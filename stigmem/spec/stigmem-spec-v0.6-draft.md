@@ -1,11 +1,12 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 ## Specification v0.6 — Draft
 
-**Status:** Working draft. §1–5, §7–10 promoted from v0.5 (stable). §6 stable. §11 stable. §12 Adapter ABI promoted from Phase 4 reserved to normative. §2.5 Entity URI scheme new (normative). §6.2 capability negotiation now required.
+**Status:** Working draft — CTO reviewed. §1–5, §7–10 promoted from v0.5 (stable). §6 stable. §11 stable. §12 Adapter ABI promoted from Phase 4 reserved to normative. §2.5 Entity URI scheme new (normative). §6.2 capability negotiation now required.
 **License:** Apache-2.0
 **Authors:** Giganomix
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
+- v0.6 (CTO review pass): §12.5 context injection schema corrected to match `_facts_to_summary` reference impl (namespace grouping, conditional confidence annotation, em-dash header); §12.4.1 informal URI caveat added with v0.7 migration note; §12.3.2 step 1 documents preference-relation filter; §12.2 `STIGMEM_SOURCE_ENTITY` default clarified as adapter-specific.
 - v0.6: §2.5 Entity URI scheme formal scheme (`stigmem://`) now normative; informal URIs deprecated with warning (resolves §8.1); §6.2 capability negotiation promoted from optional to required (resolves §8.4); §12 Adapter ABI promoted from Phase 4 reserved to concrete normative spec based on three shipped adapters (MCP, Paperclip, OpenClaw); §13 Reserved for Phase 5+.
 - v0.5: §6 Federation promoted from RFC stub to concrete implementable spec; new federation wire routes (§5.6–§5.10); HLC timestamps (§2.4); per-scope key restrictions on `api_keys` (§3.5); conflict-first-class semantics formalized (§3.3, §6.5); §11 Failure Modes acceptance scenarios; schema additions (§10); design decisions updated.
 - v0.4: Auth promoted from stub to Phase 2 implementation (§3.5); `PATCH /v1/facts/:id/confidence` retraction route (§5.4); `GET /v1/facts/:id` single-fact route (§5.5); `text` size guidance (§2.1); migration-friendliness note on schema (§10); gaps from Phase 2 implementation captured in §8.
@@ -1032,7 +1033,7 @@ All adapters MUST honor the following environment variables:
 |---|---|---|---|
 | `STIGMEM_URL` | All | — | Base URL of the Stigmem node, e.g. `http://localhost:8765` |
 | `STIGMEM_API_KEY` | All (optional) | none | API key; required when `auth=required` |
-| `STIGMEM_SOURCE_ENTITY` | Middleware | `"agent:unknown"` | Entity URI used as `source` on all write operations |
+| `STIGMEM_SOURCE_ENTITY` | Middleware | adapter-specific (e.g. `"agent:openclaw"`, `"agent:unknown"`) | Entity URI used as `source` on all write operations. Adapters SHOULD default to a descriptive identity; `"agent:unknown"` is an acceptable last-resort fallback. |
 
 **Process-mode adapters:** MUST exit with a non-zero status code and a clear error
 message to stderr if `STIGMEM_URL` is absent.
@@ -1079,6 +1080,9 @@ a failed or empty response on any individual query MUST NOT abort the boot seque
    ```
    GET /v1/facts?entity={user_entity}&scope=company&min_confidence=0.7
    ```
+   Adapters SHOULD filter the result to relevant relation namespaces (e.g. `preference:`).
+   Injecting all relations for the user entity may produce a large or noisy context;
+   retaining `preference:*` is the reference behavior.
 
 2. **Project constraints** (one query per project entity; skip if no project entities configured)
    ```
@@ -1136,6 +1140,13 @@ For adapters that instrument platform issue/task lifecycle:
 
 **Activity ping scope:** `paperclip:last_active` MUST use `scope="local"`. Activity
 pings are heartbeat signals for intra-node observability; they MUST NOT be federated.
+
+**Entity URI format note:** The `entity` column above uses informal URI shorthand
+(`issue:{task_id}`). Per §2.5, adapters targeting v0.6+ SHOULD use formal URIs:
+`stigmem://{node_authority}/issue/{task_id}`, where `{node_authority}` is the
+hostname component of `STIGMEM_URL`. Adapters that do not have access to the
+node authority MAY use the informal form — the node will accept it and emit a
+deprecation warning to stderr. Migration to formal URIs is tracked for v0.7.
 
 #### 12.4.2 Handoff facts
 
@@ -1196,17 +1207,21 @@ Adapters that inject Stigmem facts into an agent's system prompt MUST use the
 following markdown schema:
 
 ```markdown
-## Stigmem context for {user_entity}
+## Stigmem context — {user_entity}
 
-- **{relation}** on `{entity}`: {value_str} (confidence={confidence})
+### {namespace}
+- **{relation}** on `{entity}`: {value_str}[ _(confidence: {confidence:.2f})_]
 ```
 
 **Field rendering rules:**
 - `{user_entity}`: the primary entity passed to the boot handshake
+- `{namespace}`: the relation prefix before the first `:` (e.g. `preference`, `roadmap`);
+  facts with the same namespace are grouped under a shared `### {namespace}` subheading
 - `{relation}`: the fact's `relation` field, verbatim
 - `{entity}`: the fact's `entity` field, verbatim
 - `{value_str}`: for `null` type → render `(null)`; for all other types → render `value.v` as a string
-- `{confidence}`: the fact's `confidence` as a decimal with one decimal place minimum, e.g. `0.9`, `1.0`
+- Confidence annotation: rendered only when `confidence < 1.0`, using the format
+  `_(confidence: {value:.2f})_`. Facts with `confidence == 1.0` omit the annotation.
 
 **Ordering:** Facts SHOULD be ordered by descending `confidence`, then descending `hlc` within equal confidence.
 
@@ -1219,11 +1234,19 @@ zero fact lines.
 def _facts_to_summary(facts: list[Fact], user_entity: str) -> str:
     if not facts:
         return ""
-    lines = [f"## Stigmem context for {user_entity}\n"]
+    groups: dict[str, list[Fact]] = {}
     for fact in facts:
-        value_str = getattr(fact.value, "v", "(null)") if hasattr(fact.value, "v") else "(null)"
-        lines.append(f"- **{fact.relation}** on `{fact.entity}`: {value_str} (confidence={fact.confidence})")
-    return "\n".join(lines)
+        ns = fact.relation.split(":")[0] if ":" in fact.relation else fact.relation
+        groups.setdefault(ns, []).append(fact)
+    lines = [f"## Stigmem context — {user_entity}\n"]
+    for ns, ns_facts in groups.items():
+        lines.append(f"### {ns}")
+        for fact in ns_facts:
+            val = getattr(fact.value, "v", "(null)") if fact.value is not None else "(null)"
+            confidence_note = f" _(confidence: {fact.confidence:.2f})_" if fact.confidence < 1.0 else ""
+            lines.append(f"- **{fact.relation}** on `{fact.entity}`: {val}{confidence_note}")
+        lines.append("")
+    return "\n".join(lines).rstrip()
 ```
 
 ### 12.6 Error Handling Contract

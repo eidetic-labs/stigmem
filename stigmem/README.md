@@ -1,84 +1,134 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 
-> **Status: v0.2 draft — federation section open for community feedback.**
+> **Status: v0.5 implemented · v0.6-draft in progress · Apache-2.0**
 > **Repository:** [github.com/giganomix/stigmem](https://github.com/giganomix/stigmem)
 
-Stigmem is an open specification for a federated knowledge fabric: a shared, persistent layer where AI agents and humans can write facts, query relationships, and hand off work — across tools, platforms, and organizations.
+Stigmem is an open specification and reference implementation for a federated knowledge fabric: a shared, persistent layer where AI agents and humans write typed, traceable facts that travel across tools, platforms, and organizations.
 
-## The problem
+Every fact is an immutable record — `(entity, relation, value, source, timestamp, confidence, scope)` — with full provenance, a hybrid logical clock timestamp, and a defined expiry. Nodes can peer with each other via a signed handshake; facts replicate across scope boundaries under explicit permission. Contradictions between nodes are surfaced as first-class records, not silently overwritten.
 
-Every agent, every human, and every company maintains its own private memory. Facts decay silently, contradict each other across contexts, carry no provenance, and cannot travel with the entity they describe. When you switch tools, change agents, or cross an org boundary, context evaporates.
+Stigmem does **not** replace company orchestration platforms, agent runtimes, or tool protocols like MCP. It sits above them — the shared cognitive layer they all reason over.
 
-Stigmem is the missing substrate: an open, federated knowledge fabric that any agent or human can write facts into and query against, plus a typed intent/protocol layer so agents can express goals, hand off work, and defer to each other without designing bespoke handshake protocols every time.
-
-## Core concepts
-
-### Atomic facts
-
-Every piece of knowledge is an atomic, immutable fact:
-
-```
-(entity, relation, value, source, timestamp, confidence, scope)
-```
-
-Facts are **immutable** — updates create new facts. **Contradictions are surfaced**, not silently overwritten. **Provenance is first-class** — every fact carries its source and timestamp; queries return them unchanged.
-
-### Scopes and federation
-
-Facts have four scopes: `local`, `team`, `company`, `public`. Only `public` facts federate across nodes. Federation uses a signed peer declaration model (like email's MX/SMTP trust) — two nodes federate when both operators agree.
-
-### Intent envelopes
-
-Beyond facts (world state), Stigmem defines a typed **intent envelope** — a structured message from one actor to another expressing a desired transition, with constraints, soft preferences, deference rules, and handoff payloads.
-
-## What Stigmem is not
-
-Stigmem does not replace company orchestration platforms, agent runtimes, or tool protocols. It is a shared cognitive layer that sits above them — readable and writable by anything that speaks JSON over HTTP.
-
-## Spec
-
-- [`spec/stigmem-spec-v0.2.md`](spec/stigmem-spec-v0.2.md) — current working draft
-
-## Prototype
-
-A minimal reference implementation lives in [`prototype/`](prototype/). It implements the v0.1 wire format (assert/query facts, no federation yet).
-
-```bash
-git clone https://github.com/giganomix/stigmem
-cd stigmem/prototype
-pip install -r requirements.txt
-python main.py
-```
-
-See [`prototype/seed_memory.py`](prototype/seed_memory.py) for example fact writes.
+---
 
 ## Current status
 
-| Area | Status |
-|---|---|
-| Core fact shape (§2) | Stable draft |
-| Fact semantics: provenance, decay, contradiction (§3) | Stable draft |
-| Intent envelope (§4) | Draft — feedback wanted |
-| Wire format v0.1 HTTP/JSON (§5) | Implemented in prototype |
-| Federation handshake (§6) | Sketch only — **community feedback wanted** |
-| Auth / identity (Phase 2) | Not yet specified |
-| Namespace registry (`stigmem:`, `rel:`, `memory:`) | Defined in v0.3 draft |
+| Area | Status | Spec section |
+|------|--------|-------------|
+| Core fact shape (`entity`, `relation`, `value`, `source`, `timestamp`, `confidence`, `scope`) | **Implemented** | §2 |
+| `valid_until` decay, provenance, contradiction | **Implemented** | §3 |
+| HTTP wire format (assert, query, retract, single-fact GET) | **Implemented** | §5.1–5.5 |
+| Auth: API keys, per-scope restrictions | **Implemented** | §3.5 |
+| `/.well-known/stigmem` node metadata | **Implemented** | §5.3 |
+| Hybrid Logical Clock (HLC) | **Implemented** | §2.4 |
+| Federation: PeerDeclaration handshake (Ed25519), pull replication, scope enforcement | **Implemented** | §6 |
+| Conflict-first-class: auto-generated conflict records, resolution API | **Implemented** | §3.3, §5.9–5.10 |
+| Failure modes: split-brain, malicious peer, partial failure, replay attack | **Automated tests** | §11 |
+| Entity URI scheme (`stigmem://`) | Draft (v0.6) | §2.5 |
+| Adapter ABI (MCP, Paperclip, OpenClaw) | In progress (Phase 4) | §12 |
+| Intent envelope (`goal`, `constraint`, `preference`, `handoff`) | Draft — feedback wanted | §4 |
+| Synthesis, decay UI, contradiction digests | Planned (Phase 5) | §13 |
 
-## Community feedback wanted
+---
 
-The federation section (§6) is the least-developed part of the spec. If you have production experience with distributed knowledge systems, agent memory, or gossip protocols, your feedback is especially valuable.
+## Quickstart
 
-Open an RFC issue or comment on the spec PR — see [CONTRIBUTING.md](CONTRIBUTING.md).
+### Requirements
 
-## How to contribute
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) (recommended) or pip
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full RFC process.
+### Run the reference node
 
-Short version:
+```bash
+git clone https://github.com/giganomix/stigmem
+cd stigmem/node
+uv run python -m stigmem_node
+```
+
+The node starts on `http://localhost:8000`.
+
+- Interactive API docs: `http://localhost:8000/docs`
+- Node metadata (spec §5.3): `http://localhost:8000/.well-known/stigmem`
+
+### Assert a fact
+
+```bash
+curl -s -X POST http://localhost:8000/v1/facts \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer dev-key' \
+  -d '{
+    "entity":     "user:alice",
+    "relation":   "memory:prefers",
+    "value":      "dark mode",
+    "source":     "agent:settings",
+    "confidence": 1.0,
+    "scope":      "local"
+  }' | jq .
+```
+
+### Query it back
+
+```bash
+curl -s 'http://localhost:8000/v1/facts?entity=user:alice' \
+  -H 'Authorization: Bearer dev-key' | jq .facts
+```
+
+### Run the test suite (74 tests)
+
+```bash
+cd stigmem/node
+uv run pytest tests/ -v
+```
+
+---
+
+## Architecture in brief
+
+```
+stigmem/
+├── spec/           ← canonical specification (v0.2 → v0.6-draft)
+├── node/           ← reference node: FastAPI + SQLite, 74 tests
+├── adapters/       ← MCP server (TypeScript), OpenClaw (Python), Paperclip (JS hook)
+├── dogfood/        ← CEO memory migration scripts
+└── docs/           ← Docusaurus 3 documentation site
+```
+
+See [`docs/docs/architecture/`](docs/docs/architecture/index.md) for the full architecture reference, or [`docs/docs/about/state-of-stigmem.md`](docs/docs/about/state-of-stigmem.md) for the current-state narrative.
+
+---
+
+## What Stigmem is not
+
+Stigmem does not compete with:
+- **Agent platforms** (OpenClaw/Claude Code) — Stigmem is the shared substrate agents reason over, not an agent runtime.
+- **Company orchestration** (Paperclip) — Stigmem sits *upstream* of Paperclip; the Paperclip adapter emits issue lifecycle events as Stigmem facts.
+- **Tool protocols** (MCP) — MCP is the transport; the Stigmem MCP adapter ships Stigmem as an MCP server.
+
+It fills the gap none of them fill: typed, provenance-traceable, federated, entity-scoped shared knowledge.
+
+---
+
+## Spec
+
+The canonical specification lives in [`spec/`](spec/). See [`spec/README.md`](spec/README.md) for the section-by-section status table.
+
+Current working draft: **[`spec/stigmem-spec-v0.6-draft.md`](spec/stigmem-spec-v0.6-draft.md)** — §1–6, §8–11 stable; §12 Adapter ABI normative; §4 Intent Envelope draft.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the RFC process. Short version:
+
 1. Open an issue using the [RFC template](.github/ISSUE_TEMPLATE/rfc.yml)
-2. Discuss; iterate on the issue thread
-3. Submit a PR against `spec/stigmem-spec-v0.2.md` (or the active version)
+2. Discuss and iterate
+3. Submit a PR against the active spec draft (`spec/stigmem-spec-v0.6-draft.md`)
 4. Spec changes merge with ≥2 approvals from active contributors
+
+For bugs in the reference node, use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.yml).
+
+---
 
 ## License
 

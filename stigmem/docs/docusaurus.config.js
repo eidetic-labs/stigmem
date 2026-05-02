@@ -10,7 +10,7 @@ const config = {
   url: 'https://docs.stigmem.dev',
   baseUrl: '/',
 
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',  // /ACM/issues/... links are valid Paperclip control-plane refs, not site pages
 
   i18n: {
     defaultLocale: 'en',

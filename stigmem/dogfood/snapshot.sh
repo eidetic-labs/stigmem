@@ -10,16 +10,15 @@ MEMORY_DIR="${1:?Usage: snapshot.sh <memory-dir>}"
 OUTFILE="${MEMORY_DIR}/stigmem-snapshot.md"
 TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-AUTH_HEADER=""
+AUTH_HEADER=()
 if [[ -n "${STIGMEM_API_KEY:-}" ]]; then
-  AUTH_HEADER="-H \"Authorization: Bearer ${STIGMEM_API_KEY}\""
+  AUTH_HEADER=(-H "Authorization: Bearer ${STIGMEM_API_KEY}")
 fi
 
 fetch_facts() {
   local entity="$1"
   local scope="$2"
-  # shellcheck disable=SC2086
-  curl -sf ${AUTH_HEADER} \
+  curl -sf "${AUTH_HEADER[@]+${AUTH_HEADER[@]}}" \
     "${STIGMEM_URL}/v1/facts?entity=${entity}&scope=${scope}&limit=200&include_contradicted=false&include_expired=false"
 }
 

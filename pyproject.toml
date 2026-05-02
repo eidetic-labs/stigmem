@@ -11,7 +11,7 @@ authors = [
 
 [tool.uv.workspace]
 members = [
-  "muninn/node",
+  "stigmem/node",
   "packages/core",
   "packages/agents",
   "packages/compliance",

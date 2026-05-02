@@ -1,4 +1,4 @@
-"""Fact assertion and query routes — spec §5.1 and §5.2."""
+"""Fact assertion and query routes — spec §5.1, §5.2, §5.4, §5.5."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db
+from ..hlc import node_hlc
 from ..models import (
     VALID_SCOPES,
     AssertRequest,
@@ -26,19 +27,21 @@ def assert_fact(
     req: AssertRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> FactRecord:
-    """Assert a fact into the fabric (spec §5.1)."""
+    """Assert a fact into the fabric (spec §5.1). Advances local HLC; detects contradictions."""
     if not identity.can_write():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
 
     fact_id = str(uuid.uuid4())
     now = datetime.now(UTC).isoformat()
+    hlc = node_hlc.tick()
     value_v = _encode_v(req.value.type, req.value.v)
 
     with db() as conn:
         conn.execute(
             """INSERT INTO facts
-               (id, entity, relation, value_type, value_v, source, timestamp, valid_until, confidence, scope)
-               VALUES (?,?,?,?,?,?,?,?,?,?)""",
+               (id, entity, relation, value_type, value_v, source, timestamp,
+                valid_until, confidence, scope, hlc, received_from)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 req.entity,
@@ -50,15 +53,77 @@ def assert_fact(
                 req.valid_until,
                 req.confidence,
                 req.scope,
+                hlc,
+                None,  # local write; not received from a peer
             ),
         )
         row = conn.execute("SELECT * FROM facts WHERE id=?", (fact_id,)).fetchone()
-        sibling_count = conn.execute(
-            "SELECT COUNT(*) FROM facts WHERE entity=? AND relation=? AND scope=?",
-            (req.entity, req.relation, req.scope),
-        ).fetchone()[0]
 
-    return row_to_record(row, contradicted=sibling_count > 1)
+        # Contradiction detection: check for active siblings
+        siblings = conn.execute(
+            """SELECT id FROM facts
+               WHERE entity=? AND relation=? AND scope=? AND id!=? AND confidence>0.0""",
+            (req.entity, req.relation, req.scope, fact_id),
+        ).fetchall()
+        contradicted = len(siblings) > 0
+
+        if contradicted:
+            _record_contradictions(conn, fact_id, req.entity, req.relation, req.scope, siblings)
+
+    return row_to_record(row, contradicted=contradicted)
+
+
+def _record_contradictions(
+    conn: Any,
+    new_fact_id: str,
+    entity: str,
+    relation: str,
+    scope: str,
+    siblings: list[Any],
+) -> None:
+    """Write conflict entities and conflicts table rows for new contradictions."""
+    now = datetime.now(UTC).isoformat()
+    for sibling in siblings:
+        sibling_id = sibling["id"]
+
+        already = conn.execute(
+            """SELECT id FROM conflicts
+               WHERE (fact_a_id=? AND fact_b_id=?) OR (fact_a_id=? AND fact_b_id=?)""",
+            (new_fact_id, sibling_id, sibling_id, new_fact_id),
+        ).fetchone()
+        if already:
+            continue
+
+        conflict_id = f"stigmem:conflict:{uuid.uuid4()}"
+        h_between = node_hlc.tick()
+        conn.execute(
+            """INSERT INTO facts
+               (id, entity, relation, value_type, value_v, source, timestamp,
+                valid_until, confidence, scope, hlc, received_from)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                str(uuid.uuid4()), conflict_id, "stigmem:conflict:between",
+                "text", f"{new_fact_id} {sibling_id}",
+                "system:stigmem", now, None, 1.0, scope, h_between, None,
+            ),
+        )
+        h_status = node_hlc.tick()
+        conn.execute(
+            """INSERT INTO facts
+               (id, entity, relation, value_type, value_v, source, timestamp,
+                valid_until, confidence, scope, hlc, received_from)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                str(uuid.uuid4()), conflict_id, "stigmem:conflict:status",
+                "string", "unresolved",
+                "system:stigmem", now, None, 1.0, scope, h_status, None,
+            ),
+        )
+        conn.execute(
+            """INSERT OR IGNORE INTO conflicts (id, fact_a_id, fact_b_id, status, detected_at)
+               VALUES (?,?,?,?,?)""",
+            (conflict_id, new_fact_id, sibling_id, "unresolved", now),
+        )
 
 
 @router.get("", response_model=QueryResponse)
@@ -103,7 +168,6 @@ def query_facts(
         conditions.append("id > ?")
         params.append(cursor)
 
-    # Enforce valid_until: filter expired facts unless caller opts in
     if not include_expired:
         now = datetime.now(UTC).isoformat()
         conditions.append("(valid_until IS NULL OR valid_until > ?)")
@@ -119,7 +183,6 @@ def query_facts(
     has_more = len(rows) > limit
     rows = rows[:limit]
 
-    # Per-group contradiction detection
     seen: dict[tuple[str, str, str], int] = {}
     for r in rows:
         key = (r["entity"], r["relation"], r["scope"])
@@ -146,9 +209,8 @@ def get_fact(
         row = conn.execute("SELECT * FROM facts WHERE id = ?", (fact_id,)).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="fact not found")
-    sibling_count: int = 0
     with db() as conn:
-        sibling_count = conn.execute(
+        sibling_count: int = conn.execute(
             "SELECT COUNT(*) FROM facts WHERE entity=? AND relation=? AND scope=?",
             (row["entity"], row["relation"], row["scope"]),
         ).fetchone()[0]

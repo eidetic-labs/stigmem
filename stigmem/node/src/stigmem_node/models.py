@@ -1,4 +1,4 @@
-"""Pydantic models for the Stigmem v0.3 fact model."""
+"""Pydantic models for the Stigmem fact model (v0.5 with federation)."""
 
 from __future__ import annotations
 
@@ -47,6 +47,8 @@ class FactRecord(BaseModel):
     value: FactValue
     source: str
     timestamp: str
+    hlc: str | None = None          # v0.5: HLC timestamp; null for pre-migration facts
+    received_from: str | None = None  # v0.5: originating node_id if federated
     valid_until: str | None = None
     confidence: float
     scope: str
@@ -59,7 +61,58 @@ class QueryResponse(BaseModel):
     cursor: str | None
 
 
+# ---------------------------------------------------------------------------
+# Federation models (v0.5)
+# ---------------------------------------------------------------------------
+
+class PeerRegisterRequest(BaseModel):
+    node_url: str = Field(..., min_length=1)
+    node_id: str = Field(..., min_length=1)
+    federation_pubkey: str = Field(..., min_length=1)
+    allowed_scopes: list[str]
+    declaration_sig: str = Field(..., min_length=1)
+    signed_at: str = Field(..., min_length=1)
+
+    @field_validator("allowed_scopes")
+    @classmethod
+    def check_scopes(cls, scopes: list[str]) -> list[str]:
+        invalid = set(scopes) - VALID_SCOPES
+        if invalid:
+            raise ValueError(f"invalid scopes: {invalid}")
+        return scopes
+
+
+class PeerRecord(BaseModel):
+    peer_id: str
+    node_id: str
+    node_url: str
+    status: str
+    allowed_scopes: list[str]
+    established_at: str | None
+
+
+class PeerRegisterResponse(BaseModel):
+    peer_id: str
+    status: str
+    verified_at: str | None
+
+
+class FederationFactsResponse(BaseModel):
+    facts: list[FactRecord]
+    cursor: str | None
+    has_more: bool
+
+
+class AuditEntry(BaseModel):
+    id: str
+    peer_id: str
+    event_type: str
+    detail: str | None
+    ts: str
+
+
 def row_to_record(row: sqlite3.Row, contradicted: bool = False) -> FactRecord:
+    keys = row.keys()
     return FactRecord(
         id=row["id"],
         entity=row["entity"],
@@ -67,6 +120,8 @@ def row_to_record(row: sqlite3.Row, contradicted: bool = False) -> FactRecord:
         value=FactValue(type=row["value_type"], v=_parse_v(row["value_type"], row["value_v"])),
         source=row["source"],
         timestamp=row["timestamp"],
+        hlc=row["hlc"] if "hlc" in keys else None,
+        received_from=row["received_from"] if "received_from" in keys else None,
         valid_until=row["valid_until"],
         confidence=row["confidence"],
         scope=row["scope"],

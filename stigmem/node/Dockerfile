@@ -11,11 +11,11 @@ COPY src/ src/
 
 RUN uv pip install --system --no-cache .
 
-ENV MUNINN_DB_PATH=/data/muninn.db
-ENV MUNINN_HOST=0.0.0.0
-ENV MUNINN_PORT=8765
+ENV STIGMEM_DB_PATH=/data/stigmem.db
+ENV STIGMEM_HOST=0.0.0.0
+ENV STIGMEM_PORT=8765
 
 VOLUME ["/data"]
 EXPOSE 8765
 
-CMD ["muninn-node"]
+CMD ["stigmem-node"]

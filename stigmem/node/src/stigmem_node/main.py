@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from collections.abc import AsyncGenerator
 
 import uvicorn
@@ -11,6 +12,7 @@ from fastapi import FastAPI
 
 from .db import apply_migrations
 from .routes.facts import router as facts_router
+from .routes.federation import router as federation_router
 from .routes.wellknown import router as wellknown_router
 from .settings import settings
 
@@ -21,20 +23,41 @@ def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         apply_migrations()
-        logger.info("Stigmem node ready — db=%s auth=%s", settings.db_path, settings.auth_required)
+
+        pull_task: asyncio.Task[None] | None = None
+        if settings.federation_enabled:
+            from .peer_token import init_federation_keys
+            from .federation_pull import pull_loop_task
+
+            init_federation_keys()
+            pull_task = asyncio.create_task(pull_loop_task())
+            logger.info("Stigmem federation enabled — pull interval %ds", settings.federation_pull_interval_s)
+
+        logger.info(
+            "Stigmem node ready — db=%s auth=%s federation=%s",
+            settings.db_path,
+            settings.auth_required,
+            "enabled" if settings.federation_enabled else "disabled",
+        )
         yield
+
+        if pull_task is not None:
+            pull_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await pull_task
 
     app = FastAPI(
         title="Stigmem Reference Node",
-        version="0.2.0",
+        version="0.3.0",
         description=(
-            "Single-host Stigmem node implementing spec v0.3. "
-            "No federation (Phase 3). No adapters (Phase 4)."
+            "Single-host Stigmem node implementing spec v0.5 — federation handshake and "
+            "pull replication (Phase 3). No adapters (Phase 4+)."
         ),
         lifespan=lifespan,
     )
 
     app.include_router(facts_router)
+    app.include_router(federation_router)
     app.include_router(wellknown_router)
 
     @app.get("/healthz", tags=["ops"])

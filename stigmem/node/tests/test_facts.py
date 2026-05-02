@@ -105,10 +105,16 @@ class TestQueryFacts:
         facts = r.json()["facts"]
         assert all(f["confidence"] >= 0.5 for f in facts)
 
-    def test_contradiction_flagged(self, client: TestClient) -> None:
+    def test_contradicted_excluded_by_default(self, client: TestClient) -> None:
         client.post("/v1/facts", json=FACT)
         client.post("/v1/facts", json={**FACT, "value": {"type": "string", "v": "CTO"}})
         r = client.get("/v1/facts?entity=user:alice&relation=memory:role&scope=company")
+        assert r.json()["total"] == 0
+
+    def test_contradicted_included_with_flag(self, client: TestClient) -> None:
+        client.post("/v1/facts", json=FACT)
+        client.post("/v1/facts", json={**FACT, "value": {"type": "string", "v": "CTO"}})
+        r = client.get("/v1/facts?entity=user:alice&relation=memory:role&scope=company&include_contradicted=true")
         facts = r.json()["facts"]
         assert len(facts) == 2
         assert all(f["contradicted"] for f in facts)

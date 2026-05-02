@@ -193,6 +193,9 @@ def query_facts(
         for r in rows
     ]
 
+    if not include_contradicted:
+        records = [r for r in records if not r.contradicted]
+
     next_cursor = rows[-1]["id"] if has_more and rows else None
     return QueryResponse(facts=records, total=len(records), cursor=next_cursor)
 

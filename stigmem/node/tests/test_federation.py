@@ -759,7 +759,7 @@ class TestSplitBrain:
             "stigmem://node-b",
         )
 
-        r = fed_node.client.get(f"/v1/facts?entity={entity}&relation=split:val")
+        r = fed_node.client.get(f"/v1/facts?entity={entity}&relation=split:val&include_contradicted=true")
         assert r.status_code == 200
         facts = r.json()["facts"]
         assert len(facts) == 2, f"Expected 2 contradicting facts, got {len(facts)}"

@@ -174,9 +174,9 @@ async def register_peer(
     verified_at: str | None = None
 
     if fetched_pubkey and fetched_pubkey == req.federation_pubkey:
+        # Signed fields are everything except declaration_sig itself (spec §6.1 struct "above fields")
         signed_fields: dict[str, Any] = {
             "allowed_scopes": req.allowed_scopes,
-            "declaration_sig": req.declaration_sig,
             "federation_pubkey": req.federation_pubkey,
             "node_id": req.node_id,
             "node_url": req.node_url,

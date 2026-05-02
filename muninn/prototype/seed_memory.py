@@ -1,4 +1,4 @@
-"""Load example facts into a running Loom node.
+"""Load example facts into a running Muninn node.
 
 Usage:
     python seed_memory.py [--url http://localhost:8000]
@@ -48,7 +48,7 @@ def bv(v: bool) -> dict[str, Any]:
 
 def seed(url: str) -> None:
     src = "agent:example"
-    print(f"Seeding Loom node at {url} ...")
+    print(f"Seeding Muninn node at {url} ...")
 
     facts = [
         # User preferences

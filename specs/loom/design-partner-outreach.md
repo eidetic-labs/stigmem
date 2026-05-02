@@ -1,4 +1,4 @@
-# Loom Design Partner Outreach — Draft Messages
+# Muninn Design Partner Outreach — Draft Messages
 
 **Status:** Draft — week 1 outreach for Phase 1  
 **Targets:** Chalef (Zep), Packer (Letta), topoteretes (Cognee)  
@@ -8,13 +8,13 @@
 
 ## 1. Daniel Chalef — Zep (daniel@getzep.com)
 
-**Subject:** Loom spec — your temporal edge model is in it, want to co-author federation?
+**Subject:** Muninn spec — your temporal edge model is in it, want to co-author federation?
 
 Hi Daniel,
 
-I built a spec called Loom — an open federated knowledge fabric for AI agents. While researching prior art, Zep's temporal edge model (`valid_at`/`invalid_at`) stood out as the cleanest solution to the "historical fact vs uncertain fact" conflation problem. I borrowed the pattern directly and cited Zep in the design decisions.
+I built a spec called Muninn — an open federated knowledge fabric for AI agents. While researching prior art, Zep's temporal edge model (`valid_at`/`invalid_at`) stood out as the cleanest solution to the "historical fact vs uncertain fact" conflation problem. I borrowed the pattern directly and cited Zep in the design decisions.
 
-Loom is now v0.2 and going public. The federation section (§6) is the least-developed part — it's a sketch with the right intuitions but missing the operational detail that comes from actually running a multi-node system at scale.
+Muninn is now v0.2 and going public. The federation section (§6) is the least-developed part — it's a sketch with the right intuitions but missing the operational detail that comes from actually running a multi-node system at scale.
 
 I'd like to co-author that section with you if you're interested. The ask is: a 30-minute call, async review of a PR with the proposed federation design, and your name on the spec.
 
@@ -26,11 +26,11 @@ Worth 30 minutes?
 
 ## 2. Charles Packer — Letta (charles@letta.com)
 
-**Subject:** Loom — federated agent memory spec, looking for co-authors on the federation section
+**Subject:** Muninn — federated agent memory spec, looking for co-authors on the federation section
 
 Hi Charles,
 
-I've been building a spec for federated agent memory called Loom. The core primitive is an atomic fact: `(entity, relation, value, source, timestamp, confidence, scope)` — immutable, provenance-first, contradiction-surfacing. It's what I'd want underneath a system like Letta if I needed memory to travel across agent boundaries and org boundaries without losing provenance.
+I've been building a spec for federated agent memory called Muninn. The core primitive is an atomic fact: `(entity, relation, value, source, timestamp, confidence, scope)` — immutable, provenance-first, contradiction-surfacing. It's what I'd want underneath a system like Letta if I needed memory to travel across agent boundaries and org boundaries without losing provenance.
 
 The intent envelope (§4) is directly inspired by the coordination problems MemGPT surfaced — how do you hand off in-flight context from one agent to another without the receiver having to re-infer everything from scratch?
 
@@ -42,11 +42,11 @@ Spec: [link once public]
 
 ## 3. topoteretes — Cognee (GitHub: topoteretes)
 
-**Subject:** Loom spec — interested in co-authoring the federation and namespace governance sections?
+**Subject:** Muninn spec — interested in co-authoring the federation and namespace governance sections?
 
 Hey,
 
-Building an open spec for federated agent memory called Loom — atomic facts with provenance, scopes, contradiction detection, and eventually federation. Going public this week with v0.2.
+Building an open spec for federated agent memory called Muninn — atomic facts with provenance, scopes, contradiction detection, and eventually federation. Going public this week with v0.2.
 
 Two sections where Cognee's experience would be most useful:
 
@@ -70,5 +70,5 @@ Spec: [link once public]
 ## Notes
 
 - Don't send before the repo is public — the link needs to be live
-- If any of these turn into calls, record key decisions as new facts in the Loom node and update the spec design decisions log (§7)
+- If any of these turn into calls, record key decisions as new facts in the Muninn node and update the spec design decisions log (§7)
 - Co-author credit goes in the spec header: `## Co-authors\n- [Name], [Affiliation] — federation section`

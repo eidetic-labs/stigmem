@@ -1,14 +1,14 @@
-# Loom — Federated Knowledge Fabric + Intent Protocol
+# Muninn — Federated Knowledge Fabric + Intent Protocol
 
 > **Status: v0.2 draft — actively seeking design partners for the federation section.**
 
-Loom is an open specification for a federated knowledge fabric: a shared, persistent layer where AI agents and humans can write facts, query relationships, and hand off work — across tools, platforms, and organizations.
+Muninn is an open specification for a federated knowledge fabric: a shared, persistent layer where AI agents and humans can write facts, query relationships, and hand off work — across tools, platforms, and organizations.
 
 ## The problem
 
 Every agent, every human, and every company maintains its own private memory. Facts decay silently, contradict each other across contexts, carry no provenance, and cannot travel with the entity they describe. When you switch tools, change agents, or cross an org boundary, context evaporates.
 
-Loom is the missing substrate: an open, federated knowledge fabric that any agent or human can write facts into and query against, plus a typed intent/protocol layer so agents can express goals, hand off work, and defer to each other without designing bespoke handshake protocols every time.
+Muninn is the missing substrate: an open, federated knowledge fabric that any agent or human can write facts into and query against, plus a typed intent/protocol layer so agents can express goals, hand off work, and defer to each other without designing bespoke handshake protocols every time.
 
 ## Core concepts
 
@@ -28,11 +28,11 @@ Facts have four scopes: `local`, `team`, `company`, `public`. Only `public` fact
 
 ### Intent envelopes
 
-Beyond facts (world state), Loom defines a typed **intent envelope** — a structured message from one actor to another expressing a desired transition, with constraints, soft preferences, deference rules, and handoff payloads.
+Beyond facts (world state), Muninn defines a typed **intent envelope** — a structured message from one actor to another expressing a desired transition, with constraints, soft preferences, deference rules, and handoff payloads.
 
-## What Loom is not
+## What Muninn is not
 
-Loom does not replace company orchestration platforms, agent runtimes, or tool protocols. It is a shared cognitive layer that sits above them — readable and writable by anything that speaks JSON over HTTP.
+Muninn does not replace company orchestration platforms, agent runtimes, or tool protocols. It is a shared cognitive layer that sits above them — readable and writable by anything that speaks JSON over HTTP.
 
 ## Spec
 

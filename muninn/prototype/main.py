@@ -1,4 +1,4 @@
-"""Loom single-node reference prototype.
+"""Muninn single-node reference prototype.
 
 Two operations: assert(fact) and query(pattern).
 No federation, no auth, no UI. ~200 lines.
@@ -16,7 +16,7 @@ from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
 
 DB_PATH = "loom.db"
-app = FastAPI(title="Loom prototype", version="0.0.1")
+app = FastAPI(title="Muninn prototype", version="0.0.1")
 
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
-# Contributing to Loom
+# Contributing to Muninn
 
-Thanks for your interest in contributing. Loom is a community spec — the goal is to get smart people with production experience to stress-test the design before it ossifies.
+Thanks for your interest in contributing. Muninn is a community spec — the goal is to get smart people with production experience to stress-test the design before it ossifies.
 
 ## Ways to contribute
 

@@ -1,9 +1,9 @@
-# Loom — Federated Knowledge Fabric + Intent Protocol
+# Muninn — Federated Knowledge Fabric + Intent Protocol
 ## Specification v0.2 — Public Draft
 
 **Status:** Public draft. Seeking design-partner feedback before v0.3.
 **License:** Apache-2.0
-**Working name:** Loom
+**Working name:** Muninn
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:** v0.2 adds `text` FactValue type, reification pattern for N-ary relationships, and `valid_until` field inspired by Zep/Graphiti temporal edge model.
 
@@ -15,12 +15,12 @@ Every agent, every human, and every company maintains its own private memory.
 Facts decay silently, contradict each other across contexts, carry no provenance,
 and cannot travel with the entity they describe.
 
-Loom is the missing substrate: an open, federated knowledge fabric that any agent
+Muninn is the missing substrate: an open, federated knowledge fabric that any agent
 or human can write facts into and query against, plus a typed intent/protocol layer
 so agents can express goals, hand off work, and defer to each other without
 designing bespoke handshake protocols every time.
 
-Loom does **not** replace company orchestration platforms, agent runtimes, or tool
+Muninn does **not** replace company orchestration platforms, agent runtimes, or tool
 protocols like MCP. It sits above them all — the shared cognitive layer they can
 all reason over.
 
@@ -28,7 +28,7 @@ all reason over.
 
 ## 2. Atomic Fact Shape
 
-Every piece of knowledge in Loom is an **atomic fact**:
+Every piece of knowledge in Muninn is an **atomic fact**:
 
 ```
 (entity, relation, value, source, timestamp, confidence, scope)
@@ -159,7 +159,7 @@ introduces built-in decay functions.
 ### 3.3 Contradiction
 
 When two facts share the same `(entity, relation, scope)` triple but have different
-values, a contradiction exists. Loom nodes MUST surface contradictions rather than
+values, a contradiction exists. Muninn nodes MUST surface contradictions rather than
 silently discarding one.
 
 **Resolution order (v0.1 default):**
@@ -261,7 +261,7 @@ If a constraint is unresolvable or a deference times out:
 ```
 EscalationPolicy {
   escalate_to:  URI         // entity to notify
-  channel:      string      // e.g. "loom", "email", "slack" (v0.1: loom only)
+  channel:      string      // e.g. "muninn", "email", "slack" (v0.1: loom only)
   priority:     "low" | "medium" | "high" | "critical"
   include_context: boolean  // attach full intent + relevant facts
 }
@@ -377,7 +377,7 @@ The handshake deliberately mirrors email's MX/SMTP trust model and ActivityPub's
    IANA-style registry, or community PRs to a spec repo? Unresolved before Phase 1.
 
 2. **Entity URI scheme.** `user:alice` is informal. Should v0.2 require a more
-   structured URI (`loom://company.acme/user/alice`)? Leaning yes before Phase 1
+   structured URI (`muninn://company.acme/user/alice`)? Leaning yes before Phase 1
    to avoid namespace collisions in federated deployments.
 
 3. **Handoff vs. fact-only approach.** Is the intent envelope necessary in v0.1,

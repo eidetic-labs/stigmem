@@ -1,12 +1,12 @@
 name: RFC
-description: Propose a change to the Loom specification
+description: Propose a change to the Muninn specification
 title: "RFC: "
 labels: ["rfc", "needs-discussion"]
 body:
   - type: markdown
     attributes:
       value: |
-        Use this template to propose a spec change, add a new field or endpoint, change semantics, or resolve an open question. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for the full RFC process.
+        Use this template to propose a spec change, add a new field or endpoint, change semantics, or resolve an open question. See [CONTRIBUTING.md](../CONTRIBUTING.md) for the full RFC process.
 
   - type: textarea
     id: problem

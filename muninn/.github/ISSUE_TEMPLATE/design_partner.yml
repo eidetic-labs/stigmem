@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        We're looking for teams with production experience in agent memory, knowledge graphs, or agent coordination to co-author the federation section of Loom v0.3. Co-authors are named in the spec.
+        We're looking for teams with production experience in agent memory, knowledge graphs, or agent coordination to co-author the federation section of Muninn v0.3. Co-authors are named in the spec.
 
   - type: textarea
     id: background
@@ -20,7 +20,7 @@ body:
     id: federation_opinions
     attributes:
       label: What are your strongest opinions about federation?
-      description: What should Loom get right? What have you seen go wrong in other systems?
+      description: What should Muninn get right? What have you seen go wrong in other systems?
     validations:
       required: false
 

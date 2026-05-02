@@ -538,11 +538,16 @@ Authorization: Bearer <api-key>
 ```
 
 **Resolution semantics:** The node asserts:
-1. A new fact for `(entity, relation, scope)` with the winning or new value and `confidence=1.0`.
+1. A new **resolution fact** written under the namespaced entity
+   `stigmem:resolution:<conflict_id>` (not the conflicting facts' entity) with the
+   winning or new value and `confidence=1.0`. Using a dedicated entity prevents
+   the resolution fact from sharing the `(entity, relation, scope)` triple with the
+   conflicting facts, which would otherwise trigger a cascading contradiction wave
+   when the fact is federated to peer nodes (§6.5).
 2. A `stigmem:resolves` meta-fact:
    ```
    (entity=<resolution-fact-id>, relation="stigmem:resolves",
-    value={type:"ref", v:"<conflict_id>"}, source=<caller's entity_uri>, ...)
+    value={type:"ref", v:"<conflict_id>"}, source="system:stigmem", ...)
    ```
 3. Updates the conflict's `stigmem:conflict:status` to `"resolved"`.
 

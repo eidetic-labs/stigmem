@@ -1008,7 +1008,7 @@ class TestConflictResolution:
         assert conflict_id not in unresolved_ids, "resolved conflict must not appear in unresolved list"
 
     def test_resolve_creates_resolution_fact_with_provenance(self, fed_node: FedNode) -> None:
-        """Resolution fact exists in store; stigmem:resolves meta-fact points to conflict."""
+        """Resolution fact uses namespaced entity; stigmem:resolves meta-fact points to conflict."""
         conflict_id, entity, fact_a_id, _ = self._create_conflict(fed_node)
 
         r = fed_node.client.post(
@@ -1017,11 +1017,16 @@ class TestConflictResolution:
         )
         resolution_fact_id = r.json()["resolution_fact_id"]
 
-        # Resolution fact exists in the facts table
+        # Resolution fact exists in the facts table under the namespaced entity (not the
+        # original entity) to avoid sharing the (entity, relation, scope) triple with the
+        # conflicting facts, which would cause a cascade contradiction wave on federation.
         r_fact = fed_node.client.get(f"/v1/facts/{resolution_fact_id}")
         assert r_fact.status_code == 200
         fact = r_fact.json()
-        assert fact["entity"] == entity
+        assert fact["entity"] == f"stigmem:resolution:{conflict_id}", (
+            "resolution fact MUST use namespaced entity, not the conflicting entity"
+        )
+        assert fact["entity"] != entity, "resolution fact must NOT share entity with conflicting facts"
         assert fact["relation"] == "resolve:val"
         assert fact["confidence"] == 1.0
 
@@ -1033,6 +1038,59 @@ class TestConflictResolution:
             ).fetchone()
         assert resolves is not None, "stigmem:resolves meta-fact must exist"
         assert resolves["value_v"] == conflict_id
+
+    def test_resolve_no_cascade_contradiction_on_federation(self, fed_node: FedNode) -> None:
+        """Ingesting a resolution fact via federation must not create a new contradiction.
+
+        Regression test for ACM-51: the old implementation wrote the resolution fact
+        under the original (entity, relation, scope), which caused a new contradiction
+        wave when peers ingested it alongside the two original conflicting facts.
+        """
+        conflict_id, entity, fact_a_id, _ = self._create_conflict(fed_node)
+
+        r = fed_node.client.post(
+            f"/v1/conflicts/{conflict_id}/resolve",
+            json={"winning_fact_id": fact_a_id},
+        )
+        assert r.status_code == 200
+        resolution_fact_id = r.json()["resolution_fact_id"]
+
+        # Count conflicts before re-ingesting the resolution fact
+        with _db_ctx() as conn:
+            before = conn.execute(
+                "SELECT COUNT(*) AS n FROM conflicts WHERE status = 'unresolved'"
+            ).fetchone()["n"]
+
+        # Simulate a peer node ingesting the resolution fact (idempotent re-ingest)
+        r_fact = fed_node.client.get(f"/v1/facts/{resolution_fact_id}")
+        assert r_fact.status_code == 200
+        resolution_fact = r_fact.json()
+
+        ingest_fact(
+            {
+                "id": resolution_fact["id"],
+                "entity": resolution_fact["entity"],
+                "relation": resolution_fact["relation"],
+                "value": resolution_fact["value"],
+                "source": resolution_fact["source"],
+                "timestamp": resolution_fact["timestamp"],
+                "hlc": resolution_fact.get("hlc"),
+                "confidence": resolution_fact["confidence"],
+                "scope": resolution_fact["scope"],
+                "valid_until": resolution_fact.get("valid_until"),
+            },
+            "stigmem://peer-node",
+        )
+
+        # No new unresolved conflicts must have appeared
+        with _db_ctx() as conn:
+            after = conn.execute(
+                "SELECT COUNT(*) AS n FROM conflicts WHERE status = 'unresolved'"
+            ).fetchone()["n"]
+        assert after == before, (
+            f"federation of resolution fact must not create new contradictions "
+            f"(unresolved conflicts before={before}, after={after})"
+        )
 
     def test_resolve_with_new_value(self, fed_node: FedNode) -> None:
         """Resolve with new_value asserts a fresh reconciliation value."""

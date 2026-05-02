@@ -527,7 +527,11 @@ def resolve_conflict(
         now = datetime.now(UTC).isoformat()
         caller = identity.entity_uri
 
-        # 1. Assert canonical resolution fact for (entity, relation, scope)
+        # 1. Assert resolution fact under a namespaced entity so it never shares the
+        #    (entity, relation, scope) triple with the conflicting facts. Writing under
+        #    the original entity+relation would trigger a new contradiction wave when the
+        #    fact is federated to peers (spec §resolution-semantics, ACM-51).
+        resolution_entity = f"stigmem:resolution:{conflict_id}"
         hlc_res = node_hlc.tick()
         conn.execute(
             """INSERT INTO facts
@@ -536,7 +540,7 @@ def resolve_conflict(
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 resolution_fact_id,
-                fact_a["entity"],
+                resolution_entity,
                 fact_a["relation"],
                 res_type,
                 res_v,

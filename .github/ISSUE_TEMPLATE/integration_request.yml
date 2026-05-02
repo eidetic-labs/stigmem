@@ -1,0 +1,33 @@
+name: Integration Request
+description: Request a new integration connector
+labels: ["integration", "enhancement"]
+body:
+  - type: input
+    id: service
+    attributes:
+      label: Service / platform name
+      placeholder: "e.g. HubSpot, Twilio, Salesforce"
+    validations:
+      required: true
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: What would this integration enable?
+    validations:
+      required: true
+  - type: textarea
+    id: api_docs
+    attributes:
+      label: API documentation
+      description: Link to the service's API docs if publicly available.
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How critical is this for you?
+      options:
+        - Nice to have
+        - Important for my use case
+        - Blocking my adoption
+    validations:
+      required: true

@@ -1,0 +1,19 @@
+[project]
+name = "agent-platform-compliance"
+version = "0.1.0"
+description = "Compliance engine — SOC2/GDPR/HIPAA evidence collection, policy generation, audit prep"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = [
+  "agent-platform-core",
+  "arq>=0.25",
+  "croniter>=2.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/compliance"]

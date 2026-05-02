@@ -1,0 +1,44 @@
+name: Bug Report
+description: Report a bug in AI Platform
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thank you for reporting a bug! Please fill out all sections."
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal code or steps to reproduce the issue.
+      placeholder: |
+        1. Install version X
+        2. Run this code...
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, package version, LLM provider used.
+      placeholder: |
+        - OS: macOS 14
+        - Python: 3.11
+        - agent-platform-core: 0.1.0
+        - LLM: Anthropic Claude
+    validations:
+      required: true

@@ -129,7 +129,7 @@ export class StigmemClient {
     const res = await this.fetchFn(url, {
       method,
       headers: this.headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
     await raiseForStatus(res);
     return res.json() as Promise<T>;
@@ -252,7 +252,7 @@ export class StigmemClient {
     while (true) {
       if (opts.signal?.aborted) return;
 
-      const page = await this.query({ scope, cursor, limit: 100 });
+      const page = await this.query({ scope, limit: 100, ...(cursor !== undefined ? { cursor } : {}) });
       if (page.facts.length > 0) {
         yield page.facts;
       }

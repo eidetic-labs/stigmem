@@ -4,40 +4,39 @@ Integrates Stigmem with OpenClaw agents. Provides the standard boot handshake
 (pull user prefs + project constraints into context) and write surfaces for
 handoffs, decisions, and escalations.
 
-> **Status:** Scaffold complete (Phase 4 heartbeat 1). Full implementation
-> tracked in child issue assigned to SeniorEngineer.
+> **Status:** Complete (Phase 4 / ACM-41). Pagination, hardened write surfaces,
+> and a full test suite ship with this release.
 
 ## Design
 
 OpenClaw agents are persistent and channel-agnostic. The Stigmem adapter hooks into:
 
-1. **Agent boot** — pull user preferences, active project constraints, and any pending
-   handoff facts for the starting session.
+1. **Agent boot** — pull user preferences (`preference:*`), active project
+   constraints (`roadmap:constraint`), pending handoff facts, and recent
+   escalations. All queries are paginated; node unavailability produces an empty
+   context with a logged warning instead of crashing the agent.
 2. **Handoff** — when a user ends a session or delegates to another channel/agent,
-   emit a `intent:handoff` fact with a `HandoffPayload` (fact refs, continuation, summary).
-3. **Decision** — when the agent makes a meaningful decision (tool choice, escalation,
-   scope change), emit a `roadmap:decision` or `intent:escalation` fact.
+   emit a typed `intent:handoff` fact cluster with validated fact refs, an optional
+   continuation note, and a human-readable summary.
+3. **Decision** — when the agent makes a meaningful choice, emit a
+   `roadmap:decision` fact. A dedup guard skips the write when an equivalent fact
+   already exists for the same (entity, source) pair.
+4. **Escalation** — emit a priority-typed `intent:escalation` fact cluster with a
+   24-hour expiry so stale escalations don't linger.
 
-### What OpenClaw public surfaces are used
+### OpenClaw surface inventory
 
-Built against OpenClaw's public API surfaces only — no holdco outreach per Phase 0 constraint.
-Current surface inventory (from `specs/loom/readback-surfaces.md`):
-
-- OpenClaw uses an internal Gateway protocol (versioned, additive-first).
-- No published inter-agent wire spec found publicly as of 2026-05-01.
-- The adapter therefore wraps Stigmem's HTTP API and provides a Python helper
-  library that OpenClaw-hosted agents can import.
-
-If OpenClaw's public surface exposes a plugin/extension API, the adapter should
-be re-implemented against that. Escalate to CEO if a protocol gap requires
-holdco outreach.
+Built against OpenClaw's public API surfaces only — no holdco outreach per Phase 0
+constraint. The adapter wraps Stigmem's HTTP API via `stigmem-py`; OpenClaw-hosted
+agents import it as a standard Python library.
 
 ## Files
 
 | File | Purpose |
 |---|---|
 | `adapter.py` | Python adapter class — boot handshake + write surfaces |
-| `boot_handshake.py` | Standalone boot handshake script (imported by OpenClaw agent entrypoints) |
+| `tests/conftest.py` | pytest path setup (no package install required) |
+| `tests/test_adapter.py` | Unit tests (respx-mocked) + conformance vector smoke tests |
 | `README.md` | This file |
 
 ## Setup
@@ -56,76 +55,89 @@ STIGMEM_API_KEY=sk-your-key
 STIGMEM_SOURCE_ENTITY=agent:openclaw   # entity URI for this OpenClaw instance
 ```
 
-### Boot handshake
-
-At agent startup, call:
+## Worked example — full agent boot + session lifecycle
 
 ```python
-from stigmem.adapters.openclaw import OpenClawStigmemAdapter
+import os
+from stigmem.adapters.openclaw.adapter import OpenClawStigmemAdapter
 
+# 1. Construct from environment
 adapter = OpenClawStigmemAdapter.from_env()
-context = adapter.boot(user_entity="user:alice", session_id="session:xyz")
 
-# context.facts contains all pulled facts
-# context.summary is a markdown string ready to inject into system prompt
-```
-
-The boot handshake pulls:
-1. User preferences (`preference:*` facts for the user entity)
-2. Active project constraints (`roadmap:constraint` facts for active projects)
-3. Pending handoff facts targeting this agent
-4. Recent escalations (`intent:escalation` facts within the last 24h)
-
-### Write surfaces
-
-```python
-# Emit a handoff fact when session ends
-adapter.emit_handoff(
-    from_entity="agent:openclaw",
-    to_entity="agent:assistant",
-    summary="User asked about Q2 roadmap; pending decision on DB choice.",
-    fact_refs=["fact-001", "fact-002"],
-    continuation="Continue from where we left off on the roadmap discussion.",
+# 2. Boot at session start — pull all relevant facts and format a system prompt snippet
+ctx = adapter.boot(
+    user_entity="user:alice",
+    session_id="session:2026-05-02-abc",
+    project_entities=["project:acme-roadmap"],
 )
 
-# Emit a decision fact
+if ctx:
+    system_prompt = base_system_prompt + "\n\n" + ctx.summary
+else:
+    system_prompt = base_system_prompt  # node was unavailable; continue without stigmem
+
+# ctx.summary looks like:
+#
+# ## Stigmem context — user:alice
+#
+# ### preference
+# - **preference:theme** on `user:alice`: dark
+# - **preference:lang** on `user:alice`: en
+#
+# ### roadmap
+# - **roadmap:constraint** on `project:acme-roadmap`: Must ship Phase 1 before 2026-06-01
+#
+# ### intent
+# - **intent:context_ref** on `handoff:5f3a`: fact-004
+
+# 3. Agent runs its main loop …
+# (LLM calls, tool use, etc.)
+
+# 4a. Emit a significant architectural decision
 adapter.emit_decision(
-    entity="decision:db-choice",
-    summary="Chose PostgreSQL over SQLite for the hosted tier.",
+    entity="decision:auth-provider",
+    summary="Chose Clerk over Auth0: simpler Next.js integration, lower per-seat cost at SMB scale.",
     source="agent:openclaw",
 )
 
-# Emit an escalation fact
+# 4b. Escalate to the CTO when the agent hits a scope boundary
 adapter.emit_escalation(
     to_entity="agent:cto",
-    goal="Approve infrastructure cost increase for Phase 3.",
+    goal="Approve increased Stripe webhook rate limit for Phase 2 load.",
     priority="high",
+)
+
+# 5. Emit a handoff when the session ends or delegates
+adapter.emit_handoff(
+    from_entity="agent:openclaw",
+    to_entity="agent:assistant",
+    summary="User asked about Q2 roadmap; auth provider chosen; Stripe limit escalation pending.",
+    fact_refs=["fact-auth-decision", "fact-esc-stripe"],   # invalid refs are silently skipped
+    continuation="Resume from the Stripe rate-limit discussion.",
 )
 ```
 
-## Integration recipe
+## Running the tests
 
-1. Install `stigmem-py` in your OpenClaw agent environment.
-2. Set the three env vars above.
-3. Call `adapter.boot()` at the top of your agent's system prompt construction.
-4. Append `context.summary` to the system prompt.
-5. At session end or on significant events, call the write surface methods.
+```bash
+# from the repo root
+uv run pytest stigmem/adapters/openclaw/tests/ -v
+```
 
-The adapter is intentionally thin — it does not modify OpenClaw's internal state
-or hook into its internal API. It reads and writes facts via Stigmem's HTTP API only.
+No live Stigmem node required — all tests are respx-mocked. Conformance vectors
+from `sdks/stigmem-py/tests/conformance_vectors.py` are included as smoke tests.
 
-## Relation namespaces used
+## Relation namespaces
 
-| Relation | Scope | Written by |
-|---|---|---|
-| `preference:*` | company | Any agent or user |
-| `roadmap:constraint` | company | CTO / planning agents |
-| `intent:handoff` | company | Agent on session end |
-| `intent:escalation` | company | Agent on escalation |
-| `roadmap:decision` | company | Agent on architectural decision |
-
-## Implementation status
-
-The adapter class (`adapter.py`) is scaffolded with the interface contract.
-Full implementation — boot handshake pagination, fact-to-prompt formatting,
-write surface tests — is in progress (child issue ACM-40.x, assigned SeniorEngineer).
+| Relation | Scope | Written by | Notes |
+|---|---|---|---|
+| `preference:*` | company | Any agent or user | Pulled on boot; filtered to `preference:` prefix |
+| `roadmap:constraint` | company | CTO / planning agents | Pulled per project entity |
+| `roadmap:decision` | company | Agent | Dedup guard: skips if fact already exists |
+| `intent:handoff_to` | company | Agent on session end | Ref to receiving agent |
+| `intent:handoff_summary` | company | Agent on session end | Text summary |
+| `intent:context_ref` | company | Agent on session end | Fact refs for receiver |
+| `intent:continuation` | company | Agent on session end | Optional continuation note |
+| `intent:escalation` | company | Agent on escalation | Priority string; 24h expiry |
+| `intent:escalate_to` | company | Agent on escalation | Ref to receiving agent |
+| `intent:goal` | company | Agent on escalation | Text goal |

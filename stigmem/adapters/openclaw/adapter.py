@@ -6,11 +6,18 @@ Built against Stigmem's HTTP API via stigmem-py; no holdco-internal API access.
 
 from __future__ import annotations
 
+import logging
 import os
+import uuid
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from typing import Any
 
-from stigmem import StigmemClient, string_value, text_value, ref_value
+from stigmem import StigmemClient, ref_value, string_value, text_value
+from stigmem.exceptions import StigmemError, StigmemNotFoundError
 from stigmem.models import Fact, FactScope
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -20,6 +27,7 @@ class BootContext:
     Inject `summary` into the agent's system prompt. `facts` are the raw
     fact objects for programmatic use.
     """
+
     facts: list[Fact] = field(default_factory=list)
     summary: str = ""
 
@@ -65,52 +73,72 @@ class OpenClawStigmemAdapter:
     ) -> BootContext:
         """Pull user prefs, project constraints, and pending handoffs.
 
-        Returns a BootContext with all fetched facts and a markdown summary
-        ready to prepend to the agent system prompt.
+        Returns a BootContext whose `summary` field is markdown ready to
+        prepend to the agent system prompt. Returns an empty context (with
+        a logged warning) when the node is unavailable — never crashes the
+        calling agent.
         """
+        try:
+            return self._boot_inner(user_entity, session_id, project_entities)
+        except Exception as exc:
+            logger.warning(
+                "Stigmem node unavailable during boot; proceeding with empty context: %s", exc
+            )
+            return BootContext()
+
+    def _boot_inner(
+        self,
+        user_entity: str,
+        session_id: str | None,
+        project_entities: list[str] | None,
+    ) -> BootContext:
         facts: list[Fact] = []
 
-        # 1. User preferences
-        prefs = self._client.query(entity=user_entity, scope="company", min_confidence=0.7)
-        facts.extend(prefs.facts)
+        # 1. User preferences — all preference:* facts for the user entity
+        user_facts = self._query_all(
+            entity=user_entity,
+            scope="company",
+            min_confidence=0.7,
+        )
+        facts.extend(f for f in user_facts if f.relation.startswith("preference:"))
 
         # 2. Active project constraints
-        for proj_entity in (project_entities or []):
-            constraints = self._client.query(
+        for proj_entity in project_entities or []:
+            constraints = self._query_all(
                 entity=proj_entity,
                 relation="roadmap:constraint",
                 scope="company",
                 min_confidence=0.7,
             )
-            facts.extend(constraints.facts)
+            facts.extend(constraints)
 
         # 3. Pending handoffs targeting this adapter's source entity
-        handoffs = self._client.query(
+        handoffs = self._query_all(
             relation="intent:handoff_to",
             scope="company",
             min_confidence=0.8,
         )
         my_handoffs = [
-            f for f in handoffs.facts
+            f
+            for f in handoffs
             if hasattr(f.value, "v") and f.value.v == self._source  # type: ignore[union-attr]
         ]
         for handoff in my_handoffs:
-            # Pull the context_ref for each handoff
-            ctx_refs = self._client.query(
-                entity=handoff.entity,
-                relation="intent:context_ref",
-                scope="company",
-            )
-            facts.extend(ctx_refs.facts)
+            for rel in ("intent:context_ref", "intent:handoff_summary", "intent:continuation"):
+                sub = self._query_all(
+                    entity=handoff.entity,
+                    relation=rel,
+                    scope="company",
+                )
+                facts.extend(sub)
 
         # 4. Recent escalations for this agent
-        escalations = self._client.query(
+        escalations = self._query_all(
             relation="intent:escalation",
             scope="company",
             min_confidence=0.8,
-            limit=10,
         )
-        facts.extend(escalations.facts)
+        facts.extend(escalations)
 
         summary = _facts_to_summary(facts, user_entity=user_entity)
         return BootContext(facts=facts, summary=summary)
@@ -128,40 +156,31 @@ class OpenClawStigmemAdapter:
         continuation: str | None = None,
         scope: FactScope = "company",
     ) -> None:
-        """Emit a handoff intent when a session ends or delegates."""
-        import uuid
+        """Emit a handoff intent when a session ends or delegates.
+
+        fact_refs are validated before asserting; invalid refs are skipped.
+        Individual assertion failures are logged but do not abort the handoff.
+        """
+        valid_refs: list[str] = []
+        for ref in fact_refs:
+            try:
+                self._client.get(ref)
+                valid_refs.append(ref)
+            except StigmemNotFoundError:
+                logger.warning("emit_handoff: fact_ref %r not found; skipping", ref)
+            except StigmemError as exc:
+                logger.warning(
+                    "emit_handoff: could not validate fact_ref %r: %s; skipping", ref, exc
+                )
+
         handoff_id = f"handoff:{uuid.uuid4()}"
 
-        self._client.assert_fact(
-            entity=handoff_id,
-            relation="intent:handoff_to",
-            value=ref_value(to_entity),
-            source=from_entity,
-            scope=scope,
-        )
-        self._client.assert_fact(
-            entity=handoff_id,
-            relation="intent:handoff_summary",
-            value=text_value(summary),
-            source=from_entity,
-            scope=scope,
-        )
-        for ref in fact_refs:
-            self._client.assert_fact(
-                entity=handoff_id,
-                relation="intent:context_ref",
-                value=ref_value(ref),
-                source=from_entity,
-                scope=scope,
-            )
+        _safe_assert(self._client, handoff_id, "intent:handoff_to", ref_value(to_entity), from_entity, scope)
+        _safe_assert(self._client, handoff_id, "intent:handoff_summary", text_value(summary), from_entity, scope)
+        for ref in valid_refs:
+            _safe_assert(self._client, handoff_id, "intent:context_ref", ref_value(ref), from_entity, scope)
         if continuation:
-            self._client.assert_fact(
-                entity=handoff_id,
-                relation="intent:continuation",
-                value=text_value(continuation),
-                source=from_entity,
-                scope=scope,
-            )
+            _safe_assert(self._client, handoff_id, "intent:continuation", text_value(continuation), from_entity, scope)
 
     def emit_decision(
         self,
@@ -170,12 +189,35 @@ class OpenClawStigmemAdapter:
         source: str | None = None,
         scope: FactScope = "company",
     ) -> None:
-        """Emit a decision fact for an architectural or significant choice."""
+        """Emit a decision fact for an architectural or significant choice.
+
+        Skips the assert when an equivalent non-retracted fact already exists
+        for (entity, roadmap:decision, source) — prevents duplicate decisions
+        from repeated calls in the same session.
+        """
+        src = source or self._source
+
+        existing = self._query_all(
+            entity=entity,
+            relation="roadmap:decision",
+            source=src,
+            scope=scope,
+            min_confidence=0.5,
+        )
+        if existing:
+            logger.debug(
+                "emit_decision: %d existing fact(s) for %s/roadmap:decision from %s; skipping",
+                len(existing),
+                entity,
+                src,
+            )
+            return
+
         self._client.assert_fact(
             entity=entity,
             relation="roadmap:decision",
             value=text_value(summary),
-            source=source or self._source,
+            source=src,
             scope=scope,
         )
 
@@ -186,8 +228,10 @@ class OpenClawStigmemAdapter:
         priority: str = "medium",
         scope: FactScope = "company",
     ) -> None:
-        """Emit an escalation intent fact."""
-        import uuid
+        """Emit an escalation intent fact with a 24-hour expiry."""
+        valid_until = (datetime.now(tz=timezone.utc) + timedelta(hours=24)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
         esc_id = f"escalation:{uuid.uuid4()}"
 
         self._client.assert_fact(
@@ -196,6 +240,7 @@ class OpenClawStigmemAdapter:
             value=string_value(priority),
             source=self._source,
             scope=scope,
+            valid_until=valid_until,
         )
         self._client.assert_fact(
             entity=esc_id,
@@ -212,16 +257,53 @@ class OpenClawStigmemAdapter:
             scope=scope,
         )
 
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _query_all(self, **kwargs: Any) -> list[Fact]:
+        """Paginate through all facts matching the given query filters."""
+        facts: list[Fact] = []
+        cursor: str | None = None
+        while True:
+            page = self._client.query(cursor=cursor, **kwargs)
+            facts.extend(page.facts)
+            if page.cursor is None:
+                break
+            cursor = page.cursor
+        return facts
+
 
 # ---------------------------------------------------------------------------
-# Internal helpers
+# Module-level helpers
 # ---------------------------------------------------------------------------
+
+def _safe_assert(client: StigmemClient, entity: str, relation: str, value: Any, source: str, scope: FactScope) -> None:
+    """Assert a fact, logging and swallowing errors so partial handoff failures don't crash."""
+    try:
+        client.assert_fact(entity=entity, relation=relation, value=value, source=source, scope=scope)
+    except StigmemError as exc:
+        logger.warning("Failed to assert %s/%s: %s", entity, relation, exc)
+
 
 def _facts_to_summary(facts: list[Fact], user_entity: str) -> str:
+    """Format a list of facts as clean markdown for system prompt injection."""
     if not facts:
         return ""
-    lines = [f"## Stigmem context for {user_entity}\n"]
+
+    # Group by relation namespace (prefix before the colon)
+    groups: dict[str, list[Fact]] = {}
     for fact in facts:
-        value_str = getattr(fact.value, "v", "(null)") if hasattr(fact.value, "v") else "(null)"
-        lines.append(f"- **{fact.relation}** on `{fact.entity}`: {value_str} (confidence={fact.confidence})")
-    return "\n".join(lines)
+        ns = fact.relation.split(":")[0] if ":" in fact.relation else fact.relation
+        groups.setdefault(ns, []).append(fact)
+
+    lines = [f"## Stigmem context — {user_entity}\n"]
+    for ns, ns_facts in groups.items():
+        lines.append(f"### {ns}")
+        for fact in ns_facts:
+            val = getattr(fact.value, "v", "(null)") if fact.value is not None else "(null)"
+            confidence_note = f" _(confidence: {fact.confidence:.2f})_" if fact.confidence < 1.0 else ""
+            lines.append(f"- **{fact.relation}** on `{fact.entity}`: {val}{confidence_note}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip()

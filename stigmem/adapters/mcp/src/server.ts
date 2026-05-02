@@ -22,7 +22,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 
-import { StigmemClient, StigmemError } from "../../../sdks/stigmem-ts/src/client.js";
+import { StigmemClient, StigmemError } from "stigmem-ts";
 
 // ---------------------------------------------------------------------------
 // Config

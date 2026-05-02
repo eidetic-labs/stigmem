@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import json
 import uuid
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 import anthropic
-
 from agent_platform.memory import InMemoryMemory, Memory
 from agent_platform.tools import FunctionTool, Tool
 from agent_platform.types import (
@@ -44,7 +44,7 @@ class Agent:
         tools: list[Tool | FunctionTool] | None = None,
         llm: LLMConfig | None = None,
         memory: Memory | None = None,
-    ) -> "Agent":
+    ) -> Agent:
         instance = cls.__new__(cls)
         instance.name = name
         instance.instructions = instructions
@@ -136,7 +136,9 @@ class Agent:
                     tool_fn = tool_map.get(tool_name)
 
                     if tool_fn is None:
-                        result = ToolResult(success=False, data=None, error=f"Unknown tool: {tool_name}")
+                        result = ToolResult(
+                            success=False, data=None, error=f"Unknown tool: {tool_name}"
+                        )
                     else:
                         result = await tool_fn.execute(**tool_args)
 
@@ -149,10 +151,13 @@ class Agent:
                     )
                     all_tool_calls.append(tc)
 
+                    content = (
+                        json.dumps(result.data) if result.success else f"Error: {result.error}"
+                    )
                     tool_results_content.append({
                         "type": "tool_result",
                         "tool_use_id": block.id,
-                        "content": json.dumps(result.data) if result.success else f"Error: {result.error}",
+                        "content": content,
                     })
 
                 history.append(Message(
@@ -181,7 +186,7 @@ class Agent:
         context: Context | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """Streaming execution — yields typed events."""
-        ctx = context or Context(session_id=str(uuid.uuid4()))
+        _ = context  # session tracking reserved for future use
         client = anthropic.AsyncAnthropic()
 
         kwargs: dict[str, Any] = {

@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import structlog
+from api.routers import agents, health, runs, sessions
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from api.routers import agents, health, sessions
 
 logger = structlog.get_logger()
 
@@ -27,6 +26,7 @@ app.add_middleware(
 
 app.include_router(health.router, tags=["health"])
 app.include_router(agents.router, prefix="/api/v1/agents", tags=["agents"])
+app.include_router(runs.router, prefix="/api/v1/runs", tags=["runs"])
 app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
 
 

@@ -1,3 +1,6 @@
+"""Agent run history endpoints."""
+from __future__ import annotations
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -12,5 +15,4 @@ class RunSummary(BaseModel):
 
 @router.get("", response_model=list[RunSummary])
 async def list_runs() -> list[RunSummary]:
-    # Stub: replace with DB query in Phase 2
     return []

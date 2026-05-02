@@ -1,10 +1,9 @@
 """Agent execution endpoints."""
 from __future__ import annotations
 
+from agent_platform import Agent, Context, LLMConfig
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
-from agent_platform import Agent, Context, LLMConfig, tool
 
 router = APIRouter()
 

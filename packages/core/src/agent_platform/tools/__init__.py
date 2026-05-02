@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-import functools
 import inspect
-from typing import Any, Callable, Protocol, runtime_checkable
-
-from pydantic import TypeAdapter
+from collections.abc import Callable
+from typing import Any, Protocol, runtime_checkable
 
 from agent_platform.types import JsonSchema, ToolResult
+from pydantic import TypeAdapter
 
 
 @runtime_checkable

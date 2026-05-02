@@ -2,16 +2,14 @@
 from __future__ import annotations
 
 import re
-from enum import Enum
-from typing import Any
+from enum import StrEnum
 
 import anthropic
-
 from agent_platform.agents import Agent
 from agent_platform.types import AgentResponse, Context, LLMConfig
 
 
-class RoutingStrategy(str, Enum):
+class RoutingStrategy(StrEnum):
     LLM_ROUTER = "llm_router"
     KEYWORD = "keyword"
     ROUND_ROBIN = "round_robin"
@@ -75,7 +73,8 @@ class Orchestrator:
             for name, agent in self._agents.items()
         )
         prompt = (
-            f"You are a routing assistant. Given a user message, select the most appropriate agent.\n\n"
+            "You are a routing assistant. Given a user message, "
+            "select the most appropriate agent.\n\n"
             f"Available agents:\n{descriptions}\n\n"
             f"User message: {message}\n\n"
             f"Respond with ONLY the agent name (one of: {', '.join(agent_names)})."

@@ -1,6 +1,5 @@
 """Tests for the @tool decorator and FunctionTool."""
 import pytest
-
 from agent_platform.tools import FunctionTool, tool
 from agent_platform.types import ToolResult
 

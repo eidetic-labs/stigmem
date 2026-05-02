@@ -1,6 +1,5 @@
 """Tests for InMemoryMemory."""
 import pytest
-
 from agent_platform.memory import InMemoryMemory
 from agent_platform.types import Message, Role
 

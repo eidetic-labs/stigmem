@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import os
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 import anthropic
-
 from agent_platform.llm.base import LLMAdapter, LLMResponse
 from agent_platform.types import Message, Role
 
@@ -50,7 +50,9 @@ class AnthropicAdapter(LLMAdapter):
         # Apply prompt caching to the system prompt when enabled
         system_param: str | list[dict[str, Any]] | anthropic.NotGiven
         if self.enable_cache and system:
-            system_param = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+            system_param = [
+                {"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}
+            ]
         elif system:
             system_param = system
         else:
@@ -83,7 +85,9 @@ class AnthropicAdapter(LLMAdapter):
 
         system_param: str | list[dict[str, Any]] | anthropic.NotGiven
         if self.enable_cache and system:
-            system_param = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+            system_param = [
+                {"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}
+            ]
         elif system:
             system_param = system
         else:

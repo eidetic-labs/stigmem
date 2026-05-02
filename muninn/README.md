@@ -1,6 +1,6 @@
 # Muninn — Federated Knowledge Fabric + Intent Protocol
 
-> **Status: v0.2 draft — actively seeking design partners for the federation section.**
+> **Status: v0.2 draft — federation section open for community feedback.**
 > **Repository:** [github.com/giganomix/muninn](https://github.com/giganomix/muninn)
 
 Muninn is an open specification for a federated knowledge fabric: a shared, persistent layer where AI agents and humans can write facts, query relationships, and hand off work — across tools, platforms, and organizations.
@@ -60,17 +60,15 @@ See [`prototype/seed_memory.py`](prototype/seed_memory.py) for example fact writ
 | Fact semantics: provenance, decay, contradiction (§3) | Stable draft |
 | Intent envelope (§4) | Draft — feedback wanted |
 | Wire format v0.1 HTTP/JSON (§5) | Implemented in prototype |
-| Federation handshake (§6) | Sketch only — **co-authors wanted** |
+| Federation handshake (§6) | Sketch only — **community feedback wanted** |
 | Auth / identity (Phase 2) | Not yet specified |
-| Namespace registry (`loom:`, `rel:`, `memory:`) | Open question |
+| Namespace registry (`muninn:`, `rel:`, `memory:`) | Defined in v0.3 draft |
 
-## Design partner track
+## Community feedback wanted
 
-We are looking for **3 design partners** to co-author the federation section (v0.3). Ideal design partners have built persistent memory, knowledge graphs, or agent-to-agent coordination systems and have strong opinions about what good looks like.
+The federation section (§6) is the least-developed part of the spec. If you have production experience with distributed knowledge systems, agent memory, or gossip protocols, your feedback is especially valuable.
 
-Co-authoring the federation section means: a 30-minute interview, async spec review on a PR, and your name on the spec.
-
-**Interested?** Open an issue tagged [`design-partner`](https://github.com/giganomix/muninn/labels/design-partner) or email the spec maintainer.
+Open an RFC issue or comment on the spec PR — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## How to contribute
 

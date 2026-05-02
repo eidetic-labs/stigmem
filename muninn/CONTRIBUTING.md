@@ -6,20 +6,9 @@ Thanks for your interest in contributing. Muninn is a community spec — the goa
 
 | Track | What it is | Who it's for |
 |---|---|---|
-| **Design partner** | 30-min interview + async spec review + named co-author credit | Teams that have built agent memory, knowledge graphs, or agent coordination at scale |
 | **RFC** | Propose a spec change via issue + PR | Anyone with a concrete problem or proposed improvement |
 | **Implementation** | Build an alternative node or client | Developers who want to validate the wire format against real workloads |
 | **Bug / gap report** | File an issue about a spec ambiguity or prototype bug | Anyone reading the spec |
-
-## Design partner track
-
-Design partners have outsized influence on the spec. If you have production experience with agent memory (e.g., Zep, Letta/MemGPT, Cognee, LangMem, custom solutions), we want your feedback on the federation section in particular.
-
-**To become a design partner:**
-1. Open an issue with the label `design-partner` describing your use case and what you've built
-2. We'll schedule a 30-minute call
-3. You'll receive a draft PR of the federation section for async review
-4. Merged contributions earn co-author credit in the spec
 
 ## RFC process
 
@@ -53,7 +42,7 @@ Tests: `pytest` (when test coverage exists — contributions welcome).
 
 ## Spec authorship and attribution
 
-The spec file records authors in its header. Design partners and RFC contributors who make substantive changes to spec content are listed. Implementation-only contributors are acknowledged in CHANGELOG.
+The spec file records authors in its header. RFC contributors who make substantive changes to spec content are listed. Implementation-only contributors are acknowledged in CHANGELOG.
 
 ## Code of conduct
 

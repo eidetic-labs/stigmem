@@ -1,10 +1,11 @@
 # Loom — Federated Knowledge Fabric + Intent Protocol
-## Specification v0.1 — DRAFT (Phase 0 scoping)
+## Specification v0.2 — DRAFT (Phase 0 scoping)
 
 **Status:** Phase 0 draft. Not yet public. Subject to revision after design-partner interviews.  
 **License:** Apache-2.0 (planned)  
 **Working name:** Loom (board may rename)  
-**Layer:** above the company (Paperclip, etc.), below the open internet
+**Layer:** above the company (Paperclip, etc.), below the open internet  
+**Changelog:** v0.2 adds `text` FactValue type (Gap 2), reification pattern for N-ary relationships (Gap 4), and `valid_until` field inspired by Zep/Graphiti temporal edge model (Gap 3 partial).
 
 ---
 
@@ -40,6 +41,7 @@ Every piece of knowledge in Loom is an **atomic fact**:
 | `value`       | `FactValue` (see §2.1)            | The asserted value. |
 | `source`      | URI or opaque ID string           | Who asserted the fact. Examples: `agent:cto`, `user:barry`, `system:loom`. |
 | `timestamp`   | ISO 8601 UTC datetime             | When the fact was asserted. Set by the node at write time; clients may suggest. |
+| `valid_until` | ISO 8601 UTC datetime or null     | Optional. If set, the fact is considered expired (not active) after this time. Distinct from `confidence`: use `confidence` for certainty, `valid_until` for temporal scope. Inspired by Zep/Graphiti's `valid_at`/`invalid_at` temporal edge model. |
 | `confidence`  | float in [0.0, 1.0]              | Asserting party's confidence. 1.0 = certain, 0.5 = uncertain, 0.0 = retracted. |
 | `scope`       | `FactScope` (see §2.2)            | Visibility / federation boundary. |
 
@@ -53,13 +55,23 @@ A value is one of:
 
 ```
 FactValue =
-  | { type: "string",    v: string }
+  | { type: "string",    v: string }          // short identifier or label (≤1 KB recommended)
+  | { type: "text",      v: string }          // unbounded narrative; markdown allowed
   | { type: "number",    v: number }
   | { type: "boolean",   v: boolean }
   | { type: "datetime",  v: ISO8601 }
-  | { type: "ref",       v: URI }        // pointer to another entity
-  | { type: "null" }                     // explicit "unknown / not applicable"
+  | { type: "ref",       v: URI }             // pointer to another entity or external content
+  | { type: "null" }                          // explicit "unknown / not applicable"
 ```
+
+`string` is for atomic identifiers, labels, and short values. `text` is for
+multi-paragraph narrative content (rationale, notes, design decisions) where the
+body is part of the fact, not a separate content store. Both are stored inline.
+
+For very large documents (>64 KB), use `{ type: "ref", v: "<content-store-URI>" }`
+and store the body in an external blob; the fact carries only the pointer. The URI
+SHOULD resolve to the content over HTTP with a stable content hash in the path
+(e.g. `sha256:<hash>`) so readers can verify integrity without a separate lookup.
 
 ### 2.2 FactScope
 
@@ -75,6 +87,31 @@ FactScope =
 
 Nodes MUST NOT federate `local` or `team` facts without explicit operator override.
 
+### 2.3 Reification (N-ary Relationships)
+
+The base fact shape is binary: one `entity`, one `value`. When you need to model
+a relationship that involves **multiple entities** or attach metadata to a
+relationship itself, use **reification**:
+
+1. Mint a synthetic entity URI: `loom:rel:{uuid}` (the "relationship node").
+2. Assert atomic facts about the relationship node:
+
+```
+// "Acme–Giganomix partnership requires board approval"
+(entity="loom:rel:abc123", relation="rel:subject",  value={type:"ref", v:"company:acme"})
+(entity="loom:rel:abc123", relation="rel:object",   value={type:"ref", v:"company:giganomix"})
+(entity="loom:rel:abc123", relation="rel:type",     value={type:"string", v:"policy:board-approval"})
+(entity="loom:rel:abc123", relation="rel:approver", value={type:"ref",   v:"entity:board"})
+```
+
+Relationship nodes SHOULD follow the `loom:rel:` prefix so queries can distinguish
+them from domain entities. The `rel:subject`, `rel:object`, and `rel:type` relations
+are reserved in the `rel:` namespace.
+
+**When NOT to reify:** if the relationship is truly binary and the value is a
+simple scalar or a single ref, use the direct fact shape. Reification adds query
+complexity; use it only when two or more entities participate in the same statement.
+
 ---
 
 ## 3. Fact Semantics
@@ -88,9 +125,19 @@ relay chain, so downstream consumers can make their own trust judgments.
 Facts with `source = system:loom` are written by the node itself (e.g., TTL
 expiry markers, contradiction tombstones).
 
-### 3.2 Decay
+### 3.2 Decay and Temporal Scope
 
-Facts are permanent records by default. Decay is expressed as a separate fact:
+Facts are permanent records by default.
+
+**Temporal scope (`valid_until`):** The preferred mechanism for time-bounded facts.
+Set `valid_until` at write time when you know the fact has a natural expiry — e.g.,
+a scheduled event, a fiscal-quarter goal, a temporary policy. A node MUST NOT
+return facts whose `valid_until` has passed unless the caller explicitly includes
+`include_expired=true`. Expired facts remain in the store (immutable record); they
+are filtered at read time.
+
+**TTL via meta-fact:** For facts whose expiry is not known at write time, decay can
+be expressed as a separate meta-fact:
 
 ```
 (entity=<fact-id>, relation="loom:ttl", value={type:"datetime", v:<expiry>},
@@ -101,7 +148,12 @@ A node MAY tombstone expired facts by writing a `confidence=0.0` successor fact.
 Clients querying an expired fact SHOULD receive it with a `decayed: true` flag so
 they can distinguish "unknown" from "was known, now expired."
 
-Decay rates are not globally standardized in v0.1 — left to node operators. Phase 5
+**`valid_until` vs. `confidence`:** These are orthogonal. A historically certain
+fact (e.g., "roadmap v3 was active in Q3 2025") should have `confidence=1.0` and
+`valid_until` set to when it became superseded. Do not lower confidence to express
+that a fact is historical — that conflates certainty with recency.
+
+Decay rates are not globally standardized in v0.2 — left to node operators. Phase 5
 introduces built-in decay functions.
 
 ### 3.3 Contradiction
@@ -311,22 +363,39 @@ The handshake deliberately mirrors email's MX/SMTP trust model and ActivityPub's
 | No global decay standard | Node operators have heterogeneous retention needs; standardize in Phase 5 |
 | Handoff via fact refs, not copies | Keeps the fabric as source of truth; prevents drift between snapshot and reality |
 | Intent envelope separate from facts | Facts = world state; intents = desired transitions. Conflating them muddies both. |
+| `text` type added alongside `string` | Shadow migration (D3) revealed multi-paragraph rationale bodies don't fit `string`. Inline `text` avoids a content store for moderate-size bodies. `ref` for blobs >64 KB. |
+| Reification via `loom:rel:` entities | Shadow migration surfaced a policy involving three entities; no natural primary entity. Reification is the RDF-proven pattern; encoding N-ary logic into a value type adds parsing complexity downstream. |
+| `valid_until` field added to fact shape | Zep/Graphiti `valid_at`/`invalid_at` temporal edge model is the closest prior art. Separating temporal scope from `confidence` prevents "lower confidence to express a historical fact" anti-pattern found in D3. |
 
 ---
 
 ## 8. Open Questions (Phase 0 exit)
 
-1. **Relation namespace governance.** Who owns `memory:*`, `intent:*`? IANA-style
-   registry, or community PRs to a spec repo?
-2. **Entity URI scheme.** `user:barry` is informal. Should v0.1 require a more
-   structured URI (`loom://company.acme/user/barry`)?
+1. **Relation namespace governance.** Who owns `memory:*`, `intent:*`, `rel:*`?
+   IANA-style registry, or community PRs to a spec repo? Unresolved before Phase 1.
+
+2. **Entity URI scheme.** `user:barry` is informal. Should v0.2 require a more
+   structured URI (`loom://company.acme/user/barry`)? Leaning yes before Phase 1
+   to avoid namespace collisions in federated deployments.
+
 3. **Handoff vs. fact-only approach.** Is the intent envelope necessary in v0.1,
    or should Phase 0 test only the fact shape and defer the envelope to Phase 2?
+   Design partner feedback should resolve this.
+
 4. **Contradiction resolution extensibility.** Should operators be able to plug in
    arbitrary resolution functions (LLM-based synthesis, etc.) in v0.1?
+
 5. **Scope enforcement without auth.** In a multi-tenant deployment, scope is
-   meaningless without identity. How does v0.1 handle this honestly?
+   meaningless without identity. v0.2 acknowledges this gap honestly; auth is a
+   Phase 2 requirement.
+
+6. **`text` size limit.** 64 KB threshold for inline `text` vs. `ref` is arbitrary.
+   Should v0.2 specify a hard limit or leave it to node operators?
+
+7. **Reification query ergonomics.** The `loom:rel:*` pattern requires two-hop
+   queries (find the rel entity, then fetch its subject/object). Should v0.2 define
+   a shorthand query parameter (`?subject=X&object=Y`) or keep it pure graph traversal?
 
 ---
 
-*Drafted by CTO, Acme Corp — Phase 0 scoping sprint. See [ACM-19](/ACM/issues/ACM-19) for sprint context.*
+*v0.1 drafted by CTO, Acme Corp — Phase 0 scoping sprint. v0.2 updated with Gap 2/3/4 fixes from shadow migration and Zep/Graphiti peer research. See [ACM-19](/ACM/issues/ACM-19) for sprint context.*

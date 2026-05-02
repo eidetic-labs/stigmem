@@ -1,64 +1,80 @@
 # Contributing to AI Platform
 
-Thank you for your interest in contributing!
-
-## DCO Sign-off (Required)
-
-All commits must include a Developer Certificate of Origin (DCO) sign-off:
-
-```bash
-git commit -s -m "feat: add web search tool"
-```
-
-This adds `Signed-off-by: Your Name <email@example.com>` to your commit message, certifying that you wrote the code or have the right to submit it under the Apache 2.0 license.
-
-## Branch Strategy
-
-- `main` — protected; all changes via PR, requires at least one review and passing CI
-- `feature/<name>` — new features
-- `fix/<name>` — bug fixes  
-- `docs/<name>` — documentation only
+Thank you for your interest in contributing! This guide covers everything you need to get started.
 
 ## Development Setup
 
 ```bash
-git clone https://github.com/acmecorp/ai-platform
+# Prerequisites: Python 3.11+, uv, Docker, Node.js 20+, pnpm 9+
+
+git clone https://github.com/acme/ai-platform.git
 cd ai-platform
+
+# Install Python dependencies
 uv sync
+
+# Install JS dependencies
+pnpm install
+
+# Start dev stack
 docker compose -f infra/docker/docker-compose.yml up -d
+
+# Run tests
 uv run pytest
+pnpm test
 ```
+
+## Code Style
+
+- **Python**: ruff for linting and formatting (`uv run ruff check . && uv run ruff format .`)
+- **Mypy**: strict mode enabled; no `# type: ignore` without an explanatory comment
+- **TypeScript**: ESLint + Prettier via Turborepo
+
+Run all checks: `uv run ruff check . && uv run mypy packages/ apps/api/ && uv run pytest`
+
+## Testing Requirements
+
+- New public functions require unit tests
+- New integrations require integration tests with mocked HTTP (use `respx`)
+- Minimum coverage: 80% for new code
+
+## Branch Strategy
+
+- `main` — always releasable; protected; requires PR + 1 approval + CI green
+- `dev` — integration branch for large feature work
+- Feature branches: use `feat/`, `fix/`, or `chore/` prefixes
 
 ## Pull Request Process
 
-1. Open an issue first for non-trivial changes.
-2. Fork and create a branch from `main`.
-3. Write tests that cover your change.
-4. Run the full test suite: `uv run pytest`
-5. Run linting: `uv run ruff check . && uv run ruff format .`
-6. Run type checking: `uv run mypy packages/core/src`
-7. Commit with `-s` (DCO sign-off).
-8. Open a PR against `main`. Fill out the PR template.
-9. Address review feedback.
+1. Fork the repo and create a branch from `main` (for fixes) or `dev` (for features)
+2. Make focused, small commits with conventional commit messages (`feat:`, `fix:`, `chore:`)
+3. Fill in the PR template
+4. Link the PR to the relevant issue
+5. Sign off your commits with DCO: `git commit -s -m "feat: add thing"`
+6. Wait for CI to pass and a maintainer review
 
-## Commit Message Format
+## Developer Certificate of Origin (DCO)
 
-We use [Conventional Commits](https://www.conventionalcommits.org/):
+All contributions must include a DCO sign-off. By signing off you certify that:
 
-```
-<type>(<scope>): <description>
+> I wrote this code and have the right to contribute it under the Apache 2.0 license.
+> See https://developercertificate.org/ for the full text.
 
-[optional body]
+Sign off automatically with `git commit -s`.
 
-Signed-off-by: Your Name <email@example.com>
-```
+## Adding a New Connector
 
-Types: `feat`, `fix`, `docs`, `test`, `chore`, `refactor`, `perf`
+1. Copy `packages/integrations/shopify/` as a template
+2. Implement the `Connector` protocol in `src/{name}/connector.py`
+3. Add tools in `src/{name}/tools.py`
+4. Write integration tests with `respx` mocking
+5. Add a README with auth setup instructions
+6. Submit PR with the `integration` label
 
 ## Code of Conduct
 
-This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). Be kind.
+This project follows the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md). Be kind.
 
-## Security Issues
+## Good First Issues
 
-Do **not** open public issues for security vulnerabilities. See [SECURITY.md](SECURITY.md).
+Look for issues tagged [`good-first-issue`](https://github.com/acme/ai-platform/labels/good-first-issue) to get started.

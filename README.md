@@ -1,80 +1,71 @@
 # AI Platform
 
-Open-source AI agent platform for SMBs — built on three pillars: a composable agent framework, a compliance engine, and pre-built vertical agents.
+Open-source AI agent platform for SMBs — automate support, compliance, and workflows.
 
 ## Three Pillars
 
-**Pillar A — Pre-built SMB Agents**
-Production-ready agents for e-commerce support, bookkeeping, and appointment scheduling. Deploy in minutes; no ML expertise required.
-
-**Pillar B — Compliance Engine**
-Automated evidence collection, AI policy generation, and continuous drift detection for SOC 2, GDPR, and HIPAA.
-
-**Pillar C — Agent Framework (this repo)**
-The composable primitives (Agent, Tool, Memory, Orchestrator) that power everything else. Build custom agents in <50 lines of Python.
+| Pillar | What it does |
+|--------|-------------|
+| **A — Agent Platform** | Pre-built autonomous agents for customer support, bookkeeping, and scheduling |
+| **B — Compliance Engine** | SOC2/GDPR/HIPAA automation: evidence collection, policy generation, audit prep |
+| **C — Developer Tools** | Agent framework: orchestration, tool use, memory, multi-agent coordination |
 
 ## Quickstart
 
 ```bash
-# Install the core framework
-pip install agent-platform-core
-
-# Create your first agent
-from agent_platform import Agent, AgentConfig, tool
-from agent_platform.llm import AnthropicAdapter
-
-@tool(description="Search the web for information")
-async def web_search(query: str) -> str:
-    # Your search implementation here
-    return f"Results for: {query}"
-
-config = AgentConfig(
-    agent_id="my-agent",
-    system_prompt="You are a helpful assistant.",
-)
-```
-
-## Local Development
-
-Prerequisites: Python 3.11+, Docker, [uv](https://docs.astral.sh/uv/), [pnpm](https://pnpm.io/) 9+
-
-```bash
-# Clone and set up
-git clone https://github.com/acmecorp/ai-platform
+# 1. Clone and install
+git clone https://github.com/acme/ai-platform.git
 cd ai-platform
-
-# Start the dev stack (FastAPI + PostgreSQL 16 + pgvector + Redis)
-cp .env.example .env  # Add ANTHROPIC_API_KEY
-docker compose -f infra/docker/docker-compose.yml up -d
-
-# Install Python deps
 uv sync
 
-# Run tests
-uv run pytest
+# 2. Start the dev stack (PostgreSQL + Redis)
+docker compose -f infra/docker/docker-compose.yml up -d
 
-# Run linting
-uv run ruff check . && uv run mypy packages/core/src
+# 3. Run the API
+cd apps/api && uv run uvicorn api.main:app --reload
+
+# 4. Build your first agent
+from agent_platform import Agent, tool, LLMConfig
+
+@tool(description="Get weather for a city")
+async def get_weather(city: str) -> str:
+    return f"Sunny in {city}"
+
+agent = Agent.create(
+    name="weather",
+    instructions="You help users check the weather.",
+    tools=[get_weather],
+    llm=LLMConfig(provider="anthropic", model="claude-sonnet-4-6"),
+)
+
+response = await agent.run("What's the weather in Tokyo?")
+print(response.content)
 ```
 
-## Repository Layout
+## Architecture
 
 ```
-packages/core        # Agent, Tool, Memory, Orchestrator primitives
-packages/agents      # Pre-built SMB agents
-packages/compliance  # Compliance engine
-packages/integrations/  # Third-party connectors
-apps/api             # FastAPI REST + WebSocket server
-apps/dashboard       # Next.js 14 dashboard
-apps/docs            # Mintlify documentation
-sdks/typescript      # TypeScript SDK
-examples/            # Runnable examples
-infra/               # Docker Compose, Helm, Terraform
+packages/core          # Agent framework (Pillar C)
+packages/agents        # Pre-built SMB agents (Pillar A)
+packages/compliance    # Compliance engine (Pillar B)
+packages/integrations  # Shopify, Stripe, GitHub, AWS, ...
+apps/api               # FastAPI REST + WebSocket server
+apps/dashboard         # Next.js 14 web dashboard
+apps/docs              # Mintlify documentation
+sdks/typescript        # TypeScript SDK
 ```
+
+## Stack
+
+- **Runtime**: Python 3.11+, [uv](https://docs.astral.sh/uv/)
+- **API**: FastAPI, PostgreSQL 16 + pgvector, Redis, ARQ
+- **Dashboard**: Next.js 14, TypeScript
+- **Primary LLM**: Anthropic Claude
+- **License**: Apache 2.0
 
 ## Contributing
 
-We welcome contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a PR. All contributions require a DCO sign-off (`git commit -s`).
+See [CONTRIBUTING.md](CONTRIBUTING.md). By submitting a pull request you agree to the [Developer Certificate of Origin](https://developercertificate.org/).
 
 ## License
 

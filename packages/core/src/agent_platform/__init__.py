@@ -1,21 +1,36 @@
-"""agent-platform-core: Agent, Tool, Memory, and Orchestrator primitives."""
-
-from agent_platform.agents.base import Agent, AgentConfig, AgentResult
-from agent_platform.memory.base import Memory, MemoryEntry
-from agent_platform.orchestrator import Orchestrator
-from agent_platform.tools.base import Tool, tool
-from agent_platform.types import Context, Message, Role
+"""agent_platform — open-source AI agent framework."""
+from agent_platform.agents import Agent
+from agent_platform.memory import InMemoryMemory, Memory
+from agent_platform.orchestrator import Orchestrator, RoutingStrategy
+from agent_platform.tools import FunctionTool, Tool, tool
+from agent_platform.types import (
+    AgentResponse,
+    Context,
+    LLMConfig,
+    MemoryItem,
+    Message,
+    Role,
+    TokenUsage,
+    ToolCall,
+    ToolResult,
+)
 
 __all__ = [
     "Agent",
-    "AgentConfig",
-    "AgentResult",
+    "AgentResponse",
     "Context",
+    "FunctionTool",
+    "InMemoryMemory",
+    "LLMConfig",
     "Memory",
-    "MemoryEntry",
+    "MemoryItem",
     "Message",
     "Orchestrator",
     "Role",
+    "RoutingStrategy",
+    "TokenUsage",
     "Tool",
+    "ToolCall",
+    "ToolResult",
     "tool",
 ]

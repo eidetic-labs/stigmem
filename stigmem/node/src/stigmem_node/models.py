@@ -111,6 +111,14 @@ class AuditEntry(BaseModel):
     ts: str
 
 
+class ConflictResolveRequest(BaseModel):
+    """Request body for POST /v1/conflicts/:id/resolve (spec §5.10)."""
+
+    winning_fact_id: str | None = None
+    resolution_note: str = ""
+    new_value: FactValue | None = None
+
+
 def row_to_record(row: sqlite3.Row, contradicted: bool = False) -> FactRecord:
     keys = row.keys()
     return FactRecord(

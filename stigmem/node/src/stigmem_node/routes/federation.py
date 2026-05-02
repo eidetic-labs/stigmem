@@ -22,7 +22,9 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from ..auth import Identity, resolve_identity
 from ..db import db, get_or_create_node_id
 from ..federation_ingest import ingest_fact, write_audit_log
+from ..hlc import node_hlc
 from ..models import (
+    ConflictResolveRequest,
     FederationFactsResponse,
     FactRecord,
     PeerRecord,
@@ -326,6 +328,23 @@ def push_facts(
             rejected += 1
             errors.append({"fact_id": fact.get("id"), "error": "scope_not_permitted"})
             continue
+
+        # Source non-forgery: source must match the sending peer's node_id (§6.4)
+        fact_source = fact.get("source", "")
+        if fact_source != peer["node_id"]:
+            write_audit_log(
+                peer["id"], "rejected_fact",
+                {
+                    "fact_id": fact.get("id"),
+                    "reason": "source_not_owned",
+                    "source": fact_source,
+                    "peer_node_id": peer["node_id"],
+                },
+            )
+            rejected += 1
+            errors.append({"fact_id": fact.get("id"), "error": "source_not_owned"})
+            continue
+
         try:
             ingest_fact(fact, peer["node_id"])
             accepted += 1
@@ -442,3 +461,145 @@ def list_conflicts(
     has_more = len(rows) > limit
     next_cursor = rows[limit - 1]["id"] if has_more and len(rows) >= limit else None
     return {"conflicts": conflicts, "cursor": next_cursor, "has_more": has_more}
+
+
+# ---------------------------------------------------------------------------
+# POST /v1/conflicts/:conflict_id/resolve — resolve a conflict (§5.10)
+# ---------------------------------------------------------------------------
+
+
+def _encode_value(vtype: str, v: Any) -> str:
+    if vtype == "null":
+        return "null"
+    if vtype == "boolean":
+        return "true" if v else "false"
+    return str(v)
+
+
+@router.post("/v1/conflicts/{conflict_id}/resolve")
+def resolve_conflict(
+    conflict_id: str,
+    req: ConflictResolveRequest,
+    identity: Annotated[Identity, Depends(resolve_identity)],
+) -> dict[str, Any]:
+    """Assert a canonical resolution fact and close the conflict (spec §5.10)."""
+    if not identity.can_write():
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
+
+    with db() as conn:
+        conflict = conn.execute(
+            "SELECT * FROM conflicts WHERE id = ?", (conflict_id,)
+        ).fetchone()
+
+        if conflict is None:
+            raise HTTPException(status_code=404, detail="conflict not found")
+        if conflict["status"] == "resolved":
+            raise HTTPException(status_code=409, detail="conflict already resolved")
+
+        fact_a = conn.execute("SELECT * FROM facts WHERE id = ?", (conflict["fact_a_id"],)).fetchone()
+        fact_b = conn.execute("SELECT * FROM facts WHERE id = ?", (conflict["fact_b_id"],)).fetchone()
+
+        if fact_a is None or fact_b is None:
+            raise HTTPException(status_code=500, detail="conflicting facts not found in store")
+
+        # Determine value for the resolution fact
+        if req.new_value is not None:
+            res_type = req.new_value.type
+            res_v = _encode_value(req.new_value.type, req.new_value.v)
+        elif req.winning_fact_id is not None:
+            if req.winning_fact_id == fact_a["id"]:
+                winner = fact_a
+            elif req.winning_fact_id == fact_b["id"]:
+                winner = fact_b
+            else:
+                raise HTTPException(
+                    status_code=422,
+                    detail="winning_fact_id must be one of the conflicting facts",
+                )
+            res_type = winner["value_type"]
+            res_v = winner["value_v"]
+        else:
+            raise HTTPException(
+                status_code=422, detail="provide winning_fact_id or new_value"
+            )
+
+        resolution_fact_id = str(uuid.uuid4())
+        now = datetime.now(UTC).isoformat()
+        caller = identity.entity_uri
+
+        # 1. Assert canonical resolution fact for (entity, relation, scope)
+        hlc_res = node_hlc.tick()
+        conn.execute(
+            """INSERT INTO facts
+               (id, entity, relation, value_type, value_v, source, timestamp,
+                valid_until, confidence, scope, hlc, received_from)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                resolution_fact_id,
+                fact_a["entity"],
+                fact_a["relation"],
+                res_type,
+                res_v,
+                caller,
+                now,
+                None,
+                1.0,
+                fact_a["scope"],
+                hlc_res,
+                None,
+            ),
+        )
+
+        # 2. Assert stigmem:resolves meta-fact (spec §5.10)
+        hlc_meta = node_hlc.tick()
+        conn.execute(
+            """INSERT INTO facts
+               (id, entity, relation, value_type, value_v, source, timestamp,
+                valid_until, confidence, scope, hlc, received_from)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                str(uuid.uuid4()),
+                resolution_fact_id,
+                "stigmem:resolves",
+                "ref",
+                conflict_id,
+                "system:stigmem",
+                now,
+                None,
+                1.0,
+                fact_a["scope"],
+                hlc_meta,
+                None,
+            ),
+        )
+
+        # 3. Record updated conflict:status as a new fact (status changes are immutable appends)
+        hlc_status = node_hlc.tick()
+        conn.execute(
+            """INSERT INTO facts
+               (id, entity, relation, value_type, value_v, source, timestamp,
+                valid_until, confidence, scope, hlc, received_from)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                str(uuid.uuid4()),
+                conflict_id,
+                "stigmem:conflict:status",
+                "string",
+                "resolved",
+                "system:stigmem",
+                now,
+                None,
+                1.0,
+                fact_a["scope"],
+                hlc_status,
+                None,
+            ),
+        )
+
+        # 4. Update conflicts table
+        conn.execute(
+            "UPDATE conflicts SET status = 'resolved', resolution_fact_id = ? WHERE id = ?",
+            (resolution_fact_id, conflict_id),
+        )
+
+    return {"resolution_fact_id": resolution_fact_id, "conflict_status": "resolved"}

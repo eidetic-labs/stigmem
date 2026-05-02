@@ -626,3 +626,471 @@ class TestPeerRegistration:
 
         assert r.status_code == 201, r.text
         assert r.json()["status"] == "rejected"
+
+
+# ---------------------------------------------------------------------------
+# §11.1 — Split-Brain acceptance scenario
+# ---------------------------------------------------------------------------
+
+
+class TestSplitBrain:
+    """Full acceptance gate for spec §11.1: split-brain conflict detection."""
+
+    def test_both_facts_stored_with_contradicted_flag(self, fed_node: FedNode) -> None:
+        """After partition heals, both facts exist with contradicted=True."""
+        entity = f"split:e-{uuid.uuid4()}"
+        base_ms = int(time.time() * 1000)
+
+        # Node A writes locally
+        r_a = fed_node.client.post(
+            "/v1/facts",
+            json={
+                "entity": entity,
+                "relation": "split:value",
+                "value": {"type": "string", "v": "from-a"},
+                "source": "agent:node-a",
+                "confidence": 1.0,
+                "scope": "public",
+            },
+        )
+        assert r_a.status_code == 201
+        fact_a_id = r_a.json()["id"]
+
+        # Simulate node B's divergent fact arriving via federation (partition healed)
+        fact_b = {
+            "id": str(uuid.uuid4()),
+            "entity": entity,
+            "relation": "split:value",
+            "value": {"type": "string", "v": "from-b"},
+            "source": "stigmem://node-b",
+            "timestamp": "2026-05-02T00:01:00Z",
+            "hlc": f"{base_ms + 1000}.000",
+            "confidence": 1.0,
+            "scope": "public",
+            "valid_until": None,
+        }
+        ingest_fact(fact_b, "stigmem://node-b")
+
+        # Both facts must be stored
+        with _db_ctx() as conn:
+            a_row = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_a_id,)).fetchone()
+            b_row = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_b["id"],)).fetchone()
+        assert a_row is not None, "fact_a missing from store"
+        assert b_row is not None, "fact_b missing from store"
+
+    def test_conflict_record_queryable_via_api(self, fed_node: FedNode) -> None:
+        """GET /v1/conflicts?status=unresolved returns the split-brain conflict."""
+        entity = f"split:q-{uuid.uuid4()}"
+        base_ms = int(time.time() * 1000)
+
+        fed_node.client.post(
+            "/v1/facts",
+            json={
+                "entity": entity,
+                "relation": "split:val",
+                "value": {"type": "string", "v": "local"},
+                "source": "agent:local",
+                "confidence": 1.0,
+                "scope": "public",
+            },
+        )
+
+        ingest_fact(
+            {
+                "id": str(uuid.uuid4()),
+                "entity": entity,
+                "relation": "split:val",
+                "value": {"type": "string", "v": "remote"},
+                "source": "stigmem://node-b",
+                "timestamp": "2026-05-02T00:01:00Z",
+                "hlc": f"{base_ms + 500}.000",
+                "confidence": 1.0,
+                "scope": "public",
+                "valid_until": None,
+            },
+            "stigmem://node-b",
+        )
+
+        r = fed_node.client.get("/v1/conflicts?status=unresolved")
+        assert r.status_code == 200
+        body = r.json()
+        our_conflicts = [
+            c for c in body["conflicts"]
+            if (c["fact_a"] and c["fact_a"]["entity"] == entity)
+            or (c["fact_b"] and c["fact_b"]["entity"] == entity)
+        ]
+        assert len(our_conflicts) >= 1
+        c = our_conflicts[0]
+        assert c["status"] == "unresolved"
+        assert c["fact_a"] is not None
+        assert c["fact_b"] is not None
+
+    def test_query_returns_both_facts_with_contradicted_true(self, fed_node: FedNode) -> None:
+        """GET /v1/facts for split-brain entity returns both facts marked contradicted."""
+        entity = f"split:both-{uuid.uuid4()}"
+        base_ms = int(time.time() * 1000)
+
+        r_local = fed_node.client.post(
+            "/v1/facts",
+            json={
+                "entity": entity,
+                "relation": "split:val",
+                "value": {"type": "string", "v": "local"},
+                "source": "agent:local",
+                "confidence": 1.0,
+                "scope": "public",
+            },
+        )
+        assert r_local.status_code == 201
+
+        ingest_fact(
+            {
+                "id": str(uuid.uuid4()),
+                "entity": entity,
+                "relation": "split:val",
+                "value": {"type": "string", "v": "remote"},
+                "source": "stigmem://node-b",
+                "timestamp": "2026-05-02T00:01:00Z",
+                "hlc": f"{base_ms + 500}.000",
+                "confidence": 1.0,
+                "scope": "public",
+                "valid_until": None,
+            },
+            "stigmem://node-b",
+        )
+
+        r = fed_node.client.get(f"/v1/facts?entity={entity}&relation=split:val")
+        assert r.status_code == 200
+        facts = r.json()["facts"]
+        assert len(facts) == 2, f"Expected 2 contradicting facts, got {len(facts)}"
+        assert all(f["contradicted"] for f in facts), "Both facts must have contradicted=True"
+
+    def test_no_fact_silently_discarded(self, fed_node: FedNode) -> None:
+        """No fact is overwritten or silently discarded during merge (§6.6 rule 5)."""
+        entity = f"split:nodrop-{uuid.uuid4()}"
+        base_ms = int(time.time() * 1000)
+
+        ids = []
+        for i, val in enumerate(["alpha", "beta", "gamma"]):
+            fact = {
+                "id": str(uuid.uuid4()),
+                "entity": entity,
+                "relation": "split:multi",
+                "value": {"type": "string", "v": val},
+                "source": f"stigmem://node-{i}",
+                "timestamp": f"2026-05-02T00:0{i}:00Z",
+                "hlc": f"{base_ms + i * 100}.000",
+                "confidence": 1.0,
+                "scope": "public",
+                "valid_until": None,
+            }
+            ingest_fact(fact, f"stigmem://node-{i}")
+            ids.append(fact["id"])
+
+        with _db_ctx() as conn:
+            stored = {
+                r["id"]
+                for r in conn.execute(
+                    "SELECT id FROM facts WHERE entity = ? AND relation = 'split:multi'",
+                    (entity,),
+                ).fetchall()
+            }
+        assert set(ids) == stored, "All facts must be stored, none discarded"
+
+
+# ---------------------------------------------------------------------------
+# §11.2 — Malicious Peer acceptance scenario
+# ---------------------------------------------------------------------------
+
+
+class TestMaliciousPeer:
+    """Full acceptance gate for spec §11.2: scope violation + source forgery via push."""
+
+    def _push_node(self, fed_node: FedNode, monkeypatch: pytest.MonkeyPatch) -> tuple[str, str, str]:
+        """Register an active peer with push enabled. Returns (node_b_id, pub, priv)."""
+        import stigmem_node.settings as _settings_mod
+        from stigmem_node.settings import Settings
+
+        # Enable push for this test
+        original = _settings_mod.settings
+        new_settings = Settings(
+            db_path=original.db_path,
+            auth_required=original.auth_required,
+            node_url=original.node_url,
+            federation_enabled=original.federation_enabled,
+            federation_pubkey=original.federation_pubkey,
+            federation_privkey=original.federation_privkey,
+            federation_push_enabled=True,
+        )
+        monkeypatch.setattr(_settings_mod, "settings", new_settings)
+        for mod_name in [
+            "stigmem_node.routes.federation",
+            "stigmem_node.federation_ingest",
+            "stigmem_node.peer_token",
+        ]:
+            import importlib
+            try:
+                mod = importlib.import_module(mod_name)
+                if hasattr(mod, "settings"):
+                    monkeypatch.setattr(mod, "settings", new_settings)
+            except ImportError:
+                pass
+
+        pub, priv = _generate_ed25519_b64()
+        node_b_id = f"stigmem://malicious-peer-{uuid.uuid4()}"
+        _insert_active_peer(
+            fed_node.db_path, node_b_id, "http://malicious-peer", pub,
+            allowed_scopes=["public"],
+        )
+        return node_b_id, pub, priv
+
+    def test_scope_violation_rejected_with_audit(
+        self, fed_node: FedNode, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """§11.2 scenario 1: push fact with disallowed scope → rejected + audit entry."""
+        node_b_id, pub, priv = self._push_node(fed_node, monkeypatch)
+        token = make_peer_token(priv, node_b_id, fed_node.node_id, ["public", "company"])
+
+        r = fed_node.client.post(
+            "/v1/federation/facts/push",
+            json={
+                "facts": [
+                    {
+                        "id": str(uuid.uuid4()),
+                        "entity": "company:secret",
+                        "relation": "test:val",
+                        "value": {"type": "string", "v": "leak"},
+                        "source": node_b_id,
+                        "timestamp": "2026-05-02T00:00:00Z",
+                        "hlc": f"{int(time.time() * 1000)}.000",
+                        "confidence": 1.0,
+                        "scope": "company",    # peer only allows "public"
+                        "valid_until": None,
+                    }
+                ]
+            },
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert r.status_code == 202
+        data = r.json()
+        assert data["rejected"] == 1
+        assert data["accepted"] == 0
+
+        with _db_ctx() as conn:
+            entry = conn.execute(
+                "SELECT * FROM federation_audit WHERE event_type = 'scope_violation' LIMIT 1"
+            ).fetchone()
+        assert entry is not None, "scope_violation audit entry must be written"
+
+    def test_source_forgery_rejected_with_audit(
+        self, fed_node: FedNode, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """§11.2 scenario 2: push fact with forged source → rejected + rejected_fact audit entry."""
+        node_b_id, pub, priv = self._push_node(fed_node, monkeypatch)
+        token = make_peer_token(priv, node_b_id, fed_node.node_id, ["public"])
+
+        forged_fact_id = str(uuid.uuid4())
+        r = fed_node.client.post(
+            "/v1/federation/facts/push",
+            json={
+                "facts": [
+                    {
+                        "id": forged_fact_id,
+                        "entity": "user:alice",
+                        "relation": "test:val",
+                        "value": {"type": "string", "v": "injected"},
+                        "source": "user:alice",   # not the peer's node_id → forgery
+                        "timestamp": "2026-05-02T00:00:00Z",
+                        "hlc": f"{int(time.time() * 1000)}.000",
+                        "confidence": 1.0,
+                        "scope": "public",
+                        "valid_until": None,
+                    }
+                ]
+            },
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert r.status_code == 202
+        data = r.json()
+        assert data["rejected"] == 1
+        assert data["accepted"] == 0
+        assert any(e.get("error") == "source_not_owned" for e in data["errors"])
+
+        with _db_ctx() as conn:
+            entry = conn.execute(
+                "SELECT detail FROM federation_audit WHERE event_type = 'rejected_fact' LIMIT 1"
+            ).fetchone()
+        assert entry is not None, "rejected_fact audit entry must be written"
+        detail = json.loads(entry["detail"])
+        assert detail.get("reason") == "source_not_owned"
+
+        # Forged fact must NOT be in the store
+        with _db_ctx() as conn:
+            row = conn.execute("SELECT id FROM facts WHERE id = ?", (forged_fact_id,)).fetchone()
+        assert row is None, "Forged fact must not be stored"
+
+
+# ---------------------------------------------------------------------------
+# §5.10 — Conflict resolution route
+# ---------------------------------------------------------------------------
+
+
+class TestConflictResolution:
+    """Acceptance tests for POST /v1/conflicts/:id/resolve (spec §5.10)."""
+
+    def _create_conflict(self, fed_node: FedNode) -> tuple[str, str, str, str]:
+        """Create a conflict and return (conflict_id, entity, fact_a_id, fact_b_id)."""
+        entity = f"resolve:e-{uuid.uuid4()}"
+        base_ms = int(time.time() * 1000)
+
+        r_a = fed_node.client.post(
+            "/v1/facts",
+            json={
+                "entity": entity,
+                "relation": "resolve:val",
+                "value": {"type": "string", "v": "version-a"},
+                "source": "agent:test",
+                "confidence": 1.0,
+                "scope": "public",
+            },
+        )
+        assert r_a.status_code == 201
+        fact_a_id = r_a.json()["id"]
+
+        fact_b = {
+            "id": str(uuid.uuid4()),
+            "entity": entity,
+            "relation": "resolve:val",
+            "value": {"type": "string", "v": "version-b"},
+            "source": "stigmem://node-b",
+            "timestamp": "2026-05-02T00:01:00Z",
+            "hlc": f"{base_ms + 1000}.000",
+            "confidence": 1.0,
+            "scope": "public",
+            "valid_until": None,
+        }
+        ingest_fact(fact_b, "stigmem://node-b")
+        fact_b_id = fact_b["id"]
+
+        with _db_ctx() as conn:
+            conflict = conn.execute(
+                "SELECT id FROM conflicts WHERE fact_a_id = ? OR fact_b_id = ?",
+                (fact_a_id, fact_a_id),
+            ).fetchone()
+        assert conflict is not None, "conflict must be created"
+        return conflict["id"], entity, fact_a_id, fact_b_id
+
+    def test_resolve_with_winning_fact_returns_200(self, fed_node: FedNode) -> None:
+        """Resolve with winning_fact_id → 200 with resolution_fact_id."""
+        conflict_id, entity, fact_a_id, _ = self._create_conflict(fed_node)
+
+        r = fed_node.client.post(
+            f"/v1/conflicts/{conflict_id}/resolve",
+            json={"winning_fact_id": fact_a_id, "resolution_note": "prefer local"},
+        )
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert "resolution_fact_id" in body
+        assert body["conflict_status"] == "resolved"
+
+    def test_resolve_updates_conflict_status(self, fed_node: FedNode) -> None:
+        """After resolution, GET /v1/conflicts?status=unresolved omits the conflict."""
+        conflict_id, entity, fact_a_id, _ = self._create_conflict(fed_node)
+
+        fed_node.client.post(
+            f"/v1/conflicts/{conflict_id}/resolve",
+            json={"winning_fact_id": fact_a_id},
+        )
+
+        r = fed_node.client.get("/v1/conflicts?status=unresolved")
+        assert r.status_code == 200
+        unresolved_ids = [c["conflict_id"] for c in r.json()["conflicts"]]
+        assert conflict_id not in unresolved_ids, "resolved conflict must not appear in unresolved list"
+
+    def test_resolve_creates_resolution_fact_with_provenance(self, fed_node: FedNode) -> None:
+        """Resolution fact exists in store; stigmem:resolves meta-fact points to conflict."""
+        conflict_id, entity, fact_a_id, _ = self._create_conflict(fed_node)
+
+        r = fed_node.client.post(
+            f"/v1/conflicts/{conflict_id}/resolve",
+            json={"winning_fact_id": fact_a_id},
+        )
+        resolution_fact_id = r.json()["resolution_fact_id"]
+
+        # Resolution fact exists in the facts table
+        r_fact = fed_node.client.get(f"/v1/facts/{resolution_fact_id}")
+        assert r_fact.status_code == 200
+        fact = r_fact.json()
+        assert fact["entity"] == entity
+        assert fact["relation"] == "resolve:val"
+        assert fact["confidence"] == 1.0
+
+        # stigmem:resolves meta-fact points to the conflict
+        with _db_ctx() as conn:
+            resolves = conn.execute(
+                "SELECT * FROM facts WHERE entity = ? AND relation = 'stigmem:resolves'",
+                (resolution_fact_id,),
+            ).fetchone()
+        assert resolves is not None, "stigmem:resolves meta-fact must exist"
+        assert resolves["value_v"] == conflict_id
+
+    def test_resolve_with_new_value(self, fed_node: FedNode) -> None:
+        """Resolve with new_value asserts a fresh reconciliation value."""
+        conflict_id, entity, fact_a_id, _ = self._create_conflict(fed_node)
+
+        r = fed_node.client.post(
+            f"/v1/conflicts/{conflict_id}/resolve",
+            json={"new_value": {"type": "string", "v": "reconciled"}},
+        )
+        assert r.status_code == 200
+        resolution_fact_id = r.json()["resolution_fact_id"]
+
+        r_fact = fed_node.client.get(f"/v1/facts/{resolution_fact_id}")
+        assert r_fact.status_code == 200
+        assert r_fact.json()["value"]["v"] == "reconciled"
+
+    def test_resolve_idempotency_conflict(self, fed_node: FedNode) -> None:
+        """Resolving an already-resolved conflict → 409."""
+        conflict_id, _, fact_a_id, _ = self._create_conflict(fed_node)
+
+        fed_node.client.post(
+            f"/v1/conflicts/{conflict_id}/resolve",
+            json={"winning_fact_id": fact_a_id},
+        )
+        r2 = fed_node.client.post(
+            f"/v1/conflicts/{conflict_id}/resolve",
+            json={"winning_fact_id": fact_a_id},
+        )
+        assert r2.status_code == 409
+
+    def test_resolve_original_facts_remain_immutable(self, fed_node: FedNode) -> None:
+        """Both original conflicting facts remain in the store after resolution."""
+        conflict_id, entity, fact_a_id, fact_b_id = self._create_conflict(fed_node)
+
+        fed_node.client.post(
+            f"/v1/conflicts/{conflict_id}/resolve",
+            json={"winning_fact_id": fact_a_id},
+        )
+
+        with _db_ctx() as conn:
+            a = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_a_id,)).fetchone()
+            b = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_b_id,)).fetchone()
+        assert a is not None, "original fact_a must remain"
+        assert b is not None, "original fact_b must remain"
+
+    def test_resolve_missing_conflict_returns_404(self, fed_node: FedNode) -> None:
+        """Non-existent conflict_id → 404."""
+        r = fed_node.client.post(
+            "/v1/conflicts/stigmem:conflict:does-not-exist/resolve",
+            json={"winning_fact_id": str(uuid.uuid4())},
+        )
+        assert r.status_code == 404
+
+    def test_resolve_no_winning_fact_or_new_value_returns_422(self, fed_node: FedNode) -> None:
+        """Missing both winning_fact_id and new_value → 422."""
+        conflict_id, _, _, _ = self._create_conflict(fed_node)
+        r = fed_node.client.post(
+            f"/v1/conflicts/{conflict_id}/resolve",
+            json={"resolution_note": "note only, no winner"},
+        )
+        assert r.status_code == 422

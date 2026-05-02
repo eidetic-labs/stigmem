@@ -22,6 +22,16 @@ fetch_facts() {
     "${STIGMEM_URL}/v1/facts?entity=${entity}&scope=${scope}&limit=200&include_contradicted=false&include_expired=false"
 }
 
+fetch_conflicts() {
+  local status="$1"
+  curl -sf "${AUTH_HEADER[@]+${AUTH_HEADER[@]}}" \
+    "${STIGMEM_URL}/v1/conflicts?status=${status}&limit=500"
+}
+
+# Fetch contradiction data before the redirect block so we can also check has_more
+UNRESOLVED_JSON="$(fetch_conflicts "unresolved" 2>/dev/null || echo '{"conflicts":[],"has_more":false}')"
+RESOLVED_JSON="$(fetch_conflicts "resolved" 2>/dev/null || echo '{"conflicts":[],"has_more":false}')"
+
 {
   echo "# Stigmem Snapshot — ${TIMESTAMP}"
   echo ""
@@ -40,6 +50,41 @@ fetch_facts() {
   fetch_facts "agent:ceo" "company" \
     | jq -r '.facts[] | "- **\(.relation)** (\(.source), conf=\(.confidence)): \(.value.v // .value.type)"' \
     2>/dev/null || echo "_No facts found._"
+  echo ""
+
+  echo "## Contradiction Metrics"
+  echo ""
+  jq -rn \
+    --argjson u "${UNRESOLVED_JSON}" \
+    --argjson r "${RESOLVED_JSON}" \
+    '
+      ($u.conflicts + $r.conflicts) as $all |
+      if ($all | length) == 0 then
+        "_No contradictions detected._"
+      else
+        (
+          "| Scope | Unresolved | Resolved | Total |",
+          "|-------|------------|----------|-------|",
+          (
+            $all
+            | group_by((.fact_a?.scope // .fact_b?.scope // "unknown"))[]
+            | {
+                scope:       (.[0].fact_a?.scope // .[0].fact_b?.scope // "unknown"),
+                unresolved:  (map(select(.status == "unresolved")) | length),
+                resolved:    (map(select(.status == "resolved"))   | length),
+                total:       length
+              }
+            | "| \(.scope) | \(.unresolved) | \(.resolved) | \(.total) |"
+          )
+        )
+      end
+    ' 2>/dev/null || echo "_Error fetching contradiction data._"
+
+  if [[ "$(echo "${UNRESOLVED_JSON}" | jq -r '.has_more // false')" == "true" ]] || \
+     [[ "$(echo "${RESOLVED_JSON}"   | jq -r '.has_more // false')" == "true" ]]; then
+    echo ""
+    echo "> **Note:** conflict list exceeded 500 entries; counts shown are a lower bound."
+  fi
   echo ""
 } > "${OUTFILE}"
 

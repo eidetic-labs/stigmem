@@ -134,6 +134,27 @@ def query_facts(
     return QueryResponse(facts=records, total=len(records), cursor=next_cursor)
 
 
+@router.get("/{fact_id}", response_model=FactRecord)
+def get_fact(
+    fact_id: str,
+    identity: Annotated[Identity, Depends(resolve_identity)],
+) -> FactRecord:
+    """Retrieve a single fact by ID (spec v0.4 §5.5)."""
+    if not identity.can_read():
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+    with db() as conn:
+        row = conn.execute("SELECT * FROM facts WHERE id = ?", (fact_id,)).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="fact not found")
+    sibling_count: int = 0
+    with db() as conn:
+        sibling_count = conn.execute(
+            "SELECT COUNT(*) FROM facts WHERE entity=? AND relation=? AND scope=?",
+            (row["entity"], row["relation"], row["scope"]),
+        ).fetchone()[0]
+    return row_to_record(row, contradicted=sibling_count > 1)
+
+
 def _encode_v(vtype: str, v: Any) -> str:
     if vtype == "null":
         return "null"

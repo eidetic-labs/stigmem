@@ -138,6 +138,18 @@ class TestExpiry:
         assert r.json()["total"] == 1
 
 
+class TestGetById:
+    def test_get_existing_fact(self, client: TestClient) -> None:
+        created = client.post("/v1/facts", json=FACT).json()
+        r = client.get(f"/v1/facts/{created['id']}")
+        assert r.status_code == 200
+        assert r.json()["id"] == created["id"]
+
+    def test_get_missing_fact(self, client: TestClient) -> None:
+        r = client.get("/v1/facts/nonexistent-id")
+        assert r.status_code == 404
+
+
 class TestAuth:
     def test_no_token_allowed_when_auth_disabled(self, client: TestClient) -> None:
         r = client.post("/v1/facts", json=FACT)

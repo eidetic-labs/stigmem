@@ -31,7 +31,7 @@ Use this when you want to propose a spec change, add a new field or endpoint, ch
    - Alternatives you considered
    - Open questions
 2. **Discuss** on the issue. Aim for at least one week of async discussion before calling for merge.
-3. **Submit a PR** against the active spec file (e.g., `spec/loom-spec-v0.2.md`). Reference the issue.
+3. **Submit a PR** against the active spec file (e.g., `spec/muninn-spec-v0.2.md`). Reference the issue.
 4. **Merge criteria:** ≥2 approvals from contributors who have merged at least one prior PR. The spec maintainer may veto with a written rationale.
 
 For small fixes (typos, clarity, example corrections), skip the RFC issue and send a PR directly.

@@ -1,6 +1,7 @@
 # Muninn — Federated Knowledge Fabric + Intent Protocol
 
 > **Status: v0.2 draft — actively seeking design partners for the federation section.**
+> **Repository:** [github.com/giganomix/muninn](https://github.com/giganomix/muninn)
 
 Muninn is an open specification for a federated knowledge fabric: a shared, persistent layer where AI agents and humans can write facts, query relationships, and hand off work — across tools, platforms, and organizations.
 
@@ -36,14 +37,15 @@ Muninn does not replace company orchestration platforms, agent runtimes, or tool
 
 ## Spec
 
-- [`spec/loom-spec-v0.2.md`](spec/loom-spec-v0.2.md) — current working draft
+- [`spec/muninn-spec-v0.2.md`](spec/muninn-spec-v0.2.md) — current working draft
 
 ## Prototype
 
 A minimal reference implementation lives in [`prototype/`](prototype/). It implements the v0.1 wire format (assert/query facts, no federation yet).
 
 ```bash
-cd prototype
+git clone https://github.com/giganomix/muninn
+cd muninn/prototype
 pip install -r requirements.txt
 python main.py
 ```
@@ -68,7 +70,7 @@ We are looking for **3 design partners** to co-author the federation section (v0
 
 Co-authoring the federation section means: a 30-minute interview, async spec review on a PR, and your name on the spec.
 
-**Interested?** Open an issue tagged [`design-partner`](../../labels/design-partner) or email the spec maintainer.
+**Interested?** Open an issue tagged [`design-partner`](https://github.com/giganomix/muninn/labels/design-partner) or email the spec maintainer.
 
 ## How to contribute
 
@@ -77,7 +79,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full RFC process.
 Short version:
 1. Open an issue using the [RFC template](.github/ISSUE_TEMPLATE/rfc.yml)
 2. Discuss; iterate on the issue thread
-3. Submit a PR against `spec/loom-spec-v0.2.md` (or the active version)
+3. Submit a PR against `spec/muninn-spec-v0.2.md` (or the active version)
 4. Spec changes merge with ≥2 approvals from active contributors
 
 ## License

@@ -15,7 +15,7 @@ from typing import Any, Generator
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
 
-DB_PATH = "loom.db"
+DB_PATH = "muninn.db"
 app = FastAPI(title="Muninn prototype", version="0.0.1")
 
 

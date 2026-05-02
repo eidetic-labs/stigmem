@@ -61,13 +61,13 @@ def seed(url: str) -> None:
         ("agent:assistant", "capability:research", bv(True), src, 1.0),
 
         # Project state
-        ("project:loom", "roadmap:status", sv("public-draft"), src, 1.0),
-        ("project:loom", "roadmap:version", sv("v0.2"), src, 1.0),
-        ("project:loom", "roadmap:license", sv("Apache-2.0"), src, 1.0),
+        ("project:muninn", "roadmap:status", sv("public-draft"), src, 1.0),
+        ("project:muninn", "roadmap:version", sv("v0.2"), src, 1.0),
+        ("project:muninn", "roadmap:license", sv("Apache-2.0"), src, 1.0),
 
         # Example contradiction pair — two agents disagree on budget
-        ("project:loom", "budget:estimate_usd", {"type": "number", "v": 5000}, "agent:assistant", 0.7),
-        ("project:loom", "budget:estimate_usd", {"type": "number", "v": 8000}, "agent:other", 0.6),
+        ("project:muninn", "budget:estimate_usd", {"type": "number", "v": 5000}, "agent:assistant", 0.7),
+        ("project:muninn", "budget:estimate_usd", {"type": "number", "v": 8000}, "agent:other", 0.6),
     ]
 
     ok = 0
@@ -86,7 +86,7 @@ def seed(url: str) -> None:
     print(f"\nSeeded {ok}/{len(facts)} facts.")
     print(f"\nQuery example:")
     print(f"  curl '{url}/v1/facts?entity=user:alice'")
-    print(f"  curl '{url}/v1/facts?entity=project:loom&include_contradicted=true'")
+    print(f"  curl '{url}/v1/facts?entity=project:muninn&include_contradicted=true'")
 
 
 if __name__ == "__main__":

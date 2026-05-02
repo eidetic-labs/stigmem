@@ -801,7 +801,7 @@ The following invariants MUST hold at all times:
    resolution functions? Deferred until a concrete use case emerges from Phase 4 testing.
 
 4. **Audit log retention.** The federation audit log has no specified retention policy.
-   Nodes SHOULD retain at least 7 days. Formal policy is a Phase 7 concern.
+   Nodes SHOULD retain at least 7 heartbeats (initial test period; time-based policy is a Phase 7 concern).
 
 5. **`company`-scoped federation.** The spec allows `company` facts to cross federation
    with explicit opt-in. Phase 4 testing should confirm whether this is too permissive.

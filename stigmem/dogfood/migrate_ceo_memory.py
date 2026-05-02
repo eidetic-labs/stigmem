@@ -142,7 +142,11 @@ def main() -> None:
     errors = 0
 
     for entry in entries:
-        relation = f"memory:{entry['type']}"
+        # Use filename slug as a sub-key to avoid intra-type relation collisions.
+        # Without this, all "project" files share memory:project and trigger
+        # Stigmem's contradiction protocol on every migration run.
+        slug = Path(entry["filename"]).stem.lower().replace(" ", "_")
+        relation = f"memory:{entry['type']}:{slug}"
         fact = {
             "entity": ENTITY,
             "relation": relation,

@@ -29,7 +29,7 @@ curl http://localhost:8765/v1/facts?entity=user:ceo | jq .
 | Field      | Value                     |
 |------------|---------------------------|
 | entity     | `user:ceo`                |
-| relation   | `memory:{type}` (type from frontmatter: project, feedback, user, reference) |
+| relation   | `memory:{type}:{slug}` (type from frontmatter + filename slug for uniqueness) |
 | value      | `{ type: "text", v: <full file body> }` |
 | source     | `agent:stigmem-migrator`   |
 | scope      | `company`                 |

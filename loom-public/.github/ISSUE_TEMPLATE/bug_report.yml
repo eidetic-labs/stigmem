@@ -1,0 +1,41 @@
+name: Bug / spec ambiguity
+description: Report a prototype bug or a spec section that is unclear or contradictory
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Prototype bug (incorrect behavior)
+        - Spec ambiguity (two valid readings)
+        - Spec contradiction (two sections conflict)
+        - Missing behavior (spec is silent on a case that matters)
+    validations:
+      required: true
+
+  - type: input
+    id: section
+    attributes:
+      label: Spec section (if applicable)
+      placeholder: "§3.3 Contradiction"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What did you observe or read? What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction (prototype bugs only)
+      description: Steps to reproduce. Include the HTTP request/response if relevant.
+      render: bash
+    validations:
+      required: false

@@ -1,0 +1,58 @@
+name: RFC
+description: Propose a change to the Loom specification
+title: "RFC: "
+labels: ["rfc", "needs-discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to propose a spec change, add a new field or endpoint, change semantics, or resolve an open question. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for the full RFC process.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this RFC solve? Be concrete — include a use case or example of the current behavior that breaks.
+      placeholder: "When I try to model X, the spec requires Y which causes Z..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the change you want to make. Include spec text changes, new fields, modified semantics.
+      placeholder: "Add a `list` FactValue type: { type: 'list', v: FactValue[] }..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: drawbacks
+    attributes:
+      label: Drawbacks
+      description: What are the downsides of this change? What does it make harder?
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider? Why did you reject them?
+    validations:
+      required: false
+
+  - type: textarea
+    id: open_questions
+    attributes:
+      label: Open questions
+      description: What is unresolved? What would you want feedback on specifically?
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: design_partner
+    attributes:
+      label: Background
+      options:
+        - label: I have production experience with agent memory or knowledge graphs relevant to this RFC

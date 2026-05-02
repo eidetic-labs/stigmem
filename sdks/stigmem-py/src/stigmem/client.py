@@ -1,0 +1,443 @@
+"""Stigmem Python client SDK — spec v0.4/v0.5."""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from collections.abc import Callable, AsyncGenerator
+from typing import Any
+
+import httpx
+
+from .exceptions import (
+    StigmemAuthError,
+    StigmemConflictError,
+    StigmemHTTPError,
+    StigmemNotFoundError,
+)
+from .models import (
+    AssertRequest,
+    Conflict,
+    ConflictPage,
+    ConflictResolution,
+    Fact,
+    FactPage,
+    FactScope,
+    FactValue,
+    NodeInfo,
+    Peer,
+    PeerPage,
+    ResolveRequest,
+)
+
+logger = logging.getLogger("stigmem")
+
+
+def _raise_for_status(resp: httpx.Response) -> None:
+    if resp.is_success:
+        return
+    try:
+        detail = resp.json().get("detail", resp.text)
+    except Exception:
+        detail = resp.text
+    if resp.status_code in (401, 403):
+        raise StigmemAuthError(resp.status_code, detail)
+    if resp.status_code == 404:
+        raise StigmemNotFoundError(resp.status_code, detail)
+    if resp.status_code == 409:
+        raise StigmemConflictError(resp.status_code, detail)
+    raise StigmemHTTPError(resp.status_code, detail)
+
+
+class StigmemClient:
+    """Synchronous Stigmem client.
+
+    Usage::
+
+        client = StigmemClient(url="http://localhost:8765", api_key="sk-...")
+        fact = client.assert_fact(
+            entity="user:alice",
+            relation="memory:role",
+            value=string_value("CEO"),
+            source="agent:cto",
+        )
+    """
+
+    def __init__(
+        self,
+        url: str,
+        api_key: str | None = None,
+        timeout: float = 10.0,
+    ) -> None:
+        self._url = url.rstrip("/")
+        headers: dict[str, str] = {"Accept": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        self._http = httpx.Client(base_url=self._url, headers=headers, timeout=timeout)
+
+    def close(self) -> None:
+        self._http.close()
+
+    def __enter__(self) -> StigmemClient:
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.close()
+
+    # ------------------------------------------------------------------
+    # Node / metadata
+    # ------------------------------------------------------------------
+
+    def node_info(self) -> NodeInfo:
+        resp = self._http.get("/.well-known/stigmem")
+        _raise_for_status(resp)
+        return NodeInfo.model_validate(resp.json())
+
+    # ------------------------------------------------------------------
+    # Facts
+    # ------------------------------------------------------------------
+
+    def assert_fact(
+        self,
+        entity: str,
+        relation: str,
+        value: FactValue,
+        source: str,
+        *,
+        confidence: float = 1.0,
+        scope: FactScope = "company",
+        valid_until: str | None = None,
+    ) -> Fact:
+        req = AssertRequest(
+            entity=entity,
+            relation=relation,
+            value=value,
+            source=source,
+            confidence=confidence,
+            scope=scope,
+            valid_until=valid_until,
+        )
+        body = req.model_dump(exclude_none=True)
+        body["value"] = value.model_dump()
+        resp = self._http.post("/v1/facts", json=body)
+        _raise_for_status(resp)
+        return Fact.model_validate(resp.json())
+
+    def retract(
+        self,
+        entity: str,
+        relation: str,
+        scope: FactScope,
+        source: str,
+        *,
+        value: FactValue | None = None,
+    ) -> Fact:
+        """Assert a retraction (confidence=0.0) for the given triple."""
+        from .models import string_value as _sv
+
+        retract_value = value if value is not None else _sv("retracted")
+        return self.assert_fact(
+            entity=entity,
+            relation=relation,
+            value=retract_value,
+            source=source,
+            confidence=0.0,
+            scope=scope,
+        )
+
+    def get(self, fact_id: str) -> Fact:
+        resp = self._http.get(f"/v1/facts/{fact_id}")
+        _raise_for_status(resp)
+        return Fact.model_validate(resp.json())
+
+    def query(
+        self,
+        *,
+        entity: str | None = None,
+        relation: str | None = None,
+        source: str | None = None,
+        scope: FactScope | None = None,
+        min_confidence: float | None = None,
+        include_contradicted: bool = False,
+        include_expired: bool = False,
+        cursor: str | None = None,
+        limit: int = 50,
+        after: str | None = None,
+    ) -> FactPage:
+        params: dict[str, Any] = {"limit": limit}
+        if entity:
+            params["entity"] = entity
+        if relation:
+            params["relation"] = relation
+        if source:
+            params["source"] = source
+        if scope:
+            params["scope"] = scope
+        if min_confidence is not None:
+            params["min_confidence"] = min_confidence
+        if include_contradicted:
+            params["include_contradicted"] = "true"
+        if include_expired:
+            params["include_expired"] = "true"
+        if cursor:
+            params["cursor"] = cursor
+        if after:
+            params["after"] = after
+        resp = self._http.get("/v1/facts", params=params)
+        _raise_for_status(resp)
+        return FactPage.model_validate(resp.json())
+
+    # ------------------------------------------------------------------
+    # Conflicts
+    # ------------------------------------------------------------------
+
+    def list_conflicts(
+        self,
+        *,
+        status: str | None = "unresolved",
+        cursor: str | None = None,
+        limit: int = 50,
+    ) -> ConflictPage:
+        params: dict[str, Any] = {"limit": limit}
+        if status:
+            params["status"] = status
+        if cursor:
+            params["cursor"] = cursor
+        resp = self._http.get("/v1/conflicts", params=params)
+        _raise_for_status(resp)
+        return ConflictPage.model_validate(resp.json())
+
+    def resolve_conflict(
+        self,
+        conflict_id: str,
+        *,
+        winning_fact_id: str | None = None,
+        resolution_note: str = "",
+        new_value: FactValue | None = None,
+    ) -> ConflictResolution:
+        req = ResolveRequest(
+            winning_fact_id=winning_fact_id,
+            resolution_note=resolution_note,
+            new_value=new_value,
+        )
+        resp = self._http.post(f"/v1/conflicts/{conflict_id}/resolve", json=req.model_dump_api())
+        _raise_for_status(resp)
+        return ConflictResolution.model_validate(resp.json())
+
+    # ------------------------------------------------------------------
+    # Federation
+    # ------------------------------------------------------------------
+
+    def federation_status(self) -> list[Peer]:
+        resp = self._http.get("/v1/federation/peers")
+        _raise_for_status(resp)
+        return PeerPage.model_validate(resp.json()).peers
+
+    # ------------------------------------------------------------------
+    # Subscribe (polling)
+    # ------------------------------------------------------------------
+
+    def subscribe_scope(
+        self,
+        scope: FactScope,
+        callback: Callable[[list[Fact]], None],
+        *,
+        interval_s: float = 30.0,
+        stop_event: asyncio.Event | None = None,
+    ) -> None:
+        """Poll for new facts in *scope* and call *callback* with each batch.
+
+        Blocking — runs until *stop_event* is set or KeyboardInterrupt.
+        For async use, see AsyncStigmemClient.subscribe_scope().
+        """
+        import time
+
+        cursor: str | None = None
+        while True:
+            if stop_event and stop_event.is_set():
+                break
+            page = self.query(scope=scope, cursor=cursor, limit=100)
+            if page.facts:
+                callback(page.facts)
+            cursor = page.cursor
+            time.sleep(interval_s)
+
+
+class AsyncStigmemClient:
+    """Async Stigmem client (httpx.AsyncClient)."""
+
+    def __init__(
+        self,
+        url: str,
+        api_key: str | None = None,
+        timeout: float = 10.0,
+    ) -> None:
+        self._url = url.rstrip("/")
+        headers: dict[str, str] = {"Accept": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        self._http = httpx.AsyncClient(base_url=self._url, headers=headers, timeout=timeout)
+
+    async def aclose(self) -> None:
+        await self._http.aclose()
+
+    async def __aenter__(self) -> AsyncStigmemClient:
+        return self
+
+    async def __aexit__(self, *args: Any) -> None:
+        await self.aclose()
+
+    async def node_info(self) -> NodeInfo:
+        resp = await self._http.get("/.well-known/stigmem")
+        _raise_for_status(resp)
+        return NodeInfo.model_validate(resp.json())
+
+    async def assert_fact(
+        self,
+        entity: str,
+        relation: str,
+        value: FactValue,
+        source: str,
+        *,
+        confidence: float = 1.0,
+        scope: FactScope = "company",
+        valid_until: str | None = None,
+    ) -> Fact:
+        req = AssertRequest(
+            entity=entity,
+            relation=relation,
+            value=value,
+            source=source,
+            confidence=confidence,
+            scope=scope,
+            valid_until=valid_until,
+        )
+        body = req.model_dump(exclude_none=True)
+        body["value"] = value.model_dump()
+        resp = await self._http.post("/v1/facts", json=body)
+        _raise_for_status(resp)
+        return Fact.model_validate(resp.json())
+
+    async def retract(
+        self,
+        entity: str,
+        relation: str,
+        scope: FactScope,
+        source: str,
+        *,
+        value: FactValue | None = None,
+    ) -> Fact:
+        from .models import string_value as _sv
+
+        retract_value = value if value is not None else _sv("retracted")
+        return await self.assert_fact(
+            entity=entity,
+            relation=relation,
+            value=retract_value,
+            source=source,
+            confidence=0.0,
+            scope=scope,
+        )
+
+    async def get(self, fact_id: str) -> Fact:
+        resp = await self._http.get(f"/v1/facts/{fact_id}")
+        _raise_for_status(resp)
+        return Fact.model_validate(resp.json())
+
+    async def query(
+        self,
+        *,
+        entity: str | None = None,
+        relation: str | None = None,
+        source: str | None = None,
+        scope: FactScope | None = None,
+        min_confidence: float | None = None,
+        include_contradicted: bool = False,
+        include_expired: bool = False,
+        cursor: str | None = None,
+        limit: int = 50,
+        after: str | None = None,
+    ) -> FactPage:
+        params: dict[str, Any] = {"limit": limit}
+        if entity:
+            params["entity"] = entity
+        if relation:
+            params["relation"] = relation
+        if source:
+            params["source"] = source
+        if scope:
+            params["scope"] = scope
+        if min_confidence is not None:
+            params["min_confidence"] = min_confidence
+        if include_contradicted:
+            params["include_contradicted"] = "true"
+        if include_expired:
+            params["include_expired"] = "true"
+        if cursor:
+            params["cursor"] = cursor
+        if after:
+            params["after"] = after
+        resp = await self._http.get("/v1/facts", params=params)
+        _raise_for_status(resp)
+        return FactPage.model_validate(resp.json())
+
+    async def list_conflicts(
+        self,
+        *,
+        status: str | None = "unresolved",
+        cursor: str | None = None,
+        limit: int = 50,
+    ) -> ConflictPage:
+        params: dict[str, Any] = {"limit": limit}
+        if status:
+            params["status"] = status
+        if cursor:
+            params["cursor"] = cursor
+        resp = await self._http.get("/v1/conflicts", params=params)
+        _raise_for_status(resp)
+        return ConflictPage.model_validate(resp.json())
+
+    async def resolve_conflict(
+        self,
+        conflict_id: str,
+        *,
+        winning_fact_id: str | None = None,
+        resolution_note: str = "",
+        new_value: FactValue | None = None,
+    ) -> ConflictResolution:
+        req = ResolveRequest(
+            winning_fact_id=winning_fact_id,
+            resolution_note=resolution_note,
+            new_value=new_value,
+        )
+        resp = await self._http.post(
+            f"/v1/conflicts/{conflict_id}/resolve",
+            json=req.model_dump_api(),
+        )
+        _raise_for_status(resp)
+        return ConflictResolution.model_validate(resp.json())
+
+    async def federation_status(self) -> list[Peer]:
+        resp = await self._http.get("/v1/federation/peers")
+        _raise_for_status(resp)
+        return PeerPage.model_validate(resp.json()).peers
+
+    async def subscribe_scope(
+        self,
+        scope: FactScope,
+        callback: Callable[[list[Fact]], None],
+        *,
+        interval_s: float = 30.0,
+        stop_event: asyncio.Event | None = None,
+    ) -> AsyncGenerator[list[Fact], None]:
+        """Async generator that yields batches of new facts in *scope*."""
+        cursor: str | None = None
+        while True:
+            if stop_event and stop_event.is_set():
+                return
+            page = await self.query(scope=scope, cursor=cursor, limit=100)
+            if page.facts:
+                callback(page.facts)
+                yield page.facts
+            cursor = page.cursor
+            await asyncio.sleep(interval_s)

@@ -12,6 +12,7 @@ authors = [
 [tool.uv.workspace]
 members = [
   "stigmem/node",
+  "sdks/stigmem-py",
   "packages/core",
   "packages/agents",
   "packages/compliance",

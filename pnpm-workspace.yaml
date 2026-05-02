@@ -1,4 +1,6 @@
 packages:
   - "apps/dashboard"
   - "sdks/typescript"
+  - "sdks/stigmem-ts"
+  - "stigmem/adapters/mcp"
   - "examples/*"

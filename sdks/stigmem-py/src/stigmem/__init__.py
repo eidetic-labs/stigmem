@@ -1,0 +1,80 @@
+"""stigmem-py — Python client SDK for Stigmem (spec v0.4/v0.5)."""
+
+from .client import AsyncStigmemClient, StigmemClient
+from .exceptions import (
+    StigmemAuthError,
+    StigmemConflictError,
+    StigmemError,
+    StigmemHTTPError,
+    StigmemNotFoundError,
+)
+from .models import (
+    AssertRequest,
+    BooleanValue,
+    Conflict,
+    ConflictPage,
+    ConflictResolution,
+    DatetimeValue,
+    Fact,
+    FactPage,
+    FactScope,
+    FactValue,
+    NodeInfo,
+    NullValue,
+    NumberValue,
+    Peer,
+    PeerPage,
+    RefValue,
+    ResolveRequest,
+    StringValue,
+    TextValue,
+    boolean_value,
+    datetime_value,
+    null_value,
+    number_value,
+    ref_value,
+    string_value,
+    text_value,
+)
+
+__all__ = [
+    # clients
+    "StigmemClient",
+    "AsyncStigmemClient",
+    # exceptions
+    "StigmemError",
+    "StigmemHTTPError",
+    "StigmemAuthError",
+    "StigmemNotFoundError",
+    "StigmemConflictError",
+    # models
+    "Fact",
+    "FactPage",
+    "FactValue",
+    "FactScope",
+    "StringValue",
+    "TextValue",
+    "NumberValue",
+    "BooleanValue",
+    "DatetimeValue",
+    "RefValue",
+    "NullValue",
+    "NodeInfo",
+    "Peer",
+    "PeerPage",
+    "Conflict",
+    "ConflictPage",
+    "ConflictResolution",
+    "AssertRequest",
+    "ResolveRequest",
+    # value constructors
+    "string_value",
+    "text_value",
+    "number_value",
+    "boolean_value",
+    "datetime_value",
+    "ref_value",
+    "null_value",
+]
+
+__version__ = "0.4.0"

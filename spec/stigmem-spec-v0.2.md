@@ -377,7 +377,7 @@ The handshake deliberately mirrors email's MX/SMTP trust model and ActivityPub's
    IANA-style registry, or community PRs to a spec repo? Unresolved before Phase 1.
 
 2. **Entity URI scheme.** `user:alice` is informal. Should v0.2 require a more
-   structured URI (`stigmem://company.acme/user/alice`)? Leaning yes before Phase 1
+   structured URI (`stigmem://company.example/user/alice`)? Leaning yes before Phase 1
    to avoid namespace collisions in federated deployments.
 
 3. **Handoff vs. fact-only approach.** Is the intent envelope necessary in v0.1,

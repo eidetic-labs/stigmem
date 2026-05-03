@@ -54,14 +54,14 @@ class TestRegisterAlias:
         conn.row_factory = sqlite3.Row
         result = register_alias(
             conn,
-            "stigmem://company.acme/user/ALICE",
-            "stigmem://company.acme/user/a.smith",
+            "stigmem://company.example/user/ALICE",
+            "stigmem://company.example/user/a.smith",
         )
         conn.commit()
         conn.close()
 
-        assert result["raw_uri"] == "stigmem://company.acme/user/alice"
-        assert result["canonical_uri"] == "stigmem://company.acme/user/a.smith"
+        assert result["raw_uri"] == "stigmem://company.example/user/alice"
+        assert result["canonical_uri"] == "stigmem://company.example/user/a.smith"
 
     def test_rejects_identical_after_normalisation(self, tmp_db: str) -> None:
         conn = sqlite3.connect(tmp_db)

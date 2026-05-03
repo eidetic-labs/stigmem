@@ -10,8 +10,8 @@ from fastapi.testclient import TestClient
 # Helpers
 # ---------------------------------------------------------------------------
 
-_FROM = "stigmem://company.acme/agent/assistant"
-_TO = "stigmem://company.acme/agent/reviewer"
+_FROM = "stigmem://company.example/agent/assistant"
+_TO = "stigmem://company.example/agent/reviewer"
 _GOAL = "Review the draft and return a scored rubric."
 
 
@@ -64,7 +64,7 @@ class TestSubmitIntentMinimal:
 class TestSubmitIntentWithEscalation:
     def test_escalation_round_trips(self, client: TestClient):
         payload = _minimal_envelope(escalation={
-            "escalate_to": "stigmem://company.acme/agent/cto",
+            "escalate_to": "stigmem://company.example/agent/cto",
             "channel": "stigmem",
             "priority": "high",
             "include_context": True,
@@ -72,12 +72,12 @@ class TestSubmitIntentWithEscalation:
         r = client.post("/v1/intents", json=payload)
         assert r.status_code == 201
         esc = r.json()["escalation"]
-        assert esc["escalate_to"] == "stigmem://company.acme/agent/cto"
+        assert esc["escalate_to"] == "stigmem://company.example/agent/cto"
         assert esc["priority"] == "high"
 
     def test_escalation_facts_written(self, client: TestClient):
         payload = _minimal_envelope(escalation={
-            "escalate_to": "stigmem://company.acme/agent/cto",
+            "escalate_to": "stigmem://company.example/agent/cto",
             "channel": "stigmem",
             "priority": "critical",
             "include_context": False,
@@ -92,7 +92,7 @@ class TestSubmitIntentWithHandoff:
     def test_handoff_round_trips(self, client: TestClient):
         # First assert a fact to use as fact_ref
         fr = client.post("/v1/facts", json={
-            "entity": "stigmem://company.acme/doc/draft-v1",
+            "entity": "stigmem://company.example/doc/draft-v1",
             "relation": "memory:status",
             "value": {"type": "string", "v": "reviewed"},
             "source": _FROM,
@@ -131,7 +131,7 @@ class TestSubmitIntentWithConstraintsAndPreferences:
         payload = _minimal_envelope(
             deference=[{
                 "condition": "cost > $100",
-                "defer_to": "stigmem://company.acme/agent/cfo",
+                "defer_to": "stigmem://company.example/agent/cfo",
                 "timeout_s": 300,
             }],
         )
@@ -139,7 +139,7 @@ class TestSubmitIntentWithConstraintsAndPreferences:
         assert r.status_code == 201
         d = r.json()["deference"][0]
         assert d["condition"] == "cost > $100"
-        assert d["defer_to"] == "stigmem://company.acme/agent/cfo"
+        assert d["defer_to"] == "stigmem://company.example/agent/cfo"
         assert d["timeout_s"] == 300
 
 
@@ -172,7 +172,7 @@ class TestSubmitIntentValidation:
     def test_invalid_escalation_priority_returns_422(self, client: TestClient):
         r = client.post("/v1/intents", json=_minimal_envelope(
             escalation={
-                "escalate_to": "stigmem://company.acme/agent/cto",
+                "escalate_to": "stigmem://company.example/agent/cto",
                 "channel": "stigmem",
                 "priority": "URGENT",  # not a valid priority
                 "include_context": True,
@@ -183,7 +183,7 @@ class TestSubmitIntentValidation:
     def test_invalid_escalation_channel_returns_422(self, client: TestClient):
         r = client.post("/v1/intents", json=_minimal_envelope(
             escalation={
-                "escalate_to": "stigmem://company.acme/agent/cto",
+                "escalate_to": "stigmem://company.example/agent/cto",
                 "channel": "carrier-pigeon",  # not valid
                 "priority": "high",
                 "include_context": True,
@@ -217,7 +217,7 @@ class TestGetIntent:
 
     def test_get_reconstructs_escalation(self, client: TestClient):
         payload = _minimal_envelope(escalation={
-            "escalate_to": "stigmem://company.acme/agent/cto",
+            "escalate_to": "stigmem://company.example/agent/cto",
             "channel": "stigmem",
             "priority": "high",
             "include_context": True,

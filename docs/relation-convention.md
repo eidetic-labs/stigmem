@@ -155,7 +155,7 @@ protocol version. For now, warnings are non-blocking.
 | `pm:status`, `eng:status` | `status` |
 | `memory:role:primary` | `role` |
 | `acme:decision:approved-at` | `approved` |
-| `stigmem://company.acme/agent/cto` | `agent:cto` (informal) |
+| `stigmem://company.example/agent/cto` | `agent:cto` (informal) |
 | Separate relations for separate lifecycles | One relation, multiple concurrent writers |
 
 ---

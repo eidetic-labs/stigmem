@@ -386,7 +386,7 @@ When a federated fact contradicts a local fact, the standard contradiction rules
 ## 8. Open Questions
 
 1. **Entity URI scheme.** `user:alice` is informal. Should v0.3 require
-   `stigmem://company.acme/user/alice`? Leaning yes to avoid namespace collisions
+   `stigmem://company.example/user/alice`? Leaning yes to avoid namespace collisions
    in federated deployments. Community input wanted.
 
 2. **Handoff vs. fact-only.** Is the intent envelope necessary in v0.1 or should

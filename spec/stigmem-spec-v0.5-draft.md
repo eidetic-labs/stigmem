@@ -734,7 +734,7 @@ The following invariants MUST hold at all times:
 ## 8. Open Questions (v0.5)
 
 1. **Entity URI scheme.** `user:alice` is informal. Should v0.5 require
-   `stigmem://company.acme/user/alice`? The collision risk becomes real once federation
+   `stigmem://company.example/user/alice`? The collision risk becomes real once federation
    ships. **Leaning yes for v0.6** — Phase 3 implementation should warn on informal URIs
    but not break on them.
 

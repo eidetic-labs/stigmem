@@ -7,14 +7,14 @@ sidebar_label: Overview
 # Stigmem Protocol Specification
 
 :::note Version
-These docs track **Stigmem spec v0.8-draft**. See the [v0.2 docs](/docs/v0.2/spec) for the stable public draft.
+These docs track **Stigmem spec v0.9-draft**. See the [v0.2 docs](/docs/v0.2/spec) for the stable public draft.
 :::
 
-The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative source is `spec/stigmem-spec-v0.8-draft.md` in the repository.
+The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative source is `spec/stigmem-spec-v0.9-draft.md` in the repository.
 
 ## Spec sections
 
-| Section | Topic | Status in v0.8 |
+| Section | Topic | Status in v0.9 |
 |---------|-------|----------------|
 | §1 | Motivation | Stable |
 | §2 | Atomic Fact Shape | Stable |
@@ -35,10 +35,10 @@ The Stigmem specification defines the wire format, fact semantics, and federatio
 | §11 | Failure Mode Scenarios | Stable (new in v0.5) |
 | §12 | Adapter ABI | Stable (new in v0.6) |
 | §14 | Lint Semantics | Stable (new in v0.7) |
-| §15 | Decay Semantics | Draft (new in v0.8) — [guide](/docs/guides/decay) |
-| §16 | Synthesis | Draft (new in v0.8) — [guide](/docs/guides/synthesis) |
-| §17 | Memory Garden | Incoming v0.9 |
-| §18 | Source Attestation | Incoming v0.9 |
+| §15 | Decay Semantics | Stable (promoted v0.9) — [guide](/docs/guides/decay) |
+| §16 | Synthesis | Stable (promoted v0.9) — [guide](/docs/guides/synthesis) |
+| §17 | Memory Garden | New (draft) — guide coming soon |
+| §18 | Source Attestation | New (draft) — guide coming soon |
 
 ## Key concepts
 
@@ -77,7 +77,7 @@ v0.8 adds three tools for managing fact health over time. They form a pipeline:
 | `decay_scope` | §15 | "Apply configured decay policies" | [Decay guide](/docs/guides/decay) |
 | `synthesize_scope` | §16 | "What do I currently know?" | [Synthesis guide](/docs/guides/synthesis) |
 
-Both §15 and §16 are **draft** in v0.8. Promotion to normative is a v0.9 goal.
+§15 and §16 were promoted to **stable** in v0.9.
 
 ### N-node federation (§6.7–6.8)
 

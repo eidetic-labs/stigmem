@@ -393,7 +393,7 @@ per-peer trust multipliers.
 ## 8. Open Questions (v0.4)
 
 1. **Entity URI scheme.** `user:alice` is informal. Should v0.4 require
-   `stigmem://company.acme/user/alice`? Leaning yes to avoid namespace collisions
+   `stigmem://company.example/user/alice`? Leaning yes to avoid namespace collisions
    in federated deployments. **Phase 2 finding:** informal URIs worked for dogfood;
    the collision risk becomes real only once federation ships.
 

@@ -27,6 +27,7 @@ dev = [
 
 [project.scripts]
 stigmem-node = "stigmem_node.main:run"
+stigmem = "stigmem_node.cli:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -151,6 +151,12 @@ For bugs in the reference node, use the [bug report template](.github/ISSUE_TEMP
 
 ---
 
+## Security
+
+To report a vulnerability, use GitHub's private advisory process — **do not open a public issue**. See [SECURITY.md](SECURITY.md) for the full disclosure policy and the v1.0-rc security posture statement.
+
+---
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).

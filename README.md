@@ -13,6 +13,18 @@ Stigmem does **not** replace company orchestration platforms, agent runtimes, or
 
 ---
 
+## The name
+
+**Stigmem** = **Stigmergy** + **Memory**.
+
+[Stigmergy](https://en.wikipedia.org/wiki/Stigmergy) (Greek *stigma* — mark; *ergon* — work) is the coordination mechanism observed in ant colonies and termite mounds: agents don't communicate directly with each other. Instead, they leave traces in a shared environment — a pheromone trail, a soil deposit — and those traces guide the behavior of future agents. The colony's intelligence emerges from the environment itself, not from any central controller.
+
+Stigmem applies the same principle to multi-agent AI systems. Agents write typed, provenance-tagged facts into a shared substrate. Other agents — running later, on different platforms, inside different organizations — read those facts and act on them. No central coordinator, no point-to-point protocol overhead. The knowledge environment carries the coordination signal.
+
+The **Memory** half reflects persistence and decay: facts have `valid_until` expiries and confidence scores, so the substrate stays fresh rather than accumulating stale state — just as pheromone trails fade when they're no longer reinforced.
+
+---
+
 ## Current status
 
 | Area | Status | Spec section |

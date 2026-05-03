@@ -12,6 +12,7 @@ without installing any SDK.
 | `query_facts` | Query facts by entity / relation / scope |
 | `resolve_contradiction` | Resolve a contradiction between two conflicting facts |
 | `subscribe_scope` | Poll for recent facts in a scope (single-shot, cursor-based) |
+| `lint_scope` | Health-check sweep — detect contradictions, stale facts, orphans, broken refs (read-only; spec §14) |
 
 ## Setup
 

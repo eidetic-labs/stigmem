@@ -1,5 +1,5 @@
 /**
- * Stigmem TypeScript client SDK — spec v0.4/v0.5.
+ * Stigmem TypeScript client SDK — spec v0.7.
  */
 
 import type {
@@ -12,6 +12,8 @@ import type {
   FactPage,
   FactScope,
   FactValue,
+  LintOptions,
+  LintResult,
   NodeInfo,
   Peer,
   QueryOptions,
@@ -227,6 +229,19 @@ export class StigmemClient {
       body["new_value"] = opts.new_value;
     }
     return this.req<ConflictResolution>("POST", `/v1/conflicts/${conflictId}/resolve`, body);
+  }
+
+  // ------------------------------------------------------------------
+  // Lint — v0.7 (spec §14)
+  // ------------------------------------------------------------------
+
+  async lint(scope: FactScope, opts: LintOptions = {}): Promise<LintResult> {
+    const body: Record<string, unknown> = { scope };
+    if (opts.checks?.length) body["checks"] = opts.checks;
+    if (opts.entity !== undefined) body["entity"] = opts.entity;
+    if (opts.relation !== undefined) body["relation"] = opts.relation;
+    if (opts.stale_lookahead_s !== undefined) body["stale_lookahead_s"] = opts.stale_lookahead_s;
+    return this.req<LintResult>("POST", "/v1/lint", body);
   }
 
   // ------------------------------------------------------------------

@@ -166,3 +166,34 @@ export interface SubscribeOptions {
   intervalMs?: number;
   signal?:     AbortSignal;
 }
+
+// ---------------------------------------------------------------------------
+// Lint — v0.7 (spec §14)
+// ---------------------------------------------------------------------------
+
+export type LintCheck = "contradiction" | "stale" | "orphan" | "broken_ref";
+export type LintSeverity = "error" | "warning" | "info";
+
+export interface LintFinding {
+  check:    LintCheck;
+  severity: LintSeverity;
+  entity:   string;
+  relation: string | null;
+  fact_ids: string[];
+  detail:   string;
+}
+
+export interface LintResult {
+  findings:   LintFinding[];
+  checked_at: string;
+  scope:      FactScope;
+  checks_run: LintCheck[];
+  fact_count: number;
+}
+
+export interface LintOptions {
+  checks?:            LintCheck[];
+  entity?:            string;
+  relation?:          string;
+  stale_lookahead_s?: number;
+}

@@ -203,3 +203,38 @@ class TestWellKnown:
 class TestHealthz:
     def test_health(self, client: TestClient) -> None:
         assert client.get("/healthz").json() == {"status": "ok"}
+
+
+class TestLint:
+    """Smoke tests for POST /v1/lint (spec §5.12)."""
+
+    def test_lint_clean_scope(self, client: TestClient) -> None:
+        r = client.post("/v1/lint", json={"scope": "company"})
+        assert r.status_code == 200
+        body = r.json()
+        assert body["scope"] == "company"
+        assert "findings" in body
+        assert "checks_run" in body
+        assert "fact_count" in body
+        assert "checked_at" in body
+
+    def test_lint_detects_contradiction(self, client: TestClient) -> None:
+        FACT = {
+            "entity": "lint:entity", "relation": "lint:rel",
+            "value": {"type": "string", "v": "A"},
+            "source": "agent:test", "confidence": 1.0, "scope": "company",
+        }
+        client.post("/v1/facts", json=FACT)
+        client.post("/v1/facts", json={**FACT, "value": {"type": "string", "v": "B"}})
+
+        r = client.post("/v1/lint", json={"scope": "company", "checks": ["contradiction"]})
+        assert r.status_code == 200
+        body = r.json()
+        contradiction_findings = [f for f in body["findings"] if f["check"] == "contradiction"]
+        assert len(contradiction_findings) >= 1
+        assert contradiction_findings[0]["severity"] == "error"
+        assert len(contradiction_findings[0]["fact_ids"]) == 2
+
+    def test_lint_invalid_scope(self, client: TestClient) -> None:
+        r = client.post("/v1/lint", json={"scope": "invalid"})
+        assert r.status_code == 400

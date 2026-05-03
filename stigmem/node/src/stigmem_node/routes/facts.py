@@ -1,7 +1,8 @@
-"""Fact assertion and query routes — spec §5.1, §5.2, §5.4, §5.5."""
+"""Fact assertion and query routes — spec §5.1, §5.2, §5.4, §5.5, §2.6."""
 
 from __future__ import annotations
 
+import sys
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
@@ -10,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db
+from ..entity_normalizer import NormalizationError, is_informal, normalize_entity_uri
 from ..hlc import node_hlc
 from ..models import (
     VALID_SCOPES,
@@ -27,9 +29,29 @@ def assert_fact(
     req: AssertRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> FactRecord:
-    """Assert a fact into the fabric (spec §5.1). Advances local HLC; detects contradictions."""
+    """Assert a fact into the fabric (spec §5.1, §2.6). Normalizes entity/source URIs on ingest."""
     if not identity.can_write():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
+
+    try:
+        entity = normalize_entity_uri(req.entity)
+        source = normalize_entity_uri(req.source)
+    except NormalizationError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"invalid_entity_uri: {exc}") from exc
+
+    # Deprecation warning for informal URIs (spec §2.5)
+    if is_informal(req.entity):
+        print(
+            f"[stigmem] DEPRECATED: informal entity URI {req.entity!r} — "
+            f"use stigmem://authority/type/id format (spec §2.5)",
+            file=sys.stderr,
+        )
+    if is_informal(req.source):
+        print(
+            f"[stigmem] DEPRECATED: informal source URI {req.source!r} — "
+            f"use stigmem://authority/type/id format (spec §2.5)",
+            file=sys.stderr,
+        )
 
     fact_id = str(uuid.uuid4())
     now = datetime.now(UTC).isoformat()
@@ -44,11 +66,11 @@ def assert_fact(
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
-                req.entity,
+                entity,    # normalized (spec §2.6)
                 req.relation,
                 req.value.type,
                 value_v,
-                req.source,
+                source,    # normalized (spec §2.6)
                 now,
                 req.valid_until,
                 req.confidence,
@@ -63,12 +85,12 @@ def assert_fact(
         siblings = conn.execute(
             """SELECT id FROM facts
                WHERE entity=? AND relation=? AND scope=? AND id!=? AND confidence>0.0""",
-            (req.entity, req.relation, req.scope, fact_id),
+            (entity, req.relation, req.scope, fact_id),
         ).fetchall()
         contradicted = len(siblings) > 0
 
         if contradicted:
-            _record_contradictions(conn, fact_id, req.entity, req.relation, req.scope, siblings)
+            _record_contradictions(conn, fact_id, entity, req.relation, req.scope, siblings)
 
     return row_to_record(row, contradicted=contradicted)
 
@@ -140,7 +162,7 @@ def query_facts(
     cursor: str | None = Query(None, description="Opaque pagination cursor (fact id)"),
     limit: int = Query(50, ge=1, le=500),
 ) -> QueryResponse:
-    """Query facts by pattern (spec §5.2). Omitted fields are wildcards."""
+    """Query facts by pattern (spec §5.2). Omitted fields are wildcards. Entity/source are normalized (§2.6)."""
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
 
@@ -148,12 +170,20 @@ def query_facts(
     params: list[Any] = [min_confidence]
 
     if entity:
+        try:
+            entity = normalize_entity_uri(entity)
+        except NormalizationError:
+            pass  # malformed query — fall through to exact-match with raw value
         conditions.append("entity = ?")
         params.append(entity)
     if relation:
         conditions.append("relation = ?")
         params.append(relation)
     if source:
+        try:
+            source = normalize_entity_uri(source)
+        except NormalizationError:
+            pass
         conditions.append("source = ?")
         params.append(source)
     if scope:

@@ -92,6 +92,18 @@ const SubscribeScopeSchema = z.object({
   limit:  z.number().int().min(1).max(500).default(POLL_LIMIT),
 });
 
+const LintCheckEnum = z.enum(["contradiction", "stale", "orphan", "broken_ref"]);
+
+const LintScopeSchema = z.object({
+  scope:             FactScopeSchema.describe("The fact scope to sweep."),
+  checks:            z.array(LintCheckEnum).optional()
+                       .describe("Which checks to run. Omit to run all four: contradiction, stale, orphan, broken_ref."),
+  entity:            z.string().optional().describe("Optional. Restrict sweep to facts about a single entity URI."),
+  relation:          z.string().optional().describe("Optional. Restrict sweep to a single relation."),
+  stale_lookahead_s: z.number().int().optional()
+                       .describe("Optional. Also flag facts expiring within this many seconds. Default 0 (expired-only)."),
+});
+
 // ---------------------------------------------------------------------------
 // MCP tool definitions
 // ---------------------------------------------------------------------------
@@ -129,6 +141,16 @@ const TOOLS = [
       "Returns up to `limit` facts and a cursor for the next call. " +
       "This is a single-shot poll — call repeatedly with the returned cursor to follow new facts.",
     inputSchema: zodToJsonSchema(SubscribeScopeSchema),
+  },
+  {
+    name: "lint_scope",
+    description:
+      "Sweep a Stigmem scope for knowledge-base health issues (spec §14). " +
+      "Checks for: unresolved contradictions (severity=error), stale or expiring facts (warning/info), " +
+      "orphaned entities with no live facts (info), and broken cross-references (warning or error for intent relations). " +
+      "Read-only — reports findings without modifying any facts. " +
+      "Use resolve_contradiction to fix contradictions found here.",
+    inputSchema: zodToJsonSchema(LintScopeSchema),
   },
 ] as const;
 
@@ -265,6 +287,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               has_more: (page.cursor !== null && page.cursor !== undefined),
             }, null, 2),
           }],
+        };
+      }
+
+      case "lint_scope": {
+        const input = LintScopeSchema.parse(args);
+        const result = await client.lint(input.scope, {
+          checks:            input.checks,
+          entity:            input.entity,
+          relation:          input.relation,
+          stale_lookahead_s: input.stale_lookahead_s,
+        });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };
       }
 

@@ -1,6 +1,6 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 
-> **Status: v0.9-draft · Phase 7 (substrate) · Apache-2.0**
+> **Status: v1.0 stable · Phase 7 (substrate) · Apache-2.0**
 > **Repository:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem)
 
 Stigmem is an open specification and reference implementation for a federated knowledge fabric: a shared, persistent layer where AI agents and humans write typed, traceable facts that travel across tools, platforms, and organizations.
@@ -38,7 +38,7 @@ Stigmem does **not** replace company orchestration platforms, agent runtimes, or
 
 ## Install
 
-**Single node (Docker):**
+**Single node (Docker — recommended):**
 
 ```bash
 git clone https://github.com/Eidetic-Labs/stigmem
@@ -46,10 +46,24 @@ cd stigmem
 docker compose up --build -d
 ```
 
-Node A starts on `http://localhost:8765`, Node B on `http://localhost:8766`.
+Two federated nodes start immediately:
 
-- Interactive API docs: `http://localhost:8765/docs`
-- Node metadata: `http://localhost:8765/.well-known/stigmem`
+| Node | Host port | Interactive API | Node metadata |
+|------|-----------|-----------------|---------------|
+| `node-a` | 8765 | `http://localhost:8765/docs` | `http://localhost:8765/.well-known/stigmem` |
+| `node-b` | 8766 | `http://localhost:8766/docs` | `http://localhost:8766/.well-known/stigmem` |
+
+Key environment variables (`STIGMEM_` prefix, set in `docker-compose.yml` `environment:` block):
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `STIGMEM_NODE_URL` | `http://localhost:8765` | Public URL included in PeerDeclarations |
+| `STIGMEM_FEDERATION_ENABLED` | `false` | Enable pull replication |
+| `STIGMEM_FEDERATION_PULL_INTERVAL_S` | `30` | Seconds between pull cycles |
+| `STIGMEM_AUTH_REQUIRED` | `false` | Require Bearer token on every request |
+| `STIGMEM_DB_PATH` | `stigmem.db` | SQLite database path |
+
+→ Full environment variable reference: **[docs/docs/install.md](docs/docs/install.md)**
 
 **Single node (Python / uv):**
 
@@ -58,7 +72,7 @@ cd stigmem/node
 uv run python -m stigmem_node
 ```
 
-See [node/README.md](node/README.md) for environment variable reference.
+**Migrating from bare-metal to Docker?** See the [upgrade path guide](docs/docs/install.md#upgrade).
 
 ## Quickstart — two nodes federating
 
@@ -108,7 +122,7 @@ uv run pytest tests/ -v
 
 ```
 stigmem/
-├── spec/           ← canonical specification (v0.2 → v0.9-draft)
+├── spec/           ← canonical specification (v0.2 → v1.0 stable)
 ├── node/           ← reference node: FastAPI + SQLite, 74 tests
 ├── adapters/       ← MCP server (TypeScript), OpenClaw (Python), Paperclip (JS hook)
 ├── dogfood/        ← CEO memory migration scripts
@@ -134,7 +148,7 @@ It fills the gap none of them fill: typed, provenance-traceable, federated, enti
 
 The canonical specification lives in [`spec/`](spec/). See [`spec/README.md`](spec/README.md) for the section-by-section status table.
 
-Current working draft: **[`spec/stigmem-spec-v0.9-draft.md`](spec/stigmem-spec-v0.9-draft.md)** — §1–16 stable; §17 Memory Garden and §18 Source Attestation new in v0.9 (working draft).
+Current stable version: **[`spec/stigmem-spec-v1.0.md`](spec/stigmem-spec-v1.0.md)** — §1–18 all stable; §17 Memory Garden and §18 Source Attestation promoted from v0.9-draft.
 
 ---
 

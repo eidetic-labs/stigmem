@@ -99,6 +99,12 @@ const config = {
           },
           {
             type: 'docSidebar',
+            sidebarId: 'deploymentSidebar',
+            label: 'Deployment',
+            position: 'left',
+          },
+          {
+            type: 'docSidebar',
             sidebarId: 'specSidebar',
             label: 'Spec',
             position: 'left',

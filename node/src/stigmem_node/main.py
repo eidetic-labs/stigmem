@@ -16,6 +16,7 @@ from fastapi.responses import FileResponse
 from .auth import Identity, resolve_identity
 from .db import apply_migrations
 from .routes.agent_keys import router as agent_keys_router
+from .routes.aliases import router as aliases_router
 from .routes.audit import router as audit_router
 from .routes.auth import router as auth_router
 from .routes.decay import router as decay_router
@@ -23,6 +24,7 @@ from .routes.facts import router as facts_router
 from .routes.federation import router as federation_router
 from .routes.gardens import router as gardens_router
 from .routes.lint import router as lint_router
+from .routes.resolver import router as resolver_router
 from .routes.synthesize import router as synthesize_router
 from .routes.wellknown import router as wellknown_router
 from .settings import settings
@@ -78,6 +80,8 @@ def create_app() -> FastAPI:
     app.include_router(lint_router)
     app.include_router(synthesize_router)
     app.include_router(decay_router)
+    app.include_router(aliases_router)
+    app.include_router(resolver_router)
     app.include_router(wellknown_router)
 
     @app.get("/healthz", tags=["ops"])

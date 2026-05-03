@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..entity_normalizer import NormalizationError, is_informal, normalize_entity_uri
+from ..fuzzy_resolver import resolve_entity
 from ..hlc import node_hlc
 from ..models import (
     VALID_SCOPES,
@@ -91,6 +92,12 @@ def assert_fact(
             f"use stigmem://authority/type/id format (spec §2.5)",
             file=sys.stderr,
         )
+
+    # Layer 2: resolve user-defined semantic aliases (spec §2.6.6).
+    # Runs after strict normalization (Layer 1) so the alias table is keyed on canonical forms.
+    with db() as _alias_conn:
+        entity = resolve_entity(_alias_conn, entity)
+        source = resolve_entity(_alias_conn, source)
 
     # Relation namespacing convention check (see relation-convention.md)
     relation_warnings = _validate_relation(req.relation)

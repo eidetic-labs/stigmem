@@ -48,7 +48,7 @@ This section documents the current security posture of the stigmem v1.0-rc relea
 
 | Category | Count |
 | -------- | ----- |
-| Alerts addressed by the v1.0-rc dep upgrade sweep (ACM-146/147) — pending GitHub rescan | 20 |
+| Alerts addressed by the v1.0-rc dep upgrade sweep — pending GitHub rescan | 20 |
 | Alerts in docs build toolchain (non-exploitable, suppressed) | 7 |
 | Unaddressed / escalated blockers | 0 |
 
@@ -56,7 +56,7 @@ This section documents the current security posture of the stigmem v1.0-rc relea
 
 ---
 
-### Group A — Resolved by ACM-146/147 dep upgrade (20 alerts)
+### Group A — Resolved by v1.0-rc dep upgrade (20 alerts)
 
 The `chore(deps): TypeScript dep upgrade sweep + Node CVE remediation` commit upgraded the following packages to patched versions. Dependabot alerts will auto-close on the next GitHub rescan after the branch merges.
 
@@ -138,4 +138,31 @@ The stigmem reference node (`stigmem/node/`) is implemented in Python with FastA
 - **Federation:** Peer handshake uses Ed25519 signing; replay attack resistance via HLC timestamps (§6).
 - **Input validation:** Pydantic models on all HTTP endpoints; malformed payloads return 422 before reaching business logic.
 - **Secrets:** No credentials are committed to the repository. Docker Compose uses environment variable injection.
-- **CI:** Dependabot alerts are monitored; the `npm audit` step runs in CI for all PRs touching `docs/` or `apps/`.
+- **CI:** Dependabot alerts are monitored; `pip-audit`, `pnpm audit`, and `bandit` run as blocking CI steps on every PR (see Audit Tooling below).
+
+---
+
+### Audit Tooling
+
+All three tools run as blocking steps in `.github/workflows/ci.yml` on every push and pull request.
+
+| Tool | Scope | What it checks | CI step |
+| ---- | ----- | -------------- | ------- |
+| `pip-audit` | Python dependencies (`uv.lock`) | Known CVEs in installed packages via PyPI advisory database | `python-tests` job — exits non-zero on any moderate+ finding |
+| `pnpm audit` | Node.js dependencies (`pnpm-lock.yaml`) | Known CVEs via npm advisory database | `node-tests` job — `--audit-level=moderate` |
+| `bandit` | Python source (`node/src/`, `sdks/stigmem-py/src/`) | Common Python security anti-patterns (injection, weak crypto, unsafe deserialization) | `python-tests` job — configured via `[tool.bandit]` in `pyproject.toml`; `B101` (assert usage) suppressed for test code |
+
+**Running locally:**
+
+```bash
+# Python dependency audit
+uv run pip-audit
+
+# Python static analysis
+uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml
+
+# Node.js dependency audit
+pnpm audit --audit-level=moderate
+```
+
+The docs build toolchain (`docusaurus-plugin-openapi-docs` and its transitive dependencies) generates known alerts in `pnpm audit` output. These are suppressed per the Group B analysis above — they are build-time only and have no user-controlled input pathway.

@@ -29,6 +29,9 @@ jobs:
       - name: pip-audit (no known vulnerabilities)
         run: uv run pip-audit --progress-spinner off
 
+      - name: bandit (Python security linting)
+        run: uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml -q
+
   node-tests:
     name: TypeScript SDK + MCP adapter tests
     runs-on: ubuntu-latest

@@ -74,6 +74,64 @@ python -m stigmem_node
 
 The node starts on `http://localhost:8000`. Interactive Swagger UI at `http://localhost:8000/docs`.
 
+## Running as a persistent service (macOS)
+
+The `service-install.sh` script registers stigmem as a macOS LaunchAgent that starts automatically at login and restarts on crash — no Docker required.
+
+### Prerequisites
+
+- Python venv built in the repo root (run `uv sync` if you haven't already):
+
+  ```bash
+  uv sync
+  ```
+
+  The script expects `.venv/bin/stigmem-node` to exist; it will fail fast if it doesn't.
+
+### Install
+
+```bash
+bash scripts/service-install.sh
+```
+
+The script:
+1. Generates a LaunchAgent plist at `~/Library/LaunchAgents/com.eidetic-labs.stigmem.plist`
+2. Bootstraps it with `launchctl bootstrap` (no `sudo` required)
+3. Polls `http://127.0.0.1:8765/healthz` for up to 10 seconds and prints the result
+
+The service runs with these environment variables baked in:
+
+| Variable | Value |
+|----------|-------|
+| `STIGMEM_HOST` | `127.0.0.1` |
+| `STIGMEM_PORT` | `8765` |
+| `STIGMEM_DB_PATH` | `data/stigmem.db` (relative to the repo root) |
+| `STIGMEM_FEDERATION_ENABLED` | `false` |
+
+Logs are written to `logs/stigmem.log` (stdout) and `logs/stigmem-error.log` (stderr).
+
+### Verify
+
+```bash
+curl -s http://127.0.0.1:8765/healthz   # {"status":"ok"}
+lsof -i :8765                           # shows the stigmem-node process
+```
+
+### Uninstall
+
+```bash
+bash scripts/service-uninstall.sh
+```
+
+Stops the service, unregisters it from `launchctl`, and removes the plist. The database at `data/stigmem.db` is preserved.
+
+:::note
+The service label is `com.eidetic-labs.stigmem`. To inspect it directly:
+```bash
+launchctl print gui/$(id -u)/com.eidetic-labs.stigmem
+```
+:::
+
 ## Upgrading
 
 ```bash

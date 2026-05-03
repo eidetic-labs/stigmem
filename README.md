@@ -1,6 +1,6 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 
-> **Status: v0.8-draft · Phase 6 (public beta) · Apache-2.0**
+> **Status: v0.9-draft · Phase 7 (substrate) · Apache-2.0**
 > **Repository:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem)
 
 Stigmem is an open specification and reference implementation for a federated knowledge fabric: a shared, persistent layer where AI agents and humans write typed, traceable facts that travel across tools, platforms, and organizations.
@@ -108,7 +108,7 @@ uv run pytest tests/ -v
 
 ```
 stigmem/
-├── spec/           ← canonical specification (v0.2 → v0.8-draft)
+├── spec/           ← canonical specification (v0.2 → v0.9-draft)
 ├── node/           ← reference node: FastAPI + SQLite, 74 tests
 ├── adapters/       ← MCP server (TypeScript), OpenClaw (Python), Paperclip (JS hook)
 ├── dogfood/        ← CEO memory migration scripts
@@ -134,7 +134,7 @@ It fills the gap none of them fill: typed, provenance-traceable, federated, enti
 
 The canonical specification lives in [`spec/`](spec/). See [`spec/README.md`](spec/README.md) for the section-by-section status table.
 
-Current working draft: **[`spec/stigmem-spec-v0.8-draft.md`](spec/stigmem-spec-v0.8-draft.md)** — §1–14 stable; §15 Decay Semantics and §16 Synthesis new (draft, stable in v0.9).
+Current working draft: **[`spec/stigmem-spec-v0.9-draft.md`](spec/stigmem-spec-v0.9-draft.md)** — §1–16 stable; §17 Memory Garden and §18 Source Attestation new in v0.9 (working draft).
 
 ---
 
@@ -144,7 +144,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the RFC process. Short version:
 
 1. Open an issue using the [RFC template](.github/ISSUE_TEMPLATE/rfc.yml)
 2. Discuss and iterate
-3. Submit a PR against the active spec draft (`spec/stigmem-spec-v0.8-draft.md`)
+3. Submit a PR against the active spec draft (`spec/stigmem-spec-v0.9-draft.md`)
 4. Spec changes merge with ≥2 approvals from active contributors
 
 For bugs in the reference node, use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.yml).

@@ -39,10 +39,10 @@ Every piece of knowledge in Stigmem is an **atomic fact**:
 
 | Field         | Type                              | Description |
 |---------------|-----------------------------------|-------------|
-| `entity`      | URI (see §2.5, §2.6)              | What this fact is about. Formal: `stigmem://company.acme/user/alice`. Informal (deprecated): `user:alice`. Stored in canonical normalized form (§2.6). |
+| `entity`      | URI (see §2.5, §2.6)              | What this fact is about. Formal: `stigmem://company.example/user/alice`. Informal (deprecated): `user:alice`. Stored in canonical normalized form (§2.6). |
 | `relation`    | string (namespaced predicate)     | What kind of statement this is. Examples: `memory:role`, `roadmap:status`, `preference:timezone`. |
 | `value`       | `FactValue` (see §2.1)            | The asserted value. |
-| `source`      | URI (see §2.5, §2.6)              | Who asserted the fact. Examples: `stigmem://company.acme/agent/assistant`, `stigmem://company.acme/user/alice`. Stored in canonical normalized form (§2.6). |
+| `source`      | URI (see §2.5, §2.6)              | Who asserted the fact. Examples: `stigmem://company.example/agent/assistant`, `stigmem://company.example/user/alice`. Stored in canonical normalized form (§2.6). |
 | `timestamp`   | ISO 8601 UTC datetime             | Wall-clock time when the fact was asserted. Set by the node at write time; clients may suggest. |
 | `hlc`         | HLC string (see §2.4)            | Hybrid Logical Clock timestamp. Causality-preserving; required for federation. |
 | `valid_until` | ISO 8601 UTC datetime or null     | Optional. If set, the fact is expired after this time. |
@@ -87,8 +87,8 @@ includes `"company"` in `allowed_scopes` (see §6.1).
 Mint a synthetic entity `stigmem:rel:{uuid}` and assert facts about it:
 
 ```
-(entity="stigmem:rel:abc123", relation="rel:subject",  value={type:"ref", v:"stigmem://company.acme/company/a"})
-(entity="stigmem:rel:abc123", relation="rel:object",   value={type:"ref", v:"stigmem://company.acme/company/b"})
+(entity="stigmem:rel:abc123", relation="rel:subject",  value={type:"ref", v:"stigmem://company.example/company/a"})
+(entity="stigmem:rel:abc123", relation="rel:object",   value={type:"ref", v:"stigmem://company.example/company/b"})
 (entity="stigmem:rel:abc123", relation="rel:type",     value={type:"string", v:"policy:board-approval"})
 ```
 
@@ -124,14 +124,14 @@ stigmem://{authority}/{type}/{id}
 
 | Component   | Description | Examples |
 |-------------|-------------|---------|
-| `authority` | Hostname of the Stigmem node that owns this entity namespace | `company.acme`, `node.example.com` |
+| `authority` | Hostname of the Stigmem node that owns this entity namespace | `company.example`, `node.example.com` |
 | `type`      | Entity type slug (lowercase, no spaces) | `user`, `agent`, `project`, `issue`, `decision`, `team` |
 | `id`        | Opaque stable identifier for the entity | `alice`, `cto`, `acme-roadmap`, `EG-42` |
 
 **Examples:**
-- `stigmem://company.acme/user/alice`
-- `stigmem://company.acme/agent/cto`
-- `stigmem://company.acme/issue/EG-42`
+- `stigmem://company.example/user/alice`
+- `stigmem://company.example/agent/cto`
+- `stigmem://company.example/issue/EG-42`
 - `stigmem://node.acme/decision/use-sqlite`
 
 #### Deprecation of informal URIs
@@ -158,7 +158,7 @@ is active. `user:alice` on node A and `user:alice` on node B may refer to differ
 people. The formal scheme binds the authority to the URI, preventing silent identity
 collisions across federated nodes.
 
-**v0.7 note:** All components of the formal URI are normalized to lowercase on ingest (§2.6). `stigmem://company.acme/issue/EG-42` is stored as `stigmem://company.acme/issue/eg-42`.
+**v0.7 note:** All components of the formal URI are normalized to lowercase on ingest (§2.6). `stigmem://company.example/issue/EG-42` is stored as `stigmem://company.example/issue/eg-42`.
 
 ### 2.6 Entity Naming Rules — v0.7 Normative
 
@@ -173,8 +173,8 @@ Before strict normalization, the following assertions create separate entities f
 ```
 entity="project/eg-18"                            (informal, slash separator, lowercase)
 entity="project/EG-18"                            (informal, slash separator, uppercase)
-entity="stigmem://company.acme/project/eg-18"     (formal, lowercase id)
-entity="stigmem://company.acme/project/EG-18"     (formal, uppercase id)
+entity="stigmem://company.example/project/eg-18"     (formal, lowercase id)
+entity="stigmem://company.example/project/EG-18"     (formal, uppercase id)
 ```
 
 All four refer to the same project. Without normalization, queries for any one form miss the others entirely, and contradiction detection never fires for facts that should conflict.
@@ -521,16 +521,16 @@ HandoffPayload {
 
 ```
 POST /v1/facts
-{ "entity": "stigmem://company.acme/user/alice", "relation": "memory:role",
+{ "entity": "stigmem://company.example/user/alice", "relation": "memory:role",
   "value": { "type": "string", "v": "CEO" },
-  "source": "stigmem://company.acme/agent/assistant", "confidence": 1.0, "scope": "company" }
+  "source": "stigmem://company.example/agent/assistant", "confidence": 1.0, "scope": "company" }
 → 201 { "id": "<uuid>", "timestamp": "...", "hlc": "...", ...fact... }
 ```
 
 ### 5.2 Query facts
 
 ```
-GET /v1/facts?entity=stigmem://company.acme/user/alice&relation=memory:role
+GET /v1/facts?entity=stigmem://company.example/user/alice&relation=memory:role
 → 200 { "facts": [...], "total": 1, "cursor": null }
 ```
 
@@ -569,9 +569,9 @@ The original fact is never deleted; the retraction is a new immutable entry.
 
 ```
 POST /v1/facts
-{ "entity": "stigmem://company.acme/user/alice", "relation": "memory:role",
+{ "entity": "stigmem://company.example/user/alice", "relation": "memory:role",
   "value": { "type": "string", "v": "CEO" },
-  "source": "stigmem://company.acme/agent/assistant", "confidence": 0.0, "scope": "company" }
+  "source": "stigmem://company.example/agent/assistant", "confidence": 0.0, "scope": "company" }
 → 201 { ..., "confidence": 0.0 }
 ```
 
@@ -1877,7 +1877,7 @@ installation.
     {
       "check": "contradiction",
       "severity": "error",
-      "entity": "stigmem://company.acme/user/alice",
+      "entity": "stigmem://company.example/user/alice",
       "relation": "memory:role",
       "fact_ids": ["fact-uuid-1", "fact-uuid-2"],
       "detail": "Two live facts with different values for (entity, relation, scope)"

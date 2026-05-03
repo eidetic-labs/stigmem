@@ -7,7 +7,7 @@ description: Current-state narrative — what Stigmem is, why it exists, what we
 
 # State of Stigmem
 
-*Last updated: 2026-05-02. Audience: board, prospective hires, external readers.*
+*Last updated: 2026-05-03. Audience: board, prospective hires, external readers.*
 
 ---
 
@@ -37,7 +37,7 @@ Memory architecture per-agent patches around this; a *shared substrate* solves i
 
 ## Where are we today?
 
-Six of seven planned phases are complete as of 2026-05-02. Phase 6 (public beta) shipped decay semantics, synthesis, N-node federation soak, cursor-checkpoint recovery, entity naming rules, and lint semantics. Phase 7 (v1.0 hardening) is next.
+Phases 0 through 6 are complete as of 2026-05-02. Phase 7 (substrate, v0.9) has started. Phase 6 (public beta) shipped decay semantics, synthesis, N-node federation soak, cursor-checkpoint recovery, entity naming rules, and lint semantics.
 
 ### Phase 0 — Scoping Sprint ✓
 
@@ -81,6 +81,16 @@ Six of seven planned phases are complete as of 2026-05-02. Phase 6 (public beta)
 ### Phase 6 — Public Beta ✓
 
 **What shipped:** Decay semantics (§15) — configurable `TTL` and confidence-decay policies, `POST /v1/decay/sweep`. Synthesis (§16) — `POST /v1/synthesis` and `synthesize_scope` MCP tool for confidence-weighted current-state snapshots. N-node federation soak (4-node topology, backpressure and scope propagation invariants in §6.7–6.8). Cursor-checkpoint export/import for bounded DB-loss recovery. Human surface (browser UI) stub shipped as in-progress. Spec v0.8 published.
+
+### Phase 7 — Substrate (in progress)
+
+v0.9 ships three primitives that together form the substrate for the curator dashboard and the connector ecosystem:
+
+- **Memory Garden (§17)** — named, ACL'd partitions of the fact store. Each garden has a `garden_id`, a permission table (admin/writer/reader roles), and garden-tagged facts. Agents and connectors write into gardens; the curator dashboard reads and curates them. The `garden:` namespace prefix is reserved.
+- **Source Attestation (§18)** — binds an `entity_uri` to an API key so that every fact written by that key carries a verifiable `attested` field. Three enforcement modes: `enforce` (reject unattested writes), `warn` (log and pass), and `off`. Source Attestation is the trust anchor for the connector ecosystem: third-party integrations write under their own attested identity, and the curator dashboard can filter or quarantine by attestation.
+- **Intent Envelope (§4)** — provides `goal`, `constraint`, `preference`, and `handoff` envelope types for richer agent coordination, moving §4 from long-running community-feedback draft toward initial implementation.
+
+**Exit criteria for Phase 7:** v0.9 spec stabilized; curator dashboard prototype running end-to-end on Stigmem; at least one external connector demo using Source Attestation; §17 and §18 promoted to normative.
 
 ---
 
@@ -137,9 +147,9 @@ The architecture reflects specific deliberate decisions, each sharpened by the P
 | 4 | Adapters (OpenClaw, Paperclip, MCP) + CEO end-to-end dogfood | **Done** |
 | 5 | Synthesis & Hygiene — entity naming rules, lint semantics | **Done** |
 | 6 | Public Beta — decay, synthesis, N-node soak, cursor-checkpoint recovery, human surface stub | **Done** |
-| 7 | v1.0 Hardening + Public Launch — multi-tenant, OIDC, billing, launch site | Planned |
+| 7 | Substrate — Memory Garden (§17), Source Attestation (§18), Intent Envelope (§4), curator dashboard | **In progress** |
 
-Phase 7 is GA: multi-tenant hosting, OIDC/SSO, billing, and the public launch site.
+Phase 7 is the substrate phase: Memory Garden, Source Attestation, and Intent Envelope form the foundation for the curator dashboard and the connector ecosystem. v1.0 GA (multi-tenant, OIDC/SSO, billing, public launch) follows Phase 7.
 
 ---
 
@@ -169,7 +179,7 @@ stigmem/
 │   ├── stigmem-spec-v0.5-draft.md
 │   ├── stigmem-spec-v0.6-draft.md
 │   ├── stigmem-spec-v0.7-draft.md
-│   ├── stigmem-spec-v0.8-draft.md  ← current working draft
+│   ├── stigmem-spec-v0.9-draft.md  ← current working draft
 │   └── README.md               ← spec status table
 ├── node/                       ← reference node (FastAPI + SQLite)
 │   ├── migrations/             ← SQL schema migrations

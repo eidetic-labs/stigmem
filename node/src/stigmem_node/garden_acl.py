@@ -12,24 +12,36 @@ from .auth import Identity
 from .db import db
 
 
-def get_garden_by_slug_or_id(slug_or_id: str) -> dict | None:
-    """Return a garden row by slug or by its UUID id. Returns None if not found."""
+def get_garden_by_slug_or_id(slug_or_id: str, tenant_id: str | None = None) -> dict | None:
+    """Return a garden row by slug or by its UUID id.
+
+    When tenant_id is provided, slug lookups are scoped to that tenant so that
+    the same slug used by different tenants resolves to the correct garden.
+    UUID lookups are globally unique and do not require tenant scoping.
+    """
     with db() as conn:
-        row = conn.execute(
-            "SELECT * FROM gardens WHERE slug = ? OR id = ?",
-            (slug_or_id, slug_or_id),
-        ).fetchone()
+        if tenant_id is not None:
+            # Slug lookup scoped to tenant; UUID lookup is always unique
+            row = conn.execute(
+                "SELECT * FROM gardens WHERE (slug = ? AND tenant_id = ?) OR id = ?",
+                (slug_or_id, tenant_id, slug_or_id),
+            ).fetchone()
+        else:
+            row = conn.execute(
+                "SELECT * FROM gardens WHERE slug = ? OR id = ?",
+                (slug_or_id, slug_or_id),
+            ).fetchone()
     return dict(row) if row is not None else None
 
 
-def get_garden_by_garden_uri(garden_uri: str) -> dict | None:
+def get_garden_by_garden_uri(garden_uri: str, tenant_id: str | None = None) -> dict | None:
     """Return a garden row by its stigmem://authority/garden/{slug} URI."""
     # Extract slug from URI: stigmem://authority/garden/{slug}
     parts = garden_uri.split("/garden/", 1)
     if len(parts) != 2 or not parts[1]:
         return None
     slug = parts[1].rstrip("/")
-    return get_garden_by_slug_or_id(slug)
+    return get_garden_by_slug_or_id(slug, tenant_id=tenant_id)
 
 
 def get_member_role(garden_id: str, entity_uri: str) -> str | None:

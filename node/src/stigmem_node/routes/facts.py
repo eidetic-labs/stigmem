@@ -10,6 +10,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..auth import Identity, resolve_identity
+from ..billing import BillingEvent, get_hook_bus
 from ..db import db
 from ..entity_normalizer import NormalizationError, is_informal, normalize_entity_uri
 from ..fuzzy_resolver import resolve_entity
@@ -137,7 +138,7 @@ def assert_fact(
     # --- Garden ACL (spec §17.3) ---
     garden = None
     if req.garden_id is not None:
-        garden = get_garden_by_garden_uri(req.garden_id)
+        garden = get_garden_by_garden_uri(req.garden_id, tenant_id=identity.tenant_id)
         if garden is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
         if garden["scope"] != req.scope:
@@ -166,8 +167,8 @@ def assert_fact(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
                 valid_until, confidence, scope, hlc, received_from, attested_key_id,
-                garden_id, attested)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                garden_id, attested, tenant_id)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 entity,    # normalized (spec §2.6)
@@ -184,14 +185,15 @@ def assert_fact(
                 attested_key_id,
                 garden_uuid,
                 attested_int,
+                identity.tenant_id,
             ),
         )
 
         # C3: write audit entry joining principal → attested-source → fact-id
         conn.execute(
             """INSERT INTO fact_audit_log
-               (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts)
-               VALUES (?,?,?,?,?,?,?,?)""",
+               (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts, tenant_id)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
             (
                 audit_id,
                 fact_id,
@@ -201,6 +203,7 @@ def assert_fact(
                 source,
                 attested_key_id,
                 now,
+                identity.tenant_id,
             ),
         )
 
@@ -218,19 +221,27 @@ def assert_fact(
         if not _is_system:
             siblings = conn.execute(
                 """SELECT id FROM facts
-                   WHERE entity=? AND relation=? AND scope=? AND id!=? AND confidence>0.0""",
-                (entity, req.relation, req.scope, fact_id),
+                   WHERE entity=? AND relation=? AND scope=? AND id!=? AND confidence>0.0
+                     AND tenant_id=?""",
+                (entity, req.relation, req.scope, fact_id, identity.tenant_id),
             ).fetchall()
         contradicted = len(siblings) > 0
 
         if contradicted:
-            _record_contradictions(conn, fact_id, entity, req.relation, req.scope, siblings)
+            _record_contradictions(conn, fact_id, entity, req.relation, req.scope, siblings, identity.tenant_id)
             print(
                 f"[stigmem] WARN: collision — entity={entity!r} relation={req.relation!r} "
                 f"scope={req.scope!r}: fact {fact_id!r} contradicts {len(siblings)} existing "
                 f"fact(s); verify relation namespacing (see relation-convention.md)",
                 file=sys.stderr,
             )
+
+    get_hook_bus().emit(BillingEvent(
+        event_type="fact_written",
+        tenant_id=identity.tenant_id,
+        entity_uri=identity.entity_uri,
+        fact_id=fact_id,
+    ))
 
     return row_to_record(row, contradicted=contradicted, warnings=relation_warnings)
 
@@ -242,6 +253,7 @@ def _record_contradictions(
     relation: str,
     scope: str,
     siblings: list[Any],
+    tenant_id: str = "default",
 ) -> None:
     """Write conflict entities and conflicts table rows for new contradictions."""
     now = datetime.now(UTC).isoformat()
@@ -261,24 +273,24 @@ def _record_contradictions(
         conn.execute(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
-                valid_until, confidence, scope, hlc, received_from)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                valid_until, confidence, scope, hlc, received_from, tenant_id)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 str(uuid.uuid4()), conflict_id, "stigmem:conflict:between",
                 "text", f"{new_fact_id} {sibling_id}",
-                "system:stigmem", now, None, 1.0, scope, h_between, None,
+                "system:stigmem", now, None, 1.0, scope, h_between, None, tenant_id,
             ),
         )
         h_status = node_hlc.tick()
         conn.execute(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
-                valid_until, confidence, scope, hlc, received_from)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                valid_until, confidence, scope, hlc, received_from, tenant_id)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 str(uuid.uuid4()), conflict_id, "stigmem:conflict:status",
                 "string", "unresolved",
-                "system:stigmem", now, None, 1.0, scope, h_status, None,
+                "system:stigmem", now, None, 1.0, scope, h_status, None, tenant_id,
             ),
         )
         conn.execute(
@@ -311,13 +323,13 @@ def query_facts(
     # Garden ACL: resolve and enforce membership before querying (spec §5.20, §17.3)
     garden = None
     if garden_id is not None:
-        garden = get_garden_by_garden_uri(garden_id)
+        garden = get_garden_by_garden_uri(garden_id, tenant_id=identity.tenant_id)
         if garden is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
         require_garden_read(garden, identity)
 
-    conditions: list[str] = ["confidence >= ?"]
-    params: list[Any] = [min_confidence]
+    conditions: list[str] = ["confidence >= ?", "tenant_id = ?"]
+    params: list[Any] = [min_confidence, identity.tenant_id]
 
     # Garden filter: explicit garden_id, or hide garden facts from callers who can't see them
     if garden is not None:
@@ -327,7 +339,9 @@ def query_facts(
         # Hide garden-tagged facts from callers who aren't members (spec §17.3)
         with db() as _g_conn:
             visible_garden_ids = [
-                row["id"] for row in _g_conn.execute("SELECT id FROM gardens").fetchall()
+                row["id"] for row in _g_conn.execute(
+                    "SELECT id FROM gardens WHERE tenant_id = ?", (identity.tenant_id,)
+                ).fetchall()
                 if caller_can_see_garden(row["id"], identity)
             ]
         if visible_garden_ids:
@@ -417,7 +431,10 @@ def get_fact(
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
     with db() as conn:
-        row = conn.execute("SELECT * FROM facts WHERE id = ?", (fact_id,)).fetchone()
+        row = conn.execute(
+            "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
+            (fact_id, identity.tenant_id),
+        ).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="fact not found")
 
@@ -425,15 +442,16 @@ def get_fact(
     if "garden_id" in row.keys() and row["garden_id"] is not None:
         with db() as conn:
             garden_row = conn.execute(
-                "SELECT * FROM gardens WHERE id = ?", (row["garden_id"],)
+                "SELECT * FROM gardens WHERE id = ? AND tenant_id = ?",
+                (row["garden_id"], identity.tenant_id),
             ).fetchone()
         if garden_row is not None:
             require_garden_read(dict(garden_row), identity)
 
     with db() as conn:
         sibling_count: int = conn.execute(
-            "SELECT COUNT(*) FROM facts WHERE entity=? AND relation=? AND scope=?",
-            (row["entity"], row["relation"], row["scope"]),
+            "SELECT COUNT(*) FROM facts WHERE entity=? AND relation=? AND scope=? AND tenant_id=?",
+            (row["entity"], row["relation"], row["scope"], identity.tenant_id),
         ).fetchone()[0]
     return row_to_record(row, contradicted=sibling_count > 1)
 

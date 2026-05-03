@@ -39,10 +39,12 @@ class Identity:
         entity_uri: str,
         permissions: list[str],
         oidc_sub: str | None = None,
+        tenant_id: str = "default",
     ) -> None:
         self.entity_uri = entity_uri
         self.permissions = set(permissions)
         self.oidc_sub = oidc_sub
+        self.tenant_id = tenant_id
 
     def can_read(self) -> bool:
         return "read" in self.permissions
@@ -54,7 +56,7 @@ class Identity:
         return "federate" in self.permissions
 
 
-_ANON = Identity("anon:trusted", ["read", "write", "federate"])
+_ANON = Identity("anon:trusted", ["read", "write", "federate"], tenant_id="default")
 
 
 def resolve_identity(
@@ -94,7 +96,8 @@ def _lookup(raw_key: str) -> Identity | None:
     now = datetime.now(UTC).isoformat()
     with db() as conn:
         row = conn.execute(
-            "SELECT entity_uri, permissions, expires_at, oidc_sub FROM api_keys WHERE key_hash = ?",
+            "SELECT entity_uri, permissions, expires_at, oidc_sub, tenant_id"
+            " FROM api_keys WHERE key_hash = ?",
             (key_hash,),
         ).fetchone()
     if row is None:
@@ -106,6 +109,7 @@ def _lookup(raw_key: str) -> Identity | None:
         entity_uri=row["entity_uri"],
         permissions=perms,
         oidc_sub=row["oidc_sub"],
+        tenant_id=row["tenant_id"] or "default",
     )
 
 
@@ -115,6 +119,7 @@ def create_api_key(
     description: str | None = None,
     expires_at: str | None = None,
     oidc_sub: str | None = None,
+    tenant_id: str = "default",
 ) -> str:
     """Mint a new raw API key, persist its hash, and return the raw key."""
     if permissions is None:
@@ -124,8 +129,8 @@ def create_api_key(
     with db() as conn:
         conn.execute(
             """INSERT INTO api_keys
-               (id, key_hash, entity_uri, permissions, description, created_at, expires_at, oidc_sub)
-               VALUES (?,?,?,?,?,?,?,?)""",
+               (id, key_hash, entity_uri, permissions, description, created_at, expires_at, oidc_sub, tenant_id)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
             (
                 key_id,
                 _hash_key(raw),
@@ -135,6 +140,7 @@ def create_api_key(
                 datetime.now(UTC).isoformat(),
                 expires_at,
                 oidc_sub,
+                tenant_id,
             ),
         )
     return raw

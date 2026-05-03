@@ -1,11 +1,12 @@
 ---
-name: stigmem
+name: stigmem-node
 description: Persistent federated memory for OpenClaw agents — boot handshake, handoff, decision, and escalation surfaces backed by a Stigmem node.
 version: 1.0.0
 metadata:
   openclaw:
     emoji: "🧠"
     homepage: https://stigmem.dev/docs/guides/federation#external-onboarding
+    clawhub: https://clawhub.ai/skills/stigmem-node
     primaryEnv: STIGMEM_URL
     requires:
       env:

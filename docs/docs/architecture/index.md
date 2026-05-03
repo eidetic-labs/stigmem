@@ -269,7 +269,7 @@ stigmem/
 
 **SQLite as Phase 2–4 storage.** The schema (spec §10) is migration-friendly by design: column additions do not require table rewrites. A PostgreSQL backend is feasible for Phase 5+ but not required before v1.0.
 
-**HLC requires a threading lock.** The in-process HLC state is shared between the HTTP request path and the background federation pull task. Without `threading.Lock`, concurrent writes race and may produce out-of-order HLC values. Fixed in `hlc.py`; noted in the [Phase 3 exit memo](/ACM/issues/ACM-34).
+**HLC requires a threading lock.** The in-process HLC state is shared between the HTTP request path and the background federation pull task. Without `threading.Lock`, concurrent writes race and may produce out-of-order HLC values. Fixed in `hlc.py`; noted in the Phase 3 exit memo.
 
 **Idempotency + conflict edge case.** If fact F arrives from peer A and creates a conflict with local fact G, then F arrives again via replication, the second ingestion is a no-op — it must not create a second conflict record. `federation_ingest.py` handles this; the spec §6.3 needs a normative sentence covering this case before v0.5.1 is finalized.
 

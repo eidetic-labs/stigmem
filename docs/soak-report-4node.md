@@ -1,7 +1,7 @@
 # 4-Node Federation Soak Report
 
 **Status:** PENDING — soak not yet complete  
-**Issue:** [ACM-61](/ACM/issues/ACM-61)  
+**Issue:** ACM-61  
 **Topology:** Full-mesh pull replication, 4 nodes, pull interval 10s  
 **Duration:** 72 hours  
 **Start:** TBD  

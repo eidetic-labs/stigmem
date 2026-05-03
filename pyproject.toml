@@ -1,40 +1,23 @@
 [project]
-name = "ai-platform"
-version = "0.1.0"
-description = "Open-source AI platform for SMBs — agent framework, compliance engine, and developer tools"
+name = "stigmem"
+version = "0.2.0"
+description = "Stigmem — federated knowledge fabric for AI agents"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
 authors = [
-  { name = "Acme Corp", email = "oss@acmecorp.ai" },
+  { name = "Eidetic Labs", email = "oss@eidetic-labs.ai" },
 ]
 
 [tool.uv.workspace]
 members = [
-  "stigmem/node",
+  "node",
   "sdks/stigmem-py",
-  "packages/core",
-  "packages/agents",
-  "packages/compliance",
-  "packages/integrations/shopify",
-  "packages/integrations/woocommerce",
-  "packages/integrations/stripe",
-  "packages/integrations/github",
-  "packages/integrations/aws",
-  "packages/integrations/google-workspace",
-  "apps/api",
 ]
 
 [tool.uv.sources]
-agent-platform-core = { workspace = true }
-agent-platform-agents = { workspace = true }
-agent-platform-compliance = { workspace = true }
-agent-platform-integration-shopify = { workspace = true }
-agent-platform-integration-woocommerce = { workspace = true }
-agent-platform-integration-stripe = { workspace = true }
-agent-platform-integration-github = { workspace = true }
-agent-platform-integration-aws = { workspace = true }
-agent-platform-integration-google-workspace = { workspace = true }
+stigmem-node = { workspace = true }
+stigmem-py = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -69,11 +52,11 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests", "packages", "apps"]
+testpaths = ["node/tests", "sdks/stigmem-py/tests"]
 addopts = "--cov --cov-report=xml --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["packages", "apps"]
+source = ["node/src", "sdks/stigmem-py/src"]
 omit = ["*/tests/*", "*/migrations/*"]
 
 [tool.bandit]

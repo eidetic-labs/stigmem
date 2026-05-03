@@ -8,11 +8,11 @@ sidebar_label: Design Partner Notes
 
 **Audience:** Contributors and integrators evaluating stigmem for production adoption.
 
-Three design-partner pilots ran during Phase 6 ([ACM-65](/ACM/issues/ACM-65)): Zep, Letta, and Cognee. Each pilot produced a working adapter and surfaced feedback that shaped the v0.8 protocol decisions.
+Three design-partner pilots ran during Phase 6 (ACM-65): Zep, Letta, and Cognee. Each pilot produced a working adapter and surfaced feedback that shaped the v0.8 protocol decisions.
 
 ## Zep
 
-**Adapter:** `adapters/zep/` ([ACM-65](/ACM/issues/ACM-65) D5a)
+**Adapter:** `adapters/zep/` (ACM-65 D5a)
 
 Zep stores agent memory as session-scoped "propositions" extracted from dialogue. The adapter bridges these into stigmem facts and back.
 
@@ -29,7 +29,7 @@ Zep stores agent memory as session-scoped "propositions" extracted from dialogue
 
 ## Letta
 
-**Adapter:** `adapters/letta/` ([ACM-65](/ACM/issues/ACM-65) D5b)
+**Adapter:** `adapters/letta/` (ACM-65 D5b)
 
 Letta is an agent framework with first-class persistent memory blocks. The adapter federates stigmem facts into Letta's in-context memory and back.
 
@@ -47,7 +47,7 @@ Letta is an agent framework with first-class persistent memory blocks. The adapt
 
 ## Cognee
 
-**Adapter:** `adapters/cognee/` ([ACM-65](/ACM/issues/ACM-65) D5c)
+**Adapter:** `adapters/cognee/` (ACM-65 D5c)
 
 Cognee builds knowledge graphs from unstructured text. The adapter bridges stigmem's (entity, relation, value) triple model with Cognee's graph representation.
 
@@ -59,9 +59,9 @@ Cognee builds knowledge graphs from unstructured text. The adapter bridges stigm
 **Feedback themes:**
 - Namespace discipline mattered most here: Cognee extracts arbitrary relation labels; without normalization against the stigmem namespace registry (§9), facts from different Cognee runs used inconsistent relation URIs for the same semantic concept. The adapter now includes a relation normalization step.
 - The `source` field (provenance) was well-received for audit purposes: Cognee users needed to know which document a fact came from. The adapter populates `source=cognee:doc:<hash>`.
-- Fuzzy entity resolution (Track F, [ACM-105](/ACM/issues/ACM-105)) was flagged as important: Cognee often extracts the same entity with slightly different text forms (`"alice"` vs `"Alice Smith"`). The fuzzy entity resolver was accelerated by this feedback.
+- Fuzzy entity resolution (Track F, ACM-105) was flagged as important: Cognee often extracts the same entity with slightly different text forms (`"alice"` vs `"Alice Smith"`). The fuzzy entity resolver was accelerated by this feedback.
 
-**See also:** Fuzzy entity resolver guide (Track F, [ACM-105](/ACM/issues/ACM-105)); [Namespace registry spec §9](/docs/spec/)
+**See also:** Fuzzy entity resolver guide (Track F, ACM-105); [Namespace registry spec §9](/docs/spec/)
 
 ## Cross-pilot patterns
 

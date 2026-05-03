@@ -9,7 +9,7 @@ sidebar_label: Human Surface
 **Audience:** Curators, contributors, and consumers who need a browser UI for managing stigmem facts.
 
 :::info Coming soon
-This guide covers the browser-based human surface (B2, [ACM-81](/ACM/issues/ACM-81)). Implementation is in progress.
+This guide covers the browser-based human surface (B2, ACM-81). Implementation is in progress.
 :::
 
 The human surface provides a browser UI for:

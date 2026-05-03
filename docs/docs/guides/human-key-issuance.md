@@ -9,7 +9,7 @@ sidebar_label: Human Key Issuance (C2)
 **Audience:** Node operators setting up human-facing access, and developers integrating Stigmem with an identity provider.
 
 :::info Coming in Track C
-OIDC-backed human key issuance is planned for Track C — Per-Principal Identity Hardening ([ACM-86](/ACM/issues/ACM-86)). This page is a stub. Content will be completed once the implementation lands.
+OIDC-backed human key issuance is planned for Track C — Per-Principal Identity Hardening (ACM-86). This page is a stub. Content will be completed once the implementation lands.
 :::
 
 ## Overview

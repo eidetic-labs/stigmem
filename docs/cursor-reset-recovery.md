@@ -1,7 +1,7 @@
 # Cursor-Reset-on-DB-Loss Recovery Procedure
 
 **Failure mode:** FM-3 edge case — [failure-modes-4node.md § FM-3](./failure-modes-4node.md)  
-**Issue:** [ACM-102](/ACM/issues/ACM-102) (Track F, pre-GA hardening)  
+**Issue:** ACM-102 (Track F, pre-GA hardening)  
 **Protocol version:** stigmem spec v0.7-draft (§6)
 
 ---

@@ -20,7 +20,7 @@ node-d   node-b (8766)
     node-c (8767)
 ```
 
-This topology was validated in a 72-hour soak run that included partition injection, network delay, and node restart scenarios ([ACM-61](/ACM/issues/ACM-61)).
+This topology was validated in a 72-hour soak run that included partition injection, network delay, and node restart scenarios (ACM-61).
 
 ## Starting the 4-node cluster
 

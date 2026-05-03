@@ -9,7 +9,7 @@ sidebar_label: Agent Keypairs (C1)
 **Audience:** Node operators and agent developers who need verifiable source attestation on asserted facts.
 
 :::info Coming in Track C
-Per-agent keypair registration is planned for Track C — Per-Principal Identity Hardening ([ACM-85](/ACM/issues/ACM-85)). This page is a stub. Content will be completed once the implementation lands.
+Per-agent keypair registration is planned for Track C — Per-Principal Identity Hardening (ACM-85). This page is a stub. Content will be completed once the implementation lands.
 :::
 
 ## Overview

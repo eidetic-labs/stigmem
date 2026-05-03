@@ -1500,7 +1500,7 @@ The following Phase 5 deliverables are addressed in v0.7:
 
 - **Lint primitive** (Phase 5 Deliverable 3): §14 Lint Semantics normative. Done.
 - **Entity normalization layer** (Phase 5 Deliverable 4): §2.6 Entity Naming Rules normative; strict normalizer on ingest path implemented (`entity_normalizer.py`); migration 003 (entity_aliases). Done.
-- **Bug fixes in progress**: §resolution-semantics (Deliverable 1) and §query-semantics (Deliverable 2) tracked separately under [ACM-50](/ACM/issues/ACM-50).
+- **Bug fixes in progress**: §resolution-semantics (Deliverable 1) and §query-semantics (Deliverable 2) tracked separately under ACM-50.
 
 The following are deferred to Phase 6+:
 

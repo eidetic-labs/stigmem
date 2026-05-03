@@ -37,8 +37,8 @@ The Stigmem specification defines the wire format, fact semantics, and federatio
 | §14 | Lint Semantics | Stable (new in v0.7) |
 | §15 | Decay Semantics | Draft (new in v0.8) — [guide](/docs/guides/decay) |
 | §16 | Synthesis | Draft (new in v0.8) — [guide](/docs/guides/synthesis) |
-| §17 | Memory Garden | Incoming v0.9 — [ACM-75](/ACM/issues/ACM-75) |
-| §18 | Source Attestation | Incoming v0.9 — [ACM-76](/ACM/issues/ACM-76) |
+| §17 | Memory Garden | Incoming v0.9 — ACM-75 |
+| §18 | Source Attestation | Incoming v0.9 — ACM-76 |
 
 ## Key concepts
 

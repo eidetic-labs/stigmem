@@ -65,4 +65,4 @@ The active development version is **v0.7-draft**. Sections §1–12 are stable. 
 2. §6.3 idempotency + conflict interaction: re-ingestion of a fact that already created a conflict record must be a no-op, not a duplicate conflict
 3. HLC §2.4 note on threading requirements for concurrent implementors (spec describes logical behavior; threading is an implementation concern but worth a normative note)
 
-*Source: [ACM-34 Phase 3 exit memo](/ACM/issues/ACM-34)*
+*Source: Phase 3 exit memo.*

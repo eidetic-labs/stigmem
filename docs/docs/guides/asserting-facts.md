@@ -136,6 +136,39 @@ curl -s -X POST http://localhost:8765/v1/facts \
 If you are inside a Paperclip or Claude Code session with the Stigmem MCP server configured, call `assert_fact` directly — no `curl` required. See the [Paperclip connector guide](./connectors/paperclip).
 :::
 
+## Multi-tenant fact assertion
+
+When a node serves multiple tenants, the `tenant_id` is derived automatically from the API key — no extra field in the request body is needed. All facts written with a key scoped to `"acme"` are invisible to keys scoped to any other tenant.
+
+### Asserting a fact as a specific tenant
+
+```bash
+# Uses an API key minted with tenant_id="acme"
+curl -s -X POST http://localhost:8765/v1/facts \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ACME_KEY" \
+  -d '{
+    "entity":     "user:alice",
+    "relation":   "memory:prefers",
+    "value":      {"type": "string", "v": "dark mode"},
+    "source":     "agent:settings",
+    "confidence": 1.0,
+    "scope":      "local"
+  }' | jq .
+```
+
+A key scoped to `"beta"` cannot read or overwrite this fact — `GET /v1/facts?entity=user:alice` returns an empty result for any other tenant.
+
+### Querying facts — tenant-isolated
+
+```bash
+# Returns only facts belonging to the "acme" tenant
+curl -s "http://localhost:8765/v1/facts?entity=user:alice" \
+  -H "Authorization: Bearer $ACME_KEY" | jq .
+```
+
+See [Multi-Tenant Scoping](./multi-tenant) for the full isolation model and key provisioning guide.
+
 ## Additional topics
 
 - Retracting a fact: set `"confidence": 0.0` with the same `(entity, relation, scope)` triple

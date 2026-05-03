@@ -35,7 +35,7 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | §7 | Design Decisions | Stable |
 | §8 | Open Questions | Living |
 | §9 | Namespace Registry | Stable |
-| §10 | Schema and Migration | Stable |
+| §10 | Schema and Migration | Stable — migration 012 adds `tenant_id` to all write-bearing tables ([multi-tenant guide](/docs/guides/multi-tenant)) |
 | §11 | Failure Mode Scenarios | Stable (new in v0.5) |
 | §12 | Adapter ABI | Stable (new in v0.6) |
 | §14 | Lint Semantics | Stable (new in v0.7) |
@@ -90,6 +90,15 @@ v0.8 adds two new subsections to the federation spec:
 
 - **§6.7 N-node Backpressure** — relay lag signals (`X-Stigmem-Replication-Lag` header, HTTP 503 throttle) for multi-hop topologies. See the [relay backpressure guide](/docs/guides/relay-backpressure).
 - **§6.8 Scope Propagation Invariants** — closes v0.7 open question §8.5: `company`-scoped facts MUST NOT be re-federated. See the [scope propagation guide](/docs/guides/scope-propagation).
+
+## Reference node extensions (not yet in spec)
+
+The following reference node features are implemented and tested but do not yet have a formal spec section. They will be folded into a future spec revision.
+
+| Feature | Guide | Status |
+|---|---|---|
+| Multi-tenant scoping (`tenant_id` on all write tables, migration 012) | [Multi-Tenant Scoping](/docs/guides/multi-tenant) | Stable (reference node v1.0-rc) |
+| Billing hook bus (`HookBus` / `CaptureBus`) | [Billing Hooks](/docs/guides/billing-hooks) | Stable (reference node v1.0-rc) |
 
 :::info Coming soon
 Per-section spec reference pages with full wire format examples are planned for the next docs sprint.

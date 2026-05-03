@@ -1,0 +1,17 @@
+apiVersion: v2
+name: stigmem
+description: Stigmem — federated knowledge fabric for AI agents
+type: application
+version: 0.1.0
+appVersion: "1.0.0-rc"
+keywords:
+  - stigmem
+  - knowledge-graph
+  - federation
+  - ai
+home: https://github.com/Eidetic-Labs/stigmem
+sources:
+  - https://github.com/Eidetic-Labs/stigmem
+maintainers:
+  - name: Eidetic Labs
+    email: oss@eidetic-labs.ai

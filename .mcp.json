@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "stigmem": {
+      "command": "node",
+      "args": ["/Users/bjones/.paperclip/instances/default/projects/cef5cc41-2b39-469d-ba9d-afbe20f75947/5b9484ee-6620-4e58-b6ad-daeb0c798607/_default/stigmem/adapters/mcp/dist/server.js"],
+      "env": {
+        "STIGMEM_URL": "http://localhost:8765"
+      }
+    }
+  }
+}

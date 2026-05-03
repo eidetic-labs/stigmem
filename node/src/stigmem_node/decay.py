@@ -58,7 +58,7 @@ def run_decay_sweep(
         if effective_ttl is not None:
             cutoff = (now_dt - timedelta(seconds=effective_ttl)).isoformat()
             sql = (
-                f"SELECT id FROM facts "
+                f"SELECT id FROM facts "  # nosec B608 — _NOT_SYSTEM_SQL is a module-level constant; user values in params
                 f"WHERE timestamp <= ? AND valid_until IS NULL AND {_NOT_SYSTEM_SQL}"
             )
             params: list[Any] = [cutoff]
@@ -69,7 +69,7 @@ def run_decay_sweep(
 
         if effective_min_conf is not None:
             sql = (
-                f"SELECT id FROM facts "
+                f"SELECT id FROM facts "  # nosec B608 — _NOT_SYSTEM_SQL is a module-level constant; user values in params
                 f"WHERE confidence < ? AND confidence > 0.0 "
                 f"AND (valid_until IS NULL OR valid_until > ?) "
                 f"AND {_NOT_SYSTEM_SQL}"
@@ -85,7 +85,7 @@ def run_decay_sweep(
         if not dry_run and candidates:
             placeholders = ",".join("?" * len(candidates))
             conn.execute(
-                f"UPDATE facts SET valid_until = ? WHERE id IN ({placeholders})",
+                f"UPDATE facts SET valid_until = ? WHERE id IN ({placeholders})",  # nosec B608 — placeholders is "?,?,?" sequence, not user input
                 [now, *candidates],
             )
 

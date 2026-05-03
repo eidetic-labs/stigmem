@@ -396,7 +396,7 @@ def query_facts(
         params.append(now)
 
     where = " AND ".join(conditions)
-    sql = f"SELECT * FROM facts WHERE {where} ORDER BY timestamp DESC, id DESC LIMIT ?"
+    sql = f"SELECT * FROM facts WHERE {where} ORDER BY timestamp DESC, id DESC LIMIT ?"  # nosec B608 — where is built from literal SQL fragments; all user values in params
     params.append(limit + 1)
 
     with db() as conn:

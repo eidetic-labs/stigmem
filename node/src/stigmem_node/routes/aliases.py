@@ -81,7 +81,7 @@ def list_aliases(
 
     with db() as conn:
         rows = conn.execute(
-            f"SELECT raw_uri, canonical_uri, kind, created_at FROM entity_aliases"
+            f"SELECT raw_uri, canonical_uri, kind, created_at FROM entity_aliases"  # nosec B608 — where is built from literal fragments; values in params
             f" {where} ORDER BY created_at DESC",
             params,
         ).fetchall()

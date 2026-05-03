@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "feat/**", "chore/**", "fix/**"]
+  pull_request:
+
+jobs:
+  python-tests:
+    name: Python tests (node + SDK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install all workspace packages
+        run: uv sync --all-packages
+
+      - name: Run tests
+        run: uv run pytest node/tests/ sdks/stigmem-py/tests/ -q --tb=short
+
+      - name: pip-audit (no known vulnerabilities)
+        run: uv run pip-audit --progress-spinner off
+
+  node-tests:
+    name: TypeScript SDK + MCP adapter tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Type check (all workspaces)
+        run: pnpm type-check
+
+      - name: Run tests
+        run: pnpm --filter stigmem-ts test
+
+      - name: pnpm audit (no known vulnerabilities)
+        run: pnpm audit --audit-level=moderate
+
+  helm-lint:
+    name: Helm chart lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: "3.17.0"
+
+      - name: Lint stigmem chart
+        run: helm lint infra/helm/stigmem
+
+      - name: Dry-run install (template rendering)
+        run: |
+          helm install stigmem ./infra/helm/stigmem \
+            --dry-run --debug \
+            --set image.pullPolicy=Never

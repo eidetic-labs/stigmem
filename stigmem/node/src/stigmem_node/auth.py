@@ -48,7 +48,7 @@ class Identity:
         return "federate" in self.permissions
 
 
-_ANON = Identity("anon:trusted", ["read", "write"])
+_ANON = Identity("anon:trusted", ["read", "write", "federate"])
 
 
 def resolve_identity(

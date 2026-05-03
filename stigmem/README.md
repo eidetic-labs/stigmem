@@ -31,50 +31,66 @@ Stigmem does **not** replace company orchestration platforms, agent runtimes, or
 
 ---
 
-## Quickstart
+## Install
 
-### Requirements
-
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/) (recommended) or pip
-
-### Run the reference node
+**Single node (Docker):**
 
 ```bash
 git clone https://github.com/giganomix/stigmem
+cd stigmem
+docker compose up --build -d
+```
+
+Node A starts on `http://localhost:8765`, Node B on `http://localhost:8766`.
+
+- Interactive API docs: `http://localhost:8765/docs`
+- Node metadata: `http://localhost:8765/.well-known/stigmem`
+
+**Single node (Python / uv):**
+
+```bash
 cd stigmem/node
 uv run python -m stigmem_node
 ```
 
-The node starts on `http://localhost:8000`.
+See [node/README.md](node/README.md) for environment variable reference.
 
-- Interactive API docs: `http://localhost:8000/docs`
-- Node metadata (spec §5.3): `http://localhost:8000/.well-known/stigmem`
+## Quickstart — two nodes federating
 
-### Assert a fact
+→ **[docs/docs/getting-started/quickstart.md](docs/docs/getting-started/quickstart.md)** — zero to two-node federation in under 10 minutes.
+
+Quick summary:
 
 ```bash
-curl -s -X POST http://localhost:8000/v1/facts \
+# 1. Start two nodes
+git clone https://github.com/giganomix/stigmem && cd stigmem
+docker compose up --build -d
+
+# 2. Federation handshake (register both directions)
+docker exec stigmem-node-a-1 \
+  stigmem federation register-peer \
+    --local-url http://node-a:8765 --remote-url http://node-b:8765
+docker exec stigmem-node-b-1 \
+  stigmem federation register-peer \
+    --local-url http://node-b:8765 --remote-url http://node-a:8765
+
+# 3. Assert a fact on node-a
+curl -s -X POST http://localhost:8765/v1/facts \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer dev-key' \
-  -d '{
-    "entity":     "user:alice",
-    "relation":   "memory:prefers",
-    "value":      "dark mode",
-    "source":     "agent:settings",
-    "confidence": 1.0,
-    "scope":      "local"
-  }' | jq .
+  -d '{"entity":"user:alice","relation":"memory:prefers","value":{"type":"string","v":"dark mode"},
+       "source":"agent:settings","confidence":1.0,"scope":"company"}' | jq .
+
+# 4. Wait ~30 s, then verify replication on node-b
+curl -s 'http://localhost:8766/v1/facts?entity=user:alice&scope=company' | jq .facts
 ```
 
-### Query it back
+For automated reproducibility testing:
 
 ```bash
-curl -s 'http://localhost:8000/v1/facts?entity=user:alice' \
-  -H 'Authorization: Bearer dev-key' | jq .facts
+bash scripts/quickstart-verify.sh
 ```
 
-### Run the test suite (74 tests)
+### Run the test suite
 
 ```bash
 cd stigmem/node

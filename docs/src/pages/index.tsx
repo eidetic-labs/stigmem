@@ -14,11 +14,11 @@ function HomepageHeader(): JSX.Element {
         <h1 className="hero__title">{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
-          <Link className="button button--secondary button--lg" to="/docs/getting-started">
-            Get started →
+          <Link className="button button--secondary button--lg" to="/docs/getting-started/quickstart">
+            Quickstart — under 5 minutes →
           </Link>
-          <Link className="button button--outline button--secondary button--lg" to="/docs/api-reference">
-            API Reference
+          <Link className="button button--outline button--secondary button--lg" to="/docs/getting-started">
+            Getting Started
           </Link>
         </div>
       </div>
@@ -35,17 +35,22 @@ const features: FeatureItem[] = [
   {
     title: 'Structured facts',
     description:
-      'Every piece of knowledge is an immutable (entity, relation, value) triple with provenance, confidence, scope, and a hybrid logical timestamp. See spec §2.',
+      'Every piece of knowledge is an immutable (entity, relation, value) triple with provenance, confidence score, scope, and a hybrid logical clock timestamp — so every memory is auditable and reproducible.',
   },
   {
-    title: 'Federation',
+    title: 'Federated by design',
     description:
-      'Nodes replicate facts across a peer mesh using Ed25519-signed tokens and scope-enforced pull replication. Conflicts are first-class — never silently discarded. See spec §6.',
+      'Facts replicate across peer nodes via Ed25519-signed tokens and scope-enforced pull replication. Conflicts surface as first-class objects and are never silently discarded.',
+  },
+  {
+    title: 'Plugs into your stack',
+    description:
+      'Native connectors for Claude Code, Cursor, Zed, Gemini, Codex CLI, and LiteLLM. Your agents share a verifiable memory in minutes — no custom glue code required.',
   },
   {
     title: 'Interactive API reference',
     description:
-      'Auto-generated from the FastAPI OpenAPI schema. Try live requests against your local node from the docs. Run `npm run gen-api-docs` to refresh after a schema change.',
+      'Auto-generated from the OpenAPI schema. Try live requests against your local node directly from the docs.',
   },
 ];
 
@@ -58,7 +63,7 @@ export default function Home(): JSX.Element {
         <div className="container">
           <div className={clsx('row', styles.featureRow)}>
             {features.map(({ title, description }) => (
-              <div key={title} className="col col--4">
+              <div key={title} className="col col--3">
                 <h3>{title}</h3>
                 <p>{description}</p>
               </div>

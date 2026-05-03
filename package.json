@@ -5,6 +5,7 @@
   "description": "Stigmem — federated knowledge fabric for AI agents",
   "workspaces": [
     "adapters/mcp",
+    "apps/dashboard",
     "sdks/stigmem-ts"
   ],
   "scripts": {

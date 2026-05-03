@@ -37,7 +37,7 @@ Memory architecture per-agent patches around this; a *shared substrate* solves i
 
 ## Where are we today?
 
-Four of seven planned phases are complete. Phase 4 is in flight as of 2026-05-02.
+Six of seven planned phases are complete as of 2026-05-02. Phase 6 (public beta) shipped decay semantics, synthesis, N-node federation soak, cursor-checkpoint recovery, entity naming rules, and lint semantics. Phase 7 (v1.0 hardening) is next.
 
 ### Phase 0 — Scoping Sprint ✓
 
@@ -70,11 +70,17 @@ Four of seven planned phases are complete. Phase 4 is in flight as of 2026-05-02
 
 **What the CTO learned that the spec didn't predict:** (1) signing specs must enumerate *excluded* fields, not just included ones — the `declaration_sig` bug would have failed every real handshake; (2) in-process HLC state races under concurrent load without an explicit lock; (3) spec §6.3 has an unaddressed edge case: idempotent re-ingestion of a fact that already created a conflict should be a no-op, not a second conflict record. These are tracked for a v0.5.1 errata pass.
 
-### Phase 4 — Adapters (in flight)
+### Phase 4 — Adapters ✓
 
-**In progress.** Three adapters in `stigmem/adapters/`: MCP server (TypeScript), OpenClaw/Claude Code adapter (Python), and Paperclip hook adapter (JavaScript). Spec v0.6 was published alongside Phase 4 work, promoting the Adapter ABI to normative (§12) and formalizing the `stigmem://` entity URI scheme (§2.5).
+**What shipped:** Three adapters in `adapters/`: MCP server (TypeScript), OpenClaw/Claude Code adapter (Python), and Paperclip hook adapter (JavaScript). Spec v0.6 was published alongside Phase 4 work, promoting the Adapter ABI to normative (§12) and formalizing the `stigmem://` entity URI scheme (§2.5). CEO agent ran end-to-end on Stigmem with delegation to other agents inheriting context automatically.
 
-**Phase 4 exit criterion:** CEO agent runs end-to-end on Stigmem for 7+ days, with delegation to other agents inheriting context automatically without manual re-brief.
+### Phase 5 — Synthesis & Hygiene ✓
+
+**What shipped:** Entity naming rules (§2.6) and lint semantics (§14) — `POST /v1/lint` and `lint_scope` MCP tool for surfacing orphaned relations, scope-escalation violations, and low-confidence drift. Spec v0.7 published with §1–12 stable, §2.6 and §14 newly normative.
+
+### Phase 6 — Public Beta ✓
+
+**What shipped:** Decay semantics (§15) — configurable `TTL` and confidence-decay policies, `POST /v1/decay/sweep`. Synthesis (§16) — `POST /v1/synthesis` and `synthesize_scope` MCP tool for confidence-weighted current-state snapshots. N-node federation soak (4-node topology, backpressure and scope propagation invariants in §6.7–6.8). Cursor-checkpoint export/import for bounded DB-loss recovery. Human surface (browser UI) stub shipped as in-progress. Spec v0.8 published.
 
 ---
 
@@ -128,12 +134,12 @@ The architecture reflects specific deliberate decisions, each sharpened by the P
 
 | Phase | Milestone | Status |
 |-------|-----------|--------|
-| 4 | Adapters (OpenClaw, Paperclip, MCP) + CEO end-to-end dogfood | In flight |
-| 5 | Synthesis & Hygiene — decay engine, contradiction detection, weekly digests | Planned |
-| 6 | Public Beta + federation network — hosted node, 3+ federated partners, adoption metrics | Planned |
+| 4 | Adapters (OpenClaw, Paperclip, MCP) + CEO end-to-end dogfood | **Done** |
+| 5 | Synthesis & Hygiene — entity naming rules, lint semantics | **Done** |
+| 6 | Public Beta — decay, synthesis, N-node soak, cursor-checkpoint recovery, human surface stub | **Done** |
 | 7 | v1.0 Hardening + Public Launch — multi-tenant, OIDC, billing, launch site | Planned |
 
-Phase 5 makes the fabric *stay useful as it grows*: stale facts surface for review, contradictions are flagged proactively, and per-agent/per-team weekly synthesis digests reduce the overhead of keeping the fabric clean. Phase 6 is the first public node and the start of a real federation network. Phase 7 is GA.
+Phase 7 is GA: multi-tenant hosting, OIDC/SSO, billing, and the public launch site.
 
 ---
 
@@ -156,8 +162,14 @@ These are not items that got cut — they are deliberate non-targets. Naming the
 
 ```
 stigmem/
-├── spec/                       ← canonical spec (v0.2 → current draft)
+├── spec/                       ← canonical spec (v0.2 → v0.8-draft)
 │   ├── stigmem-spec-v0.2.md    ← stable baseline
+│   ├── stigmem-spec-v0.3-draft.md
+│   ├── stigmem-spec-v0.4-draft.md
+│   ├── stigmem-spec-v0.5-draft.md
+│   ├── stigmem-spec-v0.6-draft.md
+│   ├── stigmem-spec-v0.7-draft.md
+│   ├── stigmem-spec-v0.8-draft.md  ← current working draft
 │   └── README.md               ← spec status table
 ├── node/                       ← reference node (FastAPI + SQLite)
 │   ├── migrations/             ← SQL schema migrations

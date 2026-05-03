@@ -38,5 +38,32 @@ class Settings(BaseSettings):
     # 0.0 = disabled; positive = decay facts below this confidence when sweep runs without explicit min_confidence
     decay_min_confidence: float = 0.0
 
+    # Track C / C1: require Ed25519 attestation on all fact assertions.
+    # When True, POST /v1/facts must include a valid attestation token.
+    # Defaults to False for backward compatibility.
+    attestation_required: bool = False
+
+    # OIDC bridge (Track B / B3): human identity → scoped API keys.
+    # Set oidc_enabled=true and configure the remaining fields to activate.
+    oidc_enabled: bool = False
+    # IdP issuer URL; discovery doc fetched from {issuer_url}/.well-known/openid-configuration
+    oidc_issuer_url: str = ""
+    # client_id expected in the id_token's "aud" claim
+    oidc_audience: str = ""
+    # lifetime of issued API keys in hours (default 8 h working-day session)
+    oidc_token_ttl_hours: int = 8
+    # comma-separated list of allowed email domains; empty = allow any
+    oidc_allowed_domains: str = ""
+
+    # Async job threshold (spec §14.5 / §15.4): scopes with more facts than this
+    # trigger the async 202 path. Override in tests to force async path at small scale.
+    async_job_threshold: int = 100_000
+
+    # Source attestation mode (v0.9, spec §18).
+    # "enforce": reject facts where source != caller's entity_uri (HTTP 403)
+    # "warn"   : accept with attested=False; log warning (default; backward compatible)
+    # "off"    : no check; attested=None on all facts
+    source_attestation_mode: str = "warn"
+
 
 settings = Settings()

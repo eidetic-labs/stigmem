@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stigmem UI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    .badge { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium; }
+    .scope-local    { @apply bg-gray-100 text-gray-700; }
+    .scope-team     { @apply bg-blue-100 text-blue-700; }
+    .scope-company  { @apply bg-purple-100 text-purple-700; }
+    .scope-public   { @apply bg-green-100 text-green-700; }
+    .role-admin     { @apply bg-red-100 text-red-700; }
+    .role-writer    { @apply bg-amber-100 text-amber-700; }
+    .role-reader    { @apply bg-sky-100 text-sky-700; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-sm text-gray-800" x-data="app()" x-init="init()" x-cloak>
+
+<!-- ─── HEADER ─────────────────────────────────────────────────────────── -->
+<header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 flex-wrap">
+  <span class="font-bold text-indigo-700 text-base tracking-tight">stigmem</span>
+
+  <div class="flex items-center gap-2 flex-1 min-w-0">
+    <input x-model="baseUrl" @change="saveSettings()"
+           placeholder="http://localhost:8765"
+           class="border border-gray-300 rounded px-2 py-1 text-xs w-52 focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+    <input x-model="apiKey" @change="saveSettings()" type="password"
+           placeholder="API key (optional)"
+           class="border border-gray-300 rounded px-2 py-1 text-xs w-48 focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+    <button @click="connect()"
+            class="bg-indigo-600 text-white text-xs px-3 py-1 rounded hover:bg-indigo-700">
+      Connect
+    </button>
+  </div>
+
+  <div x-show="identity" class="flex items-center gap-2 text-xs">
+    <span class="text-gray-500">Signed in as</span>
+    <span class="font-mono text-indigo-600 truncate max-w-xs" x-text="identity?.entity_uri"></span>
+    <template x-for="p in (identity?.permissions || [])">
+      <span class="badge bg-indigo-100 text-indigo-700" x-text="p"></span>
+    </template>
+  </div>
+  <div x-show="connectError" class="text-xs text-red-600" x-text="connectError"></div>
+</header>
+
+<!-- ─── NAV ────────────────────────────────────────────────────────────── -->
+<nav class="bg-white border-b border-gray-200 px-4 flex gap-0">
+  <template x-for="tab in tabs">
+    <button
+      @click="view = tab.id; onTabChange(tab.id)"
+      :class="view === tab.id
+        ? 'border-b-2 border-indigo-600 text-indigo-700 font-medium'
+        : 'text-gray-500 hover:text-gray-700'"
+      class="px-4 py-2.5 text-xs transition-colors"
+      x-text="tab.label">
+    </button>
+  </template>
+</nav>
+
+<!-- ─── MAIN ───────────────────────────────────────────────────────────── -->
+<main class="max-w-6xl mx-auto px-4 py-4">
+
+  <!-- ── FACTS VIEW ───────────────────────────────────────────────────── -->
+  <div x-show="view === 'facts'">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold text-gray-700">Browse Facts</h2>
+      <button @click="view='assert'" class="text-xs text-indigo-600 hover:underline">+ Assert new fact</button>
+    </div>
+
+    <!-- filter bar -->
+    <div class="bg-white border border-gray-200 rounded p-3 mb-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+      <input x-model="ff.entity" placeholder="Entity URI filter"
+             class="border border-gray-300 rounded px-2 py-1 text-xs col-span-2 focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+      <input x-model="ff.relation" placeholder="Relation filter"
+             class="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+      <select x-model="ff.scope" class="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none">
+        <option value="">All scopes</option>
+        <option value="local">local</option>
+        <option value="team">team</option>
+        <option value="company">company</option>
+        <option value="public">public</option>
+      </select>
+      <input x-model="ff.source" placeholder="Source filter"
+             class="border border-gray-300 rounded px-2 py-1 text-xs col-span-2 focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+      <div class="flex items-center gap-3 col-span-2">
+        <label class="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+          <input type="checkbox" x-model="ff.include_contradicted" class="rounded" />
+          Include contradicted
+        </label>
+        <label class="flex items-center gap-1.5 text-xs text-gray-600">
+          Min confidence
+          <input type="number" x-model.number="ff.min_confidence" min="0" max="1" step="0.1"
+                 class="border border-gray-300 rounded px-1 py-0.5 text-xs w-16 focus:outline-none" />
+        </label>
+        <button @click="loadFacts(false)"
+                class="ml-auto bg-indigo-600 text-white text-xs px-3 py-1 rounded hover:bg-indigo-700">
+          Search
+        </button>
+      </div>
+    </div>
+
+    <!-- error -->
+    <div x-show="factsError" class="bg-red-50 border border-red-200 rounded p-2 mb-3 text-xs text-red-700" x-text="factsError"></div>
+    <!-- loading -->
+    <div x-show="factsLoading" class="text-xs text-gray-400 mb-2">Loading…</div>
+
+    <!-- table -->
+    <div class="bg-white border border-gray-200 rounded overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead class="bg-gray-50 text-gray-500 uppercase tracking-wide text-xs">
+          <tr>
+            <th class="text-left px-3 py-2">Entity</th>
+            <th class="text-left px-3 py-2">Relation</th>
+            <th class="text-left px-3 py-2">Value</th>
+            <th class="text-left px-3 py-2">Scope</th>
+            <th class="text-left px-3 py-2">Confidence</th>
+            <th class="text-left px-3 py-2">Timestamp</th>
+            <th class="text-left px-3 py-2">Status</th>
+            <th class="px-3 py-2"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-if="facts.length === 0 && !factsLoading">
+            <tr><td colspan="8" class="text-center text-gray-400 py-8">No facts found</td></tr>
+          </template>
+          <template x-for="f in facts" :key="f.id">
+            <tr class="border-t border-gray-100 hover:bg-gray-50">
+              <td class="px-3 py-2 font-mono text-xs max-w-[180px] truncate" :title="f.entity" x-text="f.entity"></td>
+              <td class="px-3 py-2 font-mono text-xs max-w-[140px] truncate" :title="f.relation" x-text="f.relation"></td>
+              <td class="px-3 py-2 font-mono max-w-[160px] truncate" :title="fmtValue(f)" x-text="fmtValue(f)"></td>
+              <td class="px-3 py-2">
+                <span class="badge" :class="'scope-' + f.scope" x-text="f.scope"></span>
+              </td>
+              <td class="px-3 py-2" x-text="f.confidence.toFixed(2)"></td>
+              <td class="px-3 py-2 whitespace-nowrap" x-text="fmtTs(f.timestamp)"></td>
+              <td class="px-3 py-2">
+                <template x-if="f.contradicted">
+                  <span class="badge bg-red-100 text-red-700" title="Contradicted by another fact for this entity+relation+scope">⚠ conflict</span>
+                </template>
+                <template x-if="f.confidence === 0">
+                  <span class="badge bg-gray-200 text-gray-600">retracted</span>
+                </template>
+              </td>
+              <td class="px-3 py-2 whitespace-nowrap">
+                <button @click="openFactDetail(f)"
+                        class="text-indigo-500 hover:underline mr-2">detail</button>
+                <template x-if="canWrite() && f.confidence > 0">
+                  <button @click="openRetract(f)"
+                          class="text-red-500 hover:underline">retract</button>
+                </template>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- pagination -->
+    <div class="mt-3 flex justify-between items-center">
+      <span class="text-xs text-gray-400" x-text="facts.length + ' fact(s) loaded'"></span>
+      <button x-show="factsCursor"
+              @click="loadFacts(true)"
+              class="text-xs text-indigo-600 hover:underline">
+        Load more
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ── ASSERT VIEW ──────────────────────────────────────────────────── -->
+  <div x-show="view === 'assert'">
+    <h2 class="font-semibold text-gray-700 mb-3">Assert Fact</h2>
+
+    <div class="bg-white border border-gray-200 rounded p-4 max-w-2xl">
+      <div class="grid grid-cols-1 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Entity URI <span class="text-red-500">*</span></label>
+          <input x-model="af.entity" placeholder="stigmem://node/agent/my-agent"
+                 class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Relation <span class="text-red-500">*</span></label>
+          <input x-model="af.relation" placeholder="your-prefix:relation-name"
+                 class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+          <p x-show="af.relation && !af.relation.includes(':')" class="text-amber-600 text-xs mt-1">
+            ⚠ Bare relation — add a namespace prefix (e.g. <code>myns:relation</code>) to avoid collisions.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Value type</label>
+            <select x-model="af.value_type"
+                    class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none">
+              <option value="string">string</option>
+              <option value="text">text</option>
+              <option value="number">number</option>
+              <option value="boolean">boolean</option>
+              <option value="datetime">datetime</option>
+              <option value="ref">ref</option>
+              <option value="null">null</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Value</label>
+            <template x-if="af.value_type === 'boolean'">
+              <select x-model="af.value_v"
+                      class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none">
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </template>
+            <template x-if="af.value_type !== 'boolean' && af.value_type !== 'null'">
+              <input x-model="af.value_v" placeholder="value"
+                     class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+            </template>
+            <template x-if="af.value_type === 'null'">
+              <input disabled value="(null)" class="w-full border border-gray-200 rounded px-2 py-1.5 text-xs bg-gray-50" />
+            </template>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Source URI <span class="text-red-500">*</span></label>
+          <input x-model="af.source" :placeholder="identity?.entity_uri || 'stigmem://node/agent/source'"
+                 class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Scope</label>
+            <select x-model="af.scope"
+                    class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none">
+              <option value="local">local</option>
+              <option value="team">team</option>
+              <option value="company">company</option>
+              <option value="public">public</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Confidence (0–1)</label>
+            <input x-model.number="af.confidence" type="number" min="0" max="1" step="0.1"
+                   class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Valid until (ISO 8601)</label>
+            <input x-model="af.valid_until" placeholder="leave blank = non-expiring"
+                   class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 pt-1">
+          <button @click="submitAssert()"
+                  :disabled="assertLoading"
+                  class="bg-indigo-600 text-white text-xs px-4 py-1.5 rounded hover:bg-indigo-700 disabled:opacity-50">
+            <span x-show="!assertLoading">Assert</span>
+            <span x-show="assertLoading">Asserting…</span>
+          </button>
+          <button @click="resetAssert()"
+                  class="text-xs text-gray-500 hover:text-gray-700">Clear</button>
+        </div>
+
+        <div x-show="assertError" class="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-700" x-text="assertError"></div>
+
+        <template x-if="assertResult">
+          <div class="bg-green-50 border border-green-200 rounded p-3">
+            <p class="text-green-700 text-xs font-medium mb-1">✓ Fact asserted</p>
+            <p class="font-mono text-xs text-gray-600" x-text="'ID: ' + assertResult.id"></p>
+            <template x-if="assertResult.contradicted">
+              <p class="text-amber-600 text-xs mt-1">⚠ Contradicts existing fact(s) for this entity + relation + scope</p>
+            </template>
+            <template x-if="assertResult.warnings && assertResult.warnings.length">
+              <ul class="mt-1">
+                <template x-for="w in assertResult.warnings">
+                  <li class="text-amber-600 text-xs" x-text="'⚠ ' + w"></li>
+                </template>
+              </ul>
+            </template>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── AUDIT LOG VIEW ───────────────────────────────────────────────── -->
+  <div x-show="view === 'audit'">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold text-gray-700">Audit Log</h2>
+      <span class="text-xs text-gray-400">End-to-end identity trail: principal → attested key → fact</span>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded p-3 mb-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+      <input x-model="adf.entity_uri" placeholder="Principal entity URI"
+             class="border border-gray-300 rounded px-2 py-1 text-xs col-span-2 focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+      <input x-model="adf.oidc_sub" placeholder="OIDC subject"
+             class="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+      <input x-model="adf.source" placeholder="Source URI"
+             class="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+      <div class="flex items-center gap-3 col-span-4 flex-wrap">
+        <select x-model="adf.attested" class="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none">
+          <option value="">All assertions</option>
+          <option value="true">Attested only</option>
+          <option value="false">Unattested only</option>
+        </select>
+        <button @click="loadAudit(false)"
+                class="bg-indigo-600 text-white text-xs px-3 py-1 rounded hover:bg-indigo-700">
+          Search
+        </button>
+        <template x-if="identity">
+          <button @click="adf.entity_uri = identity.entity_uri; loadAudit(false)"
+                  class="text-xs text-indigo-600 hover:underline">My assertions</button>
+        </template>
+        <button @click="exportAuditCsv()"
+                class="ml-auto text-xs text-indigo-600 hover:underline">Export CSV</button>
+      </div>
+    </div>
+
+    <div x-show="auditError" class="bg-red-50 border border-red-200 rounded p-2 mb-3 text-xs text-red-700" x-text="auditError"></div>
+    <div x-show="auditLoading" class="text-xs text-gray-400 mb-2">Loading…</div>
+
+    <div class="bg-white border border-gray-200 rounded overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead class="bg-gray-50 text-gray-500 uppercase tracking-wide text-xs">
+          <tr>
+            <th class="text-left px-3 py-2 whitespace-nowrap">Principal</th>
+            <th class="text-left px-3 py-2 whitespace-nowrap">Attested Key</th>
+            <th class="text-left px-3 py-2 whitespace-nowrap">Fact Entity</th>
+            <th class="text-left px-3 py-2 whitespace-nowrap">Relation</th>
+            <th class="text-left px-3 py-2 whitespace-nowrap">Value</th>
+            <th class="text-left px-3 py-2 whitespace-nowrap">Scope</th>
+            <th class="text-left px-3 py-2 whitespace-nowrap">Source</th>
+            <th class="text-left px-3 py-2 whitespace-nowrap">Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-if="auditEntries.length === 0 && !auditLoading">
+            <tr><td colspan="8" class="text-center text-gray-400 py-8">No results</td></tr>
+          </template>
+          <template x-for="e in auditEntries" :key="e.id">
+            <tr class="border-t border-gray-100 hover:bg-gray-50">
+              <!-- principal -->
+              <td class="px-3 py-2 max-w-[180px]">
+                <div class="font-mono text-xs truncate" :title="e.entity_uri" x-text="e.entity_uri || '—'"></div>
+                <template x-if="e.oidc_sub">
+                  <div class="text-gray-400 truncate font-mono" style="font-size:10px" :title="e.oidc_sub" x-text="'oidc:' + e.oidc_sub"></div>
+                </template>
+              </td>
+              <!-- attested key -->
+              <td class="px-3 py-2 max-w-[160px]">
+                <template x-if="e.attested_key_id">
+                  <div>
+                    <div class="font-mono text-xs truncate text-green-700" :title="e.attested_key_entity_uri" x-text="e.attested_key_entity_uri || e.attested_key_id"></div>
+                    <template x-if="e.attested_key_description">
+                      <div class="text-gray-400 truncate" style="font-size:10px" x-text="e.attested_key_description"></div>
+                    </template>
+                  </div>
+                </template>
+                <template x-if="!e.attested_key_id">
+                  <span class="text-gray-300">—</span>
+                </template>
+              </td>
+              <!-- fact entity -->
+              <td class="px-3 py-2 font-mono text-xs max-w-[140px] truncate" :title="e.fact_entity" x-text="e.fact_entity || '—'"></td>
+              <!-- fact relation -->
+              <td class="px-3 py-2 font-mono text-xs max-w-[120px] truncate" :title="e.fact_relation" x-text="e.fact_relation || '—'"></td>
+              <!-- value -->
+              <td class="px-3 py-2 font-mono text-xs max-w-[120px] truncate"
+                  :title="e.fact_value_v"
+                  x-text="e.fact_value_type ? '[' + e.fact_value_type + '] ' + (e.fact_value_v ?? '') : '—'"></td>
+              <!-- scope -->
+              <td class="px-3 py-2">
+                <template x-if="e.fact_scope">
+                  <span class="badge" :class="'scope-' + e.fact_scope" x-text="e.fact_scope"></span>
+                </template>
+                <template x-if="!e.fact_scope"><span class="text-gray-300">—</span></template>
+              </td>
+              <!-- source -->
+              <td class="px-3 py-2 font-mono text-xs max-w-[140px] truncate" :title="e.source" x-text="e.source"></td>
+              <!-- ts -->
+              <td class="px-3 py-2 whitespace-nowrap" x-text="fmtTs(e.ts)"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-3 flex justify-between items-center">
+      <span class="text-xs text-gray-400" x-text="auditEntries.length + ' record(s) loaded'"></span>
+      <button x-show="auditCursor" @click="loadAudit(true)" class="text-xs text-indigo-600 hover:underline">Load more</button>
+    </div>
+  </div>
+
+
+  <!-- ── GARDENS VIEW ─────────────────────────────────────────────────── -->
+  <div x-show="view === 'gardens' && !currentGarden">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold text-gray-700">Memory Gardens</h2>
+      <button x-show="canWrite()" @click="createGardenModal = true"
+              class="bg-indigo-600 text-white text-xs px-3 py-1 rounded hover:bg-indigo-700">
+        + New Garden
+      </button>
+    </div>
+
+    <div x-show="gardensError" class="bg-red-50 border border-red-200 rounded p-2 mb-3 text-xs text-red-700" x-text="gardensError"></div>
+    <div x-show="gardensLoading" class="text-xs text-gray-400 mb-2">Loading…</div>
+
+    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <template x-if="gardens.length === 0 && !gardensLoading">
+        <p class="text-gray-400 text-xs col-span-3">No gardens found. Create one to get started.</p>
+      </template>
+      <template x-for="g in gardens" :key="g.id">
+        <div @click="openGarden(g.slug)"
+             class="bg-white border border-gray-200 rounded p-4 cursor-pointer hover:border-indigo-400 hover:shadow-sm transition-all">
+          <div class="flex items-start justify-between mb-1">
+            <span class="font-medium text-gray-800 font-mono" x-text="g.slug"></span>
+            <span class="badge" :class="'scope-' + g.scope" x-text="g.scope"></span>
+          </div>
+          <p class="text-gray-600 text-xs" x-text="g.name"></p>
+          <p x-show="g.description" class="text-gray-400 text-xs mt-1 truncate" x-text="g.description"></p>
+          <p class="text-gray-400 text-xs mt-2">Created <span x-text="fmtTs(g.created_at)"></span></p>
+        </div>
+      </template>
+    </div>
+  </div>
+
+
+  <!-- ── GARDEN DETAIL VIEW ───────────────────────────────────────────── -->
+  <div x-show="view === 'gardens' && currentGarden">
+    <div class="flex items-center gap-2 mb-4">
+      <button @click="currentGarden = null; loadGardens()" class="text-indigo-500 text-xs hover:underline">← Gardens</button>
+      <span class="text-gray-400">/</span>
+      <span class="font-mono font-medium" x-text="currentGarden?.slug"></span>
+      <span class="badge" :class="'scope-' + currentGarden?.scope" x-text="currentGarden?.scope"></span>
+    </div>
+
+    <div x-show="gardenDetailError" class="bg-red-50 border border-red-200 rounded p-2 mb-3 text-xs text-red-700" x-text="gardenDetailError"></div>
+    <div x-show="gardenDetailLoading" class="text-xs text-gray-400 mb-2">Loading…</div>
+
+    <!-- garden info -->
+    <div class="bg-white border border-gray-200 rounded p-4 mb-4">
+      <h3 class="font-medium text-gray-700 mb-2" x-text="currentGarden?.name"></h3>
+      <p x-show="currentGarden?.description" class="text-gray-500 text-xs mb-2" x-text="currentGarden?.description"></p>
+      <div class="grid grid-cols-2 gap-2 text-xs text-gray-500">
+        <div>Garden ID: <span class="font-mono text-gray-700" x-text="currentGarden?.garden_id"></span></div>
+        <div>Created by: <span class="font-mono text-gray-700" x-text="currentGarden?.created_by"></span></div>
+      </div>
+    </div>
+
+    <!-- members table -->
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="font-semibold text-gray-700 text-sm">Members</h3>
+      <template x-if="isGardenAdmin()">
+        <button @click="addMemberModal = true"
+                class="bg-indigo-600 text-white text-xs px-3 py-1 rounded hover:bg-indigo-700">
+          + Add Member
+        </button>
+      </template>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead class="bg-gray-50 text-gray-500 uppercase tracking-wide">
+          <tr>
+            <th class="text-left px-3 py-2">Entity URI</th>
+            <th class="text-left px-3 py-2">Role</th>
+            <th class="text-left px-3 py-2">Added by</th>
+            <th class="text-left px-3 py-2">Added at</th>
+            <th class="px-3 py-2"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-if="(currentGarden?.members || []).length === 0">
+            <tr><td colspan="5" class="text-center text-gray-400 py-6">No members</td></tr>
+          </template>
+          <template x-for="m in (currentGarden?.members || [])" :key="m.entity_uri">
+            <tr class="border-t border-gray-100 hover:bg-gray-50">
+              <td class="px-3 py-2 font-mono max-w-[200px] truncate" :title="m.entity_uri" x-text="m.entity_uri"></td>
+              <td class="px-3 py-2">
+                <template x-if="isGardenAdmin() && m.entity_uri !== identity?.entity_uri">
+                  <select @change="changeMemberRole(m.entity_uri, $event.target.value)"
+                          :value="m.role"
+                          class="border border-gray-300 rounded px-1 py-0.5 text-xs focus:outline-none">
+                    <option value="admin">admin</option>
+                    <option value="writer">writer</option>
+                    <option value="reader">reader</option>
+                  </select>
+                </template>
+                <template x-if="!isGardenAdmin() || m.entity_uri === identity?.entity_uri">
+                  <span class="badge" :class="'role-' + m.role" x-text="m.role"></span>
+                </template>
+              </td>
+              <td class="px-3 py-2 font-mono text-xs max-w-[160px] truncate" :title="m.added_by" x-text="m.added_by"></td>
+              <td class="px-3 py-2 whitespace-nowrap" x-text="fmtTs(m.added_at)"></td>
+              <td class="px-3 py-2">
+                <template x-if="isGardenAdmin() && m.entity_uri !== identity?.entity_uri">
+                  <button @click="removeMember(m.entity_uri)"
+                          class="text-red-500 hover:underline text-xs">remove</button>
+                </template>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- browse facts in this garden shortcut -->
+    <div class="mt-4">
+      <button @click="browseGardenFacts(currentGarden)"
+              class="text-xs text-indigo-600 hover:underline">
+        Browse facts in this garden →
+      </button>
+    </div>
+  </div>
+
+</main>
+
+
+<!-- ─── FACT DETAIL MODAL ────────────────────────────────────────────── -->
+<div x-show="factDetailModal" x-cloak
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+  <div @click.outside="factDetailModal = false"
+       class="bg-white rounded-lg shadow-xl w-full max-w-lg p-5">
+    <div class="flex items-start justify-between mb-3">
+      <h3 class="font-semibold text-gray-700">Fact Detail</h3>
+      <button @click="factDetailModal = false" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+    </div>
+    <template x-if="detailFact">
+      <dl class="grid grid-cols-3 gap-x-3 gap-y-1.5 text-xs">
+        <dt class="text-gray-500 font-medium">ID</dt>
+        <dd class="col-span-2 font-mono break-all" x-text="detailFact.id"></dd>
+        <dt class="text-gray-500 font-medium">Entity</dt>
+        <dd class="col-span-2 font-mono break-all" x-text="detailFact.entity"></dd>
+        <dt class="text-gray-500 font-medium">Relation</dt>
+        <dd class="col-span-2 font-mono break-all" x-text="detailFact.relation"></dd>
+        <dt class="text-gray-500 font-medium">Value</dt>
+        <dd class="col-span-2 font-mono" x-text="fmtValue(detailFact)"></dd>
+        <dt class="text-gray-500 font-medium">Type</dt>
+        <dd class="col-span-2" x-text="detailFact.value.type"></dd>
+        <dt class="text-gray-500 font-medium">Source</dt>
+        <dd class="col-span-2 font-mono break-all" x-text="detailFact.source"></dd>
+        <dt class="text-gray-500 font-medium">Scope</dt>
+        <dd class="col-span-2"><span class="badge" :class="'scope-' + detailFact.scope" x-text="detailFact.scope"></span></dd>
+        <dt class="text-gray-500 font-medium">Confidence</dt>
+        <dd class="col-span-2" x-text="detailFact.confidence"></dd>
+        <dt class="text-gray-500 font-medium">Timestamp</dt>
+        <dd class="col-span-2" x-text="detailFact.timestamp"></dd>
+        <template x-if="detailFact.valid_until">
+          <dt class="text-gray-500 font-medium">Valid until</dt>
+          <dd class="col-span-2" x-text="detailFact.valid_until"></dd>
+        </template>
+        <template x-if="detailFact.contradicted">
+          <dt class="text-gray-500 font-medium">Status</dt>
+          <dd class="col-span-2"><span class="badge bg-red-100 text-red-700">⚠ contradicted</span></dd>
+        </template>
+      </dl>
+    </template>
+    <div class="mt-4 flex gap-2 justify-end">
+      <template x-if="canWrite() && detailFact && detailFact.confidence > 0">
+        <button @click="factDetailModal = false; openRetract(detailFact)"
+                class="bg-red-600 text-white text-xs px-4 py-1.5 rounded hover:bg-red-700">
+          Retract
+        </button>
+      </template>
+      <button @click="factDetailModal = false"
+              class="border border-gray-300 text-xs px-4 py-1.5 rounded hover:bg-gray-50">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─── RETRACT MODAL ───────────────────────────────────────────────── -->
+<div x-show="retractModal" x-cloak
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+  <div @click.outside="retractModal = false"
+       class="bg-white rounded-lg shadow-xl w-full max-w-md p-5">
+    <h3 class="font-semibold text-gray-700 mb-1">Retract Fact</h3>
+    <p class="text-xs text-gray-500 mb-3">
+      Sets confidence to 0.0 and marks this fact as retracted. This cannot be undone without re-asserting.
+    </p>
+    <template x-if="retractTarget">
+      <div class="bg-gray-50 border border-gray-200 rounded p-2 mb-3 text-xs font-mono space-y-0.5">
+        <p><span class="text-gray-500">entity:</span> <span x-text="retractTarget.entity"></span></p>
+        <p><span class="text-gray-500">relation:</span> <span x-text="retractTarget.relation"></span></p>
+        <p><span class="text-gray-500">value:</span> <span x-text="fmtValue(retractTarget)"></span></p>
+        <p><span class="text-gray-500">scope:</span> <span x-text="retractTarget.scope"></span></p>
+      </div>
+    </template>
+    <div class="mb-3">
+      <label class="block text-xs text-gray-500 mb-1">Reason (optional — stored as a fact)</label>
+      <input x-model="retractReason" placeholder="Why is this being retracted?"
+             class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+    </div>
+    <div x-show="retractError" class="bg-red-50 border border-red-200 rounded p-2 mb-3 text-xs text-red-700" x-text="retractError"></div>
+    <div class="flex gap-2 justify-end">
+      <button @click="retractModal = false; retractReason = ''; retractError = ''"
+              class="border border-gray-300 text-xs px-4 py-1.5 rounded hover:bg-gray-50">Cancel</button>
+      <button @click="confirmRetract()"
+              :disabled="retractLoading"
+              class="bg-red-600 text-white text-xs px-4 py-1.5 rounded hover:bg-red-700 disabled:opacity-50">
+        <span x-show="!retractLoading">Confirm Retract</span>
+        <span x-show="retractLoading">Retracting…</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─── ADD MEMBER MODAL ────────────────────────────────────────────── -->
+<div x-show="addMemberModal" x-cloak
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+  <div @click.outside="addMemberModal = false"
+       class="bg-white rounded-lg shadow-xl w-full max-w-sm p-5">
+    <h3 class="font-semibold text-gray-700 mb-3">Add Member</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Entity URI</label>
+        <input x-model="amf.entity_uri" placeholder="stigmem://node/agent/name"
+               class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Role</label>
+        <select x-model="amf.role" class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none">
+          <option value="reader">reader</option>
+          <option value="writer">writer</option>
+          <option value="admin">admin</option>
+        </select>
+      </div>
+    </div>
+    <div x-show="addMemberError" class="bg-red-50 border border-red-200 rounded p-2 mt-3 text-xs text-red-700" x-text="addMemberError"></div>
+    <div class="flex gap-2 justify-end mt-4">
+      <button @click="addMemberModal = false; addMemberError = ''"
+              class="border border-gray-300 text-xs px-4 py-1.5 rounded hover:bg-gray-50">Cancel</button>
+      <button @click="submitAddMember()"
+              :disabled="addMemberLoading"
+              class="bg-indigo-600 text-white text-xs px-4 py-1.5 rounded hover:bg-indigo-700 disabled:opacity-50">
+        <span x-show="!addMemberLoading">Add</span>
+        <span x-show="addMemberLoading">Adding…</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─── CREATE GARDEN MODAL ─────────────────────────────────────────── -->
+<div x-show="createGardenModal" x-cloak
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+  <div @click.outside="createGardenModal = false"
+       class="bg-white rounded-lg shadow-xl w-full max-w-sm p-5">
+    <h3 class="font-semibold text-gray-700 mb-3">New Garden</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Slug <span class="text-red-500">*</span></label>
+        <input x-model="cgf.slug" placeholder="my-garden"
+               class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+        <p class="text-gray-400 text-xs mt-0.5">Lowercase letters, numbers, hyphens only</p>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Display name <span class="text-red-500">*</span></label>
+        <input x-model="cgf.name" placeholder="My Garden"
+               class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Scope</label>
+        <select x-model="cgf.scope" class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none">
+          <option value="local">local</option>
+          <option value="team">team</option>
+          <option value="company">company</option>
+          <option value="public">public</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Description (optional)</label>
+        <input x-model="cgf.description" placeholder="What facts live here?"
+               class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+      </div>
+    </div>
+    <div x-show="createGardenError" class="bg-red-50 border border-red-200 rounded p-2 mt-3 text-xs text-red-700" x-text="createGardenError"></div>
+    <div class="flex gap-2 justify-end mt-4">
+      <button @click="createGardenModal = false; createGardenError = ''"
+              class="border border-gray-300 text-xs px-4 py-1.5 rounded hover:bg-gray-50">Cancel</button>
+      <button @click="submitCreateGarden()"
+              :disabled="createGardenLoading"
+              class="bg-indigo-600 text-white text-xs px-4 py-1.5 rounded hover:bg-indigo-700 disabled:opacity-50">
+        <span x-show="!createGardenLoading">Create</span>
+        <span x-show="createGardenLoading">Creating…</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+function app() {
+  return {
+    // ── connection
+    baseUrl: localStorage.getItem('sm_url') || 'http://localhost:8765',
+    apiKey:  localStorage.getItem('sm_key') || '',
+    identity: null,
+    connectError: '',
+
+    // ── nav
+    view: 'facts',
+    tabs: [
+      { id: 'facts',   label: 'Facts' },
+      { id: 'assert',  label: 'Assert' },
+      { id: 'audit',   label: 'Audit Log' },
+      { id: 'gardens', label: 'Gardens' },
+    ],
+
+    // ── facts
+    facts: [],
+    factsCursor: null,
+    factsLoading: false,
+    factsError: '',
+    ff: { entity: '', relation: '', scope: '', source: '', include_contradicted: false, min_confidence: 0 },
+
+    // ── assert
+    af: { entity: '', relation: '', value_type: 'string', value_v: '', source: '', confidence: 1.0, scope: 'local', valid_until: '' },
+    assertResult: null,
+    assertError: '',
+    assertLoading: false,
+
+    // ── audit
+    auditEntries: [],
+    auditCursor: null,
+    auditLoading: false,
+    auditError: '',
+    adf: { entity_uri: '', oidc_sub: '', source: '', attested: '' },
+
+    // ── gardens
+    gardens: [],
+    gardensLoading: false,
+    gardensError: '',
+    currentGarden: null,
+    gardenDetailLoading: false,
+    gardenDetailError: '',
+
+    // ── retract modal
+    retractModal: false,
+    retractTarget: null,
+    retractReason: '',
+    retractLoading: false,
+    retractError: '',
+
+    // ── fact detail modal
+    factDetailModal: false,
+    detailFact: null,
+
+    // ── add member modal
+    addMemberModal: false,
+    amf: { entity_uri: '', role: 'reader' },
+    addMemberLoading: false,
+    addMemberError: '',
+
+    // ── create garden modal
+    createGardenModal: false,
+    cgf: { slug: '', name: '', scope: 'team', description: '' },
+    createGardenLoading: false,
+    createGardenError: '',
+
+    // ──────────────────────────────────────────────────────
+    async init() {
+      if (this.baseUrl) await this.connect();
+    },
+
+    saveSettings() {
+      localStorage.setItem('sm_url', this.baseUrl);
+      localStorage.setItem('sm_key', this.apiKey);
+    },
+
+    async connect() {
+      this.connectError = '';
+      try {
+        const r = await this._fetch('/v1/me');
+        if (r.ok) {
+          this.identity = await r.json();
+        } else if (r.status === 404) {
+          // fallback: node doesn't have /v1/me yet — check /healthz
+          const h = await this._fetch('/healthz');
+          if (h.ok) {
+            this.identity = { entity_uri: 'anonymous', permissions: ['read', 'write', 'federate'] };
+          } else {
+            this.connectError = 'Cannot reach node at ' + this.baseUrl;
+          }
+        } else {
+          this.connectError = 'Auth failed: ' + r.status;
+        }
+      } catch (e) {
+        this.connectError = 'Connection error: ' + e.message;
+      }
+      if (this.identity) {
+        if (this.view === 'facts') await this.loadFacts(false);
+        if (this.view === 'gardens') await this.loadGardens();
+        if (this.view === 'audit') await this.loadAudit(false);
+      }
+    },
+
+    async onTabChange(tab) {
+      if (!this.identity) return;
+      if (tab === 'facts' && this.facts.length === 0) await this.loadFacts(false);
+      if (tab === 'gardens' && this.gardens.length === 0) await this.loadGardens();
+      if (tab === 'audit' && this.auditFacts.length === 0) await this.loadAudit(false);
+    },
+
+    _fetch(path, opts = {}) {
+      const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+      if (this.apiKey) headers['Authorization'] = 'Bearer ' + this.apiKey;
+      return fetch(this.baseUrl + path, { ...opts, headers });
+    },
+
+    canWrite() {
+      return this.identity && (this.identity.permissions.includes('write') || this.identity.entity_uri === 'anonymous');
+    },
+
+    isGardenAdmin() {
+      if (!this.currentGarden || !this.identity) return false;
+      const me = this.identity.entity_uri;
+      const m = (this.currentGarden.members || []).find(x => x.entity_uri === me);
+      return m?.role === 'admin' || me === 'anonymous';
+    },
+
+    fmtValue(f) {
+      if (!f?.value) return '';
+      if (f.value.type === 'null') return 'null';
+      if (f.value.v === null || f.value.v === undefined) return '';
+      return String(f.value.v);
+    },
+
+    fmtTs(ts) {
+      if (!ts) return '';
+      try {
+        return new Date(ts).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
+      } catch { return ts; }
+    },
+
+    // ── FACTS ──────────────────────────────────────────────────────────
+    async loadFacts(append) {
+      this.factsLoading = true;
+      this.factsError = '';
+      if (!append) { this.facts = []; this.factsCursor = null; }
+
+      const p = new URLSearchParams({ limit: '50' });
+      if (this.ff.entity)              p.set('entity', this.ff.entity);
+      if (this.ff.relation)            p.set('relation', this.ff.relation);
+      if (this.ff.scope)               p.set('scope', this.ff.scope);
+      if (this.ff.source)              p.set('source', this.ff.source);
+      if (this.ff.include_contradicted) p.set('include_contradicted', 'true');
+      if (this.ff.min_confidence > 0)  p.set('min_confidence', String(this.ff.min_confidence));
+      if (append && this.factsCursor)  p.set('cursor', this.factsCursor);
+
+      try {
+        const r = await this._fetch('/v1/facts?' + p);
+        if (!r.ok) { this.factsError = await this._errMsg(r); return; }
+        const data = await r.json();
+        this.facts = append ? [...this.facts, ...data.facts] : data.facts;
+        this.factsCursor = data.cursor || null;
+      } catch (e) {
+        this.factsError = e.message;
+      } finally {
+        this.factsLoading = false;
+      }
+    },
+
+    openFactDetail(f) {
+      this.detailFact = f;
+      this.factDetailModal = true;
+    },
+
+    openRetract(f) {
+      this.retractTarget = f;
+      this.retractReason = '';
+      this.retractError = '';
+      this.retractModal = true;
+    },
+
+    async confirmRetract() {
+      if (!this.retractTarget) return;
+      const f = this.retractTarget;
+      this.retractLoading = true;
+      this.retractError = '';
+      try {
+        // Assert with confidence = 0.0 (retraction)
+        const body = {
+          entity: f.entity,
+          relation: f.relation,
+          value: f.value,
+          source: this.identity?.entity_uri || f.source,
+          confidence: 0.0,
+          scope: f.scope,
+        };
+        const r = await this._fetch('/v1/facts', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+        if (!r.ok) { this.retractError = await this._errMsg(r); return; }
+
+        // If reason provided, store it as a sibling fact
+        if (this.retractReason.trim()) {
+          const reasonBody = {
+            entity: f.id,
+            relation: 'stigmem:retract:reason',
+            value: { type: 'text', v: this.retractReason.trim() },
+            source: this.identity?.entity_uri || f.source,
+            confidence: 1.0,
+            scope: f.scope,
+          };
+          await this._fetch('/v1/facts', { method: 'POST', body: JSON.stringify(reasonBody) });
+        }
+
+        this.retractModal = false;
+        this.retractReason = '';
+        // Refresh current view
+        if (this.view === 'facts') await this.loadFacts(false);
+        if (this.view === 'audit') await this.loadAudit(false);
+      } catch (e) {
+        this.retractError = e.message;
+      } finally {
+        this.retractLoading = false;
+      }
+    },
+
+    // ── ASSERT ─────────────────────────────────────────────────────────
+    async submitAssert() {
+      this.assertLoading = true;
+      this.assertError = '';
+      this.assertResult = null;
+
+      const vv = this.af.value_type === 'null'
+        ? null
+        : this.af.value_type === 'number'
+          ? parseFloat(this.af.value_v)
+          : this.af.value_type === 'boolean'
+            ? this.af.value_v === 'true'
+            : this.af.value_v;
+
+      const body = {
+        entity: this.af.entity,
+        relation: this.af.relation,
+        value: { type: this.af.value_type, v: vv },
+        source: this.af.source || this.identity?.entity_uri || '',
+        confidence: this.af.confidence,
+        scope: this.af.scope,
+      };
+      if (this.af.valid_until.trim()) body.valid_until = this.af.valid_until.trim();
+
+      try {
+        const r = await this._fetch('/v1/facts', { method: 'POST', body: JSON.stringify(body) });
+        if (!r.ok) { this.assertError = await this._errMsg(r); return; }
+        this.assertResult = await r.json();
+      } catch (e) {
+        this.assertError = e.message;
+      } finally {
+        this.assertLoading = false;
+      }
+    },
+
+    resetAssert() {
+      this.af = { entity: '', relation: '', value_type: 'string', value_v: '', source: '', confidence: 1.0, scope: 'local', valid_until: '' };
+      this.assertResult = null;
+      this.assertError = '';
+    },
+
+    // ── AUDIT ──────────────────────────────────────────────────────────
+    async loadAudit(append) {
+      this.auditLoading = true;
+      this.auditError = '';
+      if (!append) { this.auditEntries = []; this.auditCursor = null; }
+
+      const p = new URLSearchParams({ limit: '100' });
+      if (this.adf.entity_uri) p.set('entity_uri', this.adf.entity_uri);
+      if (this.adf.oidc_sub)   p.set('oidc_sub', this.adf.oidc_sub);
+      if (this.adf.source)     p.set('source', this.adf.source);
+      if (this.adf.attested)   p.set('attested', this.adf.attested);
+      if (append && this.auditCursor) p.set('cursor', this.auditCursor);
+
+      try {
+        const r = await this._fetch('/v1/audit?' + p);
+        if (!r.ok) { this.auditError = await this._errMsg(r); return; }
+        const data = await r.json();
+        this.auditEntries = append ? [...this.auditEntries, ...data.entries] : data.entries;
+        this.auditCursor = data.cursor || null;
+      } catch (e) {
+        this.auditError = e.message;
+      } finally {
+        this.auditLoading = false;
+      }
+    },
+
+    async exportAuditCsv() {
+      const p = new URLSearchParams({ limit: '5000' });
+      if (this.adf.entity_uri) p.set('entity_uri', this.adf.entity_uri);
+      if (this.adf.oidc_sub)   p.set('oidc_sub', this.adf.oidc_sub);
+      if (this.adf.source)     p.set('source', this.adf.source);
+      if (this.adf.attested)   p.set('attested', this.adf.attested);
+      try {
+        const r = await this._fetch('/v1/audit/export?' + p);
+        if (!r.ok) { this.auditError = await this._errMsg(r); return; }
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'stigmem-audit.csv'; a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        this.auditError = e.message;
+      }
+    },
+
+    // ── GARDENS ────────────────────────────────────────────────────────
+    async loadGardens() {
+      this.gardensLoading = true;
+      this.gardensError = '';
+      try {
+        const r = await this._fetch('/v1/gardens');
+        if (!r.ok) { this.gardensError = await this._errMsg(r); return; }
+        this.gardens = await r.json();
+      } catch (e) {
+        this.gardensError = e.message;
+      } finally {
+        this.gardensLoading = false;
+      }
+    },
+
+    async openGarden(slug) {
+      this.gardenDetailLoading = true;
+      this.gardenDetailError = '';
+      this.currentGarden = null;
+      try {
+        const r = await this._fetch('/v1/gardens/' + slug);
+        if (!r.ok) { this.gardenDetailError = await this._errMsg(r); return; }
+        this.currentGarden = await r.json();
+      } catch (e) {
+        this.gardenDetailError = e.message;
+      } finally {
+        this.gardenDetailLoading = false;
+      }
+    },
+
+    async submitAddMember() {
+      if (!this.currentGarden) return;
+      this.addMemberLoading = true;
+      this.addMemberError = '';
+      try {
+        const r = await this._fetch('/v1/gardens/' + this.currentGarden.slug + '/members', {
+          method: 'POST',
+          body: JSON.stringify({ entity_uri: this.amf.entity_uri, role: this.amf.role }),
+        });
+        if (!r.ok) { this.addMemberError = await this._errMsg(r); return; }
+        this.addMemberModal = false;
+        this.amf = { entity_uri: '', role: 'reader' };
+        await this.openGarden(this.currentGarden.slug);
+      } catch (e) {
+        this.addMemberError = e.message;
+      } finally {
+        this.addMemberLoading = false;
+      }
+    },
+
+    async changeMemberRole(entityUri, newRole) {
+      if (!this.currentGarden) return;
+      try {
+        const r = await this._fetch(
+          '/v1/gardens/' + this.currentGarden.slug + '/members/' + encodeURIComponent(entityUri),
+          { method: 'PATCH', body: JSON.stringify({ role: newRole }) },
+        );
+        if (!r.ok) {
+          alert('Failed to change role: ' + await this._errMsg(r));
+          await this.openGarden(this.currentGarden.slug); // revert
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    },
+
+    async removeMember(entityUri) {
+      if (!this.currentGarden) return;
+      if (!confirm('Remove ' + entityUri + ' from this garden?')) return;
+      try {
+        const r = await this._fetch(
+          '/v1/gardens/' + this.currentGarden.slug + '/members/' + encodeURIComponent(entityUri),
+          { method: 'DELETE' },
+        );
+        if (!r.ok) { alert('Failed: ' + await this._errMsg(r)); return; }
+        await this.openGarden(this.currentGarden.slug);
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    },
+
+    async submitCreateGarden() {
+      this.createGardenLoading = true;
+      this.createGardenError = '';
+      try {
+        const body = { slug: this.cgf.slug, name: this.cgf.name, scope: this.cgf.scope };
+        if (this.cgf.description.trim()) body.description = this.cgf.description.trim();
+        const r = await this._fetch('/v1/gardens', { method: 'POST', body: JSON.stringify(body) });
+        if (!r.ok) { this.createGardenError = await this._errMsg(r); return; }
+        this.createGardenModal = false;
+        this.cgf = { slug: '', name: '', scope: 'team', description: '' };
+        await this.loadGardens();
+      } catch (e) {
+        this.createGardenError = e.message;
+      } finally {
+        this.createGardenLoading = false;
+      }
+    },
+
+    browseGardenFacts(garden) {
+      this.ff.entity = '';
+      this.ff.source = '';
+      this.view = 'facts';
+      this.currentGarden = null;
+      // The current facts API doesn't have a garden_id filter on this branch,
+      // so we browse all facts. In future this can pass garden_id query param.
+      this.loadFacts(false);
+    },
+
+    async _errMsg(r) {
+      try {
+        const d = await r.json();
+        return d.detail || JSON.stringify(d);
+      } catch {
+        return r.status + ' ' + r.statusText;
+      }
+    },
+  };
+}
+</script>
+</body>
+</html>

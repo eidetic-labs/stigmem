@@ -1,6 +1,6 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 
-> **Status: v0.5 implemented · v0.6-draft in progress · Apache-2.0**
+> **Status: v0.8-draft · Phase 6 (public beta) · Apache-2.0**
 > **Repository:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem)
 
 Stigmem is an open specification and reference implementation for a federated knowledge fabric: a shared, persistent layer where AI agents and humans write typed, traceable facts that travel across tools, platforms, and organizations.
@@ -24,10 +24,15 @@ Stigmem does **not** replace company orchestration platforms, agent runtimes, or
 | Federation: PeerDeclaration handshake (Ed25519), pull replication, scope enforcement | **Implemented** | §6 |
 | Conflict-first-class: auto-generated conflict records, resolution API | **Implemented** | §3.3, §5.9–5.10 |
 | Failure modes: split-brain, malicious peer, partial failure, replay attack | **Automated tests** | §11 |
-| Entity URI scheme (`stigmem://`) | Draft (v0.6) | §2.5 |
-| Adapter ABI (MCP, Paperclip, OpenClaw) | In progress (Phase 4) | §12 |
+| Entity URI scheme (`stigmem://`) | **Implemented** | §2.5 |
+| Entity naming rules + lint semantics (`POST /v1/lint`, `lint_scope` MCP tool) | **Implemented** | §2.6, §14 |
+| Adapter ABI (MCP, Paperclip, OpenClaw) | **Implemented** | §12 |
+| Decay sweep (`POST /v1/decay/sweep`, configurable TTL + confidence-decay policies) | **Implemented** | §15 |
+| Synthesis (`POST /v1/synthesis`, `synthesize_scope` MCP tool) | **Implemented** | §16 |
+| Cursor-checkpoint export/import (bounded DB-loss recovery) | **Implemented** | §6 |
+| N-node federation backpressure + scope propagation invariants | **Implemented** | §6.7–6.8 |
+| Browser UI (human surface) | In progress | — |
 | Intent envelope (`goal`, `constraint`, `preference`, `handoff`) | Draft — feedback wanted | §4 |
-| Synthesis, decay UI, contradiction digests | Planned (Phase 5) | §13 |
 
 ---
 
@@ -103,7 +108,7 @@ uv run pytest tests/ -v
 
 ```
 stigmem/
-├── spec/           ← canonical specification (v0.2 → v0.6-draft)
+├── spec/           ← canonical specification (v0.2 → v0.8-draft)
 ├── node/           ← reference node: FastAPI + SQLite, 74 tests
 ├── adapters/       ← MCP server (TypeScript), OpenClaw (Python), Paperclip (JS hook)
 ├── dogfood/        ← CEO memory migration scripts
@@ -129,7 +134,7 @@ It fills the gap none of them fill: typed, provenance-traceable, federated, enti
 
 The canonical specification lives in [`spec/`](spec/). See [`spec/README.md`](spec/README.md) for the section-by-section status table.
 
-Current working draft: **[`spec/stigmem-spec-v0.6-draft.md`](spec/stigmem-spec-v0.6-draft.md)** — §1–6, §8–11 stable; §12 Adapter ABI normative; §4 Intent Envelope draft.
+Current working draft: **[`spec/stigmem-spec-v0.8-draft.md`](spec/stigmem-spec-v0.8-draft.md)** — §1–14 stable; §15 Decay Semantics and §16 Synthesis new (draft, stable in v0.9).
 
 ---
 
@@ -139,7 +144,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the RFC process. Short version:
 
 1. Open an issue using the [RFC template](.github/ISSUE_TEMPLATE/rfc.yml)
 2. Discuss and iterate
-3. Submit a PR against the active spec draft (`spec/stigmem-spec-v0.6-draft.md`)
+3. Submit a PR against the active spec draft (`spec/stigmem-spec-v0.8-draft.md`)
 4. Spec changes merge with ≥2 approvals from active contributors
 
 For bugs in the reference node, use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.yml).

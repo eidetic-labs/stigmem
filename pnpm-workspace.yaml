@@ -1,3 +1,4 @@
 packages:
   - "adapters/mcp"
+  - "apps/dashboard"
   - "sdks/stigmem-ts"

@@ -89,8 +89,15 @@ async def pull_from_peer_once(
             return cursor
 
         data = resp.json()
+        # origin_allowed_scopes = peer's registered declaration scope (spec §6.8.1).
+        # These fields are internal and MUST NOT be re-replicated (§3.1), so we
+        # derive them from the peer registry rather than reading from the fact payload.
         for fact in data.get("facts", []):
-            ingest_fact(fact, peer["node_id"])
+            ingest_fact(
+                fact,
+                peer["node_id"],
+                origin_allowed_scopes=allowed_scopes,
+            )
 
         new_cursor: str | None = data.get("cursor")
         return new_cursor

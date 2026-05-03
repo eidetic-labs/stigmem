@@ -16,6 +16,7 @@ _NAMESPACES = [
     "intent:",
     "roadmap:",
     "preference:",
+    "garden:",
 ]
 
 
@@ -24,13 +25,14 @@ def node_metadata() -> dict[str, object]:
     """Return node identity, auth mode, and federation capability advertisement (spec §5.3)."""
     node_id = get_or_create_node_id()
     result: dict[str, object] = {
-        "version": "0.5",
+        "version": "0.9",
         "node_id": node_id,
         "node_url": settings.node_url,
         "auth": "required" if settings.auth_required else "none",
         "federation": "enabled" if settings.federation_enabled else "disabled",
+        "source_attestation": settings.source_attestation_mode,
         "namespaces": _NAMESPACES,
-        "spec": "https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.5-draft.md",
+        "spec": "https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9-draft.md",
     }
 
     if settings.federation_enabled:

@@ -238,3 +238,345 @@ def test_conformance_vector(client: TestClient, vector: dict[str, Any]) -> None:
         assert any(m.get("role") == expected_role for m in members), (
             f"{ctx}: no member with role '{expected_role}' in {members!r}"
         )
+
+
+# ---------------------------------------------------------------------------
+# §5.19–§5.20, §17.3 — Garden ACL with distinct identities (auth required)
+# ---------------------------------------------------------------------------
+
+import importlib as _importlib
+
+_PATCHABLE_MODULES = [
+    "stigmem_node.routes.facts",
+    "stigmem_node.routes.gardens",
+    "stigmem_node.routes.audit",
+    "stigmem_node.federation_pull",
+    "stigmem_node.peer_token",
+    "stigmem_node.federation_ingest",
+    "stigmem_node.routes.federation",
+    "stigmem_node.decay",
+    "stigmem_node.routes.decay",
+    "stigmem_node.routes.lint",
+    "stigmem_node.routes.synthesize",
+]
+
+
+def _make_authed_node(
+    tmp_path: object,
+    suffix: str = "",
+    attestation_mode: str = "warn",
+) -> "tuple[TestClient, Any, list, str]":
+    import stigmem_node.settings as sm
+    import stigmem_node.auth as am
+    import stigmem_node.db as dm
+    import stigmem_node.routes.wellknown as wk
+    from stigmem_node.auth import create_api_key
+    from stigmem_node.db import apply_migrations
+    from stigmem_node.main import create_app
+    from stigmem_node.settings import Settings
+
+    db_file = str(tmp_path) + f"/acl{suffix}.db"
+    apply_migrations(db_path=db_file)
+    original = sm.settings
+    ts = Settings(
+        db_path=db_file,
+        auth_required=True,
+        node_url="http://testnode",
+        source_attestation_mode=attestation_mode,
+    )
+    sm.settings = ts
+    am.settings = ts
+    dm.settings = ts
+    wk.settings = ts
+
+    patched: list[Any] = []
+    for name in _PATCHABLE_MODULES:
+        try:
+            mod = _importlib.import_module(name)
+            if hasattr(mod, "settings"):
+                setattr(mod, "settings", ts)
+                patched.append((mod, "settings", original))
+        except ImportError:
+            pass
+
+    # facts.py also holds a direct module-level binding `_settings` that bypasses
+    # the module-attribute patch above; we must replace it explicitly.
+    import stigmem_node.routes.facts as _facts_mod
+    _facts_orig = _facts_mod._settings
+    _facts_mod._settings = ts
+    patched.append((_facts_mod, "_settings", _facts_orig))
+
+    raw_key = create_api_key("stigmem://testnode/agent/admin", ["read", "write"])
+    app = create_app()
+    c = TestClient(app, raise_server_exceptions=True)
+    c.__enter__()
+    return c, original, patched, raw_key
+
+
+def _restore_authed(original: Any, patched: list) -> None:
+    import stigmem_node.settings as sm
+    import stigmem_node.auth as am
+    import stigmem_node.db as dm
+    import stigmem_node.routes.wellknown as wk
+    sm.settings = original
+    am.settings = original
+    dm.settings = original
+    wk.settings = original
+    for entry in patched:
+        mod, attr_name, orig_val = entry
+        setattr(mod, attr_name, orig_val)
+
+
+class TestGardenFactACLConformance:
+    """§5.19–§5.20, §17.3 — non-member 403 enforcement requires distinct API keys."""
+
+    _ADMIN_ENTITY = "stigmem://testnode/agent/admin"
+    _OUTSIDER_ENTITY = "stigmem://testnode/agent/outsider"
+    _GARDEN_SLUG = "acl-garden"
+    _GARDEN_SCOPE = "team"
+
+    @pytest.fixture(autouse=True)
+    def _setup(self, tmp_path):
+        from stigmem_node.auth import create_api_key
+        self._client, self._orig, self._patched, self._admin_key = _make_authed_node(tmp_path)
+        self._outsider_key = create_api_key(self._OUTSIDER_ENTITY, ["read", "write"])
+        r = self._client.post(
+            "/v1/gardens",
+            json={"slug": self._GARDEN_SLUG, "name": "ACL Garden", "scope": self._GARDEN_SCOPE},
+            headers={"Authorization": f"Bearer {self._admin_key}"},
+        )
+        assert r.status_code == 201, f"garden setup failed: {r.text}"
+        self._garden_uri = r.json()["garden_id"]
+        yield
+        _restore_authed(self._orig, self._patched)
+
+    def _ah(self) -> dict:
+        return {"Authorization": f"Bearer {self._admin_key}"}
+
+    def _oh(self) -> dict:
+        return {"Authorization": f"Bearer {self._outsider_key}"}
+
+    def _enc(self) -> str:
+        return self._garden_uri.replace(":", "%3A").replace("/", "%2F")
+
+    def test_member_write_garden_fact_returns_201(self) -> None:
+        """§5.19 — admin can assert a garden-tagged fact with matching scope."""
+        r = self._client.post(
+            "/v1/facts",
+            json={
+                "entity": "stigmem://testnode/project/atlas",
+                "relation": "roadmap:status",
+                "value": {"type": "string", "v": "in-flight"},
+                "source": self._ADMIN_ENTITY,
+                "confidence": 1.0,
+                "scope": self._GARDEN_SCOPE,
+                "garden_id": self._garden_uri,
+            },
+            headers=self._ah(),
+        )
+        assert r.status_code == 201, r.text
+        assert r.json()["garden_id"] is not None
+
+    def test_scope_mismatch_rejected(self) -> None:
+        """§17.3 — fact scope must match garden scope; mismatch → 403 or 422."""
+        r = self._client.post(
+            "/v1/facts",
+            json={
+                "entity": "stigmem://testnode/project/atlas",
+                "relation": "roadmap:status",
+                "value": {"type": "string", "v": "blocked"},
+                "source": self._ADMIN_ENTITY,
+                "confidence": 1.0,
+                "scope": "company",
+                "garden_id": self._garden_uri,
+            },
+            headers=self._ah(),
+        )
+        assert r.status_code in (403, 422), (
+            f"scope mismatch → 403/422 expected, got {r.status_code}: {r.text}"
+        )
+
+    def test_nonmember_write_returns_403(self) -> None:
+        """§17.3 — non-member principal is rejected on garden-tagged write."""
+        r = self._client.post(
+            "/v1/facts",
+            json={
+                "entity": "stigmem://testnode/project/atlas",
+                "relation": "roadmap:status",
+                "value": {"type": "string", "v": "blocked"},
+                "source": self._OUTSIDER_ENTITY,
+                "confidence": 1.0,
+                "scope": self._GARDEN_SCOPE,
+                "garden_id": self._garden_uri,
+            },
+            headers=self._oh(),
+        )
+        assert r.status_code == 403, (
+            f"non-member write → 403 expected, got {r.status_code}: {r.text}"
+        )
+
+    def test_member_query_by_garden_id_returns_200(self) -> None:
+        """§5.20 — garden member can filter facts by garden_id."""
+        r = self._client.get(f"/v1/facts?garden_id={self._enc()}", headers=self._ah())
+        assert r.status_code == 200, r.text
+        assert "facts" in r.json()
+
+    def test_nonmember_query_returns_403_not_empty(self) -> None:
+        """§5.20, §17.3 — non-member gets 403, not empty list, when querying by garden_id."""
+        r = self._client.get(f"/v1/facts?garden_id={self._enc()}", headers=self._oh())
+        assert r.status_code == 403, (
+            f"non-member garden query → 403 expected, got {r.status_code}: {r.text}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# §3.5 / §18 — Source Attestation mode behaviour (auth required)
+# ---------------------------------------------------------------------------
+
+class TestSourceAttestationConformance:
+    """§18 — enforce/warn/off mode + attested field values verified end-to-end."""
+
+    def test_warn_mismatch_accepted_attested_false(self, tmp_path) -> None:
+        """§18.2 warn mode — source mismatch accepted; attested=false."""
+        client, orig, patched, key = _make_authed_node(tmp_path, "wm1", "warn")
+        try:
+            r = client.post(
+                "/v1/facts",
+                json={
+                    "entity": "stigmem://testnode/user/alice",
+                    "relation": "memory:role",
+                    "value": {"type": "string", "v": "viewer"},
+                    "source": "stigmem://testnode/user/someone-else",
+                    "confidence": 1.0,
+                    "scope": "company",
+                },
+                headers={"Authorization": f"Bearer {key}"},
+            )
+            assert r.status_code == 201, r.text
+            assert r.json().get("attested") is False, (
+                f"warn mismatch → attested=false expected, got {r.json()}"
+            )
+        finally:
+            _restore_authed(orig, patched)
+
+    def test_warn_match_attested_true(self, tmp_path) -> None:
+        """§18.2 warn mode — matching source gives attested=true."""
+        client, orig, patched, key = _make_authed_node(tmp_path, "wm2", "warn")
+        try:
+            r = client.post(
+                "/v1/facts",
+                json={
+                    "entity": "stigmem://testnode/user/alice",
+                    "relation": "memory:role",
+                    "value": {"type": "string", "v": "writer"},
+                    "source": "stigmem://testnode/agent/admin",
+                    "confidence": 1.0,
+                    "scope": "company",
+                },
+                headers={"Authorization": f"Bearer {key}"},
+            )
+            assert r.status_code == 201, r.text
+            assert r.json().get("attested") is True, (
+                f"warn match → attested=true expected, got {r.json()}"
+            )
+        finally:
+            _restore_authed(orig, patched)
+
+    def test_enforce_mismatch_returns_403(self, tmp_path) -> None:
+        """§18.2 enforce mode — mismatched source → 403."""
+        client, orig, patched, key = _make_authed_node(tmp_path, "ef", "enforce")
+        try:
+            r = client.post(
+                "/v1/facts",
+                json={
+                    "entity": "stigmem://testnode/user/alice",
+                    "relation": "memory:role",
+                    "value": {"type": "string", "v": "impersonator"},
+                    "source": "stigmem://testnode/user/victim",
+                    "confidence": 1.0,
+                    "scope": "company",
+                },
+                headers={"Authorization": f"Bearer {key}"},
+            )
+            assert r.status_code == 403, (
+                f"enforce mismatch → 403 expected, got {r.status_code}: {r.text}"
+            )
+        finally:
+            _restore_authed(orig, patched)
+
+    def test_off_mode_attested_null(self, tmp_path) -> None:
+        """§18.2 off mode — no attestation check; attested=null."""
+        client, orig, patched, key = _make_authed_node(tmp_path, "off", "off")
+        try:
+            r = client.post(
+                "/v1/facts",
+                json={
+                    "entity": "stigmem://testnode/user/alice",
+                    "relation": "memory:role",
+                    "value": {"type": "string", "v": "viewer"},
+                    "source": "stigmem://testnode/user/anyone",
+                    "confidence": 1.0,
+                    "scope": "company",
+                },
+                headers={"Authorization": f"Bearer {key}"},
+            )
+            assert r.status_code == 201, r.text
+            assert r.json().get("attested") is None, (
+                f"off mode → attested=null expected, got {r.json()}"
+            )
+        finally:
+            _restore_authed(orig, patched)
+
+    def test_auth_disabled_attested_null(self, tmp_path) -> None:
+        """§18.2, §2.7 — auth disabled → attestation cannot run; attested=null."""
+        import stigmem_node.settings as sm
+        import stigmem_node.auth as am
+        import stigmem_node.db as dm
+        import stigmem_node.routes.wellknown as wk
+        from stigmem_node.db import apply_migrations
+        from stigmem_node.main import create_app
+        from stigmem_node.settings import Settings
+
+        db_file = str(tmp_path) + "/noauth.db"
+        apply_migrations(db_path=db_file)
+        original = sm.settings
+        ts = Settings(db_path=db_file, auth_required=False, node_url="http://testnode",
+                      source_attestation_mode="warn")
+        sm.settings = ts
+        am.settings = ts
+        dm.settings = ts
+        wk.settings = ts
+        app = create_app()
+        client = TestClient(app, raise_server_exceptions=True)
+        with client:
+            r = client.post(
+                "/v1/facts",
+                json={
+                    "entity": "stigmem://testnode/user/alice",
+                    "relation": "memory:role",
+                    "value": {"type": "string", "v": "viewer"},
+                    "source": "stigmem://testnode/user/anyone",
+                    "confidence": 1.0,
+                    "scope": "company",
+                },
+            )
+        sm.settings = original
+        am.settings = original
+        dm.settings = original
+        wk.settings = original
+        assert r.status_code == 201, r.text
+        assert r.json().get("attested") is None, (
+            f"auth-disabled → attested=null expected, got {r.json()}"
+        )
+
+    def test_wellknown_advertises_source_attestation(self, tmp_path) -> None:
+        """§18.3 — /.well-known/stigmem must expose source_attestation field."""
+        client, orig, patched, _ = _make_authed_node(tmp_path, "wk", "warn")
+        try:
+            r = client.get("/.well-known/stigmem")
+            assert r.status_code == 200
+            body = r.json()
+            assert "source_attestation" in body, "missing source_attestation in well-known"
+            assert body["source_attestation"] in ("enforce", "warn", "off")
+        finally:
+            _restore_authed(orig, patched)

@@ -126,9 +126,9 @@ Use a Memory Garden (Step 5) to partition access if you need per-team isolation.
 ## Step 3 — Build and configure the MCP server {#mcp-server}
 
 ```bash
-cd adapters/mcp
+cd stigmem/adapters/mcp
 pnpm install && pnpm build
-# produces: adapters/mcp/dist/server.js
+# produces: stigmem/adapters/mcp/dist/server.js
 ```
 
 Add to `.mcp.json` at the root of your Paperclip workspace (picked up by Claude Code and the Paperclip harness):

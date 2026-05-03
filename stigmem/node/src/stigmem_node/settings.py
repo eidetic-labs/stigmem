@@ -32,5 +32,11 @@ class Settings(BaseSettings):
     # Allow team-scoped facts to cross federation boundaries (must be explicitly enabled; audit-logged).
     federation_allow_team: bool = False
 
+    # Decay sweeper (Phase 6, spec §decay)
+    # 0 = disabled; positive = decay non-expiring facts older than N seconds when sweep runs without explicit ttl_seconds
+    decay_ttl_seconds: int = 0
+    # 0.0 = disabled; positive = decay facts below this confidence when sweep runs without explicit min_confidence
+    decay_min_confidence: float = 0.0
+
 
 settings = Settings()

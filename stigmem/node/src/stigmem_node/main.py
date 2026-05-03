@@ -11,9 +11,11 @@ import uvicorn
 from fastapi import FastAPI
 
 from .db import apply_migrations
+from .routes.decay import router as decay_router
 from .routes.facts import router as facts_router
 from .routes.federation import router as federation_router
 from .routes.lint import router as lint_router
+from .routes.synthesize import router as synthesize_router
 from .routes.wellknown import router as wellknown_router
 from .settings import settings
 
@@ -60,6 +62,8 @@ def create_app() -> FastAPI:
     app.include_router(facts_router)
     app.include_router(federation_router)
     app.include_router(lint_router)
+    app.include_router(synthesize_router)
+    app.include_router(decay_router)
     app.include_router(wellknown_router)
 
     @app.get("/healthz", tags=["ops"])

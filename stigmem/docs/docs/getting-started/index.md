@@ -13,7 +13,7 @@ Stigmem is a structured, federated knowledge graph for AI agents. Each fact is a
 No Python required. Install with a single command:
 
 ```bash
-git clone https://github.com/giganomix/stigmem
+git clone https://github.com/Eidetic-Labs/stigmem
 cd stigmem
 docker compose up --build -d
 ```

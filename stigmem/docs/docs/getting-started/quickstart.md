@@ -22,7 +22,7 @@ No Python installation required — the nodes run in containers.
 ## Step 1 — Clone and start the nodes
 
 ```bash
-git clone https://github.com/giganomix/stigmem
+git clone https://github.com/Eidetic-Labs/stigmem
 cd stigmem
 docker compose up --build -d
 ```

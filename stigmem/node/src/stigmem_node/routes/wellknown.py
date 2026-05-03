@@ -30,7 +30,7 @@ def node_metadata() -> dict[str, object]:
         "auth": "required" if settings.auth_required else "none",
         "federation": "enabled" if settings.federation_enabled else "disabled",
         "namespaces": _NAMESPACES,
-        "spec": "https://github.com/giganomix/stigmem/blob/main/spec/stigmem-spec-v0.5-draft.md",
+        "spec": "https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.5-draft.md",
     }
 
     if settings.federation_enabled:

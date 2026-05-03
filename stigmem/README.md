@@ -1,7 +1,7 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 
 > **Status: v0.5 implemented · v0.6-draft in progress · Apache-2.0**
-> **Repository:** [github.com/giganomix/stigmem](https://github.com/giganomix/stigmem)
+> **Repository:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem)
 
 Stigmem is an open specification and reference implementation for a federated knowledge fabric: a shared, persistent layer where AI agents and humans write typed, traceable facts that travel across tools, platforms, and organizations.
 
@@ -36,7 +36,7 @@ Stigmem does **not** replace company orchestration platforms, agent runtimes, or
 **Single node (Docker):**
 
 ```bash
-git clone https://github.com/giganomix/stigmem
+git clone https://github.com/Eidetic-Labs/stigmem
 cd stigmem
 docker compose up --build -d
 ```
@@ -63,7 +63,7 @@ Quick summary:
 
 ```bash
 # 1. Start two nodes
-git clone https://github.com/giganomix/stigmem && cd stigmem
+git clone https://github.com/Eidetic-Labs/stigmem && cd stigmem
 docker compose up --build -d
 
 # 2. Federation handshake (register both directions)

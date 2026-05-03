@@ -41,13 +41,13 @@ Four of seven planned phases are complete. Phase 4 is in flight as of 2026-05-02
 
 ### Phase 0 — Scoping Sprint ✓ ([ACM-19](/ACM/issues/ACM-19))
 
-**What shipped:** A working v0.1 prototype (200 lines, FastAPI+SQLite), the first spec draft (`stigmem-spec-v0.2.md`), a shadow migration of the CEO's `MEMORY.md` into the prototype as a dogfood test, and a read-back of the Paperclip and OpenClaw public surfaces (see `docs/loom/upstream-surfaces.md`). The surface read-back established what Stigmem should align with and where it deliberately diverges.
+**What shipped:** A working v0.1 prototype (200 lines, FastAPI+SQLite), the first spec draft (`stigmem-spec-v0.2.md`), a shadow migration of the CEO's `MEMORY.md` into the prototype as a dogfood test, and a read-back of the Paperclip and OpenClaw public surfaces. The surface read-back established what Stigmem should align with and where it deliberately diverges.
 
 **Exit decision:** Board approved Phase 1 with a sharpened thesis. Phase 0 confirmed the primitive is real — the seven frictions exist, the fact model could represent them, and no existing tool (MCP, Paperclip, OpenClaw PARA memory) fills the gap.
 
 ### Phase 1 — Public RFC ✓ ([ACM-23](/ACM/issues/ACM-23))
 
-**What shipped:** Public GitHub repo (`giganomix/muninn`, later renamed to `giganomix/stigmem`), spec v0.3 published with federation as an open community-feedback stub, RFC scaffolding (issue templates, CONTRIBUTING.md), and ≥2 external contributors with merged PRs.
+**What shipped:** Public GitHub repo (`Eidetic-Labs/stigmem`), spec v0.3 published with federation as an open community-feedback stub, RFC scaffolding (issue templates, CONTRIBUTING.md), and ≥2 external contributors with merged PRs.
 
 **Key framing decision (board-confirmed):** README must not frame Stigmem as "the Paperclip memory layer" or imply OpenClaw endorsement. Stigmem stands alone as an open protocol. Engagement with Paperclip and OpenClaw teams is deferred to Phase 4 adapters and Phase 6 public beta — when there is something earned to show.
 
@@ -101,7 +101,7 @@ Replication is pull-based: each node runs a background task that periodically fe
 
 ### Layer 3 — Adapters (Phase 4, in flight)
 
-Adapters bridge Stigmem to specific agent platforms. The Adapter ABI (spec §12) defines the minimum contract: three environment variables (`STIGMEM_NODE_URL`, `STIGMEM_API_KEY`, `STIGMEM_SOURCE_ENTITY`), a `loom_assert(fact)` write path, and a `loom_recall(query, scope)` read path.
+Adapters bridge Stigmem to specific agent platforms. The Adapter ABI (spec §12) defines the minimum contract: three environment variables (`STIGMEM_NODE_URL`, `STIGMEM_API_KEY`, `STIGMEM_SOURCE_ENTITY`), an `assert_fact(fact)` write path, and a `query_facts(query, scope)` read path.
 
 - **MCP adapter** (TypeScript): Exposes `stigmem_assert` and `stigmem_query` as MCP tools. Any Claude Code agent with the server in `.mcp.json` gets read/write access to a Stigmem node with no code changes.
 - **Paperclip adapter** (JavaScript hook): Wires into Paperclip's `PostToolResult` hook to emit issue lifecycle events (status transitions, assignments, blocker resolutions) as Stigmem facts automatically.
@@ -119,7 +119,7 @@ The architecture reflects specific deliberate decisions, each documented in the 
 
 **Why conflicts are first-class, not silently resolved?** Multi-agent systems will contradict each other. Pretending otherwise (last-writer-wins, or silently dropping the losing fact) corrupts ground truth in ways that are hard to detect and expensive to recover from. By retaining both facts, generating a system `stigmem:conflict:*` record, and requiring explicit resolution with provenance, Stigmem makes disagreement visible and traceable. A resolved conflict is more valuable than a silently correct fact, because it carries the reasoning for the resolution.
 
-**Why entity-scoped, not agent-scoped?** Every existing agent memory system — OpenClaw PARA, per-agent `MEMORY.md` files — is *agent-scoped*: the CEO's memory about project X and the CTO's memory about project X are separate files with no reconciliation. Stigmem is *entity-scoped*: facts about `stigmem://company.acme/project/loom` belong to that entity, not to whoever wrote them first. Any authorized agent queries and contributes to the same entity's fact set. This is the single most important architectural divergence from existing agent memory, identified in the Phase 0 surface read-back (`docs/loom/upstream-surfaces.md` §4.6, [ACM-21](/ACM/issues/ACM-21)).
+**Why entity-scoped, not agent-scoped?** Every existing agent memory system — OpenClaw PARA, per-agent `MEMORY.md` files — is *agent-scoped*: the CEO's memory about project X and the CTO's memory about project X are separate files with no reconciliation. Stigmem is *entity-scoped*: facts about `stigmem://company.acme/project/x` belong to that entity, not to whoever wrote them first. Any authorized agent queries and contributes to the same entity's fact set. This is the single most important architectural divergence from existing agent memory, identified in the Phase 0 surface read-back ([ACM-21](/ACM/issues/ACM-21)).
 
 **Why not just MCP?** MCP is a tool protocol: stateless, no persistence between calls, no semantic memory, no provenance chain, no federation. It is the correct transport layer *for calling Stigmem* — the MCP adapter ships Stigmem as an MCP server — but MCP alone does not provide the shared fabric. The relationship is complementary, not competing.
 

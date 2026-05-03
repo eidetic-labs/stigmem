@@ -18,7 +18,7 @@ class TestNormalizeEntityUri:
         assert normalize_entity_uri("stigmem://company.acme/user/alice") == "stigmem://company.acme/user/alice"
 
     def test_formal_uppercase_id(self) -> None:
-        assert normalize_entity_uri("stigmem://company.acme/issue/ISSUE-18") == "stigmem://company.acme/issue/issue-18"
+        assert normalize_entity_uri("stigmem://company.acme/issue/EG-18") == "stigmem://company.acme/issue/eg-18"
 
     def test_formal_uppercase_authority(self) -> None:
         assert normalize_entity_uri("stigmem://Company.ACME/user/alice") == "stigmem://company.acme/user/alice"
@@ -28,8 +28,8 @@ class TestNormalizeEntityUri:
 
     def test_formal_all_uppercase(self) -> None:
         assert (
-            normalize_entity_uri("stigmem://COMPANY.ACME/PROJECT/ISSUE-18")
-            == "stigmem://company.acme/project/issue-18"
+            normalize_entity_uri("stigmem://COMPANY.ACME/PROJECT/EG-18")
+            == "stigmem://company.acme/project/eg-18"
         )
 
     def test_formal_whitespace_in_id(self) -> None:
@@ -52,10 +52,10 @@ class TestNormalizeEntityUri:
         assert normalize_entity_uri("user:Alice") == "user:alice"
 
     def test_informal_issue_uppercase(self) -> None:
-        assert normalize_entity_uri("issue:ISSUE-18") == "issue:issue-18"
+        assert normalize_entity_uri("issue:EG-18") == "issue:eg-18"
 
     def test_informal_slash_uppercase(self) -> None:
-        assert normalize_entity_uri("project/ISSUE-18") == "project/issue-18"
+        assert normalize_entity_uri("project/EG-18") == "project/eg-18"
 
     def test_informal_slash_mixed(self) -> None:
         assert normalize_entity_uri("Project/MIXED-phase4") == "project/mixed-phase4"
@@ -66,7 +66,7 @@ class TestNormalizeEntityUri:
 
     # Idempotency (required by spec)
     def test_idempotent_formal(self) -> None:
-        uri = "stigmem://company.acme/issue/issue-42"
+        uri = "stigmem://company.acme/issue/eg-42"
         assert normalize_entity_uri(normalize_entity_uri(uri)) == normalize_entity_uri(uri)
 
     def test_idempotent_informal(self) -> None:
@@ -74,7 +74,7 @@ class TestNormalizeEntityUri:
         assert normalize_entity_uri(normalize_entity_uri(uri)) == normalize_entity_uri(uri)
 
     def test_idempotent_uppercase_formal(self) -> None:
-        uri = "stigmem://Company.ACME/Issue/ISSUE-42"
+        uri = "stigmem://Company.ACME/Issue/EG-42"
         assert normalize_entity_uri(normalize_entity_uri(uri)) == normalize_entity_uri(uri)
 
     # Error cases
@@ -105,7 +105,7 @@ class TestIsInformal:
         assert is_informal("user:alice")
 
     def test_informal_slash(self) -> None:
-        assert is_informal("project/issue-18")
+        assert is_informal("project/eg-18")
 
 
 class TestNormalizationOnIngest:
@@ -115,7 +115,7 @@ class TestNormalizationOnIngest:
         r = client.post(
             "/v1/facts",
             json={
-                "entity": "stigmem://company.acme/issue/ISSUE-18",
+                "entity": "stigmem://company.acme/issue/EG-18",
                 "relation": "roadmap:status",
                 "value": {"type": "string", "v": "done"},
                 "source": "stigmem://company.acme/agent/cto",
@@ -124,13 +124,13 @@ class TestNormalizationOnIngest:
             },
         )
         assert r.status_code == 201
-        assert r.json()["entity"] == "stigmem://company.acme/issue/issue-18"
+        assert r.json()["entity"] == "stigmem://company.acme/issue/eg-18"
 
     def test_informal_entity_lowercased_on_store(self, client: TestClient) -> None:
         r = client.post(
             "/v1/facts",
             json={
-                "entity": "issue:ISSUE-42",
+                "entity": "issue:EG-42",
                 "relation": "roadmap:status",
                 "value": {"type": "string", "v": "in_progress"},
                 "source": "agent:assistant",
@@ -139,12 +139,12 @@ class TestNormalizationOnIngest:
             },
         )
         assert r.status_code == 201
-        assert r.json()["entity"] == "issue:issue-42"
+        assert r.json()["entity"] == "issue:eg-42"
 
     def test_case_variants_detect_contradiction(self, client: TestClient) -> None:
-        """ISSUE-18 and issue-18 normalize to the same entity — should trigger contradiction."""
+        """EG-18 and eg-18 normalize to the same entity — should trigger contradiction."""
         fact = {
-            "entity": "stigmem://company.acme/issue/ISSUE-99",
+            "entity": "stigmem://company.acme/issue/EG-99",
             "relation": "roadmap:status",
             "value": {"type": "string", "v": "todo"},
             "source": "stigmem://company.acme/agent/cto",
@@ -154,7 +154,7 @@ class TestNormalizationOnIngest:
         r1 = client.post("/v1/facts", json=fact)
         assert r1.status_code == 201
 
-        fact2 = {**fact, "entity": "stigmem://company.acme/issue/issue-99", "value": {"type": "string", "v": "done"}}
+        fact2 = {**fact, "entity": "stigmem://company.acme/issue/eg-99", "value": {"type": "string", "v": "done"}}
         r2 = client.post("/v1/facts", json=fact2)
         assert r2.status_code == 201
         assert r2.json()["contradicted"] is True

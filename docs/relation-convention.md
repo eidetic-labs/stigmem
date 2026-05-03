@@ -12,8 +12,8 @@ Two agents writing semantically different facts under the same `(entity, relatio
 create a contradiction where none should exist:
 
 ```
-entity="stigmem://acme/project/issue-18"  relation="status"  value="in_progress"   source=agent:pm
-entity="stigmem://acme/project/issue-18"  relation="status"  value="code_complete"  source=agent:cto
+entity="stigmem://acme/project/eg-18"  relation="status"  value="in_progress"   source=agent:pm
+entity="stigmem://acme/project/eg-18"  relation="status"  value="code_complete"  source=agent:cto
 ```
 
 Both are valid facts about the same project. They differ semantically (project management
@@ -101,8 +101,8 @@ then retract (`confidence=0.0`) the original colliding facts:
 # entity="acme/project", relation="status", value="code_complete"
 
 # New (distinct sub-relations):
-client.assert_fact("stigmem://acme/project/issue-18", "pm:status",  {"type": "string", "v": "in_progress"},   source="agent:pm")
-client.assert_fact("stigmem://acme/project/issue-18", "eng:status", {"type": "string", "v": "code_complete"}, source="agent:cto")
+client.assert_fact("stigmem://acme/project/eg-18", "pm:status",  {"type": "string", "v": "in_progress"},   source="agent:pm")
+client.assert_fact("stigmem://acme/project/eg-18", "eng:status", {"type": "string", "v": "code_complete"}, source="agent:cto")
 
 # Retract originals (set confidence=0.0)
 client.retract(old_fact_id_1)

@@ -131,12 +131,12 @@ stigmem://{authority}/{type}/{id}
 |-------------|-------------|---------|
 | `authority` | Hostname of the Stigmem node that owns this entity namespace | `company.acme`, `node.example.com` |
 | `type`      | Entity type slug (lowercase, no spaces) | `user`, `agent`, `project`, `issue`, `decision`, `team` |
-| `id`        | Opaque stable identifier for the entity | `alice`, `cto`, `acme-roadmap`, `ISSUE-42` |
+| `id`        | Opaque stable identifier for the entity | `alice`, `cto`, `acme-roadmap`, `EG-42` |
 
 **Examples:**
 - `stigmem://company.acme/user/alice`
 - `stigmem://company.acme/agent/cto`
-- `stigmem://company.acme/issue/ISSUE-42`
+- `stigmem://company.acme/issue/EG-42`
 - `stigmem://node.acme/decision/use-sqlite`
 
 #### Deprecation of informal URIs
@@ -168,7 +168,7 @@ collisions across federated nodes.
 ### 2.6 Entity Naming Rules — Phase 5 (v0.7 Normative)
 
 **Root cause of entity fragmentation (Bug 1):** Two agents writing
-`project/issue-18`, `project/ISSUE-18`, and `phase4` create three silent entity
+`project/eg-18`, `project/EG-18`, and `phase4` create three silent entity
 fragments that never merge. The node has no basis to treat them as the same entity.
 The v0.7 normalization layer closes this gap.
 

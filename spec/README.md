@@ -9,7 +9,8 @@ This directory contains the canonical specification for the Stigmem federated kn
 | [`stigmem-spec-v0.4-draft.md`](stigmem-spec-v0.4-draft.md) | v0.4 | Stable | Auth promoted to implemented (§3.5), `PATCH /v1/facts/:id/confidence` retraction (§5.4), `GET /v1/facts/:id` single-fact route (§5.5), `text` size guidance, migration-friendliness note on schema (§10) |
 | [`stigmem-spec-v0.5-draft.md`](stigmem-spec-v0.5-draft.md) | v0.5 | Stable | §6 Federation promoted to normative concrete spec, new federation wire routes (§5.6–5.10), HLC timestamps (§2.4), per-scope key restrictions (§3.5), conflict-first-class semantics formalized (§3.3), §11 Failure Modes acceptance scenarios |
 | [`stigmem-spec-v0.6-draft.md`](stigmem-spec-v0.6-draft.md) | v0.6 | Stable | §2.5 Entity URI scheme (`stigmem://`) normative, §6.2 capability negotiation now required, §12 Adapter ABI normative (MCP, Paperclip, OpenClaw), §13 reserved for Phase 5+ |
-| [`stigmem-spec-v0.7-draft.md`](stigmem-spec-v0.7-draft.md) | v0.7 | Working draft | §14 Lint Semantics normative (`POST /v1/lint`, MCP `lint_scope`, `LINT_VECTORS`); §2.6 Entity Naming Rules normative; `stigmem:lint:` prefix reserved; §6 promoted v0.6 → stable |
+| [`stigmem-spec-v0.7-draft.md`](stigmem-spec-v0.7-draft.md) | v0.7 | Stable | §14 Lint Semantics normative (`POST /v1/lint`, MCP `lint_scope`, `LINT_VECTORS`); §2.6 Entity Naming Rules normative; `stigmem:lint:` prefix reserved; §6 promoted v0.6 → stable |
+| [`stigmem-spec-v0.8-draft.md`](stigmem-spec-v0.8-draft.md) | v0.8 | Working draft | §15 Decay Semantics (`POST /v1/decay/sweep`, `DecayPolicy` registry, `decay_scope` MCP tool); §16 Synthesis (`POST /v1/synthesis`, `synthesize_scope` MCP tool); §6.7 N-node federation backpressure; §6.8 scope propagation invariants; §1–14 promoted to stable; `stigmem:decay:` prefix reserved |
 
 ---
 
@@ -58,11 +59,17 @@ A section marked **RFC stub** or **Community feedback wanted** has spec text but
 
 ## Current working draft
 
-The active development version is **v0.7-draft**. Sections §1–12 are stable. §2.6 (Entity Naming Rules) and §14 (Lint Semantics) are newly normative (Phase 5 Deliverables 4 and 3 respectively). §4 (Intent Envelope) remains draft and is not being implemented until Phase 6+.
+The active development version is **v0.8-draft**. Sections §1–14 are stable. §15 (Decay Semantics) and §16 (Synthesis) are new in v0.8 and will be promoted to stable in v0.9. §4 (Intent Envelope) remains draft and is not being implemented until a future phase.
 
-**Phase 4 errata (from Phase 3 exit memo)** — three items to be resolved in a v0.5.1 errata pass before Phase 4 finalizes:
-1. §6 signing spec must enumerate *excluded* fields (the `declaration_sig` exclusion from its own preimage)
-2. §6.3 idempotency + conflict interaction: re-ingestion of a fact that already created a conflict record must be a no-op, not a duplicate conflict
-3. HLC §2.4 note on threading requirements for concurrent implementors (spec describes logical behavior; threading is an implementation concern but worth a normative note)
+**Phase 6 additions (v0.8):**
+- §15 Decay Semantics — configurable TTL + confidence-decay policies, `POST /v1/decay/sweep`, `DecayPolicy` registry
+- §16 Synthesis — confidence-weighted snapshot API, `POST /v1/synthesis`, `synthesize_scope` MCP tool
+- §6.7 N-node federation backpressure — cascade behavior in relay nodes, 4-node topology
+- §6.8 Scope propagation invariants — transitive escalation prevention, re-federation restrictions
+
+**Phase 3 errata resolved in Phase 4:**
+1. §6 signing spec now enumerates excluded fields (the `declaration_sig` exclusion from its own preimage)
+2. §6.3 idempotency + conflict: re-ingestion of an existing-conflict fact is a no-op
+3. §2.4 threading note added for concurrent HLC implementors
 
 *Source: Phase 3 exit memo.*

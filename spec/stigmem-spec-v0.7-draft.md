@@ -3,7 +3,7 @@
 
 **Status:** Working draft — Phase 5, Deliverables 3 + 4. §1–12 promoted from v0.6 (stable). §14 Lint Semantics new (normative). §2.6 Entity Naming Rules new (normative). §13 updated to reflect Phase 5 progress.
 **License:** Apache-2.0
-**Authors:** Giganomix
+**Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
 - v0.7 (Deliverable 4 — entity normalization): §2.6 Entity Naming Rules new normative section — strict normalizer on ingest path (case normalization, whitespace collapse, idempotent + deterministic); query-time backward compatibility; migration guide for existing facts; §10 adds migration 003 (entity_aliases table); §3.3 Contradiction notes fragmentation fix; §7 Design Decisions extended; §8 entity fragmentation resolved.

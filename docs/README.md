@@ -107,7 +107,7 @@ stigmem/docs/
 ├── versions.json               # Published versions list
 ├── openapi/
 │   └── stigmem.json            # Local OpenAPI spec (committed)
-├── docs/                       # Current docs (v0.5)
+├── docs/                       # Current docs (v0.8)
 │   ├── getting-started/
 │   ├── spec/
 │   ├── api-reference/

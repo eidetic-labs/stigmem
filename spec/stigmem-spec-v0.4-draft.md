@@ -3,7 +3,7 @@
 
 **Status:** Working draft. v0.3 sections are stable. §3.5 auth promoted from stub. §6 (Federation) unchanged, still open for community feedback.
 **License:** Apache-2.0
-**Authors:** Giganomix
+**Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
 - v0.4: Auth promoted from stub to Phase 2 implementation (§3.5); `PATCH /v1/facts/:id/confidence` retraction route (§5.4); `GET /v1/facts/:id` single-fact route (§5.5); `text` size guidance (§2.1); migration-friendliness note on schema (§10); gaps from Phase 2 implementation captured in §8.

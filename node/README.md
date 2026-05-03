@@ -1,6 +1,6 @@
 # Stigmem Reference Node
 
-Single-host Stigmem node implementing [spec v0.3](../spec/stigmem-spec-v0.3-draft.md). Phase 2 reference implementation.
+Single-host Stigmem node implementing [spec v0.8-draft](../spec/stigmem-spec-v0.8-draft.md). Reference implementation.
 
 ## Quick start
 

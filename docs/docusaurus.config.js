@@ -122,6 +122,11 @@ const config = {
             position: 'left',
           },
           {
+            href: 'https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md',
+            label: 'Security',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/stigmem/stigmem',
             label: 'GitHub',
             position: 'right',

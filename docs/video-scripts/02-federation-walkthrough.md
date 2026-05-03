@@ -1,263 +1,275 @@
-# Script: Federation Walkthrough
-<!-- Video 2 of 3 | Target length: ≤ 10 min | Audience: node operators -->
+# Script 2 — Federation Walkthrough
 
-## Video description (YouTube / project channel copy)
+**Target duration:** ~9 min 45 s  
+**Audience:** Node operator connecting two stigmem nodes  
+**Format:** Screen-recording, terminal split-view (two panes), narrated  
 
-> Connect two stigmem nodes, watch facts replicate automatically, and learn how the federation handshake works under the hood — Ed25519 key verification, scope enforcement, and the audit log.
->
-> **Timestamps**
-> [0:00] Introduction
-> [0:45] How federation works (30-second overview)
-> [2:00] Start the two-node stack
-> [3:15] Inspect the federation handshake
-> [4:45] Assert a scoped fact on Node A
-> [6:00] Verify replication on Node B
-> [7:15] Federation audit log
-> [8:15] Scope enforcement — why local facts don't replicate
-> [9:15] Wrap-up and next steps
+---
+
+## YouTube / channel description block
+
+```
+stigmem — Federation Walkthrough (v1.0)
+
+Connect two stigmem nodes, watch facts replicate automatically,
+inspect the pull-loop handshake, and demo scope enforcement and conflict resolution.
+
+Timestamps:
+0:00 — What federation is and why it matters
+1:15 — Starting the two-node stack
+2:30 — Inspecting the automatic peer handshake
+4:00 — Assert a company-scoped fact on Node A
+4:45 — Wait for replication and verify on Node B
+6:00 — Conflict detection and resolution
+7:30 — Scope enforcement: local facts stay local
+8:30 — Federation audit log
+9:15 — What's next
+
+GitHub: https://github.com/Eidetic-Labs/stigmem
+Docs: https://stigmem.dev/docs/guides/federation
+```
 
 ---
 
 ## Production notes
 
-- **Recording environment:** two terminal panes side-by-side (left = Node A, right = Node B), 1920×1080.
-- Label the left pane "Node A — :8765" and the right pane "Node B — :8766" with colored title bars.
-- **Do not** show real API keys — use `dev-key` throughout.
-- Each `[PAUSE]` marker = ~2 s silence for edits.
+- Resolution: 1920×1080
+- Use a two-pane terminal split: left = Node A commands, right = Node B commands
+- Mask or substitute any real API keys before recording
+- **Section [4:45] — `sleep 35` b-roll cut:** The script calls `sleep 35` while waiting for the pull interval. Do NOT hold on the idle terminal for 35 s of dead air. At the `sleep 35` command, cut to the static Mermaid pull-loop diagram (see `docs/docs/architecture/index.md`), narrate the pull cycle over the diagram, then cut back to the terminal when the query fires. Resume narration from the query output.
 
 ---
 
-## [0:00] Introduction
+## Script
 
-**[SCREEN: title card — "Stigmem: Federation Walkthrough"]**
+### [0:00] What federation is and why it matters
 
-> Stigmem is designed to be federated from day one. In this video you'll connect two nodes, watch a fact asserted on Node A appear automatically on Node B, and see how the protocol enforces scope boundaries — so `local` facts never leave the node they were created on.
->
-> This builds on video 1. If you haven't run a single node yet, start there first.
+**[Screen: architecture diagram from docs/docs/architecture/index.md or Mermaid diagram]**
 
----
+> "Federation is stigmem's mechanism for synchronizing facts across multiple nodes. Each node maintains its own local fact store. The federation protocol propagates facts bidirectionally so every peer eventually holds a consistent view of each allowed scope."
 
-## [0:45] How federation works — 30-second overview
+> "The key design choices: pull-based replication — nodes pull from their peers on a configurable interval, no push required. Identity via Ed25519 — each node signs a `PeerDeclaration` that peers verify before accepting. And scope enforcement — only facts in agreed scopes cross the boundary. A `local`-scoped fact never leaves its node, regardless of what peers are configured."
 
-**[SCREEN: Mermaid diagram — two nodes, arrow from Node A to Node B labeled "pull (every 30 s)", arrow from Node B to Node A labeled "pull (every 30 s)"]**
-
-> Federation in stigmem uses a **pull** model. Each node independently polls its registered peers for new facts. Here's the four-step handshake:
->
-> 1. Node A registers with Node B by posting a **PeerDeclaration** — a signed JSON payload containing Node A's `node_id`, public URL, Ed25519 public key, and the scopes it wants to share (spec §6.1).
-> 2. Node B fetches Node A's `/.well-known/stigmem` endpoint and verifies the Ed25519 signature.
-> 3. Once the peer is `active`, Node B's pull loop fetches new facts from Node A every 30 seconds using a cursor — so restarts and partitions don't cause duplicates.
-> 4. Scope filtering happens at the sending node: `local` facts are never included in pull responses.
-
-**[PAUSE]**
-
-> The Docker Compose quickstart automates steps 1–2 with a `federation-init` one-shot container. You don't need to manually sign PeerDeclarations for local development.
+> "In the Docker Compose setup we ship, all of this is wired automatically. Let me show you."
 
 ---
 
-## [2:00] Start the two-node stack
+### [1:15] Starting the two-node stack
 
-**[SCREEN: left terminal]**
+**[Screen: terminal]**
+
+> "From the repo root, start the stack."
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/Eidetic-Labs/stigmem   # skip if already cloned
 cd stigmem
 make up
 ```
 
-> If you already have the repo, `make up` is enough — it's idempotent.
-
-**[SCREEN: left terminal — `docker compose ps`]**
+> "`make up` starts three services: `node-a` on port 8765, `node-b` on 8766, and `federation-init` — a one-shot container that wires the two nodes together automatically."
 
 ```bash
 docker compose ps
 ```
 
-> Wait about 15 seconds. You want:
-> - `node-a` → `healthy`
-> - `node-b` → `healthy`
-> - `federation-init` → `exited (0)`
-
-**[PAUSE]**
-
-> Exit code zero from `federation-init` means both peer registrations succeeded. If you see exit code 1, run `make logs` and look for the `federation-init` lines — most likely a node wasn't healthy in time.
+> "Wait until `node-a` and `node-b` show `healthy` and `federation-init` shows `exited (0)`. The `exited (0)` is the success indicator — the init script ran, registered the peers in both directions, and shut down cleanly."
 
 ---
 
-## [3:15] Inspect the federation handshake
+### [2:30] Inspecting the automatic peer handshake
 
-**[SCREEN: left terminal]**
-
-> Let's look at the `federation-init` log to see exactly what happened:
+**[Screen: terminal — run make logs, filter for federation-init output]**
 
 ```bash
 make logs 2>&1 | grep "federation-init"
 ```
 
-> You'll see output like:
+> "The init log shows exactly what happened: it fetched each node's `node_id` and `federation_pubkey` from the SQLite database, constructed a signed `PeerDeclaration` for each direction, and POSTed it to the remote node."
 
-```
-federation-init-1  | federation-init: starting
-federation-init-1  |   node-a  id=abc12345…  pub=abc123def456…
-federation-init-1  |   node-b  id=def67890…  pub=def456ghi789…
-federation-init-1  |   registering node-a → node-b…
-federation-init-1  |     status=active
-federation-init-1  |   registering node-b → node-a…
-federation-init-1  |     status=active
-federation-init-1  | federation-init: done
-```
+> "`status=active` in the log confirms each remote node fetched our `.well-known/stigmem`, verified the Ed25519 signature on the declaration, and accepted the peer — per spec §6.1."
 
-> `status=active` means Node B fetched Node A's well-known endpoint, verified the Ed25519 public key against the `declaration_sig` in the PeerDeclaration, and accepted the registration.
-
-**[SCREEN: left terminal — query peers]**
-
-> Confirm from the API:
+> "Confirm the live peer status directly on both nodes."
 
 ```bash
-# Peers known to Node A
-curl -s http://localhost:8765/v1/federation/peers \
-  -H 'X-API-Key: dev-key' | jq '[.[] | {node_id, status, allowed_scopes}]'
+# Left pane — Node A
+curl -s http://localhost:8765/v1/federation/peers | jq '.[].{node_id, status}'
 
-# Peers known to Node B
-curl -s http://localhost:8766/v1/federation/peers \
-  -H 'X-API-Key: dev-key' | jq '[.[] | {node_id, status, allowed_scopes}]'
+# Right pane — Node B
+curl -s http://localhost:8766/v1/federation/peers | jq '.[].{node_id, status}'
 ```
 
-> Each node lists the other as a peer with `"status": "active"` and `"allowed_scopes": ["company", "public"]`.
+> "Both return `status: active`. The federation link is live."
 
 ---
 
-## [4:45] Assert a scoped fact on Node A
+### [4:00] Assert a company-scoped fact on Node A
 
-**[SCREEN: left terminal — "Node A :8765"]**
+**[Screen: left pane — Node A terminal]**
 
-> Now assert a fact on Node A using `scope: company`. Company-scoped facts replicate to all peers that registered with `company` in their `allowed_scopes`.
-
-```bash
-FACT=$(curl -s -X POST http://localhost:8765/v1/facts \
-  -H 'Content-Type: application/json' \
-  -H 'X-API-Key: dev-key' \
-  -d '{
-    "entity":     "project:acme-platform",
-    "relation":   "roadmap:status",
-    "value":      {"type": "string", "v": "in-progress"},
-    "source":     "agent:planner",
-    "confidence": 1.0,
-    "scope":      "company"
-  }')
-
-echo $FACT | jq '{id, entity, relation, value, scope, hlc}'
-```
-
-**[SCREEN: highlight `id` field]**
-
-> Save the `id` — we'll use it to confirm replication. Note the `scope` is `company` and the `hlc` shows the hybrid logical clock tick.
-
-**[PAUSE]**
-
-> Node B's pull loop runs every 30 seconds by default. Rather than wait, let's check the environment variable that controls this:
+> "Now let's put data through the link. I'll assert a company-scoped fact on Node A."
 
 ```bash
-docker compose exec node-b env | grep PULL_INTERVAL
-# STIGMEM_FEDERATION_PULL_INTERVAL_S=30
-```
-
-> For this demo, 35 seconds is the safe wait. You can lower the interval in `docker-compose.yml` for faster iteration in development.
-
----
-
-## [6:00] Verify replication on Node B
-
-**[SCREEN: right terminal — "Node B :8766"]**
-
-```bash
-sleep 35
-curl -s 'http://localhost:8766/v1/facts?entity=project:acme-platform&scope=company' \
-  -H 'X-API-Key: dev-key' | jq '.facts[] | {id, entity, value, scope, source_node}'
-```
-
-**[SCREEN: highlight `source_node` field in output]**
-
-> The fact is there on Node B. Notice `source_node` is set to Node A's `node_id` — this is how the receiving node tracks provenance. The fact's `id` is identical to what we got from Node A: stigmem uses content-addressed IDs, so the same fact always has the same ID regardless of which node you query.
-
-**[PAUSE]**
-
-> **Conflict detection:** if you assert a different value for the same entity/relation/scope on Node B before the Node A fact replicates, stigmem records a `ConflictRecord` and surfaces it in the response. Resolve conflicts with `POST /v1/facts/resolve` — we demonstrate that in video 3 via the MCP adapter.
-
----
-
-## [7:15] Federation audit log
-
-**[SCREEN: right terminal — "Node B :8766"]**
-
-> Every pull event is recorded in the federation audit log:
-
-```bash
-curl -s http://localhost:8766/v1/federation/audit \
-  -H 'X-API-Key: dev-key' | jq '.entries[-5:] | .[] | {event, peer_node_id, facts_ingested, cursor, ts}'
-```
-
-> You'll see entries with:
-> - `event: pull_complete` — a successful pull cycle
-> - `facts_ingested` — how many new facts were fetched this cycle
-> - `cursor` — the HLC timestamp used as the resume point next cycle
-
-**[PAUSE]**
-
-> The cursor is persisted in the `replication_cursors` table. If Node B restarts, it resumes from the last committed cursor — no re-pull from the beginning, no duplicates. This was verified in a 4-node soak test on 2026-05-02: five facts asserted during a node-stop window were all recovered within 30 s on restart.
-
----
-
-## [8:15] Scope enforcement
-
-**[SCREEN: left terminal — "Node A :8765"]**
-
-> Let's confirm that `local`-scoped facts do not cross node boundaries:
-
-```bash
-# Assert a local fact on Node A
 curl -s -X POST http://localhost:8765/v1/facts \
   -H 'Content-Type: application/json' \
   -H 'X-API-Key: dev-key' \
   -d '{
-    "entity":     "user:alice",
-    "relation":   "memory:session-token",
-    "value":      {"type": "string", "v": "secret-abc"},
-    "source":     "agent:auth",
+    "entity":     "agent:assistant",
+    "relation":   "memory:prefers",
+    "value":      {"type": "string", "v": "concise replies"},
+    "source":     "agent:orchestrator",
+    "confidence": 0.9,
+    "scope":      "company"
+  }' | jq '{id, entity, value, scope}'
+```
+
+> "Company scope — this fact should replicate to Node B. Note the typed value object: `{\"type\": \"string\", \"v\": \"concise replies\"}`. That's the required format."
+
+**[Highlight the `id` in the output]**
+
+> "Note that `id` — we'll query for it on Node B."
+
+---
+
+### [4:45] Wait for replication and verify on Node B
+
+**[Screen: terminal — type `sleep 35` and immediately cut to b-roll]**
+
+```bash
+sleep 35
+```
+
+> **[CUT TO: Mermaid pull-loop diagram — narrate over diagram]**
+
+> "While we wait for the pull interval, here's what's happening behind the scenes. Node B's pull loop wakes every 30 seconds — that's `STIGMEM_FEDERATION_PULL_INTERVAL_S`. It calls `GET /v1/federation/facts` on Node A, presenting the peer token it received during registration. Node A returns new facts since the last cursor position. Node B ingests them into its local store and advances the cursor. The cursor is persisted in the `replication_cursors` table, so even a restart won't cause re-delivery of facts."
+
+> **[CUT BACK TO: right pane — Node B terminal, `sleep` has finished]**
+
+```bash
+curl -s 'http://localhost:8766/v1/facts?entity=agent:assistant&scope=company' \
+  -H 'X-API-Key: dev-key' | jq '.facts[] | {id, entity, value, scope, source_node}'
+```
+
+> "There it is on Node B. Notice the `source_node` field — it points to Node A's `node_id`, telling you this fact originated remotely. That provenance is preserved through replication."
+
+---
+
+### [6:00] Conflict detection and resolution
+
+**[Screen: left pane — assert a conflicting fact on Node A]**
+
+> "What happens when two nodes assert different values for the same entity–relation–scope? Stigmem detects the conflict on ingest and surfaces it."
+
+> "Let me assert a conflicting preference on Node A — same entity, relation, and scope, but a different value."
+
+```bash
+curl -s -X POST http://localhost:8765/v1/facts \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: dev-key' \
+  -d '{
+    "entity":     "agent:assistant",
+    "relation":   "memory:prefers",
+    "value":      {"type": "string", "v": "verbose replies"},
+    "source":     "agent:reviewer",
+    "confidence": 0.8,
+    "scope":      "company"
+  }' | jq '{id, value}'
+```
+
+> "After the next pull, Node B will detect a conflict. List conflicts on Node B."
+
+```bash
+sleep 35 && \
+curl -s http://localhost:8766/v1/conflicts \
+  -H 'X-API-Key: dev-key' | jq '.[0] | {conflict_id, entity, relation}'
+```
+
+> "There's the conflict record. Resolve it by nominating the winning fact."
+
+```bash
+CONFLICT_ID=$(curl -s http://localhost:8766/v1/conflicts \
+  -H 'X-API-Key: dev-key' | jq -r '.[0].conflict_id')
+
+WINNING_ID=$(curl -s http://localhost:8766/v1/conflicts \
+  -H 'X-API-Key: dev-key' | jq -r '.[0].facts[0].id')
+
+curl -s -X POST "http://localhost:8766/v1/conflicts/${CONFLICT_ID}/resolve" \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: dev-key' \
+  -d "{
+    \"winning_fact_id\": \"${WINNING_ID}\",
+    \"resolution_note\": \"Original preference confirmed by reviewer\"
+  }" | jq '{conflict_id, status}'
+```
+
+> "The resolve endpoint is `POST /v1/conflicts/{conflict_id}/resolve` — note the conflict ID is in the path, not the request body. Resolution writes a new fact with a `stigmem:resolves` relation that marks the conflict as settled."
+
+---
+
+### [7:30] Scope enforcement: local facts stay local
+
+**[Screen: left pane — assert a local-scoped fact on Node A]**
+
+> "Scope enforcement is a hard boundary. Let me prove it."
+
+```bash
+curl -s -X POST http://localhost:8765/v1/facts \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: dev-key' \
+  -d '{
+    "entity":     "agent:assistant",
+    "relation":   "session:scratch",
+    "value":      {"type": "string", "v": "draft thoughts"},
+    "source":     "agent:assistant",
     "confidence": 1.0,
     "scope":      "local"
   }' | jq '{id, scope}'
 ```
 
-**[SCREEN: right terminal — "Node B :8766", wait ~35s]**
+> "Now wait for the pull interval and query Node B for that entity."
 
 ```bash
-sleep 35
-curl -s 'http://localhost:8766/v1/facts?entity=user:alice&relation=memory:session-token' \
+sleep 35 && \
+curl -s 'http://localhost:8766/v1/facts?entity=agent:assistant&relation=session:scratch' \
   -H 'X-API-Key: dev-key' | jq '.facts | length'
-# 0
 ```
 
-> Zero facts on Node B. The sending node's pull endpoint filters out `local` facts at the query layer before responding to peers. Scope isolation is enforced server-side — there is no client-side honor system.
+> "Zero. The `local`-scoped fact never left Node A. This is the core privacy boundary — agent scratch state and working memory stay on the local node regardless of federation configuration."
 
 ---
 
-## [9:15] Wrap-up and next steps
+### [8:30] Federation audit log
 
-**[SCREEN: title card with links]**
+**[Screen: terminal]**
 
-> You've seen two stigmem nodes federate automatically: the Ed25519 peer handshake, cursor-based pull, scope enforcement, and the audit log.
->
-> Next steps:
-> - **MCP adapter** — watch video 3 to use stigmem from Claude Code or any MCP host without writing any HTTP code
-> - **4-node topology guide** — `docs.stigmem.dev/docs/guides/federation-4node` — full-mesh setup with failure injection
-> - **Spec §6** — the complete federation protocol including peer token format and conflict semantics
-
-**[SCREEN: terminal — teardown]**
+> "Every pull event, peer registration, conflict detection, and scope check is recorded in the audit log."
 
 ```bash
-make down
+curl -s http://localhost:8765/v1/federation/audit | jq '.entries[-5:]'
 ```
+
+> "You can filter by event type."
+
+```bash
+curl -s 'http://localhost:8765/v1/federation/audit?event_type=pull' | \
+  jq '.entries[-3:] | .[] | {timestamp, peer_node_id, fact_count, cursor}'
+```
+
+> "Healthy replication looks like a steady stream of `pull` events with monotonically increasing cursors and a non-zero `fact_count` when new facts were available. A stalled cursor with zero facts for many cycles usually means a network issue or an expired peer token."
 
 ---
 
-*End of script — estimated runtime: ~9 min 45 s*
+### [9:15] What's next
+
+**[Screen: docs site]**
+
+> "That covers the core federation workflow: automatic peering, pull-based replication, conflict detection and resolution, and scope enforcement."
+
+> "For advanced topics: the federation guide in the docs covers manual key management, production TLS setup, key rotation, and the 4-node full-mesh topology with failure injection."
+
+> "Next up: the MCP adapter video, which shows how to wire stigmem into Claude Code so your agents can assert and query facts directly from their context."
+
+> "Thanks for watching."
+
+---
+
+*End of Script 2*

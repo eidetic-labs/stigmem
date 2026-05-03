@@ -82,6 +82,14 @@ curl -s 'http://localhost:8000/v1/facts?entity=user:alice&relation=memory:prefer
 
 To run two nodes and verify cross-node fact replication, see the [Quickstart](./quickstart) guide. It takes under 10 minutes and requires only Docker.
 
+## Video walkthroughs
+
+| Video | Duration | What you'll learn |
+|-------|----------|-------------------|
+| [Self-hosted node setup](#) <!-- TODO: replace with upload URL --> | ~9 min | Install, start, assert your first fact, query, teardown |
+| [Federation walkthrough](#) <!-- TODO: replace with upload URL --> | ~9 min | Connect two nodes, peer handshake, fact replication, scope enforcement, conflict resolution |
+| [MCP adapter usage](#) <!-- TODO: replace with upload URL --> | ~9 min | Build and configure the adapter, demo all five MCP tools |
+
 ## Explore interactively
 
 Once the node is running, regenerate the interactive API reference:

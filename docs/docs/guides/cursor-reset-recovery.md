@@ -8,7 +8,7 @@ sidebar_label: DB-Loss Recovery
 
 **Audience:** Node operators managing Stigmem federation in production.  
 **Spec reference:** §6 (federation pull loop, cursor semantics)  
-**Track:** F2 — ACM-102 (pre-GA hardening)
+**Track:** F2 — pre-GA hardening
 
 ## Problem
 

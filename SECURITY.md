@@ -12,7 +12,7 @@
 
 Please report security issues via GitHub's private advisory path:
 
-1. Go to the [Security Advisories](https://github.com/acmecorp/ai-platform/security/advisories) page.
+1. Go to the [Security Advisories](https://github.com/eidetic-labs/stigmem/security/advisories) page.
 2. Click **"Report a vulnerability"**.
 3. Fill in the details: description, reproduction steps, potential impact, and suggested fix if known.
 

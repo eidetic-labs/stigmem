@@ -1,6 +1,6 @@
 # stigmem-py
 
-Python client SDK for [Stigmem](https://github.com/acmecorp/stigmem) — the federated knowledge fabric.
+Python client SDK for [Stigmem](https://github.com/eidetic-labs/stigmem) — the federated knowledge fabric.
 
 ## Install
 

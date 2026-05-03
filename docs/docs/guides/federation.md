@@ -55,7 +55,7 @@ When a node ingests a federated fact that conflicts with a locally-held fact (sa
 
 The pull loop persists cursor positions in the `replication_cursors` table across both process restarts and network interruptions.
 
-**Verified behavior (4-node soak, 2026-05-02 — ACM-101):**
+**Verified behavior (4-node soak, 2026-05-02):**
 
 - `TestCursorResume::test_node_restart_resumes_without_gaps` — 5 public facts asserted on a peer while the local node was stopped; on restart with the same SQLite DB, all 5 facts were recovered within 30s via cursor-resume pull. No manual intervention required.
 - `TestPartialFailure::test_partial_ingest_then_resume` — 20-fact partial-crash scenario; correct cursor position and zero duplicates after resume.

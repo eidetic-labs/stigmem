@@ -9,7 +9,7 @@ sidebar_label: Audit Log (C3)
 **Audience:** Node operators and security engineers who need an end-to-end trail linking facts to verified principals.
 
 :::info Coming in Track C
-The joined audit log surface is planned for Track C — Per-Principal Identity Hardening (ACM-87). This page is a stub. Content will be completed once the implementation lands.
+The joined audit log surface is planned for Track C — Per-Principal Identity Hardening. This page is a stub. Content will be completed once the implementation lands.
 :::
 
 ## Overview

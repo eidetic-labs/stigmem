@@ -10,7 +10,7 @@ sidebar_label: Overview
 These docs track **Stigmem spec v0.8-draft**. See the [v0.2 docs](/docs/v0.2/spec) for the stable public draft.
 :::
 
-The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative source is `stigmem/spec/stigmem-spec-v0.8-draft.md` in the repository.
+The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative source is `spec/stigmem-spec-v0.8-draft.md` in the repository.
 
 ## Spec sections
 
@@ -37,8 +37,8 @@ The Stigmem specification defines the wire format, fact semantics, and federatio
 | §14 | Lint Semantics | Stable (new in v0.7) |
 | §15 | Decay Semantics | Draft (new in v0.8) — [guide](/docs/guides/decay) |
 | §16 | Synthesis | Draft (new in v0.8) — [guide](/docs/guides/synthesis) |
-| §17 | Memory Garden | Incoming v0.9 — ACM-75 |
-| §18 | Source Attestation | Incoming v0.9 — ACM-76 |
+| §17 | Memory Garden | Incoming v0.9 |
+| §18 | Source Attestation | Incoming v0.9 |
 
 ## Key concepts
 

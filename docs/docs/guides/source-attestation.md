@@ -9,7 +9,7 @@ sidebar_label: Source Attestation
 **Audience:** Node operators enforcing provenance guarantees on fact assertions.
 
 :::info Coming soon
-This guide covers Source Attestation (A2, ACM-76), a v0.9 addition. Spec draft is in progress.
+This guide covers Source Attestation , a v0.9 addition. Spec draft is in progress.
 :::
 
 Source attestation binds a fact's `source` field to the caller's registered `entity_uri`. The node verifies that the asserted `source` matches the API key's registered identity.

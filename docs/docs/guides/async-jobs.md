@@ -8,7 +8,7 @@ sidebar_label: Async Jobs
 
 **Audience:** Node operators and API consumers managing fact quality at scale.  
 **Spec reference:** §14.5 (lint), §15.4 (decay)  
-**Track:** F3 — ACM-103 (pre-GA hardening)
+**Track:** F3 — pre-GA hardening
 
 ## Overview
 

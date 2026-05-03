@@ -21,7 +21,7 @@ Stigmem does not replace company orchestration platforms, agent runtimes, or too
 
 ## Why does it exist?
 
-The motivation is a set of daily-felt frictions observed running an agent-intensive company. From the ACM-18 plan:
+The motivation is a set of daily-felt frictions observed running an agent-intensive company:
 
 1. **Memories are siloed per-agent.** Every agent writes to its own memory directory. When the CEO tells the CTO something, the CTO must manually transcribe it into their own memory — lossily. There is no shared brain.
 2. **No shared decision ledger.** When the board redirects strategy, every agent must be re-briefed individually. The change should propagate as a fact in the shared substrate, not as the CEO's labor.
@@ -39,23 +39,23 @@ Memory architecture per-agent patches around this; a *shared substrate* solves i
 
 Four of seven planned phases are complete. Phase 4 is in flight as of 2026-05-02.
 
-### Phase 0 — Scoping Sprint ✓ (ACM-19)
+### Phase 0 — Scoping Sprint ✓
 
 **What shipped:** A working v0.1 prototype (200 lines, FastAPI+SQLite), the first spec draft (`stigmem-spec-v0.2.md`), a shadow migration of the CEO's `MEMORY.md` into the prototype as a dogfood test, and a read-back of the Paperclip and OpenClaw public surfaces. The surface read-back established what Stigmem should align with and where it deliberately diverges.
 
 **Exit decision:** Board approved Phase 1 with a sharpened thesis. Phase 0 confirmed the primitive is real — the seven frictions exist, the fact model could represent them, and no existing tool (MCP, Paperclip, OpenClaw PARA memory) fills the gap.
 
-### Phase 1 — Public RFC ✓ (ACM-23)
+### Phase 1 — Public RFC ✓
 
 **What shipped:** Public GitHub repo (`Eidetic-Labs/stigmem`), spec v0.3 published with federation as an open community-feedback stub, RFC scaffolding (issue templates, CONTRIBUTING.md), and ≥2 external contributors with merged PRs.
 
 **Key framing decision (board-confirmed):** README must not frame Stigmem as "the Paperclip memory layer" or imply OpenClaw endorsement. Stigmem stands alone as an open protocol. Engagement with Paperclip and OpenClaw teams is deferred to Phase 4 adapters and Phase 6 public beta — when there is something earned to show.
 
-### Phase 2 — Reference Node ✓ (ACM-29)
+### Phase 2 — Reference Node ✓
 
 **What shipped:** A production-quality single-host reference node (FastAPI + SQLite) implementing the v0.3 spec. Provenance, decay (`valid_until`), and scope enforcement at read and write time. API-key authentication (SHA-256 stored server-side, never the raw key). The `/.well-known/stigmem` metadata endpoint (§5.3). CEO `MEMORY.md` fully migrated and readable via the Stigmem API. Spec v0.4 draft capturing implementation gaps and promoting auth from stub to normative.
 
-### Phase 3 — Federation ✓ (ACM-34)
+### Phase 3 — Federation ✓
 
 **What shipped:** Two nodes can federate. Five commits across ~3 weeks:
 
@@ -71,7 +71,7 @@ Four of seven planned phases are complete. Phase 4 is in flight as of 2026-05-02
 
 **What the CTO learned that the spec didn't predict:** (1) signing specs must enumerate *excluded* fields, not just included ones — the `declaration_sig` bug would have failed every real handshake; (2) in-process HLC state races under concurrent load without an explicit lock; (3) spec §6.3 has an unaddressed edge case: idempotent re-ingestion of a fact that already created a conflict should be a no-op, not a second conflict record. These are tracked for a v0.5.1 errata pass.
 
-### Phase 4 — Adapters (in flight) (ACM-40)
+### Phase 4 — Adapters (in flight)
 
 **In progress.** Three adapters in `stigmem/adapters/`: MCP server (TypeScript), OpenClaw/Claude Code adapter (Python), and Paperclip hook adapter (JavaScript). Spec v0.6 was published alongside Phase 4 work, promoting the Adapter ABI to normative (§12) and formalizing the `stigmem://` entity URI scheme (§2.5).
 
@@ -111,7 +111,7 @@ Adapters bridge Stigmem to specific agent platforms. The Adapter ABI (spec §12)
 
 ## Why these choices?
 
-The architecture reflects specific deliberate decisions, each documented in the ACM-18 plan and sharpened by the Phase 0 surface read-back.
+The architecture reflects specific deliberate decisions, each sharpened by the Phase 0 surface read-back.
 
 **Why federated, not centralized?** A protocol that can't federate isn't a protocol — it's a feature of one platform. HTTP, email, ActivityPub, and MCP are all open because federation prevents capture. A Stigmem network where every node is self-hosted and sovereign cannot be taken down or monetized behind a lock. The precedents are email (SMTP federation), ActivityPub (Mastodon), and Solid (personal data pods) — not a SaaS API with optional export.
 
@@ -119,7 +119,7 @@ The architecture reflects specific deliberate decisions, each documented in the 
 
 **Why conflicts are first-class, not silently resolved?** Multi-agent systems will contradict each other. Pretending otherwise (last-writer-wins, or silently dropping the losing fact) corrupts ground truth in ways that are hard to detect and expensive to recover from. By retaining both facts, generating a system `stigmem:conflict:*` record, and requiring explicit resolution with provenance, Stigmem makes disagreement visible and traceable. A resolved conflict is more valuable than a silently correct fact, because it carries the reasoning for the resolution.
 
-**Why entity-scoped, not agent-scoped?** Every existing agent memory system — OpenClaw PARA, per-agent `MEMORY.md` files — is *agent-scoped*: the CEO's memory about project X and the CTO's memory about project X are separate files with no reconciliation. Stigmem is *entity-scoped*: facts about `stigmem://company.acme/project/x` belong to that entity, not to whoever wrote them first. Any authorized agent queries and contributes to the same entity's fact set. This is the single most important architectural divergence from existing agent memory, identified in the Phase 0 surface read-back (ACM-21).
+**Why entity-scoped, not agent-scoped?** Every existing agent memory system — OpenClaw PARA, per-agent `MEMORY.md` files — is *agent-scoped*: the CEO's memory about project X and the CTO's memory about project X are separate files with no reconciliation. Stigmem is *entity-scoped*: facts about `stigmem://company.example/project/x` belong to that entity, not to whoever wrote them first. Any authorized agent queries and contributes to the same entity's fact set. This is the single most important architectural divergence from existing agent memory, identified in the Phase 0 surface read-back.
 
 **Why not just MCP?** MCP is a tool protocol: stateless, no persistence between calls, no semantic memory, no provenance chain, no federation. It is the correct transport layer *for calling Stigmem* — the MCP adapter ships Stigmem as an MCP server — but MCP alone does not provide the shared fabric. The relationship is complementary, not competing.
 
@@ -140,13 +140,13 @@ Phase 5 makes the fabric *stay useful as it grows*: stale facts surface for revi
 
 ## What we are not building
 
-From the ACM-18 plan, unchanged and load-bearing for scope:
+Load-bearing non-targets, unchanged:
 
 - **A new agent platform.** OpenClaw/Claude Code owns the agent runtime. We are not building a competing agent.
 - **A company OS or multi-agent orchestration layer.** Paperclip owns this. We sit *upstream* of Paperclip, not alongside it.
 - **A vertical agent product.** Support agent, compliance agent, bookkeeping agent — all parked until post-v1.0.
 - **A chatbot of any kind.**
-- **An in-house compliance or GRC tool.** Giganomix Comply is a separate product. Stigmem is the protocol layer; compliance application logic is out of scope.
+- **An in-house compliance or GRC tool.** Stigmem is the protocol layer; compliance application logic is out of scope.
 - **Anything that competes with Paperclip or OpenClaw on their core surfaces.** Stigmem makes both more valuable by being the shared substrate they reason over. Competition with either would undermine the protocol's value proposition.
 
 These are not items that got cut — they are deliberate non-targets. Naming them explicitly keeps scope creep visible as the project grows.
@@ -157,25 +157,19 @@ These are not items that got cut — they are deliberate non-targets. Naming the
 
 ```
 stigmem/
-├── spec/                       ← canonical spec (v0.2 → v0.6-draft)
+├── spec/                       ← canonical spec (v0.2 → current draft)
 │   ├── stigmem-spec-v0.2.md    ← stable baseline
-│   ├── stigmem-spec-v0.3-draft.md
-│   ├── stigmem-spec-v0.4-draft.md
-│   ├── stigmem-spec-v0.5-draft.md
-│   ├── stigmem-spec-v0.6-draft.md  ← current working draft
-│   └── README.md               ← spec status table (this sprint)
+│   └── README.md               ← spec status table
 ├── node/                       ← reference node (FastAPI + SQLite)
 │   ├── migrations/             ← SQL schema migrations
-│   └── tests/                  ← 74 passing tests (facts, federation, failure modes)
-├── adapters/                   ← platform adapters (Phase 4)
+│   └── tests/                  ← integration tests (facts, federation, failure modes)
+├── adapters/                   ← platform adapters
 │   ├── mcp/                    ← MCP server (TypeScript)
 │   ├── openclaw/               ← OpenClaw/Claude Code adapter (Python)
 │   └── paperclip/              ← Paperclip hook adapter (JavaScript)
-├── dogfood/                    ← CEO memory migration + snapshot scripts
 ├── docs/                       ← Docusaurus 3 documentation site
 └── CONTRIBUTING.md             ← RFC process for spec contributions
 ```
 
 ---
 
-*Source citations: ACM-18 plan · ACM-19 (Phase 0) · ACM-23 (Phase 1) · ACM-29 (Phase 2) · ACM-34 (Phase 3 exit memo) · ACM-40 (Phase 4)*

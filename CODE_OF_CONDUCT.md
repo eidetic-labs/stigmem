@@ -20,7 +20,7 @@ We pledge to make participation in our community a harassment-free experience fo
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project team at **conduct@acmecorp.ai**. All complaints will be reviewed and investigated promptly and fairly. Project maintainers are obligated to maintain confidentiality.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project team at **conduct@eidetic-labs.ai**. All complaints will be reviewed and investigated promptly and fairly. Project maintainers are obligated to maintain confidentiality.
 
 ## Attribution
 

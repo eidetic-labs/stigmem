@@ -1,0 +1,61 @@
+{
+  "spec_section": "§5.2",
+  "title": "Fact Query — Wire Format Conformance",
+  "description": "Validates GET /v1/facts query parameters and response shape.",
+  "note": "Each vector is run after seeding the fact specified in 'setup_fact'. The test runner seeds then asserts.",
+  "seed_fact": {
+    "entity": "stigmem://testnode/user/query-target",
+    "relation": "memory:role",
+    "value": {"type": "string", "v": "analyst"},
+    "source": "stigmem://testnode/agent/test",
+    "confidence": 1.0,
+    "scope": "company"
+  },
+  "vectors": [
+    {
+      "id": "fact-query-all",
+      "description": "GET /v1/facts returns 200 with facts array and total",
+      "method": "GET",
+      "path": "/v1/facts",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["facts", "total"]
+    },
+    {
+      "id": "fact-query-by-entity",
+      "description": "GET /v1/facts?entity=... returns 200 with matching facts only",
+      "method": "GET",
+      "path": "/v1/facts?entity=stigmem%3A%2F%2Ftestnode%2Fuser%2Fquery-target",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["facts", "total"]
+    },
+    {
+      "id": "fact-query-by-relation",
+      "description": "GET /v1/facts?relation=memory:role returns 200",
+      "method": "GET",
+      "path": "/v1/facts?relation=memory%3Arole",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["facts"]
+    },
+    {
+      "id": "fact-query-by-scope",
+      "description": "GET /v1/facts?scope=company returns 200",
+      "method": "GET",
+      "path": "/v1/facts?scope=company",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["facts"]
+    },
+    {
+      "id": "fact-query-no-entity-empty",
+      "description": "Query for entity that does not exist returns 200 with empty facts list",
+      "method": "GET",
+      "path": "/v1/facts?entity=stigmem%3A%2F%2Ftestnode%2Fuser%2Fno-such-entity-xyz",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_contains": {"facts": [], "total": 0}
+    }
+  ]
+}

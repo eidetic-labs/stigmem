@@ -1,0 +1,46 @@
+{
+  "spec_section": "§5.3, §18.3",
+  "title": "Well-Known Discovery — Wire Format Conformance",
+  "description": "Validates GET /.well-known/stigmem response shape including v1.0 source_attestation field (§18.3).",
+  "vectors": [
+    {
+      "id": "wellknown-shape",
+      "description": "/.well-known/stigmem returns 200 with required fields",
+      "method": "GET",
+      "path": "/.well-known/stigmem",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["version", "node_id", "node_url", "auth", "federation", "namespaces"]
+    },
+    {
+      "id": "wellknown-source-attestation",
+      "description": "/.well-known/stigmem includes source_attestation field (§18.3 normative)",
+      "method": "GET",
+      "path": "/.well-known/stigmem",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["source_attestation"],
+      "expected_body_value_in": {
+        "source_attestation": ["enforce", "warn", "off"]
+      }
+    },
+    {
+      "id": "wellknown-auth-disabled",
+      "description": "/.well-known/stigmem returns auth=none when auth_required=false",
+      "method": "GET",
+      "path": "/.well-known/stigmem",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_contains": {"auth": "none"}
+    },
+    {
+      "id": "wellknown-garden-namespace",
+      "description": "/.well-known/stigmem namespaces list includes garden: prefix (§9.1)",
+      "method": "GET",
+      "path": "/.well-known/stigmem",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_list_contains": {"namespaces": "garden:"}
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "spec_section": "§2.7, §5.1",
+  "title": "Fact Assert — Wire Format Conformance",
+  "description": "Validates the POST /v1/facts request/response contract for every FactValue type and error path.",
+  "vectors": [
+    {
+      "id": "fact-assert-string",
+      "description": "Assert a string fact returns 201 with entity, relation, scope, id, timestamp",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:role",
+        "value": {"type": "string", "v": "engineer"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "company"
+      },
+      "expected_status": 201,
+      "expected_body_contains": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:role",
+        "scope": "company"
+      },
+      "expected_body_has_keys": ["id", "timestamp"]
+    },
+    {
+      "id": "fact-assert-number",
+      "description": "Assert a number fact returns 201 with value.type=number",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:score",
+        "value": {"type": "number", "v": 42.5},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 0.9,
+        "scope": "company"
+      },
+      "expected_status": 201,
+      "expected_body_contains": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:score"
+      },
+      "expected_nested": {"value.type": "number", "value.v": 42.5}
+    },
+    {
+      "id": "fact-assert-boolean",
+      "description": "Assert a boolean fact returns 201 with value.type=boolean",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:active",
+        "value": {"type": "boolean", "v": true},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "company"
+      },
+      "expected_status": 201,
+      "expected_nested": {"value.type": "boolean", "value.v": true}
+    },
+    {
+      "id": "fact-assert-null",
+      "description": "Assert a null fact returns 201 with value.v=null",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:alias",
+        "value": {"type": "null"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "company"
+      },
+      "expected_status": 201,
+      "expected_nested": {"value.type": "null", "value.v": null}
+    },
+    {
+      "id": "fact-assert-text",
+      "description": "Assert a text fact returns 201 with value.type=text",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:bio",
+        "value": {"type": "text", "v": "A long-form narrative about Alice."},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 0.8,
+        "scope": "team"
+      },
+      "expected_status": 201,
+      "expected_nested": {"value.type": "text"}
+    },
+    {
+      "id": "fact-assert-ref",
+      "description": "Assert a ref fact returns 201 with value.type=ref",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/project/atlas",
+        "relation": "rel:owner",
+        "value": {"type": "ref", "v": "stigmem://testnode/user/alice"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "company"
+      },
+      "expected_status": 201,
+      "expected_nested": {"value.type": "ref"}
+    },
+    {
+      "id": "fact-assert-invalid-scope",
+      "description": "Assert with unknown scope returns 422",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:role",
+        "value": {"type": "string", "v": "engineer"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "universe"
+      },
+      "expected_status": 422
+    },
+    {
+      "id": "fact-assert-confidence-too-high",
+      "description": "Assert with confidence > 1.0 returns 422",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:role",
+        "value": {"type": "string", "v": "engineer"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.5,
+        "scope": "company"
+      },
+      "expected_status": 422
+    },
+    {
+      "id": "fact-assert-confidence-too-low",
+      "description": "Assert with confidence < 0.0 returns 422",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:role",
+        "value": {"type": "string", "v": "engineer"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": -0.1,
+        "scope": "company"
+      },
+      "expected_status": 422
+    },
+    {
+      "id": "fact-assert-invalid-value-type",
+      "description": "Assert with unsupported value type returns 422",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:role",
+        "value": {"type": "bytes", "v": "aGVsbG8="},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "company"
+      },
+      "expected_status": 422
+    },
+    {
+      "id": "fact-assert-valid-until",
+      "description": "Assert with valid_until returns 201 with valid_until echoed back",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/alice",
+        "relation": "memory:session",
+        "value": {"type": "string", "v": "active"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "local",
+        "valid_until": "2030-01-01T00:00:00Z"
+      },
+      "expected_status": 201,
+      "expected_body_contains": {"valid_until": "2030-01-01T00:00:00Z"}
+    },
+    {
+      "id": "fact-assert-attested-null-when-auth-disabled",
+      "description": "In auth-disabled mode, attested field is null (§18.2, §2.7)",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/bob",
+        "relation": "memory:role",
+        "value": {"type": "string", "v": "viewer"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "company"
+      },
+      "expected_status": 201,
+      "expected_body_contains": {"attested": null}
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "spec_section": "§5.14–§5.18, §17",
+  "title": "Memory Garden CRUD + Membership — Wire Format Conformance",
+  "description": "Validates garden create/read/delete and membership management against spec §5.14–§5.18.",
+  "note": "Vectors run sequentially within a single fresh node. Each class in the test runner creates its own client.",
+  "vectors": [
+    {
+      "id": "garden-create-201",
+      "description": "POST /v1/gardens with valid payload returns 201 with garden record",
+      "method": "POST",
+      "path": "/v1/gardens",
+      "body": {"slug": "conf-alpha", "name": "Conformance Alpha", "scope": "team"},
+      "expected_status": 201,
+      "expected_body_contains": {"slug": "conf-alpha", "name": "Conformance Alpha", "scope": "team"},
+      "expected_body_has_keys": ["id", "garden_id", "created_by", "created_at", "members"]
+    },
+    {
+      "id": "garden-create-creator-is-admin",
+      "description": "Creator is automatically added as admin member (§5.14, §17.4)",
+      "method": "POST",
+      "path": "/v1/gardens",
+      "body": {"slug": "conf-beta", "name": "Conformance Beta", "scope": "company"},
+      "expected_status": 201,
+      "expected_members_contain_role": "admin"
+    },
+    {
+      "id": "garden-create-duplicate-slug-409",
+      "description": "POST /v1/gardens with existing slug returns 409 (§5.14)",
+      "method": "POST",
+      "path": "/v1/gardens",
+      "body": {"slug": "conf-alpha", "name": "Duplicate", "scope": "team"},
+      "expected_status": 409,
+      "requires_setup": "garden-create-201"
+    },
+    {
+      "id": "garden-create-invalid-slug-422",
+      "description": "POST /v1/gardens with uppercase slug returns 422 (slug must match ^[a-z0-9][a-z0-9\\-]{0,62}$)",
+      "method": "POST",
+      "path": "/v1/gardens",
+      "body": {"slug": "Invalid_Slug!", "name": "Bad Slug", "scope": "team"},
+      "expected_status": 422
+    },
+    {
+      "id": "garden-create-invalid-scope-422",
+      "description": "POST /v1/gardens with unknown scope returns 422",
+      "method": "POST",
+      "path": "/v1/gardens",
+      "body": {"slug": "conf-bad-scope", "name": "Bad", "scope": "universe"},
+      "expected_status": 422
+    },
+    {
+      "id": "garden-list-200",
+      "description": "GET /v1/gardens returns 200 with list of accessible gardens",
+      "method": "GET",
+      "path": "/v1/gardens",
+      "body": null,
+      "expected_status": 200,
+      "expected_response_is_list": true
+    },
+    {
+      "id": "garden-get-by-slug-200",
+      "description": "GET /v1/gardens/:slug returns 200 with full garden record including members",
+      "method": "GET",
+      "path": "/v1/gardens/conf-alpha",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_contains": {"slug": "conf-alpha"},
+      "expected_body_has_keys": ["members"],
+      "requires_setup": "garden-create-201"
+    },
+    {
+      "id": "garden-get-not-found-404",
+      "description": "GET /v1/gardens/nonexistent returns 404 (§5.16)",
+      "method": "GET",
+      "path": "/v1/gardens/no-such-garden-xyz",
+      "body": null,
+      "expected_status": 404
+    },
+    {
+      "id": "garden-add-member-201",
+      "description": "POST /v1/gardens/:slug/members returns 201 with member record (§5.18)",
+      "method": "POST",
+      "path": "/v1/gardens/conf-alpha/members",
+      "body": {"entity_uri": "stigmem://testnode/user/alice", "role": "writer"},
+      "expected_status": 201,
+      "expected_body_contains": {"entity_uri": "stigmem://testnode/user/alice", "role": "writer"},
+      "requires_setup": "garden-create-201"
+    },
+    {
+      "id": "garden-add-member-duplicate-409",
+      "description": "POST /v1/gardens/:slug/members with existing entity returns 409 (§5.18)",
+      "method": "POST",
+      "path": "/v1/gardens/conf-alpha/members",
+      "body": {"entity_uri": "stigmem://testnode/user/alice", "role": "reader"},
+      "expected_status": 409,
+      "requires_setup": "garden-add-member-201"
+    },
+    {
+      "id": "garden-list-members-200",
+      "description": "GET /v1/gardens/:slug/members returns 200 with member list (§5.18)",
+      "method": "GET",
+      "path": "/v1/gardens/conf-alpha/members",
+      "body": null,
+      "expected_status": 200,
+      "expected_response_is_list": true,
+      "requires_setup": "garden-create-201"
+    },
+    {
+      "id": "garden-update-member-role-200",
+      "description": "PATCH /v1/gardens/:slug/members/:entity_uri returns 200 (§5.18)",
+      "method": "PATCH",
+      "path": "/v1/gardens/conf-alpha/members/stigmem%3A%2F%2Ftestnode%2Fuser%2Falice",
+      "body": {"role": "reader"},
+      "expected_status": 200,
+      "expected_body_contains": {"role": "reader"},
+      "requires_setup": "garden-add-member-201"
+    },
+    {
+      "id": "garden-remove-member-204",
+      "description": "DELETE /v1/gardens/:slug/members/:entity_uri returns 204 (§5.18)",
+      "method": "DELETE",
+      "path": "/v1/gardens/conf-alpha/members/stigmem%3A%2F%2Ftestnode%2Fuser%2Falice",
+      "body": null,
+      "expected_status": 204,
+      "requires_setup": "garden-add-member-201"
+    },
+    {
+      "id": "garden-delete-204",
+      "description": "DELETE /v1/gardens/:slug returns 204 (§5.17)",
+      "method": "DELETE",
+      "path": "/v1/gardens/conf-beta",
+      "body": null,
+      "expected_status": 204,
+      "requires_setup": "garden-create-creator-is-admin"
+    },
+    {
+      "id": "garden-delete-not-found-404",
+      "description": "DELETE /v1/gardens/nonexistent returns 404 (§5.17)",
+      "method": "DELETE",
+      "path": "/v1/gardens/no-such-garden-xyz",
+      "body": null,
+      "expected_status": 404
+    }
+  ]
+}

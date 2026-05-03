@@ -126,4 +126,4 @@ translation — you do not need to adjust tool declarations manually.
 ## See also
 
 - [OSS adapters (Ollama / LiteLLM)](./ollama-litellm) — OpenAI-compatible format for local models
-- [MCP server](../../architecture/mcp-server) — for hosts that do support MCP natively
+- [MCP server](../../architecture) — for hosts that do support MCP natively

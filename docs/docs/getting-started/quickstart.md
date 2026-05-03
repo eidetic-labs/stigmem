@@ -155,7 +155,7 @@ docker compose -f docker-compose.yml up --build -d
 
 ## Kubernetes install (Helm)
 
-The chart at `infra/helm/stigmem/` deploys a **single** stigmem node (chart v0.1.0, app v0.9).
+The chart at `infra/helm/stigmem/` deploys a **single** stigmem node (chart v0.1.0, app v1.0).
 
 ### Basic install
 

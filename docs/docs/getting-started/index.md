@@ -8,6 +8,18 @@ sidebar_label: Overview
 
 Stigmem is a structured, federated knowledge graph for AI agents. Each fact is an immutable **(entity, relation, value)** triple with provenance, confidence, scope, and a hybrid logical clock timestamp.
 
+## Video walkthroughs
+
+Prefer video? Three short walkthroughs cover the main paths — each under 10 minutes.
+
+| # | Title | What you'll learn |
+|---|-------|-------------------|
+| 1 | [Self-hosted node setup](#) | Install, configure, and start a stigmem node with Docker Compose |
+| 2 | [Federation walkthrough](#) | Connect two nodes and watch facts replicate automatically |
+| 3 | [MCP adapter usage](#) | Wire stigmem into Claude Code or any MCP-compatible agent |
+
+<!-- TODO: replace # hrefs above with published video URLs once recorded and uploaded -->
+
 ## Quickest start — Docker (recommended)
 
 No Python required. Install with a single command:
@@ -46,11 +58,11 @@ The node starts on `http://localhost:8000`.
 ```bash
 curl -s -X POST http://localhost:8000/v1/facts \
   -H 'Content-Type: application/json' \
-  -H 'X-API-Key: dev-key' \
+  -H 'Authorization: Bearer dev-key' \
   -d '{
     "entity": "user:alice",
     "relation": "memory:prefers",
-    "value": "dark mode",
+    "value": {"type": "string", "v": "dark mode"},
     "source": "agent:settings",
     "confidence": 1.0,
     "scope": "local"

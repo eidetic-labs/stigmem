@@ -8,7 +8,7 @@ sidebar_label: Overview
 
 Practical guides for common Stigmem operations. Each guide includes a working `curl` or Python example.
 
-## Available guides
+## Core operations
 
 | Guide | Topic |
 |-------|-------|
@@ -20,70 +20,49 @@ Practical guides for common Stigmem operations. Each guide includes a working `c
 
 ---
 
-## Phase 6 — Public Beta + 4-Node Federation
+## v1.0 features
 
-Phase 6 deliverables: installer, 4-node topology validation, v0.8 MCP tools, and design-partner pilots.
+New normative sections in v1.0 (spec §§17–18) and supporting node capabilities.
 
-| Guide | Topic |
-|-------|-------|
-| [4-Node Topology](./federation-4node) | Full-mesh 4-node cluster setup, soak tooling, and failure modes |
-| [Design Partner Notes](./design-partner-notes) | Feedback themes from Zep, Letta, and Cognee pilots |
-
-For installation, see the [Installation page](../getting-started/installation) and [Quickstart](../getting-started/quickstart).
+| Guide | Spec | Topic |
+|-------|------|-------|
+| [Memory Gardens](./memory-gardens) | §17 | Named, ACL'd partitions above scope — roles, membership API, enforcement |
+| [Source Attestation](./source-attestation) | §18 | `entity_uri` binding on API keys; enforce, warn, or off modes |
+| [Multi-Tenant Scoping](./multi-tenancy) | — | Complete data isolation for multiple teams or customers on one node |
+| [Fuzzy Entity Resolver](./fuzzy-entity-resolver) | §2.6.6 | Semantic alias matching on entity lookup |
+| [Billing Hooks](./billing-hooks) | — | `BillingEvent` emission on writes — log or forward to a custom backend |
+| [Agent Keypairs](./agent-keypairs) | §18 | Ed25519 keypair registration and node-enforced source attestation |
+| [Human Key Issuance](./human-key-issuance) | — | OIDC-backed key issuance for human principals |
+| [OIDC / SSO Integration](./oidc-sso) | — | OIDC bridge — human IdP identity → scoped Stigmem API key |
+| [Human Surface (Web UI)](./human-surface) | — | Browser UI for curators, contributors, and consumers |
+| [Audit Log](./audit-log) | §18 | End-to-end audit trail: principal → attested-source → fact-id |
 
 ---
 
-## v0.8 Protocol Operations
-
-New in spec v0.8 — fact lifecycle management and multi-hop federation patterns.
+## Fact lifecycle
 
 | Guide | Spec | Topic |
 |-------|------|-------|
 | [Decay Semantics](./decay) | §15 | Retract or reduce confidence of stale facts via configurable `DecayPolicy` |
 | [Synthesis](./synthesis) | §16 | Confidence-weighted current-state snapshot for agent context injection |
+| [Async Lint/Decay APIs](./async-jobs) | §14.5, §15.4 | Job submission, status polling, and cancellation for lint and decay sweeps |
+
+---
+
+## Federation deep-dives
+
+| Guide | Spec | Topic |
+|-------|------|-------|
+| [4-Node Topology](./federation-4node) | §6 | Full-mesh 4-node cluster setup, soak tooling, and failure modes |
 | [Relay Backpressure](./relay-backpressure) | §6.7 | Lag signals and throttle behavior in N-node relay topologies |
-| [Scope Propagation](./scope-propagation) | §6.8 | Transitive scope non-escalation and company re-federation restriction |
+| [Scope Propagation](./scope-propagation) | §6.8 | Transitive scope non-escalation and `company` re-federation restriction |
+| [DB-Loss Recovery](./cursor-reset-recovery) | §6 | `cursor-export` / `cursor-import` runbook — bounds re-pull cost after DB loss |
 
 ---
 
-## Pre-GA Hardening
-
-| Guide | Status | Topic |
-|-------|--------|-------|
-| [Federation (soak results)](./federation#soak-results) | ✅ shipped | Cursor-resume behavior verified under 4-node failure injection |
-| [DB-Loss Recovery](./cursor-reset-recovery) | ✅ shipped | `cursor-export` / `cursor-import` runbook — bounds re-pull cost after DB loss |
-| [Async Lint/Decay APIs](./async-jobs) | ✅ shipped | Job submission, status polling, and cancellation for lint and decay sweeps |
-
----
-
-## Per-Principal Identity Hardening
-
-These guides cover source attestation, OIDC-backed human keys, and the joined audit trail.
+## Reference
 
 | Guide | Topic |
 |-------|-------|
-| [Agent Keypairs](./agent-keypairs) | Ed25519 keypair registration and node-enforced source attestation |
-| [Human Key Issuance](./human-key-issuance) | OIDC-backed key issuance for human principals |
-| [Audit Log](./audit-log) | End-to-end audit trail: principal → attested-source → fact-id |
-
----
-
-## Human Surface
-
-These guides cover the human-facing browser UI and OIDC identity bridge.
-
-| Guide | Topic |
-|-------|-------|
-| [Human Surface (Web UI)](./human-surface) | Browser UI for curators, contributors, and consumers |
-| [OIDC / SSO Integration](./oidc-sso) | OIDC bridge — human IdP identity → scoped Stigmem API key |
-
----
-
-## Memory Garden + Source Attestation
-
-These guides cover the two new primitives added in spec v0.9.
-
-| Guide | Topic |
-|-------|-------|
-| [Memory Gardens](./memory-gardens) | Named, ACL'd partitions above scope — roles, membership API, enforcement |
-| [Source Attestation](./source-attestation) | Signed source URIs bound to auth principal; node rejects mismatched sources |
+| [Intent Envelopes](./intent-envelopes) | Non-normative §4 draft — goal, constraint, preference, handoff |
+| [Design Partner Notes](./design-partner-notes) | Feedback themes from Zep, Letta, and Cognee pilots |

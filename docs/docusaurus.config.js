@@ -10,7 +10,7 @@ const config = {
   url: 'https://docs.stigmem.dev',
   baseUrl: '/',
 
-  onBrokenLinks: 'warn',
+  onBrokenLinks: 'throw',
 
   i18n: {
     defaultLocale: 'en',
@@ -35,11 +35,18 @@ const config = {
           docItemComponent: '@theme/ApiItem',
           lastVersion: 'current',
           versions: {
-            current: { label: 'v0.5', badge: true },
+            current: { label: 'v1.0', badge: true },
             'v0.2': { label: 'v0.2', path: 'v0.2', badge: true },
           },
         },
-        blog: false,
+        blog: {
+          showReadingTime: true,
+          blogTitle: 'Stigmem Blog',
+          blogDescription: 'Updates, announcements, and deep-dives from the Stigmem project.',
+          postsPerPage: 10,
+          blogSidebarTitle: 'Recent posts',
+          blogSidebarCount: 5,
+        },
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -86,6 +93,13 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       image: 'img/logo.svg',
+      metadata: [
+        { name: 'description', content: 'Open-source federated knowledge graph for AI agents. Immutable (entity, relation, value) facts with provenance, confidence scores, and cryptographic federation across peer nodes.' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:image', content: 'https://docs.stigmem.dev/img/logo.svg' },
+        { name: 'twitter:card', content: 'summary' },
+        { name: 'twitter:site', content: '@stigmem' },
+      ],
       navbar: {
         title: 'Stigmem',
         logo: { alt: 'Stigmem Logo', src: 'img/logo.svg' },
@@ -127,13 +141,14 @@ const config = {
             label: 'Architecture',
             position: 'left',
           },
+          { to: '/blog', label: 'Blog', position: 'left' },
           {
             href: 'https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md',
             label: 'Security',
             position: 'right',
           },
           {
-            href: 'https://github.com/stigmem/stigmem',
+            href: 'https://github.com/Eidetic-Labs/stigmem',
             label: 'GitHub',
             position: 'right',
           },
@@ -142,7 +157,7 @@ const config = {
       footer: {
         style: 'dark',
         links: [],
-        copyright: `Copyright © ${new Date().getFullYear()} Acme. Apache 2.0 License.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Eidetic Labs. Apache 2.0 License.`,
       },
       prism: {
         theme: prismThemes.github,

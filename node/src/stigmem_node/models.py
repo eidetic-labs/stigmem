@@ -1,4 +1,4 @@
-"""Pydantic models for the Stigmem fact model (v0.9 — gardens)."""
+"""Pydantic models for the Stigmem fact model (v0.9 — gardens; v1.0 — identity)."""
 
 from __future__ import annotations
 
@@ -24,6 +24,18 @@ class FactValue(BaseModel):
         return t
 
 
+class AttestationToken(BaseModel):
+    """Ed25519 attestation proving the caller owns the registered agent key.
+
+    The signature covers the canonical UTF-8 message:
+        "{entity}\\n{relation}\\n{value.type}\\n{encoded_v}\\n{source}"
+    where encoded_v is the same string the node derives via _encode_v().
+    """
+
+    key_id: str = Field(..., min_length=1)
+    signature: str = Field(..., min_length=1, description="base64url-encoded Ed25519 signature")
+
+
 class AssertRequest(BaseModel):
     entity: str = Field(..., min_length=1)
     relation: str = Field(..., min_length=1)
@@ -32,6 +44,10 @@ class AssertRequest(BaseModel):
     confidence: float = Field(1.0, ge=0.0, le=1.0)
     scope: str = Field("local")
     valid_until: str | None = Field(None, description="ISO 8601 UTC expiry; null = non-expiring")
+    attestation: AttestationToken | None = Field(
+        None,
+        description="Optional Ed25519 attestation; required when STIGMEM_ATTESTATION_REQUIRED=true",
+    )
 
     @field_validator("scope")
     @classmethod
@@ -53,6 +69,7 @@ class FactRecord(BaseModel):
     valid_until: str | None = None
     confidence: float
     scope: str
+    attested_key_id: str | None = None  # v1.0: agent key that attested this assertion
     contradicted: bool = False
     warnings: list[str] = Field(default_factory=list)  # write-time convention warnings (assert only)
 
@@ -199,6 +216,7 @@ def row_to_record(
         valid_until=row["valid_until"],
         confidence=row["confidence"],
         scope=row["scope"],
+        attested_key_id=row["attested_key_id"] if "attested_key_id" in keys else None,
         contradicted=contradicted,
         warnings=warnings or [],
     )
@@ -212,3 +230,50 @@ def _parse_v(vtype: str, raw: str) -> Any:
     if vtype == "null":
         return None
     return raw  # string, text, datetime, ref
+
+
+# ---------------------------------------------------------------------------
+# Agent key models (spec §C1 — per-agent keypair registration)
+# ---------------------------------------------------------------------------
+
+class AgentKeyRegisterRequest(BaseModel):
+    public_key: str = Field(..., min_length=1, description="base64url-encoded Ed25519 raw public key")
+    description: str | None = None
+
+
+class AgentKeyRecord(BaseModel):
+    id: str
+    entity_uri: str
+    public_key: str
+    description: str | None
+    registered_at: str
+    status: str
+
+
+# ---------------------------------------------------------------------------
+# Fact audit models (spec §C3 — end-to-end audit log)
+# ---------------------------------------------------------------------------
+
+class AuditLogEntry(BaseModel):
+    id: str
+    fact_id: str
+    event_type: str
+    entity_uri: str | None
+    oidc_sub: str | None
+    source: str
+    attested_key_id: str | None
+    ts: str
+    # C3 enriched join fields (None when not attested or fact/key deleted)
+    attested_key_entity_uri: str | None = None
+    attested_key_description: str | None = None
+    fact_entity: str | None = None
+    fact_relation: str | None = None
+    fact_value_type: str | None = None
+    fact_value_v: str | None = None
+    fact_scope: str | None = None
+
+
+class AuditLogResponse(BaseModel):
+    entries: list[AuditLogEntry]
+    total: int
+    cursor: str | None

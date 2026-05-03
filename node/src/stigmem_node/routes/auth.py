@@ -1,8 +1,11 @@
-"""Track B / B3 — OIDC → scoped API-key exchange bridge.
+"""Track B / B3 + C2 — OIDC → scoped API-key exchange bridge.
 
 POST /v1/auth/oidc/exchange   validate id_token, mint/refresh a scoped key
 GET  /v1/auth/keys            list caller's own keys
 DELETE /v1/auth/keys/{key_id} revoke a specific key
+
+C2 addition: permissions are capped by the caller's garden membership role.
+admin/writer in any garden → up to ["read","write"]; reader/no membership → ["read"].
 """
 
 from __future__ import annotations
@@ -97,6 +100,24 @@ def _check_domain(email: str | None) -> None:
 # ---------------------------------------------------------------------------
 
 _ALLOWED_PERMISSIONS = {"read", "write"}
+_PERM_ORDER = ["read", "write"]
+
+
+def _derive_permission_ceiling(entity_uri: str) -> set[str]:
+    """Return the max permissions the entity is entitled to via garden membership.
+
+    admin/writer role in any garden → {"read","write"}
+    reader role only, or no membership → {"read"}
+    """
+    with db() as conn:
+        rows = conn.execute(
+            "SELECT role FROM garden_members WHERE entity_uri = ?",
+            (entity_uri,),
+        ).fetchall()
+    roles = {r["role"] for r in rows}
+    if "admin" in roles or "writer" in roles:
+        return {"read", "write"}
+    return {"read"}
 
 
 class ExchangeRequest(BaseModel):
@@ -107,6 +128,7 @@ class ExchangeRequest(BaseModel):
 class ExchangeResponse(BaseModel):
     api_key: str
     entity_uri: str
+    permissions: list[str]
     expires_at: str
 
 
@@ -134,18 +156,21 @@ def oidc_exchange(body: ExchangeRequest) -> ExchangeResponse:
             detail="OIDC authentication is not enabled on this node",
         )
 
-    # Sanitise permissions: cap at read+write, no federate via OIDC
-    requested = {p for p in body.permissions if p in _ALLOWED_PERMISSIONS}
-    if not requested:
-        requested = {"read"}
-    permissions = sorted(requested, key=lambda p: ["read", "write"].index(p))
-
     claims = _verify_id_token(body.id_token)
     sub: str = claims["sub"]
     email: str | None = claims.get("email")
     _check_domain(email)
 
     entity_uri = f"oidc:{sub}"
+
+    # C2: cap permissions by the caller's garden membership role so curators
+    # only get the access their membership entitles them to.
+    ceiling = _derive_permission_ceiling(entity_uri)
+    requested = {p for p in body.permissions if p in _ALLOWED_PERMISSIONS} & ceiling
+    if not requested:
+        requested = {"read"}
+    permissions = sorted(requested, key=lambda p: _PERM_ORDER.index(p))
+
     expires_at = (datetime.now(UTC) + timedelta(hours=settings.oidc_token_ttl_hours)).isoformat()
 
     # Rotate: revoke all previous OIDC-issued keys for this sub before minting
@@ -164,7 +189,7 @@ def oidc_exchange(body: ExchangeRequest) -> ExchangeResponse:
     )
 
     logger.info("OIDC exchange: sub=%s entity_uri=%s perms=%s", sub, entity_uri, permissions)
-    return ExchangeResponse(api_key=raw_key, entity_uri=entity_uri, expires_at=expires_at)
+    return ExchangeResponse(api_key=raw_key, entity_uri=entity_uri, permissions=permissions, expires_at=expires_at)
 
 
 @router.get("/keys", response_model=list[KeyInfo])

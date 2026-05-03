@@ -15,6 +15,8 @@ from fastapi.responses import FileResponse
 
 from .auth import Identity, resolve_identity
 from .db import apply_migrations
+from .routes.agent_keys import router as agent_keys_router
+from .routes.audit import router as audit_router
 from .routes.auth import router as auth_router
 from .routes.decay import router as decay_router
 from .routes.facts import router as facts_router
@@ -68,6 +70,8 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(auth_router)
+    app.include_router(agent_keys_router)
+    app.include_router(audit_router)
     app.include_router(facts_router)
     app.include_router(gardens_router)
     app.include_router(federation_router)
@@ -82,7 +86,11 @@ def create_app() -> FastAPI:
 
     @app.get("/v1/me", tags=["auth"])
     def whoami(identity: Annotated[Identity, Depends(resolve_identity)]) -> dict:
-        return {"entity_uri": identity.entity_uri, "permissions": sorted(identity.permissions)}
+        return {
+            "entity_uri": identity.entity_uri,
+            "permissions": sorted(identity.permissions),
+            "oidc_sub": identity.oidc_sub,
+        }
 
     @app.get("/ui", include_in_schema=False)
     def ui_index() -> FileResponse:

@@ -378,3 +378,166 @@ def test_exchange_rotation_does_not_affect_other_users(oidc_client: TestClient, 
 
     # Carol's key still works
     assert oidc_client.get("/v1/facts", headers={"Authorization": f"Bearer {carol_key}"}).status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# C2 — garden-membership-scoped permission tests
+# ---------------------------------------------------------------------------
+
+
+import sqlite3 as _sqlite3
+
+
+def _seed_garden_member(db_path: str, entity_uri: str, role: str) -> None:
+    """Insert a minimal garden + member row so the exchange can derive permissions."""
+    garden_id = str(uuid.uuid4())
+    now = "2026-01-01T00:00:00+00:00"
+    conn = _sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO gardens (id, slug, name, scope, created_by, created_at) VALUES (?,?,?,?,?,?)",
+        (garden_id, f"test-garden-{garden_id[:8]}", "Test Garden", "company", entity_uri, now),
+    )
+    conn.execute(
+        "INSERT INTO garden_members (garden_id, entity_uri, role, added_by, added_at) VALUES (?,?,?,?,?)",
+        (garden_id, entity_uri, role, entity_uri, now),
+    )
+    conn.commit()
+    conn.close()
+
+
+@pytest.fixture()
+def oidc_env(
+    tmp_path: object,
+    rsa_keypair,
+    jwks_document,
+) -> Generator[tuple[TestClient, str], None, None]:
+    """Like oidc_client but yields (client, db_path) so tests can pre-seed garden rows."""
+    db_file = str(tmp_path) + "/oidc_c2_test.db"  # type: ignore[operator]
+    apply_migrations(db_path=db_file)
+
+    original = settings_module.settings
+    test_settings = Settings(
+        db_path=db_file,
+        auth_required=True,
+        node_url="http://testnode",
+        oidc_enabled=True,
+        oidc_issuer_url=ISSUER,
+        oidc_audience=AUDIENCE,
+        oidc_token_ttl_hours=1,
+        oidc_allowed_domains="",
+    )
+
+    settings_module.settings = test_settings  # type: ignore[assignment]
+    auth_mod.settings = test_settings  # type: ignore[assignment]
+    db_mod.settings = test_settings  # type: ignore[assignment]
+    wk_mod.settings = test_settings  # type: ignore[assignment]
+    auth_route_mod.settings = test_settings  # type: ignore[assignment]
+    auth_route_mod._JWKS_CACHE.clear()
+
+    disco_response = MagicMock()
+    disco_response.raise_for_status = MagicMock()
+    disco_response.json.return_value = {"jwks_uri": f"{ISSUER}/.well-known/jwks.json"}
+
+    real_PyJWKClient = jwt.PyJWKClient
+
+    class _FakeJWKSClient(real_PyJWKClient):
+        def fetch_data(self):
+            return jwks_document
+
+    def _fake_get(url: str, **kwargs: Any) -> MagicMock:
+        return disco_response
+
+    with patch("stigmem_node.routes.auth.httpx.get", side_effect=_fake_get):
+        with patch("stigmem_node.routes.auth.jwt.PyJWKClient", _FakeJWKSClient):
+            app = create_app()
+            with TestClient(app, raise_server_exceptions=True) as c:
+                yield c, db_file
+
+    settings_module.settings = original  # type: ignore[assignment]
+    auth_mod.settings = original  # type: ignore[assignment]
+    db_mod.settings = original  # type: ignore[assignment]
+    wk_mod.settings = original  # type: ignore[assignment]
+    auth_route_mod.settings = original  # type: ignore[assignment]
+    auth_route_mod._JWKS_CACHE.clear()
+
+
+def test_exchange_writer_membership_grants_write(oidc_env, rsa_keypair) -> None:
+    """A user with writer role in any garden receives read+write permissions."""
+    client, db_path = oidc_env
+    private_key, _ = rsa_keypair
+    _seed_garden_member(db_path, "oidc:writer-user", "writer")
+
+    token = _sign_token(private_key, sub="writer-user")
+    resp = client.post(
+        "/v1/auth/oidc/exchange",
+        json={"id_token": token, "permissions": ["read", "write"]},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert set(body["permissions"]) == {"read", "write"}
+
+
+def test_exchange_admin_membership_grants_write(oidc_env, rsa_keypair) -> None:
+    """A user with admin role in any garden receives read+write permissions."""
+    client, db_path = oidc_env
+    private_key, _ = rsa_keypair
+    _seed_garden_member(db_path, "oidc:admin-user", "admin")
+
+    token = _sign_token(private_key, sub="admin-user")
+    resp = client.post(
+        "/v1/auth/oidc/exchange",
+        json={"id_token": token, "permissions": ["read", "write"]},
+    )
+    assert resp.status_code == 200
+    assert set(resp.json()["permissions"]) == {"read", "write"}
+
+
+def test_exchange_reader_only_membership_caps_at_read(oidc_env, rsa_keypair) -> None:
+    """A user with only reader role cannot obtain write permissions."""
+    client, db_path = oidc_env
+    private_key, _ = rsa_keypair
+    _seed_garden_member(db_path, "oidc:reader-user", "reader")
+
+    token = _sign_token(private_key, sub="reader-user")
+    resp = client.post(
+        "/v1/auth/oidc/exchange",
+        json={"id_token": token, "permissions": ["read", "write"]},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["permissions"] == ["read"]
+
+    # Confirm the key cannot write
+    api_key = resp.json()["api_key"]
+    write_resp = client.post(
+        "/v1/facts",
+        json={"entity": "e", "relation": "r", "value": {"type": "string", "v": "x"}, "source": "s"},
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
+    assert write_resp.status_code == 403
+
+
+def test_exchange_no_membership_caps_at_read(oidc_env, rsa_keypair) -> None:
+    """A user with no garden membership can only get read access."""
+    client, _ = oidc_env
+    private_key, _ = rsa_keypair
+
+    token = _sign_token(private_key, sub="nomember-user", email="nomember@example.com")
+    resp = client.post(
+        "/v1/auth/oidc/exchange",
+        json={"id_token": token, "permissions": ["read", "write"]},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["permissions"] == ["read"]
+
+
+def test_exchange_response_includes_permissions_field(oidc_env, rsa_keypair) -> None:
+    """ExchangeResponse always contains the permissions field."""
+    client, _ = oidc_env
+    private_key, _ = rsa_keypair
+
+    token = _sign_token(private_key, sub="fields-check-user")
+    resp = client.post("/v1/auth/oidc/exchange", json={"id_token": token})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "permissions" in body
+    assert isinstance(body["permissions"], list)

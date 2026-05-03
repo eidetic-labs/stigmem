@@ -20,6 +20,7 @@ from ..models import (
     QueryResponse,
     row_to_record,
 )
+from .. import settings as _settings_pkg  # access via module so test patches propagate
 
 router = APIRouter(prefix="/v1/facts", tags=["facts"])
 
@@ -51,6 +52,26 @@ def assert_fact(
     if not identity.can_write():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
 
+    # C1: attestation enforcement — verify or require attestation token
+    attested_key_id: str | None = None
+    if req.attestation is not None:
+        from .agent_keys import verify_attestation
+        value_v_for_sig = _encode_v(req.value.type, req.value.v)
+        canonical = (
+            f"{req.entity}\n{req.relation}\n{req.value.type}\n{value_v_for_sig}\n{req.source}"
+        ).encode("utf-8")
+        attested_key_id = verify_attestation(
+            key_id=req.attestation.key_id,
+            signature_b64=req.attestation.signature,
+            canonical_message=canonical,
+            caller_entity_uri=identity.entity_uri,
+        )
+    elif _settings_pkg.settings.attestation_required:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="attestation required; register an agent key at POST /v1/auth/agent-keys",
+        )
+
     try:
         entity = normalize_entity_uri(req.entity)
         source = normalize_entity_uri(req.source)
@@ -80,13 +101,14 @@ def assert_fact(
     now = datetime.now(UTC).isoformat()
     hlc = node_hlc.tick()
     value_v = _encode_v(req.value.type, req.value.v)
+    audit_id = str(uuid.uuid4())
 
     with db() as conn:
         conn.execute(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
-                valid_until, confidence, scope, hlc, received_from)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                valid_until, confidence, scope, hlc, received_from, attested_key_id)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 entity,    # normalized (spec §2.6)
@@ -100,8 +122,27 @@ def assert_fact(
                 req.scope,
                 hlc,
                 None,  # local write; not received from a peer
+                attested_key_id,
             ),
         )
+
+        # C3: write audit entry joining principal → attested-source → fact-id
+        conn.execute(
+            """INSERT INTO fact_audit_log
+               (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts)
+               VALUES (?,?,?,?,?,?,?,?)""",
+            (
+                audit_id,
+                fact_id,
+                "assert",
+                identity.entity_uri,
+                identity.oidc_sub,
+                source,
+                attested_key_id,
+                now,
+            ),
+        )
+
         row = conn.execute("SELECT * FROM facts WHERE id=?", (fact_id,)).fetchone()
 
         # Contradiction detection: skip bare stigmem: system facts — they are state

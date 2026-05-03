@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     # 0.0 = disabled; positive = decay facts below this confidence when sweep runs without explicit min_confidence
     decay_min_confidence: float = 0.0
 
+    # Track C / C1: require Ed25519 attestation on all fact assertions.
+    # When True, POST /v1/facts must include a valid attestation token.
+    # Defaults to False for backward compatibility.
+    attestation_required: bool = False
+
     # OIDC bridge (Track B / B3): human identity → scoped API keys.
     # Set oidc_enabled=true and configure the remaining fields to activate.
     oidc_enabled: bool = False

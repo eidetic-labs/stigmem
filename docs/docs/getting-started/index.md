@@ -75,7 +75,7 @@ The response includes an `id`, `hlc` (hybrid logical clock tick), and `timestamp
 
 ```bash
 curl -s 'http://localhost:8000/v1/facts?entity=user:alice&relation=memory:prefers' \
-  -H 'X-API-Key: dev-key' | jq .facts
+  -H 'Authorization: Bearer dev-key' | jq .facts
 ```
 
 ## Two-node federation quickstart

@@ -1,7 +1,8 @@
 ---
 name: stigmem-node
+title: Stigmem
 description: Persistent federated memory for OpenClaw agents — boot handshake, handoff, decision, and escalation surfaces backed by a Stigmem node.
-version: 1.0.0
+version: 1.0.1
 metadata:
   openclaw:
     emoji: "🧠"
@@ -17,16 +18,16 @@ metadata:
         description: "Base URL of your Stigmem node (e.g. https://stigmem.example.com)."
       - name: STIGMEM_API_KEY
         required: false
-        description: "API key for the Stigmem node. Omit if the node runs with auth disabled."
+        description: "API key for the Stigmem node. Omit if the node runs with auth disabled. Use a least-privilege key scoped to the intended node only; rotate regularly."
       - name: STIGMEM_SOURCE_ENTITY
         required: false
         description: "Entity URI that identifies this agent in the fact graph (default: agent:openclaw)."
     install:
       - kind: uv
-        package: stigmem-py>=1.0.0rc1
+        package: "stigmem-py>=1.0.0,<2.0.0"
 ---
 
-# stigmem
+# Stigmem
 
 Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://stigmem.dev) — an open-source knowledge fabric that stores facts as immutable, signed assertions and replicates them across nodes.
 
@@ -81,6 +82,14 @@ adapter.emit_handoff(
     continuation="Resume from the Stripe rate-limit discussion.",
 )
 ```
+
+## Security notes
+
+**Memory isolation** — Facts written via this skill persist across sessions and agents. An incorrect decision, handoff, or escalation propagates to future agent runs. Use separate Stigmem nodes (or separate scope namespaces) for experimental and production workloads. Retract stale facts explicitly rather than relying on expiry.
+
+**Retrieved facts are untrusted** — `boot()` returns facts from an external node. The adapter sanitizes values before formatting them into a summary, but you should still review the injected context before acting on it in high-stakes workflows.
+
+**API key scope** — Set `STIGMEM_API_KEY` to a key scoped only to the nodes this agent needs to read from and write to. Rotate keys regularly. Never share a key across multiple unrelated agent deployments.
 
 ## Running your own Stigmem node
 

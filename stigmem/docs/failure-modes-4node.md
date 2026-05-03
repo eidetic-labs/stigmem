@@ -76,7 +76,7 @@ A 4-node full-mesh federation cluster (pull replication, interval 10s default) w
 - No facts lost from the restarting node's perspective.
 - No duplicate ingest: `federation_ingest.py` is idempotent on fact ID (silent no-op for already-seen IDs).
 
-**Edge case (gap in cursor):** If the DB file is lost or corrupted, the cursor resets to `NULL` (start of time). This causes a full re-pull of all facts from each peer. This is safe (idempotent ingest) but expensive for large datasets. **A DB backup policy is needed for production deployments.**
+**Edge case (gap in cursor):** If the DB file is lost or corrupted, the cursor resets to `NULL` (start of time). This causes a full re-pull of all facts from each peer. This is safe (idempotent ingest) but expensive for large datasets. See [cursor-reset-recovery.md](./cursor-reset-recovery.md) for the recovery procedure and the `stigmem federation cursor-export / cursor-import` helper that bounds re-pull cost on large datasets ([ACM-102](/ACM/issues/ACM-102)).
 
 ---
 
@@ -154,7 +154,7 @@ These emerged from test iteration and are surfaced for [ACM-63](/ACM/issues/ACM-
 
 1. **Contradiction storm eviction:** No TTL or eviction policy for `conflicts` table. Long-running deployments with frequent contradictions will grow unboundedly. Need a conflict archival / auto-resolution policy.
 
-2. **Cursor reset on DB loss:** If a node loses its `replication_cursors` table (DB corruption, restore from backup), it performs a full re-pull. Under large datasets this is expensive. Need a documented recovery procedure.
+2. ~~**Cursor reset on DB loss**~~ — **Resolved ([ACM-102](/ACM/issues/ACM-102)):** Recovery procedure documented in [cursor-reset-recovery.md](./cursor-reset-recovery.md); `stigmem federation cursor-export / cursor-import` CLI helpers bound re-pull cost.
 
 3. **Backpressure signal:** The `federation_pull_interval_s` hint from peer well-known is mentioned in spec but not yet implemented. The 429 response is the only backpressure mechanism. Under high load, 429 back-off compounds with contradiction storms.
 

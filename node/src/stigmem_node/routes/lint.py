@@ -84,19 +84,17 @@ def _run_lint_sweep(
     fact_count = 0
 
     with db() as conn:
-        count_sql = f"SELECT COUNT(*) FROM facts f WHERE 1=1 {f_filter}"
+        count_sql = f"SELECT COUNT(*) FROM facts f WHERE 1=1 {f_filter}"  # nosec B608 — f_filter is built from literal SQL fragments; values in params
         fact_count = conn.execute(count_sql, f_params).fetchone()[0]
 
         if "contradiction" in checks:
-            conflict_sql = f"""
-                SELECT c.id AS conflict_id, c.fact_a_id, c.fact_b_id,
-                       fa.entity, fa.relation
-                FROM conflicts c
-                JOIN facts fa ON fa.id = c.fact_a_id
-                JOIN facts fb ON fb.id = c.fact_b_id
-                WHERE c.status = 'unresolved'
-                {fa_filter}
-            """
+            conflict_sql = (
+                "SELECT c.id AS conflict_id, c.fact_a_id, c.fact_b_id, fa.entity, fa.relation"
+                " FROM conflicts c"
+                " JOIN facts fa ON fa.id = c.fact_a_id"
+                " JOIN facts fb ON fb.id = c.fact_b_id"
+                f" WHERE c.status = 'unresolved' {fa_filter}"  # nosec B608 — fa_filter built from literal SQL fragments; values in params
+            )
             for row in conn.execute(conflict_sql, fa_params).fetchall():
                 findings.append({
                     "check": "contradiction",
@@ -108,14 +106,14 @@ def _run_lint_sweep(
                 })
 
         if "stale" in checks:
-            stale_sql = f"""
-                SELECT f.id, f.entity, f.relation, f.valid_until
-                FROM facts f
-                WHERE f.valid_until IS NOT NULL
-                AND f.confidence > 0.0
-                AND f.valid_until <= ?
-                {f_filter}
-            """
+            stale_sql = (
+                "SELECT f.id, f.entity, f.relation, f.valid_until"
+                " FROM facts f"
+                " WHERE f.valid_until IS NOT NULL"
+                " AND f.confidence > 0.0"
+                " AND f.valid_until <= ?"
+                f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
+            )
             for row in conn.execute(stale_sql, [lookahead] + f_params).fetchall():
                 expired = row["valid_until"] <= now
                 findings.append({
@@ -138,20 +136,14 @@ def _run_lint_sweep(
                 orphan_clauses += " AND entity = ?"
                 orphan_params.append(entity)
 
-            orphan_sql = f"""
-                SELECT entity
-                FROM facts
-                WHERE 1=1 {orphan_clauses}
-                GROUP BY entity
-                HAVING COUNT(*) > 0
-                   AND SUM(
-                       CASE
-                         WHEN confidence > 0.0
-                          AND (valid_until IS NULL OR valid_until > ?)
-                         THEN 1 ELSE 0
-                       END
-                   ) = 0
-            """
+            orphan_sql = (
+                "SELECT entity FROM facts"
+                f" WHERE 1=1 {orphan_clauses}"  # nosec B608 — orphan_clauses built from literal SQL fragments; values in params
+                " GROUP BY entity"
+                " HAVING COUNT(*) > 0"
+                " AND SUM(CASE WHEN confidence > 0.0"
+                " AND (valid_until IS NULL OR valid_until > ?) THEN 1 ELSE 0 END) = 0"
+            )
             for row in conn.execute(orphan_sql, orphan_params + [now]).fetchall():
                 findings.append({
                     "check": "orphan",
@@ -163,14 +155,14 @@ def _run_lint_sweep(
                 })
 
         if "broken_ref" in checks:
-            ref_sql = f"""
-                SELECT f.id, f.entity, f.relation, f.value_v
-                FROM facts f
-                WHERE f.value_type = 'ref'
-                  AND f.confidence > 0.0
-                  AND (f.valid_until IS NULL OR f.valid_until > ?)
-                  {f_filter}
-            """
+            ref_sql = (
+                "SELECT f.id, f.entity, f.relation, f.value_v"
+                " FROM facts f"
+                " WHERE f.value_type = 'ref'"
+                " AND f.confidence > 0.0"
+                " AND (f.valid_until IS NULL OR f.valid_until > ?)"
+                f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
+            )
             for row in conn.execute(ref_sql, [now] + f_params).fetchall():
                 target_entity = row["value_v"]
                 live_count = conn.execute(
@@ -191,15 +183,15 @@ def _run_lint_sweep(
                     })
 
         if "namespacing" in checks:
-            ns_sql = f"""
-                SELECT f.entity, f.relation, GROUP_CONCAT(f.id) AS ids
-                FROM facts f
-                WHERE f.confidence > 0.0
-                  AND (f.valid_until IS NULL OR f.valid_until > ?)
-                  AND instr(f.relation, ':') = 0
-                  {f_filter}
-                GROUP BY f.entity, f.relation
-            """
+            ns_sql = (
+                "SELECT f.entity, f.relation, GROUP_CONCAT(f.id) AS ids"
+                " FROM facts f"
+                " WHERE f.confidence > 0.0"
+                " AND (f.valid_until IS NULL OR f.valid_until > ?)"
+                " AND instr(f.relation, ':') = 0"
+                f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
+                " GROUP BY f.entity, f.relation"
+            )
             for row in conn.execute(ns_sql, [now] + f_params).fetchall():
                 findings.append({
                     "check": "namespacing",

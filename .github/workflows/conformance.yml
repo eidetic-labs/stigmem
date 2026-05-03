@@ -1,0 +1,46 @@
+name: Conformance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "node/**"
+      - "spec/**"
+      - "data/conformance/**"
+      - ".github/workflows/conformance.yml"
+  pull_request:
+    paths:
+      - "node/**"
+      - "spec/**"
+      - "data/conformance/**"
+      - ".github/workflows/conformance.yml"
+
+jobs:
+  conformance:
+    name: Stigmem v1.0 Conformance Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install stigmem-node with dev dependencies
+        run: |
+          pip install -e "node[dev]" cryptography PyJWT
+
+      - name: Run conformance suite (zero skips enforced)
+        run: |
+          pytest node/tests/test_conformance_v1.py \
+            -v \
+            --tb=short \
+            -p no:randomly \
+            --strict-markers
+        env:
+          STIGMEM_DB_PATH: ":memory:"
+          STIGMEM_AUTH_REQUIRED: "false"
+          STIGMEM_SOURCE_ATTESTATION_MODE: "warn"

@@ -170,7 +170,7 @@ async def register_peer(
         if wk_resp.status_code == 200:
             fetched_pubkey = wk_resp.json().get("federation_pubkey")
     except Exception:
-        pass  # fetched_pubkey stays None → rejected below
+        pass  # nosec B110 — fetched_pubkey stays None → rejected below
 
     final_status = "rejected"
     verified_at: str | None = None
@@ -276,7 +276,7 @@ def pull_facts(
 
     with db() as conn:
         rows = conn.execute(
-            f"SELECT * FROM facts WHERE {where} ORDER BY hlc ASC LIMIT ?",
+            f"SELECT * FROM facts WHERE {where} ORDER BY hlc ASC LIMIT ?",  # nosec B608 — where built from literal fragments; values in params
             params,
         ).fetchall()
 
@@ -389,7 +389,7 @@ def get_audit_log(
 
     with db() as conn:
         rows = conn.execute(
-            f"SELECT * FROM federation_audit {where} ORDER BY ts DESC, id DESC LIMIT ?",
+            f"SELECT * FROM federation_audit {where} ORDER BY ts DESC, id DESC LIMIT ?",  # nosec B608 — where built from literal fragments; values in params
             params,
         ).fetchall()
 
@@ -442,9 +442,8 @@ def list_conflicts(
 
     with db() as conn:
         rows = conn.execute(
-            f"""SELECT c.id, c.fact_a_id, c.fact_b_id, c.status, c.resolution_fact_id, c.detected_at
-                FROM conflicts c {where}
-                ORDER BY c.detected_at DESC, c.id DESC LIMIT ?""",
+            "SELECT c.id, c.fact_a_id, c.fact_b_id, c.status, c.resolution_fact_id, c.detected_at"
+            f" FROM conflicts c {where} ORDER BY c.detected_at DESC, c.id DESC LIMIT ?",  # nosec B608 — where built from literal fragments; values in params
             params,
         ).fetchall()
 

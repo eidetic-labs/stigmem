@@ -138,6 +138,14 @@ ts
 
 ---
 
+## Tenant scoping
+
+Audit entries are automatically scoped to the caller's tenant. A key provisioned for tenant `"acme"` can only query audit entries where `tenant_id = 'acme'` — cross-tenant audit data is never returned, even with node-admin permissions.
+
+This scoping was added in migration `012_multi_tenant.sql`. Rows written before that migration carry `tenant_id = 'default'`. See [Multi-Tenant Scoping](./multi-tenant) for the full isolation model.
+
+---
+
 ## Retention and backfill
 
 Facts asserted before Track C landed do not have audit entries. The `fact_audit_log` table was created by migration `006_fact_audit.sql` — all entries with `ts` prior to that migration date are absent.
@@ -158,3 +166,4 @@ The Audit Log tab in the browser UI (`/` on the node) shows the same joined view
 - [Human Key Issuance](./human-key-issuance) — C2: how OIDC principals and garden roles flow into `entity_uri`
 - [Authentication](./authentication) — Bearer-key model and permissions
 - [OIDC / SSO Integration](./oidc-sso) — OIDC bridge that populates `oidc_sub`
+- [Multi-Tenant Scoping](./multi-tenant) — tenant_id isolation model and migration 012

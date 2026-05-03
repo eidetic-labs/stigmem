@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     )
 
     db_path: str = "stigmem.db"
-    host: str = "0.0.0.0"
+    host: str = "0.0.0.0"  # nosec B104 — overridable via STIGMEM_HOST; intentional server default
     port: int = 8765
     node_url: str = "http://localhost:8765"
     log_level: str = "info"

@@ -99,6 +99,12 @@ const config = {
           },
           {
             type: 'docSidebar',
+            sidebarId: 'deploymentSidebar',
+            label: 'Deployment',
+            position: 'left',
+          },
+          {
+            type: 'docSidebar',
             sidebarId: 'specSidebar',
             label: 'Spec',
             position: 'left',
@@ -120,6 +126,11 @@ const config = {
             sidebarId: 'architectureSidebar',
             label: 'Architecture',
             position: 'left',
+          },
+          {
+            href: 'https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md',
+            label: 'Security',
+            position: 'right',
           },
           {
             href: 'https://github.com/stigmem/stigmem',

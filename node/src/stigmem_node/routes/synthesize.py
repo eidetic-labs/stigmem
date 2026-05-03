@@ -50,7 +50,7 @@ def synthesize_scope(
     params.append(limit)
 
     where = " AND ".join(conditions)
-    sql = f"SELECT * FROM facts WHERE {where} ORDER BY confidence DESC, timestamp DESC LIMIT ?"
+    sql = f"SELECT * FROM facts WHERE {where} ORDER BY confidence DESC, timestamp DESC LIMIT ?"  # nosec B608 — where built from literal SQL fragments; all user values in params
 
     with db() as conn:
         rows = conn.execute(sql, params).fetchall()

@@ -1,6 +1,6 @@
 {
   "name": "stigmem-ts",
-  "version": "0.4.0",
+  "version": "1.0.0-rc",
   "description": "TypeScript client SDK for Stigmem — the federated knowledge fabric (spec v0.4/v0.5)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,8 +21,9 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/coverage-v8": "^4.1.0",
     "typescript": "^5.4.0",
-    "vitest": "^1.6.0"
+    "vite": "^6.3.0",
+    "vitest": "^4.1.0"
   }
 }

@@ -10,6 +10,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..auth import Identity, resolve_identity
+from ..billing import BillingEvent, get_hook_bus
 from ..db import db
 from ..garden_acl import (
     get_garden_by_slug_or_id,
@@ -98,14 +99,17 @@ def create_garden(
     now = datetime.now(UTC).isoformat()
 
     with db() as conn:
-        existing = conn.execute("SELECT id FROM gardens WHERE slug = ?", (slug,)).fetchone()
+        existing = conn.execute(
+            "SELECT id FROM gardens WHERE slug = ? AND tenant_id = ?",
+            (slug, identity.tenant_id),
+        ).fetchone()
         if existing:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="slug already exists")
 
         conn.execute(
-            """INSERT INTO gardens (id, slug, name, scope, description, created_by, created_at)
-               VALUES (?,?,?,?,?,?,?)""",
-            (garden_uuid, slug, req.name, req.scope, req.description, identity.entity_uri, now),
+            """INSERT INTO gardens (id, slug, name, scope, description, created_by, created_at, tenant_id)
+               VALUES (?,?,?,?,?,?,?,?)""",
+            (garden_uuid, slug, req.name, req.scope, req.description, identity.entity_uri, now, identity.tenant_id),
         )
         conn.execute(
             """INSERT INTO garden_members (garden_id, entity_uri, role, added_by, added_at)
@@ -113,6 +117,13 @@ def create_garden(
             (garden_uuid, identity.entity_uri, "admin", identity.entity_uri, now),
         )
         row = conn.execute("SELECT * FROM gardens WHERE id = ?", (garden_uuid,)).fetchone()
+
+    get_hook_bus().emit(BillingEvent(
+        event_type="garden_created",
+        tenant_id=identity.tenant_id,
+        entity_uri=identity.entity_uri,
+        garden_id=_build_garden_id_uri(slug),
+    ))
 
     return _row_to_garden_record(dict(row))
 
@@ -127,14 +138,17 @@ def list_gardens(
 
     with db() as conn:
         if is_node_admin(identity):
-            rows = conn.execute("SELECT * FROM gardens ORDER BY created_at").fetchall()
+            rows = conn.execute(
+                "SELECT * FROM gardens WHERE tenant_id = ? ORDER BY created_at",
+                (identity.tenant_id,),
+            ).fetchall()
         else:
             rows = conn.execute(
                 """SELECT g.* FROM gardens g
                    JOIN garden_members m ON g.id = m.garden_id
-                   WHERE m.entity_uri = ?
+                   WHERE m.entity_uri = ? AND g.tenant_id = ?
                    ORDER BY g.created_at""",
-                (identity.entity_uri,),
+                (identity.entity_uri, identity.tenant_id),
             ).fetchall()
 
     return [_row_to_garden_record(dict(r), include_members=False) for r in rows]
@@ -149,7 +163,7 @@ def get_garden(
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
 
-    garden = get_garden_by_slug_or_id(garden_slug_or_id)
+    garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
 
@@ -165,7 +179,7 @@ def delete_garden(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> None:
     """Delete a garden (spec §5.17). Requires garden admin role. Facts are orphaned, not deleted."""
-    garden = get_garden_by_slug_or_id(garden_slug_or_id)
+    garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
 
@@ -185,7 +199,7 @@ def list_members(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> list[GardenMemberRecord]:
     """List members of a garden (spec §5.18). Requires any member role."""
-    garden = get_garden_by_slug_or_id(garden_slug_or_id)
+    garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
     require_garden_read(garden, identity)
@@ -203,7 +217,7 @@ def add_member(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> GardenMemberRecord:
     """Add a member to a garden (spec §5.18). Requires admin role."""
-    garden = get_garden_by_slug_or_id(garden_slug_or_id)
+    garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
 
@@ -240,7 +254,7 @@ def update_member_role(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> GardenMemberRecord:
     """Change a member's role (spec §5.18). Requires admin. Cannot demote last admin."""
-    garden = get_garden_by_slug_or_id(garden_slug_or_id)
+    garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
 
@@ -278,7 +292,7 @@ def remove_member(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> None:
     """Remove a member from a garden (spec §5.18). Cannot remove last admin."""
-    garden = get_garden_by_slug_or_id(garden_slug_or_id)
+    garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
 

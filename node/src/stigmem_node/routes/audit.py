@@ -92,6 +92,7 @@ def _decode_cursor(cursor: str) -> tuple[str, str] | None:
 
 
 def _build_where(
+    tenant_id: str,
     entity_uri: str | None,
     oidc_sub: str | None,
     source: str | None,
@@ -99,8 +100,8 @@ def _build_where(
     attested: bool | None,
     cursor: str | None,
 ) -> tuple[str, list[Any]]:
-    conditions: list[str] = []
-    params: list[Any] = []
+    conditions: list[str] = ["al.tenant_id = ?"]
+    params: list[Any] = [tenant_id]
 
     if entity_uri:
         conditions.append("al.entity_uri = ?")
@@ -141,13 +142,16 @@ def get_fact_audit(
 
     with db() as conn:
         rows = conn.execute(
-            _JOIN_SELECT + " WHERE al.fact_id = ? ORDER BY al.ts ASC",
-            (fact_id,),
+            _JOIN_SELECT + " WHERE al.fact_id = ? AND al.tenant_id = ? ORDER BY al.ts ASC",
+            (fact_id, identity.tenant_id),
         ).fetchall()
 
     if not rows:
         with db() as conn:
-            exists = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_id,)).fetchone()
+            exists = conn.execute(
+                "SELECT id FROM facts WHERE id = ? AND tenant_id = ?",
+                (fact_id, identity.tenant_id),
+            ).fetchone()
         if exists is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fact not found")
 
@@ -168,7 +172,7 @@ def export_audit_csv(
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
 
-    where, params = _build_where(entity_uri, oidc_sub, source, fact_id, attested, None)
+    where, params = _build_where(identity.tenant_id, entity_uri, oidc_sub, source, fact_id, attested, None)
     params.append(limit)
     sql = _JOIN_SELECT + where + " ORDER BY al.ts ASC LIMIT ?"
 
@@ -217,7 +221,7 @@ def query_audit(
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
 
-    where, params = _build_where(entity_uri, oidc_sub, source, fact_id, attested, cursor)
+    where, params = _build_where(identity.tenant_id, entity_uri, oidc_sub, source, fact_id, attested, cursor)
     params.append(limit + 1)
     sql = _JOIN_SELECT + where + " ORDER BY al.ts DESC, al.id DESC LIMIT ?"
 

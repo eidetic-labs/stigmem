@@ -1,0 +1,60 @@
+{
+  "spec_section": "§5.19–§5.20, §17.3",
+  "title": "Garden-Tagged Facts — Wire Format Conformance",
+  "description": "Validates POST /v1/facts and GET /v1/facts with garden_id (§5.19, §5.20). Garden ACL enforcement against non-members (§17.3) is validated in test_conformance_v1.py::TestGardenFactACLConformance which uses an auth-enabled node with distinct keys.",
+  "vectors": [
+    {
+      "id": "garden-setup-for-facts",
+      "description": "Create garden used by subsequent garden-fact vectors",
+      "method": "POST",
+      "path": "/v1/gardens",
+      "body": {"slug": "conf-garden", "name": "Conf Garden", "scope": "local"},
+      "expected_status": 201
+    },
+    {
+      "id": "garden-fact-write-member",
+      "description": "POST /v1/facts with garden_id by node admin (anon:trusted) returns 201 (§5.19)",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/project/atlas",
+        "relation": "roadmap:status",
+        "value": {"type": "string", "v": "in-flight"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "local",
+        "garden_id": "stigmem://testnode/garden/conf-garden"
+      },
+      "expected_status": 201,
+      "expected_body_has_keys": ["id", "garden_id"],
+      "requires_setup": "garden-setup-for-facts"
+    },
+    {
+      "id": "garden-fact-scope-mismatch",
+      "description": "POST /v1/facts with garden_id whose scope differs from fact scope → 403 or 422 (§17.3 invariant)",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/project/atlas",
+        "relation": "roadmap:status",
+        "value": {"type": "string", "v": "blocked"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "company",
+        "garden_id": "stigmem://testnode/garden/conf-garden"
+      },
+      "expected_status_in": [403, 422],
+      "requires_setup": "garden-setup-for-facts"
+    },
+    {
+      "id": "garden-fact-query-with-filter",
+      "description": "GET /v1/facts?garden_id=... by a garden member returns 200 with facts list (§5.20)",
+      "method": "GET",
+      "path": "/v1/facts?garden_id=stigmem%3A%2F%2Ftestnode%2Fgarden%2Fconf-garden",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["facts"],
+      "requires_setup": "garden-setup-for-facts"
+    }
+  ]
+}

@@ -7,10 +7,14 @@ sidebar_label: Overview
 # Stigmem Protocol Specification
 
 :::note Version
-These docs track **Stigmem spec v0.9-draft**. See the [v0.2 docs](/docs/v0.2/spec) for the stable public draft.
+These docs track **Stigmem spec v1.0** (stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
 :::
 
-The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative source is `spec/stigmem-spec-v0.9-draft.md` in the repository.
+The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative source is `spec/stigmem-spec-v1.0.md` in the repository.
+
+:::info Security
+Report vulnerabilities via the [GitHub private advisory path](https://github.com/eidetic-labs/stigmem/security/advisories) — not as public issues. Full policy and coordinated disclosure terms: [SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md).
+:::
 
 ## Spec sections
 
@@ -31,14 +35,15 @@ The Stigmem specification defines the wire format, fact semantics, and federatio
 | §7 | Design Decisions | Stable |
 | §8 | Open Questions | Living |
 | §9 | Namespace Registry | Stable |
-| §10 | Schema and Migration | Stable |
+| §10 | Schema and Migration | Stable — migration 012 adds `tenant_id` to all write-bearing tables ([multi-tenant guide](/docs/guides/multi-tenancy)) |
 | §11 | Failure Mode Scenarios | Stable (new in v0.5) |
 | §12 | Adapter ABI | Stable (new in v0.6) |
 | §14 | Lint Semantics | Stable (new in v0.7) |
 | §15 | Decay Semantics | Stable (promoted v0.9) — [guide](/docs/guides/decay) |
 | §16 | Synthesis | Stable (promoted v0.9) — [guide](/docs/guides/synthesis) |
-| §17 | Memory Garden | New (draft) — guide coming soon |
-| §18 | Source Attestation | New (draft) — guide coming soon |
+| §17 | Memory Garden | Stable (normative in v1.0) |
+| §18 | Source Attestation | Stable (normative in v1.0) |
+| §19 | Security Policy | Non-normative — see [SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md) |
 
 ## Key concepts
 
@@ -85,6 +90,15 @@ v0.8 adds two new subsections to the federation spec:
 
 - **§6.7 N-node Backpressure** — relay lag signals (`X-Stigmem-Replication-Lag` header, HTTP 503 throttle) for multi-hop topologies. See the [relay backpressure guide](/docs/guides/relay-backpressure).
 - **§6.8 Scope Propagation Invariants** — closes v0.7 open question §8.5: `company`-scoped facts MUST NOT be re-federated. See the [scope propagation guide](/docs/guides/scope-propagation).
+
+## Reference node extensions (not yet in spec)
+
+The following reference node features are implemented and tested but do not yet have a formal spec section. They will be folded into a future spec revision.
+
+| Feature | Guide | Status |
+|---|---|---|
+| Multi-tenant scoping (`tenant_id` on all write tables, migration 012) | [Multi-Tenant Scoping](/docs/guides/multi-tenancy) | Stable (reference node v1.0-rc) |
+| Billing hook bus (`HookBus` / `CaptureBus`) | [Billing Hooks](/docs/guides/billing-hooks) | Stable (reference node v1.0-rc) |
 
 :::info Coming soon
 Per-section spec reference pages with full wire format examples are planned for the next docs sprint.

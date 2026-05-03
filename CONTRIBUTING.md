@@ -25,6 +25,59 @@ Use this when you want to propose a spec change, add a new field or endpoint, ch
 
 For small fixes (typos, clarity, example corrections), skip the RFC issue and send a PR directly.
 
+## Conformance suite
+
+**Contract:** every new spec section or wire-format change MUST include at least one new conformance vector in `data/conformance/v1.0/`. PRs that add or modify spec text without a corresponding vector will not be merged.
+
+The `data/conformance/v1.0/` directory contains machine-readable test vectors that every conforming implementation must pass. The CI job **Stigmem v1.0 Conformance Suite** runs on every push to `main` and on pull requests that touch `node/`, `spec/`, `data/conformance/`, or the workflow file itself.
+
+**Run locally:**
+
+```bash
+uv run pytest node/tests/test_conformance_v1.py -v
+```
+
+**Adding a new test vector:**
+
+1. Open (or create) a numbered file in `data/conformance/v1.0/` (e.g., `06_new_feature.json`). The runner loads all files matching `0*.json` in sorted order.
+2. Use this top-level structure:
+
+```json
+{
+  "spec_section": "§X.Y",
+  "title": "Short group title",
+  "description": "Optional longer description",
+  "vectors": [...]
+}
+```
+
+3. Each vector must include at minimum `id`, `description`, `method`, `path`, and one of the `expected_*` assertion fields:
+
+```json
+{
+  "id": "unique-kebab-id",
+  "description": "What this vector tests",
+  "method": "POST",
+  "path": "/v1/facts",
+  "body": { "entity": "stigmem://node/user/alice", "relation": "memory:role", "..." },
+  "expected_status": 201,
+  "expected_body_contains": { "entity": "stigmem://node/user/alice" },
+  "expected_body_has_keys": ["id", "timestamp"]
+}
+```
+
+4. Use `expected_nested` for deep assertions without matching the full response. Keys are dotted paths:
+
+```json
+"expected_nested": { "value.type": "number", "value.v": 42.5 }
+```
+
+   This checks `response["value"]["type"] == "number"` and `response["value"]["v"] == 42.5`.
+
+5. Use `requires_setup` (another vector's `id`) to declare ordering dependencies — the runner will execute the prerequisite first within the same DB session.
+
+6. **Do not add vectors with `requires_auth: true` to files in `data/conformance/v1.0/`.** Zero skips are enforced by CI; auth-dependent scenarios belong in the dedicated auth test module.
+
 ## Prototype contributions
 
 The prototype in `prototype/` is a minimal reference implementation — not production software. Contributions that validate spec behavior are welcome; contributions that add production-hardening, auth, or persistence layers should wait until Phase 2 scope is set.

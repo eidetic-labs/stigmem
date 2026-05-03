@@ -1,0 +1,57 @@
+image:
+  repository: ghcr.io/eidetic-labs/stigmem-node
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8765
+
+persistence:
+  enabled: true
+  storageClass: ""
+  size: 1Gi
+  mountPath: /data
+
+stigmem:
+  nodeUrl: "http://stigmem:8765"
+  logLevel: "info"
+  authRequired: false
+  dbPath: "/data/stigmem.db"
+
+  federationEnabled: false
+  federationPullIntervalS: 30
+  federationPushEnabled: false
+  federationNonceWindowS: 300
+  federationAllowTeam: false
+  federationPubkey: ""
+  federationPrivkey: ""
+
+  decayTtlSeconds: 0
+  decayMinConfidence: 0.0
+
+  attestationRequired: false
+  sourceAttestationMode: "warn"
+
+  oidcEnabled: false
+  oidcIssuerUrl: ""
+  oidcAudience: ""
+  oidcTokenTtlHours: 8
+  oidcAllowedDomains: ""
+
+  asyncJobThreshold: 100000
+
+federationKeypairSecret:
+  name: ""
+  pubkeyKey: ""
+  privkeyKey: ""
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

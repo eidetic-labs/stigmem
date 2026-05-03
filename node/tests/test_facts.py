@@ -207,7 +207,7 @@ class TestWellKnown:
 
     def test_shape(self, client: TestClient) -> None:
         body = client.get("/.well-known/stigmem").json()
-        assert body["version"] == "0.9"
+        assert body["version"] == "1.0"
         assert body["node_id"].startswith("stigmem:node:")
         assert body["auth"] in ("none", "required")
         assert body["federation"] == "disabled"

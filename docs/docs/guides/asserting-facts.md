@@ -6,34 +6,141 @@ sidebar_label: Asserting Facts
 
 # Asserting Facts
 
-**Audience:** Node operators and agent developers using the Stigmem REST API.
+**Audience:** Node operators and agent developers using the Stigmem REST API or MCP tools.
 
-:::info Coming soon
-Full guide content is planned for the next docs sprint.
-:::
+## FactValue schema
 
-## Quick example
+Every fact carries a typed value. The `value` field must be an object with a `type` discriminator and, for all types except `null`, a `v` field holding the payload:
+
+| `type` | `v` type | Example |
+|--------|----------|---------|
+| `string` | string | `{"type": "string", "v": "active"}` |
+| `text` | string (long-form) | `{"type": "text", "v": "Full markdown body…"}` |
+| `number` | number | `{"type": "number", "v": 42}` |
+| `boolean` | boolean | `{"type": "boolean", "v": true}` |
+| `datetime` | ISO 8601 string | `{"type": "datetime", "v": "2026-05-03T14:00:00Z"}` |
+| `ref` | entity URI string | `{"type": "ref", "v": "user:alice"}` |
+| `null` | (no `v` key) | `{"type": "null"}` |
+
+## Relation naming convention
+
+Relations must carry a namespace prefix separated by `:`, for example `memory:role` or `acme:goal_state`. Bare relation names (e.g. `role`, `goal_state`) are accepted but emit a server warning and risk collisions across agents and integrations.
+
+Convention: use a short, lowercase namespace that identifies the system or team asserting the fact:
+
+```
+<namespace>:<predicate>
+# Examples
+acme:goal_state
+memory:prefers
+agent:last_heartbeat
+infra:deploy_sha
+```
+
+## Asserting a fact
 
 ```bash
-curl -s -X POST http://localhost:8000/v1/facts \
+curl -s -X POST http://localhost:8765/v1/facts \
   -H 'Content-Type: application/json' \
   -H 'X-API-Key: dev-key' \
   -d '{
-    "entity": "user:alice",
-    "relation": "memory:prefers",
-    "value": "dark mode",
-    "source": "agent:settings",
+    "entity":     "user:alice",
+    "relation":   "memory:prefers",
+    "value":      {"type": "string", "v": "dark mode"},
+    "source":     "agent:settings",
     "confidence": 1.0,
-    "scope": "local"
+    "scope":      "local"
   }' | jq .
 ```
 
-## Topics to be covered
+To **update** a fact, assert a new one for the same `(entity, relation, scope)` triple — Stigmem marks the old fact as superseded (see spec §3).
 
-- Creating a new fact
-- Updating a fact (asserting a new fact with the same entity/relation — see spec §3)
-- Retracting a fact (`confidence: 0`)
-- Reification for N-ary relationships (`stigmem:rel:<uuid>` — see spec §2.3)
-- Using `valid_until` for ephemeral facts
+To **retract** a fact, set `"confidence": 0.0`.
+
+## Heartbeat fact-assertion pattern
+
+Agents that run on a periodic heartbeat should assert a standard set of facts at the start (and end) of each run. This gives any observer a consistent view of agent liveness and intent.
+
+### Mandatory assertions (every heartbeat)
+
+```bash
+# 1 — last_heartbeat: timestamp of this run
+curl -s -X POST http://localhost:8765/v1/facts \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "entity":     "agent:my-agent",
+    "relation":   "acme:last_heartbeat",
+    "value":      {"type": "datetime", "v": "2026-05-03T14:00:00Z"},
+    "source":     "agent:my-agent",
+    "confidence": 1.0,
+    "scope":      "company"
+  }'
+
+# 2 — goal_state: what the agent is currently working on
+curl -s -X POST http://localhost:8765/v1/facts \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "entity":     "agent:my-agent",
+    "relation":   "acme:goal_state",
+    "value":      {"type": "string", "v": "ACM-138: writing documentation"},
+    "source":     "agent:my-agent",
+    "confidence": 1.0,
+    "scope":      "company"
+  }'
+```
+
+### Conditional assertions
+
+Assert these only when the condition applies:
+
+```bash
+# blocked_by — when progress is blocked
+curl -s -X POST http://localhost:8765/v1/facts \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "entity":     "agent:my-agent",
+    "relation":   "acme:blocked_by",
+    "value":      {"type": "ref", "v": "issue:ACM-99"},
+    "source":     "agent:my-agent",
+    "confidence": 1.0,
+    "scope":      "company"
+  }'
+
+# decision — a decision made this heartbeat (use type: "text" for longer rationale)
+curl -s -X POST http://localhost:8765/v1/facts \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "entity":     "agent:my-agent",
+    "relation":   "acme:decision",
+    "value":      {"type": "string", "v": "Deferred API guide to child issue ACM-140"},
+    "source":     "agent:my-agent",
+    "confidence": 1.0,
+    "scope":      "company",
+    "valid_until": "2026-05-03T23:59:59Z"
+  }'
+
+# completed — task finished this heartbeat
+curl -s -X POST http://localhost:8765/v1/facts \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "entity":     "issue:ACM-138",
+    "relation":   "acme:completed",
+    "value":      {"type": "boolean", "v": true},
+    "source":     "agent:my-agent",
+    "confidence": 1.0,
+    "scope":      "company"
+  }'
+```
+
+:::tip Using the MCP tool instead of curl
+If you are inside a Paperclip or Claude Code session with the Stigmem MCP server configured, call `assert_fact` directly — no `curl` required. See the [Paperclip connector guide](./connectors/paperclip).
+:::
+
+## Additional topics
+
+- Retracting a fact: set `"confidence": 0.0` with the same `(entity, relation, scope)` triple
+- Reification for N-ary relationships: use `stigmem:rel:<uuid>` as an intermediate entity (see spec §2.3)
+- `valid_until`: ISO 8601 expiry; omit for a permanent fact
+- Updating facts: see spec §3 for supersession semantics
 
 See the [API Reference](/docs/api-reference) for the full `POST /v1/facts` endpoint spec.

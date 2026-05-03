@@ -41,3 +41,9 @@ Thumbs.db
 
 # Docker
 *.log
+
+# Stigmem runtime (DB and logs are runtime state, not source)
+data/*.db
+data/*.db-shm
+data/*.db-wal
+logs/

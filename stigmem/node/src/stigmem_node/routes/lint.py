@@ -1,10 +1,11 @@
-"""Lint route — spec §5.12 (Phase 5).
+"""Lint route — spec §14 (v0.7).
 
 POST /v1/lint
 { scope, checks?, entity?, relation?, stale_lookahead_s? }
 
 Read-only health-check sweep: contradiction detection, stale-fact flagging,
-orphan-entity detection, broken cross-reference detection.
+orphan-entity detection (all-retracted entities), broken cross-reference detection.
+Never writes or modifies any facts.
 """
 
 from __future__ import annotations
@@ -23,6 +24,9 @@ router = APIRouter(tags=["lint"])
 
 LintCheck = Literal["contradiction", "stale", "orphan", "broken_ref"]
 ALL_CHECKS: list[LintCheck] = ["contradiction", "stale", "orphan", "broken_ref"]
+
+# Relations where a broken ref is severity=error (spec §14.3)
+INTENT_ROUTING_RELATIONS = frozenset({"intent:handoff_to", "intent:context_ref"})
 
 
 class LintRequest(BaseModel):
@@ -55,7 +59,7 @@ def lint_scope(
     req: LintRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> LintResult:
-    """Health-check sweep for a scope (spec §5.12). Read-only."""
+    """Health-check sweep for a scope (spec §14). Read-only."""
     if not identity.can_read():
         raise HTTPException(status_code=403, detail="read permission required")
 
@@ -112,11 +116,13 @@ def lint_scope(
                 ))
 
         # 2. Stale facts (past valid_until, or expiring within lookahead_s)
+        #    Only flag live facts (confidence > 0.0); retracted facts are not stale.
         if "stale" in checks_to_run:
             stale_sql = f"""
                 SELECT f.id, f.entity, f.relation, f.valid_until
                 FROM facts f
                 WHERE f.valid_until IS NOT NULL
+                AND f.confidence > 0.0
                 AND f.valid_until <= ?
                 {f_filter}
             """
@@ -138,44 +144,71 @@ def lint_scope(
                     detail=detail,
                 ))
 
-        # 3. Orphan entities: source URIs that never appear as entity in scope
-        if "orphan" in checks_to_run and not req.entity and not req.relation:
-            orphan_sql = """
-                SELECT DISTINCT f.source
-                FROM facts f
-                WHERE f.scope = ?
-                AND f.source NOT IN (
-                    SELECT DISTINCT entity FROM facts WHERE scope = ?
-                )
+        # 3. Orphan entities (spec §14.1): entities where ALL facts in scope are either
+        #    retracted (confidence=0.0) or expired (valid_until < now). No live facts remain.
+        if "orphan" in checks_to_run:
+            orphan_clauses = "AND scope = ?"
+            orphan_params: list[Any] = [req.scope]
+            if req.entity:
+                orphan_clauses += " AND entity = ?"
+                orphan_params.append(req.entity)
+
+            orphan_sql = f"""
+                SELECT entity
+                FROM facts
+                WHERE 1=1 {orphan_clauses}
+                GROUP BY entity
+                HAVING COUNT(*) > 0
+                   AND SUM(
+                       CASE
+                         WHEN confidence > 0.0
+                          AND (valid_until IS NULL OR valid_until > ?)
+                         THEN 1 ELSE 0
+                       END
+                   ) = 0
             """
-            for row in conn.execute(orphan_sql, [req.scope, req.scope]).fetchall():
+            for row in conn.execute(orphan_sql, orphan_params + [now]).fetchall():
                 findings.append(LintFinding(
                     check="orphan",
                     severity="info",
-                    entity=row["source"],
+                    entity=row["entity"],
                     relation=None,
                     fact_ids=[],
-                    detail=f"source URI {row['source']!r} has no facts as entity in scope={req.scope}",
+                    detail=f"entity {row['entity']!r} has no live facts in scope={req.scope}",
                 ))
 
-        # 4. Broken cross-references: ref values pointing to non-existent fact IDs
+        # 4. Broken cross-references (spec §14.1): ref facts whose target entity URI
+        #    has no live (non-retracted, non-expired) facts in this node's store.
+        #    Severity: error if relation is intent:handoff_to or intent:context_ref (spec §14.3);
+        #              warning otherwise.
         if "broken_ref" in checks_to_run:
             ref_sql = f"""
                 SELECT f.id, f.entity, f.relation, f.value_v
                 FROM facts f
                 WHERE f.value_type = 'ref'
-                AND f.value_v NOT IN (SELECT id FROM facts)
-                {f_filter}
+                  AND f.confidence > 0.0
+                  AND (f.valid_until IS NULL OR f.valid_until > ?)
+                  {f_filter}
             """
-            for row in conn.execute(ref_sql, f_params).fetchall():
-                findings.append(LintFinding(
-                    check="broken_ref",
-                    severity="warning",
-                    entity=row["entity"],
-                    relation=row["relation"],
-                    fact_ids=[row["id"]],
-                    detail=f"ref value {row['value_v']!r} not found in facts table",
-                ))
+            for row in conn.execute(ref_sql, [now] + f_params).fetchall():
+                target_entity = row["value_v"]
+                live_count = conn.execute(
+                    """SELECT COUNT(*) FROM facts
+                       WHERE entity = ?
+                         AND confidence > 0.0
+                         AND (valid_until IS NULL OR valid_until > ?)""",
+                    [target_entity, now],
+                ).fetchone()[0]
+                if live_count == 0:
+                    is_intent_routing = row["relation"] in INTENT_ROUTING_RELATIONS
+                    findings.append(LintFinding(
+                        check="broken_ref",
+                        severity="error" if is_intent_routing else "warning",
+                        entity=row["entity"],
+                        relation=row["relation"],
+                        fact_ids=[row["id"]],
+                        detail=f"ref target entity {target_entity!r} has no live facts",
+                    ))
 
     return LintResult(
         findings=findings,

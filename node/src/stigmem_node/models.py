@@ -1,4 +1,4 @@
-"""Pydantic models for the Stigmem fact model (v0.5 with federation)."""
+"""Pydantic models for the Stigmem fact model (v0.9 — gardens)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 
 VALID_VALUE_TYPES = {"string", "text", "number", "boolean", "datetime", "ref", "null"}
 VALID_SCOPES = {"local", "team", "company", "public"}
+VALID_GARDEN_ROLES = {"admin", "writer", "reader"}
 
 
 class FactValue(BaseModel):
@@ -118,6 +119,66 @@ class ConflictResolveRequest(BaseModel):
     winning_fact_id: str | None = None
     resolution_note: str = ""
     new_value: FactValue | None = None
+
+
+# ---------------------------------------------------------------------------
+# Memory Garden models (spec §17 — v0.9)
+# ---------------------------------------------------------------------------
+
+class GardenMemberRecord(BaseModel):
+    entity_uri: str
+    role: str
+    added_by: str
+    added_at: str
+
+
+class GardenRecord(BaseModel):
+    id: str
+    garden_id: str
+    slug: str
+    name: str
+    scope: str
+    description: str | None = None
+    created_by: str
+    created_at: str
+    members: list[GardenMemberRecord] = Field(default_factory=list)
+
+
+class GardenCreateRequest(BaseModel):
+    slug: str = Field(..., min_length=1, max_length=63)
+    name: str = Field(..., min_length=1)
+    scope: str = Field("company")
+    description: str | None = None
+
+    @field_validator("scope")
+    @classmethod
+    def check_scope(cls, s: str) -> str:
+        if s not in VALID_SCOPES:
+            raise ValueError(f"scope must be one of {VALID_SCOPES}")
+        return s
+
+
+class GardenMemberRequest(BaseModel):
+    entity_uri: str = Field(..., min_length=1)
+    role: str = Field("reader")
+
+    @field_validator("role")
+    @classmethod
+    def check_role(cls, r: str) -> str:
+        if r not in VALID_GARDEN_ROLES:
+            raise ValueError(f"role must be one of {VALID_GARDEN_ROLES}")
+        return r
+
+
+class GardenMemberUpdateRequest(BaseModel):
+    role: str
+
+    @field_validator("role")
+    @classmethod
+    def check_role(cls, r: str) -> str:
+        if r not in VALID_GARDEN_ROLES:
+            raise ValueError(f"role must be one of {VALID_GARDEN_ROLES}")
+        return r
 
 
 def row_to_record(

@@ -38,5 +38,17 @@ class Settings(BaseSettings):
     # 0.0 = disabled; positive = decay facts below this confidence when sweep runs without explicit min_confidence
     decay_min_confidence: float = 0.0
 
+    # OIDC bridge (Track B / B3): human identity → scoped API keys.
+    # Set oidc_enabled=true and configure the remaining fields to activate.
+    oidc_enabled: bool = False
+    # IdP issuer URL; discovery doc fetched from {issuer_url}/.well-known/openid-configuration
+    oidc_issuer_url: str = ""
+    # client_id expected in the id_token's "aud" claim
+    oidc_audience: str = ""
+    # lifetime of issued API keys in hours (default 8 h working-day session)
+    oidc_token_ttl_hours: int = 8
+    # comma-separated list of allowed email domains; empty = allow any
+    oidc_allowed_domains: str = ""
+
 
 settings = Settings()

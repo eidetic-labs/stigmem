@@ -4,20 +4,28 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from contextlib import asynccontextmanager, suppress
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager, suppress
+from pathlib import Path
+from typing import Annotated
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from fastapi.responses import FileResponse
 
+from .auth import Identity, resolve_identity
 from .db import apply_migrations
+from .routes.auth import router as auth_router
 from .routes.decay import router as decay_router
 from .routes.facts import router as facts_router
 from .routes.federation import router as federation_router
+from .routes.gardens import router as gardens_router
 from .routes.lint import router as lint_router
 from .routes.synthesize import router as synthesize_router
 from .routes.wellknown import router as wellknown_router
 from .settings import settings
+
+_STATIC_DIR = Path(__file__).parent / "static"
 
 logger = logging.getLogger("stigmem")
 
@@ -59,7 +67,9 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    app.include_router(auth_router)
     app.include_router(facts_router)
+    app.include_router(gardens_router)
     app.include_router(federation_router)
     app.include_router(lint_router)
     app.include_router(synthesize_router)
@@ -69,6 +79,14 @@ def create_app() -> FastAPI:
     @app.get("/healthz", tags=["ops"])
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/v1/me", tags=["auth"])
+    def whoami(identity: Annotated[Identity, Depends(resolve_identity)]) -> dict:
+        return {"entity_uri": identity.entity_uri, "permissions": sorted(identity.permissions)}
+
+    @app.get("/ui", include_in_schema=False)
+    def ui_index() -> FileResponse:
+        return FileResponse(_STATIC_DIR / "index.html", media_type="text/html")
 
     return app
 

@@ -34,9 +34,15 @@ BEARER = HTTPBearer(auto_error=False)
 class Identity:
     """Resolved caller identity (spec §3.5)."""
 
-    def __init__(self, entity_uri: str, permissions: list[str]) -> None:
+    def __init__(
+        self,
+        entity_uri: str,
+        permissions: list[str],
+        oidc_sub: str | None = None,
+    ) -> None:
         self.entity_uri = entity_uri
         self.permissions = set(permissions)
+        self.oidc_sub = oidc_sub
 
     def can_read(self) -> bool:
         return "read" in self.permissions
@@ -88,7 +94,7 @@ def _lookup(raw_key: str) -> Identity | None:
     now = datetime.now(UTC).isoformat()
     with db() as conn:
         row = conn.execute(
-            "SELECT entity_uri, permissions, expires_at FROM api_keys WHERE key_hash = ?",
+            "SELECT entity_uri, permissions, expires_at, oidc_sub FROM api_keys WHERE key_hash = ?",
             (key_hash,),
         ).fetchone()
     if row is None:
@@ -96,7 +102,11 @@ def _lookup(raw_key: str) -> Identity | None:
     if row["expires_at"] and row["expires_at"] < now:
         return None
     perms: list[str] = json.loads(row["permissions"])
-    return Identity(entity_uri=row["entity_uri"], permissions=perms)
+    return Identity(
+        entity_uri=row["entity_uri"],
+        permissions=perms,
+        oidc_sub=row["oidc_sub"],
+    )
 
 
 def create_api_key(
@@ -104,6 +114,7 @@ def create_api_key(
     permissions: list[str] | None = None,
     description: str | None = None,
     expires_at: str | None = None,
+    oidc_sub: str | None = None,
 ) -> str:
     """Mint a new raw API key, persist its hash, and return the raw key."""
     if permissions is None:
@@ -112,8 +123,9 @@ def create_api_key(
     key_id = str(uuid.uuid4())
     with db() as conn:
         conn.execute(
-            """INSERT INTO api_keys (id, key_hash, entity_uri, permissions, description, created_at, expires_at)
-               VALUES (?,?,?,?,?,?,?)""",
+            """INSERT INTO api_keys
+               (id, key_hash, entity_uri, permissions, description, created_at, expires_at, oidc_sub)
+               VALUES (?,?,?,?,?,?,?,?)""",
             (
                 key_id,
                 _hash_key(raw),
@@ -122,6 +134,7 @@ def create_api_key(
                 description,
                 datetime.now(UTC).isoformat(),
                 expires_at,
+                oidc_sub,
             ),
         )
     return raw

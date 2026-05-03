@@ -4,7 +4,7 @@ Integrates Stigmem with OpenClaw agents. Provides the standard boot handshake
 (pull user prefs + project constraints into context) and write surfaces for
 handoffs, decisions, and escalations.
 
-> **Status:** Complete (Phase 4 / ACM-41). Pagination, hardened write surfaces,
+> **Status:** Complete (Phase 4). Pagination, hardened write surfaces,
 > and a full test suite ship with this release.
 
 ## Design

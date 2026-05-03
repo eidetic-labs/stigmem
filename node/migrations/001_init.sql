@@ -1,4 +1,4 @@
--- Muninn reference node v0.2.0 — initial schema
+-- Stigmem reference node — initial schema
 -- Migration 001: fact store, auth, node metadata
 
 CREATE TABLE IF NOT EXISTS schema_migrations (

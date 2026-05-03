@@ -1,6 +1,6 @@
 """Federation integration tests — spec §11.3 (partial failure) and §11.4 (replay attack).
 
-These are the Phase 3 acceptance gates per ACM-36.
+These are the Phase 3 acceptance gates per ISSUE-36.
 """
 
 from __future__ import annotations
@@ -1042,7 +1042,7 @@ class TestConflictResolution:
     def test_resolve_no_cascade_contradiction_on_federation(self, fed_node: FedNode) -> None:
         """Ingesting a resolution fact via federation must not create a new contradiction.
 
-        Regression test for ACM-51: the old implementation wrote the resolution fact
+        Regression test for ISSUE-51: the old implementation wrote the resolution fact
         under the original (entity, relation, scope), which caused a new contradiction
         wave when peers ingested it alongside the two original conflicting facts.
         """
@@ -1098,7 +1098,7 @@ class TestConflictResolution:
         """Ingesting stigmem:conflict:status 'resolved' via federation must not create a
         spurious contradiction against the existing 'unresolved' status fact.
 
-        Regression test for ACM-57: _detect_and_record_contradiction was not exempting
+        Regression test for ISSUE-57: _detect_and_record_contradiction was not exempting
         stigmem: namespace facts, causing status transitions to be treated as sibling
         conflicts and generating spurious conflict records on peer nodes.
         """

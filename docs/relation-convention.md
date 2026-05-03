@@ -1,7 +1,7 @@
 # Stigmem Relation Namespacing Convention
 
 **Scope:** All fact writes to any Stigmem node.  
-**Status:** Normative convention as of Phase 5 (ACM-50 Deliverable 5).  
+**Status:** Normative convention as of Phase 5.  
 **Companion spec:** §9 (Namespace Registry) + §2.6 (Entity Naming Rules).
 
 ---
@@ -12,8 +12,8 @@ Two agents writing semantically different facts under the same `(entity, relatio
 create a contradiction where none should exist:
 
 ```
-entity="stigmem://acme/project/acm-18"  relation="status"  value="in_progress"   source=agent:pm
-entity="stigmem://acme/project/acm-18"  relation="status"  value="code_complete"  source=agent:cto
+entity="stigmem://acme/project/issue-18"  relation="status"  value="in_progress"   source=agent:pm
+entity="stigmem://acme/project/issue-18"  relation="status"  value="code_complete"  source=agent:cto
 ```
 
 Both are valid facts about the same project. They differ semantically (project management
@@ -101,8 +101,8 @@ then retract (`confidence=0.0`) the original colliding facts:
 # entity="acme/project", relation="status", value="code_complete"
 
 # New (distinct sub-relations):
-client.assert_fact("stigmem://acme/project/acm-18", "pm:status",  {"type": "string", "v": "in_progress"},   source="agent:pm")
-client.assert_fact("stigmem://acme/project/acm-18", "eng:status", {"type": "string", "v": "code_complete"}, source="agent:cto")
+client.assert_fact("stigmem://acme/project/issue-18", "pm:status",  {"type": "string", "v": "in_progress"},   source="agent:pm")
+client.assert_fact("stigmem://acme/project/issue-18", "eng:status", {"type": "string", "v": "code_complete"}, source="agent:cto")
 
 # Retract originals (set confidence=0.0)
 client.retract(old_fact_id_1)
@@ -160,4 +160,4 @@ protocol version. For now, warnings are non-blocking.
 
 ---
 
-*Last updated: Phase 5 (ACM-50). Maintainer: CTO.*
+*Last updated: Phase 5. Maintainer: CTO.*

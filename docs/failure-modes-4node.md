@@ -1,6 +1,6 @@
 # 4-Node Federation Failure Modes
 
-**Issue:** ACM-61  
+
 **Status:** Documented from integration test observations and protocol analysis  
 **Protocol version:** stigmem spec v0.7-draft (§6)
 
@@ -76,7 +76,7 @@ A 4-node full-mesh federation cluster (pull replication, interval 10s default) w
 - No facts lost from the restarting node's perspective.
 - No duplicate ingest: `federation_ingest.py` is idempotent on fact ID (silent no-op for already-seen IDs).
 
-**Edge case (gap in cursor):** If the DB file is lost or corrupted, the cursor resets to `NULL` (start of time). This causes a full re-pull of all facts from each peer. This is safe (idempotent ingest) but expensive for large datasets. See [cursor-reset-recovery.md](./cursor-reset-recovery.md) for the recovery procedure and the `stigmem federation cursor-export / cursor-import` helper that bounds re-pull cost on large datasets (ACM-102).
+**Edge case (gap in cursor):** If the DB file is lost or corrupted, the cursor resets to `NULL` (start of time). This causes a full re-pull of all facts from each peer. This is safe (idempotent ingest) but expensive for large datasets. See [cursor-reset-recovery.md](./cursor-reset-recovery.md) for the recovery procedure and the `stigmem federation cursor-export / cursor-import` helper that bounds re-pull cost on large datasets.
 
 ---
 
@@ -95,7 +95,7 @@ A 4-node full-mesh federation cluster (pull replication, interval 10s default) w
 - HLC invariant maintained under storm.
 - `local`-scope conflict system facts do not cross node boundaries.
 
-**Risk:** A sustained storm (e.g., agents continuously asserting conflicting values) can grow the `conflicts` table unboundedly. **No eviction or TTL on conflict records currently exists.** This is a spec v0.8 edge case to address (see D3 ACM-63).
+**Risk:** A sustained storm (e.g., agents continuously asserting conflicting values) can grow the `conflicts` table unboundedly. **No eviction or TTL on conflict records currently exists.** This is a spec v0.8 edge case to address.
 
 ---
 
@@ -150,11 +150,11 @@ A 4-node full-mesh federation cluster (pull replication, interval 10s default) w
 
 ## Open Edge Cases for Spec v0.8 (D3)
 
-These emerged from test iteration and are surfaced for ACM-63:
+These emerged from test iteration and are surfaced:
 
 1. **Contradiction storm eviction:** No TTL or eviction policy for `conflicts` table. Long-running deployments with frequent contradictions will grow unboundedly. Need a conflict archival / auto-resolution policy.
 
-2. ~~**Cursor reset on DB loss**~~ — **Resolved (ACM-102):** Recovery procedure documented in [cursor-reset-recovery.md](./cursor-reset-recovery.md); `stigmem federation cursor-export / cursor-import` CLI helpers bound re-pull cost.
+2. ~~**Cursor reset on DB loss**~~ — **Resolved:** Recovery procedure documented in [cursor-reset-recovery.md](./cursor-reset-recovery.md); `stigmem federation cursor-export / cursor-import` CLI helpers bound re-pull cost.
 
 3. **Backpressure signal:** The `federation_pull_interval_s` hint from peer well-known is mentioned in spec but not yet implemented. The 429 response is the only backpressure mechanism. Under high load, 429 back-off compounds with contradiction storms.
 

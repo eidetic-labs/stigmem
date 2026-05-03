@@ -1,7 +1,7 @@
 # 4-Node Federation Soak Report
 
 **Status:** PENDING — soak not yet complete  
-**Issue:** ACM-61  
+
 **Topology:** Full-mesh pull replication, 4 nodes, pull interval 10s  
 **Duration:** 72 hours  
 **Start:** TBD  
@@ -97,7 +97,7 @@
 |--------------------|----------|
 | TBD | 0 |
 
-Any non-zero violation count is a protocol correctness failure requiring investigation before the spec v0.8 cleanup ([ACM-63 D3](#)).
+Any non-zero violation count is a protocol correctness failure requiring investigation before the spec v0.8 cleanup.
 
 ---
 

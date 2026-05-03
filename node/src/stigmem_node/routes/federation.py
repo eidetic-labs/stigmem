@@ -530,7 +530,7 @@ def resolve_conflict(
         # 1. Assert resolution fact under a namespaced entity so it never shares the
         #    (entity, relation, scope) triple with the conflicting facts. Writing under
         #    the original entity+relation would trigger a new contradiction wave when the
-        #    fact is federated to peers (spec §resolution-semantics, ACM-51).
+        #    fact is federated to peers (spec §resolution-semantics, ISSUE-51).
         resolution_entity = f"stigmem:resolution:{conflict_id}"
         hlc_res = node_hlc.tick()
         conn.execute(

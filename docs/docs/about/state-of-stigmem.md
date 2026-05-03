@@ -61,7 +61,6 @@ Four of seven planned phases are complete. Phase 4 is in flight as of 2026-05-02
 
 | Commit | Delivered |
 |--------|-----------|
-| `80fb945` | Renamed `muninn` → `stigmem` across the entire codebase |
 | `e30ffca` | Spec v0.5 — §6 Federation chapter (handshake, replication, conflict semantics, §11 failure scenarios) |
 | `ff5758a` | Federation handshake + pull replication engine (PeerDeclaration, Ed25519 signatures, HLC cursors) |
 | `8b2a7e9` | Hotfix: excluded `declaration_sig` from its own signature preimage |

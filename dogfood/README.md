@@ -47,8 +47,7 @@ curl http://localhost:8765/v1/facts?entity=user:ceo | jq .
 ## Snapshot — Contradiction Metrics
 
 `snapshot.sh` emits a `## Contradiction Metrics` section at the end of each daily
-snapshot (source: ACM-56, Deliverable 6 of
-ACM-50).
+snapshot.
 
 ### How it works
 

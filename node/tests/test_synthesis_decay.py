@@ -1,4 +1,4 @@
-"""Conformance tests for synthesize_scope and decay sweeper (ACM-63, Phase 6)."""
+"""Conformance tests for synthesize_scope and decay sweeper (ISSUE-63, Phase 6)."""
 
 from __future__ import annotations
 

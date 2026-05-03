@@ -6,7 +6,7 @@
 **Authors:** Giganomix
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
-- v0.6+phase5 (ACM-50): §2.6 entity naming rules normative (strict normalizer shipped); §5.12 lint-semantics new (lint_scope MCP tool + backend route); §5.10 resolution semantics corrected — resolution facts now namespace to `stigmem:resolution:<conflict-id>` to prevent cascade contradiction wave (ACM-51); query_facts `include_contradicted=false` default now enforced server-side (ACM-52).
+- v0.6+phase5: §2.6 entity naming rules normative (strict normalizer shipped); §5.12 lint-semantics new (lint_scope MCP tool + backend route); §5.10 resolution semantics corrected — resolution facts now namespace to `stigmem:resolution:<conflict-id>` to prevent cascade contradiction wave; query_facts `include_contradicted=false` default now enforced server-side.
 - v0.6 (CTO review pass): §12.5 context injection schema corrected to match `_facts_to_summary` reference impl (namespace grouping, conditional confidence annotation, em-dash header); §12.4.1 informal URI caveat added with v0.7 migration note; §12.3.2 step 1 documents preference-relation filter; §12.2 `STIGMEM_SOURCE_ENTITY` default clarified as adapter-specific.
 - v0.6: §2.5 Entity URI scheme formal scheme (`stigmem://`) now normative; informal URIs deprecated with warning (resolves §8.1); §6.2 capability negotiation promoted from optional to required (resolves §8.4); §12 Adapter ABI promoted from Phase 4 reserved to concrete normative spec based on three shipped adapters (MCP, Paperclip, OpenClaw); §13 Reserved for Phase 5+.
 - v0.5: §6 Federation promoted from RFC stub to concrete implementable spec; new federation wire routes (§5.6–§5.10); HLC timestamps (§2.4); per-scope key restrictions on `api_keys` (§3.5); conflict-first-class semantics formalized (§3.3, §6.5); §11 Failure Modes acceptance scenarios; schema additions (§10); design decisions updated.
@@ -131,12 +131,12 @@ stigmem://{authority}/{type}/{id}
 |-------------|-------------|---------|
 | `authority` | Hostname of the Stigmem node that owns this entity namespace | `company.acme`, `node.example.com` |
 | `type`      | Entity type slug (lowercase, no spaces) | `user`, `agent`, `project`, `issue`, `decision`, `team` |
-| `id`        | Opaque stable identifier for the entity | `alice`, `cto`, `acme-roadmap`, `ACM-42` |
+| `id`        | Opaque stable identifier for the entity | `alice`, `cto`, `acme-roadmap`, `ISSUE-42` |
 
 **Examples:**
 - `stigmem://company.acme/user/alice`
 - `stigmem://company.acme/agent/cto`
-- `stigmem://company.acme/issue/ACM-42`
+- `stigmem://company.acme/issue/ISSUE-42`
 - `stigmem://node.acme/decision/use-sqlite`
 
 #### Deprecation of informal URIs
@@ -168,7 +168,7 @@ collisions across federated nodes.
 ### 2.6 Entity Naming Rules — Phase 5 (v0.7 Normative)
 
 **Root cause of entity fragmentation (Bug 1):** Two agents writing
-`project/acm-18`, `project/ACM-18`, and `acm-phase4` create three silent entity
+`project/issue-18`, `project/ISSUE-18`, and `phase4` create three silent entity
 fragments that never merge. The node has no basis to treat them as the same entity.
 The v0.7 normalization layer closes this gap.
 

@@ -132,12 +132,12 @@ stigmem://{authority}/{type}/{id}
 |-------------|-------------|---------|
 | `authority` | Hostname of the Stigmem node that owns this entity namespace | `company.acme`, `node.example.com` |
 | `type`      | Entity type slug (lowercase, no spaces) | `user`, `agent`, `project`, `issue`, `decision`, `team` |
-| `id`        | Opaque stable identifier for the entity | `alice`, `cto`, `acme-roadmap`, `ACM-42` |
+| `id`        | Opaque stable identifier for the entity | `alice`, `cto`, `acme-roadmap`, `ISSUE-42` |
 
 **Examples:**
 - `stigmem://company.acme/user/alice`
 - `stigmem://company.acme/agent/cto`
-- `stigmem://company.acme/issue/ACM-42`
+- `stigmem://company.acme/issue/ISSUE-42`
 - `stigmem://node.acme/decision/use-sqlite`
 
 #### Deprecation of informal URIs
@@ -164,7 +164,7 @@ is active. `user:alice` on node A and `user:alice` on node B may refer to differ
 people. The formal scheme binds the authority to the URI, preventing silent identity
 collisions across federated nodes.
 
-**v0.7 note:** All components of the formal URI are normalized to lowercase on ingest (§2.6). `stigmem://company.acme/issue/ACM-42` is stored as `stigmem://company.acme/issue/acm-42`.
+**v0.7 note:** All components of the formal URI are normalized to lowercase on ingest (§2.6). `stigmem://company.acme/issue/ISSUE-42` is stored as `stigmem://company.acme/issue/issue-42`.
 
 ### 2.6 Entity Naming Rules — v0.7 Normative
 
@@ -177,10 +177,10 @@ This section defines canonical entity naming rules and the **strict normalizer**
 Before strict normalization, the following assertions create separate entities for the same project:
 
 ```
-entity="project/acm-18"                            (informal, slash separator, lowercase)
-entity="project/ACM-18"                            (informal, slash separator, uppercase)
-entity="stigmem://company.acme/project/acm-18"     (formal, lowercase id)
-entity="stigmem://company.acme/project/ACM-18"     (formal, uppercase id)
+entity="project/issue-18"                            (informal, slash separator, lowercase)
+entity="project/ISSUE-18"                            (informal, slash separator, uppercase)
+entity="stigmem://company.acme/project/issue-18"     (formal, lowercase id)
+entity="stigmem://company.acme/project/ISSUE-18"     (formal, uppercase id)
 ```
 
 All four refer to the same project. Without normalization, queries for any one form miss the others entirely, and contradiction detection never fires for facts that should conflict.
@@ -350,7 +350,7 @@ A **contradiction** exists when two facts `a`, `b` satisfy all of:
 
 **Both facts are retained. Neither is silently overwritten.**
 
-**v0.7 note:** Because `entity` is normalized on ingest (§2.6), two facts about the same real-world entity written with different cases (e.g. `project/ACM-18` vs `project/acm-18`) now normalize to the same canonical entity and correctly trigger contradiction detection. Pre-v0.7 fragmented facts are not retroactively merged — use the alias table or re-assertion sweep (§2.6.6) to consolidate them.
+**v0.7 note:** Because `entity` is normalized on ingest (§2.6), two facts about the same real-world entity written with different cases (e.g. `project/ISSUE-18` vs `project/issue-18`) now normalize to the same canonical entity and correctly trigger contradiction detection. Pre-v0.7 fragmented facts are not retroactively merged — use the alias table or re-assertion sweep (§2.6.6) to consolidate them.
 
 **Resolution order at query time:**
 1. Higher `confidence` wins.
@@ -934,7 +934,7 @@ The following invariants MUST hold at all times:
 | Formal entity URI scheme in v0.6 | Informal `user:alice` URIs are ambiguous under federation — two peers can have different `user:alice`. Formal `stigmem://authority/type/id` binds identity to the node that owns the namespace. Deprecation-warning approach preserves backward compat while driving migration. |
 | Capability negotiation required in v0.6 | Phase 4 shipped two adapters with distinct relation namespaces. Without capability exchange, federated peers silently replicate relations they cannot interpret. Required negotiation prevents contradiction storms on semantically-opaque relations. |
 | Crash-forbidden adapter contract | Adapters are middleware in existing agent processes; a Stigmem node failure must not take down the agent. Crash-forbidden is an explicit ABI invariant so all adapter authors share the same degradation model. |
-| Case normalization at ingest (v0.7) | `project/ACM-18` and `project/acm-18` created silent entity fragments — the root cause under ACM-50 Bug 1. Normalizing at ingest (not query) keeps query O(1) on indexed lookups and prevents non-canonical data from accumulating in the store. Informal URIs are lowercased in place (not converted to formal) to preserve the §2.5 anti-rewrite invariant. |
+| Case normalization at ingest (v0.7) | `project/ISSUE-18` and `project/issue-18` created silent entity fragments — the root cause in earlier work. Normalizing at ingest (not query) keeps query O(1) on indexed lookups and prevents non-canonical data from accumulating in the store. Informal URIs are lowercased in place (not converted to formal) to preserve the §2.5 anti-rewrite invariant. |
 | Lint as first-class operation (v0.7) | Karpathy LLM-Wiki analysis (Phase 5) identified that adapter-side ad-hoc contradiction/stale queries are inconsistent and fragile. A single normative `POST /v1/lint` provides uniform sweep semantics with deterministic severity levels, enabling the decay engine (Phase 6) to delegate sweep discovery to the node rather than each adapter reimplementing it. |
 | Lint uses POST, not GET (v0.7) | The lint request body can include multiple optional filter fields (`entity`, `relation`, `checks`, `stale_lookahead_s`). A GET query string with complex filters risks URL-length limits and encoding ambiguity. POST body is unambiguous. Lint is idempotent despite using POST; this is documented explicitly (§14.5). |
 | Lint is strictly read-only (v0.7) | Diagnostic operations must not modify state. A lint sweep that auto-retracted stale facts would conflate discovery with action, removing the human/agent approval step before retraction. Lint observes; retraction is a deliberate subsequent operation. |
@@ -1500,7 +1500,7 @@ The following Phase 5 deliverables are addressed in v0.7:
 
 - **Lint primitive** (Phase 5 Deliverable 3): §14 Lint Semantics normative. Done.
 - **Entity normalization layer** (Phase 5 Deliverable 4): §2.6 Entity Naming Rules normative; strict normalizer on ingest path implemented (`entity_normalizer.py`); migration 003 (entity_aliases). Done.
-- **Bug fixes in progress**: §resolution-semantics (Deliverable 1) and §query-semantics (Deliverable 2) tracked separately under ACM-50.
+- **Bug fixes in progress**: §resolution-semantics (Deliverable 1) and §query-semantics (Deliverable 2) tracked separately.
 
 The following are deferred to Phase 6+:
 

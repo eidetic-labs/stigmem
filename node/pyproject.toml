@@ -1,6 +1,6 @@
 [project]
 name = "stigmem-node"
-version = "0.2.0"
+version = "1.0.0rc1"
 description = "Stigmem reference node — single-host production implementation"
 readme = "README.md"
 requires-python = ">=3.11"

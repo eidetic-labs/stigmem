@@ -54,6 +54,10 @@ curl -s 'http://localhost:8000/v1/facts?entity=user:alice&relation=memory:prefer
   -H 'X-API-Key: dev-key' | jq .facts
 ```
 
+## Two-node federation quickstart
+
+To run two nodes and verify cross-node fact replication, see the [Quickstart](./quickstart.md) guide. It takes under 10 minutes and requires only Docker.
+
 ## Explore interactively
 
 Once the node is running, regenerate the interactive API reference:
@@ -65,7 +69,3 @@ npm run start
 ```
 
 Then open `http://localhost:3000/docs/api-reference` to try API calls directly from the docs.
-
-:::info Coming soon
-Step-by-step installation guide, environment variable reference, and Docker quickstart are planned for the next docs sprint.
-:::

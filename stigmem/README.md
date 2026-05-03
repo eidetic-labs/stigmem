@@ -69,10 +69,10 @@ docker compose up --build -d
 # 2. Federation handshake (register both directions)
 docker exec stigmem-node-a-1 \
   stigmem federation register-peer \
-    --local-url http://node-a:8765 --remote-url http://node-b:8765
+    --local-url http://node-a:8765 --remote-url http://node-b:8765 --scopes company,public
 docker exec stigmem-node-b-1 \
   stigmem federation register-peer \
-    --local-url http://node-b:8765 --remote-url http://node-a:8765
+    --local-url http://node-b:8765 --remote-url http://node-a:8765 --scopes company,public
 
 # 3. Assert a fact on node-a
 curl -s -X POST http://localhost:8765/v1/facts \

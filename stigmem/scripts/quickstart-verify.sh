@@ -142,7 +142,7 @@ END_TIME=$(date +%s)
 ELAPSED=$(( END_TIME - START_TIME ))
 echo ""
 echo "========================================"
-echo " quickstart-verify PASSED in ${ELAPSED}s"
+echo " quickstart smoke test PASSED (${ELAPSED}s)"
 echo "========================================"
 
 # ---- teardown ----------------------------------------------------------------

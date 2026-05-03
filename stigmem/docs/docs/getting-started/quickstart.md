@@ -9,8 +9,6 @@ sidebar_label: Quickstart
 **Goal:** run two stigmem nodes on one machine and watch a fact asserted on Node A replicate automatically to Node B.  
 **Time:** under 10 minutes on a machine with Docker and Docker Compose installed.
 
----
-
 ## Prerequisites
 
 | Tool | Version |
@@ -20,8 +18,6 @@ sidebar_label: Quickstart
 | `curl` + `jq` | any recent version |
 
 No Python installation required — the nodes run in containers.
-
----
 
 ## Step 1 — Clone and start the nodes
 
@@ -53,8 +49,6 @@ curl -s http://localhost:8766/healthz   # node-b
 
 Both should return `{"status":"ok"}`.
 
----
-
 ## Step 2 — Inspect node metadata
 
 Each node exposes its identity and Ed25519 public key:
@@ -65,8 +59,6 @@ curl -s http://localhost:8766/.well-known/stigmem | jq '{node_id, federation_pub
 ```
 
 Note that each node auto-generates a unique `node_id` and keypair on first start.
-
----
 
 ## Step 3 — Peer handshake (both directions)
 
@@ -106,8 +98,6 @@ The `active` status means the receiving node fetched the sender's `/.well-known/
 Docker Compose names containers `<project>-<service>-<replica>`. If your clone directory is `stigmem`, the containers are `stigmem-node-a-1` and `stigmem-node-b-1`. Verify with `docker compose ps`.
 :::
 
----
-
 ## Step 4 — Assert a fact on Node A
 
 ```bash
@@ -124,8 +114,6 @@ curl -s -X POST http://localhost:8765/v1/facts \
 ```
 
 Record the `id` from the response — you'll use it to confirm replication.
-
----
 
 ## Step 5 — Verify cross-node replication
 
@@ -144,8 +132,6 @@ The fact asserted on Node A (`localhost:8765`) should appear on Node B (`localho
 The default pull interval is 30 s (`STIGMEM_FEDERATION_PULL_INTERVAL_S`). For testing you can lower it to 5 s in `docker-compose.yml`.
 :::
 
----
-
 ## Step 6 — Federation audit log
 
 Every pull event and peer action is recorded:
@@ -162,8 +148,6 @@ curl -s http://localhost:8766/v1/federation/audit | jq '.entries[-3:]'
 - [Federation guide](../guides/federation.md) — scope enforcement, conflict resolution, production keys
 - [API reference](../api-reference/index.md) — full endpoint reference
 - [Architecture](../architecture/index.md) — HLC, PeerDeclaration internals, spec §6
-
----
 
 ## Teardown
 

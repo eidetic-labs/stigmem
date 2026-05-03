@@ -23,6 +23,24 @@ from ..models import (
 
 router = APIRouter(prefix="/v1/facts", tags=["facts"])
 
+_SYSTEM_RELATION_PREFIX = "stigmem:"
+
+
+def _validate_relation(relation: str) -> list[str]:
+    """Return convention warnings for a relation name (see relation-convention.md)."""
+    if ":" not in relation:
+        return [
+            f"bare relation {relation!r} has no namespace prefix; "
+            f"rename to 'your-prefix:{relation}' to prevent silent collisions "
+            "(see relation-convention.md)"
+        ]
+    if relation.startswith(_SYSTEM_RELATION_PREFIX):
+        return [
+            f"relation {relation!r} uses reserved system prefix 'stigmem:'; "
+            "non-system callers should use a custom namespace prefix (see spec §9.1)"
+        ]
+    return []
+
 
 @router.post("", response_model=FactRecord, status_code=status.HTTP_201_CREATED)
 def assert_fact(
@@ -52,6 +70,11 @@ def assert_fact(
             f"use stigmem://authority/type/id format (spec §2.5)",
             file=sys.stderr,
         )
+
+    # Relation namespacing convention check (see relation-convention.md)
+    relation_warnings = _validate_relation(req.relation)
+    for w in relation_warnings:
+        print(f"[stigmem] WARN: relation naming: {w}", file=sys.stderr)
 
     fact_id = str(uuid.uuid4())
     now = datetime.now(UTC).isoformat()
@@ -91,8 +114,14 @@ def assert_fact(
 
         if contradicted:
             _record_contradictions(conn, fact_id, entity, req.relation, req.scope, siblings)
+            print(
+                f"[stigmem] WARN: collision — entity={entity!r} relation={req.relation!r} "
+                f"scope={req.scope!r}: fact {fact_id!r} contradicts {len(siblings)} existing "
+                f"fact(s); verify relation namespacing (see relation-convention.md)",
+                file=sys.stderr,
+            )
 
-    return row_to_record(row, contradicted=contradicted)
+    return row_to_record(row, contradicted=contradicted, warnings=relation_warnings)
 
 
 def _record_contradictions(

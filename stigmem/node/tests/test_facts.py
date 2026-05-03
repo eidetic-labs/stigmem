@@ -74,6 +74,25 @@ class TestAssertFact:
         r = client.post("/v1/facts", json={**FACT, "confidence": 1.5})
         assert r.status_code == 422
 
+    def test_namespaced_relation_no_warnings(self, client: TestClient) -> None:
+        r = client.post("/v1/facts", json=FACT)  # FACT uses "memory:role"
+        assert r.status_code == 201
+        assert r.json()["warnings"] == []
+
+    def test_bare_relation_returns_warning(self, client: TestClient) -> None:
+        r = client.post("/v1/facts", json={**FACT, "relation": "status"})
+        assert r.status_code == 201
+        body = r.json()
+        assert body["warnings"]
+        assert any("bare relation" in w for w in body["warnings"])
+
+    def test_system_prefix_relation_returns_warning(self, client: TestClient) -> None:
+        r = client.post("/v1/facts", json={**FACT, "relation": "stigmem:custom"})
+        assert r.status_code == 201
+        body = r.json()
+        assert body["warnings"]
+        assert any("reserved system prefix" in w for w in body["warnings"])
+
 
 class TestQueryFacts:
     def test_empty_query(self, client: TestClient) -> None:
@@ -238,3 +257,33 @@ class TestLint:
     def test_lint_invalid_scope(self, client: TestClient) -> None:
         r = client.post("/v1/lint", json={"scope": "invalid"})
         assert r.status_code == 400
+
+    def test_lint_detects_bare_relation(self, client: TestClient) -> None:
+        client.post("/v1/facts", json={
+            "entity": "stigmem://acme/project/test", "relation": "status",
+            "value": {"type": "string", "v": "active"},
+            "source": "agent:test", "confidence": 1.0, "scope": "company",
+        })
+        r = client.post("/v1/lint", json={"scope": "company", "checks": ["namespacing"]})
+        assert r.status_code == 200
+        body = r.json()
+        ns_findings = [f for f in body["findings"] if f["check"] == "namespacing"]
+        assert len(ns_findings) >= 1
+        assert ns_findings[0]["severity"] == "warning"
+        assert ns_findings[0]["relation"] == "status"
+
+    def test_lint_no_namespacing_violation_for_prefixed_relation(self, client: TestClient) -> None:
+        client.post("/v1/facts", json={
+            "entity": "stigmem://acme/project/test", "relation": "pm:status",
+            "value": {"type": "string", "v": "active"},
+            "source": "agent:test", "confidence": 1.0, "scope": "company",
+        })
+        r = client.post("/v1/lint", json={"scope": "company", "checks": ["namespacing"]})
+        body = r.json()
+        ns_findings = [f for f in body["findings"] if f["check"] == "namespacing"]
+        assert ns_findings == []
+
+    def test_lint_namespacing_included_in_all_checks(self, client: TestClient) -> None:
+        r = client.post("/v1/lint", json={"scope": "company"})
+        assert r.status_code == 200
+        assert "namespacing" in r.json()["checks_run"]

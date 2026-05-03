@@ -22,8 +22,8 @@ from ..models import VALID_SCOPES
 
 router = APIRouter(tags=["lint"])
 
-LintCheck = Literal["contradiction", "stale", "orphan", "broken_ref"]
-ALL_CHECKS: list[LintCheck] = ["contradiction", "stale", "orphan", "broken_ref"]
+LintCheck = Literal["contradiction", "stale", "orphan", "broken_ref", "namespacing"]
+ALL_CHECKS: list[LintCheck] = ["contradiction", "stale", "orphan", "broken_ref", "namespacing"]
 
 # Relations where a broken ref is severity=error (spec §14.3)
 INTENT_ROUTING_RELATIONS = frozenset({"intent:handoff_to", "intent:context_ref"})
@@ -209,6 +209,32 @@ def lint_scope(
                         fact_ids=[row["id"]],
                         detail=f"ref target entity {target_entity!r} has no live facts",
                     ))
+
+        # 5. Namespacing violations (relation-convention.md): live facts whose relation
+        #    contains no colon separator — bare words like "status" silently collide when
+        #    multiple sources write semantically distinct facts.
+        if "namespacing" in checks_to_run:
+            ns_sql = f"""
+                SELECT f.entity, f.relation, GROUP_CONCAT(f.id) AS ids
+                FROM facts f
+                WHERE f.confidence > 0.0
+                  AND (f.valid_until IS NULL OR f.valid_until > ?)
+                  AND instr(f.relation, ':') = 0
+                  {f_filter}
+                GROUP BY f.entity, f.relation
+            """
+            for row in conn.execute(ns_sql, [now] + f_params).fetchall():
+                findings.append(LintFinding(
+                    check="namespacing",
+                    severity="warning",
+                    entity=row["entity"],
+                    relation=row["relation"],
+                    fact_ids=row["ids"].split(",") if row["ids"] else [],
+                    detail=(
+                        f"bare relation {row['relation']!r} has no namespace prefix — "
+                        f"rename to 'your-prefix:{row['relation']}' to avoid silent collisions"
+                    ),
+                ))
 
     return LintResult(
         findings=findings,

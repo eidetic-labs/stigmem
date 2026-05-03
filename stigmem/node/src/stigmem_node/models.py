@@ -53,6 +53,7 @@ class FactRecord(BaseModel):
     confidence: float
     scope: str
     contradicted: bool = False
+    warnings: list[str] = Field(default_factory=list)  # write-time convention warnings (assert only)
 
 
 class QueryResponse(BaseModel):
@@ -119,7 +120,11 @@ class ConflictResolveRequest(BaseModel):
     new_value: FactValue | None = None
 
 
-def row_to_record(row: sqlite3.Row, contradicted: bool = False) -> FactRecord:
+def row_to_record(
+    row: sqlite3.Row,
+    contradicted: bool = False,
+    warnings: list[str] | None = None,
+) -> FactRecord:
     keys = row.keys()
     return FactRecord(
         id=row["id"],
@@ -134,6 +139,7 @@ def row_to_record(row: sqlite3.Row, contradicted: bool = False) -> FactRecord:
         confidence=row["confidence"],
         scope=row["scope"],
         contradicted=contradicted,
+        warnings=warnings or [],
     )
 
 

@@ -117,15 +117,34 @@ Run `lint_scope` again to confirm no unresolved conflicts remain for the migrate
 
 ## Write-time Collision Validator
 
-Starting with Phase 5, the node emits a warning log entry when a new fact would
-contradict an existing fact on `assert_fact`. This is surfaced via:
+As of Phase 5, the node validates relation names and detects collisions at write time.
+Two signals are returned in the `POST /v1/facts` response:
 
-1. **The `contradicted: true` field** in the `assert_fact` response — check this
-   in your agent to detect collisions immediately on write.
-2. **`GET /v1/lint?scope=<scope>`** — run periodically to find accumulated collisions.
+1. **`warnings: list[str]`** — populated when the relation violates naming conventions.
+   Actionable cases:
+   - **Bare relation** (no colon): `"status"` → rename to `"pm:status"` or similar.
+   - **Reserved prefix** (`stigmem:`): non-system callers must use a custom prefix.
+   Check this field on every `assert_fact` call and fix violations before they accumulate.
+2. **`contradicted: true`** — set when the new fact immediately contradicts one or more
+   existing live facts on the same `(entity, relation, scope)` tuple.
 
-A future validator (Phase 6) will reject writes that violate declared unique-relation
-constraints. For now, the caller is responsible for using correctly namespaced relations.
+The node also emits `[stigmem] WARN:` log lines to stderr for both cases, so violations
+surface in server logs even without inspecting the response body.
+
+**`POST /v1/lint` — periodic sweep**
+
+Use `checks: ["namespacing"]` to find bare-relation violations across a scope:
+
+```bash
+curl -X POST "$STIGMEM_URL/v1/lint" \
+  -H "Content-Type: application/json" \
+  -d '{"scope": "company", "checks": ["namespacing"]}'
+```
+
+`namespacing` is also included in the default all-checks sweep (omit `checks` field).
+
+A hard-reject mode (returning 422 on naming violations) is planned for a future
+protocol version. For now, warnings are non-blocking.
 
 ---
 

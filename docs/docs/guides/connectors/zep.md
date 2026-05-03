@@ -103,6 +103,5 @@ No live Zep instance required — Zep client calls are mocked with
 
 ## See also
 
-- [Letta connector](./letta) — per-agent archival memory bridge
 - [Gemini connector](./gemini) — Gemini native function-calling format
 - [Authentication](../authentication) — Stigmem API key setup

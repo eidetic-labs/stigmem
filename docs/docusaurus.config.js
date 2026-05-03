@@ -157,7 +157,7 @@ const config = {
       footer: {
         style: 'dark',
         links: [],
-        copyright: `Copyright © ${new Date().getFullYear()} Acme. Apache 2.0 License.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Eidetic Labs. Apache 2.0 License.`,
       },
       prism: {
         theme: prismThemes.github,

@@ -165,4 +165,4 @@ opposite of Gemini's upper-case format. If you need both, use each adapter separ
 ## See also
 
 - [Gemini adapter](./gemini) — Google's `FunctionDeclaration` format
-- [MCP server](../../architecture/mcp-server) — for hosts that speak MCP natively (Claude Code, Codex CLI, Cursor, Zed)
+- [MCP server](../../architecture) — for hosts that speak MCP natively (Claude Code, Codex CLI, Cursor, Zed)

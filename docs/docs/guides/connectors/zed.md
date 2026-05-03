@@ -75,5 +75,5 @@ for a valid response.
 
 ## See also
 
-- [MCP server reference](../../architecture/mcp-server) — tool schema and protocol notes
+- [MCP server reference](../../architecture) — tool schema and protocol notes
 - [Authentication](../authentication) — API key and OIDC setup

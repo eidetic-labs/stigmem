@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse
 
 from .auth import Identity, resolve_identity
 from .db import apply_migrations
+from .rate_limit import RateLimitMiddleware
 from .routes.agent_keys import router as agent_keys_router
 from .routes.aliases import router as aliases_router
 from .routes.audit import router as audit_router
@@ -71,6 +72,8 @@ def create_app() -> FastAPI:
         ),
         lifespan=lifespan,
     )
+
+    app.add_middleware(RateLimitMiddleware)
 
     app.include_router(auth_router)
     app.include_router(agent_keys_router)

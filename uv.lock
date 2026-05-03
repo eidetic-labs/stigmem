@@ -1286,7 +1286,7 @@ wheels = [
 
 [[package]]
 name = "stigmem"
-version = "0.2.0"
+version = "1.0.0rc1"
 source = { virtual = "." }
 
 [package.dev-dependencies]
@@ -1317,7 +1317,7 @@ dev = [
 
 [[package]]
 name = "stigmem-node"
-version = "0.2.0"
+version = "1.0.0rc1"
 source = { editable = "node" }
 dependencies = [
     { name = "fastapi" },
@@ -1369,7 +1369,7 @@ dev = [
 
 [[package]]
 name = "stigmem-py"
-version = "0.4.0"
+version = "1.0.0rc1"
 source = { editable = "sdks/stigmem-py" }
 dependencies = [
     { name = "httpx" },

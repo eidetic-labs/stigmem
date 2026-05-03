@@ -27,6 +27,8 @@ For small fixes (typos, clarity, example corrections), skip the RFC issue and se
 
 ## Conformance suite
 
+**Contract:** every new spec section or wire-format change MUST include at least one new conformance vector in `data/conformance/v1.0/`. PRs that add or modify spec text without a corresponding vector will not be merged.
+
 The `data/conformance/v1.0/` directory contains machine-readable test vectors that every conforming implementation must pass. The CI job **Stigmem v1.0 Conformance Suite** runs on every push to `main` and on pull requests that touch `node/`, `spec/`, `data/conformance/`, or the workflow file itself.
 
 **Run locally:**

@@ -1,5 +1,7 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 
+[![Conformance](https://github.com/Eidetic-Labs/stigmem/actions/workflows/conformance.yml/badge.svg)](https://github.com/Eidetic-Labs/stigmem/actions/workflows/conformance.yml)
+
 > **Status: v1.0 stable · Phase 7 (substrate) · Apache-2.0**
 > **Repository:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem)
 
@@ -158,7 +160,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the RFC process. Short version:
 
 1. Open an issue using the [RFC template](.github/ISSUE_TEMPLATE/rfc.yml)
 2. Discuss and iterate
-3. Submit a PR against the active spec draft (`spec/stigmem-spec-v0.9-draft.md`)
+3. Submit a PR against the canonical spec ([`spec/stigmem-spec-v1.0.md`](spec/stigmem-spec-v1.0.md)) — new sections start as draft blocks inside the stable spec file
 4. Spec changes merge with ≥2 approvals from active contributors
 
 For bugs in the reference node, use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.yml).

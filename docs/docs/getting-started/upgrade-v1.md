@@ -107,7 +107,7 @@ curl -s -X POST http://localhost:8765/v1/auth/keys \
   }'
 ```
 
-Keys issued for `beta-inc` see only facts written by `beta-inc` keys. See [Multi-Tenancy → Isolation in practice](../guides/multi-tenant#isolation-in-practice) for a cross-tenant verification example.
+Keys issued for `beta-inc` see only facts written by `beta-inc` keys. See [Multi-Tenancy → Isolation in practice](../guides/multi-tenancy#isolation-in-practice) for a cross-tenant verification example.
 
 ---
 

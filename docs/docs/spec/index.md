@@ -35,7 +35,7 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | §7 | Design Decisions | Stable |
 | §8 | Open Questions | Living |
 | §9 | Namespace Registry | Stable |
-| §10 | Schema and Migration | Stable — migration 012 adds `tenant_id` to all write-bearing tables ([multi-tenant guide](/docs/guides/multi-tenant)) |
+| §10 | Schema and Migration | Stable — migration 012 adds `tenant_id` to all write-bearing tables ([multi-tenant guide](/docs/guides/multi-tenancy)) |
 | §11 | Failure Mode Scenarios | Stable (new in v0.5) |
 | §12 | Adapter ABI | Stable (new in v0.6) |
 | §14 | Lint Semantics | Stable (new in v0.7) |
@@ -97,7 +97,7 @@ The following reference node features are implemented and tested but do not yet 
 
 | Feature | Guide | Status |
 |---|---|---|
-| Multi-tenant scoping (`tenant_id` on all write tables, migration 012) | [Multi-Tenant Scoping](/docs/guides/multi-tenant) | Stable (reference node v1.0-rc) |
+| Multi-tenant scoping (`tenant_id` on all write tables, migration 012) | [Multi-Tenant Scoping](/docs/guides/multi-tenancy) | Stable (reference node v1.0-rc) |
 | Billing hook bus (`HookBus` / `CaptureBus`) | [Billing Hooks](/docs/guides/billing-hooks) | Stable (reference node v1.0-rc) |
 
 :::info Coming soon

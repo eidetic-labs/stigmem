@@ -8,15 +8,27 @@ sidebar_label: Overview
 
 Stigmem is a structured, federated knowledge graph for AI agents. Each fact is an immutable **(entity, relation, value)** triple with provenance, confidence, scope, and a hybrid logical clock timestamp.
 
-## Prerequisites
+## Quickest start — Docker (recommended)
+
+No Python required. Install with a single command:
+
+```bash
+git clone https://github.com/giganomix/stigmem
+cd stigmem
+docker compose up --build -d
+```
+
+Two federated nodes start on ports 8765 and 8766. See the [Installation page](./installation) for full options and the [Quickstart](./quickstart) to verify federation end-to-end.
+
+## Development (Python)
+
+For hacking on the source or running without Docker:
 
 | Requirement | Version |
 |-------------|---------|
 | Python | ≥ 3.11 |
 | SQLite | ≥ 3.37 |
 | uv (recommended) | latest |
-
-## Run the reference node
 
 ```bash
 cd stigmem/node
@@ -56,7 +68,7 @@ curl -s 'http://localhost:8000/v1/facts?entity=user:alice&relation=memory:prefer
 
 ## Two-node federation quickstart
 
-To run two nodes and verify cross-node fact replication, see the [Quickstart](./quickstart.md) guide. It takes under 10 minutes and requires only Docker.
+To run two nodes and verify cross-node fact replication, see the [Quickstart](./quickstart) guide. It takes under 10 minutes and requires only Docker.
 
 ## Explore interactively
 

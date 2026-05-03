@@ -4,6 +4,7 @@ This directory contains the canonical specification for the Stigmem federated kn
 
 | File | Version | Status | Key additions vs prior |
 |------|---------|--------|------------------------|
+| [`stigmem-spec-v1.0.md`](stigmem-spec-v1.0.md) | **v1.0** | **Canonical stable** | §17 Memory Garden + §18 Source Attestation promoted to stable; v1.0 conformance suite (`data/conformance/v1.0/`); §4 Intent Envelope deferred indefinitely |
 | [`stigmem-spec-v0.2.md`](stigmem-spec-v0.2.md) | v0.2 | Stable baseline | `text` FactValue type, reification pattern, `valid_until` field |
 | [`stigmem-spec-v0.3-draft.md`](stigmem-spec-v0.3-draft.md) | v0.3 | Stable | Auth stub (§3.5), namespace registry plan (§9), federation as community-feedback stub (§6), `stigmem:channel` escalation fix |
 | [`stigmem-spec-v0.4-draft.md`](stigmem-spec-v0.4-draft.md) | v0.4 | Stable | Auth promoted to implemented (§3.5), `PATCH /v1/facts/:id/confidence` retraction (§5.4), `GET /v1/facts/:id` single-fact route (§5.5), `text` size guidance, migration-friendliness note on schema (§10) |
@@ -62,15 +63,16 @@ A section marked **RFC stub** or **Community feedback wanted** has spec text but
 
 ---
 
-## Current working draft
+## Canonical stable spec
 
-The active development version is **v0.9-draft**. Sections §1–16 are stable (§15 and §16 promoted from draft in v0.9). §17 (Memory Garden) and §18 (Source Attestation) are new in v0.9. §4 (Intent Envelope) remains draft.
+The canonical specification is **[`stigmem-spec-v1.0.md`](stigmem-spec-v1.0.md)**. All sections §1–18 are stable. This is the reference document for conformance testing; all entries in `data/conformance/v1.0/` are validated against it.
 
-**Phase 7 additions (v0.9):**
-- §17 Memory Garden — named ACL'd partitions (`garden_id`), admin/writer/reader roles, garden-tagged facts; `garden:` prefix reserved
-- §18 Source Attestation — `entity_uri` bound to API key, enforce/warn/off modes; `attested` field on FactRecord
-- §5.14–§5.20 garden + attestation wire routes
-- §2 extended: `garden_id` and `attested` fields on FactRecord
+**v1.0 (promoted from v0.9-draft):**
+- §17 Memory Garden — promoted to stable: named ACL'd partitions (`garden_id`), admin/writer/reader roles, garden-tagged facts; `garden:` prefix reserved
+- §18 Source Attestation — promoted to stable: `entity_uri` bound to API key, enforce/warn/off modes; `attested` field on FactRecord
+- §5.14–§5.20 garden + attestation wire routes — stable
+- §2 extended: `garden_id` and `attested` fields on FactRecord — stable
+- §4 Intent Envelope — deferred indefinitely (not implemented; removed from active roadmap)
 
 **Phase 6 additions (v0.8):**
 - §15 Decay Semantics — configurable TTL + confidence-decay policies, `POST /v1/decay/sweep`, `DecayPolicy` registry

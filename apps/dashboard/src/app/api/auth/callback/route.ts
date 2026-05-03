@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { exchangeCode } from "@/lib/oidc";
 import { getSessionFromRequest } from "@/lib/session";
 import { stigmemJson } from "@/lib/api";
+import type { GardenRecord } from "@/lib/api";
 
 /**
  * GET /api/auth/callback
  * Receives OIDC authorization code, exchanges for id_token, then calls
  * POST /v1/auth/oidc/exchange on the stigmem backend to obtain an API key.
  * Stores the key in the iron-session HttpOnly cookie and redirects to /facts.
+ * New users (no existing gardens) are redirected to /onboarding instead.
  */
 export async function GET(req: NextRequest) {
   const res = NextResponse.redirect(new URL("/facts", req.url));
@@ -65,7 +67,29 @@ export async function GET(req: NextRequest) {
   session.permissions = exchangeResult.permissions;
   await session.save();
 
-  const redirectRes = NextResponse.redirect(new URL("/facts", req.url));
+  // Detect new users: check for existing gardens and auto-provision if none found.
+  let isNewUser = false;
+  try {
+    const gardens = await stigmemJson<GardenRecord[]>("/v1/gardens", exchangeResult.api_key);
+    if (gardens.length === 0) {
+      await stigmemJson("/v1/gardens", exchangeResult.api_key, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug: "my-facts",
+          name: "My Facts",
+          scope: "private",
+          description: "Your personal fact namespace.",
+        }),
+      });
+      isNewUser = true;
+    }
+  } catch {
+    // Garden check/creation is best-effort; fall through to /facts on failure.
+  }
+
+  const dest = isNewUser ? "/onboarding" : "/facts";
+  const redirectRes = NextResponse.redirect(new URL(dest, req.url));
   res.headers.getSetCookie().forEach((c) => redirectRes.headers.append("Set-Cookie", c));
   return redirectRes;
 }

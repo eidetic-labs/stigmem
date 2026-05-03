@@ -48,6 +48,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build stigmem-ts (required before type-check)
+        run: pnpm --filter stigmem-ts build
+
       - name: Type check (all workspaces)
         run: pnpm type-check
 
@@ -73,6 +76,6 @@ jobs:
 
       - name: Dry-run install (template rendering)
         run: |
-          helm install stigmem ./infra/helm/stigmem \
-            --dry-run --debug \
+          helm template stigmem ./infra/helm/stigmem \
+            --debug \
             --set image.pullPolicy=Never

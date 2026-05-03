@@ -99,6 +99,7 @@ _PATCHABLE_MODULES = [
     "stigmem_node.routes.decay",
     "stigmem_node.routes.lint",
     "stigmem_node.routes.synthesize",
+    "stigmem_node.rate_limit",
 ]
 
 

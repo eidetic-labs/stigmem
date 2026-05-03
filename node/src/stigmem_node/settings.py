@@ -55,5 +55,15 @@ class Settings(BaseSettings):
     # comma-separated list of allowed email domains; empty = allow any
     oidc_allowed_domains: str = ""
 
+    # Async job threshold (spec §14.5 / §15.4): scopes with more facts than this
+    # trigger the async 202 path. Override in tests to force async path at small scale.
+    async_job_threshold: int = 100_000
+
+    # Source attestation mode (v0.9, spec §18).
+    # "enforce": reject facts where source != caller's entity_uri (HTTP 403)
+    # "warn"   : accept with attested=False; log warning (default; backward compatible)
+    # "off"    : no check; attested=None on all facts
+    source_attestation_mode: str = "warn"
+
 
 settings = Settings()

@@ -97,6 +97,7 @@ _PATCHABLE_MODULES = [
     "stigmem_node.routes.federation",
     "stigmem_node.decay",
     "stigmem_node.routes.decay",
+    "stigmem_node.routes.lint",
     "stigmem_node.routes.synthesize",
 ]
 
@@ -151,6 +152,23 @@ def client(tmp_db: str) -> Generator[TestClient, None, None]:
     """TestClient with auth disabled and a fresh in-process DB."""
     original = settings_module.settings
     test_settings = Settings(db_path=tmp_db, auth_required=False, node_url="http://testnode")
+    extra = _patch_settings(test_settings)
+    app = create_app()
+    with TestClient(app, raise_server_exceptions=True) as c:
+        yield c
+    _restore_settings(original, extra)
+
+
+@pytest.fixture()
+def client_async_threshold(tmp_db: str) -> Generator[TestClient, None, None]:
+    """TestClient with async_job_threshold=1 to force the async 202 path in tests."""
+    original = settings_module.settings
+    test_settings = Settings(
+        db_path=tmp_db,
+        auth_required=False,
+        node_url="http://testnode",
+        async_job_threshold=0,
+    )
     extra = _patch_settings(test_settings)
     app = create_app()
     with TestClient(app, raise_server_exceptions=True) as c:

@@ -1,11 +1,11 @@
-"""Lint route — spec §14 (v0.7).
+"""Lint route — spec §14 (v0.7) + async job path (spec §14.5).
 
 POST /v1/lint
 { scope, checks?, entity?, relation?, stale_lookahead_s? }
+  → 200 sync result, or 202 { job_id, status, estimated_s } when scope > threshold.
 
-Read-only health-check sweep: contradiction detection, stale-fact flagging,
-orphan-entity detection (all-retracted entities), broken cross-reference detection.
-Never writes or modifies any facts.
+GET /v1/lint/jobs/:job_id
+  → 200 job status/result, or 404 if not found.
 """
 
 from __future__ import annotations
@@ -13,19 +13,21 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from ..auth import Identity, resolve_identity
 from ..db import db
+from ..jobs import create_job, get_job, mark_done, mark_failed, mark_running
 from ..models import VALID_SCOPES
+from ..settings import settings
 
 router = APIRouter(tags=["lint"])
 
 LintCheck = Literal["contradiction", "stale", "orphan", "broken_ref", "namespacing"]
 ALL_CHECKS: list[LintCheck] = ["contradiction", "stale", "orphan", "broken_ref", "namespacing"]
 
-# Relations where a broken ref is severity=error (spec §14.3)
 INTENT_ROUTING_RELATIONS = frozenset({"intent:handoff_to", "intent:context_ref"})
 
 
@@ -54,48 +56,38 @@ class LintResult(BaseModel):
     fact_count: int
 
 
-@router.post("/v1/lint", response_model=LintResult)
-def lint_scope(
-    req: LintRequest,
-    identity: Annotated[Identity, Depends(resolve_identity)],
-) -> LintResult:
-    """Health-check sweep for a scope (spec §14). Read-only."""
-    if not identity.can_read():
-        raise HTTPException(status_code=403, detail="read permission required")
-
-    if req.scope not in VALID_SCOPES:
-        raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
-
-    checks_to_run: list[LintCheck] = req.checks if req.checks else ALL_CHECKS
+def _run_lint_sweep(
+    scope: str,
+    checks: list[LintCheck],
+    entity: str | None,
+    relation: str | None,
+    stale_lookahead_s: int,
+) -> dict[str, Any]:
+    """Execute the lint sweep and return a dict matching LintResult fields."""
     now_dt = datetime.now(UTC)
     now = now_dt.isoformat()
-    lookahead_dt = now_dt + timedelta(seconds=req.stale_lookahead_s)
-    lookahead = lookahead_dt.isoformat()
+    lookahead = (now_dt + timedelta(seconds=stale_lookahead_s)).isoformat()
 
-    # Clauses using alias "f" (for simple facts queries)
     f_scope = "AND f.scope = ?"
-    f_entity = ("AND f.entity = ?" if req.entity else "")
-    f_relation = ("AND f.relation = ?" if req.relation else "")
+    f_entity = ("AND f.entity = ?" if entity else "")
+    f_relation = ("AND f.relation = ?" if relation else "")
     f_filter = f_scope + f_entity + f_relation
-    f_params: list[Any] = [req.scope] + ([req.entity] if req.entity else []) + ([req.relation] if req.relation else [])
+    f_params: list[Any] = [scope] + ([entity] if entity else []) + ([relation] if relation else [])
 
-    # Clauses using alias "fa" (for conflict join queries)
     fa_scope = "AND fa.scope = ?"
-    fa_entity = ("AND fa.entity = ?" if req.entity else "")
-    fa_relation = ("AND fa.relation = ?" if req.relation else "")
+    fa_entity = ("AND fa.entity = ?" if entity else "")
+    fa_relation = ("AND fa.relation = ?" if relation else "")
     fa_filter = fa_scope + fa_entity + fa_relation
-    fa_params: list[Any] = [req.scope] + ([req.entity] if req.entity else []) + ([req.relation] if req.relation else [])
+    fa_params: list[Any] = [scope] + ([entity] if entity else []) + ([relation] if relation else [])
 
-    findings: list[LintFinding] = []
+    findings: list[dict[str, Any]] = []
     fact_count = 0
 
     with db() as conn:
-        # Total facts checked
         count_sql = f"SELECT COUNT(*) FROM facts f WHERE 1=1 {f_filter}"
         fact_count = conn.execute(count_sql, f_params).fetchone()[0]
 
-        # 1. Unresolved contradictions
-        if "contradiction" in checks_to_run:
+        if "contradiction" in checks:
             conflict_sql = f"""
                 SELECT c.id AS conflict_id, c.fact_a_id, c.fact_b_id,
                        fa.entity, fa.relation
@@ -106,18 +98,16 @@ def lint_scope(
                 {fa_filter}
             """
             for row in conn.execute(conflict_sql, fa_params).fetchall():
-                findings.append(LintFinding(
-                    check="contradiction",
-                    severity="error",
-                    entity=row["entity"],
-                    relation=row["relation"],
-                    fact_ids=[row["fact_a_id"], row["fact_b_id"]],
-                    detail=f"unresolved conflict {row['conflict_id']}",
-                ))
+                findings.append({
+                    "check": "contradiction",
+                    "severity": "error",
+                    "entity": row["entity"],
+                    "relation": row["relation"],
+                    "fact_ids": [row["fact_a_id"], row["fact_b_id"]],
+                    "detail": f"unresolved conflict {row['conflict_id']}",
+                })
 
-        # 2. Stale facts (past valid_until, or expiring within lookahead_s)
-        #    Only flag live facts (confidence > 0.0); retracted facts are not stale.
-        if "stale" in checks_to_run:
+        if "stale" in checks:
             stale_sql = f"""
                 SELECT f.id, f.entity, f.relation, f.valid_until
                 FROM facts f
@@ -126,32 +116,27 @@ def lint_scope(
                 AND f.valid_until <= ?
                 {f_filter}
             """
-            stale_params: list[Any] = [lookahead] + f_params
-            for row in conn.execute(stale_sql, stale_params).fetchall():
+            for row in conn.execute(stale_sql, [lookahead] + f_params).fetchall():
                 expired = row["valid_until"] <= now
-                severity = "warning" if expired else "info"
-                detail = (
-                    f"expired at {row['valid_until']}"
-                    if expired
-                    else f"expires at {row['valid_until']} (within {req.stale_lookahead_s}s)"
-                )
-                findings.append(LintFinding(
-                    check="stale",
-                    severity=severity,
-                    entity=row["entity"],
-                    relation=row["relation"],
-                    fact_ids=[row["id"]],
-                    detail=detail,
-                ))
+                findings.append({
+                    "check": "stale",
+                    "severity": "warning" if expired else "info",
+                    "entity": row["entity"],
+                    "relation": row["relation"],
+                    "fact_ids": [row["id"]],
+                    "detail": (
+                        f"expired at {row['valid_until']}"
+                        if expired
+                        else f"expires at {row['valid_until']} (within {stale_lookahead_s}s)"
+                    ),
+                })
 
-        # 3. Orphan entities (spec §14.1): entities where ALL facts in scope are either
-        #    retracted (confidence=0.0) or expired (valid_until < now). No live facts remain.
-        if "orphan" in checks_to_run:
+        if "orphan" in checks:
             orphan_clauses = "AND scope = ?"
-            orphan_params: list[Any] = [req.scope]
-            if req.entity:
+            orphan_params: list[Any] = [scope]
+            if entity:
                 orphan_clauses += " AND entity = ?"
-                orphan_params.append(req.entity)
+                orphan_params.append(entity)
 
             orphan_sql = f"""
                 SELECT entity
@@ -168,20 +153,16 @@ def lint_scope(
                    ) = 0
             """
             for row in conn.execute(orphan_sql, orphan_params + [now]).fetchall():
-                findings.append(LintFinding(
-                    check="orphan",
-                    severity="info",
-                    entity=row["entity"],
-                    relation=None,
-                    fact_ids=[],
-                    detail=f"entity {row['entity']!r} has no live facts in scope={req.scope}",
-                ))
+                findings.append({
+                    "check": "orphan",
+                    "severity": "info",
+                    "entity": row["entity"],
+                    "relation": None,
+                    "fact_ids": [],
+                    "detail": f"entity {row['entity']!r} has no live facts in scope={scope}",
+                })
 
-        # 4. Broken cross-references (spec §14.1): ref facts whose target entity URI
-        #    has no live (non-retracted, non-expired) facts in this node's store.
-        #    Severity: error if relation is intent:handoff_to or intent:context_ref (spec §14.3);
-        #              warning otherwise.
-        if "broken_ref" in checks_to_run:
+        if "broken_ref" in checks:
             ref_sql = f"""
                 SELECT f.id, f.entity, f.relation, f.value_v
                 FROM facts f
@@ -193,27 +174,23 @@ def lint_scope(
             for row in conn.execute(ref_sql, [now] + f_params).fetchall():
                 target_entity = row["value_v"]
                 live_count = conn.execute(
-                    """SELECT COUNT(*) FROM facts
-                       WHERE entity = ?
-                         AND confidence > 0.0
-                         AND (valid_until IS NULL OR valid_until > ?)""",
+                    "SELECT COUNT(*) FROM facts"
+                    " WHERE entity = ? AND confidence > 0.0"
+                    " AND (valid_until IS NULL OR valid_until > ?)",
                     [target_entity, now],
                 ).fetchone()[0]
                 if live_count == 0:
-                    is_intent_routing = row["relation"] in INTENT_ROUTING_RELATIONS
-                    findings.append(LintFinding(
-                        check="broken_ref",
-                        severity="error" if is_intent_routing else "warning",
-                        entity=row["entity"],
-                        relation=row["relation"],
-                        fact_ids=[row["id"]],
-                        detail=f"ref target entity {target_entity!r} has no live facts",
-                    ))
+                    is_intent = row["relation"] in INTENT_ROUTING_RELATIONS
+                    findings.append({
+                        "check": "broken_ref",
+                        "severity": "error" if is_intent else "warning",
+                        "entity": row["entity"],
+                        "relation": row["relation"],
+                        "fact_ids": [row["id"]],
+                        "detail": f"ref target entity {target_entity!r} has no live facts",
+                    })
 
-        # 5. Namespacing violations (relation-convention.md): live facts whose relation
-        #    contains no colon separator — bare words like "status" silently collide when
-        #    multiple sources write semantically distinct facts.
-        if "namespacing" in checks_to_run:
+        if "namespacing" in checks:
             ns_sql = f"""
                 SELECT f.entity, f.relation, GROUP_CONCAT(f.id) AS ids
                 FROM facts f
@@ -224,22 +201,95 @@ def lint_scope(
                 GROUP BY f.entity, f.relation
             """
             for row in conn.execute(ns_sql, [now] + f_params).fetchall():
-                findings.append(LintFinding(
-                    check="namespacing",
-                    severity="warning",
-                    entity=row["entity"],
-                    relation=row["relation"],
-                    fact_ids=row["ids"].split(",") if row["ids"] else [],
-                    detail=(
+                findings.append({
+                    "check": "namespacing",
+                    "severity": "warning",
+                    "entity": row["entity"],
+                    "relation": row["relation"],
+                    "fact_ids": row["ids"].split(",") if row["ids"] else [],
+                    "detail": (
                         f"bare relation {row['relation']!r} has no namespace prefix — "
                         f"rename to 'your-prefix:{row['relation']}' to avoid silent collisions"
                     ),
-                ))
+                })
 
+    return {
+        "findings": findings,
+        "checked_at": now,
+        "scope": scope,
+        "checks_run": checks,
+        "fact_count": fact_count,
+    }
+
+
+def _lint_job_worker(job_id: str, req: LintRequest) -> None:
+    """Background task: run lint sweep and update job status."""
+    mark_running(job_id)
+    try:
+        result = _run_lint_sweep(
+            scope=req.scope,
+            checks=req.checks or ALL_CHECKS,
+            entity=req.entity,
+            relation=req.relation,
+            stale_lookahead_s=req.stale_lookahead_s,
+        )
+        mark_done(job_id, result)
+    except Exception as exc:
+        mark_failed(job_id, str(exc))
+
+
+@router.post("/v1/lint")
+def lint_scope(
+    req: LintRequest,
+    background_tasks: BackgroundTasks,
+    identity: Annotated[Identity, Depends(resolve_identity)],
+) -> Any:
+    """Health-check sweep for a scope (spec §14). Read-only.
+
+    Returns 200 with results synchronously for scopes ≤ threshold facts.
+    Returns 202 with job_id for larger scopes; poll GET /v1/lint/jobs/:job_id.
+    """
+    if not identity.can_read():
+        raise HTTPException(status_code=403, detail="read permission required")
+    if req.scope not in VALID_SCOPES:
+        raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
+
+    checks_to_run: list[LintCheck] = req.checks if req.checks else ALL_CHECKS
+
+    # Count scope facts to choose sync vs. async path (spec §14.5).
+    with db() as conn:
+        scope_count: int = conn.execute(
+            "SELECT COUNT(*) FROM facts WHERE scope = ?", [req.scope]
+        ).fetchone()[0]
+
+    if scope_count > settings.async_job_threshold:
+        estimated_s = max(10, scope_count // 5_000)
+        job_id = create_job("lint", req.scope, estimated_s)
+        background_tasks.add_task(_lint_job_worker, job_id, req)
+        return JSONResponse(
+            status_code=202,
+            content={"job_id": job_id, "status": "pending", "estimated_s": estimated_s},
+        )
+
+    result = _run_lint_sweep(req.scope, checks_to_run, req.entity, req.relation, req.stale_lookahead_s)
     return LintResult(
-        findings=findings,
-        checked_at=now,
-        scope=req.scope,
-        checks_run=checks_to_run,
-        fact_count=fact_count,
+        findings=[LintFinding(**f) for f in result["findings"]],
+        checked_at=result["checked_at"],
+        scope=result["scope"],
+        checks_run=result["checks_run"],
+        fact_count=result["fact_count"],
     )
+
+
+@router.get("/v1/lint/jobs/{job_id}")
+def get_lint_job(
+    job_id: str,
+    identity: Annotated[Identity, Depends(resolve_identity)],
+) -> Any:
+    """Poll the status of an async lint job (spec §14.5)."""
+    if not identity.can_read():
+        raise HTTPException(status_code=403, detail="read permission required")
+    job = get_job(job_id, job_type="lint")
+    if job is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    return job

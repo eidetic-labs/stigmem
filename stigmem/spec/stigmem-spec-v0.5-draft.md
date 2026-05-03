@@ -500,6 +500,15 @@ Authorization: Bearer <api-key>
 
 Both original conflicting facts remain immutable in the store.
 
+**Reserved-namespace exemption:** Facts whose entity or relation begins with the bare
+`stigmem:` prefix (e.g., `stigmem:conflict:status`, `stigmem:resolves`) are exempt from
+sibling-detection on both local write (`assert_fact`) and federation ingest
+(`_detect_and_record_contradiction`). These facts represent protocol state transitions, not
+semantic content — two differing `stigmem:conflict:status` values are a state transition, not
+a contradiction. The guard checks for the bare namespace prefix (`stigmem:`) and specifically
+excludes the `stigmem://` URI scheme: facts whose entity is a `stigmem://` URI (user-created
+content) are **not** exempt and remain subject to full contradiction detection.
+
 ### 5.11 Push replication (optional) — v0.5
 
 Nodes that advertise a non-null `federation_endpoints.push` MUST accept:
@@ -655,6 +664,12 @@ Nodes SHOULD surface unresolved conflicts in monitoring/alerting.
 
 **Contradiction entity namespace:** All conflict entities use `stigmem:conflict:<uuid>`.
 These entities MUST NOT be federated (they are local accounting artifacts).
+
+**Reserved-namespace exemption during ingest:** When `_detect_and_record_contradiction` runs
+on an ingested fact, it skips sibling-detection for any fact whose entity or relation starts
+with the bare `stigmem:` prefix (see §5.10). This prevents `stigmem:conflict:status` facts
+asserted during conflict resolution from triggering a cascade contradiction on peer nodes that
+ingest them. Facts with `stigmem://` URI entities are user content and are not exempt.
 
 ### 6.6 Security Invariants
 

@@ -45,6 +45,12 @@ curl http://nodeB:8000/v1/federation/peers \
   -H 'X-API-Key: <nodeB-key>' | jq .
 ```
 
+## Conflict detection during ingest
+
+When a node ingests a federated fact that conflicts with a locally-held fact (same entity/relation/scope, different value), it records a `ConflictRecord` and surfaces the contradiction to callers. Full semantics are in spec §6.5.
+
+**Reserved-namespace exemption:** Facts whose entity or relation starts with the bare `stigmem:` prefix (e.g., `stigmem:conflict:status`, `stigmem:resolves`) are **exempt** from this detection. They carry protocol state, not semantic content, so two differing values represent a state transition rather than a conflict. Facts with a `stigmem://` URI entity (user content) are not covered by this exemption and remain subject to normal contradiction detection. See spec §5.10 and §6.5.
+
 ## Topics to be covered
 
 - Generating Ed25519 keys and declaration signatures (spec §6.1)

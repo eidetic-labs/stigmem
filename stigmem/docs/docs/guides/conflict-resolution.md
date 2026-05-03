@@ -16,6 +16,8 @@ Full guide content is planned for the next docs sprint.
 
 A conflict occurs when two facts share the same (entity, relation, scope) tuple but carry different values. Stigmem stores both facts and creates a `ConflictRecord` — it never silently overwrites. See spec §3 and §5.9.
 
+**Reserved-namespace exemption:** Facts whose entity or relation begins with the bare `stigmem:` prefix (e.g., `stigmem:conflict:status`, `stigmem:resolves`) are exempt from sibling-detection. These are protocol state transitions, not semantic content. Note that `stigmem://` URI entities (user-created content) are **not** exempt and are subject to normal contradiction detection. See spec §5.10.
+
 ## List open conflicts
 
 ```bash

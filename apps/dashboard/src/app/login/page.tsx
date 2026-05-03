@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LogIn, AlertCircle } from "lucide-react";
 
 interface Props {
-  searchParams: { error?: string; redirect?: string };
+  searchParams: Promise<{ error?: string; redirect?: string }>;
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -17,10 +17,11 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 export default async function LoginPage({ searchParams }: Props) {
   const session = await getSession();
-  if (session.apiKey) redirect(searchParams.redirect ?? "/facts");
+  const sp = await searchParams;
+  if (session.apiKey) redirect(sp.redirect ?? "/facts");
 
-  const errorMsg = searchParams.error
-    ? (ERROR_MESSAGES[searchParams.error] ?? `Login error: ${searchParams.error}`)
+  const errorMsg = sp.error
+    ? (ERROR_MESSAGES[sp.error] ?? `Login error: ${sp.error}`)
     : null;
 
   const oidcEnabled = !!process.env.OIDC_ISSUER_URL;

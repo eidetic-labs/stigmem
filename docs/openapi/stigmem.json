@@ -1,0 +1,888 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Stigmem Reference Node",
+    "version": "0.3.0",
+    "description": "Single-host Stigmem node implementing spec v0.5.\n\nSee the [Stigmem specification](https://github.com/stigmem/stigmem/blob/main/spec/stigmem-spec-v0.5-draft.md) for full protocol details.",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development node"
+    }
+  ],
+  "security": [{ "ApiKeyAuth": [] }],
+  "tags": [
+    {
+      "name": "Facts",
+      "description": "Assert and query immutable facts. Each fact is an (entity, relation, value) triple with provenance, confidence, scope, and a hybrid logical clock tick. See spec §2 and §5.1–§5.5."
+    },
+    {
+      "name": "Federation",
+      "description": "Peer management and fact replication across nodes. Peers exchange Ed25519-signed tokens and pull facts within allowed scopes. See spec §5.6–§5.11 and §6."
+    },
+    {
+      "name": "Conflicts",
+      "description": "List and resolve detected fact contradictions. Contradictions are stored as first-class records rather than silently discarded. See spec §5.9–§5.10."
+    },
+    {
+      "name": "Node Metadata",
+      "description": "Node identity and capability advertisement. Used by peers during the federation handshake. See spec §5.3."
+    },
+    {
+      "name": "Health",
+      "description": "Operational health check for load balancers and monitoring."
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key for authenticating client requests. Set `STIGMEM_AUTH_REQUIRED=false` to disable auth in development."
+      },
+      "PeerTokenAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Short-lived Ed25519-signed JWT for peer-to-peer federation. Fields: `iss` (issuer node_id), `sub` (target node_id), `iat`/`exp` (epoch_ms, max 3600s), `nonce` (UUID), `scopes` (FactScope[]). See spec §6.3."
+      }
+    },
+    "schemas": {
+      "FactScope": {
+        "type": "string",
+        "enum": ["local", "team", "company", "public"],
+        "description": "Visibility scope for a fact. `local` and `team` scopes are never federated (except with `STIGMEM_FEDERATION_ALLOW_TEAM=true`). See spec §2.2."
+      },
+      "FactValue": {
+        "description": "The value carried by a fact. One of seven types defined in spec §2.1: plain string, number, boolean, null, long-form `text`, ISO 8601 `datetime`, or entity `ref`.",
+        "oneOf": [
+          {
+            "type": "string",
+            "title": "string",
+            "description": "Short string value."
+          },
+          {
+            "type": "number",
+            "title": "number",
+            "description": "Numeric value (integer or float)."
+          },
+          {
+            "type": "boolean",
+            "title": "boolean"
+          },
+          {
+            "type": "null",
+            "title": "null",
+            "description": "Explicit null — used for retractions."
+          },
+          {
+            "type": "object",
+            "title": "text",
+            "required": ["text"],
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "Long-form text value (e.g. agent notes, summaries)."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "title": "datetime",
+            "required": ["datetime"],
+            "properties": {
+              "datetime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO 8601 datetime string (UTC)."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "title": "ref",
+            "required": ["ref"],
+            "properties": {
+              "ref": {
+                "type": "string",
+                "description": "Reference to another entity URI. Used to build typed relations."
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "AssertRequest": {
+        "type": "object",
+        "required": ["entity", "relation", "value", "source"],
+        "properties": {
+          "entity": {
+            "type": "string",
+            "description": "Entity URI. Examples: `user:alice`, `stigmem:rel:<uuid>` (reification). See spec §2, §2.3."
+          },
+          "relation": {
+            "type": "string",
+            "description": "Relation URI from the namespace registry. Examples: `memory:prefers`, `intent:goal`. See spec §9."
+          },
+          "value": {
+            "$ref": "#/components/schemas/FactValue"
+          },
+          "source": {
+            "type": "string",
+            "description": "Source agent or system URI. Example: `agent:settings-sync`."
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1.0,
+            "description": "Confidence score 0–1. Facts with `confidence: 0` are retracted."
+          },
+          "scope": {
+            "$ref": "#/components/schemas/FactScope"
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Optional expiry datetime (UTC). Expired facts are excluded from query results unless `include_expired=true`. See spec §3."
+          }
+        },
+        "example": {
+          "entity": "user:alice",
+          "relation": "memory:prefers",
+          "value": "dark mode",
+          "source": "agent:settings",
+          "confidence": 1.0,
+          "scope": "local"
+        }
+      },
+      "FactRecord": {
+        "type": "object",
+        "description": "An immutable fact record as stored in the node. See spec §2.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Fact UUID."
+          },
+          "entity": { "type": "string" },
+          "relation": { "type": "string" },
+          "value": { "$ref": "#/components/schemas/FactValue" },
+          "source": { "type": "string" },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Wall-clock write time (UTC)."
+          },
+          "hlc": {
+            "type": "string",
+            "description": "Hybrid Logical Clock tick at write time. Format: `<wall_ms>-<seq>-<node_id_prefix>`. Used for cursor-based pagination and global ordering. See spec §2.4."
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "scope": { "$ref": "#/components/schemas/FactScope" },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "contradicted": {
+            "type": "boolean",
+            "description": "True if a conflicting fact with the same (entity, relation, scope) but a different value exists."
+          }
+        }
+      },
+      "QueryResponse": {
+        "type": "object",
+        "description": "Paginated fact query result.",
+        "properties": {
+          "facts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FactRecord" }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total matching facts (before pagination)."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "HLC-based cursor for fetching the next page. Omit from the next request if `null`."
+          }
+        }
+      },
+      "PeerRecord": {
+        "type": "object",
+        "description": "A registered federation peer.",
+        "properties": {
+          "peer_id": { "type": "string", "format": "uuid" },
+          "node_id": { "type": "string", "description": "Stable URI for the peer node." },
+          "node_url": { "type": "string", "description": "Base URL of the peer's HTTP API." },
+          "status": {
+            "type": "string",
+            "enum": ["pending_verification", "active", "rejected"],
+            "description": "Peer verification status."
+          },
+          "allowed_scopes": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FactScope" },
+            "description": "Scopes this peer is allowed to pull."
+          },
+          "established_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PeerRegisterRequest": {
+        "type": "object",
+        "required": ["node_id", "node_url", "allowed_scopes", "declaration_sig"],
+        "description": "Peer registration payload. The `declaration_sig` must be a valid Ed25519 signature over the canonical declaration JSON, verifiable against the peer's public key from its `/.well-known/stigmem` endpoint. See spec §6.1.",
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "description": "Stable URI for the registering node."
+          },
+          "node_url": {
+            "type": "string",
+            "description": "Base HTTP URL of the registering node."
+          },
+          "allowed_scopes": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FactScope" }
+          },
+          "declaration_sig": {
+            "type": "string",
+            "description": "Base64url-encoded Ed25519 signature over the declaration preimage. See spec §6.1."
+          }
+        }
+      },
+      "ConflictRecord": {
+        "type": "object",
+        "description": "A detected fact contradiction between two facts with the same (entity, relation, scope) but different values.",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "fact_a": { "$ref": "#/components/schemas/FactRecord" },
+          "fact_b": { "$ref": "#/components/schemas/FactRecord" },
+          "status": {
+            "type": "string",
+            "enum": ["open", "resolved"]
+          },
+          "resolved_by": {
+            "type": "string",
+            "description": "ID of the resolution fact (present when status is `resolved`)."
+          },
+          "detected_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ConflictResolveRequest": {
+        "description": "Resolve a conflict by selecting the winning fact or providing a fresh value. See spec §5.10.",
+        "oneOf": [
+          {
+            "type": "object",
+            "title": "Select winner",
+            "required": ["winning_fact_id"],
+            "properties": {
+              "winning_fact_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "ID of the winning fact — must be `fact_a.id` or `fact_b.id` from the conflict record."
+              }
+            }
+          },
+          {
+            "type": "object",
+            "title": "Provide new value",
+            "required": ["new_value"],
+            "properties": {
+              "new_value": {
+                "$ref": "#/components/schemas/FactValue",
+                "description": "A fresh value that replaces both conflicting facts."
+              }
+            }
+          }
+        ]
+      },
+      "WellKnownResponse": {
+        "type": "object",
+        "description": "Node identity and capability advertisement. Returned without authentication. See spec §5.3.",
+        "properties": {
+          "version": { "type": "string", "example": "0.5" },
+          "node_id": { "type": "string", "description": "Stable node identity URI." },
+          "node_url": { "type": "string" },
+          "auth": {
+            "type": "string",
+            "enum": ["required", "none"]
+          },
+          "federation": {
+            "type": "string",
+            "enum": ["enabled", "disabled"]
+          },
+          "federation_pubkey": {
+            "type": "string",
+            "description": "Base64url-encoded Ed25519 public key used to verify peer tokens. Present only when federation is enabled."
+          },
+          "federation_version": {
+            "type": "string",
+            "description": "Supported federation protocol version (semver range)."
+          },
+          "federation_endpoints": {
+            "type": "object",
+            "properties": {
+              "peers": { "type": "string" },
+              "facts": { "type": "string" },
+              "push": { "type": ["string", "null"] }
+            }
+          },
+          "namespaces": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Supported relation namespace prefixes. See spec §9."
+          },
+          "spec": {
+            "type": "string",
+            "description": "URL to the authoritative spec document."
+          }
+        }
+      },
+      "AuditEntry": {
+        "type": "object",
+        "description": "A federation security event recorded in the audit log. See spec §6.4.",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "event_type": {
+            "type": "string",
+            "enum": ["rejected_fact", "rejected_token", "scope_violation", "replay_attempt"]
+          },
+          "peer_id": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "detail": {
+            "type": "object",
+            "description": "Event-specific detail payload."
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "loc": { "type": "array", "items": { "type": "string" } },
+                "msg": { "type": "string" },
+                "type": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/facts": {
+      "post": {
+        "tags": ["Facts"],
+        "summary": "Assert a fact",
+        "description": "Assert a new immutable fact. If a contradicting fact (same entity, relation, scope but different value and confidence > 0) already exists, both facts are retained and a `ConflictRecord` is created automatically. Facts are never mutated — updates are new facts with a higher HLC. See spec §5.1.",
+        "operationId": "assertFact",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AssertRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Fact asserted successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FactRecord" }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid API key." },
+          "403": { "description": "API key lacks write permission for the requested scope." },
+          "422": {
+            "description": "Request validation error.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Facts"],
+        "summary": "Query facts",
+        "description": "Query facts by pattern with optional filtering. Returns results ordered by HLC ascending. Supports cursor-based pagination via the `cursor` field in the response. See spec §5.2.",
+        "operationId": "queryFacts",
+        "parameters": [
+          {
+            "name": "entity",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by entity URI (exact match)."
+          },
+          {
+            "name": "relation",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by relation URI (exact match)."
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by source URI (exact match)."
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/FactScope" },
+            "description": "Filter by scope."
+          },
+          {
+            "name": "min_confidence",
+            "in": "query",
+            "schema": { "type": "number", "minimum": 0, "maximum": 1 },
+            "description": "Minimum confidence threshold (inclusive)."
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Return only facts with HLC after this value (for event-driven polling)."
+          },
+          {
+            "name": "include_contradicted",
+            "in": "query",
+            "schema": { "type": "boolean", "default": false },
+            "description": "Include facts that have been contradicted by a newer fact."
+          },
+          {
+            "name": "include_expired",
+            "in": "query",
+            "schema": { "type": "boolean", "default": false },
+            "description": "Include facts whose `valid_until` has passed."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "HLC cursor from a previous response. Omit to start from the beginning."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 500, "default": 50 },
+            "description": "Maximum number of facts to return per page (1–500)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching facts, paginated.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/QueryResponse" }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid API key." }
+        }
+      }
+    },
+    "/v1/facts/{fact_id}": {
+      "get": {
+        "tags": ["Facts"],
+        "summary": "Get a single fact",
+        "description": "Retrieve a single fact by its UUID. Returns 404 if the fact does not exist. See spec §5.5.",
+        "operationId": "getFact",
+        "parameters": [
+          {
+            "name": "fact_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Fact UUID."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fact record.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FactRecord" }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid API key." },
+          "404": { "description": "Fact not found." }
+        }
+      }
+    },
+    "/.well-known/stigmem": {
+      "get": {
+        "tags": ["Node Metadata"],
+        "summary": "Node identity and capabilities",
+        "description": "Returns node identity, auth configuration, federation capabilities, supported namespaces, and a link to the spec. No authentication required. Peers fetch this endpoint during the federation handshake to verify the peer's public key and supported scopes. See spec §5.3.",
+        "operationId": "getWellKnown",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Node metadata.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WellKnownResponse" },
+                "example": {
+                  "version": "0.5",
+                  "node_id": "stigmem:node:alice-workstation",
+                  "node_url": "http://localhost:8000",
+                  "auth": "required",
+                  "federation": "enabled",
+                  "federation_pubkey": "MCowBQYDK2VdAyEA...",
+                  "federation_version": "0.5",
+                  "federation_endpoints": {
+                    "peers": "/v1/federation/peers",
+                    "facts": "/v1/federation/facts",
+                    "push": null
+                  },
+                  "namespaces": ["stigmem:", "rel:", "memory:", "intent:", "roadmap:", "preference:", "x-"],
+                  "spec": "https://github.com/stigmem/stigmem/blob/main/spec/stigmem-spec-v0.5-draft.md"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/federation/peers": {
+      "post": {
+        "tags": ["Federation"],
+        "summary": "Register a peer",
+        "description": "Register a remote node as a federation peer. The `declaration_sig` field must be a valid Ed25519 signature verifiable against the peer's public key from its `/.well-known/stigmem` endpoint. Registration status begins as `pending_verification` and transitions to `active` or `rejected` after verification. See spec §5.6, §6.1.",
+        "operationId": "registerPeer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PeerRegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Peer registered.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PeerRecord" }
+              }
+            }
+          },
+          "400": { "description": "Invalid declaration or signature verification failed." },
+          "401": { "description": "Missing or invalid API key." },
+          "409": { "description": "A peer with this node_id is already registered." }
+        }
+      },
+      "get": {
+        "tags": ["Federation"],
+        "summary": "List registered peers",
+        "description": "List all registered federation peers and their current status. See spec §5.7.",
+        "operationId": "listPeers",
+        "responses": {
+          "200": {
+            "description": "List of peers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "peers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PeerRecord" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid API key." }
+        }
+      }
+    },
+    "/v1/federation/facts": {
+      "get": {
+        "tags": ["Federation"],
+        "summary": "Pull replication endpoint",
+        "description": "Returns scope-filtered, HLC-cursor-paginated facts for federation pull replication. Requires a valid peer token (`Authorization: Bearer <peer-token>`). Facts are filtered to the intersection of the peer's `allowed_scopes` (from registration) and the token's `scopes` field. `local` and `team` scopes are excluded unless `STIGMEM_FEDERATION_ALLOW_TEAM=true`. See spec §5.8, §6.3.",
+        "operationId": "federationPullFacts",
+        "security": [{ "PeerTokenAuth": [] }],
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/FactScope" },
+            "description": "Scope to pull (must be within allowed_scopes)."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "HLC cursor for incremental pulls. Omit on first pull."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 500, "default": 100 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated facts within the allowed scope.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/QueryResponse" }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid peer token." },
+          "403": { "description": "Requested scope is not in the peer's allowed_scopes." }
+        }
+      }
+    },
+    "/v1/federation/facts/push": {
+      "post": {
+        "tags": ["Federation"],
+        "summary": "Push replication endpoint (optional)",
+        "description": "Accept a batch of facts pushed by a peer. Feature-flagged: requires `STIGMEM_FEDERATION_PUSH_ENABLED=true`. Validates scope enforcement (facts must be within the peer's `allowed_scopes`) and source non-forgery (source must match the peer's node_id prefix). Returns per-fact accept/reject counts. See spec §5.11.",
+        "operationId": "federationPushFacts",
+        "security": [{ "PeerTokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["facts"],
+                "properties": {
+                  "facts": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/FactRecord" },
+                    "description": "Array of facts to ingest."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Push accepted (individual facts may still be rejected).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accepted": { "type": "integer" },
+                    "rejected": { "type": "integer" },
+                    "errors": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid peer token." },
+          "403": { "description": "Push replication is disabled on this node." }
+        }
+      }
+    },
+    "/v1/federation/audit": {
+      "get": {
+        "tags": ["Federation"],
+        "summary": "Federation audit log",
+        "description": "Returns the federation security audit log. Captures rejected facts, rejected tokens, scope violations, and replay attacks. Use `peer_id` to narrow the log to a specific peer. See spec §6.4.",
+        "operationId": "getFederationAudit",
+        "parameters": [
+          {
+            "name": "peer_id",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Filter by peer ID."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 500, "default": 50 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Pagination cursor from previous response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit log page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entries": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AuditEntry" }
+                    },
+                    "cursor": { "type": "string" },
+                    "has_more": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid API key." }
+        }
+      }
+    },
+    "/v1/conflicts": {
+      "get": {
+        "tags": ["Conflicts"],
+        "summary": "List conflicts",
+        "description": "List detected fact contradictions. Conflicts are created automatically when a new fact contradicts an existing fact with the same (entity, relation, scope) but a different value. See spec §5.9.",
+        "operationId": "listConflicts",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["open", "resolved"] },
+            "description": "Filter by conflict status."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 500, "default": 50 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conflict list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "conflicts": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ConflictRecord" }
+                    },
+                    "cursor": { "type": "string" },
+                    "has_more": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid API key." }
+        }
+      }
+    },
+    "/v1/conflicts/{conflict_id}/resolve": {
+      "post": {
+        "tags": ["Conflicts"],
+        "summary": "Resolve a conflict",
+        "description": "Resolve an open conflict by selecting the winning fact or providing a fresh replacement value. Resolution creates an immutable resolution fact (confidence=1.0) and a `stigmem:resolves` meta-fact, then marks the conflict as resolved. See spec §5.10.",
+        "operationId": "resolveConflict",
+        "parameters": [
+          {
+            "name": "conflict_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Conflict UUID."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ConflictResolveRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conflict resolved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "resolution_fact_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "ID of the newly created resolution fact."
+                    },
+                    "conflict_status": {
+                      "type": "string",
+                      "enum": ["resolved"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid API key." },
+          "404": { "description": "Conflict not found." },
+          "409": { "description": "Conflict is already resolved." }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "description": "Returns 200 OK with `{status: \"ok\"}` when the node is operational. No authentication required. Suitable for load balancer health probes.",
+        "operationId": "healthCheck",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Node is healthy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

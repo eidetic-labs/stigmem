@@ -1,0 +1,43 @@
+# Two-node stigmem federation quickstart.
+# Usage: docker compose up --build -d
+# Then follow docs/quickstart.md to complete the federation handshake.
+services:
+  node-a:
+    build: ./node
+    ports:
+      - "8765:8765"
+    environment:
+      STIGMEM_NODE_URL: "http://node-a:8765"
+      STIGMEM_FEDERATION_ENABLED: "true"
+      STIGMEM_DB_PATH: "/data/stigmem.db"
+      STIGMEM_LOG_LEVEL: "info"
+    volumes:
+      - node-a-data:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8765/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  node-b:
+    build: ./node
+    ports:
+      - "8766:8765"
+    environment:
+      STIGMEM_NODE_URL: "http://node-b:8765"
+      STIGMEM_FEDERATION_ENABLED: "true"
+      STIGMEM_DB_PATH: "/data/stigmem.db"
+      STIGMEM_LOG_LEVEL: "info"
+    volumes:
+      - node-b-data:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8765/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  node-a-data:
+  node-b-data:

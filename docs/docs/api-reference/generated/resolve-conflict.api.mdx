@@ -1,0 +1,69 @@
+---
+id: resolve-conflict
+title: "Resolve a conflict"
+description: "Resolve an open conflict by selecting the winning fact or providing a fresh replacement value. Resolution creates an immutable resolution fact (confidence=1.0) and a `stigmem:resolves` meta-fact, then marks the conflict as resolved. See spec §5.10."
+sidebar_label: "Resolve a conflict"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: docs/api-reference/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Resolve a conflict"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/conflicts/{conflict_id}/resolve"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Resolve an open conflict by selecting the winning fact or providing a fresh replacement value. Resolution creates an immutable resolution fact (confidence=1.0) and a `stigmem:resolves` meta-fact, then marks the conflict as resolved. See spec §5.10.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./resolve-conflict.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./resolve-conflict.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./resolve-conflict.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

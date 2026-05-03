@@ -1,0 +1,28 @@
+{
+  "name": "stigmem-ts",
+  "version": "0.4.0",
+  "description": "TypeScript client SDK for Stigmem — the federated knowledge fabric (spec v0.4/v0.5)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^1.6.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

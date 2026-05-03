@@ -1,0 +1,27 @@
+{
+  "name": "stigmem",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Stigmem — federated knowledge fabric for AI agents",
+  "workspaces": [
+    "adapters/mcp",
+    "sdks/stigmem-ts"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "test": "turbo run test",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

@@ -1,0 +1,11 @@
+# Docusaurus
+.docusaurus
+build
+node_modules
+
+# Generated API docs — committed so build works without a live node
+# Delete this line if you prefer to regenerate on each CI run instead:
+# docs/api-reference/generated
+
+# OS
+.DS_Store

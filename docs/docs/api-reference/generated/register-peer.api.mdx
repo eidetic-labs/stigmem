@@ -1,0 +1,67 @@
+---
+id: register-peer
+title: "Register a peer"
+description: "Register a remote node as a federation peer. The `declaration_sig` field must be a valid Ed25519 signature verifiable against the peer's public key from its `/.well-known/stigmem` endpoint. Registration status begins as `pending_verification` and transitions to `active` or `rejected` after verification. See spec §5.6, §6.1."
+sidebar_label: "Register a peer"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: docs/api-reference/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Register a peer"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/federation/peers"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Register a remote node as a federation peer. The `declaration_sig` field must be a valid Ed25519 signature verifiable against the peer's public key from its `/.well-known/stigmem` endpoint. Registration status begins as `pending_verification` and transitions to `active` or `rejected` after verification. See spec §5.6, §6.1.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./register-peer.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./register-peer.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

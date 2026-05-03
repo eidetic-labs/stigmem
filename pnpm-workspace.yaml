@@ -1,0 +1,3 @@
+packages:
+  - "adapters/mcp"
+  - "sdks/stigmem-ts"

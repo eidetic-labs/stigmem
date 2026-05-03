@@ -1,6 +1,6 @@
 [project]
 name = "stigmem-openclaw"
-version = "1.0.0"
+version = "1.0.1"
 description = "Stigmem adapter for OpenClaw agents — boot handshake, handoff, decision, and escalation surfaces"
 readme = "README.md"
 requires-python = ">=3.11"

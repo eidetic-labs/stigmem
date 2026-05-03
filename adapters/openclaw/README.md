@@ -4,8 +4,64 @@ Integrates Stigmem with OpenClaw agents. Provides the standard boot handshake
 (pull user prefs + project constraints into context) and write surfaces for
 handoffs, decisions, and escalations.
 
-> **Status:** Complete (Phase 4). Pagination, hardened write surfaces,
-> and a full test suite ship with this release.
+> **Status:** v1.0.1 — published to ClawHub as
+> [`stigmem-node`](https://clawhub.ai/skills/stigmem-node). Includes
+> security fixes (identity binding, value sanitization) and a bundled
+> `adapter.py` for self-contained skill installs.
+
+## ClawHub skill
+
+The recommended way to use this adapter in an OpenClaw deployment is via the
+[`stigmem-node` ClawHub skill](https://clawhub.ai/skills/stigmem-node). The skill
+bundles `adapter.py` so no separate package install is required beyond `stigmem-py`,
+and documents the environment variables in a format OpenClaw reads automatically.
+
+```bash
+# Install via OpenClaw's ClawHub integration
+skill install stigmem-node
+```
+
+Then set the required env vars (ClawHub will prompt for them on first use):
+
+```bash
+STIGMEM_URL=https://stigmem.example.com   # required
+STIGMEM_API_KEY=sk-your-key               # required if auth is enabled
+STIGMEM_SOURCE_ENTITY=agent:openclaw      # optional; default: agent:openclaw
+```
+
+## Security model
+
+**Identity binding** — Each write surface (`emit_decision`, `emit_handoff`,
+`emit_escalation`) pins the `source` field to the entity declared in
+`STIGMEM_SOURCE_ENTITY`. Facts are attributed to this URI in the fact graph; ensure
+it uniquely identifies the agent deployment, not a shared or generic identifier.
+
+**Untrusted retrieved context** — `boot()` returns facts from an external Stigmem
+node. The adapter sanitizes fact values before formatting them into the system-prompt
+summary, but the summary should be treated as untrusted input in high-stakes
+workflows — an attacker who controls the node can craft fact values to influence
+agent behaviour. Use a private, access-controlled node for sensitive workloads.
+
+**API key scope** — Set `STIGMEM_API_KEY` to a least-privilege key scoped only to
+the nodes this agent reads from and writes to. Do not share a key across unrelated
+agent deployments. Rotate keys regularly; revoke via the Stigmem node admin API if
+compromised.
+
+## Changelog
+
+### v1.0.1
+
+- Security: `source_entity` is now bound at construction time and cannot be
+  overridden per-call, preventing source spoofing.
+- Security: fact values in `boot()` summary output are sanitized (control
+  characters and embedded newlines stripped) before injection into the system prompt.
+- ClawHub: `adapter.py` bundled in the skill directory so ClawHub installs are
+  self-contained.
+
+### v1.0.0
+
+Initial release — boot handshake, handoff, decision, and escalation surfaces;
+pagination; full respx-mocked test suite.
 
 ## Design
 

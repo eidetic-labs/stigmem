@@ -13,6 +13,12 @@ from ..auth import Identity, resolve_identity
 from ..db import db
 from ..entity_normalizer import NormalizationError, is_informal, normalize_entity_uri
 from ..fuzzy_resolver import resolve_entity
+from ..garden_acl import (
+    caller_can_see_garden,
+    get_garden_by_garden_uri,
+    require_garden_read,
+    require_garden_write,
+)
 from ..hlc import node_hlc
 from ..models import (
     VALID_SCOPES,
@@ -22,6 +28,7 @@ from ..models import (
     row_to_record,
 )
 from .. import settings as _settings_pkg  # access via module so test patches propagate
+from ..settings import settings as _settings  # direct ref for source_attestation_mode reads
 
 router = APIRouter(prefix="/v1/facts", tags=["facts"])
 
@@ -42,6 +49,31 @@ def _validate_relation(relation: str) -> list[str]:
             "non-system callers should use a custom namespace prefix (see spec §9.1)"
         ]
     return []
+
+
+def _check_source_attestation(source: str, identity: Identity) -> bool | None:
+    """Enforce source attestation per spec §18. Returns attested value or raises 403."""
+    mode = _settings.source_attestation_mode
+    if mode == "off" or not _settings.auth_required:
+        return None
+
+    attested = (source == identity.entity_uri)
+    if not attested:
+        if mode == "enforce":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"source_attestation_failed: declared source {source!r} does not match "
+                    f"authenticated principal {identity.entity_uri!r} (spec §18)"
+                ),
+            )
+        # warn mode
+        print(
+            f"[stigmem] WARN: source attestation mismatch — "
+            f"declared source={source!r}, identity={identity.entity_uri!r}",
+            file=sys.stderr,
+        )
+    return attested
 
 
 @router.post("", response_model=FactRecord, status_code=status.HTTP_201_CREATED)
@@ -99,6 +131,25 @@ def assert_fact(
         entity = resolve_entity(_alias_conn, entity)
         source = resolve_entity(_alias_conn, source)
 
+    # --- Source attestation (spec §18) ---
+    attested = _check_source_attestation(source, identity)
+
+    # --- Garden ACL (spec §17.3) ---
+    garden = None
+    if req.garden_id is not None:
+        garden = get_garden_by_garden_uri(req.garden_id)
+        if garden is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
+        if garden["scope"] != req.scope:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"scope mismatch: garden scope is '{garden['scope']}' but fact scope is '{req.scope}'",
+            )
+        require_garden_write(garden, identity)
+
+    garden_uuid = garden["id"] if garden is not None else None
+    attested_int = None if attested is None else (1 if attested else 0)
+
     # Relation namespacing convention check (see relation-convention.md)
     relation_warnings = _validate_relation(req.relation)
     for w in relation_warnings:
@@ -114,8 +165,9 @@ def assert_fact(
         conn.execute(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
-                valid_until, confidence, scope, hlc, received_from, attested_key_id)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                valid_until, confidence, scope, hlc, received_from, attested_key_id,
+                garden_id, attested)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 entity,    # normalized (spec §2.6)
@@ -130,6 +182,8 @@ def assert_fact(
                 hlc,
                 None,  # local write; not received from a peer
                 attested_key_id,
+                garden_uuid,
+                attested_int,
             ),
         )
 
@@ -247,13 +301,45 @@ def query_facts(
     after: str | None = Query(None, description="Return facts with timestamp > this ISO 8601 value"),
     cursor: str | None = Query(None, description="Opaque pagination cursor (fact id)"),
     limit: int = Query(50, ge=1, le=500),
+    garden_id: str | None = Query(None, description="v0.9: filter to facts in this garden (spec §5.20)"),
+    attested: bool | None = Query(None, description="v0.9: filter by attestation status (spec §18.6)"),
 ) -> QueryResponse:
-    """Query facts by pattern (spec §5.2). Omitted fields are wildcards. Entity/source are normalized (§2.6)."""
+    """Query facts by pattern (spec §5.2, §5.20). Omitted fields are wildcards. Entity/source are normalized (§2.6)."""
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
 
+    # Garden ACL: resolve and enforce membership before querying (spec §5.20, §17.3)
+    garden = None
+    if garden_id is not None:
+        garden = get_garden_by_garden_uri(garden_id)
+        if garden is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
+        require_garden_read(garden, identity)
+
     conditions: list[str] = ["confidence >= ?"]
     params: list[Any] = [min_confidence]
+
+    # Garden filter: explicit garden_id, or hide garden facts from callers who can't see them
+    if garden is not None:
+        conditions.append("garden_id = ?")
+        params.append(garden["id"])
+    else:
+        # Hide garden-tagged facts from callers who aren't members (spec §17.3)
+        with db() as _g_conn:
+            visible_garden_ids = [
+                row["id"] for row in _g_conn.execute("SELECT id FROM gardens").fetchall()
+                if caller_can_see_garden(row["id"], identity)
+            ]
+        if visible_garden_ids:
+            placeholders = ",".join("?" * len(visible_garden_ids))
+            conditions.append(f"(garden_id IS NULL OR garden_id IN ({placeholders}))")
+            params.extend(visible_garden_ids)
+        else:
+            conditions.append("garden_id IS NULL")
+
+    if attested is not None:
+        conditions.append("attested = ?")
+        params.append(1 if attested else 0)
 
     if entity:
         try:
@@ -327,13 +413,23 @@ def get_fact(
     fact_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> FactRecord:
-    """Retrieve a single fact by ID (spec v0.4 §5.5)."""
+    """Retrieve a single fact by ID (spec v0.4 §5.5, §17.3)."""
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
     with db() as conn:
         row = conn.execute("SELECT * FROM facts WHERE id = ?", (fact_id,)).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="fact not found")
+
+    # Garden ACL: fact in a garden is only readable by members (spec §17.3)
+    if "garden_id" in row.keys() and row["garden_id"] is not None:
+        with db() as conn:
+            garden_row = conn.execute(
+                "SELECT * FROM gardens WHERE id = ?", (row["garden_id"],)
+            ).fetchone()
+        if garden_row is not None:
+            require_garden_read(dict(garden_row), identity)
+
     with db() as conn:
         sibling_count: int = conn.execute(
             "SELECT COUNT(*) FROM facts WHERE entity=? AND relation=? AND scope=?",

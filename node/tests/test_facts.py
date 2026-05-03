@@ -207,10 +207,11 @@ class TestWellKnown:
 
     def test_shape(self, client: TestClient) -> None:
         body = client.get("/.well-known/stigmem").json()
-        assert body["version"] == "0.5"
+        assert body["version"] == "0.9"
         assert body["node_id"].startswith("stigmem:node:")
         assert body["auth"] in ("none", "required")
         assert body["federation"] == "disabled"
+        assert body["source_attestation"] in ("off", "warn", "enforce")
         assert isinstance(body["namespaces"], list)
 
     def test_auth_none_when_disabled(self, client: TestClient) -> None:

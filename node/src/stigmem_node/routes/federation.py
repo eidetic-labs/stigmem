@@ -265,6 +265,7 @@ def pull_facts(
         "received_from IS NULL",       # do not re-federate inbound facts (§3.1)
         "entity NOT LIKE 'stigmem:conflict:%'",  # conflict entities are local (§6.5)
         "relation NOT LIKE 'stigmem:%'",         # meta-facts (received_from, ttl) are local
+        "re_federation_blocked = 0",   # exclude company-scope relay-blocked facts (§6.8.2)
     ]
     if cursor:
         conditions.append("hlc > ?")
@@ -346,7 +347,11 @@ def push_facts(
             continue
 
         try:
-            ingest_fact(fact, peer["node_id"])
+            ingest_fact(
+                fact,
+                peer["node_id"],
+                origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
+            )
             accepted += 1
         except Exception as exc:
             rejected += 1

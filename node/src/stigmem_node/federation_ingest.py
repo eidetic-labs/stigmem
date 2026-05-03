@@ -25,15 +25,38 @@ def _encode_v(value: dict[str, Any]) -> str:
     return str(v)
 
 
-def ingest_fact(fact: dict[str, Any], sender_node_id: str) -> bool:
+def ingest_fact(
+    fact: dict[str, Any],
+    sender_node_id: str,
+    origin_node_id: str | None = None,
+    origin_allowed_scopes: list[str] | None = None,
+) -> bool:
     """Idempotently ingest a federated fact.
 
     Returns True if the fact was new, False if it already existed (no-op).
     Writes stigmem:received_from meta-fact atomically with the fact.
     Advances the local HLC.
     Detects contradictions and writes conflict entities (spec §6.5, §3.3).
+
+    origin_node_id / origin_allowed_scopes populate the v0.8 scope-propagation
+    columns (spec §6.8.1, Migration 004). When None, defaults to sender_node_id
+    and the fact's scope as a single-element list (first-hop inference).
+
+    Company-scope facts are re_federation_blocked=1 by default (spec §6.8.2):
+    the originating node's grant is non-transitive.
     """
     fact_id = fact["id"]
+    scope = fact["scope"]
+
+    # Scope-propagation columns (spec §6.8.1)
+    eff_origin_node_id = origin_node_id or sender_node_id
+    eff_origin_scopes: str | None
+    if origin_allowed_scopes is not None:
+        eff_origin_scopes = json.dumps(sorted(origin_allowed_scopes))
+    else:
+        eff_origin_scopes = json.dumps([scope])
+    # company-scope facts: re-federation is blocked by default (§6.8.2)
+    re_fed_blocked = 1 if scope == "company" else 0
 
     with db() as conn:
         existing = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_id,)).fetchone()
@@ -44,12 +67,13 @@ def ingest_fact(fact: dict[str, Any], sender_node_id: str) -> bool:
         remote_hlc = fact.get("hlc")
         new_hlc = node_hlc.receive(remote_hlc) if remote_hlc else node_hlc.tick()
 
-        # Insert the fact with received_from column
+        # Insert the fact with received_from + scope-propagation columns (Migration 004)
         conn.execute(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
-                valid_until, confidence, scope, hlc, received_from)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                valid_until, confidence, scope, hlc, received_from,
+                origin_node_id, origin_allowed_scopes, re_federation_blocked)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 fact["entity"],
@@ -60,9 +84,12 @@ def ingest_fact(fact: dict[str, Any], sender_node_id: str) -> bool:
                 fact["timestamp"],
                 fact.get("valid_until"),
                 fact["confidence"],
-                fact["scope"],
+                scope,
                 new_hlc,
                 sender_node_id,
+                eff_origin_node_id,
+                eff_origin_scopes,
+                re_fed_blocked,
             ),
         )
 

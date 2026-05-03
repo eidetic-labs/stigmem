@@ -6,7 +6,6 @@ import re
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated
-from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -20,12 +19,12 @@ from ..garden_acl import (
     require_garden_read,
 )
 from ..models import (
-    VALID_SCOPES,
     GardenCreateRequest,
     GardenMemberRecord,
     GardenMemberRequest,
     GardenMemberUpdateRequest,
     GardenRecord,
+    VALID_SCOPES,
 )
 from ..settings import settings
 
@@ -34,7 +33,9 @@ router = APIRouter(prefix="/v1/gardens", tags=["gardens"])
 _SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9\-]{0,62}$")
 
 
-def _garden_id_uri(slug: str) -> str:
+def _build_garden_id_uri(slug: str) -> str:
+    """Construct the canonical garden_id URI from a slug."""
+    from urllib.parse import urlparse
     parsed = urlparse(settings.node_url)
     authority = parsed.netloc or parsed.path
     return f"stigmem://{authority}/garden/{slug}"
@@ -57,11 +58,11 @@ def _members_for_garden(garden_uuid: str) -> list[GardenMemberRecord]:
     ]
 
 
-def _row_to_record(row: dict, include_members: bool = True) -> GardenRecord:
+def _row_to_garden_record(row: dict, include_members: bool = True) -> GardenRecord:
     members = _members_for_garden(row["id"]) if include_members else []
     return GardenRecord(
         id=row["id"],
-        garden_id=_garden_id_uri(row["slug"]),
+        garden_id=_build_garden_id_uri(row["slug"]),
         slug=row["slug"],
         name=row["name"],
         scope=row["scope"],
@@ -77,6 +78,7 @@ def create_garden(
     req: GardenCreateRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> GardenRecord:
+    """Create a new garden (spec §5.14). Creator is auto-added as admin."""
     if not identity.can_write():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
 
@@ -112,13 +114,14 @@ def create_garden(
         )
         row = conn.execute("SELECT * FROM gardens WHERE id = ?", (garden_uuid,)).fetchone()
 
-    return _row_to_record(dict(row))
+    return _row_to_garden_record(dict(row))
 
 
 @router.get("", response_model=list[GardenRecord])
 def list_gardens(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> list[GardenRecord]:
+    """List accessible gardens (spec §5.15). Node admins see all; others see only their gardens."""
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
 
@@ -134,7 +137,7 @@ def list_gardens(
                 (identity.entity_uri,),
             ).fetchall()
 
-    return [_row_to_record(dict(r), include_members=False) for r in rows]
+    return [_row_to_garden_record(dict(r), include_members=False) for r in rows]
 
 
 @router.get("/{garden_slug_or_id}", response_model=GardenRecord)
@@ -142,6 +145,7 @@ def get_garden(
     garden_slug_or_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> GardenRecord:
+    """Get a garden by slug or UUID (spec §5.16)."""
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
 
@@ -152,7 +156,7 @@ def get_garden(
     if not is_node_admin(identity):
         require_garden_read(garden, identity)
 
-    return _row_to_record(garden)
+    return _row_to_garden_record(garden)
 
 
 @router.delete("/{garden_slug_or_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -160,6 +164,7 @@ def delete_garden(
     garden_slug_or_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> None:
+    """Delete a garden (spec §5.17). Requires garden admin role. Facts are orphaned, not deleted."""
     garden = get_garden_by_slug_or_id(garden_slug_or_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
@@ -170,11 +175,16 @@ def delete_garden(
         conn.execute("DELETE FROM gardens WHERE id = ?", (garden["id"],))
 
 
+# ---------------------------------------------------------------------------
+# Membership routes (spec §5.18)
+# ---------------------------------------------------------------------------
+
 @router.get("/{garden_slug_or_id}/members", response_model=list[GardenMemberRecord])
 def list_members(
     garden_slug_or_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> list[GardenMemberRecord]:
+    """List members of a garden (spec §5.18). Requires any member role."""
     garden = get_garden_by_slug_or_id(garden_slug_or_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
@@ -192,6 +202,7 @@ def add_member(
     req: GardenMemberRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> GardenMemberRecord:
+    """Add a member to a garden (spec §5.18). Requires admin role."""
     garden = get_garden_by_slug_or_id(garden_slug_or_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
@@ -228,6 +239,7 @@ def update_member_role(
     req: GardenMemberUpdateRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> GardenMemberRecord:
+    """Change a member's role (spec §5.18). Requires admin. Cannot demote last admin."""
     garden = get_garden_by_slug_or_id(garden_slug_or_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
@@ -265,6 +277,7 @@ def remove_member(
     entity_uri: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> None:
+    """Remove a member from a garden (spec §5.18). Cannot remove last admin."""
     garden = get_garden_by_slug_or_id(garden_slug_or_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
@@ -286,6 +299,7 @@ def remove_member(
 
 
 def _guard_last_admin(garden_uuid: str, entity_uri: str) -> None:
+    """Raise 403 if removing/demoting entity_uri would leave the garden with no admins."""
     with db() as conn:
         admin_count: int = conn.execute(
             "SELECT COUNT(*) FROM garden_members WHERE garden_id = ? AND role = 'admin'",

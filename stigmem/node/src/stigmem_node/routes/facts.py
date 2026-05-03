@@ -203,8 +203,11 @@ def query_facts(
             entity = normalize_entity_uri(entity)
         except NormalizationError:
             pass  # malformed query — fall through to exact-match with raw value
-        conditions.append("entity = ?")
-        params.append(entity)
+        conditions.append(
+            "(entity = ? OR entity IN"
+            " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+        )
+        params.extend([entity, entity])
     if relation:
         conditions.append("relation = ?")
         params.append(relation)
@@ -213,8 +216,11 @@ def query_facts(
             source = normalize_entity_uri(source)
         except NormalizationError:
             pass
-        conditions.append("source = ?")
-        params.append(source)
+        conditions.append(
+            "(source = ? OR source IN"
+            " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+        )
+        params.extend([source, source])
     if scope:
         if scope not in VALID_SCOPES:
             raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")

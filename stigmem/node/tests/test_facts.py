@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import sqlite3
+import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -287,3 +289,82 @@ class TestLint:
         r = client.post("/v1/lint", json={"scope": "company"})
         assert r.status_code == 200
         assert "namespacing" in r.json()["checks_run"]
+
+
+class TestAliasJoin:
+    """Integration tests for §2.6.6 backward-compat alias join in query_facts."""
+
+    def _insert_raw_fact(
+        self,
+        db_path: str,
+        entity: str,
+        source: str,
+        *,
+        scope: str = "company",
+    ) -> str:
+        """Insert a fact directly with non-canonical URIs, bypassing ingest normalization."""
+        fact_id = str(uuid.uuid4())
+        now = datetime.now(UTC).isoformat()
+        conn = sqlite3.connect(db_path)
+        try:
+            conn.execute(
+                """INSERT INTO facts
+                   (id, entity, relation, value_type, value_v, source, timestamp,
+                    valid_until, confidence, scope, hlc, received_from)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (fact_id, entity, "memory:role", "string", "legacy-value",
+                 source, now, None, 1.0, scope, now, None),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        return fact_id
+
+    def test_entity_alias_join_finds_pre_v07_fact(
+        self, client: TestClient, tmp_db: str
+    ) -> None:
+        """Canonical-form entity query must surface facts stored with non-canonical URIs (§2.6.6)."""
+        from stigmem_node.migrate import normalize_entities_sweep
+
+        raw_entity = "User:Alice"  # non-canonical; canonical is "user:alice"
+        canonical_entity = "user:alice"
+        fact_id = self._insert_raw_fact(tmp_db, raw_entity, "agent:assistant")
+
+        normalize_entities_sweep(tmp_db)
+
+        r = client.get(f"/v1/facts?entity={canonical_entity}&include_contradicted=true")
+        assert r.status_code == 200
+        ids = [f["id"] for f in r.json()["facts"]]
+        assert fact_id in ids, (
+            f"pre-v0.7 fact {fact_id!r} stored as {raw_entity!r} "
+            f"not found via canonical query entity={canonical_entity!r}"
+        )
+
+    def test_source_alias_join_finds_pre_v07_fact(
+        self, client: TestClient, tmp_db: str
+    ) -> None:
+        """Canonical-form source query must surface facts stored with non-canonical source URIs (§2.6.6)."""
+        from stigmem_node.migrate import normalize_entities_sweep
+
+        raw_source = "Agent:Assistant"  # non-canonical; canonical is "agent:assistant"
+        canonical_source = "agent:assistant"
+        fact_id = self._insert_raw_fact(tmp_db, "user:alice", raw_source)
+
+        normalize_entities_sweep(tmp_db)
+
+        r = client.get(f"/v1/facts?source={canonical_source}&include_contradicted=true")
+        assert r.status_code == 200
+        ids = [f["id"] for f in r.json()["facts"]]
+        assert fact_id in ids, (
+            f"pre-v0.7 fact {fact_id!r} stored as source={raw_source!r} "
+            f"not found via canonical query source={canonical_source!r}"
+        )
+
+    def test_canonical_entity_still_matches_without_aliases(
+        self, client: TestClient
+    ) -> None:
+        """Normal canonical-form facts must remain findable (no regression)."""
+        r = client.post("/v1/facts", json=FACT)
+        assert r.status_code == 201
+        r2 = client.get("/v1/facts?entity=user:alice")
+        assert r2.json()["total"] == 1

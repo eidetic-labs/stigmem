@@ -97,12 +97,29 @@ def ingest_fact(fact: dict[str, Any], sender_node_id: str) -> bool:
     return True
 
 
+_STIGMEM_NS = "stigmem:"
+_STIGMEM_URI_NS = "stigmem://"
+
+
+def _is_reserved_stigmem(s: str) -> bool:
+    """True for bare stigmem: system names (e.g. 'stigmem:conflict:x').
+    False for stigmem:// URI entities which are user content."""
+    return s.startswith(_STIGMEM_NS) and not s.startswith(_STIGMEM_URI_NS)
+
+
 def _detect_and_record_contradiction(
     conn: Any,
     fact: dict[str, Any],
     fact_id: str,
 ) -> None:
     """If a contradiction exists, assert conflict entities and write conflicts table."""
+    # Reserved stigmem: facts are system state (status transitions, meta-facts), not
+    # semantic content. Two stigmem:conflict:status facts with different values represent
+    # a state transition, not a contradiction — exempt them from sibling-detection (§9.1).
+    # Note: stigmem:// URI entities are user content and ARE subject to detection.
+    if _is_reserved_stigmem(fact["entity"]) or _is_reserved_stigmem(fact["relation"]):
+        return
+
     siblings = conn.execute(
         """SELECT id FROM facts
            WHERE entity = ? AND relation = ? AND scope = ?

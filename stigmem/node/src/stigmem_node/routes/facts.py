@@ -104,12 +104,21 @@ def assert_fact(
         )
         row = conn.execute("SELECT * FROM facts WHERE id=?", (fact_id,)).fetchone()
 
-        # Contradiction detection: check for active siblings
-        siblings = conn.execute(
-            """SELECT id FROM facts
-               WHERE entity=? AND relation=? AND scope=? AND id!=? AND confidence>0.0""",
-            (entity, req.relation, req.scope, fact_id),
-        ).fetchall()
+        # Contradiction detection: skip bare stigmem: system facts — they are state
+        # transitions, not semantic content, and are never in conflict (§9.1).
+        # stigmem:// URI entities are user content and ARE subject to detection.
+        _is_system = (
+            entity.startswith(_SYSTEM_RELATION_PREFIX) and not entity.startswith("stigmem://")
+        ) or (
+            req.relation.startswith(_SYSTEM_RELATION_PREFIX) and not req.relation.startswith("stigmem://")
+        )
+        siblings: list[Any] = []
+        if not _is_system:
+            siblings = conn.execute(
+                """SELECT id FROM facts
+                   WHERE entity=? AND relation=? AND scope=? AND id!=? AND confidence>0.0""",
+                (entity, req.relation, req.scope, fact_id),
+            ).fetchall()
         contradicted = len(siblings) > 0
 
         if contradicted:

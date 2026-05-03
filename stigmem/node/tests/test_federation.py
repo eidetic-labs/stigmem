@@ -1092,6 +1092,48 @@ class TestConflictResolution:
             f"(unresolved conflicts before={before}, after={after})"
         )
 
+    def test_status_resolved_fact_no_cascade_contradiction_on_federation(
+        self, fed_node: FedNode
+    ) -> None:
+        """Ingesting stigmem:conflict:status 'resolved' via federation must not create a
+        spurious contradiction against the existing 'unresolved' status fact.
+
+        Regression test for ACM-57: _detect_and_record_contradiction was not exempting
+        stigmem: namespace facts, causing status transitions to be treated as sibling
+        conflicts and generating spurious conflict records on peer nodes.
+        """
+        conflict_id, _entity, _fact_a_id, _ = self._create_conflict(fed_node)
+
+        with _db_ctx() as conn:
+            before = conn.execute(
+                "SELECT COUNT(*) AS n FROM conflicts WHERE status = 'unresolved'"
+            ).fetchone()["n"]
+
+        base_ms = int(time.time() * 1000)
+        resolved_status_fact = {
+            "id": str(uuid.uuid4()),
+            "entity": conflict_id,
+            "relation": "stigmem:conflict:status",
+            "value": {"type": "string", "v": "resolved"},
+            "source": "system:stigmem",
+            "timestamp": "2026-05-02T00:02:00Z",
+            "hlc": f"{base_ms + 2000}.000",
+            "confidence": 1.0,
+            "scope": "public",
+            "valid_until": None,
+        }
+        ingest_fact(resolved_status_fact, "stigmem://peer-node")
+
+        with _db_ctx() as conn:
+            after = conn.execute(
+                "SELECT COUNT(*) AS n FROM conflicts WHERE status = 'unresolved'"
+            ).fetchone()["n"]
+
+        assert after == before, (
+            f"ingesting stigmem:conflict:status 'resolved' must not create new spurious "
+            f"contradictions (unresolved conflicts before={before}, after={after})"
+        )
+
     def test_resolve_with_new_value(self, fed_node: FedNode) -> None:
         """Resolve with new_value asserts a fresh reconciliation value."""
         conflict_id, entity, fact_a_id, _ = self._create_conflict(fed_node)

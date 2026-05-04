@@ -1397,3 +1397,155 @@ def test_cli_capability_revoke_parser() -> None:
     assert args.token_id == "some-token-id"
     assert args.reason == "expired"
     assert callable(args.func)
+
+
+# ===========================================================================
+# 19. POST /v1/federation/capability-tokens/verify endpoint
+# ===========================================================================
+
+
+def test_verify_endpoint_valid_signed_token(tmp_path: Path) -> None:
+    """POST /verify returns {valid: true} for a properly signed token."""
+    import base64
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat, PublicFormat
+
+    priv = Ed25519PrivateKey.generate()
+    priv_b64 = base64.urlsafe_b64encode(
+        priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+    ).decode().rstrip("=")
+    pub_b64 = base64.urlsafe_b64encode(
+        priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    ).decode().rstrip("=")
+
+    db_file = str(tmp_path / "verify_ep_test.db")
+    apply_migrations(db_path=db_file)
+
+    original = settings_module.settings
+    test_settings = Settings(
+        db_path=db_file,
+        auth_required=False,
+        node_url="http://testnode",
+        trust_mode="relaxed",
+        tl_backend="off",
+        node_private_key=priv_b64,
+    )
+    extra = _patch_settings(test_settings)
+
+    try:
+        issuer = "https://verify-ep-test.org"
+        subject = issuer
+        m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
+
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as client:
+            # Register manifest
+            resp = client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+            assert resp.status_code == 200, resp.text
+
+            # Issue a token
+            resp = client.post("/v1/federation/capability-tokens", json={
+                "issuer": issuer,
+                "subject": subject,
+                "verb": "write",
+                "object": "stigmem://facts",
+            })
+            assert resp.status_code == 201, resp.text
+            token_json = resp.json()["token_json"]
+
+            # Verify the token via the endpoint
+            resp = client.post("/v1/federation/capability-tokens/verify",
+                               json={"token_json": token_json})
+            assert resp.status_code == 200, resp.text
+            data = resp.json()
+            assert data["valid"] is True, data
+    finally:
+        _restore_settings(original, extra)
+
+
+def test_verify_endpoint_revoked_token_invalid(tmp_path: Path) -> None:
+    """POST /verify returns {valid: false} for a revoked token."""
+    import base64
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat, PublicFormat
+
+    priv = Ed25519PrivateKey.generate()
+    priv_b64 = base64.urlsafe_b64encode(
+        priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+    ).decode().rstrip("=")
+    pub_b64 = base64.urlsafe_b64encode(
+        priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    ).decode().rstrip("=")
+
+    db_file = str(tmp_path / "verify_rev_test.db")
+    apply_migrations(db_path=db_file)
+
+    original = settings_module.settings
+    test_settings = Settings(
+        db_path=db_file,
+        auth_required=False,
+        node_url="http://testnode",
+        trust_mode="relaxed",
+        tl_backend="off",
+        node_private_key=priv_b64,
+    )
+    extra = _patch_settings(test_settings)
+
+    try:
+        issuer = "https://verify-rev-ep.org"
+        subject = issuer
+        m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
+
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as client:
+            client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+            resp = client.post("/v1/federation/capability-tokens", json={
+                "issuer": issuer, "subject": subject,
+                "verb": "write", "object": "stigmem://facts",
+            })
+            assert resp.status_code == 201
+            token_id = resp.json()["token_id"]
+            token_json = resp.json()["token_json"]
+
+            # Revoke (using admin identity which matches issuer in this anon setup —
+            # identity_client sets auth_required=False; need to patch entity_uri match.
+            # Since auth_required=False, entity_uri="anon:trusted" != issuer.
+            # Instead directly mark revoked in DB for test isolation.)
+            import sqlite3 as _sqlite3
+            conn = _sqlite3.connect(db_file)
+            conn.execute(
+                "UPDATE capability_tokens SET revoked_at = '2026-01-01T00:00:00+00:00' WHERE id = ?",
+                (token_id,),
+            )
+            conn.commit()
+            conn.close()
+
+            resp = client.post("/v1/federation/capability-tokens/verify",
+                               json={"token_json": token_json})
+            assert resp.status_code == 200, resp.text
+            data = resp.json()
+            assert data["valid"] is False
+            assert "revoked" in data.get("reason", "").lower()
+    finally:
+        _restore_settings(original, extra)
+
+
+def test_verify_endpoint_missing_body_returns_422(tmp_path: Path) -> None:
+    """POST /verify with empty body returns 422."""
+    db_file = str(tmp_path / "verify_422.db")
+    apply_migrations(db_path=db_file)
+
+    original = settings_module.settings
+    test_settings = Settings(
+        db_path=db_file, auth_required=False, node_url="http://testnode",
+        trust_mode="relaxed", tl_backend="off",
+    )
+    extra = _patch_settings(test_settings)
+
+    try:
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as client:
+            resp = client.post("/v1/federation/capability-tokens/verify", json={})
+            assert resp.status_code == 422, resp.text
+    finally:
+        _restore_settings(original, extra)

@@ -4,6 +4,7 @@ Routes:
   PUT  /v1/federation/manifest                        — publish/update org manifest
   GET  /v1/federation/manifest/{entity_uri_encoded}   — resolve manifest
   POST /v1/federation/capability-tokens               — issue capability token
+  POST /v1/federation/capability-tokens/verify        — verify a capability token (CLI + peers)
   POST /v1/federation/capability-tokens/{token_id}/revoke — revoke token
   POST /v1/gardens/{id}/promote                       — quarantine moderation (garden-scoped)
   POST /v1/gardens/{id}/reject                        — quarantine moderation (garden-scoped)
@@ -32,7 +33,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db
-from ..identity.capability import load_node_private_key, sign_revocation_event, sign_token
+from ..identity.capability import (
+    CapabilityTokenError,
+    load_node_private_key,
+    sign_revocation_event,
+    sign_token,
+    verify_token,
+)
 from ..identity.manifest import (
     ManifestError,
     manifest_from_dict,
@@ -342,6 +349,46 @@ def issue_capability_token(
         "nonce": nonce,
         "token_json": token_json,
     }
+
+
+# ---------------------------------------------------------------------------
+# POST /v1/federation/capability-tokens/verify
+# ---------------------------------------------------------------------------
+# NOTE: this static path MUST be registered before /{token_id}/revoke so that
+# FastAPI does not swallow "verify" as a {token_id} capture.
+
+@router.post(
+    "/v1/federation/capability-tokens/verify",
+    status_code=status.HTTP_200_OK,
+)
+def verify_capability_token_endpoint(
+    body: dict[str, Any],
+    identity: Annotated[Identity, Depends(resolve_identity)],
+) -> dict[str, Any]:
+    """Verify a capability token (spec §19.3.3 steps 1–6).
+
+    Returns {"valid": true} on success, or {"valid": false, "reason": "..."}
+    when the token fails any verification step (expired, bad sig, revoked, etc.).
+    HTTP 200 in both cases; 422 only for a missing/malformed request body.
+    """
+    if not identity.can_read():
+        raise HTTPException(status_code=403, detail="read permission required")
+
+    token_json = body.get("token_json", "")
+    if not token_json:
+        raise HTTPException(status_code=422, detail="token_json is required")
+
+    try:
+        verify_token(
+            token_json,
+            lambda uri: get_peer_manifest(
+                uri, refresh_if_expired=True, trust_mode=settings.trust_mode
+            ),
+            trust_mode=settings.trust_mode,
+        )
+        return {"valid": True}
+    except CapabilityTokenError as exc:
+        return {"valid": False, "reason": str(exc)}
 
 
 # ---------------------------------------------------------------------------

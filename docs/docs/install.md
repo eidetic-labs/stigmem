@@ -127,7 +127,7 @@ All variables use the `STIGMEM_` prefix and can be set in the `environment:` blo
 | `STIGMEM_PORT` | `8765` | Port the HTTP server listens on |
 | `STIGMEM_NODE_URL` | `http://localhost:8765` | Public URL of this node — included in `PeerDeclaration` payloads (§5.3) |
 | `STIGMEM_LOG_LEVEL` | `info` | Log verbosity: `debug` · `info` · `warning` · `error` |
-| `STIGMEM_AUTH_REQUIRED` | `false` | When `true`, every request must carry a valid Bearer token. Set `false` for single-operator / local-only installs |
+| `STIGMEM_AUTH_REQUIRED` | `true` | When `true` (default), every request must carry a valid Bearer token. Set `false` only for single-operator / local-only installs |
 
 ### Federation (§6)
 

@@ -74,7 +74,7 @@ Key environment variables (`STIGMEM_` prefix, set in `docker-compose.yml` `envir
 | `STIGMEM_NODE_URL` | `http://localhost:8765` | Public URL included in PeerDeclarations |
 | `STIGMEM_FEDERATION_ENABLED` | `false` | Enable pull replication |
 | `STIGMEM_FEDERATION_PULL_INTERVAL_S` | `30` | Seconds between pull cycles |
-| `STIGMEM_AUTH_REQUIRED` | `false` | Require Bearer token on every request |
+| `STIGMEM_AUTH_REQUIRED` | `true` | Require Bearer token on every request. Set `false` for local dev only |
 | `STIGMEM_DB_PATH` | `stigmem.db` | SQLite database path |
 
 → Full environment variable reference: **[docs/docs/install.md](docs/docs/install.md)**

@@ -16,9 +16,9 @@ class Settings(BaseSettings):
     node_url: str = "http://localhost:8765"
     log_level: str = "info"
 
-    # When True, every request must carry a valid Bearer token.
-    # When False (default), all callers are trusted (single-operator mode).
-    auth_required: bool = False
+    # When True (default), every request must carry a valid Bearer token.
+    # Set to False only for local development / single-operator installs.
+    auth_required: bool = True
 
     # Federation — Phase 3 (spec §6)
     federation_enabled: bool = False

@@ -46,8 +46,8 @@ stigmem:
   nodeUrl: "http://stigmem:8765"
   logLevel: "info"
 
-  # Auth
-  authRequired: false
+  # Auth — true by default (secure by default); set false only for local dev
+  authRequired: true
   oidcEnabled: false
   oidcIssuerUrl: ""
   oidcAudience: ""

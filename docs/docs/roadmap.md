@@ -15,7 +15,7 @@ Phases 0–7 are complete. The full history — what shipped, key architectural 
 
 The v2 build plan runs seven phases (8–14), roughly 22 weeks, with meaningful parallelism between phases once the early trust and storage foundations are stable. Target timelines are given in calendar quarters; exact dates depend on community feedback and how earlier phases land.
 
-**Current status:** Phase 8 is in flight. All subsequent phases are sequenced but their scope can shift as earlier phases land.
+**Current status:** Phase 8 is in progress. Spec v1.1 is published with §19 Federation Trust normative; the [Federation Trust guide](/docs/guides/federation-trust) is live. The persistent storage backends stream continues. All subsequent phases are sequenced but their scope can shift as earlier phases land.
 
 ---
 
@@ -28,8 +28,8 @@ Phase 8 establishes the trust and storage foundations the rest of the plan depen
 **Documentation and community surfaces (Phase 8a, in progress):**
 This page, the [Backends](./backends.md) guide, the [Security & Pen Testing](./contributing/security.md) contribution guide, and the [Project Resources](./community/project-resources.md) page are published to the docs site before Phase 8 code work merges. These are the operator-facing surfaces that make the build plan legible to the community.
 
-**Federation trust architecture:**
-Spec §19 "Federation Trust" is drafted and implemented as a reference:
+**Federation trust architecture (§19 — shipped in spec v1.1):**
+Spec §19 "Federation Trust" is normative in v1.1. The [Federation Trust guide](/docs/guides/federation-trust) covers operator setup end-to-end. Key capabilities:
 
 - **Org manifests** — each operator publishes an org manifest (Ed25519 keypair, entity-URI list, rotation events) pinned in a transparency log (Rekor or Sigstore-equivalent). Rotation events are append-only and cryptographically linked.
 - **Cross-org capability tokens** — writing scope `S` on a peer node requires a short-lived capability signed by the scope owner. Capabilities are revocable via the transparency log and carry explicit subject + verb + object.
@@ -155,7 +155,7 @@ Phase 13 fills the tooling gaps that block adoption at scale.
 
 Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
-- §19 Federation Trust → **normative**.
+- §19 Federation Trust → normative *(already shipped in v1.1; Phase 14 confirms no breaking changes before v2.0 tagging)*.
 - §20 Recall & Graph → **normative**.
 - Instruction-manifest pattern → **normative**.
 - Source-trust model → **normative**.
@@ -176,4 +176,4 @@ Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
 ---
 
-*This page is updated at every phase boundary. Last updated: Q2 2026.*
+*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 8 §19 Federation Trust shipped.*

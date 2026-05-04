@@ -7,10 +7,12 @@ sidebar_label: Overview
 # Stigmem Protocol Specification
 
 :::note Version
-These docs track **Stigmem spec v1.0** (stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
+These docs track **Stigmem spec v1.1** (§19 normative) and **v1.0** (§1–§18 stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
+
+§19 Federation Trust was promoted to normative in v1.1. §1–§18 are unchanged from v1.0.
 :::
 
-The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative source is `spec/stigmem-spec-v1.0.md` in the repository.
+The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative sources are `spec/stigmem-spec-v1.0.md` (§1–§18) and `spec/stigmem-spec-v1.1-draft.md` (§19 + v1.1 additions to §2 and §5) in the repository.
 
 :::info Security
 Report vulnerabilities via the [GitHub private advisory path](https://github.com/eidetic-labs/stigmem/security/advisories) — not as public issues. Full policy and coordinated disclosure terms: [SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md).
@@ -18,24 +20,26 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 
 ## Spec sections
 
-| Section | Topic | Status in v0.9 |
-|---------|-------|----------------|
-| §1 | Motivation | Stable |
-| §2 | Atomic Fact Shape | Stable |
-| §2.1 | FactValue types | Stable |
-| §2.2 | FactScope | Stable |
-| §2.3 | Reification | Stable |
+| Section | Topic | Status |
+|---------|-------|--------|
+| §1 | Motivation | Stable (v1.0) |
+| §2 | Atomic Fact Shape | Stable (v1.0) |
+| §2.1 | FactValue types | Stable (v1.0) |
+| §2.2 | FactScope | Stable (v1.0) |
+| §2.3 | Reification | Stable (v1.0) |
 | §2.4 | Hybrid Logical Clock | Stable (new in v0.5) |
-| §3 | Fact Semantics | Stable |
-| §4 | Intent Envelope | Stable |
-| §5 | Wire Format | Stable |
+| §2.8 | Federation Trust Fields (`derived_from`, `attestation_chain`, `source_trust`) | **Normative (new in v1.1)** — [Federation Trust guide](/docs/guides/federation-trust) |
+| §3 | Fact Semantics | Stable (v1.0) |
+| §4 | Intent Envelope | Stable (v1.0) |
+| §5 | Wire Format | Stable (v1.0) |
+| §5.21–5.25 | Federation Trust wire routes (manifest, capability token, quarantine) | **Normative (new in v1.1)** — [Federation Trust guide](/docs/guides/federation-trust) |
 | §6 | Federation | Stable (extended v0.8 for N-node backpressure) |
 | §6.7 | N-node Backpressure Patterns | Draft (new in v0.8) — [guide](/docs/guides/relay-backpressure) |
 | §6.8 | Scope Propagation Invariants | Normative (new in v0.8) — [guide](/docs/guides/scope-propagation) |
-| §7 | Design Decisions | Stable |
+| §7 | Design Decisions | Stable (v1.0) |
 | §8 | Open Questions | Living |
-| §9 | Namespace Registry | Stable |
-| §10 | Schema and Migration | Stable — migration 012 adds `tenant_id` to all write-bearing tables ([multi-tenant guide](/docs/guides/multi-tenancy)) |
+| §9 | Namespace Registry | Stable (v1.0) |
+| §10 | Schema and Migration | Stable — migration 012 adds `tenant_id`; migration 006 adds federation trust tables (v1.1) ([multi-tenant guide](/docs/guides/multi-tenancy)) |
 | §11 | Failure Mode Scenarios | Stable (new in v0.5) |
 | §12 | Adapter ABI | Stable (new in v0.6) |
 | §14 | Lint Semantics | Stable (new in v0.7) |
@@ -43,7 +47,7 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | §16 | Synthesis | Stable (promoted v0.9) — [guide](/docs/guides/synthesis) |
 | §17 | Memory Garden | Stable (normative in v1.0) |
 | §18 | Source Attestation | Stable (normative in v1.0) |
-| §19 | Security Policy | Non-normative — see [SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md) |
+| §19 | Federation Trust | **Normative (v1.1)** — [guide](/docs/guides/federation-trust); Security Policy moved to Appendix A |
 
 ## Key concepts
 

@@ -81,4 +81,11 @@ def make_backend(
             encryption_key=encryption_key,
         )
 
-    return SQLiteBackend(path, encryption_key=encryption_key)
+    embed_enabled: bool = getattr(_settings, "embed_enabled", False)
+    embed_dimension: int = int(getattr(_settings, "embed_dimension", 768))
+    return SQLiteBackend(
+        path,
+        encryption_key=encryption_key,
+        embed_enabled=embed_enabled,
+        embed_dimension=embed_dimension,
+    )

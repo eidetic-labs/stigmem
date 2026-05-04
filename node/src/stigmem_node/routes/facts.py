@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import logging
 import sys
+import threading
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+logger = logging.getLogger("stigmem.facts")
 
 from ..auth import Identity, resolve_identity
 from ..billing import BillingEvent, get_hook_bus
@@ -163,13 +167,16 @@ def assert_fact(
     value_v = _encode_v(req.value.type, req.value.v)
     audit_id = str(uuid.uuid4())
 
+    _embed_enabled = _settings_pkg.settings.embed_enabled
+    embedding_missing_val = 1 if _embed_enabled else None
+
     with db() as conn:
         conn.execute(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
                 valid_until, confidence, scope, hlc, received_from, attested_key_id,
-                garden_id, attested, tenant_id)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                garden_id, attested, tenant_id, embedding_missing)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 entity,    # normalized (spec §2.6)
@@ -187,6 +194,7 @@ def assert_fact(
                 garden_uuid,
                 attested_int,
                 identity.tenant_id,
+                embedding_missing_val,
             ),
         )
 
@@ -207,6 +215,10 @@ def assert_fact(
                 identity.tenant_id,
             ),
         )
+
+        # Phase 9 §1: materialize entity_edges for ref-typed facts
+        if req.value.type == "ref" and value_v and _is_valid_entity_uri(value_v):
+            _insert_entity_edge(conn, fact_id, entity, req.relation, value_v, req.scope, req.confidence, now)
 
         row = conn.execute("SELECT * FROM facts WHERE id=?", (fact_id,)).fetchone()
 
@@ -237,6 +249,14 @@ def assert_fact(
                 file=sys.stderr,
             )
 
+    # Phase 9 §2: write-time embedding (background thread, graceful fallback)
+    if _embed_enabled:
+        threading.Thread(
+            target=_embed_fact_background,
+            args=(fact_id, entity, req.relation, req.value.type, value_v or ""),
+            daemon=True,
+        ).start()
+
     get_hook_bus().emit(BillingEvent(
         event_type="fact_written",
         tenant_id=identity.tenant_id,
@@ -245,6 +265,55 @@ def assert_fact(
     ))
 
     return row_to_record(row, contradicted=contradicted, warnings=relation_warnings)
+
+
+def _is_valid_entity_uri(uri: str) -> bool:
+    """Minimal check: URI must contain '://' or start with 'urn:'."""
+    return "://" in uri or uri.startswith("urn:")
+
+
+def _insert_entity_edge(
+    conn: Any,
+    fact_id: str,
+    subject: str,
+    relation: str,
+    object_uri: str,
+    scope: str,
+    confidence: float,
+    now: str,
+) -> None:
+    """Insert or replace an entity_edges row for a ref-typed fact."""
+    import time
+
+    now_ms = int(time.time() * 1000)
+    conn.execute(
+        """INSERT OR REPLACE INTO entity_edges
+           (id, subject, relation, object, scope, confidence, source_trust, decay_epoch, created_at)
+           VALUES (?,?,?,?,?,?,?,?,?)""",
+        (fact_id, subject, relation, object_uri, scope, confidence, None, None, now_ms),
+    )
+
+
+def _embed_fact_background(
+    fact_id: str,
+    entity: str,
+    relation: str,
+    value_type: str,
+    value_v: str,
+) -> None:
+    """Background thread: embed one fact and persist to vec_facts."""
+    try:
+        from .. import settings as settings_pkg
+        from ..embedding import get_embedding_model
+        from ..vector_search import check_or_register_model, embed_and_store_fact
+        from ..db import db
+
+        model = get_embedding_model(settings_pkg.settings)
+        with db() as conn:
+            check_or_register_model(conn, model.model_id, model.dimension)
+            embed_and_store_fact(fact_id, entity, relation, value_type, value_v, conn, model)
+    except Exception as exc:
+        logger.warning("Write-time embedding failed for fact %s: %s", fact_id, exc)
 
 
 def _record_contradictions(

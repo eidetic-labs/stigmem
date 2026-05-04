@@ -164,5 +164,45 @@ class Settings(BaseSettings):
             )
         return v
 
+    # -------------------------------------------------------------------------
+    # Embeddings — Phase 9 (spec §20 / design memo §2)
+    # -------------------------------------------------------------------------
+    # Set embed_enabled=true to activate sqlite-vec integration.
+    # When false (default), no extension is loaded and no embeddings are stored.
+    embed_enabled: bool = False
+
+    # "local"  — Ollama HTTP API (default); requires a running Ollama instance.
+    # "openai" — OpenAI embeddings API; requires OPENAI_API_KEY (or the env var
+    #            named by embed_openai_api_key_env).
+    # "stub"   — deterministic test stub; no external dependencies.
+    embed_model_provider: str = "local"
+
+    # Model identifier passed to the provider.
+    # Local default:  "nomic-embed-text-v1.5" (768-dim, Apache-2.0, runs on laptop).
+    # OpenAI default: "text-embedding-3-small" (1536-dim).
+    embed_model_id: str = "nomic-embed-text-v1.5"
+
+    # Output dimensionality.  MUST match the model; changing this after the first
+    # embedding requires running `stigmem embed reindex` (migration tool).
+    embed_dimension: int = 768
+
+    # Ollama base URL (local provider only).
+    embed_ollama_url: str = "http://localhost:11434"
+
+    # Name of the env var holding the OpenAI API key (openai provider only).
+    embed_openai_api_key_env: str = "OPENAI_API_KEY"
+
+    # Facts with confidence below this threshold have their vec_facts entry
+    # deleted during the decay sweep (design memo §2 "Decay interaction").
+    embed_tombstone_threshold: float = 0.1
+
+    # Subscription primitive (Phase 9, spec §20)
+    # How long (seconds) the replay window extends back from now (default 24 h).
+    subscription_replay_s: int = 86400
+    # How often (seconds) the background sweep retries pending/failed delivery.
+    subscription_delivery_sweep_s: int = 30
+    # Consecutive delivery failures before the circuit breaker opens on a subscription.
+    subscription_circuit_threshold: int = 10
+
 
 settings = Settings()

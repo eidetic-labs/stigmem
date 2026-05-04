@@ -39,6 +39,15 @@ sqlcipher = [
     # Requires the SQLCipher C library; see the encryption-at-rest guide.
     "sqlcipher3>=0.5.0",
 ]
+sqlite-vec = [
+    # sqlite-vec extension for vector search (Phase 9 / spec §20).
+    # Enables embed_enabled=true; local vector ANN search via sqlite-vec virtual tables.
+    "sqlite-vec>=0.1.0",
+]
+embed-openai = [
+    # OpenAI embeddings API cloud opt-in (Phase 9 / design memo §2).
+    "openai>=1.0",
+]
 
 [project.scripts]
 stigmem-node = "stigmem_node.main:run"

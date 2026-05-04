@@ -34,7 +34,7 @@ it like any other community plugin and point it at your stigmem node.
 ## Requirements
 
 - Obsidian ≥ 1.4.0
-- A running stigmem node. See [Deploy recipes](../../install/deploy-recipes.md).
+- A running stigmem node. See [Deploy runbooks](../../operating/deploy-runbooks.md).
 
 ## Installation
 

@@ -26,6 +26,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import canonicaljson
+
 logger = logging.getLogger("stigmem.identity.tl")
 
 
@@ -85,7 +87,8 @@ class LocalAppendOnlyLog(TransparencyLog):
         self._log_id = hashlib.sha256(str(self._path.resolve()).encode()).hexdigest()[:16]
 
     def _leaf_hash(self, payload: dict[str, Any]) -> str:
-        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+        # RFC 8785 JCS — must match RekorLog and manifest signing bodies.
+        canonical = canonicaljson.encode_canonical_json(payload)
         return hashlib.sha256(canonical).hexdigest()
 
     def _last_entry(self) -> dict[str, Any] | None:
@@ -185,7 +188,8 @@ class RekorLog(TransparencyLog):
         try:
             import httpx
 
-            canonical = json.dumps(manifest_dict, sort_keys=True, separators=(",", ":")).encode()
+            # RFC 8785 JCS — consistent with LocalAppendOnlyLog._leaf_hash.
+            canonical = canonicaljson.encode_canonical_json(manifest_dict)
             leaf_hash = hashlib.sha256(canonical).hexdigest()
 
             # Rekor accepts intoto / hashedrekord entries; we submit as hashedrekord v0.0.1
@@ -281,12 +285,16 @@ class RekorLog(TransparencyLog):
                     f"expected={log_entry.leaf_hash!r}"
                 )
 
-            # Delegate checkpoint/STH verification to sigstore.transparency
+            # Delegate checkpoint/STH verification to sigstore.transparency.
+            # ImportError (sigstore not installed) is a warned skip; any other failure
+            # means the log checkpoint cannot be trusted and is a hard error.
             try:
                 from sigstore.transparency import LogEntry as SigstoreLogEntry  # type: ignore[import-not-found]
                 _ = SigstoreLogEntry.from_response(data)
+            except ImportError as exc:
+                logger.warning("sigstore not installed; STH checkpoint verification skipped: %s", exc)
             except Exception as exc:
-                logger.warning("sigstore STH verification skipped: %s", exc)
+                raise ValueError(f"Rekor STH checkpoint verification failed: {exc}") from exc
 
             return True
 

@@ -26,13 +26,12 @@ import time
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
-from urllib.parse import unquote, quote
+from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db
-from ..garden_acl import get_garden_by_slug_or_id, require_quarantine_moderator_or_admin
 from ..identity.manifest import (
     ManifestError,
     manifest_from_dict,
@@ -45,7 +44,6 @@ from ..identity.trust_store import (
     get_peer_manifest,
     store_peer_manifest,
 )
-from ..models import QuarantinePromoteRequest, QuarantineRejectRequest, QUARANTINE_PENDING
 from ..settings import settings
 
 router = APIRouter(tags=["identity"])
@@ -319,7 +317,7 @@ async def revoke_capability_token(
 
     with db() as conn:
         row = conn.execute(
-            "SELECT id, issuer, revoked_at FROM capability_tokens WHERE id = ?",
+            "SELECT id, issuer, subject, revoked_at FROM capability_tokens WHERE id = ?",
             (token_id,),
         ).fetchone()
 
@@ -327,6 +325,13 @@ async def revoke_capability_token(
         raise HTTPException(status_code=404, detail="capability token not found")
     if row["revoked_at"] is not None:
         raise HTTPException(status_code=409, detail="token already revoked")
+
+    # BOLA guard: only the issuer or subject may revoke their own token.
+    if row["issuer"] != identity.entity_uri and row["subject"] != identity.entity_uri:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="not authorized to revoke this token: caller is not the issuer or subject",
+        )
 
     revoke_event = {
         "token_id": token_id,
@@ -371,159 +376,7 @@ async def revoke_capability_token(
     return result
 
 
-# ---------------------------------------------------------------------------
-# POST /v1/gardens/{id}/promote — garden-scoped quarantine moderation
-# ---------------------------------------------------------------------------
-
-
-@router.post("/v1/gardens/{garden_id}/promote", status_code=status.HTTP_200_OK)
-def garden_promote_fact(
-    garden_id: str,
-    req: QuarantinePromoteRequest,
-    identity: Annotated[Identity, Depends(resolve_identity)],
-) -> dict[str, Any]:
-    """Promote a quarantined fact from *garden_id* to a target garden.
-
-    Requires quarantine:moderator or admin role in the quarantine garden.
-    """
-    if not identity.can_read():
-        raise HTTPException(status_code=403, detail="read permission required")
-
-    garden = get_garden_by_slug_or_id(garden_id, tenant_id=identity.tenant_id)
-    if garden is None:
-        raise HTTPException(status_code=404, detail="garden not found")
-
-    if not identity.can_write():
-        require_quarantine_moderator_or_admin(garden, identity)
-
-    now = datetime.now(UTC).isoformat()
-
-    with db() as conn:
-        fact_row = conn.execute(
-            "SELECT id, quarantine_status, quarantine_garden_id FROM facts WHERE id = ?",
-            (req.fact_id,),
-        ).fetchone()
-
-    if fact_row is None:
-        raise HTTPException(status_code=404, detail="fact not found")
-    if fact_row["quarantine_status"] != QUARANTINE_PENDING:
-        raise HTTPException(status_code=409, detail="fact is not in quarantine_pending status")
-    if fact_row["quarantine_garden_id"] != garden["id"]:
-        raise HTTPException(
-            status_code=409,
-            detail="fact is not in the specified quarantine garden",
-        )
-
-    # Resolve target garden
-    target_db_id: str | None = None
-    if req.target_garden_id:
-        tg = get_garden_by_slug_or_id(req.target_garden_id, tenant_id=identity.tenant_id)
-        if tg is None:
-            raise HTTPException(status_code=404, detail="target garden not found")
-        target_db_id = tg["id"]
-
-    with db() as conn:
-        conn.execute(
-            """UPDATE facts
-               SET garden_id = ?,
-                   quarantine_status = 'promoted',
-                   quarantine_acted_by = ?,
-                   quarantine_acted_at = ?,
-                   quarantine_reason = ?
-               WHERE id = ?""",
-            (target_db_id, identity.entity_uri, now, req.reason or "promoted via garden API", req.fact_id),
-        )
-        _write_quarantine_audit(conn, req.fact_id, "quarantine_promote", identity, now)
-
-    return {
-        "fact_id": req.fact_id,
-        "action": "promoted",
-        "garden_id": garden_id,
-        "target_garden_id": target_db_id,
-        "acted_by": identity.entity_uri,
-        "acted_at": now,
-    }
-
-
-# ---------------------------------------------------------------------------
-# POST /v1/gardens/{id}/reject — garden-scoped quarantine moderation
-# ---------------------------------------------------------------------------
-
-
-@router.post("/v1/gardens/{garden_id}/reject", status_code=status.HTTP_200_OK)
-def garden_reject_fact(
-    garden_id: str,
-    req: QuarantineRejectRequest,
-    identity: Annotated[Identity, Depends(resolve_identity)],
-) -> dict[str, Any]:
-    """Permanently reject a quarantined fact in *garden_id*.
-
-    Sets confidence = 0.0 and quarantine_status = 'rejected'.
-    Requires quarantine:moderator or admin role in the quarantine garden.
-    """
-    if not identity.can_read():
-        raise HTTPException(status_code=403, detail="read permission required")
-
-    garden = get_garden_by_slug_or_id(garden_id, tenant_id=identity.tenant_id)
-    if garden is None:
-        raise HTTPException(status_code=404, detail="garden not found")
-
-    if not identity.can_write():
-        require_quarantine_moderator_or_admin(garden, identity)
-
-    now = datetime.now(UTC).isoformat()
-
-    with db() as conn:
-        fact_row = conn.execute(
-            "SELECT id, quarantine_status, quarantine_garden_id FROM facts WHERE id = ?",
-            (req.fact_id,),
-        ).fetchone()
-
-    if fact_row is None:
-        raise HTTPException(status_code=404, detail="fact not found")
-    if fact_row["quarantine_status"] != QUARANTINE_PENDING:
-        raise HTTPException(status_code=409, detail="fact is not in quarantine_pending status")
-    if fact_row["quarantine_garden_id"] != garden["id"]:
-        raise HTTPException(
-            status_code=409,
-            detail="fact is not in the specified quarantine garden",
-        )
-
-    with db() as conn:
-        conn.execute(
-            """UPDATE facts
-               SET confidence = 0.0,
-                   quarantine_status = 'rejected',
-                   quarantine_acted_by = ?,
-                   quarantine_acted_at = ?,
-                   quarantine_reason = ?
-               WHERE id = ?""",
-            (identity.entity_uri, now, req.reason or "rejected via garden API", req.fact_id),
-        )
-        _write_quarantine_audit(conn, req.fact_id, "quarantine_reject", identity, now)
-
-    return {
-        "fact_id": req.fact_id,
-        "action": "rejected",
-        "garden_id": garden_id,
-        "acted_by": identity.entity_uri,
-        "acted_at": now,
-    }
-
-
-# ---------------------------------------------------------------------------
-# Helper
-# ---------------------------------------------------------------------------
-
-
-def _write_quarantine_audit(
-    conn: Any, fact_id: str, event_type: str, identity: Identity, now: str
-) -> None:
-    audit_id = str(uuid.uuid4())
-    conn.execute(
-        "INSERT INTO fact_audit_log "
-        "(id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts) "
-        "VALUES (?,?,?,?,?,?,?,?)",
-        (audit_id, fact_id, event_type, identity.entity_uri, identity.oidc_sub,
-         identity.entity_uri, None, now),
-    )
+# Quarantine promote/reject routes live in routes/gardens.py (registered before this
+# router). Do NOT add duplicate promote/reject handlers here — gardens.py owns those
+# endpoints and enforces the correct quarantine ACL (quarantine-flag check + mandatory
+# moderator/admin role, no write-permission bypass).

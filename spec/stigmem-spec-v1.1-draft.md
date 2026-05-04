@@ -157,7 +157,7 @@ OrgManifest:
   manifest_version:  integer          // MUST be 1 for this spec version
   entity_uri:        URI              // root entity URI; MUST be a stigmem:// URI
   public_key:        base64url        // Ed25519 public key (32 bytes, encoded)
-  key_id:            hex              // SHA-256 fingerprint of the raw public key bytes
+  key_id:            hex              // SHA-256 of the 32-byte raw Ed25519 public key (the base64url-decoded value of `public_key`)
   entities:          [URI]            // entity URIs this manifest is authoritative for; MUST include entity_uri
   rotation_events:   [RotationEvent]  // ordered history of key rotations (§19.1.4); empty on first publish
   issued_at:         RFC3339          // issuance timestamp
@@ -180,18 +180,19 @@ RotationEvent:
   rotated_at:    RFC3339   // timestamp of rotation
   old_key_id:    hex       // key_id of the previous key
   new_key_id:    hex       // key_id of the new key (= current manifest's key_id)
-  rotation_sig:  base64url // Ed25519 sig over canonical JSON of { old_key_id, new_key_id, rotated_at }
-                           // signed by the OLD private key
+  rotation_sig:  base64url // Ed25519 sig over canonical JSON of { entity_uri, old_key_id, new_key_id, rotated_at }
+                           // signed by the OLD private key; entity_uri binds the event to its manifest
 ```
 
 The `rotation_sig` MUST verify under the public key identified by `old_key_id`. This creates an unbroken chain: the previous key vouches for the new key. Nodes MUST build the rotation chain before trusting a manifest: starting from any previously accepted manifest, each rotation step MUST validate before the chain is considered complete.
 
-Peers that do not have the old manifest cached SHOULD fetch it from the transparency log (§19.2) before verifying the rotation chain.
+Peers that do not have the old manifest cached MUST fetch the most recent log entry for the `entity_uri` from the transparency log (§19.2) before accepting or verifying a new manifest.
 
 **Rotation chain invariants:**
 1. `rotation_events` MUST be ordered chronologically ascending.
 2. Each event's `old_key_id` MUST equal the `key_id` of the preceding entry (or the original manifest's `key_id` for the first rotation).
 3. A valid rotation chain MUST terminate with the `new_key_id` matching the current manifest's `key_id`.
+4. The `rotation_events` count in a newly published manifest MUST be ≥ the count in the most recently submitted manifest for the same `entity_uri` in the transparency log. Peers MUST reject any manifest where the rotation event count regresses.
 
 #### 19.1.5 Entity URI List
 
@@ -294,6 +295,7 @@ The issuer MUST sign the token using the private key corresponding to the `publi
 3. Verify the token's `signature` under the manifest's `public_key`.
 4. Check that `subject` appears in the issuer's `entities` list or is an external entity the issuer is permitted to delegate to.
 5. Check `expiry` > now.
+5b. Check `expiry` ≤ `issued_at` + 90 days.
 6. Check the token is not revoked (§19.3.4).
 
 A token that fails any of steps 1–6 MUST be rejected.
@@ -318,7 +320,7 @@ A revoked token MUST be rejected even if it has not yet expired.
 
 #### 19.3.5 Token Nonce and Replay Prevention
 
-The `nonce` field MUST be 32 bytes of cryptographically random data (e.g., from `/dev/urandom`). Receivers SHOULD maintain a nonce cache for the token's lifetime (from `issued_at` to `expiry`) to detect replays. A nonce that appears in the cache MUST cause the token to be rejected with a `token_replay` error.
+The `nonce` field MUST be 32 bytes of cryptographically random data (e.g., from `/dev/urandom`). Receivers MUST maintain a nonce cache in `trust_mode: strict`; receivers SHOULD maintain a nonce cache in `trust_mode: relaxed`. The nonce cache MUST be global (keyed on the nonce value alone, not per-issuer or per-subject) and MUST cover the token's full validity window (from `issued_at` to `expiry`). A nonce that appears in the cache MUST cause the token to be rejected with a `token_replay` error.
 
 ---
 
@@ -427,7 +429,7 @@ A quarantine garden is a `Garden` record (§17) with an additional `quarantine: 
 Differences from a standard garden:
 1. A quarantine garden adds a `quarantine:moderator` role (§19.5.3) not present in standard gardens.
 2. Facts in a quarantine garden MAY NOT be asserted directly — they are only populated by the node's automatic quarantine policy (§19.5.4) or by explicit operator action.
-3. A quarantine garden MUST NOT be deleted while it holds unreviewd facts (status `pending`). Attempting deletion returns HTTP 409 `quarantine_has_pending_facts`.
+3. A quarantine garden MUST NOT be deleted while it holds unreviewed facts (status `pending`). Attempting deletion returns HTTP 409 `quarantine_has_pending_facts`.
 
 #### 19.5.3 Roles
 
@@ -514,11 +516,13 @@ The following fields MUST be excluded from the hash input: `id`, `garden_id`, `a
 - Each `FactHash` MUST be a 64-character lowercase hex string.
 - The array is ordered by logical derivation precedence (first = most direct antecedent).
 - An empty array is equivalent to `null` (no declared provenance).
+- The `derived_from` reference graph MUST be a DAG. Implementations MUST detect circular references using a visited-set during traversal and MUST reject any fact that would create a cycle with HTTP 400 `provenance_cycle_detected`.
 - The referenced facts MUST either exist in the same node or be resolvable via federation. Nodes SHOULD validate that referenced facts exist at write time in `trust_mode: strict`. In `trust_mode: relaxed`, the node MAY log a warning for dangling references.
 
 `attestation_chain: [Signature]`
 - Each `Signature` is a base64url-encoded Ed25519 signature over the canonical fact hash (§19.6.2).
 - Signatures are ordered from innermost processor to outermost (first processor = index 0).
+- `attestation_chain` MUST NOT exceed 16 entries. Nodes MUST reject facts with longer chains with HTTP 400 `attestation_chain_too_long`.
 - Each signature is bound to a specific entity URI by convention: the signing entity MUST include their entity URI in a parallel `attestation_chain_issuers: [URI]` field (same indexing). Implementations MUST include both fields together or neither.
 - Verifiers MUST verify each signature in the chain using the corresponding issuer's manifest public key.
 - A chain with an invalid signature at any position MUST be rejected entirely.
@@ -531,6 +535,7 @@ A provenance chain is **valid** if all of the following hold:
 2. Every signature in `attestation_chain` verifies under the corresponding issuer's current manifest public key.
 3. No issuer in `attestation_chain_issuers` appears more than once (no circular attestation).
 4. The issuers' entity URIs each appear in their respective manifest's `entities` list.
+5. If any field included in the fact hash (§19.6.2) is modified after attestation, the node MUST either: (a) clear `attestation_chain` and `attestation_chain_issuers` (treating the updated fact as unattested), or (b) reject the update with HTTP 409 `fact_is_attested`. Nodes MUST NOT retain stale attestation chains after hash-relevant field changes.
 
 Nodes MUST reject facts with invalid provenance chains in `trust_mode: strict`. Nodes SHOULD log warnings for invalid chains in `trust_mode: relaxed`.
 
@@ -545,6 +550,8 @@ The recall-time content sanitizer prevents prompt-injection payloads and malform
 The sanitizer is NOT applied at write time (storage is a transparent record layer). It is applied immediately before facts are serialized into the API response for `GET /v1/facts` and `GET /v1/recall` endpoints.
 
 #### 19.7.2 Default-Deny Sentinel Patterns
+
+Before applying sentinel patterns, implementations MUST normalize all string input to Unicode NFKC form. Implementations MUST also strip or reject the following Unicode categories: bidirectional control characters (U+200F, U+200E, U+202A–U+202E, U+2066–U+2069) and invisible formatting characters (U+200B–U+200D, U+FEFF).
 
 The following patterns are checked against all string-typed `FactValue` fields (`type: "string"`, `type: "text"`) in the recall result. Matches trigger the configured enforcement action (§19.7.4):
 
@@ -697,6 +704,8 @@ CREATE INDEX IF NOT EXISTS idx_facts_quarantine_garden ON facts(quarantine_garde
 | 400 | `manifest_rotation_chain_invalid` | Rotation chain verification fails |
 | 400 | `token_nonce_invalid` | Nonce is not 32 bytes or is malformed |
 | 400 | `provenance_hash_invalid` | `derived_from` entry is not a 64-char lowercase hex string |
+| 400 | `provenance_cycle_detected` | `derived_from` graph contains a cycle |
+| 400 | `attestation_chain_too_long` | `attestation_chain` exceeds 16 entries |
 | 403 | `trust_below_threshold` | Fact source `t < 0.2` in `trust_mode: strict` and no quarantine garden configured |
 | 403 | `token_expired` | Capability token `expiry` has passed |
 | 403 | `token_revoked` | Token found in revocation log |
@@ -705,6 +714,7 @@ CREATE INDEX IF NOT EXISTS idx_facts_quarantine_garden ON facts(quarantine_garde
 | 403 | `entity_not_in_manifest` | Source entity_uri not in the issuer's manifest `entities` list |
 | 409 | `quarantine_has_pending_facts` | Attempted deletion of quarantine garden with pending facts |
 | 409 | `fact_not_quarantine_pending` | Promote/reject attempted on a fact not in `pending` quarantine state |
+| 409 | `fact_is_attested` | Update to a hash-relevant field rejected because `attestation_chain` is present and node is configured to reject rather than clear |
 | 422 | `attestation_chain_mismatch` | `attestation_chain` and `attestation_chain_issuers` array lengths differ |
 
 ---

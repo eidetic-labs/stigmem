@@ -1,0 +1,312 @@
+"""Subscription delivery engine — spec §20.4.
+
+Responsibilities:
+1. ``fan_out`` — when a fact is written, find matching subscriptions and insert
+   pending ``subscription_events`` rows (fast; called synchronously on every write).
+2. ``deliver_pending`` — sweep: attempt delivery for all pending/due-for-retry events.
+3. ``sweep_loop`` — asyncio task run in the app lifespan; calls deliver_pending periodically.
+
+Delivery types:
+- ``webhook`` — HTTP POST to delivery_address with exponential backoff (1 s, 2 s, 4 s … ≤ 300 s).
+- ``wake``    — structured JSON emitted to stderr; platform-specific integration hook.
+
+Garden ACL (§17) and content sanitizer (§19) are applied at delivery time.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import sys
+import time
+import uuid
+from datetime import UTC, datetime
+from typing import Any
+
+import httpx
+
+from . import settings as _settings_pkg
+from .auth import Identity
+from .db import db
+from .garden_acl import get_member_role
+from .recall_pipeline import apply_recall_pipeline
+
+logger = logging.getLogger("stigmem.subscriptions")
+
+
+# ---------------------------------------------------------------------------
+# Fan-out — called from routes/facts.py after each successful fact write
+# ---------------------------------------------------------------------------
+
+
+def fan_out(
+    fact_id: str,
+    entity: str,
+    scope: str,
+    garden_id: str | None,
+    tenant_id: str,
+    fact_payload_json: str,
+) -> None:
+    """Find subscriptions matching this fact and create pending delivery events."""
+    now = datetime.now(UTC).isoformat()
+
+    with db() as conn:
+        scope_subs = conn.execute(
+            """SELECT * FROM subscriptions
+               WHERE target_kind='scope' AND target=? AND tenant_id=? AND circuit_open=0""",
+            (scope, tenant_id),
+        ).fetchall()
+
+        entity_subs = conn.execute(
+            """SELECT * FROM subscriptions
+               WHERE target_kind='entity' AND target=? AND tenant_id=? AND circuit_open=0""",
+            (entity, tenant_id),
+        ).fetchall()
+
+        for sub in list(scope_subs) + list(entity_subs):
+            event_id = str(uuid.uuid4())
+            conn.execute(
+                """INSERT INTO subscription_events
+                   (id, subscription_id, event_type, entity_uri, fact_id, payload, created_at, delivery_status)
+                   VALUES (?,?,?,?,?,?,?,'pending')""",
+                (event_id, sub["id"], "fact_asserted", entity, fact_id, fact_payload_json, now),
+            )
+
+
+# ---------------------------------------------------------------------------
+# Delivery sweep — called by sweep_loop every N seconds
+# ---------------------------------------------------------------------------
+
+
+def deliver_pending() -> None:
+    """Attempt delivery for all pending events that are due."""
+    now = datetime.now(UTC).isoformat()
+
+    with db() as conn:
+        events = conn.execute(
+            """SELECT e.id, e.subscription_id, e.event_type, e.entity_uri, e.fact_id,
+                      e.payload, e.created_at, e.delivery_attempts,
+                      s.on_change, s.delivery_address, s.subscriber_identity, s.tenant_id,
+                      s.circuit_open
+               FROM subscription_events e
+               JOIN subscriptions s ON e.subscription_id = s.id
+               WHERE e.delivery_status = 'pending'
+                 AND s.circuit_open = 0
+                 AND (e.next_retry_at IS NULL OR e.next_retry_at <= ?)
+               ORDER BY e.created_at ASC
+               LIMIT 100""",
+            (now,),
+        ).fetchall()
+
+    for event in events:
+        try:
+            payload = json.loads(event["payload"])
+            success = _deliver_one(event, payload)
+        except Exception as exc:
+            logger.error("Delivery error for event %s: %s", event["id"], exc)
+            success = False
+
+        _record_result(event, success)
+
+
+# ---------------------------------------------------------------------------
+# Delivery helpers
+# ---------------------------------------------------------------------------
+
+
+def _deliver_one(event: Any, payload: dict) -> bool:
+    on_change = event["on_change"]
+    if on_change == "webhook":
+        return _deliver_webhook(event, payload)
+    if on_change == "wake":
+        return _deliver_wake(event, payload)
+    logger.error("Unknown on_change %r for event %s", on_change, event["id"])
+    return False
+
+
+def _subscriber_identity(entity_uri: str, tenant_id: str) -> Identity:
+    return Identity(entity_uri=entity_uri, permissions=["read"], tenant_id=tenant_id)
+
+
+def _sanitize_payload(event: Any, payload: dict) -> dict | None:
+    """Apply §17 garden ACL and §19 sanitizer.  Returns None to suppress delivery."""
+    from .models import FactRecord, FactValue
+
+    subscriber = event["subscriber_identity"]
+    tenant_id = event["tenant_id"]
+
+    # §17 garden ACL re-check: skip delivery if subscriber no longer a member
+    garden_uuid = payload.get("garden_id")
+    if garden_uuid:
+        role = get_member_role(garden_uuid, subscriber)
+        if role is None:
+            return None
+
+    try:
+        record = FactRecord(
+            id=payload["id"],
+            entity=payload["entity"],
+            relation=payload["relation"],
+            value=FactValue(type=payload["value_type"], v=payload.get("value_v")),
+            source=payload["source"],
+            timestamp=payload["timestamp"],
+            confidence=float(payload.get("confidence", 1.0)),
+            scope=payload.get("scope", "local"),
+        )
+        identity = _subscriber_identity(subscriber, tenant_id)
+        results = apply_recall_pipeline([record], identity=identity, include_low_trust=True)
+        if not results:
+            return None
+        sanitized = results[0]
+        if sanitized.sanitizer_redacted:
+            return {"fact_id": payload["id"], "redacted": True}
+        out = dict(payload)
+        out["value_v"] = str(sanitized.value.v) if sanitized.value.v is not None else None
+        if sanitized.sanitizer_warnings:
+            out["sanitizer_warnings"] = sanitized.sanitizer_warnings
+        return out
+    except Exception as exc:
+        logger.warning("Sanitizer error for fact %s: %s", payload.get("id"), exc)
+        return payload
+
+
+def _deliver_webhook(event: Any, payload: dict) -> bool:
+    sanitized = _sanitize_payload(event, payload)
+    if sanitized is None:
+        # ACL/sanitizer blocked — mark delivered, don't retry
+        _mark_delivered(event["id"], event["subscription_id"])
+        return True
+
+    body = {
+        "event_id": event["id"],
+        "idempotency_key": event["id"],
+        "subscription_id": event["subscription_id"],
+        "event_type": event["event_type"],
+        "fact": sanitized,
+    }
+
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.post(
+                event["delivery_address"],
+                json=body,
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Stigmem-Event-Id": event["id"],
+                },
+            )
+
+        if resp.status_code == 410:
+            # Webhook endpoint gone — cancel the subscription
+            with db() as conn:
+                conn.execute("DELETE FROM subscriptions WHERE id=?", (event["subscription_id"],))
+            logger.info("Subscription %s cancelled (410 Gone)", event["subscription_id"])
+            return True
+
+        # 5xx / 429 → retry; 2xx/3xx → success; 4xx (except 429) → permanent failure, don't retry
+        if resp.status_code >= 500 or resp.status_code == 429:
+            return False
+        return resp.status_code < 400
+
+    except (httpx.TimeoutException, httpx.ConnectError, httpx.RemoteProtocolError):
+        return False
+
+
+def _deliver_wake(event: Any, payload: dict) -> bool:
+    sanitized = _sanitize_payload(event, payload)
+    if sanitized is None:
+        return True  # ACL blocked; mark delivered
+
+    # Wake delivery: emit structured JSON for operator/platform pickup
+    print(
+        json.dumps({
+            "stigmem_wake": {
+                "event_id": event["id"],
+                "subscription_id": event["subscription_id"],
+                "subscriber_identity": event["subscriber_identity"],
+                "delivery_address": event["delivery_address"],
+                "event_type": event["event_type"],
+                "fact": sanitized,
+                "ts": datetime.now(UTC).isoformat(),
+            }
+        }),
+        file=sys.stderr,
+    )
+    return True
+
+
+def _record_result(event: Any, success: bool) -> None:
+    now = datetime.now(UTC).isoformat()
+    new_attempts = (event["delivery_attempts"] or 0) + 1
+
+    if success:
+        with db() as conn:
+            conn.execute(
+                """UPDATE subscription_events
+                   SET delivered_at=?, delivery_status='delivered', delivery_attempts=?
+                   WHERE id=?""",
+                (now, new_attempts, event["id"]),
+            )
+            conn.execute(
+                "UPDATE subscriptions SET last_delivered_at=?, consecutive_failures=0 WHERE id=?",
+                (now, event["subscription_id"]),
+            )
+        return
+
+    backoff_s = min(2 ** new_attempts, 300)
+    next_retry = datetime.fromtimestamp(time.time() + backoff_s, UTC).isoformat()
+
+    with db() as conn:
+        conn.execute(
+            "UPDATE subscription_events SET delivery_attempts=?, next_retry_at=? WHERE id=?",
+            (new_attempts, next_retry, event["id"]),
+        )
+        conn.execute(
+            "UPDATE subscriptions SET consecutive_failures=consecutive_failures+1 WHERE id=?",
+            (event["subscription_id"],),
+        )
+        sub = conn.execute(
+            "SELECT consecutive_failures FROM subscriptions WHERE id=?",
+            (event["subscription_id"],),
+        ).fetchone()
+        if sub and sub["consecutive_failures"] >= _settings_pkg.settings.subscription_circuit_threshold:
+            conn.execute(
+                "UPDATE subscriptions SET circuit_open=1 WHERE id=?",
+                (event["subscription_id"],),
+            )
+            conn.execute(
+                "UPDATE subscription_events SET delivery_status='failed' WHERE id=?",
+                (event["id"],),
+            )
+            logger.warning("Circuit breaker opened for subscription %s", event["subscription_id"])
+
+
+def _mark_delivered(event_id: str, subscription_id: str) -> None:
+    now = datetime.now(UTC).isoformat()
+    with db() as conn:
+        conn.execute(
+            """UPDATE subscription_events
+               SET delivered_at=?, delivery_status='delivered', delivery_attempts=delivery_attempts+1
+               WHERE id=?""",
+            (now, event_id),
+        )
+        conn.execute(
+            "UPDATE subscriptions SET last_delivered_at=?, consecutive_failures=0 WHERE id=?",
+            (now, subscription_id),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Background sweep loop
+# ---------------------------------------------------------------------------
+
+
+async def sweep_loop() -> None:
+    """Long-running asyncio task: runs deliver_pending() every N seconds."""
+    import asyncio
+    from contextlib import suppress
+
+    while True:
+        await asyncio.sleep(_settings_pkg.settings.subscription_delivery_sweep_s)
+        with suppress(Exception):
+            await asyncio.to_thread(deliver_pending)

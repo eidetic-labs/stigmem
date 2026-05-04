@@ -216,9 +216,23 @@ def assert_fact(
             ),
         )
 
-        # Phase 9 §1: materialize entity_edges for ref-typed facts
+        # Graph adjacency index (§20.1.1): materialize edge for ref-typed facts
         if req.value.type == "ref" and value_v and _is_valid_entity_uri(value_v):
-            _insert_entity_edge(conn, fact_id, entity, req.relation, value_v, req.scope, req.confidence, now)
+            from ..graph_index import upsert_edge as _upsert_edge
+            _upsert_edge(
+                conn,
+                fact_id=fact_id,
+                subject=entity,
+                relation=req.relation,
+                object_uri=value_v,
+                scope=req.scope,
+                confidence=req.confidence,
+                garden_id=garden_uuid,
+                tenant_id=identity.tenant_id,
+                received_from=None,
+                source_trust=None,
+                valid_until=req.valid_until,
+            )
 
         row = conn.execute("SELECT * FROM facts WHERE id=?", (fact_id,)).fetchone()
 
@@ -296,28 +310,6 @@ def assert_fact(
 def _is_valid_entity_uri(uri: str) -> bool:
     """Minimal check: URI must contain '://' or start with 'urn:'."""
     return "://" in uri or uri.startswith("urn:")
-
-
-def _insert_entity_edge(
-    conn: Any,
-    fact_id: str,
-    subject: str,
-    relation: str,
-    object_uri: str,
-    scope: str,
-    confidence: float,
-    now: str,
-) -> None:
-    """Insert or replace an entity_edges row for a ref-typed fact."""
-    import time
-
-    now_ms = int(time.time() * 1000)
-    conn.execute(
-        """INSERT OR REPLACE INTO entity_edges
-           (id, subject, relation, object, scope, confidence, source_trust, decay_epoch, created_at)
-           VALUES (?,?,?,?,?,?,?,?,?)""",
-        (fact_id, subject, relation, object_uri, scope, confidence, None, None, now_ms),
-    )
 
 
 def _embed_fact_background(

@@ -11,8 +11,6 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-logger = logging.getLogger("stigmem.facts")
-
 from ..auth import Identity, resolve_identity
 from ..billing import BillingEvent, get_hook_bus
 from ..db import db
@@ -35,6 +33,8 @@ from ..models import (
 from ..recall_pipeline import apply_recall_pipeline
 from .. import settings as _settings_pkg  # access via module so test patches propagate
 from ..settings import settings as _settings  # direct ref for source_attestation_mode reads
+
+logger = logging.getLogger("stigmem.facts")
 
 router = APIRouter(prefix="/v1/facts", tags=["facts"])
 
@@ -263,6 +263,32 @@ def assert_fact(
         entity_uri=identity.entity_uri,
         fact_id=fact_id,
     ))
+
+    # §20: fan out to subscribers (fast DB insert only; delivery happens in sweep loop)
+    try:
+        import json as _json
+        from ..subscription_delivery import fan_out as _subscription_fan_out
+        _subscription_fan_out(
+            fact_id=fact_id,
+            entity=entity,
+            scope=req.scope,
+            garden_id=garden_uuid,
+            tenant_id=identity.tenant_id,
+            fact_payload_json=_json.dumps({
+                "id": fact_id,
+                "entity": entity,
+                "relation": req.relation,
+                "value_type": req.value.type,
+                "value_v": value_v,
+                "source": source,
+                "timestamp": now,
+                "scope": req.scope,
+                "confidence": req.confidence,
+                "garden_id": garden_uuid,
+            }),
+        )
+    except Exception as _sub_exc:
+        print(f"[stigmem] WARN: subscription fan_out failed: {_sub_exc}", file=sys.stderr)
 
     return row_to_record(row, contradicted=contradicted, warnings=relation_warnings)
 

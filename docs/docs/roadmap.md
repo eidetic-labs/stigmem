@@ -15,18 +15,18 @@ Phases 0–7 are complete. The full history — what shipped, key architectural 
 
 The v2 build plan runs seven phases (8–14), roughly 22 weeks, with meaningful parallelism between phases once the early trust and storage foundations are stable. Target timelines are given in calendar quarters; exact dates depend on community feedback and how earlier phases land.
 
-**Current status:** Phase 8 is in progress. Spec v1.1 is published with §19 Federation Trust normative; the [Federation Trust guide](/docs/guides/federation-trust) is live. The persistent storage backends stream continues. All subsequent phases are sequenced but their scope can shift as earlier phases land.
+**Current status:** Phase 8 is complete. Spec v1.1 ships §19 Federation Trust as normative; the [Federation Trust guide](/docs/guides/federation-trust) is live. The persistent storage backend layer (libSQL, SQLCipher at-rest encryption, signed snapshot backup/restore) and the 2-org federated network tutorial are shipped. Phase 9 is next. All subsequent phases are sequenced but their scope can shift as earlier phases land.
 
 ---
 
-## Phase 8 — Trust & Persistence Foundation
+## Phase 8 — Trust & Persistence Foundation ✓ Done
 
-**Target: Q2 2026**
+**Shipped: Q2 2026**
 
 Phase 8 establishes the trust and storage foundations the rest of the plan depends on. It runs in two parallel streams:
 
-**Documentation and community surfaces (Phase 8a, in progress):**
-This page, the [Backends](./backends.md) guide, the [Security & Pen Testing](./contributing/security.md) contribution guide, and the [Project Resources](./community/project-resources.md) page are published to the docs site before Phase 8 code work merges. These are the operator-facing surfaces that make the build plan legible to the community.
+**Documentation and community surfaces (Phase 8a — shipped):**
+This page, the [Backends](./backends.md) guide (including the libSQL how-to, at-rest encryption section, and backup/restore runbook), the [Federation Trust guide](./guides/federation-trust.md), the [Security & Pen Testing](./contributing/security.md) contribution guide, and the [Project Resources](./community/project-resources.md) page are live. The [Two-Org Federated Network tutorial](./tutorials/two-org-federation.md) is the Phase 8 community-facing walkthrough that proves the trust story end-to-end.
 
 **Federation trust architecture (§19 — shipped in spec v1.1):**
 Spec §19 "Federation Trust" is normative in v1.1. The [Federation Trust guide](/docs/guides/federation-trust) covers operator setup end-to-end. Key capabilities:
@@ -176,4 +176,4 @@ Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
 ---
 
-*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 8 §19 Federation Trust shipped.*
+*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 8 complete (spec v1.1, libSQL storage, at-rest encryption, signed snapshots, 2-org federation tutorial). Phase 9 next.*

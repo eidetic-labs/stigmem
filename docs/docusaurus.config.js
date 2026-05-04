@@ -142,6 +142,12 @@ const config = {
           },
           {
             type: 'docSidebar',
+            sidebarId: 'tutorialsSidebar',
+            label: 'Tutorials',
+            position: 'left',
+          },
+          {
+            type: 'docSidebar',
             sidebarId: 'architectureSidebar',
             label: 'Architecture',
             position: 'left',

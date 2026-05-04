@@ -170,6 +170,6 @@ Check your plan limits at `turso db show <db-name>` or the Turso dashboard.
 
 - [Turso PITR documentation](https://docs.turso.tech/features/point-in-time-restore)
 - [Turso CLI reference](https://docs.turso.tech/cli/introduction)
-- [Stigmem libSQL/Turso setup](../../backends.md)
+- [Stigmem libSQL/Turso setup](../backends.md)
 - [Stigmem signed snapshots](./backup-restore.md)
 - [Cursor-reset recovery](./cursor-reset-recovery.md)

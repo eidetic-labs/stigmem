@@ -108,23 +108,63 @@ This gives you SQLite's operational simplicity with:
 - Native at-rest encryption
 - Point-in-time recovery via Turso's cloud service
 
+### Step-by-step: Fly.io + Turso setup
+
+**Prerequisites:** `flyctl` installed; Turso CLI installed (`curl -sSfL https://get.tur.so/install.sh | bash`).
+
 ```bash
-# Install the libsql extra, then configure:
+# 1. Create a Turso database
+turso db create stigmem-prod
+
+# 2. Retrieve the database URL and auth token
+TURSO_URL=$(turso db show stigmem-prod --url)
+TURSO_TOKEN=$(turso db tokens create stigmem-prod)
+
+# 3. Install the libsql extra
 pip install 'stigmem-node[libsql]'
 
-STIGMEM_STORAGE_BACKEND=libsql
-STIGMEM_DB_PATH=/app/data/stigmem.db          # local replica file
-STIGMEM_LIBSQL_URL=libsql://your-db.turso.io  # Turso endpoint
-STIGMEM_LIBSQL_AUTH_TOKEN=<inject-from-secrets-manager>
+# 4. Set environment variables (Fly.io secrets or local .env)
+fly secrets set \
+  STIGMEM_STORAGE_BACKEND=libsql \
+  STIGMEM_LIBSQL_URL="$TURSO_URL" \
+  STIGMEM_LIBSQL_AUTH_TOKEN="$TURSO_TOKEN" \
+  STIGMEM_DB_PATH=/app/data/stigmem.db
 
-# Optional: encrypt the local replica file (Turso cloud primary uses its own server-side encryption)
-STIGMEM_AT_REST_ENCRYPTION=on
-STIGMEM_AT_REST_KEY_PASSPHRASE_ENV=MY_PASSPHRASE_VAR
+# 5. Run migrations (idempotent — safe to run on every deploy)
+stigmem migrate
 ```
 
-Turso has a free tier suitable for single-operator nodes. For multi-region read replicas, configure per-region embedded replica URLs in `fly.toml` or your PaaS config.
+**Verifying the connection:**
 
-For air-gapped or sovereign deployments where a cloud primary is not acceptable, self-hosted libSQL sqld is an option — see the Operator's Handbook (Phase 11).
+```bash
+# From inside the running container or locally with env vars set:
+stigmem healthcheck
+# → { "status": "ok", "backend": "libsql", "sync_lag_ms": 0 }
+```
+
+**Multi-region read replicas (optional):**
+
+To serve reads from a second region, create a Turso replica and point it at the same group:
+
+```bash
+turso db replicate stigmem-prod --location fra
+# Then add STIGMEM_LIBSQL_REPLICA_URL=<fra-replica-url> for that region's node.
+```
+
+Writes always route to the primary regardless of which replica is configured. The node automatically falls back to the primary if the replica is unavailable.
+
+For air-gapped or sovereign deployments where a cloud primary is not acceptable, self-hosted `libsql sqld` is an option — see the Operator's Handbook (Phase 11).
+
+### Encrypt the local replica (optional)
+
+The Turso cloud primary uses server-side encryption. To also encrypt the local replica file:
+
+```bash
+STIGMEM_AT_REST_ENCRYPTION=on
+STIGMEM_AT_REST_KEY_PASSPHRASE_ENV=MY_PASSPHRASE_VAR   # name of the env var holding your passphrase
+```
+
+See [Encrypted at Rest](#encrypted-at-rest) below for the full setup and key-rotation runbook.
 
 ---
 
@@ -184,22 +224,116 @@ Air-gapped or sovereign deployment?
 
 ---
 
-## Backup and restore
+## Encrypted at Rest
 
-All production backends support signed snapshot backup and restore via the `stigmem snapshot` CLI tool (ships in Phase 8):
+At-rest encryption is an opt-in layer on top of any file-based backend (SQLite or libSQL local replica). The encryption key never touches the database file — it is derived from an environment-injected passphrase at runtime.
+
+### Initial setup
 
 ```bash
-# Create a signed snapshot
-stigmem snapshot create --output /backups/stigmem-$(date +%Y%m%d).snap
+# Install the extras
+pip install 'stigmem-node[encryption,sqlcipher]'
 
-# Verify snapshot integrity before restoring
-stigmem snapshot verify /backups/stigmem-20260601.snap
+# Point to the env var that holds your passphrase (don't put the passphrase inline)
+export MY_DB_PASSPHRASE="my-strong-passphrase"
 
-# Restore
-stigmem snapshot restore /backups/stigmem-20260601.snap
+STIGMEM_AT_REST_ENCRYPTION=on
+STIGMEM_AT_REST_KEY_PASSPHRASE_ENV=MY_DB_PASSPHRASE
 ```
 
-Snapshots are signed with the node's Ed25519 keypair. The restore step validates the signature before applying. For libSQL and Postgres, cloud-native point-in-time recovery is also available and documented in the Operator's Handbook (Phase 11).
+On first start with encryption enabled, Stigmem converts an existing plain-text database to encrypted format in place. A backup is written to `<db_path>.pre-encryption-backup` before the conversion.
+
+### Migrating an existing database to encryption
+
+If you are enabling encryption on a node that already has data:
+
+```bash
+# Stop the node, then run the migration helper
+stigmem db encrypt --passphrase-env MY_DB_PASSPHRASE
+
+# Start the node — it will open the now-encrypted file transparently
+```
+
+The helper re-encrypts the WAL and then issues a `VACUUM` to reclaim freed pages in the plaintext WAL file.
+
+### Key rotation
+
+To rotate the encryption passphrase without downtime:
+
+```bash
+stigmem db rekey \
+  --old-passphrase-env OLD_PASSPHRASE_VAR \
+  --new-passphrase-env NEW_PASSPHRASE_VAR
+```
+
+The node must be stopped before rekeying. After rekeying, update your secrets manager and restart with the new env var name in `STIGMEM_AT_REST_KEY_PASSPHRASE_ENV`.
+
+:::caution
+If you lose the passphrase, the database file is irrecoverable. Store the passphrase in a secrets manager (Fly.io secrets, AWS Secrets Manager, Vault, etc.) — not in the `fly.toml` or Dockerfile.
+:::
+
+---
+
+## Backup and Restore
+
+All production backends support signed snapshot backup and restore via the `stigmem snapshot` CLI tool. Snapshots are content-addressed and signed with the node's Ed25519 federation keypair.
+
+### Create a snapshot
+
+```bash
+# Create a signed snapshot (writes to the specified path)
+stigmem snapshot create --output /backups/stigmem-$(date +%Y%m%d-%H%M%S).snap
+
+# Snapshot includes:
+#   artifacts/stigmem.db                   — copy of the database file
+#   artifacts/schema_migration_cursor.json — applied migration versions
+#   manifest.json                          — SHA-256 hashes + Ed25519 signature
+```
+
+Automate daily snapshots with cron or a Fly.io machine cron target:
+
+```bash
+# Example: daily backup via cron (add to crontab or a scheduled Fly Machine)
+0 3 * * * stigmem snapshot create --output /backups/stigmem-$(date +%Y%m%d).snap
+```
+
+### Verify a snapshot before restoring
+
+Always verify before applying a snapshot to a live node:
+
+```bash
+stigmem snapshot verify /backups/stigmem-20260601.snap
+# → OK: sha256 checksums valid, signature verified (key: stigmem:node:<uuid>)
+# → ERROR: signature mismatch — possible tampering; abort restore
+
+# Verify against a specific trusted public key (e.g. when restoring to a different node)
+stigmem snapshot verify /backups/stigmem-20260601.snap \
+  --trusted-key <base64url-ed25519-pubkey>
+```
+
+### Restore
+
+```bash
+# Stop the node first
+stigmem snapshot restore /backups/stigmem-20260601.snap
+
+# The restore step:
+#   1. Verifies SHA-256 checksums for all artifacts
+#   2. Verifies the Ed25519 manifest signature
+#   3. Writes the database file to STIGMEM_DB_PATH
+#   4. Replays any migrations newer than the snapshot cursor
+
+# Restart the node
+stigmem serve
+```
+
+:::caution
+Restore overwrites `STIGMEM_DB_PATH`. Ensure you have a pre-restore backup of the current database before running this command.
+:::
+
+### libSQL / Postgres: cloud-native point-in-time recovery
+
+For libSQL (Turso), use `turso db snapshot` for point-in-time recovery — it operates on the cloud primary without requiring node downtime. For Postgres, use your managed provider's PITR feature. Both are documented in the Operator's Handbook (Phase 11).
 
 ---
 

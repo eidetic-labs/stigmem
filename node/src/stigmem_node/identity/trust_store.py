@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 import httpx
 
+from ..net_util import assert_safe_url
 from .manifest import (
     ManifestError,
     OrgManifest,
@@ -229,10 +230,11 @@ def _try_fetch_manifest(entity_uri: str) -> OrgManifest | None:
         return None  # can't derive URL from non-HTTP URI
 
     try:
+        assert_safe_url(base_url, allow_schemes=frozenset({"https", "http"}))
         resp = httpx.get(
             f"{base_url}/.well-known/stigmem-manifest.json",
             timeout=10.0,
-            follow_redirects=True,
+            follow_redirects=False,
         )
         if resp.status_code != 200:
             return None

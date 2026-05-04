@@ -26,6 +26,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, 
 
 from ..auth import Identity, resolve_identity
 from ..db import db, get_or_create_node_id
+from ..net_util import assert_safe_url
 from ..federation_ingest import ingest_fact, write_audit_log
 from ..hlc import node_hlc
 from ..identity.manifest import ManifestError, manifest_from_dict, verify_manifest
@@ -224,10 +225,11 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
     # Try to fetch the peer's manifest from their well-known endpoint
     manifest_obj = None
     try:
+        assert_safe_url(node_url, allow_schemes=frozenset({"https", "http"}))
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(
                 f"{node_url}/.well-known/stigmem-manifest.json",
-                follow_redirects=True,
+                follow_redirects=False,
             )
         if resp.status_code == 200:
             try:

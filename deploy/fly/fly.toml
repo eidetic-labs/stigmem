@@ -1,0 +1,75 @@
+# Fly.io deploy recipe — stigmem reference node
+#
+# IMPORTANT: use `fly deploy`, NOT `fly launch`.
+# `fly launch` auto-detects workspace pyproject.toml and fails.
+#
+# Run from repo root:
+#   fly deploy --config deploy/fly/fly.toml --app <APP_NAME>
+#
+# See deploy/fly/README.md for first-time setup steps.
+
+app = "<APP_NAME>"
+primary_region = "iad"
+
+[build]
+  # Build context must be repo root; Dockerfile copies from node/ subdirectory.
+  dockerfile = "node/Dockerfile"
+
+[env]
+  STIGMEM_HOST          = "0.0.0.0"
+  STIGMEM_PORT          = "8765"
+  STIGMEM_DB_PATH       = "/data/stigmem.db"
+  STIGMEM_LOG_LEVEL     = "info"
+  # Auth: set to "true" in production; pair with STIGMEM_OIDC_* secrets.
+  STIGMEM_AUTH_REQUIRED = "false"
+  # Federation: enable when peering with another node.
+  STIGMEM_FEDERATION_ENABLED = "false"
+  # Storage backend: "sqlite" (default, local volume) or "libsql" (Turso).
+  STIGMEM_STORAGE_BACKEND = "sqlite"
+  # Encryption at rest: "off" (default) or "on" (requires key secret).
+  STIGMEM_AT_REST_ENCRYPTION = "off"
+
+# Persistent volume — created once with:
+#   fly volumes create stigmem_data --size 1 --region iad --app <APP_NAME>
+[mounts]
+  source      = "stigmem_data"
+  destination = "/data"
+
+[[services]]
+  internal_port = 8765
+  protocol      = "tcp"
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port     = 443
+
+  [[services.ports]]
+    handlers = ["http"]
+    port     = 80
+    [services.ports.http_options]
+      response.headers = { "Strict-Transport-Security" = "max-age=31536000; includeSubDomains" }
+
+  [services.concurrency]
+    type       = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+  [[services.http_checks]]
+    interval       = "10s"
+    timeout        = "5s"
+    grace_period   = "20s"
+    method         = "GET"
+    path           = "/healthz"
+    protocol       = "http"
+    tls_skip_verify = false
+
+# Scale to zero: uncomment to allow idle machines to stop.
+# Cold-start adds ~300 ms. Set min_machines_running = 1 for low-latency nodes.
+# [http_service]
+#   auto_stop_machines  = true
+#   auto_start_machines = true
+#   min_machines_running = 0
+
+[metrics]
+  port = 9091
+  path = "/metrics"

@@ -1,0 +1,43 @@
+[Unit]
+Description=Stigmem reference node
+Documentation=https://docs.stigmem.dev
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=stigmem
+Group=stigmem
+WorkingDirectory=/opt/stigmem
+
+# Environment file — contains STIGMEM_* variables.
+# Copy /opt/stigmem/.env.example to /opt/stigmem/.env and fill in values.
+# This file must NOT be world-readable (mode 0600).
+EnvironmentFile=-/opt/stigmem/.env
+
+# Core settings — override in .env if needed
+Environment=STIGMEM_HOST=127.0.0.1
+Environment=STIGMEM_PORT=8765
+Environment=STIGMEM_DB_PATH=/var/lib/stigmem/stigmem.db
+Environment=STIGMEM_LOG_LEVEL=info
+
+ExecStart=/opt/stigmem/venv/bin/stigmem-node
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+TimeoutStopSec=15
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/stigmem
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=stigmem
+
+[Install]
+WantedBy=multi-user.target

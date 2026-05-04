@@ -82,7 +82,8 @@ CREATE TABLE IF NOT EXISTS capability_tokens (
     object      TEXT NOT NULL,
     issued_at   TEXT NOT NULL,
     expiry      TEXT NOT NULL,
-    nonce       TEXT NOT NULL UNIQUE,
+    nonce       TEXT NOT NULL UNIQUE
+                    CHECK(length(nonce) = 64 AND nonce GLOB '[0-9a-f]*'),
     revoked_at  TEXT,               -- NULL if active
     revoke_log  TEXT,               -- JSON of RevocationEvent if revoked
     created_at  TEXT NOT NULL
@@ -113,7 +114,7 @@ CREATE INDEX IF NOT EXISTS idx_quarantine_rules_org_uri
 
 -- -------------------------------------------------------------------------
 -- Quarantine-specific admin audit extension
--- The existing fact_audit table (Migration 007) gains rows with
+-- The existing fact_audit_log table (Migration 007) gains rows with
 -- event_type "quarantine_promote" / "quarantine_reject".
 -- The detail JSON carries the extra §19.5.6 fields.
 -- No schema change needed; detail is already a TEXT/JSON blob.

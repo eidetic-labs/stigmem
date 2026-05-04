@@ -144,6 +144,27 @@ def ingest_fact(
             ),
         )
 
+        # Phase 8 §19.5.4: audit entry for ingest-time quarantine routing
+        if quarantine_status == "pending":
+            audit_id = str(uuid.uuid4())
+            audit_now = datetime.now(UTC).isoformat()
+            conn.execute(
+                """INSERT INTO fact_audit_log
+                   (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, detail, ts)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                (
+                    audit_id,
+                    fact_id,
+                    "quarantine_ingest",
+                    "system:federation",
+                    None,
+                    sender_node_id,
+                    None,
+                    json.dumps({"trust_score": trust_score}),
+                    audit_now,
+                ),
+            )
+
         # Write stigmem:received_from meta-fact atomically (spec §3.1)
         meta_id = str(uuid.uuid4())
         meta_now = datetime.now(UTC).isoformat()

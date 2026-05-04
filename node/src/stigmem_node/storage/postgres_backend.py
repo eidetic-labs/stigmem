@@ -76,6 +76,9 @@ _OR_REPLACE_RE = re.compile(
     r"\bINSERT\s+OR\s+REPLACE\s+INTO\s+(\w+)\s*\(([^)]+)\)",
     re.IGNORECASE,
 )
+# SQLite strftime('%s', col) → EXTRACT(EPOCH FROM col::timestamptz)
+# Must be translated before the % → %% escaping step.
+_STRFTIME_EPOCH_RE = re.compile(r"strftime\('%s',\s*([^)]+)\)", re.IGNORECASE)
 
 
 def _rewrite_or_ignore(sql: str) -> str:
@@ -128,15 +131,18 @@ def _pg_translate(sql: str) -> str:
 
     Applied in order:
     1. Rewrite ``INSERT OR IGNORE`` and ``INSERT OR REPLACE``.
-    2. Escape literal ``%`` → ``%%`` (psycopg2 treats bare ``%`` as special).
-    3. Replace ``?`` parameter placeholders with ``%s``.
-    4. Translate ``INTEGER PRIMARY KEY AUTOINCREMENT`` → ``SERIAL PRIMARY KEY``.
+    2. Translate ``strftime('%s', col)`` → ``EXTRACT(EPOCH FROM col::timestamptz)``.
+       Must happen before step 3 so the ``%s`` inside strftime is not mangled.
+    3. Escape literal ``%`` → ``%%`` (psycopg2 treats bare ``%`` as special).
+    4. Replace ``?`` parameter placeholders with ``%s``.
+    5. Translate ``INTEGER PRIMARY KEY AUTOINCREMENT`` → ``SERIAL PRIMARY KEY``.
     """
     if _OR_IGNORE_RE.search(sql):
         sql = _rewrite_or_ignore(sql)
     elif _OR_REPLACE_RE.search(sql):
         sql = _rewrite_or_replace(sql)
 
+    sql = _STRFTIME_EPOCH_RE.sub(r"EXTRACT(EPOCH FROM \1::timestamptz)", sql)
     sql = sql.replace("%", "%%")
     sql = sql.replace("?", "%s")
     sql = re.sub(

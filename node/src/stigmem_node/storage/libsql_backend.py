@@ -68,6 +68,66 @@ class _LibSQLRow:
         return self._data.get(key, default)
 
 
+class _LibSQLCursor:
+    """Wraps a raw libsql-experimental cursor and returns _LibSQLRow objects.
+
+    libsql-experimental has no row_factory on the connection; we wrap at the
+    cursor level instead so all fetch methods return dict-accessible rows.
+    """
+
+    __slots__ = ("_cur",)
+
+    def __init__(self, cur: Any) -> None:
+        self._cur = cur
+
+    @property
+    def description(self) -> Any:
+        return self._cur.description
+
+    @property
+    def lastrowid(self) -> Any:
+        return self._cur.lastrowid
+
+    @property
+    def rowcount(self) -> int:
+        return self._cur.rowcount
+
+    def fetchone(self) -> Any:
+        row = self._cur.fetchone()
+        return None if row is None else _LibSQLRow(self._cur, row)
+
+    def fetchall(self) -> list:
+        return [_LibSQLRow(self._cur, r) for r in self._cur.fetchall()]
+
+    def fetchmany(self, size: int | None = None) -> list:
+        rows = self._cur.fetchmany(size) if size is not None else self._cur.fetchmany()
+        return [_LibSQLRow(self._cur, r) for r in rows]
+
+
+class _LibSQLConnection:
+    """Wraps a raw libsql-experimental connection so execute() returns _LibSQLCursor."""
+
+    __slots__ = ("_conn",)
+
+    def __init__(self, conn: Any) -> None:
+        self._conn = conn
+
+    def execute(self, sql: str, params: Any = ()) -> _LibSQLCursor:
+        return _LibSQLCursor(self._conn.execute(sql, params))
+
+    def executemany(self, sql: str, params: Any = ()) -> _LibSQLCursor:
+        return _LibSQLCursor(self._conn.executemany(sql, params))
+
+    def commit(self) -> None:
+        self._conn.commit()
+
+    def rollback(self) -> None:
+        self._conn.rollback()
+
+    def close(self) -> None:
+        self._conn.close()
+
+
 class LibSQLBackend(StorageBackend):
     """libSQL backend (Turso-compatible).
 
@@ -120,9 +180,8 @@ class LibSQLBackend(StorageBackend):
         else:
             conn = libsql.connect(database=self._db_path, **enc_kwargs)
 
-        conn.row_factory = _LibSQLRow
         conn.execute("PRAGMA foreign_keys=ON")
-        return conn
+        return _LibSQLConnection(conn)
 
     @contextmanager
     def connection(self) -> Generator[Any, None, None]:

@@ -84,13 +84,13 @@ def list_quarantined_facts(
     where_clause = " AND ".join(filters)
 
     with db() as conn:
-        count_row = conn.execute(  # nosec B608 — where_clause built from hardcoded literals only
-            f"SELECT COUNT(*) FROM facts f WHERE {where_clause}",
+        count_row = conn.execute(
+            f"SELECT COUNT(*) FROM facts f WHERE {where_clause}",  # nosec B608
             params,
         ).fetchone()
         total: int = count_row[0] if count_row else 0
 
-        rows = conn.execute(  # nosec B608 — where_clause built from hardcoded literals only
+        rows = conn.execute(
             f"""SELECT f.id, f.entity, f.relation, f.source,
                        f.quarantine_status, f.quarantine_garden_id, f.quarantine_reason,
                        f.quarantine_acted_by, f.quarantine_acted_at,
@@ -98,7 +98,7 @@ def list_quarantined_facts(
                 FROM facts f
                 WHERE {where_clause}
                 ORDER BY f.timestamp DESC
-                LIMIT ? OFFSET ?""",
+                LIMIT ? OFFSET ?""",  # nosec B608
             [*params, limit, offset],
         ).fetchall()
 

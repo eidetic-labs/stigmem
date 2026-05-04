@@ -150,14 +150,14 @@ def _trusted_pubkeys(
             if row:
                 pub_bytes = _b64url_decode(row[0])
                 keys.append(Ed25519PublicKey.from_public_bytes(pub_bytes))
-        except Exception:  # DB might not exist yet on a fresh restore host
+        except Exception:  # nosec B110 — DB might not exist yet on a fresh restore host
             pass
 
     if self_attesting_pubkey:
         try:
             pub_bytes = _b64url_decode(self_attesting_pubkey)
             keys.append(Ed25519PublicKey.from_public_bytes(pub_bytes))
-        except Exception:
+        except Exception:  # nosec B110 — invalid b64url key is silently skipped
             pass
 
     return keys

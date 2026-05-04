@@ -59,7 +59,7 @@ def _cmd_capability_verify(args: argparse.Namespace) -> int:
     import httpx
 
     token_json_str = args.token_json
-    if token_json_str == "-":
+    if token_json_str == "-":  # nosec B105 — "-" is stdin sentinel, not a password
         token_json_str = sys.stdin.read().strip()
 
     headers: dict[str, str] = {}

@@ -84,7 +84,7 @@ class LibSQLBackend(StorageBackend):
         self,
         db_path: str,
         sync_url: str = "",
-        auth_token: str = "",
+        auth_token: str = "",  # nosec B107 — empty string is the correct default for optional Turso auth
         encryption_key: bytes | None = None,
     ) -> None:
         self._db_path = db_path

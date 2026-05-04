@@ -190,7 +190,7 @@ def _scope_authority(source_uri: str, scope: str, identity: "Identity | None") -
         authority = parsed.netloc or parsed.path
         if source_uri.startswith(f"stigmem://{authority}"):
             return 0.7
-    except Exception:
+    except Exception:  # nosec B110 — node_url parse failure falls through to default score
         pass
 
     # External entity without explicit scope authority

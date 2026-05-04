@@ -270,7 +270,7 @@ def issue_capability_token(
 
     token_body: dict[str, Any] = {
         "token_id": token_id,
-        "token_version": 1,
+        "token_version": 1,  # nosec B105 — integer version field, not a password
         "issuer": issuer,
         "subject": subject,
         "verb": verb,

@@ -176,7 +176,7 @@ def _try_peer_token_auth(
 def _cap_token_covers_scope(token_object: str, scope: str) -> bool:
     """Return True if the capability token's object covers the given fact scope (H-SEC-2)."""
     # "stigmem://facts" is a wildcard covering all scopes
-    if token_object == "stigmem://facts":
+    if token_object == "stigmem://facts":  # nosec B105 — URI scheme constant, not a password
         return True
     # "stigmem://facts/scope:X" covers exactly scope X
     return token_object == f"stigmem://facts/scope:{scope}"
@@ -332,7 +332,7 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
                 has_tl_proof = True
         except TransparencyLogUnavailable:
             pass
-        except Exception:
+        except Exception:  # nosec B110 — TL inclusion check is best-effort; failure is non-fatal
             pass
 
     if not has_tl_proof:

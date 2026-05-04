@@ -1,4 +1,4 @@
-"""Federation protocol routes — spec §5.6–§5.9, §6.
+"""Federation protocol routes — spec §5.6–§5.9, §6, §19.2.3.
 
 Routes:
   POST /v1/federation/peers             — register a peer (§5.6)
@@ -7,6 +7,11 @@ Routes:
   POST /v1/federation/facts/push        — optional push endpoint (§5.11)
   GET  /v1/federation/audit             — audit log (§6.4)
   GET  /v1/conflicts                    — list conflicts (§5.9)
+
+Federation handshake extension (§19.2.3):
+  register_peer checks for TL inclusion proof when trust_mode=strict (enforce).
+  trust_mode=relaxed  → accept without proof, emit warning in audit log.
+  trust_mode=off      → skip TL check entirely.
 """
 
 from __future__ import annotations
@@ -17,12 +22,15 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 
 import httpx
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db, get_or_create_node_id
 from ..federation_ingest import ingest_fact, write_audit_log
 from ..hlc import node_hlc
+from ..identity.manifest import ManifestError, manifest_from_dict, verify_manifest
+from ..identity.transparency_log import LogEntry, TransparencyLogUnavailable, make_transparency_log
+from ..identity.trust_store import get_peer_manifest, store_peer_manifest
 from ..models import (
     ConflictResolveRequest,
     FederationFactsResponse,
@@ -126,6 +134,7 @@ PeerTokenDep = Annotated[tuple[dict[str, Any], dict[str, Any]], Depends(_require
 )
 async def register_peer(
     req: PeerRegisterRequest,
+    background_tasks: BackgroundTasks,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> PeerRegisterResponse:
     """Register a peer. Fetches its well-known doc and verifies declaration_sig (§5.6)."""
@@ -194,7 +203,96 @@ async def register_peer(
             (final_status, verified_at, peer_id),
         )
 
+    # §19.2.3 — TL inclusion proof check runs after response to avoid blocking registration
+    if final_status == "active":
+        background_tasks.add_task(_check_tl_inclusion_for_peer, req.node_id, req.node_url, peer_id)
+
     return PeerRegisterResponse(peer_id=peer_id, status=final_status, verified_at=verified_at)
+
+
+async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str) -> None:
+    """Check TL inclusion proof for a newly registered peer (§19.2.3).
+
+    trust_mode=strict  (enforce): no proof → downgrade peer to pending_tl_proof
+    trust_mode=relaxed (warn):    no proof → accept + audit warning
+    trust_mode=off:               skip entirely
+    """
+    trust_mode = settings.trust_mode
+    if trust_mode == "off":
+        return
+
+    # Try to fetch the peer's manifest from their well-known endpoint
+    manifest_obj = None
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"{node_url}/.well-known/stigmem-manifest.json",
+                follow_redirects=True,
+            )
+        if resp.status_code == 200:
+            try:
+                manifest_obj = manifest_from_dict(resp.json())
+                verify_manifest(manifest_obj, trust_mode=trust_mode)
+            except (ManifestError, Exception):
+                manifest_obj = None
+    except Exception:
+        manifest_obj = None
+
+    has_tl_proof = False
+    if manifest_obj is not None:
+        # Check whether the manifest has a TL entry recorded
+        existing = get_peer_manifest(manifest_obj.entity_uri, refresh_if_expired=False)
+        if existing is None:
+            try:
+                store_peer_manifest(manifest_obj.entity_uri, manifest_obj, trust_mode=trust_mode)
+            except ManifestError:
+                pass
+
+        # Try to verify TL inclusion
+        try:
+            tl = make_transparency_log()
+            from ..db import db as _db
+            with _db() as conn:
+                row = conn.execute(
+                    "SELECT log_entry_json FROM federation_manifests WHERE entity_uri = ?",
+                    (manifest_obj.entity_uri,),
+                ).fetchone()
+            if row and row["log_entry_json"]:
+                import json as _json
+                le_data = _json.loads(row["log_entry_json"])
+                le = LogEntry(
+                    log_id=le_data.get("log_id", ""),
+                    leaf_hash=le_data.get("leaf_hash", ""),
+                    log_index=le_data.get("log_index", -1),
+                    integrated_time=le_data.get("integrated_time", 0),
+                    inclusion_proof=le_data.get("inclusion_proof", {}),
+                )
+                tl.verify_inclusion(le)
+                has_tl_proof = True
+        except TransparencyLogUnavailable:
+            pass
+        except Exception:
+            pass
+
+    if not has_tl_proof:
+        if trust_mode == "strict":
+            write_audit_log(
+                peer_id,
+                "tl_proof_missing",
+                {"node_id": node_id, "action": "downgraded_to_pending_tl_proof"},
+            )
+            from ..db import db as _db
+            with _db() as conn:
+                conn.execute(
+                    "UPDATE peers SET status = 'pending_tl_proof' WHERE id = ?",
+                    (peer_id,),
+                )
+        else:
+            write_audit_log(
+                peer_id,
+                "tl_proof_missing",
+                {"node_id": node_id, "action": "accepted_with_warning", "trust_mode": trust_mode},
+            )
 
 
 # ---------------------------------------------------------------------------

@@ -133,5 +133,13 @@ class Settings(BaseSettings):
     # Path to YAML file defining operator auto-trust rules (always_trust / never_trust).
     trust_rules_file: str = ""
 
+    # Transparency log backend (§19.2.3):
+    #   "local"  — append-only JSONL file with hash chain (default, no external deps).
+    #   "rekor"  — Sigstore Rekor REST API.
+    #   "off"    — no TL submission; inclusion proofs are never verified.
+    tl_backend: str = "local"
+    tl_local_path: str = "stigmem_tl.jsonl"
+    tl_rekor_url: str = "https://rekor.sigstore.dev"
+
 
 settings = Settings()

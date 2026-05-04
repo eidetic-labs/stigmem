@@ -147,6 +147,8 @@ _PATCHABLE_MODULES = [
     "stigmem_node.peer_token",
     "stigmem_node.federation_ingest",
     "stigmem_node.routes.federation",
+    "stigmem_node.routes.identity",
+    "stigmem_node.identity.trust_store",
     "stigmem_node.decay",
     "stigmem_node.routes.decay",
     "stigmem_node.routes.lint",

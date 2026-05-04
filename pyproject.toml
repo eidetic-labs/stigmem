@@ -54,7 +54,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["node/tests", "sdks/stigmem-py/tests"]
+testpaths = ["node/tests", "sdks/stigmem-py/tests", "node/src/stigmem_conformance/tests"]
 pythonpath = ["node/tests", "sdks/stigmem-py/tests"]
 addopts = "--cov --cov-report=xml --cov-report=term-missing --import-mode=importlib"
 

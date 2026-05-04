@@ -19,8 +19,11 @@ permissions:
   contents: read
 
 jobs:
-  conformance:
-    name: Stigmem v1.0 Conformance Suite
+  # -------------------------------------------------------------------------
+  # Legacy v1 wire-format conformance vectors (zero-skip enforced)
+  # -------------------------------------------------------------------------
+  conformance-vectors:
+    name: Stigmem v1.0 Wire Conformance (vectors)
     runs-on: ubuntu-latest
 
     steps:
@@ -47,3 +50,84 @@ jobs:
           STIGMEM_DB_PATH: ":memory:"
           STIGMEM_AUTH_REQUIRED: "false"
           STIGMEM_SOURCE_ATTESTATION_MODE: "warn"
+
+  # -------------------------------------------------------------------------
+  # Multi-backend behavioral conformance suite (Phase 11)
+  # Parameterized over sqlite, libsql, and postgres (feature-flagged).
+  # -------------------------------------------------------------------------
+  conformance-multi-backend:
+    name: Multi-backend conformance (${{ matrix.backend }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        backend: [sqlite, libsql, postgres]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: stigmem
+          POSTGRES_PASSWORD: stigmem_test
+          POSTGRES_DB: stigmem_conformance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Install stigmem-node (all extras)
+        run: |
+          uv pip install -e "node[dev,libsql,postgres,conformance]"
+
+      - name: Run conformance suite — ${{ matrix.backend }}
+        run: |
+          python -m stigmem_conformance \
+            --backend ${{ matrix.backend }} \
+            --report conformance-${{ matrix.backend }}.md \
+            --verbose
+        env:
+          STIGMEM_TEST_PG_DSN: "postgresql://stigmem:stigmem_test@localhost/stigmem_conformance"
+          STIGMEM_AUTH_REQUIRED: "false"
+          STIGMEM_SOURCE_ATTESTATION_MODE: "warn"
+
+      - name: Upload conformance report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: conformance-report-${{ matrix.backend }}
+          path: conformance-${{ matrix.backend }}.md
+          retention-days: 30
+
+  # -------------------------------------------------------------------------
+  # Gate: all three backends must be green before merging to main
+  # -------------------------------------------------------------------------
+  conformance-gate:
+    name: Conformance gate (all backends)
+    needs: [conformance-vectors, conformance-multi-backend]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all conformance jobs passed
+        run: |
+          if [[ "${{ needs.conformance-vectors.result }}" != "success" ]]; then
+            echo "conformance-vectors failed" && exit 1
+          fi
+          if [[ "${{ needs.conformance-multi-backend.result }}" != "success" ]]; then
+            echo "conformance-multi-backend failed" && exit 1
+          fi
+          echo "All conformance checks passed."

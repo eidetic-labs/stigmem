@@ -48,6 +48,22 @@ embed-openai = [
     # OpenAI embeddings API cloud opt-in (Phase 9 / design memo §2).
     "openai>=1.0",
 ]
+postgres = [
+    # PostgreSQL backend (Phase 11 — feature-flagged).
+    # Requires a running PostgreSQL server; set STIGMEM_PG_DSN or DATABASE_URL.
+    # psycopg2-binary includes pre-compiled C extensions; swap for psycopg2>=2.9
+    # in production environments that compile from source.
+    "psycopg2-binary>=2.9",
+    # pgvector Python adapter — required only when embed_enabled=true.
+    "pgvector>=0.2.0",
+]
+conformance = [
+    # Standalone behavioral conformance suite (Phase 11).
+    # Installs stigmem_conformance and its test runner.
+    # Run: python -m stigmem_conformance --backend <name>
+    "pytest>=8.0",
+    "stigmem-node[postgres]",
+]
 
 [project.scripts]
 stigmem-node = "stigmem_node.main:run"
@@ -58,7 +74,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/stigmem_node"]
+packages = ["src/stigmem_node", "src/stigmem_conformance"]
 
 [tool.ruff]
 line-length = 100

@@ -263,6 +263,13 @@ def assert_fact(
                 file=sys.stderr,
             )
 
+    # Phase 9: mark entity's memory card stale on every write (ACM-214)
+    try:
+        from ..card_materializer import mark_entity_stale as _mark_stale
+        _mark_stale(entity, req.scope, identity.tenant_id)
+    except Exception as _card_exc:
+        logger.warning("card mark_stale failed for %r: %s", entity, _card_exc)
+
     # Phase 9 §2: write-time embedding (background thread, graceful fallback)
     if _embed_enabled:
         threading.Thread(

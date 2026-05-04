@@ -30,6 +30,7 @@ from .routes.intents import router as intents_router
 from .routes.lint import router as lint_router
 from .routes.quarantine import router as quarantine_router
 from .routes.resolver import router as resolver_router
+from .routes.cards import router as cards_router
 from .routes.recall import router as recall_router
 from .routes.subscriptions import router as subscriptions_router
 from .routes.synthesize import router as synthesize_router
@@ -106,6 +107,7 @@ def create_app() -> FastAPI:
     app.include_router(decay_router)
     app.include_router(aliases_router)
     app.include_router(resolver_router)
+    app.include_router(cards_router)
     app.include_router(recall_router)
     app.include_router(subscriptions_router)
     app.include_router(wellknown_router)

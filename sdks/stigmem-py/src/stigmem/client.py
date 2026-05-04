@@ -24,6 +24,7 @@ from .models import (
     FactPage,
     FactScope,
     FactValue,
+    MemoryCard,
     NodeInfo,
     Peer,
     PeerPage,
@@ -312,6 +313,37 @@ class StigmemClient:
         _raise_for_status(resp)
         return RecallResponse.model_validate(resp.json())
 
+    # ------------------------------------------------------------------
+    # Memory cards (Phase 9 — spec §20)
+    # ------------------------------------------------------------------
+
+    def get_card(
+        self,
+        entity_uri: str,
+        *,
+        scope: FactScope = "local",
+        refresh: bool = False,
+    ) -> MemoryCard:
+        """Fetch the synthesized memory card for *entity_uri*.
+
+        Args:
+            entity_uri: The entity to fetch the card for.
+            scope: Fact scope the card was materialised from.
+            refresh: Force a server-side refresh even if the card is fresh.
+
+        Returns:
+            MemoryCard with summary, contributing fact hashes, and confidence.
+
+        Raises:
+            StigmemNotFoundError: When the entity has no live facts.
+        """
+        params: dict[str, Any] = {"scope": scope}
+        if refresh:
+            params["refresh"] = "true"
+        resp = self._http.get(f"/v1/cards/{entity_uri}", params=params)
+        _raise_for_status(resp)
+        return MemoryCard.model_validate(resp.json())
+
 
 class AsyncStigmemClient:
     """Async Stigmem client (httpx.AsyncClient)."""
@@ -522,3 +554,25 @@ class AsyncStigmemClient:
         resp = await self._http.post("/v1/recall", json=req.model_dump())
         _raise_for_status(resp)
         return RecallResponse.model_validate(resp.json())
+
+    # ------------------------------------------------------------------
+    # Memory cards (Phase 9 — spec §20)
+    # ------------------------------------------------------------------
+
+    async def get_card(
+        self,
+        entity_uri: str,
+        *,
+        scope: FactScope = "local",
+        refresh: bool = False,
+    ) -> MemoryCard:
+        """Async fetch of the synthesized memory card for *entity_uri*.
+
+        Raises StigmemNotFoundError when the entity has no live facts.
+        """
+        params: dict[str, Any] = {"scope": scope}
+        if refresh:
+            params["refresh"] = "true"
+        resp = await self._http.get(f"/v1/cards/{entity_uri}", params=params)
+        _raise_for_status(resp)
+        return MemoryCard.model_validate(resp.json())

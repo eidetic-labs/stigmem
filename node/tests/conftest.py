@@ -154,6 +154,8 @@ _PATCHABLE_MODULES = [
     "stigmem_node.routes.lint",
     "stigmem_node.routes.synthesize",
     "stigmem_node.routes.recall",
+    "stigmem_node.routes.cards",
+    "stigmem_node.card_materializer",
     "stigmem_node.rate_limit",
 ]
 

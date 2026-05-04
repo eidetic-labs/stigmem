@@ -256,3 +256,22 @@ class RecallResponse(BaseModel):
     truncated: bool
 
     model_config = {"extra": "allow"}
+
+
+# ---------------------------------------------------------------------------
+# Memory cards (Phase 9 — spec §20)
+# ---------------------------------------------------------------------------
+
+class MemoryCard(BaseModel):
+    """Per-entity synthesized summary card (spec §20)."""
+
+    entity_uri: str
+    scope: str
+    summary: str
+    fact_hashes: list[str]
+    avg_confidence: float
+    refreshed_at: str | None = None
+    is_stale: bool = False
+    has_contradictions: bool = False
+
+    model_config = {"extra": "allow"}

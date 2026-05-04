@@ -20,10 +20,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ..auth import Identity, resolve_identity
+from ..card_materializer import CARD_MIN_CONFIDENCE, get_fresh_card
 from ..db import db
 from ..garden_acl import caller_can_see_garden
 from ..graph import MAX_DEPTH, bfs_neighbors
-from ..models import FactRecord, VALID_SCOPES, row_to_record
+from ..models import FactRecord, FactValue, VALID_SCOPES, row_to_record
 from ..recall_pipeline import apply_recall_pipeline
 from ..settings import settings
 from ..source_trust import compute_source_trust
@@ -83,6 +84,7 @@ class ScoredFact(BaseModel):
     score_breakdown: ScoreBreakdown
     hop_distance: int = 0
     token_estimate: int
+    from_card: bool = False
 
 
 class RecallResponse(BaseModel):
@@ -543,6 +545,59 @@ def recall(
         all_candidate_ids = list(direct_ids | set(graph_hops.keys()))[:_MAX_CANDIDATES]
         all_facts_raw = _fetch_facts_by_ids(conn, all_candidate_ids)
 
+        # --- Card fast-path (§20): for each candidate entity, check for a fresh card ---
+        # Entities with a fresh, high-confidence, contradiction-free card skip raw-fact
+        # re-ranking; their card becomes a single synthetic ScoredFact in the output.
+        card_facts: list[ScoredFact] = []
+        card_entity_ids: set[str] = set()  # fact IDs belonging to card-served entities
+        try:
+            candidate_entities: dict[str, list[str]] = {}  # entity -> [fact_ids]
+            for fid, record in all_facts_raw.items():
+                candidate_entities.setdefault(record.entity, []).append(fid)
+
+            for entity_uri, entity_fact_ids in candidate_entities.items():
+                card = get_fresh_card(entity_uri, req.scope, identity.tenant_id, conn)
+                if (
+                    card is not None
+                    and not card.is_stale
+                    and not card.has_contradictions
+                    and card.avg_confidence >= CARD_MIN_CONFIDENCE
+                ):
+                    # Build a synthetic FactRecord from the card summary
+                    card_record = FactRecord(
+                        id=f"card:{entity_uri}",
+                        entity=entity_uri,
+                        relation="stigmem:card:summary",
+                        value=FactValue(type="text", v=card.summary),
+                        source="system:stigmem:materializer",
+                        timestamp=card.refreshed_at or now,
+                        confidence=card.avg_confidence,
+                        scope=req.scope,
+                    )
+                    card_facts.append(ScoredFact(
+                        fact=card_record,
+                        score=round(card.avg_confidence, 6),
+                        score_breakdown=ScoreBreakdown(
+                            source_trust=round(card.avg_confidence, 4),
+                            weighted_total=round(card.avg_confidence, 6),
+                        ),
+                        hop_distance=0,
+                        token_estimate=_estimate_tokens(card_record),
+                        from_card=True,
+                    ))
+                    card_entity_ids.update(entity_fact_ids)
+        except Exception as _card_exc:
+            logger.warning("card fast-path error (falling through to raw facts): %s", _card_exc)
+            card_facts = []
+            card_entity_ids = set()
+
+        # Exclude card-served facts from raw-fact scoring
+        if card_entity_ids:
+            all_facts_raw = {k: v for k, v in all_facts_raw.items() if k not in card_entity_ids}
+            lex_scores = {k: v for k, v in lex_scores.items() if k not in card_entity_ids}
+            sem_scores = {k: v for k, v in sem_scores.items() if k not in card_entity_ids}
+            graph_hops = {k: v for k, v in graph_hops.items() if k not in card_entity_ids}
+
         # Apply §19 recall pipeline (source-trust multiplier + content sanitiser)
         pipeline_out = apply_recall_pipeline(list(all_facts_raw.values()), identity)
         all_facts = {r.id: r for r in pipeline_out}
@@ -552,6 +607,9 @@ def recall(
             all_facts, lex_scores, sem_scores, graph_hops,
             req.weights, identity, req.depth,
         )
+
+        # Merge card-derived facts with raw-fact candidates
+        candidates.extend(card_facts)
 
         total_scored = len(candidates)
 

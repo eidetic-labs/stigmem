@@ -6,6 +6,7 @@
 **Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
+- v1.1-draft rev 2 (2026-05-04): Security patch — C1: §19.3.3 step 4 rewritten to remove ambiguous external-entity delegation (Option A); H1: §19.3.3 step 1b added for manifest expiry check with refresh; C2: §19.2.6 "Checkpoint Verification" added with normative Rekor key-discovery and verification procedure, failure-closed behavior, and `sigstore-python` reference; H3: §19.3.4 clarified that revocation TL entries are for auditability only, not inline validation; new error codes `inclusion_proof_invalid` (400) and `transparency_log_unavailable` (503) added to §19.9.
 - v1.1-draft (Phase 8): §19 Federation Trust — normative. Replaces the non-normative §19 Security Policy stub from v1.0. Security Policy content moved to Appendix A. §2 extended with `derived_from`, `attestation_chain`, and `source_trust` fields. §19.1–§19.7 cover org manifest, transparency log, capability tokens, source-trust score, quarantine garden, provenance chain, and recall-time sanitizer.
 - v1.0 (2026-05-03): Promoted §17 Memory Garden and §18 Source Attestation from draft to normative. All §1–§18 sections stable.
 - [Prior changelog in stigmem-spec-v1.0.md]
@@ -257,6 +258,20 @@ Nodes SHOULD store the `LogEntry` alongside the manifest and serve it at `/.well
 
 Capability token revocations (§19.3.4) MUST be submitted to the transparency log as a distinct log entry type. This makes revocations independently auditable: a peer can verify a token is revoked by checking the log without trusting the issuing node's runtime state.
 
+#### 19.2.6 Checkpoint Verification
+
+The `checkpoint` field in `LogEntry.inclusion_proof` is a signed note in the [transparency-dev/formats](https://github.com/transparency-dev/formats) checkpoint format. Implementations MUST be able to verify it as follows:
+
+1. **Key discovery.** Obtain the log's public key from the log's key discovery endpoint. For Rekor-compatible logs, issue `GET /api/v1/log` against the log instance; the response includes the ECDSA public key (PEM-encoded in the `publicKey.content` field, base64-encoded) used to sign checkpoint notes.
+
+2. **Verification.** For Rekor-compatible logs, implementations MUST verify the checkpoint using the log's published public key as returned by the log's key discovery endpoint. A checkpoint that fails signature verification MUST cause the enclosing inclusion proof to be rejected.
+
+3. **Failure-closed behavior.** If the transparency log is unreachable when an inclusion proof is required (i.e., the node operates in `trust_mode: strict`), the manifest MUST be rejected. Implementations MUST NOT fall back to accepting an unverified manifest in `trust_mode: strict` when the log is unavailable.
+
+4. **Reference implementation.** The `sigstore-python` library (`sigstore.verify`) is the reference implementation for checkpoint and inclusion-proof verification. Implementations in other languages SHOULD follow the same verification flow.
+
+5. **Error codes.** See §19.9 for `inclusion_proof_invalid` (HTTP 400) and `transparency_log_unavailable` (HTTP 503).
+
 ---
 
 ### 19.3 Capability Tokens
@@ -291,9 +306,10 @@ The `verb` values are:
 
 The issuer MUST sign the token using the private key corresponding to the `public_key` in their current org manifest (§19.1). Verifiers MUST:
 1. Resolve the issuer's org manifest.
+1b. Check `manifest.expires_at > now`; if expired, attempt refresh from the issuer's `/.well-known/stigmem-manifest.json`; reject the token if the manifest is still expired after refresh.
 2. Verify the manifest's self-signature.
 3. Verify the token's `signature` under the manifest's `public_key`.
-4. Check that `subject` appears in the issuer's `entities` list or is an external entity the issuer is permitted to delegate to.
+4. Check that `subject` appears in the issuer's `entities` list. External-entity subjects are not permitted; cross-org delegation requires the delegatee to obtain their own org manifest and capability tokens.
 5. Check `expiry` > now.
 5b. Check `expiry` ≤ `issued_at` + 90 days.
 6. Check the token is not revoked (§19.3.4).
@@ -317,6 +333,8 @@ RevocationEvent:
 Nodes that receive a token MUST check for a revocation event before honoring it. Nodes SHOULD cache revocation events with a TTL of no less than 60 seconds.
 
 A revoked token MUST be rejected even if it has not yet expired.
+
+**Revocation transparency log entries are for auditability, not real-time validation.** Implementations MUST NOT attempt an inline transparency log query as part of per-request token validation; doing so would introduce a synchronous dependency on an external service in the hot path. Real-time revocation checks MUST use the local revocation cache (populated by background sync) and the issuer's revocation API (§5.24). Transparency log entries for revocations exist so that auditors and peers can independently verify that a revocation occurred and when — they are not the authoritative revocation signal for runtime decisions.
 
 #### 19.3.5 Token Nonce and Replay Prevention
 
@@ -712,6 +730,8 @@ CREATE INDEX IF NOT EXISTS idx_facts_quarantine_garden ON facts(quarantine_garde
 | 403 | `token_replay` | Token nonce already seen within its validity window |
 | 403 | `insufficient_capability` | Bearer's capability token does not cover the requested verb/object |
 | 403 | `entity_not_in_manifest` | Source entity_uri not in the issuer's manifest `entities` list |
+| 400 | `inclusion_proof_invalid` | Checkpoint signature or Merkle path fails verification; the transparency log inclusion proof is invalid |
+| 503 | `transparency_log_unavailable` | The transparency log was unreachable; in `trust_mode: strict`, the manifest MUST be rejected |
 | 409 | `quarantine_has_pending_facts` | Attempted deletion of quarantine garden with pending facts |
 | 409 | `fact_not_quarantine_pending` | Promote/reject attempted on a fact not in `pending` quarantine state |
 | 409 | `fact_is_attested` | Update to a hash-relevant field rejected because `attestation_chain` is present and node is configured to reject rather than clear |

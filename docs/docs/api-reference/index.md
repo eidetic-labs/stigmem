@@ -31,6 +31,7 @@ The Stigmem reference node exposes a REST API implementing spec §5. The interac
 | **Graph** | `/v1/graph/*` | API key | §20.1 |
 | **Subscriptions** | `/v1/subscriptions` | API key + capability token | §20.5 |
 | **Provenance** | `/v1/facts/:id/provenance` | API key | §20.6 |
+| **Instructions** | `/v1/agents/:id/instruction-manifest` · `/v1/agents/:id/recall-instruction` | API key | §21 |
 
 ---
 
@@ -224,6 +225,144 @@ curl -s http://localhost:8000/v1/facts/abc123/provenance \
 ```
 
 **Response:** array of `FactRecord` objects in topological order (root antecedents first), each annotated with `depth`, `is_root`, and `exists` fields. Unauthorized cross-scope references appear as `{"hash": "...", "exists": false}` entries.
+
+---
+
+## Phase 10 endpoints (§21 — DRAFT)
+
+### `PUT /v1/agents/{agent_id}/instruction-manifest`
+
+Publish or replace the instruction manifest for an agent. The manifest is the index Stigmem uses to answer lazy `recall-instruction` requests — it lists each instruction unit with its load triggers, token estimate, and fact URI.
+
+The manifest is written with a versioned identifier (`{version}-{timestamp}`) so old manifests are superseded rather than overwritten in place.
+
+**Auth:** `write` scope required.
+
+**Path parameter:**
+- `agent_id` — UUID of the agent that owns the manifest.
+
+**Request body:**
+
+```json
+{
+  "version": "v1-1746393600",
+  "entries": [
+    {
+      "name": "deployment-checklist",
+      "description": "Deployment Checklist",
+      "fact_uri": "instruction:default/agent/{agent_id}/deployment-checklist/v1",
+      "load_triggers": {
+        "intents": ["deployment checklist"],
+        "keywords": ["deploy", "checklist", "release"],
+        "task_types": []
+      },
+      "token_estimate": 340
+    }
+  ],
+  "skip_coverage_gate": false
+}
+```
+
+**Response:** `200 OK` on success; the stored manifest body with `created_at` and `superseded_at` timestamps.
+
+Typically published automatically by `stigmem instruction migrate`. See the [Instruction Migration guide](../guides/instruction-migration.md) for the full workflow.
+
+---
+
+### `POST /v1/agents/{agent_id}/recall-instruction`
+
+Retrieve the most relevant instruction units for a given agent intent. Uses a three-phase retrieval strategy:
+
+1. **Hint resolution** — explicit `manifest_hint` names are loaded first (highest priority).
+2. **Ranked retrieval** — remaining slots are filled by BM25 scoring of `intent` against each unit's `description`, `load_triggers.intents`, and `keywords`.
+3. **Guaranteed units** — units with `guarantee_load: true` are always appended regardless of score; at most 5 per manifest.
+
+**Auth:** `read` scope required.
+
+**Path parameter:**
+- `agent_id` — UUID of the agent whose manifest to query.
+
+**Request body:**
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `intent` | string | Yes | — | Natural-language description of what the agent is about to do |
+| `max_chunks` | integer | No | 3 | Maximum instruction units to load (1–20) |
+| `token_budget` | integer | No | 2000 | Token limit across all returned chunks (1–100 000) |
+| `manifest_hint` | array of strings | No | `[]` | Explicit unit names to prioritize by name |
+
+**Example:**
+
+```bash
+curl -s -X POST \
+  http://localhost:8000/v1/agents/a1b2c3d4-0000-0000-0000-000000000001/recall-instruction \
+  -H 'Authorization: Bearer <api-key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "intent": "how do I handle a production incident?",
+    "max_chunks": 3,
+    "token_budget": 2000
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "chunks": [
+    {
+      "name": "incident-response",
+      "fact_uri": "instruction:default/agent/.../incident-response/v1",
+      "content": "## Incident Response\n\nWhen a production incident...",
+      "tokens": 210,
+      "valid_until": null,
+      "version": "v1",
+      "score": 0.91,
+      "source": "stigmem"
+    }
+  ],
+  "total_tokens": 210,
+  "truncated": false,
+  "missed_hints": [],
+  "audit_token": "aud_abc123"
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `chunks` | Ranked instruction units within the token budget |
+| `total_tokens` | Sum of token estimates across returned chunks |
+| `truncated` | `true` if guaranteed units exceeded the token budget |
+| `missed_hints` | `manifest_hint` names that were not found in the manifest |
+| `audit_token` | Submit to `POST /v1/instruction/audit` to log which chunks were used |
+
+See the [Instruction Migration guide](../guides/instruction-migration.md) for the full dry-run → migrate → recall-instruction workflow.
+
+---
+
+### CLI reference — `stigmem instruction migrate`
+
+The `stigmem instruction migrate` command is the primary tool for publishing instruction files to a node. It is a wrapper around the two endpoints above.
+
+```
+stigmem instruction migrate PATH --role ROLE --agent-id UUID [options]
+stigmem instruction migrate PATH --skill SKILL --agent-id UUID [options]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `PATH` | — | Markdown file or directory |
+| `--role ROLE` / `--skill SKILL` | — | Scope selector (mutually exclusive) |
+| `--agent-id UUID` | — | Agent UUID owning the manifest |
+| `--deployment NAME` | `default` | Deployment namespace |
+| `--version VER` | `v1` | Fact version string |
+| `--node-url URL` | `http://127.0.0.1:8000` | Node base URL |
+| `--api-key KEY` | `$STIGMEM_API_KEY` | API key for writes |
+| `--db PATH` | — | Local SQLite file for fast idempotency checks |
+| `--dry-run` | — | Print diff, exit without writing |
+| `-y` / `--yes` | — | Skip confirmation prompt |
+
+Full documentation, idempotency semantics, and the tombstone lifecycle are in the [Instruction Migration guide](../guides/instruction-migration.md).
 
 ## Authentication
 

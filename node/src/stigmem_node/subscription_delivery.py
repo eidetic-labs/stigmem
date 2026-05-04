@@ -128,12 +128,36 @@ def _subscriber_identity(entity_uri: str, tenant_id: str) -> Identity:
     return Identity(entity_uri=entity_uri, permissions=["read"], tenant_id=tenant_id)
 
 
+def _subscriber_has_active_key(entity_uri: str, tenant_id: str) -> bool:
+    """Return True if at least one non-expired API key exists for this identity.
+
+    Only consulted when STIGMEM_AUTH_REQUIRED=true so that single-operator
+    (auth-disabled) nodes are not affected.
+    """
+    from . import settings as _sp
+    if not _sp.settings.auth_required:
+        return True
+    now = datetime.now(UTC).isoformat()
+    with db() as conn:
+        row = conn.execute(
+            "SELECT id FROM api_keys WHERE entity_uri=? AND tenant_id=?"
+            " AND (expires_at IS NULL OR expires_at > ?) LIMIT 1",
+            (entity_uri, tenant_id, now),
+        ).fetchone()
+    return row is not None
+
+
 def _sanitize_payload(event: Any, payload: dict) -> dict | None:
     """Apply §17 garden ACL and §19 sanitizer.  Returns None to suppress delivery."""
     from .models import FactRecord, FactValue
 
     subscriber = event["subscriber_identity"]
     tenant_id = event["tenant_id"]
+
+    # S2 fix: re-check that the subscriber still holds an active read credential.
+    # Prevents continued delivery after API key revocation for scope/entity subscriptions.
+    if not _subscriber_has_active_key(subscriber, tenant_id):
+        return None
 
     # §17 garden ACL re-check: skip delivery if subscriber no longer a member
     garden_uuid = payload.get("garden_id")
@@ -217,7 +241,12 @@ def _deliver_wake(event: Any, payload: dict) -> bool:
     if sanitized is None:
         return True  # ACL blocked; mark delivered
 
-    # Wake delivery: emit structured JSON for operator/platform pickup
+    # P1 note: wake delivery writes sanitized fact payloads to stderr for
+    # operator/platform pickup.  Any process with stderr access sees ALL wake
+    # events from ALL subscribers.  This is intentional for the operator
+    # integration use-case but means the platform operator is implicitly
+    # trusted with the content of every wake-delivered fact.  Operators that
+    # need per-subscriber isolation should run one node per subscriber.
     print(
         json.dumps({
             "stigmem_wake": {

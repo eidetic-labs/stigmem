@@ -641,3 +641,97 @@ def test_delivery_sanitizer_redacted(client: TestClient) -> None:
     # sanitizer_mode default is "warn" so fact is delivered with warnings, not fully redacted
     fact = delivered_body.get("fact", {})
     assert "sanitizer_warnings" in fact or fact.get("redacted") is None
+
+
+# ---------------------------------------------------------------------------
+# Security regression: S3 — replay window must re-apply garden ACL / sanitizer
+# ---------------------------------------------------------------------------
+
+
+def test_replay_window_suppresses_garden_acl_blocked_events(client: TestClient) -> None:
+    """S3 regression: garden-ACL-blocked events must not appear in the replay window.
+
+    A scope subscriber who is removed from a garden should not be able to retrieve
+    garden-scoped fact payloads via GET /v1/subscriptions/{id}/events.  Without the
+    fix, the raw pre-delivery payload (stored verbatim in subscription_events) would
+    be returned, bypassing the delivery-time ACL check.
+    """
+    sub = _create_subscription(client, target="local")
+
+    garden_uuid = str(uuid.uuid4())
+    import stigmem_node.db as db_mod
+    secret_fact_id = str(uuid.uuid4())
+    payload = {
+        "id": secret_fact_id,
+        "entity": "stigmem://test/agent/alice",
+        "relation": "test:secret",
+        "value_type": "string",
+        "value_v": "classified_value",
+        "source": "stigmem://test/agent/alice",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "scope": "local",
+        "confidence": 1.0,
+        "garden_id": garden_uuid,
+    }
+    event_id = str(uuid.uuid4())
+    with db_mod.db() as conn:
+        conn.execute(
+            """INSERT INTO subscription_events
+               (id, subscription_id, event_type, entity_uri, fact_id, payload, created_at, delivery_status)
+               VALUES (?,?,?,?,?,?,?,'delivered')""",
+            (event_id, sub["id"], "fact_asserted", payload["entity"],
+             payload["id"], json.dumps(payload), datetime.now(UTC).isoformat()),
+        )
+
+    # Subscriber is NOT a member of garden_uuid — garden ACL should suppress
+    with patch("stigmem_node.subscription_delivery.get_member_role", return_value=None):
+        resp = client.get(f"/v1/subscriptions/{sub['id']}/events")
+
+    assert resp.status_code == 200
+    events = resp.json()["events"]
+    assert len(events) == 1
+    # Payload must be redacted, not the raw classified value
+    assert events[0]["payload"].get("redacted") is True
+    assert "classified_value" not in str(events[0]["payload"])
+
+
+# ---------------------------------------------------------------------------
+# Security regression: R2 — idempotency key must not leak across entities
+# ---------------------------------------------------------------------------
+
+
+def test_idempotency_key_not_shared_across_entities(two_authed_clients: tuple) -> None:
+    """R2 regression: idempotency key lookup must be scoped to the caller's identity.
+
+    If entity A creates a subscription with key K and entity B sends POST with key K,
+    the old code would return entity A's subscription to entity B, leaking delivery_address,
+    subscriber_identity, and target.  The fix scopes the lookup to subscriber_identity.
+    """
+    client, headers_a, headers_b = two_authed_clients
+
+    key = str(uuid.uuid4())
+    # Entity A creates subscription with this idempotency key
+    resp_a = client.post(
+        "/v1/subscriptions",
+        json={"target": "local", "on_change": "webhook",
+              "delivery_address": "https://a-private.example.com/hook",
+              "idempotency_key": key},
+        headers=headers_a,
+    )
+    assert resp_a.status_code == 201
+    sub_a_id = resp_a.json()["id"]
+
+    # Entity B sends the same idempotency key — must NOT receive entity A's subscription
+    resp_b = client.post(
+        "/v1/subscriptions",
+        json={"target": "team", "on_change": "webhook",
+              "delivery_address": "https://b.example.com/hook",
+              "idempotency_key": key},
+        headers=headers_b,
+    )
+    assert resp_b.status_code == 201
+    sub_b = resp_b.json()
+    # B must get a fresh subscription, not A's
+    assert sub_b["id"] != sub_a_id
+    assert sub_b["delivery_address"] == "https://b.example.com/hook"
+    assert sub_b["subscriber_identity"] != resp_a.json()["subscriber_identity"]

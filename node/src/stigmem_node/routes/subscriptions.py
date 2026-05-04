@@ -28,6 +28,7 @@ from ..models import (
     SubscriptionListResponse,
     SubscriptionRecord,
 )
+from ..subscription_delivery import _sanitize_payload as _sanitize_event_payload
 
 router = APIRouter(prefix="/v1/subscriptions", tags=["subscriptions"])
 
@@ -67,6 +68,22 @@ def _event_row_to_record(row: Any) -> SubscriptionEventRecord:
     )
 
 
+def _event_row_to_record_with_payload(row: Any, payload_json: str) -> SubscriptionEventRecord:
+    """Like _event_row_to_record but substitutes a pre-sanitized payload JSON string."""
+    return SubscriptionEventRecord(
+        id=row["id"],
+        subscription_id=row["subscription_id"],
+        event_type=row["event_type"],
+        entity_uri=row["entity_uri"],
+        fact_id=row["fact_id"],
+        payload=json.loads(payload_json),
+        created_at=row["created_at"],
+        delivered_at=row["delivered_at"],
+        delivery_status=row["delivery_status"],
+        delivery_attempts=row["delivery_attempts"],
+    )
+
+
 # ---------------------------------------------------------------------------
 # CRUD
 # ---------------------------------------------------------------------------
@@ -88,12 +105,13 @@ def create_subscription(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
         require_garden_read(garden, identity)
 
-    # Idempotency key: return existing subscription if key matches
+    # Idempotency key: return existing subscription if key matches THIS caller.
+    # Scoped to (subscriber_identity, tenant_id) to prevent cross-entity metadata leakage (R2).
     if req.idempotency_key:
         with db() as conn:
             existing = conn.execute(
-                "SELECT * FROM subscriptions WHERE idempotency_key=? AND tenant_id=?",
-                (req.idempotency_key, identity.tenant_id),
+                "SELECT * FROM subscriptions WHERE idempotency_key=? AND tenant_id=? AND subscriber_identity=?",
+                (req.idempotency_key, identity.tenant_id, identity.entity_uri),
             ).fetchone()
         if existing is not None:
             return _row_to_record(existing)
@@ -247,8 +265,24 @@ def list_subscription_events(
     rows = rows[:limit]
     next_cursor = str(rows[-1]["rowid"]) if has_more and rows else None
 
+    # S3 fix: re-apply §17 garden ACL and §19 sanitizer at replay time.
+    # subscription_events.payload stores the raw pre-delivery payload; without this
+    # re-check a subscriber could retrieve garden-scoped facts they've since been
+    # removed from, or sanitizer-redacted content, via the replay window.
+    event_ctx = {"subscriber_identity": sub_row["subscriber_identity"], "tenant_id": identity.tenant_id}
+    safe_events: list[SubscriptionEventRecord] = []
+    for r in rows:
+        raw_payload = json.loads(r["payload"])
+        sanitized = _sanitize_event_payload(event_ctx, raw_payload)
+        if sanitized is None:
+            # ACL/sanitizer blocked — return redacted placeholder
+            safe_payload = json.dumps({"fact_id": raw_payload.get("id"), "redacted": True})
+        else:
+            safe_payload = json.dumps(sanitized)
+        safe_events.append(_event_row_to_record_with_payload(r, safe_payload))
+
     return SubscriptionEventsResponse(
-        events=[_event_row_to_record(r) for r in rows],
-        total=len(rows),
+        events=safe_events,
+        total=len(safe_events),
         cursor=next_cursor,
     )

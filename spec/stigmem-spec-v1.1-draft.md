@@ -6,6 +6,7 @@
 **Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
+- v1.1-draft rev 10 (2026-05-04): SecurityEngineer re-review amendments (ACM-237). (S1) §21.1.5 rule 1: wake reason MUST be sourced from authenticated control-plane event; runtime MUST NOT accept unverified caller-supplied wake_reason for preload dispatch. (S2) §21.1.5 rule 4: `guarantee_load: true` units MUST cause fatal heartbeat abort if unreachable; non-fatal continues only for `guarantee_load: false` units; preload failures MUST be written to instruction_audit table. (S3) §21.1.5: blast-radius note added — preloaded units exposed to all subsequent task context including adversarial injections. (S4) §21.3.3 rule 3: cap changed from per-deployment to per-agent (max 5/agent); deployment-wide soft cap may emit warning but MUST NOT block individual publishes. (S5) §21.3.3: confidentiality note — guaranteed units accessible to any authorised recall caller including via prompt injection; content MUST NOT rely on retrieval difficulty for confidentiality. (S6) §21.3.3 rule 1: `force_position: "prepend"` MUST require distinct admin approval record; SHOULD be reserved for policy units. (S7) §21.8.3: `skip_coverage_gate: true` on manifests with `guarantee_load: true` entries MUST require dual-admin co-signature; audit event MUST include failing unit names and coverage_pct. (S8) §21.8.3: paraphrase generator data boundary — input MUST be limited to trigger strings; instruction content MUST NOT be sent to external services; external services MUST be in trust manifest. (S9) §21.8.6: peer agent API key querying another agent's coverage MUST return 403 instruction_scope_denied; agent key scoped to own agent_id only. (S10) §21.8.3: 7-day auto-re-certification SHOULD on bypass. (S11) §21.8.6: coverage_status categorical labels SHOULD be restricted to admin-key responses; agent-key responses return raw metrics only.
 - v1.1-draft rev 9 (2026-05-04): §21 chronic-miss mitigations (RS collab). (B) §21.1.5 Task-Type Preloads: `required_by_task_types` manifest field; runtime deterministically injects matching units at heartbeat start before agent context; lint gate on task-type enum; >2 declared task types requires admin sign-off. (A-aug) §21.8.3 augmented manifest certification gate: N=5 paraphrase expansion per intent, top-k coverage check, reject at <80% coverage with `manifest_coverage_failure`; re-certification required on embedding model bump. (C) §21.3.3 guarantee_load: `guarantee_load` boolean on manifest entries; append-by-default; hard budget precedence (guaranteed units never silently dropped); deployment cap of 5 units; `force_position: "prepend"` override for policy units. (D) §21.5.4 expanded: Approach D probe-set + soft-score-lift architecture added as Phase 11 roadmap item; `score += log(1+λ)` lift for coverage-critical units; background audit job; coverage endpoint §21.8.6. New error codes: `manifest_coverage_failure`, `task_type_unknown`, `guarantee_cap_exceeded`.
 - v1.1-draft rev 8 (2026-05-04): §21.1.1 defensive guidance — boot stub SHOULD NOT (not MUST NOT) contain operational content; "always-applicable" rules (mandatory escalation thresholds, universal security constraints, hard prohibitions) MAY be embedded directly as the primary mitigation against chronic instruction-scope miss. Deployments SHOULD classify units as "always applicable" vs "task-conditional" at manifest authoring time.
 - v1.1-draft rev 7 (2026-05-04): §21.5.3 amendment — endogeneity caveat + §21.5.4 probe-set eval. Adds a non-normative note documenting the `used_chunks` endogeneity limitation (chronic misses invisible to live-audit Recall@k/Hit@k/miss-rate). Adds non-normative §21.5.4 specifying the probe-set complement: curated `(intent, required_units, k)` probes; Probe-coverage@k and Probe-hit@k metrics independent of agent behavior; follow-on spec revision will formalize after live data calibration.
@@ -1549,17 +1550,18 @@ Immediately after boot stub delivery and before the agent receives any task cont
 
 Rules:
 
-1. The runtime MUST compare the current wake reason (e.g. `issue_assigned`, `issue_commented`, `routine_fired`) against each manifest entry's `required_by_task_types` array. String comparison is exact and case-sensitive.
+1. The runtime MUST compare the current wake reason against each manifest entry's `required_by_task_types` array. String comparison is exact and case-sensitive. **The wake reason MUST be sourced from the authenticated heartbeat trigger event (e.g. the control-plane JWT or signed adapter payload). The runtime MUST NOT accept an unverified `wake_reason` claim originating from the agent's task context or any caller-supplied payload when dispatching preloads.** (S1)
 2. All matching units MUST be fetched and injected into the agent's context before any task context is provided.
 3. Preloaded units MUST be included in the heartbeat's audit record under `loaded_chunks`, tagged with `"source": "task_type_preload"`.
-4. If a preloaded unit's `fact_uri` is unreachable, the runtime MUST fall back to `path` if present (with `"source": "fallback_path"`) or MUST surface a non-fatal `preload_unit_unavailable` warning and continue — a missing preload MUST NOT abort the heartbeat.
+4. If a preloaded unit's `fact_uri` is unreachable, the runtime MUST fall back to `path` if present (with `"source": "fallback_path"`) or MUST surface a `preload_unit_unavailable` warning and continue — a missing preload MUST NOT abort the heartbeat. **Exception: if the unavailable unit also has `guarantee_load: true` in the manifest, the runtime MUST treat unavailability as fatal and MUST abort the heartbeat with a `preload_unit_unavailable` error.** Non-fatal fallback applies only to units with `guarantee_load: false`. In all cases the warning or error MUST be written to the `instruction_audit` table (not only local log) to support replay-based audit (§21.5.3). (S2)
 5. Token budget: the combined token cost of boot stub + task-type preloads SHOULD remain under 2000 tokens. Implementations SHOULD emit a `preload_budget_warning` event when this threshold is exceeded but MUST NOT silently drop preloaded units.
 
 Governance:
 
-- Any manifest entry declaring more than **2** `required_by_task_types` values MUST require explicit administrator approval before the manifest can be published (enforced at §21.8.3 as `>2_task_types_requires_approval`).
+- Any manifest entry declaring more than **2** `required_by_task_types` values MUST require explicit administrator approval before the manifest can be published (enforced at §21.8.3 as `task_types_approval_required`).
 - Build pipelines MUST validate all strings in `required_by_task_types` against the deployment's registered wake-reason enum. Unknown values MUST cause a `task_type_unknown` error at manifest publish time (§21.9).
 - The intent of task-type preloads is for structurally-predictable critical units. Authors MUST NOT use `required_by_task_types` as a shortcut to load content that should be retrieved semantically; excessive preload declarations rot into a distributed boot stub.
+- **Blast-radius note:** Units declared in `required_by_task_types` are exposed unconditionally to all subsequent task context, including adversarial prompt injections that arrive later in the same heartbeat. Authors SHOULD NOT declare units containing content that must remain confidential from adversarial task payloads. (S3)
 
 ---
 
@@ -1597,7 +1599,7 @@ Each instruction unit in the manifest MUST be described by the following fields:
 | `name` | MUST | Stable identifier for this instruction unit; MUST be unique within the manifest |
 | `description` | MUST | One-line (≤ 120 characters) description of what this unit covers |
 | `required_by_task_types` | SHOULD for critical units | Wake-reason strings that cause this unit to be deterministically preloaded at heartbeat start (§21.1.5); entries MUST be registered wake-reason enum values |
-| `guarantee_load` | MAY | If `true`, unit is always appended to `recall_instruction` responses regardless of relevance score (§21.3.3); max 5 per deployment; requires explicit admin approval |
+| `guarantee_load` | MAY | If `true`, unit is always appended to `recall_instruction` responses regardless of relevance score (§21.3.3); max 5 per agent; requires explicit admin approval; content MUST be safe for any authorised recall caller to observe |
 | `load_triggers.intents` | SHOULD | Natural-language intent phrases that SHOULD cause this unit to be loaded |
 | `load_triggers.keywords` | SHOULD | Exact or prefix-match keywords; implementations MAY use BM25 matching |
 | `load_triggers.task_types` | MAY | Event type strings (e.g. `issue_assigned`) that SHOULD trigger a `recall_instruction` call; distinct from `required_by_task_types` (semantic hint, not deterministic preload) |
@@ -1698,11 +1700,12 @@ If `manifest_hint` is provided, the named units MUST be included in the result (
 
 **Guaranteed units (`guarantee_load: true`):** After ranked and hinted results are assembled, the implementation MUST append all manifest units with `guarantee_load: true` that were not already included. The following rules govern their inclusion:
 
-1. **Position:** guaranteed units MUST be appended after ranked results by default, so that ranked results (higher expected relevance) receive attention primacy. A unit with `force_position: "prepend"` in its manifest entry MUST be prepended instead; this override SHOULD be reserved for universal policy units where omission risk outweighs priming risk.
+1. **Position:** guaranteed units MUST be appended after ranked results by default, so that ranked results (higher expected relevance) receive attention primacy. A unit with `force_position: "prepend"` in its manifest entry MUST be prepended instead. **A unit with `force_position: "prepend"` MUST undergo explicit content review at manifest publish time, recorded in provenance metadata, and MUST require a distinct admin approval record separate from the general `guarantee_load` approval.** The `force_position: "prepend"` override SHOULD be reserved for universal policy units where omission risk outweighs priming risk. (S6)
 2. **Budget precedence:** guaranteed units MUST NOT be silently dropped by `token_budget` exhaustion. If budget is exhausted after ranked results, the implementation MUST still append guaranteed units and MUST set `truncated: true`. Ranked results are truncated first to make room; guaranteed units are truncated last but never to zero.
-3. **Deployment cap:** at most **5** manifest units per deployment may have `guarantee_load: true`. Manifest publish MUST be rejected with `guarantee_cap_exceeded` if this limit would be exceeded (§21.9).
+3. **Agent cap:** at most **5** manifest units **per agent** may have `guarantee_load: true`. Manifest publish MUST be rejected with `guarantee_cap_exceeded` if this per-agent limit would be exceeded (§21.9). A deployment-wide soft cap MAY be configured; exceeding it SHOULD emit a warning event but MUST NOT block individual agent manifest publishes. (S4)
 4. **Relevance threshold:** implementations SHOULD warn (non-fatal) if a guaranteed unit has an empirical `P(relevant | recall_invoked) < 0.6` based on the discovery audit; this is a signal to remove the `guarantee_load` flag from that unit.
 5. **Governance:** setting `guarantee_load: true` on any manifest entry requires explicit administrator approval. The approval MUST be recorded in the manifest's provenance metadata.
+6. **Confidentiality note:** guaranteed units are appended to every `recall_instruction` response and are therefore accessible to any principal authorised to invoke `recall_instruction` for this agent, including via prompt injection. Content in guaranteed units MUST NOT rely on retrieval difficulty for confidentiality. Guaranteed units MUST only contain content that is acceptable for any authorised recall caller to observe. (S5)
 
 #### 21.3.4 Determinism and Auditability
 
@@ -2067,7 +2070,9 @@ Content-Type: application/json
 3. Compute `coverage_pct = (paraphrases where unit in top-k) / (total paraphrases)`.
 4. If `coverage_pct < 0.80` for any unit, the entire publish MUST be rejected with `manifest_coverage_failure`, identifying the failing unit(s).
 
-`skip_coverage_gate: true` MAY be used by administrators to bypass the coverage check (e.g. for bootstrap or emergency update); the bypass MUST be recorded in the manifest's provenance metadata and MUST emit an audit event.
+`skip_coverage_gate: true` MAY be used by administrators to bypass the coverage check (e.g. for bootstrap or emergency update); the bypass MUST be recorded in the manifest's provenance metadata and MUST emit an audit event that includes the names and `coverage_pct` values of all units that would have failed the gate. **When `skip_coverage_gate: true` is used on a manifest containing any `guarantee_load: true` entry, the bypass provenance record MUST include co-signatures from at least two distinct administrators (two distinct `authored_by` entity URIs). Single-admin bypass is permitted only for manifests with no `guarantee_load: true` entries.** (S7) Implementations SHOULD automatically schedule re-certification within 7 days when `skip_coverage_gate: true` is used. (S10)
+
+**Paraphrase generator data boundary:** Paraphrase generation input MUST be limited to `load_triggers.intents` strings only. Instruction fact content (the body of instruction units) MUST NOT be sent to any external paraphrase generation service. If an external service is used for paraphrase generation, it MUST be listed in the deployment's trust manifest (§19.1) and covered by an appropriate data processing agreement. Implementations SHOULD prefer local, deterministic paraphrase methods for deployments handling confidential instruction content. (S8)
 
 **Re-certification requirement:** When the deployment's embedding model version changes, all existing manifests MUST be re-certified through this gate before the new model version is activated for production recall. Implementations MUST expose the current embedding model version in the `GET /v1/agents/{agent_id}/instruction-manifest` response.
 
@@ -2118,6 +2123,7 @@ Content-Type: application/json
 GET /v1/agents/{agent_id}/instruction-manifest/coverage
 Authorization: Bearer <agent api-key or admin api-key>
 
+Agent-key response:
 → 200 {
     "manifest_version": "v4",
     "embedding_model_version": "nomic-embed-text-v1.5",
@@ -2126,26 +2132,25 @@ Authorization: Bearer <agent api-key or admin api-key>
       {
         "name":             "security-posture",
         "coverage_pct":     0.95,
-        "coverage_status":  "ok",
         "hit_at_10":        0.92,
-        "probe_count":      20,
-        "last_evaluated_at": "2026-05-04T06:00:00Z"
-      },
-      {
-        "name":             "escalation-path",
-        "coverage_pct":     0.38,
-        "coverage_status":  "coverage_critical",
-        "hit_at_10":        0.35,
         "probe_count":      20,
         "last_evaluated_at": "2026-05-04T06:00:00Z"
       }
     ]
   }
-→ 403 if caller is not the agent itself or an admin
+
+Admin-key response: same as above, plus "coverage_status" field per unit.
+
+→ 403 instruction_scope_denied  if agent API key's scope does not match {agent_id}
+→ 403 if peer agent's API key is used to query another agent's coverage
 → 404 if no manifest or no coverage report generated yet
 ```
 
-`coverage_status` values: `"ok"` (hit@10 ≥ 0.4), `"coverage_critical"` (hit@10 < 0.4, soft-lift eligible in Phase 11), `"not_evaluated"` (probe run not yet completed). This endpoint is the primary operator signal for diagnosing instruction units before they produce production misses.
+**Scope validation (S9):** The `agent_id` path parameter MUST be validated against the caller's API key scope. An agent API key MUST only grant access to the coverage report for the agent whose scope matches the token. A peer agent's API key querying a different agent's coverage report MUST return `403 instruction_scope_denied`. Only an admin API key may access any agent's coverage report.
+
+**Categorical label restriction (S11):** The `coverage_status` categorical label (`"ok"`, `"coverage_critical"`, `"not_evaluated"`) SHOULD be returned only in admin-key responses. Agent-key responses SHOULD return only raw `coverage_pct` and `hit_at_10` values, omitting the categorical label. This limits the retrieval-quality oracle surface for non-admin callers.
+
+`coverage_status` values (admin-only): `"ok"` (hit@10 ≥ 0.4), `"coverage_critical"` (hit@10 < 0.4, soft-lift eligible in Phase 11), `"not_evaluated"` (probe run not yet completed). This endpoint is the primary operator signal for diagnosing instruction units before they produce production misses.
 
 ---
 

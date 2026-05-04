@@ -396,12 +396,15 @@ def test_expired_manifest_rejects_token_issuance(tmp_path: Path):
             conn.commit()
             conn.close()
 
+            # Mint an API key so the caller authenticates as the issuer (H-SEC-1 BOLA guard)
+            issuer_key = auth_mod.create_api_key(issuer, ["read", "write"])
+
             resp = client.post("/v1/federation/capability-tokens", json={
                 "issuer": issuer,
                 "subject": issuer,
                 "verb": "read",
                 "object": "stigmem://test/facts",
-            })
+            }, headers={"Authorization": f"Bearer {issuer_key}"})
             # H1: expired manifest → 422 (manifest not found or expired)
             assert resp.status_code == 422, resp.text
             assert "expired" in resp.json().get("detail", "").lower()
@@ -425,13 +428,16 @@ def test_external_entity_subject_rejected(identity_client: TestClient):
     resp = identity_client.put("/v1/federation/manifest", json=manifest_to_dict(m))
     assert resp.status_code == 200, resp.text
 
+    # Mint an API key so the caller authenticates as the issuer (H-SEC-1 BOLA guard)
+    api_key = auth_mod.create_api_key(issuer, ["read", "write"])
+
     # Attempt to issue a token with an external subject
     resp = identity_client.post("/v1/federation/capability-tokens", json={
         "issuer": issuer,
         "subject": "https://attacker.org",  # NOT in entities list
         "verb": "read",
         "object": "stigmem://facts",
-    })
+    }, headers={"Authorization": f"Bearer {api_key}"})
     assert resp.status_code == 403, resp.text
     assert "C1" in resp.json().get("detail", "") or "entities list" in resp.json().get("detail", "")
 
@@ -446,12 +452,15 @@ def test_subject_in_entities_succeeds(identity_client: TestClient):
     resp = identity_client.put("/v1/federation/manifest", json=manifest_to_dict(m))
     assert resp.status_code == 200, resp.text
 
+    # Mint an API key so the caller authenticates as the issuer (H-SEC-1 BOLA guard)
+    api_key = auth_mod.create_api_key(issuer, ["read", "write"])
+
     resp = identity_client.post("/v1/federation/capability-tokens", json={
         "issuer": issuer,
         "subject": subject,
         "verb": "read",
         "object": "stigmem://facts",
-    })
+    }, headers={"Authorization": f"Bearer {api_key}"})
     assert resp.status_code == 201, resp.text
     data = resp.json()
     assert data["subject"] == subject
@@ -594,20 +603,20 @@ def test_revoke_token_by_issuer_succeeds(identity_client: TestClient):
     m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer, subject])
 
     identity_client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+
+    # Mint API key for the issuer so the H-SEC-1 BOLA guard on issuance passes
+    issuer_key = auth_mod.create_api_key(issuer, ["read", "write"])
+
     resp = identity_client.post("/v1/federation/capability-tokens", json={
         "issuer": issuer,
         "subject": subject,
         "verb": "read",
         "object": "stigmem://facts",
-    })
+    }, headers={"Authorization": f"Bearer {issuer_key}"})
     assert resp.status_code == 201
     token_id = resp.json()["token_id"]
 
-    # Caller is anonymous (entity_uri="anon:trusted") with auth_required=False.
-    # The check compares identity.entity_uri to issuer/subject; since auth is off,
-    # _ANON entity_uri is "anon:trusted" which does not match the token's issuer/subject.
-    # This verifies the guard fires; for a full round-trip the caller must be the issuer.
-    # We test the 403 path here:
+    # Revoke with no auth header → anon identity "anon:trusted" ≠ issuer/subject → 403
     resp = identity_client.post(f"/v1/federation/capability-tokens/{token_id}/revoke", json={})
     assert resp.status_code == 403, resp.text
     assert "not authorized" in resp.json().get("detail", "").lower()
@@ -629,16 +638,20 @@ def test_revoke_token_unauthorized_third_party_blocked(identity_client: TestClie
     m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer, subject])
 
     identity_client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+
+    # Mint API key for the issuer so the H-SEC-1 BOLA guard on issuance passes
+    issuer_key = auth_mod.create_api_key(issuer, ["read", "write"])
+
     resp = identity_client.post("/v1/federation/capability-tokens", json={
         "issuer": issuer,
         "subject": subject,
         "verb": "read",
         "object": "stigmem://facts",
-    })
+    }, headers={"Authorization": f"Bearer {issuer_key}"})
     assert resp.status_code == 201
     token_id = resp.json()["token_id"]
 
-    # identity_client uses auth_required=False → entity_uri is "anon:trusted",
+    # Revoke with no auth header → anon identity "anon:trusted",
     # which is neither issuer (https://org-a.org) nor subject (https://org-a.org/agent)
     resp = identity_client.post(
         f"/v1/federation/capability-tokens/{token_id}/revoke",
@@ -865,3 +878,25 @@ def test_quarantine_ingest_writes_audit_log_entry(tmp_path: Path):
         auth_mod.settings = original  # type: ignore[assignment]
         db_mod.settings = original  # type: ignore[assignment]
         bust_trust_cache(sender_node_id)
+
+
+# ===========================================================================
+# 13. H-SEC-1 regression — BOLA on capability-token issuance
+# ===========================================================================
+
+
+def test_issuer_must_match_caller_entity_uri(identity_client: TestClient):
+    """Caller cannot forge a token claiming a different org as issuer (H-SEC-1 BOLA).
+
+    With auth_required=False the unauthenticated caller's entity_uri is "anon:trusted".
+    Requesting a token with issuer="https://bob.org" must be rejected with 403
+    before any manifest lookup occurs.
+    """
+    resp = identity_client.post("/v1/federation/capability-tokens", json={
+        "issuer": "https://bob.org",
+        "subject": "https://bob.org",
+        "verb": "read",
+        "object": "stigmem://facts",
+    })
+    assert resp.status_code == 403, resp.text
+    assert "issuer" in resp.json().get("detail", "").lower()

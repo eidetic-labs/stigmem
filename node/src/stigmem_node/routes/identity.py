@@ -220,6 +220,13 @@ def issue_capability_token(
             status_code=422, detail="issuer, subject, verb, and object are required"
         )
 
+    # BOLA guard (H-SEC-1): prevent a caller from forging tokens under a different org's identity
+    if issuer != identity.entity_uri:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="issuer must match the authenticated caller entity_uri",
+        )
+
     # H1: resolve issuer manifest (checks expiry, refreshes if needed)
     issuer_manifest = get_peer_manifest(
         issuer, refresh_if_expired=True, trust_mode=settings.trust_mode

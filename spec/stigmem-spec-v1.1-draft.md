@@ -1,11 +1,12 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 ## Specification v1.1-draft
 
-**Status:** DRAFT — §19 proposed normative; §20 DRAFT. §1–§18 stable from v1.0.
+**Status:** DRAFT — §19 proposed normative; §20–§21 DRAFT. §1–§18 stable from v1.0.
 **License:** Apache-2.0
 **Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
+- v1.1-draft rev 6 (2026-05-04): §21 Lazy Instruction Discovery — DRAFT normative (Phase 10). Defines: boot stub (§21.1, ≤500 token preamble with identity + manifest pointer + `recall_instruction` tool schema); instruction manifest (§21.2, ≤1000 token always-loaded index with `load_triggers`); `recall_instruction` tool contract (§21.3, backed by stigmem recall on `instruction:` scope, deterministic + auditable); `instruction:` scope semantics with versioning, provenance requirements, garden isolation, and cross-agent confidentiality (§21.4); discovery audit with replay-based eval shape — Recall@k, Hit@k, miss rate (§21.5); migration semantics and 5-stage deprecation path (§21.6); schema migrations (§21.7); wire format additions (§21.8); error reference (§21.9). ResearchScientist sign-off on discovery-audit eval shape pending; SecurityEngineer review of §21.4 confidentiality rules pending.
 - v1.1-draft rev 5 (2026-05-04): Security review amendments to §§19.3.2, 20.3.3, 20.4.4, 20.5.5, 20.6.2. (S1) §20.5.5 wrong §19.5 cross-ref corrected to §19.3/§19.3.3. (S2) §19.3.2 `subscribe` verb added to capability token verb enum. (S3) §20.5.5 delivery-time validation expanded: token revocation check (§19.3.4) added alongside garden ACL re-evaluation; event content/queue semantics clarified for at-least-once compatibility. (R1) §20.3.3 Stage 2 explicit garden ACL check added; Stage 3 seed garden ACL pre-filter MUST added. (R2) §20.4.4 garden_id ACL check MUST added before card inclusion in recall response. (P1) §20.6.2 auth requirement added: unauthorized root facts MUST return HTTP 403. (P2) §20.6.2 cross-scope oracle fix: unauthorized `derived_from` references MUST be represented as `{"exists": false}` — indistinguishable from absent facts.
 - v1.1-draft rev 4 (2026-05-04): ResearchScientist review amendments to §20. (1) §20.2.3 MTEB score corrected to ~53.1. (2) §20.2.4 Matryoshka floor rule added (min 64 dims for nomic-embed-text-v1.5; new error `embed_dimensions_below_floor`). (3) §20.3.2 depth-cap rationale added; default weights marked provisional with eval guidance. (4) §20.3.3 Stage 2 ANN SQL corrected to join `facts` for scope + confidence filtering — normative cross-scope leakage guard. (5) §20.3.4 empty-budget edge-case MUST added.
 - v1.1-draft rev 3 (2026-05-04): §20 Recall & Graph — DRAFT normative. Covers graph index (`entity_edges`), embedding storage (`vec_facts`, nomic-embed-text-v1.5 default), recall API (hybrid lexical + vector + graph with MMR packing), memory cards, subscriptions, and causal/derivation links.
@@ -14,7 +15,7 @@
 - v1.0 (2026-05-03): Promoted §17 Memory Garden and §18 Source Attestation from draft to normative. All §1–§18 sections stable.
 - [Prior changelog in stigmem-spec-v1.0.md]
 
-> **Reading guide:** §1–§18 are unchanged from v1.0. §19 is fully normative in v1.1. §20 is DRAFT normative (Phase 9): graph index, embedding, recall API, memory cards, subscriptions, and causal/derivation links. §2 and §5 carry v1.1 additions. Appendix A (Security Policy) is unchanged in content from the v1.0 §19 stub.
+> **Reading guide:** §1–§18 are unchanged from v1.0. §19 is fully normative in v1.1. §20 is DRAFT normative (Phase 9): graph index, embedding, recall API, memory cards, subscriptions, and causal/derivation links. §21 is DRAFT normative (Phase 10): lazy instruction discovery — boot stub, instruction manifest, `recall_instruction` tool, `instruction:` scope, discovery audit, and migration semantics. §2 and §5 carry v1.1 additions. Appendix A (Security Policy) is unchanged in content from the v1.0 §19 stub.
 
 ---
 
@@ -1458,6 +1459,575 @@ CREATE INDEX IF NOT EXISTS idx_sub_events_sub_id ON subscription_events (subscri
 | 422 | `embed_dimensionality_mismatch` | `vec_facts` configured dimensions differ from stored |
 | 404 | `subscription_not_found` | No subscription with given id exists |
 | 404 | `fact_not_found` | Provenance walk root fact not found |
+
+---
+
+## 21. Lazy Instruction Discovery
+
+**Status: DRAFT normative (Phase 10)**
+
+This section specifies how agents discover and load their instructions on demand rather than preloading every instruction document at startup. The mechanism has three runtime components — a **boot stub**, an **instruction manifest**, and the **`recall_instruction` tool** — and one off-path component, the **discovery audit**, used for continuous retrieval-quality evaluation.
+
+---
+
+### 21.1 Boot Stub
+
+The boot stub is the minimal agent preamble loaded unconditionally at the start of every heartbeat or session. Its purpose is to give the agent enough context to function and to provide handles for lazy-loading the rest of its instructions.
+
+#### 21.1.1 Required Content
+
+A compliant boot stub MUST contain all of the following fields:
+
+| Field | Description |
+|---|---|
+| `agent_id` | Stable UUID that uniquely identifies this agent within the deployment |
+| `agent_role` | Human-readable role label (e.g. `"CTO"`, `"ResearchScientist"`) |
+| `heartbeat_contract` | URI or `instruction:` fact URI pointing to the heartbeat procedure document |
+| `manifest_uri` | `instruction:` scope URI for the instruction manifest (§21.2) |
+| `recall_tool_schema` | Inline JSON Schema for the `recall_instruction` tool (§21.3); MUST be present so the agent can invoke it without a separate fetch |
+
+The boot stub MUST NOT contain operational instruction content. Instructions SHOULD be loaded lazily via `recall_instruction`.
+
+#### 21.1.2 Wire Format
+
+The boot stub MUST be serialized as a markdown document with YAML frontmatter:
+
+```markdown
+---
+agent_id: "8e0ed057-bcd8-4f8f-92ee-c046c55b64e9"
+agent_role: "CTO"
+heartbeat_contract: "instruction:acme/heartbeat-contract/v1"
+manifest_uri: "instruction:acme/agent/cto/manifest/v1"
+stub_version: 1
+generated_at: "2026-05-04T00:00:00Z"
+adapter_profile: "paperclip-claude-code"
+migration_mode: "stigmem"
+---
+
+# Agent Boot Stub
+
+You are **CTO** (id: `8e0ed057-bcd8-4f8f-92ee-c046c55b64e9`).
+
+Your heartbeat procedure is at `instruction:acme/heartbeat-contract/v1`.
+Your instruction manifest is at `instruction:acme/agent/cto/manifest/v1`.
+
+Call `recall_instruction(intent)` to load relevant instruction sections before
+performing any non-trivial task. The manifest lists available sections and their
+triggers to help you decide when to load.
+```
+
+The body section (after the frontmatter) MUST be no longer than **500 tokens** as measured by a cl100k-compatible tokenizer. Implementations SHOULD target ≤ 450 tokens to leave headroom for adapter injection.
+
+#### 21.1.3 Adapter Profiles
+
+The `adapter_profile` frontmatter field allows runtimes to inject adapter-specific content (tool declarations, permission banners, etc.) after boot stub delivery. Supported built-in profiles:
+
+| Profile | Description |
+|---|---|
+| `paperclip-claude-code` | Injects Paperclip tool definitions and heartbeat harness context |
+| `openai-assistants` | Injects OpenAI Assistants tool-call shim |
+| `generic` | No runtime injection; stub is delivered as-is |
+
+Implementations MAY define additional profiles. Unknown profiles MUST be treated as `generic`.
+
+#### 21.1.4 Boot Stub Delivery
+
+The boot stub for an agent MUST be retrievable via:
+
+```
+GET /v1/agents/{agent_id}/boot-stub[?profile={adapter_profile}]
+```
+
+See §21.8.1 for the full wire contract. The boot stub MUST be regenerated whenever the agent's `manifest_uri` changes or the stub schema version increments; stale delivery is a correctness defect, not a warning.
+
+---
+
+### 21.2 Instruction Manifest
+
+The instruction manifest is a compact, always-loaded index of every instruction unit available to an agent. It fits in the agent's context without incurring meaningful token cost.
+
+#### 21.2.1 Token Budget
+
+The instruction manifest MUST fit within **1000 tokens** (cl100k). Implementations MUST enforce this at write time and MUST reject a manifest update that would exceed it with error `manifest_too_large` (§21.9). Instruction units SHOULD be described at granular enough detail that `recall_instruction` can select them precisely but coarse enough to stay within budget.
+
+#### 21.2.2 Manifest Entry Shape
+
+Each instruction unit in the manifest MUST be described by the following fields:
+
+```json
+{
+  "name":          "heartbeat-procedure",
+  "description":   "Step-by-step heartbeat loop: checkout, work, update, exit.",
+  "load_triggers": {
+    "intents":    ["waking up", "starting heartbeat", "checking inbox"],
+    "keywords":   ["heartbeat", "checkout", "wake"],
+    "task_types": ["issue_assigned", "issue_commented", "routine_fired"]
+  },
+  "fact_uri":       "instruction:acme/agent/cto/heartbeat-procedure/v3",
+  "path":           null,
+  "token_estimate": 420
+}
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `name` | MUST | Stable identifier for this instruction unit; MUST be unique within the manifest |
+| `description` | MUST | One-line (≤ 120 characters) description of what this unit covers |
+| `load_triggers.intents` | SHOULD | Natural-language intent phrases that SHOULD cause this unit to be loaded |
+| `load_triggers.keywords` | SHOULD | Exact or prefix-match keywords; implementations MAY use BM25 matching |
+| `load_triggers.task_types` | MAY | Event type strings (e.g. `issue_assigned`) that should trigger a load |
+| `fact_uri` | MUST if `path` absent | `instruction:`-scope stigmem fact URI for this unit (§21.4) |
+| `path` | MUST if `fact_uri` absent | File path relative to the agent's instructions root |
+| `token_estimate` | SHOULD | Estimated token count of the full unit content; used for budget planning |
+
+Exactly one of `fact_uri` or `path` MUST be present per entry; an entry with neither or both MUST be rejected with `manifest_entry_invalid`.
+
+#### 21.2.3 Manifest Wire Contract
+
+The manifest is stored as a stigmem fact under the `instruction:` scope (§21.4) and is also surfaced as a structured API resource. See §21.8.2 and §21.8.3.
+
+---
+
+### 21.3 `recall_instruction` Tool Contract
+
+`recall_instruction` is the agent-facing callable that retrieves instruction content on demand. It MUST be available to the agent as a declared tool in all compliant runtimes.
+
+#### 21.3.1 Request Shape
+
+```json
+{
+  "intent":        "I need to check out an issue and start work",
+  "max_chunks":    3,
+  "token_budget":  1200,
+  "manifest_hint": ["heartbeat-procedure", "checkout-procedure"]
+}
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `intent` | MUST | Free-text description of what the agent is about to do or needs help with |
+| `max_chunks` | SHOULD | Maximum number of instruction units to return; MUST default to `3` if absent |
+| `token_budget` | SHOULD | Soft token budget for the combined response content; MUST default to `2000` if absent |
+| `manifest_hint` | MAY | Explicit unit names from the manifest; these are loaded first before ranked retrieval |
+
+#### 21.3.2 Response Shape
+
+```json
+{
+  "chunks": [
+    {
+      "name":        "heartbeat-procedure",
+      "fact_uri":    "instruction:acme/agent/cto/heartbeat-procedure/v3",
+      "content":     "## Heartbeat Procedure\n\n...",
+      "tokens":      420,
+      "valid_until": "2027-05-04T00:00:00Z",
+      "version":     "v3",
+      "score":       0.91,
+      "source":      "stigmem"
+    }
+  ],
+  "total_tokens":  420,
+  "truncated":     false,
+  "missed_hints":  [],
+  "audit_token":   "audi_01J..."
+}
+```
+
+| Field | Description |
+|---|---|
+| `chunks` | Ordered list of instruction units; most relevant first |
+| `chunks[].name` | Unit name from the manifest |
+| `chunks[].fact_uri` | Stigmem `instruction:` fact URI |
+| `chunks[].content` | Full rendered markdown content of the instruction unit |
+| `chunks[].tokens` | Actual token count of `.content` |
+| `chunks[].valid_until` | Expiry from the backing stigmem fact; agent SHOULD re-call before expiry if session is long |
+| `chunks[].version` | Version string of the instruction unit; used in audit logs |
+| `chunks[].score` | Relevance score in [0.0, 1.0] used for ordering |
+| `chunks[].source` | Either `"stigmem"` or `"fallback_path"` (§21.6.1 co-existence fallback) |
+| `total_tokens` | Sum of tokens across all returned chunks |
+| `truncated` | `true` if one or more units were dropped to stay within `token_budget` |
+| `missed_hints` | Unit names from `manifest_hint` that were not found or not accessible |
+| `audit_token` | Opaque token for the discovery audit; MUST be passed to the audit submission endpoint (§21.5.2) |
+
+#### 21.3.3 Backing Implementation
+
+`recall_instruction` MUST be implemented as a stigmem `recall` call (§20.3) restricted to the `instruction:` scope (§21.4.1):
+
+```json
+POST /v1/recall
+{
+  "scope":              "instruction:{deployment}/{agent_id}",
+  "intent":             "{agent-provided intent string}",
+  "max_facts":          "{max_chunks}",
+  "token_budget":       "{token_budget}",
+  "weights":            { "lexical": 0.35, "semantic": 0.50, "graph": 0.15 },
+  "require_garden_ids": ["{agent_instruction_garden_id}"]
+}
+```
+
+The `require_garden_ids` constraint MUST be applied so that `recall_instruction` cannot return facts from gardens the agent is not authorized to read (§17, §19.3). Implementations MUST apply the garden ACL check at recall time using the caller's capability token.
+
+If `manifest_hint` is provided, the named units MUST be included in the result (subject to `token_budget`) before the ranked retrieval results. If a hinted unit does not exist or is not accessible, it MUST be silently omitted (not an error) and its name MUST appear in `missed_hints`.
+
+#### 21.3.4 Determinism and Auditability
+
+The same `(intent, manifest_hint, max_chunks, token_budget)` tuple MUST produce the same ordered result given the same set of instruction facts at the same `valid_until` boundaries. This determinism property enables replay-based audit (§21.5.3).
+
+Implementations MUST record every `recall_instruction` invocation in the discovery audit table (§21.5.1) before returning the response. If audit write fails, the response MUST still be returned (audit is best-effort); the failure MUST be logged as `audit_write_failed`.
+
+---
+
+### 21.4 `instruction:` Scope Semantics
+
+The `instruction:` URI scheme is a reserved stigmem scope for agent instruction artifacts. It extends §17 (Memory Garden) and §19 (Federation Trust) with instruction-specific semantics.
+
+#### 21.4.1 Scope Namespace
+
+`instruction:` URIs follow the pattern:
+
+```
+instruction:{deployment}/{agent_id}/{unit_name}/{version}
+```
+
+Where:
+- `{deployment}` is the deployment identifier (e.g. `acme`); MUST match the `entity_uri` root in the org manifest (§19.1).
+- `{agent_id}` is the stable agent UUID or a well-known shortname (e.g. `cto`).
+- `{unit_name}` is the instruction unit name from the manifest.
+- `{version}` is a version string (e.g. `v1`, `v3`); MUST be monotonically incrementing; MUST NOT be a floating alias (e.g. `latest`).
+
+The special URI `instruction:{deployment}/{agent_id}/manifest/{version}` addresses the agent's instruction manifest itself.
+
+#### 21.4.2 Versioning
+
+Instruction facts are **mutable** in the sense that a new version supersedes the old, but individual versioned facts are **immutable** once written. The following rules apply:
+
+1. A new version MUST be written as a new fact (new `id`, new `version` string) rather than mutating an existing fact.
+2. The previous version's `valid_until` MUST be set to the new version's `created_at` within the same transaction, or within a 30-second grace window.
+3. `recall_instruction` MUST return only the latest version (highest version string by semantic version ordering, or by `created_at` if versions are non-comparable strings).
+4. Agents MAY cache instruction chunks for the duration of a heartbeat/session. Agents MUST NOT cache across heartbeats unless the `valid_until` extends past the next expected heartbeat time.
+
+#### 21.4.3 Provenance
+
+Every instruction fact MUST carry:
+
+| Field | Requirement |
+|---|---|
+| `source_trust` | MUST be populated at write time (§19.4); instruction facts authored by verified human administrators SHOULD have `source_trust >= 0.9` |
+| `attestation_chain` | MUST include at least one signature from an org manifest key (§19.2); unsigned instruction facts MUST be quarantined (§19.5) |
+| `derived_from` | SHOULD reference the instruction unit's prior version hash when updating; `null` is valid for the first version |
+| Metadata `authored_by` | MUST be the `entity_uri` of the human or system that created this version |
+| Metadata `authored_at` | MUST be an ISO 8601 timestamp |
+
+#### 21.4.4 Garden Membership
+
+All instruction facts MUST be placed in a dedicated instruction garden, separate from operational fact gardens. The naming convention is:
+
+```
+garden_id: "instruction:{deployment}:{agent_id}"
+```
+
+Access MUST be restricted to:
+- The agent itself: read-only via capability token with verb `read`
+- Deployment administrators: read + write via admin API key
+- Peer agents: MUST NOT have read access to another agent's instruction garden unless explicitly granted; cross-agent instruction access is a confidentiality boundary (§21.4.5)
+
+#### 21.4.5 Cross-Agent Confidentiality
+
+An agent's instruction facts MAY contain sensitive operational details including security postures, escalation paths, and negotiation limits. The following rules enforce confidentiality:
+
+1. A capability token granting `read` on `instruction:{deployment}/{agent_A}/*` MUST NOT be derived from a token held by `agent_B` unless `agent_B`'s role is a declared supervisor of `agent_A` in the org manifest.
+2. Federation (§19.3) MUST NOT replicate instruction-scope facts to peer nodes unless the receiving node is in the same deployment trust domain.
+3. The `recall_instruction` API endpoint MUST validate that the calling agent's token scope matches the instruction garden of the agent whose manifest is being queried; cross-agent recall MUST return `403 instruction_scope_denied`.
+4. Audit logs for instruction recall MUST be accessible to administrators but MUST NOT be surfaced to peer agents.
+
+---
+
+### 21.5 Discovery Audit
+
+The discovery audit provides a per-heartbeat signal for tuning manifest descriptions and `load_triggers`. It enables evaluation of retrieval quality by comparing what was loaded against what was actually used.
+
+#### 21.5.1 Audit Record Shape
+
+```json
+{
+  "id":            "audevent_01J...",
+  "agent_id":      "8e0ed057-bcd8-4f8f-92ee-c046c55b64e9",
+  "heartbeat_id":  "run_ad74de74...",
+  "session_start": "2026-05-04T12:00:00Z",
+  "intent":        "I need to check out an issue and start work",
+  "loaded_chunks": ["heartbeat-procedure", "checkout-procedure"],
+  "used_chunks":   ["heartbeat-procedure"],
+  "missed_chunks": [],
+  "audit_token":   "audi_01J...",
+  "audit_closed":  "2026-05-04T12:01:05Z",
+  "created_at":    "2026-05-04T12:00:02Z"
+}
+```
+
+| Field | Description |
+|---|---|
+| `id` | Globally unique audit event ID with `audevent_` prefix |
+| `agent_id` | Agent that performed the recall |
+| `heartbeat_id` | Run/heartbeat ID in which the recall occurred |
+| `session_start` | ISO 8601 timestamp of the heartbeat start |
+| `intent` | The `intent` string passed to `recall_instruction` |
+| `loaded_chunks` | Unit names returned by `recall_instruction` in this invocation |
+| `used_chunks` | Unit names the agent demonstrably applied (runtime-tracked or self-reported) |
+| `missed_chunks` | Unit names the agent referenced but that were not in `loaded_chunks` (self-reported or post-hoc replay) |
+| `audit_token` | Must match the `audit_token` returned in the `recall_instruction` response |
+| `audit_closed` | Timestamp when the audit submission was received; `null` until POST /audit |
+| `created_at` | Write timestamp of the initial record |
+
+`used_chunks` and `missed_chunks` MAY be populated by the runtime (if it tracks tool-call traces) or by the agent via self-report at heartbeat end. Agents SHOULD self-report usage when runtime tracking is unavailable.
+
+#### 21.5.2 Audit Submission API
+
+```
+POST /v1/instruction/audit
+Authorization: Bearer <agent api-key>
+Content-Type: application/json
+
+{
+  "audit_token":   "audi_01J...",
+  "used_chunks":   ["heartbeat-procedure"],
+  "missed_chunks": []
+}
+→ 204 No Content on success
+→ 400 audit_token_invalid  if token not recognized or already fully closed
+→ 400 audit_token_expired  if token is older than 24 hours
+```
+
+The audit endpoint MUST be idempotent: a second submission with the same `audit_token` MUST return `204` without modifying the record.
+
+#### 21.5.3 Replay-Based Evaluation
+
+The audit table is append-only and replay-able. The evaluation metrics are:
+
+**Recall@k**: fraction of `used_chunks` that appear in `loaded_chunks` within rank k.  
+**Hit@k**: fraction of heartbeats where at least one `used_chunk` was in `loaded_chunks`.  
+**Miss rate**: `|missed_chunks| / (|used_chunks| + |missed_chunks|)`.
+
+These metrics SHOULD be computed over a rolling 7-day window. Deployments SHOULD alert when `miss_rate > 0.15` over 100+ events, as this indicates manifest descriptions or triggers need improvement.
+
+Replay procedure: given an audit record with `intent` and the stigmem state at `session_start`, re-execute `recall_instruction(intent)` and compare results to `loaded_chunks`. Determinism (§21.3.4) guarantees the replay is reproducible.
+
+The `recall@k` and `hit@k` metrics SHOULD be computed against the post-hoc replay set (ground truth: all instruction units the agent actually needed, reconstructed from the full heartbeat trace) to measure manifest coverage independently of what the agent happened to load.
+
+---
+
+### 21.6 Migration Semantics
+
+This section defines the co-existence and deprecation path for agents transitioning from file-based instructions to `instruction:`-scope stigmem facts.
+
+#### 21.6.1 Co-existence Period
+
+During migration, an agent MAY have both:
+- A static markdown instruction file (e.g. `AGENTS.md`) at a file path, and
+- A manifest with `fact_uri` entries pointing at stigmem.
+
+The following resolution rules apply:
+
+1. If a manifest entry has both `fact_uri` and `path`, `fact_uri` MUST take precedence.
+2. If `fact_uri` lookup fails (fact not found or scope unreachable), the runtime MUST fall back to `path` if present and MUST append `"source": "fallback_path"` to the returned chunk.
+3. File-path entries are read-only; they MUST NOT be written via `recall_instruction` or the instruction API.
+4. The boot stub MUST indicate migration state via the `migration_mode` frontmatter field:
+   - `"file"` — no manifest; static file only
+   - `"coexistence"` — both static file and manifest entries present
+   - `"stigmem"` — manifest only; no file fallback
+
+#### 21.6.2 Deprecation Path
+
+The deprecation sequence for an instruction unit is:
+
+| Stage | Action |
+|---|---|
+| 1. Seed | Write instruction content to stigmem as `instruction:` facts; verify recall quality over ≥ 5 heartbeats |
+| 2. Coexist | Add `fact_uri` to the manifest entry alongside existing `path`; set `migration_mode: "coexistence"` |
+| 3. Verify | Monitor audit metrics (§21.5.3) for 7 days; confirm `miss_rate < 0.10` |
+| 4. Promote | Remove `path` from the manifest entry; set `migration_mode: "stigmem"` |
+| 5. Archive | Move the source markdown file to `docs/legacy-instructions/` with a redirect comment pointing to the `fact_uri` |
+
+Deployments MUST NOT skip Stage 3 (Verify) for agents that handle sensitive operational decisions. The risk of an undetected miss in a security-relevant instruction unit is higher than the cost of a 7-day observation window.
+
+#### 21.6.3 Bulk Migration Tooling
+
+Implementations SHOULD provide a `stigmem migrate-instructions` CLI command that:
+
+1. Reads all entries from an existing markdown instruction file.
+2. Splits at H2/H3 section boundaries (or at a configurable split regex).
+3. Writes each section as an `instruction:` fact with attestation from the local admin key.
+4. Emits a manifest `entries` array for copy-paste into the manifest file.
+5. Does NOT automatically update the manifest or boot stub; the operator MUST review and commit the change manually.
+
+This is a SHOULD (not MUST) because manual migration is always acceptable.
+
+---
+
+### 21.7 Schema Migrations
+
+The following DDL MUST be applied when upgrading to Phase 10 (§21 compliance):
+
+```sql
+-- Instruction manifest registry
+CREATE TABLE IF NOT EXISTS instruction_manifests (
+    id               TEXT PRIMARY KEY,           -- UUID
+    agent_id         TEXT NOT NULL,
+    version          TEXT NOT NULL,
+    fact_uri         TEXT NOT NULL,              -- instruction: scope URI
+    token_count      INTEGER NOT NULL,
+    body             TEXT NOT NULL,              -- JSON: array of manifest entries
+    created_at       INTEGER NOT NULL,           -- Unix ms
+    superseded_at    INTEGER,                    -- NULL if current version
+    UNIQUE(agent_id, version)
+);
+CREATE INDEX IF NOT EXISTS idx_manifests_agent ON instruction_manifests (agent_id, superseded_at NULLS FIRST);
+
+-- Discovery audit log (append-only)
+CREATE TABLE IF NOT EXISTS instruction_audit (
+    id               TEXT PRIMARY KEY,           -- audevent_ prefixed UUID
+    agent_id         TEXT NOT NULL,
+    heartbeat_id     TEXT NOT NULL,
+    session_start    INTEGER NOT NULL,           -- Unix ms
+    intent           TEXT NOT NULL,
+    loaded_chunks    TEXT NOT NULL,              -- JSON array of unit names
+    used_chunks      TEXT NOT NULL DEFAULT '[]', -- JSON array; updated on POST /audit
+    missed_chunks    TEXT NOT NULL DEFAULT '[]', -- JSON array; updated on POST /audit
+    audit_token      TEXT NOT NULL UNIQUE,
+    audit_closed     INTEGER,                    -- Unix ms; NULL until POST /audit received
+    created_at       INTEGER NOT NULL            -- Unix ms
+);
+CREATE INDEX IF NOT EXISTS idx_audit_agent_session ON instruction_audit (agent_id, session_start DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_token         ON instruction_audit (audit_token);
+
+-- Boot stub cache (invalidated on manifest update)
+CREATE TABLE IF NOT EXISTS boot_stubs (
+    agent_id          TEXT NOT NULL,
+    adapter_profile   TEXT NOT NULL DEFAULT 'generic',
+    stub_version      INTEGER NOT NULL DEFAULT 1,
+    body              TEXT NOT NULL,              -- full markdown stub
+    token_count       INTEGER NOT NULL,
+    generated_at      INTEGER NOT NULL,           -- Unix ms
+    manifest_version  TEXT NOT NULL,              -- version string of backing manifest
+    PRIMARY KEY (agent_id, adapter_profile)
+);
+```
+
+---
+
+### 21.8 Wire Format Additions
+
+The following routes supplement §5. Implementations MUST provide all MUST-labelled routes to claim §21 compliance.
+
+#### 21.8.1 Get Boot Stub (MUST)
+
+```
+GET /v1/agents/{agent_id}/boot-stub[?profile={adapter_profile}]
+Authorization: Bearer <agent api-key or admin api-key>
+
+→ 200 Content-Type: text/markdown
+      X-Stub-Version: 1
+      X-Manifest-Version: v3
+      X-Token-Count: 420
+      [stub body]
+
+→ 403 if caller is not the agent itself or an admin
+→ 404 if agent not found or no stub generated yet
+```
+
+If `profile` is absent, MUST default to `generic`. Unknown profiles MUST be treated as `generic` (no error).
+
+#### 21.8.2 Get Instruction Manifest (MUST)
+
+```
+GET /v1/agents/{agent_id}/instruction-manifest
+Authorization: Bearer <agent api-key or admin api-key>
+
+→ 200 {
+    "manifest_version": "v3",
+    "fact_uri": "instruction:acme/agent/cto/manifest/v3",
+    "token_count": 840,
+    "entries": [ ...entry objects per §21.2.2... ],
+    "last_updated_at": "2026-05-04T00:00:00Z"
+  }
+→ 403 if caller is not the agent itself or an admin
+→ 404 if no manifest configured for agent
+```
+
+#### 21.8.3 Publish / Replace Instruction Manifest (MUST)
+
+```
+PUT /v1/agents/{agent_id}/instruction-manifest
+Authorization: Bearer <admin api-key>
+Content-Type: application/json
+
+{
+  "version": "v4",
+  "entries": [ ...entry objects per §21.2.2... ]
+}
+
+→ 200 { "fact_uri": "instruction:acme/agent/cto/manifest/v4", "token_count": 910 }
+→ 400 manifest_too_large       if token_count > 1000
+→ 400 manifest_entry_invalid   if any entry has neither or both of fact_uri/path
+→ 409 manifest_version_conflict if version already exists (versions are immutable)
+```
+
+This route MUST atomically: (1) write the manifest fact to stigmem under `instruction:` scope, (2) update `instruction_manifests` table, (3) invalidate the boot stub cache for this agent.
+
+#### 21.8.4 Recall Instructions (MUST)
+
+```
+POST /v1/agents/{agent_id}/recall-instruction
+Authorization: Bearer <agent api-key>
+Content-Type: application/json
+
+{
+  "intent":        "I need to check out an issue and start work",
+  "max_chunks":    3,
+  "token_budget":  1200,
+  "manifest_hint": ["heartbeat-procedure"]
+}
+
+→ 200 { ...response shape per §21.3.2... }
+→ 400 intent_required          if intent is absent or empty
+→ 403 instruction_scope_denied if agent token scope does not match agent_id
+→ 404 if agent not found
+→ 503 recall_backend_unavailable if stigmem recall backend is unreachable (retryable)
+```
+
+#### 21.8.5 Submit Discovery Audit (SHOULD)
+
+```
+POST /v1/instruction/audit
+Authorization: Bearer <agent api-key>
+Content-Type: application/json
+
+{
+  "audit_token":   "audi_01J...",
+  "used_chunks":   ["heartbeat-procedure"],
+  "missed_chunks": []
+}
+
+→ 204 on success (idempotent)
+→ 400 audit_token_invalid  if token not recognized or already fully closed
+→ 400 audit_token_expired  if token is older than 24 hours
+```
+
+---
+
+### 21.9 Error Reference
+
+| HTTP | Error code | Condition |
+|---|---|---|
+| 400 | `intent_required` | `intent` field absent or empty in `recall_instruction` request |
+| 400 | `manifest_too_large` | Manifest exceeds 1000-token budget |
+| 400 | `manifest_entry_invalid` | Entry has neither `fact_uri` nor `path`, or has both |
+| 400 | `audit_token_invalid` | `audit_token` not recognized or already fully closed |
+| 400 | `audit_token_expired` | `audit_token` is older than 24 hours |
+| 403 | `instruction_scope_denied` | Caller's token scope does not match the requested agent's instruction garden |
+| 404 | `manifest_not_found` | No instruction manifest configured for the agent |
+| 404 | `boot_stub_not_found` | No boot stub generated for the agent yet |
+| 409 | `manifest_version_conflict` | Version string already exists; manifest versions are immutable |
+| 503 | `recall_backend_unavailable` | Stigmem recall backend unreachable; retryable |
 
 ---
 

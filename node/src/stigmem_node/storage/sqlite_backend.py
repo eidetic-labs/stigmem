@@ -1,4 +1,11 @@
-"""SQLite implementation of StorageBackend — the default backend."""
+"""SQLite implementation of StorageBackend — the default backend.
+
+When *encryption_key* is provided (32 bytes), the backend uses SQLCipher via
+the ``sqlcipher3`` package instead of stdlib ``sqlite3``.  Install the extra
+before enabling encryption::
+
+    pip install 'stigmem-node[sqlcipher]'
+"""
 
 from __future__ import annotations
 
@@ -16,22 +23,42 @@ class SQLiteBackend(StorageBackend):
 
     Behaviour is identical to the pre-trait implementation in ``db.py``.
     Uses WAL journal mode and enforces foreign-key constraints on every
-    connection.
+    connection.  When *encryption_key* is provided, SQLCipher is used
+    transparently — the key is set via ``PRAGMA key`` immediately after open.
     """
 
-    def __init__(self, db_path: str) -> None:
+    def __init__(self, db_path: str, encryption_key: bytes | None = None) -> None:
         self._db_path = db_path
+        self._encryption_key = encryption_key
 
     @property
     def backend_name(self) -> str:
         return "sqlite"
 
-    @contextmanager
-    def connection(self) -> Generator[Any, None, None]:
-        conn = sqlite3.connect(self._db_path)
-        conn.row_factory = sqlite3.Row
+    def _open_conn(self) -> Any:
+        """Open and return a raw (un-transacted) connection, WAL + FK enabled."""
+        if self._encryption_key is not None:
+            try:
+                import sqlcipher3 as _sc  # type: ignore[import]
+            except ImportError as exc:
+                raise RuntimeError(
+                    "sqlcipher3 is required for SQLite encryption-at-rest. "
+                    "Install it with: pip install 'stigmem-node[sqlcipher]'"
+                ) from exc
+            conn = _sc.connect(self._db_path)
+            hex_key = self._encryption_key.hex()
+            conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+            conn.row_factory = _sc.Row
+        else:
+            conn = sqlite3.connect(self._db_path)
+            conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA foreign_keys=ON")
+        return conn
+
+    @contextmanager
+    def connection(self) -> Generator[Any, None, None]:
+        conn = self._open_conn()
         try:
             yield conn
             conn.commit()
@@ -42,9 +69,7 @@ class SQLiteBackend(StorageBackend):
             conn.close()
 
     def apply_migrations(self, migrations_dir: Path) -> None:
-        conn = sqlite3.connect(self._db_path)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
+        conn = self._open_conn()
         try:
             conn.execute(
                 """CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -71,14 +96,35 @@ class SQLiteBackend(StorageBackend):
             conn.close()
 
     def export_snapshot(self, dest: Path) -> None:
-        """Online backup via ``sqlite3.Connection.backup()``."""
-        src_conn = sqlite3.connect(self._db_path)
-        dst_conn = sqlite3.connect(str(dest))
-        try:
-            src_conn.backup(dst_conn)
-        finally:
-            dst_conn.close()
-            src_conn.close()
+        """Online backup via ``sqlite3.Connection.backup()``.
+
+        Encrypted databases produce encrypted snapshots (same key).
+        """
+        if self._encryption_key is not None:
+            try:
+                import sqlcipher3 as _sc  # type: ignore[import]
+            except ImportError as exc:
+                raise RuntimeError(
+                    "sqlcipher3 is required to snapshot an encrypted SQLite database."
+                ) from exc
+            hex_key = self._encryption_key.hex()
+            src_conn = _sc.connect(self._db_path)
+            src_conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+            dst_conn = _sc.connect(str(dest))
+            dst_conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+            try:
+                src_conn.backup(dst_conn)
+            finally:
+                dst_conn.close()
+                src_conn.close()
+        else:
+            src_conn = sqlite3.connect(self._db_path)
+            dst_conn = sqlite3.connect(str(dest))
+            try:
+                src_conn.backup(dst_conn)
+            finally:
+                dst_conn.close()
+                src_conn.close()
 
     def import_snapshot(self, src: Path) -> None:
         """Restore by replacing the current database file."""

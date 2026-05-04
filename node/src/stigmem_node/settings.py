@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -80,6 +81,57 @@ class Settings(BaseSettings):
     libsql_url: str = ""
     # Turso auth token (from `turso db tokens create`)
     libsql_auth_token: str = ""
+
+    # Encryption at rest (Phase 8).
+    # "off" (default) — no encryption; plaintext DB (dev-friendly default).
+    # "on"            — SQLCipher for SQLite backend; native encryption for libSQL.
+    # When "on", exactly one of at_rest_key_passphrase_env / at_rest_key_kms_uri
+    # must be set — the node refuses to start otherwise.
+    at_rest_encryption: str = "off"
+    # Name of the env var whose value is the passphrase (not the passphrase itself).
+    # e.g. STIGMEM_AT_REST_KEY_PASSPHRASE_ENV=MY_DB_PASSPHRASE
+    at_rest_key_passphrase_env: str = ""
+    # KMS URI for raw 32-byte key material. "env://VAR" reads a hex-encoded key
+    # from env var VAR. Future schemes: "aws-kms://...", "gcp-kms://...".
+    at_rest_key_kms_uri: str = ""
+
+    @field_validator("at_rest_encryption")
+    @classmethod
+    def _validate_encryption_mode(cls, v: str) -> str:
+        if v not in ("on", "off"):
+            raise ValueError(f"at_rest_encryption must be 'on' or 'off'; got {v!r}")
+        return v
+
+    # Federation Trust — Phase 8 (spec §19)
+    # trust_mode controls source-trust scoring and quarantine routing:
+    #   "strict"  — trust is computed for all inbound facts; t < 0.2 → quarantine.
+    #   "relaxed" — trust is computed but quarantine is not auto-triggered (default).
+    #   "off"     — trust not computed; source_trust is null on all facts.
+    trust_mode: str = "relaxed"
+
+    # Sanitizer mode (§19.7) applied at recall time:
+    #   "block"     — fact excluded, placeholder returned.
+    #   "quarantine"— fact moved to quarantine garden.
+    #   "warn"      — fact returned with sanitizer_warnings (default).
+    #   "off"       — no check (implied by trust_mode=off).
+    sanitizer_mode: str = "warn"
+
+    # UUID of the node's designated quarantine garden.
+    # Required in strict mode; facts below threshold are rejected with 403 if unset.
+    quarantine_garden_id: str = ""
+
+    # Source-trust score weights (§19.4.2).  Must sum to 1.0; deviations are not
+    # validated at startup — set incorrectly and t will be out of [0,1] range.
+    trust_weight_identity:    float = 0.35
+    trust_weight_peer_history: float = 0.30
+    trust_weight_scope_authority: float = 0.25
+    trust_weight_attestation_mode: float = 0.10
+
+    # Path to a newline-delimited file of extra sanitizer regex patterns (§19.7.2).
+    sanitizer_extra_patterns_file: str = ""
+
+    # Path to YAML file defining operator auto-trust rules (always_trust / never_trust).
+    trust_rules_file: str = ""
 
 
 settings = Settings()

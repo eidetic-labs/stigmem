@@ -29,6 +29,15 @@ libsql = [
     # Latest release on PyPI is 0.0.x; bump the floor when a stable 1.x ships.
     "libsql-experimental>=0.0.1",
 ]
+encryption = [
+    # Argon2id key derivation for passphrase-based encryption-at-rest (Phase 8).
+    "argon2-cffi>=23.1",
+]
+sqlcipher = [
+    # SQLCipher-enabled SQLite driver for at-rest encryption (Phase 8).
+    # Requires the SQLCipher C library; see the encryption-at-rest guide.
+    "sqlcipher3>=0.5.0",
+]
 
 [project.scripts]
 stigmem-node = "stigmem_node.main:run"

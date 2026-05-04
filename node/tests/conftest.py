@@ -39,6 +39,10 @@ _MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
 # ---------------------------------------------------------------------------
 
 
+_ENCRYPT_PASSPHRASE_ENV = "_STIGMEM_TEST_PASSPHRASE"
+_ENCRYPT_PASSPHRASE = "ci-test-passphrase-not-for-production-use"
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:  # type: ignore[name-defined]
     parser.addoption(
         "--backend",
@@ -46,11 +50,36 @@ def pytest_addoption(parser: pytest.Parser) -> None:  # type: ignore[name-define
         choices=["sqlite", "libsql"],
         help="Storage backend to test against (default: sqlite)",
     )
+    parser.addoption(
+        "--encrypt",
+        default="off",
+        choices=["off", "on"],
+        help="Run conformance suite against encrypted storage (default: off)",
+    )
 
 
 @pytest.fixture()
 def backend(request: pytest.FixtureRequest) -> str:
     return request.config.getoption("--backend")  # type: ignore[no-any-return]
+
+
+@pytest.fixture()
+def encrypt(request: pytest.FixtureRequest) -> str:
+    return request.config.getoption("--encrypt")  # type: ignore[no-any-return]
+
+
+@pytest.fixture(autouse=True)
+def _encryption_env(encrypt: str, monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
+    """Set test passphrase env var and flush key cache when --encrypt=on."""
+    if encrypt == "on":
+        from stigmem_node.storage.encryption import _reset_key_cache
+
+        monkeypatch.setenv(_ENCRYPT_PASSPHRASE_ENV, _ENCRYPT_PASSPHRASE)
+        _reset_key_cache()
+        yield
+        _reset_key_cache()
+    else:
+        yield
 
 
 # ---------------------------------------------------------------------------
@@ -164,17 +193,25 @@ def _restore_settings(original: Settings, extra: list) -> None:
 # ---------------------------------------------------------------------------
 
 
+def _make_enc_settings(db_file: str, backend: str, encrypt: str, **overrides: object) -> Settings:
+    """Build a Settings object for the given backend/encrypt combination."""
+    kwargs: dict[str, object] = {"db_path": db_file, "storage_backend": backend, **overrides}
+    if encrypt == "on":
+        kwargs["at_rest_encryption"] = "on"
+        kwargs["at_rest_key_passphrase_env"] = _ENCRYPT_PASSPHRASE_ENV
+    return Settings(**kwargs)
+
+
 @pytest.fixture()
-def tmp_db(tmp_path: object, backend: str) -> str:
-    """Create a migrated test database, honouring the --backend CLI option."""
+def tmp_db(tmp_path: object, backend: str, encrypt: str) -> str:
+    """Create a migrated test database, honouring --backend and --encrypt."""
     db_file = str(tmp_path) + "/test.db"  # type: ignore[operator]
-    if backend == "libsql":
-        pytest.importorskip("libsql_experimental", reason="libsql-experimental not installed")
+    if encrypt == "on" or backend == "libsql":
+        if backend == "libsql":
+            pytest.importorskip("libsql_experimental", reason="libsql-experimental not installed")
         from stigmem_node.storage import make_backend as _make_backend
 
-        b = _make_backend(
-            _settings=Settings(db_path=db_file, storage_backend="libsql"),
-        )
+        b = _make_backend(_settings=_make_enc_settings(db_file, backend, encrypt))
         b.apply_migrations(_MIGRATIONS_DIR)
     else:
         apply_migrations(db_path=db_file)
@@ -182,14 +219,11 @@ def tmp_db(tmp_path: object, backend: str) -> str:
 
 
 @pytest.fixture()
-def client(tmp_db: str, backend: str) -> Generator[TestClient, None, None]:
+def client(tmp_db: str, backend: str, encrypt: str) -> Generator[TestClient, None, None]:
     """TestClient with auth disabled and a fresh in-process DB."""
     original = settings_module.settings
-    test_settings = Settings(
-        db_path=tmp_db,
-        auth_required=False,
-        node_url="http://testnode",
-        storage_backend=backend,
+    test_settings = _make_enc_settings(
+        tmp_db, backend, encrypt, auth_required=False, node_url="http://testnode"
     )
     extra = _patch_settings(test_settings)
     app = create_app()
@@ -199,15 +233,12 @@ def client(tmp_db: str, backend: str) -> Generator[TestClient, None, None]:
 
 
 @pytest.fixture()
-def client_async_threshold(tmp_db: str, backend: str) -> Generator[TestClient, None, None]:
-    """TestClient with async_job_threshold=1 to force the async 202 path in tests."""
+def client_async_threshold(tmp_db: str, backend: str, encrypt: str) -> Generator[TestClient, None, None]:
+    """TestClient with async_job_threshold=0 to force the async 202 path in tests."""
     original = settings_module.settings
-    test_settings = Settings(
-        db_path=tmp_db,
-        auth_required=False,
-        node_url="http://testnode",
-        async_job_threshold=0,
-        storage_backend=backend,
+    test_settings = _make_enc_settings(
+        tmp_db, backend, encrypt,
+        auth_required=False, node_url="http://testnode", async_job_threshold=0,
     )
     extra = _patch_settings(test_settings)
     app = create_app()
@@ -217,14 +248,11 @@ def client_async_threshold(tmp_db: str, backend: str) -> Generator[TestClient, N
 
 
 @pytest.fixture()
-def authed_client(tmp_db: str, backend: str) -> Generator[tuple[TestClient, str], None, None]:
+def authed_client(tmp_db: str, backend: str, encrypt: str) -> Generator[tuple[TestClient, str], None, None]:
     """TestClient with auth enabled; yields (client, raw_key)."""
     original = settings_module.settings
-    test_settings = Settings(
-        db_path=tmp_db,
-        auth_required=True,
-        node_url="http://testnode",
-        storage_backend=backend,
+    test_settings = _make_enc_settings(
+        tmp_db, backend, encrypt, auth_required=True, node_url="http://testnode"
     )
     extra = _patch_settings(test_settings)
     raw_key = create_api_key("agent:test", ["read", "write"])

@@ -83,11 +83,17 @@ volumes:
 #   destination = "/app/data"
 ```
 
-**SQLCipher (at-rest encryption):** available as a build flag. Enable with `STIGMEM_SQLITE_ENCRYPT=true` and provide the key via `STIGMEM_SQLITE_KEY`. Inject the key through your secrets manager — do not commit it.
+**SQLCipher (at-rest encryption):** available as a one-flag opt-in. Install the
+`encryption` and `sqlcipher` extras, set `STIGMEM_AT_REST_ENCRYPTION=on`, and
+point to your passphrase or raw key via env var. See the
+[Encryption at Rest guide](./guides/encryption-at-rest.md) for the full setup,
+existing-database migration, and key-rotation runbook.
 
 ```bash
-STIGMEM_SQLITE_ENCRYPT=true
-STIGMEM_SQLITE_KEY=<inject-from-secrets-manager>
+pip install 'stigmem-node[encryption,sqlcipher]'
+
+STIGMEM_AT_REST_ENCRYPTION=on
+STIGMEM_AT_REST_KEY_PASSPHRASE_ENV=MY_PASSPHRASE_VAR   # name of the env var holding the passphrase
 ```
 
 ---
@@ -110,6 +116,10 @@ STIGMEM_STORAGE_BACKEND=libsql
 STIGMEM_DB_PATH=/app/data/stigmem.db          # local replica file
 STIGMEM_LIBSQL_URL=libsql://your-db.turso.io  # Turso endpoint
 STIGMEM_LIBSQL_AUTH_TOKEN=<inject-from-secrets-manager>
+
+# Optional: encrypt the local replica file (Turso cloud primary uses its own server-side encryption)
+STIGMEM_AT_REST_ENCRYPTION=on
+STIGMEM_AT_REST_KEY_PASSPHRASE_ENV=MY_PASSPHRASE_VAR
 ```
 
 Turso has a free tier suitable for single-operator nodes. For multi-region read replicas, configure per-region embedded replica URLs in `fly.toml` or your PaaS config.

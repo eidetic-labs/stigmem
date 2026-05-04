@@ -10,8 +10,8 @@ Usage::
     with backend.connection() as conn:
         conn.execute("SELECT ...")
 
-    # Explicit path always returns a SQLiteBackend (backward-compat for
-    # CLI tools and test fixtures that create their own temp databases)
+    # Explicit path always returns a plaintext SQLiteBackend (backward-compat
+    # for CLI tools and test fixtures that create their own temp databases).
     backend = make_backend(db_path="/tmp/test.db")
 """
 
@@ -36,17 +36,23 @@ def make_backend(
     """Return the appropriate ``StorageBackend`` instance.
 
     Args:
-        db_path: When provided, always returns a ``SQLiteBackend`` at this
-            path.  This preserves backward-compatibility for CLI tools,
+        db_path: When provided, always returns a plaintext ``SQLiteBackend``
+            at this path.  This preserves backward-compatibility for CLI tools,
             ``apply_migrations(db_path=…)`` calls, and test fixtures that
-            supply a temporary database path directly.
+            supply a temporary database path directly.  Encryption settings
+            are ignored when *db_path* is given.
         _settings: A ``Settings`` object to read ``storage_backend``,
-            ``db_path``, ``libsql_url``, and ``libsql_auth_token`` from.
-            Defaults to the live ``stigmem_node.settings.settings`` singleton,
-            which means test fixtures can control backend selection by
-            patching ``db_mod.settings`` as they already do.
+            ``db_path``, ``libsql_url``, ``libsql_auth_token``, and
+            ``at_rest_encryption`` from.  Defaults to the live
+            ``stigmem_node.settings.settings`` singleton so that test fixtures
+            can control backend selection by patching ``db_mod.settings``.
+
+    Raises:
+        RuntimeError: If ``at_rest_encryption="on"`` is set but no key source
+            is configured (``at_rest_key_passphrase_env`` / ``at_rest_key_kms_uri``
+            both empty).  The node refuses to start in this state.
     """
-    # An explicit path always means SQLite — backward-compat guarantee.
+    # An explicit path always means plaintext SQLite — backward-compat guarantee.
     if db_path is not None:
         return SQLiteBackend(db_path)
 
@@ -54,6 +60,15 @@ def make_backend(
         from stigmem_node.settings import settings  # lazy to avoid import cycles
 
         _settings = settings
+
+    # Resolve encryption key (Phase 8 / ACM-184).  load_key() raises immediately
+    # if encryption is on but no key source is configured — this surfaces the
+    # misconfiguration at app startup (apply_migrations call) rather than lazily.
+    encryption_key: bytes | None = None
+    if getattr(_settings, "at_rest_encryption", "off") == "on":
+        from .encryption import load_key
+
+        encryption_key = load_key(_settings)
 
     backend_name: str = getattr(_settings, "storage_backend", "sqlite")
     path: str = _settings.db_path
@@ -63,6 +78,7 @@ def make_backend(
             db_path=path,
             sync_url=getattr(_settings, "libsql_url", ""),
             auth_token=getattr(_settings, "libsql_auth_token", ""),
+            encryption_key=encryption_key,
         )
 
-    return SQLiteBackend(path)
+    return SQLiteBackend(path, encryption_key=encryption_key)

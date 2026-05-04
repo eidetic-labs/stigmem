@@ -6,6 +6,11 @@ Supports two modes:
     SQLite file kept in sync with a Turso database.  Drop-in for Fly.io
     persistent volumes.
 
+Encryption-at-rest is enabled by passing *encryption_key* (32 bytes).  The key
+is forwarded to ``libsql.connect()`` as a hex string.  Both local and
+embedded-replica modes support encryption; the Turso cloud primary uses its own
+server-side encryption independently of the local replica key.
+
 Install the optional dependency before use::
 
     pip install "stigmem-node[libsql]"
@@ -69,12 +74,23 @@ class LibSQLBackend(StorageBackend):
     In embedded-replica mode (``sync_url`` set) the local file acts as the
     read/write store; the client syncs with Turso on every new connection.
     In local mode (no ``sync_url``) the behaviour is equivalent to SQLite.
+
+    Pass *encryption_key* (32 bytes) to enable at-rest encryption for the local
+    replica file.  Requires ``libsql-experimental >= 0.0.4`` or a build that
+    exposes the ``encryption_key`` parameter in ``libsql.connect()``.
     """
 
-    def __init__(self, db_path: str, sync_url: str = "", auth_token: str = "") -> None:
+    def __init__(
+        self,
+        db_path: str,
+        sync_url: str = "",
+        auth_token: str = "",
+        encryption_key: bytes | None = None,
+    ) -> None:
         self._db_path = db_path
         self._sync_url = sync_url
         self._auth_token = auth_token
+        self._encryption_key = encryption_key
 
     @property
     def backend_name(self) -> str:
@@ -89,15 +105,20 @@ class LibSQLBackend(StorageBackend):
                 "Install it with: pip install 'stigmem-node[libsql]'"
             ) from exc
 
+        enc_kwargs: dict[str, str] = {}
+        if self._encryption_key is not None:
+            enc_kwargs["encryption_key"] = self._encryption_key.hex()
+
         if self._sync_url:
             conn = libsql.connect(
                 database=self._db_path,
                 sync_url=self._sync_url,
                 auth_token=self._auth_token,
+                **enc_kwargs,
             )
             conn.sync()
         else:
-            conn = libsql.connect(database=self._db_path)
+            conn = libsql.connect(database=self._db_path, **enc_kwargs)
 
         conn.row_factory = _LibSQLRow
         conn.execute("PRAGMA foreign_keys=ON")

@@ -19,6 +19,7 @@ from .models import (
     FactPage,
     FactScope,
     FactValue,
+    MemoryCard,
     NodeInfo,
     NullValue,
     NumberValue,
@@ -72,12 +73,13 @@ __all__ = [
     "ConflictResolution",
     "AssertRequest",
     "ResolveRequest",
-    # recall (Phase 9)
+    # recall + cards (Phase 9)
     "RecallRequest",
     "RecallResponse",
     "RecallWeights",
     "ScoreBreakdown",
     "ScoredFact",
+    "MemoryCard",
     # value constructors
     "string_value",
     "text_value",

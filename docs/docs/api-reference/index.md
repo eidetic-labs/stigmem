@@ -26,18 +26,15 @@ The Stigmem reference node exposes a REST API implementing spec §5. The interac
 | **Identity** | `/v1/me` | API key | — |
 | **Node Metadata** | `/.well-known/stigmem` | None | §5.3 |
 | **Health** | `/healthz` | None | — |
-| **Recall** *(Phase 9 — draft)* | `/v1/recall` | API key | §20.3 |
-| **Graph** *(Phase 9 — draft)* | `/v1/graph/*` | API key | §20.1 |
-| **Subscriptions** *(Phase 9 — draft)* | `/v1/subscriptions` | API key + capability token | §20.5 |
-| **Provenance** *(Phase 9 — draft)* | `/v1/facts/:id/provenance` | API key | §20.6 |
-
-:::note Phase 9 endpoints (draft)
-The Recall, Graph, Subscriptions, and Provenance endpoint groups are part of spec §20 — currently a draft. The API shapes below reflect the draft spec; they may change before §20 is promoted to normative. Security review of subscription auth (§20.5.5) and cross-garden recall scoping is in progress.
-:::
+| **Recall** | `/v1/recall` | API key | §20.3 |
+| **Cards** | `/v1/cards/*` | API key | §20.4 |
+| **Graph** | `/v1/graph/*` | API key | §20.1 |
+| **Subscriptions** | `/v1/subscriptions` | API key + capability token | §20.5 |
+| **Provenance** | `/v1/facts/:id/provenance` | API key | §20.6 |
 
 ---
 
-## Phase 9 endpoints (§20 — draft)
+## Phase 9 endpoints (§20 — normative)
 
 ### `GET /v1/recall` · `POST /v1/recall`
 
@@ -108,6 +105,63 @@ curl -s "http://localhost:8000/v1/recall?entity=stigmem%3A%2F%2Fcompany.example%
   "truncated": false
 }
 ```
+
+---
+
+### `GET /v1/cards/{entity_uri}` {#get-v1cardsentity_uri}
+
+Fetch (and optionally force-refresh) the synthesized memory card for a specific entity (spec §20.4). Returns `404` when the entity has no live facts.
+
+Memory cards are pre-aggregated summaries stored in the `memory_cards` table. They are marked stale on every `assert_fact` call and refreshed on the next read. When a fresh card is available during `POST /v1/recall`, the recall pipeline uses it as a single synthetic fact instead of re-ranking all raw facts for that entity.
+
+**Path parameter:**
+- `entity_uri` — URL-encoded entity URI (e.g. `stigmem%3A%2F%2Fcompany.example%2Fuser%2Falice`)
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `scope` | string | `"local"` | Scope the card was materialised from (`local`, `team`, `company`, `public`) |
+| `refresh` | boolean | `false` | Force a server-side refresh even if the card is already fresh |
+
+**Auth:** read permission required (`read` scope on the API key).
+
+**Example:**
+
+```bash
+# Fetch card (auto-refreshes if stale)
+curl -s "http://localhost:8000/v1/cards/stigmem%3A%2F%2Fcompany.example%2Fuser%2Falice?scope=local" \
+  -H 'Authorization: Bearer <api-key>'
+
+# Force refresh
+curl -s "http://localhost:8000/v1/cards/stigmem%3A%2F%2Fcompany.example%2Fuser%2Falice?scope=local&refresh=true" \
+  -H 'Authorization: Bearer <api-key>'
+```
+
+**Response:**
+
+```json
+{
+  "entity_uri": "stigmem://company.example/user/alice",
+  "scope": "local",
+  "summary": "Entity: stigmem://company.example/user/alice\nFacts:\n  memory:role: engineer (conf=1.00)\n  memory:team: platform (conf=0.95)",
+  "fact_hashes": ["a1b2c3d4...", "e5f6a7b8..."],
+  "avg_confidence": 0.975,
+  "refreshed_at": "2026-05-04T11:30:00+00:00",
+  "is_stale": false,
+  "has_contradictions": false
+}
+```
+
+**Error responses:**
+
+| Status | Condition |
+|--------|-----------|
+| 400 | Invalid `scope` value or malformed `entity_uri` |
+| 403 | API key lacks read permission |
+| 404 | No live facts exist for the entity |
+
+See the [Memory Cards guide](../guides/memory-cards.md) for the full lifecycle, schema, and Python SDK usage.
 
 ---
 

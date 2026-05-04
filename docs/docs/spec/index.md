@@ -7,12 +7,12 @@ sidebar_label: Overview
 # Stigmem Protocol Specification
 
 :::note Version
-These docs track **Stigmem spec v1.1** (§19 normative) and **v1.0** (§1–§18 stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
+These docs track **Stigmem spec v1.1** (§19–§20 normative) and **v1.0** (§1–§18 stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
 
-§19 Federation Trust was promoted to normative in v1.1. §1–§18 are unchanged from v1.0.
+§19 Federation Trust was promoted to normative in v1.1. §20 Recall & Graph was promoted to normative in v1.1 (Phase 9). §1–§18 are unchanged from v1.0.
 :::
 
-The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative sources are `spec/stigmem-spec-v1.0.md` (§1–§18) and `spec/stigmem-spec-v1.1-draft.md` (§19 + v1.1 additions to §2 and §5) in the repository.
+The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative sources are `spec/stigmem-spec-v1.0.md` (§1–§18) and `spec/stigmem-spec-v1.1-draft.md` (§19–§20 + v1.1 additions to §2 and §5) in the repository.
 
 :::info Security
 Report vulnerabilities via the [GitHub private advisory path](https://github.com/eidetic-labs/stigmem/security/advisories) — not as public issues. Full policy and coordinated disclosure terms: [SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md).
@@ -48,6 +48,13 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | §17 | Memory Garden | Stable (normative in v1.0) |
 | §18 | Source Attestation | Stable (normative in v1.0) |
 | §19 | Federation Trust | **Normative (v1.1)** — [guide](/docs/guides/federation-trust); Security Policy moved to Appendix A |
+| §20 | Recall & Graph | **Normative (v1.1, Phase 9)** — see §20.1–§20.6 below |
+| §20.1 | Graph Adjacency Index (`entity_edges`, k-hop traversal) | **Normative (v1.1)** — [API reference](/docs/api-reference) |
+| §20.2 | Vector Embeddings (model selection, `vec_facts`, text composition, decay) | **Normative (v1.1)** — [Embeddings guide](/docs/guides/embeddings) |
+| §20.3 | Recall API (`GET/POST /v1/recall`; lexical + dense + graph; MMR packing; token budget) | **Normative (v1.1)** — [Recall guide](/docs/guides/recall), [API reference](/docs/api-reference) |
+| §20.4 | Memory Cards (`stigmem:memory:card` facts; refresh policy; stale-on-write) | **Normative (v1.1)** — [Recall guide](/docs/guides/recall) |
+| §20.5 | Subscriptions (`POST /v1/subscriptions`; webhook + wake; ACL re-check at delivery) | **Normative (v1.1)** — [Subscriptions guide](/docs/guides/subscriptions), [API reference](/docs/api-reference) |
+| §20.6 | Causal Links & Provenance (`derived_from`; `GET /v1/facts/:id/provenance`) | **Normative (v1.1)** — [API reference](/docs/api-reference) |
 
 ## Key concepts
 

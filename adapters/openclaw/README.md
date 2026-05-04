@@ -49,6 +49,27 @@ compromised.
 
 ## Changelog
 
+### v1.0.5
+
+- Docs: corrected documentation URLs to include ReadTheDocs path prefix (`/en/latest/`) — all links now resolve correctly.
+
+### v1.0.4
+
+- Docs: corrected documentation domain to `docs.stigmem.dev` (not `stigmem.dev`).
+
+### v1.0.3
+
+- ClawHub: corrected skill display name (was "Clawhub Skill", now "Stigmem").
+
+### v1.0.2
+
+- Docs: fixed incorrect `homepage` and `Documentation` URLs — both now point to
+  `https://docs.stigmem.dev/docs/guides/connectors/openclaw` instead of
+  `federation#external-onboarding`.
+- Docs: expanded SKILL.md security section to cover all five ClawHub security
+  findings (prompt injection, stale facts, identity scope, dependency pinning,
+  federation scope) with concrete mitigations.
+
 ### v1.0.1
 
 - Security: `source_entity` is now bound at construction time and cannot be

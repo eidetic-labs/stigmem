@@ -1,6 +1,6 @@
 [project]
 name = "stigmem-openclaw"
-version = "1.0.1"
+version = "1.0.5"
 description = "Stigmem adapter for OpenClaw agents — boot handshake, handoff, decision, and escalation surfaces"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -24,7 +24,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/Eidetic-Labs/stigmem"
-Documentation = "https://stigmem.dev/docs/guides/federation#external-onboarding"
+Documentation = "https://docs.stigmem.dev/en/latest/docs/guides/connectors/openclaw"
 Repository = "https://github.com/Eidetic-Labs/stigmem"
 Issues = "https://github.com/Eidetic-Labs/stigmem/issues"
 

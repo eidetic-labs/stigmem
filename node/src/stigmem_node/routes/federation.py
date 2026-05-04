@@ -604,9 +604,9 @@ def push_facts(
                     identity_strength_boost=0.5,  # §19.4.2 boost for valid capability token
                 )
                 accepted += 1
-            except Exception as exc:
+            except Exception:
                 rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": str(exc)})
+                errors.append({"fact_id": fact.get("id"), "error": "ingest_error"})
         else:
             assert peer is not None and token_payload is not None
             permitted = _allowed_output_scopes(peer, token_payload)
@@ -643,9 +643,9 @@ def push_facts(
                     origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
                 )
                 accepted += 1
-            except Exception as exc:
+            except Exception:
                 rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": str(exc)})
+                errors.append({"fact_id": fact.get("id"), "error": "ingest_error"})
 
     return {"accepted": accepted, "rejected": rejected, "errors": errors}
 

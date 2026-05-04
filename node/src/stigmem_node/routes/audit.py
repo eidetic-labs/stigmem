@@ -57,6 +57,21 @@ _CSV_HEADERS = [
     "ts",
 ]
 
+# Static WHERE clause — all filters are nullable bind parameters so there is
+# no dynamic SQL string construction and no SQL-injection taint path.
+# Parameter order matches _filter_params() exactly.
+_STATIC_WHERE = (
+    " WHERE al.tenant_id = ?"
+    "   AND (? IS NULL OR al.entity_uri = ?)"
+    "   AND (? IS NULL OR al.oidc_sub = ?)"
+    "   AND (? IS NULL OR al.source = ?)"
+    "   AND (? IS NULL OR al.fact_id = ?)"
+    "   AND (? IS NULL"
+    "        OR (? = 1 AND al.attested_key_id IS NOT NULL)"
+    "        OR (? = 0 AND al.attested_key_id IS NULL))"
+    "   AND (? IS NULL OR al.ts < ? OR (al.ts = ? AND al.id < ?))"
+)
+
 
 def _row_to_entry(row: Any) -> AuditLogEntry:
     return AuditLogEntry(
@@ -91,7 +106,7 @@ def _decode_cursor(cursor: str) -> tuple[str, str] | None:
     return parts[0], parts[1]
 
 
-def _build_where(
+def _filter_params(
     tenant_id: str,
     entity_uri: str | None,
     oidc_sub: str | None,
@@ -99,36 +114,24 @@ def _build_where(
     fact_id: str | None,
     attested: bool | None,
     cursor: str | None,
-) -> tuple[str, list[Any]]:
-    conditions: list[str] = ["al.tenant_id = ?"]
-    params: list[Any] = [tenant_id]
-
-    if entity_uri:
-        conditions.append("al.entity_uri = ?")
-        params.append(entity_uri)
-    if oidc_sub:
-        conditions.append("al.oidc_sub = ?")
-        params.append(oidc_sub)
-    if source:
-        conditions.append("al.source = ?")
-        params.append(source)
-    if fact_id:
-        conditions.append("al.fact_id = ?")
-        params.append(fact_id)
-    if attested is True:
-        conditions.append("al.attested_key_id IS NOT NULL")
-    elif attested is False:
-        conditions.append("al.attested_key_id IS NULL")
+) -> list[Any]:
+    """Return bind parameters matching _STATIC_WHERE (no dynamic SQL construction)."""
+    attested_val: int | None = None if attested is None else (1 if attested else 0)
+    cur_ts: str | None = None
+    cur_id: str | None = None
     if cursor:
         decoded = _decode_cursor(cursor)
         if decoded:
             cur_ts, cur_id = decoded
-            # Keyset pagination for ORDER BY ts DESC, id DESC
-            conditions.append("(al.ts < ? OR (al.ts = ? AND al.id < ?))")
-            params.extend([cur_ts, cur_ts, cur_id])
-
-    where = (" WHERE " + " AND ".join(conditions)) if conditions else ""
-    return where, params
+    return [
+        tenant_id,
+        entity_uri, entity_uri,
+        oidc_sub, oidc_sub,
+        source, source,
+        fact_id, fact_id,
+        attested_val, attested_val, attested_val,
+        cur_ts, cur_ts, cur_ts, cur_id,
+    ]
 
 
 @router.get("/facts/{fact_id}", response_model=list[AuditLogEntry])
@@ -172,9 +175,9 @@ def export_audit_csv(
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
 
-    where, params = _build_where(identity.tenant_id, entity_uri, oidc_sub, source, fact_id, attested, None)
+    params = _filter_params(identity.tenant_id, entity_uri, oidc_sub, source, fact_id, attested, None)
     params.append(limit)
-    sql = _JOIN_SELECT + where + " ORDER BY al.ts ASC LIMIT ?"
+    sql = _JOIN_SELECT + _STATIC_WHERE + " ORDER BY al.ts ASC LIMIT ?"
 
     with db() as conn:
         rows = conn.execute(sql, params).fetchall()
@@ -221,9 +224,9 @@ def query_audit(
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
 
-    where, params = _build_where(identity.tenant_id, entity_uri, oidc_sub, source, fact_id, attested, cursor)
+    params = _filter_params(identity.tenant_id, entity_uri, oidc_sub, source, fact_id, attested, cursor)
     params.append(limit + 1)
-    sql = _JOIN_SELECT + where + " ORDER BY al.ts DESC, al.id DESC LIMIT ?"
+    sql = _JOIN_SELECT + _STATIC_WHERE + " ORDER BY al.ts DESC, al.id DESC LIMIT ?"
 
     with db() as conn:
         rows = conn.execute(sql, params).fetchall()

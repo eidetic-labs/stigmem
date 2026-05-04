@@ -33,6 +33,16 @@ non-MCP runtimes.
 | [Gemini](./gemini) | Google Gemini — native `FunctionDeclaration` format |
 | [Ollama / LiteLLM](./ollama-litellm) | OpenAI-compatible tool-use format for local models |
 
+## Agent platform adapters
+
+These adapters integrate Stigmem with agent orchestration platforms via their
+native skill or hook surfaces (not MCP).
+
+| Guide | Platform |
+|-------|----------|
+| [OpenClaw](./openclaw) | OpenClaw — ClawHub skill providing boot handshake, handoff, decision, and escalation surfaces |
+| [Paperclip / Claude Code](./paperclip) | Paperclip and Claude Code — MCP server registered in `.mcp.json` |
+
 ## Memory federation adapters
 
 These adapters bridge Stigmem with other memory systems to share knowledge across

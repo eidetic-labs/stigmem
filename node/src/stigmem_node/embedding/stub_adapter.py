@@ -35,7 +35,7 @@ class StubEmbeddingModel(EmbeddingModel):
         for text in texts:
             digest = hashlib.sha256(text.encode()).digest()
             seed = int.from_bytes(digest[:8], "big")
-            rng = random.Random(seed)
+            rng = random.Random(seed)  # nosec B311 — deterministic test stub; seed is a SHA-256 digest, not a secret
             raw = [rng.gauss(0, 1) for _ in range(self._dim)]
             result.append(l2_normalize(raw))
         return result

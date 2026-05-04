@@ -10,15 +10,9 @@ Stigmem is a structured, federated knowledge graph for AI agents. Each fact is a
 
 ## Video walkthroughs
 
-Prefer video? Three short walkthroughs cover the main paths — each under 10 minutes.
-
-| # | Title | What you'll learn |
-|---|-------|-------------------|
-| 1 | [Self-hosted node setup](#) | Install, configure, and start a stigmem node with Docker Compose |
-| 2 | [Federation walkthrough](#) | Connect two nodes and watch facts replicate automatically |
-| 3 | [MCP adapter usage](#) | Wire stigmem into Claude Code or any MCP-compatible agent |
-
-<!-- TODO: replace # hrefs above with published video URLs once recorded and uploaded -->
+:::info Coming soon
+Video walkthroughs for self-hosted node setup, federation, and MCP adapter usage are in production and will be linked here when published.
+:::
 
 ## Quickest start — Docker (recommended)
 
@@ -78,17 +72,15 @@ curl -s 'http://localhost:8000/v1/facts?entity=user:alice&relation=memory:prefer
   -H 'Authorization: Bearer dev-key' | jq .facts
 ```
 
+## Hosted offering
+
+:::info Coming soon
+A free-tier hosted stigmem node is on the roadmap. [Join the discussion](https://github.com/Eidetic-Labs/stigmem/discussions) to register interest and get notified at launch.
+:::
+
 ## Two-node federation quickstart
 
 To run two nodes and verify cross-node fact replication, see the [Quickstart](./quickstart) guide. It takes under 10 minutes and requires only Docker.
-
-## Video walkthroughs
-
-| Video | Duration | What you'll learn |
-|-------|----------|-------------------|
-| [Self-hosted node setup](#) <!-- TODO: replace with upload URL --> | ~9 min | Install, start, assert your first fact, query, teardown |
-| [Federation walkthrough](#) <!-- TODO: replace with upload URL --> | ~9 min | Connect two nodes, peer handshake, fact replication, scope enforcement, conflict resolution |
-| [MCP adapter usage](#) <!-- TODO: replace with upload URL --> | ~9 min | Build and configure the adapter, demo all five MCP tools |
 
 ## Explore interactively
 

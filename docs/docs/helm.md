@@ -8,17 +8,23 @@ sidebar_label: Helm
 
 **Audience:** platform engineers deploying Stigmem nodes on Kubernetes via Helm.
 
-:::info Coming soon
-Stigmem does not yet ship an official Helm chart. Docker Compose is the current supported deployment path — see [Deployment & Installation](./install).
+The Helm chart ships in [`deploy/helm/stigmem/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/helm/stigmem)
+in the main repository. Install it directly from that path:
 
-This page will be completed when a Helm chart is published. If Kubernetes support is a priority for your team, open an issue at [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem).
-:::
+```bash
+# Quick install with defaults (SQLite, no auth, no ingress):
+helm install stigmem deploy/helm/stigmem --namespace stigmem --create-namespace
+```
+
+See the **[Helm recipe README](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/helm/README.md)**
+for full instructions: ingress, TLS, libSQL/Turso, encryption at rest, federation keypair secrets,
+and multi-instance federation.
 
 ---
 
-## Planned chart structure
+## Chart values
 
-When the chart is released, it will expose the same environment variables documented in the [env var reference](./install#environment-variable-reference) as Helm values. The expected shape:
+The chart exposes all `STIGMEM_*` env vars as Helm values. The expected shape:
 
 ```yaml
 # values.yaml (preview — subject to change)
@@ -89,8 +95,16 @@ Never embed `STIGMEM_FEDERATION_PRIVKEY` directly in a `values.yaml` file commit
 
 ---
 
-## Current alternative: Docker Compose
+## Other deployment options
 
-Until the Helm chart is available, you can run Stigmem on Kubernetes using a plain `Deployment` + `Service` manifest with the same environment variables. Refer to the [env var reference](./install#environment-variable-reference) for the full variable list.
+| Recipe | Guide |
+|---|---|
+| Fly.io | [`deploy/fly/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/fly) |
+| Docker Compose | [`deploy/compose/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/compose) |
+| systemd / bare-metal | [`deploy/systemd/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/systemd) |
+| Render / Railway / App Runner / Cloud Run | [`deploy/paas/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/paas) |
 
-For local and single-host deployments, use Docker Compose — see [Deployment & Installation](./install).
+See the top-level [`deploy/README.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/README.md)
+decision tree for help picking the right recipe.
+
+For local and single-host deployments, see [Deployment & Installation](./install).

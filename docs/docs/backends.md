@@ -222,6 +222,10 @@ Air-gapped or sovereign deployment?
   → Avoid Turso cloud — it's a network-dependent service
 ```
 
+Once you have chosen a backend, pick a **[deploy recipe](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/README.md)**
+that matches your environment (Fly.io, Compose, Helm, systemd, or PaaS). Each recipe
+ships a ready-to-use `STIGMEM_STORAGE_BACKEND` env-var template.
+
 ---
 
 ## Encrypted at Rest

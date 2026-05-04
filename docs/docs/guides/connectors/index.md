@@ -43,6 +43,15 @@ native skill or hook surfaces (not MCP).
 | [OpenClaw](./openclaw) | OpenClaw — ClawHub skill providing boot handshake, handoff, decision, and escalation surfaces |
 | [Paperclip / Claude Code](./paperclip) | Paperclip and Claude Code — MCP server registered in `.mcp.json` |
 
+## Vault / note-taking adapters
+
+These adapters sync Stigmem facts with local markdown vaults, enabling bidirectional
+integration with note-taking tools.
+
+| Guide | Tool |
+|-------|------|
+| [Obsidian Vault](./obsidian) | CLI/daemon sync for Obsidian, Logseq, Dendron, and plain-folder markdown vaults |
+
 ## Memory federation adapters
 
 These adapters bridge Stigmem with other memory systems to share knowledge across

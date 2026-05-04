@@ -353,6 +353,51 @@ def _cmd_federation_register_peer(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_snapshot_create(args: argparse.Namespace) -> int:
+    """Create a signed, content-addressed snapshot tarball."""
+    from pathlib import Path
+
+    from .db import apply_migrations
+    from .settings import settings
+    from .snapshot import snapshot_create
+
+    db_path: str = args.db or settings.db_path
+    apply_migrations(db_path=db_path)
+
+    out_path = Path(args.out) if args.out else None
+    sign_with = Path(args.sign_with) if args.sign_with else None
+
+    result = snapshot_create(db_path=db_path, out_path=out_path, sign_with_key_path=sign_with)
+    print(f"snapshot created: {result}", file=sys.stderr)
+    return 0
+
+
+def _cmd_snapshot_restore(args: argparse.Namespace) -> int:
+    """Verify and restore a snapshot tarball."""
+    from pathlib import Path
+
+    from .settings import settings
+    from .snapshot import SnapshotVerificationError, snapshot_restore
+
+    db_path: str = args.db or settings.db_path
+    from_path = Path(args.from_path)
+    trusted_keys = Path(args.trusted_keys) if args.trusted_keys else None
+
+    try:
+        snapshot_restore(
+            tarball_path=from_path,
+            db_path=db_path,
+            trusted_keys_path=trusted_keys,
+            force_unverified=args.force_unverified,
+        )
+    except SnapshotVerificationError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"snapshot restored to {db_path}", file=sys.stderr)
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="stigmem",
@@ -459,6 +504,70 @@ def _build_parser() -> argparse.ArgumentParser:
         help="path to stigmem.db (default: STIGMEM_DB_PATH env or settings default)",
     )
     ci_p.set_defaults(func=_cmd_federation_cursor_import)
+
+    # ------------------------------------------------------------------ snapshot
+    snap_p = sub.add_parser("snapshot", help="backup/restore with signed manifests (Phase 8)")
+    snap_sub = snap_p.add_subparsers(dest="snap_command", metavar="SUBCOMMAND")
+    snap_sub.required = True
+
+    sc_p = snap_sub.add_parser(
+        "create",
+        help="create a signed, content-addressed snapshot tarball",
+    )
+    sc_p.add_argument(
+        "--out",
+        metavar="PATH",
+        default=None,
+        help="output path for the .tar.gz (default: auto-named stigmem-snapshot-<ts>-<hash>.tar.gz)",
+    )
+    sc_p.add_argument(
+        "--sign-with",
+        dest="sign_with",
+        metavar="KEY_FILE",
+        default=None,
+        help="path to a file containing a raw base64url Ed25519 private key (32 bytes); "
+        "default: use the node's built-in federation key",
+    )
+    sc_p.add_argument(
+        "--db",
+        metavar="PATH",
+        default=None,
+        help="path to stigmem.db (default: STIGMEM_DB_PATH env or settings default)",
+    )
+    sc_p.set_defaults(func=_cmd_snapshot_create)
+
+    sr_p = snap_sub.add_parser(
+        "restore",
+        help="verify signature + hashes and restore a snapshot tarball",
+    )
+    sr_p.add_argument(
+        "--from",
+        dest="from_path",
+        metavar="PATH",
+        required=True,
+        help="path to the .tar.gz snapshot to restore",
+    )
+    sr_p.add_argument(
+        "--trusted-keys",
+        dest="trusted_keys",
+        metavar="PATH",
+        default=None,
+        help="JSON file listing trusted base64url Ed25519 public keys; "
+        "default: only the local node's own key",
+    )
+    sr_p.add_argument(
+        "--force-unverified",
+        dest="force_unverified",
+        action="store_true",
+        help="restore even if signature or hash verification fails (logged loudly; NOT recommended)",
+    )
+    sr_p.add_argument(
+        "--db",
+        metavar="PATH",
+        default=None,
+        help="destination database path (default: STIGMEM_DB_PATH env or settings default)",
+    )
+    sr_p.set_defaults(func=_cmd_snapshot_restore)
 
     # ------------------------------------------------------------------ decay
     decay_p = sub.add_parser("decay", help="decay sweeper — expire stale facts (Phase 6)")

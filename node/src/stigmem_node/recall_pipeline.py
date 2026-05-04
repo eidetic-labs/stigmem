@@ -275,7 +275,7 @@ def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
             import uuid
             audit_id = str(uuid.uuid4())
             conn.execute(
-                """INSERT INTO fact_audit (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts)
+                """INSERT INTO fact_audit_log (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts)
                    VALUES (?,?,?,?,?,?,?,?)""",
                 (audit_id, fact_id, "sanitizer_quarantine", "system:stigmem", None, "system:stigmem", None, now),
             )

@@ -6,6 +6,7 @@
 **Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
+- v1.1-draft rev 9 (2026-05-04): §21 chronic-miss mitigations (RS collab). (B) §21.1.5 Task-Type Preloads: `required_by_task_types` manifest field; runtime deterministically injects matching units at heartbeat start before agent context; lint gate on task-type enum; >2 declared task types requires admin sign-off. (A-aug) §21.8.3 augmented manifest certification gate: N=5 paraphrase expansion per intent, top-k coverage check, reject at <80% coverage with `manifest_coverage_failure`; re-certification required on embedding model bump. (C) §21.3.3 guarantee_load: `guarantee_load` boolean on manifest entries; append-by-default; hard budget precedence (guaranteed units never silently dropped); deployment cap of 5 units; `force_position: "prepend"` override for policy units. (D) §21.5.4 expanded: Approach D probe-set + soft-score-lift architecture added as Phase 11 roadmap item; `score += log(1+λ)` lift for coverage-critical units; background audit job; coverage endpoint §21.8.6. New error codes: `manifest_coverage_failure`, `task_type_unknown`, `guarantee_cap_exceeded`.
 - v1.1-draft rev 8 (2026-05-04): §21.1.1 defensive guidance — boot stub SHOULD NOT (not MUST NOT) contain operational content; "always-applicable" rules (mandatory escalation thresholds, universal security constraints, hard prohibitions) MAY be embedded directly as the primary mitigation against chronic instruction-scope miss. Deployments SHOULD classify units as "always applicable" vs "task-conditional" at manifest authoring time.
 - v1.1-draft rev 7 (2026-05-04): §21.5.3 amendment — endogeneity caveat + §21.5.4 probe-set eval. Adds a non-normative note documenting the `used_chunks` endogeneity limitation (chronic misses invisible to live-audit Recall@k/Hit@k/miss-rate). Adds non-normative §21.5.4 specifying the probe-set complement: curated `(intent, required_units, k)` probes; Probe-coverage@k and Probe-hit@k metrics independent of agent behavior; follow-on spec revision will formalize after live data calibration.
 - v1.1-draft rev 6 (2026-05-04): §21 Lazy Instruction Discovery — DRAFT normative (Phase 10). Defines: boot stub (§21.1, ≤500 token preamble with identity + manifest pointer + `recall_instruction` tool schema); instruction manifest (§21.2, ≤1000 token always-loaded index with `load_triggers`); `recall_instruction` tool contract (§21.3, backed by stigmem recall on `instruction:` scope, deterministic + auditable); `instruction:` scope semantics with versioning, provenance requirements, garden isolation, and cross-agent confidentiality (§21.4); discovery audit with replay-based eval shape — Recall@k, Hit@k, miss rate (§21.5); migration semantics and 5-stage deprecation path (§21.6); schema migrations (§21.7); wire format additions (§21.8); error reference (§21.9). ResearchScientist sign-off on discovery-audit eval shape pending; SecurityEngineer review of §21.4 confidentiality rules pending.
@@ -1542,6 +1543,24 @@ GET /v1/agents/{agent_id}/boot-stub[?profile={adapter_profile}]
 
 See §21.8.1 for the full wire contract. The boot stub MUST be regenerated whenever the agent's `manifest_uri` changes or the stub schema version increments; stale delivery is a correctness defect, not a warning.
 
+#### 21.1.5 Task-Type Preloads
+
+Immediately after boot stub delivery and before the agent receives any task context, the runtime MUST deliver the content of all manifest units whose `required_by_task_types` array contains the current heartbeat's wake reason. This is called **task-type preloading**. No retrieval scoring is applied; units are fetched deterministically.
+
+Rules:
+
+1. The runtime MUST compare the current wake reason (e.g. `issue_assigned`, `issue_commented`, `routine_fired`) against each manifest entry's `required_by_task_types` array. String comparison is exact and case-sensitive.
+2. All matching units MUST be fetched and injected into the agent's context before any task context is provided.
+3. Preloaded units MUST be included in the heartbeat's audit record under `loaded_chunks`, tagged with `"source": "task_type_preload"`.
+4. If a preloaded unit's `fact_uri` is unreachable, the runtime MUST fall back to `path` if present (with `"source": "fallback_path"`) or MUST surface a non-fatal `preload_unit_unavailable` warning and continue — a missing preload MUST NOT abort the heartbeat.
+5. Token budget: the combined token cost of boot stub + task-type preloads SHOULD remain under 2000 tokens. Implementations SHOULD emit a `preload_budget_warning` event when this threshold is exceeded but MUST NOT silently drop preloaded units.
+
+Governance:
+
+- Any manifest entry declaring more than **2** `required_by_task_types` values MUST require explicit administrator approval before the manifest can be published (enforced at §21.8.3 as `>2_task_types_requires_approval`).
+- Build pipelines MUST validate all strings in `required_by_task_types` against the deployment's registered wake-reason enum. Unknown values MUST cause a `task_type_unknown` error at manifest publish time (§21.9).
+- The intent of task-type preloads is for structurally-predictable critical units. Authors MUST NOT use `required_by_task_types` as a shortcut to load content that should be retrieved semantically; excessive preload declarations rot into a distributed boot stub.
+
 ---
 
 ### 21.2 Instruction Manifest
@@ -1558,16 +1577,18 @@ Each instruction unit in the manifest MUST be described by the following fields:
 
 ```json
 {
-  "name":          "heartbeat-procedure",
-  "description":   "Step-by-step heartbeat loop: checkout, work, update, exit.",
+  "name":                   "security-posture",
+  "description":            "Security constraints, escalation thresholds, and hard prohibitions.",
+  "required_by_task_types": ["issue_assigned", "issue_commented"],
+  "guarantee_load":         false,
   "load_triggers": {
-    "intents":    ["waking up", "starting heartbeat", "checking inbox"],
-    "keywords":   ["heartbeat", "checkout", "wake"],
+    "intents":    ["security rule", "what am I not allowed to do", "escalation threshold"],
+    "keywords":   ["security", "escalate", "prohibited", "never"],
     "task_types": ["issue_assigned", "issue_commented", "routine_fired"]
   },
-  "fact_uri":       "instruction:acme/agent/cto/heartbeat-procedure/v3",
+  "fact_uri":       "instruction:acme/agent/cto/security-posture/v2",
   "path":           null,
-  "token_estimate": 420
+  "token_estimate": 320
 }
 ```
 
@@ -1575,14 +1596,18 @@ Each instruction unit in the manifest MUST be described by the following fields:
 |---|---|---|
 | `name` | MUST | Stable identifier for this instruction unit; MUST be unique within the manifest |
 | `description` | MUST | One-line (≤ 120 characters) description of what this unit covers |
+| `required_by_task_types` | SHOULD for critical units | Wake-reason strings that cause this unit to be deterministically preloaded at heartbeat start (§21.1.5); entries MUST be registered wake-reason enum values |
+| `guarantee_load` | MAY | If `true`, unit is always appended to `recall_instruction` responses regardless of relevance score (§21.3.3); max 5 per deployment; requires explicit admin approval |
 | `load_triggers.intents` | SHOULD | Natural-language intent phrases that SHOULD cause this unit to be loaded |
 | `load_triggers.keywords` | SHOULD | Exact or prefix-match keywords; implementations MAY use BM25 matching |
-| `load_triggers.task_types` | MAY | Event type strings (e.g. `issue_assigned`) that should trigger a load |
+| `load_triggers.task_types` | MAY | Event type strings (e.g. `issue_assigned`) that SHOULD trigger a `recall_instruction` call; distinct from `required_by_task_types` (semantic hint, not deterministic preload) |
 | `fact_uri` | MUST if `path` absent | `instruction:`-scope stigmem fact URI for this unit (§21.4) |
 | `path` | MUST if `fact_uri` absent | File path relative to the agent's instructions root |
 | `token_estimate` | SHOULD | Estimated token count of the full unit content; used for budget planning |
 
 Exactly one of `fact_uri` or `path` MUST be present per entry; an entry with neither or both MUST be rejected with `manifest_entry_invalid`.
+
+> **`required_by_task_types` vs `load_triggers.task_types`:** These are complementary. `required_by_task_types` is a deterministic preload commitment — the runtime unconditionally injects this unit at heartbeat start for the named wake reasons. `load_triggers.task_types` is a semantic hint — it tells the manifest how to describe when a `recall_instruction` call should include this unit, but does not guarantee loading.
 
 #### 21.2.3 Manifest Wire Contract
 
@@ -1670,6 +1695,14 @@ POST /v1/recall
 The `require_garden_ids` constraint MUST be applied so that `recall_instruction` cannot return facts from gardens the agent is not authorized to read (§17, §19.3). Implementations MUST apply the garden ACL check at recall time using the caller's capability token.
 
 If `manifest_hint` is provided, the named units MUST be included in the result (subject to `token_budget`) before the ranked retrieval results. If a hinted unit does not exist or is not accessible, it MUST be silently omitted (not an error) and its name MUST appear in `missed_hints`.
+
+**Guaranteed units (`guarantee_load: true`):** After ranked and hinted results are assembled, the implementation MUST append all manifest units with `guarantee_load: true` that were not already included. The following rules govern their inclusion:
+
+1. **Position:** guaranteed units MUST be appended after ranked results by default, so that ranked results (higher expected relevance) receive attention primacy. A unit with `force_position: "prepend"` in its manifest entry MUST be prepended instead; this override SHOULD be reserved for universal policy units where omission risk outweighs priming risk.
+2. **Budget precedence:** guaranteed units MUST NOT be silently dropped by `token_budget` exhaustion. If budget is exhausted after ranked results, the implementation MUST still append guaranteed units and MUST set `truncated: true`. Ranked results are truncated first to make room; guaranteed units are truncated last but never to zero.
+3. **Deployment cap:** at most **5** manifest units per deployment may have `guarantee_load: true`. Manifest publish MUST be rejected with `guarantee_cap_exceeded` if this limit would be exceeded (§21.9).
+4. **Relevance threshold:** implementations SHOULD warn (non-fatal) if a guaranteed unit has an empirical `P(relevant | recall_invoked) < 0.6` based on the discovery audit; this is a signal to remove the `guarantee_load` flag from that unit.
+5. **Governance:** setting `guarantee_load: true` on any manifest entry requires explicit administrator approval. The approval MUST be recorded in the manifest's provenance metadata.
 
 #### 21.3.4 Determinism and Auditability
 
@@ -1837,7 +1870,25 @@ The `recall@k` and `hit@k` metrics SHOULD be computed against the post-hoc repla
 > }
 > ```
 >
-> A follow-on spec revision will formalize the probe-set storage format, the evaluation runner contract, and the alert thresholds once sufficient live audit data has accumulated to calibrate them empirically.
+> A follow-on spec revision (Phase 11) will formalize the probe-set storage format, the evaluation runner contract, alert thresholds, and the soft-lift mechanism described below.
+>
+> #### 21.5.5 Probe-Set Coverage Sampling with Soft Score Lift (Phase 11 roadmap, non-normative)
+>
+> Approaches B and augmented A (§21.1.5, §21.8.3) address structurally-predictable and trigger-quality misses at authoring time. The residual problem — semantic-drift misses and embedding-model staleness causing gradual coverage degradation without any live-audit signal — requires an exogenous coverage signal independent of both the retrieval path and agent behavior.
+>
+> **Architecture (non-normative):**
+>
+> 1. **Probe-set construction:** At manifest publish time, generate M=15–20 synthetic queries per unit by combining the unit's `description` with each `load_triggers.intents` string, paraphrased via a diverse augmentation pass (lexical + syntactic variation, not just dense neighbours). Store per unit as `{unit_id → [q_1 … q_M]}` in the manifest DB. Re-generated on unit update.
+>
+> 2. **Background coverage audit:** A scheduled job (runs daily and on every embedding-model version bump) runs all probes through the live retrieval index. Computes per-unit `hit@10` across the M probes. Units with `hit@10 < 0.4` are flagged as *coverage-critical*.
+>
+> 3. **Soft score lift for coverage-critical units:** Flagged units receive a log-additive ranking boost applied within the recall engine: `score += log(1 + λ)` where λ ≈ 0.15. This lifts chronically under-retrieved units without forcing them into context unconditionally — they only appear if they are in the semantic neighbourhood of the actual query. No irrelevant units are injected; the noise properties of Approach C are avoided entirely.
+>
+> 4. **Coverage endpoint:** `GET /v1/agents/{agent_id}/instruction-manifest/coverage` (§21.8.6) returns per-unit `hit@10` and `coverage_status` so authors can diagnose units before production misses occur.
+>
+> 5. **Probe-set calibration:** The probe set SHOULD be seeded with real heartbeat intent strings (10% sample, PII-stripped) on a weekly cadence to keep the distribution calibrated to actual agent query patterns.
+>
+> This approach addresses the root cause of endogeneity by making the miss-rate signal exogenous, and makes embedding-model drift visible as a measurable per-unit delta across versions.
 
 ---
 
@@ -1988,16 +2039,39 @@ Content-Type: application/json
 
 {
   "version": "v4",
-  "entries": [ ...entry objects per §21.2.2... ]
+  "entries": [ ...entry objects per §21.2.2... ],
+  "skip_coverage_gate": false
 }
 
-→ 200 { "fact_uri": "instruction:acme/agent/cto/manifest/v4", "token_count": 910 }
-→ 400 manifest_too_large       if token_count > 1000
-→ 400 manifest_entry_invalid   if any entry has neither or both of fact_uri/path
-→ 409 manifest_version_conflict if version already exists (versions are immutable)
+→ 200 {
+    "fact_uri":       "instruction:acme/agent/cto/manifest/v4",
+    "token_count":    910,
+    "coverage_report": [
+      { "unit": "security-posture", "coverage_pct": 0.95, "passed": true },
+      { "unit": "escalation-path",  "coverage_pct": 0.60, "passed": false }
+    ]
+  }
+→ 400 manifest_too_large              if token_count > 1000
+→ 400 manifest_entry_invalid          if any entry has neither or both of fact_uri/path
+→ 400 manifest_coverage_failure       if any unit fails the paraphrase coverage gate (see below)
+→ 400 task_type_unknown               if any required_by_task_types value is not a registered wake-reason string
+→ 400 guarantee_cap_exceeded          if more than 5 entries have guarantee_load: true
+→ 400 task_types_approval_required    if any entry declares > 2 required_by_task_types values without recorded admin approval
+→ 409 manifest_version_conflict       if version already exists (versions are immutable)
 ```
 
-This route MUST atomically: (1) write the manifest fact to stigmem under `instruction:` scope, (2) update `instruction_manifests` table, (3) invalidate the boot stub cache for this agent.
+**Augmented manifest coverage gate (Approach A):** This route MUST run a paraphrase-expansion coverage check before accepting a manifest. For each unit in the incoming manifest:
+
+1. For every string in `load_triggers.intents`, generate N=5 paraphrases using lexically and syntactically diverse augmentation (MUST NOT use the retrieval encoder's own nearest-neighbour space as the sole paraphrase source).
+2. Run `recall_instruction(paraphrase)` for each generated paraphrase and check whether this unit appears in the top-k results (default k=3).
+3. Compute `coverage_pct = (paraphrases where unit in top-k) / (total paraphrases)`.
+4. If `coverage_pct < 0.80` for any unit, the entire publish MUST be rejected with `manifest_coverage_failure`, identifying the failing unit(s).
+
+`skip_coverage_gate: true` MAY be used by administrators to bypass the coverage check (e.g. for bootstrap or emergency update); the bypass MUST be recorded in the manifest's provenance metadata and MUST emit an audit event.
+
+**Re-certification requirement:** When the deployment's embedding model version changes, all existing manifests MUST be re-certified through this gate before the new model version is activated for production recall. Implementations MUST expose the current embedding model version in the `GET /v1/agents/{agent_id}/instruction-manifest` response.
+
+This route MUST atomically: (1) run coverage gate, (2) write the manifest fact to stigmem under `instruction:` scope, (3) update `instruction_manifests` table, (4) invalidate the boot stub cache for this agent.
 
 #### 21.8.4 Recall Instructions (MUST)
 
@@ -2038,6 +2112,41 @@ Content-Type: application/json
 → 400 audit_token_expired  if token is older than 24 hours
 ```
 
+#### 21.8.6 Get Manifest Coverage Report (SHOULD)
+
+```
+GET /v1/agents/{agent_id}/instruction-manifest/coverage
+Authorization: Bearer <agent api-key or admin api-key>
+
+→ 200 {
+    "manifest_version": "v4",
+    "embedding_model_version": "nomic-embed-text-v1.5",
+    "evaluated_at": "2026-05-04T06:00:00Z",
+    "units": [
+      {
+        "name":             "security-posture",
+        "coverage_pct":     0.95,
+        "coverage_status":  "ok",
+        "hit_at_10":        0.92,
+        "probe_count":      20,
+        "last_evaluated_at": "2026-05-04T06:00:00Z"
+      },
+      {
+        "name":             "escalation-path",
+        "coverage_pct":     0.38,
+        "coverage_status":  "coverage_critical",
+        "hit_at_10":        0.35,
+        "probe_count":      20,
+        "last_evaluated_at": "2026-05-04T06:00:00Z"
+      }
+    ]
+  }
+→ 403 if caller is not the agent itself or an admin
+→ 404 if no manifest or no coverage report generated yet
+```
+
+`coverage_status` values: `"ok"` (hit@10 ≥ 0.4), `"coverage_critical"` (hit@10 < 0.4, soft-lift eligible in Phase 11), `"not_evaluated"` (probe run not yet completed). This endpoint is the primary operator signal for diagnosing instruction units before they produce production misses.
+
 ---
 
 ### 21.9 Error Reference
@@ -2047,6 +2156,10 @@ Content-Type: application/json
 | 400 | `intent_required` | `intent` field absent or empty in `recall_instruction` request |
 | 400 | `manifest_too_large` | Manifest exceeds 1000-token budget |
 | 400 | `manifest_entry_invalid` | Entry has neither `fact_uri` nor `path`, or has both |
+| 400 | `manifest_coverage_failure` | One or more units failed the paraphrase coverage gate at publish time (§21.8.3); response body identifies failing units and their `coverage_pct` |
+| 400 | `task_type_unknown` | A `required_by_task_types` value is not a registered wake-reason string in this deployment |
+| 400 | `guarantee_cap_exceeded` | More than 5 manifest entries have `guarantee_load: true`; deployment cap exceeded |
+| 400 | `task_types_approval_required` | A manifest entry declares > 2 `required_by_task_types` values and no admin approval is recorded |
 | 400 | `audit_token_invalid` | `audit_token` not recognized or already fully closed |
 | 400 | `audit_token_expired` | `audit_token` is older than 24 hours |
 | 403 | `instruction_scope_denied` | Caller's token scope does not match the requested agent's instruction garden |

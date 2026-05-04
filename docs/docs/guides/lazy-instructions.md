@@ -239,6 +239,55 @@ The bimodal shape is structural, not a tuning gap. Architecture intents legitima
 
 ---
 
+## Instruction scope confidentiality
+
+**Spec reference:** §21.4 (v1.1-draft rev 6; SE-reviewed rev 10).
+
+Facts stored under the `instruction:` scope are accessible to any caller authorized on the agent — including calls triggered by adversarial prompt injection. **Content MUST NOT rely on retrieval difficulty as a confidentiality control.**
+
+Practical implications:
+
+- **Do not store secrets in instruction facts.** API keys, internal system credentials, and sensitive configuration belong in environment variables or a secrets manager — not in instruction units.
+- **`guarantee_load: true` units are always exposed.** A unit marked `guarantee_load: true` is injected into every heartbeat regardless of task intent, making its content visible in every prompt context including those shaped by attacker-controlled input. Reserve `guarantee_load` for non-sensitive policy content (mandatory escalation thresholds, hard prohibitions).
+- **`force_position: "prepend"` requires admin approval.** Units set to prepend before the boot stub require a distinct admin approval record (§21.3.3 rule 1). This gate exists because prepended units appear before any trust-filtering logic.
+- **All instruction reads are auditable.** Every `recall_instruction` call produces an `audit_token` (§21.5). Operators can audit which instruction units were loaded per heartbeat via `POST /v1/instruction/audit`.
+
+:::warning
+Instruction content is not private. An attacker who can influence the agent's prompt context can potentially elicit any instruction unit's content regardless of whether that unit would normally be recalled. Write instruction files assuming their content may be observable.
+:::
+
+---
+
+## Discovery audit eval metrics
+
+**Spec reference:** §21.5 (v1.1-draft rev 6; RS-reviewed rev 9).
+
+The shadow audit protocol produces per-heartbeat metrics for evaluating recall quality. Three primary metrics:
+
+| Metric | Definition | Pass threshold |
+|--------|-----------|----------------|
+| **Recall@k** | Fraction of recalled chunks that were task-critical, across all audit turns | ≥ 0.95 |
+| **Hit@k** | Fraction of task-critical chunks present in the top-k recall results for a given turn | ≥ 0.95 per turn |
+| **Miss rate** | Fraction of turns where at least one task-critical chunk was absent from the recall set | ≤ 0.05 |
+
+These are computed by the `stigmem instruction audit` command. The audit compares recalled chunks against the set of chunks that *would have been loaded* under eager mode (the ground truth), not against an agent-reported usage log.
+
+:::info Endogeneity caveat (§21.5.3)
+Live-audit metrics derived from `used_chunks` (what the agent actually called) have an endogeneity limitation: **chronic misses are invisible**. If a chunk is never recalled because its triggers are too narrow, the agent never reports needing it, so the miss never surfaces in Recall@k or Hit@k. The replay-based eval (shadow mode with eager ground truth) is the authoritative measure. See §21.5.4 for the probe-set complement: curated `(intent, required_units, k)` probes that test chunk coverage independently of agent behavior.
+:::
+
+### Probe-set evaluation (§21.5.4, non-normative)
+
+For operators who want to go beyond shadow mode, the spec defines a non-normative probe-set approach:
+
+1. Curate a set of `(intent, required_units, k)` probes — representative task intents paired with the chunks that MUST be recalled for that intent.
+2. Run each probe through `recall_instruction` and measure **Probe-coverage@k** (fraction of required units in top-k) and **Probe-hit@k** (binary: all required units present at k?).
+3. Probe-set metrics are independent of agent behavior, making them immune to the endogeneity limitation above.
+
+This is the recommended pre-production gate for agents with large instruction sets (> 20 chunks) before flipping to `migration_mode: lazy`.
+
+---
+
 ## Related
 
 - [Instruction Migration guide](/docs/guides/instruction-migration) — `stigmem instruction migrate` CLI reference

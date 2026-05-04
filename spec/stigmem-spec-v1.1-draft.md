@@ -6,6 +6,7 @@
 **Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
+- v1.1-draft rev 5 (2026-05-04): Security review amendments to §§19.3.2, 20.3.3, 20.4.4, 20.5.5, 20.6.2. (S1) §20.5.5 wrong §19.5 cross-ref corrected to §19.3/§19.3.3. (S2) §19.3.2 `subscribe` verb added to capability token verb enum. (S3) §20.5.5 delivery-time validation expanded: token revocation check (§19.3.4) added alongside garden ACL re-evaluation; event content/queue semantics clarified for at-least-once compatibility. (R1) §20.3.3 Stage 2 explicit garden ACL check added; Stage 3 seed garden ACL pre-filter MUST added. (R2) §20.4.4 garden_id ACL check MUST added before card inclusion in recall response. (P1) §20.6.2 auth requirement added: unauthorized root facts MUST return HTTP 403. (P2) §20.6.2 cross-scope oracle fix: unauthorized `derived_from` references MUST be represented as `{"exists": false}` — indistinguishable from absent facts.
 - v1.1-draft rev 4 (2026-05-04): ResearchScientist review amendments to §20. (1) §20.2.3 MTEB score corrected to ~53.1. (2) §20.2.4 Matryoshka floor rule added (min 64 dims for nomic-embed-text-v1.5; new error `embed_dimensions_below_floor`). (3) §20.3.2 depth-cap rationale added; default weights marked provisional with eval guidance. (4) §20.3.3 Stage 2 ANN SQL corrected to join `facts` for scope + confidence filtering — normative cross-scope leakage guard. (5) §20.3.4 empty-budget edge-case MUST added.
 - v1.1-draft rev 3 (2026-05-04): §20 Recall & Graph — DRAFT normative. Covers graph index (`entity_edges`), embedding storage (`vec_facts`, nomic-embed-text-v1.5 default), recall API (hybrid lexical + vector + graph with MMR packing), memory cards, subscriptions, and causal/derivation links.
 - v1.1-draft rev 2 (2026-05-04): Security patch — C1: §19.3.3 step 4 rewritten to remove ambiguous external-entity delegation (Option A); H1: §19.3.3 step 1b added for manifest expiry check with refresh; C2: §19.2.6 "Checkpoint Verification" added with normative Rekor key-discovery and verification procedure, failure-closed behavior, and `sigstore-python` reference; H3: §19.3.4 clarified that revocation TL entries are for auditability only, not inline validation; new error codes `inclusion_proof_invalid` (400) and `transparency_log_unavailable` (503) added to §19.9.
@@ -303,6 +304,7 @@ The `verb` values are:
 - `write` — bearer may assert facts to `object`.
 - `admin` — bearer may manage keys and settings on `object`.
 - `federate` — bearer may replicate facts bidirectionally via the federation protocol (§6).
+- `subscribe` — bearer may register a standing event subscription on `object` (scope URI or entity URI).
 
 #### 19.3.3 Signing and Verification
 
@@ -1041,13 +1043,13 @@ WHERE vf.embedding MATCH embed(query)
   AND f.confidence >= :min_confidence
 ```
 
-`vec_facts` carries no `scope` column; scope enforcement MUST be applied via the join to `facts` as shown above. Implementations MUST NOT pass ANN results to the fusion stage before this join filter; doing so risks cross-scope leakage.
+`vec_facts` carries no `scope` column; scope enforcement MUST be applied via the join to `facts` as shown above. Implementations MUST NOT pass ANN results to the fusion stage before this join filter; doing so risks cross-scope leakage. Implementations MUST ALSO verify the caller's garden ACL for each Stage 2 candidate before passing it to fusion — scope filtering alone is insufficient if the caller's garden access does not cover the candidate's `garden_id`.
 
 Cosine similarity `= 1 - distance` for unit-norm vectors.
 
 **Stage 3 — Graph expansion (BFS on `entity_edges`):**
 
-Seed entities are the distinct `entity` values from the union of stage 1 and stage 2 results. Expand to depth ≤ `depth` (max 2). For each reached entity, include the top-20 facts by effective confidence. Edge score:
+Seed entities are the distinct `entity` values from the union of stage 1 and stage 2 results. Seed entities MUST have their garden ACL verified before BFS expansion begins; entities in unauthorized gardens MUST be dropped as seeds. Expand to depth ≤ `depth` (max 2). For each reached entity, include the top-20 facts by effective confidence. Edge score:
 
 ```
 graph_score(f at entity e via edge x) =
@@ -1223,6 +1225,8 @@ In `GET /v1/recall`, memory cards are used as follows:
 | Card generation in flight | Return raw facts immediately; do not block |
 | Query is not entity-centric (no `entity` param) | Skip card lookup; run full hybrid pipeline on raw facts |
 
+Implementations MUST verify the caller's garden ACL against the card's `garden_id` before including the card in a recall response. Cards in unauthorized gardens MUST be excluded; when a card is excluded, the fallback is raw facts from authorized gardens only (following the rows above as if no card exists).
+
 #### 20.4.5 Divergence Policy
 
 When raw facts contradict the card's synthesized summary (i.e., a fact's current value differs from what was captured in a cached card), the card MUST be invalidated immediately and the divergent fact MUST be included in the `results` array of the recall response with `card_stale: true`. Implementations MUST NOT serve a card whose content is known to be inconsistent with live facts.
@@ -1290,11 +1294,16 @@ The `idempotency_key` in the delivery envelope MUST equal `event_id`. Subscriber
 
 #### 20.5.5 Auth and Scoping
 
-Subscription creation MUST require the caller to hold a capability token (§19.5) covering the `subscribe` verb on the target scope or entity. Tokens MUST be validated per §19.5.2 before any subscription is persisted.
+Subscription creation MUST require the caller to hold a capability token (§19.3) with verb `subscribe` on the target scope or entity URI. Tokens MUST be validated per §19.3.3 before any subscription is persisted.
 
-The security boundary is critical: a subscription's event stream MUST NOT leak facts from garden-scoped entities to callers without garden read access. Implementations MUST re-evaluate the caller's garden ACL on each event delivery, not just at subscription creation time. If the caller's access has been revoked since subscription creation, event delivery MUST be silently dropped (not an error) and the subscription MUST be automatically cancelled with event type `subscription_cancelled_access_revoked`.
+The security boundary is critical: a subscription's event stream MUST NOT leak facts from garden-scoped entities to callers without garden read access. At each event delivery, implementations MUST perform the following checks in order:
 
-This is the primary security concern for the subscription primitive: **cross-garden leakage via event streams**. Implementations MUST NOT queue events until after the garden ACL check at delivery time.
+1. **Token revocation check** — verify the subscriber's capability token is not revoked (§19.3.4). A revoked token MUST be treated the same as access revocation below.
+2. **Garden ACL check** — re-evaluate the caller's garden ACL against the event's target entity/scope, not just at subscription creation time.
+
+If either check fails, event content MUST NOT be populated or delivered. The event record MAY be queued internally before these checks to honour at-least-once delivery semantics, but event content MUST be withheld from the subscriber until both checks pass at delivery time. If the caller's access or token has been revoked since subscription creation, delivery MUST be silently dropped (not an error) and the subscription MUST be automatically cancelled with event type `subscription_cancelled_access_revoked`.
+
+This is the primary security concern for the subscription primitive: **cross-garden leakage via event streams**.
 
 ---
 
@@ -1333,6 +1342,8 @@ GET /v1/facts/:id/provenance
   &scope={scope}
 ```
 
+Implementations MUST verify that the caller has read access to the root fact's scope and `garden_id` before executing the walk. Unauthorized root facts MUST return HTTP 403 with error code `access_denied`. No node or edge data MUST be returned for an unauthorized root fact.
+
 **Response:**
 
 ```json
@@ -1341,7 +1352,7 @@ GET /v1/facts/:id/provenance
   "depth_limit":    3,
   "nodes": [
     { "id": "…", "entity": "…", "relation": "…", "value": {…}, "confidence": 0.9, "exists": true },
-    { "hash": "a3f9c2d1e8b7…", "exists": false }   // retracted source fact
+    { "hash": "a3f9c2d1e8b7…", "exists": false }   // retracted or unauthorized fact
   ],
   "edges": [
     { "derived_fact_id": "…", "source_hash": "a3f9c2d1e8b7…" }
@@ -1350,7 +1361,7 @@ GET /v1/facts/:id/provenance
 }
 ```
 
-Nodes with `"exists": false` represent retracted source facts whose hash is known but whose content is no longer available (unless an audit log or transparency log entry is available per §19.2).
+Nodes with `"exists": false` represent either retracted source facts or facts in unauthorized scopes/gardens. When resolving `derived_from` references during the walk, implementations MUST check the caller's garden ACL for each referenced fact's scope and `garden_id`. Facts in unauthorized scopes or gardens MUST be represented as `{ "hash": "…", "exists": false }` — identical in shape to genuinely absent facts. Implementations MUST NOT confirm or deny the existence of facts in unauthorized scopes or gardens via the provenance walk; the response MUST be indistinguishable from a missing fact to prevent cross-scope inference attacks.
 
 #### 20.6.3 Recall Integration
 

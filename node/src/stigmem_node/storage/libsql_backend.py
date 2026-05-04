@@ -132,9 +132,14 @@ class _LibSQLConnection:
         self._conn = conn
 
     def execute(self, sql: str, params: Any = ()) -> _LibSQLCursor:
+        # libsql-experimental only accepts tuples, not lists, for parameters.
+        if isinstance(params, list):
+            params = tuple(params)
         return _LibSQLCursor(self._conn.execute(sql, params))
 
     def executemany(self, sql: str, params: Any = ()) -> _LibSQLCursor:
+        if isinstance(params, list):
+            params = tuple(params)
         return _LibSQLCursor(self._conn.executemany(sql, params))
 
     def commit(self) -> None:

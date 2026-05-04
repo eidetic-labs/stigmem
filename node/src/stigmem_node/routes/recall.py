@@ -148,6 +148,12 @@ def _lexical_search(
     """Return {fact_id: normalised_bm25_score}. Returns {} on FTS unavailability."""
     fts_q = _fts_query(query)
     try:
+        # SAVEPOINT protects the surrounding transaction on Postgres: a failed
+        # FTS5 MATCH query aborts the psycopg2 transaction, making all subsequent
+        # SQL on the same connection fail.  Rolling back to the savepoint restores
+        # the connection to a usable state.  SAVEPOINT is a no-op cost on
+        # SQLite/libsql, which also support the syntax.
+        conn.execute("SAVEPOINT _fts_search")
         rows = conn.execute(
             """
             SELECT ff.fact_id, bm25(facts_fts) AS rank
@@ -163,8 +169,13 @@ def _lexical_search(
             """,
             (fts_q, scope, tenant_id, min_confidence, now, k),
         ).fetchall()
+        conn.execute("RELEASE SAVEPOINT _fts_search")
     except Exception as exc:
         logger.warning("FTS5 lexical search failed: %s", exc)
+        try:
+            conn.execute("ROLLBACK TO SAVEPOINT _fts_search")
+        except Exception:
+            pass
         return {}
 
     if not rows:

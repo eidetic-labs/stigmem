@@ -2,7 +2,12 @@ TITLE: Stigmem v1.0: A federated knowledge fabric for AI agents (open-source)
 TAGS: ai, opensource, devtools, agentprotocol
 COVER IMAGE: (optional — use docs.stigmem.dev/img/logo.svg)
 
---- PASTE EVERYTHING BELOW THIS LINE INTO THE dev.to EDITOR ---
+IMPORTANT — SWITCH TO THE MARKDOWN EDITOR FIRST:
+  dev.to Settings -> Customization -> Writing -> Editor -> switch to "v1 (basic markdown)"
+  This stops dev.to applying Liquid to your code blocks.
+  Do this ONCE and it applies to all future posts.
+
+--- PASTE EVERYTHING BELOW THIS LINE INTO THE dev.to BODY FIELD ---
 
 > *Cross-posted from the [Stigmem blog](https://docs.stigmem.dev/blog/stigmem-v1-launch).*
 
@@ -20,7 +25,6 @@ Facts are immutable. Contradictions are first-class records. Each fact carries a
 
 ## Federation in 2 minutes
 
-{% raw %}
 ```bash
 git clone https://github.com/Eidetic-Labs/stigmem && cd stigmem
 docker compose up --build -d
@@ -37,11 +41,9 @@ curl -X POST http://localhost:8765/v1/facts \
 # 30s later — fact replicated to node-b
 curl 'http://localhost:8766/v1/facts?entity=user:alice&scope=company'
 ```
-{% endraw %}
 
 ## MCP integration
 
-{% raw %}
 ```json
 {
   "mcpServers": {
@@ -53,7 +55,6 @@ curl 'http://localhost:8766/v1/facts?entity=user:alice&scope=company'
   }
 }
 ```
-{% endraw %}
 
 Tools available: `assert_fact`, `query_facts`, `retract_fact`, `synthesize_scope`, `lint_scope`.
 

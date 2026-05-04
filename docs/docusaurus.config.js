@@ -1,6 +1,12 @@
 // @ts-check
 const { themes: prismThemes } = require('prism-react-renderer');
 
+// RTD serves the site under /<language>/<version>/ in multi-version mode.
+// Use injected env vars so asset paths resolve correctly without changing local dev.
+const baseUrl = process.env.READTHEDOCS === 'True'
+  ? `/${process.env.READTHEDOCS_LANGUAGE}/${process.env.READTHEDOCS_VERSION}/`
+  : '/';
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Stigmem Protocol',
@@ -8,7 +14,7 @@ const config = {
   favicon: 'img/favicon.ico',
 
   url: 'https://docs.stigmem.dev',
-  baseUrl: '/',
+  baseUrl,
 
   onBrokenLinks: 'throw',
 

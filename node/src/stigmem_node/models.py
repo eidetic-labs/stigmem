@@ -1,4 +1,4 @@
-"""Pydantic models for the Stigmem fact model (v0.9 — gardens; v1.0 — identity)."""
+"""Pydantic models for the Stigmem fact model (v0.9 — gardens; v1.0 — identity; v1.1 — trust)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,12 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 VALID_VALUE_TYPES = {"string", "text", "number", "boolean", "datetime", "ref", "null"}
 VALID_SCOPES = {"local", "team", "company", "public"}
-VALID_GARDEN_ROLES = {"admin", "writer", "reader"}
+VALID_GARDEN_ROLES = {"admin", "writer", "reader", "quarantine:moderator"}
+
+# Quarantine statuses written to facts.quarantine_status
+QUARANTINE_PENDING   = "pending"
+QUARANTINE_PROMOTED  = "promoted"
+QUARANTINE_REJECTED  = "rejected"
 
 
 class FactValue(BaseModel):
@@ -77,6 +82,15 @@ class FactRecord(BaseModel):
     attested: bool | None = None    # v0.9: source attestation result; null = not applicable
     contradicted: bool = False
     warnings: list[str] = Field(default_factory=list)  # write-time convention warnings (assert only)
+    # v1.1: source-trust snapshot (§19.4); recomputed live at recall — stored value is for audit only
+    source_trust: float | None = None
+    # v1.1: quarantine metadata (§19.5)
+    quarantine_status: str | None = None
+    quarantine_garden_id: str | None = None
+    # v1.1: recall-time computed fields — not stored; populated by recall pipeline
+    effective_confidence: float | None = None
+    sanitizer_warnings: list[str] = Field(default_factory=list)
+    sanitizer_redacted: bool = False
 
 
 class QueryResponse(BaseModel):
@@ -164,6 +178,7 @@ class GardenRecord(BaseModel):
     created_by: str
     created_at: str
     members: list[GardenMemberRecord] = Field(default_factory=list)
+    quarantine: bool = False  # v1.1: True for quarantine gardens (§19.5)
 
 
 class GardenCreateRequest(BaseModel):
@@ -171,6 +186,7 @@ class GardenCreateRequest(BaseModel):
     name: str = Field(..., min_length=1)
     scope: str = Field("company")
     description: str | None = None
+    quarantine: bool = Field(False, description="v1.1: create as quarantine garden (§19.5)")
 
     @field_validator("scope")
     @classmethod
@@ -203,10 +219,54 @@ class GardenMemberUpdateRequest(BaseModel):
         return r
 
 
+# ---------------------------------------------------------------------------
+# Quarantine garden action models (spec §19.5.5, §5.25)
+# ---------------------------------------------------------------------------
+
+class QuarantinePromoteRequest(BaseModel):
+    """POST /v1/gardens/:id/promote — move a quarantined fact to a target garden."""
+    fact_id: str = Field(..., min_length=1)
+    target_garden_id: str | None = Field(
+        None,
+        description="Target garden UUID or slug. Null = promote to no-garden (main fabric).",
+    )
+    reason: str = Field("", description="Human-readable reason for promotion.")
+
+
+class QuarantineRejectRequest(BaseModel):
+    """POST /v1/gardens/:id/reject — permanently reject a quarantined fact."""
+    fact_id: str = Field(..., min_length=1)
+    reason: str = Field("", description="Human-readable reason for rejection.")
+
+
+class QuarantineRecord(BaseModel):
+    """Quarantined fact as returned by GET /v1/quarantine."""
+    fact_id: str
+    entity: str
+    relation: str
+    source: str
+    quarantine_status: str
+    quarantine_garden_id: str | None
+    quarantine_reason: str | None
+    quarantine_acted_by: str | None
+    quarantine_acted_at: str | None
+    source_trust: float | None
+    received_from: str | None
+    timestamp: str
+
+
+class QuarantineListResponse(BaseModel):
+    items: list[QuarantineRecord]
+    total: int
+
+
 def row_to_record(
     row: sqlite3.Row,
     contradicted: bool = False,
     warnings: list[str] | None = None,
+    effective_confidence: float | None = None,
+    sanitizer_warnings: list[str] | None = None,
+    sanitizer_redacted: bool = False,
 ) -> FactRecord:
     import json as _json
     keys = row.keys()
@@ -216,6 +276,8 @@ def row_to_record(
     origin_allowed_scopes: list[str] | None = (
         _json.loads(raw_scopes) if raw_scopes else None
     )
+    source_trust_raw = row["source_trust"] if "source_trust" in keys else None
+    source_trust: float | None = float(source_trust_raw) if source_trust_raw is not None else None
     return FactRecord(
         id=row["id"],
         entity=row["entity"],
@@ -235,6 +297,12 @@ def row_to_record(
         attested=attested,
         contradicted=contradicted,
         warnings=warnings or [],
+        source_trust=source_trust,
+        quarantine_status=row["quarantine_status"] if "quarantine_status" in keys else None,
+        quarantine_garden_id=row["quarantine_garden_id"] if "quarantine_garden_id" in keys else None,
+        effective_confidence=effective_confidence,
+        sanitizer_warnings=sanitizer_warnings or [],
+        sanitizer_redacted=sanitizer_redacted,
     )
 
 

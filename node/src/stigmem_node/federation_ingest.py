@@ -1,7 +1,11 @@
-"""Idempotent fact ingestion from federated peers (spec §6.3, §6.5).
+"""Idempotent fact ingestion from federated peers (spec §6.3, §6.5, §19.4–19.5).
 
 ingest_fact() is the single entry-point for all federated facts.
 It is safe to call multiple times for the same fact (no-op after first write).
+
+Phase 8 (§19): source-trust score is computed at ingest time and stored as a
+snapshot in facts.source_trust.  In trust_mode=strict, facts with t < 0.2 are
+routed to the node's designated quarantine garden instead of the main fact table.
 """
 
 from __future__ import annotations
@@ -38,6 +42,10 @@ def ingest_fact(
     Advances the local HLC.
     Detects contradictions and writes conflict entities (spec §6.5, §3.3).
 
+    Phase 8 (§19): computes source_trust at ingest; routes to quarantine garden
+    when trust_mode=strict and t < 0.2, or rejects with 403 if no quarantine
+    garden is configured.
+
     origin_node_id / origin_allowed_scopes populate the v0.8 scope-propagation
     columns (spec §6.8.1, Migration 004). When None, defaults to sender_node_id
     and the fact's scope as a single-element list (first-hop inference).
@@ -45,8 +53,46 @@ def ingest_fact(
     Company-scope facts are re_federation_blocked=1 by default (spec §6.8.2):
     the originating node's grant is non-transitive.
     """
+    from .settings import settings
+    from .source_trust import compute_source_trust
+
     fact_id = fact["id"]
     scope = fact["scope"]
+    source = fact["source"]
+
+    # Phase 8: compute source-trust snapshot (§19.4)
+    trust_score: float | None = None
+    quarantine_garden_db_id: str | None = None
+    quarantine_status: str | None = None
+
+    trust_mode = settings.trust_mode
+    if trust_mode != "off":
+        trust_score = compute_source_trust(source, scope, identity=None)
+
+        if trust_mode == "strict" and trust_score < 0.2:
+            # Route to quarantine or reject (§19.5.4)
+            qg_id = settings.quarantine_garden_id
+            if not qg_id:
+                # No quarantine garden configured — reject the fact
+                from fastapi import HTTPException
+                raise HTTPException(
+                    status_code=403,
+                    detail="trust_below_threshold",
+                )
+            # Verify the configured quarantine garden exists
+            with db() as conn:
+                qg_row = conn.execute(
+                    "SELECT id FROM gardens WHERE (id = ? OR slug = ?) AND quarantine = 1",
+                    (qg_id, qg_id),
+                ).fetchone()
+            if qg_row is None:
+                from fastapi import HTTPException
+                raise HTTPException(
+                    status_code=403,
+                    detail="trust_below_threshold",
+                )
+            quarantine_garden_db_id = qg_row["id"]
+            quarantine_status = "pending"
 
     # Scope-propagation columns (spec §6.8.1)
     eff_origin_node_id = origin_node_id or sender_node_id
@@ -68,19 +114,21 @@ def ingest_fact(
         new_hlc = node_hlc.receive(remote_hlc) if remote_hlc else node_hlc.tick()
 
         # Insert the fact with received_from + scope-propagation columns (Migration 004)
+        # Phase 8: also store source_trust snapshot + quarantine metadata
         conn.execute(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
                 valid_until, confidence, scope, hlc, received_from,
-                origin_node_id, origin_allowed_scopes, re_federation_blocked)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                origin_node_id, origin_allowed_scopes, re_federation_blocked,
+                source_trust, quarantine_garden_id, quarantine_status)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 fact["entity"],
                 fact["relation"],
                 fact["value"]["type"],
                 _encode_v(fact["value"]),
-                fact["source"],
+                source,
                 fact["timestamp"],
                 fact.get("valid_until"),
                 fact["confidence"],
@@ -90,6 +138,9 @@ def ingest_fact(
                 eff_origin_node_id,
                 eff_origin_scopes,
                 re_fed_blocked,
+                trust_score,
+                quarantine_garden_db_id,
+                quarantine_status,
             ),
         )
 
@@ -118,8 +169,9 @@ def ingest_fact(
             ),
         )
 
-        # Contradiction detection (spec §3.3, §6.5)
-        _detect_and_record_contradiction(conn, fact, fact_id)
+        # Contradiction detection — skip for quarantined facts (§19.5.2)
+        if quarantine_status is None:
+            _detect_and_record_contradiction(conn, fact, fact_id)
 
     return True
 

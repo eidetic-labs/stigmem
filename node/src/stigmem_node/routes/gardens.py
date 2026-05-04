@@ -16,8 +16,10 @@ from ..garden_acl import (
     get_garden_by_slug_or_id,
     get_member_role,
     is_node_admin,
+    quarantine_garden_has_pending_facts,
     require_garden_admin,
     require_garden_read,
+    require_quarantine_moderator_or_admin,
 )
 from ..models import (
     GardenCreateRequest,
@@ -25,6 +27,8 @@ from ..models import (
     GardenMemberRequest,
     GardenMemberUpdateRequest,
     GardenRecord,
+    QuarantinePromoteRequest,
+    QuarantineRejectRequest,
     VALID_SCOPES,
 )
 from ..settings import settings
@@ -71,6 +75,7 @@ def _row_to_garden_record(row: dict, include_members: bool = True) -> GardenReco
         created_by=row["created_by"],
         created_at=row["created_at"],
         members=members,
+        quarantine=bool(row.get("quarantine", 0)),
     )
 
 
@@ -107,9 +112,9 @@ def create_garden(
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="slug already exists")
 
         conn.execute(
-            """INSERT INTO gardens (id, slug, name, scope, description, created_by, created_at, tenant_id)
-               VALUES (?,?,?,?,?,?,?,?)""",
-            (garden_uuid, slug, req.name, req.scope, req.description, identity.entity_uri, now, identity.tenant_id),
+            """INSERT INTO gardens (id, slug, name, scope, description, created_by, created_at, tenant_id, quarantine)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
+            (garden_uuid, slug, req.name, req.scope, req.description, identity.entity_uri, now, identity.tenant_id, int(req.quarantine)),
         )
         conn.execute(
             """INSERT INTO garden_members (garden_id, entity_uri, role, added_by, added_at)
@@ -178,12 +183,22 @@ def delete_garden(
     garden_slug_or_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> None:
-    """Delete a garden (spec §5.17). Requires garden admin role. Facts are orphaned, not deleted."""
+    """Delete a garden (spec §5.17). Requires garden admin role. Facts are orphaned, not deleted.
+
+    Quarantine gardens with pending facts cannot be deleted (§19.5.2 — HTTP 409).
+    """
     garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
 
     require_garden_admin(garden, identity)
+
+    # Guard: quarantine garden cannot be deleted while it has pending facts (§19.5.2)
+    if garden.get("quarantine") and quarantine_garden_has_pending_facts(garden["id"]):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="quarantine_has_pending_facts",
+        )
 
     with db() as conn:
         conn.execute("DELETE FROM gardens WHERE id = ?", (garden["id"],))
@@ -324,3 +339,164 @@ def _guard_last_admin(garden_uuid: str, entity_uri: str) -> None:
             status_code=status.HTTP_403_FORBIDDEN,
             detail="cannot remove or demote the last admin; promote another member first",
         )
+
+
+def _guard_last_elevated_role(garden_uuid: str, entity_uri: str) -> None:
+    """For quarantine gardens: raise 409 if removal would leave no admin or moderator (§19.5.3)."""
+    with db() as conn:
+        elevated_count: int = conn.execute(
+            """SELECT COUNT(*) FROM garden_members
+               WHERE garden_id = ? AND role IN ('admin', 'quarantine:moderator')""",
+            (garden_uuid,),
+        ).fetchone()[0]
+    if elevated_count <= 1:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="quarantine garden must retain at least one admin or quarantine:moderator",
+        )
+
+
+# ---------------------------------------------------------------------------
+# Quarantine promote / reject (spec §5.25, §19.5.5)
+# ---------------------------------------------------------------------------
+
+@router.post("/{garden_slug_or_id}/promote", status_code=status.HTTP_200_OK)
+def promote_fact(
+    garden_slug_or_id: str,
+    req: QuarantinePromoteRequest,
+    identity: Annotated[Identity, Depends(resolve_identity)],
+) -> dict:
+    """Promote a quarantined fact to a target garden (spec §5.25, §19.5.5).
+
+    Requires quarantine:moderator or admin role.
+    """
+    garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
+    if garden is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
+
+    if not garden.get("quarantine"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="this endpoint is only valid for quarantine gardens",
+        )
+
+    require_quarantine_moderator_or_admin(garden, identity)
+
+    now = datetime.now(UTC).isoformat()
+
+    with db() as conn:
+        fact_row = conn.execute(
+            "SELECT id, quarantine_status, quarantine_garden_id FROM facts WHERE id = ?",
+            (req.fact_id,),
+        ).fetchone()
+
+        if fact_row is None or fact_row["quarantine_garden_id"] != garden["id"]:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fact not found in quarantine garden")
+
+        if fact_row["quarantine_status"] != "pending":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="fact_not_quarantine_pending",
+            )
+
+        # Resolve target garden UUID if provided as slug
+        target_garden_db_id: str | None = None
+        if req.target_garden_id:
+            tg = get_garden_by_slug_or_id(req.target_garden_id, tenant_id=identity.tenant_id)
+            if tg is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="target garden not found")
+            target_garden_db_id = tg["id"]
+
+        conn.execute(
+            """UPDATE facts
+               SET garden_id = ?,
+                   quarantine_status = 'promoted',
+                   quarantine_acted_by = ?,
+                   quarantine_acted_at = ?,
+                   quarantine_reason = ?
+               WHERE id = ?""",
+            (target_garden_db_id, identity.entity_uri, now, req.reason or "promoted", req.fact_id),
+        )
+
+        # Audit log (§19.5.6)
+        import json as _json, uuid as _uuid
+        audit_id = str(_uuid.uuid4())
+        conn.execute(
+            "INSERT INTO fact_audit_log (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts) VALUES (?,?,?,?,?,?,?,?)",
+            (audit_id, req.fact_id, "quarantine_promote", identity.entity_uri, identity.oidc_sub, identity.entity_uri, None, now),
+        )
+
+    return {
+        "fact_id": req.fact_id,
+        "action": "promoted",
+        "target_garden_id": target_garden_db_id,
+        "acted_by": identity.entity_uri,
+        "acted_at": now,
+    }
+
+
+@router.post("/{garden_slug_or_id}/reject", status_code=status.HTTP_200_OK)
+def reject_fact(
+    garden_slug_or_id: str,
+    req: QuarantineRejectRequest,
+    identity: Annotated[Identity, Depends(resolve_identity)],
+) -> dict:
+    """Reject a quarantined fact (spec §5.25, §19.5.5).
+
+    Sets confidence = 0.0 and quarantine_status = 'rejected'.
+    Requires quarantine:moderator or admin role.
+    """
+    garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
+    if garden is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
+
+    if not garden.get("quarantine"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="this endpoint is only valid for quarantine gardens",
+        )
+
+    require_quarantine_moderator_or_admin(garden, identity)
+
+    now = datetime.now(UTC).isoformat()
+
+    with db() as conn:
+        fact_row = conn.execute(
+            "SELECT id, quarantine_status, quarantine_garden_id FROM facts WHERE id = ?",
+            (req.fact_id,),
+        ).fetchone()
+
+        if fact_row is None or fact_row["quarantine_garden_id"] != garden["id"]:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fact not found in quarantine garden")
+
+        if fact_row["quarantine_status"] != "pending":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="fact_not_quarantine_pending",
+            )
+
+        conn.execute(
+            """UPDATE facts
+               SET confidence = 0.0,
+                   quarantine_status = 'rejected',
+                   quarantine_acted_by = ?,
+                   quarantine_acted_at = ?,
+                   quarantine_reason = ?
+               WHERE id = ?""",
+            (identity.entity_uri, now, req.reason or "rejected", req.fact_id),
+        )
+
+        # Audit log (§19.5.6)
+        import json as _json, uuid as _uuid
+        audit_id = str(_uuid.uuid4())
+        conn.execute(
+            "INSERT INTO fact_audit_log (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts) VALUES (?,?,?,?,?,?,?,?)",
+            (audit_id, req.fact_id, "quarantine_reject", identity.entity_uri, identity.oidc_sub, identity.entity_uri, None, now),
+        )
+
+    return {
+        "fact_id": req.fact_id,
+        "action": "rejected",
+        "acted_by": identity.entity_uri,
+        "acted_at": now,
+    }

@@ -28,6 +28,7 @@ from ..models import (
     QueryResponse,
     row_to_record,
 )
+from ..recall_pipeline import apply_recall_pipeline
 from .. import settings as _settings_pkg  # access via module so test patches propagate
 from ..settings import settings as _settings  # direct ref for source_attestation_mode reads
 
@@ -315,6 +316,7 @@ def query_facts(
     limit: int = Query(50, ge=1, le=500),
     garden_id: str | None = Query(None, description="v0.9: filter to facts in this garden (spec §5.20)"),
     attested: bool | None = Query(None, description="v0.9: filter by attestation status (spec §18.6)"),
+    include_low_trust: bool = Query(False, description="v1.1: include facts with effective_confidence < 0.3 (§19.4.4)"),
 ) -> QueryResponse:
     """Query facts by pattern (spec §5.2, §5.20). Omitted fields are wildcards. Entity/source are normalized (§2.6)."""
     if not identity.can_read():
@@ -418,6 +420,9 @@ def query_facts(
     if not include_contradicted:
         records = [r for r in records if not r.contradicted]
 
+    # v1.1: apply recall-time trust multiplier + content sanitizer (§19.4.4, §19.7)
+    records = apply_recall_pipeline(records, identity=identity, include_low_trust=include_low_trust)
+
     next_cursor = rows[-1]["id"] if has_more and rows else None
     return QueryResponse(facts=records, total=len(records), cursor=next_cursor)
 
@@ -453,7 +458,13 @@ def get_fact(
             "SELECT COUNT(*) FROM facts WHERE entity=? AND relation=? AND scope=? AND tenant_id=?",
             (row["entity"], row["relation"], row["scope"], identity.tenant_id),
         ).fetchone()[0]
-    return row_to_record(row, contradicted=sibling_count > 1)
+    record = row_to_record(row, contradicted=sibling_count > 1)
+    # v1.1: recall pipeline (trust multiplier + sanitizer)
+    pipeline_results = apply_recall_pipeline([record], identity=identity, include_low_trust=True)
+    if pipeline_results:
+        return pipeline_results[0]
+    # Pending-quarantine facts return 404 to normal callers
+    raise HTTPException(status_code=404, detail="fact not found")
 
 
 def _encode_v(vtype: str, v: Any) -> str:

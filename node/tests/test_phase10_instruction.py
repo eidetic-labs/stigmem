@@ -572,6 +572,351 @@ class TestCLIAuditDiscovery:
 
 
 # ---------------------------------------------------------------------------
+# Migration tool — unit tests
+# ---------------------------------------------------------------------------
+
+
+class TestInstructionMigrateParser:
+    """Tests for parse_instruction_chunks (pure Python, no server)."""
+
+    def test_parses_headings(self, tmp_path: Path) -> None:
+        from stigmem_node.instruction_migrate import parse_instruction_chunks
+
+        md = tmp_path / "heartbeat.md"
+        md.write_text("## Checkout\n\nCheck out the issue.\n\n## Update\n\nPatch status.\n")
+        chunks = parse_instruction_chunks(tmp_path)
+        assert len(chunks) == 2
+        slugs = {c.slug for c in chunks}
+        assert "checkout" in slugs
+        assert "update" in slugs
+
+    def test_parses_single_file(self, tmp_path: Path) -> None:
+        from stigmem_node.instruction_migrate import parse_instruction_chunks
+
+        md = tmp_path / "soul.md"
+        md.write_text("# Soul\n\nCore values.\n")
+        chunks = parse_instruction_chunks(tmp_path)
+        assert len(chunks) == 1
+        assert chunks[0].content.startswith("# Soul")
+
+    def test_strips_frontmatter(self, tmp_path: Path) -> None:
+        from stigmem_node.instruction_migrate import parse_instruction_chunks
+
+        md = tmp_path / "agents.md"
+        md.write_text("---\nrole: cto\n---\n## Rules\n\nDo not push to main.\n")
+        chunks = parse_instruction_chunks(tmp_path)
+        assert all("---" not in c.content for c in chunks)
+        assert any("Rules" in c.heading_text for c in chunks)
+
+    def test_no_headings_treated_as_one_chunk(self, tmp_path: Path) -> None:
+        from stigmem_node.instruction_migrate import parse_instruction_chunks
+
+        md = tmp_path / "plain.md"
+        md.write_text("Just a paragraph with no headings.")
+        chunks = parse_instruction_chunks(tmp_path)
+        assert len(chunks) == 1
+
+    def test_keywords_extracted(self, tmp_path: Path) -> None:
+        from stigmem_node.instruction_migrate import parse_instruction_chunks
+
+        md = tmp_path / "auth.md"
+        md.write_text("## Authentication\n\nUse bearer tokens always.\n")
+        chunks = parse_instruction_chunks(tmp_path)
+        assert len(chunks) == 1
+        assert any(len(kw) >= 4 for kw in chunks[0].keywords)
+
+    def test_deduplicates_slugs_across_files(self, tmp_path: Path) -> None:
+        from stigmem_node.instruction_migrate import parse_instruction_chunks
+
+        (tmp_path / "a.md").write_text("## Overview\n\nFile A.\n")
+        (tmp_path / "b.md").write_text("## Overview\n\nFile B.\n")
+        chunks = parse_instruction_chunks(tmp_path)
+        slugs = [c.slug for c in chunks]
+        assert len(slugs) == len(set(slugs)), "slugs must be unique"
+
+    def test_accepts_single_file_path(self, tmp_path: Path) -> None:
+        from stigmem_node.instruction_migrate import parse_instruction_chunks
+
+        md = tmp_path / "tools.md"
+        md.write_text("## Tools\n\nUse bash.\n")
+        chunks = parse_instruction_chunks(md)
+        assert len(chunks) == 1
+
+
+class TestComputeDiff:
+    def test_create_when_no_existing(self) -> None:
+        from stigmem_node.instruction_migrate import Chunk, compute_diff
+
+        chunks = [Chunk("f", "Heartbeat", "heartbeat", "# Heartbeat\n\nDo things.", ["heartbeat"], 5)]
+        diff = compute_diff(chunks, "instruction:test/agent/xyz", "v1", {}, set())
+        assert len(diff) == 1
+        assert diff[0].action == "CREATE"
+        assert diff[0].unit_name == "heartbeat"
+
+    def test_noop_when_content_unchanged(self) -> None:
+        from stigmem_node.instruction_migrate import Chunk, compute_diff
+
+        content = "# Heartbeat\n\nDo things."
+        chunks = [Chunk("f", "Heartbeat", "heartbeat", content, [], 5)]
+        existing = {"instruction:test/agent/xyz/heartbeat/v1": content}
+        diff = compute_diff(chunks, "instruction:test/agent/xyz", "v1", existing, set())
+        assert diff[0].action == "NOOP"
+
+    def test_update_when_content_changed(self) -> None:
+        from stigmem_node.instruction_migrate import Chunk, compute_diff
+
+        chunks = [Chunk("f", "Heartbeat", "heartbeat", "# Heartbeat\n\nNew content.", [], 5)]
+        existing = {"instruction:test/agent/xyz/heartbeat/v1": "# Heartbeat\n\nOld content."}
+        diff = compute_diff(chunks, "instruction:test/agent/xyz", "v1", existing, set())
+        assert diff[0].action == "UPDATE"
+
+    def test_tombstone_for_removed_sections(self) -> None:
+        from stigmem_node.instruction_migrate import Chunk, compute_diff
+
+        chunks = [Chunk("f", "New Section", "new-section", "# New Section\n\nContent.", [], 5)]
+        prev_names = {"old-section", "another-old-section"}
+        diff = compute_diff(chunks, "instruction:test/agent/xyz", "v1", {}, prev_names)
+        tombstones = [d for d in diff if d.action == "TOMBSTONE"]
+        assert len(tombstones) == 2
+        names = {d.unit_name for d in tombstones}
+        assert "old-section" in names
+
+    def test_fact_uri_format_role(self) -> None:
+        from stigmem_node.instruction_migrate import Chunk, compute_diff
+
+        chunks = [Chunk("f", "Test", "test-slug", "# Test", [], 1)]
+        diff = compute_diff(chunks, "instruction:prod/agent/agent-uuid", "v2", {}, set())
+        assert diff[0].fact_uri == "instruction:prod/agent/agent-uuid/test-slug/v2"
+
+    def test_fact_uri_format_skill(self) -> None:
+        from stigmem_node.instruction_migrate import Chunk, compute_diff
+
+        chunks = [Chunk("f", "Test", "test-slug", "# Test", [], 1)]
+        diff = compute_diff(chunks, "instruction:prod/skill/paperclip", "v1", {}, set())
+        assert diff[0].fact_uri == "instruction:prod/skill/paperclip/test-slug/v1"
+
+
+class TestFormatPreview:
+    def test_preview_contains_counts(self, tmp_path: Path) -> None:
+        from stigmem_node.instruction_migrate import Chunk, DiffEntry, compute_diff, format_preview
+
+        chunks = [
+            Chunk("f", "Section A", "section-a", "# Section A", [], 1),
+            Chunk("f", "Section B", "section-b", "# Section B", [], 1),
+        ]
+        existing = {"instruction:t/agent/x/section-b/v1": "# Section B"}
+        diff = compute_diff(chunks, "instruction:t/agent/x", "v1", existing, {"old-section"})
+        preview = format_preview(diff, "role:cto", tmp_path, "v1")
+        assert "1 create" in preview
+        assert "1 noop" in preview
+        assert "1 tombstone" in preview
+
+    def test_dry_run_cli_shows_preview(self, tmp_path: Path) -> None:
+        import subprocess
+        import sys
+
+        md = tmp_path / "heartbeat.md"
+        md.write_text("## Heartbeat Procedure\n\nCheckout the issue.\n\n## Update Status\n\nPatch.\n")
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "stigmem_node.cli",
+                "instruction", "migrate", str(tmp_path),
+                "--role", "cto",
+                "--agent-id", str(uuid.uuid4()),
+                "--deployment", "test",
+                "--dry-run",
+            ],
+            capture_output=True, text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        assert "Migration Preview" in result.stdout
+        assert "Dry-run" in result.stdout
+
+    def test_dry_run_shows_creates(self, tmp_path: Path) -> None:
+        import subprocess
+        import sys
+
+        md = tmp_path / "tools.md"
+        md.write_text("## Tools\n\nUse the bash tool.\n")
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "stigmem_node.cli",
+                "instruction", "migrate", str(tmp_path),
+                "--skill", "paperclip",
+                "--agent-id", str(uuid.uuid4()),
+                "--dry-run",
+            ],
+            capture_output=True, text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        assert "[+]" in result.stdout  # CREATE symbol
+
+
+class TestMigrationRoundTrip:
+    """Integration test: migrate facts → recall_instruction retrieves content."""
+
+    def _migrate_via_client(
+        self,
+        admin_client: TestClient,
+        tmp_path: Path,
+        agent_id: str,
+        deployment: str = "test",
+        version: str = "v1",
+    ) -> None:
+        """Parse a markdown dir, write facts + manifest via the test client."""
+        from stigmem_node.instruction_migrate import (
+            compute_diff,
+            parse_instruction_chunks,
+            scope_prefix_for_role,
+        )
+
+        chunks = parse_instruction_chunks(tmp_path)
+        scope_prefix = scope_prefix_for_role(deployment, agent_id)
+        diff = compute_diff(chunks, scope_prefix, version, {}, set())
+
+        # Write facts
+        for d in diff:
+            if d.action in ("CREATE", "UPDATE"):
+                admin_client.post("/v1/facts", json={
+                    "entity": d.fact_uri,
+                    "relation": "instruction:content",
+                    "value": {"type": "text", "v": d.content},
+                    "source": "instruction-migration",
+                    "scope": "local",
+                })
+
+        # Publish manifest
+        entries = [
+            {
+                "name": d.unit_name,
+                "description": d.heading_text[:120],
+                "fact_uri": d.fact_uri,
+                "load_triggers": {
+                    "intents": [d.heading_text.lower()],
+                    "keywords": d.keywords,
+                    "task_types": [],
+                },
+                "token_estimate": d.token_estimate,
+            }
+            for d in diff if d.action != "TOMBSTONE"
+        ]
+        admin_client.put(
+            f"/v1/agents/{agent_id}/instruction-manifest",
+            json={"version": version, "entries": entries, "skip_coverage_gate": True},
+        )
+
+    def test_recall_retrieves_migrated_content(self, admin_client: TestClient, tmp_path: Path) -> None:
+        agent_id = str(uuid.uuid4())
+        md = tmp_path / "heartbeat.md"
+        md.write_text(
+            "## Heartbeat Procedure\n\nCheckout the issue first using POST /checkout.\n\n"
+            "## Update Status\n\nPatch the issue status when done.\n"
+        )
+        self._migrate_via_client(admin_client, tmp_path, agent_id)
+
+        r = admin_client.post(
+            f"/v1/agents/{agent_id}/recall-instruction",
+            json={"intent": "I need to checkout an issue and start working"},
+        )
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["chunks"], "should return at least one chunk"
+        # The heartbeat chunk content should be present
+        contents = " ".join(c["content"] for c in body["chunks"])
+        assert "checkout" in contents.lower() or "heartbeat" in contents.lower()
+
+    def test_idempotent_migration(self, admin_client: TestClient, tmp_path: Path) -> None:
+        """Running migration twice on same content produces NOOP on second run."""
+        from stigmem_node.instruction_migrate import (
+            compute_diff,
+            load_existing_facts_from_db,
+            parse_instruction_chunks,
+            scope_prefix_for_role,
+        )
+        import sqlite3
+
+        agent_id = str(uuid.uuid4())
+        deployment = "test"
+        version = "v1"
+        md = tmp_path / "agents.md"
+        md.write_text("## Identity\n\nYou are the CTO.\n")
+
+        chunks = parse_instruction_chunks(tmp_path)
+        scope_prefix = scope_prefix_for_role(deployment, agent_id)
+
+        # First run: write facts
+        diff1 = compute_diff(chunks, scope_prefix, version, {}, set())
+        assert all(d.action == "CREATE" for d in diff1 if d.action != "TOMBSTONE")
+        for d in diff1:
+            if d.action == "CREATE":
+                admin_client.post("/v1/facts", json={
+                    "entity": d.fact_uri,
+                    "relation": "instruction:content",
+                    "value": {"type": "text", "v": d.content},
+                    "source": "instruction-migration",
+                    "scope": "local",
+                })
+
+        # Second run: same content → NOOP
+        # Re-query existing facts directly from DB
+        import stigmem_node.settings as settings_mod
+        db_path = settings_mod.settings.db_path
+        existing = {}
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        for d in diff1:
+            row = conn.execute(
+                "SELECT value_v FROM facts WHERE entity = ? ORDER BY timestamp DESC LIMIT 1",
+                (d.fact_uri,),
+            ).fetchone()
+            if row:
+                existing[d.fact_uri] = str(row["value_v"])
+        conn.close()
+
+        diff2 = compute_diff(chunks, scope_prefix, version, existing, set())
+        non_tombstone = [d for d in diff2 if d.action != "TOMBSTONE"]
+        assert all(d.action == "NOOP" for d in non_tombstone), \
+            f"Second run should be all NOOP, got: {[d.action for d in non_tombstone]}"
+
+    def test_boot_stub_migration_reference_dataset(self, admin_client: TestClient, tmp_path: Path) -> None:
+        """Migrates the boot-stub reference dataset and verifies recall works."""
+        agent_id = str(uuid.uuid4())
+        # Reference dataset: minimal boot stub content from the impl issue
+        boot_stub = tmp_path / "boot-stub.md"
+        boot_stub.write_text(
+            "## Agent Boot Stub\n\n"
+            "You are the CTO agent. Your role is to own all technical execution.\n\n"
+            "## Heartbeat Procedure\n\n"
+            "Follow these steps every heartbeat:\n"
+            "1. Check assignments via GET /api/agents/me/inbox-lite\n"
+            "2. Checkout the issue via POST /api/issues/{id}/checkout\n"
+            "3. Do the work\n"
+            "4. Update status via PATCH /api/issues/{id}\n\n"
+            "## Safety Rules\n\n"
+            "Never push to main. Never bypass CI. Never skip hooks.\n"
+        )
+        self._migrate_via_client(admin_client, tmp_path, agent_id)
+
+        # Verify manifest was published
+        r = admin_client.get(f"/v1/agents/{agent_id}/instruction-manifest")
+        assert r.status_code == 200
+        entries = r.json()["entries"]
+        names = {e["name"] for e in entries}
+        assert "heartbeat-procedure" in names or any("heartbeat" in n for n in names)
+
+        # Verify recall retrieves relevant chunk
+        r = admin_client.post(
+            f"/v1/agents/{agent_id}/recall-instruction",
+            json={"intent": "I need to check my assignments and checkout an issue"},
+        )
+        assert r.status_code == 200
+        body = r.json()
+        contents = " ".join(c["content"] for c in body["chunks"])
+        assert "checkout" in contents.lower() or "assignments" in contents.lower()
+        assert body["audit_token"].startswith("audi_")
+
+
+# ---------------------------------------------------------------------------
 # Fixtures specific to this test module
 # ---------------------------------------------------------------------------
 

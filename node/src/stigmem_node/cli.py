@@ -876,6 +876,68 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     img_p.set_defaults(func=_cmd_instruction_manifest_generate)
 
+    # instruction migrate
+    imig_p = instr_sub.add_parser(
+        "migrate",
+        help="migrate markdown instruction files to stigmem facts + publish manifest",
+    )
+    imig_p.add_argument("path", metavar="PATH", help="markdown file or directory to migrate")
+    scope_grp = imig_p.add_mutually_exclusive_group(required=True)
+    scope_grp.add_argument("--role", default=None, metavar="ROLE", help="agent role name (e.g. cto)")
+    scope_grp.add_argument("--skill", default=None, metavar="SKILL", help="skill name (e.g. paperclip)")
+    imig_p.add_argument(
+        "--agent-id",
+        dest="agent_id",
+        required=True,
+        metavar="AGENT_ID",
+        help="agent UUID owning the manifest",
+    )
+    imig_p.add_argument(
+        "--deployment",
+        default="default",
+        metavar="DEPLOYMENT",
+        help="deployment namespace (default: default)",
+    )
+    imig_p.add_argument(
+        "--version",
+        default="v1",
+        metavar="VERSION",
+        help="fact version string (default: v1)",
+    )
+    imig_p.add_argument(
+        "--node-url",
+        dest="node_url",
+        default="http://127.0.0.1:8000",
+        metavar="URL",
+        help="stigmem node base URL (default: http://127.0.0.1:8000)",
+    )
+    imig_p.add_argument(
+        "--api-key",
+        dest="api_key",
+        default=None,
+        metavar="KEY",
+        help="API key (or set STIGMEM_API_KEY env var)",
+    )
+    imig_p.add_argument(
+        "--db",
+        default=None,
+        metavar="PATH",
+        help="path to stigmem.db for local idempotency checks (skips HTTP fact queries)",
+    )
+    imig_p.add_argument(
+        "--dry-run",
+        dest="dry_run",
+        action="store_true",
+        help="show diff without writing any facts or manifest",
+    )
+    imig_p.add_argument(
+        "--yes",
+        "-y",
+        action="store_true",
+        help="skip confirmation prompt",
+    )
+    imig_p.set_defaults(func=_cmd_instruction_migrate)
+
     # ------------------------------------------------------------------ audit
     audit_p = sub.add_parser("audit", help="discovery audit reports (Phase 10 §21.5)")
     audit_sub = audit_p.add_subparsers(dest="audit_command", metavar="SUBCOMMAND")
@@ -907,6 +969,157 @@ def _build_parser() -> argparse.ArgumentParser:
     ad_p.set_defaults(func=_cmd_audit_discovery)
 
     return parser
+
+
+def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
+    """Migrate markdown instruction files to stigmem facts and publish manifest."""
+    import os
+    import time
+    from pathlib import Path
+
+    from .instruction_migrate import (
+        compute_diff,
+        format_preview,
+        load_existing_facts_from_api,
+        load_existing_facts_from_db,
+        load_prev_manifest_names_from_api,
+        load_prev_manifest_names_from_db,
+        parse_instruction_chunks,
+        publish_manifest,
+        scope_prefix_for_role,
+        scope_prefix_for_skill,
+        write_facts,
+    )
+
+    path = Path(args.path)
+    if not path.exists():
+        print(f"error: path '{args.path}' does not exist", file=sys.stderr)
+        return 1
+
+    api_key = args.api_key or os.environ.get("STIGMEM_API_KEY", "")
+    node_url = args.node_url
+    deployment = args.deployment
+    version = args.version
+    agent_id = args.agent_id
+
+    # Build scope prefix and label
+    if args.role:
+        scope_prefix = scope_prefix_for_role(deployment, agent_id)
+        scope_label = f"role:{args.role}  agent:{agent_id}"
+    else:
+        scope_prefix = scope_prefix_for_skill(deployment, args.skill)
+        scope_label = f"skill:{args.skill}  agent:{agent_id}"
+
+    # Parse
+    chunks = parse_instruction_chunks(path)
+    if not chunks:
+        print("No instruction chunks found. Check that the path contains .md files.", file=sys.stderr)
+        return 0
+
+    # Load existing state for idempotency checks
+    # Initial diff pass to know which URIs to query
+    from .instruction_migrate import build_fact_uri
+    stub_diff_uris = {build_fact_uri(scope_prefix, c.slug, version) for c in chunks}
+    existing_content: dict[str, str] = {}
+    prev_names: set[str] = set()
+
+    if args.db:
+        from .instruction_migrate import load_existing_facts_from_db as _lef_db, load_prev_manifest_names_from_db as _lpn_db
+        # We need DiffEntry stubs for the DB loader — use dict approach
+        import sqlite3
+        try:
+            conn = sqlite3.connect(args.db)
+            conn.row_factory = sqlite3.Row
+            for uri in stub_diff_uris:
+                row = conn.execute(
+                    "SELECT value_v FROM facts WHERE entity = ? ORDER BY timestamp DESC LIMIT 1",
+                    (uri,),
+                ).fetchone()
+                if row:
+                    existing_content[uri] = str(row["value_v"])
+            # Previous manifest names
+            row = conn.execute(
+                "SELECT body FROM instruction_manifests WHERE agent_id = ? AND superseded_at IS NULL"
+                " ORDER BY created_at DESC LIMIT 1",
+                (agent_id,),
+            ).fetchone()
+            if row:
+                import json as _json
+                prev_names = {e["name"] for e in _json.loads(row["body"])}
+            conn.close()
+        except Exception as exc:
+            print(f"warning: db query failed: {exc}", file=sys.stderr)
+    elif api_key:
+        try:
+            import httpx as _httpx  # noqa: F401
+            import httpx
+            headers = {"Authorization": f"Bearer {api_key}"}
+            base = node_url.rstrip("/")
+            for uri in stub_diff_uris:
+                try:
+                    r = httpx.get(f"{base}/v1/facts", params={"entity": uri, "limit": 1}, headers=headers, timeout=10.0)
+                    if r.status_code == 200:
+                        facts = r.json().get("facts", [])
+                        if facts:
+                            existing_content[uri] = str(facts[0]["value"]["v"])
+                except Exception:
+                    pass
+            try:
+                r = httpx.get(f"{base}/v1/agents/{agent_id}/instruction-manifest", headers=headers, timeout=10.0)
+                if r.status_code == 200:
+                    prev_names = {e["name"] for e in r.json().get("entries", [])}
+            except Exception:
+                pass
+        except ImportError:
+            print("warning: httpx not installed — skipping idempotency checks", file=sys.stderr)
+
+    # Compute diff
+    diff = compute_diff(chunks, scope_prefix, version, existing_content, prev_names)
+
+    # Show preview
+    print(format_preview(diff, scope_label, path, version))
+
+    if args.dry_run:
+        print("Dry-run mode — no changes written.")
+        return 0
+
+    creates = [d for d in diff if d.action == "CREATE"]
+    updates = [d for d in diff if d.action == "UPDATE"]
+    tombstones = [d for d in diff if d.action == "TOMBSTONE"]
+
+    if not creates and not updates and not tombstones:
+        print("Nothing to do.")
+        return 0
+
+    if not args.yes:
+        try:
+            answer = input("Proceed? [y/N] ")
+        except (EOFError, KeyboardInterrupt):
+            print("\nAborted.")
+            return 1
+        if answer.lower() not in ("y", "yes"):
+            print("Aborted.")
+            return 1
+
+    if not api_key:
+        print("error: --api-key or STIGMEM_API_KEY env var required to write facts", file=sys.stderr)
+        return 1
+
+    # Write facts
+    written, failed = write_facts(diff, node_url, api_key)
+    if failed > 0:
+        print(f"\n{failed} fact(s) failed to write. Manifest will NOT be published.", file=sys.stderr)
+        return 1
+
+    # Publish manifest with a unique version per run (timestamp suffix)
+    manifest_version = f"{version}-{int(time.time())}"
+    ok = publish_manifest(agent_id, diff, manifest_version, node_url, api_key)
+    if not ok:
+        return 1
+
+    print(f"\nDone. {written} fact(s) written, manifest published as version '{manifest_version}'.")
+    print(f"Verify: stigmem recall-instruction via POST /v1/agents/{agent_id}/recall-instruction")
+    return 0
 
 
 def _cmd_instruction_manifest_generate(args: argparse.Namespace) -> int:

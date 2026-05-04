@@ -110,6 +110,41 @@ def _fts_query(q: str) -> str:
     return cleaned or '""'
 
 
+def _like_search(
+    conn: Any,
+    query: str,
+    scope: str,
+    tenant_id: str,
+    k: int,
+    min_confidence: float,
+    now: str,
+) -> dict[str, float]:
+    """LIKE-based text scan — fallback when FTS5 is unavailable (libsql, postgres)."""
+    words = [w for w in re.sub(r"[^\w]", " ", query).split() if len(w) >= 2][:5]
+    if not words:
+        return {}
+    clauses = " OR ".join("(value_v LIKE ? OR entity LIKE ?)" for _ in words)
+    params: list[Any] = []
+    for w in words:
+        pat = f"%{w}%"
+        params.extend([pat, pat])
+    params.extend([scope, tenant_id, min_confidence, now, k])
+    try:
+        rows = conn.execute(
+            f"SELECT id AS fact_id, confidence AS rank FROM facts WHERE ({clauses}) AND scope = ? AND tenant_id = ? AND confidence >= ? AND (valid_until IS NULL OR valid_until > ?) ORDER BY confidence DESC LIMIT ?",  # nosec B608
+            params,
+        ).fetchall()
+    except Exception as exc:
+        logger.warning("LIKE fallback search failed: %s", exc)
+        return {}
+    if not rows:
+        return {}
+    max_conf = max(float(row["rank"]) for row in rows)
+    if max_conf <= 0:
+        return {}
+    return {row["fact_id"]: float(row["rank"]) / max_conf for row in rows}
+
+
 def _now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -176,7 +211,7 @@ def _lexical_search(
             conn.execute("ROLLBACK TO SAVEPOINT _fts_search")
         except Exception:
             pass
-        return {}
+        return _like_search(conn, query, scope, tenant_id, k, min_confidence, now)
 
     if not rows:
         return {}

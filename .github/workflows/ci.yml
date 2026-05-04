@@ -74,11 +74,91 @@ jobs:
         with:
           version: "3.17.0"
 
-      - name: Lint stigmem chart
+      - name: Lint stigmem chart (infra)
         run: helm lint infra/helm/stigmem
+
+      - name: Lint stigmem chart (deploy)
+        run: helm lint deploy/helm/stigmem
 
       - name: Dry-run install (template rendering)
         run: |
           helm template stigmem ./infra/helm/stigmem \
             --debug \
             --set image.pullPolicy=Never
+
+  container-smoke:
+    name: Container hardening smoke test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # needed for cosign keyless verify in future; harmless now
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build hardened image (linux/amd64)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./node/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: stigmem-node:ci-smoke
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify image runs as non-root (UID 65532)
+        run: |
+          uid=$(docker run --rm stigmem-node:ci-smoke id -u)
+          echo "Container UID: $uid"
+          [ "$uid" = "65532" ] || (echo "ERROR: expected UID 65532, got $uid" && exit 1)
+
+      - name: Verify read-only root filesystem
+        run: |
+          docker run --rm --read-only \
+            --tmpfs /tmp:mode=1777 \
+            --tmpfs /run:mode=755 \
+            -v ci-smoke-data:/data \
+            -e STIGMEM_DB_PATH=/data/smoke.db \
+            -e STIGMEM_HOST=0.0.0.0 \
+            -e STIGMEM_PORT=8765 \
+            --cap-drop ALL \
+            -d --name ci-smoke stigmem-node:ci-smoke
+          # Wait for healthcheck
+          for i in $(seq 1 20); do
+            status=$(docker inspect --format='{{.State.Health.Status}}' ci-smoke 2>/dev/null || echo starting)
+            echo "Health: $status (attempt $i)"
+            [ "$status" = "healthy" ] && break
+            sleep 2
+          done
+          docker inspect --format='{{.State.Health.Status}}' ci-smoke | grep -q healthy \
+            || (docker logs ci-smoke && exit 1)
+          docker rm -f ci-smoke
+          docker volume rm ci-smoke-data || true
+
+      - name: Generate SBOM with syft
+        uses: anchore/sbom-action@v0
+        with:
+          image: stigmem-node:ci-smoke
+          format: spdx-json
+          output-file: stigmem-node-ci-sbom.spdx.json
+          upload-artifact: false
+
+      - name: Verify SBOM contains expected packages
+        run: |
+          python3 - <<'EOF'
+          import json, sys
+          with open("stigmem-node-ci-sbom.spdx.json") as f:
+              sbom = json.load(f)
+          names = {p.get("name","").lower() for p in sbom.get("packages", [])}
+          required = {"fastapi", "uvicorn", "pydantic"}
+          missing = required - names
+          if missing:
+              print(f"SBOM missing expected packages: {missing}", file=sys.stderr)
+              sys.exit(1)
+          print(f"SBOM OK — {len(names)} packages found, required set present")
+          EOF

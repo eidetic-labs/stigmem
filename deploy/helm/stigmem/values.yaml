@@ -115,6 +115,27 @@ atRestEncryptionSecret:
   name: ""          # name of a Secret containing the DB passphrase / key
   passphraseKey: "" # key in that Secret; value stored in env var named by atRestKeyPassphraseEnv
 
+# ── Security context (Phase 12) ───────────────────────────────────────────────
+# Non-root UID/GID 65532 matches the user baked into the hardened image.
+# Seccomp profile references the JSON file shipped in deploy/seccomp/.
+# To load the seccomp profile as a ConfigMap instead of a hostPath, set
+#   securityContext.seccompProfile.type: Localhost
+# and pre-create the profile on each node at the path below.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
 # ── Resource limits ───────────────────────────────────────────────────────────
 resources: {}
 # Recommended starting point:

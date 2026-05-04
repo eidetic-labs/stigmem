@@ -1,0 +1,77 @@
+{
+  "_comment": "Stigmem node seccomp profile.",
+  "_comment2": "Strategy: defaultAction ALLOW (compatible with Python/uvicorn thread model),",
+  "_comment3": "explicit ERRNO deny list targeting container-escape and privilege-escalation syscalls.",
+  "_comment4": "clone/clone3 are intentionally NOT denied here — Python threads require them.",
+  "_comment5": "Namespace-related misuse is blocked at the capability layer (CAP_SYS_ADMIN dropped).",
+  "defaultAction": "SCMP_ACT_ALLOW",
+  "archMap": [
+    {
+      "architecture": "SCMP_ARCH_X86_64",
+      "subArchitectures": ["SCMP_ARCH_X86", "SCMP_ARCH_X32"]
+    },
+    {
+      "architecture": "SCMP_ARCH_AARCH64",
+      "subArchitectures": ["SCMP_ARCH_ARM"]
+    }
+  ],
+  "syscalls": [
+    {
+      "names": [
+        "ptrace",
+        "process_vm_readv",
+        "process_vm_writev",
+        "personality",
+        "reboot",
+        "syslog",
+        "kexec_load",
+        "kexec_file_load",
+        "pivot_root",
+        "mount",
+        "umount2",
+        "unshare",
+        "setns",
+        "open_tree",
+        "move_mount",
+        "fsopen",
+        "fsconfig",
+        "fsmount",
+        "fspick",
+        "perf_event_open",
+        "bpf",
+        "userfaultfd",
+        "nfsservctl",
+        "add_key",
+        "keyctl",
+        "request_key",
+        "lookup_dcookie",
+        "get_mempolicy",
+        "set_mempolicy",
+        "mbind",
+        "migrate_pages",
+        "move_pages",
+        "seccomp",
+        "settimeofday",
+        "adjtimex",
+        "clock_adjtime",
+        "clock_adjtime64",
+        "ntp_adjtime",
+        "modify_ldt",
+        "iopl",
+        "ioperm",
+        "swapon",
+        "swapoff",
+        "acct",
+        "uselib",
+        "chroot",
+        "create_module",
+        "delete_module",
+        "init_module",
+        "finit_module",
+        "query_module"
+      ],
+      "action": "SCMP_ACT_ERRNO",
+      "errnoRet": 1
+    }
+  ]
+}

@@ -92,7 +92,7 @@ jobs:
 
       - name: Install stigmem-node (all extras)
         run: |
-          uv pip install -e "node[dev,libsql,postgres,conformance]"
+          uv pip install --system -e "node[dev,libsql,postgres,conformance]"
 
       - name: Run conformance suite — ${{ matrix.backend }}
         run: |

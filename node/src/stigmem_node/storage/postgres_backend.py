@@ -109,7 +109,7 @@ def _rewrite_or_replace(sql: str) -> str:
         conflict_target = ", ".join(pk_cols)
         if update_cols:
             set_clauses = ", ".join(f"{c} = EXCLUDED.{c}" for c in update_cols)
-            sql += f"\nON CONFLICT ({conflict_target}) DO UPDATE SET {set_clauses}"
+            sql += f"\nON CONFLICT ({conflict_target}) DO UPDATE SET {set_clauses}"  # nosec B608 — conflict_target and update_cols are column names from _TABLE_PK (hardcoded schema dict), not user input
         else:
             sql += f"\nON CONFLICT ({conflict_target}) DO NOTHING"
     else:

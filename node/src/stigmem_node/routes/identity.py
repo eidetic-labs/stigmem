@@ -32,6 +32,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db
+from ..identity.capability import load_node_private_key, sign_revocation_event, sign_token
 from ..identity.manifest import (
     ManifestError,
     manifest_from_dict,
@@ -254,6 +255,7 @@ def issue_capability_token(
 
     token_body: dict[str, Any] = {
         "token_id": token_id,
+        "token_version": 1,
         "issuer": issuer,
         "subject": subject,
         "verb": verb,
@@ -262,6 +264,15 @@ def issue_capability_token(
         "expiry": expiry,
         "nonce": nonce,
     }
+
+    # Sign token body if node_private_key is configured (C-SEC-1 / spec §19.3.2)
+    if load_node_private_key() is not None:
+        token_body["signature"] = sign_token(token_body)
+    else:
+        logger.warning(
+            "STIGMEM_NODE_PRIVATE_KEY not set; issuing unsigned capability token "
+            "(set the env var to enable spec-compliant signing)"
+        )
 
     import canonicaljson
     token_json = canonicaljson.encode_canonical_json(token_body).decode()
@@ -340,12 +351,16 @@ async def revoke_capability_token(
             detail="not authorized to revoke this token: caller is not the issuer or subject",
         )
 
-    revoke_event = {
+    revoke_event: dict[str, Any] = {
         "token_id": token_id,
         "revoked_by": identity.entity_uri,
         "revoked_at": now,
         "reason": reason,
     }
+
+    # Sign revocation event (spec §19.3.4 — best-effort when key not configured)
+    if load_node_private_key() is not None:
+        revoke_event["signature"] = sign_revocation_event(revoke_event)
 
     # Submit revocation to TL (best-effort; log warning in non-strict mode)
     tl = make_transparency_log()

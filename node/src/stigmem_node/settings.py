@@ -141,5 +141,28 @@ class Settings(BaseSettings):
     tl_local_path: str = "stigmem_tl.jsonl"
     tl_rekor_url: str = "https://rekor.sigstore.dev"
 
+    # Capability token signing — spec §19.3.2 (C-SEC-1).
+    # Base64url-encoded raw 32-byte Ed25519 seed used to sign capability tokens and
+    # revocation events. If empty, token signing is skipped and verify_token() will
+    # reject all tokens (dev/test nodes that don't participate in trust federation).
+    node_private_key: str = ""
+
+    @field_validator("node_private_key")
+    @classmethod
+    def _validate_node_private_key(cls, v: str) -> str:
+        if not v:
+            return v
+        import base64
+        padded = v + "=" * (-len(v) % 4)
+        try:
+            raw = base64.urlsafe_b64decode(padded)
+        except Exception as exc:
+            raise ValueError(f"node_private_key is not valid base64url: {exc}") from exc
+        if len(raw) != 32:
+            raise ValueError(
+                f"node_private_key must decode to exactly 32 bytes; got {len(raw)}"
+            )
+        return v
+
 
 settings = Settings()

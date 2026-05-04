@@ -45,6 +45,7 @@ from stigmem_node.identity.manifest import (
     verify_manifest,
     verify_rotation_chain,
 )
+from stigmem_node.identity.capability import CapabilityTokenError, verify_token
 from stigmem_node.identity.transparency_log import (
     LocalAppendOnlyLog,
     TransparencyLogUnavailable,
@@ -900,3 +901,133 @@ def test_issuer_must_match_caller_entity_uri(identity_client: TestClient):
     })
     assert resp.status_code == 403, resp.text
     assert "issuer" in resp.json().get("detail", "").lower()
+
+
+# ===========================================================================
+# 14. C-SEC-1 / M-SEC-2 — Ed25519 token signing and verify_token
+# ===========================================================================
+
+
+@pytest.fixture()
+def signed_identity_client(tmp_path: Path) -> Generator[tuple[TestClient, str, str], None, None]:
+    """Client with node_private_key configured; yields (client, issuer_uri, priv_b64url).
+
+    The issuer manifest is pre-registered so token issuance can succeed.
+    auth_required=False → entity_uri is 'anon:trusted', which means the H-SEC-1
+    issuer==caller guard would block us.  We patch identity_mod._manifest_submit_log
+    and issue tokens directly using a pre-registered manifest trick: register the
+    manifest under 'anon:trusted' so the caller can issue its own token.
+    """
+    db_file = str(tmp_path / "csec1_test.db")
+    apply_migrations(db_path=db_file)
+
+    priv, pub_b64, priv_b64 = _gen_keypair()
+    issuer = "anon:trusted"  # matches auth_required=False entity_uri
+
+    original = settings_module.settings
+    test_settings = Settings(
+        db_path=db_file,
+        auth_required=False,
+        node_url="http://testnode",
+        trust_mode="relaxed",
+        tl_backend="off",
+        node_private_key=priv_b64,
+    )
+    extra = _patch_settings(test_settings)
+
+    app = create_app()
+    with TestClient(app, raise_server_exceptions=True) as client:
+        # Register issuer manifest under 'anon:trusted' so the route's H-SEC-1 guard passes
+        m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
+        resp = client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+        assert resp.status_code == 200, resp.text
+        yield client, issuer, priv_b64
+
+    _restore_settings(original, extra)
+
+
+def test_signed_token_has_token_version_and_signature(
+    signed_identity_client: tuple[TestClient, str, str],
+) -> None:
+    """Issued tokens must include token_version=1 and a signature field (C-SEC-1 / M-SEC-2)."""
+    client, issuer, _ = signed_identity_client
+
+    resp = client.post("/v1/federation/capability-tokens", json={
+        "issuer": issuer,
+        "subject": issuer,
+        "verb": "read",
+        "object": "stigmem://facts",
+    })
+    assert resp.status_code == 201, resp.text
+    token_json_str = resp.json()["token_json"]
+    token = json.loads(token_json_str)
+
+    assert token.get("token_version") == 1, "token_version must be 1 (M-SEC-2)"
+    assert "signature" in token, "signature field must be present (C-SEC-1)"
+    assert len(token["signature"]) > 0, "signature must not be empty"
+
+
+def test_verify_token_rejects_mutated_token(
+    signed_identity_client: tuple[TestClient, str, str],
+) -> None:
+    """Mutating any token field after signing must cause verify_token to raise (C-SEC-1)."""
+    client, issuer, _ = signed_identity_client
+
+    resp = client.post("/v1/federation/capability-tokens", json={
+        "issuer": issuer,
+        "subject": issuer,
+        "verb": "read",
+        "object": "stigmem://facts",
+    })
+    assert resp.status_code == 201, resp.text
+    original_token_json = resp.json()["token_json"]
+
+    # Mutate the verb field — signature no longer matches the canonical body
+    token = json.loads(original_token_json)
+    token["verb"] = "write"
+    mutated_token_json = json.dumps(token)
+
+    # get_peer_manifest is the production trust-store resolver; settings are patched
+    # by signed_identity_client so it uses the test DB
+    from stigmem_node.identity.trust_store import get_peer_manifest
+
+    with pytest.raises(CapabilityTokenError, match="signature"):
+        verify_token(mutated_token_json, get_peer_manifest)
+
+
+def test_verify_token_rejects_missing_token_version() -> None:
+    """verify_token must reject a token that has no token_version field (M-SEC-2)."""
+    token_without_version = json.dumps({
+        "token_id": str(uuid.uuid4()),
+        "issuer": "https://example.org",
+        "subject": "https://example.org",
+        "verb": "read",
+        "object": "stigmem://facts",
+        "issued_at": datetime.now(UTC).isoformat(),
+        "expiry": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+        "nonce": "a" * 64,
+        "signature": "fakesig",
+        # token_version intentionally absent
+    })
+
+    with pytest.raises(CapabilityTokenError, match="token_version"):
+        verify_token(token_without_version, lambda _uri: None)
+
+
+def test_verify_token_rejects_wrong_token_version() -> None:
+    """verify_token must reject token_version != 1 (M-SEC-2)."""
+    token_wrong_version = json.dumps({
+        "token_id": str(uuid.uuid4()),
+        "token_version": 2,
+        "issuer": "https://example.org",
+        "subject": "https://example.org",
+        "verb": "read",
+        "object": "stigmem://facts",
+        "issued_at": datetime.now(UTC).isoformat(),
+        "expiry": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+        "nonce": "a" * 64,
+        "signature": "fakesig",
+    })
+
+    with pytest.raises(CapabilityTokenError, match="token_version"):
+        verify_token(token_wrong_version, lambda _uri: None)

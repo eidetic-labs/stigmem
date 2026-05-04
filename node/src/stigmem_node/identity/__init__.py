@@ -1,5 +1,12 @@
 """Org-identity layer — spec §19.1 (manifest), §19.2 (transparency log), §19.3 (trust store)."""
 
+from .capability import (
+    CapabilityTokenError,
+    load_node_private_key,
+    sign_revocation_event,
+    sign_token,
+    verify_token,
+)
 from .manifest import (
     ManifestError,
     OrgManifest,
@@ -23,6 +30,11 @@ from .trust_store import (
 )
 
 __all__ = [
+    "CapabilityTokenError",
+    "load_node_private_key",
+    "sign_revocation_event",
+    "sign_token",
+    "verify_token",
     "ManifestError",
     "OrgManifest",
     "RotationEvent",

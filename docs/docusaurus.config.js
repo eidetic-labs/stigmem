@@ -92,17 +92,17 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: 'img/logo.svg',
+      image: 'img/stigmem-logo.svg',
       metadata: [
         { name: 'description', content: 'Open-source federated knowledge graph for AI agents. Immutable (entity, relation, value) facts with provenance, confidence scores, and cryptographic federation across peer nodes.' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:image', content: 'https://docs.stigmem.dev/img/logo.svg' },
-        { name: 'twitter:card', content: 'summary' },
+        { property: 'og:image', content: 'https://docs.stigmem.dev/img/stigmem-logo.svg' },
+        { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:site', content: '@stigmem' },
       ],
       navbar: {
         title: 'Stigmem',
-        logo: { alt: 'Stigmem Logo', src: 'img/logo.svg' },
+        logo: { alt: 'Stigmem by Eidetic Labs', src: 'img/logo.svg' },
         items: [
           { type: 'docsVersionDropdown', position: 'left' },
           {

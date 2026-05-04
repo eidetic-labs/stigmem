@@ -102,7 +102,6 @@ const config = {
       metadata: [
         { name: 'description', content: 'Open-source federated knowledge graph for AI agents. Immutable (entity, relation, value) facts with provenance, confidence scores, and cryptographic federation across peer nodes.' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:image', content: 'https://docs.stigmem.dev/img/stigmem-logo.svg' },
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:site', content: '@stigmem' },
       ],

@@ -150,7 +150,8 @@ Phase 12 closes the concrete security gaps in the current threat model and ships
 - Constant-time crypto audit of the Ed25519 signing/verification path.
 - Garden role-escalation safeguards: writer→admin transitions logged and require admin signature.
 - Transparency log integration: Rekor or Sigstore-equivalent for org-manifest rotation events (§19).
-- **Community pen testing** — scope, safe-harbor terms, severity guidance, and engagement path published at [Security & Pen Testing](./contributing/security.md).
+- **Threat model** — formal STRIDE analysis per trust boundary, risk register linked to spec §§19, 20, 22; published at [`spec/security/threat-model.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md).
+- **Community pen testing** — scope, safe-harbor terms, report template, and recognition model at [Community Pen-Test Handbook](./security/pen-test.md). Overview at [Security](./security/index.md).
 
 **What this means for operators:** Stigmem reaches the hardening posture appropriate for multi-org federation. The community pen-test path opens the protocol to external security review.
 

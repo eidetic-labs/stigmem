@@ -7,6 +7,45 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ---
 
+## [Unreleased] — Phase 8 — Storage adapter trait + libSQL/Turso backend
+
+### Added
+
+- **`StorageBackend` trait** (`node/src/stigmem_node/storage/`) — abstract seam
+  covering connection lifecycle, transaction semantics, migration runner, and
+  snapshot export/import hooks.  All new persistence backends implement this
+  interface; no changes required in route handlers.
+- **`SQLiteBackend`** — existing SQLite path refactored to implement
+  `StorageBackend`.  Behaviour is identical to pre-trait deployments.
+- **`LibSQLBackend`** — libSQL / Turso adapter implementing the trait.
+  Supports embedded-replica mode (local file + Turso sync URL).  Drop-in for
+  Fly.io persistent volumes.
+- **`STIGMEM_STORAGE_BACKEND`** env var — `"sqlite"` (default) or `"libsql"`.
+- **`STIGMEM_LIBSQL_URL`** — Turso database endpoint
+  (e.g. `libsql://my-db.turso.io`).  Required when backend is `libsql`.
+- **`STIGMEM_LIBSQL_AUTH_TOKEN`** — Turso auth token (from
+  `turso db tokens create`).
+- **`libsql` optional dependency group** — `pip install 'stigmem-node[libsql]'`
+  installs `libsql-experimental>=0.3`.
+- **Backend-parameterized test runner** — `pytest --backend=libsql` runs the
+  full conformance suite against the libSQL backend.  Tests auto-skip when
+  `libsql-experimental` is not installed.
+
+### Changed
+
+- `db.py` — `db()`, `apply_migrations()`, `get_or_create_federation_keypair()`,
+  and `get_or_create_node_id()` all delegate to `make_backend()`.  The module-
+  level `settings` attribute is still the patch point for test fixtures.
+
+### Migration
+
+- No schema changes.  Existing SQLite databases continue to work without any
+  action.  To switch to Turso, set `STIGMEM_STORAGE_BACKEND=libsql`,
+  `STIGMEM_LIBSQL_URL`, and `STIGMEM_LIBSQL_AUTH_TOKEN`, then run
+  `stigmem migrate` to apply pending migrations against the new backend.
+
+---
+
 ## [1.0.0-rc] — 2026-05-03
 
 **Spec:** v1.0 stable (see [spec/CHANGELOG.md](spec/CHANGELOG.md#v10--2026-05-03--stable))

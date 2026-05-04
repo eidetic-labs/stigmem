@@ -70,5 +70,16 @@ class Settings(BaseSettings):
     rate_limit_write_per_hour: int = 1000
     rate_limit_read_per_hour: int = 5000
 
+    # Storage backend (Phase 8).
+    # "sqlite" (default) — local SQLite file at db_path.
+    # "libsql"           — libSQL / Turso; uses db_path as the local replica
+    #                      file; set libsql_url + libsql_auth_token for
+    #                      embedded-replica sync with Turso.
+    storage_backend: str = "sqlite"
+    # Turso database endpoint, e.g. "libsql://my-db.turso.io"
+    libsql_url: str = ""
+    # Turso auth token (from `turso db tokens create`)
+    libsql_auth_token: str = ""
+
 
 settings = Settings()

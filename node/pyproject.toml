@@ -24,6 +24,11 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
 ]
+libsql = [
+    # libSQL / Turso embedded-replica backend (Phase 8).
+    # Latest release on PyPI is 0.0.x; bump the floor when a stable 1.x ships.
+    "libsql-experimental>=0.0.1",
+]
 
 [project.scripts]
 stigmem-node = "stigmem_node.main:run"

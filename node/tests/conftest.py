@@ -8,6 +8,7 @@ import sqlite3
 import time
 import uuid
 from collections.abc import Generator
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
@@ -28,6 +29,28 @@ from stigmem_node.auth import create_api_key
 from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
+
+# Path to migrations/ directory — used when building libSQL test databases.
+_MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
+
+
+# ---------------------------------------------------------------------------
+# Backend selection CLI option (Phase 8 — multi-backend conformance)
+# ---------------------------------------------------------------------------
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:  # type: ignore[name-defined]
+    parser.addoption(
+        "--backend",
+        default="sqlite",
+        choices=["sqlite", "libsql"],
+        help="Storage backend to test against (default: sqlite)",
+    )
+
+
+@pytest.fixture()
+def backend(request: pytest.FixtureRequest) -> str:
+    return request.config.getoption("--backend")  # type: ignore[no-any-return]
 
 
 # ---------------------------------------------------------------------------
@@ -137,38 +160,36 @@ def _restore_settings(original: Settings, extra: list) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Basic fixtures (Phase 2 compatible)
+# Basic fixtures (Phase 2 compatible; Phase 8: multi-backend via --backend)
 # ---------------------------------------------------------------------------
 
 
 @pytest.fixture()
-def tmp_db(tmp_path: object) -> str:
+def tmp_db(tmp_path: object, backend: str) -> str:
+    """Create a migrated test database, honouring the --backend CLI option."""
     db_file = str(tmp_path) + "/test.db"  # type: ignore[operator]
-    apply_migrations(db_path=db_file)
+    if backend == "libsql":
+        pytest.importorskip("libsql_experimental", reason="libsql-experimental not installed")
+        from stigmem_node.storage import make_backend as _make_backend
+
+        b = _make_backend(
+            _settings=Settings(db_path=db_file, storage_backend="libsql"),
+        )
+        b.apply_migrations(_MIGRATIONS_DIR)
+    else:
+        apply_migrations(db_path=db_file)
     return db_file
 
 
 @pytest.fixture()
-def client(tmp_db: str) -> Generator[TestClient, None, None]:
+def client(tmp_db: str, backend: str) -> Generator[TestClient, None, None]:
     """TestClient with auth disabled and a fresh in-process DB."""
-    original = settings_module.settings
-    test_settings = Settings(db_path=tmp_db, auth_required=False, node_url="http://testnode")
-    extra = _patch_settings(test_settings)
-    app = create_app()
-    with TestClient(app, raise_server_exceptions=True) as c:
-        yield c
-    _restore_settings(original, extra)
-
-
-@pytest.fixture()
-def client_async_threshold(tmp_db: str) -> Generator[TestClient, None, None]:
-    """TestClient with async_job_threshold=1 to force the async 202 path in tests."""
     original = settings_module.settings
     test_settings = Settings(
         db_path=tmp_db,
         auth_required=False,
         node_url="http://testnode",
-        async_job_threshold=0,
+        storage_backend=backend,
     )
     extra = _patch_settings(test_settings)
     app = create_app()
@@ -178,10 +199,33 @@ def client_async_threshold(tmp_db: str) -> Generator[TestClient, None, None]:
 
 
 @pytest.fixture()
-def authed_client(tmp_db: str) -> Generator[tuple[TestClient, str], None, None]:
+def client_async_threshold(tmp_db: str, backend: str) -> Generator[TestClient, None, None]:
+    """TestClient with async_job_threshold=1 to force the async 202 path in tests."""
+    original = settings_module.settings
+    test_settings = Settings(
+        db_path=tmp_db,
+        auth_required=False,
+        node_url="http://testnode",
+        async_job_threshold=0,
+        storage_backend=backend,
+    )
+    extra = _patch_settings(test_settings)
+    app = create_app()
+    with TestClient(app, raise_server_exceptions=True) as c:
+        yield c
+    _restore_settings(original, extra)
+
+
+@pytest.fixture()
+def authed_client(tmp_db: str, backend: str) -> Generator[tuple[TestClient, str], None, None]:
     """TestClient with auth enabled; yields (client, raw_key)."""
     original = settings_module.settings
-    test_settings = Settings(db_path=tmp_db, auth_required=True, node_url="http://testnode")
+    test_settings = Settings(
+        db_path=tmp_db,
+        auth_required=True,
+        node_url="http://testnode",
+        storage_backend=backend,
+    )
     extra = _patch_settings(test_settings)
     raw_key = create_api_key("agent:test", ["read", "write"])
     app = create_app()

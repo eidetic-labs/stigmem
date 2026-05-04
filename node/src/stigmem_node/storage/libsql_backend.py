@@ -31,12 +31,31 @@ def _split_sql(sql: str) -> list[str]:
     """Split a SQL script into individual statements, stripping comments.
 
     libsql-experimental does not expose ``executescript()``, so we split
-    manually.  Migration files contain only DDL with no embedded semicolons
-    inside string literals, so a simple split is safe.
+    manually on ``';'``.  Trigger bodies contain ``BEGIN...END`` blocks with
+    inner semicolons; we filter the resulting fragments rather than trying to
+    parse them.  FTS5 virtual tables and their sync triggers are SQLite-only
+    and are silently dropped so libsql-experimental (which lacks FTS5) can
+    still run every migration.
     """
     sql = re.sub(r"--[^\n]*", "", sql)
     sql = re.sub(r"/\*.*?\*/", "", sql, flags=re.DOTALL)
-    return [stmt.strip() for stmt in sql.split(";") if stmt.strip()]
+    stmts = []
+    for stmt in sql.split(";"):
+        stmt = stmt.strip()
+        if not stmt:
+            continue
+        upper = stmt.upper()
+        # Bare keywords left after splitting trigger/transaction bodies
+        if upper in ("BEGIN", "END", "COMMIT", "ROLLBACK"):
+            continue
+        # FTS5 virtual table — not supported by libsql-experimental
+        if re.search(r"CREATE\s+VIRTUAL\s+TABLE", stmt, re.IGNORECASE):
+            continue
+        # Trigger bodies and backfill inserts that reference facts_fts
+        if re.search(r"\bfacts_fts\b", stmt, re.IGNORECASE):
+            continue
+        stmts.append(stmt)
+    return stmts
 
 
 class _LibSQLRow:

@@ -24,9 +24,13 @@ from .models import (
     FactPage,
     FactScope,
     FactValue,
+    MemoryCard,
     NodeInfo,
     Peer,
     PeerPage,
+    RecallRequest,
+    RecallResponse,
+    RecallWeights,
     ResolveRequest,
 )
 
@@ -262,6 +266,84 @@ class StigmemClient:
             cursor = page.cursor
             time.sleep(interval_s)
 
+    # ------------------------------------------------------------------
+    # Recall (Phase 9 — spec §20)
+    # ------------------------------------------------------------------
+
+    def recall(
+        self,
+        query: str,
+        *,
+        scope: FactScope = "local",
+        token_budget: int = 4000,
+        depth: int = 2,
+        weights: RecallWeights | None = None,
+        min_confidence: float = 0.1,
+        include_neighbors: bool = True,
+        limit: int = 100,
+    ) -> RecallResponse:
+        """Hybrid recall — return the most salient facts for *query* within *token_budget*.
+
+        Combines lexical (BM25/FTS5), dense-vector, and graph-traversal signals.
+
+        Args:
+            query: Natural-language or keyword query.
+            scope: Fact scope to search within.
+            token_budget: Maximum token budget for the response.
+            depth: Graph traversal depth (1–3).
+            weights: Signal weights; defaults applied server-side when None.
+            min_confidence: Minimum fact confidence to include.
+            include_neighbors: Whether to expand via graph traversal.
+            limit: Maximum candidate facts before token-budget packing.
+
+        Returns:
+            RecallResponse with scored + packed facts and score breakdowns.
+        """
+        req = RecallRequest(
+            query=query,
+            scope=scope,
+            token_budget=token_budget,
+            depth=depth,
+            weights=weights or RecallWeights(),
+            min_confidence=min_confidence,
+            include_neighbors=include_neighbors,
+            limit=limit,
+        )
+        resp = self._http.post("/v1/recall", json=req.model_dump())
+        _raise_for_status(resp)
+        return RecallResponse.model_validate(resp.json())
+
+    # ------------------------------------------------------------------
+    # Memory cards (Phase 9 — spec §20)
+    # ------------------------------------------------------------------
+
+    def get_card(
+        self,
+        entity_uri: str,
+        *,
+        scope: FactScope = "local",
+        refresh: bool = False,
+    ) -> MemoryCard:
+        """Fetch the synthesized memory card for *entity_uri*.
+
+        Args:
+            entity_uri: The entity to fetch the card for.
+            scope: Fact scope the card was materialised from.
+            refresh: Force a server-side refresh even if the card is fresh.
+
+        Returns:
+            MemoryCard with summary, contributing fact hashes, and confidence.
+
+        Raises:
+            StigmemNotFoundError: When the entity has no live facts.
+        """
+        params: dict[str, Any] = {"scope": scope}
+        if refresh:
+            params["refresh"] = "true"
+        resp = self._http.get(f"/v1/cards/{entity_uri}", params=params)
+        _raise_for_status(resp)
+        return MemoryCard.model_validate(resp.json())
+
 
 class AsyncStigmemClient:
     """Async Stigmem client (httpx.AsyncClient)."""
@@ -441,3 +523,56 @@ class AsyncStigmemClient:
                 yield page.facts
             cursor = page.cursor
             await asyncio.sleep(interval_s)
+
+    # ------------------------------------------------------------------
+    # Recall (Phase 9 — spec §20)
+    # ------------------------------------------------------------------
+
+    async def recall(
+        self,
+        query: str,
+        *,
+        scope: FactScope = "local",
+        token_budget: int = 4000,
+        depth: int = 2,
+        weights: RecallWeights | None = None,
+        min_confidence: float = 0.1,
+        include_neighbors: bool = True,
+        limit: int = 100,
+    ) -> RecallResponse:
+        """Async hybrid recall — return the most salient facts for *query* within *token_budget*."""
+        req = RecallRequest(
+            query=query,
+            scope=scope,
+            token_budget=token_budget,
+            depth=depth,
+            weights=weights or RecallWeights(),
+            min_confidence=min_confidence,
+            include_neighbors=include_neighbors,
+            limit=limit,
+        )
+        resp = await self._http.post("/v1/recall", json=req.model_dump())
+        _raise_for_status(resp)
+        return RecallResponse.model_validate(resp.json())
+
+    # ------------------------------------------------------------------
+    # Memory cards (Phase 9 — spec §20)
+    # ------------------------------------------------------------------
+
+    async def get_card(
+        self,
+        entity_uri: str,
+        *,
+        scope: FactScope = "local",
+        refresh: bool = False,
+    ) -> MemoryCard:
+        """Async fetch of the synthesized memory card for *entity_uri*.
+
+        Raises StigmemNotFoundError when the entity has no live facts.
+        """
+        params: dict[str, Any] = {"scope": scope}
+        if refresh:
+            params["refresh"] = "true"
+        resp = await self._http.get(f"/v1/cards/{entity_uri}", params=params)
+        _raise_for_status(resp)
+        return MemoryCard.model_validate(resp.json())

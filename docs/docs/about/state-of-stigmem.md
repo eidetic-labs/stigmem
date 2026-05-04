@@ -7,7 +7,7 @@ description: Current-state narrative — what Stigmem is, why it exists, what we
 
 # State of Stigmem
 
-*Last updated: 2026-05-03. Audience: board, prospective hires, external readers.*
+*Last updated: 2026-05-04. Audience: board, prospective hires, external readers.*
 
 ---
 
@@ -92,6 +92,16 @@ v0.9 ships three primitives that together form the substrate for the curator das
 
 **Exit criteria for Phase 7:** v0.9 spec stabilized; curator dashboard prototype running end-to-end on Stigmem; at least one external connector demo using Source Attestation; §17 and §18 promoted to normative.
 
+### Phase 9 — Recall, Graph, and Subscriptions (in progress)
+
+v1.1-draft ships the Recall & Graph primitive (spec §20):
+
+- **Graph adjacency index** (`entity_edges` table) — materialized BFS-ready index of `ref`-type fact edges. Powers multi-hop `GET /v1/graph/neighbors` queries without O(k × |F|) scans.
+- **Embedding storage** (`vec_facts`, sqlite-vec) — per-fact FLOAT[768] embeddings using nomic-embed-text-v1.5 via a pluggable adapter. Supports hybrid lexical + vector + graph recall.
+- **Recall API** (`POST /v1/recall`) — hybrid ranking with lexical (FTS5/BM25), dense-vector (sqlite-vec ANN), and graph-expansion signals fused with greedy token-budget packing. Spec §20.3.
+- **Memory cards materializer** (`GET /v1/cards/{entity_uri}`) — per-entity, per-scope pre-aggregated summaries stored in a `memory_cards` table. Materialised on the stale-on-write / refresh-on-read pattern: every `assert_fact` call marks the entity card stale; the next `recall` or `GET /v1/cards` call re-computes it. Fresh, high-confidence, contradiction-free cards short-circuit raw-fact re-ranking in the recall pipeline (fast-path); cards with contradictions or stale state fall through to full ranking (divergence policy). Python SDK: `MemoryCard` + `client.get_card()`. Spec §20.4.
+- **Subscription primitive** (`/v1/subscriptions`) — standing fact-change watches with webhook and wake delivery, circuit breaker (threshold: 10 failures), 24 h replay window, and §17/§19 re-enforcement at delivery time. Spec §20.3–§20.6. Security-reviewed and published 2026-05-04.
+
 ---
 
 ## Architecture
@@ -148,8 +158,9 @@ The architecture reflects specific deliberate decisions, each sharpened by the P
 | 5 | Synthesis & Hygiene — entity naming rules, lint semantics | **Done** |
 | 6 | Public Beta — decay, synthesis, N-node soak, cursor-checkpoint recovery, human surface stub | **Done** |
 | 7 | Substrate — Memory Garden (§17), Source Attestation (§18), Intent Envelope (§4), curator dashboard | **In progress** |
+| 9 | Recall & Graph — graph adjacency index, embeddings (sqlite-vec), recall API, **memory cards materializer**, subscription primitive | **Done** |
 
-Phase 7 is the substrate phase: Memory Garden, Source Attestation, and Intent Envelope form the foundation for the curator dashboard and the connector ecosystem. v1.0 GA (multi-tenant, OIDC/SSO, billing, public launch) follows Phase 7.
+Phase 7 is the substrate phase: Memory Garden, Source Attestation, and Intent Envelope form the foundation for the curator dashboard and the connector ecosystem. Phase 9 (v1.1) adds the Recall & Graph primitive — the recall endpoint, memory cards materializer (stale-on-write + fast-path), and subscription primitive are all shipped and security-reviewed as of 2026-05-04. v1.0 GA (multi-tenant, OIDC/SSO, billing, public launch) follows Phase 7.
 
 ---
 

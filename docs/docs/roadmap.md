@@ -15,7 +15,7 @@ Phases 0–7 are complete. The full history — what shipped, key architectural 
 
 The v2 build plan runs seven phases (8–14), roughly 22 weeks, with meaningful parallelism between phases once the early trust and storage foundations are stable. Target timelines are given in calendar quarters; exact dates depend on community feedback and how earlier phases land.
 
-**Current status:** Phase 8 is complete. Spec v1.1 ships §19 Federation Trust as normative; the [Federation Trust guide](/docs/guides/federation-trust) is live. The persistent storage backend layer (libSQL, SQLCipher at-rest encryption, signed snapshot backup/restore) and the 2-org federated network tutorial are shipped. Phase 9 is next. All subsequent phases are sequenced but their scope can shift as earlier phases land.
+**Current status:** Phases 8 and 9 are complete. Spec v1.1 ships §19 Federation Trust and §20 Recall & Graph as normative. The [Recall guide](/docs/guides/recall), [Embeddings guide](/docs/guides/embeddings), [Subscriptions guide](/docs/guides/subscriptions), and [Agent-with-Recall tutorial](/docs/tutorials/agent-with-recall) are live. **Phase 10 is in progress.** All subsequent phases are sequenced but their scope can shift as earlier phases land.
 
 ---
 
@@ -44,27 +44,36 @@ A `StorageBackend` adapter trait replaces the single-SQLite assumption. libSQL (
 
 ---
 
-## Phase 9 — Graph Memory & Recall
+## Phase 9 — Graph Memory & Recall ✓ Done
 
-**Target: Q2–Q3 2026**
+**Shipped: Q2 2026**
 
-Phase 9 makes Stigmem useful as a memory substrate for agents that need to retrieve *relevant* facts rather than query by exact predicate. It adds the graph index, vector embeddings, and the `recall` endpoint that are the primary agent call surface going forward.
+Phase 9 makes Stigmem useful as a memory substrate for agents that need to retrieve *relevant* facts rather than query by exact predicate. It ships the graph index, vector embeddings, and the `recall` endpoint that are the primary agent call surface going forward. Spec §20 "Recall & Graph" is **normative** in v1.1.
 
-- **Graph adjacency index** — entity-to-entity relation traversal in O(edges), built as an incremental side index on the existing fact table.
-- **Vector embeddings** — `value` (and optionally `entity` + `relation`) embedded at write time. sqlite-vec for SQLite/libSQL; pgvector for Postgres. Configurable embedding model with a local default and a cloud opt-in.
-- **`recall` endpoint** — `recall(query, token_budget, depth=2, weights={lexical, vector, graph})` returns a scoped, budget-bounded slice: query-relevant facts plus their k-hop graph neighbors, ranked by salience. This is the primary API for agents that need context about an entity.
-- **Memory cards** — per-entity synthesized summaries, refreshed on write, for fast pre-aggregated recall without re-ranking raw facts every call.
-- **Subscriptions** — agents register push notifications (`on_change: webhook|wake`) on a scope or entity. Push instead of poll.
-- **Causal links** — `derived_from: [fact_hash...]` on fact records enables audit chains (builds on Phase 8 provenance work).
-- **Spec §20 "Recall & Graph"** published as a draft.
+- **Graph adjacency index** — entity-to-entity relation traversal in O(edges), built as an incremental side index on the existing fact table. Exposed via `GET /v1/graph/neighbors` (§20.1).
+- **Vector embeddings** — each fact embedded as a composed `"{entity} {relation} {value}"` string at write time. sqlite-vec for SQLite/libSQL. Default model: `nomic-embed-text-v1.5` (offline, Apache-2.0). Cloud opt-in via `STIGMEM_EMBED_MODEL_PROVIDER=openai`. (§20.2)
+- **`recall` endpoint** — `GET/POST /v1/recall` with `query`, `token_budget`, `depth`, and `weights` parameters. Three-stage hybrid pipeline (lexical + dense + graph) fused with MMR packing. Entity-centric queries return the memory card first. (§20.3)
+- **Memory cards** — per-entity synthesized summaries stored in the `memory_cards` table, materialised by a stale-on-write / refresh-on-read pattern. Every `assert_fact` call marks the entity's card stale; the next `recall` or `GET /v1/cards/{entity_uri}` call re-materialises it. Fresh, high-confidence (`avg_confidence ≥ 0.5`), contradiction-free cards short-circuit raw-fact re-ranking in the recall pipeline (fast-path). Cards with contradictions or stale confidence fall through to full raw-fact ranking (divergence policy). Python SDK: `MemoryCard` model + `client.get_card()`. (§20.4)
+- **Subscriptions** — agents register push notifications (`on_change: webhook|wake`) on a scope or entity via `POST /v1/subscriptions`. Push instead of poll; garden ACL is re-evaluated on every event delivery. Security review of subscription auth (§20.5.5) and cross-garden recall scoping complete. (§20.5)
+- **Causal links** — `derived_from: [fact_hash...]` on fact records enables audit chains; `GET /v1/facts/:id/provenance` walks the full derivation graph. (§20.6)
+- **Python SDK** — `StigmemClient.recall()`, `StigmemClient.get_card()`, and async equivalents; `MemoryCard` model exported from `stigmem`.
+
+**Documentation shipped with Phase 9:**
+- [Recall guide](/docs/guides/recall) — when to use `recall` vs. `query_facts`, token-budget packing, weight tuning, memory card fast-path.
+- [Memory Cards guide](/docs/guides/memory-cards) — card lifecycle (stale-on-write, refresh-on-read), divergence policy, `GET /v1/cards/{entity_uri}`, Python SDK.
+- [Python SDK reference](/docs/guides/python-sdk) — `StigmemClient` / `AsyncStigmemClient` full API, `MemoryCard` model, exceptions.
+- [Embeddings guide](/docs/guides/embeddings) — model selection, dimensionality, mixed-model safety.
+- [Subscriptions guide](/docs/guides/subscriptions) — webhook and wake delivery, circuit breaker, replay window.
+- [Tutorial: Agent with Recall](/docs/tutorials/agent-with-recall) — complete walkthrough building a token-efficient recall agent.
+- [API Reference](/docs/api-reference) — recall, cards, graph, subscriptions, and provenance endpoints.
 
 **What this means for operators:** agents calling Stigmem no longer pull full fact tables. `recall` fits relevant memory into a token budget automatically. Subscriptions eliminate polling loops for agents watching shared entities.
 
 ---
 
-## Phase 10 — Lazy Instruction Discovery
+## Phase 10 — Lazy Instruction Discovery ⟳ In Progress
 
-**Target: Q3 2026**
+**In progress: Q3 2026**
 
 Phase 10 applies the recall primitive to the agent-instruction problem. Today, agents load all instruction files (role specs, skills, memory files) at every conversation start even when most of the content isn't relevant to the current task. Phase 10 fixes this.
 
@@ -176,4 +185,4 @@ Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
 ---
 
-*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 8 complete (spec v1.1, libSQL storage, at-rest encryption, signed snapshots, 2-org federation tutorial). Phase 9 next.*
+*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 9 complete (spec §20 normative, graph index, recall endpoint, memory cards materializer with stale-on-write + recall fast-path, subscriptions, causal links). Phase 10 in progress (lazy instruction discovery).*

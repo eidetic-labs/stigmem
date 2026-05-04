@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import sys
+import threading
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
@@ -31,6 +33,8 @@ from ..models import (
 from ..recall_pipeline import apply_recall_pipeline
 from .. import settings as _settings_pkg  # access via module so test patches propagate
 from ..settings import settings as _settings  # direct ref for source_attestation_mode reads
+
+logger = logging.getLogger("stigmem.facts")
 
 router = APIRouter(prefix="/v1/facts", tags=["facts"])
 
@@ -163,13 +167,16 @@ def assert_fact(
     value_v = _encode_v(req.value.type, req.value.v)
     audit_id = str(uuid.uuid4())
 
+    _embed_enabled = _settings_pkg.settings.embed_enabled
+    embedding_missing_val = 1 if _embed_enabled else None
+
     with db() as conn:
         conn.execute(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
                 valid_until, confidence, scope, hlc, received_from, attested_key_id,
-                garden_id, attested, tenant_id)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                garden_id, attested, tenant_id, embedding_missing)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 entity,    # normalized (spec §2.6)
@@ -187,6 +194,7 @@ def assert_fact(
                 garden_uuid,
                 attested_int,
                 identity.tenant_id,
+                embedding_missing_val,
             ),
         )
 
@@ -207,6 +215,24 @@ def assert_fact(
                 identity.tenant_id,
             ),
         )
+
+        # Graph adjacency index (§20.1.1): materialize edge for ref-typed facts
+        if req.value.type == "ref" and value_v and _is_valid_entity_uri(value_v):
+            from ..graph_index import upsert_edge as _upsert_edge
+            _upsert_edge(
+                conn,
+                fact_id=fact_id,
+                subject=entity,
+                relation=req.relation,
+                object_uri=value_v,
+                scope=req.scope,
+                confidence=req.confidence,
+                garden_id=garden_uuid,
+                tenant_id=identity.tenant_id,
+                received_from=None,
+                source_trust=None,
+                valid_until=req.valid_until,
+            )
 
         row = conn.execute("SELECT * FROM facts WHERE id=?", (fact_id,)).fetchone()
 
@@ -237,6 +263,21 @@ def assert_fact(
                 file=sys.stderr,
             )
 
+    # Phase 9: mark entity's memory card stale on every write (ACM-214)
+    try:
+        from ..card_materializer import mark_entity_stale as _mark_stale
+        _mark_stale(entity, req.scope, identity.tenant_id)
+    except Exception as _card_exc:
+        logger.warning("card mark_stale failed for %r: %s", entity, _card_exc)
+
+    # Phase 9 §2: write-time embedding (background thread, graceful fallback)
+    if _embed_enabled:
+        threading.Thread(
+            target=_embed_fact_background,
+            args=(fact_id, entity, req.relation, req.value.type, value_v or ""),
+            daemon=True,
+        ).start()
+
     get_hook_bus().emit(BillingEvent(
         event_type="fact_written",
         tenant_id=identity.tenant_id,
@@ -244,7 +285,60 @@ def assert_fact(
         fact_id=fact_id,
     ))
 
+    # §20: fan out to subscribers (fast DB insert only; delivery happens in sweep loop)
+    try:
+        import json as _json
+        from ..subscription_delivery import fan_out as _subscription_fan_out
+        _subscription_fan_out(
+            fact_id=fact_id,
+            entity=entity,
+            scope=req.scope,
+            garden_id=garden_uuid,
+            tenant_id=identity.tenant_id,
+            fact_payload_json=_json.dumps({
+                "id": fact_id,
+                "entity": entity,
+                "relation": req.relation,
+                "value_type": req.value.type,
+                "value_v": value_v,
+                "source": source,
+                "timestamp": now,
+                "scope": req.scope,
+                "confidence": req.confidence,
+                "garden_id": garden_uuid,
+            }),
+        )
+    except Exception as _sub_exc:
+        print(f"[stigmem] WARN: subscription fan_out failed: {_sub_exc}", file=sys.stderr)
+
     return row_to_record(row, contradicted=contradicted, warnings=relation_warnings)
+
+
+def _is_valid_entity_uri(uri: str) -> bool:
+    """Minimal check: URI must contain '://' or start with 'urn:'."""
+    return "://" in uri or uri.startswith("urn:")
+
+
+def _embed_fact_background(
+    fact_id: str,
+    entity: str,
+    relation: str,
+    value_type: str,
+    value_v: str,
+) -> None:
+    """Background thread: embed one fact and persist to vec_facts."""
+    try:
+        from .. import settings as settings_pkg
+        from ..embedding import get_embedding_model
+        from ..vector_search import check_or_register_model, embed_and_store_fact
+        from ..db import db
+
+        model = get_embedding_model(settings_pkg.settings)
+        with db() as conn:
+            check_or_register_model(conn, model.model_id, model.dimension)
+            embed_and_store_fact(fact_id, entity, relation, value_type, value_v, conn, model)
+    except Exception as exc:
+        logger.warning("Write-time embedding failed for fact %s: %s", fact_id, exc)
 
 
 def _record_contradictions(

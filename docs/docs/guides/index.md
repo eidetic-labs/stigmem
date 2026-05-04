@@ -20,6 +20,19 @@ Practical guides for common Stigmem operations. Each guide includes a working `c
 
 ---
 
+## v1.1 features (Phase 9 — DRAFT)
+
+New DRAFT normative sections in v1.1 (spec §20).
+
+| Guide | Spec | Topic |
+|-------|------|-------|
+| [Recall](./recall) | §20.3 | Hybrid recall — lexical + dense + graph pipeline, token budget, weight tuning |
+| [Memory Cards](./memory-cards) | §20.4 | Per-entity pre-aggregated summaries — stale-on-write, refresh-on-read, divergence policy |
+| [Subscriptions](./subscriptions) | §20.3–§20.6 | Standing fact-change watches — webhook and wake delivery, circuit breaker, replay window |
+| [Python SDK](./python-sdk) | — | `StigmemClient` / `AsyncStigmemClient` API reference — all methods, models, exceptions |
+
+---
+
 ## v1.0 features
 
 New normative sections in v1.0 (spec §§17–18) and supporting node capabilities.

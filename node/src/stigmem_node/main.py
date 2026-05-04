@@ -24,11 +24,15 @@ from .routes.decay import router as decay_router
 from .routes.facts import router as facts_router
 from .routes.federation import router as federation_router
 from .routes.gardens import router as gardens_router
+from .routes.graph import router as graph_router
 from .routes.identity import router as identity_router
 from .routes.intents import router as intents_router
 from .routes.lint import router as lint_router
 from .routes.quarantine import router as quarantine_router
 from .routes.resolver import router as resolver_router
+from .routes.cards import router as cards_router
+from .routes.recall import router as recall_router
+from .routes.subscriptions import router as subscriptions_router
 from .routes.synthesize import router as synthesize_router
 from .routes.wellknown import router as wellknown_router
 from .settings import settings
@@ -52,6 +56,13 @@ def create_app() -> FastAPI:
             pull_task = asyncio.create_task(pull_loop_task())
             logger.info("Stigmem federation enabled — pull interval %ds", settings.federation_pull_interval_s)
 
+        from .subscription_delivery import sweep_loop as _sub_sweep_loop
+        sweep_task: asyncio.Task[None] = asyncio.create_task(_sub_sweep_loop())
+        logger.info(
+            "Stigmem subscription sweep enabled — interval %ds",
+            settings.subscription_delivery_sweep_s,
+        )
+
         logger.info(
             "Stigmem node ready — db=%s auth=%s federation=%s",
             settings.db_path,
@@ -59,6 +70,10 @@ def create_app() -> FastAPI:
             "enabled" if settings.federation_enabled else "disabled",
         )
         yield
+
+        sweep_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await sweep_task
 
         if pull_task is not None:
             pull_task.cancel()
@@ -82,6 +97,7 @@ def create_app() -> FastAPI:
     app.include_router(audit_router)
     app.include_router(facts_router)
     app.include_router(gardens_router)
+    app.include_router(graph_router)
     app.include_router(identity_router)
     app.include_router(intents_router)
     app.include_router(federation_router)
@@ -91,6 +107,9 @@ def create_app() -> FastAPI:
     app.include_router(decay_router)
     app.include_router(aliases_router)
     app.include_router(resolver_router)
+    app.include_router(cards_router)
+    app.include_router(recall_router)
+    app.include_router(subscriptions_router)
     app.include_router(wellknown_router)
 
     @app.get("/healthz", tags=["ops"])

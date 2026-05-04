@@ -88,6 +88,9 @@ def run_decay_sweep(
                 f"UPDATE facts SET valid_until = ? WHERE id IN ({placeholders})",  # nosec B608 — placeholders is "?,?,?" sequence, not user input
                 [now, *candidates],
             )
+            # Graph adjacency index (§20.1.2): propagate expiry to entity_edges
+            from .graph_index import sync_edge_expiry
+            sync_edge_expiry(conn, candidates, now)
 
     return {
         "scanned": len(candidates),

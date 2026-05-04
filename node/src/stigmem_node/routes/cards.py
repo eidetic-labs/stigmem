@@ -1,0 +1,86 @@
+"""Memory cards route — spec §20 (Phase 9).
+
+GET /v1/cards/{entity_uri}  Fetch (and optionally force-refresh) the memory card
+                            for a specific entity.
+"""
+
+from __future__ import annotations
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
+
+from ..auth import Identity, resolve_identity
+from ..card_materializer import CARD_MIN_CONFIDENCE, get_fresh_card, refresh_card
+from ..db import db
+from ..entity_normalizer import NormalizationError, normalize_entity_uri
+from ..models import VALID_SCOPES
+
+router = APIRouter(prefix="/v1/cards", tags=["cards"])
+
+
+class MemoryCardResponse(BaseModel):
+    entity_uri: str
+    scope: str
+    summary: str
+    fact_hashes: list[str]
+    avg_confidence: float
+    refreshed_at: str | None
+    is_stale: bool
+    has_contradictions: bool
+
+
+@router.get("/{entity_uri:path}", response_model=MemoryCardResponse)
+def get_card(
+    entity_uri: str,
+    identity: Annotated[Identity, Depends(resolve_identity)],
+    scope: str = Query("local"),
+    refresh: bool = Query(False, description="Force refresh even if card is fresh"),
+) -> MemoryCardResponse:
+    """Fetch the synthesized memory card for an entity (spec §20).
+
+    Returns 404 when the entity has no live facts.
+    """
+    if not identity.can_read():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="read permission required",
+        )
+    if scope not in VALID_SCOPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"scope must be one of {sorted(VALID_SCOPES)}",
+        )
+
+    try:
+        entity_uri = normalize_entity_uri(entity_uri)
+    except NormalizationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"invalid_entity_uri: {exc}",
+        ) from exc
+
+    with db() as conn:
+        card = (
+            refresh_card(entity_uri, scope, identity.tenant_id, conn)
+            if refresh
+            else get_fresh_card(entity_uri, scope, identity.tenant_id, conn)
+        )
+
+    if card is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="no facts found for entity",
+        )
+
+    return MemoryCardResponse(
+        entity_uri=card.entity_uri,
+        scope=card.scope,
+        summary=card.summary,
+        fact_hashes=card.fact_hashes,
+        avg_confidence=card.avg_confidence,
+        refreshed_at=card.refreshed_at,
+        is_stale=card.is_stale,
+        has_contradictions=card.has_contradictions,
+    )

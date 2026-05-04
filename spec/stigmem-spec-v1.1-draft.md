@@ -6,6 +6,7 @@
 **Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
+- v1.1-draft rev 4 (2026-05-04): ResearchScientist review amendments to §20. (1) §20.2.3 MTEB score corrected to ~53.1. (2) §20.2.4 Matryoshka floor rule added (min 64 dims for nomic-embed-text-v1.5; new error `embed_dimensions_below_floor`). (3) §20.3.2 depth-cap rationale added; default weights marked provisional with eval guidance. (4) §20.3.3 Stage 2 ANN SQL corrected to join `facts` for scope + confidence filtering — normative cross-scope leakage guard. (5) §20.3.4 empty-budget edge-case MUST added.
 - v1.1-draft rev 3 (2026-05-04): §20 Recall & Graph — DRAFT normative. Covers graph index (`entity_edges`), embedding storage (`vec_facts`, nomic-embed-text-v1.5 default), recall API (hybrid lexical + vector + graph with MMR packing), memory cards, subscriptions, and causal/derivation links.
 - v1.1-draft rev 2 (2026-05-04): Security patch — C1: §19.3.3 step 4 rewritten to remove ambiguous external-entity delegation (Option A); H1: §19.3.3 step 1b added for manifest expiry check with refresh; C2: §19.2.6 "Checkpoint Verification" added with normative Rekor key-discovery and verification procedure, failure-closed behavior, and `sigstore-python` reference; H3: §19.3.4 clarified that revocation TL entries are for auditability only, not inline validation; new error codes `inclusion_proof_invalid` (400) and `transparency_log_unavailable` (503) added to §19.9.
 - v1.1-draft (Phase 8): §19 Federation Trust — normative. Replaces the non-normative §19 Security Policy stub from v1.0. Security Policy content moved to Appendix A. §2 extended with `derived_from`, `attestation_chain`, and `source_trust` fields. §19.1–§19.7 cover org manifest, transparency log, capability tokens, source-trust score, quarantine garden, provenance chain, and recall-time sanitizer.
@@ -923,7 +924,7 @@ All embeddings MUST be L2-normalized to unit length on insertion so that cosine 
 
 #### 20.2.3 Default Model
 
-The default embedding model is `nomic-embed-text-v1.5` (768 dimensions, Apache-2.0, runnable offline via Ollama: `ollama pull nomic-embed-text`). This model is chosen because it is open-weight, runs without network access, and achieves MTEB retrieval avg 53.9 on the standard benchmark set, which is representative of the fact-recall workload.
+The default embedding model is `nomic-embed-text-v1.5` (768 dimensions, Apache-2.0, runnable offline via Ollama: `ollama pull nomic-embed-text`). This model is chosen because it is open-weight, runs without network access, and achieves MTEB retrieval avg ~53.1 on the standard benchmark set (MTEB leaderboard, 2025-05-04), which is representative of the fact-recall workload.
 
 Alternative models are supported via environment configuration:
 
@@ -949,7 +950,7 @@ Each node MUST record its configured embedding dimensionality in the `/.well-kno
 }
 ```
 
-`truncated_dimensions` MAY be set to a smaller integer (e.g., 256) when using Matryoshka-capable models and the operator has configured dimension truncation for resource-constrained deployments. Implementations MUST use only the first `truncated_dimensions` components from the model's output.
+`truncated_dimensions` MAY be set to a smaller integer (e.g., 256) when using Matryoshka-capable models and the operator has configured dimension truncation for resource-constrained deployments. Implementations MUST use only the first `truncated_dimensions` components from the model's output. Implementations MUST document the minimum effective `truncated_dimensions` for each supported model; for `nomic-embed-text-v1.5` this floor is **64 dimensions** — setting `truncated_dimensions` below this value MUST be rejected with error `embed_dimensions_below_floor`.
 
 **Incompatibility rule:** Implementations MUST refuse to mix embeddings of different dimensionalities in the same `vec_facts` table. If `STIGMEM_EMBED_DIMENSIONS` is changed after facts have been indexed, the node MUST refuse to start and emit the error:
 
@@ -996,8 +997,8 @@ The MCP tool `recall` wraps the same endpoint with identical semantics.
 |---|---|---|---|---|
 | `query` | string | Yes | — | Natural-language or structured query string |
 | `token_budget` | integer | Yes | — | Max tokens in the response payload (exclusive of field labels) |
-| `depth` | integer | No | 1 | Graph expansion depth for the traversal stage; max 2 |
-| `weights` | object | No | `{lexical:0.30, vector:0.50, graph:0.20}` | Stage weights; MUST sum to 1.0 within ±0.001 |
+| `depth` | integer | No | 1 | Graph expansion depth for the traversal stage; max 2 (capped lower than `neighbors()` max-3 to bound recall latency at the P95 target) |
+| `weights` | object | No | `{lexical:0.30, vector:0.50, graph:0.20}` | Stage weights; MUST sum to 1.0 within ±0.001. **These defaults are provisional** — operators SHOULD re-tune `α`, `β`, `γ` against a held-out probe set (recall@10, MRR) before production use. |
 | `include_low_trust` | boolean | No | `false` | If `false`, facts with effective confidence < 0.2 are excluded |
 | `entity` | string | No | — | Entity URI; enables entity-centric recall (card-first) |
 | `relation` | string | No | — | Relation label filter; skips memory card lookup |
@@ -1031,11 +1032,16 @@ LIMIT 200
 **Stage 2 — Dense (ANN):**
 
 ```sql
-SELECT id, distance
-FROM vec_facts
-WHERE embedding MATCH embed(query)
-  AND k = 200
+SELECT vf.id, vf.distance
+FROM vec_facts vf
+JOIN facts f ON f.id = vf.id
+WHERE vf.embedding MATCH embed(query)
+  AND vf.k = 200
+  AND f.scope = :scope
+  AND f.confidence >= :min_confidence
 ```
+
+`vec_facts` carries no `scope` column; scope enforcement MUST be applied via the join to `facts` as shown above. Implementations MUST NOT pass ANN results to the fusion stage before this join filter; doing so risks cross-scope leakage.
 
 Cosine similarity `= 1 - distance` for unit-norm vectors.
 
@@ -1097,6 +1103,8 @@ token_cost(f) = 40 + ceil(len(value_text_utf8) / 4)
 ```
 
 The constant 40 accounts for field labels, punctuation, and newline overhead per result row. Implementations MUST stay under `token_budget`; they MUST NOT return a partial result row to fit exactly.
+
+**Empty-budget edge case:** When no candidate's `token_cost` fits within the remaining budget — including when `token_budget` is too small to hold even the smallest candidate — implementations MUST return an empty `results` array with `truncated: true` and `tokens_used: 0`. They MUST NOT return HTTP 400; the caller controls budget.
 
 **Exception:** When `entity` is specified (entity-centric recall), MMR MUST be disabled. All facts for that entity in scope are returned sorted by `score` descending, up to the token budget.
 

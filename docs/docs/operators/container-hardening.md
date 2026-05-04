@@ -127,10 +127,13 @@ And pin the base image tag in `node/Dockerfile` to a specific digest as well.
 - **kexec**: `kexec_load`, `kexec_file_load`
 - **Namespace manipulation** (container escape vectors): `pivot_root`, `mount`, `umount2`, `unshare`, `setns`, `open_tree`, `move_mount`, `fsopen`, `fsconfig`, `fsmount`, `fspick`
 - **eBPF**: `bpf`, `perf_event_open`
-- **Kernel time adjustment**: `adjtimex`, `clock_adjtime`, `settimeofday`
+- **Kernel time adjustment**: `adjtimex`, `clock_adjtime`, `settimeofday`, `clock_settime`
 - **Privileged I/O**: `iopl`, `ioperm`
 - **Key ring**: `add_key`, `keyctl`, `request_key`
-- **Misc dangerous**: `reboot`, `syslog`, `chroot`, `acct`, `swapon`, `swapoff`, `userfaultfd`, `seccomp`
+- **Misc dangerous**: `reboot`, `syslog`, `chroot`, `acct`, `swapon`, `swapoff`, `userfaultfd`, `seccomp`, `quotactl`
+- **io_uring** (CVE-2022-29582, CVE-2023-2598, CVE-2022-2586): `io_uring_setup`, `io_uring_enter`, `io_uring_register` — blocked because Python/uvicorn does not use io_uring and the interface has accumulated significant kernel exploit history
+- **Shocker-class container escape** (host inode access via bind-mount): `open_by_handle_at`, `name_to_handle_at`
+- **Cross-process information disclosure**: `kcmp`
 
 The `clone`/`clone3` syscalls are **not** denied because Python's threading model requires them. Namespace-related misuse is blocked by the missing `CAP_SYS_ADMIN` capability, providing defense-in-depth.
 

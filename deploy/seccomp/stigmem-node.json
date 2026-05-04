@@ -68,7 +68,15 @@
         "delete_module",
         "init_module",
         "finit_module",
-        "query_module"
+        "query_module",
+        "io_uring_setup",
+        "io_uring_enter",
+        "io_uring_register",
+        "open_by_handle_at",
+        "name_to_handle_at",
+        "kcmp",
+        "clock_settime",
+        "quotactl"
       ],
       "action": "SCMP_ACT_ERRNO",
       "errnoRet": 1

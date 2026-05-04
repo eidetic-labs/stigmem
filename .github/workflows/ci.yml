@@ -162,3 +162,47 @@ jobs:
               sys.exit(1)
           print(f"SBOM OK — {len(names)} packages found, required set present")
           EOF
+
+      - name: Validate seccomp denylist completeness
+        run: |
+          python3 - <<'EOF'
+          import json, sys
+
+          with open("deploy/seccomp/stigmem-node.json") as f:
+              profile = json.load(f)
+
+          denied = set()
+          for rule in profile.get("syscalls", []):
+              if rule.get("action") == "SCMP_ACT_ERRNO":
+                  denied.update(rule.get("names", []))
+
+          # Syscalls that must be in the denylist; regression check against
+          # Docker moby default + stigmem-specific additions (F2/F3 findings).
+          required = {
+              # container escape / namespace manipulation
+              "pivot_root", "mount", "umount2", "unshare", "setns",
+              "open_tree", "move_mount", "fsopen", "fsconfig", "fsmount", "fspick",
+              # Shocker-class container escape (F3)
+              "open_by_handle_at", "name_to_handle_at",
+              # io_uring exploit surface (F2)
+              "io_uring_setup", "io_uring_enter", "io_uring_register",
+              # cross-process info disclosure (F3)
+              "kcmp",
+              # time manipulation (F3)
+              "clock_settime",
+              # disk quota info disclosure (F3)
+              "quotactl",
+              # process injection
+              "ptrace", "process_vm_readv", "process_vm_writev",
+              # kernel / boot
+              "kexec_load", "kexec_file_load", "reboot",
+              # eBPF
+              "bpf", "perf_event_open",
+          }
+
+          missing = required - denied
+          if missing:
+              print(f"ERROR: seccomp denylist is missing required syscalls: {sorted(missing)}", file=sys.stderr)
+              sys.exit(1)
+          print(f"Seccomp denylist OK — {len(denied)} syscalls denied, all {len(required)} required entries present")
+          EOF

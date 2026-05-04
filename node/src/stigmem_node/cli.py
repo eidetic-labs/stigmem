@@ -835,7 +835,252 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     sw_p.set_defaults(func=_cmd_decay_sweep)
 
+    # ------------------------------------------------------------------ instruction
+    instr_p = sub.add_parser("instruction", help="instruction manifest tools (Phase 10 §21)")
+    instr_sub = instr_p.add_subparsers(dest="instr_command", metavar="SUBCOMMAND")
+    instr_sub.required = True
+
+    im_p = instr_sub.add_parser("manifest", help="manage instruction manifests")
+    im_sub = im_p.add_subparsers(dest="manifest_command", metavar="SUBCOMMAND")
+    im_sub.required = True
+
+    img_p = im_sub.add_parser(
+        "generate",
+        help="generate a manifest JSON from a directory of markdown instruction files",
+    )
+    img_p.add_argument("path", metavar="PATH", help="directory containing markdown instruction files")
+    img_p.add_argument(
+        "--agent-id",
+        dest="agent_id",
+        required=True,
+        metavar="AGENT_ID",
+        help="agent UUID to embed in generated fact_uri values",
+    )
+    img_p.add_argument(
+        "--deployment",
+        default="default",
+        metavar="DEPLOYMENT",
+        help="deployment namespace for instruction: URIs (default: default)",
+    )
+    img_p.add_argument(
+        "--version",
+        default="v1",
+        metavar="VERSION",
+        help="manifest version string (default: v1)",
+    )
+    img_p.add_argument(
+        "--out",
+        default=None,
+        metavar="FILE",
+        help="write JSON to FILE instead of stdout",
+    )
+    img_p.set_defaults(func=_cmd_instruction_manifest_generate)
+
+    # ------------------------------------------------------------------ audit
+    audit_p = sub.add_parser("audit", help="discovery audit reports (Phase 10 §21.5)")
+    audit_sub = audit_p.add_subparsers(dest="audit_command", metavar="SUBCOMMAND")
+    audit_sub.required = True
+
+    ad_p = audit_sub.add_parser(
+        "discovery",
+        help="print discovery audit metrics: Recall@k, Hit@k, miss rate",
+    )
+    ad_p.add_argument(
+        "--agent",
+        required=True,
+        metavar="AGENT_ID_OR_ROLE",
+        help="agent ID (UUID) or role substring to filter",
+    )
+    ad_p.add_argument(
+        "--since",
+        default=None,
+        metavar="DATE",
+        help="ISO 8601 date/datetime to start from (default: 7 days ago)",
+    )
+    ad_p.add_argument(
+        "--db",
+        default=None,
+        metavar="PATH",
+        help="path to stigmem.db (default: STIGMEM_DB_PATH env or settings default)",
+    )
+    ad_p.add_argument("--json", action="store_true", help="output as JSON")
+    ad_p.set_defaults(func=_cmd_audit_discovery)
+
     return parser
+
+
+def _cmd_instruction_manifest_generate(args: argparse.Namespace) -> int:
+    """Generate an instruction manifest JSON from a directory of markdown files."""
+    import json
+    import os
+    import re
+    from pathlib import Path
+
+    path = Path(args.path)
+    if not path.is_dir():
+        print(f"error: '{args.path}' is not a directory", file=sys.stderr)
+        return 1
+
+    entries = []
+    md_files = sorted(path.glob("*.md")) + sorted(path.glob("**/*.md"))
+
+    for md_file in md_files:
+        try:
+            text = md_file.read_text(encoding="utf-8")
+        except Exception as exc:
+            print(f"warning: skipping {md_file}: {exc}", file=sys.stderr)
+            continue
+
+        # Split at H2/H3 boundaries
+        sections = re.split(r"(?m)^(#{2,3}\s+.+)$", text)
+
+        # Merge heading with following content
+        chunks: list[tuple[str, str]] = []
+        i = 0
+        while i < len(sections):
+            if re.match(r"^#{2,3}\s+", sections[i].strip()):
+                heading = sections[i].strip()
+                body = sections[i + 1].strip() if i + 1 < len(sections) else ""
+                chunks.append((heading, body))
+                i += 2
+            else:
+                if sections[i].strip():
+                    chunks.append(("# " + md_file.stem.replace("-", " ").title(), sections[i].strip()))
+                i += 1
+
+        if not chunks:
+            chunks = [("# " + md_file.stem.replace("-", " ").title(), text.strip())]
+
+        for heading, body in chunks:
+            heading_text = re.sub(r"^#{2,3}\s+", "", heading).strip()
+            slug = re.sub(r"[^a-z0-9]+", "-", heading_text.lower()).strip("-")
+            if not slug:
+                slug = md_file.stem
+            unit_name = f"{md_file.stem}-{slug}" if md_file.stem not in slug else slug
+
+            keywords = list({w.lower() for w in re.findall(r"\b[a-zA-Z]{4,}\b", heading_text + " " + body[:200])})[:8]
+            token_est = max(1, len(body) // 4)
+            fact_uri = f"instruction:{args.deployment}/agent/{args.agent_id}/{unit_name}/{args.version}"
+
+            entries.append({
+                "name": unit_name,
+                "description": heading_text[:120],
+                "required_by_task_types": [],
+                "guarantee_load": False,
+                "load_triggers": {
+                    "intents": [heading_text.lower()],
+                    "keywords": keywords,
+                    "task_types": [],
+                },
+                "fact_uri": fact_uri,
+                "path": str(md_file),
+                "token_estimate": token_est,
+            })
+
+    result = {
+        "version": args.version,
+        "agent_id": args.agent_id,
+        "deployment": args.deployment,
+        "generated_from": str(path),
+        "entries": entries,
+    }
+    output = json.dumps(result, indent=2)
+
+    if args.out:
+        with open(args.out, "w") as f:
+            f.write(output)
+        print(f"Wrote {len(entries)} entries to {args.out}")
+    else:
+        print(output)
+
+    return 0
+
+
+def _cmd_audit_discovery(args: argparse.Namespace) -> int:
+    """Print discovery audit metrics from the local database."""
+    import json
+    import sqlite3
+    from datetime import UTC, datetime, timedelta
+
+    from .settings import settings
+
+    db_path = args.db or settings.db_path
+
+    if args.since:
+        try:
+            since_dt = datetime.fromisoformat(args.since.replace("Z", "+00:00"))
+        except ValueError:
+            print(f"error: invalid --since date: {args.since}", file=sys.stderr)
+            return 1
+    else:
+        since_dt = datetime.now(UTC) - timedelta(days=7)
+    since_ms = int(since_dt.timestamp() * 1000)
+
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+    except Exception as exc:
+        print(f"error: cannot open database {db_path}: {exc}", file=sys.stderr)
+        return 1
+
+    agent_filter = args.agent
+    rows = conn.execute(
+        "SELECT * FROM instruction_audit WHERE agent_id LIKE ? AND session_start >= ?",
+        (f"%{agent_filter}%", since_ms),
+    ).fetchall()
+
+    if not rows:
+        print(f"No audit records found for agent '{agent_filter}' since {since_dt.date()}")
+        return 0
+
+    total = len(rows)
+    recall_at_k_num = 0
+    hit_at_k_num = 0
+    total_used = 0
+    total_missed = 0
+
+    for row in rows:
+        loaded = set(json.loads(row["loaded_chunks"]))
+        used = json.loads(row["used_chunks"])
+        missed = json.loads(row["missed_chunks"])
+        used_set = set(used)
+        missed_set = set(missed)
+
+        if used_set:
+            recall_at_k = len(used_set & loaded) / len(used_set)
+            recall_at_k_num += recall_at_k
+            if used_set & loaded:
+                hit_at_k_num += 1
+
+        total_used += len(used_set)
+        total_missed += len(missed_set)
+
+    recall_at_k_avg = recall_at_k_num / total if total > 0 else 0.0
+    hit_at_k_avg = hit_at_k_num / total if total > 0 else 0.0
+    miss_rate = total_missed / (total_used + total_missed) if (total_used + total_missed) > 0 else 0.0
+
+    report = {
+        "agent": agent_filter,
+        "since": since_dt.isoformat(),
+        "total_events": total,
+        "recall_at_k": round(recall_at_k_avg, 4),
+        "hit_at_k": round(hit_at_k_avg, 4),
+        "miss_rate": round(miss_rate, 4),
+    }
+
+    if args.json:
+        print(json.dumps(report, indent=2))
+    else:
+        print(f"Discovery audit — agent: {agent_filter}  since: {since_dt.date()}")
+        print(f"  Total events : {total}")
+        print(f"  Recall@k     : {recall_at_k_avg:.1%}")
+        print(f"  Hit@k        : {hit_at_k_avg:.1%}")
+        print(f"  Miss rate    : {miss_rate:.1%}")
+        if miss_rate > 0.15:
+            print("  ALERT: miss_rate > 0.15 — manifest descriptions or triggers need review")
+
+    conn.close()
+    return 0
 
 
 def main() -> None:

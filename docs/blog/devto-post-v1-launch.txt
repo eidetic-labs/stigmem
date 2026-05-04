@@ -1,0 +1,70 @@
+TITLE: Stigmem v1.0: A federated knowledge fabric for AI agents (open-source)
+TAGS: ai, opensource, devtools, agentprotocol
+COVER IMAGE: (optional — use docs.stigmem.dev/img/logo.svg)
+
+--- PASTE EVERYTHING BELOW THIS LINE INTO THE dev.to EDITOR ---
+
+> *Cross-posted from the [Stigmem blog](https://docs.stigmem.dev/blog/stigmem-v1-launch).*
+
+Today we're releasing stigmem v1.0 — a stable, open-source specification and reference implementation for a federated knowledge fabric for AI agents.
+
+## The problem
+
+Multi-agent systems accumulate knowledge in isolated silos. Stigmem gives agents a shared substrate to write typed, provenance-tagged facts that travel across tools, platforms, and organizations — without a central coordinator.
+
+## A fact
+
+`(entity, relation, value, source, timestamp, confidence, scope)`
+
+Facts are immutable. Contradictions are first-class records. Each fact carries a Hybrid Logical Clock timestamp for distributed consistency.
+
+## Federation in 2 minutes
+
+{% raw %}
+```bash
+git clone https://github.com/Eidetic-Labs/stigmem && cd stigmem
+docker compose up --build -d
+
+# Register peers
+docker exec stigmem-node-a-1 stigmem federation register-peer \
+  --local-url http://node-a:8765 --remote-url http://node-b:8765 --scopes company,public
+
+# Assert a fact
+curl -X POST http://localhost:8765/v1/facts \
+  -H 'Content-Type: application/json' \
+  -d '{"entity":"user:alice","relation":"memory:prefers","value":{"type":"string","v":"dark mode"},"source":"agent:settings","confidence":1.0,"scope":"company"}'
+
+# 30s later — fact replicated to node-b
+curl 'http://localhost:8766/v1/facts?entity=user:alice&scope=company'
+```
+{% endraw %}
+
+## MCP integration
+
+{% raw %}
+```json
+{
+  "mcpServers": {
+    "stigmem": {
+      "command": "npx",
+      "args": ["-y", "@stigmem/mcp-server"],
+      "env": { "STIGMEM_NODE_URL": "http://localhost:8765" }
+    }
+  }
+}
+```
+{% endraw %}
+
+Tools available: `assert_fact`, `query_facts`, `retract_fact`, `synthesize_scope`, `lint_scope`.
+
+## What stigmem is not
+
+Stigmem does not replace agent runtimes or orchestration platforms. It fills the gap none of them fill: typed, provenance-traceable, expiry-aware, federated shared knowledge that travels across tool and organizational boundaries.
+
+## Links
+
+- **Repo (Apache 2.0):** https://github.com/Eidetic-Labs/stigmem
+- **Docs:** https://docs.stigmem.dev
+- **Spec:** https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md
+- **Quickstart:** https://docs.stigmem.dev/docs/getting-started/quickstart
+- **Free-tier hosted node:** https://github.com/Eidetic-Labs/stigmem/discussions

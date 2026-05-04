@@ -260,7 +260,7 @@ def test_exchange_domain_restriction_blocks_wrong_domain(tmp_path: object, rsa_k
                 with TestClient(app, raise_server_exceptions=True) as c:
                     resp = c.post("/v1/auth/oidc/exchange", json={"id_token": token})
                     assert resp.status_code == 403
-                    assert "example.com" in resp.json()["detail"]
+                    assert resp.json()["detail"] == "Email domain 'example.com' is not permitted"
     finally:
         settings_module.settings = original  # type: ignore[assignment]
         auth_mod.settings = original  # type: ignore[assignment]

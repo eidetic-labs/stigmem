@@ -5,6 +5,9 @@ on:
     branches: ["main", "feat/**", "chore/**", "fix/**"]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   python-tests:
     name: Python tests (node + SDK)

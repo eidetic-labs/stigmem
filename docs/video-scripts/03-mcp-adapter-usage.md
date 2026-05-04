@@ -1,98 +1,119 @@
-# Script: MCP Adapter Usage
-<!-- Video 3 of 3 | Target length: ≤ 10 min | Audience: AI/agent developers, Claude Code users -->
+# Script 3 — MCP Adapter Usage
 
-## Video description (YouTube / project channel copy)
+**Target duration:** ~9 min 50 s  
+**Audience:** Developer wiring the stigmem MCP adapter into Claude Code or another MCP host  
+**Format:** Screen-recording, terminal + editor + Claude Code, narrated  
 
-> Wire the stigmem MCP adapter into Claude Code (or any MCP-compatible agent) in under ten minutes. We build the adapter, configure it, and demo all five tools: assert_fact, query_facts, resolve_contradiction, subscribe_scope, and lint_scope.
->
-> **Timestamps**
-> [0:00] Introduction
-> [0:45] Architecture overview (30 seconds)
-> [1:30] Prerequisites and build
-> [3:00] Configure in Claude Code
-> [4:15] assert_fact — write a decision fact
-> [5:30] query_facts — retrieve project constraints
-> [6:45] subscribe_scope — cursor-based polling
-> [7:45] resolve_contradiction — CTO confirms a decision
-> [8:45] lint_scope — health-check sweep
-> [9:30] Wrap-up and next steps
+---
+
+## YouTube / channel description block
+
+```
+stigmem — MCP Adapter Usage (v1.0)
+
+Wire the stigmem MCP adapter into Claude Code and use all five tools:
+assert_fact, query_facts, subscribe_scope, resolve_contradiction, lint_scope.
+
+Timestamps:
+0:00 — What the MCP adapter does
+1:00 — Prerequisites and architecture
+2:00 — Build the adapter
+3:00 — Configure in Claude Code
+4:15 — Demo: assert_fact and query_facts
+5:45 — Demo: subscribe_scope
+6:45 — Demo: lint_scope
+7:30 — Demo: resolve_contradiction
+8:45 — STIGMEM_POLL_LIMIT and tuning
+9:20 — What's next
+
+GitHub: https://github.com/Eidetic-Labs/stigmem
+Docs: https://stigmem.dev/docs/guides/connectors
+```
 
 ---
 
 ## Production notes
 
-- **Recording environment:** VS Code on the left (`.claude/mcp_servers.json` open), Claude Code chat pane on the right, terminal at the bottom. 1920×1080.
-- The stigmem node should be running before the demo starts (use `make up` from video 1).
-- **Do not** show real API keys — use `sk-demo-key` or `dev-key` in all configs and responses.
-- Each `[PAUSE]` marker = ~2 s silence for edits.
+- Resolution: 1920×1080
+- Show terminal and editor side-by-side during the configure step (section [3:00])
+- Mask `STIGMEM_API_KEY` values with `sk-xxxx` before recording
+- Claude Code interaction segments: zoom to 130 % so tool calls are readable
+- Keep Claude Code prompts short and literal — do not ad-lib; the demo prompts below are designed to show specific tool behaviors
 
 ---
 
-## [0:00] Introduction
+## Script
 
-**[SCREEN: title card — "Stigmem: MCP Adapter Usage"]**
+### [0:00] What the MCP adapter does
 
-> The Model Context Protocol — MCP — lets AI agents call tools over a standard stdio interface. Stigmem ships an MCP server that wraps its full HTTP API as five typed tools. Any MCP-aware host — Claude Code, Codex, or a custom agent framework — can read and write stigmem facts without touching HTTP.
->
-> In this video you'll build the adapter, wire it into Claude Code, and demo every tool.
+**[Screen: architecture diagram]**
+
+```
+Claude Code / MCP host
+      │  MCP (stdio)
+      ▼
+stigmem-mcp  (adapters/mcp)
+      │  HTTP
+      ▼
+Stigmem node  (localhost:8765)
+      │
+      ▼
+ SQLite store
+```
+
+> "The stigmem MCP server is a thin translation layer. It accepts MCP tool calls over stdio, translates them to HTTP requests against your running stigmem node, and returns the results. The server itself is stateless — all persistence lives in the node's SQLite store."
+
+> "This means any MCP-aware agent — Claude Code, Codex, a custom host — can read and write structured facts without installing any SDK or knowing the HTTP API."
 
 ---
 
-## [0:45] Architecture overview
+### [1:00] Prerequisites and architecture
 
-**[SCREEN: diagram — Claude Code → MCP (stdio) → stigmem-mcp → HTTP → Stigmem node → SQLite]**
+**[Screen: terminal — show node running]**
 
-> The adapter is stateless. It sits between your agent and a running stigmem node, translating MCP tool calls to HTTP requests. No local state is held in the adapter process — all persistence lives in the node's SQLite database.
->
-> You need: Node.js 18 or later, and a running stigmem node. The node can be local or remote — the adapter just needs its URL.
-
----
-
-## [1:30] Prerequisites and build
-
-**[SCREEN: terminal]**
-
-> First, make sure a stigmem node is running. If you followed video 1 you already have one on port 8765:
+> "You'll need Node.js 18 or later, and a running stigmem node. If you don't have one running, the self-hosted setup video covers that in under 10 minutes."
 
 ```bash
 curl -s http://localhost:8765/healthz | jq .
-# {"status": "ok"}
 ```
 
-**[PAUSE]**
+> "Good — node is up."
 
-> Now build the MCP adapter:
+> "The MCP adapter exposes five tools."
+
+**[Screen: show tools table from README or docs]**
+
+> "`assert_fact` — write a typed fact. `query_facts` — query by entity, relation, or scope. `subscribe_scope` — cursor-based poll for recent facts in a scope. `resolve_contradiction` — resolve a conflict between two competing facts. And `lint_scope` — a read-only health check that detects contradictions, stale facts, orphaned references, and broken links in a scope."
+
+---
+
+### [2:00] Build the adapter
+
+**[Screen: terminal]**
+
+> "The adapter is a TypeScript package. Build it with pnpm."
 
 ```bash
-cd stigmem/adapters/mcp
+cd adapters/mcp
 pnpm install
 pnpm build
 ```
 
-> The build compiles the TypeScript source to `dist/server.js`. The entire adapter is a single Node.js entry point — no daemon, no extra services.
-
-**[SCREEN: terminal — verify build output]**
+> "That produces `dist/server.js`. The build takes about 10 seconds on first run — subsequent builds are faster."
 
 ```bash
-ls dist/
-# server.js
+ls dist/server.js
 ```
 
-> Note the absolute path to `server.js` — you'll need it in the next step.
-
-```bash
-pwd
-# /path/to/stigmem/adapters/mcp
-# → full path is /path/to/stigmem/adapters/mcp/dist/server.js
-```
+> "That's the entry point you'll point your MCP host at."
 
 ---
 
-## [3:00] Configure in Claude Code
+### [3:00] Configure in Claude Code
 
-**[SCREEN: VS Code — `.claude/mcp_servers.json`]**
+**[Screen: editor — open or create .claude/mcp_servers.json]**
 
-> Open `.claude/mcp_servers.json` in your project root (create it if it doesn't exist) and add the stigmem entry:
+> "Add the adapter to Claude Code's MCP server config."
 
 ```json
 {
@@ -107,171 +128,148 @@ pwd
 }
 ```
 
-> Use the absolute path from the previous step. The adapter uses two environment variables: `STIGMEM_URL` points to your running node, and `STIGMEM_API_KEY` is forwarded on every HTTP request as `X-API-Key`. An optional `STIGMEM_POLL_LIMIT` caps how many facts `subscribe_scope` returns per call — default is 50.
+> "The path in `args` must be absolute. `STIGMEM_URL` points to your running node, and `STIGMEM_API_KEY` is the node's API key — `dev-key` works for the default Docker Compose setup."
 
-**[SCREEN: Claude Code — restart or open a new session]**
+> "Reload Claude Code to pick up the config. You'll see `stigmem` appear in the MCP servers panel."
 
-> Save the file and restart Claude Code (or reload the window). In the next session the `stigmem` server will appear in the MCP tools list. You can verify by typing `/mcp` in Claude Code — you should see five stigmem tools.
+**[Screen: Claude Code MCP panel showing stigmem connected]**
 
-**[PAUSE]**
-
-> For other MCP hosts (Codex CLI, Continue.dev, Cursor) the config syntax differs but the adapter command and env vars are identical. Check the connectors guide at `docs.stigmem.dev/docs/guides/connectors` for host-specific snippets.
+> "Green status — the adapter is connected and all five tools are available."
 
 ---
 
-## [4:15] assert_fact — write a decision fact
+### [4:15] Demo: assert_fact and query_facts
 
-**[SCREEN: Claude Code chat pane]**
+**[Screen: Claude Code — new conversation]**
 
-> Let's ask Claude Code to record a technical decision using the adapter:
+> "Let's try it. I'll ask Claude to record a fact."
 
-> **User prompt (show in chat):**
-> ```
-> Use assert_fact to record that we decided to use SQLite for local storage.
-> Entity: decision:use-sqlite, relation: roadmap:status, value: approved,
-> source: agent:cto, scope: company.
-> ```
+**[Type the following prompt in Claude Code]**
 
-**[SCREEN: Claude Code — tool call expanding in UI]**
-
-> Claude Code calls `assert_fact` with the parameters we described. Watch the tool call appear in the sidebar.
-
-**[SCREEN: Claude Code — tool response]**
-
-> The response comes back with the new fact's `id` and `hlc`. Claude acknowledges the write.
-
-**[PAUSE]**
-
-> Notice we used `scope: company` — this fact will replicate to any federation peer. If you were recording a user's personal preference that should stay private, use `scope: local`.
->
-> Facts are **immutable** once written. To supersede this decision later, call `assert_fact` again for the same entity and relation. To retract it, assert with `confidence: 0.0`.
-
----
-
-## [5:30] query_facts — retrieve project constraints
-
-**[SCREEN: Claude Code chat pane]**
-
-> Now query all constraints on the `project:acme-platform` entity:
-
-> **User prompt:**
-> ```
-> Use query_facts to show me all facts about project:acme-platform
-> with relation roadmap:constraint.
-> ```
-
-**[SCREEN: Claude Code — tool call + response]**
-
-> The `query_facts` tool accepts `entity`, `relation`, `scope`, and an optional `since` cursor. It returns a `facts` array. Claude summarizes the constraints it found.
-
-**[PAUSE]**
-
-> You can also query directly from the terminal for scripting:
-
-```bash
-curl -s 'http://localhost:8765/v1/facts?entity=project:acme-platform&relation=roadmap:constraint' \
-  -H 'X-API-Key: dev-key' | jq '.facts[] | {value, confidence, source}'
+```
+Use assert_fact to record:
+  entity: decision:use-postgres
+  relation: roadmap:status
+  value: {"type": "string", "v": "approved"}
+  source: agent:cto
+  scope: company
 ```
 
-> The HTTP API and the MCP tool return the same data — the adapter is just a thin translation layer.
+> "Notice the typed value — `{\"type\": \"string\", \"v\": \"approved\"}`. The MCP tool requires this format. If you give Claude a natural-language request like 'record that we approved postgres', it will format the value object correctly for you. But in tool calls, use the typed format directly to avoid a validation error."
 
----
+**[Show Claude's response with the tool call and fact ID]**
 
-## [6:45] subscribe_scope — cursor-based polling
+> "The fact is written. Now query it back."
 
-**[SCREEN: Claude Code chat pane]**
-
-> `subscribe_scope` is a single-shot poll — call it repeatedly with the returned cursor to follow new facts over time. It's designed for agent loops that need to stay in sync with a scope.
-
-> **User prompt:**
-> ```
-> Use subscribe_scope to get the latest public facts. Then use the
-> returned cursor to poll again for anything newer.
-> ```
-
-**[SCREEN: Claude Code — two tool calls in sequence]**
-
-> First call returns up to 50 facts and a `cursor` value — an HLC timestamp. The second call passes that cursor back, returning only facts newer than that point. Zero facts in the second call means the scope is caught up.
-
-**[PAUSE]**
-
-> This cursor pattern is how an agent maintains a live view of a stigmem scope across a long session without re-reading everything from the beginning.
-
----
-
-## [7:45] resolve_contradiction — CTO confirms a decision
-
-**[SCREEN: Claude Code chat pane]**
-
-> If two facts conflict — same entity, relation, and scope but different values — stigmem records a `ConflictRecord`. Let's resolve one.
-
-> First, look up open conflicts:
-
-```bash
-curl -s http://localhost:8765/v1/facts/conflicts \
-  -H 'X-API-Key: dev-key' | jq '.[0] | {conflict_id, facts}'
+```
+Query facts for entity decision:use-postgres, relation roadmap:status
 ```
 
-**[SCREEN: Claude Code — show conflict ID]**
+**[Show Claude's query_facts response]**
 
-> **User prompt:**
-> ```
-> Use resolve_contradiction with conflict_id "stigmem:conflict:abc123",
-> picking fact-001 as the winner. Note: CTO confirmed during board review.
-> ```
-
-**[SCREEN: Claude Code — tool call + response]**
-
-> `resolve_contradiction` posts the winning fact ID and a free-text `resolution_note` for audit. The conflict record is closed and the winning fact becomes the canonical value for that entity/relation/scope.
-
-**[PAUSE]**
-
-> The resolution is itself recorded as a `stigmem:resolves` provenance fact so you have a durable audit trail of who resolved what and why.
+> "The fact comes back with its `id`, `hlc` timestamp, and `source_node` — that last field will be non-null for facts that arrived via federation."
 
 ---
 
-## [8:45] lint_scope — health-check sweep
+### [5:45] Demo: subscribe_scope
 
-**[SCREEN: Claude Code chat pane]**
+**[Screen: Claude Code]**
 
-> The last tool is `lint_scope`. It's a read-only health check that scans for contradictions, stale facts, orphaned references, and broken entity links — equivalent to running spec §14's conformance checks on demand.
+> "`subscribe_scope` is a single-shot cursor-based poll. It returns recent facts in a scope and a cursor you can pass on the next call to get only new facts since the last check."
 
-> **User prompt:**
-> ```
-> Run lint_scope on the company scope and tell me if there are any issues.
-> ```
+```
+Use subscribe_scope to get the 5 most recent facts in scope company
+```
 
-**[SCREEN: Claude Code — tool call + response showing lint report]**
+**[Show response with facts and cursor]**
 
-> The lint report returns a structured list of issues by category. Zero findings means your scope is clean. Findings include the relevant fact IDs so you can resolve them programmatically with `resolve_contradiction`.
+> "The response includes a `cursor` value. Pass it back on the next call to get only facts written after this point — it's how you build an efficient polling loop."
 
-**[PAUSE]**
+```
+subscribe_scope again with that cursor
+```
 
-> Run `lint_scope` in your CI pipeline or as a scheduled agent task to catch drift before it accumulates.
-
----
-
-## [9:30] Wrap-up and next steps
-
-**[SCREEN: title card with links]**
-
-> You've wired stigmem into Claude Code and used all five MCP tools:
->
-> - `assert_fact` — write immutable, scoped facts with provenance
-> - `query_facts` — retrieve facts by entity, relation, or scope
-> - `subscribe_scope` — cursor-based polling for agent sync loops
-> - `resolve_contradiction` — close conflict records with an audit note
-> - `lint_scope` — read-only health sweep across a scope
->
-> **Next steps:**
-> - **Connectors guide** — `docs.stigmem.dev/docs/guides/connectors` — config snippets for Zed, Cursor, Codex CLI, Continue.dev, and others
-> - **Full API reference** — `docs.stigmem.dev/docs/api-reference`
-> - **Federation** — if you want facts to flow between multiple stigmem nodes, watch video 2
-
-**[SCREEN: GitHub link]**
-
-> Questions or feedback? Open a discussion at `github.com/Eidetic-Labs/stigmem`. Thanks for watching.
+> "Empty — no new facts since the last call. This is the pattern: poll on a schedule, process the delta, advance the cursor. `STIGMEM_POLL_LIMIT` controls the max facts per call — more on that in a moment."
 
 ---
 
-*End of script — estimated runtime: ~9 min 50 s*
+### [6:45] Demo: lint_scope
+
+**[Screen: Claude Code]**
+
+> "`lint_scope` is a read-only health sweep. It scans a scope for contradictions — same entity–relation–scope with different values — stale facts that haven't been updated in a long time, orphaned references, and broken links. It writes nothing; it only reports."
+
+```
+Run lint_scope on scope company
+```
+
+**[Show linter output — ideally clean, or with a synthetic contradiction]**
+
+> "Clean — no contradictions, no stale facts, no broken references. If the linter finds issues, each finding includes the entity, relation, and affected fact IDs so you can investigate or resolve."
+
+---
+
+### [7:30] Demo: resolve_contradiction
+
+**[Screen: Claude Code]**
+
+> "If the linter or ingest detection surfaces a conflict, you resolve it with `resolve_contradiction`. Let me first list any open conflicts via curl so we have a real conflict ID to work with."
+
+**[Screen: split — terminal + Claude Code]**
+
+```bash
+curl -s http://localhost:8765/v1/conflicts \
+  -H 'X-API-Key: dev-key' | jq '.[0] | {conflict_id, entity, relation}'
+```
+
+> "There's the conflict endpoint — `GET /v1/conflicts`. If there are open conflicts, you'll see them here. Let's resolve one through the MCP tool."
+
+**[Screen: Claude Code — if a conflict exists from earlier demo, use it; otherwise note it]**
+
+```
+Use resolve_contradiction to resolve conflict <conflict_id>
+Choose the fact from source agent:cto as the winner
+Resolution note: CTO decision confirmed
+```
+
+**[Show tool call and response]**
+
+> "`resolve_contradiction` calls `POST /v1/conflicts/{conflict_id}/resolve` under the hood, passing the `winning_fact_id` and your resolution note. The conflict is marked settled and a resolution fact is written with a `stigmem:resolves` relation."
+
+---
+
+### [8:45] STIGMEM_POLL_LIMIT and tuning
+
+**[Screen: terminal — show env var docs or README]**
+
+> "Two env vars worth knowing for production use."
+
+> "`STIGMEM_POLL_LIMIT` controls the maximum facts returned per `subscribe_scope` call. Default is 50. If your node has high write rate, increase this to reduce the number of calls needed to drain the queue. Set it in the `env` block of your MCP server config."
+
+```json
+"env": {
+  "STIGMEM_URL": "http://localhost:8765",
+  "STIGMEM_API_KEY": "sk-your-key",
+  "STIGMEM_POLL_LIMIT": "200"
+}
+```
+
+> "`STIGMEM_FEDERATION_PULL_INTERVAL_S` on the node side controls how often peers are polled for new facts — default 30 seconds. Lower it in dev for faster iteration, leave it at 30 in production."
+
+---
+
+### [9:20] What's next
+
+**[Screen: docs site]**
+
+> "That covers the full MCP adapter workflow: build, configure, and all five tools — `assert_fact`, `query_facts`, `subscribe_scope`, `lint_scope`, and `resolve_contradiction`."
+
+> "The MCP adapter works with any MCP-capable host. The connector guides in the docs cover Cursor, Zed, Continue, and the Paperclip agent platform."
+
+> "For federation between nodes, watch the federation walkthrough. For setting up the node itself, watch the self-hosted node setup video."
+
+> "Full documentation at stigmem.dev. Thanks for watching."
+
+---
+
+*End of Script 3*

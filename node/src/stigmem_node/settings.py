@@ -65,5 +65,10 @@ class Settings(BaseSettings):
     # "off"    : no check; attested=None on all facts
     source_attestation_mode: str = "warn"
 
+    # Rate limiting for hosted offering (per API key, sliding 1-hour window).
+    # 0 = disabled.
+    rate_limit_write_per_hour: int = 1000
+    rate_limit_read_per_hour: int = 5000
+
 
 settings = Settings()

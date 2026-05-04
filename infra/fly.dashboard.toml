@@ -1,0 +1,45 @@
+# Fly.io deployment config — stigmem dashboard (Next.js)
+# Replace `<DASHBOARD_APP_NAME>` with your Fly.io app name.
+# Deploy with:  fly deploy --config infra/fly.dashboard.toml --dockerfile apps/dashboard/Dockerfile
+#
+# Required secrets (set via `fly secrets set`):
+#   SESSION_SECRET           (min 32 random chars)
+#   OIDC_ISSUER_URL          (same IdP as the node)
+#   OIDC_CLIENT_ID
+#   OIDC_CLIENT_SECRET
+#   OIDC_REDIRECT_URI        (https://<DASHBOARD_APP_NAME>.fly.dev/api/auth/callback)
+# Required env:
+#   NEXT_PUBLIC_STIGMEM_API_URL  (https://<APP_NAME>.fly.dev)  — set as fly secret or build-arg
+
+app = "<DASHBOARD_APP_NAME>"
+primary_region = "iad"
+
+[build]
+  dockerfile = "apps/dashboard/Dockerfile"
+  [build.args]
+    NEXT_PUBLIC_STIGMEM_API_URL = "https://<APP_NAME>.fly.dev"
+
+[env]
+  PORT          = "3000"
+  NODE_ENV      = "production"
+
+[[services]]
+  internal_port = 3000
+  protocol      = "tcp"
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port     = 443
+
+  [[services.ports]]
+    handlers = ["http"]
+    port     = 80
+
+  [services.http_checks]
+    [[services.http_checks.checks]]
+      interval     = "15s"
+      timeout      = "5s"
+      grace_period = "20s"
+      method       = "GET"
+      path         = "/"
+      protocol     = "http"

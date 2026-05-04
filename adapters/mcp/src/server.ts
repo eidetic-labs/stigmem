@@ -57,12 +57,19 @@ const FactValueSchema = z.discriminatedUnion("type", [
 
 const FactScopeSchema = z.enum(["local", "team", "company", "public"]);
 
+// MCP clients may pass structured args as JSON strings; preprocess to handle both.
+const coerceJsonString = <T>(schema: z.ZodType<T>) =>
+  z.preprocess(
+    (v) => (typeof v === "string" ? (() => { try { return JSON.parse(v); } catch { return v; } })() : v),
+    schema,
+  );
+
 const AssertFactSchema = z.object({
   entity:      z.string().describe("Entity URI or opaque ID, e.g. 'user:alice'"),
   relation:    z.string().describe("Namespaced predicate, e.g. 'memory:role'"),
-  value:       FactValueSchema.describe("Typed fact value"),
+  value:       coerceJsonString(FactValueSchema).describe("Typed fact value"),
   source:      z.string().describe("Asserting agent/user URI, e.g. 'agent:cto'"),
-  confidence:  z.number().min(0).max(1).default(1.0).describe("Confidence in [0.0, 1.0]"),
+  confidence:  z.coerce.number().min(0).max(1).default(1.0).describe("Confidence in [0.0, 1.0]"),
   scope:       FactScopeSchema.default("company").describe("Visibility scope"),
   valid_until: z.string().optional().describe("ISO 8601 expiry; null = never expires"),
 });
@@ -72,10 +79,10 @@ const QueryFactsSchema = z.object({
   relation:             z.string().optional().describe("Filter by relation"),
   source:               z.string().optional().describe("Filter by source agent"),
   scope:                FactScopeSchema.optional().describe("Filter by scope"),
-  min_confidence:       z.number().min(0).max(1).optional().describe("Minimum confidence threshold"),
-  include_contradicted: z.boolean().default(false).describe("Include contradicted facts"),
-  include_expired:      z.boolean().default(false).describe("Include expired facts"),
-  limit:                z.number().int().min(1).max(500).default(50),
+  min_confidence:       z.coerce.number().min(0).max(1).optional().describe("Minimum confidence threshold"),
+  include_contradicted: z.coerce.boolean().default(false).describe("Include contradicted facts"),
+  include_expired:      z.coerce.boolean().default(false).describe("Include expired facts"),
+  limit:                z.coerce.number().int().min(1).max(500).default(50),
   cursor:               z.string().optional().describe("Pagination cursor"),
 });
 
@@ -83,13 +90,13 @@ const ResolveContradictionSchema = z.object({
   conflict_id:     z.string().describe("conflict_id from GET /v1/conflicts, e.g. 'stigmem:conflict:<uuid>'"),
   winning_fact_id: z.string().optional().describe("ID of the fact that should win; omit to assert a fresh value"),
   resolution_note: z.string().default("").describe("Human-readable rationale stored as a fact"),
-  new_value:       FactValueSchema.optional().describe("Optional fresh reconciliation value to assert"),
+  new_value:       coerceJsonString(FactValueSchema).optional().describe("Optional fresh reconciliation value to assert"),
 });
 
 const SubscribeScopeSchema = z.object({
   scope:  FactScopeSchema.describe("Scope to poll for new facts"),
   cursor: z.string().optional().describe("Cursor from previous call; null = from beginning"),
-  limit:  z.number().int().min(1).max(500).default(POLL_LIMIT),
+  limit:  z.coerce.number().int().min(1).max(500).default(POLL_LIMIT),
 });
 
 const LintCheckEnum = z.enum(["contradiction", "stale", "orphan", "broken_ref"]);
@@ -100,7 +107,7 @@ const LintScopeSchema = z.object({
                        .describe("Which checks to run. Omit to run all four: contradiction, stale, orphan, broken_ref."),
   entity:            z.string().optional().describe("Optional. Restrict sweep to facts about a single entity URI."),
   relation:          z.string().optional().describe("Optional. Restrict sweep to a single relation."),
-  stale_lookahead_s: z.number().int().optional()
+  stale_lookahead_s: z.coerce.number().int().optional()
                        .describe("Optional. Also flag facts expiring within this many seconds. Default 0 (expired-only)."),
 });
 

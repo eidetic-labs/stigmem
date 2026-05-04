@@ -13,11 +13,13 @@ authors = [
 members = [
   "node",
   "sdks/stigmem-py",
+  "adapters/openclaw",
 ]
 
 [tool.uv.sources]
 stigmem-node = { workspace = true }
 stigmem-py = { workspace = true }
+stigmem-openclaw = { workspace = true }
 
 [dependency-groups]
 dev = [

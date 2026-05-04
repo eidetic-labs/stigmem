@@ -1,6 +1,12 @@
 // @ts-check
 const { themes: prismThemes } = require('prism-react-renderer');
 
+// RTD serves the site under /<language>/<version>/ in multi-version mode.
+// Use injected env vars so asset paths resolve correctly without changing local dev.
+const baseUrl = process.env.READTHEDOCS === 'True'
+  ? `/${process.env.READTHEDOCS_LANGUAGE}/${process.env.READTHEDOCS_VERSION}/`
+  : '/';
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Stigmem Protocol',
@@ -8,7 +14,7 @@ const config = {
   favicon: 'img/favicon.ico',
 
   url: 'https://docs.stigmem.dev',
-  baseUrl: '/',
+  baseUrl,
 
   onBrokenLinks: 'throw',
 
@@ -92,17 +98,16 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: 'img/logo.svg',
+      image: 'img/stigmem-logo.svg',
       metadata: [
         { name: 'description', content: 'Open-source federated knowledge graph for AI agents. Immutable (entity, relation, value) facts with provenance, confidence scores, and cryptographic federation across peer nodes.' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:image', content: 'https://docs.stigmem.dev/img/logo.svg' },
-        { name: 'twitter:card', content: 'summary' },
+        { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:site', content: '@stigmem' },
       ],
       navbar: {
         title: 'Stigmem',
-        logo: { alt: 'Stigmem Logo', src: 'img/logo.svg' },
+        logo: { alt: 'Stigmem by Eidetic Labs', src: 'img/logo.svg' },
         items: [
           { type: 'docsVersionDropdown', position: 'left' },
           {

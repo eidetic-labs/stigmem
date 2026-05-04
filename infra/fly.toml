@@ -1,0 +1,55 @@
+# Fly.io deployment config — stigmem reference node
+# Replace `<APP_NAME>` with your Fly.io app name before deploying.
+# Deploy with:  fly deploy --config infra/fly.toml --dockerfile node/Dockerfile
+#               fly volumes create stigmem_data --size 1 --region <region>
+#
+# Required secrets (set via `fly secrets set`):
+#   STIGMEM_OIDC_ISSUER_URL, STIGMEM_OIDC_AUDIENCE, STIGMEM_OIDC_ALLOWED_DOMAINS
+
+app = "<APP_NAME>"
+primary_region = "iad"
+
+[build]
+  dockerfile = "node/Dockerfile"
+
+[env]
+  STIGMEM_HOST          = "0.0.0.0"
+  STIGMEM_PORT          = "8765"
+  STIGMEM_DB_PATH       = "/data/stigmem.db"
+  STIGMEM_AUTH_REQUIRED = "true"
+  STIGMEM_OIDC_ENABLED  = "true"
+  STIGMEM_LOG_LEVEL     = "info"
+  # Federation disabled for hosted free-tier node; enable when peering is wanted
+  STIGMEM_FEDERATION_ENABLED = "false"
+
+[mounts]
+  source      = "stigmem_data"
+  destination = "/data"
+
+[[services]]
+  internal_port = 8765
+  protocol      = "tcp"
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port     = 443
+
+  [[services.ports]]
+    handlers = ["http"]
+    port     = 80
+    [services.ports.http_options]
+      response.headers = { "Strict-Transport-Security" = "max-age=31536000; includeSubDomains" }
+
+  [services.http_checks]
+    [[services.http_checks.checks]]
+      interval       = "10s"
+      timeout        = "5s"
+      grace_period   = "15s"
+      method         = "GET"
+      path           = "/healthz"
+      protocol       = "http"
+      tls_skip_verify = false
+
+[metrics]
+  port = 9091
+  path = "/metrics"

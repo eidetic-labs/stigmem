@@ -27,10 +27,10 @@ Stigmem HTTP request, and the result comes back as structured JSON.
 - The MCP server built:
 
   ```bash
-  cd adapters/mcp
+  cd stigmem/adapters/mcp
   pnpm install
   pnpm build
-  # produces: adapters/mcp/dist/server.js
+  # produces: stigmem/adapters/mcp/dist/server.js
   ```
 
 ## Configuring `.mcp.json`

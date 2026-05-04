@@ -7,7 +7,7 @@ description: The Stigmem v2 roadmap — phase summaries, target quarters, and wh
 
 # Roadmap
 
-*Last updated: Q2 2026. Audience: operators, integrators, spec contributors.*
+*Last updated: Q3 2026. Audience: operators, integrators, spec contributors.*
 
 ---
 
@@ -15,7 +15,7 @@ Phases 0–7 are complete. The full history — what shipped, key architectural 
 
 The v2 build plan runs seven phases (8–14), roughly 22 weeks, with meaningful parallelism between phases once the early trust and storage foundations are stable. Target timelines are given in calendar quarters; exact dates depend on community feedback and how earlier phases land.
 
-**Current status:** Phases 8, 9, and 10 are complete. Spec v1.2 ships §21 Lazy Instruction Discovery as normative. The [Lazy Instructions guide](/docs/guides/lazy-instructions), [Instruction Migration guide](/docs/guides/instruction-migration), and [Tutorial: Authoring Lazy-Discovery Instructions](/docs/tutorials/authoring-lazy-discovery-instructions) are live. **Phase 11 is next.** All subsequent phases are sequenced but their scope can shift as earlier phases land.
+**Current status:** Phases 8, 9, 10, and 11 are complete. The [Operator's Handbook](/docs/operating), deploy recipes (Fly.io, Compose, Helm, systemd, PaaS), Obsidian plugin, and Obsidian CLI adapter are all live. The [Tutorial: Self-host a stigmem node and sync your Obsidian vault](/docs/tutorials/self-host-obsidian) is the Phase 11 end-to-end walkthrough. **Phase 12 is next.** All subsequent phases are sequenced but their scope can shift as earlier phases land.
 
 ---
 
@@ -98,9 +98,9 @@ The token budget calibration differs by instruction set size: large sets (> 3,00
 
 ---
 
-## Phase 11 — Hosting Reference, Backend Matrix & Obsidian Adapter
+## Phase 11 — Hosting Reference, Backend Matrix & Obsidian Adapter ✓ Done
 
-**Target: Q3 2026**
+**Shipped: Q3 2026**
 
 Phase 11 completes the operator runbook and ships the Obsidian integration that makes Stigmem accessible to the memory-first / vibe-coder audience.
 
@@ -115,16 +115,22 @@ Phase 11 completes the operator runbook and ships the Obsidian integration that 
 
 **Conformance test suite** published and runnable against all three production backends (SQLite, libSQL, Postgres). Independent adapter and node implementations can use it to verify compliance.
 
-**Operator's handbook** — backend selection decision tree, backup/restore runbook, peer setup, key rotation, monitoring.
+**Operator's handbook** ([Operator's Handbook](/docs/operating)) — backend selection decision tree, backup/restore runbook, peer setup, key rotation, monitoring, and cost calculator.
 
 **Obsidian vault adapter** — two distribution forms:
 
-1. **CLI/daemon** (`adapters/obsidian/`) — bidirectional sync between a Stigmem node and an Obsidian vault. Markdown notes become entities; frontmatter keys/values become typed facts; `[[wikilinks]]` become relations; inline `key:: value` (Dataview syntax) becomes facts. Renames tracked via link-update events. Conflicts surfaced as Obsidian markdown comments for in-vault resolution.
-2. **Obsidian community plugin** (`adapters/obsidian-plugin/`) — same sync engine inside Obsidian's process, plus command-palette `Recall related memories`, a sidebar showing graph neighbors from Stigmem, and inline fact rendering.
+1. **CLI/daemon** (`adapters/obsidian/`) — bidirectional sync between a Stigmem node and an Obsidian vault. Markdown notes become entities; frontmatter keys/values become typed facts; `[[wikilinks]]` become relations; inline `key:: value` (Dataview syntax) becomes facts. Renames tracked via link-update events. Conflicts surfaced as Obsidian markdown comments for in-vault resolution. See the [Obsidian Vault Adapter guide](/docs/guides/connectors/obsidian).
+2. **Obsidian community plugin** (`adapters/obsidian-plugin/`) — same sync engine inside Obsidian's process, plus command-palette `Recall related memories`, a sidebar showing graph neighbors from Stigmem, and inline fact rendering. See the [Obsidian Plugin guide](/docs/guides/connectors/obsidian-plugin).
 
-Logseq, Dendron, and plain-markdown vaults are supported via config — same adapter primitives, different vault-format flag. See the [Backends](./backends.md) page for the Obsidian positioning (adapter, not a backend).
+Logseq, Dendron, and plain-markdown vaults are supported via config — same adapter primitives, different vault-format flag.
 
-**What this means for operators:** everything needed to run Stigmem in production on any platform is documented and tested. Obsidian users get a first-class bidirectional integration without leaving their vault.
+**Documentation shipped with Phase 11:**
+- [Operator's Handbook](/docs/operating) — eight pages covering backend selection, deploy runbooks, federation setup, backup/restore, key rotation, monitoring, and cost estimation.
+- [Obsidian Vault Adapter guide](/docs/guides/connectors/obsidian) — CLI/daemon reference.
+- [Obsidian Plugin guide](/docs/guides/connectors/obsidian-plugin) — in-process sync, recall sidebar, settings reference.
+- [Tutorial: Self-host a stigmem node and sync your Obsidian vault](/docs/tutorials/self-host-obsidian) — end-to-end walkthrough from zero to working node + synced vault, including deploy-time and sync-throughput numbers.
+
+**What this means for operators:** everything needed to run Stigmem in production on any platform is documented and tested. Obsidian users get a first-class bidirectional integration without leaving their vault. The conformance suite lets independent implementers verify their own nodes against all three backends.
 
 ---
 
@@ -195,4 +201,4 @@ Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
 ---
 
-*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 10 complete (spec §21 normative, lazy instruction discovery, boot stub + manifest format, `recall_instruction` skill, shadow audit protocol; CEO and CTO agents both flipped to `migration_mode: lazy, stub_version: 2`). Phase 11 next (hosting reference, backend matrix, Obsidian adapter).*
+*This page is updated at every phase boundary. Last updated: Q3 2026 — Phase 11 complete (hosting recipes, Postgres backend, conformance suite, Operator's Handbook, Obsidian CLI adapter and community plugin; Tutorial: Self-host a stigmem node and sync your Obsidian vault live). Phase 12 next (security hardening).*

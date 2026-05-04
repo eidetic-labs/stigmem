@@ -89,7 +89,12 @@ Phase 10 applies the recall primitive to the agent-instruction problem. Today, a
 - [Instruction Migration guide](/docs/guides/instruction-migration) — `stigmem instruction migrate` CLI reference.
 - [Tutorial: Authoring Lazy-Discovery Instructions](/docs/tutorials/authoring-lazy-discovery-instructions) — end-to-end walkthrough with real coverage and token numbers.
 
-**What this means for operators:** agents running on Stigmem-backed instructions pay per-call context costs only for relevant content. In two production rollouts, agents reduced per-turn instruction token consumption to **13–50%** of their eager baseline with **100% coverage** of task-critical content across 11 consecutive representative turns.
+**What this means for operators:** agents running on Stigmem-backed instructions pay per-call context costs only for relevant content. Two production rollouts have completed the shadow audit and flipped to `migration_mode: lazy`:
+
+- **CEO agent** (3,190t eager baseline): stable 415t per heartbeat = 13.0% of baseline. 11/11 eval heartbeats at 100% coverage, 0 regressions.
+- **CTO agent** (1,129t eager baseline, small instruction set): 356–565t bimodal range = 31.5–50.0% of baseline. The bimodal profile reflects two intent classes (task-execution vs. architecture/design); both modes maintain 100% critical-chunk coverage. 11/11 eval heartbeats, 0 regressions.
+
+The token budget calibration differs by instruction set size: large sets (> 3,000t) target ≤ 25% of eager baseline; small sets (≤ 1,500t) target ≤ 50%. Both represent meaningful savings — 87% reduction on the CEO's 3,190t set, 50% reduction on the CTO's 1,129t set.
 
 ---
 
@@ -190,4 +195,4 @@ Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
 ---
 
-*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 10 complete (spec §21 normative, lazy instruction discovery, boot stub + manifest format, `recall_instruction` skill, shadow audit protocol). Phase 11 next (hosting reference, backend matrix, Obsidian adapter).*
+*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 10 complete (spec §21 normative, lazy instruction discovery, boot stub + manifest format, `recall_instruction` skill, shadow audit protocol; CEO and CTO agents both flipped to `migration_mode: lazy, stub_version: 2`). Phase 11 next (hosting reference, backend matrix, Obsidian adapter).*

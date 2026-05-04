@@ -64,6 +64,10 @@ heartbeat_contract: "Follow the heartbeat procedure in the
 Two production rollouts found that `max_chunks: 3` was too tight: the heartbeat-entry chunk, one task-specific chunk, and the exit chunk consumed all three slots, leaving no room for role-specific content. `max_chunks: 4` reliably fit all critical chunks and stayed well within token budgets.
 :::
 
+:::info Production reference: CTO agent (small instruction set)
+The CTO agent runs `stub_version: 2`, `migration_mode: lazy`, `max_chunks: 4`. Eager baseline: 1,129t (11 chunks). Eval-phase token range: 356–565t (31.5–50.0% of baseline). 11/11 eval heartbeats at 100% critical coverage, 0 regressions. See [Shadow mode audit](#shadow-mode-audit) for the bimodal token profile and keyword lessons from this rollout.
+:::
+
 ---
 
 ## Instruction manifest schema
@@ -155,6 +159,8 @@ Any chunk describing how to do a type of work (code review, implementation, debu
 "keywords": ["review", "code", "implement", "test", "bug", "fix", "refactor", "pr", "pull request"]
 ```
 
+In the CTO production rollout (HB3), a `work-standards` chunk with no task-verb triggers scored zero hits on a pure code-review intent and was absent — a regression. Adding `["review", "code", "implement", "test", "bug", "fix"]` resolved it in the next heartbeat and held for all subsequent turns. Work-standards chunks are critical on almost every engineering task; their keywords must cover every entry point verb, not just the verb that describes the chunk's own content.
+
 ### Rule 3 — Check for natural-language vs. identifier drift
 
 If a keyword only makes sense to someone who knows the document structure (`HEARTBEAT-9-exit`, `SOUL-philosophy`), add the natural-language equivalents. The recall engine scores semantic similarity — use the words the agent and users actually type.
@@ -214,6 +220,22 @@ stigmem instruction audit \
 | Regressions | 0 |
 
 When coverage dips below 95%, inspect the missed chunk and add keywords. See [Tutorial: Authoring Lazy-Discovery Instructions](/docs/tutorials/authoring-lazy-discovery-instructions) for a worked example with before/after measurements.
+
+### Production rollout summary
+
+Two production agents have completed the shadow audit and flipped to lazy mode:
+
+| Agent | Eager baseline | Eval token range | % baseline | Eval HBs | Coverage | Regressions |
+|---|---|---|---|---|---|---|
+| CEO (large set) | 3,190t | 415t stable | 13.0% | 11/11 | 100% | 0 |
+| CTO (small set ≤ 1,500t) | 1,129t | 356–565t bimodal | 31.5–50.0% | 11/11 | 100% | 0 |
+
+**CTO bimodal profile.** The CTO agent's token load splits into two stable bands by intent class:
+
+- **457t (40.5%)** — bug-fix, CI/CD, refactor, security: `work-standards` dominates (3–4 keyword hits), filling the remaining slots with `exit`, `technical-lenses`, `soul`.
+- **565t (50.0%)** — architecture, data-model, spec, performance: `what-you-own` and `technical-lenses` both fire on architecture/technical/implementation keywords, pushing to the 50% ceiling while still covering all critical chunks.
+
+The bimodal shape is structural, not a tuning gap. Architecture intents legitimately need two scope chunks; the budget ceiling is by design. If your agent shows a similar bimodal pattern, verify that critical chunks (work-standards, exit) are always present in both bands before accepting it as stable.
 
 ---
 

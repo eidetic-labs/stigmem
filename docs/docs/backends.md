@@ -337,6 +337,71 @@ For libSQL (Turso), use `turso db snapshot` for point-in-time recovery — it op
 
 ---
 
+## Recall and embedding configuration (Phase 9 — §20)
+
+:::note Phase 9 — draft
+The following environment variables are part of spec §20, currently a draft. Variable names and defaults are stable in the draft spec; they may change before §20 is promoted to normative.
+:::
+
+Phase 9 adds vector embedding and recall capabilities. Configure these variables alongside your storage backend settings.
+
+### Embedding provider
+
+| Variable | Default | Description |
+|---|---|---|
+| `STIGMEM_EMBED_PROVIDER` | `ollama` | Embedding backend. Options: `ollama` (offline, default), `openai` (requires `OPENAI_API_KEY`), `voyage` (requires `VOYAGE_API_KEY`). |
+| `STIGMEM_EMBED_MODEL` | `nomic-embed-text` | Model name for the selected provider. See the table below for supported combinations. |
+| `STIGMEM_EMBED_DIMENSIONS` | `768` | Embedding vector dimensions. **Changing this after facts have been indexed is a fatal error** — re-index by draining and re-inserting all `vec_facts` rows. |
+
+Supported model combinations:
+
+| `STIGMEM_EMBED_PROVIDER` | `STIGMEM_EMBED_MODEL` | Dimensions | Notes |
+|---|---|---|---|
+| `ollama` (default) | `nomic-embed-text` (default) | 768 | Offline; Matryoshka — truncate to 256 with `STIGMEM_EMBED_DIMENSIONS=256` |
+| `ollama` | `mxbai-embed-large` | 1024 | Higher recall; larger memory footprint |
+| `openai` | `text-embedding-3-small` | 1536 | Cloud; requires `OPENAI_API_KEY` |
+| `voyage` | `voyage-3-lite` | 512 | Cloud; requires `VOYAGE_API_KEY` |
+
+**Local setup (default, no API key required):**
+
+```bash
+# Install Ollama and pull the default model
+ollama pull nomic-embed-text
+
+# No additional env vars needed — the node uses ollama at localhost:11434 by default
+STIGMEM_EMBED_PROVIDER=ollama
+STIGMEM_EMBED_MODEL=nomic-embed-text
+```
+
+**OpenAI cloud opt-in:**
+
+```bash
+STIGMEM_EMBED_PROVIDER=openai
+STIGMEM_EMBED_MODEL=text-embedding-3-small
+STIGMEM_EMBED_DIMENSIONS=1536
+OPENAI_API_KEY=<from-secrets-manager>
+```
+
+:::caution
+Changing `STIGMEM_EMBED_PROVIDER` or `STIGMEM_EMBED_DIMENSIONS` after the node has indexed facts will cause a startup error:
+
+```
+FATAL: vec_facts dimensionality mismatch: stored=768 configured=1536. Re-index required.
+```
+
+To re-index, drain and re-insert all `vec_facts` rows with the new model. The node will not silently truncate existing embeddings.
+:::
+
+### Memory card and subscription tuning
+
+| Variable | Default | Description |
+|---|---|---|
+| `STIGMEM_CARD_MAX_AGE_S` | `86400` | Seconds before a memory card is considered stale and queued for background refresh. Stale cards are served with `card_stale: true` until refresh completes. |
+| `STIGMEM_SUBSCRIPTION_REPLAY_S` | `3600` | Event replay window for subscriptions. Subscribers may request missed events within this window via `GET /v1/subscriptions/:id/events?after={event_id}`. Events older than this window are not recoverable. |
+| `STIGMEM_CURSOR_TTL_S` | `300` | Lifetime of pagination cursors issued by `GET /v1/graph/neighbors`. A request with an expired cursor returns HTTP 400 `cursor_expired`; re-issue the query to get a fresh cursor. |
+
+---
+
 ## Obsidian — adapter, not a backend
 
 **Obsidian is not a storage backend for Stigmem.** Obsidian stores knowledge as plain markdown files with YAML frontmatter and `[[wikilinks]]` in a user-owned vault. It is not a transactional database and cannot host federation HLC ordering, indices, or attestation tables.

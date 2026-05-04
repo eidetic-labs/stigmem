@@ -26,6 +26,150 @@ The Stigmem reference node exposes a REST API implementing spec §5. The interac
 | **Identity** | `/v1/me` | API key | — |
 | **Node Metadata** | `/.well-known/stigmem` | None | §5.3 |
 | **Health** | `/healthz` | None | — |
+| **Recall** *(Phase 9 — draft)* | `/v1/recall` | API key | §20.3 |
+| **Graph** *(Phase 9 — draft)* | `/v1/graph/*` | API key | §20.1 |
+| **Subscriptions** *(Phase 9 — draft)* | `/v1/subscriptions` | API key + capability token | §20.5 |
+| **Provenance** *(Phase 9 — draft)* | `/v1/facts/:id/provenance` | API key | §20.6 |
+
+:::note Phase 9 endpoints (draft)
+The Recall, Graph, Subscriptions, and Provenance endpoint groups are part of spec §20 — currently a draft. The API shapes below reflect the draft spec; they may change before §20 is promoted to normative. Security review of subscription auth (§20.5.5) and cross-garden recall scoping is in progress.
+:::
+
+---
+
+## Phase 9 endpoints (§20 — draft)
+
+### `GET /v1/recall` · `POST /v1/recall`
+
+Returns a token-budget-bounded, salience-ranked slice of the fact store relevant to a natural-language or structured query. Uses a three-stage hybrid pipeline: lexical (FTS5/BM25), dense vector (ANN via sqlite-vec), and graph expansion (BFS on `entity_edges`). Results are packed with Maximal Marginal Relevance (MMR) to avoid duplicates within the budget.
+
+POST is preferred when `query` exceeds 1000 characters (avoids URI length limits). Both forms accept identical parameters.
+
+**Key parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `query` | string | Yes | — | Natural-language or structured query |
+| `token_budget` | integer | Yes | — | Max response tokens (field labels excluded) |
+| `depth` | integer | No | 1 | Graph expansion depth; max 2 |
+| `weights` | object | No | `{lexical:0.30, vector:0.50, graph:0.20}` | Stage weights; must sum to 1.0 ±0.001 |
+| `entity` | string | No | — | Entity URI; enables entity-centric (card-first) recall |
+| `relation` | string | No | — | Relation filter; skips memory card lookup |
+| `scope` | string | No | global | Garden or global scope |
+| `lambda_mmr` | float | No | 0.7 | MMR diversity tradeoff; 1.0 = greedy by score |
+| `min_confidence` | float | No | 0.1 | Minimum effective confidence for inclusion |
+| `force_refresh` | boolean | No | false | Block on synchronous memory card refresh |
+| `include_contradicted` | boolean | No | false | Include facts with unresolved contradictions |
+
+**Example — open-ended query:**
+
+```bash
+curl -s -X POST http://localhost:8000/v1/recall \
+  -H 'Authorization: Bearer <api-key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "query": "what is the current project status for phase 9?",
+    "token_budget": 2000,
+    "depth": 1
+  }'
+```
+
+**Example — entity-centric query (card-first):**
+
+```bash
+curl -s "http://localhost:8000/v1/recall?entity=stigmem%3A%2F%2Fcompany.example%2Fagent%2Fcto&token_budget=1500" \
+  -H 'Authorization: Bearer <api-key>'
+```
+
+**Response shape:**
+
+```json
+{
+  "results": [
+    {
+      "id": "...",
+      "entity": "stigmem://company.example/agent/cto",
+      "relation": "memory:role",
+      "value": { "type": "text", "v": "CTO" },
+      "score": 0.92,
+      "source_trust": 0.95,
+      "contradicted": false,
+      "derived_from": [],
+      "provenance_of": null
+    }
+  ],
+  "memory_card": {
+    "entity": "stigmem://company.example/agent/cto",
+    "value": "## CTO\n\n| Relation | Value | ... |\n...",
+    "card_stale": false,
+    "contradicted_count": 0
+  },
+  "token_budget_used": 312,
+  "truncated": false
+}
+```
+
+---
+
+### `GET /v1/graph/neighbors`
+
+Returns the graph neighbors of one or more seed entities by traversing the materialized `entity_edges` adjacency index.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `entity` | string | Yes | — | Seed entity URI (repeat for multiple seeds) |
+| `depth` | integer | No | 1 | Traversal depth; max 2 |
+| `relation` | string | No | — | Filter edges by relation label |
+| `min_confidence` | float | No | 0.1 | Minimum edge confidence |
+| `limit` | integer | No | 50 | Max edges returned per page |
+| `cursor` | string | No | — | Opaque pagination cursor (TTL: `STIGMEM_CURSOR_TTL_S`, default 300s) |
+
+**Example:**
+
+```bash
+curl -s "http://localhost:8000/v1/graph/neighbors?entity=stigmem%3A%2F%2Fcompany.example%2Fagent%2Fcto&depth=2" \
+  -H 'Authorization: Bearer <api-key>'
+```
+
+---
+
+### `POST /v1/subscriptions`
+
+Register a push subscription to receive events when facts matching a scope or entity change. Requires a capability token (§19.3, validated per §19.3.3) covering the `subscribe` verb on the target (verb enum defined in §19.3.2).
+
+```bash
+curl -s -X POST http://localhost:8000/v1/subscriptions \
+  -H 'Authorization: Bearer <api-key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "target": "stigmem://company.example/project/phase9",
+    "target_type": "entity",
+    "on_change": "webhook",
+    "webhook_url": "https://your-agent.example/hook",
+    "idempotency_key": "sub-phase9-agent-assistant"
+  }'
+```
+
+Events are delivered with `subscription_id`, `event_type` (`fact_asserted` | `fact_retracted` | `conflict_opened` | `conflict_resolved`), `fact_id`, and `hlc`.
+
+**Delivery security:** the node re-evaluates the caller's garden ACL **and** capability token revocation status (§19.3.4) on every event delivery. Event content is not populated until the ACL check passes — preventing cross-garden fact leakage via standing event streams. If access has been revoked since subscription creation, delivery is silently dropped and the subscription is cancelled with event type `subscription_cancelled_access_revoked`.
+
+---
+
+### `GET /v1/facts/:id/provenance`
+
+Walks the `derived_from` DAG for a given fact and returns the full derivation graph.
+
+**Auth requirement:** the caller must have read access to the root fact's scope and `garden_id`. Unauthorized root facts return HTTP 403. When resolving `derived_from` references, facts in unauthorized scopes or gardens are represented as `{"hash": "...", "exists": false}` — identical to genuinely absent facts. The endpoint does not confirm or deny the existence of facts the caller cannot access.
+
+```bash
+curl -s http://localhost:8000/v1/facts/abc123/provenance \
+  -H 'Authorization: Bearer <api-key>'
+```
+
+**Response:** array of `FactRecord` objects in topological order (root antecedents first), each annotated with `depth`, `is_root`, and `exists` fields. Unauthorized cross-scope references appear as `{"hash": "...", "exists": false}` entries.
 
 ## Authentication
 

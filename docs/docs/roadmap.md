@@ -15,7 +15,7 @@ Phases 0–7 are complete. The full history — what shipped, key architectural 
 
 The v2 build plan runs seven phases (8–14), roughly 22 weeks, with meaningful parallelism between phases once the early trust and storage foundations are stable. Target timelines are given in calendar quarters; exact dates depend on community feedback and how earlier phases land.
 
-**Current status:** Phase 8 is complete. Spec v1.1 ships §19 Federation Trust as normative; the [Federation Trust guide](/docs/guides/federation-trust) is live. The persistent storage backend layer (libSQL, SQLCipher at-rest encryption, signed snapshot backup/restore) and the 2-org federated network tutorial are shipped. Phase 9 is next. All subsequent phases are sequenced but their scope can shift as earlier phases land.
+**Current status:** Phase 8 is complete. Spec v1.1 ships §19 Federation Trust as normative; the [Federation Trust guide](/docs/guides/federation-trust) is live. The persistent storage backend layer (libSQL, SQLCipher at-rest encryption, signed snapshot backup/restore) and the 2-org federated network tutorial are shipped. **Phase 9 is in progress.** Spec §20 Recall & Graph has been published as a draft in `spec/stigmem-spec-v1.1-draft.md`. All subsequent phases are sequenced but their scope can shift as earlier phases land.
 
 ---
 
@@ -44,19 +44,19 @@ A `StorageBackend` adapter trait replaces the single-SQLite assumption. libSQL (
 
 ---
 
-## Phase 9 — Graph Memory & Recall
+## Phase 9 — Graph Memory & Recall ⟳ In Progress
 
-**Target: Q2–Q3 2026**
+**In progress: Q2–Q3 2026**
 
 Phase 9 makes Stigmem useful as a memory substrate for agents that need to retrieve *relevant* facts rather than query by exact predicate. It adds the graph index, vector embeddings, and the `recall` endpoint that are the primary agent call surface going forward.
 
-- **Graph adjacency index** — entity-to-entity relation traversal in O(edges), built as an incremental side index on the existing fact table.
-- **Vector embeddings** — `value` (and optionally `entity` + `relation`) embedded at write time. sqlite-vec for SQLite/libSQL; pgvector for Postgres. Configurable embedding model with a local default and a cloud opt-in.
-- **`recall` endpoint** — `recall(query, token_budget, depth=2, weights={lexical, vector, graph})` returns a scoped, budget-bounded slice: query-relevant facts plus their k-hop graph neighbors, ranked by salience. This is the primary API for agents that need context about an entity.
-- **Memory cards** — per-entity synthesized summaries, refreshed on write, for fast pre-aggregated recall without re-ranking raw facts every call.
-- **Subscriptions** — agents register push notifications (`on_change: webhook|wake`) on a scope or entity. Push instead of poll.
-- **Causal links** — `derived_from: [fact_hash...]` on fact records enables audit chains (builds on Phase 8 provenance work).
-- **Spec §20 "Recall & Graph"** published as a draft.
+- **Graph adjacency index** — entity-to-entity relation traversal in O(edges), built as an incremental side index on the existing fact table. Exposed via `GET /v1/graph/neighbors` (§20.1).
+- **Vector embeddings** — each fact embedded as a composed `"{entity} {relation} {value}"` string at write time. sqlite-vec for SQLite/libSQL; pgvector for Postgres. Default model: `nomic-embed-text-v1.5` (offline, Apache-2.0). Cloud opt-in via `STIGMEM_EMBED_PROVIDER`. (§20.2)
+- **`recall` endpoint** — `GET/POST /v1/recall` with `query`, `token_budget`, `depth`, and `weights` parameters. Three-stage hybrid pipeline (lexical + dense + graph) fused with MMR packing. Entity-centric queries return the memory card first. (§20.3)
+- **Memory cards** — per-entity synthesized summaries stored as `stigmem:memory:card` facts, refreshed on write and on age expiry (`STIGMEM_CARD_MAX_AGE_S`). Stale cards served with `card_stale: true` flag. (§20.4)
+- **Subscriptions** — agents register push notifications (`on_change: webhook|wake`) on a scope or entity via `POST /v1/subscriptions`. Push instead of poll; garden ACL is re-evaluated on every event delivery. (§20.5)
+- **Causal links** — `derived_from: [fact_hash...]` on fact records enables audit chains; `GET /v1/facts/:id/provenance` walks the full derivation graph. (§20.6)
+- **Spec §20 "Recall & Graph"** published as a draft in `spec/stigmem-spec-v1.1-draft.md`. Security review of subscription auth and cross-garden recall scoping is in progress.
 
 **What this means for operators:** agents calling Stigmem no longer pull full fact tables. `recall` fits relevant memory into a token budget automatically. Subscriptions eliminate polling loops for agents watching shared entities.
 
@@ -176,4 +176,4 @@ Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
 ---
 
-*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 8 complete (spec v1.1, libSQL storage, at-rest encryption, signed snapshots, 2-org federation tutorial). Phase 9 next.*
+*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 8 complete (spec v1.1, libSQL storage, at-rest encryption, signed snapshots, 2-org federation tutorial). Phase 9 in progress (spec §20 Recall & Graph draft, graph index, recall endpoint, memory cards, subscriptions).*

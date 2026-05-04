@@ -4,6 +4,49 @@ All notable changes to the Stigmem protocol specification. Versions correspond t
 
 ---
 
+## [v1.1-draft] — 2026-05 · Phase 9 (Graph Memory & Recall) — DRAFT
+
+**Promoted from:** v1.0
+
+### New sections (§20 — draft normative)
+
+- **§20.1 Graph Index** — materialized `entity_edges` table for O(edges) k-hop traversal; `GET /v1/graph/neighbors` route with depth cap (default 2), confidence/trust pruning, and opaque pagination cursor.
+- **§20.2 Embedding Storage** — `vec_facts` virtual table (sqlite-vec); per-fact composition string `"{entity} {relation} {value}"`; default model `nomic-embed-text-v1.5` (768-dim, Apache-2.0, offline via Ollama); cloud opt-in via `STIGMEM_EMBED_PROVIDER=openai|voyage`; L2-normalized at insertion. `STIGMEM_EMBED_DIMENSIONS` tracks configured dimensionality; dimensionality change after indexing is a fatal error requiring re-index.
+- **§20.3 Recall API** — `GET /POST /v1/recall`; three-stage hybrid pipeline (lexical BM25 + dense ANN + graph BFS); late-fusion formula with salience signals (recency, confidence, access frequency, contradiction penalty, garden tier, source-trust multiplier); token-budget packing via MMR (λ=0.7).
+- **§20.4 Memory Cards** — per-entity synthesized summaries stored as `stigmem:memory:card` facts; refreshed on write/decay/age; stale card served with `card_stale: true`; hard cap 4000 tokens; exempt from decay sweeper. `STIGMEM_CARD_MAX_AGE_S` (default 86400).
+- **§20.5 Subscriptions** — `POST/GET/DELETE /v1/subscriptions`; webhook and agent-wake delivery; `STIGMEM_SUBSCRIPTION_REPLAY_S` replay window (default 3600s); capability token required on creation (§19.5); per-event garden ACL re-evaluation prevents cross-garden leakage.
+- **§20.6 Causal / Derivation Links** — `derived_from: [FactHash]` DAG on fact records; acyclicity enforced at write time; `GET /v1/facts/:id/provenance` provenance-walk route; derived-fact hashes included in recall responses.
+
+### Extended sections
+
+- **§2** — `derived_from` field added to `FactRecord` for causal lineage (complementing Phase 8 `attestation_chain`).
+- **§5** — New routes §20.3 (`/v1/recall`), §20.1 (`/v1/graph/neighbors`), §20.5 (`/v1/subscriptions`), §20.6 (`/v1/facts/:id/provenance`).
+- **§10 Database Schema** — migrations for `entity_edges`, `vec_facts`, `subscriptions`, `subscription_events`.
+
+### New environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `STIGMEM_EMBED_PROVIDER` | `ollama` | Embedding backend (`ollama`, `openai`, `voyage`) |
+| `STIGMEM_EMBED_MODEL` | `nomic-embed-text` | Model name for the selected provider |
+| `STIGMEM_EMBED_DIMENSIONS` | `768` | Embedding vector dimensions; changing after indexing requires re-index |
+| `STIGMEM_CARD_MAX_AGE_S` | `86400` | Max age (seconds) before a memory card is invalidated |
+| `STIGMEM_SUBSCRIPTION_REPLAY_S` | `3600` | Event replay window for subscriptions |
+| `STIGMEM_CURSOR_TTL_S` | `300` | Pagination cursor TTL for `/v1/graph/neighbors` |
+
+### Documentation updates (Phase 9)
+
+- `docs/docs/roadmap.md` — Phase 9 row updated; §20 draft noted.
+- `docs/docs/api-reference/index.md` — Recall, Graph, Subscriptions, and Provenance endpoint groups added.
+- `docs/docs/architecture/index.md` — Graph index and recall pipeline section added (three-stage pipeline, MMR, memory cards).
+- `docs/docs/backends.md` — Phase 9 recall and embedding env vars table added.
+
+### Status
+
+§20 is **draft normative** — pending security review of subscription auth (§20.5.5) and cross-garden recall scoping. §1–§19 are normative and unchanged from v1.0 / v1.1-rev2.
+
+---
+
 ## [v1.0] — 2026-05-03 · Stable
 
 **Promoted from:** v0.9-draft

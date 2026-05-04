@@ -1,4 +1,4 @@
-"""Federation protocol routes — spec §5.6–§5.9, §6.
+"""Federation protocol routes — spec §5.6–§5.9, §6, §19.2.3.
 
 Routes:
   POST /v1/federation/peers             — register a peer (§5.6)
@@ -7,6 +7,11 @@ Routes:
   POST /v1/federation/facts/push        — optional push endpoint (§5.11)
   GET  /v1/federation/audit             — audit log (§6.4)
   GET  /v1/conflicts                    — list conflicts (§5.9)
+
+Federation handshake extension (§19.2.3):
+  register_peer checks for TL inclusion proof when trust_mode=strict (enforce).
+  trust_mode=relaxed  → accept without proof, emit warning in audit log.
+  trust_mode=off      → skip TL check entirely.
 """
 
 from __future__ import annotations
@@ -17,12 +22,17 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 
 import httpx
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db, get_or_create_node_id
+from ..net_util import assert_safe_url
 from ..federation_ingest import ingest_fact, write_audit_log
 from ..hlc import node_hlc
+from ..identity.capability import CapabilityTokenError, verify_token
+from ..identity.manifest import ManifestError, manifest_from_dict, verify_manifest
+from ..identity.transparency_log import LogEntry, TransparencyLogUnavailable, make_transparency_log
+from ..identity.trust_store import get_peer_manifest, store_peer_manifest
 from ..models import (
     ConflictResolveRequest,
     FederationFactsResponse,
@@ -114,6 +124,64 @@ def _require_peer_token(
 PeerTokenDep = Annotated[tuple[dict[str, Any], dict[str, Any]], Depends(_require_peer_token)]
 
 
+def _try_peer_token_auth(
+    authorization: str | None,
+) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    """Soft peer-JWT auth: returns (peer, payload) on success, None on failure.
+
+    Unlike _require_peer_token, never raises — used so push_facts can fall
+    through to the capability-token path when peer JWT is absent or invalid.
+    """
+    if authorization is None or not authorization.lower().startswith("bearer "):
+        return None
+
+    raw_token = authorization[7:]
+
+    import jwt as _jwt
+
+    try:
+        unverified: dict[str, Any] = _jwt.decode(
+            raw_token,
+            options={
+                "verify_signature": False,
+                "verify_exp": False,
+                "verify_iat": False,
+                "verify_nbf": False,
+                "verify_aud": False,
+            },
+            algorithms=["EdDSA"],
+        )
+    except Exception:
+        return None
+
+    iss = unverified.get("iss", "")
+    with db() as conn:
+        peer_row = conn.execute(
+            "SELECT * FROM peers WHERE node_id = ? AND status = 'active'",
+            (iss,),
+        ).fetchone()
+
+    if peer_row is None:
+        return None
+
+    peer = dict(peer_row)
+    try:
+        payload = verify_peer_token(raw_token, peer["federation_pubkey"], peer["id"])
+    except TokenError:
+        return None
+
+    return peer, payload
+
+
+def _cap_token_covers_scope(token_object: str, scope: str) -> bool:
+    """Return True if the capability token's object covers the given fact scope (H-SEC-2)."""
+    # "stigmem://facts" is a wildcard covering all scopes
+    if token_object == "stigmem://facts":  # nosec B105 — URI scheme constant, not a password
+        return True
+    # "stigmem://facts/scope:X" covers exactly scope X
+    return token_object == f"stigmem://facts/scope:{scope}"
+
+
 # ---------------------------------------------------------------------------
 # POST /v1/federation/peers — register peer (§5.6)
 # ---------------------------------------------------------------------------
@@ -126,6 +194,7 @@ PeerTokenDep = Annotated[tuple[dict[str, Any], dict[str, Any]], Depends(_require
 )
 async def register_peer(
     req: PeerRegisterRequest,
+    background_tasks: BackgroundTasks,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> PeerRegisterResponse:
     """Register a peer. Fetches its well-known doc and verifies declaration_sig (§5.6)."""
@@ -194,7 +263,97 @@ async def register_peer(
             (final_status, verified_at, peer_id),
         )
 
+    # §19.2.3 — TL inclusion proof check runs after response to avoid blocking registration
+    if final_status == "active":
+        background_tasks.add_task(_check_tl_inclusion_for_peer, req.node_id, req.node_url, peer_id)
+
     return PeerRegisterResponse(peer_id=peer_id, status=final_status, verified_at=verified_at)
+
+
+async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str) -> None:
+    """Check TL inclusion proof for a newly registered peer (§19.2.3).
+
+    trust_mode=strict  (enforce): no proof → downgrade peer to pending_tl_proof
+    trust_mode=relaxed (warn):    no proof → accept + audit warning
+    trust_mode=off:               skip entirely
+    """
+    trust_mode = settings.trust_mode
+    if trust_mode == "off":
+        return
+
+    # Try to fetch the peer's manifest from their well-known endpoint
+    manifest_obj = None
+    try:
+        assert_safe_url(node_url, allow_schemes=frozenset({"https", "http"}))
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"{node_url}/.well-known/stigmem-manifest.json",
+                follow_redirects=False,
+            )
+        if resp.status_code == 200:
+            try:
+                manifest_obj = manifest_from_dict(resp.json())
+                verify_manifest(manifest_obj, trust_mode=trust_mode)
+            except (ManifestError, Exception):
+                manifest_obj = None
+    except Exception:
+        manifest_obj = None
+
+    has_tl_proof = False
+    if manifest_obj is not None:
+        # Check whether the manifest has a TL entry recorded
+        existing = get_peer_manifest(manifest_obj.entity_uri, refresh_if_expired=False)
+        if existing is None:
+            try:
+                store_peer_manifest(manifest_obj.entity_uri, manifest_obj, trust_mode=trust_mode)
+            except ManifestError:
+                pass
+
+        # Try to verify TL inclusion
+        try:
+            tl = make_transparency_log()
+            from ..db import db as _db
+            with _db() as conn:
+                row = conn.execute(
+                    "SELECT log_entry_json FROM federation_manifests WHERE entity_uri = ?",
+                    (manifest_obj.entity_uri,),
+                ).fetchone()
+            if row and row["log_entry_json"]:
+                import json as _json
+                le_data = _json.loads(row["log_entry_json"])
+                le = LogEntry(
+                    log_id=le_data.get("log_id", ""),
+                    leaf_hash=le_data.get("leaf_hash", ""),
+                    log_index=le_data.get("log_index", -1),
+                    integrated_time=le_data.get("integrated_time", 0),
+                    inclusion_proof=le_data.get("inclusion_proof", {}),
+                )
+                tl.verify_inclusion(le)
+                has_tl_proof = True
+        except TransparencyLogUnavailable:
+            pass
+        except Exception:  # nosec B110 — TL inclusion check is best-effort; failure is non-fatal
+            pass
+
+    if not has_tl_proof:
+        if trust_mode == "strict":
+            write_audit_log(
+                peer_id,
+                "tl_proof_missing",
+                {"node_id": node_id, "action": "downgraded_to_pending_tl_proof"},
+            )
+            from ..db import db as _db
+            with _db() as conn:
+                conn.execute(
+                    "UPDATE peers SET status = 'pending_tl_proof' WHERE id = ?",
+                    (peer_id,),
+                )
+        else:
+            write_audit_log(
+                peer_id,
+                "tl_proof_missing",
+                {"node_id": node_id, "action": "accepted_with_warning", "trust_mode": trust_mode},
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -304,15 +463,111 @@ def pull_facts(
 
 @router.post("/v1/federation/facts/push", status_code=202)
 def push_facts(
-    peer_and_token: PeerTokenDep,
     body: dict[str, Any],
+    authorization: Annotated[str | None, Header(alias="authorization")] = None,
+    x_stigmem_capability: Annotated[str | None, Header(alias="x-stigmem-capability")] = None,
 ) -> dict[str, Any]:
-    """Receive push-replicated facts from a peer (§5.11). Off by default."""
+    """Receive push-replicated facts from a peer (§5.11). Off by default.
+
+    Auth (H-SEC-2): peer JWT first; if that fails and X-Stigmem-Capability is
+    present, fall through to capability-token verification.  Capability tokens
+    must carry verb=write and an object that covers all pushed fact scopes.
+    """
     if not settings.federation_push_enabled:
         raise HTTPException(status_code=405, detail="push replication not enabled on this node")
 
-    peer, token_payload = peer_and_token
-    permitted = _allowed_output_scopes(peer, token_payload)
+    # --- Phase 1: try peer JWT auth ---
+    peer_auth = _try_peer_token_auth(authorization)
+
+    peer: dict[str, Any] | None = None
+    token_payload: dict[str, Any] | None = None
+    cap_token: dict[str, Any] | None = None
+    using_cap_token = False
+
+    if peer_auth is not None:
+        peer, token_payload = peer_auth
+    elif x_stigmem_capability is not None:
+        # --- Phase 2: capability-token fallback (H-SEC-2) ---
+        try:
+            verify_token(
+                x_stigmem_capability,
+                lambda uri: get_peer_manifest(uri, refresh_if_expired=True, trust_mode=settings.trust_mode),
+                trust_mode=settings.trust_mode,
+            )
+        except CapabilityTokenError as exc:
+            # M-SEC-4: log capability_rejected
+            import uuid as _uuid
+            from datetime import UTC as _UTC, datetime as _datetime
+            _now = _datetime.now(_UTC).isoformat()
+            try:
+                import json as _json
+                with db() as conn:
+                    conn.execute(
+                        """INSERT INTO fact_audit_log
+                           (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, detail, ts)
+                           VALUES (?,?,?,?,?,?,?,?,?)""",
+                        (
+                            str(_uuid.uuid4()),
+                            "capability:rejected",
+                            "capability_rejected",
+                            None,
+                            None,
+                            "system:capability",
+                            None,
+                            _json.dumps({"reason": str(exc)}),
+                            _now,
+                        ),
+                    )
+            except Exception:
+                pass  # nosec B110 — audit log is best-effort here
+            raise HTTPException(status_code=401, detail=f"capability token invalid: {exc}")
+
+        try:
+            cap_token = json.loads(x_stigmem_capability)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(status_code=400, detail=f"malformed capability token JSON: {exc}")
+
+        if cap_token.get("verb") != "write":
+            raise HTTPException(
+                status_code=403,
+                detail="insufficient_capability: token verb must be 'write' for push",
+            )
+        using_cap_token = True
+
+        # M-SEC-4: log capability_verified
+        import uuid as _uuid2
+        from datetime import UTC as _UTC2, datetime as _datetime2
+        _now2 = _datetime2.now(_UTC2).isoformat()
+        try:
+            with db() as conn:
+                conn.execute(
+                    """INSERT INTO fact_audit_log
+                       (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, detail, ts)
+                       VALUES (?,?,?,?,?,?,?,?,?)""",
+                    (
+                        str(_uuid2.uuid4()),
+                        cap_token.get("token_id", "unknown"),
+                        "capability_verified",
+                        cap_token.get("subject"),
+                        None,
+                        "system:capability",
+                        None,
+                        json.dumps({
+                            "token_id": cap_token.get("token_id"),
+                            "issuer": cap_token.get("issuer"),
+                            "verb": cap_token.get("verb"),
+                            "object": cap_token.get("object"),
+                        }),
+                        _now2,
+                    ),
+                )
+        except Exception:
+            pass  # nosec B110 — audit log is best-effort
+    else:
+        raise HTTPException(
+            status_code=401,
+            detail="peer token or X-Stigmem-Capability header required",
+        )
 
     facts = body.get("facts", [])
     accepted = 0
@@ -321,41 +576,76 @@ def push_facts(
 
     for fact in facts:
         fact_scope = fact.get("scope", "")
-        if fact_scope not in permitted:
-            write_audit_log(
-                peer["id"], "scope_violation",
-                {"fact_id": fact.get("id"), "scope": fact_scope},
-            )
-            rejected += 1
-            errors.append({"fact_id": fact.get("id"), "error": "scope_not_permitted"})
-            continue
 
-        # Source non-forgery: source must match the sending peer's node_id (§6.4)
-        fact_source = fact.get("source", "")
-        if fact_source != peer["node_id"]:
-            write_audit_log(
-                peer["id"], "rejected_fact",
-                {
+        if using_cap_token:
+            # H-SEC-2: verify capability token object covers this fact's scope
+            assert cap_token is not None
+            token_object = cap_token.get("object", "")
+            if not _cap_token_covers_scope(token_object, fact_scope):
+                rejected += 1
+                errors.append({
                     "fact_id": fact.get("id"),
-                    "reason": "source_not_owned",
-                    "source": fact_source,
-                    "peer_node_id": peer["node_id"],
-                },
-            )
-            rejected += 1
-            errors.append({"fact_id": fact.get("id"), "error": "source_not_owned"})
-            continue
+                    "error": "insufficient_capability: token object does not cover scope",
+                })
+                continue
 
-        try:
-            ingest_fact(
-                fact,
-                peer["node_id"],
-                origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
-            )
-            accepted += 1
-        except Exception as exc:
-            rejected += 1
-            errors.append({"fact_id": fact.get("id"), "error": str(exc)})
+            sender_node_id = cap_token.get("subject", "")
+            fact_source = fact.get("source", "")
+            # Source non-forgery: source must match capability token subject
+            if fact_source != sender_node_id:
+                rejected += 1
+                errors.append({"fact_id": fact.get("id"), "error": "source_not_owned"})
+                continue
+
+            try:
+                ingest_fact(
+                    fact,
+                    sender_node_id,
+                    identity_strength_boost=0.5,  # §19.4.2 boost for valid capability token
+                )
+                accepted += 1
+            except Exception:
+                rejected += 1
+                errors.append({"fact_id": fact.get("id"), "error": "ingest_error"})
+        else:
+            assert peer is not None and token_payload is not None
+            permitted = _allowed_output_scopes(peer, token_payload)
+
+            if fact_scope not in permitted:
+                write_audit_log(
+                    peer["id"], "scope_violation",
+                    {"fact_id": fact.get("id"), "scope": fact_scope},
+                )
+                rejected += 1
+                errors.append({"fact_id": fact.get("id"), "error": "scope_not_permitted"})
+                continue
+
+            # Source non-forgery: source must match the sending peer's node_id (§6.4)
+            fact_source = fact.get("source", "")
+            if fact_source != peer["node_id"]:
+                write_audit_log(
+                    peer["id"], "rejected_fact",
+                    {
+                        "fact_id": fact.get("id"),
+                        "reason": "source_not_owned",
+                        "source": fact_source,
+                        "peer_node_id": peer["node_id"],
+                    },
+                )
+                rejected += 1
+                errors.append({"fact_id": fact.get("id"), "error": "source_not_owned"})
+                continue
+
+            try:
+                ingest_fact(
+                    fact,
+                    peer["node_id"],
+                    origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
+                )
+                accepted += 1
+            except Exception:
+                rejected += 1
+                errors.append({"fact_id": fact.get("id"), "error": "ingest_error"})
 
     return {"accepted": accepted, "rejected": rejected, "errors": errors}
 

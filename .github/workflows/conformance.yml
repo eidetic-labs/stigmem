@@ -15,6 +15,9 @@ on:
       - "data/conformance/**"
       - ".github/workflows/conformance.yml"
 
+permissions:
+  contents: read
+
 jobs:
   conformance:
     name: Stigmem v1.0 Conformance Suite

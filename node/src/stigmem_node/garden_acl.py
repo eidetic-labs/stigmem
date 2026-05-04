@@ -1,7 +1,8 @@
-"""Garden ACL enforcement — spec §17.3.
+"""Garden ACL enforcement — spec §17.3, §19.5.3.
 
 Gardens are named, ACL'd partitions above scope (v0.9).
 ACL is checked at fact read and write time in addition to scope enforcement.
+Quarantine gardens extend this with the quarantine:moderator role (v1.1).
 """
 
 from __future__ import annotations
@@ -98,3 +99,32 @@ def caller_can_see_garden(garden_id: str, identity: Identity) -> bool:
 def is_node_admin(identity: Identity) -> bool:
     """Node admin: any identity with write permission (spec §5.15)."""
     return identity.can_write()
+
+
+def require_quarantine_moderator_or_admin(garden: dict, identity: Identity) -> None:
+    """Raise 403 if identity cannot promote/reject quarantined facts (spec §19.5.3).
+
+    Allowed roles: 'admin' or 'quarantine:moderator'.
+    """
+    role = get_member_role(garden["id"], identity.entity_uri)
+    if role not in ("admin", "quarantine:moderator"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="quarantine:moderator or admin role required to promote/reject facts",
+        )
+
+
+def has_elevated_quarantine_role(garden: dict, identity: Identity) -> bool:
+    """True if identity holds admin or quarantine:moderator in a quarantine garden."""
+    role = get_member_role(garden["id"], identity.entity_uri)
+    return role in ("admin", "quarantine:moderator")
+
+
+def quarantine_garden_has_pending_facts(garden_uuid: str) -> bool:
+    """True if the quarantine garden holds at least one fact with quarantine_status='pending'."""
+    with db() as conn:
+        row = conn.execute(
+            "SELECT id FROM facts WHERE quarantine_garden_id = ? AND quarantine_status = 'pending' LIMIT 1",
+            (garden_uuid,),
+        ).fetchone()
+    return row is not None

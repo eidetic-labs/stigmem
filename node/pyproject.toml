@@ -14,6 +14,7 @@ dependencies = [
     "pydantic-settings>=2.0",
     "PyJWT[crypto]>=2.8",
     "httpx>=0.27",
+    "canonicaljson>=2.0",
 ]
 
 [project.optional-dependencies]
@@ -23,6 +24,20 @@ dev = [
     "httpx>=0.27",
     "ruff>=0.4",
     "mypy>=1.10",
+]
+libsql = [
+    # libSQL / Turso embedded-replica backend (Phase 8).
+    # Latest release on PyPI is 0.0.x; bump the floor when a stable 1.x ships.
+    "libsql-experimental>=0.0.1",
+]
+encryption = [
+    # Argon2id key derivation for passphrase-based encryption-at-rest (Phase 8).
+    "argon2-cffi>=23.1",
+]
+sqlcipher = [
+    # SQLCipher-enabled SQLite driver for at-rest encryption (Phase 8).
+    # Requires the SQLCipher C library; see the encryption-at-rest guide.
+    "sqlcipher3>=0.5.0",
 ]
 
 [project.scripts]

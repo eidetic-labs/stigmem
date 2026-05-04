@@ -1,8 +1,8 @@
 TITLE: Stigmem v1.0: A federated knowledge fabric for AI agents (open-source)
 TAGS: ai, opensource, devtools, agentprotocol
-COVER IMAGE: (optional — use docs.stigmem.dev/img/logo.svg)
+COVER IMAGE: (optional - use docs.stigmem.dev/img/logo.svg)
 
-IMPORTANT — SWITCH TO THE MARKDOWN EDITOR FIRST:
+IMPORTANT - SWITCH TO THE MARKDOWN EDITOR FIRST:
   dev.to Settings -> Customization -> Writing -> Editor -> switch to "v1 (basic markdown)"
   This stops dev.to applying Liquid to your code blocks.
   Do this ONCE and it applies to all future posts.
@@ -11,17 +11,17 @@ IMPORTANT — SWITCH TO THE MARKDOWN EDITOR FIRST:
 
 > *Cross-posted from the [Stigmem blog](https://docs.stigmem.dev/blog/stigmem-v1-launch).*
 
-Today we're releasing stigmem v1.0 — a stable, open-source specification and reference implementation for a federated knowledge fabric for AI agents.
+Today we're releasing stigmem v1.0, a stable, open-source specification and reference implementation for a federated knowledge fabric for AI agents.
 
 ## Why "stigmem"?
 
 **Stigmem** = **Stigmergy** + **Memory**.
 
-[Stigmergy](https://en.wikipedia.org/wiki/Stigmergy) (Greek *stigma* — mark; *ergon* — work) is the coordination mechanism you see in ant colonies and termite mounds: agents don't communicate directly with each other. Instead, they leave traces in a shared environment — a pheromone trail, a soil deposit — and those traces guide the behavior of future agents. The colony's intelligence emerges from the environment itself, not from any central controller.
+[Stigmergy](https://en.wikipedia.org/wiki/Stigmergy) (Greek *stigma*, mark; *ergon*, work) is the coordination mechanism you see in ant colonies and termite mounds: agents don't communicate directly with each other. Instead, they leave traces in a shared environment (a pheromone trail, a soil deposit) and those traces guide the behavior of future agents. The colony's intelligence emerges from the environment itself, not from any central controller.
 
-Stigmem applies the same principle to multi-agent AI systems. Agents write typed, provenance-tagged facts into a shared substrate. Other agents — running later, on different platforms, inside different organizations — read those facts and act on them. No central coordinator, no point-to-point protocol overhead. The knowledge environment carries the coordination signal.
+Stigmem applies the same principle to multi-agent AI systems. Agents write typed, provenance-tagged facts into a shared substrate. Other agents running later, on different platforms, inside different organizations, read those facts and act on them. No central coordinator, no point-to-point protocol overhead. The knowledge environment carries the coordination signal.
 
-The **Memory** half reflects persistence and decay: facts have `valid_until` expiries and confidence scores, so the substrate stays fresh rather than accumulating stale state — just as pheromone trails fade when they're no longer reinforced.
+The **Memory** half reflects persistence and decay: facts have `valid_until` expiries and confidence scores, so the substrate stays fresh rather than accumulating stale state, just as pheromone trails fade when they're no longer reinforced.
 
 ## The problem
 
@@ -33,13 +33,13 @@ Stigmem gives agents that shared layer.
 
 `(entity, relation, value, source, timestamp, confidence, scope)`
 
-- **entity** — what the fact is about (`user:alice`, `project:payments`, `stigmem://org/task/42`)
-- **relation** — the predicate (`memory:prefers`, `status:blocked`, `infers:next_action`)
-- **value** — typed payload: string, number, boolean, or JSON
-- **source** — who asserted it (an agent ID, tool name, or user session)
-- **timestamp** — Hybrid Logical Clock, monotonic across distributed nodes
-- **confidence** — 0.0–1.0, decays over time if not re-asserted
-- **scope** — access boundary (`public`, `company`, `team`, `private`)
+- **entity** - what the fact is about (`user:alice`, `project:payments`, `stigmem://org/task/42`)
+- **relation** - the predicate (`memory:prefers`, `status:blocked`, `infers:next_action`)
+- **value** - typed payload: string, number, boolean, or JSON
+- **source** - who asserted it (an agent ID, tool name, or user session)
+- **timestamp** - Hybrid Logical Clock, monotonic across distributed nodes
+- **confidence** - 0.0-1.0, decays over time if not re-asserted
+- **scope** - access boundary (`public`, `company`, `team`, `private`)
 
 Facts are immutable. Contradictions between nodes are surfaced as first-class conflict records, not silently overwritten.
 
@@ -58,7 +58,7 @@ curl -X POST http://localhost:8765/v1/facts \
   -H 'Content-Type: application/json' \
   -d '{"entity":"user:alice","relation":"memory:prefers","value":{"type":"string","v":"dark mode"},"source":"agent:settings","confidence":1.0,"scope":"company"}'
 
-# 30s later — fact replicated to node-b
+# 30s later, fact replicated to node-b
 curl 'http://localhost:8766/v1/facts?entity=user:alice&scope=company'
 ```
 
@@ -78,15 +78,15 @@ Two nodes start immediately. The federation handshake uses Ed25519 signatures; f
 }
 ```
 
-Any MCP-compatible agent runtime (Claude Code, Cursor, Zed, Codex CLI) gets five tools: `assert_fact`, `query_facts`, `retract_fact`, `synthesize_scope`, and `lint_scope`. The `synthesize_scope` tool aggregates recent facts into a structured summary that slots directly into a context window — so agents get fresh, scoped knowledge without managing embeddings or retrieval pipelines.
+Any MCP-compatible agent runtime (Claude Code, Cursor, Zed, Codex CLI) gets five tools: `assert_fact`, `query_facts`, `retract_fact`, `synthesize_scope`, and `lint_scope`. The `synthesize_scope` tool aggregates recent facts into a structured summary that slots directly into a context window, so agents get fresh, scoped knowledge without managing embeddings or retrieval pipelines.
 
 ## What stigmem is not
 
 Stigmem does not replace:
 
-- **Agent runtimes** — it's the substrate those runtimes reason over, not a runtime itself
-- **Orchestration platforms** — the Paperclip and OpenClaw adapters emit events *into* stigmem; they compose, not compete
-- **Tool protocols like MCP** — MCP is the transport; the stigmem MCP adapter rides on top
+- **Agent runtimes** - it's the substrate those runtimes reason over, not a runtime itself
+- **Orchestration platforms** - the Paperclip and OpenClaw adapters emit events *into* stigmem; they compose, not compete
+- **Tool protocols like MCP** - MCP is the transport; the stigmem MCP adapter rides on top
 
 It fills the gap none of them fill: typed, provenance-traceable, expiry-aware, federated shared knowledge that travels across tool and organizational boundaries.
 
@@ -94,20 +94,20 @@ It fills the gap none of them fill: typed, provenance-traceable, expiry-aware, f
 
 Stigmem is Apache 2.0 and genuinely needs contributors. A few areas where help would make the biggest difference right now:
 
-- **Spec feedback** — the [Intent envelope](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) (§4: goal, constraint, preference, handoff) is still in draft status and we're actively looking for real use-case feedback before stabilizing it
-- **Adapter authors** — there are stubs for additional agent runtimes and we'd love to see community-maintained adapters
-- **Node implementations** — the reference node is FastAPI + SQLite; alternative implementations in other languages are explicitly encouraged by the spec
-- **Real-world federation topologies** — if you run an interesting multi-node setup, [open a discussion](https://github.com/Eidetic-Labs/stigmem/discussions) — we'd like to document it
+- **Spec feedback** - the [Intent envelope](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) (section 4: goal, constraint, preference, handoff) is still in draft status and we're actively looking for real use-case feedback before stabilizing it
+- **Adapter authors** - there are stubs for additional agent runtimes and we'd love to see community-maintained adapters
+- **Node implementations** - the reference node is FastAPI + SQLite; alternative implementations in other languages are explicitly encouraged by the spec
+- **Real-world federation topologies** - if you run an interesting multi-node setup, [open a discussion](https://github.com/Eidetic-Labs/stigmem/discussions) and we'd like to document it
 
-The contribution process uses an RFC model: open a GitHub issue with the RFC template, discuss, then PR against the spec. New spec sections start as draft blocks and need ≥2 approvals from active contributors to merge.
+The contribution process uses an RFC model: open a GitHub issue with the RFC template, discuss, then PR against the spec. New spec sections start as draft blocks and need 2+ approvals from active contributors to merge.
 
-If you're building something on stigmem or have questions about the federation protocol, the HLC implementation, or how to write an adapter, drop a comment or open a [GitHub discussion](https://github.com/Eidetic-Labs/stigmem/discussions) — we read everything.
+If you're building something on stigmem or have questions about the federation protocol, the HLC implementation, or how to write an adapter, drop a comment or open a [GitHub discussion](https://github.com/Eidetic-Labs/stigmem/discussions). We read everything.
 
 ## Links
 
-- **Repo (Apache 2.0):** https://github.com/Eidetic-Labs/stigmem
-- **Docs:** https://docs.stigmem.dev
-- **Spec:** https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md
-- **Quickstart:** https://docs.stigmem.dev/docs/getting-started/quickstart
-- **Contributing:** https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md
-- **Discussions:** https://github.com/Eidetic-Labs/stigmem/discussions
+- [GitHub Repository (Apache 2.0)](https://github.com/Eidetic-Labs/stigmem)
+- [Documentation](https://docs.stigmem.dev)
+- [v1.0 Specification](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md)
+- [Quickstart: two nodes federating in under 10 minutes](https://docs.stigmem.dev/docs/getting-started/quickstart)
+- [Contributing guide](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md)
+- [GitHub Discussions](https://github.com/Eidetic-Labs/stigmem/discussions)

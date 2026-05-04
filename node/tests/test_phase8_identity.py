@@ -1433,7 +1433,9 @@ def test_verify_endpoint_valid_signed_token(tmp_path: Path) -> None:
     extra = _patch_settings(test_settings)
 
     try:
-        issuer = "https://verify-ep-test.org"
+        # auth_required=False → identity.entity_uri = "anon:trusted"; BOLA guard
+        # requires issuer == entity_uri so we use that as both issuer and subject.
+        issuer = "anon:trusted"
         subject = issuer
         m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
 
@@ -1492,7 +1494,9 @@ def test_verify_endpoint_revoked_token_invalid(tmp_path: Path) -> None:
     extra = _patch_settings(test_settings)
 
     try:
-        issuer = "https://verify-rev-ep.org"
+        # auth_required=False → identity.entity_uri = "anon:trusted"; BOLA guard
+        # requires issuer == entity_uri so we use that as both issuer and subject.
+        issuer = "anon:trusted"
         subject = issuer
         m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
 
@@ -1507,10 +1511,8 @@ def test_verify_endpoint_revoked_token_invalid(tmp_path: Path) -> None:
             token_id = resp.json()["token_id"]
             token_json = resp.json()["token_json"]
 
-            # Revoke (using admin identity which matches issuer in this anon setup —
-            # identity_client sets auth_required=False; need to patch entity_uri match.
-            # Since auth_required=False, entity_uri="anon:trusted" != issuer.
-            # Instead directly mark revoked in DB for test isolation.)
+            # Directly mark revoked in DB for test isolation
+            # (revoke endpoint also has a BOLA guard; direct DB write is cleaner here)
             import sqlite3 as _sqlite3
             conn = _sqlite3.connect(db_file)
             conn.execute(

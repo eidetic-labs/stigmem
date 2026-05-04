@@ -695,7 +695,7 @@ function app() {
   return {
     // ── connection
     baseUrl: localStorage.getItem('sm_url') || 'http://localhost:8765',
-    apiKey:  sessionStorage.getItem('sm_key') || '',
+    apiKey:  '',
     identity: null,
     connectError: '',
 
@@ -766,7 +766,7 @@ function app() {
 
     saveSettings() {
       localStorage.setItem('sm_url', this.baseUrl);
-      sessionStorage.setItem('sm_key', this.apiKey);
+      // API key is intentionally not persisted to storage — enter it each session
     },
 
     async connect() {

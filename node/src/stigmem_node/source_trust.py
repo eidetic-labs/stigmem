@@ -50,17 +50,23 @@ def compute_source_trust(
     source_uri: str,
     scope: str,
     identity: "Identity | None" = None,
+    *,
+    identity_strength_override: float | None = None,
 ) -> float:
     """Return the source-trust score for *source_uri* asserting a fact at *scope*.
 
     Uses cached value if available (TTL 60 s).  Caches the freshly computed value.
+    When *identity_strength_override* is set the cache is bypassed so the
+    override is always honoured (spec §19.4.2 capability-token boost).
     """
-    cached = get_cached_trust(source_uri)
-    if cached is not None:
-        return cached
+    if identity_strength_override is None:
+        cached = get_cached_trust(source_uri)
+        if cached is not None:
+            return cached
 
-    score = _compute_fresh(source_uri, scope, identity)
-    _set_cache(source_uri, score)
+    score = _compute_fresh(source_uri, scope, identity, identity_strength_override=identity_strength_override)
+    if identity_strength_override is None:
+        _set_cache(source_uri, score)
     return score
 
 
@@ -68,6 +74,8 @@ def _compute_fresh(
     source_uri: str,
     scope: str,
     identity: "Identity | None",
+    *,
+    identity_strength_override: float | None = None,
 ) -> float:
     from .settings import settings
 
@@ -90,7 +98,7 @@ def _compute_fresh(
     w_s = settings.trust_weight_scope_authority
     w_a = settings.trust_weight_attestation_mode
 
-    i_s = _identity_strength(source_uri)
+    i_s = identity_strength_override if identity_strength_override is not None else _identity_strength(source_uri)
     p_h = _peer_history(source_uri)
     s_a = _scope_authority(source_uri, scope, identity)
     a_m = _attestation_mode_factor()

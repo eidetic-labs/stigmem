@@ -1031,3 +1031,369 @@ def test_verify_token_rejects_wrong_token_version() -> None:
 
     with pytest.raises(CapabilityTokenError, match="token_version"):
         verify_token(token_wrong_version, lambda _uri: None)
+
+
+# ===========================================================================
+# 15. M-SEC-1 — 90-day TTL cap on capability token issuance
+# ===========================================================================
+
+
+def test_ttl_over_90_days_rejected(identity_client: TestClient) -> None:
+    """ttl_seconds > 7,776,000 (90 days) must be rejected with 422 (M-SEC-1)."""
+    priv, pub_b64, _ = _gen_keypair()
+    issuer = "https://ttl-cap-test.org"
+    m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
+
+    identity_client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+    api_key = auth_mod.create_api_key(issuer, ["read", "write"])
+
+    resp = identity_client.post(
+        "/v1/federation/capability-tokens",
+        json={
+            "issuer": issuer,
+            "subject": issuer,
+            "verb": "read",
+            "object": "stigmem://facts",
+            "ttl_seconds": 7_776_001,  # one second over 90 days
+        },
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
+    assert resp.status_code == 422, resp.text
+    assert "90-day" in resp.json().get("detail", "").lower() or "maximum" in resp.json().get("detail", "").lower()
+
+
+def test_ttl_exactly_90_days_accepted(identity_client: TestClient) -> None:
+    """ttl_seconds == 7,776,000 (exactly 90 days) must be accepted."""
+    priv, pub_b64, _ = _gen_keypair()
+    issuer = "https://ttl-cap-exact.org"
+    m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
+
+    identity_client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+    api_key = auth_mod.create_api_key(issuer, ["read", "write"])
+
+    resp = identity_client.post(
+        "/v1/federation/capability-tokens",
+        json={
+            "issuer": issuer,
+            "subject": issuer,
+            "verb": "read",
+            "object": "stigmem://facts",
+            "ttl_seconds": 7_776_000,
+        },
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
+    assert resp.status_code == 201, resp.text
+
+
+# ===========================================================================
+# 16. M-SEC-4 — audit log entries for capability token lifecycle
+# ===========================================================================
+
+
+def test_capability_issuance_writes_audit_log(tmp_path: Path) -> None:
+    """Issue a capability token — fact_audit_log must get a capability_issued row."""
+    import sqlite3 as _sqlite3
+
+    db_file = str(tmp_path / "audit_issue.db")
+    apply_migrations(db_path=db_file)
+
+    original = settings_module.settings
+    test_settings = Settings(
+        db_path=db_file,
+        auth_required=False,
+        node_url="http://testnode",
+        trust_mode="relaxed",
+        tl_backend="off",
+    )
+    extra = _patch_settings(test_settings)
+
+    try:
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as client:
+            priv, pub_b64, _ = _gen_keypair()
+            issuer = "https://audit-issue.org"
+            m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
+            client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+            api_key = auth_mod.create_api_key(issuer, ["read", "write"])
+
+            resp = client.post(
+                "/v1/federation/capability-tokens",
+                json={"issuer": issuer, "subject": issuer, "verb": "write", "object": "stigmem://facts"},
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
+            assert resp.status_code == 201, resp.text
+            token_id = resp.json()["token_id"]
+
+        conn = _sqlite3.connect(db_file)
+        conn.row_factory = _sqlite3.Row
+        row = conn.execute(
+            "SELECT * FROM fact_audit_log WHERE fact_id = ? AND event_type = 'capability_issued'",
+            (token_id,),
+        ).fetchone()
+        conn.close()
+
+        assert row is not None, "capability_issued audit row must exist"
+        assert row["entity_uri"] == issuer
+        detail = json.loads(row["detail"])
+        assert detail["verb"] == "write"
+        assert detail["issuer"] == issuer
+    finally:
+        _restore_settings(original, extra)
+
+
+def test_capability_revocation_writes_audit_log(tmp_path: Path) -> None:
+    """Revoke a capability token — fact_audit_log must get a capability_revoked row."""
+    import sqlite3 as _sqlite3
+
+    db_file = str(tmp_path / "audit_revoke.db")
+    apply_migrations(db_path=db_file)
+
+    original = settings_module.settings
+    test_settings = Settings(
+        db_path=db_file,
+        auth_required=False,
+        node_url="http://testnode",
+        trust_mode="relaxed",
+        tl_backend="off",
+    )
+    extra = _patch_settings(test_settings)
+
+    try:
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as client:
+            priv, pub_b64, _ = _gen_keypair()
+            issuer = "https://audit-revoke.org"
+            m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
+            client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+            api_key = auth_mod.create_api_key(issuer, ["read", "write"])
+
+            resp = client.post(
+                "/v1/federation/capability-tokens",
+                json={"issuer": issuer, "subject": issuer, "verb": "write", "object": "stigmem://facts"},
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
+            assert resp.status_code == 201, resp.text
+            token_id = resp.json()["token_id"]
+
+            resp2 = client.post(
+                f"/v1/federation/capability-tokens/{token_id}/revoke",
+                json={"reason": "audit-log-test"},
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
+            assert resp2.status_code == 200, resp2.text
+
+        conn = _sqlite3.connect(db_file)
+        conn.row_factory = _sqlite3.Row
+        row = conn.execute(
+            "SELECT * FROM fact_audit_log WHERE fact_id = ? AND event_type = 'capability_revoked'",
+            (token_id,),
+        ).fetchone()
+        conn.close()
+
+        assert row is not None, "capability_revoked audit row must exist"
+        detail = json.loads(row["detail"])
+        assert detail["reason"] == "audit-log-test"
+    finally:
+        _restore_settings(original, extra)
+
+
+# ===========================================================================
+# 17. H-SEC-2 — Capability-token wire integration on push_facts
+# ===========================================================================
+
+
+@pytest.fixture()
+def push_client(tmp_path: Path) -> "Generator[tuple[TestClient, str, str], None, None]":
+    """TestClient with federation_push_enabled + node_private_key set.
+
+    Yields (client, issuer_uri, token_json) where token_json is a valid
+    write capability token signed by the node key.
+    """
+    db_file = str(tmp_path / "push_test.db")
+    apply_migrations(db_path=db_file)
+
+    priv, pub_b64, priv_b64 = _gen_keypair()
+    issuer = "anon:trusted"  # matches auth_required=False entity_uri
+
+    original = settings_module.settings
+    test_settings = Settings(
+        db_path=db_file,
+        auth_required=False,
+        node_url="http://testnode",
+        trust_mode="relaxed",
+        tl_backend="off",
+        node_private_key=priv_b64,
+        federation_push_enabled=True,
+    )
+    extra = _patch_settings(test_settings)
+
+    app = create_app()
+    with TestClient(app, raise_server_exceptions=True) as client:
+        # Register manifest so verify_token can resolve issuer
+        m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
+        resp = client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+        assert resp.status_code == 200, resp.text
+
+        # Issue a write capability token
+        resp2 = client.post(
+            "/v1/federation/capability-tokens",
+            json={
+                "issuer": issuer,
+                "subject": issuer,
+                "verb": "write",
+                "object": "stigmem://facts",
+            },
+        )
+        assert resp2.status_code == 201, resp2.text
+        token_json = resp2.json()["token_json"]
+
+        yield client, issuer, token_json
+
+    _restore_settings(original, extra)
+
+
+def test_push_facts_capability_token_accepted(
+    push_client: "tuple[TestClient, str, str]",
+) -> None:
+    """Push facts with a valid write capability token must be accepted (H-SEC-2)."""
+    client, issuer, token_json = push_client
+
+    fact_id = str(uuid.uuid4())
+    now = datetime.now(UTC).isoformat()
+
+    resp = client.post(
+        "/v1/federation/facts/push",
+        json={
+            "facts": [{
+                "id": fact_id,
+                "entity": "test:push-cap",
+                "relation": "test:value",
+                "value": {"type": "string", "v": "hello"},
+                "source": issuer,
+                "timestamp": now,
+                "hlc": None,
+                "confidence": 1.0,
+                "scope": "public",
+                "valid_until": None,
+            }]
+        },
+        headers={"X-Stigmem-Capability": token_json},
+    )
+    assert resp.status_code == 202, resp.text
+    data = resp.json()
+    assert data["accepted"] == 1
+    assert data["rejected"] == 0
+
+
+def test_push_facts_capability_token_read_verb_rejected(
+    push_client: "tuple[TestClient, str, str]",
+) -> None:
+    """A capability token with verb=read must be rejected for push (H-SEC-2)."""
+    client, issuer, _ = push_client
+
+    # Issue a read-only token
+    resp = client.post(
+        "/v1/federation/capability-tokens",
+        json={
+            "issuer": issuer,
+            "subject": issuer,
+            "verb": "read",
+            "object": "stigmem://facts",
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    read_token_json = resp.json()["token_json"]
+
+    fact_id = str(uuid.uuid4())
+    now = datetime.now(UTC).isoformat()
+
+    resp2 = client.post(
+        "/v1/federation/facts/push",
+        json={
+            "facts": [{
+                "id": fact_id,
+                "entity": "test:push-read-cap",
+                "relation": "test:value",
+                "value": {"type": "string", "v": "rejected"},
+                "source": issuer,
+                "timestamp": now,
+                "hlc": None,
+                "confidence": 1.0,
+                "scope": "public",
+                "valid_until": None,
+            }]
+        },
+        headers={"X-Stigmem-Capability": read_token_json},
+    )
+    assert resp2.status_code == 403, resp2.text
+    assert "insufficient_capability" in resp2.json().get("detail", "")
+
+
+def test_push_facts_no_auth_rejected(push_client: "tuple[TestClient, str, str]") -> None:
+    """Push without any auth header must return 401 (H-SEC-2)."""
+    client, issuer, _ = push_client
+
+    fact_id = str(uuid.uuid4())
+    now = datetime.now(UTC).isoformat()
+
+    resp = client.post(
+        "/v1/federation/facts/push",
+        json={
+            "facts": [{
+                "id": fact_id,
+                "entity": "test:no-auth",
+                "relation": "test:value",
+                "value": {"type": "string", "v": "nope"},
+                "source": issuer,
+                "timestamp": now,
+                "hlc": None,
+                "confidence": 1.0,
+                "scope": "public",
+                "valid_until": None,
+            }]
+        },
+    )
+    assert resp.status_code == 401, resp.text
+
+
+# ===========================================================================
+# 18. M-SEC-3 — CLI capability subcommand parser structure
+# ===========================================================================
+
+
+def test_cli_capability_issue_parser() -> None:
+    """stigmem capability issue must parse args correctly (M-SEC-3)."""
+    from stigmem_node.cli import _build_parser
+    parser = _build_parser()
+
+    args = parser.parse_args([
+        "capability", "issue",
+        "--issuer", "https://example.org",
+        "--subject", "https://example.org",
+        "--verb", "write",
+        "--object", "stigmem://facts",
+    ])
+    assert args.issuer == "https://example.org"
+    assert args.verb == "write"
+    assert callable(args.func)
+
+
+def test_cli_capability_verify_parser() -> None:
+    """stigmem capability verify TOKEN must parse without error (M-SEC-3)."""
+    from stigmem_node.cli import _build_parser
+    parser = _build_parser()
+
+    args = parser.parse_args(["capability", "verify", '{"token_version":1}'])
+    assert args.token_json == '{"token_version":1}'
+    assert callable(args.func)
+
+
+def test_cli_capability_revoke_parser() -> None:
+    """stigmem capability revoke TOKEN_ID must parse without error (M-SEC-3)."""
+    from stigmem_node.cli import _build_parser
+    parser = _build_parser()
+
+    args = parser.parse_args(["capability", "revoke", "some-token-id", "--reason", "expired"])
+    assert args.token_id == "some-token-id"
+    assert args.reason == "expired"
+    assert callable(args.func)

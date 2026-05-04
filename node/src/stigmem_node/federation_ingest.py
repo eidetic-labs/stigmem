@@ -34,6 +34,8 @@ def ingest_fact(
     sender_node_id: str,
     origin_node_id: str | None = None,
     origin_allowed_scopes: list[str] | None = None,
+    *,
+    identity_strength_boost: float | None = None,
 ) -> bool:
     """Idempotently ingest a federated fact.
 
@@ -67,7 +69,10 @@ def ingest_fact(
 
     trust_mode = settings.trust_mode
     if trust_mode != "off":
-        trust_score = compute_source_trust(source, scope, identity=None)
+        trust_score = compute_source_trust(
+            source, scope, identity=None,
+            identity_strength_override=identity_strength_boost,
+        )
 
         if trust_mode == "strict" and trust_score < 0.2:
             # Route to quarantine or reject (§19.5.4)

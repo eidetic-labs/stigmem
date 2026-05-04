@@ -221,6 +221,14 @@ def issue_capability_token(
             status_code=422, detail="issuer, subject, verb, and object are required"
         )
 
+    # M-SEC-1: enforce 90-day maximum TTL (spec §19.3.2)
+    _MAX_TOKEN_TTL_SECONDS = 90 * 86400
+    if ttl_seconds > _MAX_TOKEN_TTL_SECONDS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"ttl_seconds exceeds 90-day maximum ({_MAX_TOKEN_TTL_SECONDS}s)",
+        )
+
     # BOLA guard (H-SEC-1): prevent a caller from forging tokens under a different org's identity
     if issuer != identity.entity_uri:
         raise HTTPException(
@@ -292,6 +300,30 @@ def issue_capability_token(
             if "UNIQUE constraint" in str(exc):
                 raise HTTPException(status_code=409, detail="nonce collision; retry")
             raise
+
+        # M-SEC-4: audit log entry for token issuance (spec §19.3.2)
+        conn.execute(
+            """INSERT INTO fact_audit_log
+               (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, detail, ts)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
+            (
+                str(uuid.uuid4()),
+                token_id,               # token_id as surrogate fact_id
+                "capability_issued",
+                issuer,
+                None,
+                "system:capability",
+                None,
+                json.dumps({
+                    "issuer": issuer,
+                    "subject": subject,
+                    "verb": verb,
+                    "object": obj,
+                    "expiry": expiry,
+                }),
+                created_at,
+            ),
+        )
 
     # Opportunistic cleanup of stale tokens
     try:
@@ -390,6 +422,23 @@ async def revoke_capability_token(
         conn.execute(
             "UPDATE capability_tokens SET revoked_at = ?, revoke_log = ? WHERE id = ?",
             (now, revoke_log_json, token_id),
+        )
+        # M-SEC-4: audit log entry for token revocation (spec §19.3.4)
+        conn.execute(
+            """INSERT INTO fact_audit_log
+               (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, detail, ts)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
+            (
+                str(uuid.uuid4()),
+                token_id,               # token_id as surrogate fact_id
+                "capability_revoked",
+                identity.entity_uri,
+                None,
+                "system:capability",
+                None,
+                json.dumps({"reason": reason}),
+                now,
+            ),
         )
 
     result: dict[str, Any] = {"token_id": token_id, "revoked_at": now, "status": "revoked"}

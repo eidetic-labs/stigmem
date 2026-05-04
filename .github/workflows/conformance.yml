@@ -88,7 +88,9 @@ jobs:
           version: "latest"
 
       - name: Set up Python 3.11
-        run: uv python install 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
       - name: Install stigmem-node (all extras)
         run: |

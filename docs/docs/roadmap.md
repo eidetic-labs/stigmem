@@ -1,0 +1,179 @@
+---
+id: roadmap
+title: Roadmap
+sidebar_label: Roadmap
+description: The Stigmem v2 roadmap — phase summaries, target quarters, and what each phase delivers for operators and integrators.
+---
+
+# Roadmap
+
+*Last updated: Q2 2026. Audience: operators, integrators, spec contributors.*
+
+---
+
+Phases 0–7 are complete. The full history — what shipped, key architectural decisions, and lessons learned — is on the [State of Stigmem](./about/state-of-stigmem.md) page. This page covers what is coming next, in the order it ships, and what it means for you as an operator or integrator.
+
+The v2 build plan runs seven phases (8–14), roughly 22 weeks, with meaningful parallelism between phases once the early trust and storage foundations are stable. Target timelines are given in calendar quarters; exact dates depend on community feedback and how earlier phases land.
+
+**Current status:** Phase 8 is in flight. All subsequent phases are sequenced but their scope can shift as earlier phases land.
+
+---
+
+## Phase 8 — Trust & Persistence Foundation
+
+**Target: Q2 2026**
+
+Phase 8 establishes the trust and storage foundations the rest of the plan depends on. It runs in two parallel streams:
+
+**Documentation and community surfaces (Phase 8a, in progress):**
+This page, the [Backends](./backends.md) guide, the [Security & Pen Testing](./contributing/security.md) contribution guide, and the [Project Resources](./community/project-resources.md) page are published to the docs site before Phase 8 code work merges. These are the operator-facing surfaces that make the build plan legible to the community.
+
+**Federation trust architecture:**
+Spec §19 "Federation Trust" is drafted and implemented as a reference:
+
+- **Org manifests** — each operator publishes an org manifest (Ed25519 keypair, entity-URI list, rotation events) pinned in a transparency log (Rekor or Sigstore-equivalent). Rotation events are append-only and cryptographically linked.
+- **Cross-org capability tokens** — writing scope `S` on a peer node requires a short-lived capability signed by the scope owner. Capabilities are revocable via the transparency log and carry explicit subject + verb + object.
+- **Source-trust score** — every incoming fact receives a trust multiplier `t ∈ [0,1]` derived from identity strength, peer history, scope authority, and attestation mode. Effective confidence at recall time = `confidence × t`. Facts below a configurable threshold land in a **quarantine garden** for human review before entering the main fact store.
+- **Provenance chain** — facts gain `derived_from: [fact_hash...]` and `attestation_chain: [signature...]` for tamper-evident audit.
+- **Recall-time content sanitizer** — strips known prompt-injection sentinels from `value` fields when rendering into agent context. Documented as part of the recall contract.
+
+**Persistent storage backends:**
+A `StorageBackend` adapter trait replaces the single-SQLite assumption. libSQL (Turso-compatible) ships as the first non-default backend. SQLCipher at-rest encryption is available as an opt-in. Signed snapshot backup and restore with point-in-time recovery for libSQL. See the [Backends](./backends.md) page for the full matrix and decision guide.
+
+**What this means for operators:** hosted deployments can switch from ephemeral SQLite to a persistent libSQL volume without changing application code. Federation between organizations becomes auditable and revocable. The quarantine garden gives admins a review surface for untrusted writes before they enter the canonical fact store.
+
+---
+
+## Phase 9 — Graph Memory & Recall
+
+**Target: Q2–Q3 2026**
+
+Phase 9 makes Stigmem useful as a memory substrate for agents that need to retrieve *relevant* facts rather than query by exact predicate. It adds the graph index, vector embeddings, and the `recall` endpoint that are the primary agent call surface going forward.
+
+- **Graph adjacency index** — entity-to-entity relation traversal in O(edges), built as an incremental side index on the existing fact table.
+- **Vector embeddings** — `value` (and optionally `entity` + `relation`) embedded at write time. sqlite-vec for SQLite/libSQL; pgvector for Postgres. Configurable embedding model with a local default and a cloud opt-in.
+- **`recall` endpoint** — `recall(query, token_budget, depth=2, weights={lexical, vector, graph})` returns a scoped, budget-bounded slice: query-relevant facts plus their k-hop graph neighbors, ranked by salience. This is the primary API for agents that need context about an entity.
+- **Memory cards** — per-entity synthesized summaries, refreshed on write, for fast pre-aggregated recall without re-ranking raw facts every call.
+- **Subscriptions** — agents register push notifications (`on_change: webhook|wake`) on a scope or entity. Push instead of poll.
+- **Causal links** — `derived_from: [fact_hash...]` on fact records enables audit chains (builds on Phase 8 provenance work).
+- **Spec §20 "Recall & Graph"** published as a draft.
+
+**What this means for operators:** agents calling Stigmem no longer pull full fact tables. `recall` fits relevant memory into a token budget automatically. Subscriptions eliminate polling loops for agents watching shared entities.
+
+---
+
+## Phase 10 — Lazy Instruction Discovery
+
+**Target: Q3 2026**
+
+Phase 10 applies the recall primitive to the agent-instruction problem. Today, agents load all instruction files (role specs, skills, memory files) at every conversation start even when most of the content isn't relevant to the current task. Phase 10 fixes this.
+
+- **Boot stub** (~500 tokens) — identity, role, heartbeat-contract pointer, manifest pointer, and a `recall_instruction(topic)` tool. Replaces full instruction-file preloads.
+- **Instruction manifest** (~1k tokens) — an indexed list of every instruction file/section with 1-line descriptions and load triggers (intents, keywords, task types). Always loaded; body content loaded on demand.
+- **`recall_instruction` skill** — wraps the Stigmem `recall` endpoint against an `instruction:` scope. Agents call it when a heartbeat intent matches an instruction's triggers.
+- **Stigmem-backed instructions** — existing instruction files are migrated to atomic facts under `instruction:agent:{role}` and `skill:{name}` scopes. The markdown files become generated artifacts from the canonical Stigmem store.
+- **Discovery audit tool** — logs per heartbeat what the agent loaded vs. what it would have needed. Used to tune manifest descriptions and triggers before flipping the boot stub.
+- **Caching** — the boot stub + manifest are cache-stable across turns; recall results are short and per-task.
+
+**What this means for operators:** agents running on Stigmem-backed instructions pay per-call context costs only for relevant content. Token budgets across high-heartbeat roles shrink measurably.
+
+---
+
+## Phase 11 — Hosting Reference, Backend Matrix & Obsidian Adapter
+
+**Target: Q3 2026**
+
+Phase 11 completes the operator runbook and ships the Obsidian integration that makes Stigmem accessible to the memory-first / vibe-coder audience.
+
+**Hosting recipes** (`deploy/` directory at repo root):
+- **Fly.io** — `fly.toml` + persistent volume + libSQL embedded replica + healthchecks + scale-to-zero. The reference deployment for most hosted operators.
+- **Docker Compose** — laptop/VM single-host deployment.
+- **Helm** — Kubernetes / enterprise.
+- **systemd** — bare metal / air-gapped.
+- **PaaS one-pagers** — Render, Railway, AWS App Runner, GCP Cloud Run.
+
+**Postgres backend** (feature-flagged) with pgvector support.
+
+**Conformance test suite** published and runnable against all three production backends (SQLite, libSQL, Postgres). Independent adapter and node implementations can use it to verify compliance.
+
+**Operator's handbook** — backend selection decision tree, backup/restore runbook, peer setup, key rotation, monitoring.
+
+**Obsidian vault adapter** — two distribution forms:
+
+1. **CLI/daemon** (`adapters/obsidian/`) — bidirectional sync between a Stigmem node and an Obsidian vault. Markdown notes become entities; frontmatter keys/values become typed facts; `[[wikilinks]]` become relations; inline `key:: value` (Dataview syntax) becomes facts. Renames tracked via link-update events. Conflicts surfaced as Obsidian markdown comments for in-vault resolution.
+2. **Obsidian community plugin** (`adapters/obsidian-plugin/`) — same sync engine inside Obsidian's process, plus command-palette `Recall related memories`, a sidebar showing graph neighbors from Stigmem, and inline fact rendering.
+
+Logseq, Dendron, and plain-markdown vaults are supported via config — same adapter primitives, different vault-format flag. See the [Backends](./backends.md) page for the Obsidian positioning (adapter, not a backend).
+
+**What this means for operators:** everything needed to run Stigmem in production on any platform is documented and tested. Obsidian users get a first-class bidirectional integration without leaving their vault.
+
+---
+
+## Phase 12 — Security Hardening
+
+**Target: Q3–Q4 2026**
+
+Phase 12 closes the concrete security gaps in the current threat model and ships the community pen-test contribution path.
+
+- mTLS for federation peer connections; cert-pinning option.
+- API-key rotation: enforced max-age, expiring-soon surface, rotation runbook.
+- General-purpose audit log: reads of sensitive scopes, admin actions, schema changes.
+- Per-principal quotas and rate limits on writes and recalls.
+- Container hardening: non-root, distroless base, read-only filesystem, dropped capabilities.
+- Federation replay-protection fuzz tests.
+- Backup integrity: signed snapshots, restore-time signature verification.
+- Constant-time crypto audit of the Ed25519 signing/verification path.
+- Garden role-escalation safeguards: writer→admin transitions logged and require admin signature.
+- Transparency log integration: Rekor or Sigstore-equivalent for org-manifest rotation events (§19).
+- **Community pen testing** — scope, safe-harbor terms, severity guidance, and engagement path published at [Security & Pen Testing](./contributing/security.md).
+
+**What this means for operators:** Stigmem reaches the hardening posture appropriate for multi-org federation. The community pen-test path opens the protocol to external security review.
+
+---
+
+## Phase 13 — SDKs, Eval & Observability
+
+**Target: Q4 2026**
+
+Phase 13 fills the tooling gaps that block adoption at scale.
+
+- **TypeScript SDK** for browser/Node agents; **Go SDK** for hosted-infra integrators.
+- **Eval harness** — adversarial fact injection, recall accuracy benchmarks, federation soak under load. Runs in CI against all backends; independent implementations can run it against their own nodes.
+- **OpenTelemetry traces** and **Prometheus metrics** with a reference Grafana dashboard. Plug into existing observability stacks without custom instrumentation.
+- **Right-to-be-forgotten** — tombstone facts with cryptographic proof, propagated across federation.
+- **Fact versioning / time-travel API** — `recall(query, as_of=<timestamp>)` for temporal queries.
+- **Content addressing** — facts addressable by content hash for dedup, integrity, and external citation.
+- **Quota & isolation per garden / per principal.**
+
+**What this means for operators:** every major language ecosystem has a first-class SDK. Compliance teams get tombstone proofs and temporal queries. Observability stacks get native signals without custom adapters.
+
+---
+
+## Phase 14 — Spec v2.0
+
+**Target: Q4 2026**
+
+Phase 14 closes the open spec drafts and tags the stable v2.0 release.
+
+- §19 Federation Trust → **normative**.
+- §20 Recall & Graph → **normative**.
+- Instruction-manifest pattern → **normative**.
+- Source-trust model → **normative**.
+- **Stigmem v2.0** tagged.
+- **Documentation IA restructure** — operator docs, integrator docs, and spec reference separated into distinct navigation sections.
+- **Migration guide v1.0 → v2.0** — breaking changes to the federation handshake, storage backend API, and recall endpoint, with before/after examples.
+
+**What this means for operators:** v2.0 is the stable long-term target for integration. The migration guide covers exactly what to update from v1.0.
+
+---
+
+## What is not on this roadmap
+
+- **A hosted offering.** The team provides reference deployments (Fly.io, Compose, Helm, systemd) so operators can run their own nodes. There is no plan to operate a multi-tenant hosted product.
+- **Marketing site polish or a public launch announcement.** Deferred indefinitely.
+- **A competing agent platform or orchestration layer.** Stigmem is a memory substrate — it makes existing agent frameworks, IDEs, and workflow tools more capable, not redundant.
+- **An in-house compliance or GRC tool.** Stigmem provides provenance and audit primitives; compliance application logic is out of scope.
+
+---
+
+*This page is updated at every phase boundary. Last updated: Q2 2026.*

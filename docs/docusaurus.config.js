@@ -146,6 +146,29 @@ const config = {
             label: 'Architecture',
             position: 'left',
           },
+          {
+            type: 'docSidebar',
+            sidebarId: 'roadmapSidebar',
+            label: 'Roadmap',
+            position: 'left',
+          },
+          {
+            label: 'Community',
+            position: 'left',
+            type: 'dropdown',
+            items: [
+              {
+                type: 'doc',
+                docId: 'contributing/security',
+                label: 'Security & Pen Testing',
+              },
+              {
+                type: 'doc',
+                docId: 'community/project-resources',
+                label: 'Project Resources',
+              },
+            ],
+          },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
             href: 'https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md',

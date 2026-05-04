@@ -6,6 +6,7 @@
 **Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
+- v1.1-draft rev 7 (2026-05-04): §21.5.3 amendment — endogeneity caveat + §21.5.4 probe-set eval. Adds a non-normative note documenting the `used_chunks` endogeneity limitation (chronic misses invisible to live-audit Recall@k/Hit@k/miss-rate). Adds non-normative §21.5.4 specifying the probe-set complement: curated `(intent, required_units, k)` probes; Probe-coverage@k and Probe-hit@k metrics independent of agent behavior; follow-on spec revision will formalize after live data calibration.
 - v1.1-draft rev 6 (2026-05-04): §21 Lazy Instruction Discovery — DRAFT normative (Phase 10). Defines: boot stub (§21.1, ≤500 token preamble with identity + manifest pointer + `recall_instruction` tool schema); instruction manifest (§21.2, ≤1000 token always-loaded index with `load_triggers`); `recall_instruction` tool contract (§21.3, backed by stigmem recall on `instruction:` scope, deterministic + auditable); `instruction:` scope semantics with versioning, provenance requirements, garden isolation, and cross-agent confidentiality (§21.4); discovery audit with replay-based eval shape — Recall@k, Hit@k, miss rate (§21.5); migration semantics and 5-stage deprecation path (§21.6); schema migrations (§21.7); wire format additions (§21.8); error reference (§21.9). ResearchScientist sign-off on discovery-audit eval shape pending; SecurityEngineer review of §21.4 confidentiality rules pending.
 - v1.1-draft rev 5 (2026-05-04): Security review amendments to §§19.3.2, 20.3.3, 20.4.4, 20.5.5, 20.6.2. (S1) §20.5.5 wrong §19.5 cross-ref corrected to §19.3/§19.3.3. (S2) §19.3.2 `subscribe` verb added to capability token verb enum. (S3) §20.5.5 delivery-time validation expanded: token revocation check (§19.3.4) added alongside garden ACL re-evaluation; event content/queue semantics clarified for at-least-once compatibility. (R1) §20.3.3 Stage 2 explicit garden ACL check added; Stage 3 seed garden ACL pre-filter MUST added. (R2) §20.4.4 garden_id ACL check MUST added before card inclusion in recall response. (P1) §20.6.2 auth requirement added: unauthorized root facts MUST return HTTP 403. (P2) §20.6.2 cross-scope oracle fix: unauthorized `derived_from` references MUST be represented as `{"exists": false}` — indistinguishable from absent facts.
 - v1.1-draft rev 4 (2026-05-04): ResearchScientist review amendments to §20. (1) §20.2.3 MTEB score corrected to ~53.1. (2) §20.2.4 Matryoshka floor rule added (min 64 dims for nomic-embed-text-v1.5; new error `embed_dimensions_below_floor`). (3) §20.3.2 depth-cap rationale added; default weights marked provisional with eval guidance. (4) §20.3.3 Stage 2 ANN SQL corrected to join `facts` for scope + confidence filtering — normative cross-scope leakage guard. (5) §20.3.4 empty-budget edge-case MUST added.
@@ -1812,6 +1813,30 @@ These metrics SHOULD be computed over a rolling 7-day window. Deployments SHOULD
 Replay procedure: given an audit record with `intent` and the stigmem state at `session_start`, re-execute `recall_instruction(intent)` and compare results to `loaded_chunks`. Determinism (§21.3.4) guarantees the replay is reproducible.
 
 The `recall@k` and `hit@k` metrics SHOULD be computed against the post-hoc replay set (ground truth: all instruction units the agent actually needed, reconstructed from the full heartbeat trace) to measure manifest coverage independently of what the agent happened to load.
+
+> **Known limitation — endogeneity of `used_chunks` (non-normative):** Recall@k, Hit@k, and miss rate are all computed relative to `used_chunks`, which is itself derived from agent behavior during the heartbeat being measured. An agent that chronically fails to load a required instruction unit will never reference it, so the unit will never appear in `used_chunks`. The chronic miss is therefore invisible to all three live-audit metrics. This is an accepted limitation for Phase 10: the live audit is a useful signal for units the agent *does* interact with, but it cannot independently surface units the agent has never successfully retrieved.
+>
+> #### 21.5.4 Probe-Set Eval (follow-on, non-normative)
+>
+> To complement the endogenous live-audit metrics with an exogenous coverage signal, implementations SHOULD maintain a **probe set**: a curated list of `(intent, required_units)` pairs administered independently of the live agent. After every manifest update and on a periodic schedule (e.g. daily), run `recall_instruction(intent)` against each probe and compute:
+>
+> **Probe-coverage@k**: fraction of `required_units` in each probe that appear in the top-k recall result.  
+> **Probe-hit@k**: fraction of probes where ≥ 1 `required_unit` appears in the top-k result.
+>
+> Unlike live-audit Recall@k, these metrics are independent of agent behavior — a chronically un-loaded unit will fail the probe that covers it even if no live heartbeat ever referenced it.
+>
+> The probe set SHOULD be curated by deployment administrators. Each probe entry MUST specify:
+>
+> ```json
+> {
+>   "probe_id":       "probe_heartbeat_start",
+>   "intent":         "I am starting a new heartbeat and need to know what to do",
+>   "required_units": ["heartbeat-procedure", "checkout-procedure"],
+>   "k":              3
+> }
+> ```
+>
+> A follow-on spec revision will formalize the probe-set storage format, the evaluation runner contract, and the alert thresholds once sufficient live audit data has accumulated to calibrate them empirically.
 
 ---
 

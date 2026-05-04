@@ -13,10 +13,6 @@ description: Storage backend options for the Stigmem reference node — SQLite, 
 
 The Stigmem reference node is storage-backend agnostic from Phase 8 onward. A `StorageBackend` adapter trait separates the protocol logic from the persistence layer. The backend you choose depends on your durability, multi-region, and operational requirements.
 
-:::info Multi-backend support ships in Phase 8
-The `StorageBackend` adapter trait and non-SQLite backends land in Phase 8 (Q2 2026). Until then, the node uses SQLite in WAL mode as the only backend. SQLite is already persistent across reboots when the database file lives on a persistent volume — see [Choosing a backend](#choosing-a-backend) for guidance on whether to wait for libSQL.
-:::
-
 ---
 
 ## Backend matrix
@@ -27,6 +23,44 @@ The `StorageBackend` adapter trait and non-SQLite backends land in Phase 8 (Q2 2
 | **libSQL / Turso embedded replica** | Yes | Yes (cloud primary) | Yes (embedded replicas) | Yes | **Recommended for hosted operators** |
 | **Postgres + pgvector** | Yes | Yes (managed) | Yes (read replicas) | TLS + at-rest | Enterprise; existing Postgres shops |
 | **In-memory** | No | N/A | N/A | N/A | Tests only — never use in production |
+
+---
+
+## Configuring the backend
+
+Set `STIGMEM_STORAGE_BACKEND` to select the active backend. The default is `sqlite`; no extra packages are required.
+
+```bash
+# SQLite (default) — no additional setup needed
+STIGMEM_STORAGE_BACKEND=sqlite
+STIGMEM_DB_PATH=/app/data/stigmem.db   # defaults to stigmem.db in the working directory
+
+# libSQL / Turso embedded-replica — install the extra first
+pip install 'stigmem-node[libsql]'
+
+STIGMEM_STORAGE_BACKEND=libsql
+STIGMEM_DB_PATH=/app/data/stigmem.db          # local replica file path
+STIGMEM_LIBSQL_URL=libsql://your-db.turso.io  # Turso endpoint
+STIGMEM_LIBSQL_AUTH_TOKEN=<from-secrets-manager>
+```
+
+Run migrations after switching backends:
+
+```bash
+stigmem migrate
+```
+
+Migrations are idempotent — they skip already-applied versions.
+
+### Running the conformance suite against libSQL
+
+```bash
+pip install 'stigmem-node[libsql]'
+cd node
+pytest --backend=libsql
+```
+
+The `--backend` flag redirects every test fixture to use `LibSQLBackend` in local mode (no sync). Tests skip automatically when `libsql-experimental` is not installed.
 
 ---
 
@@ -69,9 +103,12 @@ This gives you SQLite's operational simplicity with:
 - Point-in-time recovery via Turso's cloud service
 
 ```bash
-# Environment variables for the libSQL backend
-STIGMEM_BACKEND=libsql
-STIGMEM_LIBSQL_URL=libsql://your-db.turso.io
+# Install the libsql extra, then configure:
+pip install 'stigmem-node[libsql]'
+
+STIGMEM_STORAGE_BACKEND=libsql
+STIGMEM_DB_PATH=/app/data/stigmem.db          # local replica file
+STIGMEM_LIBSQL_URL=libsql://your-db.turso.io  # Turso endpoint
 STIGMEM_LIBSQL_AUTH_TOKEN=<inject-from-secrets-manager>
 ```
 
@@ -86,7 +123,7 @@ For air-gapped or sovereign deployments where a cloud primary is not acceptable,
 The Postgres backend is recommended for operators who already run managed Postgres (RDS, Cloud SQL, Neon, Supabase, etc.) and want to avoid a second persistence tier. It also enables the Phase 9 vector-embedding recall features without a separate vector store.
 
 ```bash
-STIGMEM_BACKEND=postgres
+STIGMEM_STORAGE_BACKEND=postgres
 STIGMEM_POSTGRES_DSN=postgresql://user:pass@host:5432/stigmem
 ```
 
@@ -98,8 +135,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 Point-in-time recovery and read-replica failover use native Postgres features — no Stigmem-specific configuration beyond the DSN.
 
-:::note Phase 8 availability
-The Postgres backend ships as a feature flag in Phase 8. Enable with `STIGMEM_BACKEND=postgres`. The conformance test suite (Phase 11) verifies Postgres parity with SQLite and libSQL.
+:::note Phase 11 availability
+The Postgres backend ships in Phase 11. The conformance test suite (Phase 11) verifies Postgres parity with SQLite and libSQL.
 :::
 
 ---

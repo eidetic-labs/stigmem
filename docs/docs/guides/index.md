@@ -20,6 +20,16 @@ Practical guides for common Stigmem operations. Each guide includes a working `c
 
 ---
 
+## v1.1 features (Phase 9 — DRAFT)
+
+New DRAFT normative sections in v1.1 (spec §20).
+
+| Guide | Spec | Topic |
+|-------|------|-------|
+| [Subscriptions](./subscriptions) | §20.3–§20.6 | Standing fact-change watches — webhook and wake delivery, circuit breaker, replay window |
+
+---
+
 ## v1.0 features
 
 New normative sections in v1.0 (spec §§17–18) and supporting node capabilities.

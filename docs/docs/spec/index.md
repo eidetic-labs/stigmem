@@ -7,12 +7,12 @@ sidebar_label: Overview
 # Stigmem Protocol Specification
 
 :::note Version
-These docs track **Stigmem spec v1.1** (§19–§20 normative) and **v1.0** (§1–§18 stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
+These docs track **Stigmem spec v1.1-draft rev 10** (§21 DRAFT normative, Phase 10), **v1.1-draft** (§19–§20 normative), and **v1.0** (§1–§18 stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
 
-§19 Federation Trust was promoted to normative in v1.1. §20 Recall & Graph was promoted to normative in v1.1 (Phase 9). §1–§18 are unchanged from v1.0.
+§21 Lazy Instruction Discovery was introduced in **v1.1-draft rev 6** (Phase 10) and is DRAFT normative; it will be promoted to normative in v2.0. §19 Federation Trust and §20 Recall & Graph were promoted to normative in v1.1. §1–§18 are unchanged from v1.0.
 :::
 
-The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative sources are `spec/stigmem-spec-v1.0.md` (§1–§18) and `spec/stigmem-spec-v1.1-draft.md` (§19–§20 + v1.1 additions to §2 and §5) in the repository.
+The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative sources are `spec/stigmem-spec-v1.0.md` (§1–§18), and `spec/stigmem-spec-v1.1-draft.md` (§19–§21 + v1.1 additions to §2 and §5; §21 added in rev 6) in the repository.
 
 :::info Security
 Report vulnerabilities via the [GitHub private advisory path](https://github.com/eidetic-labs/stigmem/security/advisories) — not as public issues. Full policy and coordinated disclosure terms: [SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md).
@@ -55,6 +55,13 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | §20.4 | Memory Cards (`stigmem:memory:card` facts; refresh policy; stale-on-write) | **Normative (v1.1)** — [Recall guide](/docs/guides/recall) |
 | §20.5 | Subscriptions (`POST /v1/subscriptions`; webhook + wake; ACL re-check at delivery) | **Normative (v1.1)** — [Subscriptions guide](/docs/guides/subscriptions), [API reference](/docs/api-reference) |
 | §20.6 | Causal Links & Provenance (`derived_from`; `GET /v1/facts/:id/provenance`) | **Normative (v1.1)** — [API reference](/docs/api-reference) |
+| §21 | Lazy Instruction Discovery | **DRAFT normative (v1.1-draft rev 6, Phase 10)** — [Lazy Instructions guide](/docs/guides/lazy-instructions) |
+| §21.1 | Boot stub format (`stub_version`, `migration_mode`, `manifest_path`, `max_chunks`, `recall_tool`, `identity_summary`) | **DRAFT normative (v1.1-draft rev 6)** — [Lazy Instructions guide — Boot stub](/docs/guides/lazy-instructions#boot-stub-format) |
+| §21.2 | Instruction manifest schema (chunk, `load_triggers`, `tokens`, `guarantee_load`) | **DRAFT normative (v1.1-draft rev 6; `guarantee_load` added rev 9)** — [Lazy Instructions guide — Manifest](/docs/guides/lazy-instructions#instruction-manifest-schema) |
+| §21.3 | `recall_instruction` skill — wraps `/v1/agents/{id}/recall-instruction` against `instruction:` scope; `guarantee_load` units | **DRAFT normative (v1.1-draft rev 6)** — [Instruction Migration guide](/docs/guides/instruction-migration) |
+| §21.4 | `instruction:` scope semantics — versioning, provenance, garden isolation, cross-agent confidentiality | **DRAFT normative (v1.1-draft rev 6; SE-reviewed rev 10)** — [Lazy Instructions guide — Confidentiality](/docs/guides/lazy-instructions#instruction-scope-confidentiality) |
+| §21.5 | Discovery audit — Recall@k, Hit@k, miss rate, probe-set eval (§21.5.4) | **DRAFT normative (v1.1-draft rev 6; RS-reviewed rev 9)** — [Tutorial: Authoring Lazy-Discovery Instructions](/docs/tutorials/authoring-lazy-discovery-instructions) |
+| §21.6 | Migration semantics — 5-stage deprecation path, tombstone, backward compatibility | **DRAFT normative (v1.1-draft rev 6)** — [Instruction Migration guide](/docs/guides/instruction-migration) |
 
 ## Key concepts
 

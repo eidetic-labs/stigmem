@@ -7,6 +7,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ---
 
+## [Unreleased] — Phase 10 — Instruction migration + lazy instruction discovery (§21)
+
+### Added
+
+- **`stigmem instruction migrate` CLI** — converts markdown instruction files into atomic
+  `instruction:content` facts and publishes a lazy-loaded manifest.  Supports `--role` and
+  `--skill` scope selectors, `--dry-run`, `--yes`, and `--db` for local idempotency checks.
+- **Instruction manifest API** (`PUT /v1/agents/{agent_id}/instruction-manifest`) — stores
+  a versioned manifest of instruction units with load triggers (intents, keywords, task types)
+  and token estimates.  Each publish supersedes the previous manifest rather than updating
+  it in place.
+- **`recall-instruction` endpoint** (`POST /v1/agents/{agent_id}/recall-instruction`) —
+  three-phase lazy retrieval: hint resolution → BM25-ranked retrieval → guaranteed units.
+  Returns a token-budget-bounded list of instruction chunks with an `audit_token` for
+  downstream usage logging.
+- **Discovery audit** — `POST /v1/instruction/audit` closes the audit loop; the
+  `instruction_audit` table records agent, intent, loaded/used/missed chunks per recall call.
+- **`stigmem audit discovery` CLI** — prints Recall@k, Hit@k, and miss-rate metrics for an
+  agent from the local `instruction_audit` table.
+- **Tombstone semantics** — units removed between migration runs receive `TOMBSTONE` action;
+  their manifest entries are dropped while the underlying facts are preserved for audit history.
+- **Docs** — Instruction Migration guide (`docs/docs/guides/instruction-migration.md`);
+  Phase 10 endpoint reference in `docs/docs/api-reference/index.md`.
+
+---
+
 ## [Unreleased] — Phase 8 — Storage adapter trait + libSQL/Turso backend
 
 ### Added

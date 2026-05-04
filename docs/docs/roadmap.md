@@ -15,7 +15,7 @@ Phases 0–7 are complete. The full history — what shipped, key architectural 
 
 The v2 build plan runs seven phases (8–14), roughly 22 weeks, with meaningful parallelism between phases once the early trust and storage foundations are stable. Target timelines are given in calendar quarters; exact dates depend on community feedback and how earlier phases land.
 
-**Current status:** Phases 8 and 9 are complete. Spec v1.1 ships §19 Federation Trust and §20 Recall & Graph as normative. The [Recall guide](/docs/guides/recall), [Embeddings guide](/docs/guides/embeddings), [Subscriptions guide](/docs/guides/subscriptions), and [Agent-with-Recall tutorial](/docs/tutorials/agent-with-recall) are live. **Phase 10 is in progress.** All subsequent phases are sequenced but their scope can shift as earlier phases land.
+**Current status:** Phases 8, 9, and 10 are complete. Spec v1.2 ships §21 Lazy Instruction Discovery as normative. The [Lazy Instructions guide](/docs/guides/lazy-instructions), [Instruction Migration guide](/docs/guides/instruction-migration), and [Tutorial: Authoring Lazy-Discovery Instructions](/docs/tutorials/authoring-lazy-discovery-instructions) are live. **Phase 11 is next.** All subsequent phases are sequenced but their scope can shift as earlier phases land.
 
 ---
 
@@ -71,9 +71,9 @@ Phase 9 makes Stigmem useful as a memory substrate for agents that need to retri
 
 ---
 
-## Phase 10 — Lazy Instruction Discovery ⟳ In Progress
+## Phase 10 — Lazy Instruction Discovery ✓ Done
 
-**In progress: Q3 2026**
+**Shipped: Q2 2026**
 
 Phase 10 applies the recall primitive to the agent-instruction problem. Today, agents load all instruction files (role specs, skills, memory files) at every conversation start even when most of the content isn't relevant to the current task. Phase 10 fixes this.
 
@@ -84,7 +84,17 @@ Phase 10 applies the recall primitive to the agent-instruction problem. Today, a
 - **Discovery audit tool** — logs per heartbeat what the agent loaded vs. what it would have needed. Used to tune manifest descriptions and triggers before flipping the boot stub.
 - **Caching** — the boot stub + manifest are cache-stable across turns; recall results are short and per-task.
 
-**What this means for operators:** agents running on Stigmem-backed instructions pay per-call context costs only for relevant content. Token budgets across high-heartbeat roles shrink measurably.
+**Documentation shipped with Phase 10:**
+- [Lazy Instructions guide](/docs/guides/lazy-instructions) — boot stub format, manifest schema, chunk authoring, trigger design, and token-budget planning.
+- [Instruction Migration guide](/docs/guides/instruction-migration) — `stigmem instruction migrate` CLI reference.
+- [Tutorial: Authoring Lazy-Discovery Instructions](/docs/tutorials/authoring-lazy-discovery-instructions) — end-to-end walkthrough with real coverage and token numbers.
+
+**What this means for operators:** agents running on Stigmem-backed instructions pay per-call context costs only for relevant content. Two production rollouts have completed the shadow audit and flipped to `migration_mode: lazy`:
+
+- **CEO agent** (3,190t eager baseline): stable 415t per heartbeat = 13.0% of baseline. 11/11 eval heartbeats at 100% coverage, 0 regressions.
+- **CTO agent** (1,129t eager baseline, small instruction set): 356–565t bimodal range = 31.5–50.0% of baseline. The bimodal profile reflects two intent classes (task-execution vs. architecture/design); both modes maintain 100% critical-chunk coverage. 11/11 eval heartbeats, 0 regressions.
+
+The token budget calibration differs by instruction set size: large sets (> 3,000t) target ≤ 25% of eager baseline; small sets (≤ 1,500t) target ≤ 50%. Both represent meaningful savings — 87% reduction on the CEO's 3,190t set, 50% reduction on the CTO's 1,129t set.
 
 ---
 
@@ -185,4 +195,4 @@ Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
 ---
 
-*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 9 complete (spec §20 normative, graph index, recall endpoint, memory cards materializer with stale-on-write + recall fast-path, subscriptions, causal links). Phase 10 in progress (lazy instruction discovery).*
+*This page is updated at every phase boundary. Last updated: Q2 2026 — Phase 10 complete (spec §21 normative, lazy instruction discovery, boot stub + manifest format, `recall_instruction` skill, shadow audit protocol; CEO and CTO agents both flipped to `migration_mode: lazy, stub_version: 2`). Phase 11 next (hosting reference, backend matrix, Obsidian adapter).*

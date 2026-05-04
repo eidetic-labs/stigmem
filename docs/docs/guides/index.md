@@ -20,6 +20,16 @@ Practical guides for common Stigmem operations. Each guide includes a working `c
 
 ---
 
+## Phase 10 features (§21 — DRAFT)
+
+New DRAFT sections covering instruction migration and lazy instruction discovery (spec §21).
+
+| Guide | Spec | Topic |
+|-------|------|-------|
+| [Instruction Migration](./instruction-migration) | §21 | `stigmem instruction migrate` — convert markdown files to facts, publish manifest, tombstone removed units |
+
+---
+
 ## v1.1 features (Phase 9 — DRAFT)
 
 New DRAFT normative sections in v1.1 (spec §20).

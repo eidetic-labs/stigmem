@@ -835,7 +835,465 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     sw_p.set_defaults(func=_cmd_decay_sweep)
 
+    # ------------------------------------------------------------------ instruction
+    instr_p = sub.add_parser("instruction", help="instruction manifest tools (Phase 10 §21)")
+    instr_sub = instr_p.add_subparsers(dest="instr_command", metavar="SUBCOMMAND")
+    instr_sub.required = True
+
+    im_p = instr_sub.add_parser("manifest", help="manage instruction manifests")
+    im_sub = im_p.add_subparsers(dest="manifest_command", metavar="SUBCOMMAND")
+    im_sub.required = True
+
+    img_p = im_sub.add_parser(
+        "generate",
+        help="generate a manifest JSON from a directory of markdown instruction files",
+    )
+    img_p.add_argument("path", metavar="PATH", help="directory containing markdown instruction files")
+    img_p.add_argument(
+        "--agent-id",
+        dest="agent_id",
+        required=True,
+        metavar="AGENT_ID",
+        help="agent UUID to embed in generated fact_uri values",
+    )
+    img_p.add_argument(
+        "--deployment",
+        default="default",
+        metavar="DEPLOYMENT",
+        help="deployment namespace for instruction: URIs (default: default)",
+    )
+    img_p.add_argument(
+        "--version",
+        default="v1",
+        metavar="VERSION",
+        help="manifest version string (default: v1)",
+    )
+    img_p.add_argument(
+        "--out",
+        default=None,
+        metavar="FILE",
+        help="write JSON to FILE instead of stdout",
+    )
+    img_p.set_defaults(func=_cmd_instruction_manifest_generate)
+
+    # instruction migrate
+    imig_p = instr_sub.add_parser(
+        "migrate",
+        help="migrate markdown instruction files to stigmem facts + publish manifest",
+    )
+    imig_p.add_argument("path", metavar="PATH", help="markdown file or directory to migrate")
+    scope_grp = imig_p.add_mutually_exclusive_group(required=True)
+    scope_grp.add_argument("--role", default=None, metavar="ROLE", help="agent role name (e.g. cto)")
+    scope_grp.add_argument("--skill", default=None, metavar="SKILL", help="skill name (e.g. paperclip)")
+    imig_p.add_argument(
+        "--agent-id",
+        dest="agent_id",
+        required=True,
+        metavar="AGENT_ID",
+        help="agent UUID owning the manifest",
+    )
+    imig_p.add_argument(
+        "--deployment",
+        default="default",
+        metavar="DEPLOYMENT",
+        help="deployment namespace (default: default)",
+    )
+    imig_p.add_argument(
+        "--version",
+        default="v1",
+        metavar="VERSION",
+        help="fact version string (default: v1)",
+    )
+    imig_p.add_argument(
+        "--node-url",
+        dest="node_url",
+        default="http://127.0.0.1:8000",
+        metavar="URL",
+        help="stigmem node base URL (default: http://127.0.0.1:8000)",
+    )
+    imig_p.add_argument(
+        "--api-key",
+        dest="api_key",
+        default=None,
+        metavar="KEY",
+        help="API key (or set STIGMEM_API_KEY env var)",
+    )
+    imig_p.add_argument(
+        "--db",
+        default=None,
+        metavar="PATH",
+        help="path to stigmem.db for local idempotency checks (skips HTTP fact queries)",
+    )
+    imig_p.add_argument(
+        "--dry-run",
+        dest="dry_run",
+        action="store_true",
+        help="show diff without writing any facts or manifest",
+    )
+    imig_p.add_argument(
+        "--yes",
+        "-y",
+        action="store_true",
+        help="skip confirmation prompt",
+    )
+    imig_p.set_defaults(func=_cmd_instruction_migrate)
+
+    # ------------------------------------------------------------------ audit
+    audit_p = sub.add_parser("audit", help="discovery audit reports (Phase 10 §21.5)")
+    audit_sub = audit_p.add_subparsers(dest="audit_command", metavar="SUBCOMMAND")
+    audit_sub.required = True
+
+    ad_p = audit_sub.add_parser(
+        "discovery",
+        help="print discovery audit metrics: Recall@k, Hit@k, miss rate",
+    )
+    ad_p.add_argument(
+        "--agent",
+        required=True,
+        metavar="AGENT_ID_OR_ROLE",
+        help="agent ID (UUID) or role substring to filter",
+    )
+    ad_p.add_argument(
+        "--since",
+        default=None,
+        metavar="DATE",
+        help="ISO 8601 date/datetime to start from (default: 7 days ago)",
+    )
+    ad_p.add_argument(
+        "--db",
+        default=None,
+        metavar="PATH",
+        help="path to stigmem.db (default: STIGMEM_DB_PATH env or settings default)",
+    )
+    ad_p.add_argument("--json", action="store_true", help="output as JSON")
+    ad_p.set_defaults(func=_cmd_audit_discovery)
+
     return parser
+
+
+def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
+    """Migrate markdown instruction files to stigmem facts and publish manifest."""
+    import os
+    import time
+    from pathlib import Path
+
+    from .instruction_migrate import (
+        compute_diff,
+        format_preview,
+        load_existing_facts_from_api,
+        load_existing_facts_from_db,
+        load_prev_manifest_names_from_api,
+        load_prev_manifest_names_from_db,
+        parse_instruction_chunks,
+        publish_manifest,
+        scope_prefix_for_role,
+        scope_prefix_for_skill,
+        write_facts,
+    )
+
+    path = Path(args.path)
+    if not path.exists():
+        print(f"error: path '{args.path}' does not exist", file=sys.stderr)
+        return 1
+
+    api_key = args.api_key or os.environ.get("STIGMEM_API_KEY", "")
+    node_url = args.node_url
+    deployment = args.deployment
+    version = args.version
+    agent_id = args.agent_id
+
+    # Build scope prefix and label
+    if args.role:
+        scope_prefix = scope_prefix_for_role(deployment, agent_id)
+        scope_label = f"role:{args.role}  agent:{agent_id}"
+    else:
+        scope_prefix = scope_prefix_for_skill(deployment, args.skill)
+        scope_label = f"skill:{args.skill}  agent:{agent_id}"
+
+    # Parse
+    chunks = parse_instruction_chunks(path)
+    if not chunks:
+        print("No instruction chunks found. Check that the path contains .md files.", file=sys.stderr)
+        return 0
+
+    # Load existing state for idempotency checks
+    # Initial diff pass to know which URIs to query
+    from .instruction_migrate import build_fact_uri
+    stub_diff_uris = {build_fact_uri(scope_prefix, c.slug, version) for c in chunks}
+    existing_content: dict[str, str] = {}
+    prev_names: set[str] = set()
+
+    if args.db:
+        from .instruction_migrate import load_existing_facts_from_db as _lef_db, load_prev_manifest_names_from_db as _lpn_db
+        # We need DiffEntry stubs for the DB loader — use dict approach
+        import sqlite3
+        try:
+            conn = sqlite3.connect(args.db)
+            conn.row_factory = sqlite3.Row
+            for uri in stub_diff_uris:
+                row = conn.execute(
+                    "SELECT value_v FROM facts WHERE entity = ? ORDER BY timestamp DESC LIMIT 1",
+                    (uri,),
+                ).fetchone()
+                if row:
+                    existing_content[uri] = str(row["value_v"])
+            # Previous manifest names
+            row = conn.execute(
+                "SELECT body FROM instruction_manifests WHERE agent_id = ? AND superseded_at IS NULL"
+                " ORDER BY created_at DESC LIMIT 1",
+                (agent_id,),
+            ).fetchone()
+            if row:
+                import json as _json
+                prev_names = {e["name"] for e in _json.loads(row["body"])}
+            conn.close()
+        except Exception as exc:
+            print(f"warning: db query failed: {exc}", file=sys.stderr)
+    elif api_key:
+        try:
+            import httpx as _httpx  # noqa: F401
+            import httpx
+            headers = {"Authorization": f"Bearer {api_key}"}
+            base = node_url.rstrip("/")
+            for uri in stub_diff_uris:
+                try:
+                    r = httpx.get(f"{base}/v1/facts", params={"entity": uri, "limit": 1}, headers=headers, timeout=10.0)
+                    if r.status_code == 200:
+                        facts = r.json().get("facts", [])
+                        if facts:
+                            existing_content[uri] = str(facts[0]["value"]["v"])
+                except Exception:  # nosec B110 — best-effort pre-flight; node may not be reachable
+                    pass
+            try:
+                r = httpx.get(f"{base}/v1/agents/{agent_id}/instruction-manifest", headers=headers, timeout=10.0)
+                if r.status_code == 200:
+                    prev_names = {e["name"] for e in r.json().get("entries", [])}
+            except Exception:  # nosec B110 — best-effort pre-flight; node may not be reachable
+                pass
+        except ImportError:
+            print("warning: httpx not installed — skipping idempotency checks", file=sys.stderr)
+
+    # Compute diff
+    diff = compute_diff(chunks, scope_prefix, version, existing_content, prev_names)
+
+    # Show preview
+    print(format_preview(diff, scope_label, path, version))
+
+    if args.dry_run:
+        print("Dry-run mode — no changes written.")
+        return 0
+
+    creates = [d for d in diff if d.action == "CREATE"]
+    updates = [d for d in diff if d.action == "UPDATE"]
+    tombstones = [d for d in diff if d.action == "TOMBSTONE"]
+
+    if not creates and not updates and not tombstones:
+        print("Nothing to do.")
+        return 0
+
+    if not args.yes:
+        try:
+            answer = input("Proceed? [y/N] ")
+        except (EOFError, KeyboardInterrupt):
+            print("\nAborted.")
+            return 1
+        if answer.lower() not in ("y", "yes"):
+            print("Aborted.")
+            return 1
+
+    if not api_key:
+        print("error: --api-key or STIGMEM_API_KEY env var required to write facts", file=sys.stderr)
+        return 1
+
+    # Write facts
+    written, failed = write_facts(diff, node_url, api_key)
+    if failed > 0:
+        print(f"\n{failed} fact(s) failed to write. Manifest will NOT be published.", file=sys.stderr)
+        return 1
+
+    # Publish manifest with a unique version per run (timestamp suffix)
+    manifest_version = f"{version}-{int(time.time())}"
+    ok = publish_manifest(agent_id, diff, manifest_version, node_url, api_key)
+    if not ok:
+        return 1
+
+    print(f"\nDone. {written} fact(s) written, manifest published as version '{manifest_version}'.")
+    print(f"Verify: stigmem recall-instruction via POST /v1/agents/{agent_id}/recall-instruction")
+    return 0
+
+
+def _cmd_instruction_manifest_generate(args: argparse.Namespace) -> int:
+    """Generate an instruction manifest JSON from a directory of markdown files."""
+    import json
+    import os
+    import re
+    from pathlib import Path
+
+    path = Path(args.path)
+    if not path.is_dir():
+        print(f"error: '{args.path}' is not a directory", file=sys.stderr)
+        return 1
+
+    entries = []
+    md_files = sorted(path.glob("*.md")) + sorted(path.glob("**/*.md"))
+
+    for md_file in md_files:
+        try:
+            text = md_file.read_text(encoding="utf-8")
+        except Exception as exc:
+            print(f"warning: skipping {md_file}: {exc}", file=sys.stderr)
+            continue
+
+        # Split at H2/H3 boundaries
+        sections = re.split(r"(?m)^(#{2,3}\s+.+)$", text)
+
+        # Merge heading with following content
+        chunks: list[tuple[str, str]] = []
+        i = 0
+        while i < len(sections):
+            if re.match(r"^#{2,3}\s+", sections[i].strip()):
+                heading = sections[i].strip()
+                body = sections[i + 1].strip() if i + 1 < len(sections) else ""
+                chunks.append((heading, body))
+                i += 2
+            else:
+                if sections[i].strip():
+                    chunks.append(("# " + md_file.stem.replace("-", " ").title(), sections[i].strip()))
+                i += 1
+
+        if not chunks:
+            chunks = [("# " + md_file.stem.replace("-", " ").title(), text.strip())]
+
+        for heading, body in chunks:
+            heading_text = re.sub(r"^#{2,3}\s+", "", heading).strip()
+            slug = re.sub(r"[^a-z0-9]+", "-", heading_text.lower()).strip("-")
+            if not slug:
+                slug = md_file.stem
+            unit_name = f"{md_file.stem}-{slug}" if md_file.stem not in slug else slug
+
+            keywords = list({w.lower() for w in re.findall(r"\b[a-zA-Z]{4,}\b", heading_text + " " + body[:200])})[:8]
+            token_est = max(1, len(body) // 4)
+            fact_uri = f"instruction:{args.deployment}/agent/{args.agent_id}/{unit_name}/{args.version}"
+
+            entries.append({
+                "name": unit_name,
+                "description": heading_text[:120],
+                "required_by_task_types": [],
+                "guarantee_load": False,
+                "load_triggers": {
+                    "intents": [heading_text.lower()],
+                    "keywords": keywords,
+                    "task_types": [],
+                },
+                "fact_uri": fact_uri,
+                "path": str(md_file),
+                "token_estimate": token_est,
+            })
+
+    result = {
+        "version": args.version,
+        "agent_id": args.agent_id,
+        "deployment": args.deployment,
+        "generated_from": str(path),
+        "entries": entries,
+    }
+    output = json.dumps(result, indent=2)
+
+    if args.out:
+        with open(args.out, "w") as f:
+            f.write(output)
+        print(f"Wrote {len(entries)} entries to {args.out}")
+    else:
+        print(output)
+
+    return 0
+
+
+def _cmd_audit_discovery(args: argparse.Namespace) -> int:
+    """Print discovery audit metrics from the local database."""
+    import json
+    import sqlite3
+    from datetime import UTC, datetime, timedelta
+
+    from .settings import settings
+
+    db_path = args.db or settings.db_path
+
+    if args.since:
+        try:
+            since_dt = datetime.fromisoformat(args.since.replace("Z", "+00:00"))
+        except ValueError:
+            print(f"error: invalid --since date: {args.since}", file=sys.stderr)
+            return 1
+    else:
+        since_dt = datetime.now(UTC) - timedelta(days=7)
+    since_ms = int(since_dt.timestamp() * 1000)
+
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+    except Exception as exc:
+        print(f"error: cannot open database {db_path}: {exc}", file=sys.stderr)
+        return 1
+
+    agent_filter = args.agent
+    rows = conn.execute(
+        "SELECT * FROM instruction_audit WHERE agent_id LIKE ? AND session_start >= ?",
+        (f"%{agent_filter}%", since_ms),
+    ).fetchall()
+
+    if not rows:
+        print(f"No audit records found for agent '{agent_filter}' since {since_dt.date()}")
+        return 0
+
+    total = len(rows)
+    recall_at_k_num = 0
+    hit_at_k_num = 0
+    total_used = 0
+    total_missed = 0
+
+    for row in rows:
+        loaded = set(json.loads(row["loaded_chunks"]))
+        used = json.loads(row["used_chunks"])
+        missed = json.loads(row["missed_chunks"])
+        used_set = set(used)
+        missed_set = set(missed)
+
+        if used_set:
+            recall_at_k = len(used_set & loaded) / len(used_set)
+            recall_at_k_num += recall_at_k
+            if used_set & loaded:
+                hit_at_k_num += 1
+
+        total_used += len(used_set)
+        total_missed += len(missed_set)
+
+    recall_at_k_avg = recall_at_k_num / total if total > 0 else 0.0
+    hit_at_k_avg = hit_at_k_num / total if total > 0 else 0.0
+    miss_rate = total_missed / (total_used + total_missed) if (total_used + total_missed) > 0 else 0.0
+
+    report = {
+        "agent": agent_filter,
+        "since": since_dt.isoformat(),
+        "total_events": total,
+        "recall_at_k": round(recall_at_k_avg, 4),
+        "hit_at_k": round(hit_at_k_avg, 4),
+        "miss_rate": round(miss_rate, 4),
+    }
+
+    if args.json:
+        print(json.dumps(report, indent=2))
+    else:
+        print(f"Discovery audit — agent: {agent_filter}  since: {since_dt.date()}")
+        print(f"  Total events : {total}")
+        print(f"  Recall@k     : {recall_at_k_avg:.1%}")
+        print(f"  Hit@k        : {hit_at_k_avg:.1%}")
+        print(f"  Miss rate    : {miss_rate:.1%}")
+        if miss_rate > 0.15:
+            print("  ALERT: miss_rate > 0.15 — manifest descriptions or triggers need review")
+
+    conn.close()
+    return 0
 
 
 def main() -> None:

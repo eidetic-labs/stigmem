@@ -1,7 +1,18 @@
 # Fly.io deployment config — stigmem reference node
 # Replace `<APP_NAME>` with your Fly.io app name before deploying.
-# Deploy with:  fly deploy --config infra/fly.toml --dockerfile node/Dockerfile
-#               fly volumes create stigmem_data --size 1 --region <region>
+#
+# IMPORTANT: use `fly deploy`, NOT `fly launch`.
+# `fly launch` auto-detects the workspace pyproject.toml and fails.
+#
+# First-time setup (run from repo root):
+#   fly apps create <APP_NAME>
+#   fly volumes create stigmem_data --size 1 --region iad --app <APP_NAME>
+#   fly secrets set --app <APP_NAME> \
+#     STIGMEM_OIDC_ISSUER_URL=... STIGMEM_OIDC_AUDIENCE=... STIGMEM_OIDC_ALLOWED_DOMAINS=...
+#   fly deploy --config infra/fly.toml --app <APP_NAME>
+#
+# Subsequent deploys:
+#   fly deploy --config infra/fly.toml --app <APP_NAME>
 #
 # Required secrets (set via `fly secrets set`):
 #   STIGMEM_OIDC_ISSUER_URL, STIGMEM_OIDC_AUDIENCE, STIGMEM_OIDC_ALLOWED_DOMAINS

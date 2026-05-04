@@ -1,6 +1,15 @@
 # Fly.io deployment config — stigmem dashboard (Next.js)
 # Replace `<DASHBOARD_APP_NAME>` with your Fly.io app name.
-# Deploy with:  fly deploy --config infra/fly.dashboard.toml --dockerfile apps/dashboard/Dockerfile
+#
+# IMPORTANT: use `fly deploy`, NOT `fly launch`.
+#
+# First-time setup (run from repo root):
+#   fly apps create <DASHBOARD_APP_NAME>
+#   fly secrets set --app <DASHBOARD_APP_NAME> SESSION_SECRET=... OIDC_CLIENT_SECRET=... ...
+#   fly deploy --config infra/fly.dashboard.toml --app <DASHBOARD_APP_NAME>
+#
+# Subsequent deploys:
+#   fly deploy --config infra/fly.dashboard.toml --app <DASHBOARD_APP_NAME>
 #
 # Required secrets (set via `fly secrets set`):
 #   SESSION_SECRET           (min 32 random chars)

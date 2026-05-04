@@ -388,7 +388,14 @@ def verify_capability_token_endpoint(
         )
         return {"valid": True}
     except CapabilityTokenError as exc:
-        return {"valid": False, "reason": str(exc)}
+        err = str(exc)
+        if "revoked" in err:
+            reason = "token_revoked"
+        elif "expired" in err:
+            reason = "token_expired"
+        else:
+            reason = "token_invalid"
+        return {"valid": False, "reason": reason}
 
 
 # ---------------------------------------------------------------------------

@@ -40,7 +40,7 @@ router = APIRouter(tags=["instruction"])
 _MANIFEST_TOKEN_LIMIT = 1000
 _BOOT_STUB_TOKEN_LIMIT = 500
 _GUARANTEE_LOAD_CAP = 5
-_AUDIT_TOKEN_PREFIX = "audi_"
+_AUDIT_TOKEN_PREFIX = "audi_"  # nosec B105 — audit token prefix, not a password
 _AUDEVENT_PREFIX = "audevent_"
 _AUDIT_TOKEN_TTL_S = 86_400  # 24 hours
 

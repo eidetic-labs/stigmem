@@ -293,7 +293,7 @@ def load_existing_facts_from_api(
                 facts = r.json().get("facts", [])
                 if facts:
                     result[d.fact_uri] = str(facts[0]["value"]["v"])
-        except Exception:
+        except Exception:  # nosec B110 — best-effort pre-flight; node may not be reachable
             pass
     return result
 
@@ -315,7 +315,7 @@ def load_prev_manifest_names_from_db(agent_id: str, db_path: str) -> set[str]:
         if row:
             entries = json.loads(row["body"])
             return {e["name"] for e in entries}
-    except Exception:
+    except Exception:  # nosec B110 — best-effort read; DB may be absent or schema may differ
         pass
     return set()
 
@@ -335,7 +335,7 @@ def load_prev_manifest_names_from_api(agent_id: str, node_url: str, api_key: str
         )
         if r.status_code == 200:
             return {e["name"] for e in r.json().get("entries", [])}
-    except Exception:
+    except Exception:  # nosec B110 — best-effort pre-flight; node may not be reachable
         pass
     return set()
 

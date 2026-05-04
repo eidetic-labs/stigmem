@@ -1062,13 +1062,13 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
                         facts = r.json().get("facts", [])
                         if facts:
                             existing_content[uri] = str(facts[0]["value"]["v"])
-                except Exception:
+                except Exception:  # nosec B110 — best-effort pre-flight; node may not be reachable
                     pass
             try:
                 r = httpx.get(f"{base}/v1/agents/{agent_id}/instruction-manifest", headers=headers, timeout=10.0)
                 if r.status_code == 200:
                     prev_names = {e["name"] for e in r.json().get("entries", [])}
-            except Exception:
+            except Exception:  # nosec B110 — best-effort pre-flight; node may not be reachable
                 pass
         except ImportError:
             print("warning: httpx not installed — skipping idempotency checks", file=sys.stderr)

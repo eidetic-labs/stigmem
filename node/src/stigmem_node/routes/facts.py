@@ -59,8 +59,8 @@ def _validate_relation(relation: str) -> list[str]:
 
 def _check_source_attestation(source: str, identity: Identity) -> bool | None:
     """Enforce source attestation per spec §18. Returns attested value or raises 403."""
-    mode = _settings.source_attestation_mode
-    if mode == "off" or not _settings.auth_required:
+    mode = _settings_pkg.settings.source_attestation_mode
+    if mode == "off" or not _settings_pkg.settings.auth_required:
         return None
 
     attested = (source == identity.entity_uri)

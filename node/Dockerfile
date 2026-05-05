@@ -47,6 +47,9 @@ ENV PYTHONUNBUFFERED=1
 
 USER 65532:65532
 
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8765/healthz')" || exit 1
+
 VOLUME ["/data"]
 EXPOSE 8765
 

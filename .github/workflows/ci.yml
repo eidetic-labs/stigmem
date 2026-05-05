@@ -9,8 +9,104 @@ permissions:
   contents: read
 
 jobs:
+  detect-changes:
+    name: Detect changed surfaces
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      node: ${{ steps.filter.outputs.node }}
+      contract: ${{ steps.filter.outputs.contract }}
+      sdk_compat: ${{ steps.filter.outputs.sdk_compat }}
+      coverage: ${{ steps.filter.outputs.coverage }}
+      go: ${{ steps.filter.outputs.go }}
+      docs: ${{ steps.filter.outputs.docs }}
+      obsidian: ${{ steps.filter.outputs.obsidian }}
+      helm: ${{ steps.filter.outputs.helm }}
+      container: ${{ steps.filter.outputs.container }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            python:
+              - '.github/workflows/ci.yml'
+              - 'pyproject.toml'
+              - 'uv.lock'
+              - 'conftest.py'
+              - 'scripts/check.sh'
+              - 'scripts/check_ruff_baseline.py'
+              - 'scripts/check_mypy_baseline.py'
+              - 'scripts/check_constant_time.py'
+              - 'node/**'
+              - 'sdks/stigmem-py/**'
+              - 'adapters/**/*.py'
+              - 'adapters/**/pyproject.toml'
+            node:
+              - '.github/workflows/ci.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'turbo.json'
+              - 'scripts/check.sh'
+              - 'adapters/mcp/**'
+              - 'apps/dashboard/**'
+              - 'sdks/stigmem-ts/**'
+            contract:
+              - '.github/workflows/ci.yml'
+              - 'scripts/check.sh'
+              - 'scripts/export_openapi.py'
+              - 'docs/openapi/**'
+              - 'node/**'
+              - 'spec/**'
+              - 'data/conformance/**'
+              - 'sdks/stigmem-ts/**'
+            sdk_compat:
+              - '.github/workflows/ci.yml'
+              - 'scripts/check_sdk_compat.sh'
+              - 'node/**'
+              - 'sdks/stigmem-py/**'
+              - 'sdks/stigmem-ts/**'
+              - 'sdks/stigmem-go/**'
+            coverage:
+              - '.github/workflows/ci.yml'
+              - 'pyproject.toml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'node/**'
+              - 'sdks/stigmem-py/**'
+              - 'sdks/stigmem-ts/**'
+              - 'adapters/mcp/**'
+              - 'apps/dashboard/**'
+            go:
+              - '.github/workflows/ci.yml'
+              - 'scripts/check.sh'
+              - 'sdks/stigmem-go/**'
+            docs:
+              - '.github/workflows/ci.yml'
+              - 'scripts/check.sh'
+              - 'docs/**'
+            obsidian:
+              - '.github/workflows/ci.yml'
+              - 'scripts/check.sh'
+              - 'adapters/obsidian-plugin/**'
+            helm:
+              - '.github/workflows/ci.yml'
+              - 'infra/helm/**'
+              - 'deploy/helm/**'
+            container:
+              - '.github/workflows/ci.yml'
+              - 'node/**'
+              - 'node/Dockerfile'
+              - 'deploy/seccomp/**'
+              - 'docker-compose.yml'
+
   python-tests:
-    name: Python tests (node + SDK)
+    name: Python checks (lint + type + tests + security)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.python == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,25 +119,15 @@ jobs:
       - name: Set up Python
         run: uv python install 3.11
 
-      - name: Install all workspace packages
-        run: uv sync --all-packages
-
-      - name: Run tests
+      - name: Python fast gates
         env:
           HYPOTHESIS_SEED: "0"
-        run: uv run pytest node/tests/ sdks/stigmem-py/tests/ -q --tb=short
-
-      - name: pip-audit (no known vulnerabilities)
-        run: uv run pip-audit --progress-spinner off
-
-      - name: bandit (Python security linting)
-        run: uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml -q
-
-      - name: CT001 constant-time comparison lint (§22.5)
-        run: uv run python scripts/check_constant_time.py node/src/ sdks/stigmem-py/src/
+        run: bash scripts/check.sh python
 
   node-tests:
-    name: TypeScript SDK + MCP adapter tests
+    name: TypeScript checks (SDK + MCP + dashboard)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.node == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,34 +139,173 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: TypeScript fast gates
+        run: bash scripts/check.sh node
 
-      - name: Build stigmem-ts (required before type-check)
-        run: pnpm --filter stigmem-ts build
+  contract-checks:
+    name: Contract checks (OpenAPI + generated SDK)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.contract == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Type check (all workspaces)
-        run: pnpm type-check
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
 
-      - name: Run tests
-        run: pnpm --filter stigmem-ts test
+      - name: Set up Python
+        run: uv python install 3.11
 
-      - name: esbuild bundler smoke test
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Contract fast gates
+        run: bash scripts/check.sh contract
+
+  sdk-compat-smoke:
+    name: SDK compatibility smoke
+    needs: detect-changes
+    if: needs.detect-changes.outputs.sdk_compat == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: SDK compatibility fast gate
+        run: bash scripts/check_sdk_compat.sh
+
+  coverage-report:
+    name: Coverage report
+    needs: detect-changes
+    if: needs.detect-changes.outputs.coverage == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install workspace dependencies
         run: |
-          cd sdks/stigmem-ts
-          pnpm exec esbuild src/index.ts \
-            --bundle \
-            --platform=node \
-            --format=cjs \
-            --outfile=dist/smoke.cjs \
-            --log-level=warning
-          node -e "const s = require('./dist/smoke.cjs'); console.log('esbuild smoke OK — exports:', Object.keys(s).join(', '))"
+          uv sync --all-packages
+          pnpm install --frozen-lockfile
 
-      - name: pnpm audit (no known vulnerabilities)
-        run: pnpm audit --audit-level=moderate
+      - name: Python coverage
+        env:
+          HYPOTHESIS_SEED: "0"
+        run: |
+          mkdir -p coverage/python
+          uv run pytest node/tests/ sdks/stigmem-py/tests/ \
+            --cov=node/src --cov=sdks/stigmem-py/src \
+            --cov-branch \
+            --cov-report=xml:coverage/python/coverage.xml \
+            --cov-report=term
+
+      - name: TypeScript coverage
+        run: |
+          pnpm --filter stigmem-ts exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
+          pnpm --filter stigmem-mcp exec vitest run --exclude dist/** --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
+          pnpm --filter dashboard exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-artifacts
+          path: |
+            coverage/python/coverage.xml
+            sdks/stigmem-ts/coverage/**
+            adapters/mcp/coverage/**
+            apps/dashboard/coverage/**
+
+  go-tests:
+    name: Go SDK tests
+    needs: detect-changes
+    if: needs.detect-changes.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Go fast gates
+        run: bash scripts/check.sh go
+
+  docs-build:
+    name: Docs build
+    needs: detect-changes
+    if: needs.detect-changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Docs fast gates
+        run: bash scripts/check.sh docs
+
+  obsidian-plugin-build:
+    name: Obsidian plugin build
+    needs: detect-changes
+    if: needs.detect-changes.outputs.obsidian == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: adapters/obsidian-plugin/package-lock.json
+
+      - name: Obsidian fast gates
+        run: bash scripts/check.sh obsidian
 
   helm-lint:
     name: Helm chart lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.helm == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -118,6 +343,8 @@ jobs:
 
   container-smoke:
     name: Container hardening smoke test
+    needs: detect-changes
+    if: needs.detect-changes.outputs.container == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

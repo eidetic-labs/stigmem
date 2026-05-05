@@ -14,6 +14,8 @@
  *   STIGMEM_POLL_LIMIT   — facts per subscribe_scope call (default: 50)
  */
 
+import { fileURLToPath } from "node:url";
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -28,18 +30,9 @@ import { StigmemClient, StigmemError } from "stigmem-ts";
 // Config
 // ---------------------------------------------------------------------------
 
-const STIGMEM_URL = process.env["STIGMEM_URL"];
-if (!STIGMEM_URL) {
-  console.error("STIGMEM_URL is required");
-  process.exit(1);
-}
-
-const client = new StigmemClient({
-  url: STIGMEM_URL,
-  apiKey: process.env["STIGMEM_API_KEY"],
-});
-
 const POLL_LIMIT = Number(process.env["STIGMEM_POLL_LIMIT"] ?? "50");
+const MCP_SERVER_VERSION = "0.4.0";
+type StigmemApi = Pick<StigmemClient, "assertFact" | "query" | "resolveConflict" | "lint">;
 
 // ---------------------------------------------------------------------------
 // Tool input schemas (Zod, serialised to JSON Schema for MCP)
@@ -115,7 +108,7 @@ const LintScopeSchema = z.object({
 // MCP tool definitions
 // ---------------------------------------------------------------------------
 
-const TOOLS = [
+export const TOOLS = [
   {
     name: "assert_fact",
     description:
@@ -165,7 +158,7 @@ const TOOLS = [
 // Minimal Zod → JSON Schema (subset sufficient for our schemas)
 // ---------------------------------------------------------------------------
 
-function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
+export function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
   // We emit a minimal JSON Schema by introspecting the Zod shape.
   // A full zod-to-json-schema library is the right call in production;
   // this covers our needs without adding a dependency.
@@ -193,9 +186,11 @@ function zodFieldToSchema(field: z.ZodTypeAny): Record<string, unknown> {
   if (field instanceof z.ZodString) return { ...base, type: "string" };
   if (field instanceof z.ZodNumber) return { ...base, type: "number" };
   if (field instanceof z.ZodBoolean) return { ...base, type: "boolean" };
+  if (field instanceof z.ZodEffects) return { ...base, ...zodFieldToSchema(def.schema as z.ZodTypeAny) };
   if (field instanceof z.ZodOptional) return { ...base, ...zodFieldToSchema(def.innerType as z.ZodTypeAny) };
   if (field instanceof z.ZodDefault) return { ...base, ...zodFieldToSchema(def.innerType as z.ZodTypeAny) };
   if (field instanceof z.ZodEnum) return { ...base, type: "string", enum: def.values };
+  if (field instanceof z.ZodArray) return { ...base, type: "array", items: zodFieldToSchema(def.type) };
   if (field instanceof z.ZodObject) return { ...base, type: "object", properties: buildProperties(field.shape as Record<string, z.ZodTypeAny>) };
   if (field instanceof z.ZodDiscriminatedUnion) {
     return {
@@ -218,16 +213,11 @@ function getRequired(shape: Record<string, z.ZodTypeAny>): string[] {
 // Server
 // ---------------------------------------------------------------------------
 
-const server = new Server(
-  { name: "stigmem-mcp", version: "0.4.0" },
-  { capabilities: { tools: {} } },
-);
-
-server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [...TOOLS] }));
-
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
-
+export async function handleToolCall(
+  client: StigmemApi,
+  name: string,
+  args: unknown,
+): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
   try {
     switch (name) {
       case "assert_fact": {
@@ -327,7 +317,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       isError: true,
     };
   }
-});
+}
 
-const transport = new StdioServerTransport();
-await server.connect(transport);
+export function createClient(): StigmemClient {
+  const url = process.env["STIGMEM_URL"];
+  if (!url) {
+    throw new Error("STIGMEM_URL is required");
+  }
+
+  return new StigmemClient({
+    url,
+    apiKey: process.env["STIGMEM_API_KEY"],
+  });
+}
+
+export function createServer(client: StigmemApi): Server {
+  const server = new Server(
+    { name: "stigmem-mcp", version: MCP_SERVER_VERSION },
+    { capabilities: { tools: {} } },
+  );
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [...TOOLS] }));
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args } = request.params;
+    return handleToolCall(client, name, args);
+  });
+
+  return server;
+}
+
+export async function main(): Promise<void> {
+  const server = createServer(createClient());
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  await main();
+}

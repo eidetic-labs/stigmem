@@ -222,6 +222,64 @@ python seed_memory.py # loads example facts
 
 Tests: `pytest` (when test coverage exists — contributions welcome).
 
+## Local verification
+
+Install the same core toolchain the CI jobs expect:
+
+- `uv` with Python 3.11
+- Node 20 with Corepack / `pnpm`
+- Go 1.22+
+- Docker and Helm for container/deploy checks
+
+Fast PR-equivalent checks:
+
+```bash
+make check
+```
+
+Focused package checks:
+
+```bash
+make check-python
+make check-node
+make check-contract
+make check-go
+make check-docs
+make check-obsidian
+make check-sdk-compat
+```
+
+Notes:
+
+- Python lint and mypy are on a staged baseline. New findings fail CI even though historical debt is still being burned down.
+- `make check-sdk-compat` starts a local node with auth disabled and smoke-tests the Python, TypeScript, and Go SDKs against the same server.
+- Slower suites such as eval, federation soak, and multi-backend deployment checks remain outside the default PR loop.
+
+## Test policy
+
+The repository is converging on a shared marker taxonomy:
+
+- `unit`
+- `integration`
+- `conformance`
+- `postgres`
+- `libsql`
+- `docker`
+- `eval`
+- `slow`
+- `network`
+
+Fast PR checks should stay in `unit` plus fast `integration`. New slow or environment-dependent coverage should be marked accordingly.
+
+## Flaky tests
+
+Do not silently quarantine flaky tests.
+
+- If a test is quarantined or temporarily skipped, link an issue in the skip reason.
+- Assign an owner in the issue.
+- Include an expiration or review date in the issue/PR so the quarantine is not permanent.
+- Re-enabling the test is preferred over broad retries that hide regressions.
+
 ## Spec authorship and attribution
 
 The spec file records authors in its header. RFC contributors who make substantive changes to spec content are listed. Implementation-only contributors are acknowledged in CHANGELOG.

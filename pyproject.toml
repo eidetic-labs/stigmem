@@ -14,12 +14,14 @@ members = [
   "node",
   "sdks/stigmem-py",
   "adapters/openclaw",
+  "adapters/obsidian",
 ]
 
 [tool.uv.sources]
 stigmem-node = { workspace = true }
 stigmem-py = { workspace = true }
 stigmem-openclaw = { workspace = true }
+stigmem-obsidian = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -58,9 +60,21 @@ asyncio_mode = "auto"
 testpaths = ["node/tests", "sdks/stigmem-py/tests", "node/src/stigmem_conformance/tests"]
 pythonpath = ["node/tests", "sdks/stigmem-py/tests"]
 addopts = "--import-mode=importlib"
+markers = [
+  "unit: isolated package-level tests without external services",
+  "integration: multi-module or HTTP-level tests against a local app/runtime",
+  "conformance: wire-contract and versioned vector coverage",
+  "postgres: tests that require a PostgreSQL backend",
+  "libsql: tests that require a libSQL backend",
+  "docker: tests that require Docker or containerized dependencies",
+  "eval: adversarial or recall evaluation suites",
+  "slow: tests intentionally excluded from fast PR loops",
+  "network: tests that require outbound network access",
+]
 
 [tool.coverage.run]
 source = ["node/src", "sdks/stigmem-py/src"]
+branch = true
 omit = ["*/tests/*", "*/migrations/*"]
 
 [tool.bandit]

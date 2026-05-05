@@ -27,7 +27,8 @@
   "packageManager": "pnpm@9.0.0",
   "pnpm": {
     "overrides": {
-      "postcss": ">=8.5.11"
+      "postcss": ">=8.5.11",
+      "ip-address": ">=10.1.1"
     }
   }
 }

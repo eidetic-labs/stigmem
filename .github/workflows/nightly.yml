@@ -1,4 +1,4 @@
-name: Nightly Federation Soak
+name: Nightly Reliability
 
 on:
   schedule:
@@ -9,6 +9,138 @@ permissions:
   contents: read
 
 jobs:
+  docs-build:
+    name: Docs build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Build docs
+        run: bash scripts/check.sh docs
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-build-${{ github.run_id }}
+          path: docs/build/
+          retention-days: 30
+
+  quickstart-smoke:
+    name: Quickstart Docker smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run quickstart smoke
+        run: bash scripts/quickstart-verify.sh
+
+  dashboard-e2e:
+    name: Dashboard Playwright smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: pnpm --filter dashboard exec playwright install --with-deps chromium
+
+      - name: Run dashboard browser smoke
+        run: pnpm --filter dashboard exec playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-playwright-${{ github.run_id }}
+          path: apps/dashboard/playwright-report/
+          retention-days: 30
+
+  sdk-backward-compat:
+    name: Previous-release SDK compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Run backward compatibility smoke
+        run: bash scripts/check_sdk_backward_compat.sh
+
+      - name: Upload compatibility report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-backward-compat-${{ github.run_id }}
+          path: artifacts/sdk-backward-compat.json
+          retention-days: 30
+
+  migration-compat:
+    name: Schema migration compatibility
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install workspace packages
+        run: uv sync --all-packages
+
+      - name: Run migration compatibility tests
+        run: |
+          mkdir -p artifacts
+          uv run pytest node/tests/test_migration_compat.py -q --tb=short \
+            --junitxml=artifacts/migration-compat-junit.xml
+
+      - name: Upload migration report
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-compat-${{ github.run_id }}
+          path: artifacts/migration-compat-junit.xml
+          retention-days: 30
+
   federation-soak:
     name: Federation soak (1 h)
     runs-on: ubuntu-latest

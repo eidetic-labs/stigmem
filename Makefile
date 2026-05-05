@@ -1,4 +1,5 @@
 .PHONY: sdk-ts sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack help \
+        check check-python check-node check-contract check-go check-docs check-obsidian check-sdk-compat check-sdk-backward-compat check-migration-compat \
         eval-soak eval-soak-smoke \
         eval-fast eval-adversarial eval-recall eval-fast-baseline \
         gen-cli-docs
@@ -11,6 +12,17 @@ EVAL_RESULTS  := eval/results
 help:
 	@echo "Stigmem build targets"
 	@echo ""
+	@echo "  check             PR-equivalent fast gate bundle"
+	@echo "  check-python      Python lint/type/test/security checks"
+	@echo "  check-node        TypeScript build/type/test/audit checks"
+	@echo "  check-contract    OpenAPI + generated SDK contract drift checks"
+	@echo "  check-go          Go SDK tests"
+	@echo "  check-docs        Docusaurus docs build"
+	@echo "  check-obsidian    Obsidian plugin build"
+	@echo "  check-sdk-compat  Live-node smoke across Python, TypeScript, and Go SDKs"
+	@echo "  check-sdk-backward-compat  Previous-release SDK smoke against the current node"
+	@echo "  check-migration-compat     Upgrade a v1.0-rc schema baseline and verify it"
+	@echo ""
 	@echo "  sdk-ts            Full TypeScript SDK pipeline: generate → build → test → pack"
 	@echo "  sdk-ts-generate   Regenerate src/generated.ts from $(OPENAPI_SPEC)"
 	@echo "  sdk-ts-build      Compile TypeScript (tsc)"
@@ -19,6 +31,36 @@ help:
 	@echo ""
 	@echo "  eval-soak-smoke   5-min federation soak: all 5 CC scenarios (local dev)"
 	@echo "  eval-soak         1-hour federation soak: replication lag + CC-1..CC-5 (CI)"
+
+check:
+	bash scripts/check.sh
+
+check-python:
+	bash scripts/check.sh python
+
+check-node:
+	bash scripts/check.sh node
+
+check-contract:
+	bash scripts/check.sh contract
+
+check-go:
+	bash scripts/check.sh go
+
+check-docs:
+	bash scripts/check.sh docs
+
+check-obsidian:
+	bash scripts/check.sh obsidian
+
+check-sdk-compat:
+	bash scripts/check_sdk_compat.sh
+
+check-sdk-backward-compat:
+	bash scripts/check_sdk_backward_compat.sh
+
+check-migration-compat:
+	uv run pytest node/tests/test_migration_compat.py -q --tb=short
 
 # Full pipeline — matches the acceptance criterion in the Phase 13 spec.
 sdk-ts: sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack

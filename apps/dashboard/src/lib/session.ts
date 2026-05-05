@@ -11,7 +11,7 @@ export interface SessionData {
   oidcState?: string;
 }
 
-const SESSION_OPTIONS: SessionOptions = {
+export const SESSION_OPTIONS: SessionOptions = {
   password: process.env.SESSION_SECRET ?? "changeme-set-SESSION_SECRET-in-env",
   cookieName: "stigmem_session",
   cookieOptions: {

@@ -17,7 +17,6 @@ const DATAVIEW_RE = /^([A-Za-z][A-Za-z0-9_ -]*)::[ \t]*(.+)$/gm;
 const CODE_BLOCK_RE = /```[\s\S]*?```/g;
 
 export const STIGMEM_SECTION_HEADER = "## Stigmem";
-const STIGMEM_SECTION_RE = /^## Stigmem\n([\s\S]*?)(?=^## |\Z)/m;
 
 // ---------------------------------------------------------------------------
 // Data shapes
@@ -179,14 +178,25 @@ function extractDataview(text: string): Record<string, string> {
 // ---------------------------------------------------------------------------
 
 export function extractStigmemSection(content: string): string | null {
-	const m = STIGMEM_SECTION_RE.exec(content);
-	return m ? m[1].trim() : null;
+	const marker = `${STIGMEM_SECTION_HEADER}\n`;
+	const start = content.indexOf(marker);
+	if (start === -1) return null;
+
+	const bodyStart = start + marker.length;
+	const nextSection = content.indexOf("\n## ", bodyStart);
+	const bodyEnd = nextSection === -1 ? content.length : nextSection;
+	return content.slice(bodyStart, bodyEnd).trim();
 }
 
 export function replaceStigmemSection(content: string, newBody: string): string {
 	const sectionText = `${STIGMEM_SECTION_HEADER}\n${newBody}\n`;
-	if (STIGMEM_SECTION_RE.test(content)) {
-		return content.replace(STIGMEM_SECTION_RE, sectionText);
+	const marker = `${STIGMEM_SECTION_HEADER}\n`;
+	const start = content.indexOf(marker);
+	if (start !== -1) {
+		const bodyStart = start + marker.length;
+		const nextSection = content.indexOf("\n## ", bodyStart);
+		const bodyEnd = nextSection === -1 ? content.length : nextSection;
+		return `${content.slice(0, start)}${sectionText}${content.slice(bodyEnd)}`;
 	}
 	const sep = content.endsWith("\n") ? "\n" : "\n\n";
 	return content + sep + sectionText;

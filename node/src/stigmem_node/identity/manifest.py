@@ -43,13 +43,19 @@ class RotationEvent:
 
     Each event is signed by the *previous* key, enabling chain verification
     without external key registry lookups.
+
+    `previous_public_key` stores the retiring key's public bytes (base64url)
+    so verifiers can check tokens issued under that key during the dual-trust
+    window (§22.2) without an external key registry.  Empty string on events
+    created before §22.2 support; present on all Phase-12-or-later rotations.
     """
 
     previous_key_id: str
     new_key_id: str
-    new_public_key: str  # base64url Ed25519 public key for new_key_id
-    rotated_at: str      # ISO-8601 UTC
-    signature: str       # base64url Ed25519 sig over canonical body (by previous key)
+    new_public_key: str       # base64url Ed25519 public key for new_key_id
+    rotated_at: str           # ISO-8601 UTC
+    signature: str            # base64url Ed25519 sig over canonical body (by previous key)
+    previous_public_key: str = ""  # base64url retiring key pubkey (§22.2 dual-trust)
 
 
 @dataclass
@@ -89,13 +95,16 @@ def _pubkey_from_b64(b64: str) -> Ed25519PublicKey:
 
 
 def _rotation_event_to_dict(evt: RotationEvent) -> dict[str, Any]:
-    return {
+    d: dict[str, Any] = {
         "new_key_id": evt.new_key_id,
         "new_public_key": evt.new_public_key,
         "previous_key_id": evt.previous_key_id,
         "rotated_at": evt.rotated_at,
         "signature": evt.signature,
     }
+    if evt.previous_public_key:
+        d["previous_public_key"] = evt.previous_public_key
+    return d
 
 
 def _manifest_signing_body(manifest: OrgManifest) -> bytes:
@@ -326,6 +335,7 @@ def manifest_from_dict(data: dict[str, Any]) -> OrgManifest:
                 new_public_key=e["new_public_key"],
                 rotated_at=e["rotated_at"],
                 signature=e["signature"],
+                previous_public_key=e.get("previous_public_key", ""),
             )
             for e in data.get("rotation_events", [])
         ],

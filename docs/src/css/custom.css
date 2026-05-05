@@ -144,8 +144,10 @@ pre {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-/* Tables: cleaner separators, hover state, no chrome */
+/* Tables: full-width, cleaner separators, hover state, no chrome */
 .markdown table {
+  width: 100%;
+  display: table;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--ifm-color-content) 14%, transparent);
@@ -234,6 +236,26 @@ pre {
 [data-theme='dark'] .docusaurus-mermaid-container .edgeLabel {
   color: var(--ifm-color-content) !important;
   fill: var(--ifm-color-content) !important;
+}
+
+/* Prevent text clipping inside diagram nodes — ensure padding and overflow. */
+.docusaurus-mermaid-container .nodeLabel {
+  padding: 6px 10px !important;
+  overflow: visible !important;
+  white-space: normal !important;
+  word-break: break-word;
+}
+.docusaurus-mermaid-container .node foreignObject {
+  overflow: visible !important;
+}
+/* Edge labels: add a background so lines don't bleed through text. */
+.docusaurus-mermaid-container .edgeLabel {
+  padding: 4px 8px !important;
+  background: var(--ifm-background-color) !important;
+  border-radius: 4px;
+}
+[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel {
+  background: var(--stigmem-logo-bg) !important;
 }
 
 /* Hero buttons — softer, more clickable. The hero is always dark (it inherits

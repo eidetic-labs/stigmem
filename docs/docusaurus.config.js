@@ -318,6 +318,10 @@ const config = {
       },
       mermaid: {
         theme: { light: 'neutral', dark: 'dark' },
+        options: {
+          flowchart: { padding: 16, nodeSpacing: 40, rankSpacing: 50, useMaxWidth: true },
+          themeVariables: { fontSize: '14px' },
+        },
       },
       liveCodeBlock: {
         playgroundPosition: 'bottom',

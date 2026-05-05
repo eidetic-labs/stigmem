@@ -1,4 +1,5 @@
 .PHONY: sdk-ts sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack help \
+        check check-python check-node check-go check-docs check-obsidian \
         eval-soak eval-soak-smoke \
         eval-fast eval-adversarial eval-recall eval-fast-baseline
 
@@ -10,6 +11,13 @@ EVAL_RESULTS  := eval/results
 help:
 	@echo "Stigmem build targets"
 	@echo ""
+	@echo "  check             PR-equivalent fast gate bundle"
+	@echo "  check-python      Python lint/type/test/security checks"
+	@echo "  check-node        TypeScript build/type/test/audit checks"
+	@echo "  check-go          Go SDK tests"
+	@echo "  check-docs        Docusaurus docs build"
+	@echo "  check-obsidian    Obsidian plugin build"
+	@echo ""
 	@echo "  sdk-ts            Full TypeScript SDK pipeline: generate → build → test → pack"
 	@echo "  sdk-ts-generate   Regenerate src/generated.ts from $(OPENAPI_SPEC)"
 	@echo "  sdk-ts-build      Compile TypeScript (tsc)"
@@ -18,6 +26,24 @@ help:
 	@echo ""
 	@echo "  eval-soak-smoke   5-min federation soak: all 5 CC scenarios (local dev)"
 	@echo "  eval-soak         1-hour federation soak: replication lag + CC-1..CC-5 (CI)"
+
+check:
+	bash scripts/check.sh
+
+check-python:
+	bash scripts/check.sh python
+
+check-node:
+	bash scripts/check.sh node
+
+check-go:
+	bash scripts/check.sh go
+
+check-docs:
+	bash scripts/check.sh docs
+
+check-obsidian:
+	bash scripts/check.sh obsidian
 
 # Full pipeline — matches the acceptance criterion in the Phase 13 spec.
 sdk-ts: sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack

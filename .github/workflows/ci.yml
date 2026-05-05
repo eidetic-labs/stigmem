@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   python-tests:
-    name: Python tests (node + SDK)
+    name: Python checks (lint + type + tests + security)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,25 +23,13 @@ jobs:
       - name: Set up Python
         run: uv python install 3.11
 
-      - name: Install all workspace packages
-        run: uv sync --all-packages
-
-      - name: Run tests
+      - name: Python fast gates
         env:
           HYPOTHESIS_SEED: "0"
-        run: uv run pytest node/tests/ sdks/stigmem-py/tests/ -q --tb=short
-
-      - name: pip-audit (no known vulnerabilities)
-        run: uv run pip-audit --progress-spinner off
-
-      - name: bandit (Python security linting)
-        run: uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml -q
-
-      - name: CT001 constant-time comparison lint (§22.5)
-        run: uv run python scripts/check_constant_time.py node/src/ sdks/stigmem-py/src/
+        run: bash scripts/check.sh python
 
   node-tests:
-    name: TypeScript SDK + MCP adapter tests
+    name: TypeScript checks (SDK + MCP + dashboard)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,31 +41,51 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: TypeScript fast gates
+        run: bash scripts/check.sh node
 
-      - name: Build stigmem-ts (required before type-check)
-        run: pnpm --filter stigmem-ts build
+  go-tests:
+    name: Go SDK tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Type check (all workspaces)
-        run: pnpm type-check
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
 
-      - name: Run tests
-        run: pnpm --filter stigmem-ts test
+      - name: Go fast gates
+        run: bash scripts/check.sh go
 
-      - name: esbuild bundler smoke test
-        run: |
-          cd sdks/stigmem-ts
-          pnpm exec esbuild src/index.ts \
-            --bundle \
-            --platform=node \
-            --format=cjs \
-            --outfile=dist/smoke.cjs \
-            --log-level=warning
-          node -e "const s = require('./dist/smoke.cjs'); console.log('esbuild smoke OK — exports:', Object.keys(s).join(', '))"
+  docs-build:
+    name: Docs build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: pnpm audit (no known vulnerabilities)
-        run: pnpm audit --audit-level=moderate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Docs fast gates
+        run: bash scripts/check.sh docs
+
+  obsidian-plugin-build:
+    name: Obsidian plugin build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: adapters/obsidian-plugin/package-lock.json
+
+      - name: Obsidian fast gates
+        run: bash scripts/check.sh obsidian
 
   helm-lint:
     name: Helm chart lint

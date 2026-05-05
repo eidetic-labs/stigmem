@@ -1,0 +1,129 @@
+# mypy baseline for staged rollout.
+# One issue fingerprint per line: path:line:code:message
+
+node/src/stigmem_conformance/tests/conftest.py:102:type-arg:Missing type arguments for generic type "list" 
+node/src/stigmem_conformance/tests/conftest.py:109:attr-defined:Module "stigmem_node.auth" does not explicitly export attribute "settings" 
+node/src/stigmem_conformance/tests/conftest.py:110:attr-defined:Module "stigmem_node.db" does not explicitly export attribute "settings" 
+node/src/stigmem_conformance/tests/conftest.py:111:attr-defined:Module "stigmem_node.routes.wellknown" does not explicitly export attribute "settings" 
+node/src/stigmem_conformance/tests/conftest.py:126:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_conformance/tests/conftest.py:131:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_conformance/tests/conftest.py:193:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_conformance/tests/conftest.py:44:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_conformance/tests/conftest.py:75:type-arg:Missing type arguments for generic type "list" 
+node/src/stigmem_conformance/tests/conftest.py:85:type-arg:Missing type arguments for generic type "list" 
+node/src/stigmem_conformance/tests/conftest.py:93:attr-defined:Module "stigmem_node.auth" does not explicitly export attribute "settings" 
+node/src/stigmem_conformance/tests/conftest.py:94:attr-defined:Module "stigmem_node.db" does not explicitly export attribute "settings" 
+node/src/stigmem_conformance/tests/conftest.py:95:attr-defined:Module "stigmem_node.routes.wellknown" does not explicitly export attribute "settings" 
+node/src/stigmem_conformance/tests/test_contradiction.py:18:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_conformance/tests/test_decay_synthesis.py:21:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_conformance/tests/test_embeddings.py:27:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_conformance/tests/test_graph.py:19:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_conformance/tests/test_provenance.py:15:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_conformance/tests/test_recall.py:17:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_conformance/tests/test_recall.py:28:no-untyped-def:Function is missing a type annotation for one or more parameters 
+node/src/stigmem_conformance/tests/test_recall.py:28:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/cli.py:1329:assignment:Incompatible types in assignment (expression has type "float", variable has type "int") 
+node/src/stigmem_node/cli.py:1387:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/federation_pull.py:96:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/fuzzy_resolver.py:45:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/garden_acl.py:104:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/garden_acl.py:117:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/garden_acl.py:16:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/garden_acl.py:38:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/garden_acl.py:58:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/garden_acl.py:73:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/garden_acl.py:83:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/identity/capability.py:115:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/identity/capability.py:129:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/identity/capability.py:148:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/identity/capability.py:63:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/identity/capability.py:66:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/identity/capability.py:72:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/identity/manifest.py:94:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/identity/transparency_log.py:100:no-any-return:Returning Any from function declared to return "dict[str, Any] | None" 
+node/src/stigmem_node/identity/transparency_log.py:292:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/main.py:115:no-untyped-def:Function is missing a return type annotation 
+node/src/stigmem_node/main.py:115:no-untyped-def:Function is missing a type annotation for one or more parameters 
+node/src/stigmem_node/main.py:115:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/main.py:157:no-untyped-def:Function is missing a return type annotation 
+node/src/stigmem_node/main.py:157:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/main.py:166:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/metrics.py:138:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:139:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:140:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:141:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:142:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:143:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:144:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:145:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:148:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:149:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:150:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:153:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/metrics.py:154:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/models.py:553:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/peer_token.py:110:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/peer_token.py:80:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/routes/federation.py:1004:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/federation.py:1005:assignment:Incompatible default for parameter "request" (default has type "None", parameter has type "Request[State]") 
+node/src/stigmem_node/routes/federation.py:1008:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/federation.py:1110:no-any-return:Returning Any from function declared to return "str | None" 
+node/src/stigmem_node/routes/federation.py:78:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/federation.py:950:assignment:Incompatible default for parameter "request" (default has type "None", parameter has type "Request[State]") 
+node/src/stigmem_node/routes/gardens.py:368:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/gardens.py:443:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/gardens.py:66:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:119:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/routes/instruction.py:147:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:24:import-untyped:Library stubs not installed for "yaml" 
+node/src/stigmem_node/routes/instruction.py:291:no-any-return:Returning Any from function declared to return "str | None" 
+node/src/stigmem_node/routes/instruction.py:373:no-any-return:Returning Any from function declared to return "str" 
+node/src/stigmem_node/routes/instruction.py:386:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:418:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:535:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:544:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:548:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:662:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:734:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:743:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:756:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:775:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/instruction.py:795:attr-defined:Module "stigmem_node.vector_search" has no attribute "_MODEL_NAME" 
+node/src/stigmem_node/routes/instruction.py:795:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/routes/intents.py:230:list-item:List item 0 has incompatible type "None"; expected "str" 
+node/src/stigmem_node/routes/quarantine.py:136:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/quarantine.py:185:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/quarantine.py:226:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/routes/quarantine.py:256:no-untyped-def:Function is missing a type annotation for one or more parameters 
+node/src/stigmem_node/routes/quarantine.py:59:type-arg:Missing type arguments for generic type "list" 
+node/src/stigmem_node/routes/recall.py:247:attr-defined:Module "stigmem_node.embedding" has no attribute "get_model" 
+node/src/stigmem_node/routes/recall.py:69:arg-type:Argument "default_factory" to "Field" has incompatible type "type[RecallWeights]"; expected "Callable[[], Never] | Callable[[dict[str, Any]], Never]" 
+node/src/stigmem_node/storage/encryption.py:115:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/storage/encryption.py:122:no-any-return:Returning Any from function declared to return "bytes" 
+node/src/stigmem_node/storage/encryption.py:122:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/storage/libsql_backend.py:112:no-any-return:Returning Any from function declared to return "int" 
+node/src/stigmem_node/storage/libsql_backend.py:118:type-arg:Missing type arguments for generic type "list" 
+node/src/stigmem_node/storage/libsql_backend.py:121:type-arg:Missing type arguments for generic type "list" 
+node/src/stigmem_node/storage/libsql_backend.py:185:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/storage/libsql_backend.py:70:type-arg:Missing type arguments for generic type "tuple" 
+node/src/stigmem_node/storage/libsql_backend.py:72:type-arg:Missing type arguments for generic type "tuple" 
+node/src/stigmem_node/storage/postgres_backend.py:212:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/storage/postgres_backend.py:212:type-arg:Missing type arguments for generic type "tuple" 
+node/src/stigmem_node/storage/postgres_backend.py:277:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/storage/postgres_backend.py:355:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/storage/postgres_backend.py:372:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/storage/postgres_backend.py:438:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/storage/postgres_backend.py:474:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/storage/sqlite_backend.py:146:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/storage/sqlite_backend.py:60:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/storage/sqlite_backend.py:82:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/subscription_delivery.py:118:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/subscription_delivery.py:151:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/subscription_delivery.py:204:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/subscription_delivery.py:246:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/tls.py:91:type-arg:Missing type arguments for generic type "dict" 
+node/src/stigmem_node/tombstone_signing.py:35:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/tracing.py:66:unused-ignore:Unused "type: ignore" comment 
+node/src/stigmem_node/trust_rules.py:40:unused-ignore:Unused "type: ignore" comment, use narrower [import-untyped] instead of [import] code 
+node/src/stigmem_node/vector_search.py:205:type-arg:Missing type arguments for generic type "tuple" 
+node/src/stigmem_node/vector_search.py:218:type-arg:Missing type arguments for generic type "tuple" 

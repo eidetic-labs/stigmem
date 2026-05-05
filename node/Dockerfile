@@ -9,6 +9,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /build
 
 COPY node/pyproject.toml pyproject.toml
+COPY node/README.md README.md
 COPY node/migrations/ migrations/
 COPY node/src/ src/
 

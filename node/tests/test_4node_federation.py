@@ -222,6 +222,9 @@ class NodeInfo:
         self.federate_key = federate_key
         self.proc = proc
 
+    def _auth(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {self.federate_key}"}
+
     def assert_fact(
         self,
         entity: str,
@@ -243,19 +246,25 @@ class NodeInfo:
                 "valid_until": valid_until,
                 "confidence": confidence,
             },
+            headers=self._auth(),
             timeout=10.0,
         )
         assert resp.status_code == 201, f"assert_fact failed: {resp.status_code} {resp.text}"
         return resp.json()["id"]
 
     def get_fact(self, fact_id: str) -> dict | None:
-        resp = httpx.get(f"{self.host_url}/v1/facts/{fact_id}", timeout=5.0)
+        resp = httpx.get(f"{self.host_url}/v1/facts/{fact_id}", headers=self._auth(), timeout=5.0)
         if resp.status_code == 200:
             return resp.json()
         return None
 
     def list_conflicts(self) -> list[dict]:
-        resp = httpx.get(f"{self.host_url}/v1/conflicts", params={"limit": 200}, timeout=10.0)
+        resp = httpx.get(
+            f"{self.host_url}/v1/conflicts",
+            params={"limit": 200},
+            headers=self._auth(),
+            timeout=10.0,
+        )
         assert resp.status_code == 200
         data = resp.json()
         return data if isinstance(data, list) else data.get("conflicts", [])

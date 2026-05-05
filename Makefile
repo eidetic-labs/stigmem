@@ -1,5 +1,5 @@
 .PHONY: sdk-ts sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack help \
-        check check-python check-node check-contract check-go check-docs check-obsidian check-sdk-compat \
+        check check-python check-node check-contract check-go check-docs check-obsidian check-sdk-compat check-sdk-backward-compat check-migration-compat \
         eval-soak eval-soak-smoke \
         eval-fast eval-adversarial eval-recall eval-fast-baseline
 
@@ -19,6 +19,8 @@ help:
 	@echo "  check-docs        Docusaurus docs build"
 	@echo "  check-obsidian    Obsidian plugin build"
 	@echo "  check-sdk-compat  Live-node smoke across Python, TypeScript, and Go SDKs"
+	@echo "  check-sdk-backward-compat  Previous-release SDK smoke against the current node"
+	@echo "  check-migration-compat     Upgrade a v1.0-rc schema baseline and verify it"
 	@echo ""
 	@echo "  sdk-ts            Full TypeScript SDK pipeline: generate → build → test → pack"
 	@echo "  sdk-ts-generate   Regenerate src/generated.ts from $(OPENAPI_SPEC)"
@@ -52,6 +54,12 @@ check-obsidian:
 
 check-sdk-compat:
 	bash scripts/check_sdk_compat.sh
+
+check-sdk-backward-compat:
+	bash scripts/check_sdk_backward_compat.sh
+
+check-migration-compat:
+	uv run pytest node/tests/test_migration_compat.py -q --tb=short
 
 # Full pipeline — matches the acceptance criterion in the Phase 13 spec.
 sdk-ts: sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack

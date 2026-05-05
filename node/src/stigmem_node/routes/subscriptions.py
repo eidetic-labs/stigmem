@@ -251,11 +251,11 @@ def list_subscription_events(
     params: list[Any] = [subscription_id, effective_since]
 
     if cursor:
-        conditions.append("rowid > ?")
+        conditions.append("seq > ?")
         params.append(int(cursor))
 
     where = " AND ".join(conditions)
-    sql = f"SELECT rowid, * FROM subscription_events WHERE {where} ORDER BY rowid ASC LIMIT ?"  # nosec B608
+    sql = f"SELECT * FROM subscription_events WHERE {where} ORDER BY seq ASC LIMIT ?"  # nosec B608
     params.append(limit + 1)
 
     with db() as conn:
@@ -263,7 +263,7 @@ def list_subscription_events(
 
     has_more = len(rows) > limit
     rows = rows[:limit]
-    next_cursor = str(rows[-1]["rowid"]) if has_more and rows else None
+    next_cursor = str(rows[-1]["seq"]) if has_more and rows else None
 
     # S3 fix: re-apply §17 garden ACL and §19 sanitizer at replay time.
     # subscription_events.payload stores the raw pre-delivery payload; without this

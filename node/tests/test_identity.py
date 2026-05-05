@@ -422,7 +422,7 @@ def test_c3_assert_creates_audit_entry(attest_client: tuple[TestClient, str]) ->
     assert len(entries) == 1
     e = entries[0]
     assert e["fact_id"] == fact_id
-    assert e["event_type"] == "assert"
+    assert e["event_type"] == "fact_write"
     assert e["entity_uri"] == "agent:tester"
     assert e["oidc_sub"] is None
     assert e["attested_key_id"] is None

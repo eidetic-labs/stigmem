@@ -35,7 +35,7 @@ def _emit_with_conn(
     entry_id: str,
     conn: Any,
 ) -> None:
-    conn.execute(
+    cur = conn.execute(
         """INSERT INTO fact_audit_log
            (id, fact_id, event_type, entity_uri, oidc_sub, source,
             attested_key_id, ts, tenant_id, detail)
@@ -53,11 +53,11 @@ def _emit_with_conn(
             detail_json,
         ),
     )
-    # seq = rowid: monotonically increasing without a separate counter table.
-    rowid = conn.execute(
-        "SELECT rowid FROM fact_audit_log WHERE id=?", (entry_id,)
-    ).fetchone()[0]
-    conn.execute("UPDATE fact_audit_log SET seq=? WHERE id=?", (rowid, entry_id))
+    # seq = rowid on SQLite (implicit monotonic integer); on PostgreSQL the column
+    # carries a sequence DEFAULT so no manual update is needed — lastrowid is None.
+    row_seq = getattr(cur, "lastrowid", None)
+    if row_seq is not None:
+        conn.execute("UPDATE fact_audit_log SET seq=? WHERE id=?", (row_seq, entry_id))
 
 
 def emit(
@@ -80,8 +80,8 @@ def emit(
     to avoid nested-lock errors on SQLite).  If ``conn`` is None a fresh
     connection context is opened.
 
-    The ``seq`` column is set to the inserted row's SQLite rowid so it is
-    monotonically increasing per database without a separate sequence table.
+    The ``seq`` column is populated from the inserted row's implicit rowid on
+    SQLite, or from a named sequence DEFAULT on PostgreSQL (migration 022).
     """
     now = datetime.now(UTC).isoformat()
     entry_id = str(uuid.uuid4())

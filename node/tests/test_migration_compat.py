@@ -4,14 +4,13 @@ import shutil
 import sqlite3
 from pathlib import Path
 
+from conftest import _make_enc_settings, _patch_settings, _restore_settings
 from fastapi.testclient import TestClient
 
 import stigmem_node.settings as settings_module
 from stigmem_node.db import _MIGRATIONS_DIR, apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.storage import make_backend
-from conftest import _make_enc_settings, _patch_settings, _restore_settings
-
 
 _LEGACY_RELEASE_MAX_MIGRATION = 12
 _LEGACY_FACT_ID = "stigmem:fact:legacy-compat"

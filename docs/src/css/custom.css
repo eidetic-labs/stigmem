@@ -239,14 +239,19 @@ pre {
 }
 /* Edge label background: mermaid embeds a <style> inside the SVG that sets
    fill + opacity on .edgeLabel rect and background-color on the .labelBkg div.
-   themeVariables.edgeLabelBackground='transparent' handles the fill; these rules
-   catch the remaining opacity and background-color artifacts. */
+   Override with exact page background colors so the box is opaque and invisible. */
 .docusaurus-mermaid-container .edgeLabel rect {
   opacity: 1 !important;
-  fill: transparent !important;
+  fill: #ffffff !important;
+}
+[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel rect {
+  fill: #070912 !important;
 }
 .docusaurus-mermaid-container .edgeLabel .labelBkg {
-  background-color: transparent !important;
+  background-color: #ffffff !important;
+}
+[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel .labelBkg {
+  background-color: #070912 !important;
 }
 
 /* Hero buttons — softer, more clickable. The hero is always dark (it inherits

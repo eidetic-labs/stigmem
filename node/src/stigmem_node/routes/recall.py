@@ -209,7 +209,7 @@ def _lexical_search(
         logger.warning("FTS5 lexical search failed: %s", exc)
         try:
             conn.execute("ROLLBACK TO SAVEPOINT _fts_search")
-        except Exception:
+        except Exception:  # nosec B110 — best-effort rollback; failure is unrecoverable
             pass
         return _like_search(conn, query, scope, tenant_id, k, min_confidence, now)
 

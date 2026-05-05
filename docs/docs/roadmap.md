@@ -15,7 +15,7 @@ Phases 0–7 are complete. The full history — what shipped, key architectural 
 
 The v2 build plan runs seven phases (8–14), roughly 22 weeks, with meaningful parallelism between phases once the early trust and storage foundations are stable. Target timelines are given in calendar quarters; exact dates depend on community feedback and how earlier phases land.
 
-**Current status:** Phases 8, 9, 10, and 11 are complete. The [Operator's Handbook](/docs/operating), deploy recipes (Fly.io, Compose, Helm, systemd, PaaS), Obsidian plugin, and Obsidian CLI adapter are all live. The [Tutorial: Self-host a stigmem node and sync your Obsidian vault](/docs/tutorials/self-host-obsidian) is the Phase 11 end-to-end walkthrough. **Phase 12 is next.** All subsequent phases are sequenced but their scope can shift as earlier phases land.
+**Current status:** Phases 8, 9, 10, and 11 are complete. The [Operator's Handbook](/docs/operating), deploy recipes (Fly.io, Compose, Helm, systemd, PaaS), Obsidian plugin, and Obsidian CLI adapter are all live. The [Tutorial: Self-host a stigmem node and sync your Obsidian vault](/docs/tutorials/self-host-obsidian) is the Phase 11 end-to-end walkthrough. **Phase 12 (Security Hardening) is in progress** — the [§22 Security Hardening normative spec](/docs/spec#section-22) is published. All subsequent phases are sequenced but their scope can shift as earlier phases land.
 
 ---
 
@@ -138,7 +138,7 @@ Logseq, Dendron, and plain-markdown vaults are supported via config — same ada
 
 **Target: Q3–Q4 2026**
 
-Phase 12 closes the concrete security gaps in the current threat model and ships the community pen-test contribution path.
+Phase 12 closes the concrete security gaps in the current threat model and ships the community pen-test contribution path. The normative spec for this phase is [§22 Security Hardening](/docs/spec#section-22).
 
 - mTLS for federation peer connections; cert-pinning option.
 - API-key rotation: enforced max-age, expiring-soon surface, rotation runbook.
@@ -202,4 +202,4 @@ Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
 ---
 
-*This page is updated at every phase boundary. Last updated: Q3 2026 — Phase 11 complete (hosting recipes, Postgres backend, conformance suite, Operator's Handbook, Obsidian CLI adapter and community plugin; Tutorial: Self-host a stigmem node and sync your Obsidian vault live). Phase 12 next (security hardening).*
+*This page is updated at every phase boundary. Last updated: Q3 2026 — Phase 11 complete (hosting recipes, Postgres backend, conformance suite, Operator's Handbook, Obsidian CLI adapter and community plugin; Tutorial: Self-host a stigmem node and sync your Obsidian vault live). Phase 12 in progress: [§22 Security Hardening normative spec](/docs/spec#section-22) published; implementation issues active.*

@@ -80,7 +80,7 @@ The MCP server exposes five tools:
 {
   "entity":     "agent:my-agent",
   "relation":   "acme:goal_state",
-  "value":      {"type": "string", "v": "ACM-138: writing documentation"},
+  "value":      {"type": "string", "v": "PROJ-42: writing documentation"},
   "source":     "agent:my-agent",
   "confidence": 1.0,
   "scope":      "company"
@@ -155,7 +155,7 @@ Call `assert_fact` twice at the start of each run:
 {
   "entity":     "agent:my-agent",
   "relation":   "acme:goal_state",
-  "value":      {"type": "string", "v": "ACM-138: writing documentation"},
+  "value":      {"type": "string", "v": "PROJ-42: writing documentation"},
   "source":     "agent:my-agent",
   "confidence": 1.0,
   "scope":      "company"
@@ -172,7 +172,7 @@ Assert these only when the situation applies:
 {
   "entity":     "agent:my-agent",
   "relation":   "acme:blocked_by",
-  "value":      {"type": "ref", "v": "issue:ACM-99"},
+  "value":      {"type": "ref", "v": "issue:PROJ-99"},
   "source":     "agent:my-agent",
   "confidence": 1.0,
   "scope":      "company"
@@ -186,7 +186,7 @@ it expires and doesn't linger in the graph:
 {
   "entity":      "agent:my-agent",
   "relation":    "acme:decision",
-  "value":       {"type": "string", "v": "Deferred API guide to child issue ACM-140"},
+  "value":       {"type": "string", "v": "Deferred API guide to child issue PROJ-55"},
   "source":      "agent:my-agent",
   "confidence":  1.0,
   "scope":       "company",
@@ -198,7 +198,7 @@ it expires and doesn't linger in the graph:
 
 ```json
 {
-  "entity":     "issue:ACM-138",
+  "entity":     "issue:PROJ-42",
   "relation":   "acme:completed",
   "value":      {"type": "boolean", "v": true},
   "source":     "agent:my-agent",

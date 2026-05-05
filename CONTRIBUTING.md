@@ -78,6 +78,23 @@ uv run pytest node/tests/test_conformance_v1.py -v
 
 6. **Do not add vectors with `requires_auth: true` to files in `data/conformance/v1.0/`.** Zero skips are enforced by CI; auth-dependent scenarios belong in the dedicated auth test module.
 
+## Docs drift watchdog
+
+CI runs `docs/scripts/check_drift.py` on every push and PR to catch stale or forbidden content in the docs tree. It checks for:
+
+- **Forbidden strings** — product names or terms that must not appear (e.g., references to unrelated products).
+- **Calendar quarter dates** — `Q1 2025`-style strings outside exempt historical/roadmap files, which go stale quickly.
+- **Stale claims** — absolute statements that are no longer true (e.g., "no vector search" after that feature shipped).
+- **Bare tracker IDs** — internal issue tracker references (e.g., `ACM-123`) that leaked into public docs.
+
+Rules live in `docs/scripts/drift-rules.json`. To add a new rule, edit the appropriate section in that file — no code changes required. Run locally:
+
+```bash
+python docs/scripts/check_drift.py
+```
+
+To exempt a file from the calendar-quarter check (e.g., a new changelog page), add its path to the `exempt_globs` array in `drift-rules.json`.
+
 ## Prototype contributions
 
 The prototype in `prototype/` is a minimal reference implementation — not production software. Contributions that validate spec behavior are welcome; contributions that add production-hardening, auth, or persistence layers should wait until Phase 2 scope is set.

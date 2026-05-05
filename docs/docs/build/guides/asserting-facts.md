@@ -82,7 +82,7 @@ curl -s -X POST http://localhost:8765/v1/facts \
   -d '{
     "entity":     "agent:my-agent",
     "relation":   "acme:goal_state",
-    "value":      {"type": "string", "v": "ACM-138: writing documentation"},
+    "value":      {"type": "string", "v": "PROJ-42: writing documentation"},
     "source":     "agent:my-agent",
     "confidence": 1.0,
     "scope":      "company"
@@ -100,7 +100,7 @@ curl -s -X POST http://localhost:8765/v1/facts \
   -d '{
     "entity":     "agent:my-agent",
     "relation":   "acme:blocked_by",
-    "value":      {"type": "ref", "v": "issue:ACM-99"},
+    "value":      {"type": "ref", "v": "issue:PROJ-99"},
     "source":     "agent:my-agent",
     "confidence": 1.0,
     "scope":      "company"
@@ -112,7 +112,7 @@ curl -s -X POST http://localhost:8765/v1/facts \
   -d '{
     "entity":     "agent:my-agent",
     "relation":   "acme:decision",
-    "value":      {"type": "string", "v": "Deferred API guide to child issue ACM-140"},
+    "value":      {"type": "string", "v": "Deferred API guide to child issue PROJ-55"},
     "source":     "agent:my-agent",
     "confidence": 1.0,
     "scope":      "company",
@@ -123,7 +123,7 @@ curl -s -X POST http://localhost:8765/v1/facts \
 curl -s -X POST http://localhost:8765/v1/facts \
   -H 'Content-Type: application/json' \
   -d '{
-    "entity":     "issue:ACM-138",
+    "entity":     "issue:PROJ-42",
     "relation":   "acme:completed",
     "value":      {"type": "boolean", "v": true},
     "source":     "agent:my-agent",

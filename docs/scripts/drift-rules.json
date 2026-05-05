@@ -1,0 +1,42 @@
+{
+  "forbidden_strings": [
+    {
+      "pattern": "giganomix",
+      "flags": "i",
+      "description": "Giganomix is a separate product; must not appear in Stigmem docs"
+    }
+  ],
+  "calendar_quarters": {
+    "pattern": "Q[1-4] 20\\d{2}",
+    "exempt_globs": [
+      "docs/docs/roadmap.md",
+      "docs/docs/community/roadmap.md",
+      "docs/docs/about/state-of-stigmem.md",
+      "docs/docs/learn/concepts/state-of-stigmem.md",
+      "docs/docs/community/project-resources.md",
+      "docs/blog/**"
+    ],
+    "description": "Calendar quarter references outside historical/roadmap files drift quickly"
+  },
+  "stale_claims": [
+    {
+      "pattern": "no embeddings",
+      "flags": "i",
+      "description": "Stigmem supports embeddings as of Phase 9"
+    },
+    {
+      "pattern": "no vector search",
+      "flags": "i",
+      "description": "Vector search is supported as of Phase 9"
+    },
+    {
+      "pattern": "no retrieval pipeline",
+      "flags": "i",
+      "description": "Retrieval pipeline exists as of Phase 9"
+    }
+  ],
+  "bare_ticket_ids": {
+    "tracker_prefixes": ["ACM", "PAP", "ZED", "INGEST"],
+    "description": "Internal tracker IDs must not appear bare in public docs"
+  }
+}

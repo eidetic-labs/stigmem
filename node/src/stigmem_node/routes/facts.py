@@ -397,6 +397,7 @@ def _assert_fact_impl(
     embedding_missing_val = 1 if _embed_enabled else None
 
     # F-10 §25.7.3: idempotent CID pre-check — if CID already exists, return existing record
+    # Exception: confidence changes (e.g. retraction via confidence=0) update in-place (§5.1).
     with db() as _precheck_conn:
         existing_alias = _precheck_conn.execute(
             "SELECT fact_id FROM fact_cid_aliases WHERE cid = ?", (fact_cid,)
@@ -407,6 +408,16 @@ def _assert_fact_impl(
                 (existing_alias["fact_id"], identity.tenant_id),
             ).fetchone()
             if existing_row is not None:
+                if existing_row["confidence"] != req.confidence:
+                    _precheck_conn.execute(
+                        "UPDATE facts SET confidence = ? WHERE id = ?",
+                        (req.confidence, existing_row["id"]),
+                    )
+                    _precheck_conn.commit()
+                    updated = _precheck_conn.execute(
+                        "SELECT * FROM facts WHERE id = ?", (existing_row["id"],)
+                    ).fetchone()
+                    return row_to_record(updated, contradicted=False)
                 return row_to_record(existing_row, contradicted=False)
 
     with db() as conn:

@@ -138,8 +138,8 @@ class _LibSQLConnection:
         return _LibSQLCursor(self._conn.execute(sql, params))
 
     def executemany(self, sql: str, params: Any = ()) -> _LibSQLCursor:
-        if isinstance(params, list):
-            params = tuple(params)
+        if not isinstance(params, list):
+            params = list(params)
         return _LibSQLCursor(self._conn.executemany(sql, params))
 
     def commit(self) -> None:

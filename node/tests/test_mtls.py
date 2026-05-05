@@ -22,6 +22,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.x509.oid import NameOID
 
+from unittest.mock import MagicMock
+
 from stigmem_node.tls import (
     build_client_ssl_context,
     build_server_ssl_context,
@@ -317,11 +319,12 @@ def test_mtls_plaintext_guard_returns_421(tmp_path: Path, monkeypatch: pytest.Mo
     # Write placeholder files so mtls_enabled property returns True
     (tmp_path / "node.crt").write_text("placeholder")
     (tmp_path / "node.key").write_text("placeholder")
+    (tmp_path / "ca.crt").write_text("placeholder")
 
     fake_settings = settings_module.Settings(
         tls_cert_path=str(tmp_path / "node.crt"),
         tls_key_path=str(tmp_path / "node.key"),
-        tls_ca_bundle="",
+        tls_ca_bundle=str(tmp_path / "ca.crt"),
     )
     monkeypatch.setattr(settings_module, "settings", fake_settings)
     monkeypatch.setattr(main_mod, "settings", fake_settings)
@@ -345,10 +348,12 @@ def test_non_federation_routes_bypass_mtls_guard(
 
     (tmp_path / "node.crt").write_text("placeholder")
     (tmp_path / "node.key").write_text("placeholder")
+    (tmp_path / "ca.crt").write_text("placeholder")
 
     fake_settings = settings_module.Settings(
         tls_cert_path=str(tmp_path / "node.crt"),
         tls_key_path=str(tmp_path / "node.key"),
+        tls_ca_bundle=str(tmp_path / "ca.crt"),
     )
     monkeypatch.setattr(settings_module, "settings", fake_settings)
     monkeypatch.setattr(main_mod, "settings", fake_settings)
@@ -357,3 +362,130 @@ def test_non_federation_routes_bypass_mtls_guard(
     client = TestClient(app, raise_server_exceptions=False)
 
     assert client.get("/healthz").status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Regression: HIGH-1 — ca_bundle required when mTLS enabled (§22.1.2.2)
+# ---------------------------------------------------------------------------
+
+
+def test_settings_requires_ca_bundle_when_mtls_enabled(tmp_path: Path) -> None:
+    """Settings raises ValueError when cert+key are set but ca_bundle is empty."""
+    import pydantic
+    from stigmem_node.settings import Settings
+
+    (tmp_path / "node.crt").write_text("placeholder")
+    (tmp_path / "node.key").write_text("placeholder")
+
+    with pytest.raises((ValueError, pydantic.ValidationError)):
+        Settings(
+            tls_cert_path=str(tmp_path / "node.crt"),
+            tls_key_path=str(tmp_path / "node.key"),
+            tls_ca_bundle="",
+        )
+
+
+def test_settings_accepts_mtls_with_ca_bundle(tmp_path: Path) -> None:
+    """Settings succeeds when all three mTLS fields are set."""
+    from stigmem_node.settings import Settings
+
+    (tmp_path / "node.crt").write_text("placeholder")
+    (tmp_path / "node.key").write_text("placeholder")
+    (tmp_path / "ca.crt").write_text("placeholder")
+
+    s = Settings(
+        tls_cert_path=str(tmp_path / "node.crt"),
+        tls_key_path=str(tmp_path / "node.key"),
+        tls_ca_bundle=str(tmp_path / "ca.crt"),
+    )
+    assert s.mtls_enabled is True
+
+
+# ---------------------------------------------------------------------------
+# Regression: CRITICAL-1 — server-side SAN enforcement (_require_peer_token)
+# ---------------------------------------------------------------------------
+
+
+def test_get_mtls_peer_cert_no_transport() -> None:
+    """_get_mtls_peer_cert returns empty dict when no transport in scope."""
+    from stigmem_node.routes.federation import _get_mtls_peer_cert
+    from starlette.requests import Request
+
+    scope = {"type": "http", "method": "GET", "path": "/", "query_string": b"",
+             "headers": [], "server": ("localhost", 8765)}
+    req = Request(scope)
+    assert _get_mtls_peer_cert(req) == {}
+
+
+def test_get_mtls_peer_cert_ssl_transport() -> None:
+    """_get_mtls_peer_cert extracts peer cert dict from mock SSL transport."""
+    from stigmem_node.routes.federation import _get_mtls_peer_cert
+    from starlette.requests import Request
+
+    mock_cert = {"subjectAltName": [("URI", "stigmem://example.com/org/peer")]}
+    mock_ssl = MagicMock()
+    mock_ssl.getpeercert.return_value = mock_cert
+    mock_transport = MagicMock()
+    mock_transport.get_extra_info.return_value = mock_ssl
+
+    scope = {"type": "http", "method": "GET", "path": "/", "query_string": b"",
+             "headers": [], "server": ("localhost", 8765), "transport": mock_transport}
+    req = Request(scope)
+    assert _get_mtls_peer_cert(req) == mock_cert
+
+
+# ---------------------------------------------------------------------------
+# Regression: CRITICAL-2 — client-side SAN enforcement (pull_from_peer_once)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_pull_from_peer_san_mismatch_returns_old_cursor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """pull_from_peer_once returns old cursor (fail-closed) when SAN does not match."""
+    import stigmem_node.federation_pull as pull_mod
+    import stigmem_node.settings as settings_mod
+
+    # Simulate mtls_enabled = True
+    fake_settings = MagicMock()
+    fake_settings.mtls_enabled = True
+    monkeypatch.setattr(pull_mod, "settings", fake_settings)
+
+    # Mock ssl_object returning a cert with wrong SAN
+    mock_ssl = MagicMock()
+    mock_ssl.getpeercert.return_value = {
+        "subjectAltName": [("URI", "stigmem://attacker.example/org/evil")]
+    }
+
+    # Build a fake 200 httpx Response with ssl_object extension
+    import httpx
+    mock_resp = MagicMock(spec=httpx.Response)
+    mock_resp.status_code = 200
+    mock_resp.extensions = {"ssl_object": mock_ssl}
+
+    # Mock the client.get to return mock_resp
+    mock_client = MagicMock()
+    mock_client.get = MagicMock(return_value=mock_resp)
+
+    # Make client.get awaitable
+    import asyncio
+
+    async def _fake_get(*args, **kwargs):
+        return mock_resp
+
+    mock_client.get = _fake_get
+
+    # Also mock write_audit_log and create_peer_token
+    monkeypatch.setattr(pull_mod, "write_audit_log", MagicMock())
+    monkeypatch.setattr(pull_mod, "create_peer_token", lambda *a, **kw: "tok")
+
+    peer = {
+        "node_id": "stigmem://legitimate.example/org/peer",
+        "node_url": "https://legitimate.example",
+        "allowed_scopes": '["global"]',
+    }
+    old_cursor = "cursor-abc"
+
+    result = await pull_mod.pull_from_peer_once(peer, mock_client, old_cursor)
+    assert result == old_cursor, "SAN mismatch must return old cursor (fail-closed)"

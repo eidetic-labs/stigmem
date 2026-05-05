@@ -1,4 +1,4 @@
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -229,6 +229,17 @@ class Settings(BaseSettings):
     # Path to a PEM CA bundle used to verify peer certificates.
     # Required when tls_cert_path + tls_key_path are configured.
     tls_ca_bundle: str = ""
+
+    @model_validator(mode="after")
+    def _require_ca_bundle_for_mtls(self) -> "Settings":
+        if self.tls_cert_path and self.tls_key_path and not self.tls_ca_bundle:
+            raise ValueError(
+                "STIGMEM_TLS_CA_BUNDLE is required when mTLS is enabled "
+                "(STIGMEM_TLS_CERT_PATH + STIGMEM_TLS_KEY_PATH are set). "
+                "Without it, peer certs fall back to the system CA store instead "
+                "of the closed federation trust bundle (spec §22.1.2.2)."
+            )
+        return self
 
     @property
     def mtls_enabled(self) -> bool:

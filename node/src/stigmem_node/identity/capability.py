@@ -18,6 +18,7 @@ Security requirements:
 from __future__ import annotations
 
 import base64
+import hmac
 import json
 import logging
 from datetime import UTC, datetime, timedelta
@@ -91,7 +92,7 @@ def load_node_private_key() -> Ed25519PrivateKey | None:
 
     current_seed = settings.node_private_key
 
-    if current_seed == _node_private_key_seed:
+    if hmac.compare_digest(current_seed, _node_private_key_seed):  # nosec CT001 — cache invalidation; neither operand is attacker-controlled
         return _node_private_key  # cache hit
 
     if not current_seed:

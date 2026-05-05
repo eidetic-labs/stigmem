@@ -27,6 +27,8 @@ jobs:
         run: uv sync --all-packages
 
       - name: Run tests
+        env:
+          HYPOTHESIS_SEED: "0"
         run: uv run pytest node/tests/ sdks/stigmem-py/tests/ -q --tb=short
 
       - name: pip-audit (no known vulnerabilities)
@@ -34,6 +36,9 @@ jobs:
 
       - name: bandit (Python security linting)
         run: uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml -q
+
+      - name: CT001 constant-time comparison lint (§22.5)
+        run: uv run python scripts/check_constant_time.py node/src/ sdks/stigmem-py/src/
 
   node-tests:
     name: TypeScript SDK + MCP adapter tests

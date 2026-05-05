@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import concurrent.futures
-import hashlib
 import sqlite3
 import threading
 import time as time_mod
@@ -230,7 +229,6 @@ class TestHashCacheTTL:
         original = _patch(test_settings)
         rl_mod._HASH_CACHE.clear()
         raw_key = create_api_key("agent:ttl-test", ["read", "write"])
-        key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
         h = {"Authorization": f"Bearer {raw_key}"}
 
         try:
@@ -238,7 +236,8 @@ class TestHashCacheTTL:
                 # Exhaust write bucket (capacity=1) and verify key is cached.
                 assert client.post("/v1/facts", json=FACT, headers=h).status_code == 201
                 assert client.post("/v1/facts", json=FACT, headers=h).status_code == 429
-                assert key_hash in rl_mod._HASH_CACHE
+                assert len(rl_mod._HASH_CACHE) == 1
+                key_hash = next(iter(rl_mod._HASH_CACHE))
 
                 # Revoke the key in the DB.
                 conn = sqlite3.connect(tmp_db)

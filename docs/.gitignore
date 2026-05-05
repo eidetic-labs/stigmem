@@ -1,6 +1,7 @@
 # Docusaurus
 .docusaurus
 build
+site
 node_modules
 
 # Generated API docs — committed so build works without a live node

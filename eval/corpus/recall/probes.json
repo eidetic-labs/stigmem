@@ -1,0 +1,5952 @@
+[
+  {
+    "id": "entity-001",
+    "class": "entity_lookup",
+    "query": "alice role",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "b5e23250"
+    ],
+    "probe_sha": "bf9c24e39c3c8c5c"
+  },
+  {
+    "id": "entity-002",
+    "class": "entity_lookup",
+    "query": "bob department",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "2ed7adf7"
+    ],
+    "probe_sha": "ba96adee286d8514"
+  },
+  {
+    "id": "entity-003",
+    "class": "entity_lookup",
+    "query": "charlie capability",
+    "gold_entity": "user:charlie",
+    "gold_relation": "memory:capability",
+    "gold_fact_hash": "8b65c509dc3fb2211cfed7b95f54109136d63bcfc03647fa79844a3aed7cb197",
+    "relevant_fact_ids": [
+      "8b65c509"
+    ],
+    "non_relevant_fact_ids": [
+      "11525e99"
+    ],
+    "probe_sha": "04cc0f362ee11c0f"
+  },
+  {
+    "id": "entity-004",
+    "class": "entity_lookup",
+    "query": "diana clearance",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "40c544b8"
+    ],
+    "probe_sha": "b3dd89d66c51d4de"
+  },
+  {
+    "id": "entity-005",
+    "class": "entity_lookup",
+    "query": "eve status",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "59389d93"
+    ],
+    "probe_sha": "20f0ce1782f3e761"
+  },
+  {
+    "id": "entity-006",
+    "class": "entity_lookup",
+    "query": "frank team",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "279fbff9"
+    ],
+    "probe_sha": "5e677d2fbd0f23fa"
+  },
+  {
+    "id": "entity-007",
+    "class": "entity_lookup",
+    "query": "grace manager",
+    "gold_entity": "user:grace",
+    "gold_relation": "memory:manager",
+    "gold_fact_hash": "4dc1272e4e975b050b53b78ebba9d18fd28b3662078ef91192a22228ddeb2793",
+    "relevant_fact_ids": [
+      "4dc1272e"
+    ],
+    "non_relevant_fact_ids": [
+      "0ffba20b"
+    ],
+    "probe_sha": "11a030be8c66c631"
+  },
+  {
+    "id": "entity-008",
+    "class": "entity_lookup",
+    "query": "hal trust level",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "5f433018"
+    ],
+    "probe_sha": "3a6d915f90249802"
+  },
+  {
+    "id": "entity-009",
+    "class": "entity_lookup",
+    "query": "ivan locale",
+    "gold_entity": "user:ivan",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "244086a1dc7e0af17ab5d33a9f7ee29ff223d2123e9d4fd978ee7eddfa54b927",
+    "relevant_fact_ids": [
+      "244086a1"
+    ],
+    "non_relevant_fact_ids": [
+      "3d307b68"
+    ],
+    "probe_sha": "3833dca53048e7ef"
+  },
+  {
+    "id": "entity-010",
+    "class": "entity_lookup",
+    "query": "julia project",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "23530d64"
+    ],
+    "probe_sha": "bfa6e00e805a4c73"
+  },
+  {
+    "id": "entity-011",
+    "class": "entity_lookup",
+    "query": "acme plan",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "4039819f"
+    ],
+    "probe_sha": "43f5d6c1abab5fb8"
+  },
+  {
+    "id": "entity-012",
+    "class": "entity_lookup",
+    "query": "api service owner",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "621d19ba"
+    ],
+    "probe_sha": "db7c520b6e8b8761"
+  },
+  {
+    "id": "entity-013",
+    "class": "entity_lookup",
+    "query": "kate role",
+    "gold_entity": "user:kate",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "23829b4040bbc8fba824161e389ca4285d8a516b5ac5ce0a08a1cca9173e5480",
+    "relevant_fact_ids": [
+      "23829b40"
+    ],
+    "non_relevant_fact_ids": [
+      "880f6f30"
+    ],
+    "probe_sha": "fedb79be4939c738"
+  },
+  {
+    "id": "entity-014",
+    "class": "entity_lookup",
+    "query": "leo department",
+    "gold_entity": "user:leo",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "5ddb7f441c9d5da2ccd8e19537af83363bac403a4314ede5a29f741bbe61cbad",
+    "relevant_fact_ids": [
+      "5ddb7f44"
+    ],
+    "non_relevant_fact_ids": [
+      "cc069a4d"
+    ],
+    "probe_sha": "6463d913f61363c9"
+  },
+  {
+    "id": "entity-015",
+    "class": "entity_lookup",
+    "query": "mia status",
+    "gold_entity": "user:mia",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "ac4669785fe713cce052a8d871aad7d804e7248b722fb633a1538071eea6fa8c",
+    "relevant_fact_ids": [
+      "ac466978"
+    ],
+    "non_relevant_fact_ids": [
+      "09603127"
+    ],
+    "probe_sha": "1ea1fad44d27b45c"
+  },
+  {
+    "id": "entity-016",
+    "class": "entity_lookup",
+    "query": "nova trust",
+    "gold_entity": "agent:nova",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "82eb48f4f0f8eeb638af18e53b936a3c216e0da52fde344838b6d689ac44edd5",
+    "relevant_fact_ids": [
+      "82eb48f4"
+    ],
+    "non_relevant_fact_ids": [
+      "df142289"
+    ],
+    "probe_sha": "18244e4f4d36a457"
+  },
+  {
+    "id": "entity-017",
+    "class": "entity_lookup",
+    "query": "oscar locale",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "f24dfefb"
+    ],
+    "probe_sha": "b179d28982e7dc02"
+  },
+  {
+    "id": "entity-018",
+    "class": "entity_lookup",
+    "query": "petra team",
+    "gold_entity": "user:petra",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "7c2e3454082816c2955e1a0402c54b7839b05a8a57c2915df7dc54b617c4b6dd",
+    "relevant_fact_ids": [
+      "7c2e3454"
+    ],
+    "non_relevant_fact_ids": [
+      "1da1fc93"
+    ],
+    "probe_sha": "16d89553fbb1f6ca"
+  },
+  {
+    "id": "entity-019",
+    "class": "entity_lookup",
+    "query": "betacorp plan",
+    "gold_entity": "org:betacorp",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "85fe57394560639de43195244869d596f9f9568a7339e6764a5d46c592487dd9",
+    "relevant_fact_ids": [
+      "85fe5739"
+    ],
+    "non_relevant_fact_ids": [
+      "bcd7b7ce"
+    ],
+    "probe_sha": "3b4495ad392ba6bf"
+  },
+  {
+    "id": "entity-020",
+    "class": "entity_lookup",
+    "query": "db service owner",
+    "gold_entity": "service:db",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "414cfe8996b48f80858d86a7b6a7d201f26f3184eab3e1c1f746cd0a337853d5",
+    "relevant_fact_ids": [
+      "414cfe89"
+    ],
+    "non_relevant_fact_ids": [
+      "4a05faf9"
+    ],
+    "probe_sha": "984452264b1bcd18"
+  },
+  {
+    "id": "entity-021",
+    "class": "entity_lookup",
+    "query": "what is alice role",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "6f618057"
+    ],
+    "probe_sha": "efc1b088269e40b0"
+  },
+  {
+    "id": "entity-022",
+    "class": "entity_lookup",
+    "query": "what is bob department",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "3d648707"
+    ],
+    "probe_sha": "48a592aa34012367"
+  },
+  {
+    "id": "entity-023",
+    "class": "entity_lookup",
+    "query": "what is charlie capability",
+    "gold_entity": "user:charlie",
+    "gold_relation": "memory:capability",
+    "gold_fact_hash": "8b65c509dc3fb2211cfed7b95f54109136d63bcfc03647fa79844a3aed7cb197",
+    "relevant_fact_ids": [
+      "8b65c509"
+    ],
+    "non_relevant_fact_ids": [
+      "32b15fca"
+    ],
+    "probe_sha": "092211801a1357dd"
+  },
+  {
+    "id": "entity-024",
+    "class": "entity_lookup",
+    "query": "what is diana clearance",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "ea4517c7"
+    ],
+    "probe_sha": "07c6eda4840f5e15"
+  },
+  {
+    "id": "entity-025",
+    "class": "entity_lookup",
+    "query": "what is eve status",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "e748f639"
+    ],
+    "probe_sha": "4129d444c1f73367"
+  },
+  {
+    "id": "entity-026",
+    "class": "entity_lookup",
+    "query": "what is frank team",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "233dd111"
+    ],
+    "probe_sha": "c32c5d168471ebe1"
+  },
+  {
+    "id": "entity-027",
+    "class": "entity_lookup",
+    "query": "what is grace manager",
+    "gold_entity": "user:grace",
+    "gold_relation": "memory:manager",
+    "gold_fact_hash": "4dc1272e4e975b050b53b78ebba9d18fd28b3662078ef91192a22228ddeb2793",
+    "relevant_fact_ids": [
+      "4dc1272e"
+    ],
+    "non_relevant_fact_ids": [
+      "ccf814b8"
+    ],
+    "probe_sha": "5351c5dc9cdaf40b"
+  },
+  {
+    "id": "entity-028",
+    "class": "entity_lookup",
+    "query": "what is hal trust level",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "9c35f8c2"
+    ],
+    "probe_sha": "8bdd0df7c21bca5b"
+  },
+  {
+    "id": "entity-029",
+    "class": "entity_lookup",
+    "query": "what is ivan locale",
+    "gold_entity": "user:ivan",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "244086a1dc7e0af17ab5d33a9f7ee29ff223d2123e9d4fd978ee7eddfa54b927",
+    "relevant_fact_ids": [
+      "244086a1"
+    ],
+    "non_relevant_fact_ids": [
+      "b7e53f07"
+    ],
+    "probe_sha": "e1d5aa11c579685b"
+  },
+  {
+    "id": "entity-030",
+    "class": "entity_lookup",
+    "query": "what is julia project",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "182ddc26"
+    ],
+    "probe_sha": "9ca36e86a0efb513"
+  },
+  {
+    "id": "entity-031",
+    "class": "entity_lookup",
+    "query": "what is acme plan",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "0de6d51c"
+    ],
+    "probe_sha": "e2601e8972fd26b6"
+  },
+  {
+    "id": "entity-032",
+    "class": "entity_lookup",
+    "query": "what is api service owner",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "dffb19a6"
+    ],
+    "probe_sha": "a49bbcba4a06720f"
+  },
+  {
+    "id": "entity-033",
+    "class": "entity_lookup",
+    "query": "what is kate role",
+    "gold_entity": "user:kate",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "23829b4040bbc8fba824161e389ca4285d8a516b5ac5ce0a08a1cca9173e5480",
+    "relevant_fact_ids": [
+      "23829b40"
+    ],
+    "non_relevant_fact_ids": [
+      "1b99abbb"
+    ],
+    "probe_sha": "f9318fd236084b79"
+  },
+  {
+    "id": "entity-034",
+    "class": "entity_lookup",
+    "query": "what is leo department",
+    "gold_entity": "user:leo",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "5ddb7f441c9d5da2ccd8e19537af83363bac403a4314ede5a29f741bbe61cbad",
+    "relevant_fact_ids": [
+      "5ddb7f44"
+    ],
+    "non_relevant_fact_ids": [
+      "154ac042"
+    ],
+    "probe_sha": "56abcd997334cf6a"
+  },
+  {
+    "id": "entity-035",
+    "class": "entity_lookup",
+    "query": "what is mia status",
+    "gold_entity": "user:mia",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "ac4669785fe713cce052a8d871aad7d804e7248b722fb633a1538071eea6fa8c",
+    "relevant_fact_ids": [
+      "ac466978"
+    ],
+    "non_relevant_fact_ids": [
+      "3edf317c"
+    ],
+    "probe_sha": "23512b9205f8224c"
+  },
+  {
+    "id": "entity-036",
+    "class": "entity_lookup",
+    "query": "what is nova trust",
+    "gold_entity": "agent:nova",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "82eb48f4f0f8eeb638af18e53b936a3c216e0da52fde344838b6d689ac44edd5",
+    "relevant_fact_ids": [
+      "82eb48f4"
+    ],
+    "non_relevant_fact_ids": [
+      "de66fecf"
+    ],
+    "probe_sha": "0765bb9ab6d9c472"
+  },
+  {
+    "id": "entity-037",
+    "class": "entity_lookup",
+    "query": "what is oscar locale",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "12388d93"
+    ],
+    "probe_sha": "6eb57e8d7d32eac0"
+  },
+  {
+    "id": "entity-038",
+    "class": "entity_lookup",
+    "query": "what is petra team",
+    "gold_entity": "user:petra",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "7c2e3454082816c2955e1a0402c54b7839b05a8a57c2915df7dc54b617c4b6dd",
+    "relevant_fact_ids": [
+      "7c2e3454"
+    ],
+    "non_relevant_fact_ids": [
+      "a61a174c"
+    ],
+    "probe_sha": "81c4f43390d302b6"
+  },
+  {
+    "id": "entity-039",
+    "class": "entity_lookup",
+    "query": "what is betacorp plan",
+    "gold_entity": "org:betacorp",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "85fe57394560639de43195244869d596f9f9568a7339e6764a5d46c592487dd9",
+    "relevant_fact_ids": [
+      "85fe5739"
+    ],
+    "non_relevant_fact_ids": [
+      "c4883df1"
+    ],
+    "probe_sha": "450cee6813e6135a"
+  },
+  {
+    "id": "entity-040",
+    "class": "entity_lookup",
+    "query": "what is db service owner",
+    "gold_entity": "service:db",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "414cfe8996b48f80858d86a7b6a7d201f26f3184eab3e1c1f746cd0a337853d5",
+    "relevant_fact_ids": [
+      "414cfe89"
+    ],
+    "non_relevant_fact_ids": [
+      "2afa8ebf"
+    ],
+    "probe_sha": "b264e547babe7eb3"
+  },
+  {
+    "id": "entity-041",
+    "class": "entity_lookup",
+    "query": "find alice role",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "a0c8fba4"
+    ],
+    "probe_sha": "a01ea3eea1512ff6"
+  },
+  {
+    "id": "entity-042",
+    "class": "entity_lookup",
+    "query": "find bob department",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "8aaafe67"
+    ],
+    "probe_sha": "c92d6cdcf1d12d3f"
+  },
+  {
+    "id": "entity-043",
+    "class": "entity_lookup",
+    "query": "find charlie capability",
+    "gold_entity": "user:charlie",
+    "gold_relation": "memory:capability",
+    "gold_fact_hash": "8b65c509dc3fb2211cfed7b95f54109136d63bcfc03647fa79844a3aed7cb197",
+    "relevant_fact_ids": [
+      "8b65c509"
+    ],
+    "non_relevant_fact_ids": [
+      "6477145a"
+    ],
+    "probe_sha": "a7d4599281e0d139"
+  },
+  {
+    "id": "entity-044",
+    "class": "entity_lookup",
+    "query": "find diana clearance",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "8c77867f"
+    ],
+    "probe_sha": "6ec1f693d413c907"
+  },
+  {
+    "id": "entity-045",
+    "class": "entity_lookup",
+    "query": "find eve status",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "c217bb74"
+    ],
+    "probe_sha": "fd4c360110617542"
+  },
+  {
+    "id": "entity-046",
+    "class": "entity_lookup",
+    "query": "find frank team",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "d4974fa1"
+    ],
+    "probe_sha": "7121b38aa8202cf5"
+  },
+  {
+    "id": "entity-047",
+    "class": "entity_lookup",
+    "query": "find grace manager",
+    "gold_entity": "user:grace",
+    "gold_relation": "memory:manager",
+    "gold_fact_hash": "4dc1272e4e975b050b53b78ebba9d18fd28b3662078ef91192a22228ddeb2793",
+    "relevant_fact_ids": [
+      "4dc1272e"
+    ],
+    "non_relevant_fact_ids": [
+      "f4488097"
+    ],
+    "probe_sha": "703b32b7d28652c4"
+  },
+  {
+    "id": "entity-048",
+    "class": "entity_lookup",
+    "query": "find hal trust level",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "98bb0250"
+    ],
+    "probe_sha": "23e587d01416513a"
+  },
+  {
+    "id": "entity-049",
+    "class": "entity_lookup",
+    "query": "find ivan locale",
+    "gold_entity": "user:ivan",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "244086a1dc7e0af17ab5d33a9f7ee29ff223d2123e9d4fd978ee7eddfa54b927",
+    "relevant_fact_ids": [
+      "244086a1"
+    ],
+    "non_relevant_fact_ids": [
+      "458eb8c1"
+    ],
+    "probe_sha": "7d0cb1a60f65bd46"
+  },
+  {
+    "id": "entity-050",
+    "class": "entity_lookup",
+    "query": "find julia project",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "d7f27c03"
+    ],
+    "probe_sha": "57bcac0baaedffab"
+  },
+  {
+    "id": "entity-051",
+    "class": "entity_lookup",
+    "query": "find acme plan",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "83c87297"
+    ],
+    "probe_sha": "64cf618e04c08b45"
+  },
+  {
+    "id": "entity-052",
+    "class": "entity_lookup",
+    "query": "find api service owner",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "265f446f"
+    ],
+    "probe_sha": "41b1cae69f368c21"
+  },
+  {
+    "id": "entity-053",
+    "class": "entity_lookup",
+    "query": "find kate role",
+    "gold_entity": "user:kate",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "23829b4040bbc8fba824161e389ca4285d8a516b5ac5ce0a08a1cca9173e5480",
+    "relevant_fact_ids": [
+      "23829b40"
+    ],
+    "non_relevant_fact_ids": [
+      "8b23a9e9"
+    ],
+    "probe_sha": "ffcab1ad5cfeddfe"
+  },
+  {
+    "id": "entity-054",
+    "class": "entity_lookup",
+    "query": "find leo department",
+    "gold_entity": "user:leo",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "5ddb7f441c9d5da2ccd8e19537af83363bac403a4314ede5a29f741bbe61cbad",
+    "relevant_fact_ids": [
+      "5ddb7f44"
+    ],
+    "non_relevant_fact_ids": [
+      "1d054cc2"
+    ],
+    "probe_sha": "18cd0da7aa1d75aa"
+  },
+  {
+    "id": "entity-055",
+    "class": "entity_lookup",
+    "query": "find mia status",
+    "gold_entity": "user:mia",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "ac4669785fe713cce052a8d871aad7d804e7248b722fb633a1538071eea6fa8c",
+    "relevant_fact_ids": [
+      "ac466978"
+    ],
+    "non_relevant_fact_ids": [
+      "18398c74"
+    ],
+    "probe_sha": "6c8a94d7355a21ec"
+  },
+  {
+    "id": "entity-056",
+    "class": "entity_lookup",
+    "query": "find nova trust",
+    "gold_entity": "agent:nova",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "82eb48f4f0f8eeb638af18e53b936a3c216e0da52fde344838b6d689ac44edd5",
+    "relevant_fact_ids": [
+      "82eb48f4"
+    ],
+    "non_relevant_fact_ids": [
+      "be555485"
+    ],
+    "probe_sha": "75cd4282da29398a"
+  },
+  {
+    "id": "entity-057",
+    "class": "entity_lookup",
+    "query": "find oscar locale",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "c2999c59"
+    ],
+    "probe_sha": "da7f85f9e6e70e17"
+  },
+  {
+    "id": "entity-058",
+    "class": "entity_lookup",
+    "query": "find petra team",
+    "gold_entity": "user:petra",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "7c2e3454082816c2955e1a0402c54b7839b05a8a57c2915df7dc54b617c4b6dd",
+    "relevant_fact_ids": [
+      "7c2e3454"
+    ],
+    "non_relevant_fact_ids": [
+      "f8d69ed6"
+    ],
+    "probe_sha": "4861d0b516a26535"
+  },
+  {
+    "id": "entity-059",
+    "class": "entity_lookup",
+    "query": "find betacorp plan",
+    "gold_entity": "org:betacorp",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "85fe57394560639de43195244869d596f9f9568a7339e6764a5d46c592487dd9",
+    "relevant_fact_ids": [
+      "85fe5739"
+    ],
+    "non_relevant_fact_ids": [
+      "3e5707be"
+    ],
+    "probe_sha": "eae71d770d3b0a1e"
+  },
+  {
+    "id": "entity-060",
+    "class": "entity_lookup",
+    "query": "find db service owner",
+    "gold_entity": "service:db",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "414cfe8996b48f80858d86a7b6a7d201f26f3184eab3e1c1f746cd0a337853d5",
+    "relevant_fact_ids": [
+      "414cfe89"
+    ],
+    "non_relevant_fact_ids": [
+      "a9116102"
+    ],
+    "probe_sha": "faad7b604e560ea5"
+  },
+  {
+    "id": "entity-061",
+    "class": "entity_lookup",
+    "query": "lookup alice role",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "d163dcfb"
+    ],
+    "probe_sha": "caf13f1c2c57407b"
+  },
+  {
+    "id": "entity-062",
+    "class": "entity_lookup",
+    "query": "lookup bob department",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "4e2493cb"
+    ],
+    "probe_sha": "ba7926ec66bb5eb1"
+  },
+  {
+    "id": "entity-063",
+    "class": "entity_lookup",
+    "query": "lookup charlie capability",
+    "gold_entity": "user:charlie",
+    "gold_relation": "memory:capability",
+    "gold_fact_hash": "8b65c509dc3fb2211cfed7b95f54109136d63bcfc03647fa79844a3aed7cb197",
+    "relevant_fact_ids": [
+      "8b65c509"
+    ],
+    "non_relevant_fact_ids": [
+      "ca2c3871"
+    ],
+    "probe_sha": "fd8651838b3d2d35"
+  },
+  {
+    "id": "entity-064",
+    "class": "entity_lookup",
+    "query": "lookup diana clearance",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "27fd84e9"
+    ],
+    "probe_sha": "16401763b3fe33ec"
+  },
+  {
+    "id": "entity-065",
+    "class": "entity_lookup",
+    "query": "lookup eve status",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "a5111f0c"
+    ],
+    "probe_sha": "4b11881ea79c4e14"
+  },
+  {
+    "id": "entity-066",
+    "class": "entity_lookup",
+    "query": "lookup frank team",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "28603366"
+    ],
+    "probe_sha": "69aaa7dc513113be"
+  },
+  {
+    "id": "entity-067",
+    "class": "entity_lookup",
+    "query": "lookup grace manager",
+    "gold_entity": "user:grace",
+    "gold_relation": "memory:manager",
+    "gold_fact_hash": "4dc1272e4e975b050b53b78ebba9d18fd28b3662078ef91192a22228ddeb2793",
+    "relevant_fact_ids": [
+      "4dc1272e"
+    ],
+    "non_relevant_fact_ids": [
+      "d657886e"
+    ],
+    "probe_sha": "1efa8215bdfc4268"
+  },
+  {
+    "id": "entity-068",
+    "class": "entity_lookup",
+    "query": "lookup hal trust level",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "c60b47d3"
+    ],
+    "probe_sha": "28a413b8a9830c2a"
+  },
+  {
+    "id": "entity-069",
+    "class": "entity_lookup",
+    "query": "lookup ivan locale",
+    "gold_entity": "user:ivan",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "244086a1dc7e0af17ab5d33a9f7ee29ff223d2123e9d4fd978ee7eddfa54b927",
+    "relevant_fact_ids": [
+      "244086a1"
+    ],
+    "non_relevant_fact_ids": [
+      "06c6d971"
+    ],
+    "probe_sha": "37150b05b5e9a808"
+  },
+  {
+    "id": "entity-070",
+    "class": "entity_lookup",
+    "query": "lookup julia project",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "a50e8f2c"
+    ],
+    "probe_sha": "f3e5ebc67d0bd3e2"
+  },
+  {
+    "id": "entity-071",
+    "class": "entity_lookup",
+    "query": "lookup acme plan",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "d3c77104"
+    ],
+    "probe_sha": "741f7b65c3ee1517"
+  },
+  {
+    "id": "entity-072",
+    "class": "entity_lookup",
+    "query": "lookup api service owner",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "59037721"
+    ],
+    "probe_sha": "089bcb8c1d7bdee6"
+  },
+  {
+    "id": "entity-073",
+    "class": "entity_lookup",
+    "query": "lookup kate role",
+    "gold_entity": "user:kate",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "23829b4040bbc8fba824161e389ca4285d8a516b5ac5ce0a08a1cca9173e5480",
+    "relevant_fact_ids": [
+      "23829b40"
+    ],
+    "non_relevant_fact_ids": [
+      "d76c1991"
+    ],
+    "probe_sha": "5190ee3a3a7ebb0e"
+  },
+  {
+    "id": "entity-074",
+    "class": "entity_lookup",
+    "query": "lookup leo department",
+    "gold_entity": "user:leo",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "5ddb7f441c9d5da2ccd8e19537af83363bac403a4314ede5a29f741bbe61cbad",
+    "relevant_fact_ids": [
+      "5ddb7f44"
+    ],
+    "non_relevant_fact_ids": [
+      "16717561"
+    ],
+    "probe_sha": "3a184215c1310c84"
+  },
+  {
+    "id": "entity-075",
+    "class": "entity_lookup",
+    "query": "lookup mia status",
+    "gold_entity": "user:mia",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "ac4669785fe713cce052a8d871aad7d804e7248b722fb633a1538071eea6fa8c",
+    "relevant_fact_ids": [
+      "ac466978"
+    ],
+    "non_relevant_fact_ids": [
+      "3a52e3e9"
+    ],
+    "probe_sha": "97cc6f5bbf12c356"
+  },
+  {
+    "id": "entity-076",
+    "class": "entity_lookup",
+    "query": "lookup nova trust",
+    "gold_entity": "agent:nova",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "82eb48f4f0f8eeb638af18e53b936a3c216e0da52fde344838b6d689ac44edd5",
+    "relevant_fact_ids": [
+      "82eb48f4"
+    ],
+    "non_relevant_fact_ids": [
+      "29438d35"
+    ],
+    "probe_sha": "4097135b0672a752"
+  },
+  {
+    "id": "entity-077",
+    "class": "entity_lookup",
+    "query": "lookup oscar locale",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "e2d7e137"
+    ],
+    "probe_sha": "46adc35488e7ade4"
+  },
+  {
+    "id": "entity-078",
+    "class": "entity_lookup",
+    "query": "lookup petra team",
+    "gold_entity": "user:petra",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "7c2e3454082816c2955e1a0402c54b7839b05a8a57c2915df7dc54b617c4b6dd",
+    "relevant_fact_ids": [
+      "7c2e3454"
+    ],
+    "non_relevant_fact_ids": [
+      "84cec109"
+    ],
+    "probe_sha": "f2d07ffe85be2584"
+  },
+  {
+    "id": "entity-079",
+    "class": "entity_lookup",
+    "query": "lookup betacorp plan",
+    "gold_entity": "org:betacorp",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "85fe57394560639de43195244869d596f9f9568a7339e6764a5d46c592487dd9",
+    "relevant_fact_ids": [
+      "85fe5739"
+    ],
+    "non_relevant_fact_ids": [
+      "cc816ac5"
+    ],
+    "probe_sha": "41a5233a90af98c2"
+  },
+  {
+    "id": "entity-080",
+    "class": "entity_lookup",
+    "query": "lookup db service owner",
+    "gold_entity": "service:db",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "414cfe8996b48f80858d86a7b6a7d201f26f3184eab3e1c1f746cd0a337853d5",
+    "relevant_fact_ids": [
+      "414cfe89"
+    ],
+    "non_relevant_fact_ids": [
+      "56add7a9"
+    ],
+    "probe_sha": "fe1388afc22fc89a"
+  },
+  {
+    "id": "entity-081",
+    "class": "entity_lookup",
+    "query": "retrieve alice role information",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "1ce70f0c"
+    ],
+    "probe_sha": "89f924d42e969df7"
+  },
+  {
+    "id": "entity-082",
+    "class": "entity_lookup",
+    "query": "retrieve bob department information",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "08168e44"
+    ],
+    "probe_sha": "1a3c82faba917613"
+  },
+  {
+    "id": "entity-083",
+    "class": "entity_lookup",
+    "query": "retrieve charlie capability information",
+    "gold_entity": "user:charlie",
+    "gold_relation": "memory:capability",
+    "gold_fact_hash": "8b65c509dc3fb2211cfed7b95f54109136d63bcfc03647fa79844a3aed7cb197",
+    "relevant_fact_ids": [
+      "8b65c509"
+    ],
+    "non_relevant_fact_ids": [
+      "8d854d34"
+    ],
+    "probe_sha": "2af5c3426863ffde"
+  },
+  {
+    "id": "entity-084",
+    "class": "entity_lookup",
+    "query": "retrieve diana clearance information",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "328ab171"
+    ],
+    "probe_sha": "62fa5a30442cf52b"
+  },
+  {
+    "id": "entity-085",
+    "class": "entity_lookup",
+    "query": "retrieve eve status information",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "48c53e38"
+    ],
+    "probe_sha": "8109ec348c74a7e6"
+  },
+  {
+    "id": "entity-086",
+    "class": "entity_lookup",
+    "query": "retrieve frank team information",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "0c8e41f5"
+    ],
+    "probe_sha": "fe8a679c5e74e33e"
+  },
+  {
+    "id": "entity-087",
+    "class": "entity_lookup",
+    "query": "retrieve grace manager information",
+    "gold_entity": "user:grace",
+    "gold_relation": "memory:manager",
+    "gold_fact_hash": "4dc1272e4e975b050b53b78ebba9d18fd28b3662078ef91192a22228ddeb2793",
+    "relevant_fact_ids": [
+      "4dc1272e"
+    ],
+    "non_relevant_fact_ids": [
+      "9b8c7f8f"
+    ],
+    "probe_sha": "fd87e118958177ee"
+  },
+  {
+    "id": "entity-088",
+    "class": "entity_lookup",
+    "query": "retrieve hal trust level information",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "c66e90eb"
+    ],
+    "probe_sha": "0bc0a24954b47ece"
+  },
+  {
+    "id": "entity-089",
+    "class": "entity_lookup",
+    "query": "retrieve ivan locale information",
+    "gold_entity": "user:ivan",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "244086a1dc7e0af17ab5d33a9f7ee29ff223d2123e9d4fd978ee7eddfa54b927",
+    "relevant_fact_ids": [
+      "244086a1"
+    ],
+    "non_relevant_fact_ids": [
+      "1f92648a"
+    ],
+    "probe_sha": "e7f905fdc3c4cd0f"
+  },
+  {
+    "id": "entity-090",
+    "class": "entity_lookup",
+    "query": "retrieve julia project information",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "e936356d"
+    ],
+    "probe_sha": "697b130cc2f4757c"
+  },
+  {
+    "id": "entity-091",
+    "class": "entity_lookup",
+    "query": "retrieve acme plan information",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "8d0f49f7"
+    ],
+    "probe_sha": "ff2e75d59863eadd"
+  },
+  {
+    "id": "entity-092",
+    "class": "entity_lookup",
+    "query": "retrieve api service owner information",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "fae47172"
+    ],
+    "probe_sha": "8ae67b9de3e24d4a"
+  },
+  {
+    "id": "entity-093",
+    "class": "entity_lookup",
+    "query": "retrieve kate role information",
+    "gold_entity": "user:kate",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "23829b4040bbc8fba824161e389ca4285d8a516b5ac5ce0a08a1cca9173e5480",
+    "relevant_fact_ids": [
+      "23829b40"
+    ],
+    "non_relevant_fact_ids": [
+      "f0523346"
+    ],
+    "probe_sha": "05dee07deab751c6"
+  },
+  {
+    "id": "entity-094",
+    "class": "entity_lookup",
+    "query": "retrieve leo department information",
+    "gold_entity": "user:leo",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "5ddb7f441c9d5da2ccd8e19537af83363bac403a4314ede5a29f741bbe61cbad",
+    "relevant_fact_ids": [
+      "5ddb7f44"
+    ],
+    "non_relevant_fact_ids": [
+      "dd9d5d70"
+    ],
+    "probe_sha": "3c2646d41aa4a73c"
+  },
+  {
+    "id": "entity-095",
+    "class": "entity_lookup",
+    "query": "retrieve mia status information",
+    "gold_entity": "user:mia",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "ac4669785fe713cce052a8d871aad7d804e7248b722fb633a1538071eea6fa8c",
+    "relevant_fact_ids": [
+      "ac466978"
+    ],
+    "non_relevant_fact_ids": [
+      "75a7b7b9"
+    ],
+    "probe_sha": "8c6661d538c63785"
+  },
+  {
+    "id": "entity-096",
+    "class": "entity_lookup",
+    "query": "retrieve nova trust information",
+    "gold_entity": "agent:nova",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "82eb48f4f0f8eeb638af18e53b936a3c216e0da52fde344838b6d689ac44edd5",
+    "relevant_fact_ids": [
+      "82eb48f4"
+    ],
+    "non_relevant_fact_ids": [
+      "7b7990f6"
+    ],
+    "probe_sha": "6dc60f79bdc2c254"
+  },
+  {
+    "id": "entity-097",
+    "class": "entity_lookup",
+    "query": "retrieve oscar locale information",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "955052fa"
+    ],
+    "probe_sha": "a3f9751f60aaa6ef"
+  },
+  {
+    "id": "entity-098",
+    "class": "entity_lookup",
+    "query": "retrieve petra team information",
+    "gold_entity": "user:petra",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "7c2e3454082816c2955e1a0402c54b7839b05a8a57c2915df7dc54b617c4b6dd",
+    "relevant_fact_ids": [
+      "7c2e3454"
+    ],
+    "non_relevant_fact_ids": [
+      "b446e835"
+    ],
+    "probe_sha": "b283779ddeae0def"
+  },
+  {
+    "id": "entity-099",
+    "class": "entity_lookup",
+    "query": "retrieve betacorp plan information",
+    "gold_entity": "org:betacorp",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "85fe57394560639de43195244869d596f9f9568a7339e6764a5d46c592487dd9",
+    "relevant_fact_ids": [
+      "85fe5739"
+    ],
+    "non_relevant_fact_ids": [
+      "43a7a6d3"
+    ],
+    "probe_sha": "72ab620bc62d00a5"
+  },
+  {
+    "id": "entity-100",
+    "class": "entity_lookup",
+    "query": "retrieve db service owner information",
+    "gold_entity": "service:db",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "414cfe8996b48f80858d86a7b6a7d201f26f3184eab3e1c1f746cd0a337853d5",
+    "relevant_fact_ids": [
+      "414cfe89"
+    ],
+    "non_relevant_fact_ids": [
+      "c4dfc34a"
+    ],
+    "probe_sha": "10f8049be313c385"
+  },
+  {
+    "id": "relation-001",
+    "class": "relation_lookup",
+    "query": "list all manager values",
+    "gold_relation": "memory:manager",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "ceeef1789f1e58dd9006ee866394910ea359dbfdfcad4c98e93aec25f7580f0f",
+    "relevant_fact_ids": [
+      "ceeef178"
+    ],
+    "non_relevant_fact_ids": [
+      "1e8ade9f"
+    ],
+    "probe_sha": "7fa90bf987536f0c"
+  },
+  {
+    "id": "relation-002",
+    "class": "relation_lookup",
+    "query": "list all department values",
+    "gold_relation": "memory:department",
+    "gold_primary_entity": "user:bob",
+    "gold_fact_hash": "fbd3e1347a15bbeeaa9cb0ca95cc3553e72ef9e07146e0f95de97bf6634ff79b",
+    "relevant_fact_ids": [
+      "fbd3e134"
+    ],
+    "non_relevant_fact_ids": [
+      "7479391e"
+    ],
+    "probe_sha": "19baeaf85fe1c7fe"
+  },
+  {
+    "id": "relation-003",
+    "class": "relation_lookup",
+    "query": "list all trust_level values",
+    "gold_relation": "memory:trust_level",
+    "gold_primary_entity": "agent:hal",
+    "gold_fact_hash": "ffeeac8d6283af909a6cc22b56171a5c265e1ef0ff703feeb788a7442bbb47b9",
+    "relevant_fact_ids": [
+      "ffeeac8d"
+    ],
+    "non_relevant_fact_ids": [
+      "35c40063"
+    ],
+    "probe_sha": "302e79085696c5aa"
+  },
+  {
+    "id": "relation-004",
+    "class": "relation_lookup",
+    "query": "list all clearance values",
+    "gold_relation": "memory:clearance",
+    "gold_primary_entity": "user:diana",
+    "gold_fact_hash": "3b40fb8f5b1354979ceaa30182d5991097edf91aae01b10cf1357f8231623daf",
+    "relevant_fact_ids": [
+      "3b40fb8f"
+    ],
+    "non_relevant_fact_ids": [
+      "0d7a3f5a"
+    ],
+    "probe_sha": "efbe785076bc8913"
+  },
+  {
+    "id": "relation-005",
+    "class": "relation_lookup",
+    "query": "list all locale values",
+    "gold_relation": "memory:locale",
+    "gold_primary_entity": "user:ivan",
+    "gold_fact_hash": "de1b9166dbaa68a47e37424fab2d219edcf2467758a3d7538d4aec78b784c26e",
+    "relevant_fact_ids": [
+      "de1b9166"
+    ],
+    "non_relevant_fact_ids": [
+      "fc6ffcc8"
+    ],
+    "probe_sha": "00b2999a5d59f290"
+  },
+  {
+    "id": "relation-006",
+    "class": "relation_lookup",
+    "query": "list all owner values",
+    "gold_relation": "memory:owner",
+    "gold_primary_entity": "service:api",
+    "gold_fact_hash": "696001010ab1b489b18522393b6c613d1ae988287e226fcd9f0f9c475ad2ec3c",
+    "relevant_fact_ids": [
+      "69600101"
+    ],
+    "non_relevant_fact_ids": [
+      "3180143f"
+    ],
+    "probe_sha": "0a0b7ee83826ba6e"
+  },
+  {
+    "id": "relation-007",
+    "class": "relation_lookup",
+    "query": "list all plan values",
+    "gold_relation": "memory:plan",
+    "gold_primary_entity": "org:acme",
+    "gold_fact_hash": "d4fb86ececd2b3a6b62ef4c0863df4196cc0e8e0f8a12c6cb278bd11e3573fb3",
+    "relevant_fact_ids": [
+      "d4fb86ec"
+    ],
+    "non_relevant_fact_ids": [
+      "d848bbad"
+    ],
+    "probe_sha": "13669dca13da48cd"
+  },
+  {
+    "id": "relation-008",
+    "class": "relation_lookup",
+    "query": "list all status values",
+    "gold_relation": "memory:status",
+    "gold_primary_entity": "user:eve",
+    "gold_fact_hash": "70b205cce2ce27a3875c871e4ee527976b81ad9ac5ba32561e6b36ae38479426",
+    "relevant_fact_ids": [
+      "70b205cc"
+    ],
+    "non_relevant_fact_ids": [
+      "960947c2"
+    ],
+    "probe_sha": "48f750cc61c20024"
+  },
+  {
+    "id": "relation-009",
+    "class": "relation_lookup",
+    "query": "list all team values",
+    "gold_relation": "memory:team",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "f184e5b915f8b25319225f949dd8f6b9869388fbaad906c9bb1c662d30450940",
+    "relevant_fact_ids": [
+      "f184e5b9"
+    ],
+    "non_relevant_fact_ids": [
+      "355396d2"
+    ],
+    "probe_sha": "ada9e5e170528d26"
+  },
+  {
+    "id": "relation-010",
+    "class": "relation_lookup",
+    "query": "list all project values",
+    "gold_relation": "memory:project",
+    "gold_primary_entity": "user:julia",
+    "gold_fact_hash": "14f57671f5abd785d6c998a3a60a9b46472fe2ee80229f5d5b968e484984ccc2",
+    "relevant_fact_ids": [
+      "14f57671"
+    ],
+    "non_relevant_fact_ids": [
+      "f2ae62ab"
+    ],
+    "probe_sha": "35360c475177aae8"
+  },
+  {
+    "id": "relation-011",
+    "class": "relation_lookup",
+    "query": "find manager facts",
+    "gold_relation": "memory:manager",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "ceeef1789f1e58dd9006ee866394910ea359dbfdfcad4c98e93aec25f7580f0f",
+    "relevant_fact_ids": [
+      "ceeef178"
+    ],
+    "non_relevant_fact_ids": [
+      "6b7a7047"
+    ],
+    "probe_sha": "9d55fb8111d0c220"
+  },
+  {
+    "id": "relation-012",
+    "class": "relation_lookup",
+    "query": "find department facts",
+    "gold_relation": "memory:department",
+    "gold_primary_entity": "user:bob",
+    "gold_fact_hash": "fbd3e1347a15bbeeaa9cb0ca95cc3553e72ef9e07146e0f95de97bf6634ff79b",
+    "relevant_fact_ids": [
+      "fbd3e134"
+    ],
+    "non_relevant_fact_ids": [
+      "6f6a1562"
+    ],
+    "probe_sha": "c6d874e5ae090934"
+  },
+  {
+    "id": "relation-013",
+    "class": "relation_lookup",
+    "query": "find trust_level facts",
+    "gold_relation": "memory:trust_level",
+    "gold_primary_entity": "agent:hal",
+    "gold_fact_hash": "ffeeac8d6283af909a6cc22b56171a5c265e1ef0ff703feeb788a7442bbb47b9",
+    "relevant_fact_ids": [
+      "ffeeac8d"
+    ],
+    "non_relevant_fact_ids": [
+      "37bf106b"
+    ],
+    "probe_sha": "1f61b5e7f4938022"
+  },
+  {
+    "id": "relation-014",
+    "class": "relation_lookup",
+    "query": "find clearance facts",
+    "gold_relation": "memory:clearance",
+    "gold_primary_entity": "user:diana",
+    "gold_fact_hash": "3b40fb8f5b1354979ceaa30182d5991097edf91aae01b10cf1357f8231623daf",
+    "relevant_fact_ids": [
+      "3b40fb8f"
+    ],
+    "non_relevant_fact_ids": [
+      "e87ae67c"
+    ],
+    "probe_sha": "342015de43dcf892"
+  },
+  {
+    "id": "relation-015",
+    "class": "relation_lookup",
+    "query": "find locale facts",
+    "gold_relation": "memory:locale",
+    "gold_primary_entity": "user:ivan",
+    "gold_fact_hash": "de1b9166dbaa68a47e37424fab2d219edcf2467758a3d7538d4aec78b784c26e",
+    "relevant_fact_ids": [
+      "de1b9166"
+    ],
+    "non_relevant_fact_ids": [
+      "de0c786d"
+    ],
+    "probe_sha": "c8c682f24b1bb29e"
+  },
+  {
+    "id": "relation-016",
+    "class": "relation_lookup",
+    "query": "find owner facts",
+    "gold_relation": "memory:owner",
+    "gold_primary_entity": "service:api",
+    "gold_fact_hash": "696001010ab1b489b18522393b6c613d1ae988287e226fcd9f0f9c475ad2ec3c",
+    "relevant_fact_ids": [
+      "69600101"
+    ],
+    "non_relevant_fact_ids": [
+      "3d772e48"
+    ],
+    "probe_sha": "799cce39173d92b0"
+  },
+  {
+    "id": "relation-017",
+    "class": "relation_lookup",
+    "query": "find plan facts",
+    "gold_relation": "memory:plan",
+    "gold_primary_entity": "org:acme",
+    "gold_fact_hash": "d4fb86ececd2b3a6b62ef4c0863df4196cc0e8e0f8a12c6cb278bd11e3573fb3",
+    "relevant_fact_ids": [
+      "d4fb86ec"
+    ],
+    "non_relevant_fact_ids": [
+      "1c604285"
+    ],
+    "probe_sha": "69a0dccb05225c5c"
+  },
+  {
+    "id": "relation-018",
+    "class": "relation_lookup",
+    "query": "find status facts",
+    "gold_relation": "memory:status",
+    "gold_primary_entity": "user:eve",
+    "gold_fact_hash": "70b205cce2ce27a3875c871e4ee527976b81ad9ac5ba32561e6b36ae38479426",
+    "relevant_fact_ids": [
+      "70b205cc"
+    ],
+    "non_relevant_fact_ids": [
+      "41dce188"
+    ],
+    "probe_sha": "1198e70fc45c71af"
+  },
+  {
+    "id": "relation-019",
+    "class": "relation_lookup",
+    "query": "find team facts",
+    "gold_relation": "memory:team",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "f184e5b915f8b25319225f949dd8f6b9869388fbaad906c9bb1c662d30450940",
+    "relevant_fact_ids": [
+      "f184e5b9"
+    ],
+    "non_relevant_fact_ids": [
+      "e0b22f95"
+    ],
+    "probe_sha": "95ba544368777558"
+  },
+  {
+    "id": "relation-020",
+    "class": "relation_lookup",
+    "query": "find project facts",
+    "gold_relation": "memory:project",
+    "gold_primary_entity": "user:julia",
+    "gold_fact_hash": "14f57671f5abd785d6c998a3a60a9b46472fe2ee80229f5d5b968e484984ccc2",
+    "relevant_fact_ids": [
+      "14f57671"
+    ],
+    "non_relevant_fact_ids": [
+      "c50c5533"
+    ],
+    "probe_sha": "084742d6ccd08d47"
+  },
+  {
+    "id": "relation-021",
+    "class": "relation_lookup",
+    "query": "what are the manager assignments",
+    "gold_relation": "memory:manager",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "ceeef1789f1e58dd9006ee866394910ea359dbfdfcad4c98e93aec25f7580f0f",
+    "relevant_fact_ids": [
+      "ceeef178"
+    ],
+    "non_relevant_fact_ids": [
+      "ecba0113"
+    ],
+    "probe_sha": "c22af3e9c4bccade"
+  },
+  {
+    "id": "relation-022",
+    "class": "relation_lookup",
+    "query": "what are the department assignments",
+    "gold_relation": "memory:department",
+    "gold_primary_entity": "user:bob",
+    "gold_fact_hash": "fbd3e1347a15bbeeaa9cb0ca95cc3553e72ef9e07146e0f95de97bf6634ff79b",
+    "relevant_fact_ids": [
+      "fbd3e134"
+    ],
+    "non_relevant_fact_ids": [
+      "1ec697d7"
+    ],
+    "probe_sha": "5269544d92d80a7a"
+  },
+  {
+    "id": "relation-023",
+    "class": "relation_lookup",
+    "query": "what are the trust_level assignments",
+    "gold_relation": "memory:trust_level",
+    "gold_primary_entity": "agent:hal",
+    "gold_fact_hash": "ffeeac8d6283af909a6cc22b56171a5c265e1ef0ff703feeb788a7442bbb47b9",
+    "relevant_fact_ids": [
+      "ffeeac8d"
+    ],
+    "non_relevant_fact_ids": [
+      "3a8b2aa9"
+    ],
+    "probe_sha": "21d8c43d872d6342"
+  },
+  {
+    "id": "relation-024",
+    "class": "relation_lookup",
+    "query": "what are the clearance assignments",
+    "gold_relation": "memory:clearance",
+    "gold_primary_entity": "user:diana",
+    "gold_fact_hash": "3b40fb8f5b1354979ceaa30182d5991097edf91aae01b10cf1357f8231623daf",
+    "relevant_fact_ids": [
+      "3b40fb8f"
+    ],
+    "non_relevant_fact_ids": [
+      "a48c7599"
+    ],
+    "probe_sha": "4021f7929fbb9145"
+  },
+  {
+    "id": "relation-025",
+    "class": "relation_lookup",
+    "query": "what are the locale assignments",
+    "gold_relation": "memory:locale",
+    "gold_primary_entity": "user:ivan",
+    "gold_fact_hash": "de1b9166dbaa68a47e37424fab2d219edcf2467758a3d7538d4aec78b784c26e",
+    "relevant_fact_ids": [
+      "de1b9166"
+    ],
+    "non_relevant_fact_ids": [
+      "8f5c8f4c"
+    ],
+    "probe_sha": "3fac58715d6bede4"
+  },
+  {
+    "id": "relation-026",
+    "class": "relation_lookup",
+    "query": "what are the owner assignments",
+    "gold_relation": "memory:owner",
+    "gold_primary_entity": "service:api",
+    "gold_fact_hash": "696001010ab1b489b18522393b6c613d1ae988287e226fcd9f0f9c475ad2ec3c",
+    "relevant_fact_ids": [
+      "69600101"
+    ],
+    "non_relevant_fact_ids": [
+      "ed65a519"
+    ],
+    "probe_sha": "170271362c4c9e56"
+  },
+  {
+    "id": "relation-027",
+    "class": "relation_lookup",
+    "query": "what are the plan assignments",
+    "gold_relation": "memory:plan",
+    "gold_primary_entity": "org:acme",
+    "gold_fact_hash": "d4fb86ececd2b3a6b62ef4c0863df4196cc0e8e0f8a12c6cb278bd11e3573fb3",
+    "relevant_fact_ids": [
+      "d4fb86ec"
+    ],
+    "non_relevant_fact_ids": [
+      "e7f625e8"
+    ],
+    "probe_sha": "8498c4c07cf94732"
+  },
+  {
+    "id": "relation-028",
+    "class": "relation_lookup",
+    "query": "what are the status assignments",
+    "gold_relation": "memory:status",
+    "gold_primary_entity": "user:eve",
+    "gold_fact_hash": "70b205cce2ce27a3875c871e4ee527976b81ad9ac5ba32561e6b36ae38479426",
+    "relevant_fact_ids": [
+      "70b205cc"
+    ],
+    "non_relevant_fact_ids": [
+      "f489215c"
+    ],
+    "probe_sha": "a2c8c80d56e4434c"
+  },
+  {
+    "id": "relation-029",
+    "class": "relation_lookup",
+    "query": "what are the team assignments",
+    "gold_relation": "memory:team",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "f184e5b915f8b25319225f949dd8f6b9869388fbaad906c9bb1c662d30450940",
+    "relevant_fact_ids": [
+      "f184e5b9"
+    ],
+    "non_relevant_fact_ids": [
+      "594b9626"
+    ],
+    "probe_sha": "69747d5d25854d5a"
+  },
+  {
+    "id": "relation-030",
+    "class": "relation_lookup",
+    "query": "what are the project assignments",
+    "gold_relation": "memory:project",
+    "gold_primary_entity": "user:julia",
+    "gold_fact_hash": "14f57671f5abd785d6c998a3a60a9b46472fe2ee80229f5d5b968e484984ccc2",
+    "relevant_fact_ids": [
+      "14f57671"
+    ],
+    "non_relevant_fact_ids": [
+      "e55f4716"
+    ],
+    "probe_sha": "57f67931ae2d185e"
+  },
+  {
+    "id": "relation-031",
+    "class": "relation_lookup",
+    "query": "show me all manager information",
+    "gold_relation": "memory:manager",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "ceeef1789f1e58dd9006ee866394910ea359dbfdfcad4c98e93aec25f7580f0f",
+    "relevant_fact_ids": [
+      "ceeef178"
+    ],
+    "non_relevant_fact_ids": [
+      "25ebbcaa"
+    ],
+    "probe_sha": "95571787f36ad952"
+  },
+  {
+    "id": "relation-032",
+    "class": "relation_lookup",
+    "query": "show me all department information",
+    "gold_relation": "memory:department",
+    "gold_primary_entity": "user:bob",
+    "gold_fact_hash": "fbd3e1347a15bbeeaa9cb0ca95cc3553e72ef9e07146e0f95de97bf6634ff79b",
+    "relevant_fact_ids": [
+      "fbd3e134"
+    ],
+    "non_relevant_fact_ids": [
+      "00c86f5c"
+    ],
+    "probe_sha": "14897a5ae9d8d70f"
+  },
+  {
+    "id": "relation-033",
+    "class": "relation_lookup",
+    "query": "show me all trust_level information",
+    "gold_relation": "memory:trust_level",
+    "gold_primary_entity": "agent:hal",
+    "gold_fact_hash": "ffeeac8d6283af909a6cc22b56171a5c265e1ef0ff703feeb788a7442bbb47b9",
+    "relevant_fact_ids": [
+      "ffeeac8d"
+    ],
+    "non_relevant_fact_ids": [
+      "ea84b90f"
+    ],
+    "probe_sha": "b9770691e1a68cc4"
+  },
+  {
+    "id": "relation-034",
+    "class": "relation_lookup",
+    "query": "show me all clearance information",
+    "gold_relation": "memory:clearance",
+    "gold_primary_entity": "user:diana",
+    "gold_fact_hash": "3b40fb8f5b1354979ceaa30182d5991097edf91aae01b10cf1357f8231623daf",
+    "relevant_fact_ids": [
+      "3b40fb8f"
+    ],
+    "non_relevant_fact_ids": [
+      "5365aa54"
+    ],
+    "probe_sha": "cd4eea8a43ffbf4e"
+  },
+  {
+    "id": "relation-035",
+    "class": "relation_lookup",
+    "query": "show me all locale information",
+    "gold_relation": "memory:locale",
+    "gold_primary_entity": "user:ivan",
+    "gold_fact_hash": "de1b9166dbaa68a47e37424fab2d219edcf2467758a3d7538d4aec78b784c26e",
+    "relevant_fact_ids": [
+      "de1b9166"
+    ],
+    "non_relevant_fact_ids": [
+      "614f80aa"
+    ],
+    "probe_sha": "0b8785b27e70dd54"
+  },
+  {
+    "id": "relation-036",
+    "class": "relation_lookup",
+    "query": "show me all owner information",
+    "gold_relation": "memory:owner",
+    "gold_primary_entity": "service:api",
+    "gold_fact_hash": "696001010ab1b489b18522393b6c613d1ae988287e226fcd9f0f9c475ad2ec3c",
+    "relevant_fact_ids": [
+      "69600101"
+    ],
+    "non_relevant_fact_ids": [
+      "42773445"
+    ],
+    "probe_sha": "34193b3bf8800fc3"
+  },
+  {
+    "id": "relation-037",
+    "class": "relation_lookup",
+    "query": "show me all plan information",
+    "gold_relation": "memory:plan",
+    "gold_primary_entity": "org:acme",
+    "gold_fact_hash": "d4fb86ececd2b3a6b62ef4c0863df4196cc0e8e0f8a12c6cb278bd11e3573fb3",
+    "relevant_fact_ids": [
+      "d4fb86ec"
+    ],
+    "non_relevant_fact_ids": [
+      "742c1df4"
+    ],
+    "probe_sha": "b9b74bbb94ce0f67"
+  },
+  {
+    "id": "relation-038",
+    "class": "relation_lookup",
+    "query": "show me all status information",
+    "gold_relation": "memory:status",
+    "gold_primary_entity": "user:eve",
+    "gold_fact_hash": "70b205cce2ce27a3875c871e4ee527976b81ad9ac5ba32561e6b36ae38479426",
+    "relevant_fact_ids": [
+      "70b205cc"
+    ],
+    "non_relevant_fact_ids": [
+      "2d57bf2a"
+    ],
+    "probe_sha": "19136df472be1dc0"
+  },
+  {
+    "id": "relation-039",
+    "class": "relation_lookup",
+    "query": "show me all team information",
+    "gold_relation": "memory:team",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "f184e5b915f8b25319225f949dd8f6b9869388fbaad906c9bb1c662d30450940",
+    "relevant_fact_ids": [
+      "f184e5b9"
+    ],
+    "non_relevant_fact_ids": [
+      "30f1c4b5"
+    ],
+    "probe_sha": "f88dc8f459a3e5a5"
+  },
+  {
+    "id": "relation-040",
+    "class": "relation_lookup",
+    "query": "show me all project information",
+    "gold_relation": "memory:project",
+    "gold_primary_entity": "user:julia",
+    "gold_fact_hash": "14f57671f5abd785d6c998a3a60a9b46472fe2ee80229f5d5b968e484984ccc2",
+    "relevant_fact_ids": [
+      "14f57671"
+    ],
+    "non_relevant_fact_ids": [
+      "652da5e6"
+    ],
+    "probe_sha": "925c989720a8bceb"
+  },
+  {
+    "id": "relation-041",
+    "class": "relation_lookup",
+    "query": "retrieve manager data",
+    "gold_relation": "memory:manager",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "ceeef1789f1e58dd9006ee866394910ea359dbfdfcad4c98e93aec25f7580f0f",
+    "relevant_fact_ids": [
+      "ceeef178"
+    ],
+    "non_relevant_fact_ids": [
+      "282eb6a6"
+    ],
+    "probe_sha": "6202e99e43a84b9e"
+  },
+  {
+    "id": "relation-042",
+    "class": "relation_lookup",
+    "query": "retrieve department data",
+    "gold_relation": "memory:department",
+    "gold_primary_entity": "user:bob",
+    "gold_fact_hash": "fbd3e1347a15bbeeaa9cb0ca95cc3553e72ef9e07146e0f95de97bf6634ff79b",
+    "relevant_fact_ids": [
+      "fbd3e134"
+    ],
+    "non_relevant_fact_ids": [
+      "a2407c94"
+    ],
+    "probe_sha": "bd38bb35b977dc26"
+  },
+  {
+    "id": "relation-043",
+    "class": "relation_lookup",
+    "query": "retrieve trust_level data",
+    "gold_relation": "memory:trust_level",
+    "gold_primary_entity": "agent:hal",
+    "gold_fact_hash": "ffeeac8d6283af909a6cc22b56171a5c265e1ef0ff703feeb788a7442bbb47b9",
+    "relevant_fact_ids": [
+      "ffeeac8d"
+    ],
+    "non_relevant_fact_ids": [
+      "48e162d5"
+    ],
+    "probe_sha": "e427dfd893ae127d"
+  },
+  {
+    "id": "relation-044",
+    "class": "relation_lookup",
+    "query": "retrieve clearance data",
+    "gold_relation": "memory:clearance",
+    "gold_primary_entity": "user:diana",
+    "gold_fact_hash": "3b40fb8f5b1354979ceaa30182d5991097edf91aae01b10cf1357f8231623daf",
+    "relevant_fact_ids": [
+      "3b40fb8f"
+    ],
+    "non_relevant_fact_ids": [
+      "a9d530ca"
+    ],
+    "probe_sha": "3a0ff76e50d609cc"
+  },
+  {
+    "id": "relation-045",
+    "class": "relation_lookup",
+    "query": "retrieve locale data",
+    "gold_relation": "memory:locale",
+    "gold_primary_entity": "user:ivan",
+    "gold_fact_hash": "de1b9166dbaa68a47e37424fab2d219edcf2467758a3d7538d4aec78b784c26e",
+    "relevant_fact_ids": [
+      "de1b9166"
+    ],
+    "non_relevant_fact_ids": [
+      "ba77e0e5"
+    ],
+    "probe_sha": "365d955881e4f3ea"
+  },
+  {
+    "id": "relation-046",
+    "class": "relation_lookup",
+    "query": "retrieve owner data",
+    "gold_relation": "memory:owner",
+    "gold_primary_entity": "service:api",
+    "gold_fact_hash": "696001010ab1b489b18522393b6c613d1ae988287e226fcd9f0f9c475ad2ec3c",
+    "relevant_fact_ids": [
+      "69600101"
+    ],
+    "non_relevant_fact_ids": [
+      "47da5b4d"
+    ],
+    "probe_sha": "31f1acd0776e8b54"
+  },
+  {
+    "id": "relation-047",
+    "class": "relation_lookup",
+    "query": "retrieve plan data",
+    "gold_relation": "memory:plan",
+    "gold_primary_entity": "org:acme",
+    "gold_fact_hash": "d4fb86ececd2b3a6b62ef4c0863df4196cc0e8e0f8a12c6cb278bd11e3573fb3",
+    "relevant_fact_ids": [
+      "d4fb86ec"
+    ],
+    "non_relevant_fact_ids": [
+      "1f62afb9"
+    ],
+    "probe_sha": "eaab0fb6001b7440"
+  },
+  {
+    "id": "relation-048",
+    "class": "relation_lookup",
+    "query": "retrieve status data",
+    "gold_relation": "memory:status",
+    "gold_primary_entity": "user:eve",
+    "gold_fact_hash": "70b205cce2ce27a3875c871e4ee527976b81ad9ac5ba32561e6b36ae38479426",
+    "relevant_fact_ids": [
+      "70b205cc"
+    ],
+    "non_relevant_fact_ids": [
+      "06cdfc8a"
+    ],
+    "probe_sha": "4a34dab10cdd10ce"
+  },
+  {
+    "id": "relation-049",
+    "class": "relation_lookup",
+    "query": "retrieve team data",
+    "gold_relation": "memory:team",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "f184e5b915f8b25319225f949dd8f6b9869388fbaad906c9bb1c662d30450940",
+    "relevant_fact_ids": [
+      "f184e5b9"
+    ],
+    "non_relevant_fact_ids": [
+      "d480a95c"
+    ],
+    "probe_sha": "74e844981f28f14e"
+  },
+  {
+    "id": "relation-050",
+    "class": "relation_lookup",
+    "query": "retrieve project data",
+    "gold_relation": "memory:project",
+    "gold_primary_entity": "user:julia",
+    "gold_fact_hash": "14f57671f5abd785d6c998a3a60a9b46472fe2ee80229f5d5b968e484984ccc2",
+    "relevant_fact_ids": [
+      "14f57671"
+    ],
+    "non_relevant_fact_ids": [
+      "aaf386cb"
+    ],
+    "probe_sha": "683e550afd513a48"
+  },
+  {
+    "id": "relation-051",
+    "class": "relation_lookup",
+    "query": "who has a manager",
+    "gold_relation": "memory:manager",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "ceeef1789f1e58dd9006ee866394910ea359dbfdfcad4c98e93aec25f7580f0f",
+    "relevant_fact_ids": [
+      "ceeef178"
+    ],
+    "non_relevant_fact_ids": [
+      "cb26f601"
+    ],
+    "probe_sha": "47e616eb98a68c79"
+  },
+  {
+    "id": "relation-052",
+    "class": "relation_lookup",
+    "query": "who has a department",
+    "gold_relation": "memory:department",
+    "gold_primary_entity": "user:bob",
+    "gold_fact_hash": "fbd3e1347a15bbeeaa9cb0ca95cc3553e72ef9e07146e0f95de97bf6634ff79b",
+    "relevant_fact_ids": [
+      "fbd3e134"
+    ],
+    "non_relevant_fact_ids": [
+      "a94d39ad"
+    ],
+    "probe_sha": "6a8acaf6486711bf"
+  },
+  {
+    "id": "relation-053",
+    "class": "relation_lookup",
+    "query": "who has a trust_level",
+    "gold_relation": "memory:trust_level",
+    "gold_primary_entity": "agent:hal",
+    "gold_fact_hash": "ffeeac8d6283af909a6cc22b56171a5c265e1ef0ff703feeb788a7442bbb47b9",
+    "relevant_fact_ids": [
+      "ffeeac8d"
+    ],
+    "non_relevant_fact_ids": [
+      "bdbc14f0"
+    ],
+    "probe_sha": "47d2be8533e83644"
+  },
+  {
+    "id": "relation-054",
+    "class": "relation_lookup",
+    "query": "who has a clearance",
+    "gold_relation": "memory:clearance",
+    "gold_primary_entity": "user:diana",
+    "gold_fact_hash": "3b40fb8f5b1354979ceaa30182d5991097edf91aae01b10cf1357f8231623daf",
+    "relevant_fact_ids": [
+      "3b40fb8f"
+    ],
+    "non_relevant_fact_ids": [
+      "9e1804cc"
+    ],
+    "probe_sha": "19d56284142b4579"
+  },
+  {
+    "id": "relation-055",
+    "class": "relation_lookup",
+    "query": "who has a locale",
+    "gold_relation": "memory:locale",
+    "gold_primary_entity": "user:ivan",
+    "gold_fact_hash": "de1b9166dbaa68a47e37424fab2d219edcf2467758a3d7538d4aec78b784c26e",
+    "relevant_fact_ids": [
+      "de1b9166"
+    ],
+    "non_relevant_fact_ids": [
+      "70fc0af5"
+    ],
+    "probe_sha": "275d4de14e0eef24"
+  },
+  {
+    "id": "relation-056",
+    "class": "relation_lookup",
+    "query": "who has a owner",
+    "gold_relation": "memory:owner",
+    "gold_primary_entity": "service:api",
+    "gold_fact_hash": "696001010ab1b489b18522393b6c613d1ae988287e226fcd9f0f9c475ad2ec3c",
+    "relevant_fact_ids": [
+      "69600101"
+    ],
+    "non_relevant_fact_ids": [
+      "80e8ed08"
+    ],
+    "probe_sha": "58b0f71dd56a241a"
+  },
+  {
+    "id": "relation-057",
+    "class": "relation_lookup",
+    "query": "who has a plan",
+    "gold_relation": "memory:plan",
+    "gold_primary_entity": "org:acme",
+    "gold_fact_hash": "d4fb86ececd2b3a6b62ef4c0863df4196cc0e8e0f8a12c6cb278bd11e3573fb3",
+    "relevant_fact_ids": [
+      "d4fb86ec"
+    ],
+    "non_relevant_fact_ids": [
+      "a1c03d69"
+    ],
+    "probe_sha": "a57c0b241349cbb5"
+  },
+  {
+    "id": "relation-058",
+    "class": "relation_lookup",
+    "query": "who has a status",
+    "gold_relation": "memory:status",
+    "gold_primary_entity": "user:eve",
+    "gold_fact_hash": "70b205cce2ce27a3875c871e4ee527976b81ad9ac5ba32561e6b36ae38479426",
+    "relevant_fact_ids": [
+      "70b205cc"
+    ],
+    "non_relevant_fact_ids": [
+      "a9e67128"
+    ],
+    "probe_sha": "0dc2329bb474a57f"
+  },
+  {
+    "id": "relation-059",
+    "class": "relation_lookup",
+    "query": "who has a team",
+    "gold_relation": "memory:team",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "f184e5b915f8b25319225f949dd8f6b9869388fbaad906c9bb1c662d30450940",
+    "relevant_fact_ids": [
+      "f184e5b9"
+    ],
+    "non_relevant_fact_ids": [
+      "fa6071f4"
+    ],
+    "probe_sha": "412495fcbd3cd5a5"
+  },
+  {
+    "id": "relation-060",
+    "class": "relation_lookup",
+    "query": "who has a project",
+    "gold_relation": "memory:project",
+    "gold_primary_entity": "user:julia",
+    "gold_fact_hash": "14f57671f5abd785d6c998a3a60a9b46472fe2ee80229f5d5b968e484984ccc2",
+    "relevant_fact_ids": [
+      "14f57671"
+    ],
+    "non_relevant_fact_ids": [
+      "fcaf973c"
+    ],
+    "probe_sha": "3f7375725ff12f0b"
+  },
+  {
+    "id": "relation-061",
+    "class": "relation_lookup",
+    "query": "tell me about manager",
+    "gold_relation": "memory:manager",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "ceeef1789f1e58dd9006ee866394910ea359dbfdfcad4c98e93aec25f7580f0f",
+    "relevant_fact_ids": [
+      "ceeef178"
+    ],
+    "non_relevant_fact_ids": [
+      "364f6cd3"
+    ],
+    "probe_sha": "415ebc854e915f31"
+  },
+  {
+    "id": "relation-062",
+    "class": "relation_lookup",
+    "query": "tell me about department",
+    "gold_relation": "memory:department",
+    "gold_primary_entity": "user:bob",
+    "gold_fact_hash": "fbd3e1347a15bbeeaa9cb0ca95cc3553e72ef9e07146e0f95de97bf6634ff79b",
+    "relevant_fact_ids": [
+      "fbd3e134"
+    ],
+    "non_relevant_fact_ids": [
+      "8dc3b8e9"
+    ],
+    "probe_sha": "dbbc3a2df450cf4f"
+  },
+  {
+    "id": "relation-063",
+    "class": "relation_lookup",
+    "query": "tell me about trust_level",
+    "gold_relation": "memory:trust_level",
+    "gold_primary_entity": "agent:hal",
+    "gold_fact_hash": "ffeeac8d6283af909a6cc22b56171a5c265e1ef0ff703feeb788a7442bbb47b9",
+    "relevant_fact_ids": [
+      "ffeeac8d"
+    ],
+    "non_relevant_fact_ids": [
+      "de2b31b7"
+    ],
+    "probe_sha": "6fa65c3ce4603737"
+  },
+  {
+    "id": "relation-064",
+    "class": "relation_lookup",
+    "query": "tell me about clearance",
+    "gold_relation": "memory:clearance",
+    "gold_primary_entity": "user:diana",
+    "gold_fact_hash": "3b40fb8f5b1354979ceaa30182d5991097edf91aae01b10cf1357f8231623daf",
+    "relevant_fact_ids": [
+      "3b40fb8f"
+    ],
+    "non_relevant_fact_ids": [
+      "f0cf789a"
+    ],
+    "probe_sha": "f49196764406026e"
+  },
+  {
+    "id": "relation-065",
+    "class": "relation_lookup",
+    "query": "tell me about locale",
+    "gold_relation": "memory:locale",
+    "gold_primary_entity": "user:ivan",
+    "gold_fact_hash": "de1b9166dbaa68a47e37424fab2d219edcf2467758a3d7538d4aec78b784c26e",
+    "relevant_fact_ids": [
+      "de1b9166"
+    ],
+    "non_relevant_fact_ids": [
+      "af715463"
+    ],
+    "probe_sha": "8853415bac46550a"
+  },
+  {
+    "id": "relation-066",
+    "class": "relation_lookup",
+    "query": "tell me about owner",
+    "gold_relation": "memory:owner",
+    "gold_primary_entity": "service:api",
+    "gold_fact_hash": "696001010ab1b489b18522393b6c613d1ae988287e226fcd9f0f9c475ad2ec3c",
+    "relevant_fact_ids": [
+      "69600101"
+    ],
+    "non_relevant_fact_ids": [
+      "d7449bcb"
+    ],
+    "probe_sha": "bb2fcb158208ce58"
+  },
+  {
+    "id": "relation-067",
+    "class": "relation_lookup",
+    "query": "tell me about plan",
+    "gold_relation": "memory:plan",
+    "gold_primary_entity": "org:acme",
+    "gold_fact_hash": "d4fb86ececd2b3a6b62ef4c0863df4196cc0e8e0f8a12c6cb278bd11e3573fb3",
+    "relevant_fact_ids": [
+      "d4fb86ec"
+    ],
+    "non_relevant_fact_ids": [
+      "f271a319"
+    ],
+    "probe_sha": "51b69874888abee1"
+  },
+  {
+    "id": "relation-068",
+    "class": "relation_lookup",
+    "query": "tell me about status",
+    "gold_relation": "memory:status",
+    "gold_primary_entity": "user:eve",
+    "gold_fact_hash": "70b205cce2ce27a3875c871e4ee527976b81ad9ac5ba32561e6b36ae38479426",
+    "relevant_fact_ids": [
+      "70b205cc"
+    ],
+    "non_relevant_fact_ids": [
+      "60249cd2"
+    ],
+    "probe_sha": "7fd056c621fae0d5"
+  },
+  {
+    "id": "relation-069",
+    "class": "relation_lookup",
+    "query": "tell me about team",
+    "gold_relation": "memory:team",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "f184e5b915f8b25319225f949dd8f6b9869388fbaad906c9bb1c662d30450940",
+    "relevant_fact_ids": [
+      "f184e5b9"
+    ],
+    "non_relevant_fact_ids": [
+      "1501c18a"
+    ],
+    "probe_sha": "2da25bc507f9b6de"
+  },
+  {
+    "id": "relation-070",
+    "class": "relation_lookup",
+    "query": "tell me about project",
+    "gold_relation": "memory:project",
+    "gold_primary_entity": "user:julia",
+    "gold_fact_hash": "14f57671f5abd785d6c998a3a60a9b46472fe2ee80229f5d5b968e484984ccc2",
+    "relevant_fact_ids": [
+      "14f57671"
+    ],
+    "non_relevant_fact_ids": [
+      "4b757017"
+    ],
+    "probe_sha": "ff496b5199de46d5"
+  },
+  {
+    "id": "relation-071",
+    "class": "relation_lookup",
+    "query": "describe the manager attribute",
+    "gold_relation": "memory:manager",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "ceeef1789f1e58dd9006ee866394910ea359dbfdfcad4c98e93aec25f7580f0f",
+    "relevant_fact_ids": [
+      "ceeef178"
+    ],
+    "non_relevant_fact_ids": [
+      "e4ad9119"
+    ],
+    "probe_sha": "eacf39074ee65c85"
+  },
+  {
+    "id": "relation-072",
+    "class": "relation_lookup",
+    "query": "describe the department attribute",
+    "gold_relation": "memory:department",
+    "gold_primary_entity": "user:bob",
+    "gold_fact_hash": "fbd3e1347a15bbeeaa9cb0ca95cc3553e72ef9e07146e0f95de97bf6634ff79b",
+    "relevant_fact_ids": [
+      "fbd3e134"
+    ],
+    "non_relevant_fact_ids": [
+      "05a5ee61"
+    ],
+    "probe_sha": "952ddd5e044c7642"
+  },
+  {
+    "id": "relation-073",
+    "class": "relation_lookup",
+    "query": "describe the trust_level attribute",
+    "gold_relation": "memory:trust_level",
+    "gold_primary_entity": "agent:hal",
+    "gold_fact_hash": "ffeeac8d6283af909a6cc22b56171a5c265e1ef0ff703feeb788a7442bbb47b9",
+    "relevant_fact_ids": [
+      "ffeeac8d"
+    ],
+    "non_relevant_fact_ids": [
+      "4347f962"
+    ],
+    "probe_sha": "b41b355888a53e7f"
+  },
+  {
+    "id": "relation-074",
+    "class": "relation_lookup",
+    "query": "describe the clearance attribute",
+    "gold_relation": "memory:clearance",
+    "gold_primary_entity": "user:diana",
+    "gold_fact_hash": "3b40fb8f5b1354979ceaa30182d5991097edf91aae01b10cf1357f8231623daf",
+    "relevant_fact_ids": [
+      "3b40fb8f"
+    ],
+    "non_relevant_fact_ids": [
+      "a941cbf8"
+    ],
+    "probe_sha": "55290aba242ad48b"
+  },
+  {
+    "id": "relation-075",
+    "class": "relation_lookup",
+    "query": "describe the locale attribute",
+    "gold_relation": "memory:locale",
+    "gold_primary_entity": "user:ivan",
+    "gold_fact_hash": "de1b9166dbaa68a47e37424fab2d219edcf2467758a3d7538d4aec78b784c26e",
+    "relevant_fact_ids": [
+      "de1b9166"
+    ],
+    "non_relevant_fact_ids": [
+      "989704d3"
+    ],
+    "probe_sha": "e2a0af49a96e36bd"
+  },
+  {
+    "id": "relation-076",
+    "class": "relation_lookup",
+    "query": "describe the owner attribute",
+    "gold_relation": "memory:owner",
+    "gold_primary_entity": "service:api",
+    "gold_fact_hash": "696001010ab1b489b18522393b6c613d1ae988287e226fcd9f0f9c475ad2ec3c",
+    "relevant_fact_ids": [
+      "69600101"
+    ],
+    "non_relevant_fact_ids": [
+      "a0a18aee"
+    ],
+    "probe_sha": "51a2c0ca2ce87250"
+  },
+  {
+    "id": "relation-077",
+    "class": "relation_lookup",
+    "query": "describe the plan attribute",
+    "gold_relation": "memory:plan",
+    "gold_primary_entity": "org:acme",
+    "gold_fact_hash": "d4fb86ececd2b3a6b62ef4c0863df4196cc0e8e0f8a12c6cb278bd11e3573fb3",
+    "relevant_fact_ids": [
+      "d4fb86ec"
+    ],
+    "non_relevant_fact_ids": [
+      "633a52cd"
+    ],
+    "probe_sha": "c2637e0656e67a96"
+  },
+  {
+    "id": "relation-078",
+    "class": "relation_lookup",
+    "query": "describe the status attribute",
+    "gold_relation": "memory:status",
+    "gold_primary_entity": "user:eve",
+    "gold_fact_hash": "70b205cce2ce27a3875c871e4ee527976b81ad9ac5ba32561e6b36ae38479426",
+    "relevant_fact_ids": [
+      "70b205cc"
+    ],
+    "non_relevant_fact_ids": [
+      "14a78f39"
+    ],
+    "probe_sha": "f7c919f9ca8c120b"
+  },
+  {
+    "id": "relation-079",
+    "class": "relation_lookup",
+    "query": "describe the team attribute",
+    "gold_relation": "memory:team",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "f184e5b915f8b25319225f949dd8f6b9869388fbaad906c9bb1c662d30450940",
+    "relevant_fact_ids": [
+      "f184e5b9"
+    ],
+    "non_relevant_fact_ids": [
+      "c9b5d98b"
+    ],
+    "probe_sha": "6d4a8e83e54b22d3"
+  },
+  {
+    "id": "relation-080",
+    "class": "relation_lookup",
+    "query": "describe the project attribute",
+    "gold_relation": "memory:project",
+    "gold_primary_entity": "user:julia",
+    "gold_fact_hash": "14f57671f5abd785d6c998a3a60a9b46472fe2ee80229f5d5b968e484984ccc2",
+    "relevant_fact_ids": [
+      "14f57671"
+    ],
+    "non_relevant_fact_ids": [
+      "234eec15"
+    ],
+    "probe_sha": "495bde16373ecf13"
+  },
+  {
+    "id": "relation-081",
+    "class": "relation_lookup",
+    "query": "what entities have manager",
+    "gold_relation": "memory:manager",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "ceeef1789f1e58dd9006ee866394910ea359dbfdfcad4c98e93aec25f7580f0f",
+    "relevant_fact_ids": [
+      "ceeef178"
+    ],
+    "non_relevant_fact_ids": [
+      "1cc7b457"
+    ],
+    "probe_sha": "4340f4ec41334e4f"
+  },
+  {
+    "id": "relation-082",
+    "class": "relation_lookup",
+    "query": "what entities have department",
+    "gold_relation": "memory:department",
+    "gold_primary_entity": "user:bob",
+    "gold_fact_hash": "fbd3e1347a15bbeeaa9cb0ca95cc3553e72ef9e07146e0f95de97bf6634ff79b",
+    "relevant_fact_ids": [
+      "fbd3e134"
+    ],
+    "non_relevant_fact_ids": [
+      "647ca99a"
+    ],
+    "probe_sha": "21d54243c3b57643"
+  },
+  {
+    "id": "relation-083",
+    "class": "relation_lookup",
+    "query": "what entities have trust_level",
+    "gold_relation": "memory:trust_level",
+    "gold_primary_entity": "agent:hal",
+    "gold_fact_hash": "ffeeac8d6283af909a6cc22b56171a5c265e1ef0ff703feeb788a7442bbb47b9",
+    "relevant_fact_ids": [
+      "ffeeac8d"
+    ],
+    "non_relevant_fact_ids": [
+      "8f5457c7"
+    ],
+    "probe_sha": "9f6a9700d8572d72"
+  },
+  {
+    "id": "relation-084",
+    "class": "relation_lookup",
+    "query": "what entities have clearance",
+    "gold_relation": "memory:clearance",
+    "gold_primary_entity": "user:diana",
+    "gold_fact_hash": "3b40fb8f5b1354979ceaa30182d5991097edf91aae01b10cf1357f8231623daf",
+    "relevant_fact_ids": [
+      "3b40fb8f"
+    ],
+    "non_relevant_fact_ids": [
+      "773d20c9"
+    ],
+    "probe_sha": "caea865ea4066e70"
+  },
+  {
+    "id": "relation-085",
+    "class": "relation_lookup",
+    "query": "what entities have locale",
+    "gold_relation": "memory:locale",
+    "gold_primary_entity": "user:ivan",
+    "gold_fact_hash": "de1b9166dbaa68a47e37424fab2d219edcf2467758a3d7538d4aec78b784c26e",
+    "relevant_fact_ids": [
+      "de1b9166"
+    ],
+    "non_relevant_fact_ids": [
+      "be65f9a5"
+    ],
+    "probe_sha": "31aca61431557185"
+  },
+  {
+    "id": "relation-086",
+    "class": "relation_lookup",
+    "query": "what entities have owner",
+    "gold_relation": "memory:owner",
+    "gold_primary_entity": "service:api",
+    "gold_fact_hash": "696001010ab1b489b18522393b6c613d1ae988287e226fcd9f0f9c475ad2ec3c",
+    "relevant_fact_ids": [
+      "69600101"
+    ],
+    "non_relevant_fact_ids": [
+      "850c3c1a"
+    ],
+    "probe_sha": "6a208bd518a2d756"
+  },
+  {
+    "id": "relation-087",
+    "class": "relation_lookup",
+    "query": "what entities have plan",
+    "gold_relation": "memory:plan",
+    "gold_primary_entity": "org:acme",
+    "gold_fact_hash": "d4fb86ececd2b3a6b62ef4c0863df4196cc0e8e0f8a12c6cb278bd11e3573fb3",
+    "relevant_fact_ids": [
+      "d4fb86ec"
+    ],
+    "non_relevant_fact_ids": [
+      "e5b90875"
+    ],
+    "probe_sha": "88a8bdc3227dba10"
+  },
+  {
+    "id": "relation-088",
+    "class": "relation_lookup",
+    "query": "what entities have status",
+    "gold_relation": "memory:status",
+    "gold_primary_entity": "user:eve",
+    "gold_fact_hash": "70b205cce2ce27a3875c871e4ee527976b81ad9ac5ba32561e6b36ae38479426",
+    "relevant_fact_ids": [
+      "70b205cc"
+    ],
+    "non_relevant_fact_ids": [
+      "32a65dca"
+    ],
+    "probe_sha": "dbc1b994a7442239"
+  },
+  {
+    "id": "relation-089",
+    "class": "relation_lookup",
+    "query": "what entities have team",
+    "gold_relation": "memory:team",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "f184e5b915f8b25319225f949dd8f6b9869388fbaad906c9bb1c662d30450940",
+    "relevant_fact_ids": [
+      "f184e5b9"
+    ],
+    "non_relevant_fact_ids": [
+      "2a80484f"
+    ],
+    "probe_sha": "7466ae23cdeec74a"
+  },
+  {
+    "id": "relation-090",
+    "class": "relation_lookup",
+    "query": "what entities have project",
+    "gold_relation": "memory:project",
+    "gold_primary_entity": "user:julia",
+    "gold_fact_hash": "14f57671f5abd785d6c998a3a60a9b46472fe2ee80229f5d5b968e484984ccc2",
+    "relevant_fact_ids": [
+      "14f57671"
+    ],
+    "non_relevant_fact_ids": [
+      "0115f199"
+    ],
+    "probe_sha": "315188b40645640b"
+  },
+  {
+    "id": "relation-091",
+    "class": "relation_lookup",
+    "query": "give me manager details",
+    "gold_relation": "memory:manager",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "ceeef1789f1e58dd9006ee866394910ea359dbfdfcad4c98e93aec25f7580f0f",
+    "relevant_fact_ids": [
+      "ceeef178"
+    ],
+    "non_relevant_fact_ids": [
+      "838943f2"
+    ],
+    "probe_sha": "e04be19426a1f44f"
+  },
+  {
+    "id": "relation-092",
+    "class": "relation_lookup",
+    "query": "give me department details",
+    "gold_relation": "memory:department",
+    "gold_primary_entity": "user:bob",
+    "gold_fact_hash": "fbd3e1347a15bbeeaa9cb0ca95cc3553e72ef9e07146e0f95de97bf6634ff79b",
+    "relevant_fact_ids": [
+      "fbd3e134"
+    ],
+    "non_relevant_fact_ids": [
+      "b4693b46"
+    ],
+    "probe_sha": "d66c550686fa13b9"
+  },
+  {
+    "id": "relation-093",
+    "class": "relation_lookup",
+    "query": "give me trust_level details",
+    "gold_relation": "memory:trust_level",
+    "gold_primary_entity": "agent:hal",
+    "gold_fact_hash": "ffeeac8d6283af909a6cc22b56171a5c265e1ef0ff703feeb788a7442bbb47b9",
+    "relevant_fact_ids": [
+      "ffeeac8d"
+    ],
+    "non_relevant_fact_ids": [
+      "1350dbbe"
+    ],
+    "probe_sha": "e92c4e7c5220558f"
+  },
+  {
+    "id": "relation-094",
+    "class": "relation_lookup",
+    "query": "give me clearance details",
+    "gold_relation": "memory:clearance",
+    "gold_primary_entity": "user:diana",
+    "gold_fact_hash": "3b40fb8f5b1354979ceaa30182d5991097edf91aae01b10cf1357f8231623daf",
+    "relevant_fact_ids": [
+      "3b40fb8f"
+    ],
+    "non_relevant_fact_ids": [
+      "94c02d59"
+    ],
+    "probe_sha": "425c3ae7df54a565"
+  },
+  {
+    "id": "relation-095",
+    "class": "relation_lookup",
+    "query": "give me locale details",
+    "gold_relation": "memory:locale",
+    "gold_primary_entity": "user:ivan",
+    "gold_fact_hash": "de1b9166dbaa68a47e37424fab2d219edcf2467758a3d7538d4aec78b784c26e",
+    "relevant_fact_ids": [
+      "de1b9166"
+    ],
+    "non_relevant_fact_ids": [
+      "996b4314"
+    ],
+    "probe_sha": "511ee0058a61d6b5"
+  },
+  {
+    "id": "relation-096",
+    "class": "relation_lookup",
+    "query": "give me owner details",
+    "gold_relation": "memory:owner",
+    "gold_primary_entity": "service:api",
+    "gold_fact_hash": "696001010ab1b489b18522393b6c613d1ae988287e226fcd9f0f9c475ad2ec3c",
+    "relevant_fact_ids": [
+      "69600101"
+    ],
+    "non_relevant_fact_ids": [
+      "195a6752"
+    ],
+    "probe_sha": "b8ac1a04e3b150f4"
+  },
+  {
+    "id": "relation-097",
+    "class": "relation_lookup",
+    "query": "give me plan details",
+    "gold_relation": "memory:plan",
+    "gold_primary_entity": "org:acme",
+    "gold_fact_hash": "d4fb86ececd2b3a6b62ef4c0863df4196cc0e8e0f8a12c6cb278bd11e3573fb3",
+    "relevant_fact_ids": [
+      "d4fb86ec"
+    ],
+    "non_relevant_fact_ids": [
+      "0f75f8be"
+    ],
+    "probe_sha": "9ce93b0ae7a49939"
+  },
+  {
+    "id": "relation-098",
+    "class": "relation_lookup",
+    "query": "give me status details",
+    "gold_relation": "memory:status",
+    "gold_primary_entity": "user:eve",
+    "gold_fact_hash": "70b205cce2ce27a3875c871e4ee527976b81ad9ac5ba32561e6b36ae38479426",
+    "relevant_fact_ids": [
+      "70b205cc"
+    ],
+    "non_relevant_fact_ids": [
+      "e1fcae93"
+    ],
+    "probe_sha": "8c1fc1b5370d8629"
+  },
+  {
+    "id": "relation-099",
+    "class": "relation_lookup",
+    "query": "give me team details",
+    "gold_relation": "memory:team",
+    "gold_primary_entity": "user:frank",
+    "gold_fact_hash": "f184e5b915f8b25319225f949dd8f6b9869388fbaad906c9bb1c662d30450940",
+    "relevant_fact_ids": [
+      "f184e5b9"
+    ],
+    "non_relevant_fact_ids": [
+      "62a15684"
+    ],
+    "probe_sha": "8def1dc33f1808ff"
+  },
+  {
+    "id": "relation-100",
+    "class": "relation_lookup",
+    "query": "give me project details",
+    "gold_relation": "memory:project",
+    "gold_primary_entity": "user:julia",
+    "gold_fact_hash": "14f57671f5abd785d6c998a3a60a9b46472fe2ee80229f5d5b968e484984ccc2",
+    "relevant_fact_ids": [
+      "14f57671"
+    ],
+    "non_relevant_fact_ids": [
+      "913b161c"
+    ],
+    "probe_sha": "8e82c17b656667d7"
+  },
+  {
+    "id": "paraphrase-001",
+    "class": "paraphrase",
+    "query": "Who is in charge of the platform team?",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "2ac28845"
+    ],
+    "probe_sha": "51e0bc4974d4cf2c"
+  },
+  {
+    "id": "paraphrase-002",
+    "class": "paraphrase",
+    "query": "Tell me about alice's permissions",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "59ee471e"
+    ],
+    "probe_sha": "477b8547eb873da1"
+  },
+  {
+    "id": "paraphrase-003",
+    "class": "paraphrase",
+    "query": "What can agent hal do?",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "2d92c3b7"
+    ],
+    "probe_sha": "f0b0e563b63aa7a4"
+  },
+  {
+    "id": "paraphrase-004",
+    "class": "paraphrase",
+    "query": "How is the acme organization set up?",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "3f29fe1e"
+    ],
+    "probe_sha": "d0dea1f589d21cc4"
+  },
+  {
+    "id": "paraphrase-005",
+    "class": "paraphrase",
+    "query": "What's bob's area of work?",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "250e3845"
+    ],
+    "probe_sha": "41dcb495457be4e1"
+  },
+  {
+    "id": "paraphrase-006",
+    "class": "paraphrase",
+    "query": "Is diana authorized for sensitive work?",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "0aba7bcd"
+    ],
+    "probe_sha": "d33c1a478a5d58d6"
+  },
+  {
+    "id": "paraphrase-007",
+    "class": "paraphrase",
+    "query": "Where is oscar located?",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "886eb4b2"
+    ],
+    "probe_sha": "be827995459b65bd"
+  },
+  {
+    "id": "paraphrase-008",
+    "class": "paraphrase",
+    "query": "What project is julia assigned to?",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "fc7c142f"
+    ],
+    "probe_sha": "c74d8c92e91d5e32"
+  },
+  {
+    "id": "paraphrase-009",
+    "class": "paraphrase",
+    "query": "Who runs the database service?",
+    "gold_entity": "service:db",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "414cfe8996b48f80858d86a7b6a7d201f26f3184eab3e1c1f746cd0a337853d5",
+    "relevant_fact_ids": [
+      "414cfe89"
+    ],
+    "non_relevant_fact_ids": [
+      "43474a14"
+    ],
+    "probe_sha": "4cc6b3673e8fe95a"
+  },
+  {
+    "id": "paraphrase-010",
+    "class": "paraphrase",
+    "query": "Is eve currently working?",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "f69be6b8"
+    ],
+    "probe_sha": "efac916517734dd5"
+  },
+  {
+    "id": "paraphrase-011",
+    "class": "paraphrase",
+    "query": "What's grace's reporting structure?",
+    "gold_entity": "user:grace",
+    "gold_relation": "memory:manager",
+    "gold_fact_hash": "4dc1272e4e975b050b53b78ebba9d18fd28b3662078ef91192a22228ddeb2793",
+    "relevant_fact_ids": [
+      "4dc1272e"
+    ],
+    "non_relevant_fact_ids": [
+      "025885ec"
+    ],
+    "probe_sha": "822701fabfd3b766"
+  },
+  {
+    "id": "paraphrase-012",
+    "class": "paraphrase",
+    "query": "How trusted is nova?",
+    "gold_entity": "agent:nova",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "82eb48f4f0f8eeb638af18e53b936a3c216e0da52fde344838b6d689ac44edd5",
+    "relevant_fact_ids": [
+      "82eb48f4"
+    ],
+    "non_relevant_fact_ids": [
+      "c78d3060"
+    ],
+    "probe_sha": "041cf04e48b1c6e1"
+  },
+  {
+    "id": "paraphrase-013",
+    "class": "paraphrase",
+    "query": "What team does petra belong to?",
+    "gold_entity": "user:petra",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "7c2e3454082816c2955e1a0402c54b7839b05a8a57c2915df7dc54b617c4b6dd",
+    "relevant_fact_ids": [
+      "7c2e3454"
+    ],
+    "non_relevant_fact_ids": [
+      "fe9476bd"
+    ],
+    "probe_sha": "2ff9374b25c8d09a"
+  },
+  {
+    "id": "paraphrase-014",
+    "class": "paraphrase",
+    "query": "What's betacorp's pricing tier?",
+    "gold_entity": "org:betacorp",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "85fe57394560639de43195244869d596f9f9568a7339e6764a5d46c592487dd9",
+    "relevant_fact_ids": [
+      "85fe5739"
+    ],
+    "non_relevant_fact_ids": [
+      "259e3ed4"
+    ],
+    "probe_sha": "5ef0b2f4c559e0bc"
+  },
+  {
+    "id": "paraphrase-015",
+    "class": "paraphrase",
+    "query": "Who has access to the api service?",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "fb11b265"
+    ],
+    "probe_sha": "218894e3662c4965"
+  },
+  {
+    "id": "paraphrase-016",
+    "class": "paraphrase",
+    "query": "What's kate's job function?",
+    "gold_entity": "user:kate",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "23829b4040bbc8fba824161e389ca4285d8a516b5ac5ce0a08a1cca9173e5480",
+    "relevant_fact_ids": [
+      "23829b40"
+    ],
+    "non_relevant_fact_ids": [
+      "7d2b29aa"
+    ],
+    "probe_sha": "cee5cbbec7d376bc"
+  },
+  {
+    "id": "paraphrase-017",
+    "class": "paraphrase",
+    "query": "Is mia an active user?",
+    "gold_entity": "user:mia",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "ac4669785fe713cce052a8d871aad7d804e7248b722fb633a1538071eea6fa8c",
+    "relevant_fact_ids": [
+      "ac466978"
+    ],
+    "non_relevant_fact_ids": [
+      "f8d5176c"
+    ],
+    "probe_sha": "fe59f1aa662ba7ff"
+  },
+  {
+    "id": "paraphrase-018",
+    "class": "paraphrase",
+    "query": "What department is leo in?",
+    "gold_entity": "user:leo",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "5ddb7f441c9d5da2ccd8e19537af83363bac403a4314ede5a29f741bbe61cbad",
+    "relevant_fact_ids": [
+      "5ddb7f44"
+    ],
+    "non_relevant_fact_ids": [
+      "b31564b6"
+    ],
+    "probe_sha": "0525ca57172d3d36"
+  },
+  {
+    "id": "paraphrase-019",
+    "class": "paraphrase",
+    "query": "Can charlie make changes?",
+    "gold_entity": "user:charlie",
+    "gold_relation": "memory:capability",
+    "gold_fact_hash": "8b65c509dc3fb2211cfed7b95f54109136d63bcfc03647fa79844a3aed7cb197",
+    "relevant_fact_ids": [
+      "8b65c509"
+    ],
+    "non_relevant_fact_ids": [
+      "60723e8f"
+    ],
+    "probe_sha": "055e80820cf4fd4a"
+  },
+  {
+    "id": "paraphrase-020",
+    "class": "paraphrase",
+    "query": "What language does ivan use?",
+    "gold_entity": "user:ivan",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "244086a1dc7e0af17ab5d33a9f7ee29ff223d2123e9d4fd978ee7eddfa54b927",
+    "relevant_fact_ids": [
+      "244086a1"
+    ],
+    "non_relevant_fact_ids": [
+      "128bc4f2"
+    ],
+    "probe_sha": "1661d0b0368e5321"
+  },
+  {
+    "id": "paraphrase-021",
+    "class": "paraphrase",
+    "query": "Please answer: Who is in charge of the platform team?",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "9fc60d4c"
+    ],
+    "probe_sha": "c0312c920f60381f"
+  },
+  {
+    "id": "paraphrase-022",
+    "class": "paraphrase",
+    "query": "Please answer: Tell me about alice's permissions",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "53419d89"
+    ],
+    "probe_sha": "084ca843eb2620fb"
+  },
+  {
+    "id": "paraphrase-023",
+    "class": "paraphrase",
+    "query": "Please answer: What can agent hal do?",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "ca455b5c"
+    ],
+    "probe_sha": "5ca77af8873c8479"
+  },
+  {
+    "id": "paraphrase-024",
+    "class": "paraphrase",
+    "query": "Please answer: How is the acme organization set up?",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "7896147d"
+    ],
+    "probe_sha": "3efba318d63a5860"
+  },
+  {
+    "id": "paraphrase-025",
+    "class": "paraphrase",
+    "query": "Please answer: What's bob's area of work?",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "e0ca505b"
+    ],
+    "probe_sha": "1d0fcbe83614a1b3"
+  },
+  {
+    "id": "paraphrase-026",
+    "class": "paraphrase",
+    "query": "Please answer: Is diana authorized for sensitive work?",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "ebe88093"
+    ],
+    "probe_sha": "c2b1d1803b1aa064"
+  },
+  {
+    "id": "paraphrase-027",
+    "class": "paraphrase",
+    "query": "Please answer: Where is oscar located?",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "631794d3"
+    ],
+    "probe_sha": "632a78f4e5b246a9"
+  },
+  {
+    "id": "paraphrase-028",
+    "class": "paraphrase",
+    "query": "Please answer: What project is julia assigned to?",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "6abc7514"
+    ],
+    "probe_sha": "1507a3e7661258a7"
+  },
+  {
+    "id": "paraphrase-029",
+    "class": "paraphrase",
+    "query": "Please answer: Who runs the database service?",
+    "gold_entity": "service:db",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "414cfe8996b48f80858d86a7b6a7d201f26f3184eab3e1c1f746cd0a337853d5",
+    "relevant_fact_ids": [
+      "414cfe89"
+    ],
+    "non_relevant_fact_ids": [
+      "cacee81b"
+    ],
+    "probe_sha": "7e8a67a00e5474a0"
+  },
+  {
+    "id": "paraphrase-030",
+    "class": "paraphrase",
+    "query": "Please answer: Is eve currently working?",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "8ddf6b67"
+    ],
+    "probe_sha": "cf4371b1af38d013"
+  },
+  {
+    "id": "paraphrase-031",
+    "class": "paraphrase",
+    "query": "Please answer: What's grace's reporting structure?",
+    "gold_entity": "user:grace",
+    "gold_relation": "memory:manager",
+    "gold_fact_hash": "4dc1272e4e975b050b53b78ebba9d18fd28b3662078ef91192a22228ddeb2793",
+    "relevant_fact_ids": [
+      "4dc1272e"
+    ],
+    "non_relevant_fact_ids": [
+      "3fe0bbe3"
+    ],
+    "probe_sha": "b9d253270f8b21b0"
+  },
+  {
+    "id": "paraphrase-032",
+    "class": "paraphrase",
+    "query": "Please answer: How trusted is nova?",
+    "gold_entity": "agent:nova",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "82eb48f4f0f8eeb638af18e53b936a3c216e0da52fde344838b6d689ac44edd5",
+    "relevant_fact_ids": [
+      "82eb48f4"
+    ],
+    "non_relevant_fact_ids": [
+      "1b91935a"
+    ],
+    "probe_sha": "211eadd0b5abf68e"
+  },
+  {
+    "id": "paraphrase-033",
+    "class": "paraphrase",
+    "query": "Please answer: What team does petra belong to?",
+    "gold_entity": "user:petra",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "7c2e3454082816c2955e1a0402c54b7839b05a8a57c2915df7dc54b617c4b6dd",
+    "relevant_fact_ids": [
+      "7c2e3454"
+    ],
+    "non_relevant_fact_ids": [
+      "a2f6c21b"
+    ],
+    "probe_sha": "54144fa910d16823"
+  },
+  {
+    "id": "paraphrase-034",
+    "class": "paraphrase",
+    "query": "Please answer: What's betacorp's pricing tier?",
+    "gold_entity": "org:betacorp",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "85fe57394560639de43195244869d596f9f9568a7339e6764a5d46c592487dd9",
+    "relevant_fact_ids": [
+      "85fe5739"
+    ],
+    "non_relevant_fact_ids": [
+      "6ee8b19b"
+    ],
+    "probe_sha": "4dc9f656904a411a"
+  },
+  {
+    "id": "paraphrase-035",
+    "class": "paraphrase",
+    "query": "Please answer: Who has access to the api service?",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "34310248"
+    ],
+    "probe_sha": "ce9a2e26828a20f4"
+  },
+  {
+    "id": "paraphrase-036",
+    "class": "paraphrase",
+    "query": "Please answer: What's kate's job function?",
+    "gold_entity": "user:kate",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "23829b4040bbc8fba824161e389ca4285d8a516b5ac5ce0a08a1cca9173e5480",
+    "relevant_fact_ids": [
+      "23829b40"
+    ],
+    "non_relevant_fact_ids": [
+      "cf0f183c"
+    ],
+    "probe_sha": "ea7614a6c8dc7c54"
+  },
+  {
+    "id": "paraphrase-037",
+    "class": "paraphrase",
+    "query": "Please answer: Is mia an active user?",
+    "gold_entity": "user:mia",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "ac4669785fe713cce052a8d871aad7d804e7248b722fb633a1538071eea6fa8c",
+    "relevant_fact_ids": [
+      "ac466978"
+    ],
+    "non_relevant_fact_ids": [
+      "64b3678b"
+    ],
+    "probe_sha": "c39dcce6e77b3fa7"
+  },
+  {
+    "id": "paraphrase-038",
+    "class": "paraphrase",
+    "query": "Please answer: What department is leo in?",
+    "gold_entity": "user:leo",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "5ddb7f441c9d5da2ccd8e19537af83363bac403a4314ede5a29f741bbe61cbad",
+    "relevant_fact_ids": [
+      "5ddb7f44"
+    ],
+    "non_relevant_fact_ids": [
+      "63600e85"
+    ],
+    "probe_sha": "677e2ef3d95b907b"
+  },
+  {
+    "id": "paraphrase-039",
+    "class": "paraphrase",
+    "query": "Please answer: Can charlie make changes?",
+    "gold_entity": "user:charlie",
+    "gold_relation": "memory:capability",
+    "gold_fact_hash": "8b65c509dc3fb2211cfed7b95f54109136d63bcfc03647fa79844a3aed7cb197",
+    "relevant_fact_ids": [
+      "8b65c509"
+    ],
+    "non_relevant_fact_ids": [
+      "3bfd58c2"
+    ],
+    "probe_sha": "c947fd091de08572"
+  },
+  {
+    "id": "paraphrase-040",
+    "class": "paraphrase",
+    "query": "Please answer: What language does ivan use?",
+    "gold_entity": "user:ivan",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "244086a1dc7e0af17ab5d33a9f7ee29ff223d2123e9d4fd978ee7eddfa54b927",
+    "relevant_fact_ids": [
+      "244086a1"
+    ],
+    "non_relevant_fact_ids": [
+      "633419c3"
+    ],
+    "probe_sha": "53b269d837e9ebe8"
+  },
+  {
+    "id": "paraphrase-041",
+    "class": "paraphrase",
+    "query": "I need to know: Who is in charge of the platform team?",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "f8277070"
+    ],
+    "probe_sha": "283f7ddba52f7e74"
+  },
+  {
+    "id": "paraphrase-042",
+    "class": "paraphrase",
+    "query": "I need to know: Tell me about alice's permissions",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "d089553c"
+    ],
+    "probe_sha": "6c73841362d29b0f"
+  },
+  {
+    "id": "paraphrase-043",
+    "class": "paraphrase",
+    "query": "I need to know: What can agent hal do?",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "aef58799"
+    ],
+    "probe_sha": "0b5703c7939659c9"
+  },
+  {
+    "id": "paraphrase-044",
+    "class": "paraphrase",
+    "query": "I need to know: How is the acme organization set up?",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "bc80f3ae"
+    ],
+    "probe_sha": "5643d55f72702717"
+  },
+  {
+    "id": "paraphrase-045",
+    "class": "paraphrase",
+    "query": "I need to know: What's bob's area of work?",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "0f99d159"
+    ],
+    "probe_sha": "1d9606304855a3bb"
+  },
+  {
+    "id": "paraphrase-046",
+    "class": "paraphrase",
+    "query": "I need to know: Is diana authorized for sensitive work?",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "f564dede"
+    ],
+    "probe_sha": "1669eab77bb663d2"
+  },
+  {
+    "id": "paraphrase-047",
+    "class": "paraphrase",
+    "query": "I need to know: Where is oscar located?",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "be3623ce"
+    ],
+    "probe_sha": "c3681885a189bcd3"
+  },
+  {
+    "id": "paraphrase-048",
+    "class": "paraphrase",
+    "query": "I need to know: What project is julia assigned to?",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "015a7b67"
+    ],
+    "probe_sha": "13730a61627299fd"
+  },
+  {
+    "id": "paraphrase-049",
+    "class": "paraphrase",
+    "query": "I need to know: Who runs the database service?",
+    "gold_entity": "service:db",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "414cfe8996b48f80858d86a7b6a7d201f26f3184eab3e1c1f746cd0a337853d5",
+    "relevant_fact_ids": [
+      "414cfe89"
+    ],
+    "non_relevant_fact_ids": [
+      "303a301c"
+    ],
+    "probe_sha": "2781268d82e7f72b"
+  },
+  {
+    "id": "paraphrase-050",
+    "class": "paraphrase",
+    "query": "I need to know: Is eve currently working?",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "420aadbf"
+    ],
+    "probe_sha": "6495b58c88fd0af3"
+  },
+  {
+    "id": "paraphrase-051",
+    "class": "paraphrase",
+    "query": "I need to know: What's grace's reporting structure?",
+    "gold_entity": "user:grace",
+    "gold_relation": "memory:manager",
+    "gold_fact_hash": "4dc1272e4e975b050b53b78ebba9d18fd28b3662078ef91192a22228ddeb2793",
+    "relevant_fact_ids": [
+      "4dc1272e"
+    ],
+    "non_relevant_fact_ids": [
+      "37f71044"
+    ],
+    "probe_sha": "cf4065c329942550"
+  },
+  {
+    "id": "paraphrase-052",
+    "class": "paraphrase",
+    "query": "I need to know: How trusted is nova?",
+    "gold_entity": "agent:nova",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "82eb48f4f0f8eeb638af18e53b936a3c216e0da52fde344838b6d689ac44edd5",
+    "relevant_fact_ids": [
+      "82eb48f4"
+    ],
+    "non_relevant_fact_ids": [
+      "934c4c3c"
+    ],
+    "probe_sha": "dafde70d5051fc5c"
+  },
+  {
+    "id": "paraphrase-053",
+    "class": "paraphrase",
+    "query": "I need to know: What team does petra belong to?",
+    "gold_entity": "user:petra",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "7c2e3454082816c2955e1a0402c54b7839b05a8a57c2915df7dc54b617c4b6dd",
+    "relevant_fact_ids": [
+      "7c2e3454"
+    ],
+    "non_relevant_fact_ids": [
+      "55201e1c"
+    ],
+    "probe_sha": "2f0d724f35ccd762"
+  },
+  {
+    "id": "paraphrase-054",
+    "class": "paraphrase",
+    "query": "I need to know: What's betacorp's pricing tier?",
+    "gold_entity": "org:betacorp",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "85fe57394560639de43195244869d596f9f9568a7339e6764a5d46c592487dd9",
+    "relevant_fact_ids": [
+      "85fe5739"
+    ],
+    "non_relevant_fact_ids": [
+      "955b8583"
+    ],
+    "probe_sha": "21016423d0df13b3"
+  },
+  {
+    "id": "paraphrase-055",
+    "class": "paraphrase",
+    "query": "I need to know: Who has access to the api service?",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "bb99cf22"
+    ],
+    "probe_sha": "675dde9e2ff8e7df"
+  },
+  {
+    "id": "paraphrase-056",
+    "class": "paraphrase",
+    "query": "I need to know: What's kate's job function?",
+    "gold_entity": "user:kate",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "23829b4040bbc8fba824161e389ca4285d8a516b5ac5ce0a08a1cca9173e5480",
+    "relevant_fact_ids": [
+      "23829b40"
+    ],
+    "non_relevant_fact_ids": [
+      "22884887"
+    ],
+    "probe_sha": "a3dfbea422052266"
+  },
+  {
+    "id": "paraphrase-057",
+    "class": "paraphrase",
+    "query": "I need to know: Is mia an active user?",
+    "gold_entity": "user:mia",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "ac4669785fe713cce052a8d871aad7d804e7248b722fb633a1538071eea6fa8c",
+    "relevant_fact_ids": [
+      "ac466978"
+    ],
+    "non_relevant_fact_ids": [
+      "8fc4c01e"
+    ],
+    "probe_sha": "e0a72808edbf566a"
+  },
+  {
+    "id": "paraphrase-058",
+    "class": "paraphrase",
+    "query": "I need to know: What department is leo in?",
+    "gold_entity": "user:leo",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "5ddb7f441c9d5da2ccd8e19537af83363bac403a4314ede5a29f741bbe61cbad",
+    "relevant_fact_ids": [
+      "5ddb7f44"
+    ],
+    "non_relevant_fact_ids": [
+      "fc539ed4"
+    ],
+    "probe_sha": "77afa70b970cc81a"
+  },
+  {
+    "id": "paraphrase-059",
+    "class": "paraphrase",
+    "query": "I need to know: Can charlie make changes?",
+    "gold_entity": "user:charlie",
+    "gold_relation": "memory:capability",
+    "gold_fact_hash": "8b65c509dc3fb2211cfed7b95f54109136d63bcfc03647fa79844a3aed7cb197",
+    "relevant_fact_ids": [
+      "8b65c509"
+    ],
+    "non_relevant_fact_ids": [
+      "fc9daa4a"
+    ],
+    "probe_sha": "c0e1ea7c71a51326"
+  },
+  {
+    "id": "paraphrase-060",
+    "class": "paraphrase",
+    "query": "I need to know: What language does ivan use?",
+    "gold_entity": "user:ivan",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "244086a1dc7e0af17ab5d33a9f7ee29ff223d2123e9d4fd978ee7eddfa54b927",
+    "relevant_fact_ids": [
+      "244086a1"
+    ],
+    "non_relevant_fact_ids": [
+      "9d2fbc8f"
+    ],
+    "probe_sha": "ef757ddd6e51a74d"
+  },
+  {
+    "id": "paraphrase-061",
+    "class": "paraphrase",
+    "query": "Quick question — Who is in charge of the platform team?",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "d4d33e8b"
+    ],
+    "probe_sha": "cfff5d49f06f8fe3"
+  },
+  {
+    "id": "paraphrase-062",
+    "class": "paraphrase",
+    "query": "Quick question — Tell me about alice's permissions",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "74f75472"
+    ],
+    "probe_sha": "945c6e7d86474c29"
+  },
+  {
+    "id": "paraphrase-063",
+    "class": "paraphrase",
+    "query": "Quick question — What can agent hal do?",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "fe38e13c"
+    ],
+    "probe_sha": "742203e2c031107d"
+  },
+  {
+    "id": "paraphrase-064",
+    "class": "paraphrase",
+    "query": "Quick question — How is the acme organization set up?",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "2120532b"
+    ],
+    "probe_sha": "0b094bedca88c876"
+  },
+  {
+    "id": "paraphrase-065",
+    "class": "paraphrase",
+    "query": "Quick question — What's bob's area of work?",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "259d7dcb"
+    ],
+    "probe_sha": "0c4903b2b9d59890"
+  },
+  {
+    "id": "paraphrase-066",
+    "class": "paraphrase",
+    "query": "Quick question — Is diana authorized for sensitive work?",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "2b5ed300"
+    ],
+    "probe_sha": "b324cfe69e774ed7"
+  },
+  {
+    "id": "paraphrase-067",
+    "class": "paraphrase",
+    "query": "Quick question — Where is oscar located?",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "dc0e3266"
+    ],
+    "probe_sha": "f5de06d1943a6ae6"
+  },
+  {
+    "id": "paraphrase-068",
+    "class": "paraphrase",
+    "query": "Quick question — What project is julia assigned to?",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "c6bbde23"
+    ],
+    "probe_sha": "9a36a2c435918aca"
+  },
+  {
+    "id": "paraphrase-069",
+    "class": "paraphrase",
+    "query": "Quick question — Who runs the database service?",
+    "gold_entity": "service:db",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "414cfe8996b48f80858d86a7b6a7d201f26f3184eab3e1c1f746cd0a337853d5",
+    "relevant_fact_ids": [
+      "414cfe89"
+    ],
+    "non_relevant_fact_ids": [
+      "d38ea07e"
+    ],
+    "probe_sha": "815a811b2082912f"
+  },
+  {
+    "id": "paraphrase-070",
+    "class": "paraphrase",
+    "query": "Quick question — Is eve currently working?",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "294518e4"
+    ],
+    "probe_sha": "754eced6d5abd645"
+  },
+  {
+    "id": "paraphrase-071",
+    "class": "paraphrase",
+    "query": "Quick question — What's grace's reporting structure?",
+    "gold_entity": "user:grace",
+    "gold_relation": "memory:manager",
+    "gold_fact_hash": "4dc1272e4e975b050b53b78ebba9d18fd28b3662078ef91192a22228ddeb2793",
+    "relevant_fact_ids": [
+      "4dc1272e"
+    ],
+    "non_relevant_fact_ids": [
+      "bda54104"
+    ],
+    "probe_sha": "38bd7dd7a9bd433c"
+  },
+  {
+    "id": "paraphrase-072",
+    "class": "paraphrase",
+    "query": "Quick question — How trusted is nova?",
+    "gold_entity": "agent:nova",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "82eb48f4f0f8eeb638af18e53b936a3c216e0da52fde344838b6d689ac44edd5",
+    "relevant_fact_ids": [
+      "82eb48f4"
+    ],
+    "non_relevant_fact_ids": [
+      "38638cdc"
+    ],
+    "probe_sha": "aaefa468dcd4e322"
+  },
+  {
+    "id": "paraphrase-073",
+    "class": "paraphrase",
+    "query": "Quick question — What team does petra belong to?",
+    "gold_entity": "user:petra",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "7c2e3454082816c2955e1a0402c54b7839b05a8a57c2915df7dc54b617c4b6dd",
+    "relevant_fact_ids": [
+      "7c2e3454"
+    ],
+    "non_relevant_fact_ids": [
+      "e5ef9c0f"
+    ],
+    "probe_sha": "e953f4ca30ac72a7"
+  },
+  {
+    "id": "paraphrase-074",
+    "class": "paraphrase",
+    "query": "Quick question — What's betacorp's pricing tier?",
+    "gold_entity": "org:betacorp",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "85fe57394560639de43195244869d596f9f9568a7339e6764a5d46c592487dd9",
+    "relevant_fact_ids": [
+      "85fe5739"
+    ],
+    "non_relevant_fact_ids": [
+      "d2ddf602"
+    ],
+    "probe_sha": "aec14821209547e5"
+  },
+  {
+    "id": "paraphrase-075",
+    "class": "paraphrase",
+    "query": "Quick question — Who has access to the api service?",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "538b47b8"
+    ],
+    "probe_sha": "cba6cfd844264fa0"
+  },
+  {
+    "id": "paraphrase-076",
+    "class": "paraphrase",
+    "query": "Quick question — What's kate's job function?",
+    "gold_entity": "user:kate",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "23829b4040bbc8fba824161e389ca4285d8a516b5ac5ce0a08a1cca9173e5480",
+    "relevant_fact_ids": [
+      "23829b40"
+    ],
+    "non_relevant_fact_ids": [
+      "8ac2fbd2"
+    ],
+    "probe_sha": "ed75cf70fa96bbbf"
+  },
+  {
+    "id": "paraphrase-077",
+    "class": "paraphrase",
+    "query": "Quick question — Is mia an active user?",
+    "gold_entity": "user:mia",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "ac4669785fe713cce052a8d871aad7d804e7248b722fb633a1538071eea6fa8c",
+    "relevant_fact_ids": [
+      "ac466978"
+    ],
+    "non_relevant_fact_ids": [
+      "b4f3171e"
+    ],
+    "probe_sha": "fcbc91281a60fa0f"
+  },
+  {
+    "id": "paraphrase-078",
+    "class": "paraphrase",
+    "query": "Quick question — What department is leo in?",
+    "gold_entity": "user:leo",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "5ddb7f441c9d5da2ccd8e19537af83363bac403a4314ede5a29f741bbe61cbad",
+    "relevant_fact_ids": [
+      "5ddb7f44"
+    ],
+    "non_relevant_fact_ids": [
+      "ca03c667"
+    ],
+    "probe_sha": "1c5b6195fee2ddbc"
+  },
+  {
+    "id": "paraphrase-079",
+    "class": "paraphrase",
+    "query": "Quick question — Can charlie make changes?",
+    "gold_entity": "user:charlie",
+    "gold_relation": "memory:capability",
+    "gold_fact_hash": "8b65c509dc3fb2211cfed7b95f54109136d63bcfc03647fa79844a3aed7cb197",
+    "relevant_fact_ids": [
+      "8b65c509"
+    ],
+    "non_relevant_fact_ids": [
+      "dd802108"
+    ],
+    "probe_sha": "3e90aac0afd63c9a"
+  },
+  {
+    "id": "paraphrase-080",
+    "class": "paraphrase",
+    "query": "Quick question — What language does ivan use?",
+    "gold_entity": "user:ivan",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "244086a1dc7e0af17ab5d33a9f7ee29ff223d2123e9d4fd978ee7eddfa54b927",
+    "relevant_fact_ids": [
+      "244086a1"
+    ],
+    "non_relevant_fact_ids": [
+      "af1091c2"
+    ],
+    "probe_sha": "5d37210760fd7a79"
+  },
+  {
+    "id": "paraphrase-081",
+    "class": "paraphrase",
+    "query": "Help me understand: Who is in charge of the platform team?",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "cbd76259"
+    ],
+    "probe_sha": "eb5a0ed875bb9be2"
+  },
+  {
+    "id": "paraphrase-082",
+    "class": "paraphrase",
+    "query": "Help me understand: Tell me about alice's permissions",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "7ebf8219"
+    ],
+    "probe_sha": "5928049aa434363a"
+  },
+  {
+    "id": "paraphrase-083",
+    "class": "paraphrase",
+    "query": "Help me understand: What can agent hal do?",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "56e279db"
+    ],
+    "probe_sha": "39dcacb9bd936f88"
+  },
+  {
+    "id": "paraphrase-084",
+    "class": "paraphrase",
+    "query": "Help me understand: How is the acme organization set up?",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "c3a44f87"
+    ],
+    "probe_sha": "f18da1bcd74551e1"
+  },
+  {
+    "id": "paraphrase-085",
+    "class": "paraphrase",
+    "query": "Help me understand: What's bob's area of work?",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "0eaf6760"
+    ],
+    "probe_sha": "6c59aafecce2a3fc"
+  },
+  {
+    "id": "paraphrase-086",
+    "class": "paraphrase",
+    "query": "Help me understand: Is diana authorized for sensitive work?",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "6b7787d5"
+    ],
+    "probe_sha": "5a4a2b7db12d41d9"
+  },
+  {
+    "id": "paraphrase-087",
+    "class": "paraphrase",
+    "query": "Help me understand: Where is oscar located?",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "ad40a8a6"
+    ],
+    "probe_sha": "e1abe14321090872"
+  },
+  {
+    "id": "paraphrase-088",
+    "class": "paraphrase",
+    "query": "Help me understand: What project is julia assigned to?",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "7a72447d"
+    ],
+    "probe_sha": "97b68a40dc49ae69"
+  },
+  {
+    "id": "paraphrase-089",
+    "class": "paraphrase",
+    "query": "Help me understand: Who runs the database service?",
+    "gold_entity": "service:db",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "414cfe8996b48f80858d86a7b6a7d201f26f3184eab3e1c1f746cd0a337853d5",
+    "relevant_fact_ids": [
+      "414cfe89"
+    ],
+    "non_relevant_fact_ids": [
+      "dbded72a"
+    ],
+    "probe_sha": "84a47940f7889239"
+  },
+  {
+    "id": "paraphrase-090",
+    "class": "paraphrase",
+    "query": "Help me understand: Is eve currently working?",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "7003faba"
+    ],
+    "probe_sha": "c8bff14d8745df71"
+  },
+  {
+    "id": "paraphrase-091",
+    "class": "paraphrase",
+    "query": "Help me understand: What's grace's reporting structure?",
+    "gold_entity": "user:grace",
+    "gold_relation": "memory:manager",
+    "gold_fact_hash": "4dc1272e4e975b050b53b78ebba9d18fd28b3662078ef91192a22228ddeb2793",
+    "relevant_fact_ids": [
+      "4dc1272e"
+    ],
+    "non_relevant_fact_ids": [
+      "a50bac5b"
+    ],
+    "probe_sha": "1ad35cbfbbe46d34"
+  },
+  {
+    "id": "paraphrase-092",
+    "class": "paraphrase",
+    "query": "Help me understand: How trusted is nova?",
+    "gold_entity": "agent:nova",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "82eb48f4f0f8eeb638af18e53b936a3c216e0da52fde344838b6d689ac44edd5",
+    "relevant_fact_ids": [
+      "82eb48f4"
+    ],
+    "non_relevant_fact_ids": [
+      "4b5aeec0"
+    ],
+    "probe_sha": "97aea6f28f826ad6"
+  },
+  {
+    "id": "paraphrase-093",
+    "class": "paraphrase",
+    "query": "Help me understand: What team does petra belong to?",
+    "gold_entity": "user:petra",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "7c2e3454082816c2955e1a0402c54b7839b05a8a57c2915df7dc54b617c4b6dd",
+    "relevant_fact_ids": [
+      "7c2e3454"
+    ],
+    "non_relevant_fact_ids": [
+      "b6e74778"
+    ],
+    "probe_sha": "e562e5f000c7fee6"
+  },
+  {
+    "id": "paraphrase-094",
+    "class": "paraphrase",
+    "query": "Help me understand: What's betacorp's pricing tier?",
+    "gold_entity": "org:betacorp",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "85fe57394560639de43195244869d596f9f9568a7339e6764a5d46c592487dd9",
+    "relevant_fact_ids": [
+      "85fe5739"
+    ],
+    "non_relevant_fact_ids": [
+      "0a0aca7b"
+    ],
+    "probe_sha": "84bf691d98a728d1"
+  },
+  {
+    "id": "paraphrase-095",
+    "class": "paraphrase",
+    "query": "Help me understand: Who has access to the api service?",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "e4b8d91f"
+    ],
+    "probe_sha": "bf3eba8b4d2ec49a"
+  },
+  {
+    "id": "paraphrase-096",
+    "class": "paraphrase",
+    "query": "Help me understand: What's kate's job function?",
+    "gold_entity": "user:kate",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "23829b4040bbc8fba824161e389ca4285d8a516b5ac5ce0a08a1cca9173e5480",
+    "relevant_fact_ids": [
+      "23829b40"
+    ],
+    "non_relevant_fact_ids": [
+      "ef14afe1"
+    ],
+    "probe_sha": "c8597723af62e8b4"
+  },
+  {
+    "id": "paraphrase-097",
+    "class": "paraphrase",
+    "query": "Help me understand: Is mia an active user?",
+    "gold_entity": "user:mia",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "ac4669785fe713cce052a8d871aad7d804e7248b722fb633a1538071eea6fa8c",
+    "relevant_fact_ids": [
+      "ac466978"
+    ],
+    "non_relevant_fact_ids": [
+      "0237b1d2"
+    ],
+    "probe_sha": "49d627cf9fd039d6"
+  },
+  {
+    "id": "paraphrase-098",
+    "class": "paraphrase",
+    "query": "Help me understand: What department is leo in?",
+    "gold_entity": "user:leo",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "5ddb7f441c9d5da2ccd8e19537af83363bac403a4314ede5a29f741bbe61cbad",
+    "relevant_fact_ids": [
+      "5ddb7f44"
+    ],
+    "non_relevant_fact_ids": [
+      "4d5c07a4"
+    ],
+    "probe_sha": "04fd3eab0f1283e8"
+  },
+  {
+    "id": "paraphrase-099",
+    "class": "paraphrase",
+    "query": "Help me understand: Can charlie make changes?",
+    "gold_entity": "user:charlie",
+    "gold_relation": "memory:capability",
+    "gold_fact_hash": "8b65c509dc3fb2211cfed7b95f54109136d63bcfc03647fa79844a3aed7cb197",
+    "relevant_fact_ids": [
+      "8b65c509"
+    ],
+    "non_relevant_fact_ids": [
+      "94dace93"
+    ],
+    "probe_sha": "aec646e7611a84df"
+  },
+  {
+    "id": "paraphrase-100",
+    "class": "paraphrase",
+    "query": "Help me understand: What language does ivan use?",
+    "gold_entity": "user:ivan",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "244086a1dc7e0af17ab5d33a9f7ee29ff223d2123e9d4fd978ee7eddfa54b927",
+    "relevant_fact_ids": [
+      "244086a1"
+    ],
+    "non_relevant_fact_ids": [
+      "7549f172"
+    ],
+    "probe_sha": "2081675edf83a624"
+  },
+  {
+    "id": "adv-ttl-01",
+    "class": "adversarial_ood",
+    "subclass": "ttl_expiring",
+    "query": "ttl-alpha session",
+    "gold_entity": "user:ttl-alpha",
+    "gold_relation": "memory:session",
+    "gold_value": "active",
+    "ttl_seconds": 5,
+    "gold_fact_hash": "dd5bb79f85301829f26a6adfb017655eafa663212c1f19f5db1801c312d41c33",
+    "relevant_fact_ids": [
+      "dd5bb79f"
+    ],
+    "non_relevant_fact_ids": [
+      "76daa128"
+    ],
+    "note": "expires in 5s; exercises confidence-decay sweeper",
+    "probe_sha": "31eb0c9f5835a37e"
+  },
+  {
+    "id": "adv-ttl-02",
+    "class": "adversarial_ood",
+    "subclass": "ttl_expiring",
+    "query": "ttl-beta token",
+    "gold_entity": "user:ttl-beta",
+    "gold_relation": "memory:token",
+    "gold_value": "abc123",
+    "ttl_seconds": 5,
+    "gold_fact_hash": "e53b9b22648ec3412a6a2d8bc06fbdca76edb0ef163fa787fc941e968e1003e4",
+    "relevant_fact_ids": [
+      "e53b9b22"
+    ],
+    "non_relevant_fact_ids": [
+      "d1cb17c0"
+    ],
+    "note": "expires in 5s; exercises confidence-decay sweeper",
+    "probe_sha": "9cd6ad170d6b76d6"
+  },
+  {
+    "id": "adv-ttl-03",
+    "class": "adversarial_ood",
+    "subclass": "ttl_expiring",
+    "query": "ttl-gamma cache",
+    "gold_entity": "user:ttl-gamma",
+    "gold_relation": "memory:cache",
+    "gold_value": "hot",
+    "ttl_seconds": 5,
+    "gold_fact_hash": "adf41472ebf6ab8310428c914d8adae0d5cc0b520252f5a8676ef94a30f2b611",
+    "relevant_fact_ids": [
+      "adf41472"
+    ],
+    "non_relevant_fact_ids": [
+      "a6009ad2"
+    ],
+    "note": "expires in 5s; exercises confidence-decay sweeper",
+    "probe_sha": "ac2c59e826ffb9a4"
+  },
+  {
+    "id": "adv-ttl-04",
+    "class": "adversarial_ood",
+    "subclass": "ttl_expiring",
+    "query": "ttl-delta lease",
+    "gold_entity": "agent:ttl-delta",
+    "gold_relation": "memory:lease",
+    "gold_value": "valid",
+    "ttl_seconds": 5,
+    "gold_fact_hash": "3d4b6bd78ffb135ee5e9d8da8b3d6b1d615bf78f46376746cb73b1e8fd063180",
+    "relevant_fact_ids": [
+      "3d4b6bd7"
+    ],
+    "non_relevant_fact_ids": [
+      "3a180d51"
+    ],
+    "note": "expires in 5s; exercises confidence-decay sweeper",
+    "probe_sha": "fd0d2e0ae65bd494"
+  },
+  {
+    "id": "adv-ttl-05",
+    "class": "adversarial_ood",
+    "subclass": "ttl_expiring",
+    "query": "ttl-epsilon lock",
+    "gold_entity": "user:ttl-epsilon",
+    "gold_relation": "memory:lock",
+    "gold_value": "acquired",
+    "ttl_seconds": 5,
+    "gold_fact_hash": "49cee90c0683ebc04227a0c7b0b441bb815fa9d8682027e990b149689aa105ba",
+    "relevant_fact_ids": [
+      "49cee90c"
+    ],
+    "non_relevant_fact_ids": [
+      "12443350"
+    ],
+    "note": "expires in 5s; exercises confidence-decay sweeper",
+    "probe_sha": "b565531fef1ec4ed"
+  },
+  {
+    "id": "adv-ttl-06",
+    "class": "adversarial_ood",
+    "subclass": "ttl_expiring",
+    "query": "ttl-zeta connection",
+    "gold_entity": "service:ttl-zeta",
+    "gold_relation": "memory:connection",
+    "gold_value": "open",
+    "ttl_seconds": 5,
+    "gold_fact_hash": "e016de4c4951243bf91992e252b947d6f136d73b8c559fc591e7636e4b42dcbf",
+    "relevant_fact_ids": [
+      "e016de4c"
+    ],
+    "non_relevant_fact_ids": [
+      "553c6a38"
+    ],
+    "note": "expires in 5s; exercises confidence-decay sweeper",
+    "probe_sha": "9a22ddba6eba998a"
+  },
+  {
+    "id": "adv-ttl-07",
+    "class": "adversarial_ood",
+    "subclass": "ttl_expiring",
+    "query": "ttl-eta reservation",
+    "gold_entity": "user:ttl-eta",
+    "gold_relation": "memory:reservation",
+    "gold_value": "pending",
+    "ttl_seconds": 5,
+    "gold_fact_hash": "d6942c2cd2934cedf6a085ee6a0b5fb3938e3aff76e64a49442bda3eabf7d190",
+    "relevant_fact_ids": [
+      "d6942c2c"
+    ],
+    "non_relevant_fact_ids": [
+      "cce7ec26"
+    ],
+    "note": "expires in 5s; exercises confidence-decay sweeper",
+    "probe_sha": "b2e22a460b2d6661"
+  },
+  {
+    "id": "adv-ttl-08",
+    "class": "adversarial_ood",
+    "subclass": "ttl_expiring",
+    "query": "ttl-theta trial",
+    "gold_entity": "org:ttl-theta",
+    "gold_relation": "memory:trial",
+    "gold_value": "active",
+    "ttl_seconds": 5,
+    "gold_fact_hash": "dfd764bd2e620844ebb4c84d3747b498c996c11511eb1290191a256f0f459a74",
+    "relevant_fact_ids": [
+      "dfd764bd"
+    ],
+    "non_relevant_fact_ids": [
+      "6ed37552"
+    ],
+    "note": "expires in 5s; exercises confidence-decay sweeper",
+    "probe_sha": "cec48ef65967a777"
+  },
+  {
+    "id": "adv-ttl-09",
+    "class": "adversarial_ood",
+    "subclass": "ttl_expiring",
+    "query": "ttl-iota otp",
+    "gold_entity": "user:ttl-iota",
+    "gold_relation": "memory:otp",
+    "gold_value": "valid",
+    "ttl_seconds": 5,
+    "gold_fact_hash": "7f126a5f4f4384056c1d7ca76fbce2ff66ca544695db75cbbd762045d20e0251",
+    "relevant_fact_ids": [
+      "7f126a5f"
+    ],
+    "non_relevant_fact_ids": [
+      "e540b4d4"
+    ],
+    "note": "expires in 5s; exercises confidence-decay sweeper",
+    "probe_sha": "1b568875426fdd24"
+  },
+  {
+    "id": "adv-ttl-10",
+    "class": "adversarial_ood",
+    "subclass": "ttl_expiring",
+    "query": "ttl-kappa heartbeat",
+    "gold_entity": "agent:ttl-kappa",
+    "gold_relation": "memory:heartbeat",
+    "gold_value": "alive",
+    "ttl_seconds": 5,
+    "gold_fact_hash": "75ef1b3376f55ca945cc7b4ded4c4554fb4ca385c585910a167f953844cebade",
+    "relevant_fact_ids": [
+      "75ef1b33"
+    ],
+    "non_relevant_fact_ids": [
+      "941475ae"
+    ],
+    "note": "expires in 5s; exercises confidence-decay sweeper",
+    "probe_sha": "209b96ec71ce6ea1"
+  },
+  {
+    "id": "adv-missing-001",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-000 role",
+    "gold_entity": "user:missing-000",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "739eecfddc3053889c865a466a3ffafda43d26de17070e90b84f2e350402237f",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "90088ca4ff488697"
+  },
+  {
+    "id": "adv-missing-002",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-001 role",
+    "gold_entity": "user:missing-001",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "1ac3c92c1675d21db6e14dd11405ee2b8c1e26204ee2de58210aa15f5da9421a",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "610ce7e3bdc3f1c2"
+  },
+  {
+    "id": "adv-missing-003",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-002 role",
+    "gold_entity": "user:missing-002",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "5518539aba7d8b22323b7a149e970eff7d2a707e4102833dce5bf00b43b09a44",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "864673fcb14fe280"
+  },
+  {
+    "id": "adv-missing-004",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-003 role",
+    "gold_entity": "user:missing-003",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "26615d8c52dd9f0e3013819bae7d276b6eb845b12db866388ce0ae5e60593d33",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "c78b6494a1820868"
+  },
+  {
+    "id": "adv-missing-005",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-004 role",
+    "gold_entity": "user:missing-004",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "4906c8636b0ab0140e2c29657832a888f3bf514a17243d9dfe36ffa46637c16e",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "6dac3b8f6792ed2f"
+  },
+  {
+    "id": "adv-missing-006",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-005 role",
+    "gold_entity": "user:missing-005",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "2f4ac86be31ab0dfb21d6ecb667d744abdf7ed4f444baad5b3b8d0d73d30a7ad",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "cc73f0177c940ebb"
+  },
+  {
+    "id": "adv-missing-007",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-006 role",
+    "gold_entity": "user:missing-006",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "0b5ac8e8483439ab385a1ce1b3722719d7c00bbbab8c0fc35990463e192cea29",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "a2c03f6677a29cc5"
+  },
+  {
+    "id": "adv-missing-008",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-007 role",
+    "gold_entity": "user:missing-007",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "6d74fa13478a96cd723eb2d8c46dc15f94f90e154ad23e83842d8ec00935b594",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "ac1b881207a52a07"
+  },
+  {
+    "id": "adv-missing-009",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-008 role",
+    "gold_entity": "user:missing-008",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "1b4fd1b33818200c14adcd77abbef446fef2168401cee497b603e6467b42224e",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "ce8f103e06d71dbe"
+  },
+  {
+    "id": "adv-missing-010",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-009 role",
+    "gold_entity": "user:missing-009",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "c8a5bed99d0c130cd361803496a63e1e35f9d38df81168d9c886f939424417ae",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "36f671317e2a812b"
+  },
+  {
+    "id": "adv-missing-011",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-010 role",
+    "gold_entity": "user:missing-010",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "636d6decc081dc011cabdb4d7eb7c3c6a37eeba04d35f31d331075a21071628f",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "9b1d665d6fb503e3"
+  },
+  {
+    "id": "adv-missing-012",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-011 role",
+    "gold_entity": "user:missing-011",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "1074ae85c2f1b14e459080a4923b691972f422e5da5afdd0945a1af992f0ca67",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "4a23e2ac05350dd2"
+  },
+  {
+    "id": "adv-missing-013",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-012 role",
+    "gold_entity": "user:missing-012",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "0cdf2871305c47cc7769f34bbc770adc0a1bf14a2cc520d6e548eebdf40d90f5",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "1c8fb022eae1d0c7"
+  },
+  {
+    "id": "adv-missing-014",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-013 role",
+    "gold_entity": "user:missing-013",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "6ee34ee5bef079b5bfe2231f65be76c0ac11cbeb5aba78254b170d1cecd0cf0c",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "b5350579f688e178"
+  },
+  {
+    "id": "adv-missing-015",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-014 role",
+    "gold_entity": "user:missing-014",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "168fc8ca0b94969b1d0b4d5f6be2d6f95f75dabbd06cdbcf383fc5d44549e0b8",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "e40c4994a875e6e5"
+  },
+  {
+    "id": "adv-missing-016",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-015 role",
+    "gold_entity": "user:missing-015",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "f0329c65913a6a3b053c16d3c313ed773c8b1a2141806fb25e183a0d4cb0714a",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "1490ba6c83371f6a"
+  },
+  {
+    "id": "adv-missing-017",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-016 role",
+    "gold_entity": "user:missing-016",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "98a1f0932ad008d3aedb44fb45487e6b5de903340c0e4f7103b40073bb612031",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "c37c4b596e5704ac"
+  },
+  {
+    "id": "adv-missing-018",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-017 role",
+    "gold_entity": "user:missing-017",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d0b2c913b6301fdf189695281100cdb20f034fb437e1daa0d89d8330defdb82b",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "bb1eb9f723e2d0d3"
+  },
+  {
+    "id": "adv-missing-019",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-018 role",
+    "gold_entity": "user:missing-018",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "ecff55a07aef98494c2c070b04f475ec5b1278a547ac1973f12c4200c5e22fdf",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "b668bfd8a16a3afb"
+  },
+  {
+    "id": "adv-missing-020",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-019 role",
+    "gold_entity": "user:missing-019",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "66ae0b56d73e75230ef4ca523cccd3d092ee7990ba781d666f625317f2376a8f",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "d766714c97062d43"
+  },
+  {
+    "id": "adv-missing-021",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-020 role",
+    "gold_entity": "user:missing-020",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "94ec59172de972f1dcfd967013335bafc7cc9b52b1b87a576382aaf72b49c1f1",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "7c5cecdbf6eb8018"
+  },
+  {
+    "id": "adv-missing-022",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-021 role",
+    "gold_entity": "user:missing-021",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "bd0a3f0d33f5635cd4fb7c3b906aed7cd9baae34f31886cc3a0a64f8f5bc27e8",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "9d6a63142b38e12f"
+  },
+  {
+    "id": "adv-missing-023",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-022 role",
+    "gold_entity": "user:missing-022",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "fe27d03e0373aea1efcd5741be2b803cff87e3fda7972c6b31170afb822e4426",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "4242dfa5acef3ad2"
+  },
+  {
+    "id": "adv-missing-024",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-023 role",
+    "gold_entity": "user:missing-023",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "e91a13761de90f321a3136930787b96109aa43fac106908a8583a24e9d698ae2",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "a82774f1c5ef6ba1"
+  },
+  {
+    "id": "adv-missing-025",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-024 role",
+    "gold_entity": "user:missing-024",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "305e93f0724a51765dd9f2de7b8fe434304f8c333d231dd122a47ce6bac57815",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "5e9e8a2099037738"
+  },
+  {
+    "id": "adv-missing-026",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-025 role",
+    "gold_entity": "user:missing-025",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "81e1ca5612ee5240dde34de6b5322f34d43954846b3d96fe97416fd4be2bea95",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "26d58cc46d036bd8"
+  },
+  {
+    "id": "adv-missing-027",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-026 role",
+    "gold_entity": "user:missing-026",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "b394362a67eddfd091b4287ea0470f7c59e6fa297577b00782b06b2232c3dd8c",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "f088200feb3e904c"
+  },
+  {
+    "id": "adv-missing-028",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-027 role",
+    "gold_entity": "user:missing-027",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "a4792093fa085d06b566a31bdcc98b2709165eaec394f05bbd7b1a33f7b1d75c",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "19d80463bb3b8b46"
+  },
+  {
+    "id": "adv-missing-029",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-028 role",
+    "gold_entity": "user:missing-028",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "e7f5c1e81c8454761f9c028aa90d0ea42fc6b8bccfcb6f182cbcb01690035afa",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "c05b3dd7a9d0bac9"
+  },
+  {
+    "id": "adv-missing-030",
+    "class": "adversarial_ood",
+    "subclass": "entity_not_in_corpus",
+    "query": "missing-029 role",
+    "gold_entity": "user:missing-029",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "76606db8f9a45c8cb092bcb2b3f67cfb026ef9c7f26f0e3d67b33f0ef400faa5",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "b514c884ae3ee077"
+  },
+  {
+    "id": "adv-conf-001",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "alice administrator permissions write access",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "04d1777d"
+    ],
+    "probe_sha": "6832a516235f787b"
+  },
+  {
+    "id": "adv-conf-002",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "bob software engineering division",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "d76ef4f5"
+    ],
+    "probe_sha": "112a95f9ae48e28c"
+  },
+  {
+    "id": "adv-conf-003",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "hal artificial intelligence confidence score",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "37c3246d"
+    ],
+    "probe_sha": "95659bedd474e5b0"
+  },
+  {
+    "id": "adv-conf-004",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "acme company billing tier pricing plan",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "67b2c57e"
+    ],
+    "probe_sha": "66395846ffbb7fb2"
+  },
+  {
+    "id": "adv-conf-005",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "diana classified information clearance level",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "ffd75f73"
+    ],
+    "probe_sha": "35df8fc01f38e3cd"
+  },
+  {
+    "id": "adv-conf-006",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "oscar language region preference locale",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "b4fa78e1"
+    ],
+    "probe_sha": "b8abcd182d66451b"
+  },
+  {
+    "id": "adv-conf-007",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "julia ongoing work assignment project name",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "cb2fa2c9"
+    ],
+    "probe_sha": "9dd04526165eb068"
+  },
+  {
+    "id": "adv-conf-008",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "api gateway service ownership responsibility",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "6b5c81e8"
+    ],
+    "probe_sha": "c6412bad98fd9e07"
+  },
+  {
+    "id": "adv-conf-009",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "eve currently working employed active status",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "cc6e8f01"
+    ],
+    "probe_sha": "a599c0fc739e1f94"
+  },
+  {
+    "id": "adv-conf-010",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "frank team leader manager reporting line",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "6fb49b53"
+    ],
+    "probe_sha": "cd1808f04351e82c"
+  },
+  {
+    "id": "adv-conf-011",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Context: alice administrator permissions write access",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "9b613d88"
+    ],
+    "probe_sha": "d08544e4865518c4"
+  },
+  {
+    "id": "adv-conf-012",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Context: bob software engineering division",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "243bbe3d"
+    ],
+    "probe_sha": "1e962027f2d0fddb"
+  },
+  {
+    "id": "adv-conf-013",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Context: hal artificial intelligence confidence score",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "81439ad8"
+    ],
+    "probe_sha": "e64148b6ea31d75f"
+  },
+  {
+    "id": "adv-conf-014",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Context: acme company billing tier pricing plan",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "920d39e6"
+    ],
+    "probe_sha": "1beee03ceef14d87"
+  },
+  {
+    "id": "adv-conf-015",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Context: diana classified information clearance level",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "ea9a4350"
+    ],
+    "probe_sha": "45f0e990a18edb98"
+  },
+  {
+    "id": "adv-conf-016",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Context: oscar language region preference locale",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "8d48a8a2"
+    ],
+    "probe_sha": "fffbd4ca5f2d2029"
+  },
+  {
+    "id": "adv-conf-017",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Context: julia ongoing work assignment project name",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "4a81cdf5"
+    ],
+    "probe_sha": "9ffc9a309d300a68"
+  },
+  {
+    "id": "adv-conf-018",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Context: api gateway service ownership responsibility",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "8a627ea9"
+    ],
+    "probe_sha": "f4fd06b030f93378"
+  },
+  {
+    "id": "adv-conf-019",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Context: eve currently working employed active status",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "7bbd6014"
+    ],
+    "probe_sha": "5c74e156bbff96e1"
+  },
+  {
+    "id": "adv-conf-020",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Context: frank team leader manager reporting line",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "936464ae"
+    ],
+    "probe_sha": "64517a5eac7f90d8"
+  },
+  {
+    "id": "adv-conf-021",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Background: alice administrator permissions write access",
+    "gold_entity": "user:alice",
+    "gold_relation": "memory:role",
+    "gold_fact_hash": "d1c5e1a6a3720e1c55855e0b389e10b74e3d01d59dd7b65a5eb1ccac2af1def9",
+    "relevant_fact_ids": [
+      "d1c5e1a6"
+    ],
+    "non_relevant_fact_ids": [
+      "74463120"
+    ],
+    "probe_sha": "9a3209f01884c538"
+  },
+  {
+    "id": "adv-conf-022",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Background: bob software engineering division",
+    "gold_entity": "user:bob",
+    "gold_relation": "memory:department",
+    "gold_fact_hash": "3732edc3bd51f8007b18290fa37bc8b797bdd10f2da02d3e804679d293e44560",
+    "relevant_fact_ids": [
+      "3732edc3"
+    ],
+    "non_relevant_fact_ids": [
+      "126f22e4"
+    ],
+    "probe_sha": "bf9a977da2e58acd"
+  },
+  {
+    "id": "adv-conf-023",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Background: hal artificial intelligence confidence score",
+    "gold_entity": "agent:hal",
+    "gold_relation": "memory:trust_level",
+    "gold_fact_hash": "123b3f132c2ed7af1bb8dc2eb4832b62930d5602e84604efba3d7cea09305ae6",
+    "relevant_fact_ids": [
+      "123b3f13"
+    ],
+    "non_relevant_fact_ids": [
+      "8a2300ea"
+    ],
+    "probe_sha": "f47a81c7a1885574"
+  },
+  {
+    "id": "adv-conf-024",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Background: acme company billing tier pricing plan",
+    "gold_entity": "org:acme",
+    "gold_relation": "memory:plan",
+    "gold_fact_hash": "5a3e1d6fc2d0459a17c21a01c181e327fc2ff5de96b1ebe9323ee21b149984b4",
+    "relevant_fact_ids": [
+      "5a3e1d6f"
+    ],
+    "non_relevant_fact_ids": [
+      "2e0e301d"
+    ],
+    "probe_sha": "fe1c6c36b60cf631"
+  },
+  {
+    "id": "adv-conf-025",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Background: diana classified information clearance level",
+    "gold_entity": "user:diana",
+    "gold_relation": "memory:clearance",
+    "gold_fact_hash": "f326f7d9fd1ed73d8b2b20592d1a9a63844912d1fb6d1f5e3f7b9aa4c8c73645",
+    "relevant_fact_ids": [
+      "f326f7d9"
+    ],
+    "non_relevant_fact_ids": [
+      "787c8e30"
+    ],
+    "probe_sha": "5cff4e94da96bdee"
+  },
+  {
+    "id": "adv-conf-026",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Background: oscar language region preference locale",
+    "gold_entity": "user:oscar",
+    "gold_relation": "memory:locale",
+    "gold_fact_hash": "889768889c6bd61c6ebde8c6f2a5d1806b86825bb9e09ea4feaab5a732c3a9ec",
+    "relevant_fact_ids": [
+      "88976888"
+    ],
+    "non_relevant_fact_ids": [
+      "3b587100"
+    ],
+    "probe_sha": "62efd0522309f05f"
+  },
+  {
+    "id": "adv-conf-027",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Background: julia ongoing work assignment project name",
+    "gold_entity": "user:julia",
+    "gold_relation": "memory:project",
+    "gold_fact_hash": "0f2af801d8e8db0ae80b26ce2fd76ce1a25b79d1f6e2c14f2804cd06aa581c74",
+    "relevant_fact_ids": [
+      "0f2af801"
+    ],
+    "non_relevant_fact_ids": [
+      "25862075"
+    ],
+    "probe_sha": "86a37d78f26aaaa8"
+  },
+  {
+    "id": "adv-conf-028",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Background: api gateway service ownership responsibility",
+    "gold_entity": "service:api",
+    "gold_relation": "memory:owner",
+    "gold_fact_hash": "4ab3135cf74049305432d15172abe44b9c28dcb53f26eabce35fcf3f1a846913",
+    "relevant_fact_ids": [
+      "4ab3135c"
+    ],
+    "non_relevant_fact_ids": [
+      "53ae7510"
+    ],
+    "probe_sha": "d03f0dce12539bb7"
+  },
+  {
+    "id": "adv-conf-029",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Background: eve currently working employed active status",
+    "gold_entity": "user:eve",
+    "gold_relation": "memory:status",
+    "gold_fact_hash": "8e82c7deb4e15b30571e593cfa67ec103a5db1aa5efe04926473d1760ffc84ba",
+    "relevant_fact_ids": [
+      "8e82c7de"
+    ],
+    "non_relevant_fact_ids": [
+      "2e4660f8"
+    ],
+    "probe_sha": "30a696ea28e251f6"
+  },
+  {
+    "id": "adv-conf-030",
+    "class": "adversarial_ood",
+    "subclass": "semantic_confusing",
+    "query": "Background: frank team leader manager reporting line",
+    "gold_entity": "user:frank",
+    "gold_relation": "memory:team",
+    "gold_fact_hash": "6da1107b294b9ac023fcfdb6284ecedd2a4640222c1abbeec7737cf83264c73c",
+    "relevant_fact_ids": [
+      "6da1107b"
+    ],
+    "non_relevant_fact_ids": [
+      "2bc86ad5"
+    ],
+    "probe_sha": "56e301136aaf8246"
+  },
+  {
+    "id": "adv-ood-001",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "what is the weather today",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "9caa922874ced057b2f6205b34140266f797ed2ad2dcb57044c5eb084abf838e",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "a1a3fab4feacf016"
+  },
+  {
+    "id": "adv-ood-002",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "latest news about AI",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "15854aa170b724fb4067319c0b3b0661fc72162848e9871ea4aaffb9015efac6",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "5230d4d6304f1a6c"
+  },
+  {
+    "id": "adv-ood-003",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "how do I cook pasta",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "57559a685135dbadbe4236d5b66ae51ceff646ea61d9e2d68b2beaa0cad9b77e",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "02b26241e6fabb2d"
+  },
+  {
+    "id": "adv-ood-004",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "what is 2+2",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "a5be5fb258388588e7dee720268d8ce0b1c4751bed983e48fdd4bf03f87d590b",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "53eacc350cd0cdee"
+  },
+  {
+    "id": "adv-ood-005",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "explain quantum physics",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "c69b4a2e03e1398858520d98ae139f89ed7dde8ba8af9f872114aabea04b2599",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "8fba8dbc3cf6ef24"
+  },
+  {
+    "id": "adv-ood-006",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "stock market trends",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "57a2cc2d1df7419dc40e19d3602649863842f10f455662d09e979dd8bdb0cfe4",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "6e8a627f2f281139"
+  },
+  {
+    "id": "adv-ood-007",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "best practices for sleep",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "b492892bccdf5de4f81d772c6a5200a7f4ead79f2daee019810aa63dc32da268",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "6bcc77ec5549faff"
+  },
+  {
+    "id": "adv-ood-008",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "history of ancient Rome",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "e39318c2c65ac59df7ce05d154eafc580e17d9dadd4bfea92ddd25c0c52578a0",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "90052d5dbb884a3b"
+  },
+  {
+    "id": "adv-ood-009",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "how to write a poem",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "df3af34fa001631209e10e26cdc5550755fa6f90422e03135aca5fffc9c77a01",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "a290aecc7d6e4896"
+  },
+  {
+    "id": "adv-ood-010",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "best programming languages 2025",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "987d1bdffcfd56524c946c8f3a3c53af03ef4ec3bc9133a5ef41b80fd06db4c6",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "afa1a1b4fbfb3159"
+  },
+  {
+    "id": "adv-ood-011",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Tell me: what is the weather today",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "0371ffcd96f046e3f83caaf5d959de029ad1aded84524ca653240c7a6bf99e43",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "cdc89638294fe063"
+  },
+  {
+    "id": "adv-ood-012",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Tell me: latest news about AI",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "7ad4255814c308cde064d6d2f3930408db7c60ffca353290e21fd5ff915349d0",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "a095c72288e65d55"
+  },
+  {
+    "id": "adv-ood-013",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Tell me: how do I cook pasta",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "9cc7ca88945a8089e3f2b74dd2b216873f693cb6c1a2ceae6f0771a675e2452c",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "abb4919698fd0506"
+  },
+  {
+    "id": "adv-ood-014",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Tell me: what is 2+2",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "85dc495bf0d98822ff2f9b63b591a42f179909f7bebe70d621e04ef6669944f5",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "b9d0022e9504b49c"
+  },
+  {
+    "id": "adv-ood-015",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Tell me: explain quantum physics",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "e2e76e65ace52f29b7b4b2550f334357219b71c3a21888082849eca66d40f8f9",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "ae5fc71ce8682b27"
+  },
+  {
+    "id": "adv-ood-016",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Tell me: stock market trends",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "f74b6c8636b53f24263ad63ef28725563214b586b08a3cee51ae06c91fe45198",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "a224597b2d2dbc2d"
+  },
+  {
+    "id": "adv-ood-017",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Tell me: best practices for sleep",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "7c44665c9a358ac0c08a8a7189b524affcfec99c2fc8ac8124b402de480fb92d",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "e0774545dfc404ed"
+  },
+  {
+    "id": "adv-ood-018",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Tell me: history of ancient Rome",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "d65dbc80653d221c94c4a39a8fb4f1d247d76935d1669e9e8c57becee6e51e09",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "4af318dd4ebd59a8"
+  },
+  {
+    "id": "adv-ood-019",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Tell me: how to write a poem",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "564024f2682b437173245b28deba115ce658033efcdd3835624e25182223aa24",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "dc18593024713392"
+  },
+  {
+    "id": "adv-ood-020",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Tell me: best programming languages 2025",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "716e59ce859d7747e26af682f06a6a80e4fd5f2d0ed79028be35d7bf9bdbefce",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "61bd9037b1e167e9"
+  },
+  {
+    "id": "adv-ood-021",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Quick: what is the weather today",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "4a501fde9c72a619aabc9156150a2a4df5b3f52ea15812e4d9d89bf3c1b7e93e",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "5becb29414b2d76f"
+  },
+  {
+    "id": "adv-ood-022",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Quick: latest news about AI",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "f61ee8e1afc7b93e64fe39fb88e99898f2c22d7ef9b99d689dcbcbb078a91433",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "5c5e00947800ce8f"
+  },
+  {
+    "id": "adv-ood-023",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Quick: how do I cook pasta",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "0fc2d2e589b8ab2fe229ad9c6d92ad3027888a8798fc592da11d8f7ae1d9403e",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "6670125ab9474b80"
+  },
+  {
+    "id": "adv-ood-024",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Quick: what is 2+2",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "9ca743128ccca49ca17535513d2ecbee8aa622253a6a24d27a357ed7abcbd99e",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "a4ce779ef4e5f1d9"
+  },
+  {
+    "id": "adv-ood-025",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Quick: explain quantum physics",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "e76895bd246b0105cc811dd54d672f93683edccad89f0afc28412372b8916bb2",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "a08be07f3f847972"
+  },
+  {
+    "id": "adv-ood-026",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Quick: stock market trends",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "c276ea6e116f8b784725f0ca5630f30c69e54dbd309e2ac4ae0b14b195ad2d46",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "e8300471ff57125c"
+  },
+  {
+    "id": "adv-ood-027",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Quick: best practices for sleep",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "9f466b8ed80094a6f883274b92c0dc687f92d689007b23536491f1618f68cec6",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "48a3ab534682c12f"
+  },
+  {
+    "id": "adv-ood-028",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Quick: history of ancient Rome",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "71f103b8d4d963077d46f7eaba6ebadd57e0a3066b9697048a616564c8981b1f",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "e380f5b150549311"
+  },
+  {
+    "id": "adv-ood-029",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Quick: how to write a poem",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "f656cb24908e78300cf02bea8d183db430b61ff61397d74ff9557edd6195ffdf",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "db17047985430977"
+  },
+  {
+    "id": "adv-ood-030",
+    "class": "adversarial_ood",
+    "subclass": "out_of_domain",
+    "query": "Quick: best programming languages 2025",
+    "gold_entity": null,
+    "gold_relation": null,
+    "gold_fact_hash": "6c86530b01a9681fbc3693de01f20de694185f021abdba0057ebe16ff74f82ab",
+    "relevant_fact_ids": [],
+    "non_relevant_fact_ids": [],
+    "expected_empty": true,
+    "probe_sha": "149f2019ecb08970"
+  }
+]

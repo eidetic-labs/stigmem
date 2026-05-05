@@ -1,0 +1,161 @@
+[
+  {
+    "id": "captoken-001",
+    "class": "capability_token",
+    "description": "Unsigned capability token — raw JSON without Ed25519 signature",
+    "forgery_shape": "unsigned_json",
+    "token": "{\"entity_uri\":\"https://evil.example.org\",\"capabilities\":[\"write\"],\"exp\":9999999999}",
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-002",
+    "class": "capability_token",
+    "description": "Token signed with unknown ephemeral key (no registered manifest)",
+    "forgery_shape": "unknown_key_signed",
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-003",
+    "class": "capability_token",
+    "description": "Token with valid structure but single-bit signature corruption",
+    "forgery_shape": "bit_corrupted_signature",
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-004",
+    "class": "capability_token",
+    "description": "Expired token (exp = unix epoch 0)",
+    "forgery_shape": "expired_token",
+    "token_overrides": {"exp": 0},
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-005",
+    "class": "capability_token",
+    "description": "Token with future 'not before' (nbf far in the future)",
+    "forgery_shape": "nbf_in_future",
+    "token_overrides": {"nbf": 9999999999},
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-006",
+    "class": "capability_token",
+    "description": "Token claiming 'write' capability when manifest only grants 'read'",
+    "forgery_shape": "capability_escalation",
+    "token_overrides": {"capabilities": ["read", "write", "admin"]},
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-007",
+    "class": "capability_token",
+    "description": "Token with empty capabilities array",
+    "forgery_shape": "empty_capabilities",
+    "token_overrides": {"capabilities": []},
+    "endpoint": "/v1/recall",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-008",
+    "class": "capability_token",
+    "description": "Replay: same valid token submitted twice (nonce replay attack)",
+    "forgery_shape": "nonce_replay",
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status_on_replay": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-009",
+    "class": "capability_token",
+    "description": "Token payload: alg=none attack (unsigned algorithm claim)",
+    "forgery_shape": "alg_none",
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-010",
+    "class": "capability_token",
+    "description": "Token with mismatched entity_uri (signed for org A, used for org B)",
+    "forgery_shape": "entity_uri_mismatch",
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-011",
+    "class": "capability_token",
+    "description": "Malformed JWT: missing header segment",
+    "forgery_shape": "malformed_jwt_no_header",
+    "token": "eyJjYXBhYmlsaXRpZXMiOlsid3JpdGUiXX0.invalid",
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [400, 401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-012",
+    "class": "capability_token",
+    "description": "Malformed JWT: non-base64 payload",
+    "forgery_shape": "malformed_jwt_bad_base64",
+    "token": "header.!!!not-base64!!!.signature",
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [400, 401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-013",
+    "class": "capability_token",
+    "description": "Empty Authorization header value",
+    "forgery_shape": "empty_auth_header",
+    "token": "",
+    "endpoint": "/v1/recall",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-014",
+    "class": "capability_token",
+    "description": "Authorization header with wrong scheme ('Basic' instead of 'Bearer')",
+    "forgery_shape": "wrong_auth_scheme",
+    "token": "Basic dXNlcjpwYXNz",
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [401, 403],
+    "pass_criterion": "no_fact_data_in_response"
+  },
+  {
+    "id": "captoken-015",
+    "class": "capability_token",
+    "description": "Token length exceeds 16 KB (DoS / parser bomb shape)",
+    "forgery_shape": "oversized_token",
+    "endpoint": "/v1/facts",
+    "method": "POST",
+    "expected_status": [400, 401, 403, 413, 422],
+    "pass_criterion": "no_fact_data_in_response"
+  }
+]

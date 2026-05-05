@@ -1,26 +1,42 @@
-"""Optional Prometheus metrics for the Stigmem reference node — spec §22.4.
+"""Prometheus metrics for the Stigmem reference node — spec §22.4, Phase 13.
 
-If ``prometheus_client`` is installed, this module registers counters and
-exposes them via ``/metrics``.  If the package is absent, all operations
+If ``prometheus_client`` is installed, this module registers the full metric
+set and exposes it via ``/metrics``.  If the package is absent, all operations
 are no-ops so the node runs without the dependency.
 
-Counters registered:
+Counters:
   stigmem_fact_write_total{principal, tenant}
   stigmem_fact_read_total{principal, tenant}
   stigmem_quota_breach_total{principal, tenant, dimension}
   stigmem_audit_event_total{event_type, tenant}
+  stigmem_contradiction_total{tenant}
+  stigmem_federation_ingress_total{peer_id, status}
+  stigmem_federation_egress_total{peer_id, status}
+  stigmem_subscription_event_total{delivery_type, status}
+
+Histograms:
+  stigmem_request_latency_seconds{route, method, status_code}
+  stigmem_recall_ranker_duration_seconds{tenant}
+  stigmem_capability_verify_duration_seconds{result}
+
+Gauges:
+  stigmem_subscription_connections_active{tenant}
+  stigmem_replication_lag_seconds{peer_id}
 """
 
 from __future__ import annotations
 
-from typing import Any
+import time
+from contextlib import contextmanager
+from typing import Any, Generator
 
 try:
     import prometheus_client as _prom
-    from prometheus_client import Counter, REGISTRY  # noqa: F401
+    from prometheus_client import Counter, Gauge, Histogram, REGISTRY  # noqa: F401
 
     _ENABLED = True
 
+    # ----- Counters -----
     FACT_WRITE = Counter(
         "stigmem_fact_write_total",
         "Total fact assertions",
@@ -38,8 +54,60 @@ try:
     )
     AUDIT_EVENT = Counter(
         "stigmem_audit_event_total",
-        "Total audit events emitted",
+        "Total audit events emitted (§22.3)",
         ["event_type", "tenant"],
+    )
+    CONTRADICTION = Counter(
+        "stigmem_contradiction_total",
+        "Total facts that triggered a contradiction on write",
+        ["tenant"],
+    )
+    FEDERATION_INGRESS = Counter(
+        "stigmem_federation_ingress_total",
+        "Facts received via federation pull ingress",
+        ["peer_id", "status"],
+    )
+    FEDERATION_EGRESS = Counter(
+        "stigmem_federation_egress_total",
+        "Facts served via federation pull egress",
+        ["peer_id", "status"],
+    )
+    SUBSCRIPTION_EVENT = Counter(
+        "stigmem_subscription_event_total",
+        "Subscription delivery events",
+        ["delivery_type", "status"],
+    )
+
+    # ----- Histograms -----
+    REQUEST_LATENCY = Histogram(
+        "stigmem_request_latency_seconds",
+        "End-to-end HTTP request latency",
+        ["route", "method", "status_code"],
+        buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5),
+    )
+    RECALL_RANKER_DURATION = Histogram(
+        "stigmem_recall_ranker_duration_seconds",
+        "Time spent in the hybrid recall ranker",
+        ["tenant"],
+        buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5),
+    )
+    CAPABILITY_VERIFY_DURATION = Histogram(
+        "stigmem_capability_verify_duration_seconds",
+        "Time spent verifying capability tokens",
+        ["result"],
+        buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1),
+    )
+
+    # ----- Gauges -----
+    SUBSCRIPTION_CONNECTIONS = Gauge(
+        "stigmem_subscription_connections_active",
+        "Number of active (non-circuit-open) subscriptions",
+        ["tenant"],
+    )
+    REPLICATION_LAG = Gauge(
+        "stigmem_replication_lag_seconds",
+        "Estimated replication lag to each federation peer (seconds)",
+        ["peer_id"],
     )
 
 except ImportError:
@@ -48,14 +116,42 @@ except ImportError:
     class _Noop:
         def labels(self, **_: Any) -> "_Noop":
             return self
+
         def inc(self, amount: float = 1) -> None:
             pass
 
+        def observe(self, amount: float) -> None:
+            pass
+
+        def set(self, value: float) -> None:
+            pass
+
+        def inc_gauge(self, amount: float = 1) -> None:
+            pass
+
+        def dec(self, amount: float = 1) -> None:
+            pass
+
     _noop = _Noop()
-    FACT_WRITE = _noop  # type: ignore[assignment]
-    FACT_READ = _noop   # type: ignore[assignment]
-    QUOTA_BREACH = _noop  # type: ignore[assignment]
-    AUDIT_EVENT = _noop   # type: ignore[assignment]
+
+    # Counters
+    FACT_WRITE = _noop        # type: ignore[assignment]
+    FACT_READ = _noop         # type: ignore[assignment]
+    QUOTA_BREACH = _noop      # type: ignore[assignment]
+    AUDIT_EVENT = _noop       # type: ignore[assignment]
+    CONTRADICTION = _noop     # type: ignore[assignment]
+    FEDERATION_INGRESS = _noop  # type: ignore[assignment]
+    FEDERATION_EGRESS = _noop   # type: ignore[assignment]
+    SUBSCRIPTION_EVENT = _noop  # type: ignore[assignment]
+
+    # Histograms
+    REQUEST_LATENCY = _noop           # type: ignore[assignment]
+    RECALL_RANKER_DURATION = _noop    # type: ignore[assignment]
+    CAPABILITY_VERIFY_DURATION = _noop  # type: ignore[assignment]
+
+    # Gauges
+    SUBSCRIPTION_CONNECTIONS = _noop  # type: ignore[assignment]
+    REPLICATION_LAG = _noop           # type: ignore[assignment]
 
 
 def metrics_enabled() -> bool:
@@ -71,3 +167,17 @@ def make_metrics_response() -> Any:
         content=_prom.generate_latest(),
         media_type=_prom.CONTENT_TYPE_LATEST,
     )
+
+
+@contextmanager
+def observe_duration(histogram: Any, labels: dict[str, str]) -> Generator[None, None, None]:
+    """Context manager: observe elapsed time in ``histogram`` after the block exits."""
+    start = time.perf_counter()
+    try:
+        yield
+    finally:
+        elapsed = time.perf_counter() - start
+        try:
+            histogram.labels(**labels).observe(elapsed)
+        except Exception:  # noqa: BLE001
+            pass

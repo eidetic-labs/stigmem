@@ -1006,6 +1006,33 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     rk_p.set_defaults(func=_cmd_identity_rotate_key)
 
+    # ------------------------------------------------------------------ backfill-cids
+    bc_p = sub.add_parser(
+        "backfill-cids",
+        help="compute and persist CIDs for facts that pre-date Phase 13 (spec §25.6.3)",
+    )
+    bc_p.add_argument(
+        "--db",
+        dest="db",
+        default=None,
+        metavar="PATH",
+        help="path to stigmem.db (default: STIGMEM_DB_PATH env or settings default)",
+    )
+    bc_p.add_argument(
+        "--batch-size",
+        dest="batch_size",
+        type=int,
+        default=500,
+        metavar="N",
+        help="facts to process per transaction (default: 500)",
+    )
+    bc_p.add_argument(
+        "--quiet",
+        action="store_true",
+        help="suppress progress output",
+    )
+    bc_p.set_defaults(func=_cmd_backfill_cids)
+
     return parser
 
 
@@ -1420,6 +1447,72 @@ def _cmd_identity_rotate_key(args: argparse.Namespace) -> int:
     print("ACTION REQUIRED — update your secrets manager with the new private key:")
     print(f"  STIGMEM_NODE_PRIVATE_KEY={result.new_private_key_b64}")
     print("Then restart the node.  Keep the old key value until the dual-trust window closes.")
+    return 0
+
+
+def _cmd_backfill_cids(args: argparse.Namespace) -> int:
+    """Compute and persist CIDs for facts that pre-date Phase 13 (spec §25.6.3)."""
+    import sqlite3 as _sqlite3
+    from .cid import compute_cid as _compute_cid
+
+    db_path: str | None = getattr(args, "db", None)
+    if db_path is None:
+        import os as _os
+        db_path = _os.environ.get("STIGMEM_DB_PATH", "stigmem.db")
+
+    batch_size: int = getattr(args, "batch_size", 500)
+    quiet: bool = getattr(args, "quiet", False)
+
+    conn = _sqlite3.connect(db_path)
+    conn.row_factory = _sqlite3.Row
+
+    total_updated = 0
+    collision_skipped = 0
+
+    while True:
+        rows = conn.execute(
+            "SELECT id, entity, relation, value_type, value_v, source, scope"
+            " FROM facts WHERE cid IS NULL LIMIT ?",
+            (batch_size,),
+        ).fetchall()
+        if not rows:
+            break
+
+        for row in rows:
+            cid = _compute_cid(
+                entity=row["entity"],
+                relation=row["relation"],
+                value_type=row["value_type"],
+                value_v=row["value_v"] or "",
+                source=row["source"],
+                scope=row["scope"],
+            )
+            # Check for CID collision before writing
+            existing = conn.execute(
+                "SELECT fact_id FROM fact_cid_aliases WHERE cid = ?", (cid,)
+            ).fetchone()
+            if existing and existing["fact_id"] != row["id"]:
+                collision_skipped += 1
+                continue
+
+            conn.execute("UPDATE facts SET cid = ? WHERE id = ?", (cid, row["id"]))
+            conn.execute(
+                "INSERT OR IGNORE INTO fact_cid_aliases (fact_id, cid) VALUES (?, ?)",
+                (row["id"], cid),
+            )
+
+        conn.commit()
+        total_updated += len(rows)
+        if not quiet:
+            print(f"backfill-cids: processed {total_updated} facts…", file=sys.stderr)
+
+    conn.close()
+    if not quiet:
+        print(
+            f"backfill-cids: done — {total_updated} facts updated"
+            + (f", {collision_skipped} CID collisions skipped" if collision_skipped else ""),
+            file=sys.stderr,
+        )
     return 0
 
 

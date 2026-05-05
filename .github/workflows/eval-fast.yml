@@ -1,0 +1,107 @@
+name: Eval fast subset
+
+on:
+  pull_request:
+  push:
+    branches: ["main", "phase/**", "feat/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  eval-fast:
+    name: Eval harness (adversarial + recall, ≤5 min)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install all workspace packages
+        run: uv sync --all-packages
+
+      - name: Run adversarial corpus (79 scenarios)
+        run: |
+          mkdir -p eval/results
+          uv run pytest eval/test_adversarial.py -v --tb=short \
+            --rootdir=. \
+            -p no:cacheprovider \
+            -p no:cov
+        env:
+          STIGMEM_EVAL_URL: ""
+
+      - name: Run recall benchmark (400 probes)
+        run: |
+          uv run pytest eval/test_recall.py -v --tb=short \
+            --rootdir=. \
+            -p no:cacheprovider \
+            -p no:cov
+        env:
+          STIGMEM_EVAL_URL: ""
+
+      - name: Upload eval artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-${{ github.sha }}
+          path: eval/results/
+          retention-days: 30
+
+      - name: Check adversarial total count
+        run: |
+          python3 - <<'EOF'
+          import json, pathlib, sys
+
+          classes = [
+            "typo_squatted", "contradiction_floods", "tombstone_bypass",
+            "capability_token", "sanitizer_bypass",
+          ]
+          total = 0
+          corpus_dir = pathlib.Path("eval/corpus/adversarial")
+          for cls in classes:
+              scenarios = []
+              for path in sorted((corpus_dir / cls).glob("*.json")):
+                  data = json.loads(path.read_text())
+                  if isinstance(data, list):
+                      scenarios.extend(data)
+                  else:
+                      scenarios.append(data)
+              print(f"  {cls}: {len(scenarios)}")
+              total += len(scenarios)
+          if total != 79:
+              print(f"ERROR: expected 79 scenarios, got {total}", file=sys.stderr)
+              sys.exit(1)
+          print(f"OK: {total} adversarial scenarios")
+          EOF
+
+      - name: Verify recall probe count
+        run: |
+          python3 - <<'EOF'
+          import json, pathlib, sys
+          probes = json.loads(pathlib.Path("eval/corpus/recall/probes.json").read_text())
+          if len(probes) != 400:
+              print(f"ERROR: expected 400 probes, got {len(probes)}", file=sys.stderr)
+              sys.exit(1)
+          print(f"OK: {len(probes)} recall probes")
+          EOF
+
+      - name: Verify baseline.json schema
+        run: |
+          python3 - <<'EOF'
+          import json, pathlib, sys
+          baseline = json.loads(pathlib.Path("eval/corpus/recall/baseline.json").read_text())
+          required = {"nDCG@10", "Recall@5", "corpus_sha", "server_version", "recorded_at"}
+          missing = required - set(baseline.keys())
+          if missing:
+              print(f"ERROR: baseline.json missing keys: {missing}", file=sys.stderr)
+              sys.exit(1)
+          print(f"OK: baseline.json schema valid — nDCG@10={baseline['nDCG@10']}")
+          EOF

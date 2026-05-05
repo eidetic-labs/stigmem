@@ -230,7 +230,7 @@ class TestHashCacheTTL:
         original = _patch(test_settings)
         rl_mod._HASH_CACHE.clear()
         raw_key = create_api_key("agent:ttl-test", ["read", "write"])
-        key_hash = hashlib.sha256(raw_key.encode()).hexdigest()  # lgtm[py/weak-sensitive-data-hashing]
+        key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
         h = {"Authorization": f"Bearer {raw_key}"}
 
         try:

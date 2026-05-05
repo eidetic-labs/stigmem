@@ -7,12 +7,12 @@ sidebar_label: Overview
 # Stigmem Protocol Specification
 
 :::note Version
-These docs track **Stigmem spec v1.1-draft rev 11** (§22 DRAFT normative, Phase 12; §21 DRAFT normative, Phase 10), **v1.1-draft** (§19–§20 normative), and **v1.0** (§1–§18 stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
+These docs track **Stigmem spec v1.1-draft rev 14** (§23–§25 DRAFT normative, Phase 13; §22 DRAFT normative, Phase 12; §21 DRAFT normative, Phase 10), **v1.1-draft** (§19–§20 normative), and **v1.0** (§1–§18 stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
 
-§22 Security Hardening was introduced in **v1.1-draft rev 11** (Phase 12) and is DRAFT normative; it will be promoted to normative in v2.0. §21 Lazy Instruction Discovery was introduced in **v1.1-draft rev 6** (Phase 10) and is DRAFT normative. §19 Federation Trust and §20 Recall & Graph were promoted to normative in v1.1. §1–§18 are unchanged from v1.0.
+§23–§25 (RTBF tombstones, time-travel queries, content-addressed IDs) were introduced in **v1.1-draft rev 12** (Phase 13) and are DRAFT normative; rev 13–14 applied peer-review amendments (retraction data model, subscription tombstone filter, CID tamper-detection improvements, tombstone signing hardening). §22 Security Hardening was introduced in **v1.1-draft rev 11** (Phase 12) and is DRAFT normative; it will be promoted to normative in v2.0. §21 Lazy Instruction Discovery was introduced in **v1.1-draft rev 6** (Phase 10) and is DRAFT normative. §19 Federation Trust and §20 Recall & Graph were promoted to normative in v1.1. §1–§18 are unchanged from v1.0.
 :::
 
-The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative sources are `spec/stigmem-spec-v1.0.md` (§1–§18), and `spec/stigmem-spec-v1.1-draft.md` (§19–§22 + v1.1 additions to §2 and §5; §21 added in rev 6; §22 added in rev 11) in the repository.
+The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative sources are `spec/stigmem-spec-v1.0.md` (§1–§18), and `spec/stigmem-spec-v1.1-draft.md` (§19–§25 + v1.1 additions to §2 and §5; §21 added in rev 6; §22 added in rev 11; §23–§25 added in rev 12; rev 13–14 amendments) in the repository.
 
 :::info Security
 Report vulnerabilities via the [GitHub private advisory path](https://github.com/eidetic-labs/stigmem/security/advisories) — not as public issues. Full policy and coordinated disclosure terms: [SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md).
@@ -71,6 +71,20 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | §22.6 | Container baseline (distroless, non-root UID 1000, read-only-fs, seccomp, Cosign signing) | **DRAFT normative (v1.1-draft rev 11)** |
 | §22.7 | Transparency log own-instance decision memo (5-criterion gate; reference deployment defers self-hosted Rekor) | **DRAFT normative (v1.1-draft rev 11)** |
 | §22.7.5 | Transparency log public-key rotation (Rekor root-key; 30-day update SLA; `transparency_log_key_mismatch` audit event) | **DRAFT normative (v1.1-draft rev 11)** |
+| §23 | Right-to-be-Forgotten Tombstones | **DRAFT normative (v1.1-draft rev 12–14, Phase 13)** |
+| §23.2 | Tombstone record shape (`id`, `entity_uri`, `scope`, `reason`, `signed_by`, `key_id`, `signature`, `created_at`, `legal_hold`); `key_id` added rev 14 for key-rotation disambiguation; revocation record | **DRAFT normative (v1.1-draft rev 12; `key_id` added rev 14)** |
+| §23.3 | Recall-time tombstone filter — direct-entity + graph-reference suppression; subscription delivery tombstone check (rev 13); pagination-total oracle guard (rev 13); memory-card full suppression when `about_entity` tombstoned (rev 13); DB isolation MUST (rev 13); 60-second effectiveness SLA | **DRAFT normative (v1.1-draft rev 12; amended rev 13)** |
+| §23.4 | Federation propagation — outbound rebroadcast; inbound `signed_by` resolved via transparency log independent of relaying peer (rev 14); tombstone `created_at` accepted against retention horizon not ±5 min window (rev 14); `tombstone:read` capability verb; `/v1/federation/tombstones` poll route | **DRAFT normative (v1.1-draft rev 12; amended rev 14)** |
+| §23.5 | Storage-trait extension (`tombstone()`, `is_tombstoned()`, `list_tombstones()`, `revoke_tombstone()`); Migration 013a DDL; `fact_retractions` append-only log (Migration 013c) added rev 13 | **DRAFT normative (v1.1-draft rev 12; Migration 013c added rev 13)** |
+| §24 | Time-Travel / As-Of Queries | **DRAFT normative (v1.1-draft rev 12–14, Phase 13)** |
+| §24.2 | Fact visibility at time T: 4-condition definition; `as_of` parameter on `/v1/recall` and `/v1/facts`; retraction data model resolved — `fact_retractions` log, `retracted_at <= T` (rev 13); retroactive-monotonicity break documented (rev 13); monotonicity invariant | **DRAFT normative (v1.1-draft rev 12; retraction model added rev 13)** |
+| §24.3 | Tombstone interaction — RTBF retroactive suppression (default); `legal_hold: true` preserves facts for admin-key `as_of` queries only; agent-key `as_of` legal-hold path returns silent `200` (rev 14) | **DRAFT normative (v1.1-draft rev 12; agent-key 200 path added rev 14)** |
+| §24.4 | Storage-trait extension — `query_facts_as_of`, `recall_as_of`; `is_admin_caller: bool` added rev 13; `tombstone_notices` added to `query_facts_as_of` return type rev 13; cursor stability across tombstone events rev 13 | **DRAFT normative (v1.1-draft rev 12; amended rev 13)** |
+| §25 | Content-Addressed Fact IDs | **DRAFT normative (v1.1-draft rev 12–14, Phase 13)** |
+| §25.2 | CID format: `"sha256:" + hex(SHA-256(RFC8785(canonical_body)))` over 6 canonical fields; excluded fields require independent validation (`valid_until`, `derived_from`, `attestation_chain`, `source_trust`) — rev 14; future algorithm rotation via `"sha256:"` prefix (§22.2 pattern) | **DRAFT normative (v1.1-draft rev 12; excluded-field validation added rev 14)** |
+| §25.3 | Migration path — `fact_cid_aliases` alias table; dual UUID/CID addressing; 12-month migration window; `cid` field on FactRecord | **DRAFT normative (v1.1-draft rev 12)** |
+| §25.4 | Federation envelope extensions — CID in federation payloads for tamper detection; `phase13_ga_at` timestamp gates null-CID rejection (rev 14); `cid_mismatch` rejection; CID in `derived_from` | **DRAFT normative (v1.1-draft rev 12; `phase13_ga_at` gate added rev 14)** |
+| §25.7 | Migration procedure — Migration 013b DDL; `stigmem backfill-cids` CLI; online write path with idempotent upsert and collision detection | **DRAFT normative (v1.1-draft rev 12)** |
 
 ## Key concepts
 

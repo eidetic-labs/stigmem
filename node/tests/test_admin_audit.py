@@ -142,8 +142,9 @@ class TestAdminAuditContent:
     def test_seq_is_monotonically_increasing(self, audit_setup: tuple[TestClient, str, str]) -> None:
         """Audit entries returned by the export must have ascending seq values."""
         client, writer_key, audit_key = audit_setup
-        for _ in range(3):
-            client.post("/v1/facts", json=FACT, headers={"Authorization": f"Bearer {writer_key}"})
+        for i in range(3):
+            fact = {**FACT, "value": {"type": "string", "v": f"CEO-{i}"}}
+            client.post("/v1/facts", json=fact, headers={"Authorization": f"Bearer {writer_key}"})
 
         r = client.get(
             "/v1/admin/audit",
@@ -156,8 +157,9 @@ class TestAdminAuditContent:
     def test_cursor_pagination(self, audit_setup: tuple[TestClient, str, str]) -> None:
         """Cursor-based pagination returns non-overlapping pages."""
         client, writer_key, audit_key = audit_setup
-        for _ in range(5):
-            client.post("/v1/facts", json=FACT, headers={"Authorization": f"Bearer {writer_key}"})
+        for i in range(5):
+            fact = {**FACT, "value": {"type": "string", "v": f"CEO-{i}"}}
+            client.post("/v1/facts", json=fact, headers={"Authorization": f"Bearer {writer_key}"})
 
         page1 = client.get(
             "/v1/admin/audit",

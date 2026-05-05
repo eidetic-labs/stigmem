@@ -148,6 +148,12 @@ const config = {
           },
           {
             type: 'docSidebar',
+            sidebarId: 'sdksSidebar',
+            label: 'SDKs',
+            position: 'left',
+          },
+          {
+            type: 'docSidebar',
             sidebarId: 'guidesSidebar',
             label: 'Guides',
             position: 'left',

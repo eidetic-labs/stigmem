@@ -20,6 +20,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from .db import db
+from .metrics import AUDIT_EVENT
 
 
 def _emit_with_conn(
@@ -90,11 +91,13 @@ def emit(
     if conn is not None:
         _emit_with_conn(event_type, entity_uri, tenant_id, oidc_sub, fact_id,
                         source, attested_key_id, detail_json, now, entry_id, conn)
-        return
+    else:
+        with db() as _conn:
+            _emit_with_conn(event_type, entity_uri, tenant_id, oidc_sub, fact_id,
+                            source, attested_key_id, detail_json, now, entry_id, _conn)
 
-    with db() as _conn:
-        _emit_with_conn(event_type, entity_uri, tenant_id, oidc_sub, fact_id,
-                        source, attested_key_id, detail_json, now, entry_id, _conn)
+    # §22.3: increment Prometheus counter for every successfully written audit event.
+    AUDIT_EVENT.labels(event_type=event_type, tenant=tenant_id).inc()
 
 
 def emit_nofail(

@@ -1,0 +1,8 @@
+{
+  "nDCG@10": 0.0,
+  "Recall@5": 0.0,
+  "corpus_sha": "fbefb7931f0213f3",
+  "server_version": "1.0.0rc1",
+  "recorded_at": "2026-05-05T03:28:40.426773+00:00",
+  "_note": "bootstrap placeholder \u2014 run `make eval-fast-baseline` to freeze real values"
+}

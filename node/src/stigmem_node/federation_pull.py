@@ -17,6 +17,7 @@ import httpx
 
 from .db import db
 from .federation_ingest import ingest_fact, write_audit_log
+from .metrics import FEDERATION_INGRESS, REPLICATION_LAG
 from .peer_token import create_peer_token
 from .settings import settings
 from .tls import check_peer_san
@@ -105,14 +106,33 @@ async def pull_from_peer_once(
         # origin_allowed_scopes = peer's registered declaration scope (spec §6.8.1).
         # These fields are internal and MUST NOT be re-replicated (§3.1), so we
         # derive them from the peer registry rather than reading from the fact payload.
+        ingested = 0
         for fact in data.get("facts", []):
             ingest_fact(
                 fact,
                 peer["node_id"],
                 origin_allowed_scopes=allowed_scopes,
             )
+            ingested += 1
+
+        if ingested:
+            FEDERATION_INGRESS.labels(peer_id=peer["node_id"], status="ok").inc(ingested)
 
         new_cursor: str | None = data.get("cursor")
+
+        # Replication-lag gauge: difference between now and the cursor HLC timestamp.
+        # The HLC is an ISO timestamp string; if parsing fails we leave the gauge unchanged.
+        try:
+            if new_cursor:
+                from datetime import UTC, datetime
+                cursor_ts = datetime.fromisoformat(new_cursor.split("_")[0].replace("Z", "+00:00"))
+                if cursor_ts.tzinfo is None:
+                    cursor_ts = cursor_ts.replace(tzinfo=UTC)
+                lag_s = max(0.0, (datetime.now(UTC) - cursor_ts).total_seconds())
+                REPLICATION_LAG.labels(peer_id=peer["node_id"]).set(lag_s)
+        except Exception:  # noqa: BLE001
+            pass
+
         return new_cursor
 
 
@@ -127,6 +147,94 @@ def _make_pull_client() -> httpx.AsyncClient:
         )
         return httpx.AsyncClient(verify=ssl_ctx)
     return httpx.AsyncClient()
+
+
+async def pull_tombstones_from_peer_once(
+    peer: dict[str, Any],
+    client: httpx.AsyncClient,
+    cursor: str | None,
+) -> str | None:
+    """Pull one page of tombstones from the peer (§23.4.3). Returns the new cursor."""
+    allowed_scopes: list[str] = json.loads(peer["allowed_scopes"])
+    token = create_peer_token(peer["node_id"], allowed_scopes)
+
+    params: dict[str, Any] = {"limit": 200}
+    if cursor:
+        params["since"] = cursor
+
+    try:
+        resp = await client.get(
+            f"{peer['node_url']}/v1/federation/tombstones",
+            params=params,
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=30.0,
+        )
+    except httpx.RequestError as exc:
+        logger.warning("Tombstone pull network error from %s: %s", peer["node_id"], exc)
+        return cursor
+
+    if resp.status_code != 200:
+        logger.warning("Tombstone pull from %s returned %s", peer["node_id"], resp.status_code)
+        return cursor
+
+    data = resp.json()
+    tombstones = data.get("tombstones", [])
+    new_cursor: str | None = data.get("cursor")
+
+    # F-13 §23.4.3: emit tombstone_sync_gap when result set is non-empty and cursor
+    # indicates skipped pages (more results available beyond this batch)
+    if tombstones and new_cursor is not None:
+        from .audit_event import emit_nofail
+        emit_nofail(
+            "tombstone_sync_gap",
+            entity_uri=peer["node_id"],
+            tenant_id="default",
+            source=f"federation_pull:{peer['node_id']}",
+            detail={
+                "peer_node_id": peer["node_id"],
+                "tombstones_in_batch": len(tombstones),
+                "cursor": new_cursor,
+            },
+        )
+
+    # Ingest tombstones and revocations
+    from .tombstones import apply_inbound_tombstone, apply_inbound_revocation
+    from .models import TombstoneRecord, TombstoneRevocationRecord
+    for t in tombstones:
+        try:
+            record = TombstoneRecord(**t)
+            apply_inbound_tombstone(record)
+        except Exception as exc:
+            logger.warning("Tombstone ingest from %s failed: %s", peer["node_id"], exc)
+
+    for r in data.get("revocations", []):
+        try:
+            rev = TombstoneRevocationRecord(**r)
+            apply_inbound_revocation(rev)
+        except Exception as exc:
+            logger.warning("Tombstone revocation ingest from %s failed: %s", peer["node_id"], exc)
+
+    return new_cursor
+
+
+def _load_tombstone_cursor(peer_id: str) -> str | None:
+    with db() as conn:
+        row = conn.execute(
+            "SELECT cursor FROM replication_cursors WHERE peer_id = ? AND direction = 'tombstone_inbound'",
+            (peer_id,),
+        ).fetchone()
+    return row["cursor"] if row else None
+
+
+def _save_tombstone_cursor(peer_id: str, cursor: str | None) -> None:
+    with db() as conn:
+        conn.execute(
+            """INSERT INTO replication_cursors (peer_id, direction, cursor, updated_at)
+               VALUES (?,?,?,?)
+               ON CONFLICT(peer_id, direction)
+               DO UPDATE SET cursor = excluded.cursor, updated_at = excluded.updated_at""",
+            (peer_id, "tombstone_inbound", cursor, datetime.now(UTC).isoformat()),
+        )
 
 
 async def pull_all_peers_once() -> None:
@@ -146,6 +254,12 @@ async def pull_all_peers_once() -> None:
             new_cursor = await pull_from_peer_once(peer_dict, client, cursor)
             if new_cursor != cursor:
                 save_cursor(peer_dict["id"], new_cursor)
+
+            # §23.4.3: pull tombstones from peers
+            tomb_cursor = _load_tombstone_cursor(peer_dict["id"])
+            new_tomb_cursor = await pull_tombstones_from_peer_once(peer_dict, client, tomb_cursor)
+            if new_tomb_cursor != tomb_cursor:
+                _save_tombstone_cursor(peer_dict["id"], new_tomb_cursor)
 
 
 async def pull_loop_task() -> None:

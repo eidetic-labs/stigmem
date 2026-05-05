@@ -59,6 +59,10 @@ class Identity:
         """True when the principal holds the audit.read capability (spec §22.3)."""
         return "audit.read" in self.permissions
 
+    def is_admin(self) -> bool:
+        """True when the principal holds the admin capability (spec §24.3.2)."""
+        return "admin" in self.permissions
+
 
 _ANON = Identity("anon:trusted", ["read", "write", "federate"], tenant_id="default")
 

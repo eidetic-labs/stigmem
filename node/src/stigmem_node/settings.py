@@ -246,5 +246,27 @@ class Settings(BaseSettings):
         """True when mTLS cert + key are configured (non-localhost deployments)."""
         return bool(self.tls_cert_path and self.tls_key_path)
 
+    # -------------------------------------------------------------------------
+    # Observability — Phase 13 (spec §23)
+    # -------------------------------------------------------------------------
+    # Set otel_enabled=true to activate OpenTelemetry tracing.
+    # Requires stigmem-node[observability] (opentelemetry-sdk + OTLP exporter).
+    otel_enabled: bool = False
+
+    # Service name reported in OTel resource attributes.
+    otel_service_name: str = "stigmem-node"
+
+    # OTLP collector base URL (HTTP protocol).
+    # e.g. "http://localhost:4318" for a local OpenTelemetry Collector or Tempo.
+    # Leave empty to disable OTLP export (spans collected locally only).
+    otel_exporter_otlp_endpoint: str = ""
+
+    # -------------------------------------------------------------------------
+    # Time-travel / as_of — Phase 13 (spec §24.2.2)
+    # -------------------------------------------------------------------------
+    # Minimum allowed as_of timestamp (ISO 8601 UTC). Queries before this floor
+    # return 400 as_of_before_retention_floor. Empty string = no floor enforced.
+    as_of_retention_floor: str = ""
+
 
 settings = Settings()

@@ -1,0 +1,79 @@
+# Observability stack for the stigmem federation quickstart.
+# Layers on top of docker-compose.yml:
+#
+#   docker compose \
+#     -f docker-compose.yml \
+#     -f docker-compose.observability.yml \
+#     up --build -d
+#
+# Services added:
+#   tempo      — Grafana Tempo; receives OTLP traces from the nodes.
+#   prometheus — Scrapes /metrics from node-a and node-b every 15 s.
+#   grafana    — Dashboards pre-loaded from dashboards/grafana/.
+#
+# Node env vars injected:
+#   STIGMEM_OTEL_ENABLED=true
+#   STIGMEM_OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+#
+# After startup:
+#   Grafana  → http://localhost:3000  (admin/admin)
+#   Prometheus → http://localhost:9090
+#   Tempo (OTLP HTTP) → http://localhost:4318
+
+services:
+  node-a:
+    environment:
+      STIGMEM_OTEL_ENABLED: "true"
+      STIGMEM_OTEL_SERVICE_NAME: "stigmem-node-a"
+      STIGMEM_OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo:4318"
+
+  node-b:
+    environment:
+      STIGMEM_OTEL_ENABLED: "true"
+      STIGMEM_OTEL_SERVICE_NAME: "stigmem-node-b"
+      STIGMEM_OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo:4318"
+
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo.yml"]
+    volumes:
+      - ./deploy/tempo.yml:/etc/tempo.yml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "3200:3200"   # Tempo query API (for Grafana datasource)
+    user: "10001:10001"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./dashboards/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./dashboards/grafana:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - tempo
+
+volumes:
+  tempo-data:
+  prometheus-data:
+  grafana-data:

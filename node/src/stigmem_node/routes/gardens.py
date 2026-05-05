@@ -486,6 +486,12 @@ def reject_fact(
             (identity.entity_uri, now, req.reason or "rejected", req.fact_id),
         )
 
+        # Append-only retraction log (§24.2.1 c.3)
+        conn.execute(
+            "INSERT INTO fact_retractions (id, fact_id, retracted_at, retracted_by) VALUES (?,?,?,?)",
+            (str(uuid.uuid4()), req.fact_id, now, identity.entity_uri),
+        )
+
         # Audit log (§19.5.6)
         import json as _json, uuid as _uuid
         audit_id = str(_uuid.uuid4())

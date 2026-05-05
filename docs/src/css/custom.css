@@ -238,24 +238,15 @@ pre {
   fill: var(--ifm-color-content) !important;
 }
 
-/* Prevent text clipping inside diagram nodes — ensure padding and overflow. */
-.docusaurus-mermaid-container .nodeLabel {
-  padding: 6px 10px !important;
-  overflow: visible !important;
-  white-space: normal !important;
-  word-break: break-word;
-}
-.docusaurus-mermaid-container .node foreignObject {
-  overflow: visible !important;
-}
-/* Edge labels: add a background so lines don't bleed through text. */
+/* Edge labels: semi-transparent backdrop so connector lines are less prominent
+   behind label text without fully hiding them. */
 .docusaurus-mermaid-container .edgeLabel {
-  padding: 4px 8px !important;
-  background: var(--ifm-background-color) !important;
-  border-radius: 4px;
+  background: color-mix(in srgb, var(--ifm-background-color) 85%, transparent) !important;
+  border-radius: 3px;
+  padding: 2px 4px !important;
 }
 [data-theme='dark'] .docusaurus-mermaid-container .edgeLabel {
-  background: var(--stigmem-logo-bg) !important;
+  background: color-mix(in srgb, var(--stigmem-logo-bg) 85%, transparent) !important;
 }
 
 /* Hero buttons — softer, more clickable. The hero is always dark (it inherits

@@ -1471,7 +1471,7 @@ def _cmd_backfill_cids(args: argparse.Namespace) -> int:
 
     while True:
         rows = conn.execute(
-            "SELECT id, entity, relation, value_type, value_v, source, scope"
+            "SELECT id, entity, relation, value_type, value_v, source, scope, confidence"
             " FROM facts WHERE cid IS NULL LIMIT ?",
             (batch_size,),
         ).fetchall()
@@ -1486,6 +1486,7 @@ def _cmd_backfill_cids(args: argparse.Namespace) -> int:
                 value_v=row["value_v"] or "",
                 source=row["source"],
                 scope=row["scope"],
+                confidence=float(row["confidence"]),
             )
             # Check for CID collision before writing
             existing = conn.execute(

@@ -205,6 +205,7 @@ def test_cid_field_sensitivity():
 def test_cid_canonical_key_order():
     """CID must not change if we compute it via an independent reference implementation."""
     body = {
+        "confidence": 1.0,
         "entity": "stigmem://a/b/1",
         "relation": "test:value",
         "scope": "local",
@@ -222,6 +223,7 @@ def test_cid_canonical_key_order():
         value_v=body["value_v"],
         source=body["source"],
         scope=body["scope"],
+        confidence=body["confidence"],
     )
     assert actual == expected
 

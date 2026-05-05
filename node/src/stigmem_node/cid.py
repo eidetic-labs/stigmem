@@ -2,8 +2,8 @@
 
 CID = "sha256:" + hex_lowercase(SHA-256(RFC8785(canonical_fact_body)))
 
-The canonical body is a JSON object with exactly 6 fields in lexicographic key order:
-  entity, relation, scope, source, value_type, value_v
+The canonical body is a JSON object with exactly 7 fields in lexicographic key order:
+  confidence, entity, relation, scope, source, value_type, value_v
 
 Security-relevant excluded fields (§25.2.1 rev 14):
   valid_until, derived_from, attestation_chain, source_trust, signature, reason
@@ -31,15 +31,11 @@ def compute_cid(
     value_v: str,
     source: str,
     scope: str,
+    confidence: float = 1.0,
 ) -> str:
-    """Return the CID for a fact's canonical body (spec §25.2.2).
-
-    Keys are in lexicographic order to match RFC8785 determinism.
-    ensure_ascii=False follows RFC8785 Unicode handling (no \\uXXXX escaping of
-    non-ASCII chars); all 6 fields are user-supplied strings so no numeric
-    encoding edge-cases apply.
-    """
+    """Return the CID for a fact's canonical body (spec §25.2.1, §25.2.2)."""
     body: dict[str, Any] = {
+        "confidence": confidence,
         "entity": entity,
         "relation": relation,
         "scope": scope,
@@ -61,6 +57,7 @@ def compute_cid_from_row(row: Any) -> str:
         value_v=row["value_v"] or "",
         source=row["source"],
         scope=row["scope"],
+        confidence=float(row["confidence"]),
     )
 
 

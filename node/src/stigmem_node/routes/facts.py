@@ -391,6 +391,7 @@ def _assert_fact_impl(
         value_v=value_v or "",
         source=source,
         scope=req.scope,
+        confidence=req.confidence,
     )
 
     _embed_enabled = _settings_pkg.settings.embed_enabled

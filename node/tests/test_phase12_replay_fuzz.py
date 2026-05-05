@@ -330,9 +330,11 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
         conn = sqlite3.connect(db_file)
         conn.execute(
             "INSERT INTO peers "
-            "(id, node_id, node_url, federation_pubkey, status, allowed_scopes, created_at) "
-            "VALUES (?, ?, ?, ?, 'active', '[]', ?)",
-            (peer_db_id, peer_node_id, "http://fuzz-peer", peer_pub_b64, now_iso),
+            "(id, node_id, node_url, federation_pubkey, status, allowed_scopes, "
+            "created_at, declaration_sig, signed_at) "
+            "VALUES (?, ?, ?, ?, 'active', '[]', ?, ?, ?)",
+            (peer_db_id, peer_node_id, "http://fuzz-peer", peer_pub_b64,
+             now_iso, "stub-sig-for-fuzz-test", now_iso),
         )
         conn.commit()
         conn.close()

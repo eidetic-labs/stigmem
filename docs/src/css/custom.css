@@ -220,6 +220,13 @@ pre {
 .docusaurus-mermaid-container .nodeLabel {
   font-family: var(--ifm-font-family-base) !important;
 }
+/* Increase internal padding on all node shapes so text doesn't clip at edges. */
+.docusaurus-mermaid-container .node foreignObject {
+  overflow: visible !important;
+}
+.docusaurus-mermaid-container .node foreignObject div {
+  padding: 4px 8px !important;
+}
 /* Force visible strokes on dark mode where the diagram theme renders thin lines. */
 [data-theme='dark'] .docusaurus-mermaid-container .edgePath path,
 [data-theme='dark'] .docusaurus-mermaid-container .flowchart-link {
@@ -239,14 +246,14 @@ pre {
 }
 
 /* Edge labels: give the SVG background rect an opaque fill so connector lines
-   don't render through the label text. CSS `background` has no effect on SVG
-   elements — we must target the <rect> inside the edgeLabel <g> and set `fill`. */
+   don't render through the label text. Use the page background color in both
+   modes so label boxes blend invisibly with the page (matching light mode look). */
 .docusaurus-mermaid-container .edgeLabel rect {
   fill: var(--ifm-background-color) !important;
   opacity: 1 !important;
 }
 [data-theme='dark'] .docusaurus-mermaid-container .edgeLabel rect {
-  fill: color-mix(in srgb, var(--ifm-color-primary) 22%, var(--stigmem-logo-bg)) !important;
+  fill: var(--ifm-background-color) !important;
 }
 
 /* Hero buttons — softer, more clickable. The hero is always dark (it inherits

@@ -320,7 +320,7 @@ const config = {
         theme: { light: 'neutral', dark: 'dark' },
         options: {
           flowchart: {
-            padding: 16,
+            padding: 20,
           },
         },
       },

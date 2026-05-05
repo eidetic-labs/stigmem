@@ -197,6 +197,8 @@ An **org manifest** is a signed document that declares the canonical public key 
 
 #### 19.1.2 Manifest Fields
 
+The `OrgManifest` struct carries everything a verifier needs to validate tokens and provenance from a given node: the node's public key, the set of entities it speaks for, and a rotation chain that lets peers verify key changes without out-of-band coordination. The `signature` field covers all other fields via JCS canonical encoding (§19.1.3), making the manifest self-verifiable — a peer can check integrity without contacting the issuer. The `expires_at` ceiling forces regular re-publication, limiting the window during which a compromised key remains trusted.
+
 ```
 OrgManifest:
   manifest_version:  integer          // MUST be 1 for this spec version
@@ -326,6 +328,8 @@ A capability token is a signed, short-lived credential that grants a specific na
 
 #### 19.3.2 Token Shape
 
+A `CapabilityToken` encodes a single permission grant: one issuer delegates one verb on one object to one subject, with a bounded lifetime. The struct is intentionally narrow — a principal that needs both `read` and `write` must hold two tokens, which keeps revocation granular and audit logs unambiguous. The `nonce` field prevents replay attacks (§19.3.5), while `expiry` caps token lifetime at 90 days to bound the blast radius of a stolen credential. The `signature` covers all other fields using the issuer's manifest key (§19.1), binding the token to a verifiable identity chain.
+
 ```
 CapabilityToken:
   token_version: integer    // MUST be 1 for this spec version
@@ -395,6 +399,8 @@ The `nonce` field MUST be 32 bytes of cryptographically random data (e.g., from 
 The source-trust score `t` is a scalar in [0.0, 1.0] that expresses how much confidence a node should place in facts asserted by a given source URI. It modulates the effective confidence of recalled facts: `effective_confidence = fact.confidence × t`. This makes the recall layer trust-aware without altering stored fact confidence values.
 
 #### 19.4.2 Derivation Formula
+
+The trust score is a weighted linear combination of four independent signals, each measuring a different dimension of source credibility. The weights sum to 1.0, and the result is clamped to [0.0, 1.0] to stay within the confidence domain. `identity_strength` rewards sources with strong authentication (manifest-backed keys score higher than anonymous API keys). `peer_history` tracks the source's track record on this node — sources whose facts are frequently contradicted or retracted score lower. `scope_authority` reflects whether the source is operating within its natural scope (a company-scoped agent writing company facts scores higher than a local agent writing to company scope). `attestation_mode_factor` rewards nodes running in `enforce` mode (§18.2), since facts from enforce-mode nodes have cryptographically verified provenance.
 
 ```
 t = clamp(
@@ -699,6 +705,8 @@ ts:                RFC3339
 
 ### 19.8 Schema Migration (Migration 006)
 
+Migration 006 adds three tables to support the federation trust layer. `federation_manifests` stores org manifests indexed by `entity_uri` and `key_id` for fast lookup during token verification. `capability_tokens` records every token the node has issued or accepted, indexed by issuer/subject/verb for capability checks and by expiry for garbage collection. `source_trust_scores` caches computed trust scores (§19.4) per source URI and scope pair, with a TTL-based invalidation column so the node can recompute scores after peer history changes without scanning the full facts table.
+
 ```sql
 -- Org manifest storage
 CREATE TABLE IF NOT EXISTS federation_manifests (
@@ -827,6 +835,8 @@ Nodes MUST extend their `/.well-known/stigmem` response to include federation tr
 The facts table is a flat relation keyed by entity URI. Entity-to-entity connections exist implicitly: any fact whose `value.type = "ref"` and whose value URI denotes a known entity constitutes a directed edge from the subject entity to the referenced entity. Without a materialized adjacency structure, multi-hop traversal requires O(k × |F|) full table scans per recall query. §20 mandates a materialized `entity_edges` table to enable efficient bounded-depth BFS.
 
 #### 20.1.2 Schema
+
+The `entity_edges` table materializes the implicit graph encoded in `ref`-typed fact values. Each row corresponds to a single ref-fact and mirrors its confidence and scope so the graph traversal stage can filter by scope and sort by edge weight without joining back to the facts table. The `source_trust` column caches the trust score from §19.4 at edge-creation time; it is nullable because trust scoring is an optional feature. The `decay_epoch` column tracks when the decay sweeper (§15) last touched this edge, allowing the sweeper to skip recently processed rows. Three indexes cover the two traversal directions (subject→object, object→subject) and a subject+relation composite for relation-filtered neighbor queries.
 
 ```sql
 CREATE TABLE IF NOT EXISTS entity_edges (
@@ -1025,6 +1035,8 @@ Both contradicting facts retain their embeddings. The contradiction penalty is a
 ### 20.3 Recall API
 
 #### 20.3.1 Route
+
+The recall endpoint supports both GET and POST. GET is convenient for short queries and cacheable at HTTP intermediaries; POST is preferred when the query string exceeds 1000 characters to avoid URI length limits imposed by proxies and load balancers.
 
 ```
 GET  /v1/recall
@@ -1279,6 +1291,8 @@ When raw facts contradict the card's synthesized summary (i.e., a fact's current
 
 #### 20.5.1 Route
 
+The subscription API follows standard REST conventions: POST to create, GET to list or inspect, DELETE to cancel. Subscription state is server-managed — the node tracks cursors internally and delivers events via the configured change mechanism.
+
 ```
 POST   /v1/subscriptions
 GET    /v1/subscriptions
@@ -1287,6 +1301,8 @@ DELETE /v1/subscriptions/:id
 ```
 
 #### 20.5.2 Request Shape
+
+A subscription request binds a `target` (either a scope or a specific entity) to a change-notification mechanism. The `on_change` field selects between two delivery modes: `webhook` for HTTP-based push delivery, and `wake` for Paperclip-integrated agent wake-ups. The `event_filter` array lets callers subscribe to a subset of event types, reducing noise for consumers that only care about specific lifecycle events. The `idempotency_key` ensures that retried creation requests do not produce duplicate subscriptions.
 
 ```json
 {
@@ -2903,6 +2919,8 @@ CREATE TABLE tombstone_revocations (
 );
 ```
 
+A separate migration adds the retraction log table required by time-travel queries (§24). Retractions in the base schema set `facts.confidence = 0.0` in place, which destroys the temporal record. The `fact_retractions` table preserves the retraction timestamp and actor so that `as_of` queries can reconstruct which facts were live at any historical point.
+
 ```sql
 -- Migration 013c: append-only retraction log (time-travel compat — §24.2.1 c.3)
 -- Retraction writes MUST insert here in addition to setting facts.confidence = 0.0.
@@ -3121,6 +3139,8 @@ The `is_admin_caller` parameter governs `legal_hold` fact visibility: when `fals
 
 #### 24.5.1 As-Of Recall
 
+Time-travel recall uses the same `POST /v1/recall` endpoint with an additional `as_of` parameter. The response shape is identical to a standard recall response but includes a `tombstone_notices` array that surfaces any RTBF tombstones (§23) affecting the result set. Legal-hold visibility is governed by the caller's API key type: agent keys receive silently filtered results to prevent information leakage, while admin keys receive explicit tombstone notices.
+
 ```
 POST /v1/recall
 Authorization: Bearer <agent or admin api-key>
@@ -3150,6 +3170,8 @@ Agent API key callers MUST NOT receive any response that reveals the existence o
 `tombstone_notices` is populated only when `legal_hold` tombstones apply AND the caller is an admin API key.
 
 #### 24.5.2 As-Of Fact Query
+
+The structured fact query endpoint also accepts `as_of` for time-travel. Unlike the recall endpoint, the fact query returns raw `FactRecord` objects rather than recall chunks, making it suitable for programmatic audits and compliance reporting. The same tombstone-filtering and legal-hold visibility rules from §24.5.1 apply.
 
 ```
 GET /v1/facts?entity_uri=user:alice&as_of=2025-01-01T00:00:00Z&scope=company

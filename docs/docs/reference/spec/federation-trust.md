@@ -39,6 +39,8 @@ An **org manifest** is a signed document that declares the canonical public key 
 
 #### §19.1.2 Manifest Fields {#section-19-1-2}
 
+The `OrgManifest` struct carries everything a verifier needs to validate tokens and provenance from a given node: the node's public key, the set of entities it speaks for, and a rotation chain that lets peers verify key changes without out-of-band coordination. The `signature` field covers all other fields via JCS canonical encoding (§19.1.3), making the manifest self-verifiable — a peer can check integrity without contacting the issuer. The `expires_at` ceiling forces regular re-publication, limiting the window during which a compromised key remains trusted.
+
 ```
 OrgManifest:
   manifest_version:  integer          // MUST be 1 for this spec version
@@ -168,6 +170,8 @@ A capability token is a signed, short-lived credential that grants a specific na
 
 #### §19.3.2 Token Shape {#section-19-3-2}
 
+A `CapabilityToken` encodes a single permission grant: one issuer delegates one verb on one object to one subject, with a bounded lifetime. The struct is intentionally narrow — a principal that needs both `read` and `write` must hold two tokens, which keeps revocation granular and audit logs unambiguous. The `nonce` field prevents replay attacks (§19.3.5), while `expiry` caps token lifetime at 90 days to bound the blast radius of a stolen credential. The `signature` covers all other fields using the issuer's manifest key (§19.1), binding the token to a verifiable identity chain.
+
 ```
 CapabilityToken:
   token_version: integer    // MUST be 1 for this spec version
@@ -237,6 +241,8 @@ The `nonce` field MUST be 32 bytes of cryptographically random data (e.g., from 
 The source-trust score `t` is a scalar in [0.0, 1.0] that expresses how much confidence a node should place in facts asserted by a given source URI. It modulates the effective confidence of recalled facts: `effective_confidence = fact.confidence × t`. This makes the recall layer trust-aware without altering stored fact confidence values.
 
 #### §19.4.2 Derivation Formula {#section-19-4-2}
+
+The trust score is a weighted linear combination of four independent signals, each measuring a different dimension of source credibility. The weights sum to 1.0, and the result is clamped to [0.0, 1.0] to stay within the confidence domain. `identity_strength` rewards sources with strong authentication (manifest-backed keys score higher than anonymous API keys). `peer_history` tracks the source's track record on this node — sources whose facts are frequently contradicted or retracted score lower. `scope_authority` reflects whether the source is operating within its natural scope (a company-scoped agent writing company facts scores higher than a local agent writing to company scope). `attestation_mode_factor` rewards nodes running in `enforce` mode (§18.2), since facts from enforce-mode nodes have cryptographically verified provenance.
 
 ```
 t = clamp(
@@ -540,6 +546,8 @@ ts:                RFC3339
 ---
 
 ### §19.8 Schema Migration (Migration 006) {#section-19-8}
+
+Migration 006 adds three tables to support the federation trust layer. `federation_manifests` stores org manifests indexed by `entity_uri` and `key_id` for fast lookup during token verification. `capability_tokens` records every token the node has issued or accepted, indexed by issuer/subject/verb for capability checks and by expiry for garbage collection. `source_trust_scores` caches computed trust scores (§19.4) per source URI and scope pair, with a TTL-based invalidation column so the node can recompute scores after peer history changes without scanning the full facts table.
 
 ```sql
 -- Org manifest storage

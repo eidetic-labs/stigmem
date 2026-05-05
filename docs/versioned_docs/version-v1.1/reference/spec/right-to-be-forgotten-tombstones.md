@@ -260,6 +260,8 @@ CREATE TABLE tombstone_revocations (
 );
 ```
 
+A separate migration adds the retraction log table required by time-travel queries (§24). Retractions in the base schema set `facts.confidence = 0.0` in place, which destroys the temporal record. The `fact_retractions` table preserves the retraction timestamp and actor so that `as_of` queries can reconstruct which facts were live at any historical point.
+
 ```sql
 -- Migration 013c: append-only retraction log (time-travel compat — §24.2.1 c.3)
 -- Retraction writes MUST insert here in addition to setting facts.confidence = 0.0.

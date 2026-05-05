@@ -135,6 +135,8 @@ The `is_admin_caller` parameter governs `legal_hold` fact visibility: when `fals
 
 #### §24.5.1 As-Of Recall {#section-24-5-1}
 
+Time-travel recall uses the same `POST /v1/recall` endpoint with an additional `as_of` parameter. The response shape is identical to a standard recall response but includes a `tombstone_notices` array that surfaces any RTBF tombstones (§23) affecting the result set. Legal-hold visibility is governed by the caller's API key type: agent keys receive silently filtered results to prevent information leakage, while admin keys receive explicit tombstone notices.
+
 ```
 POST /v1/recall
 Authorization: Bearer <agent or admin api-key>
@@ -164,6 +166,8 @@ Agent API key callers MUST NOT receive any response that reveals the existence o
 `tombstone_notices` is populated only when `legal_hold` tombstones apply AND the caller is an admin API key.
 
 #### §24.5.2 As-Of Fact Query {#section-24-5-2}
+
+The structured fact query endpoint also accepts `as_of` for time-travel. Unlike the recall endpoint, the fact query returns raw `FactRecord` objects rather than recall chunks, making it suitable for programmatic audits and compliance reporting. The same tombstone-filtering and legal-hold visibility rules from §24.5.1 apply.
 
 ```
 GET /v1/facts?entity_uri=user:alice&as_of=2025-01-01T00:00:00Z&scope=company

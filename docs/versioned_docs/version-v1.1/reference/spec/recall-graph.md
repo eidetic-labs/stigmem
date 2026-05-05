@@ -32,6 +32,8 @@ The facts table is a flat relation keyed by entity URI. Entity-to-entity connect
 
 #### §20.1.2 Schema {#section-20-1-2}
 
+The `entity_edges` table materializes the implicit graph encoded in `ref`-typed fact values. Each row corresponds to a single ref-fact and mirrors its confidence and scope so the graph traversal stage can filter by scope and sort by edge weight without joining back to the facts table. The `source_trust` column caches the trust score from §19.4 at edge-creation time; it is nullable because trust scoring is an optional feature. The `decay_epoch` column tracks when the decay sweeper (§15) last touched this edge, allowing the sweeper to skip recently processed rows. Three indexes cover the two traversal directions (subject→object, object→subject) and a subject+relation composite for relation-filtered neighbor queries.
+
 ```sql
 CREATE TABLE IF NOT EXISTS entity_edges (
     id              TEXT PRIMARY KEY,      -- edge UUID (= source fact id)
@@ -229,6 +231,8 @@ Both contradicting facts retain their embeddings. The contradiction penalty is a
 ### §20.3 Recall API {#section-20-3}
 
 #### §20.3.1 Route {#section-20-3-1}
+
+The recall endpoint supports both GET and POST. GET is convenient for short queries and cacheable at HTTP intermediaries; POST is preferred when the query string exceeds 1000 characters to avoid URI length limits imposed by proxies and load balancers.
 
 ```
 GET  /v1/recall
@@ -483,6 +487,8 @@ When raw facts contradict the card's synthesized summary (i.e., a fact's current
 
 #### §20.5.1 Route {#section-20-5-1}
 
+The subscription API follows standard REST conventions: POST to create, GET to list or inspect, DELETE to cancel. Subscription state is server-managed — the node tracks cursors internally and delivers events via the configured change mechanism.
+
 ```
 POST   /v1/subscriptions
 GET    /v1/subscriptions
@@ -491,6 +497,8 @@ DELETE /v1/subscriptions/:id
 ```
 
 #### §20.5.2 Request Shape {#section-20-5-2}
+
+A subscription request binds a `target` (either a scope or a specific entity) to a change-notification mechanism. The `on_change` field selects between two delivery modes: `webhook` for HTTP-based push delivery, and `wake` for Paperclip-integrated agent wake-ups. The `event_filter` array lets callers subscribe to a subset of event types, reducing noise for consumers that only care about specific lifecycle events. The `idempotency_key` ensures that retried creation requests do not produce duplicate subscriptions.
 
 ```json
 {

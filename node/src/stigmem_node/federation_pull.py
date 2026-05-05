@@ -103,6 +103,19 @@ async def pull_from_peer_once(
         return new_cursor
 
 
+def _make_pull_client() -> httpx.AsyncClient:
+    """Return an httpx client configured for mTLS when STIGMEM_TLS_* are set."""
+    if settings.mtls_enabled:
+        from .tls import build_client_ssl_context
+        ssl_ctx = build_client_ssl_context(
+            settings.tls_cert_path,
+            settings.tls_key_path,
+            settings.tls_ca_bundle,
+        )
+        return httpx.AsyncClient(verify=ssl_ctx)
+    return httpx.AsyncClient()
+
+
 async def pull_all_peers_once() -> None:
     """Pull one batch from every active peer. Called by the loop and by tests."""
     with db() as conn:
@@ -113,7 +126,7 @@ async def pull_all_peers_once() -> None:
     if not peers:
         return
 
-    async with httpx.AsyncClient() as client:
+    async with _make_pull_client() as client:
         for peer in peers:
             peer_dict = dict(peer)
             cursor = load_cursor(peer_dict["id"])

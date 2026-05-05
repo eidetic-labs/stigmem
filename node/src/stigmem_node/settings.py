@@ -215,5 +215,25 @@ class Settings(BaseSettings):
     # Consecutive delivery failures before the circuit breaker opens on a subscription.
     subscription_circuit_threshold: int = 10
 
+    # -------------------------------------------------------------------------
+    # mTLS Federation Transport — Phase 12 (spec §22.1)
+    # -------------------------------------------------------------------------
+    # Path to the node's PEM-encoded X.509 certificate for mTLS federation.
+    # When tls_cert_path + tls_key_path are both set, mTLS is activated:
+    # the uvicorn server requires client certs and the pull client presents this
+    # cert to peers.  Opt-out is only permitted for localhost deployments
+    # (set host to "localhost" / "127.0.0.1" / "::1" and leave paths empty).
+    tls_cert_path: str = ""
+    # Path to the node's PEM-encoded private key corresponding to tls_cert_path.
+    tls_key_path: str = ""
+    # Path to a PEM CA bundle used to verify peer certificates.
+    # Required when tls_cert_path + tls_key_path are configured.
+    tls_ca_bundle: str = ""
+
+    @property
+    def mtls_enabled(self) -> bool:
+        """True when mTLS cert + key are configured (non-localhost deployments)."""
+        return bool(self.tls_cert_path and self.tls_key_path)
+
 
 settings = Settings()

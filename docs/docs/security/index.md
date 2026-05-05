@@ -17,6 +17,10 @@ This section collects Stigmem's security resources for operators, researchers, a
 
 Everything a security researcher needs to run a structured engagement against the Stigmem reference node — in-scope surfaces, safe-harbor terms, reproducer expectations, the report template, severity guidance, the 90-day disclosure timeline, and the recognition model.
 
+### [mTLS Federation Transport](./mtls.md)
+
+Configure mutual TLS for Stigmem federation — cert provisioning, zero-downtime rotation, cipher policy (TLS 1.3 / §22.1 floor), SAN validation, and Kubernetes cert-manager recipes.
+
 ### [Threat Model](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md)
 
 The formal threat model for the Stigmem reference node and federated protocol. Covers the system diagram, all eight trust boundaries, STRIDE analysis per boundary, and a risk register linked to spec sections §19, §20, and §22.

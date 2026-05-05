@@ -14,10 +14,18 @@ spec:
       labels:
         {{- include "stigmem.selectorLabels" . | nindent 8 }}
     spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: 8765
@@ -143,11 +151,16 @@ spec:
             - name: STIGMEM_TL_LOCAL_PATH
               value: {{ .Values.stigmem.tlLocalPath | quote }}
 
-          {{- if .Values.persistence.enabled }}
           volumeMounts:
+            {{- if .Values.persistence.enabled }}
             - name: data
               mountPath: {{ .Values.persistence.mountPath }}
-          {{- end }}
+            {{- end }}
+            # Required when containerSecurityContext.readOnlyRootFilesystem=true
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /run
 
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
@@ -157,12 +170,20 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
-      {{- if .Values.persistence.enabled }}
       volumes:
+        {{- if .Values.persistence.enabled }}
         - name: data
           persistentVolumeClaim:
             claimName: {{ include "stigmem.fullname" . }}
-      {{- end }}
+        {{- end }}
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        - name: run
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

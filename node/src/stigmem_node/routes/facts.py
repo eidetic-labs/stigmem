@@ -59,8 +59,8 @@ def _validate_relation(relation: str) -> list[str]:
 
 def _check_source_attestation(source: str, identity: Identity) -> bool | None:
     """Enforce source attestation per spec §18. Returns attested value or raises 403."""
-    mode = _settings.source_attestation_mode
-    if mode == "off" or not _settings.auth_required:
+    mode = _settings_pkg.settings.source_attestation_mode
+    if mode == "off" or not _settings_pkg.settings.auth_required:
         return None
 
     attested = (source == identity.entity_uri)
@@ -165,7 +165,6 @@ def assert_fact(
     now = datetime.now(UTC).isoformat()
     hlc = node_hlc.tick()
     value_v = _encode_v(req.value.type, req.value.v)
-    audit_id = str(uuid.uuid4())
 
     _embed_enabled = _settings_pkg.settings.embed_enabled
     embedding_missing_val = 1 if _embed_enabled else None
@@ -198,22 +197,18 @@ def assert_fact(
             ),
         )
 
-        # C3: write audit entry joining principal → attested-source → fact-id
-        conn.execute(
-            """INSERT INTO fact_audit_log
-               (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts, tenant_id)
-               VALUES (?,?,?,?,?,?,?,?,?)""",
-            (
-                audit_id,
-                fact_id,
-                "assert",
-                identity.entity_uri,
-                identity.oidc_sub,
-                source,
-                attested_key_id,
-                now,
-                identity.tenant_id,
-            ),
+        # C3 / §22.3: write-ahead audit entry for fact_write event (same transaction)
+        from ..audit_event import emit as _emit_audit
+        _emit_audit(
+            "fact_write",
+            entity_uri=identity.entity_uri,
+            tenant_id=identity.tenant_id,
+            oidc_sub=identity.oidc_sub,
+            fact_id=fact_id,
+            source=source,
+            attested_key_id=attested_key_id,
+            scope=req.scope,
+            conn=conn,
         )
 
         # Graph adjacency index (§20.1.1): materialize edge for ref-typed facts

@@ -16,9 +16,10 @@ from typing import Any
 import httpx
 
 from .db import db
-from .federation_ingest import ingest_fact
+from .federation_ingest import ingest_fact, write_audit_log
 from .peer_token import create_peer_token
 from .settings import settings
+from .tls import check_peer_san
 
 logger = logging.getLogger("stigmem.federation.pull")
 
@@ -88,6 +89,18 @@ async def pull_from_peer_once(
             logger.warning("Pull from %s returned %s", peer["node_id"], resp.status_code)
             return cursor
 
+        # §22.1.2.4 — validate server cert URI SAN before consuming any data.
+        if settings.mtls_enabled:
+            ssl_obj = resp.extensions.get("ssl_object")
+            peer_cert: dict = ssl_obj.getpeercert() if ssl_obj is not None else {}
+            if not check_peer_san(peer_cert, peer["node_id"]):
+                logger.warning(
+                    "Client-side SAN mismatch from peer %s — cert URI SAN does not match node_id; discarding response",
+                    peer["node_id"],
+                )
+                write_audit_log(peer["node_id"], "san_mismatch", {"peer_node_id": peer["node_id"], "direction": "pull"})
+                return cursor  # fail-closed: no data ingested from identity-mismatched peer
+
         data = resp.json()
         # origin_allowed_scopes = peer's registered declaration scope (spec §6.8.1).
         # These fields are internal and MUST NOT be re-replicated (§3.1), so we
@@ -103,6 +116,19 @@ async def pull_from_peer_once(
         return new_cursor
 
 
+def _make_pull_client() -> httpx.AsyncClient:
+    """Return an httpx client configured for mTLS when STIGMEM_TLS_* are set."""
+    if settings.mtls_enabled:
+        from .tls import build_client_ssl_context
+        ssl_ctx = build_client_ssl_context(
+            settings.tls_cert_path,
+            settings.tls_key_path,
+            settings.tls_ca_bundle,
+        )
+        return httpx.AsyncClient(verify=ssl_ctx)
+    return httpx.AsyncClient()
+
+
 async def pull_all_peers_once() -> None:
     """Pull one batch from every active peer. Called by the loop and by tests."""
     with db() as conn:
@@ -113,7 +139,7 @@ async def pull_all_peers_once() -> None:
     if not peers:
         return
 
-    async with httpx.AsyncClient() as client:
+    async with _make_pull_client() as client:
         for peer in peers:
             peer_dict = dict(peer)
             cursor = load_cursor(peer_dict["id"])

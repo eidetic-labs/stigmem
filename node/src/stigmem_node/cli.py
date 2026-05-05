@@ -968,6 +968,44 @@ def _build_parser() -> argparse.ArgumentParser:
     ad_p.add_argument("--json", action="store_true", help="output as JSON")
     ad_p.set_defaults(func=_cmd_audit_discovery)
 
+    # ------------------------------------------------------------------ identity
+    id_p = sub.add_parser("identity", help="node identity management (spec §22.2)")
+    id_sub = id_p.add_subparsers(dest="identity_command", metavar="SUBCOMMAND")
+    id_sub.required = True
+
+    rk_p = id_sub.add_parser(
+        "rotate-key",
+        help="rotate the node or issuer Ed25519 key with a dual-trust window (§22.2)",
+    )
+    rk_p.add_argument(
+        "--kind",
+        choices=["node", "issuer"],
+        required=True,
+        metavar="KIND",
+        help="key type to rotate: node (federation identity) or issuer (capability token signing)",
+    )
+    rk_p.add_argument(
+        "--dry-run",
+        dest="dry_run",
+        action="store_true",
+        help="generate artefacts and print new key without writing to TL or DB",
+    )
+    rk_p.add_argument(
+        "--dual-trust-days",
+        dest="dual_trust_days",
+        type=int,
+        default=90,
+        metavar="DAYS",
+        help="days the retiring key stays in accept_set (default: 90; must be ≥ 90)",
+    )
+    rk_p.add_argument(
+        "--db",
+        default=None,
+        metavar="PATH",
+        help="path to stigmem.db (default: STIGMEM_DB_PATH env or settings default)",
+    )
+    rk_p.set_defaults(func=_cmd_identity_rotate_key)
+
     return parser
 
 
@@ -1293,6 +1331,95 @@ def _cmd_audit_discovery(args: argparse.Namespace) -> int:
             print("  ALERT: miss_rate > 0.15 — manifest descriptions or triggers need review")
 
     conn.close()
+    return 0
+
+
+def _cmd_identity_rotate_key(args: argparse.Namespace) -> int:
+    """Rotate the node or issuer Ed25519 key (spec §22.2).
+
+    Generates a next-gen keypair, appends a rotation event to the manifest,
+    submits updated manifest + KeyRotationLogEntry to the transparency log,
+    and prints the new private key seed for injection into your secrets manager.
+
+    The retiring key stays in the dual-trust accept_set for --dual-trust-days
+    (default 90), covering all in-flight tokens signed under the old key.
+    """
+    import json as _json
+
+    from .db import apply_migrations
+    from .identity.capability import load_node_private_key
+    from .identity.key_rotation import rotate_key
+    from .identity.manifest import manifest_from_dict, verify_manifest
+
+    from .settings import settings as _settings
+
+    if args.db:
+        import stigmem_node.settings as settings_module
+        from .settings import Settings
+        patched = Settings(db_path=args.db)
+        settings_module.settings = patched  # type: ignore[assignment]
+
+    from .settings import settings
+
+    apply_migrations(db_path=settings.db_path)
+
+    old_priv = load_node_private_key()
+    if old_priv is None:
+        print(
+            "error: STIGMEM_NODE_PRIVATE_KEY is not configured — cannot rotate",
+            file=sys.stderr,
+        )
+        return 1
+
+    entity_uri = settings.node_url
+
+    from .db import db as _db_ctx
+    with _db_ctx() as conn:
+        row = conn.execute(
+            "SELECT manifest_json FROM federation_manifests WHERE entity_uri = ?",
+            (entity_uri,),
+        ).fetchone()
+
+    if row is None:
+        print(
+            f"error: no manifest found for {entity_uri!r} in federation_manifests\n"
+            "Publish a manifest first via PUT /v1/federation/manifest",
+            file=sys.stderr,
+        )
+        return 1
+
+    old_manifest = manifest_from_dict(_json.loads(row["manifest_json"]))
+
+    try:
+        result = rotate_key(
+            entity_uri=entity_uri,
+            old_manifest=old_manifest,
+            old_private_key=old_priv,
+            dual_trust_days=args.dual_trust_days,
+            dry_run=args.dry_run,
+        )
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    tag = "[DRY RUN] " if args.dry_run else ""
+    print(f"{tag}Key rotation ({args.kind}) complete")
+    print(f"  old key_id : {old_manifest.key_id}")
+    print(f"  new key_id : {result.new_manifest.key_id}")
+    print(f"  dual-trust : {result.rotation_log_entry.dual_trust_expires_at}")
+
+    if not args.dry_run and result.manifest_log_entry and result.rotation_tl_entry:
+        print(f"  manifest TL index  : {result.manifest_log_entry.log_index}")
+        print(f"  rotation TL index  : {result.rotation_tl_entry.log_index}")
+
+        from .identity.trust_store import store_peer_manifest
+        store_peer_manifest(entity_uri, result.new_manifest, result.manifest_log_entry)
+        print("  manifest stored in federation_manifests")
+
+    print()
+    print("ACTION REQUIRED — update your secrets manager with the new private key:")
+    print(f"  STIGMEM_NODE_PRIVATE_KEY={result.new_private_key_b64}")
+    print("Then restart the node.  Keep the old key value until the dual-trust window closes.")
     return 0
 
 

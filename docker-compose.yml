@@ -1,9 +1,12 @@
 # Two-node stigmem federation quickstart.
+# Build context is the repo root (Dockerfile lives in node/).
 # Usage: docker compose up --build -d
 # Then follow docs/quickstart.md to complete the federation handshake.
 services:
   node-a:
-    build: ./node
+    build:
+      context: .
+      dockerfile: node/Dockerfile
     ports:
       - "8765:8765"
     environment:
@@ -13,6 +16,15 @@ services:
       STIGMEM_LOG_LEVEL: "info"
     volumes:
       - node-a-data:/data
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+      - /run:mode=755,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8765/healthz')"]
       interval: 5s
@@ -21,7 +33,9 @@ services:
       start_period: 5s
 
   node-b:
-    build: ./node
+    build:
+      context: .
+      dockerfile: node/Dockerfile
     ports:
       - "8766:8765"
     environment:
@@ -31,6 +45,15 @@ services:
       STIGMEM_LOG_LEVEL: "info"
     volumes:
       - node-b-data:/data
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+      - /run:mode=755,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8765/healthz')"]
       interval: 5s

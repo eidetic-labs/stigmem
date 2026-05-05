@@ -222,6 +222,9 @@ class NodeInfo:
         self.federate_key = federate_key
         self.proc = proc
 
+    def _auth(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {self.federate_key}"}
+
     def assert_fact(
         self,
         entity: str,
@@ -243,22 +246,38 @@ class NodeInfo:
                 "valid_until": valid_until,
                 "confidence": confidence,
             },
+            headers=self._auth(),
             timeout=10.0,
         )
         assert resp.status_code == 201, f"assert_fact failed: {resp.status_code} {resp.text}"
         return resp.json()["id"]
 
     def get_fact(self, fact_id: str) -> dict | None:
-        resp = httpx.get(f"{self.host_url}/v1/facts/{fact_id}", timeout=5.0)
+        resp = httpx.get(f"{self.host_url}/v1/facts/{fact_id}", headers=self._auth(), timeout=5.0)
         if resp.status_code == 200:
             return resp.json()
         return None
 
     def list_conflicts(self) -> list[dict]:
-        resp = httpx.get(f"{self.host_url}/v1/conflicts", params={"limit": 200}, timeout=10.0)
+        resp = httpx.get(
+            f"{self.host_url}/v1/conflicts",
+            params={"limit": 200},
+            headers=self._auth(),
+            timeout=10.0,
+        )
         assert resp.status_code == 200
         data = resp.json()
         return data if isinstance(data, list) else data.get("conflicts", [])
+
+    def query_facts(self, **params: object) -> list[dict]:
+        resp = httpx.get(
+            f"{self.host_url}/v1/facts",
+            params=params,
+            headers=self._auth(),
+            timeout=10.0,
+        )
+        assert resp.status_code == 200, f"query_facts failed: {resp.status_code} {resp.text}"
+        return resp.json().get("facts", [])
 
     def restart(self, db_path: str, pub_b64: str, priv_b64: str) -> None:
         """Kill and restart this node process (cursor-resume test)."""
@@ -513,13 +532,7 @@ class TestContradictionDetection:
         # Wait for both facts to reach node-a
         time.sleep(PULL_INTERVAL_S * 4)
 
-        resp = httpx.get(
-            f"{node_a.host_url}/v1/facts",
-            params={"entity": entity, "relation": "test:conflict:conf"},
-            timeout=10.0,
-        )
-        assert resp.status_code == 200
-        facts = resp.json()["facts"]
+        facts = node_a.query_facts(entity=entity, relation="test:conflict:conf")
         # Without include_contradicted, only the non-contradicted version is returned.
         # The winning fact (confidence=1.0) should appear; the loser is hidden.
         if facts:
@@ -549,12 +562,7 @@ class TestExpiryPropagation:
         time.sleep(3)
 
         # Should be excluded from normal query (not by ID — GET /facts/{id} may still return it)
-        resp = httpx.get(
-            f"{node_a.host_url}/v1/facts",
-            params={"entity": entity, "include_expired": "false"},
-            timeout=10.0,
-        )
-        facts = resp.json()["facts"]
+        facts = node_a.query_facts(entity=entity, include_expired="false")
         assert not any(f["id"] == fact_id for f in facts), (
             f"expired fact {fact_id} still appears in normal query"
         )
@@ -569,12 +577,7 @@ class TestExpiryPropagation:
         )
         time.sleep(2)
 
-        resp = httpx.get(
-            f"{node_a.host_url}/v1/facts",
-            params={"entity": entity, "include_expired": "true"},
-            timeout=10.0,
-        )
-        facts = resp.json()["facts"]
+        facts = node_a.query_facts(entity=entity, include_expired="true")
         assert any(f["id"] == fact_id for f in facts), (
             f"expired fact {fact_id} not found even with include_expired=true"
         )

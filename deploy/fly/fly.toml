@@ -7,6 +7,13 @@
 #   fly deploy --config deploy/fly/fly.toml --app <APP_NAME>
 #
 # See deploy/fly/README.md for first-time setup steps.
+#
+# Security posture (Phase 12):
+#   - Image runs as UID 65532 (non-root) — baked into node/Dockerfile.
+#   - Fly machines run in a micro-VM (gVisor sandbox) which provides
+#     kernel-level isolation; seccomp/AppArmor are not separately configured.
+#   - Volume mount at /data is the only writable path; the rest of the
+#     container filesystem is effectively read-only at the Dockerfile level.
 
 app = "<APP_NAME>"
 primary_region = "iad"

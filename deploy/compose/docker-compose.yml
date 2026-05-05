@@ -16,6 +16,12 @@
 #     -H 'Content-Type: application/json' \
 #     -d '{"entity":"hello","relation":"status","value":{"type":"string","v":"ok"},"source":"smoke","scope":"local"}'
 #   curl -s 'http://localhost:8765/v1/facts?entity=hello&scope=local' | python3 -m json.tool
+#
+# Security posture (Phase 12):
+#   - Non-root UID 65532 baked into image (see node/Dockerfile)
+#   - Read-only root filesystem; /tmp and /run writable via tmpfs
+#   - All Linux capabilities dropped
+#   - Custom seccomp profile (deploy/seccomp/stigmem-node.json)
 
 services:
   # ---------------------------------------------------------------------------
@@ -36,12 +42,24 @@ services:
       STIGMEM_DB_PATH: "/data/stigmem.db"
       STIGMEM_NODE_URL: "${STIGMEM_NODE_URL:-http://localhost:8765}"
       STIGMEM_LOG_LEVEL: "${STIGMEM_LOG_LEVEL:-info}"
-      STIGMEM_AUTH_REQUIRED: "${STIGMEM_AUTH_REQUIRED:-false}"
+      STIGMEM_AUTH_REQUIRED: "${STIGMEM_AUTH_REQUIRED:-true}"
       STIGMEM_FEDERATION_ENABLED: "${STIGMEM_FEDERATION_ENABLED:-false}"
       STIGMEM_STORAGE_BACKEND: "${STIGMEM_STORAGE_BACKEND:-sqlite}"
       STIGMEM_AT_REST_ENCRYPTION: "${STIGMEM_AT_REST_ENCRYPTION:-off}"
     volumes:
       - stigmem-data:/data
+    # ── Security hardening (Phase 12) ──────────────────────────────────────────
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+      - /run:mode=755,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:../../deploy/seccomp/stigmem-node.json
+    # ──────────────────────────────────────────────────────────────────────────
     healthcheck:
       test: ["CMD", "python3", "-c",
              "import urllib.request; urllib.request.urlopen('http://localhost:8765/healthz')"]
@@ -68,11 +86,21 @@ services:
       STIGMEM_DB_PATH: "/data/stigmem.db"
       STIGMEM_NODE_URL: "http://stigmem-b:8765"
       STIGMEM_LOG_LEVEL: "${STIGMEM_LOG_LEVEL:-info}"
-      STIGMEM_AUTH_REQUIRED: "false"
+      STIGMEM_AUTH_REQUIRED: "${STIGMEM_AUTH_REQUIRED:-true}"
       STIGMEM_FEDERATION_ENABLED: "true"
       STIGMEM_STORAGE_BACKEND: "sqlite"
     volumes:
       - stigmem-b-data:/data
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+      - /run:mode=755,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:../../deploy/seccomp/stigmem-node.json
     healthcheck:
       test: ["CMD", "python3", "-c",
              "import urllib.request; urllib.request.urlopen('http://localhost:8765/healthz')"]

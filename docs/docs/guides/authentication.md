@@ -20,7 +20,7 @@ All endpoints except `/.well-known/stigmem` and `/healthz` require an `X-API-Key
 curl -H 'X-API-Key: <your-key>' http://localhost:8000/v1/facts
 ```
 
-Set `STIGMEM_AUTH_REQUIRED=false` to disable auth in development.
+Auth is **enabled by default**. To disable for local development, set `STIGMEM_AUTH_REQUIRED=false`.
 
 ## Peer token auth (federation)
 
@@ -85,7 +85,7 @@ See [Multi-Tenant Scoping](./multi-tenant) for the full isolation model and migr
 
 | Env var | Default | Description |
 |---------|---------|-------------|
-| `STIGMEM_AUTH_REQUIRED` | `false` | Require a valid Bearer token on all requests; set `true` in production |
+| `STIGMEM_AUTH_REQUIRED` | `true` | Require a valid Bearer token on all requests (default). Set `false` only for local dev |
 
 ## See also
 

@@ -1,5 +1,9 @@
 # Security Policy
 
+**Security resources:**
+- [Community Pen-Test Handbook](https://docs.stigmem.dev/security/pen-test) — scope, safe harbor, report template, disclosure timeline, and recognition.
+- [Threat Model](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md) — trust boundaries, STRIDE analysis, risk register.
+
 ## Supported Versions
 
 | Version   | Supported |

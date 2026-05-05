@@ -15,7 +15,7 @@ Phases 0–7 are complete. The full history — what shipped, key architectural 
 
 The v2 build plan runs seven phases (8–14), roughly 22 weeks, with meaningful parallelism between phases once the early trust and storage foundations are stable. Target timelines are given in calendar quarters; exact dates depend on community feedback and how earlier phases land.
 
-**Current status:** Phases 8, 9, 10, and 11 are complete. The [Operator's Handbook](/docs/operating), deploy recipes (Fly.io, Compose, Helm, systemd, PaaS), Obsidian plugin, and Obsidian CLI adapter are all live. The [Tutorial: Self-host a stigmem node and sync your Obsidian vault](/docs/tutorials/self-host-obsidian) is the Phase 11 end-to-end walkthrough. **Phase 12 is next.** All subsequent phases are sequenced but their scope can shift as earlier phases land.
+**Current status:** Phases 8–12 are complete. The [Operator's Handbook](/docs/operating), deploy recipes (Fly.io, Compose, Helm, systemd, PaaS), Obsidian plugin, and Obsidian CLI adapter are all live. Phase 12 shipped the full security hardening layer (mTLS, key rotation, audit log, per-principal quotas, container hardening) and a new [Security section](/docs/security) with the [Tutorial: Harden a Stigmem Deployment](/docs/tutorials/hardening-a-stigmem-deployment). **Phase 13 (SDKs, Eval & Observability) is next.** All subsequent phases are sequenced but their scope can shift as earlier phases land.
 
 ---
 
@@ -91,10 +91,10 @@ Phase 10 applies the recall primitive to the agent-instruction problem. Today, a
 
 **What this means for operators:** agents running on Stigmem-backed instructions pay per-call context costs only for relevant content. Two production rollouts have completed the shadow audit and flipped to `migration_mode: lazy`:
 
-- **CEO agent** (3,190t eager baseline): stable 415t per heartbeat = 13.0% of baseline. 11/11 eval heartbeats at 100% coverage, 0 regressions.
-- **CTO agent** (1,129t eager baseline, small instruction set): 356–565t bimodal range = 31.5–50.0% of baseline. The bimodal profile reflects two intent classes (task-execution vs. architecture/design); both modes maintain 100% critical-chunk coverage. 11/11 eval heartbeats, 0 regressions.
+- **Agent A — large instruction set** (3,190t eager baseline): stable 415t per heartbeat = 13.0% of baseline. 11/11 eval heartbeats at 100% coverage, 0 regressions.
+- **Agent B — small instruction set** (1,129t eager baseline): 356–565t bimodal range = 31.5–50.0% of baseline. The bimodal profile reflects two intent classes (task-execution vs. architecture/design); both modes maintain 100% critical-chunk coverage. 11/11 eval heartbeats, 0 regressions.
 
-The token budget calibration differs by instruction set size: large sets (> 3,000t) target ≤ 25% of eager baseline; small sets (≤ 1,500t) target ≤ 50%. Both represent meaningful savings — 87% reduction on the CEO's 3,190t set, 50% reduction on the CTO's 1,129t set.
+The token budget calibration differs by instruction set size: large sets (> 3,000t) target ≤ 25% of eager baseline; small sets (≤ 1,500t) target ≤ 50%. Both represent meaningful savings — 87% reduction on Agent A's 3,190t set, 50% reduction on Agent B's 1,129t set.
 
 ---
 
@@ -134,25 +134,32 @@ Logseq, Dendron, and plain-markdown vaults are supported via config — same ada
 
 ---
 
-## Phase 12 — Security Hardening
+## Phase 12 — Security Hardening ✓ Done
 
-**Target: Q3–Q4 2026**
+**Shipped: Q3–Q4 2026**
 
-Phase 12 closes the concrete security gaps in the current threat model and ships the community pen-test contribution path.
+Phase 12 closes the concrete security gaps in the current threat model and ships the community pen-test contribution path. The normative spec for this phase is [§22 Security Hardening](/docs/spec#section-22).
 
-- mTLS for federation peer connections; cert-pinning option.
-- API-key rotation: enforced max-age, expiring-soon surface, rotation runbook.
-- General-purpose audit log: reads of sensitive scopes, admin actions, schema changes.
-- Per-principal quotas and rate limits on writes and recalls.
-- Container hardening: non-root, distroless base, read-only filesystem, dropped capabilities.
-- Federation replay-protection fuzz tests.
-- Backup integrity: signed snapshots, restore-time signature verification.
-- Constant-time crypto audit of the Ed25519 signing/verification path.
-- Garden role-escalation safeguards: writer→admin transitions logged and require admin signature.
-- Transparency log integration: Rekor or Sigstore-equivalent for org-manifest rotation events (§19).
-- **Community pen testing** — scope, safe-harbor terms, severity guidance, and engagement path published at [Security & Pen Testing](./contributing/security.md).
+- mTLS for federation peer connections; TLS 1.3 floor; URI SAN / entity_uri binding (§22.1).
+- Ed25519 key rotation: dual-trust window, rotation chain integrity, transparency-log recording (§22.2).
+- General-purpose audit log: 13 event types, write-ahead ordering, 90-day minimum retention (§22.3).
+- Per-principal token-bucket quotas across 7 dimensions; 429 + Retry-After backpressure (§22.4).
+- Federation replay-protection fuzz tests (Hypothesis) + constant-time crypto audit (§22.5).
+- Container hardening: non-root UID 65532, distroless base, read-only filesystem, dropped capabilities, custom seccomp profile (§22.6).
+- **Threat model** — formal STRIDE analysis per trust boundary, risk register linked to spec §§19, 20, 22; published at [`spec/security/threat-model.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md).
+- **Community pen testing** — scope, safe-harbor terms, report template, and recognition model at [Community Pen-Test Handbook](./security/pen-test.md). Overview at [Security](./security/index.md).
 
-**What this means for operators:** Stigmem reaches the hardening posture appropriate for multi-org federation. The community pen-test path opens the protocol to external security review.
+**Phase 12 docs delta:**
+- [Security section](/docs/security) — new top-level nav section.
+- [mTLS Federation Transport](/docs/security/mtls) — cert provisioning, rotation, cipher policy, SAN validation, Kubernetes cert-manager recipes.
+- [Key Rotation Security Runbook](/docs/security/security-key-rotation) — dual-trust window model, rotation procedure, post-rotation checklist, threat notes.
+- [Audit Log & Per-Principal Quotas](/docs/security/audit-and-quotas) — `audit.read` key provisioning, event types, quota model, Prometheus metrics.
+- [Community Pen-Test Handbook](/docs/security/pen-test) — in-scope surfaces, safe-harbor terms, reproducer template, severity guidance, disclosure timeline, recognition.
+- [Container Hardening](/docs/operators/container-hardening) — seccomp profile, non-root image, SBOM, cosign verification, Kubernetes security context.
+- [Audit & Quotas Operator Quick-Start](/docs/operators/audit-and-quotas) — operator checklist and quick setup for audit key and quota tuning.
+- [Tutorial: Harden a Stigmem Deployment](/docs/tutorials/hardening-a-stigmem-deployment) — end-to-end walkthrough from default node to Phase 12 hardened posture (mTLS, key rotation, quotas, hardened container).
+
+**What this means for operators:** Stigmem reaches the hardening posture appropriate for multi-org federation. The community pen-test path opens the protocol to external security review. The new tutorial walks the full hardening sequence end to end.
 
 ---
 
@@ -201,4 +208,4 @@ Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
 ---
 
-*This page is updated at every phase boundary. Last updated: Q3 2026 — Phase 11 complete (hosting recipes, Postgres backend, conformance suite, Operator's Handbook, Obsidian CLI adapter and community plugin; Tutorial: Self-host a stigmem node and sync your Obsidian vault live). Phase 12 next (security hardening).*
+*This page is updated at every phase boundary. Last updated: Q3–Q4 2026 — Phase 12 complete (mTLS, key rotation, audit log, per-principal quotas, container hardening, replay fuzz tests, constant-time crypto audit, threat model, community pen-test handbook; Security section and Harden a Deployment tutorial live). Phase 13 next.*

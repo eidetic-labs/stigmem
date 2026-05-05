@@ -7,12 +7,12 @@ sidebar_label: Overview
 # Stigmem Protocol Specification
 
 :::note Version
-These docs track **Stigmem spec v1.1-draft rev 10** (§21 DRAFT normative, Phase 10), **v1.1-draft** (§19–§20 normative), and **v1.0** (§1–§18 stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
+These docs track **Stigmem spec v1.1-draft rev 11** (§22 DRAFT normative, Phase 12; §21 DRAFT normative, Phase 10), **v1.1-draft** (§19–§20 normative), and **v1.0** (§1–§18 stable). See the [v0.2 docs](/docs/v0.2/spec) for the prior stable release.
 
-§21 Lazy Instruction Discovery was introduced in **v1.1-draft rev 6** (Phase 10) and is DRAFT normative; it will be promoted to normative in v2.0. §19 Federation Trust and §20 Recall & Graph were promoted to normative in v1.1. §1–§18 are unchanged from v1.0.
+§22 Security Hardening was introduced in **v1.1-draft rev 11** (Phase 12) and is DRAFT normative; it will be promoted to normative in v2.0. §21 Lazy Instruction Discovery was introduced in **v1.1-draft rev 6** (Phase 10) and is DRAFT normative. §19 Federation Trust and §20 Recall & Graph were promoted to normative in v1.1. §1–§18 are unchanged from v1.0.
 :::
 
-The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative sources are `spec/stigmem-spec-v1.0.md` (§1–§18), and `spec/stigmem-spec-v1.1-draft.md` (§19–§21 + v1.1 additions to §2 and §5; §21 added in rev 6) in the repository.
+The Stigmem specification defines the wire format, fact semantics, and federation protocol for the Stigmem knowledge graph. The authoritative sources are `spec/stigmem-spec-v1.0.md` (§1–§18), and `spec/stigmem-spec-v1.1-draft.md` (§19–§22 + v1.1 additions to §2 and §5; §21 added in rev 6; §22 added in rev 11) in the repository.
 
 :::info Security
 Report vulnerabilities via the [GitHub private advisory path](https://github.com/eidetic-labs/stigmem/security/advisories) — not as public issues. Full policy and coordinated disclosure terms: [SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md).
@@ -62,6 +62,15 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | §21.4 | `instruction:` scope semantics — versioning, provenance, garden isolation, cross-agent confidentiality | **DRAFT normative (v1.1-draft rev 6; SE-reviewed rev 10)** — [Lazy Instructions guide — Confidentiality](/docs/guides/lazy-instructions#instruction-scope-confidentiality) |
 | §21.5 | Discovery audit — Recall@k, Hit@k, miss rate, probe-set eval (§21.5.4) | **DRAFT normative (v1.1-draft rev 6; RS-reviewed rev 9)** — [Tutorial: Authoring Lazy-Discovery Instructions](/docs/tutorials/authoring-lazy-discovery-instructions) |
 | §21.6 | Migration semantics — 5-stage deprecation path, tombstone, backward compatibility | **DRAFT normative (v1.1-draft rev 6)** — [Instruction Migration guide](/docs/guides/instruction-migration) |
+| §22 | Security Hardening | **DRAFT normative (v1.1-draft rev 11, Phase 12)** |
+| §22.1 | mTLS federation transport (TLS 1.3 floor, cipher suite, cert rotation hook into §19 manifest) | **DRAFT normative (v1.1-draft rev 11)** |
+| §22.2 | Key rotation (rollover window, dual-trust period, transparency-log entry, SHOULD cadence) | **DRAFT normative (v1.1-draft rev 11)** |
+| §22.3 | Audit log surface (13 required event types, write-ahead ordering, 90-day retention, admin export) | **DRAFT normative (v1.1-draft rev 11)** |
+| §22.4 | Per-principal quotas (token-bucket, 7 default dimensions, 429 backpressure shape) | **DRAFT normative (v1.1-draft rev 11)** |
+| §22.5 | Replay protection (±5 min clock-skew, persistent nonce cache, 5 error codes) | **DRAFT normative (v1.1-draft rev 11)** |
+| §22.6 | Container baseline (distroless, non-root UID 1000, read-only-fs, seccomp, Cosign signing) | **DRAFT normative (v1.1-draft rev 11)** |
+| §22.7 | Transparency log own-instance decision memo (5-criterion gate; reference deployment defers self-hosted Rekor) | **DRAFT normative (v1.1-draft rev 11)** |
+| §22.7.5 | Transparency log public-key rotation (Rekor root-key; 30-day update SLA; `transparency_log_key_mismatch` audit event) | **DRAFT normative (v1.1-draft rev 11)** |
 
 ## Key concepts
 

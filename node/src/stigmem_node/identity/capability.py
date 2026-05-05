@@ -18,9 +18,10 @@ Security requirements:
 from __future__ import annotations
 
 import base64
+import hmac
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Callable
 
 import canonicaljson
@@ -35,6 +36,9 @@ from .manifest import ManifestError, OrgManifest, verify_manifest
 logger = logging.getLogger("stigmem.identity.capability")
 
 _TOKEN_VERSION = 1
+# Dual-trust window: old key stays in accept_set for this many days after rotation.
+# Must be ≥ max token TTL (90 days per §19.3.2 / §22.2.2).
+_DUAL_TRUST_DAYS = 90
 
 # Seed-keyed singleton: cache is invalidated automatically when settings change.
 _node_private_key: Ed25519PrivateKey | None = None
@@ -88,7 +92,7 @@ def load_node_private_key() -> Ed25519PrivateKey | None:
 
     current_seed = settings.node_private_key
 
-    if current_seed == _node_private_key_seed:
+    if hmac.compare_digest(current_seed, _node_private_key_seed):  # nosec CT001 — cache invalidation; neither operand is attacker-controlled
         return _node_private_key  # cache hit
 
     if not current_seed:
@@ -134,6 +138,58 @@ def sign_revocation_event(event: dict) -> str:
         )
     sig_bytes = key.sign(_revocation_signing_body(event))
     return base64.urlsafe_b64encode(sig_bytes).decode().rstrip("=")
+
+
+# ---------------------------------------------------------------------------
+# Verification helpers
+# ---------------------------------------------------------------------------
+
+
+def _verify_token_signature(token: dict, manifest: OrgManifest, sig_b64: str) -> None:
+    """Verify token signature against the current key or a dual-trust window key.
+
+    Tries manifest.public_key first.  On failure, walks manifest.rotation_events
+    in reverse and checks any previous_public_key that is still within the
+    _DUAL_TRUST_DAYS window (§22.2).  Raises CapabilityTokenError if no key
+    verifies the signature.
+    """
+    signing_body = _token_signing_body(token)
+    sig_bytes = base64.urlsafe_b64decode(_pad(sig_b64))
+
+    # Try current key
+    try:
+        _pubkey_from_b64(manifest.public_key).verify(sig_bytes, signing_body)
+        return
+    except InvalidSignature:
+        pass
+    except Exception as exc:
+        raise CapabilityTokenError(f"token signature error: {exc}") from exc
+
+    # Dual-trust fallback: try retiring keys whose window has not yet closed
+    now = datetime.now(UTC)
+    for evt in reversed(manifest.rotation_events):
+        if not evt.previous_public_key:
+            continue  # pre-§22.2 event — no stored retiring pubkey
+        try:
+            rotated_at = datetime.fromisoformat(evt.rotated_at.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if now >= rotated_at + timedelta(days=_DUAL_TRUST_DAYS):
+            continue  # dual-trust window closed
+        try:
+            _pubkey_from_b64(evt.previous_public_key).verify(sig_bytes, signing_body)
+            logger.debug(
+                "token verified under dual-trust key %s (window open until %s)",
+                evt.previous_key_id,
+                (rotated_at + timedelta(days=_DUAL_TRUST_DAYS)).isoformat(),
+            )
+            return
+        except InvalidSignature:
+            continue
+        except Exception as exc:
+            raise CapabilityTokenError(f"dual-trust signature error: {exc}") from exc
+
+    raise CapabilityTokenError("token signature verification failed")
 
 
 # ---------------------------------------------------------------------------
@@ -193,15 +249,11 @@ def verify_token(
     except ManifestError as exc:
         raise CapabilityTokenError(f"issuer manifest verification failed: {exc}") from exc
 
-    # Step 3: verify token signature under manifest public_key
-    try:
-        pub = _pubkey_from_b64(manifest.public_key)
-        sig_bytes = base64.urlsafe_b64decode(_pad(sig_b64))
-        pub.verify(sig_bytes, _token_signing_body(token))
-    except InvalidSignature as exc:
-        raise CapabilityTokenError("token signature verification failed") from exc
-    except Exception as exc:
-        raise CapabilityTokenError(f"token signature error: {exc}") from exc
+    # Step 3: verify token signature under manifest public_key or a dual-trust window key.
+    # §22.2: tokens issued under the prior key MUST be accepted for dual_trust_days after
+    # rotation.  We try the current key first; on InvalidSignature we walk rotation_events
+    # in reverse and try each previous_public_key that is still within its trust window.
+    _verify_token_signature(token, manifest, sig_b64)
 
     # Step 4: C1 — subject must be in issuer's entities list
     if subject not in manifest.entities:

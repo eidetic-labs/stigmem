@@ -65,12 +65,17 @@ def fan_out(
 
         for sub in list(scope_subs) + list(entity_subs):
             event_id = str(uuid.uuid4())
-            conn.execute(
+            cur = conn.execute(
                 """INSERT INTO subscription_events
                    (id, subscription_id, event_type, entity_uri, fact_id, payload, created_at, delivery_status)
                    VALUES (?,?,?,?,?,?,?,'pending')""",
                 (event_id, sub["id"], "fact_asserted", entity, fact_id, fact_payload_json, now),
             )
+            row_seq = getattr(cur, "lastrowid", None)
+            if row_seq is not None:
+                conn.execute(
+                    "UPDATE subscription_events SET seq=? WHERE id=?", (row_seq, event_id)
+                )
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,9 +16,9 @@ class Settings(BaseSettings):
     node_url: str = "http://localhost:8765"
     log_level: str = "info"
 
-    # When True, every request must carry a valid Bearer token.
-    # When False (default), all callers are trusted (single-operator mode).
-    auth_required: bool = False
+    # When True (default), every request must carry a valid Bearer token.
+    # Set to False only for local development / single-operator installs.
+    auth_required: bool = True
 
     # Federation — Phase 3 (spec §6)
     federation_enabled: bool = False
@@ -214,6 +214,37 @@ class Settings(BaseSettings):
     subscription_delivery_sweep_s: int = 30
     # Consecutive delivery failures before the circuit breaker opens on a subscription.
     subscription_circuit_threshold: int = 10
+
+    # -------------------------------------------------------------------------
+    # mTLS Federation Transport — Phase 12 (spec §22.1)
+    # -------------------------------------------------------------------------
+    # Path to the node's PEM-encoded X.509 certificate for mTLS federation.
+    # When tls_cert_path + tls_key_path are both set, mTLS is activated:
+    # the uvicorn server requires client certs and the pull client presents this
+    # cert to peers.  Opt-out is only permitted for localhost deployments
+    # (set host to "localhost" / "127.0.0.1" / "::1" and leave paths empty).
+    tls_cert_path: str = ""
+    # Path to the node's PEM-encoded private key corresponding to tls_cert_path.
+    tls_key_path: str = ""
+    # Path to a PEM CA bundle used to verify peer certificates.
+    # Required when tls_cert_path + tls_key_path are configured.
+    tls_ca_bundle: str = ""
+
+    @model_validator(mode="after")
+    def _require_ca_bundle_for_mtls(self) -> "Settings":
+        if self.tls_cert_path and self.tls_key_path and not self.tls_ca_bundle:
+            raise ValueError(
+                "STIGMEM_TLS_CA_BUNDLE is required when mTLS is enabled "
+                "(STIGMEM_TLS_CERT_PATH + STIGMEM_TLS_KEY_PATH are set). "
+                "Without it, peer certs fall back to the system CA store instead "
+                "of the closed federation trust bundle (spec §22.1.2.2)."
+            )
+        return self
+
+    @property
+    def mtls_enabled(self) -> bool:
+        """True when mTLS cert + key are configured (non-localhost deployments)."""
+        return bool(self.tls_cert_path and self.tls_key_path)
 
 
 settings = Settings()

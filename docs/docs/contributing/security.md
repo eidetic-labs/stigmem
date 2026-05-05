@@ -10,7 +10,11 @@ description: How to contribute security research and pen testing to the Stigmem 
 
 ---
 
-The Stigmem project welcomes security research and pen testing as a community contribution. Stigmem is an open protocol with a federated trust model — external scrutiny makes it stronger. This page describes the scope, safe-harbor terms, severity guidance, and engagement process for community security work.
+The Stigmem project welcomes security research and pen testing as a community contribution. Stigmem is an open protocol with a federated trust model — external scrutiny makes it stronger. This page provides an overview of the scope, safe-harbor terms, severity guidance, and engagement process for community security work.
+
+For the full structured engagement guide — including the report template, reproducer expectations, severity guidance, and recognition model — see the [Community Pen-Test Handbook](../security/pen-test.md).
+
+For the formal threat model (trust boundaries, STRIDE analysis, risk register), see [`spec/security/threat-model.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md).
 
 For the responsible-disclosure policy and supported-version matrix, see [`SECURITY.md`](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md).
 

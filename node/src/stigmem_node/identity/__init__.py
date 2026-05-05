@@ -7,6 +7,13 @@ from .capability import (
     sign_token,
     verify_token,
 )
+from .key_rotation import (
+    KeyRotationLogEntry,
+    RotationResult,
+    generate_key_id,
+    rotate_key,
+    sign_key_rotation_entry,
+)
 from .manifest import (
     ManifestError,
     OrgManifest,
@@ -35,6 +42,11 @@ __all__ = [
     "sign_revocation_event",
     "sign_token",
     "verify_token",
+    "KeyRotationLogEntry",
+    "RotationResult",
+    "generate_key_id",
+    "rotate_key",
+    "sign_key_rotation_entry",
     "ManifestError",
     "OrgManifest",
     "RotationEvent",

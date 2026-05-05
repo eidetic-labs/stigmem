@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db, get_or_create_node_id
@@ -44,6 +44,7 @@ from ..models import (
 )
 from ..peer_token import TokenError, verify_declaration_sig, verify_peer_token
 from ..settings import settings
+from ..tls import check_peer_san
 
 router = APIRouter(tags=["federation"])
 
@@ -69,7 +70,22 @@ def _allowed_output_scopes(peer: dict[str, Any], token_payload: dict[str, Any]) 
 # ---------------------------------------------------------------------------
 
 
+def _get_mtls_peer_cert(request: Request) -> dict:
+    """Extract the TLS peer certificate dict from the ASGI transport (uvicorn).
+
+    Returns an empty dict when not running under TLS (tests, plaintext mode).
+    """
+    transport = request.scope.get("transport")
+    if transport is None:
+        return {}
+    ssl_obj = transport.get_extra_info("ssl_object")
+    if ssl_obj is None:
+        return {}
+    return ssl_obj.getpeercert() or {}
+
+
 def _require_peer_token(
+    request: Request,
     authorization: Annotated[str | None, Header(alias="authorization")] = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Verify incoming peer token. Returns (peer_dict, token_payload) or raises 401."""
@@ -117,6 +133,13 @@ def _require_peer_token(
         event = "replay_attempt" if exc.kind == "nonce_already_seen" else "rejected_token"
         write_audit_log(peer["id"], event, {"reason": exc.kind})
         raise HTTPException(status_code=401, detail=exc.kind)
+
+    # §22.1.2.4 — bind TLS cert identity to JWT iss; rejects cert-swapping attacks.
+    if settings.mtls_enabled:
+        peer_cert = _get_mtls_peer_cert(request)
+        if not check_peer_san(peer_cert, peer["node_id"]):
+            write_audit_log(peer["id"], "san_mismatch", {"node_id": peer["node_id"]})
+            raise HTTPException(status_code=401, detail="peer certificate URI SAN does not match node_id")
 
     return peer, payload
 
@@ -463,6 +486,7 @@ def pull_facts(
 
 @router.post("/v1/federation/facts/push", status_code=202)
 def push_facts(
+    request: Request,
     body: dict[str, Any],
     authorization: Annotated[str | None, Header(alias="authorization")] = None,
     x_stigmem_capability: Annotated[str | None, Header(alias="x-stigmem-capability")] = None,
@@ -486,6 +510,12 @@ def push_facts(
 
     if peer_auth is not None:
         peer, token_payload = peer_auth
+        # §22.1.2.4 — enforce SAN on the push path too
+        if settings.mtls_enabled:
+            peer_cert = _get_mtls_peer_cert(request)
+            if not check_peer_san(peer_cert, peer["node_id"]):
+                write_audit_log(peer["id"], "san_mismatch", {"node_id": peer["node_id"]})
+                raise HTTPException(status_code=401, detail="peer certificate URI SAN does not match node_id")
     elif x_stigmem_capability is not None:
         # --- Phase 2: capability-token fallback (H-SEC-2) ---
         try:

@@ -130,6 +130,12 @@ const config = {
           },
           {
             type: 'docSidebar',
+            sidebarId: 'securitySidebar',
+            label: 'Security',
+            position: 'left',
+          },
+          {
+            type: 'docSidebar',
             sidebarId: 'specSidebar',
             label: 'Spec',
             position: 'left',

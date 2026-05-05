@@ -9,8 +9,104 @@ permissions:
   contents: read
 
 jobs:
+  detect-changes:
+    name: Detect changed surfaces
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      node: ${{ steps.filter.outputs.node }}
+      contract: ${{ steps.filter.outputs.contract }}
+      sdk_compat: ${{ steps.filter.outputs.sdk_compat }}
+      coverage: ${{ steps.filter.outputs.coverage }}
+      go: ${{ steps.filter.outputs.go }}
+      docs: ${{ steps.filter.outputs.docs }}
+      obsidian: ${{ steps.filter.outputs.obsidian }}
+      helm: ${{ steps.filter.outputs.helm }}
+      container: ${{ steps.filter.outputs.container }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            python:
+              - '.github/workflows/ci.yml'
+              - 'pyproject.toml'
+              - 'uv.lock'
+              - 'conftest.py'
+              - 'scripts/check.sh'
+              - 'scripts/check_ruff_baseline.py'
+              - 'scripts/check_mypy_baseline.py'
+              - 'scripts/check_constant_time.py'
+              - 'node/**'
+              - 'sdks/stigmem-py/**'
+              - 'adapters/**/*.py'
+              - 'adapters/**/pyproject.toml'
+            node:
+              - '.github/workflows/ci.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'turbo.json'
+              - 'scripts/check.sh'
+              - 'adapters/mcp/**'
+              - 'apps/dashboard/**'
+              - 'sdks/stigmem-ts/**'
+            contract:
+              - '.github/workflows/ci.yml'
+              - 'scripts/check.sh'
+              - 'scripts/export_openapi.py'
+              - 'docs/openapi/**'
+              - 'node/**'
+              - 'spec/**'
+              - 'data/conformance/**'
+              - 'sdks/stigmem-ts/**'
+            sdk_compat:
+              - '.github/workflows/ci.yml'
+              - 'scripts/check_sdk_compat.sh'
+              - 'node/**'
+              - 'sdks/stigmem-py/**'
+              - 'sdks/stigmem-ts/**'
+              - 'sdks/stigmem-go/**'
+            coverage:
+              - '.github/workflows/ci.yml'
+              - 'pyproject.toml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'node/**'
+              - 'sdks/stigmem-py/**'
+              - 'sdks/stigmem-ts/**'
+              - 'adapters/mcp/**'
+              - 'apps/dashboard/**'
+            go:
+              - '.github/workflows/ci.yml'
+              - 'scripts/check.sh'
+              - 'sdks/stigmem-go/**'
+            docs:
+              - '.github/workflows/ci.yml'
+              - 'scripts/check.sh'
+              - 'docs/**'
+            obsidian:
+              - '.github/workflows/ci.yml'
+              - 'scripts/check.sh'
+              - 'adapters/obsidian-plugin/**'
+            helm:
+              - '.github/workflows/ci.yml'
+              - 'infra/helm/**'
+              - 'deploy/helm/**'
+            container:
+              - '.github/workflows/ci.yml'
+              - 'node/**'
+              - 'node/Dockerfile'
+              - 'deploy/seccomp/**'
+              - 'docker-compose.yml'
+
   python-tests:
     name: Python checks (lint + type + tests + security)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.python == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +126,8 @@ jobs:
 
   node-tests:
     name: TypeScript checks (SDK + MCP + dashboard)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.node == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,6 +144,8 @@ jobs:
 
   contract-checks:
     name: Contract checks (OpenAPI + generated SDK)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.contract == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,6 +170,8 @@ jobs:
 
   sdk-compat-smoke:
     name: SDK compatibility smoke
+    needs: detect-changes
+    if: needs.detect-changes.outputs.sdk_compat == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -98,6 +200,8 @@ jobs:
 
   coverage-report:
     name: Coverage report
+    needs: detect-changes
+    if: needs.detect-changes.outputs.coverage == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -151,6 +255,8 @@ jobs:
 
   go-tests:
     name: Go SDK tests
+    needs: detect-changes
+    if: needs.detect-changes.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -164,6 +270,8 @@ jobs:
 
   docs-build:
     name: Docs build
+    needs: detect-changes
+    if: needs.detect-changes.outputs.docs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -179,6 +287,8 @@ jobs:
 
   obsidian-plugin-build:
     name: Obsidian plugin build
+    needs: detect-changes
+    if: needs.detect-changes.outputs.obsidian == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -194,6 +304,8 @@ jobs:
 
   helm-lint:
     name: Helm chart lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.helm == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -217,6 +329,8 @@ jobs:
 
   container-smoke:
     name: Container hardening smoke test
+    needs: detect-changes
+    if: needs.detect-changes.outputs.container == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

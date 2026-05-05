@@ -33,6 +33,9 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.39
+      '@vitest/coverage-v8':
+        specifier: ^4.1.0
+        version: 4.1.5(vitest@4.1.5)
       tsx:
         specifier: ^4.7.0
         version: 4.21.0
@@ -100,6 +103,9 @@ importers:
       '@types/react-dom':
         specifier: 18.3.0
         version: 18.3.0
+      '@vitest/coverage-v8':
+        specifier: ^4.1.0
+        version: 4.1.5(vitest@4.1.5)
       autoprefixer:
         specifier: ^10.4.20
         version: 10.5.0(postcss@8.5.13)

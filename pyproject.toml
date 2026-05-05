@@ -74,6 +74,7 @@ markers = [
 
 [tool.coverage.run]
 source = ["node/src", "sdks/stigmem-py/src"]
+branch = true
 omit = ["*/tests/*", "*/migrations/*"]
 
 [tool.bandit]

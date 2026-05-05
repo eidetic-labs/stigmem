@@ -96,6 +96,59 @@ jobs:
       - name: SDK compatibility fast gate
         run: bash scripts/check_sdk_compat.sh
 
+  coverage-report:
+    name: Coverage report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install workspace dependencies
+        run: |
+          uv sync --all-packages
+          pnpm install --frozen-lockfile
+
+      - name: Python coverage
+        env:
+          HYPOTHESIS_SEED: "0"
+        run: |
+          mkdir -p coverage/python
+          uv run pytest node/tests/ sdks/stigmem-py/tests/ \
+            --cov=node/src --cov=sdks/stigmem-py/src \
+            --cov-branch \
+            --cov-report=xml:coverage/python/coverage.xml \
+            --cov-report=term
+
+      - name: TypeScript coverage
+        run: |
+          pnpm --filter stigmem-ts exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
+          pnpm --filter stigmem-mcp exec vitest run --exclude dist/** --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
+          pnpm --filter dashboard exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-artifacts
+          path: |
+            coverage/python/coverage.xml
+            sdks/stigmem-ts/coverage/**
+            adapters/mcp/coverage/**
+            apps/dashboard/coverage/**
+
   go-tests:
     name: Go SDK tests
     runs-on: ubuntu-latest

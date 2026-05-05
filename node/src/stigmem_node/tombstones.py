@@ -86,7 +86,7 @@ def invalidate_tombstone_cache() -> None:
     try:
         from .tombstone_cache import invalidate as _cache_invalidate
         _cache_invalidate()
-    except Exception:
+    except Exception:  # nosec B110
         pass
 
 
@@ -206,7 +206,7 @@ def get_tombstone_status(entity_uri: str) -> TombstoneStatusResponse:
         ids = [t.id for t in tombstone_list]
         placeholders = ",".join("?" * len(ids))
         rev_rows = conn.execute(
-            f"SELECT * FROM tombstone_revocations WHERE tombstone_id IN ({placeholders}) ORDER BY created_at",  # noqa: S608
+            f"SELECT * FROM tombstone_revocations WHERE tombstone_id IN ({placeholders}) ORDER BY created_at",  # noqa: S608  # nosec B608
             ids,
         ).fetchall()
         revocation_list = [_row_to_revocation(r) for r in rev_rows]

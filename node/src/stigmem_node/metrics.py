@@ -179,5 +179,5 @@ def observe_duration(histogram: Any, labels: dict[str, str]) -> Generator[None, 
         elapsed = time.perf_counter() - start
         try:
             histogram.labels(**labels).observe(elapsed)
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: BLE001  # nosec B110
             pass

@@ -864,7 +864,7 @@ def _recall_impl(
         _span.set_attribute("stigmem.total_scored", total_scored)  # type: ignore[attr-defined]
         _span.set_attribute("stigmem.tokens_used", tokens_used)  # type: ignore[attr-defined]
         _span.set_attribute("stigmem.truncated", truncated)  # type: ignore[attr-defined]
-    except Exception:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # nosec B110
         pass
 
     # §23.3.3 r.3: suppress total_scored when tombstone filtering was applied

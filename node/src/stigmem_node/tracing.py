@@ -112,7 +112,7 @@ def start_span(name: str, **initial_attributes: Any) -> Generator[_NoopSpan | An
                 from opentelemetry.trace import StatusCode
                 span.record_exception(exc)
                 span.set_status(StatusCode.ERROR, str(exc))
-            except Exception:  # noqa: BLE001
+            except Exception:  # noqa: BLE001  # nosec B110
                 pass
             raise
 

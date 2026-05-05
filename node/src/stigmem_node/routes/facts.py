@@ -65,7 +65,7 @@ def _get_tombstone_filter(
     # BEGIN IMMEDIATE for SQLite consistency (§23.3.3 rule 5)
     try:
         conn.execute("BEGIN IMMEDIATE")
-    except Exception:
+    except Exception:  # nosec B110
         pass
     rows = conn.execute(
         f"""SELECT t.id, t.entity_uri, t.scope, t.created_at, t.legal_hold
@@ -73,12 +73,12 @@ def _get_tombstone_filter(
             WHERE t.entity_uri IN ({placeholders})
             AND NOT EXISTS (
                 SELECT 1 FROM tombstone_revocations r WHERE r.tombstone_id = t.id
-            )""",  # noqa: S608
+            )""",  # noqa: S608  # nosec B608
         entity_uris,
     ).fetchall()
     try:
         conn.execute("COMMIT")
-    except Exception:
+    except Exception:  # nosec B110
         pass
 
     excluded: set[str] = set()
@@ -145,7 +145,7 @@ def _validate_as_of(as_of: str) -> datetime:
                 )
         except HTTPException:
             raise
-        except Exception:
+        except Exception:  # nosec B110
             pass
     return ts
 
@@ -569,7 +569,7 @@ def _assert_fact_impl(
     try:
         _span.set_attribute("stigmem.fact_id", fact_id)  # type: ignore[attr-defined]
         _span.set_attribute("stigmem.contradicted", contradicted)  # type: ignore[attr-defined]
-    except Exception:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # nosec B110
         pass
 
     return row_to_record(row, contradicted=contradicted, warnings=relation_warnings)

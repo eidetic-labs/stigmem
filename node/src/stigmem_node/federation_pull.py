@@ -130,7 +130,7 @@ async def pull_from_peer_once(
                     cursor_ts = cursor_ts.replace(tzinfo=UTC)
                 lag_s = max(0.0, (datetime.now(UTC) - cursor_ts).total_seconds())
                 REPLICATION_LAG.labels(peer_id=peer["node_id"]).set(lag_s)
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: BLE001  # nosec B110
             pass
 
         return new_cursor

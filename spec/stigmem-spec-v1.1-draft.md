@@ -2206,7 +2206,7 @@ When a node rotates its mTLS node certificate:
 1. The node MUST generate a new X.509 certificate for the new key pair.
 2. The new certificate's public key fingerprint MUST be recorded in the node's org manifest (§19.1) as a new `RotationEvent` (§19.1.4) alongside the Ed25519 key rotation, or in a dedicated `tls_cert_fingerprint` field on the manifest if the TLS key is distinct from the Ed25519 signing key. Implementations MUST NOT rotate the mTLS certificate silently — every rotation MUST produce a manifest update.
 3. The updated manifest MUST be re-signed and re-published to `/.well-known/stigmem-manifest.json` (§19.1.6) before the new certificate is put into service.
-4. The updated manifest MUST be submitted to the transparency log (§19.2) as part of the rotation event. Nodes MUST NOT activate the new certificate until the transparency log submission has been acknowledged (i.e., until a `LogEntry` is received).
+4. The updated manifest MUST be submitted to the transparency log (§19.2) as part of the rotation event. Nodes MUST NOT activate the new certificate until the transparency log submission has been acknowledged (i.e., until a `LogEntry` is received). Nodes SHOULD retry the transparency log submission for up to 24 hours before proceeding with rotation. If rotation proceeds without a log acknowledgement (e.g., due to a Rekor maintenance window), the node MUST record a `pending_log_submission: true` flag in the manifest and MUST complete the submission as soon as the log is reachable.
 5. During the transition window (see §22.2.2 for dual-trust period), nodes MUST accept both the old and new TLS certificates from the rotating peer. The transition window MUST NOT exceed the dual-trust period defined in §22.2.
 
 #### 22.1.4 Client Certificate Provisioning
@@ -2244,10 +2244,12 @@ KeyRotationLogEntry:
   rotated_at:           RFC3339
   dual_trust_expires_at: RFC3339    // old key trusted until this time
   manifest_log_index:   integer     // log index of the updated manifest submission
-  rotation_sig:         base64url   // Ed25519 sig over canonical JSON of other fields, signed by OLD key
+  rotation_sig:         base64url   // Ed25519 sig over RFC 8785 JCS encoding of other fields, signed by OLD key
 ```
 
-The `rotation_sig` MUST verify under the `old_key_id` public key. This anchors the log entry to the prior identity.
+The `rotation_sig` MUST verify under the `old_key_id` public key. This anchors the log entry to the prior identity. The byte sequence signed MUST be the RFC 8785 JSON Canonicalization Scheme (JCS) serialisation of the other fields: keys lexicographically sorted, no whitespace, UTF-8 encoding, no trailing newline.
+
+The manifest submission (§22.1.3.4) MUST be acknowledged by the transparency log before the `KeyRotationLogEntry` is submitted; the returned log index MUST be recorded as `manifest_log_index`.
 
 #### 22.2.4 Rotation Cadence
 
@@ -2275,7 +2277,7 @@ Every Stigmem node MUST emit structured audit log events for the following opera
 | `quota_breach` | Per-principal quota ceiling hit | `event_type`, `timestamp`, `principal`, `quota_dimension`, `ceiling`, `actual` |
 | `admin_action` | Any admin API call | `event_type`, `timestamp`, `actor_entity`, `action`, `resource`, `outcome` |
 | `replay_rejected` | Capability token rejected due to replay | `event_type`, `timestamp`, `token_id`, `nonce`, `reject_reason` |
-| `instruction_audit` | Lazy instruction preload or recall | `event_type`, `timestamp`, `agent_id`, `chunk_id`, `load_trigger`, `outcome` |
+| `instruction_audit` | Lazy instruction preload or recall (MUST emit if the instruction recall layer is active; nodes not implementing the lazy instruction layer are exempt) | `event_type`, `timestamp`, `agent_id`, `chunk_id`, `load_trigger`, `outcome` |
 
 Implementations MUST NOT omit required fields. Optional fields (marked `?`) SHOULD be included when available.
 
@@ -2397,7 +2399,7 @@ This section extends §19.3.5 (capability token nonce) with normative clock-skew
 1. Every capability token MUST include a `nonce` of 32 cryptographically random bytes (§19.3.5). Every federation handshake message MUST include an independent `nonce` of 32 cryptographically random bytes.
 2. The **timestamp acceptance window** is ± **5 minutes** from the verifier's local clock. Tokens or messages with an `issued_at` timestamp outside this window MUST be rejected with a `timestamp_out_of_window` error, even if the nonce is fresh.
 3. The **nonce cache** MUST retain seen nonces for at least the **duration of the acceptance window plus the maximum token lifetime** (5 minutes + 90 days for capability tokens; 5 minutes + session duration for handshake messages). Implementations MUST NOT prune nonces from the cache before this window elapses.
-4. Nonces MUST be stored in a persistent cache (survives node restarts within the retention window). An in-memory-only nonce cache is MUST NOT be used in production; a brief restart MUST NOT create a replay window.
+4. Nonces MUST be stored in a persistent cache (survives node restarts within the retention window). An in-memory-only nonce cache MUST NOT be used in production; a brief restart MUST NOT create a replay window.
 
 #### 22.5.3 Clock-Skew Bounds
 
@@ -2514,6 +2516,13 @@ STIGMEM_TRANSPARENCY_LOG_PUBLIC_KEY=<base64-encoded ECDSA key from GET /api/v1/l
 ```
 
 When using a self-hosted instance, replace the above with the self-hosted instance URL and its corresponding public key. The `STIGMEM_TRANSPARENCY_LOG_PUBLIC_KEY` MUST be pinned explicitly; key discovery via the URL alone MUST NOT be the sole trust anchor in production.
+
+#### 22.7.5 Transparency Log Public-Key Rotation
+
+The Sigstore/Rekor root signing key is subject to rotation (a root key rotation occurred in 2022). Operators pinning `STIGMEM_TRANSPARENCY_LOG_PUBLIC_KEY` MUST have a documented procedure for updating the pin.
+
+1. Operators SHOULD subscribe to Sigstore transparency log key rotation announcements (the [sigstore-announce mailing list](https://groups.google.com/g/sigstore-announce) and the CT log transparency dashboard) and SHOULD update `STIGMEM_TRANSPARENCY_LOG_PUBLIC_KEY` within **30 days** of a published rotation.
+2. A node MUST NOT treat a persistent transparency log key verification failure as a permanent misconfiguration without first checking whether a Rekor root key rotation has occurred. On repeated verification failures, the node SHOULD emit a `transparency_log_key_mismatch` audit log event and surface an operator alert before entering a degraded-verification state.
 
 ---
 

@@ -129,7 +129,7 @@ STIGMEM_AUTH_REQUIRED=true
 STIGMEM_SOURCE_ATTESTATION_MODE=enforce
 ```
 
-See [Source Attestation](./source-attestation) and the [v1.0 security posture statement](../about/state-of-stigmem) for the full hardening checklist.
+See [Source Attestation](./source-attestation) and the [Features page](../../learn/features) for the full hardening checklist.
 
 ## Tenant naming
 
@@ -145,5 +145,5 @@ See [Source Attestation](./source-attestation) and the [v1.0 security posture st
 - [Billing Hooks](./billing-hooks) — per-tenant billing event emission
 - [Audit Log](./audit-log) — querying the tenant-scoped audit trail
 - [Source Attestation](./source-attestation) — enforce `entity_uri` binding per tenant
-- [Upgrade to v1.0](../getting-started/upgrade-v1) — migrating from single-tenant v0.x deployments
-- [Installation](../getting-started/installation) — node setup and environment configuration
+- [Upgrade to v1.0](../../learn/quickstart/upgrade-v1) — migrating from single-tenant v0.x deployments
+- [Installation](../../learn/quickstart/installation) — node setup and environment configuration

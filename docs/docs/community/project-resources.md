@@ -20,7 +20,7 @@ If you are interested in any of these roles, see [How to engage](#how-to-engage)
 
 ### Senior Engineer — Federation & Distributed Systems
 
-**Needed for: Phase 8 (Trust & Persistence Foundation, Q2 2026)**
+**Needed for: Phase 8 (Trust & Persistence Foundation) — shipped**
 
 This is the highest-priority hire — the work starts immediately. Phase 8 adds a federation trust architecture (spec §19 — org manifests, cross-org capability tokens, source-trust scores, quarantine garden behavior) and a multi-backend storage adapter (libSQL, Postgres, SQLCipher). The work is protocol-level distributed systems: signing schemes, HLC cursor semantics, replication under partition, and conflict resolution.
 
@@ -43,7 +43,7 @@ This is the highest-priority hire — the work starts immediately. Phase 8 adds 
 
 ### Security Engineer
 
-**Needed for: Phase 12 (Security Hardening, Q3–Q4 2026)**
+**Needed for: Phase 12 (Security Hardening) — shipped**
 
 Phase 12 is a hardening phase: mTLS federation, API-key rotation enforcement, per-principal rate limits, container hardening, constant-time crypto audit, and community pen-test coordination. The Security Engineer role feeds the design of spec §19 (federation trust model) from Phase 8 onward and owns Phase 12 delivery.
 
@@ -53,7 +53,7 @@ Phase 12 is a hardening phase: mTLS federation, API-key rotation enforcement, pe
 - mTLS implementation for the federation peer protocol; cert-pinning option.
 - Constant-time crypto audit of the Ed25519 signing and verification path.
 - Transparency log integration (Rekor / Sigstore-equivalent for org-manifest rotation events per §19).
-- Community pen-test coordination — scope, safe-harbor, and engagement path are already started at [Security & Pen Testing](../contributing/security.md).
+- Community pen-test coordination — scope, safe-harbor, and engagement path are already started at [Security & Pen Testing](./security-contributing.md).
 - Phase 13 right-to-be-forgotten tombstone design (cryptographic proof, cross-federation propagation).
 
 **Background that fits:**
@@ -67,7 +67,7 @@ Phase 12 is a hardening phase: mTLS federation, API-key rotation enforcement, pe
 
 ### Science / Research Agent — Graph Theory & Memory Structures
 
-**Needed for: Phase 9 (Graph Memory & Recall, Q2–Q3 2026)**
+**Needed for: Phase 9 (Graph Memory & Recall) — shipped**
 
 Phase 9 adds a graph adjacency index, vector embeddings, and a `recall` endpoint that serves salience-ranked, budget-bounded memory slices to agents. The research dimension is ongoing: what graph representations, recall algorithms, and memory structures make Stigmem more useful as a cognitive substrate?
 
@@ -108,7 +108,7 @@ There is no formal application form or résumé-screening process. The team revi
 If you want to contribute without a formal role commitment:
 
 - **Code and spec contributions** — see [`CONTRIBUTING.md`](https://github.com/eidetic-labs/stigmem/blob/main/CONTRIBUTING.md) for the RFC process, conformance suite contribution guide, and prototype guidelines. Spec changes go through an open comment period before merging.
-- **Security research** — see [Security & Pen Testing](../contributing/security.md) for scope, safe-harbor terms, and how to report findings.
+- **Security research** — see [Security & Pen Testing](./security-contributing.md) for scope, safe-harbor terms, and how to report findings.
 - **Spec review** — open issues or discussions on spec drafts in `stigmem/spec/`. Wire-format, namespace, and federation-semantics discussions are always open.
 - **Adapter development** — build a Stigmem adapter for a tool or platform and open a PR. The Adapter ABI (spec §12) is normative; third-party adapters that pass the conformance suite are listed in the docs.
 

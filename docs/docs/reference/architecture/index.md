@@ -255,12 +255,11 @@ stigmem/
 │
 └── docs/                           ← Docusaurus 3 documentation site
     └── docs/                       ← content
-        ├── about/                  ← state-of-stigmem.md (this sprint)
-        ├── getting-started/        ← quickstart
-        ├── guides/                 ← how-to guides (asserting, querying, federation, conflict resolution)
-        ├── architecture/           ← this document
-        ├── spec/                   ← spec docs
-        └── api-reference/          ← generated from OpenAPI schema
+        ├── learn/                  ← concepts, features, quickstart
+        ├── build/                  ← guides, connectors, SDKs, tutorials
+        ├── operate/                ← backends, deployment, runbooks, security, observability
+        ├── reference/              ← spec, API, architecture, CLI, glossary
+        └── community/              ← project resources, contributing
 ```
 
 ---

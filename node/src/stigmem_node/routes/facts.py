@@ -62,11 +62,15 @@ def _get_tombstone_filter(
         return set(), []
 
     placeholders = ",".join("?" * len(entity_uris))
-    # BEGIN IMMEDIATE for SQLite consistency (§23.3.3 rule 5)
+    # BEGIN IMMEDIATE for SQLite consistency (§23.3.3 rule 5).
+    # On postgres this is a syntax error; rollback clears the failed txn state.
     try:
         conn.execute("BEGIN IMMEDIATE")
     except Exception:  # nosec B110
-        pass
+        try:
+            conn.rollback()
+        except Exception:  # nosec B110
+            pass
     rows = conn.execute(
         f"""SELECT t.id, t.entity_uri, t.scope, t.created_at, t.legal_hold
             FROM tombstones t

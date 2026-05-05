@@ -1,7 +1,7 @@
 ---
 id: quickstart-tutorial
 title: Quickstart — two nodes federating
-sidebar_label: Quickstart
+sidebar_label: Federation Tutorial
 slug: quickstart-tutorial
 ---
 

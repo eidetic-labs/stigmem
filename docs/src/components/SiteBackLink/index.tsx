@@ -3,20 +3,35 @@ import styles from './styles.module.css';
 
 type Referrer = { href: string; label: string };
 
-/**
- * Renders a "← Back to <previous page>" chip when the user arrived on this
- * page from a same-origin link. Reads `document.referrer` once on mount, so
- * the chip survives in-page navigation only as long as the browser keeps the
- * referrer header set. Clicking the chip is equivalent to history.back().
- *
- * Used by the swizzled DocItem/Content theme component on every docs page so
- * deep-linked targets (notably spec sections) always have a visible way back.
- */
+const TITLE_KEY = 'stigmem-page-title';
+
+function labelFromTitle(stored: string): string {
+  return stored
+    .replace(/\s*[|–—].*$/, '')
+    .replace(/^\s*Stigmem\s*/i, '')
+    .trim() || 'Previous page';
+}
+
+function labelFromPath(pathname: string): string {
+  const segments = pathname.split('/').filter(Boolean);
+  let slug = segments[segments.length - 1] ?? '';
+  if (slug === 'index' || slug === '') {
+    slug = segments[segments.length - 2] ?? '';
+  }
+  return slug
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Previous page';
+}
+
 export default function SiteBackLink() {
   const [referrer, setReferrer] = useState<Referrer | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    const prevTitle = sessionStorage.getItem(TITLE_KEY);
+    sessionStorage.setItem(TITLE_KEY, document.title);
+
     const raw = document.referrer;
     if (!raw) return;
     let url: URL;
@@ -28,12 +43,7 @@ export default function SiteBackLink() {
     if (url.origin !== window.location.origin) return;
     if (url.pathname === window.location.pathname) return;
 
-    const segments = url.pathname.split('/').filter(Boolean);
-    const last = segments[segments.length - 1] ?? '';
-    const label =
-      last
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Previous page';
+    const label = prevTitle ? labelFromTitle(prevTitle) : labelFromPath(url.pathname);
     setReferrer({ href: url.href, label });
   }, []);
 

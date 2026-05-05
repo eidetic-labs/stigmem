@@ -288,7 +288,7 @@ const config = {
               { label: 'Learn', to: '/docs/learn' },
               { label: 'Build', to: '/docs/build/guides' },
               { label: 'Operate', to: '/docs/operate' },
-              { label: 'Reference', to: '/docs/reference/api' },
+              { label: 'Reference', to: '/docs/reference' },
               { label: 'Features', to: '/docs/learn/features' },
             ],
           },

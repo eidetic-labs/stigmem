@@ -1,7 +1,7 @@
 ---
 id: index
 title: Architecture
-sidebar_label: Overview
+sidebar_label: Architecture
 description: Engineer-facing architecture reference — fact model, provenance, scope, federation, and repo map.
 audience: Spec
 ---

@@ -1,7 +1,7 @@
 ---
 id: index
 title: API Reference
-sidebar_label: Overview
+sidebar_label: API Reference
 audience: Integrator
 ---
 

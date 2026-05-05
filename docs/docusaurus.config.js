@@ -319,6 +319,9 @@ const config = {
       mermaid: {
         theme: { light: 'neutral', dark: 'dark' },
         options: {
+          themeVariables: {
+            edgeLabelBackground: 'transparent',
+          },
           flowchart: {
             padding: 20,
           },

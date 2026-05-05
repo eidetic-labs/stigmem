@@ -1,0 +1,122 @@
+[
+  {
+    "id": "tomb-001",
+    "class": "tombstone_bypass",
+    "subclass": "same_source",
+    "description": "Same-source: retraction (confidence=0) is filtered from recall; replacement fact_b visible",
+    "entity": "user:tomb-alpha",
+    "relation": "memory:role",
+    "fact_a": {"value": {"type": "string", "v": "admin"}, "source": "eval:harness", "confidence": 1.0},
+    "fact_b": {"value": {"type": "string", "v": "viewer"}, "source": "eval:harness", "confidence": 0.9},
+    "tombstone_confidence": 0.0,
+    "pass_criteria": {"retraction_absent": true, "fact_b_present": true, "distinct_fact_ids": true}
+  },
+  {
+    "id": "tomb-002",
+    "class": "tombstone_bypass",
+    "subclass": "same_source",
+    "description": "Same-source: confidence=0 retraction not in recall; public replacement visible",
+    "entity": "user:tomb-beta",
+    "relation": "memory:clearance",
+    "fact_a": {"value": {"type": "string", "v": "top-secret"}, "source": "eval:harness", "confidence": 1.0},
+    "fact_b": {"value": {"type": "string", "v": "public"}, "source": "eval:harness", "confidence": 0.8},
+    "tombstone_confidence": 0.0,
+    "pass_criteria": {"retraction_absent": true, "fact_b_present": true, "distinct_fact_ids": true}
+  },
+  {
+    "id": "tomb-003",
+    "class": "tombstone_bypass",
+    "subclass": "same_source",
+    "description": "Same-source: zero-confidence retraction filtered; status replacement recalled",
+    "entity": "user:tomb-gamma",
+    "relation": "memory:status",
+    "fact_a": {"value": {"type": "string", "v": "active"}, "source": "eval:harness", "confidence": 1.0},
+    "fact_b": {"value": {"type": "string", "v": "suspended"}, "source": "eval:harness", "confidence": 0.7},
+    "tombstone_confidence": 0.0,
+    "pass_criteria": {"retraction_absent": true, "fact_b_present": true, "distinct_fact_ids": true}
+  },
+  {
+    "id": "tomb-004",
+    "class": "tombstone_bypass",
+    "subclass": "same_source",
+    "description": "Same-source: retraction row (confidence=0) absent from recall; low-confidence replacement present",
+    "entity": "org:tomb-delta",
+    "relation": "memory:plan",
+    "fact_a": {"value": {"type": "string", "v": "enterprise"}, "source": "eval:harness", "confidence": 1.0},
+    "fact_b": {"value": {"type": "string", "v": "starter"}, "source": "eval:harness", "confidence": 0.5},
+    "tombstone_confidence": 0.0,
+    "pass_criteria": {"retraction_absent": true, "fact_b_present": true, "distinct_fact_ids": true}
+  },
+  {
+    "id": "tomb-005",
+    "class": "tombstone_bypass",
+    "subclass": "same_source",
+    "description": "Same-source: zero-confidence retraction filtered; read-only replacement visible",
+    "entity": "agent:tomb-epsilon",
+    "relation": "memory:capability",
+    "fact_a": {"value": {"type": "string", "v": "admin"}, "source": "eval:harness", "confidence": 1.0},
+    "fact_b": {"value": {"type": "string", "v": "read"}, "source": "eval:harness", "confidence": 0.9},
+    "tombstone_confidence": 0.0,
+    "pass_criteria": {"retraction_absent": true, "fact_b_present": true, "distinct_fact_ids": true}
+  },
+  {
+    "id": "tomb-006",
+    "class": "tombstone_bypass",
+    "subclass": "different_source",
+    "description": "Different-source: adversary confidence=0 assertion doesn't suppress canonical; canonical survives in recall",
+    "entity": "user:tomb-zeta",
+    "relation": "memory:role",
+    "fact_a": {"value": {"type": "string", "v": "cto"}, "source": "eval:harness", "confidence": 1.0},
+    "adversary_tombstone": {"value": {"type": "string", "v": "cto"}, "source": "eval:adversary", "confidence": 0.0},
+    "fact_b": {"value": {"type": "string", "v": "intern"}, "source": "eval:adversary", "confidence": 0.9},
+    "pass_criteria": {"fact_a_present": true, "adversary_tombstone_absent": true, "fact_b_present": true, "distinct_fact_ids": true}
+  },
+  {
+    "id": "tomb-007",
+    "class": "tombstone_bypass",
+    "subclass": "different_source",
+    "description": "Different-source: attacker zero-confidence shadow attempt — canonical survives; attacker fact filtered",
+    "entity": "user:tomb-eta",
+    "relation": "memory:department",
+    "fact_a": {"value": {"type": "string", "v": "security"}, "source": "eval:harness", "confidence": 1.0},
+    "adversary_tombstone": {"value": {"type": "string", "v": "security"}, "source": "eval:adversary", "confidence": 0.0},
+    "fact_b": {"value": {"type": "string", "v": "marketing"}, "source": "eval:adversary", "confidence": 0.8},
+    "pass_criteria": {"fact_a_present": true, "adversary_tombstone_absent": true, "fact_b_present": true, "distinct_fact_ids": true}
+  },
+  {
+    "id": "tomb-008",
+    "class": "tombstone_bypass",
+    "subclass": "different_source",
+    "description": "Different-source: independent sources contradict; canonical source-A fact still recalled",
+    "entity": "org:tomb-theta",
+    "relation": "memory:owner",
+    "fact_a": {"value": {"type": "string", "v": "user:alice"}, "source": "eval:harness", "confidence": 1.0},
+    "adversary_tombstone": {"value": {"type": "string", "v": "user:alice"}, "source": "eval:adversary", "confidence": 0.0},
+    "fact_b": {"value": {"type": "string", "v": "user:eve"}, "source": "eval:adversary", "confidence": 0.95},
+    "pass_criteria": {"fact_a_present": true, "adversary_tombstone_absent": true, "fact_b_present": true, "distinct_fact_ids": true}
+  },
+  {
+    "id": "tomb-009",
+    "class": "tombstone_bypass",
+    "subclass": "different_source",
+    "description": "Different-source: adversary floods zero-confidence tombstones; canonical endpoint remains in recall",
+    "entity": "service:tomb-iota",
+    "relation": "memory:endpoint",
+    "fact_a": {"value": {"type": "string", "v": "https://real.example.com"}, "source": "eval:harness", "confidence": 1.0},
+    "adversary_tombstone": {"value": {"type": "string", "v": "https://real.example.com"}, "source": "eval:adversary", "confidence": 0.0},
+    "fact_b": {"value": {"type": "string", "v": "https://evil.example.com"}, "source": "eval:adversary", "confidence": 0.9},
+    "pass_criteria": {"fact_a_present": true, "adversary_tombstone_absent": true, "fact_b_present": true, "distinct_fact_ids": true}
+  },
+  {
+    "id": "tomb-010",
+    "class": "tombstone_bypass",
+    "subclass": "different_source",
+    "description": "Different-source: cross-scope tombstone attempt — canonical clearance fact recalled; adversary tombstone filtered",
+    "entity": "user:tomb-kappa",
+    "relation": "memory:clearance",
+    "fact_a": {"value": {"type": "string", "v": "secret"}, "source": "eval:harness", "confidence": 1.0},
+    "adversary_tombstone": {"value": {"type": "string", "v": "secret"}, "source": "eval:adversary", "confidence": 0.0},
+    "fact_b": {"value": {"type": "string", "v": "public"}, "source": "eval:adversary", "confidence": 0.7},
+    "pass_criteria": {"fact_a_present": true, "adversary_tombstone_absent": true, "fact_b_present": true, "distinct_fact_ids": true}
+  }
+]

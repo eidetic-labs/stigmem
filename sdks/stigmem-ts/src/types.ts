@@ -197,3 +197,73 @@ export interface LintOptions {
   relation?:          string;
   stale_lookahead_s?: number;
 }
+
+// ---------------------------------------------------------------------------
+// Recall (Phase 9 — spec §20)
+// ---------------------------------------------------------------------------
+
+export interface RecallWeights {
+  lexical?:      number;
+  semantic?:     number;
+  graph?:        number;
+  source_trust?: number;
+  recency?:      number;
+}
+
+export interface RecallOptions {
+  scope?:             FactScope;
+  token_budget?:      number;
+  depth?:             number;
+  weights?:           RecallWeights;
+  min_confidence?:    number;
+  include_neighbors?: boolean;
+  limit?:             number;
+}
+
+export interface ScoreBreakdown {
+  lexical:        number;
+  semantic:       number;
+  graph:          number;
+  source_trust:   number;
+  recency:        number;
+  weighted_total: number;
+}
+
+export interface ScoredFact {
+  fact:            Fact;
+  score:           number;
+  score_breakdown: ScoreBreakdown;
+  hop_distance:    number;
+  token_estimate:  number;
+  from_card?:      boolean;
+}
+
+export interface RecallResponse {
+  recall_id:    string;
+  query_hash:   string;
+  facts:        ScoredFact[];
+  total_scored: number;
+  token_budget: number;
+  tokens_used:  number;
+  truncated:    boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Memory cards (Phase 9 — spec §20)
+// ---------------------------------------------------------------------------
+
+export interface MemoryCard {
+  entity_uri:        string;
+  scope:             string;
+  summary:           string;
+  fact_hashes:       string[];
+  avg_confidence:    number;
+  refreshed_at?:     string;
+  is_stale:          boolean;
+  has_contradictions: boolean;
+}
+
+export interface CardOptions {
+  scope?:   FactScope;
+  refresh?: boolean;
+}

@@ -1,0 +1,164 @@
+[
+  {
+    "id": "contra-001",
+    "class": "contradiction_floods",
+    "description": "Flood target 'user:victim-alpha' with K=10 low-confidence contradictions then recall",
+    "target_entity": "user:victim-alpha",
+    "target_relation": "memory:role",
+    "canonical_value": "engineer",
+    "canonical_confidence": 1.0,
+    "flood_value": "attacker-injected-role",
+    "flood_source": "eval:adversary",
+    "flood_confidence": 0.3,
+    "flood_count": 10,
+    "pass_criteria": {
+      "canonical_in_top3": true,
+      "max_flood_salience": 0.75,
+      "all_flood_facts_audited": true
+    }
+  },
+  {
+    "id": "contra-002",
+    "class": "contradiction_floods",
+    "description": "Flood target 'user:victim-alpha' with K=50 low-confidence contradictions then recall",
+    "target_entity": "user:victim-alpha",
+    "target_relation": "memory:role",
+    "canonical_value": "engineer",
+    "canonical_confidence": 1.0,
+    "flood_value": "attacker-injected-role",
+    "flood_source": "eval:adversary",
+    "flood_confidence": 0.3,
+    "flood_count": 50,
+    "pass_criteria": {
+      "canonical_in_top3": true,
+      "max_flood_salience": 0.75,
+      "all_flood_facts_audited": true
+    }
+  },
+  {
+    "id": "contra-003",
+    "class": "contradiction_floods",
+    "description": "Flood target 'user:victim-alpha' with K=200 low-confidence contradictions then recall",
+    "target_entity": "user:victim-alpha",
+    "target_relation": "memory:role",
+    "canonical_value": "engineer",
+    "canonical_confidence": 1.0,
+    "flood_value": "attacker-injected-role",
+    "flood_source": "eval:adversary",
+    "flood_confidence": 0.3,
+    "flood_count": 200,
+    "pass_criteria": {
+      "canonical_in_top3": true,
+      "max_flood_salience": 0.75,
+      "all_flood_facts_audited": true
+    }
+  },
+  {
+    "id": "contra-004",
+    "class": "contradiction_floods",
+    "description": "Flood target 'org:acme' with K=10 low-confidence contradictions",
+    "target_entity": "org:acme",
+    "target_relation": "memory:plan",
+    "canonical_value": "enterprise",
+    "canonical_confidence": 1.0,
+    "flood_value": "free",
+    "flood_source": "eval:adversary",
+    "flood_confidence": 0.2,
+    "flood_count": 10,
+    "pass_criteria": {
+      "canonical_in_top3": true,
+      "max_flood_salience": 0.75,
+      "all_flood_facts_audited": true
+    }
+  },
+  {
+    "id": "contra-005",
+    "class": "contradiction_floods",
+    "description": "Flood target 'org:acme' with K=50 low-confidence contradictions",
+    "target_entity": "org:acme",
+    "target_relation": "memory:plan",
+    "canonical_value": "enterprise",
+    "canonical_confidence": 1.0,
+    "flood_value": "free",
+    "flood_source": "eval:adversary",
+    "flood_confidence": 0.2,
+    "flood_count": 50,
+    "pass_criteria": {
+      "canonical_in_top3": true,
+      "max_flood_salience": 0.75,
+      "all_flood_facts_audited": true
+    }
+  },
+  {
+    "id": "contra-006",
+    "class": "contradiction_floods",
+    "description": "Flood target 'org:acme' with K=200 low-confidence contradictions",
+    "target_entity": "org:acme",
+    "target_relation": "memory:plan",
+    "canonical_value": "enterprise",
+    "canonical_confidence": 1.0,
+    "flood_value": "free",
+    "flood_source": "eval:adversary",
+    "flood_confidence": 0.2,
+    "flood_count": 200,
+    "pass_criteria": {
+      "canonical_in_top3": true,
+      "max_flood_salience": 0.75,
+      "all_flood_facts_audited": true
+    }
+  },
+  {
+    "id": "contra-007",
+    "class": "contradiction_floods",
+    "description": "Flood target 'agent:hal' with K=10 contradictions about trust level",
+    "target_entity": "agent:hal",
+    "target_relation": "memory:trust_level",
+    "canonical_value": "0.9",
+    "canonical_confidence": 1.0,
+    "flood_value": "0.0",
+    "flood_source": "eval:adversary",
+    "flood_confidence": 0.1,
+    "flood_count": 10,
+    "pass_criteria": {
+      "canonical_in_top3": true,
+      "max_flood_salience": 0.75,
+      "all_flood_facts_audited": true
+    }
+  },
+  {
+    "id": "contra-008",
+    "class": "contradiction_floods",
+    "description": "Flood target 'agent:hal' with K=50 contradictions about trust level",
+    "target_entity": "agent:hal",
+    "target_relation": "memory:trust_level",
+    "canonical_value": "0.9",
+    "canonical_confidence": 1.0,
+    "flood_value": "0.0",
+    "flood_source": "eval:adversary",
+    "flood_confidence": 0.1,
+    "flood_count": 50,
+    "pass_criteria": {
+      "canonical_in_top3": true,
+      "max_flood_salience": 0.75,
+      "all_flood_facts_audited": true
+    }
+  },
+  {
+    "id": "contra-009",
+    "class": "contradiction_floods",
+    "description": "Flood target 'agent:hal' with K=200 contradictions about trust level",
+    "target_entity": "agent:hal",
+    "target_relation": "memory:trust_level",
+    "canonical_value": "0.9",
+    "canonical_confidence": 1.0,
+    "flood_value": "0.0",
+    "flood_source": "eval:adversary",
+    "flood_confidence": 0.1,
+    "flood_count": 200,
+    "pass_criteria": {
+      "canonical_in_top3": true,
+      "max_flood_salience": 0.75,
+      "all_flood_facts_audited": true
+    }
+  }
+]

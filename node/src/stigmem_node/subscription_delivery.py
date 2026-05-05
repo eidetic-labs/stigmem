@@ -30,6 +30,7 @@ from .auth import Identity
 from .db import db
 from .garden_acl import get_member_role
 from .recall_pipeline import apply_recall_pipeline
+from .tombstone_cache import is_tombstoned as _is_tombstoned
 
 logger = logging.getLogger("stigmem.subscriptions")
 
@@ -65,17 +66,12 @@ def fan_out(
 
         for sub in list(scope_subs) + list(entity_subs):
             event_id = str(uuid.uuid4())
-            cur = conn.execute(
+            conn.execute(
                 """INSERT INTO subscription_events
                    (id, subscription_id, event_type, entity_uri, fact_id, payload, created_at, delivery_status)
                    VALUES (?,?,?,?,?,?,?,'pending')""",
                 (event_id, sub["id"], "fact_asserted", entity, fact_id, fact_payload_json, now),
             )
-            row_seq = getattr(cur, "lastrowid", None)
-            if row_seq is not None:
-                conn.execute(
-                    "UPDATE subscription_events SET seq=? WHERE id=?", (row_seq, event_id)
-                )
 
 
 # ---------------------------------------------------------------------------
@@ -170,6 +166,12 @@ def _sanitize_payload(event: Any, payload: dict) -> dict | None:
         role = get_member_role(garden_uuid, subscriber)
         if role is None:
             return None
+
+    # §23.3.3 r.2: drop event immediately when entity has an active tombstone.
+    # Uses the in-process cache (§23.3.3 r.4); 60-second leak window is acceptable.
+    entity_for_tombstone = payload.get("entity")
+    if entity_for_tombstone and _is_tombstoned(entity_for_tombstone, tenant_id):
+        return None
 
     try:
         record = FactRecord(

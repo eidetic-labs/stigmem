@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { StigmemClient, StigmemAuthError, StigmemNotFoundError, sv, tv, rv } from "../src/index.js";
 
 const BASE = "http://test-node";
@@ -187,6 +187,93 @@ describe("federationStatus", () => {
     const client = new StigmemClient({ url: BASE, apiKey: KEY, fetch: fetchMock as unknown as typeof fetch });
     const peers = await client.federationStatus();
     expect(peers).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// recall
+// ---------------------------------------------------------------------------
+
+describe("recall", () => {
+  const SAMPLE_SCORED_FACT = {
+    fact: SAMPLE_FACT,
+    score: 0.92,
+    score_breakdown: { lexical: 0.4, semantic: 0.3, graph: 0.1, source_trust: 0.1, recency: 0.02, weighted_total: 0.92 },
+    hop_distance: 0,
+    token_estimate: 42,
+    from_card: false,
+  };
+  const RECALL_RESPONSE = {
+    recall_id: "recall-001",
+    query_hash: "abc123",
+    facts: [SAMPLE_SCORED_FACT],
+    total_scored: 1,
+    token_budget: 1000,
+    tokens_used: 42,
+    truncated: false,
+  };
+
+  it("returns RecallResponse with scored facts", async () => {
+    const fetchMock = mockFetch(new Map([
+      ["/v1/recall", { status: 200, body: RECALL_RESPONSE }],
+    ]));
+    const client = new StigmemClient({ url: BASE, apiKey: KEY, fetch: fetchMock as unknown as typeof fetch });
+    const result = await client.recall("what is Alice's role?", { token_budget: 1000 });
+    expect(result.recall_id).toBe("recall-001");
+    expect(result.facts).toHaveLength(1);
+    expect(result.facts[0]?.score).toBe(0.92);
+    expect(result.truncated).toBe(false);
+  });
+
+  it("sends default options when none provided", async () => {
+    let capturedBody: unknown;
+    const fetchMock = vi.fn(async (_url: string, opts?: RequestInit) => {
+      capturedBody = opts?.body ? JSON.parse(opts.body as string) : null;
+      return { ok: true, status: 200, json: async () => RECALL_RESPONSE } as Response;
+    });
+    const client = new StigmemClient({ url: BASE, apiKey: KEY, fetch: fetchMock as unknown as typeof fetch });
+    await client.recall("test query");
+    const body = capturedBody as Record<string, unknown>;
+    expect(body["scope"]).toBe("local");
+    expect(body["token_budget"]).toBe(4000);
+    expect(body["depth"]).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getCard
+// ---------------------------------------------------------------------------
+
+describe("getCard", () => {
+  const SAMPLE_CARD = {
+    entity_uri: "user:alice",
+    scope: "local",
+    summary: "Alice is a CEO at Acme with interests in memory systems.",
+    fact_hashes: ["abc123", "def456"],
+    avg_confidence: 0.95,
+    refreshed_at: "2026-05-04T00:00:00Z",
+    is_stale: false,
+    has_contradictions: false,
+  };
+
+  it("returns MemoryCard for entity", async () => {
+    const fetchMock = mockFetch(new Map([
+      ["/v1/cards/user:alice", { status: 200, body: SAMPLE_CARD }],
+    ]));
+    const client = new StigmemClient({ url: BASE, apiKey: KEY, fetch: fetchMock as unknown as typeof fetch });
+    const card = await client.getCard("user:alice");
+    expect(card.entity_uri).toBe("user:alice");
+    expect(card.summary).toContain("CEO");
+    expect(card.avg_confidence).toBe(0.95);
+    expect(card.is_stale).toBe(false);
+  });
+
+  it("throws StigmemNotFoundError when entity has no facts", async () => {
+    const fetchMock = mockFetch(new Map([
+      ["/v1/cards/user:unknown", { status: 404, body: { detail: "no facts for entity" } }],
+    ]));
+    const client = new StigmemClient({ url: BASE, apiKey: KEY, fetch: fetchMock as unknown as typeof fetch });
+    await expect(client.getCard("user:unknown")).rejects.toThrow(StigmemNotFoundError);
   });
 });
 

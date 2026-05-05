@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -88,6 +89,12 @@ def run_decay_sweep(
                 f"UPDATE facts SET valid_until = ? WHERE id IN ({placeholders})",  # nosec B608 — placeholders is "?,?,?" sequence, not user input
                 [now, *candidates],
             )
+            # Append-only retraction log for confidence-floor drops (§24.2.1 c.3)
+            if conf_ids:
+                conn.executemany(
+                    "INSERT INTO fact_retractions (id, fact_id, retracted_at, retracted_by) VALUES (?,?,?,?)",
+                    [(str(uuid.uuid4()), fid, now, "stigmem:system:decay") for fid in conf_ids],
+                )
             # Graph adjacency index (§20.1.2): propagate expiry to entity_edges
             from .graph_index import sync_edge_expiry
             sync_edge_expiry(conn, candidates, now)

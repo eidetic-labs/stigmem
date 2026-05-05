@@ -16,18 +16,21 @@ import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field
 
 from ..auth import Identity, resolve_identity
 from ..card_materializer import CARD_MIN_CONFIDENCE, get_fresh_card
 from ..db import db
+from ..metrics import FACT_READ, RECALL_RANKER_DURATION, observe_duration
 from ..garden_acl import caller_can_see_garden
 from ..graph import MAX_DEPTH, bfs_neighbors
-from ..models import FactRecord, FactValue, VALID_SCOPES, row_to_record
+from ..models import FactRecord, FactValue, VALID_SCOPES, TombstoneNotice, row_to_record
 from ..recall_pipeline import apply_recall_pipeline
 from ..settings import settings
 from ..source_trust import compute_source_trust
+from ..tombstone_cache import is_tombstoned as _is_tombstoned
+from ..tracing import start_span
 
 logger = logging.getLogger("stigmem.recall")
 
@@ -67,6 +70,7 @@ class RecallRequest(BaseModel):
     min_confidence: float = Field(0.1, ge=0.0, le=1.0)
     include_neighbors: bool = Field(True)
     limit: int = Field(100, ge=1, le=500, description="Max candidates before token-budget packing")
+    as_of: str | None = Field(None, description="§24: time-travel — return facts visible at this ISO 8601 timestamp")
 
 
 class ScoreBreakdown(BaseModel):
@@ -91,10 +95,11 @@ class RecallResponse(BaseModel):
     recall_id: str
     query_hash: str
     facts: list[ScoredFact]
-    total_scored: int
+    total_scored: int | None = None
     token_budget: int
     tokens_used: int
     truncated: bool
+    tombstone_notices: list[TombstoneNotice] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -512,6 +517,118 @@ def _write_recall_audit(
 
 
 # ---------------------------------------------------------------------------
+# §24 Time-travel recall implementation
+# ---------------------------------------------------------------------------
+
+def _recall_as_of_impl(
+    conn: Any,
+    *,
+    query: str,
+    scope: str,
+    as_of: str,
+    is_admin_caller: bool,
+    tenant_id: str,
+    max_chunks: int,
+    include_graph: bool,
+    identity: Identity,
+    weights: RecallWeights,
+    depth: int,
+) -> tuple[list[ScoredFact], list[TombstoneNotice], bool]:
+    """Return (scored_facts, tombstone_notices, tombstone_filtered) for a time-travel recall at as_of (§24.4).
+
+    Fetches facts visible at as_of (existing, not expired, not retracted at T),
+    scores them, applies tombstone filter, and returns packed chunks.
+    """
+    from .facts import _get_tombstone_filter
+
+    # Candidate fetch: facts visible at as_of
+    rows = conn.execute(
+        """
+        SELECT f.*
+        FROM facts f
+        WHERE f.scope = ?
+          AND f.tenant_id = ?
+          AND f.timestamp <= ?
+          AND (f.valid_until IS NULL OR f.valid_until > ?)
+          AND NOT EXISTS (
+            SELECT 1 FROM fact_retractions fr
+            WHERE fr.fact_id = f.id AND fr.retracted_at <= ?
+          )
+        ORDER BY f.timestamp DESC
+        LIMIT ?
+        """,
+        (scope, tenant_id, as_of, as_of, as_of, max_chunks * 5),
+    ).fetchall()
+
+    if not rows:
+        return [], [], False
+
+    all_facts_raw = {row["id"]: row_to_record(row) for row in rows}
+
+    # Apply recall pipeline (trust, sanitizer)
+    pipeline_out = apply_recall_pipeline(list(all_facts_raw.values()), identity)
+    all_facts = {r.id: r for r in pipeline_out}
+
+    # Score using lexical signal against query (recency computed relative to as_of)
+    def _recency_as_of(ts_str: str, as_of_ts: str) -> float:
+        try:
+            from datetime import UTC, datetime
+            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            aof = datetime.fromisoformat(as_of_ts.replace("Z", "+00:00"))
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=UTC)
+            if aof.tzinfo is None:
+                aof = aof.replace(tzinfo=UTC)
+            days_old = (aof - ts).days
+            return max(0.0, 1.0 - days_old / 365.0)
+        except Exception:
+            return 0.5
+
+    scored: list[ScoredFact] = []
+    q_lower = query.lower()
+    total_weight = weights.lexical + weights.recency + weights.source_trust
+    if total_weight <= 0:
+        total_weight = 1.0
+
+    for fact_id, record in all_facts.items():
+        if record.quarantine_status == "pending":
+            continue
+        text = f"{record.entity} {record.relation} {record.value.v or ''}".lower()
+        lex = sum(1.0 for w in q_lower.split() if w and w in text) / max(1, len(q_lower.split()))
+        rec_s = _recency_as_of(record.timestamp, as_of)
+        trust_s = 0.5
+        if settings.trust_mode != "off":
+            trust_s = compute_source_trust(record.source, record.scope, identity)
+        raw = (weights.lexical * lex + weights.recency * rec_s + weights.source_trust * trust_s) / total_weight
+        final_score = raw * max(0.0, record.confidence)
+        scored.append(ScoredFact(
+            fact=record,
+            score=round(final_score, 6),
+            score_breakdown=ScoreBreakdown(
+                lexical=round(lex, 4),
+                recency=round(rec_s, 4),
+                source_trust=round(trust_s, 4),
+                weighted_total=round(final_score, 6),
+            ),
+            hop_distance=0,
+            token_estimate=_estimate_tokens(record),
+        ))
+
+    scored.sort(key=lambda c: c.score, reverse=True)
+
+    # Tombstone filter (§24.3)
+    entity_uris = list({sf.fact.entity for sf in scored})
+    excluded, notices = _get_tombstone_filter(conn, entity_uris, scope, is_admin_caller)
+    tombstone_filtered = False
+    if excluded:
+        scored = [sf for sf in scored if sf.fact.entity not in excluded]
+        tombstone_filtered = True
+
+    packed, _, _ = _greedy_pack(scored[:max_chunks], max_chunks * 20)
+    return packed[:max_chunks], notices, tombstone_filtered
+
+
+# ---------------------------------------------------------------------------
 # Route
 # ---------------------------------------------------------------------------
 
@@ -519,14 +636,36 @@ def _write_recall_audit(
 def recall(
     req: RecallRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
+    response: Response,
 ) -> RecallResponse:
     """Hybrid recall — return the most salient facts for a query, within budget.
 
     Combines lexical (FTS5/BM25), dense-vector, and graph-traversal signals.
     Honors §17 garden ACL and §19 source-trust at every step.
     """
+    with start_span(
+        "stigmem.recall",
+        **{
+            "stigmem.tenant": identity.tenant_id,
+            "stigmem.principal": identity.entity_uri,
+            "stigmem.scope": req.scope,
+        },
+    ) as _span:
+        result = _recall_impl(req, identity, _span)
+    if result.total_scored is not None:
+        response.headers["X-Total-Count"] = str(result.total_scored)
+    return result
+
+
+def _recall_impl(
+    req: RecallRequest,
+    identity: Identity,
+    _span: object,
+) -> RecallResponse:
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+
+    FACT_READ.labels(principal=identity.entity_uri, tenant=identity.tenant_id).inc()
 
     if req.scope not in VALID_SCOPES:
         raise HTTPException(
@@ -538,6 +677,40 @@ def recall(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"code": "graph_depth_exceeded", "message": f"depth must be ≤ {MAX_DEPTH}"},
+        )
+
+    # §24 time-travel path
+    if req.as_of is not None:
+        from .facts import _validate_as_of
+        _validate_as_of(req.as_of)
+        is_admin = identity.is_admin()
+        recall_id = str(uuid.uuid4())
+        query_hash = hashlib.sha256(req.query.encode()).hexdigest()
+        with db() as conn:
+            packed, notices, tombstone_filtered = _recall_as_of_impl(
+                conn,
+                query=req.query,
+                scope=req.scope,
+                as_of=req.as_of,
+                is_admin_caller=is_admin,
+                tenant_id=identity.tenant_id,
+                max_chunks=req.limit,
+                include_graph=req.include_neighbors,
+                identity=identity,
+                weights=req.weights,
+                depth=req.depth,
+            )
+        tokens_used = sum(sf.token_estimate for sf in packed)
+        # §23.3.3 r.3: suppress total_scored when tombstone filtering was applied
+        return RecallResponse(
+            recall_id=recall_id,
+            query_hash=query_hash,
+            facts=packed,
+            total_scored=None if tombstone_filtered else len(packed),
+            token_budget=req.token_budget,
+            tokens_used=tokens_used,
+            truncated=False,
+            tombstone_notices=notices,
         )
 
     recall_id = str(uuid.uuid4())
@@ -591,6 +764,15 @@ def recall(
         all_candidate_ids = list(direct_ids | set(graph_hops.keys()))[:_MAX_CANDIDATES]
         all_facts_raw = _fetch_facts_by_ids(conn, all_candidate_ids)
 
+        # §23.3.2 r.3: exclude facts whose entity has an active tombstone (about_entity).
+        # Uses in-process cache (§23.3.3 r.4) — no per-fact DB read required.
+        pre_tombstone_count = len(all_facts_raw)
+        all_facts_raw = {
+            k: v for k, v in all_facts_raw.items()
+            if not _is_tombstoned(v.entity, identity.tenant_id)
+        }
+        tombstone_filtered = len(all_facts_raw) < pre_tombstone_count
+
         # --- Card fast-path (§20): for each candidate entity, check for a fresh card ---
         # Entities with a fresh, high-confidence, contradiction-free card skip raw-fact
         # re-ranking; their card becomes a single synthetic ScoredFact in the output.
@@ -602,6 +784,9 @@ def recall(
                 candidate_entities.setdefault(record.entity, []).append(fid)
 
             for entity_uri, entity_fact_ids in candidate_entities.items():
+                # §23.3.2 r.3: cards whose about_entity is tombstoned are fully excluded.
+                if _is_tombstoned(entity_uri, identity.tenant_id):
+                    continue
                 card = get_fresh_card(entity_uri, req.scope, identity.tenant_id, conn)
                 if (
                     card is not None
@@ -648,11 +833,12 @@ def recall(
         pipeline_out = apply_recall_pipeline(list(all_facts_raw.values()), identity)
         all_facts = {r.id: r for r in pipeline_out}
 
-        # --- Score ---
-        candidates = _score_candidates(
-            all_facts, lex_scores, sem_scores, graph_hops,
-            req.weights, identity, req.depth,
-        )
+        # --- Score (timed for ranker histogram) ---
+        with observe_duration(RECALL_RANKER_DURATION, {"tenant": identity.tenant_id}):
+            candidates = _score_candidates(
+                all_facts, lex_scores, sem_scores, graph_hops,
+                req.weights, identity, req.depth,
+            )
 
         # Merge card-derived facts with raw-fact candidates
         candidates.extend(card_facts)
@@ -673,11 +859,20 @@ def recall(
         recall_id, total_scored, len(packed), tokens_used, truncated,
     )
 
+    try:
+        _span.set_attribute("stigmem.recall_id", recall_id)  # type: ignore[attr-defined]
+        _span.set_attribute("stigmem.total_scored", total_scored)  # type: ignore[attr-defined]
+        _span.set_attribute("stigmem.tokens_used", tokens_used)  # type: ignore[attr-defined]
+        _span.set_attribute("stigmem.truncated", truncated)  # type: ignore[attr-defined]
+    except Exception:  # noqa: BLE001  # nosec B110
+        pass
+
+    # §23.3.3 r.3: suppress total_scored when tombstone filtering was applied
     return RecallResponse(
         recall_id=recall_id,
         query_hash=query_hash,
         facts=packed,
-        total_scored=total_scored,
+        total_scored=None if tombstone_filtered else total_scored,
         token_budget=req.token_budget,
         tokens_used=tokens_used,
         truncated=truncated,

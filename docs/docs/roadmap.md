@@ -15,7 +15,7 @@ Phases 0–7 are complete. The full history — what shipped, key architectural 
 
 The v2 build plan runs seven phases (8–14), roughly 22 weeks, with meaningful parallelism between phases once the early trust and storage foundations are stable. Target timelines are given in calendar quarters; exact dates depend on community feedback and how earlier phases land.
 
-**Current status:** Phases 8–12 are complete. The [Operator's Handbook](/docs/operating), deploy recipes (Fly.io, Compose, Helm, systemd, PaaS), Obsidian plugin, and Obsidian CLI adapter are all live. Phase 12 shipped the full security hardening layer (mTLS, key rotation, audit log, per-principal quotas, container hardening) and a new [Security section](/docs/security) with the [Tutorial: Harden a Stigmem Deployment](/docs/tutorials/hardening-a-stigmem-deployment). **Phase 13 (SDKs, Eval & Observability) is next.** All subsequent phases are sequenced but their scope can shift as earlier phases land.
+**Current status:** Phases 8–13 are complete. Phase 13 shipped TypeScript and Go SDKs, the eval harness (79 adversarial scenarios + 400 recall probes), full observability (Prometheus + OpenTelemetry + Grafana), RTBF tombstones (§23), time-travel queries (§24), and content-addressed fact IDs (§25). The [SDK Quickstart tutorial](/docs/tutorials/sdk-quickstart) covers all three language ecosystems. **Phase 14 (Spec v2.0) is next.** All subsequent phases are sequenced but their scope can shift as earlier phases land.
 
 ---
 
@@ -163,21 +163,31 @@ Phase 12 closes the concrete security gaps in the current threat model and ships
 
 ---
 
-## Phase 13 — SDKs, Eval & Observability
+## Phase 13 — SDKs, Eval & Observability ✓ Done
 
-**Target: Q4 2026**
+**Shipped: Q4 2026**
 
-Phase 13 fills the tooling gaps that block adoption at scale.
+Phase 13 fills the tooling gaps that block adoption at scale. The normative spec for this phase is §23 (RTBF Tombstones), §24 (Time-Travel / As-Of Queries), and §25 (Content-Addressed Fact IDs) in v1.1-draft.
 
-- **TypeScript SDK** for browser/Node agents; **Go SDK** for hosted-infra integrators.
-- **Eval harness** — adversarial fact injection, recall accuracy benchmarks, federation soak under load. Runs in CI against all backends; independent implementations can run it against their own nodes.
-- **OpenTelemetry traces** and **Prometheus metrics** with a reference Grafana dashboard. Plug into existing observability stacks without custom instrumentation.
-- **Right-to-be-forgotten** — tombstone facts with cryptographic proof, propagated across federation.
-- **Fact versioning / time-travel API** — `recall(query, as_of=<timestamp>)` for temporal queries.
-- **Content addressing** — facts addressable by content hash for dedup, integrity, and external citation.
+- **TypeScript SDK** (`stigmem-ts`) for browser/Node agents; **Go SDK** (`stigmem-go`) for hosted-infra integrators. Both cover facts, conflicts, recall, memory cards, subscriptions, and federation.
+- **Eval harness** — 79 adversarial scenarios (typo-squatting, contradiction floods, tombstone bypass, capability-token forgery, sanitizer bypass) and 400 recall probes (nDCG@10 + Recall@5). Runs in CI against all backends; independent implementations can run it against their own nodes.
+- **OpenTelemetry traces** and **Prometheus metrics** (8 counters, 3 histograms, 2 gauges) with reference Grafana dashboards and Prometheus alerting rules. Plug into existing observability stacks without custom instrumentation.
+- **Right-to-be-forgotten** (§23) — tombstone facts with Ed25519 cryptographic signatures, propagated across federation. Legal-hold mode preserves admin access for litigation.
+- **Time-travel API** (§24) — `as_of` parameter on fact query and recall endpoints for point-in-time queries. Append-only retraction log for temporal correctness.
+- **Content addressing** (§25) — facts addressable by SHA-256 content hash (CID) for deduplication, integrity verification, and external citation. Dual addressing (UUID + CID) with 12-month backfill window.
 - **Quota & isolation per garden / per principal.**
 
-**What this means for operators:** every major language ecosystem has a first-class SDK. Compliance teams get tombstone proofs and temporal queries. Observability stacks get native signals without custom adapters.
+**Phase 13 docs delta:**
+- [TypeScript SDK Reference](/docs/sdks/typescript-sdk) — `StigmemClient` API, value constructors, error classes, bundler compatibility.
+- [Go SDK Reference](/docs/sdks/go) — idiomatic Go client, functional options, mTLS support, channel-based subscriptions.
+- [Tutorial: SDK Quickstart](/docs/tutorials/sdk-quickstart) — choose-your-stack walkthrough (Python / TypeScript / Go) covering assert, recall, and subscribe.
+- [Observability](/docs/operators/observability) — Prometheus metrics reference, OpenTelemetry tracing setup, Grafana dashboards, alerting rules, docker-compose overlay.
+- [Eval Harness](/docs/operators/eval-harness) — adversarial corpus (79 scenarios), recall benchmark (400 probes), CI integration, running against independent implementations.
+- [RTBF Tombstones](/docs/guides/rtbf) — CLI and API usage, legal-hold semantics, federation propagation, signing details, operations checklist.
+- [Time-Travel Queries](/docs/guides/time-travel) — `as_of` parameter, retraction data model, legal-hold admin access, retention floor configuration.
+- [Content Addressing](/docs/guides/content-addressing) — CID format and computation, dual addressing, write-path deduplication, federation tamper detection, backfill monitoring.
+
+**What this means for operators:** every major language ecosystem has a first-class SDK. Compliance teams get tombstone proofs and temporal queries. Observability stacks get native signals without custom adapters. The eval harness gives independent implementers a security and quality baseline to test against.
 
 ---
 
@@ -208,4 +218,4 @@ Phase 14 closes the open spec drafts and tags the stable v2.0 release.
 
 ---
 
-*This page is updated at every phase boundary. Last updated: Q3–Q4 2026 — Phase 12 complete (mTLS, key rotation, audit log, per-principal quotas, container hardening, replay fuzz tests, constant-time crypto audit, threat model, community pen-test handbook; Security section and Harden a Deployment tutorial live). Phase 13 next.*
+*This page is updated at every phase boundary. Last updated: Q4 2026 — Phase 13 complete (TypeScript SDK, Go SDK, eval harness, observability, RTBF tombstones, time-travel queries, content addressing; SDK Quickstart tutorial, 8 new/updated doc pages live). Phase 14 next.*

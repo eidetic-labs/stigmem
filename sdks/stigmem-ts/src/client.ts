@@ -4,6 +4,7 @@
 
 import type {
   AssertOptions,
+  CardOptions,
   Conflict,
   ConflictListOptions,
   ConflictPage,
@@ -14,9 +15,12 @@ import type {
   FactValue,
   LintOptions,
   LintResult,
+  MemoryCard,
   NodeInfo,
   Peer,
   QueryOptions,
+  RecallOptions,
+  RecallResponse,
   ResolveOptions,
   SubscribeOptions,
 } from "./types.js";
@@ -251,6 +255,35 @@ export class StigmemClient {
   async federationStatus(): Promise<Peer[]> {
     const page = await this.req<{ peers: Peer[] }>("GET", "/v1/federation/peers");
     return page.peers;
+  }
+
+  // ------------------------------------------------------------------
+  // Recall (Phase 9 — spec §20)
+  // ------------------------------------------------------------------
+
+  async recall(query: string, opts: RecallOptions = {}): Promise<RecallResponse> {
+    const body: Record<string, unknown> = {
+      query,
+      scope:             opts.scope             ?? "local",
+      token_budget:      opts.token_budget      ?? 4000,
+      depth:             opts.depth             ?? 2,
+      min_confidence:    opts.min_confidence    ?? 0.1,
+      include_neighbors: opts.include_neighbors ?? true,
+      limit:             opts.limit             ?? 100,
+    };
+    if (opts.weights) body["weights"] = opts.weights;
+    return this.req<RecallResponse>("POST", "/v1/recall", body);
+  }
+
+  // ------------------------------------------------------------------
+  // Memory cards (Phase 9 — spec §20)
+  // ------------------------------------------------------------------
+
+  async getCard(entityUri: string, opts: CardOptions = {}): Promise<MemoryCard> {
+    return this.req<MemoryCard>("GET", `/v1/cards/${entityUri}`, undefined, {
+      scope:   opts.scope   ?? "local",
+      refresh: opts.refresh ? true : undefined,
+    });
   }
 
   // ------------------------------------------------------------------

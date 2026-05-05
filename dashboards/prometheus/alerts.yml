@@ -1,0 +1,76 @@
+groups:
+  - name: stigmem.node
+    interval: 1m
+    rules:
+
+      # -----------------------------------------------------------------------
+      # Contradiction rate — high contradiction rate signals a data-quality
+      # or client-bug problem; facts that contradict frequently degrade recall.
+      # -----------------------------------------------------------------------
+      - alert: StigmemHighContradictionRate
+        expr: |
+          sum(rate(stigmem_contradiction_total[5m])) by (tenant) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High contradiction rate on tenant {{ $labels.tenant }}"
+          description: >
+            More than 0.1 contradiction events/s over the last 5 minutes
+            for tenant {{ $labels.tenant }}.  Investigate write patterns
+            or relation-namespace collisions.
+
+      # -----------------------------------------------------------------------
+      # Replication lag SLO — more than 5 minutes behind a peer suggests
+      # the pull loop is stalled (network partition, peer down, or backpressure).
+      # -----------------------------------------------------------------------
+      - alert: StigmemReplicationLagHigh
+        expr: |
+          stigmem_replication_lag_seconds > 300
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Replication lag > 5 min to peer {{ $labels.peer_id }}"
+          description: >
+            Replication lag to {{ $labels.peer_id }} is {{ $value | humanizeDuration }}.
+            Check peer connectivity, mTLS certificates, and the pull-loop logs.
+
+      # -----------------------------------------------------------------------
+      # Audit write failures — audit_event_total uses the AUDIT_EVENT counter
+      # which is incremented only on successful writes.  A sudden drop in audit
+      # events while fact_write_total continues rising indicates audit-log failures.
+      # -----------------------------------------------------------------------
+      - alert: StigmemAuditEventsMissing
+        expr: |
+          (
+            rate(stigmem_fact_write_total[5m]) > 0
+          ) and (
+            rate(stigmem_audit_event_total{event_type="fact_write"}[5m]) == 0
+          )
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Audit writes absent despite active fact writes"
+          description: >
+            Facts are being written but no fact_write audit events are being
+            recorded.  This may indicate a database failure on the audit log
+            table.  Investigate immediately.
+
+      # -----------------------------------------------------------------------
+      # Quota breaches — sustained quota breaches may indicate a misbehaving
+      # client or a rate-limit misconfiguration.
+      # -----------------------------------------------------------------------
+      - alert: StigmemQuotaBreachSustained
+        expr: |
+          sum(rate(stigmem_quota_breach_total[5m])) by (tenant) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sustained quota breaches for tenant {{ $labels.tenant }}"
+          description: >
+            More than 0.05 quota-breach events/s over 10 minutes for tenant
+            {{ $labels.tenant }}.  Check rate-limit configuration or investigate
+            client traffic patterns.

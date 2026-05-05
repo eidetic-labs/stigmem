@@ -1,5 +1,5 @@
 /**
- * stigmem-ts — TypeScript client SDK for Stigmem (spec v0.4/v0.5).
+ * stigmem-ts — TypeScript client SDK for Stigmem (spec v0.7).
  *
  * @example
  * ```ts
@@ -7,7 +7,8 @@
  *
  * const client = new StigmemClient({ url: "http://localhost:8765", apiKey: "sk-..." });
  * const fact = await client.assertFact("user:alice", "memory:role", sv("CEO"), "agent:cto");
- * const page = await client.query({ entity: "user:alice" });
+ * const result = await client.recall("Alice's current role", { token_budget: 500 });
+ * const card  = await client.getCard("user:alice");
  * ```
  */
 
@@ -23,6 +24,7 @@ export {
 export type {
   AssertOptions,
   BooleanValue,
+  CardOptions,
   Conflict,
   ConflictListOptions,
   ConflictPage,
@@ -34,6 +36,12 @@ export type {
   FactScope,
   FactValue,
   FederationEndpoints,
+  LintCheck,
+  LintFinding,
+  LintOptions,
+  LintResult,
+  LintSeverity,
+  MemoryCard,
   NodeInfo,
   NullValue,
   NumberValue,
@@ -41,8 +49,13 @@ export type {
   PeerPage,
   PeerStatus,
   QueryOptions,
+  RecallOptions,
+  RecallResponse,
+  RecallWeights,
   RefValue,
   ResolveOptions,
+  ScoreBreakdown,
+  ScoredFact,
   StringValue,
   SubscribeOptions,
   TextValue,

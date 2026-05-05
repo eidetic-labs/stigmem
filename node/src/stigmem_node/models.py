@@ -91,12 +91,15 @@ class FactRecord(BaseModel):
     effective_confidence: float | None = None
     sanitizer_warnings: list[str] = Field(default_factory=list)
     sanitizer_redacted: bool = False
+    # Phase 13: content-addressing (spec §25)
+    cid: str | None = None
 
 
 class QueryResponse(BaseModel):
     facts: list[FactRecord]
-    total: int
+    total: int | None = None
     cursor: str | None
+    tombstone_notices: list["TombstoneNotice"] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -303,6 +306,7 @@ def row_to_record(
         effective_confidence=effective_confidence,
         sanitizer_warnings=sanitizer_warnings or [],
         sanitizer_redacted=sanitizer_redacted,
+        cid=row["cid"] if "cid" in keys else None,
     )
 
 
@@ -562,3 +566,87 @@ class SubscriptionEventsResponse(BaseModel):
     events: list[SubscriptionEventRecord]
     total: int
     cursor: str | None
+
+
+class TombstoneNotice(BaseModel):
+    """Tombstone metadata surfaced to admin callers on time-travel queries (spec §24.3.2)."""
+
+    entity_uri: str
+    tombstone_id: str
+    legal_hold: bool
+    tombstone_created_at: str
+
+
+# ---------------------------------------------------------------------------
+# RTBF Tombstones (spec §23)
+# ---------------------------------------------------------------------------
+
+class TombstoneRecord(BaseModel):
+    """Durable record directing every node to suppress facts about entity_uri (§23.2)."""
+    id: str
+    entity_uri: str
+    scope: str
+    reason: str | None = None
+    signed_by: str
+    key_id: str = ""
+    signature: str
+    created_at: str
+    legal_hold: bool = False
+
+
+class TombstoneRevocationRecord(BaseModel):
+    """Record reinstating a tombstoned entity (§23.2.5)."""
+    id: str
+    tombstone_id: str
+    reason: str
+    signed_by: str
+    key_id: str = ""
+    signature: str
+    created_at: str
+
+
+class TombstoneCreateRequest(BaseModel):
+    entity_uri: str = Field(..., min_length=1)
+    scope: str = Field("*")
+    reason: str | None = None
+    legal_hold: bool = False
+
+
+class TombstoneRevokeRequest(BaseModel):
+    reason: str = Field(..., min_length=1)
+
+
+class TombstoneStatusResponse(BaseModel):
+    tombstoned: bool
+    tombstones: list["TombstoneRecord"]
+    revocations: list["TombstoneRevocationRecord"]
+
+
+class FederationTombstonesResponse(BaseModel):
+    tombstones: list["TombstoneRecord"]
+    revocations: list["TombstoneRevocationRecord"]
+    cursor: str | None
+
+
+# ---------------------------------------------------------------------------
+# Provenance walk models (spec §23.3.2 r.4, §20.6.2)
+# ---------------------------------------------------------------------------
+
+class ProvenanceEntry(BaseModel):
+    """One entry in a fact's derived_from chain.
+
+    exists=False means the referenced entity is tombstoned or the fact is otherwise
+    inaccessible (§23.3.2 r.4 + §20.6.2). Shape is identical in both cases so
+    callers cannot distinguish tombstone from unauthorized.
+    """
+    hash: str
+    fact_id: str | None = None
+    entity: str | None = None
+    exists: bool
+
+
+class ProvenanceResponse(BaseModel):
+    """Response for GET /v1/facts/:id/provenance."""
+    fact_id: str
+    cid: str | None = None
+    derived_from: list[ProvenanceEntry]

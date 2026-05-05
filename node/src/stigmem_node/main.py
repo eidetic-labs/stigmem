@@ -38,6 +38,8 @@ from .routes.subscriptions import router as subscriptions_router
 from .routes.instruction import router as instruction_router
 from .routes.synthesize import router as synthesize_router
 from .routes.admin_audit import router as admin_audit_router
+from .routes.cid_admin import router as cid_admin_router
+from .routes.tombstones import router as tombstones_router
 from .routes.wellknown import router as wellknown_router
 from .settings import settings
 
@@ -50,6 +52,18 @@ def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         apply_migrations()
+
+        if settings.trust_mode == "strict" and not settings.node_private_key:
+            raise RuntimeError(
+                "STIGMEM_NODE_PRIVATE_KEY must be set when trust_mode=strict"
+            )
+
+        if settings.otel_enabled:
+            from .tracing import init_tracing
+            init_tracing(
+                service_name=settings.otel_service_name,
+                otlp_endpoint=settings.otel_exporter_otlp_endpoint,
+            )
 
         pull_task: asyncio.Task[None] | None = None
         if settings.federation_enabled:
@@ -112,6 +126,7 @@ def create_app() -> FastAPI:
             return await call_next(request)
 
     app.include_router(admin_audit_router)
+    app.include_router(cid_admin_router)
     app.include_router(auth_router)
     app.include_router(agent_keys_router)
     app.include_router(audit_router)
@@ -130,6 +145,7 @@ def create_app() -> FastAPI:
     app.include_router(cards_router)
     app.include_router(recall_router)
     app.include_router(subscriptions_router)
+    app.include_router(tombstones_router)
     app.include_router(wellknown_router)
     app.include_router(instruction_router)
 

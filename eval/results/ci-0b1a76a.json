@@ -1,0 +1,4616 @@
+{
+  "type": "recall",
+  "nDCG@10": 0.0,
+  "Recall@5": 0.0,
+  "corpus_sha": "fbefb7931f0213f3",
+  "server_version": "unknown",
+  "probe_count": 400,
+  "elapsed_s": 0.279,
+  "regression": {
+    "triggered": false,
+    "delta_pct": 0.0,
+    "threshold_pct": 3.0
+  },
+  "probe_results": [
+    {
+      "probe_id": "entity-001",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "alice role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "e610f478-b90f-43e3-b293-04d175c5c7cc"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-002",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "bob department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-003",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "charlie capability",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "3ec5baf8-4b29-4f1a-a09e-1da0a81e3b69"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-004",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "diana clearance",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-005",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "eve status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-006",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "frank team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-007",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "grace manager",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "854aedec-3506-45bc-afdf-2cabcb50843d"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-008",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "hal trust level",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-009",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "ivan locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-010",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "julia project",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-011",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "acme plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-012",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "api service owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-013",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "kate role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "cd079ffe-eca7-4955-b367-aaeaa6798299"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-014",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "leo department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "59da08cd-2ecd-44ed-ac55-499d8721ae01"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-015",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "mia status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "1c234bd8-eb66-48bf-99a8-40d73a517a87"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-016",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "nova trust",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "120fe5a4-9899-4be4-953e-d2b628ed7311"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-017",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "oscar locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "ce8e9449-9ff8-47bc-979a-eb27da148682"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-018",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "petra team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "498d65de-35cf-4fa0-9ec8-b4e28bc9a6fa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-019",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "betacorp plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "93f3a5c1-ef01-4575-96e7-0063ac1389ac"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-020",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "db service owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a58d6658-474e-4a2b-962c-b09c1afc6b58"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-021",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is alice role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "e610f478-b90f-43e3-b293-04d175c5c7cc"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-022",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is bob department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-023",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is charlie capability",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "3ec5baf8-4b29-4f1a-a09e-1da0a81e3b69"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-024",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is diana clearance",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-025",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is eve status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-026",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is frank team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-027",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is grace manager",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "854aedec-3506-45bc-afdf-2cabcb50843d"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-028",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is hal trust level",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-029",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is ivan locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-030",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is julia project",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-031",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is acme plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-032",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is api service owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-033",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is kate role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "cd079ffe-eca7-4955-b367-aaeaa6798299"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-034",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is leo department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "59da08cd-2ecd-44ed-ac55-499d8721ae01"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-035",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is mia status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "1c234bd8-eb66-48bf-99a8-40d73a517a87"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-036",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is nova trust",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "120fe5a4-9899-4be4-953e-d2b628ed7311"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-037",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is oscar locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "ce8e9449-9ff8-47bc-979a-eb27da148682"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-038",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is petra team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "498d65de-35cf-4fa0-9ec8-b4e28bc9a6fa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-039",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is betacorp plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "93f3a5c1-ef01-4575-96e7-0063ac1389ac"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-040",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "what is db service owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a58d6658-474e-4a2b-962c-b09c1afc6b58"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-041",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find alice role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "e610f478-b90f-43e3-b293-04d175c5c7cc"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-042",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find bob department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-043",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find charlie capability",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "3ec5baf8-4b29-4f1a-a09e-1da0a81e3b69"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-044",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find diana clearance",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-045",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find eve status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-046",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find frank team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-047",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find grace manager",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "854aedec-3506-45bc-afdf-2cabcb50843d"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-048",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find hal trust level",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-049",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find ivan locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-050",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find julia project",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-051",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find acme plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-052",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find api service owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-053",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find kate role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "cd079ffe-eca7-4955-b367-aaeaa6798299"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-054",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find leo department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "59da08cd-2ecd-44ed-ac55-499d8721ae01"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-055",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find mia status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "1c234bd8-eb66-48bf-99a8-40d73a517a87"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-056",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find nova trust",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "120fe5a4-9899-4be4-953e-d2b628ed7311"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-057",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find oscar locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "ce8e9449-9ff8-47bc-979a-eb27da148682"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-058",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find petra team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "498d65de-35cf-4fa0-9ec8-b4e28bc9a6fa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-059",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find betacorp plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "93f3a5c1-ef01-4575-96e7-0063ac1389ac"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-060",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "find db service owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a58d6658-474e-4a2b-962c-b09c1afc6b58"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-061",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup alice role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "e610f478-b90f-43e3-b293-04d175c5c7cc"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-062",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup bob department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-063",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup charlie capability",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "3ec5baf8-4b29-4f1a-a09e-1da0a81e3b69"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-064",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup diana clearance",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-065",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup eve status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-066",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup frank team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-067",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup grace manager",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "854aedec-3506-45bc-afdf-2cabcb50843d"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-068",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup hal trust level",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-069",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup ivan locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-070",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup julia project",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-071",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup acme plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-072",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup api service owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-073",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup kate role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "cd079ffe-eca7-4955-b367-aaeaa6798299"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-074",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup leo department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "59da08cd-2ecd-44ed-ac55-499d8721ae01"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-075",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup mia status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "1c234bd8-eb66-48bf-99a8-40d73a517a87"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-076",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup nova trust",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "120fe5a4-9899-4be4-953e-d2b628ed7311"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-077",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup oscar locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "ce8e9449-9ff8-47bc-979a-eb27da148682"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-078",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup petra team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "498d65de-35cf-4fa0-9ec8-b4e28bc9a6fa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-079",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup betacorp plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "93f3a5c1-ef01-4575-96e7-0063ac1389ac"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-080",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "lookup db service owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a58d6658-474e-4a2b-962c-b09c1afc6b58"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-081",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve alice role information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "e610f478-b90f-43e3-b293-04d175c5c7cc"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-082",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve bob department information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-083",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve charlie capability information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "3ec5baf8-4b29-4f1a-a09e-1da0a81e3b69"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-084",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve diana clearance information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-085",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve eve status information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-086",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve frank team information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-087",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve grace manager information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "854aedec-3506-45bc-afdf-2cabcb50843d"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-088",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve hal trust level information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-089",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve ivan locale information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-090",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve julia project information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-091",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve acme plan information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-092",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve api service owner information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-093",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve kate role information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "cd079ffe-eca7-4955-b367-aaeaa6798299"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-094",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve leo department information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "59da08cd-2ecd-44ed-ac55-499d8721ae01"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-095",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve mia status information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "1c234bd8-eb66-48bf-99a8-40d73a517a87"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-096",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve nova trust information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "120fe5a4-9899-4be4-953e-d2b628ed7311"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-097",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve oscar locale information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "ce8e9449-9ff8-47bc-979a-eb27da148682"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-098",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve petra team information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "498d65de-35cf-4fa0-9ec8-b4e28bc9a6fa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-099",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve betacorp plan information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "93f3a5c1-ef01-4575-96e7-0063ac1389ac"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "entity-100",
+      "class": "entity_lookup",
+      "subclass": "",
+      "query": "retrieve db service owner information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a58d6658-474e-4a2b-962c-b09c1afc6b58"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-001",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "list all manager values",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-002",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "list all department values",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-003",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "list all trust_level values",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-004",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "list all clearance values",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-005",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "list all locale values",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-006",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "list all owner values",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-007",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "list all plan values",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-008",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "list all status values",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-009",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "list all team values",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-010",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "list all project values",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-011",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "find manager facts",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-012",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "find department facts",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-013",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "find trust_level facts",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-014",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "find clearance facts",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-015",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "find locale facts",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-016",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "find owner facts",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-017",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "find plan facts",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-018",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "find status facts",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-019",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "find team facts",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-020",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "find project facts",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-021",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what are the manager assignments",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-022",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what are the department assignments",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-023",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what are the trust_level assignments",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-024",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what are the clearance assignments",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-025",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what are the locale assignments",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-026",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what are the owner assignments",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-027",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what are the plan assignments",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-028",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what are the status assignments",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-029",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what are the team assignments",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-030",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what are the project assignments",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-031",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "show me all manager information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-032",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "show me all department information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-033",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "show me all trust_level information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-034",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "show me all clearance information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-035",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "show me all locale information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-036",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "show me all owner information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-037",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "show me all plan information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-038",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "show me all status information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-039",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "show me all team information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-040",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "show me all project information",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-041",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "retrieve manager data",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-042",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "retrieve department data",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-043",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "retrieve trust_level data",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-044",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "retrieve clearance data",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-045",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "retrieve locale data",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-046",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "retrieve owner data",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-047",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "retrieve plan data",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-048",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "retrieve status data",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-049",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "retrieve team data",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-050",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "retrieve project data",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-051",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "who has a manager",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-052",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "who has a department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-053",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "who has a trust_level",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-054",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "who has a clearance",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-055",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "who has a locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-056",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "who has a owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-057",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "who has a plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-058",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "who has a status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-059",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "who has a team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-060",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "who has a project",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-061",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "tell me about manager",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-062",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "tell me about department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-063",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "tell me about trust_level",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-064",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "tell me about clearance",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-065",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "tell me about locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-066",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "tell me about owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-067",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "tell me about plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-068",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "tell me about status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-069",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "tell me about team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-070",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "tell me about project",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-071",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "describe the manager attribute",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-072",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "describe the department attribute",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-073",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "describe the trust_level attribute",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-074",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "describe the clearance attribute",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-075",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "describe the locale attribute",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-076",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "describe the owner attribute",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-077",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "describe the plan attribute",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-078",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "describe the status attribute",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-079",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "describe the team attribute",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-080",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "describe the project attribute",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-081",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what entities have manager",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-082",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what entities have department",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-083",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what entities have trust_level",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-084",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what entities have clearance",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-085",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what entities have locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-086",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what entities have owner",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-087",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what entities have plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-088",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what entities have status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-089",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what entities have team",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-090",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "what entities have project",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-091",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "give me manager details",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-092",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "give me department details",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-093",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "give me trust_level details",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-094",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "give me clearance details",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-095",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "give me locale details",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-096",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "give me owner details",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-097",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "give me plan details",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-098",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "give me status details",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-099",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "give me team details",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "relation-100",
+      "class": "relation_lookup",
+      "subclass": "",
+      "query": "give me project details",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-001",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Who is in charge of the platform team?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-002",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Tell me about alice's permissions",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "e610f478-b90f-43e3-b293-04d175c5c7cc"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-003",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "What can agent hal do?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-004",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "How is the acme organization set up?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-005",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "What's bob's area of work?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-006",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Is diana authorized for sensitive work?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-007",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Where is oscar located?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "ce8e9449-9ff8-47bc-979a-eb27da148682"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-008",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "What project is julia assigned to?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-009",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Who runs the database service?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a58d6658-474e-4a2b-962c-b09c1afc6b58"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-010",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Is eve currently working?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-011",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "What's grace's reporting structure?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "854aedec-3506-45bc-afdf-2cabcb50843d"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-012",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "How trusted is nova?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "120fe5a4-9899-4be4-953e-d2b628ed7311"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-013",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "What team does petra belong to?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "498d65de-35cf-4fa0-9ec8-b4e28bc9a6fa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-014",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "What's betacorp's pricing tier?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "93f3a5c1-ef01-4575-96e7-0063ac1389ac"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-015",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Who has access to the api service?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-016",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "What's kate's job function?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "cd079ffe-eca7-4955-b367-aaeaa6798299"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-017",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Is mia an active user?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "1c234bd8-eb66-48bf-99a8-40d73a517a87"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-018",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "What department is leo in?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "59da08cd-2ecd-44ed-ac55-499d8721ae01"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-019",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Can charlie make changes?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "3ec5baf8-4b29-4f1a-a09e-1da0a81e3b69"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-020",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "What language does ivan use?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-021",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: Who is in charge of the platform team?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-022",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: Tell me about alice's permissions",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "e610f478-b90f-43e3-b293-04d175c5c7cc"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-023",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: What can agent hal do?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-024",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: How is the acme organization set up?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-025",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: What's bob's area of work?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-026",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: Is diana authorized for sensitive work?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-027",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: Where is oscar located?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "ce8e9449-9ff8-47bc-979a-eb27da148682"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-028",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: What project is julia assigned to?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-029",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: Who runs the database service?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a58d6658-474e-4a2b-962c-b09c1afc6b58"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-030",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: Is eve currently working?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-031",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: What's grace's reporting structure?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "854aedec-3506-45bc-afdf-2cabcb50843d"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-032",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: How trusted is nova?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "120fe5a4-9899-4be4-953e-d2b628ed7311"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-033",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: What team does petra belong to?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "498d65de-35cf-4fa0-9ec8-b4e28bc9a6fa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-034",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: What's betacorp's pricing tier?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "93f3a5c1-ef01-4575-96e7-0063ac1389ac"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-035",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: Who has access to the api service?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-036",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: What's kate's job function?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "cd079ffe-eca7-4955-b367-aaeaa6798299"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-037",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: Is mia an active user?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "1c234bd8-eb66-48bf-99a8-40d73a517a87"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-038",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: What department is leo in?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "59da08cd-2ecd-44ed-ac55-499d8721ae01"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-039",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: Can charlie make changes?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "3ec5baf8-4b29-4f1a-a09e-1da0a81e3b69"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-040",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Please answer: What language does ivan use?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-041",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: Who is in charge of the platform team?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-042",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: Tell me about alice's permissions",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "e610f478-b90f-43e3-b293-04d175c5c7cc"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-043",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: What can agent hal do?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-044",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: How is the acme organization set up?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-045",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: What's bob's area of work?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-046",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: Is diana authorized for sensitive work?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-047",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: Where is oscar located?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "ce8e9449-9ff8-47bc-979a-eb27da148682"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-048",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: What project is julia assigned to?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-049",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: Who runs the database service?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a58d6658-474e-4a2b-962c-b09c1afc6b58"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-050",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: Is eve currently working?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-051",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: What's grace's reporting structure?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "854aedec-3506-45bc-afdf-2cabcb50843d"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-052",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: How trusted is nova?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "120fe5a4-9899-4be4-953e-d2b628ed7311"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-053",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: What team does petra belong to?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "498d65de-35cf-4fa0-9ec8-b4e28bc9a6fa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-054",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: What's betacorp's pricing tier?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "93f3a5c1-ef01-4575-96e7-0063ac1389ac"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-055",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: Who has access to the api service?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-056",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: What's kate's job function?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "cd079ffe-eca7-4955-b367-aaeaa6798299"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-057",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: Is mia an active user?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "1c234bd8-eb66-48bf-99a8-40d73a517a87"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-058",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: What department is leo in?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "59da08cd-2ecd-44ed-ac55-499d8721ae01"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-059",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: Can charlie make changes?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "3ec5baf8-4b29-4f1a-a09e-1da0a81e3b69"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-060",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "I need to know: What language does ivan use?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-061",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 Who is in charge of the platform team?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-062",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 Tell me about alice's permissions",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "e610f478-b90f-43e3-b293-04d175c5c7cc"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-063",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 What can agent hal do?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-064",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 How is the acme organization set up?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-065",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 What's bob's area of work?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-066",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 Is diana authorized for sensitive work?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-067",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 Where is oscar located?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "ce8e9449-9ff8-47bc-979a-eb27da148682"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-068",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 What project is julia assigned to?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-069",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 Who runs the database service?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a58d6658-474e-4a2b-962c-b09c1afc6b58"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-070",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 Is eve currently working?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-071",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 What's grace's reporting structure?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "854aedec-3506-45bc-afdf-2cabcb50843d"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-072",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 How trusted is nova?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "120fe5a4-9899-4be4-953e-d2b628ed7311"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-073",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 What team does petra belong to?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "498d65de-35cf-4fa0-9ec8-b4e28bc9a6fa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-074",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 What's betacorp's pricing tier?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "93f3a5c1-ef01-4575-96e7-0063ac1389ac"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-075",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 Who has access to the api service?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-076",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 What's kate's job function?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "cd079ffe-eca7-4955-b367-aaeaa6798299"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-077",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 Is mia an active user?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "1c234bd8-eb66-48bf-99a8-40d73a517a87"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-078",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 What department is leo in?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "59da08cd-2ecd-44ed-ac55-499d8721ae01"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-079",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 Can charlie make changes?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "3ec5baf8-4b29-4f1a-a09e-1da0a81e3b69"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-080",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Quick question \u2014 What language does ivan use?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-081",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: Who is in charge of the platform team?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "63981c39-9760-4d16-8a37-b5ad226ae712"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-082",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: Tell me about alice's permissions",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "e610f478-b90f-43e3-b293-04d175c5c7cc"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-083",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: What can agent hal do?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "08a155cc-bca7-4b03-b7eb-7756c3659fc3"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-084",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: How is the acme organization set up?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "da7e7b89-a878-40de-965d-394a8974f555"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-085",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: What's bob's area of work?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fb47f202-b8cd-401d-b2d9-6a11f26cfda2"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-086",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: Is diana authorized for sensitive work?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a8f3455e-bab7-49a9-aff1-685f57c9e729"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-087",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: Where is oscar located?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "ce8e9449-9ff8-47bc-979a-eb27da148682"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-088",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: What project is julia assigned to?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "87cee8b0-7cf2-4f5c-887b-1eba4b69326b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-089",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: Who runs the database service?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "a58d6658-474e-4a2b-962c-b09c1afc6b58"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-090",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: Is eve currently working?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "108a0080-150d-40a5-9c84-0a451329a48e"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-091",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: What's grace's reporting structure?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "854aedec-3506-45bc-afdf-2cabcb50843d"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-092",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: How trusted is nova?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "120fe5a4-9899-4be4-953e-d2b628ed7311"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-093",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: What team does petra belong to?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "498d65de-35cf-4fa0-9ec8-b4e28bc9a6fa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-094",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: What's betacorp's pricing tier?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "93f3a5c1-ef01-4575-96e7-0063ac1389ac"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-095",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: Who has access to the api service?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "8cf2e752-347f-45d8-9478-c0a3dfad22e7"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-096",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: What's kate's job function?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "cd079ffe-eca7-4955-b367-aaeaa6798299"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-097",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: Is mia an active user?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "1c234bd8-eb66-48bf-99a8-40d73a517a87"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-098",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: What department is leo in?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "59da08cd-2ecd-44ed-ac55-499d8721ae01"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-099",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: Can charlie make changes?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "3ec5baf8-4b29-4f1a-a09e-1da0a81e3b69"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "paraphrase-100",
+      "class": "paraphrase",
+      "subclass": "",
+      "query": "Help me understand: What language does ivan use?",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "390a6442-15b9-4731-83a3-c941a71aca14"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ttl-01",
+      "class": "adversarial_ood",
+      "subclass": "ttl_expiring",
+      "query": "ttl-alpha session",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "be7eb2c2-dfe0-4c0b-a957-034750fa595b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ttl-02",
+      "class": "adversarial_ood",
+      "subclass": "ttl_expiring",
+      "query": "ttl-beta token",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "fd6a60b5-4974-4323-9c31-9cff42409937"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ttl-03",
+      "class": "adversarial_ood",
+      "subclass": "ttl_expiring",
+      "query": "ttl-gamma cache",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "9981561f-64f1-4334-9d28-7ce68eba74b9"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ttl-04",
+      "class": "adversarial_ood",
+      "subclass": "ttl_expiring",
+      "query": "ttl-delta lease",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "2d808e7f-ed55-4dea-8e93-b429a1a1754b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ttl-05",
+      "class": "adversarial_ood",
+      "subclass": "ttl_expiring",
+      "query": "ttl-epsilon lock",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "75a8599f-3c49-483b-93ad-98f3eb4090aa"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ttl-06",
+      "class": "adversarial_ood",
+      "subclass": "ttl_expiring",
+      "query": "ttl-zeta connection",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "631c7f21-deab-437e-81e3-865b9b2a768b"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ttl-07",
+      "class": "adversarial_ood",
+      "subclass": "ttl_expiring",
+      "query": "ttl-eta reservation",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "f9a1d929-e61e-4e28-ad39-64437715067f"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ttl-08",
+      "class": "adversarial_ood",
+      "subclass": "ttl_expiring",
+      "query": "ttl-theta trial",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "271d10fd-3e63-4889-a8f1-a02860d341f1"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ttl-09",
+      "class": "adversarial_ood",
+      "subclass": "ttl_expiring",
+      "query": "ttl-iota otp",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "5c2a6497-47f4-47ef-a649-2c498a558624"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ttl-10",
+      "class": "adversarial_ood",
+      "subclass": "ttl_expiring",
+      "query": "ttl-kappa heartbeat",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [
+        "92ab6686-23c6-4273-9e15-c498d43dfe5c"
+      ],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-001",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-000 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-002",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-001 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-003",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-002 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-004",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-003 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-005",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-004 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-006",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-005 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-007",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-006 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-008",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-007 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-009",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-008 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-010",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-009 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-011",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-010 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-012",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-011 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-013",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-012 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-014",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-013 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-015",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-014 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-016",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-015 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-017",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-016 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-018",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-017 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-019",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-018 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-020",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-019 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-021",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-020 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-022",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-021 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-023",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-022 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-024",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-023 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-025",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-024 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-026",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-025 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-027",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-026 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-028",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-027 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-029",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-028 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-missing-030",
+      "class": "adversarial_ood",
+      "subclass": "entity_not_in_corpus",
+      "query": "missing-029 role",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-001",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "alice administrator permissions write access",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-002",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "bob software engineering division",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-003",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "hal artificial intelligence confidence score",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-004",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "acme company billing tier pricing plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-005",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "diana classified information clearance level",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-006",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "oscar language region preference locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-007",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "julia ongoing work assignment project name",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-008",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "api gateway service ownership responsibility",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-009",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "eve currently working employed active status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-010",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "frank team leader manager reporting line",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-011",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Context: alice administrator permissions write access",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-012",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Context: bob software engineering division",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-013",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Context: hal artificial intelligence confidence score",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-014",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Context: acme company billing tier pricing plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-015",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Context: diana classified information clearance level",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-016",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Context: oscar language region preference locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-017",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Context: julia ongoing work assignment project name",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-018",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Context: api gateway service ownership responsibility",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-019",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Context: eve currently working employed active status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-020",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Context: frank team leader manager reporting line",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-021",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Background: alice administrator permissions write access",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-022",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Background: bob software engineering division",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-023",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Background: hal artificial intelligence confidence score",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-024",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Background: acme company billing tier pricing plan",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-025",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Background: diana classified information clearance level",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-026",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Background: oscar language region preference locale",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-027",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Background: julia ongoing work assignment project name",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-028",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Background: api gateway service ownership responsibility",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-029",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Background: eve currently working employed active status",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-conf-030",
+      "class": "adversarial_ood",
+      "subclass": "semantic_confusing",
+      "query": "Background: frank team leader manager reporting line",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-001",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "what is the weather today",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-002",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "latest news about AI",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-003",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "how do I cook pasta",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-004",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "what is 2+2",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-005",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "explain quantum physics",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-006",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "stock market trends",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-007",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "best practices for sleep",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-008",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "history of ancient Rome",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-009",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "how to write a poem",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-010",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "best programming languages 2025",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-011",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Tell me: what is the weather today",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-012",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Tell me: latest news about AI",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-013",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Tell me: how do I cook pasta",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-014",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Tell me: what is 2+2",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-015",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Tell me: explain quantum physics",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-016",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Tell me: stock market trends",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-017",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Tell me: best practices for sleep",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-018",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Tell me: history of ancient Rome",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-019",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Tell me: how to write a poem",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-020",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Tell me: best programming languages 2025",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-021",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Quick: what is the weather today",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-022",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Quick: latest news about AI",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-023",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Quick: how do I cook pasta",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-024",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Quick: what is 2+2",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-025",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Quick: explain quantum physics",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-026",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Quick: stock market trends",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-027",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Quick: best practices for sleep",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-028",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Quick: history of ancient Rome",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-029",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Quick: how to write a poem",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    },
+    {
+      "probe_id": "adv-ood-030",
+      "class": "adversarial_ood",
+      "subclass": "out_of_domain",
+      "query": "Quick: best programming languages 2025",
+      "ndcg_at_10": 0.0,
+      "recall_at_5": 0.0,
+      "relevant_ids": [],
+      "ranked_ids": []
+    }
+  ]
+}

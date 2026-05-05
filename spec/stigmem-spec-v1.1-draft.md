@@ -1,11 +1,15 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 ## Specification v1.1-draft
 
-**Status:** DRAFT — §19 proposed normative; §20–§22 DRAFT. §1–§18 stable from v1.0.
+**Status:** DRAFT — §19 proposed normative; §20–§25 DRAFT. §1–§18 stable from v1.0.
 **License:** Apache-2.0
 **Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
+- v1.1-draft rev 12 (2026-05-04): §23–§25 DRAFT normative (Phase 13). Adds §23 Right-to-be-Forgotten tombstones (`TombstoneRecord` shape with `entity_uri`, `scope`, `reason`, `signed_by`, `signature`, `created_at`, `legal_hold`; recall-time filter excluding tombstoned subjects and graph references; federation propagation with inbound verification and `/v1/federation/tombstones` poll route; storage-trait extension: `tombstone()`, `is_tombstoned()`, `list_tombstones()`, `revoke_tombstone()`; Migration 013a DDL); §24 Time-travel / as-of queries (`as_of` timestamp parameter on `/v1/recall` and `/v1/facts`; fact visibility definition at time T; default RTBF retroactive suppression; `legal_hold: true` preserves facts for admin-key `as_of` queries only with `tombstone_notices` annotation; `query_facts_as_of` and `recall_as_of` storage-trait methods); §25 Content-addressed fact IDs (CID = `"sha256:" + hex(SHA-256(RFC8785(canonical_body)))` over 6 canonical fields; `"sha256:"` prefix for future algorithm rotation per §22.2 pattern; `fact_cid_aliases` alias table for dual UUID/CID addressing; 12-month migration window; federation envelope MUST carry CID for tamper detection; `stigmem backfill-cids` CLI; Migration 013b DDL). Adds 11 new error codes across §23–§25.
+- v1.1-draft rev 14 (2026-05-05): §23/§24/§25 security hardening amendments. (F-1+F-7) §23.2.4: signing now uses field-exclusion pattern (consistent with §19.1.3) — `"signature"` and `"reason"` excluded from JCS body before canonicalization; empty-string sentinel removed. Enables reason redaction before federation rebroadcast without breaking signature verification. (F-8) §23.2.1: `key_id` (SHA-256 hex of signing key) added as REQUIRED field in `TombstoneRecord`; included in signed canonical body; eliminates trial-verification across key rotation chain. (F-2) §23.4.2.2: tombstone `created_at` acceptance rule changed from ±5-minute §22.5 session window to retention-horizon check; §22.5 window correctly limited to session/handshake nonces only. (F-3) §23.4.2.1: tombstone signature verification must resolve `signed_by` URI directly via transparency log / `.well-known`, independent of relaying peer; relay-peer manifest MUST NOT be used. (F-9) §19.3.2: `tombstone:read` compound verb added to capability token verb enumeration with note on extension-section verb namespaces. (F-4) §24.5.1: agent API key callers on `as_of` queries that would surface `legal_hold` facts now receive `200` with silent empty filter (indistinguishable from no facts); `403 as_of_legal_hold_forbidden` restricted to admin-key callers where the deployment denies time-travel access; §24.6 error table updated accordingly. (F-5) §25.4.1.3: federation envelope must carry `phase13_ga_at` timestamp; receiving nodes MUST reject `cid: null` facts whose `created_at >= phase13_ga_at`; prevents legacy-record bypass of tamper detection. (F-6) §25.2.1: normative guidance added on security-relevant excluded CID fields (`valid_until`, `derived_from`, `attestation_chain`, `source_trust`) with per-field independent validation requirements.
+- v1.1-draft rev 13 (2026-05-05): §23/§24 review amendments. (F1) §23.3.3 r.2: subscription event delivery (§20.5.5) added to tombstone filter scope — delivery-time check MUST re-evaluate tombstone before populating event content. (F2) §23.3.3 r.3: pagination totals and HTTP response headers (e.g., `X-Total-Count`) are oracle leakage vectors; cardinality MUST be computed post-filter. (F3) §23.3.2 r.3: memory card text-body PII suppression strengthened — cards whose `about_entity` is tombstoned MUST be fully suppressed; partial `related_entities` pruning is insufficient. (F4) §23.3.2: `derived_from` provenance chains to tombstoned entities MUST use `{"exists": false}` pattern (§20.6.2). (F5) §23.3.2 r.1: source-edge direction cross-reference added. (F6) §24.2.1 c.3: retraction data model resolved — Option A adopted: append-only `fact_retractions` log; in-place `confidence = 0.0` retained for live-query compat; `query_facts_as_of` gates on `retracted_at <= T`. Migration 013c DDL added (§23.5.3). (F7) §24.2.1 c.4: retroactive tombstone violation of monotonicity invariant now explicitly documented. (F8) §24.3.1: 60-second tombstone cache window applies equally to `as_of` queries. (F9) §23.3.3: DB isolation MUST for tombstone reads (SQLite `BEGIN IMMEDIATE`; PostgreSQL `READ COMMITTED` with post-plan tombstone read). (F10) §24.4: `is_admin_caller: bool` added to `query_facts_as_of` and `recall_as_of`; `tombstone_notices` added to `query_facts_as_of` return type. (F11) §24.4: cursor stability across tombstone events specified.
+- v1.1-draft rev 12 (2026-05-04): §23 RTBF tombstones and §24 time-travel/as-of queries — initial DRAFT normative. §25 content-addressed fact IDs. See commit 70cf6bf.
 - v1.1-draft rev 11 (2026-05-04): §22 Security Hardening — DRAFT normative (Phase 12). Adds §22.1 mTLS federation transport (cipher floor TLS 1.3, cert rotation hook into §19 manifest); §22.2 key rotation (rollover window, 90-day dual-trust period, transparency-log entry shape, SHOULD cadence 90d/365d); §22.3 audit log surface (13 required event types, write-ahead ordering, 90-day retention floor, admin export API); §22.4 per-principal quotas (token-bucket model, 7 default dimensions, 429 backpressure shape); §22.5 replay protection (±5 min clock-skew window, persistent nonce cache, 5 error codes); §22.6 container baseline (distroless, non-root UID 1000, read-only-fs, seccomp normative posture, Cosign image signing); §22.7 transparency log own-instance decision memo (5-criterion gate; reference deployment defers self-hosted Rekor to backlog).
 - v1.1-draft rev 10 (2026-05-04): Security re-review amendments. (S1) §21.1.5 rule 1: wake reason MUST be sourced from authenticated control-plane event; runtime MUST NOT accept unverified caller-supplied wake_reason for preload dispatch. (S2) §21.1.5 rule 4: `guarantee_load: true` units MUST cause fatal heartbeat abort if unreachable; non-fatal continues only for `guarantee_load: false` units; preload failures MUST be written to instruction_audit table. (S3) §21.1.5: blast-radius note added — preloaded units exposed to all subsequent task context including adversarial injections. (S4) §21.3.3 rule 3: cap changed from per-deployment to per-agent (max 5/agent); deployment-wide soft cap may emit warning but MUST NOT block individual publishes. (S5) §21.3.3: confidentiality note — guaranteed units accessible to any authorised recall caller including via prompt injection; content MUST NOT rely on retrieval difficulty for confidentiality. (S6) §21.3.3 rule 1: `force_position: "prepend"` MUST require distinct admin approval record; SHOULD be reserved for policy units. (S7) §21.8.3: `skip_coverage_gate: true` on manifests with `guarantee_load: true` entries MUST require dual-admin co-signature; audit event MUST include failing unit names and coverage_pct. (S8) §21.8.3: paraphrase generator data boundary — input MUST be limited to trigger strings; instruction content MUST NOT be sent to external services; external services MUST be in trust manifest. (S9) §21.8.6: peer agent API key querying another agent's coverage MUST return 403 instruction_scope_denied; agent key scoped to own agent_id only. (S10) §21.8.3: 7-day auto-re-certification SHOULD on bypass. (S11) §21.8.6: coverage_status categorical labels SHOULD be restricted to admin-key responses; agent-key responses return raw metrics only.
 - v1.1-draft rev 9 (2026-05-04): §21 chronic-miss mitigations. (B) §21.1.5 Task-Type Preloads: `required_by_task_types` manifest field; runtime deterministically injects matching units at heartbeat start before agent context; lint gate on task-type enum; >2 declared task types requires admin sign-off. (A-aug) §21.8.3 augmented manifest certification gate: N=5 paraphrase expansion per intent, top-k coverage check, reject at <80% coverage with `manifest_coverage_failure`; re-certification required on embedding model bump. (C) §21.3.3 guarantee_load: `guarantee_load` boolean on manifest entries; append-by-default; hard budget precedence (guaranteed units never silently dropped); deployment cap of 5 units; `force_position: "prepend"` override for policy units. (D) §21.5.4 expanded: Approach D probe-set + soft-score-lift architecture added as Phase 11 roadmap item; `score += log(1+λ)` lift for coverage-critical units; background audit job; coverage endpoint §21.8.6. New error codes: `manifest_coverage_failure`, `task_type_unknown`, `guarantee_cap_exceeded`.
@@ -20,7 +24,7 @@
 - v1.0 (2026-05-03): Promoted §17 Memory Garden and §18 Source Attestation from draft to normative. All §1–§18 sections stable.
 - [Prior changelog in stigmem-spec-v1.0.md]
 
-> **Reading guide:** §1–§18 are unchanged from v1.0. §19 is fully normative in v1.1. §20 is DRAFT normative (Phase 9): graph index, embedding, recall API, memory cards, subscriptions, and causal/derivation links. §21 is DRAFT normative (Phase 10): lazy instruction discovery — boot stub, instruction manifest, `recall_instruction` tool, `instruction:` scope, discovery audit, and migration semantics. §22 is DRAFT normative (Phase 12): security hardening — mTLS transport, key rotation, audit log, quotas, replay protection, container baseline, and transparency log decision memo. §2 and §5 carry v1.1 additions. Appendix A (Security Policy) is unchanged in content from the v1.0 §19 stub.
+> **Reading guide:** §1–§18 are unchanged from v1.0. §19 is fully normative in v1.1. §20 is DRAFT normative (Phase 9): graph index, embedding, recall API, memory cards, subscriptions, and causal/derivation links. §21 is DRAFT normative (Phase 10): lazy instruction discovery — boot stub, instruction manifest, `recall_instruction` tool, `instruction:` scope, discovery audit, and migration semantics. §22 is DRAFT normative (Phase 12): security hardening — mTLS transport, key rotation, audit log, quotas, replay protection, container baseline, and transparency log decision memo. §23 is DRAFT normative (Phase 13): right-to-be-forgotten tombstones — tombstone record shape, recall-time filter, federation propagation, and storage-trait extension. §24 is DRAFT normative (Phase 13): time-travel / as-of queries — fact visibility at time T, RTBF retroactive suppression, legal-hold annotation for admin-only access. §25 is DRAFT normative (Phase 13): content-addressed fact IDs — SHA-256 CID format over canonical JSON, dual UUID/CID addressing, federation tamper detection, and backfill migration. §2 and §5 carry v1.1 additions. Appendix A (Security Policy) is unchanged in content from the v1.0 §19 stub.
 
 ---
 
@@ -297,7 +301,7 @@ CapabilityToken:
   token_id:      UUID       // unique identifier; used for revocation lookup
   issuer:        URI        // entity URI of the issuing node/org (MUST be in issuer's manifest)
   subject:       URI        // entity URI of the token bearer
-  verb:          string     // one of: "read" | "write" | "admin" | "federate"
+  verb:          string     // one of: "read" | "write" | "admin" | "federate" | "subscribe" | "tombstone:read"
   object:        URI        // resource the verb applies to (scope URI, garden URI, or "*" for any)
   issued_at:     RFC3339
   expiry:        RFC3339    // MUST be set; MUST NOT exceed 90 days from issued_at
@@ -311,6 +315,7 @@ The `verb` values are:
 - `admin` — bearer may manage keys and settings on `object`.
 - `federate` — bearer may replicate facts bidirectionally via the federation protocol (§6).
 - `subscribe` — bearer may register a standing event subscription on `object` (scope URI or entity URI).
+- `tombstone:read` — bearer may poll the tombstone federation route (`GET /v1/federation/tombstones`). Compound verb namespaces (e.g. `tombstone:read`) may be introduced by extension sections and MUST be listed here when added. Token validation implementations MUST accept any verb that appears in this enumeration.
 
 #### 19.3.3 Signing and Verification
 
@@ -816,7 +821,7 @@ Implementations MUST create this table and all three indexes before accepting `P
 
 1. **Insert on ref fact.** An `entity_edges` row MUST be inserted whenever a fact is persisted with `value.type = "ref"` and the `v` field passes entity-URI validation. The `id` MUST equal the source fact's `id`. The `object` MUST be the normalized form of the ref target URI.
 2. **Decay sweep propagation.** When the decay sweeper updates a fact's `confidence`, it MUST update the corresponding `entity_edges` row's `confidence` and `decay_epoch` in the same transaction.
-3. **Retraction soft-delete.** When a fact is retracted (`confidence = 0.0`), the edge row MUST be soft-deleted by setting `confidence = 0.0`, not hard-deleted. Hard deletion is a maintenance-window operation only.
+3. **Retraction soft-delete.** When a fact is retracted, the implementation MUST: (a) set `confidence = 0.0` on the `facts` row (live-query compat), (b) set `confidence = 0.0` on the `entity_edges` row (not hard-delete), AND (c) insert a row into `fact_retractions(fact_id, retracted_at)` with `retracted_at = NOW()`. The `fact_retractions` record is the authoritative timestamp for time-travel queries (§24.2.1 c.3); the in-place `confidence = 0.0` update is retained for live-query backward compatibility only. Hard deletion is a maintenance-window operation only.
 4. **Garden scope.** `entity_edges` rows inherit the fact's `scope`. Cross-garden traversal is governed by the caller's garden ACL checked at the application layer before returning traversal results (§17.3).
 5. **Consistency.** An `entity_edges` row MUST NOT outlive the deletion of its source fact from the facts table. Implementations SHOULD use a foreign-key cascade or equivalent constraint to enforce this.
 
@@ -2523,6 +2528,731 @@ The Sigstore/Rekor root signing key is subject to rotation (a root key rotation 
 
 1. Operators SHOULD subscribe to Sigstore transparency log key rotation announcements (the [sigstore-announce mailing list](https://groups.google.com/g/sigstore-announce) and the CT log transparency dashboard) and SHOULD update `STIGMEM_TRANSPARENCY_LOG_PUBLIC_KEY` within **30 days** of a published rotation.
 2. A node MUST NOT treat a persistent transparency log key verification failure as a permanent misconfiguration without first checking whether a Rekor root key rotation has occurred. On repeated verification failures, the node SHOULD emit a `transparency_log_key_mismatch` audit log event and surface an operator alert before entering a degraded-verification state.
+
+---
+
+## 23. Right-to-be-Forgotten Tombstones
+
+**Status:** DRAFT normative (Phase 13). §23.1–§23.7 carry MUST/SHOULD/MAY normative language.
+
+### 23.1 Scope
+
+This section defines the tombstone mechanism for compliance with right-to-be-forgotten (RTBF) obligations under data-protection frameworks (e.g., GDPR Art. 17, CCPA §1798.105). A **tombstone** is a signed, durable record that directs every node in the federation to suppress facts about a specified entity from all future recall responses.
+
+Tombstones are a protocol primitive, not a legal determination. Operators MUST obtain appropriate legal guidance before issuing or refusing tombstone requests.
+
+### 23.2 Tombstone Record Shape
+
+#### 23.2.1 Schema
+
+```
+TombstoneRecord:
+  id:          string            // globally unique tombstone ID; MUST use prefix "tomb_"
+                                 //   followed by a UUID v7 (time-ordered) suffix
+  entity_uri:  string            // URI of the entity being tombstoned (e.g. "user:alice")
+  scope:       ScopePattern      // which scope(s) this tombstone covers (§23.2.3)
+  reason:      string | null     // operator-supplied reason; SHOULD be provided; MAY be
+                                 //   redacted to "redacted" before forwarding to federation
+                                 //   peers when the reason contains PII or legal detail
+  signed_by:   string            // URI of the admin agent or service that signed the tombstone
+  key_id:      string            // SHA-256 hex of the signing key (§19.1.2); REQUIRED; included
+                                 //   in the signed canonical body so verifiers can resolve the
+                                 //   correct historical key after rotation without trial-verification
+  signature:   string            // base64url Ed25519 signature over the canonical-JSON body
+                                 //   of this record, with "signature" and "reason" excluded
+                                 //   before JCS canonicalization (§23.2.4)
+  created_at:  ISO 8601 string   // timestamp when the tombstone was issued
+  legal_hold:  boolean           // default false; see §24.3
+```
+
+#### 23.2.2 Invariants
+
+1. `id` MUST be globally unique and MUST be issued with the `"tomb_"` prefix followed by a UUID v7 (time-ordered) suffix.
+2. `entity_uri` MUST conform to the URI format defined in §9 (Namespace Registry). Wildcards MUST NOT be used in `entity_uri`; each tombstone covers exactly one entity URI.
+3. `signed_by` MUST identify an agent or service that holds an active admin API key at the time of tombstone issuance. The `signature` MUST be verifiable against the signing key in the org manifest (§19.1).
+4. Tombstone records MUST be stored in a dedicated `tombstones` table (§23.5.3) that is separate from the `facts` table. Tombstones MUST NOT be stored as ordinary facts.
+5. Tombstone records are immutable once written. Operators MUST NOT update or delete a tombstone record. To reinstate a tombstoned entity, a separate `TombstoneRevocation` record (§23.2.5) MUST be issued.
+
+#### 23.2.3 Scope Pattern
+
+`ScopePattern` controls which scopes of facts the tombstone suppresses:
+
+| Value | Meaning |
+|---|---|
+| `"*"` | All scopes (`local`, `team`, `company`, `public`) |
+| `"local"` | Local scope only |
+| `"team"` | Team scope only |
+| `"company"` | Company scope only |
+| `"public"` | Public scope only |
+| Array of the above strings | Union of listed scopes |
+
+A tombstone with `scope: "*"` is the broadest possible suppression. Operators SHOULD use the narrowest scope that satisfies the RTBF obligation.
+
+#### 23.2.4 Canonical JSON for Signing
+
+The canonical-JSON body for signature computation MUST be produced using RFC 8785 (JCS — JSON Canonicalization Scheme) over the `TombstoneRecord` object with the `"signature"` and `"reason"` fields **excluded** from the object before canonicalization (consistent with the field-exclusion pattern in §19.1.3). The `signed_by` value MUST be the plain string URI, not a reference.
+
+Excluding `"reason"` from the signed body allows the issuing node to redact it to `"redacted"` before federation rebroadcast (§23.4.1.3) without invalidating the signature on peer nodes. Excluding `"signature"` avoids self-reference. Both exclusions MUST be applied before JCS serialization; implementations MUST NOT use empty-string sentinels in place of exclusion.
+
+The `"key_id"` field MUST be included in the signed canonical body so that verifiers can resolve the correct historical signing key without trial-verifying against the entire rotation chain (see §19.1.4).
+
+#### 23.2.5 Tombstone Revocation
+
+A tombstone may be revoked by an admin who has a documented legal basis (e.g., a legal hold set by court order). Revocation is expressed via a `TombstoneRevocation` record:
+
+```
+TombstoneRevocationRecord:
+  id:            string   // "tombrevoke_" + UUID v7
+  tombstone_id:  string   // the "tomb_" record being revoked
+  reason:        string   // MUST be provided (e.g., court order reference)
+  signed_by:     string
+  signature:     string
+  created_at:    ISO 8601 string
+```
+
+A revocation does NOT delete the tombstone record. It instructs nodes to re-expose facts that were suppressed solely by the revoked tombstone. Revocations are subject to the same signature and federation propagation rules as tombstones (§23.4).
+
+### 23.3 Recall-Time Tombstone Filter
+
+#### 23.3.1 Direct-Entity Suppression
+
+At recall time, before returning any fact or memory card to the caller, the node MUST:
+
+1. Resolve the set of active tombstones for every `entity_uri` that appears in the candidate result set (as the `entity` field, or as a value of type `ref`).
+2. Exclude any fact whose `entity` matches a tombstoned `entity_uri` where the tombstone `scope` covers the fact's `scope`.
+3. Exclude any memory card (§20.4) whose `about_entity` matches a tombstoned entity under the same scope rule.
+
+A tombstone is **active** if it is present in the `tombstones` table and has no corresponding `tombstone_id` entry in the `tombstone_revocations` table.
+
+#### 23.3.2 Graph Reference Suppression
+
+The tombstone filter MUST also suppress indirect graph references to tombstoned entities:
+
+1. During graph traversal (k-hop, §20.1), edges that reference a tombstoned entity as the `target_entity_uri` MUST be excluded from the traversal result. The traversal MUST NOT propagate through tombstoned nodes. (Note: edges where the tombstoned entity is the *source* are suppressed by §23.3.1 step 2, which excludes all facts whose `entity` is tombstoned.)
+2. Facts whose `value` is of type `ref` and whose ref value matches a tombstoned `entity_uri` MUST be excluded from recall results.
+3. Memory cards in the candidate set MUST be handled as follows. A card whose `about_entity` is tombstoned MUST be suppressed entirely — it MUST NOT appear in the response. A card where the tombstoned entity appears only in `related_entities` MUST have that entry omitted from `related_entities`; if after omission the card's text body still contains PII attributed to the tombstoned entity, the card MUST also be suppressed. Implementations SHOULD regenerate or suppress cards synthesized from tombstoned fact sets rather than returning stale or partially-pruned text bodies.
+4. Facts returned in recall or provenance walk results that have `derived_from` entries referencing tombstoned entities MUST represent those entries as `{"hash": "...", "exists": false}` — identical to the unauthorized cross-scope pattern defined in §20.6.2.
+
+#### 23.3.3 Completeness and Consistency
+
+1. The tombstone check MUST be applied after scope filtering and before token-budget packing.
+2. The tombstone check MUST be applied to `GET /v1/recall` (§20.3), `recall_instruction` responses (§21.3), and subscription event delivery (§20.5.5). For subscription delivery, the tombstone filter MUST be re-evaluated immediately before populating event content at delivery time — the delivery-time check in §20.5.5 MUST be extended to include a tombstone lookup in addition to the existing garden ACL and token revocation checks.
+3. Implementations MUST NOT return a count, aggregate, or embedding that reveals the existence of suppressed facts. A result set that would have included tombstoned facts MUST be indistinguishable (from the caller's perspective) from a result set that never contained such facts. Pagination total counts and any other response fields that reflect the pre-filter cardinality of the result set MUST be computed on the post-tombstone-filter set only. HTTP response headers (e.g., `X-Total-Count`) MUST NOT reflect suppressed facts.
+4. Implementations MUST cache active tombstone IDs in an in-process LRU cache and refresh it at most every **60 seconds**. A tombstone issued on the local node MUST be effective within 60 seconds. Federation propagation latency may extend this window for peer nodes; see §23.4.
+5. Tombstone lookups for both live and `as_of` queries MUST be performed such that tombstone visibility is consistent within the query's execution scope. Implementations using SQLite MUST use `BEGIN IMMEDIATE` for tombstone reads concurrent with query execution. PostgreSQL implementations MUST use at minimum `READ COMMITTED` with tombstone reads issued after the query plan is complete, ensuring that tombstones committed before the read are visible.
+
+### 23.4 Federation Propagation
+
+#### 23.4.1 Outbound Rebroadcast
+
+1. When a node issues a new `TombstoneRecord`, it MUST enqueue the tombstone for replication to all active federation peers under the existing federation protocol (§6).
+2. The tombstone MUST be replicated with the `signed_by` and `signature` fields unchanged. Peer nodes MUST NOT re-sign tombstones; they MUST verify the original signature before applying the tombstone locally.
+3. The `reason` field MAY be redacted to `"redacted"` by the issuing node before rebroadcast, at the operator's discretion. Peer nodes MUST NOT require a non-`"redacted"` reason to accept the tombstone.
+
+#### 23.4.2 Inbound Tombstone Handling
+
+On receiving an inbound tombstone from a federation peer, the node MUST:
+
+1. Verify the `signature` against the public key published in the org manifest for the entity URI identified by `signed_by`. Nodes MUST resolve the `signed_by` URI to an org manifest via the transparency log or `/.well-known/stigmem-manifest.json`, independent of which peer forwarded the tombstone. Resolving the relaying peer's manifest instead of the `signed_by` manifest is a protocol error. Use `key_id` (§23.2.1) to select the correct historical key from the resolved manifest's rotation chain.
+2. Verify the `created_at` timestamp is not older than the node's configured retention horizon. The ±5-minute replay-protection window defined in §22.5 applies to session/handshake nonces, not to persistent tombstone records. Tombstones are durable records whose `created_at` is inherently in the past; applying the §22.5 window would permanently reject any tombstone that arrives more than 5 minutes after issuance (e.g., due to peer downtime or federation delay). Replay prevention for the tombstone delivery request itself is handled by the federation connection nonce (§22.5) — it does not need to be re-applied to the data payload's `created_at`.
+3. Write the tombstone to the local `tombstones` table if it does not already exist (idempotent on `id`).
+4. Apply the recall-time filter within 60 seconds for the tombstoned entity.
+
+Nodes MUST NOT silently drop inbound tombstones. If tombstone verification fails, the node MUST emit a `tombstone_verification_failed` audit log event (§22.3) and SHOULD alert the operator.
+
+Nodes MUST accept tombstones from any trusted federation peer (peers listed in the local org manifest's `trusted_peers`), not only from the org that first issued the tombstone.
+
+#### 23.4.3 Tombstone Federation Route
+
+Tombstones are exchanged via a dedicated federation route:
+
+```
+GET /v1/federation/tombstones?since=<ISO8601>&limit=<N>
+Authorization: Bearer <peer capability token>
+
+→ 200 {
+    "tombstones":  [ ...TombstoneRecord... ],
+    "revocations": [ ...TombstoneRevocationRecord... ],
+    "cursor":      "<opaque pagination cursor>"
+  }
+→ 401 if capability token invalid or scope insufficient
+```
+
+The peer capability token (§19.3) MUST include the `"tombstone:read"` verb in its `verbs` array. Peers MUST poll this route at least every **5 minutes** in standard federation mode, and MUST poll within **60 seconds** of receiving a `tombstone_new` event via the subscription channel (§20.5).
+
+### 23.5 Storage-Trait Extension
+
+#### 23.5.1 New Methods
+
+The following methods MUST be added to the storage trait:
+
+```
+tombstone(
+  entity_uri: string,
+  scope:      ScopePattern,
+  reason:     string | null,
+  signed_by:  string,
+  signature:  string,
+  legal_hold: bool
+) → TombstoneRecord
+
+is_tombstoned(
+  entity_uri: string,
+  scope:      FactScope       // the scope of the fact being checked
+) → bool
+
+list_tombstones(
+  scope:  ScopePattern | null,  // null = all
+  since:  ISO8601 | null
+) → [TombstoneRecord]
+
+revoke_tombstone(
+  tombstone_id: string,
+  reason:       string,
+  signed_by:    string,
+  signature:    string
+) → TombstoneRevocationRecord
+```
+
+#### 23.5.2 Semantics
+
+1. `tombstone(...)` MUST be idempotent: calling it with the same `entity_uri` and `scope` when a matching active tombstone already exists MUST return the existing tombstone without writing a new record.
+2. `is_tombstoned(entity_uri, scope)` MUST return `true` if any active tombstone covers `entity_uri` with a `ScopePattern` that includes the given `FactScope`. Implementations SHOULD cache this check (see §23.3.3 rule 4).
+3. `revoke_tombstone(...)` MUST fail with `tombstone_not_found` if no matching tombstone exists, and MUST fail with `tombstone_already_revoked` if a revocation record already exists for that tombstone.
+
+#### 23.5.3 Schema Migration
+
+```sql
+-- Migration 013a: RTBF tombstones
+CREATE TABLE tombstones (
+  id          TEXT PRIMARY KEY,          -- "tomb_" + UUIDv7
+  entity_uri  TEXT NOT NULL,
+  scope       TEXT NOT NULL,             -- serialized ScopePattern JSON
+  reason      TEXT,
+  signed_by   TEXT NOT NULL,
+  signature   TEXT NOT NULL,
+  created_at  TEXT NOT NULL,             -- ISO 8601
+  legal_hold  INTEGER NOT NULL DEFAULT 0 -- 0 = false, 1 = true
+);
+
+CREATE INDEX idx_tombstones_entity_uri ON tombstones(entity_uri);
+
+CREATE TABLE tombstone_revocations (
+  id           TEXT PRIMARY KEY,         -- "tombrevoke_" + UUIDv7
+  tombstone_id TEXT NOT NULL REFERENCES tombstones(id),
+  reason       TEXT NOT NULL,
+  signed_by    TEXT NOT NULL,
+  signature    TEXT NOT NULL,
+  created_at   TEXT NOT NULL
+);
+```
+
+```sql
+-- Migration 013c: append-only retraction log (time-travel compat — §24.2.1 c.3)
+-- Retraction writes MUST insert here in addition to setting facts.confidence = 0.0.
+CREATE TABLE fact_retractions (
+  id           TEXT PRIMARY KEY,    -- "retract_" + UUIDv7
+  fact_id      TEXT NOT NULL REFERENCES facts(id),
+  retracted_at TEXT NOT NULL,       -- ISO 8601; authoritative timestamp for as_of queries
+  retracted_by TEXT                 -- actor entity URI if known
+);
+
+CREATE INDEX idx_fact_retractions_fact_id ON fact_retractions(fact_id);
+CREATE INDEX idx_fact_retractions_retracted_at ON fact_retractions(retracted_at);
+```
+
+### 23.6 Wire Format
+
+#### 23.6.1 Issue a Tombstone
+
+```
+POST /v1/tombstones
+Authorization: Bearer <admin api-key>
+Content-Type: application/json
+
+{
+  "entity_uri": "user:alice",
+  "scope":      "*",
+  "reason":     "GDPR Art. 17 erasure request #2026-042",
+  "legal_hold": false
+}
+→ 201 { ...TombstoneRecord with id, signature, created_at populated... }
+→ 400 tombstone_invalid_scope      if scope value is not a valid ScopePattern
+→ 400 tombstone_entity_uri_invalid if entity_uri does not conform to §9 namespace format
+→ 403 if caller is not an admin API key
+→ 409 tombstone_already_exists     if an active tombstone for this entity_uri + scope exists
+```
+
+The server MUST sign the tombstone with the node's active admin signing key before returning.
+
+#### 23.6.2 Check Tombstone Status
+
+```
+GET /v1/tombstones/:entity_uri_encoded
+Authorization: Bearer <admin api-key>
+
+→ 200 { "tombstoned": true,  "tombstones": [...TombstoneRecord...], "revocations": [...] }
+→ 200 { "tombstoned": false, "tombstones": [] }
+→ 403 if caller is not an admin API key
+```
+
+This endpoint MUST NOT be accessible with agent API keys — the existence of a tombstone for a given entity is itself sensitive information.
+
+#### 23.6.3 Revoke a Tombstone
+
+```
+POST /v1/tombstones/:tombstone_id/revoke
+Authorization: Bearer <admin api-key>
+Content-Type: application/json
+
+{ "reason": "Court order #2026-CR-1234 reinstating data access" }
+
+→ 200 { ...TombstoneRevocationRecord... }
+→ 403 if caller is not an admin API key
+→ 404 tombstone_not_found
+→ 409 tombstone_already_revoked
+```
+
+### 23.7 Error Reference
+
+| HTTP | Error code | Condition |
+|---|---|---|
+| 400 | `tombstone_invalid_scope` | `scope` value is not a valid ScopePattern |
+| 400 | `tombstone_entity_uri_invalid` | `entity_uri` does not conform to §9 namespace format |
+| 400 | `tombstone_verification_failed` | Signature verification failed on inbound federation tombstone |
+| 403 | `tombstone_access_denied` | Agent API key used on tombstone endpoint; admin key required |
+| 404 | `tombstone_not_found` | Tombstone ID not found |
+| 409 | `tombstone_already_exists` | Active tombstone for this entity_uri + scope already exists |
+| 409 | `tombstone_already_revoked` | Tombstone has already been revoked |
+
+---
+
+## 24. Time-Travel / As-Of Queries
+
+**Status:** DRAFT normative (Phase 13). §24.1–§24.6 carry MUST/SHOULD/MAY normative language.
+
+### 24.1 Scope
+
+Time-travel queries allow callers to retrieve the state of the knowledge graph at a past point in time. This enables historical auditing, debugging, regulatory compliance reporting, and causal provenance reconstruction.
+
+The `as_of` parameter is an ISO 8601 timestamp specifying the point-in-time to query. An `as_of` query returns facts as they were visible to an ordinary query at that timestamp, subject to tombstone interaction rules (§24.3).
+
+### 24.2 As-Of Query Semantics
+
+#### 24.2.1 Fact Visibility at Time T
+
+A fact `f` is **visible at time T** if all of the following conditions hold:
+
+1. `f.created_at <= T` — the fact had been written before or at T.
+2. `f.valid_until is null OR f.valid_until > T` — the fact had not yet expired at T.
+3. `f.confidence > 0 at time T` — the fact had not been retracted by T. Retraction is governed by the `fact_retractions` append-only log (see §23.5.3 Migration 013c). A fact `f` is considered retracted at T if and only if a row exists in `fact_retractions` with `fact_id = f.id` and `retracted_at <= T`. The in-place `confidence = 0.0` on the `facts` row is used for live (non-`as_of`) queries only; `query_facts_as_of` MUST join `fact_retractions` on this condition and MUST NOT use the `facts.confidence` field as a proxy for retraction state at historical timestamps.
+4. No active tombstone (§23.3) covers `f.entity` with a scope matching `f.scope`, unless the tombstone has `legal_hold: true` (§24.3). **Note:** because tombstone suppression is retroactive (§24.3.1), the fact-visibility definition at time T is not a purely historical snapshot — it reflects present tombstone state. Callers MUST NOT assume that a result set for `as_of=T` is immutable; a subsequently issued tombstone will retroactively change it. This means the monotonicity invariant (§24.2.3) holds only before accounting for tombstones, retraction, or expiry.
+
+#### 24.2.2 Query Interface
+
+The `as_of` parameter MUST be accepted on the following endpoints:
+
+```
+GET  /v1/recall?intent=<string>&as_of=<ISO8601>&...
+POST /v1/recall   { "intent": "...", "as_of": "2025-01-01T00:00:00Z", ... }
+GET  /v1/facts?entity_uri=<string>&as_of=<ISO8601>&...
+```
+
+The `as_of` timestamp MUST be validated as:
+- A valid ISO 8601 timestamp.
+- Not in the future (at most the server's current clock + 5 seconds tolerance for clock skew).
+- Not older than the retention horizon configured for the deployment. Operators MAY configure a minimum `as_of` floor; queries before the floor MUST return `as_of_before_retention_floor`.
+
+#### 24.2.3 Monotonicity Invariant
+
+The `as_of` result set MUST be monotonically consistent: for any two queries with `as_of=T1 < T2`, the set of facts visible at T1 MUST be a subset of the facts visible at T2, before accounting for tombstones, retraction, or expiry. This invariant allows callers to reason about the causal evolution of the knowledge graph.
+
+### 24.3 Tombstone Interaction (RTBF and Legal Hold)
+
+#### 24.3.1 Default Behavior (legal_hold: false)
+
+When a tombstone is issued with `legal_hold: false` (the default):
+
+1. The tombstoned entity's facts MUST be excluded from ALL `as_of` queries, regardless of whether `as_of` predates the tombstone's `created_at`.
+2. The tombstone has retroactive effect: the knowledge graph history is presented as if the entity never appeared.
+3. This applies to `query_facts`, `recall`, and graph traversal results regardless of the `as_of` timestamp.
+
+This is the normative RTBF semantic: the data subject's right to erasure extends to historical query results.
+
+The 60-second LRU cache refresh window defined in §23.3.3 rule 4 applies equally to `as_of` queries. During this window, a recently tombstoned entity MAY appear in `as_of` results on nodes whose local cache has not yet refreshed. This window is bounded and does not affect the retroactive semantics of the tombstone once the cache refreshes.
+
+#### 24.3.2 Legal-Hold Behavior (legal_hold: true)
+
+When a tombstone is issued with `legal_hold: true`:
+
+1. Live recall queries (`GET /v1/recall`, `recall_instruction`) MUST still exclude the entity's facts — the entity is suppressed from the live knowledge graph identically to `legal_hold: false`.
+2. Time-travel queries (`as_of` parameter) MAY return the entity's facts, but MUST annotate them with `"tombstone_status": "legal_hold"` in the response (§24.3.3).
+3. Callers of `as_of` queries MUST be authenticated with an admin API key to receive `legal_hold`-annotated facts. Agent API keys MUST NOT receive `legal_hold`-annotated facts, even in an `as_of` context.
+4. The `legal_hold` flag is intended for regulatory use cases where a data controller must preserve historical records for audit or legal proceedings while still suppressing the entity from operational recall.
+
+Operators MUST NOT set `legal_hold: true` absent a documented legal basis. Issuing a `legal_hold` tombstone MUST emit an `rtbf_legal_hold_issued` audit log event (§22.3).
+
+#### 24.3.3 Legal-Hold Response Annotation
+
+Facts returned under a `legal_hold` tombstone MUST include the following annotation in the response envelope:
+
+```json
+{
+  "facts": [...],
+  "tombstone_notices": [
+    {
+      "entity_uri":           "user:alice",
+      "tombstone_id":         "tomb_01J...",
+      "legal_hold":           true,
+      "tombstone_created_at": "2026-05-01T10:00:00Z"
+    }
+  ]
+}
+```
+
+The `tombstone_notices` array MUST be present in every `as_of` response that returns `legal_hold` facts. It MUST NOT be present when no `legal_hold` tombstones apply to the result set.
+
+### 24.4 Storage-Trait Extension
+
+The following methods MUST be added to the storage trait for time-travel support:
+
+```
+query_facts_as_of(
+  entity_uri:      string | null,
+  scope:           FactScope | null,
+  relation:        string | null,
+  as_of:           ISO8601,
+  is_admin_caller: bool,           // controls legal_hold visibility (§24.3.2)
+  limit:           int,
+  cursor:          string | null
+) → { facts: [FactRecord], cursor: string | null, tombstone_notices: [TombstoneNotice] }
+
+recall_as_of(
+  intent:          string,
+  scope:           FactScope | null,
+  as_of:           ISO8601,
+  is_admin_caller: bool,           // controls legal_hold visibility (§24.3.2)
+  max_chunks:      int,
+  include_graph:   bool
+) → { chunks: [RecallChunk], tombstone_notices: [TombstoneNotice] }
+```
+
+Implementations of `query_facts_as_of` MUST apply tombstone filtering per §24.3 before returning results. The `as_of` timestamp MUST be passed through to the storage layer as a query parameter and MUST NOT be applied as a post-filter on an unfiltered full scan.
+
+The `is_admin_caller` parameter governs `legal_hold` fact visibility: when `false`, facts covered by a `legal_hold` tombstone MUST be excluded from results (identically to `legal_hold: false` tombstones); when `true`, they MAY be returned and MUST be annotated via `tombstone_notices`. The storage layer MUST NOT rely solely on the API layer to gate `legal_hold` facts.
+
+**Cursor stability:** `as_of` query cursors are NOT tombstone-stable snapshots. If a tombstone is applied between paginated requests, rows visible on page 1 may be absent from page 2. Callers MUST NOT infer tombstone suppression from inter-page result-count differences. The spec does not require implementations to snapshot tombstone state per cursor; it does require that page 2 results are tombstone-filtered at the time of the page 2 request.
+
+### 24.5 Wire Format
+
+#### 24.5.1 As-Of Recall
+
+```
+POST /v1/recall
+Authorization: Bearer <agent or admin api-key>
+Content-Type: application/json
+
+{
+  "intent":    "what did Alice prefer last year?",
+  "as_of":     "2025-01-01T00:00:00Z",
+  "scope":     "company",
+  "max_facts": 20
+}
+→ 200 {
+    "chunks":            [...RecallChunk...],
+    "tombstone_notices": []
+  }
+→ 400 as_of_invalid_timestamp       if timestamp is malformed
+→ 400 as_of_future                  if timestamp is in the future
+→ 400 as_of_before_retention_floor  if timestamp predates retention horizon
+→ 200 with empty `tombstone_notices` and facts silently filtered, if the query would surface legal_hold
+        facts and the caller is an **agent** API key (indistinguishable from a non-legal-hold empty result)
+→ 403 as_of_legal_hold_forbidden    if the query would return legal_hold facts and the caller is an **admin**
+        API key but the deployment is configured to deny admin as_of access to that entity
+```
+
+Agent API key callers MUST NOT receive any response that reveals the existence or absence of a legal-hold tombstone. When an agent-key `as_of` query would surface `legal_hold` facts, the node MUST return `200` with results silently filtered (as if the entity never had matching facts) — identical to non-legal-hold tombstone behavior.
+
+`tombstone_notices` is populated only when `legal_hold` tombstones apply AND the caller is an admin API key.
+
+#### 24.5.2 As-Of Fact Query
+
+```
+GET /v1/facts?entity_uri=user:alice&as_of=2025-01-01T00:00:00Z&scope=company
+Authorization: Bearer <admin api-key>
+
+→ 200 {
+    "facts":             [...FactRecord...],
+    "tombstone_notices": [...]
+  }
+→ 400 as_of_invalid_timestamp
+→ 400 as_of_future
+→ 403 as_of_legal_hold_forbidden
+```
+
+### 24.6 Error Reference
+
+| HTTP | Error code | Condition |
+|---|---|---|
+| 400 | `as_of_invalid_timestamp` | `as_of` parameter is not a valid ISO 8601 timestamp |
+| 400 | `as_of_future` | `as_of` timestamp is in the future |
+| 400 | `as_of_before_retention_floor` | `as_of` predates the deployment's minimum retention horizon |
+| 403 | `as_of_legal_hold_forbidden` | `as_of` query would surface legal-hold tombstoned facts and the caller is an admin API key but the deployment denies admin time-travel access to that entity; MUST NOT be returned to agent API key callers (use silent 200 filter instead) |
+
+---
+
+## 25. Content-Addressed Fact IDs
+
+**Status:** DRAFT normative (Phase 13). §25.1–§25.8 carry MUST/SHOULD/MAY normative language.
+
+### 25.1 Scope
+
+Content-addressed fact IDs (CIDs) provide a deterministic, tamper-evident identifier for fact records derived from the fact's canonical body. Unlike UUID-style `fact_id` values (which are randomly assigned at write time), a CID can be independently computed from the fact payload and verified without a database lookup.
+
+CIDs enable:
+- **Tamper detection**: any modification to a fact's body changes its CID.
+- **Deduplication**: identical facts from different federation sources share the same CID.
+- **Provenance linkage**: `derived_from` chains (§2.8) can reference CIDs rather than mutable UUIDs.
+
+### 25.2 CID Format
+
+#### 25.2.1 Canonical Fact Body
+
+The **canonical fact body** for CID computation is a JSON object containing the following fact fields in lexicographic key order per RFC 8785 (JCS — JSON Canonicalization Scheme):
+
+```json
+{
+  "confidence": ...,
+  "entity":     ...,
+  "relation":   ...,
+  "scope":      ...,
+  "source":     ...,
+  "value":      ...
+}
+```
+
+The following fields MUST be excluded from the canonical body:
+
+| Field | Reason |
+|---|---|
+| `fact_id` | Cannot be part of its own CID (circular) |
+| `cid` | Cannot be self-referential |
+| `hlc` | Node-local logical clock; not part of the fact assertion |
+| `timestamp` / `created_at` | Write time; same assertion at different times shares one CID |
+| `valid_until` | Expiry policy; does not change what the fact asserts |
+| `derived_from` | Provenance pointer; references other fact IDs, creates circularity |
+| `attestation_chain` | Transport/provenance concern |
+| `source_trust` | Cached derived value, not the fact assertion itself |
+
+The following excluded fields are **security-relevant** and require independent validation — CID coverage alone is not a sufficient tamper check for these fields:
+
+- **`valid_until`**: A malicious peer could extend fact lifetime by modifying this field without changing the CID. Nodes receiving federated facts MUST NOT accept a `valid_until` value that extends beyond any value previously observed for the same CID; changes require a new fact assertion.
+- **`derived_from`**: Provenance chain integrity is enforced by verifying each referenced CID independently. A peer could falsify provenance without affecting the CID.
+- **`attestation_chain`**: Signatures within the chain are independently verifiable and MUST be re-verified on federation ingest. CID coverage is not a substitute for attestation re-verification.
+- **`source_trust`**: MUST be re-computed locally from the source manifest rather than trusted from the federation envelope. Accepting a peer-supplied `source_trust` allows trust score inflation.
+
+#### 25.2.2 Hash Function
+
+The CID MUST be computed as:
+
+```
+CID = "sha256:" + hex_lowercase(SHA-256(RFC8785(canonical_fact_body)))
+```
+
+Where:
+- `RFC8785(...)` produces the deterministic UTF-8 JSON byte string per RFC 8785.
+- `SHA-256` is the SHA-2 family 256-bit hash function (FIPS 180-4).
+- `hex_lowercase` encodes the 32-byte digest as 64 lowercase hexadecimal characters.
+- The `"sha256:"` prefix MUST be included to allow future hash-algorithm rotation (see §25.2.4 and §22.2).
+
+Example:
+```
+fact = { "entity": "user:alice", "relation": "memory:prefers",
+         "value": "dark mode", "scope": "company",
+         "source": "agent:assistant-01", "confidence": 0.95 }
+
+CID = "sha256:4e9a2c1f8b3d0e7a5c6f1d2b9e8a3c4f7b0d1e6a9c2f5b8e1d4a7c0f3b6e9a2c"
+```
+
+*(The hex value above is illustrative; implementations MUST compute the actual SHA-256.)*
+
+#### 25.2.3 `value` Field Canonicalization
+
+When the fact `value` field is of type `text` or `string`, it MUST be included as a JSON string with no additional normalization (Unicode form is preserved). When `value` is of type `ref`, it MUST be included as its resolved URI string. When `value` is `null`, it MUST be included as JSON `null`. All numeric `confidence` values MUST use standard JSON number encoding (no trailing zeros beyond single precision).
+
+#### 25.2.4 Future Hash-Algorithm Rotation
+
+If SHA-256 is deprecated, nodes MUST:
+
+1. Follow the dual-trust rollover pattern (§22.2): accept both the old and new hash function during a transition window of at least 90 days.
+2. Introduce a new prefix (e.g. `"sha3-256:"`) for the new hash function.
+3. Publish a migration notice in the spec changelog with the new prefix, the transition window start date, and the SHA-256 sunset date.
+
+### 25.3 Migration Path
+
+#### 25.3.1 Alias Table
+
+A `fact_cid_aliases` table MUST be maintained to allow both UUID-style `fact_id` and CID addressing:
+
+```sql
+-- Migration 013b: Content-addressed fact IDs
+ALTER TABLE facts ADD COLUMN cid TEXT;      -- nullable during backfill window
+
+CREATE TABLE fact_cid_aliases (
+  fact_id  TEXT NOT NULL REFERENCES facts(fact_id),
+  cid      TEXT NOT NULL,
+  PRIMARY KEY (fact_id, cid)
+);
+
+CREATE UNIQUE INDEX idx_fact_cid_aliases_cid ON fact_cid_aliases(cid);
+```
+
+Every new fact written MUST have a corresponding row in `fact_cid_aliases`. Existing facts (pre-Phase 13) will have `cid IS NULL` until the backfill runner completes (§25.7.2).
+
+#### 25.3.2 Dual-Addressing During Migration Window
+
+During the migration window (until a deployment-configurable end-date; SHOULD be at least **12 months** from Phase 13 GA):
+
+1. Nodes MUST accept both a `fact_id` (UUID-style, e.g. `"fact_01J..."`) and a `cid` (`"sha256:..."`) as addressing keys in all API routes that accept a fact identifier.
+2. A lookup by CID MUST go through the `fact_cid_aliases` index.
+3. A lookup by `fact_id` MUST behave identically to pre-Phase-13 behavior.
+4. Nodes MAY include both `fact_id` and `cid` in all fact record responses during the migration window.
+
+After the migration window, `fact_id`-only addressing SHOULD be deprecated; a future spec revision will formalize the removal timeline.
+
+#### 25.3.3 `cid` Field on FactRecord
+
+A `cid` field MUST be added to the `FactRecord` schema (v1.1 Phase 13 addition):
+
+```
+FactRecord (Phase 13 addition):
+  ...all prior fields...
+  cid: string | null   // "sha256:<hex64>"; null only for pre-Phase-13 records pending backfill
+```
+
+New facts MUST be written with a non-null `cid`. Pre-Phase-13 facts will have `cid: null` until the backfill migration completes.
+
+### 25.4 Federation Envelope Extensions
+
+#### 25.4.1 CID in Federation Payloads
+
+The federation fact envelope (§5, §6) MUST carry the `cid` field alongside the legacy `fact_id` for the duration of the migration window:
+
+```json
+{
+  "fact_id":  "fact_01J...",
+  "cid":      "sha256:4e9a2c...",
+  "entity":   "user:alice",
+  "relation": "memory:prefers",
+  ...other fact fields...
+}
+```
+
+Receiving nodes MUST independently compute the CID from the inbound fact body (§25.2.2) and compare it against the `cid` field:
+
+1. If the CIDs match, the fact is accepted as unmodified.
+2. If the CIDs do not match, the fact MUST be rejected; the node MUST emit a `cid_mismatch` audit log event (§22.3) and SHOULD alert the operator.
+3. The federation envelope MUST include a `phase13_ga_at` field (ISO 8601) indicating the origin node's Phase 13 GA timestamp. Receiving nodes MUST reject facts with `cid: null` where `fact.created_at >= phase13_ga_at`, emitting a `cid_mismatch` audit event (§22.3). Facts with `cid: null` where `fact.created_at < phase13_ga_at` are accepted as legitimate pre-Phase-13 legacy records. Nodes MUST NOT silently accept a fact with `cid: null` whose `created_at` postdates the declared `phase13_ga_at`. This prevents malicious peers from bypassing tamper detection by stripping the `cid` field and claiming a post-Phase-13 fact is a legacy record.
+
+#### 25.4.2 `derived_from` CID References
+
+The `derived_from` field (§2.8) MAY carry CIDs in addition to, or instead of, UUID-style `FactHash` values during the migration window. Nodes MUST accept both formats in `derived_from` arrays. After the migration window, CIDs are the preferred `derived_from` format.
+
+### 25.5 Storage-Trait Extensions
+
+The following storage-trait methods MUST be extended or added:
+
+```
+get_fact(id: string) → FactRecord | null
+  // MUST accept both "fact_01J..." (UUID-style) and "sha256:..." (CID)
+
+assert_fact(fact: FactInput) → FactRecord
+  // MUST compute and persist cid on every write (Phase 13 forward)
+
+compute_cid(body: CanonicalFactBody) → string
+  // utility: returns "sha256:<hex64>" for the given canonical body
+```
+
+### 25.6 Wire Format
+
+#### 25.6.1 Lookup by CID or fact_id
+
+```
+GET /v1/facts/:cid_or_fact_id
+Authorization: Bearer <agent or admin api-key>
+
+→ 200 { ...FactRecord with both fact_id and cid populated... }
+→ 400 cid_malformed   if a "sha256:..." string is not a valid hex64 CID
+→ 404 fact_not_found
+```
+
+#### 25.6.2 Verify CID
+
+```
+POST /v1/facts/:fact_id/verify-cid
+Authorization: Bearer <agent or admin api-key>
+
+→ 200 { "cid_valid": true,
+         "computed_cid": "sha256:...", "stored_cid": "sha256:..." }
+→ 200 { "cid_valid": false,
+         "computed_cid": "sha256:...", "stored_cid": "sha256:...",
+         "mismatch_reason": "stored_cid does not match computed_cid" }
+→ 404 fact_not_found
+```
+
+Any `cid_valid: false` response SHOULD trigger an operator audit investigation.
+
+#### 25.6.3 Backfill Status
+
+```
+GET /v1/admin/cid-backfill/status
+Authorization: Bearer <admin api-key>
+
+→ 200 {
+    "total_facts":       12340,
+    "backfilled_facts":  12340,
+    "remaining_facts":   0,
+    "backfill_complete": true,
+    "last_updated_at":   "2026-05-04T12:00:00Z"
+  }
+```
+
+### 25.7 Migration Procedure
+
+#### 25.7.1 Schema Migration
+
+Run Migration 013b (§25.3.1 DDL) as part of the Phase 13 upgrade. The full upgrade batch MUST apply migrations in order: 013a (tombstones, §23.5.3), then 013b (CID aliases, §25.3.1), then 013c (retraction log, §23.5.3). 013a and 013c MUST both be applied before 013b to maintain foreign-key integrity.
+
+#### 25.7.2 Backfill Runner
+
+Implementations MUST provide a `stigmem backfill-cids` CLI command that:
+
+1. Iterates over all facts in the `facts` table where `cid IS NULL`.
+2. For each fact, computes the CID from the canonical fact body (§25.2.1).
+3. Writes the `cid` to `facts.cid` and inserts a row into `fact_cid_aliases`, both in a single transaction per batch.
+4. Operates in batches of 1000 facts with a configurable rate limit to avoid I/O saturation.
+5. Is idempotent: re-running on a partially backfilled table continues from the last unprocessed row.
+6. Reports progress via `GET /v1/admin/cid-backfill/status` (§25.6.3).
+
+The backfill MAY run concurrently with live fact writes. The write-path CID assignment for new facts (§25.7.3) MUST proceed regardless of backfill state.
+
+#### 25.7.3 Online Write Path
+
+From Phase 13 forward, `assert_fact` MUST:
+
+1. Compute the CID before writing to the `facts` table.
+2. Write the `cid` column in the same transaction as all other fact fields.
+3. Insert a row into `fact_cid_aliases` in the same transaction.
+4. On CID collision (same CID, different `fact_id`): check whether the existing fact body is identical. If identical, return the existing record (idempotent upsert). If the bodies differ, this is a hash collision: the node MUST emit a `cid_collision_detected` audit event and MUST NOT overwrite the existing fact.
+
+### 25.8 Error Reference
+
+| HTTP | Error code | Condition |
+|---|---|---|
+| 400 | `cid_malformed` | CID string is not a valid `"sha256:<hex64>"` format |
+| 400 | `cid_mismatch` | Inbound federated fact's `cid` does not match the independently computed CID |
+| 404 | `fact_not_found` | Fact ID (UUID or CID) not found |
+| 409 | `cid_collision_detected` | Two different fact bodies produced the same CID (hash collision); reject write and emit audit event |
 
 ---
 

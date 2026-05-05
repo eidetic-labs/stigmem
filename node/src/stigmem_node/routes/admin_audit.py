@@ -110,7 +110,7 @@ def admin_audit_export(
         {where}
         ORDER BY seq ASC NULLS LAST, ts ASC, id ASC
         LIMIT ?
-    """  # noqa: S608  # nosec B608 — where clause is literal fragments, not user input
+    """  # noqa: S608  # nosec B608
 
     with db() as conn:
         rows = conn.execute(sql, params).fetchall()

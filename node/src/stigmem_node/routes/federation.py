@@ -28,6 +28,8 @@ from ..auth import Identity, resolve_identity
 from ..db import db, get_or_create_node_id
 from ..net_util import assert_safe_url
 from ..federation_ingest import ingest_fact, write_audit_log
+from ..metrics import FEDERATION_EGRESS
+from ..tracing import start_span
 from ..hlc import node_hlc
 from ..identity.capability import CapabilityTokenError, verify_token
 from ..identity.manifest import ManifestError, manifest_from_dict, verify_manifest
@@ -36,10 +38,13 @@ from ..identity.trust_store import get_peer_manifest, store_peer_manifest
 from ..models import (
     ConflictResolveRequest,
     FederationFactsResponse,
+    FederationTombstonesResponse,
     FactRecord,
     PeerRecord,
     PeerRegisterRequest,
     PeerRegisterResponse,
+    TombstoneRecord,
+    TombstoneRevocationRecord,
     row_to_record,
 )
 from ..peer_token import TokenError, verify_declaration_sig, verify_peer_token
@@ -476,6 +481,7 @@ def pull_facts(
     ]
 
     new_cursor: str | None = rows[-1]["hlc"] if rows else cursor
+    FEDERATION_EGRESS.labels(peer_id=peer["node_id"], status="ok").inc(len(records))
     return FederationFactsResponse(facts=records, cursor=new_cursor, has_more=has_more)
 
 
@@ -931,3 +937,186 @@ def resolve_conflict(
         )
 
     return {"resolution_fact_id": resolution_fact_id, "conflict_status": "resolved"}
+
+
+# ---------------------------------------------------------------------------
+# Tombstone federation routes (spec §23.4)
+# ---------------------------------------------------------------------------
+
+@router.get("/v1/federation/tombstones", response_model=FederationTombstonesResponse)
+def federation_list_tombstones(
+    since: str | None = None,
+    limit: int = 200,
+    request: Request = None,
+    token_header: Annotated[str | None, Header(alias="Authorization")] = None,
+) -> FederationTombstonesResponse:
+    """Tombstone poll route (§23.4.3). Requires tombstone:read capability token."""
+    from ..tombstones import list_tombstones, list_revocations
+    from ..identity.capability import CapabilityTokenError, verify_token
+
+    raw_token = None
+    if token_header and token_header.startswith("Bearer "):
+        raw_token = token_header[7:]
+
+    if not raw_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="capability token required",
+        )
+
+    if settings.trust_mode != "off":
+        try:
+            import json as _json
+            token_data = _json.loads(raw_token) if raw_token.startswith("{") else {}
+            verbs = token_data.get("verbs", token_data.get("verb", ""))
+            if isinstance(verbs, str):
+                verbs = [v.strip() for v in verbs.split(",")] if verbs else []
+            if "tombstone:read" not in verbs and "admin" not in verbs:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="tombstone:read capability required",
+                )
+            verify_token(
+                raw_token,
+                lambda uri: get_peer_manifest(uri, refresh_if_expired=True, trust_mode=settings.trust_mode),
+                trust_mode=settings.trust_mode,
+            )
+        except CapabilityTokenError as exc:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
+    else:
+        import logging as _logging
+        _logging.getLogger("stigmem.federation").warning(
+            "tombstone poll: trust_mode=off — token signature verification skipped"
+        )
+
+    tombstone_list = list_tombstones(since=since)[:limit]
+    revocation_list = list_revocations(since=since)[:limit]
+    cursor = tombstone_list[-1].created_at if tombstone_list else None
+    return FederationTombstonesResponse(
+        tombstones=tombstone_list,
+        revocations=revocation_list,
+        cursor=cursor,
+    )
+
+
+@router.post("/v1/federation/tombstones/ingest", status_code=status.HTTP_200_OK)
+def federation_ingest_tombstone(
+    payload: dict,
+    request: Request = None,
+    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+    x_stigmem_capability: Annotated[str | None, Header(alias="x-stigmem-capability")] = None,
+) -> dict:
+    """Inbound tombstone push from a federation peer (§23.4.2).
+
+    Auth: peer JWT or capability token with tombstone:write verb (mirrors push_facts).
+    Verifies signature against org manifest, writes to local tombstones table.
+    """
+    from ..tombstones import apply_inbound_tombstone, apply_inbound_revocation
+    from ..tombstone_signing import verify_tombstone_signature, verify_revocation_signature
+    from ..identity.trust_store import get_peer_manifest
+    import logging as _logging
+
+    log = _logging.getLogger("stigmem.tombstones.ingest")
+
+    # --- Caller authentication (F-1 fix) ---
+    peer_auth = _try_peer_token_auth(authorization)
+    if peer_auth is not None:
+        if settings.mtls_enabled and request is not None:
+            peer_cert = _get_mtls_peer_cert(request)
+            if not check_peer_san(peer_cert, peer_auth[0]["node_id"]):
+                raise HTTPException(status_code=401, detail="peer certificate URI SAN does not match node_id")
+    elif x_stigmem_capability is not None:
+        try:
+            verify_token(
+                x_stigmem_capability,
+                lambda uri: get_peer_manifest(uri, refresh_if_expired=True, trust_mode=settings.trust_mode),
+                trust_mode=settings.trust_mode,
+            )
+        except CapabilityTokenError as exc:
+            raise HTTPException(status_code=401, detail=f"capability token invalid: {exc}")
+        try:
+            cap_token = json.loads(x_stigmem_capability)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(status_code=400, detail=f"malformed capability token JSON: {exc}")
+        verb = cap_token.get("verb", "")
+        if verb not in ("tombstone:write", "write"):
+            raise HTTPException(status_code=403, detail="capability token missing tombstone:write verb")
+    else:
+        raise HTTPException(status_code=401, detail="peer token or capability token required")
+
+    # --- Revocation branch ---
+    if "tombstone_id" in payload:
+        try:
+            rev = TombstoneRevocationRecord(**payload)
+        except Exception as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+        # F-2 fix: verify revocation signature before applying (skip when trust_mode=off)
+        if settings.trust_mode != "off":
+            if not rev.key_id:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="revocation missing key_id")
+            manifest = get_peer_manifest(rev.signed_by)
+            if manifest is None:
+                raise HTTPException(status_code=401, detail="no manifest for revocation signer")
+            pubkey_b64 = _resolve_pubkey_for_key_id(manifest, rev.key_id)
+            if pubkey_b64 is None:
+                raise HTTPException(status_code=401, detail="key_id not in signer manifest")
+            try:
+                verify_revocation_signature(rev, pubkey_b64)
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"revocation_verification_failed: {exc}",
+                ) from exc
+
+        apply_inbound_revocation(rev)
+        return {"status": "ok", "type": "revocation"}
+
+    # --- Tombstone branch ---
+    try:
+        record = TombstoneRecord(**payload)
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    # §23.4.2.1 — fail-closed signature verification (skip when trust_mode=off)
+    if settings.trust_mode != "off":
+        if not record.key_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="tombstone missing key_id")
+
+        manifest = get_peer_manifest(record.signed_by)
+        if manifest is None:
+            raise HTTPException(status_code=401, detail="no manifest for signer")
+
+        pubkey_b64 = _resolve_pubkey_for_key_id(manifest, record.key_id)
+        if pubkey_b64 is None:
+            raise HTTPException(status_code=401, detail="key_id not in signer manifest")
+
+        try:
+            verify_tombstone_signature(record, pubkey_b64)
+        except ValueError as exc:
+            _emit_tombstone_verification_failed(record, str(exc))
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"tombstone_verification_failed: {exc}",
+            ) from exc
+
+    written = apply_inbound_tombstone(record)
+    return {"status": "ok", "written": written}
+
+
+def _resolve_pubkey_for_key_id(manifest: Any, key_id: str) -> str | None:
+    """Return base64url public key from manifest matching key_id, or None."""
+    if manifest.key_id == key_id:
+        return manifest.public_key
+    for evt in getattr(manifest, "rotation_events", []):
+        if getattr(evt, "new_key_id", None) == key_id:
+            return getattr(evt, "new_public_key", None)
+    return None
+
+
+def _emit_tombstone_verification_failed(record: TombstoneRecord, reason: str) -> None:
+    import logging as _logging
+    _logging.getLogger("stigmem.tombstones.ingest").error(
+        "tombstone_verification_failed: tombstone_id=%s entity=%s reason=%s",
+        record.id, record.entity_uri, reason,
+    )

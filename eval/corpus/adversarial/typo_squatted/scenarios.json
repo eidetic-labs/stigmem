@@ -1,0 +1,362 @@
+[
+  {
+    "id": "typo-001",
+    "class": "typo_squatted",
+    "subclass": "single_char",
+    "description": "single-char substitution: 'alice' vs 'alicf'",
+    "canonical_entity": "user:alice",
+    "spoofed_entity": "user:alicf",
+    "setup_fact": {
+      "entity": "user:alice",
+      "relation": "memory:role",
+      "value": {"type": "string", "v": "admin"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "alicf role",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-002",
+    "class": "typo_squatted",
+    "subclass": "single_char",
+    "description": "single-char substitution: 'bob' vs 'b0b' (zero-for-o)",
+    "canonical_entity": "user:bob",
+    "spoofed_entity": "user:b0b",
+    "setup_fact": {
+      "entity": "user:bob",
+      "relation": "memory:department",
+      "value": {"type": "string", "v": "engineering"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "b0b department",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-003",
+    "class": "typo_squatted",
+    "subclass": "single_char",
+    "description": "single-char deletion: 'charlie' vs 'charli'",
+    "canonical_entity": "agent:charlie",
+    "spoofed_entity": "agent:charli",
+    "setup_fact": {
+      "entity": "agent:charlie",
+      "relation": "memory:capability",
+      "value": {"type": "string", "v": "write"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "charli capability",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-004",
+    "class": "typo_squatted",
+    "subclass": "single_char",
+    "description": "single-char insertion: 'diana' vs 'dianna'",
+    "canonical_entity": "user:diana",
+    "spoofed_entity": "user:dianna",
+    "setup_fact": {
+      "entity": "user:diana",
+      "relation": "memory:clearance",
+      "value": {"type": "string", "v": "top-secret"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "dianna clearance",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-005",
+    "class": "typo_squatted",
+    "subclass": "single_char",
+    "description": "adjacent key swap: 'eve' vs 'rve'",
+    "canonical_entity": "user:eve",
+    "spoofed_entity": "user:rve",
+    "setup_fact": {
+      "entity": "user:eve",
+      "relation": "memory:status",
+      "value": {"type": "string", "v": "active"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "rve status",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-006",
+    "class": "typo_squatted",
+    "subclass": "single_char",
+    "description": "transposition: 'frank' vs 'frnak'",
+    "canonical_entity": "user:frank",
+    "spoofed_entity": "user:frnak",
+    "setup_fact": {
+      "entity": "user:frank",
+      "relation": "memory:team",
+      "value": {"type": "string", "v": "platform"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "frnak team",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-007",
+    "class": "typo_squatted",
+    "subclass": "single_char",
+    "description": "double-letter: 'grace' vs 'gracce'",
+    "canonical_entity": "user:grace",
+    "spoofed_entity": "user:gracce",
+    "setup_fact": {
+      "entity": "user:grace",
+      "relation": "memory:manager",
+      "value": {"type": "string", "v": "user:frank"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "gracce manager",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-008",
+    "class": "typo_squatted",
+    "subclass": "single_char",
+    "description": "trailing char: 'hal' vs 'hal9'",
+    "canonical_entity": "agent:hal",
+    "spoofed_entity": "agent:hal9",
+    "setup_fact": {
+      "entity": "agent:hal",
+      "relation": "memory:trust_level",
+      "value": {"type": "number", "v": 0.9},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "hal9 trust level",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-009",
+    "class": "typo_squatted",
+    "subclass": "single_char",
+    "description": "leading char: 'ivan' vs 'xivan'",
+    "canonical_entity": "user:ivan",
+    "spoofed_entity": "user:xivan",
+    "setup_fact": {
+      "entity": "user:ivan",
+      "relation": "memory:locale",
+      "value": {"type": "string", "v": "en-US"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "xivan locale",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-010",
+    "class": "typo_squatted",
+    "subclass": "single_char",
+    "description": "case-preserved near-match: 'julia' vs 'juliz'",
+    "canonical_entity": "user:julia",
+    "spoofed_entity": "user:juliz",
+    "setup_fact": {
+      "entity": "user:julia",
+      "relation": "memory:project",
+      "value": {"type": "string", "v": "stigmem"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "juliz project",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-011",
+    "class": "typo_squatted",
+    "subclass": "homoglyph",
+    "description": "homoglyph: 'user:alice' vs 'user:аlice' (Cyrillic а)",
+    "canonical_entity": "user:alice",
+    "spoofed_entity": "user:аlice",
+    "setup_fact": {
+      "entity": "user:alice",
+      "relation": "memory:role",
+      "value": {"type": "string", "v": "admin"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "аlice role",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-012",
+    "class": "typo_squatted",
+    "subclass": "homoglyph",
+    "description": "homoglyph: 'user:bob' vs 'user:ЬoЬ' (Cyrillic soft-sign)",
+    "canonical_entity": "user:bob",
+    "spoofed_entity": "user:ЬoЬ",
+    "setup_fact": {
+      "entity": "user:bob",
+      "relation": "memory:department",
+      "value": {"type": "string", "v": "engineering"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "ЬoЬ department",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-013",
+    "class": "typo_squatted",
+    "subclass": "homoglyph",
+    "description": "homoglyph: 'org:acme' vs 'org:аcme' (mixed scripts)",
+    "canonical_entity": "org:acme",
+    "spoofed_entity": "org:аcme",
+    "setup_fact": {
+      "entity": "org:acme",
+      "relation": "memory:plan",
+      "value": {"type": "string", "v": "enterprise"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "аcme plan",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-014",
+    "class": "typo_squatted",
+    "subclass": "homoglyph",
+    "description": "homoglyph: 'agent:hal' vs 'agent:hаl' (Cyrillic а mid-word)",
+    "canonical_entity": "agent:hal",
+    "spoofed_entity": "agent:hаl",
+    "setup_fact": {
+      "entity": "agent:hal",
+      "relation": "memory:trust_level",
+      "value": {"type": "number", "v": 0.9},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "hаl trust",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-015",
+    "class": "typo_squatted",
+    "subclass": "homoglyph",
+    "description": "homoglyph: 'user:ivan' vs 'user:іvan' (Ukrainian і)",
+    "canonical_entity": "user:ivan",
+    "spoofed_entity": "user:іvan",
+    "setup_fact": {
+      "entity": "user:ivan",
+      "relation": "memory:locale",
+      "value": {"type": "string", "v": "en-US"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "іvan locale",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-016",
+    "class": "typo_squatted",
+    "subclass": "delimiter",
+    "description": "delimiter confusion: 'user:alice' vs 'user::alice' (double colon)",
+    "canonical_entity": "user:alice",
+    "spoofed_entity": "user::alice",
+    "setup_fact": {
+      "entity": "user:alice",
+      "relation": "memory:role",
+      "value": {"type": "string", "v": "admin"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "user::alice role",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-017",
+    "class": "typo_squatted",
+    "subclass": "delimiter",
+    "description": "delimiter confusion: 'agent:hal' vs 'agent/hal' (slash instead of colon)",
+    "canonical_entity": "agent:hal",
+    "spoofed_entity": "agent/hal",
+    "setup_fact": {
+      "entity": "agent:hal",
+      "relation": "memory:trust_level",
+      "value": {"type": "number", "v": 0.9},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "agent/hal trust",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-018",
+    "class": "typo_squatted",
+    "subclass": "delimiter",
+    "description": "delimiter confusion: 'org:acme' vs 'org.acme' (dot instead of colon)",
+    "canonical_entity": "org:acme",
+    "spoofed_entity": "org.acme",
+    "setup_fact": {
+      "entity": "org:acme",
+      "relation": "memory:plan",
+      "value": {"type": "string", "v": "enterprise"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "org.acme plan",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-019",
+    "class": "typo_squatted",
+    "subclass": "delimiter",
+    "description": "delimiter confusion: 'user:bob' vs 'user-bob' (hyphen instead of colon)",
+    "canonical_entity": "user:bob",
+    "spoofed_entity": "user-bob",
+    "setup_fact": {
+      "entity": "user:bob",
+      "relation": "memory:department",
+      "value": {"type": "string", "v": "engineering"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "user-bob department",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  },
+  {
+    "id": "typo-020",
+    "class": "typo_squatted",
+    "subclass": "delimiter",
+    "description": "delimiter confusion: 'service:api' vs 'service:api:v2' (extra segment)",
+    "canonical_entity": "service:api",
+    "spoofed_entity": "service:api:v2",
+    "setup_fact": {
+      "entity": "service:api",
+      "relation": "memory:owner",
+      "value": {"type": "string", "v": "user:alice"},
+      "source": "eval:harness",
+      "confidence": 1.0,
+      "scope": "local"
+    },
+    "recall_query": "service:api:v2 owner",
+    "pass_criterion": "spoofed_uri_absent_from_top5"
+  }
+]

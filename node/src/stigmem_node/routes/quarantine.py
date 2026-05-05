@@ -204,6 +204,11 @@ def reject_fact(
                WHERE id = ?""",
             (identity.entity_uri, now, reason or "rejected via admin API", fact_id),
         )
+        # Append-only retraction log (§24.2.1 c.3)
+        conn.execute(
+            "INSERT INTO fact_retractions (id, fact_id, retracted_at, retracted_by) VALUES (?,?,?,?)",
+            (str(uuid.uuid4()), fact_id, now, identity.entity_uri),
+        )
         _write_quarantine_audit(conn, fact_id, "quarantine_reject", identity, now)
 
     return {

@@ -64,6 +64,15 @@ conformance = [
     "pytest>=8.0",
     "stigmem-node[postgres]",
 ]
+observability = [
+    # Phase 13 — full OpenTelemetry + Prometheus observability stack.
+    # Activate with STIGMEM_OTEL_ENABLED=true (tracing) and the /metrics endpoint
+    # (Prometheus; no extra env var required).
+    "prometheus-client>=0.20",
+    "opentelemetry-sdk>=1.24",
+    "opentelemetry-exporter-otlp-proto-http>=1.24",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.24",
+]
 
 [project.scripts]
 stigmem-node = "stigmem_node.main:run"

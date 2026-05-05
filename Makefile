@@ -1,5 +1,5 @@
 .PHONY: sdk-ts sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack help \
-        check check-python check-node check-go check-docs check-obsidian \
+        check check-python check-node check-contract check-go check-docs check-obsidian \
         eval-soak eval-soak-smoke \
         eval-fast eval-adversarial eval-recall eval-fast-baseline
 
@@ -14,6 +14,7 @@ help:
 	@echo "  check             PR-equivalent fast gate bundle"
 	@echo "  check-python      Python lint/type/test/security checks"
 	@echo "  check-node        TypeScript build/type/test/audit checks"
+	@echo "  check-contract    OpenAPI + generated SDK contract drift checks"
 	@echo "  check-go          Go SDK tests"
 	@echo "  check-docs        Docusaurus docs build"
 	@echo "  check-obsidian    Obsidian plugin build"
@@ -35,6 +36,9 @@ check-python:
 
 check-node:
 	bash scripts/check.sh node
+
+check-contract:
+	bash scripts/check.sh contract
 
 check-go:
 	bash scripts/check.sh go

@@ -1,7 +1,7 @@
 {
   "name": "stigmem-ts",
   "version": "1.0.0-rc",
-  "description": "TypeScript client SDK for Stigmem — the federated knowledge fabric (spec v0.7)",
+  "description": "TypeScript client SDK for Stigmem — the federated knowledge fabric (spec v1.0)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {

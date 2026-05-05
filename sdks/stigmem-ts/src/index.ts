@@ -1,5 +1,5 @@
 /**
- * stigmem-ts — TypeScript client SDK for Stigmem (spec v0.7).
+ * stigmem-ts — TypeScript client SDK for Stigmem (spec v1.0).
  *
  * @example
  * ```ts

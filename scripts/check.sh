@@ -112,16 +112,42 @@ run_obsidian() {
 
 usage() {
   cat <<'EOF'
-Usage: scripts/check.sh [all|python|node|go|docs|obsidian]
+Usage: scripts/check.sh [all|python|node|contract|go|docs|obsidian]
 
 Runs the fast repository gates locally. "all" is the PR-equivalent bundle.
 EOF
+}
+
+run_contract() {
+  need_cmd uv
+  need_cmd node
+  cd "$ROOT_DIR"
+
+  if [[ "${CHECK_SKIP_PYTHON_SYNC:-0}" != "1" ]]; then
+    uv sync --all-packages
+  fi
+
+  uv run python scripts/export_openapi.py --check
+
+  if [[ "${CHECK_SKIP_NODE_INSTALL:-0}" != "1" ]]; then
+    pnpm_cmd install --frozen-lockfile
+  fi
+
+  local generated_tmp
+  generated_tmp="$(mktemp)"
+  (
+    cd "$ROOT_DIR/sdks/stigmem-ts"
+    pnpm_cmd exec openapi-typescript ../../docs/openapi/stigmem.json -o "$generated_tmp" --root-types
+  )
+  diff -u "$ROOT_DIR/sdks/stigmem-ts/src/generated.ts" "$generated_tmp"
+  rm -f "$generated_tmp"
 }
 
 case "${1:-all}" in
   all)
     run_python
     run_node
+    run_contract
     run_go
     run_docs
     run_obsidian
@@ -131,6 +157,9 @@ case "${1:-all}" in
     ;;
   node)
     run_node
+    ;;
+  contract)
+    run_contract
     ;;
   go)
     run_go

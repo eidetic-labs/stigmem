@@ -30,7 +30,9 @@ on them.
 
 ### §15.1 DecayPolicy {#section-15-1}
 
-A `DecayPolicy` configures how facts of a given relation (or all relations) decay over time.
+A `DecayPolicy` configures how facts of a given relation (or all relations) decay over time. Operators deploy one or more policies to ensure knowledge does not accumulate indefinitely — stale facts degrade confidence or are retracted without requiring agents to remember which facts they once asserted.
+
+The struct exposes two mutually-exclusive decay modes. **Retraction** (`ttl_s`) is an aggressive binary cut-off suited for ephemeral state such as "user is online" — once the TTL expires the fact is no longer credible and a zero-confidence retraction is written. **Confidence reduction** (`half_life_s`) provides a smoother signal for beliefs that age gradually; each sweep halves the original confidence until it hits `min_confidence`. The `relation` and `scope` wildcards (`"*"`) allow broad catch-all policies while the `exempt_relations` escape hatch protects system-generated facts (§3.5) and reification primitives whose removal would corrupt the graph.
 
 ```
 DecayPolicy {
@@ -66,6 +68,10 @@ retracted or confidence-reduced by the sweeper, regardless of policy configurati
 The `exempt_relations` field on individual policies may add further exemptions.
 
 ### §15.2 Decay Sweep Wire Format {#section-15-2}
+
+The sweep endpoint triggers evaluation of all matching decay policies against a single scope. Callers specify the target `scope` and may optionally override the decay mode (e.g. forcing `dry_run` for a preview without side effects) or restrict evaluation to a single named policy. The response returns counters that let operators and monitoring systems track how many facts were affected, supporting both automated alerting and manual audit.
+
+The request/response split between "actual" and "dry-run" counters is intentional: `facts_retracted` and `facts_reduced` are always zero in `dry_run` mode, while `dry_run_would_retract` and `dry_run_would_reduce` are always zero outside it. This avoids ambiguity about whether writes occurred.
 
 #### Request
 

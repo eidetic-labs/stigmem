@@ -27,6 +27,10 @@ The existing scope model (`local | team | company | public`) is a coarse, operat
 
 ### §17.2 Garden Primitive {#section-17-2}
 
+A garden is represented by two related structures: `Garden` (the container itself) and `GardenMember` (a principal's membership within it). The `Garden` record binds a human-readable slug to a fixed `FactScope`, ensuring all facts tagged with that garden share a single visibility tier. The `scope` field is set at creation time and cannot be changed — this invariant allows the ACL layer (§17.3) to reject scope-mismatched writes without consulting the facts table.
+
+Membership uses a three-tier role model (`GardenRole`). Roles are coarse by design: fine-grained per-relation permissions would complicate the already-layered access control stack (scope + garden + federation), so the protocol defers to operators who need them to implement a proxy or plugin. The `added_by` field supports audit trails without requiring a separate history table.
+
 ```
 Garden {
   id:          UUID              // internal primary key

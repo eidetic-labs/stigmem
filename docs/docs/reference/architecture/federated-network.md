@@ -66,7 +66,7 @@ sequenceDiagram
 ```mermaid
 flowchart TB
     Fact["Outbound fact"]
-    Check{"fact.scope ∈\nPeerDeclaration\n.allowed_scopes?"}
+    Check{"Scope allowed?"}
     Send["Replicate to peer"]
     Drop["Silently drop"]
 

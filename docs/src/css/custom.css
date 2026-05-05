@@ -246,7 +246,7 @@ pre {
   opacity: 1 !important;
 }
 [data-theme='dark'] .docusaurus-mermaid-container .edgeLabel rect {
-  fill: var(--ifm-background-surface-color) !important;
+  fill: color-mix(in srgb, var(--ifm-color-primary) 22%, var(--stigmem-logo-bg)) !important;
 }
 
 /* Hero buttons — softer, more clickable. The hero is always dark (it inherits

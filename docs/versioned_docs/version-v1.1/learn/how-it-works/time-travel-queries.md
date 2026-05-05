@@ -31,13 +31,13 @@ A fact `f` is visible at time T if **all four conditions** hold:
 
 ```mermaid
 flowchart TD
-    F["Fact f"] --> C1{"f.created_at ≤ T?<br/>(written before T)"}
+    F["Fact f"] --> C1{"Created before T?"}
     C1 -->|No| HIDDEN["Not visible"]
-    C1 -->|Yes| C2{"f.valid_until is null<br/>OR f.valid_until > T?<br/>(not yet expired at T)"}
+    C1 -->|Yes| C2{"Not expired at T?"}
     C2 -->|No| HIDDEN
-    C2 -->|Yes| C3{"Not retracted at T?<br/>(no retraction record<br/>with retracted_at ≤ T)"}
+    C2 -->|Yes| C3{"Not retracted at T?"}
     C3 -->|No| HIDDEN
-    C3 -->|Yes| C4{"Not tombstoned?<br/>(or tombstone has<br/>legal_hold: true<br/>+ admin caller)"}
+    C3 -->|Yes| C4{"Not tombstoned?"}
     C4 -->|No| HIDDEN
     C4 -->|Yes| VISIBLE["Visible at T"]
 ```

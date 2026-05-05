@@ -47,7 +47,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:  # type: ignore[name-define
     parser.addoption(
         "--backend",
         default="sqlite",
-        choices=["sqlite", "libsql"],
+        choices=["sqlite", "libsql", "postgres"],
         help="Storage backend to test against (default: sqlite)",
     )
     parser.addoption(
@@ -199,8 +199,19 @@ def _restore_settings(original: Settings, extra: list) -> None:
 
 
 def _make_enc_settings(db_file: str, backend: str, encrypt: str, **overrides: object) -> Settings:
-    """Build a Settings object for the given backend/encrypt combination."""
+    """Build a Settings object for the given backend/encrypt combination.
+
+    For the postgres backend, ``db_file`` may be the sentinel string
+    ``"pg:<dsn>:<schema>"`` produced by the ``tmp_db`` fixture.  In that case
+    ``pg_dsn`` and ``pg_schema`` are extracted automatically unless supplied
+    in *overrides*.
+    """
     kwargs: dict[str, object] = {"db_path": db_file, "storage_backend": backend, **overrides}
+    if backend == "postgres" and db_file.startswith("pg:") and "pg_dsn" not in overrides:
+        _, dsn, schema = db_file.split(":", 2)
+        kwargs["pg_dsn"] = dsn
+        kwargs["pg_schema"] = schema
+        kwargs["db_path"] = "pg_test"
     if encrypt == "on":
         kwargs["at_rest_encryption"] = "on"
         kwargs["at_rest_key_passphrase_env"] = _ENCRYPT_PASSPHRASE_ENV
@@ -208,9 +219,35 @@ def _make_enc_settings(db_file: str, backend: str, encrypt: str, **overrides: ob
 
 
 @pytest.fixture()
-def tmp_db(tmp_path: object, backend: str, encrypt: str) -> str:
+def tmp_db(tmp_path: object, backend: str, encrypt: str) -> Generator[str, None, None]:
     """Create a migrated test database, honouring --backend and --encrypt."""
     db_file = str(tmp_path) + "/test.db"  # type: ignore[operator]
+    if backend == "postgres":
+        import os
+        import uuid
+        pytest.importorskip("psycopg2", reason="psycopg2 not installed")
+        pg_dsn = os.environ.get("STIGMEM_TEST_PG_DSN", "")
+        if not pg_dsn:
+            pytest.skip("STIGMEM_TEST_PG_DSN not set")
+        from stigmem_node.storage import make_backend as _make_backend
+        schema = f"node_test_{uuid.uuid4().hex[:12]}"
+        b = _make_backend(_settings=_make_enc_settings(
+            db_file, backend, "off", pg_dsn=pg_dsn, pg_schema=schema
+        ))
+        b.apply_migrations(_MIGRATIONS_DIR)
+        sentinel = f"pg:{pg_dsn}:{schema}"
+        yield sentinel
+        # Drop the per-test schema to avoid accumulating stale schemas.
+        try:
+            import psycopg2  # type: ignore[import]
+            conn = psycopg2.connect(pg_dsn)
+            conn.autocommit = True
+            with conn.cursor() as cur:
+                cur.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")  # noqa: S608
+            conn.close()
+        except Exception:  # noqa: BLE001
+            pass
+        return
     if encrypt == "on" or backend == "libsql":
         if backend == "libsql":
             pytest.importorskip("libsql_experimental", reason="libsql-experimental not installed")
@@ -220,7 +257,7 @@ def tmp_db(tmp_path: object, backend: str, encrypt: str) -> str:
         b.apply_migrations(_MIGRATIONS_DIR)
     else:
         apply_migrations(db_path=db_file)
-    return db_file
+    yield db_file
 
 
 @pytest.fixture()

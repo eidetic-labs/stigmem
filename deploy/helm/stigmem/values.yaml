@@ -1,0 +1,151 @@
+# stigmem Helm chart — default values
+# Override with: helm install stigmem deploy/helm/stigmem -f my-values.yaml
+
+image:
+  repository: ghcr.io/eidetic-labs/stigmem-node
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+# ── Service ──────────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 8765
+
+# ── Ingress ──────────────────────────────────────────────────────────────────
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: stigmem.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: stigmem-tls
+  #    hosts:
+  #      - stigmem.example.com
+
+# ── Persistence ──────────────────────────────────────────────────────────────
+persistence:
+  enabled: true
+  storageClass: ""       # "" = cluster default
+  size: 1Gi
+  mountPath: /data
+  accessMode: ReadWriteOnce
+
+# ── stigmem node configuration ───────────────────────────────────────────────
+stigmem:
+  nodeUrl: "http://stigmem:8765"
+  logLevel: "info"
+
+  # Auth
+  authRequired: false
+  oidcEnabled: false
+  oidcIssuerUrl: ""
+  oidcAudience: ""
+  oidcTokenTtlHours: 8
+  oidcAllowedDomains: ""
+
+  # Storage backend: "sqlite" or "libsql"
+  storageBackend: "sqlite"
+  dbPath: "/data/stigmem.db"
+
+  # libSQL / Turso (only when storageBackend=libsql)
+  libsqlUrl: ""
+  libsqlAuthToken: ""        # prefer libsqlSecret below for production
+
+  # Encryption at rest: "off" or "on"
+  atRestEncryption: "off"
+  # Name of the env var holding the passphrase (not the passphrase itself):
+  atRestKeyPassphraseEnv: ""
+  # KMS URI, e.g. "env://MY_KEY_HEX" or "aws-kms://..."
+  atRestKeyKmsUri: ""
+
+  # Federation
+  federationEnabled: false
+  federationPullIntervalS: 30
+  federationPushEnabled: false
+  federationNonceWindowS: 300
+  federationAllowTeam: false
+  federationPubkey: ""
+  federationPrivkey: ""      # prefer federationKeypairSecret below for production
+
+  # Trust & sanitizer
+  trustMode: "relaxed"
+  sanitizerMode: "warn"
+  sourceAttestationMode: "warn"
+  attestationRequired: false
+
+  # Decay
+  decayTtlSeconds: 0
+  decayMinConfidence: 0.0
+
+  # Rate limiting (0 = disabled)
+  rateLimitWritePerHour: 1000
+  rateLimitReadPerHour: 5000
+
+  # Async job threshold
+  asyncJobThreshold: 100000
+
+  # Transparency log
+  tlBackend: "local"
+  tlLocalPath: "/data/stigmem_tl.jsonl"
+
+# ── Secret references ─────────────────────────────────────────────────────────
+# Prefer referencing existing Kubernetes Secrets over inlining values above.
+
+federationKeypairSecret:
+  name: ""          # name of a Secret containing federation keys
+  pubkeyKey: ""     # key in that Secret for the public key
+  privkeyKey: ""    # key in that Secret for the private key
+
+libsqlSecret:
+  name: ""          # name of a Secret containing libsql credentials
+  authTokenKey: ""  # key in that Secret for STIGMEM_LIBSQL_AUTH_TOKEN
+
+atRestEncryptionSecret:
+  name: ""          # name of a Secret containing the DB passphrase / key
+  passphraseKey: "" # key in that Secret; value stored in env var named by atRestKeyPassphraseEnv
+
+# ── Resource limits ───────────────────────────────────────────────────────────
+resources: {}
+# Recommended starting point:
+# resources:
+#   requests:
+#     memory: "128Mi"
+#     cpu: "100m"
+#   limits:
+#     memory: "512Mi"
+#     cpu: "500m"
+
+# ── Scheduling ────────────────────────────────────────────────────────────────
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# ── Probes ────────────────────────────────────────────────────────────────────
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3

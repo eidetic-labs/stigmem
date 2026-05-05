@@ -8,7 +8,27 @@ sidebar_label: Deployment
 
 **Audience:** node operators installing Stigmem for the first time, or migrating an existing bare-metal install to Docker.
 
+:::tip Operator handbook
+For narrative runbooks covering Fly.io, Helm, systemd, PaaS, and backend selection, see **[Operating Stigmem → Deploy runbooks](./operating/deploy-runbooks)**.
+:::
+
 The reference node ships as a Docker image. Docker Compose is the recommended deployment path for both local development and single-host production. For development against source, see [Running without Docker](#running-without-docker).
+
+## Deploy recipes
+
+The [`deploy/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy) directory
+contains self-contained reference recipes for every common hosting environment:
+
+| Recipe | Best for |
+|---|---|
+| [Fly.io](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/fly) | Personal / small team; zero-config TLS |
+| [Docker Compose](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/compose) | Local dev / single-server self-host |
+| [Helm](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/helm) | Kubernetes / enterprise |
+| [systemd](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/systemd) | Sovereign, air-gapped, bare metal |
+| [PaaS](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/paas) | Render, Railway, AWS App Runner, GCP Cloud Run |
+
+See [`deploy/README.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/README.md)
+for a decision tree. The sections below cover the Docker Compose path in detail.
 
 ---
 

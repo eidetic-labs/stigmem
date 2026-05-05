@@ -31,12 +31,31 @@ def _split_sql(sql: str) -> list[str]:
     """Split a SQL script into individual statements, stripping comments.
 
     libsql-experimental does not expose ``executescript()``, so we split
-    manually.  Migration files contain only DDL with no embedded semicolons
-    inside string literals, so a simple split is safe.
+    manually on ``';'``.  Trigger bodies contain ``BEGIN...END`` blocks with
+    inner semicolons; we filter the resulting fragments rather than trying to
+    parse them.  FTS5 virtual tables and their sync triggers are SQLite-only
+    and are silently dropped so libsql-experimental (which lacks FTS5) can
+    still run every migration.
     """
     sql = re.sub(r"--[^\n]*", "", sql)
     sql = re.sub(r"/\*.*?\*/", "", sql, flags=re.DOTALL)
-    return [stmt.strip() for stmt in sql.split(";") if stmt.strip()]
+    stmts = []
+    for stmt in sql.split(";"):
+        stmt = stmt.strip()
+        if not stmt:
+            continue
+        upper = stmt.upper()
+        # Bare keywords left after splitting trigger/transaction bodies
+        if upper in ("BEGIN", "END", "COMMIT", "ROLLBACK"):
+            continue
+        # FTS5 virtual table — not supported by libsql-experimental
+        if re.search(r"CREATE\s+VIRTUAL\s+TABLE", stmt, re.IGNORECASE):
+            continue
+        # Trigger bodies and backfill inserts that reference facts_fts
+        if re.search(r"\bfacts_fts\b", stmt, re.IGNORECASE):
+            continue
+        stmts.append(stmt)
+    return stmts
 
 
 class _LibSQLRow:
@@ -66,6 +85,71 @@ class _LibSQLRow:
 
     def get(self, key: str, default: Any = None) -> Any:
         return self._data.get(key, default)
+
+
+class _LibSQLCursor:
+    """Wraps a raw libsql-experimental cursor and returns _LibSQLRow objects.
+
+    libsql-experimental has no row_factory on the connection; we wrap at the
+    cursor level instead so all fetch methods return dict-accessible rows.
+    """
+
+    __slots__ = ("_cur",)
+
+    def __init__(self, cur: Any) -> None:
+        self._cur = cur
+
+    @property
+    def description(self) -> Any:
+        return self._cur.description
+
+    @property
+    def lastrowid(self) -> Any:
+        return self._cur.lastrowid
+
+    @property
+    def rowcount(self) -> int:
+        return self._cur.rowcount
+
+    def fetchone(self) -> Any:
+        row = self._cur.fetchone()
+        return None if row is None else _LibSQLRow(self._cur, row)
+
+    def fetchall(self) -> list:
+        return [_LibSQLRow(self._cur, r) for r in self._cur.fetchall()]
+
+    def fetchmany(self, size: int | None = None) -> list:
+        rows = self._cur.fetchmany(size) if size is not None else self._cur.fetchmany()
+        return [_LibSQLRow(self._cur, r) for r in rows]
+
+
+class _LibSQLConnection:
+    """Wraps a raw libsql-experimental connection so execute() returns _LibSQLCursor."""
+
+    __slots__ = ("_conn",)
+
+    def __init__(self, conn: Any) -> None:
+        self._conn = conn
+
+    def execute(self, sql: str, params: Any = ()) -> _LibSQLCursor:
+        # libsql-experimental only accepts tuples, not lists, for parameters.
+        if isinstance(params, list):
+            params = tuple(params)
+        return _LibSQLCursor(self._conn.execute(sql, params))
+
+    def executemany(self, sql: str, params: Any = ()) -> _LibSQLCursor:
+        if isinstance(params, list):
+            params = tuple(params)
+        return _LibSQLCursor(self._conn.executemany(sql, params))
+
+    def commit(self) -> None:
+        self._conn.commit()
+
+    def rollback(self) -> None:
+        self._conn.rollback()
+
+    def close(self) -> None:
+        self._conn.close()
 
 
 class LibSQLBackend(StorageBackend):
@@ -120,9 +204,8 @@ class LibSQLBackend(StorageBackend):
         else:
             conn = libsql.connect(database=self._db_path, **enc_kwargs)
 
-        conn.row_factory = _LibSQLRow
         conn.execute("PRAGMA foreign_keys=ON")
-        return conn
+        return _LibSQLConnection(conn)
 
     @contextmanager
     def connection(self) -> Generator[Any, None, None]:

@@ -1,0 +1,177 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "stigmem.fullname" . }}
+  labels:
+    {{- include "stigmem.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "stigmem.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "stigmem.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8765
+              protocol: TCP
+          env:
+            - name: STIGMEM_NODE_URL
+              value: {{ .Values.stigmem.nodeUrl | quote }}
+            - name: STIGMEM_LOG_LEVEL
+              value: {{ .Values.stigmem.logLevel | quote }}
+            - name: STIGMEM_AUTH_REQUIRED
+              value: {{ .Values.stigmem.authRequired | quote }}
+            - name: STIGMEM_DB_PATH
+              value: {{ .Values.stigmem.dbPath | quote }}
+
+            # Storage backend
+            - name: STIGMEM_STORAGE_BACKEND
+              value: {{ .Values.stigmem.storageBackend | quote }}
+            {{- if .Values.stigmem.libsqlUrl }}
+            - name: STIGMEM_LIBSQL_URL
+              value: {{ .Values.stigmem.libsqlUrl | quote }}
+            {{- end }}
+            {{- if and .Values.libsqlSecret.name .Values.libsqlSecret.authTokenKey }}
+            - name: STIGMEM_LIBSQL_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.libsqlSecret.name }}
+                  key: {{ .Values.libsqlSecret.authTokenKey }}
+            {{- else if .Values.stigmem.libsqlAuthToken }}
+            - name: STIGMEM_LIBSQL_AUTH_TOKEN
+              value: {{ .Values.stigmem.libsqlAuthToken | quote }}
+            {{- end }}
+
+            # Encryption at rest
+            - name: STIGMEM_AT_REST_ENCRYPTION
+              value: {{ .Values.stigmem.atRestEncryption | quote }}
+            {{- if .Values.stigmem.atRestKeyPassphraseEnv }}
+            - name: STIGMEM_AT_REST_KEY_PASSPHRASE_ENV
+              value: {{ .Values.stigmem.atRestKeyPassphraseEnv | quote }}
+            {{- end }}
+            {{- if and .Values.atRestEncryptionSecret.name .Values.atRestEncryptionSecret.passphraseKey .Values.stigmem.atRestKeyPassphraseEnv }}
+            - name: {{ .Values.stigmem.atRestKeyPassphraseEnv }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.atRestEncryptionSecret.name }}
+                  key: {{ .Values.atRestEncryptionSecret.passphraseKey }}
+            {{- end }}
+            {{- if .Values.stigmem.atRestKeyKmsUri }}
+            - name: STIGMEM_AT_REST_KEY_KMS_URI
+              value: {{ .Values.stigmem.atRestKeyKmsUri | quote }}
+            {{- end }}
+
+            # Auth / OIDC
+            - name: STIGMEM_OIDC_ENABLED
+              value: {{ .Values.stigmem.oidcEnabled | quote }}
+            {{- if .Values.stigmem.oidcIssuerUrl }}
+            - name: STIGMEM_OIDC_ISSUER_URL
+              value: {{ .Values.stigmem.oidcIssuerUrl | quote }}
+            {{- end }}
+            {{- if .Values.stigmem.oidcAudience }}
+            - name: STIGMEM_OIDC_AUDIENCE
+              value: {{ .Values.stigmem.oidcAudience | quote }}
+            {{- end }}
+            - name: STIGMEM_OIDC_TOKEN_TTL_HOURS
+              value: {{ .Values.stigmem.oidcTokenTtlHours | quote }}
+            {{- if .Values.stigmem.oidcAllowedDomains }}
+            - name: STIGMEM_OIDC_ALLOWED_DOMAINS
+              value: {{ .Values.stigmem.oidcAllowedDomains | quote }}
+            {{- end }}
+
+            # Federation
+            - name: STIGMEM_FEDERATION_ENABLED
+              value: {{ .Values.stigmem.federationEnabled | quote }}
+            - name: STIGMEM_FEDERATION_PULL_INTERVAL_S
+              value: {{ .Values.stigmem.federationPullIntervalS | quote }}
+            - name: STIGMEM_FEDERATION_PUSH_ENABLED
+              value: {{ .Values.stigmem.federationPushEnabled | quote }}
+            - name: STIGMEM_FEDERATION_NONCE_WINDOW_S
+              value: {{ .Values.stigmem.federationNonceWindowS | quote }}
+            - name: STIGMEM_FEDERATION_ALLOW_TEAM
+              value: {{ .Values.stigmem.federationAllowTeam | quote }}
+            {{- if .Values.stigmem.federationPubkey }}
+            - name: STIGMEM_FEDERATION_PUBKEY
+              value: {{ .Values.stigmem.federationPubkey | quote }}
+            {{- end }}
+            {{- if and .Values.federationKeypairSecret.name .Values.federationKeypairSecret.privkeyKey }}
+            - name: STIGMEM_FEDERATION_PRIVKEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.federationKeypairSecret.name }}
+                  key: {{ .Values.federationKeypairSecret.privkeyKey }}
+            {{- else if .Values.stigmem.federationPrivkey }}
+            - name: STIGMEM_FEDERATION_PRIVKEY
+              value: {{ .Values.stigmem.federationPrivkey | quote }}
+            {{- end }}
+
+            # Trust & sanitizer
+            - name: STIGMEM_TRUST_MODE
+              value: {{ .Values.stigmem.trustMode | quote }}
+            - name: STIGMEM_SANITIZER_MODE
+              value: {{ .Values.stigmem.sanitizerMode | quote }}
+            - name: STIGMEM_SOURCE_ATTESTATION_MODE
+              value: {{ .Values.stigmem.sourceAttestationMode | quote }}
+            - name: STIGMEM_ATTESTATION_REQUIRED
+              value: {{ .Values.stigmem.attestationRequired | quote }}
+
+            # Decay
+            - name: STIGMEM_DECAY_TTL_SECONDS
+              value: {{ .Values.stigmem.decayTtlSeconds | quote }}
+            - name: STIGMEM_DECAY_MIN_CONFIDENCE
+              value: {{ .Values.stigmem.decayMinConfidence | quote }}
+
+            # Rate limiting
+            - name: STIGMEM_RATE_LIMIT_WRITE_PER_HOUR
+              value: {{ .Values.stigmem.rateLimitWritePerHour | quote }}
+            - name: STIGMEM_RATE_LIMIT_READ_PER_HOUR
+              value: {{ .Values.stigmem.rateLimitReadPerHour | quote }}
+
+            # Misc
+            - name: STIGMEM_ASYNC_JOB_THRESHOLD
+              value: {{ .Values.stigmem.asyncJobThreshold | quote }}
+            - name: STIGMEM_TL_BACKEND
+              value: {{ .Values.stigmem.tlBackend | quote }}
+            - name: STIGMEM_TL_LOCAL_PATH
+              value: {{ .Values.stigmem.tlLocalPath | quote }}
+
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+          {{- end }}
+
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "stigmem.fullname" . }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -17,16 +17,18 @@ Usage::
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING, Any
 
 from .base import StorageBackend
 from .libsql_backend import LibSQLBackend
+from .postgres_backend import PostgresBackend
 from .sqlite_backend import SQLiteBackend
 
 if TYPE_CHECKING:
     pass
 
-__all__ = ["StorageBackend", "SQLiteBackend", "LibSQLBackend", "make_backend"]
+__all__ = ["StorageBackend", "SQLiteBackend", "LibSQLBackend", "PostgresBackend", "make_backend"]
 
 
 def make_backend(
@@ -79,6 +81,30 @@ def make_backend(
             sync_url=getattr(_settings, "libsql_url", ""),
             auth_token=getattr(_settings, "libsql_auth_token", ""),
             encryption_key=encryption_key,
+        )
+
+    if backend_name == "postgres":
+        # Accept STIGMEM_PG_DSN, STIGMEM_DATABASE_URL, or bare DATABASE_URL.
+        dsn: str = (
+            getattr(_settings, "pg_dsn", "")
+            or getattr(_settings, "database_url", "")
+            or os.environ.get("DATABASE_URL", "")
+        )
+        if not dsn:
+            raise RuntimeError(
+                "storage_backend='postgres' requires a connection string. "
+                "Set STIGMEM_PG_DSN, STIGMEM_DATABASE_URL, or DATABASE_URL."
+            )
+        schema: str = getattr(_settings, "pg_schema", "public")
+        embed_enabled_pg: bool = getattr(_settings, "embed_enabled", False)
+        embed_dimension_pg: int = int(getattr(_settings, "embed_dimension", 768))
+        return PostgresBackend(
+            dsn=dsn,
+            schema=schema,
+            pool_min=int(getattr(_settings, "postgres_pool_min", 2)),
+            pool_max=int(getattr(_settings, "postgres_pool_max", 10)),
+            embed_enabled=embed_enabled_pg,
+            embed_dimension=embed_dimension_pg,
         )
 
     embed_enabled: bool = getattr(_settings, "embed_enabled", False)

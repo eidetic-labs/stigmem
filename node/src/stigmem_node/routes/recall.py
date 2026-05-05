@@ -110,6 +110,41 @@ def _fts_query(q: str) -> str:
     return cleaned or '""'
 
 
+def _like_search(
+    conn: Any,
+    query: str,
+    scope: str,
+    tenant_id: str,
+    k: int,
+    min_confidence: float,
+    now: str,
+) -> dict[str, float]:
+    """LIKE-based text scan — fallback when FTS5 is unavailable (libsql, postgres)."""
+    words = [w for w in re.sub(r"[^\w]", " ", query).split() if len(w) >= 2][:5]
+    if not words:
+        return {}
+    clauses = " OR ".join("(value_v LIKE ? OR entity LIKE ?)" for _ in words)
+    params: list[Any] = []
+    for w in words:
+        pat = f"%{w}%"
+        params.extend([pat, pat])
+    params.extend([scope, tenant_id, min_confidence, now, k])
+    try:
+        rows = conn.execute(
+            f"SELECT id AS fact_id, confidence AS rank FROM facts WHERE ({clauses}) AND scope = ? AND tenant_id = ? AND confidence >= ? AND (valid_until IS NULL OR valid_until > ?) ORDER BY confidence DESC LIMIT ?",  # nosec B608
+            params,
+        ).fetchall()
+    except Exception as exc:
+        logger.warning("LIKE fallback search failed: %s", exc)
+        return {}
+    if not rows:
+        return {}
+    max_conf = max(float(row["rank"]) for row in rows)
+    if max_conf <= 0:
+        return {}
+    return {row["fact_id"]: float(row["rank"]) / max_conf for row in rows}
+
+
 def _now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -148,6 +183,12 @@ def _lexical_search(
     """Return {fact_id: normalised_bm25_score}. Returns {} on FTS unavailability."""
     fts_q = _fts_query(query)
     try:
+        # SAVEPOINT protects the surrounding transaction on Postgres: a failed
+        # FTS5 MATCH query aborts the psycopg2 transaction, making all subsequent
+        # SQL on the same connection fail.  Rolling back to the savepoint restores
+        # the connection to a usable state.  SAVEPOINT is a no-op cost on
+        # SQLite/libsql, which also support the syntax.
+        conn.execute("SAVEPOINT _fts_search")
         rows = conn.execute(
             """
             SELECT ff.fact_id, bm25(facts_fts) AS rank
@@ -163,9 +204,14 @@ def _lexical_search(
             """,
             (fts_q, scope, tenant_id, min_confidence, now, k),
         ).fetchall()
+        conn.execute("RELEASE SAVEPOINT _fts_search")
     except Exception as exc:
         logger.warning("FTS5 lexical search failed: %s", exc)
-        return {}
+        try:
+            conn.execute("ROLLBACK TO SAVEPOINT _fts_search")
+        except Exception:  # nosec B110 — best-effort rollback; failure is unrecoverable
+            pass
+        return _like_search(conn, query, scope, tenant_id, k, min_confidence, now)
 
     if not rows:
         return {}

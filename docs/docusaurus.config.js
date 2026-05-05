@@ -124,6 +124,12 @@ const config = {
           },
           {
             type: 'docSidebar',
+            sidebarId: 'operatingSidebar',
+            label: 'Operating',
+            position: 'left',
+          },
+          {
+            type: 'docSidebar',
             sidebarId: 'specSidebar',
             label: 'Spec',
             position: 'left',

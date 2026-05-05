@@ -9,6 +9,10 @@ description: Storage backend options for the Stigmem reference node — SQLite, 
 
 *Audience: node operators, deployment engineers.*
 
+:::tip Operator handbook
+Looking for a guided decision tree and step-by-step runbooks? See **[Operating Stigmem → Choose your backend](./operating/choose-backend)**.
+:::
+
 ---
 
 The Stigmem reference node is storage-backend agnostic from Phase 8 onward. A `StorageBackend` adapter trait separates the protocol logic from the persistence layer. The backend you choose depends on your durability, multi-region, and operational requirements.
@@ -221,6 +225,11 @@ Air-gapped or sovereign deployment?
   → SQLite (file)  or  self-hosted libSQL sqld
   → Avoid Turso cloud — it's a network-dependent service
 ```
+
+Once you have chosen a backend, pick a **[deploy recipe](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/README.md)**
+that matches your environment (Fly.io, Compose, Helm, systemd, or PaaS), or follow the
+step-by-step **[deploy runbooks](./operating/deploy-runbooks)** in the Operator Handbook.
+Each recipe ships a ready-to-use `STIGMEM_STORAGE_BACKEND` env-var template.
 
 ---
 

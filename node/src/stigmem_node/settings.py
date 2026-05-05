@@ -71,16 +71,27 @@ class Settings(BaseSettings):
     rate_limit_write_per_hour: int = 1000
     rate_limit_read_per_hour: int = 5000
 
-    # Storage backend (Phase 8).
-    # "sqlite" (default) — local SQLite file at db_path.
-    # "libsql"           — libSQL / Turso; uses db_path as the local replica
-    #                      file; set libsql_url + libsql_auth_token for
-    #                      embedded-replica sync with Turso.
+    # Storage backend (Phase 8 / 11).
+    # "sqlite"   (default) — local SQLite file at db_path.
+    # "libsql"             — libSQL / Turso; uses db_path as the local replica
+    #                        file; set libsql_url + libsql_auth_token for
+    #                        embedded-replica sync with Turso.
+    # "postgres"           — PostgreSQL; set pg_dsn to a libpq connection string.
     storage_backend: str = "sqlite"
     # Turso database endpoint, e.g. "libsql://my-db.turso.io"
     libsql_url: str = ""
     # Turso auth token (from `turso db tokens create`)
     libsql_auth_token: str = ""
+    # PostgreSQL connection string, e.g. "postgresql://user:pw@localhost/stigmem"
+    pg_dsn: str = ""
+    # DATABASE_URL alias (Heroku / PaaS convention); also read from bare DATABASE_URL env var.
+    database_url: str = ""
+    # PostgreSQL schema for all tables (default: "public").  Use a unique
+    # per-test schema to achieve row-level isolation without separate databases.
+    pg_schema: str = "public"
+    # Connection pool bounds for the Postgres backend.
+    postgres_pool_min: int = 2
+    postgres_pool_max: int = 10
 
     # Encryption at rest (Phase 8).
     # "off" (default) — no encryption; plaintext DB (dev-friendly default).

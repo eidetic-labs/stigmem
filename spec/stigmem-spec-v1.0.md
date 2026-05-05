@@ -534,6 +534,12 @@ Source attestation depends on the node knowing the caller's authorized `entity_u
 
 #### Key creation
 
+A key is created with a single POST that binds the `entity_uri`, scope
+permissions, and optional delegation list at creation time. The node returns
+the raw API key exactly once in the response; only its SHA-256 digest is
+stored server-side. The `entity_uri` is immutable after creation to prevent
+retroactive re-attribution of facts already written with this key.
+
 ```
 POST /v1/auth/keys
 Authorization: Bearer <admin-key>
@@ -565,6 +571,11 @@ The caller MUST store `raw_key` securely — it is not retrievable after creatio
 ```
 
 #### Updated `Identity` shape
+
+The `Identity` shape extends the v0.8 shape with the `allowed_source_entities`
+field needed for delegation (§18.9). This is the object the node constructs
+from the API key record when authenticating a request — it drives every
+attestation check in the write path.
 
 ```
 Identity {
@@ -632,7 +643,13 @@ This key may write facts with `source` equal to any of: the adapter itself, the 
 
 ### 18.10 Full Key Management API
 
-All key management routes require a key with `admin=true`.
+All key management routes require a key with `admin=true`. The key management
+API covers the full lifecycle: creation, inspection, scope/delegation updates,
+and revocation. Revocation is a soft delete — the key record is retained with a
+`revoked_at` timestamp for audit purposes, but all subsequent authentication
+attempts with the revoked key are rejected. A separate attestation-audit
+endpoint provides a searchable event log of every attestation decision the node
+has made, filterable by key, outcome, and time.
 
 ```
 POST   /v1/auth/keys                             // create key
@@ -645,6 +662,13 @@ GET    /v1/auth/attestation-audit                // attestation event log (admin
 ```
 
 `PATCH` request body may include `description`, `allowed_scopes`, `allowed_source_entities`. `entity_uri` and `admin` are immutable after creation.
+
+The attestation audit endpoint returns a paginated log of every attestation
+decision the node has made. Each event records the key that was used, the
+`source` value the caller claimed, whether attestation passed, and — when it
+failed — the specific rejection reason. This log is essential for operators
+transitioning from `warn` to `enforce` mode: querying for `attested=false`
+events surfaces all callers that would break under strict enforcement.
 
 ```
 GET /v1/auth/attestation-audit?key_id=<id>&attested=false&limit=50
@@ -665,6 +689,14 @@ GET /v1/auth/attestation-audit?key_id=<id>&attested=false&limit=50
 Filter params: `key_id`, `attested` (true/false), `after` (pagination cursor), `limit` (max 500).
 
 ### 18.11 Schema Migration (Migration 005)
+
+Migration 005 adds two tables to support source attestation. The `api_keys`
+table formalizes key storage that was previously external to the database,
+binding each key to an `entity_uri` and carrying its scope permissions and
+delegation list. The `attestation_audit` table provides the append-only event
+log queried by the admin audit endpoint (§18.10). Both tables are additive and
+do not alter the existing `facts` schema — the `attested` column on `facts`
+was already added in §2.7.
 
 ```sql
 -- API key management (spec §18.7)

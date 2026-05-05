@@ -72,6 +72,7 @@ run_node() {
   pnpm_cmd build
   pnpm_cmd type-check
   pnpm_cmd --filter stigmem-ts test
+  pnpm_cmd --filter stigmem-mcp test
   pnpm_cmd audit --audit-level=moderate
 
   (

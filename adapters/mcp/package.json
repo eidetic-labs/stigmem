@@ -12,7 +12,7 @@
     "start": "node dist/server.js",
     "dev": "tsx src/server.ts",
     "type-check": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --exclude dist/**"
   },
   "license": "Apache-2.0",
   "dependencies": {

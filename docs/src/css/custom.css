@@ -238,15 +238,15 @@ pre {
   fill: var(--ifm-color-content) !important;
 }
 
-/* Edge labels: semi-transparent backdrop so connector lines are less prominent
-   behind label text without fully hiding them. */
-.docusaurus-mermaid-container .edgeLabel {
-  background: color-mix(in srgb, var(--ifm-background-color) 85%, transparent) !important;
-  border-radius: 3px;
-  padding: 2px 4px !important;
+/* Edge labels: give the SVG background rect an opaque fill so connector lines
+   don't render through the label text. CSS `background` has no effect on SVG
+   elements — we must target the <rect> inside the edgeLabel <g> and set `fill`. */
+.docusaurus-mermaid-container .edgeLabel rect {
+  fill: var(--ifm-background-color) !important;
+  opacity: 1 !important;
 }
-[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel {
-  background: color-mix(in srgb, var(--stigmem-logo-bg) 85%, transparent) !important;
+[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel rect {
+  fill: var(--ifm-background-surface-color) !important;
 }
 
 /* Hero buttons — softer, more clickable. The hero is always dark (it inherits

@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+import concurrent.futures
+import hashlib
+import sqlite3
+import threading
+import time as time_mod
+import unittest.mock
 from collections.abc import Generator
 
 import pytest
@@ -200,3 +206,101 @@ class TestRateLimitExemptions:
             r = client.post("/v1/federation/peers", json={}, headers=h)
             assert r.status_code != 429
         _restore(original)
+
+
+class TestHashCacheTTL:
+    def test_revoked_key_returns_401_after_ttl(self, tmp_db: str) -> None:
+        """Revoked key cached in _HASH_CACHE returns 401 once the 60 s TTL lapses.
+
+        Bug scenario: key K is valid, K's bucket becomes empty (429 returned),
+        K is then revoked. Without the TTL fix the cache keeps returning the
+        principal indefinitely so the rate-limit middleware returns 429 (bucket
+        empty) instead of 401 — leaking that the key was once valid. After the
+        TTL lapses the cache is evicted, the DB is re-queried, the key is found
+        expired, and the request is passed to the auth middleware which returns
+        401.
+        """
+        test_settings = Settings(
+            db_path=tmp_db,
+            auth_required=True,
+            node_url="http://testnode",
+            rate_limit_write_per_hour=1,
+            rate_limit_read_per_hour=5000,
+        )
+        original = _patch(test_settings)
+        rl_mod._HASH_CACHE.clear()
+        raw_key = create_api_key("agent:ttl-test", ["read", "write"])
+        key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+        h = {"Authorization": f"Bearer {raw_key}"}
+
+        try:
+            with TestClient(create_app(), raise_server_exceptions=True) as client:
+                # Exhaust write bucket (capacity=1) and verify key is cached.
+                assert client.post("/v1/facts", json=FACT, headers=h).status_code == 201
+                assert client.post("/v1/facts", json=FACT, headers=h).status_code == 429
+                assert key_hash in rl_mod._HASH_CACHE
+
+                # Revoke the key in the DB.
+                conn = sqlite3.connect(tmp_db)
+                conn.execute(
+                    "UPDATE api_keys SET expires_at=? WHERE key_hash=?",
+                    ("2000-01-01T00:00:00+00:00", key_hash),
+                )
+                conn.commit()
+                conn.close()
+
+                # Within TTL: cache still serves the principal, bucket is empty
+                # → rate-limit returns 429 (auth middleware is never reached).
+                assert client.post("/v1/facts", json=FACT, headers=h).status_code == 429
+
+                # Past TTL: cache is evicted → _lookup_principal re-queries DB
+                # → key is expired → None → call_next → auth middleware → 401.
+                future_t = time_mod.time() + rl_mod._CACHE_TTL + 1.0
+                with unittest.mock.patch.object(rl_mod, "time") as mock_time:
+                    mock_time.time.return_value = future_t
+                    r = client.post("/v1/facts", json=FACT, headers=h)
+                assert r.status_code == 401
+        finally:
+            rl_mod._HASH_CACHE.clear()
+            _restore(original)
+
+
+class TestTOCTOURace:
+    def test_concurrent_single_token_only_one_succeeds(self, tmp_db: str) -> None:
+        """BEGIN IMMEDIATE ensures only 1 concurrent call succeeds when 1 token remains.
+
+        Without the lock, N threads can each read tokens=1, all pass the
+        tokens >= 1 check, and all consume — over-spending by N-1. With
+        BEGIN IMMEDIATE, SQLite serialises writes so exactly 1 thread wins.
+        """
+        n = 8
+        test_settings = Settings(
+            db_path=tmp_db,
+            auth_required=True,
+            node_url="http://testnode",
+            rate_limit_write_per_hour=1,
+            rate_limit_read_per_hour=5000,
+        )
+        original = _patch(test_settings)
+
+        results: list[bool] = []
+        lock = threading.Lock()
+        barrier = threading.Barrier(n)
+
+        def consume() -> None:
+            barrier.wait()
+            allowed, _ = rl_mod._check_and_consume("agent:race-test", "default", "fact_write")
+            with lock:
+                results.append(allowed)
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n) as pool:
+                futures = [pool.submit(consume) for _ in range(n)]
+                concurrent.futures.wait(futures)
+        finally:
+            _restore(original)
+
+        assert results.count(True) == 1, (
+            f"Expected exactly 1 allowed, got {results.count(True)}: {results}"
+        )
+        assert results.count(False) == n - 1

@@ -125,5 +125,6 @@ def emit_nofail(
         )
     except Exception:
         logging.getLogger("stigmem.audit").exception(
-            "Failed to emit audit event type=%s principal=%s", event_type, entity_uri
+            "Failed to emit audit event type=%s principal=%s tenant=%s",
+            event_type, entity_uri, tenant_id,
         )

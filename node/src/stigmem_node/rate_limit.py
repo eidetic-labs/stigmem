@@ -111,6 +111,7 @@ def _check_and_consume(
     rate = _rate_for(dimension)
 
     with db() as conn:
+        conn.execute("BEGIN IMMEDIATE")
         row = conn.execute(
             "SELECT tokens, last_refill FROM quota_buckets"
             " WHERE entity_uri=? AND tenant_id=? AND dimension=?",
@@ -153,7 +154,8 @@ def _check_and_consume(
 # Identity lookup (lightweight — only entity_uri + tenant_id needed)
 # ---------------------------------------------------------------------------
 
-_HASH_CACHE: dict[str, tuple[str, str, str | None]] = {}  # key_hash → (entity_uri, tenant_id, oidc_sub)
+_HASH_CACHE: dict[str, tuple[tuple[str, str, str | None], float]] = {}  # key_hash → (result, cached_at)
+_CACHE_TTL = 60.0
 
 
 def _lookup_principal(raw_key: str) -> tuple[str, str, str | None] | None:
@@ -164,7 +166,10 @@ def _lookup_principal(raw_key: str) -> tuple[str, str, str | None] | None:
 
     key_hash = _hl.sha256(raw_key.encode()).hexdigest()
     if key_hash in _HASH_CACHE:
-        return _HASH_CACHE[key_hash]
+        result, cached_at = _HASH_CACHE[key_hash]
+        if time.time() - cached_at < _CACHE_TTL:
+            return result
+        del _HASH_CACHE[key_hash]
 
     now = _dt.now(_UTC).isoformat()
     with db() as conn:
@@ -177,7 +182,7 @@ def _lookup_principal(raw_key: str) -> tuple[str, str, str | None] | None:
     if row["expires_at"] and row["expires_at"] < now:
         return None
     result = (row["entity_uri"], row["tenant_id"] or "default", row["oidc_sub"])
-    _HASH_CACHE[key_hash] = result
+    _HASH_CACHE[key_hash] = (result, time.time())
     return result
 
 

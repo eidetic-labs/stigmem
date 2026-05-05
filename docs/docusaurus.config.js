@@ -1,5 +1,7 @@
 // @ts-check
 const { themes: prismThemes } = require('prism-react-renderer');
+const remarkGlossaryLink = require('./plugins/remark-glossary-link');
+const remarkSpecLink = require('./plugins/remark-spec-link');
 
 // RTD serves the site under /<language>/<version>/ in multi-version mode.
 // Use injected env vars so asset paths resolve correctly without changing local dev.
@@ -38,9 +40,16 @@ const config = {
         docs: {
           sidebarPath: './sidebars.js',
           docItemComponent: '@theme/ApiItem',
-          lastVersion: 'current',
+          remarkPlugins: [remarkGlossaryLink, remarkSpecLink],
+          lastVersion: 'v1.1',
           versions: {
-            current: { label: 'v1.0', badge: true },
+            current: {
+              label: 'v2.0-draft',
+              path: 'next',
+              badge: true,
+              banner: 'unreleased',
+            },
+            'v1.1': { label: 'v1.1', badge: true },
             'v0.2': { label: 'v0.2', path: 'v0.2', badge: true },
           },
         },
@@ -86,15 +95,15 @@ const config = {
         indexPages: true,
       }),
     ],
+    require.resolve('./plugins/validate-audience'),
     [
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
           // --- learn/ (was about/, getting-started/) ---
           { from: '/docs/about/memory-garden', to: '/docs/learn/concepts/memory-garden' },
-          { from: '/docs/about/security', to: '/docs/learn/concepts/security' },
+          { from: '/docs/about/security', to: '/docs/community/security-disclosure' },
           { from: '/docs/about/state-of-stigmem', to: '/docs/learn/features' },
-          { from: '/docs/getting-started', to: '/docs/learn/quickstart' },
           { from: '/docs/getting-started/installation', to: '/docs/learn/quickstart/installation' },
           { from: '/docs/getting-started/quickstart', to: '/docs/learn/quickstart/quickstart-tutorial' },
           { from: '/docs/getting-started/upgrade-v1', to: '/docs/learn/quickstart/upgrade-v1' },
@@ -106,12 +115,12 @@ const config = {
           { from: '/docs/guides/async-jobs', to: '/docs/build/guides/async-jobs' },
           { from: '/docs/guides/audit-log', to: '/docs/build/guides/audit-log' },
           { from: '/docs/guides/authentication', to: '/docs/build/guides/authentication' },
-          { from: '/docs/guides/backup-restore', to: '/docs/build/guides/backup-restore' },
+          { from: '/docs/guides/backup-restore', to: '/docs/operate/runbooks/backup-restore' },
           { from: '/docs/guides/billing-hooks', to: '/docs/build/guides/billing-hooks' },
           { from: '/docs/guides/conflict-resolution', to: '/docs/build/guides/conflict-resolution' },
           { from: '/docs/guides/conformance', to: '/docs/build/guides/conformance' },
           { from: '/docs/guides/content-addressing', to: '/docs/build/guides/content-addressing' },
-          { from: '/docs/guides/cursor-reset-recovery', to: '/docs/build/guides/cursor-reset-recovery' },
+          { from: '/docs/guides/cursor-reset-recovery', to: '/docs/operate/runbooks/cursor-reset-recovery' },
           { from: '/docs/guides/decay', to: '/docs/build/guides/decay' },
           { from: '/docs/guides/design-partner-notes', to: '/docs/build/guides/design-partner-notes' },
           { from: '/docs/guides/embeddings', to: '/docs/build/guides/embeddings' },
@@ -129,9 +138,9 @@ const config = {
           { from: '/docs/guides/memory-cards', to: '/docs/build/guides/memory-cards' },
           { from: '/docs/guides/memory-gardens', to: '/docs/build/guides/memory-gardens' },
           { from: '/docs/guides/multi-tenancy', to: '/docs/build/guides/multi-tenancy' },
-          { from: '/docs/guides/multi-tenant', to: '/docs/build/guides/multi-tenant' },
+          { from: '/docs/guides/multi-tenant', to: '/docs/build/guides/multi-tenancy' },
           { from: '/docs/guides/oidc-sso', to: '/docs/build/guides/oidc-sso' },
-          { from: '/docs/guides/python-sdk', to: '/docs/build/guides/python-sdk' },
+          { from: '/docs/guides/python-sdk', to: '/docs/build/sdks/python' },
           { from: '/docs/guides/querying-facts', to: '/docs/build/guides/querying-facts' },
           { from: '/docs/guides/recall', to: '/docs/build/guides/recall' },
           { from: '/docs/guides/relay-backpressure', to: '/docs/build/guides/relay-backpressure' },
@@ -155,7 +164,9 @@ const config = {
           { from: '/docs/guides/connectors/zed', to: '/docs/build/connectors/zed' },
           { from: '/docs/guides/connectors/zep', to: '/docs/build/connectors/zep' },
           { from: '/docs/sdks/go', to: '/docs/build/sdks/go' },
-          { from: '/docs/sdks/typescript', to: '/docs/build/sdks/typescript-sdk' },
+          { from: '/docs/sdks/typescript', to: '/docs/build/sdks/typescript' },
+          { from: '/docs/build/guides/python-sdk', to: '/docs/build/sdks/python' },
+          { from: '/docs/build/sdks/typescript-sdk', to: '/docs/build/sdks/typescript' },
           { from: '/docs/tutorials/agent-with-recall', to: '/docs/build/tutorials/agent-with-recall' },
           { from: '/docs/tutorials/authoring-lazy-discovery-instructions', to: '/docs/build/tutorials/authoring-lazy-discovery-instructions' },
           { from: '/docs/tutorials/hardening-a-stigmem-deployment', to: '/docs/build/tutorials/hardening-a-stigmem-deployment' },
@@ -177,11 +188,11 @@ const config = {
           { from: '/docs/operating/cost-calculator', to: '/docs/operate/cost-calculator' },
           { from: '/docs/security', to: '/docs/operate/security' },
           { from: '/docs/security/audit-and-quotas', to: '/docs/operate/security/audit-and-quotas' },
-          { from: '/docs/security/key-rotation', to: '/docs/operate/security/security-key-rotation' },
+          { from: '/docs/security/key-rotation', to: '/docs/operate/runbooks/key-rotation' },
           { from: '/docs/security/mtls', to: '/docs/operate/security/mtls' },
           { from: '/docs/security/pen-test', to: '/docs/operate/security/pen-test' },
           { from: '/docs/operators/container-hardening', to: '/docs/operate/security/container-hardening' },
-          { from: '/docs/operators/audit-and-quotas', to: '/docs/operate/security/audit-quotas-operator-quickstart' },
+          { from: '/docs/operators/audit-and-quotas', to: '/docs/operate/security/audit-and-quotas' },
           { from: '/docs/operators/observability', to: '/docs/operate/observability' },
           { from: '/docs/operators/eval-harness', to: '/docs/operate/observability/eval-harness' },
 
@@ -191,10 +202,18 @@ const config = {
           { from: '/docs/architecture', to: '/docs/reference/architecture' },
 
           // --- community/ (was contributing/, + top-level roadmap) ---
-          { from: '/docs/contributing/security', to: '/docs/community/security-contributing' },
+          { from: '/docs/contributing/security', to: '/docs/community/security-disclosure' },
           { from: '/docs/roadmap', to: '/docs/learn/features' },
           { from: '/docs/community/roadmap', to: '/docs/learn/features' },
           { from: '/docs/learn/concepts/state-of-stigmem', to: '/docs/learn/features' },
+
+          // --- intermediate redirects (only for paths whose .md was removed) ---
+          { from: '/docs/community/security-contributing', to: '/docs/community/security-disclosure' },
+          { from: '/docs/learn/concepts/security', to: '/docs/community/security-disclosure' },
+          { from: '/docs/build/guides/backup-restore', to: '/docs/operate/runbooks/backup-restore' },
+          { from: '/docs/operate/security/security-key-rotation', to: '/docs/operate/runbooks/key-rotation' },
+          { from: '/docs/operate/security/key-rotation', to: '/docs/operate/runbooks/key-rotation' },
+          { from: '/docs/operate/security/audit-quotas-operator-quickstart', to: '/docs/operate/security/audit-and-quotas' },
         ],
       },
     ],
@@ -245,33 +264,52 @@ const config = {
             label: 'Reference',
             position: 'left',
           },
-          {
-            label: 'Features',
-            position: 'left',
-            type: 'dropdown',
-            items: [
-              { type: 'doc', docId: 'learn/features', label: 'Overview' },
-              { to: '/blog', label: 'Blog' },
-            ],
-          },
+          { to: '/blog', label: 'Blog', position: 'left' },
           {
             type: 'docSidebar',
             sidebarId: 'communitySidebar',
             label: 'Community',
             position: 'left',
           },
-          {
-            href: 'https://github.com/Eidetic-Labs/stigmem',
-            position: 'right',
-            className: 'header-github-link',
-            'aria-label': 'GitHub repository',
-          },
+          // Custom GitHub Star/Fork pills — counts fetched live from the GitHub API
+          // by the React component (shields.io's stars endpoint was returning
+          // "invalid" for this repo). Cached in localStorage for 1h.
+          { type: 'custom-githubButton', position: 'right', variant: 'star' },
+          { type: 'custom-githubButton', position: 'right', variant: 'fork' },
         ],
       },
       footer: {
-        style: 'dark',
-        links: [],
-        copyright: `Copyright © ${new Date().getFullYear()} Eidetic Labs. Apache 2.0 License.`,
+        // No `style` override — let the footer follow the page background
+        // (light surface in light mode, logo-canvas dark in dark mode).
+        links: [
+          {
+            title: 'Docs',
+            items: [
+              { label: 'Learn', to: '/docs/learn' },
+              { label: 'Build', to: '/docs/build/guides' },
+              { label: 'Operate', to: '/docs/operate' },
+              { label: 'Reference', to: '/docs/reference/api' },
+              { label: 'Features', to: '/docs/learn/features' },
+            ],
+          },
+          {
+            title: 'Community',
+            items: [
+              { label: 'Contributing', to: '/docs/community/security-disclosure' },
+              { label: 'Project Resources', to: '/docs/community/project-resources' },
+              { label: 'Blog', to: '/blog' },
+            ],
+          },
+          {
+            title: 'Project',
+            items: [
+              { label: 'GitHub', href: 'https://github.com/Eidetic-Labs/stigmem' },
+              { label: 'License (Apache 2.0)', href: 'https://github.com/Eidetic-Labs/stigmem/blob/main/LICENSE' },
+              { label: 'Security policy', href: 'https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md' },
+            ],
+          },
+        ],
+        copyright: `© ${new Date().getFullYear()} Eidetic Labs · Apache 2.0`,
       },
       prism: {
         theme: prismThemes.github,
@@ -279,7 +317,7 @@ const config = {
         additionalLanguages: ['bash', 'python', 'json'],
       },
       mermaid: {
-        theme: { light: 'neutral', dark: 'forest' },
+        theme: { light: 'neutral', dark: 'dark' },
       },
       liveCodeBlock: {
         playgroundPosition: 'bottom',

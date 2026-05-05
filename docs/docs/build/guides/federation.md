@@ -2,6 +2,7 @@
 id: federation
 title: Federation
 sidebar_label: Federation
+audience: Integrator
 ---
 
 # Federation
@@ -61,7 +62,7 @@ print(f"STIGMEM_FEDERATION_PRIVKEY={priv_b64}")
 ```
 
 **Never store the private key in source control.** Use a Kubernetes Secret or an environment-specific
-secrets manager; see [Kubernetes install](../getting-started/quickstart#kubernetes-install-helm) for a
+secrets manager; see [Kubernetes install](../../learn/quickstart/quickstart-tutorial#kubernetes-install-helm) for a
 `secretRef` example.
 
 Provide the keys via environment variables before starting the node:
@@ -244,7 +245,7 @@ INFO  pull from stigmem://node-b: cursor=None, got 100 facts, has_more=true
 ```
 
 If a node loses its `replication_cursors` table (DB loss/corruption), see the
-[DB-loss recovery guide](./cursor-reset-recovery) for the `cursor-export` / `cursor-import`
+[DB-loss recovery guide](../../operate/runbooks/cursor-reset-recovery) for the `cursor-export` / `cursor-import`
 procedure that bounds re-pull cost.
 
 ---
@@ -404,8 +405,8 @@ Peer registrations are seeded by `infra/soak/setup_peers.py`. See the
 
 ## See also
 
-- [Quickstart — two nodes federating](../getting-started/quickstart) — local two-node test in under 5 minutes
-- [Paperclip connector](./connectors/paperclip) — deploying stigmem as a Paperclip agent fleet's persistent fact store
+- [Quickstart — two nodes federating](../../learn/quickstart/quickstart-tutorial) — local two-node test in under 5 minutes
+- [Paperclip connector](../connectors/paperclip) — deploying stigmem as a Paperclip agent fleet's persistent fact store
 - [4-node topology](./federation-4node) — full-mesh setup, failure injection, soak metrics
-- [Federation API Reference](../api-reference) — full endpoint reference
-- [Architecture](../architecture) — HLC, PeerDeclaration internals, spec §6
+- [Federation API Reference](../../reference/api) — full endpoint reference
+- [Architecture](../../reference/architecture) — HLC, PeerDeclaration internals, spec §6

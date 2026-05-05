@@ -2,6 +2,7 @@
 id: continue-dev
 title: Continue.dev
 sidebar_label: Continue.dev
+audience: Integrator
 ---
 
 # Stigmem in Continue.dev

@@ -2,6 +2,7 @@
 id: federation-4node
 title: 4-Node Federation Topology
 sidebar_label: 4-Node Topology
+audience: Integrator
 ---
 
 # 4-Node Federation Topology
@@ -127,7 +128,7 @@ Verified in `TestCursorResume::test_node_restart_resumes_without_gaps`:
 - Restart-to-healthy: < 5 s
 - Idempotent ingest: re-delivered facts (same fact ID) are silently discarded
 
-If the DB is lost, see the [cursor-reset recovery guide](./cursor-reset-recovery) for the `stigmem federation cursor-export / cursor-import` runbook.
+If the DB is lost, see the [cursor-reset recovery guide](../../operate/runbooks/cursor-reset-recovery) for the `stigmem federation cursor-export / cursor-import` runbook.
 
 ### FM-4: Contradiction storm
 
@@ -155,7 +156,7 @@ The `-v` flag removes data volumes so the next run starts from a clean state.
 
 ## See also
 
-- [Quickstart](../getting-started/quickstart) — two-node setup in under 10 minutes
+- [Quickstart](../../learn/quickstart/quickstart-tutorial) — two-node setup in under 10 minutes
 - [Federation guide](./federation) — PeerDeclaration registration, cursor behavior, and audit log
 - [Relay backpressure](./relay-backpressure) — lag signals in N-node topologies (§6.7)
 - [Scope propagation](./scope-propagation) — scope invariants across relay hops (§6.8)

@@ -3,6 +3,7 @@ id: memory-cards
 title: Memory Cards
 sidebar_label: Memory Cards
 description: How Stigmem materialises per-entity summaries (memory cards) for fast recall queries — stale-on-write, refresh-on-read, and divergence policy (spec §20.4).
+audience: Integrator
 ---
 
 # Memory Cards
@@ -196,5 +197,5 @@ Memory cards are part of spec §20, currently a draft. The API shape is stable f
 ## See also
 
 - [Recall guide](./recall.md) — how the card fast-path integrates into hybrid recall
-- [Architecture: memory cards](../architecture/index.md#memory-cards) — design rationale and garden ACL requirement (R2)
-- [Python SDK reference](./python-sdk.md) — full `StigmemClient` API
+- [Architecture: memory cards](../../reference/architecture/index.md#memory-cards) — design rationale and garden ACL requirement (R2)
+- [Python SDK reference](/docs/build/sdks/python) — full `StigmemClient` API

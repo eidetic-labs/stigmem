@@ -2,6 +2,7 @@
 id: agent-keypairs
 title: Per-Agent Keypair Registration
 sidebar_label: Agent Keypairs
+audience: Integrator
 ---
 
 # Per-Agent Keypair Registration

@@ -1,3 +1,10 @@
+---
+id: go
+title: Go SDK
+sidebar_label: Go SDK
+audience: Integrator
+---
+
 # Go SDK
 
 The stigmem Go SDK (`stigmem-go`) is an idiomatic Go client for the stigmem memory-node HTTP API (spec v0.4+). It requires **Go 1.22 or later** and has no external dependencies.
@@ -206,7 +213,7 @@ See the [Time-Travel Queries guide](../guides/time-travel.md).
 
 - [Tutorial: SDK Quickstart](../tutorials/sdk-quickstart.md) — assert, recall, and subscribe in Python / TS / Go
 - [TypeScript SDK Reference](./typescript.md) — TypeScript client
-- [Python SDK Reference](../guides/python-sdk.md) — Python client
+- [Python SDK Reference](/docs/build/sdks/python) — Python client
 
 ---
 

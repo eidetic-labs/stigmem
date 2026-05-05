@@ -7,7 +7,7 @@ sidebar_label: Overview
 # Getting Started
 
 :::note
-This is the **v0.2** documentation — the first public draft of the Stigmem specification (seeking design-partner feedback). For the current implementation see the [v0.5 docs](/docs/getting-started).
+This is the **v0.2** documentation — the first public draft of the Stigmem specification (seeking design-partner feedback). For the current implementation see the [v0.5 docs](/docs/v0.2/learn/quickstart).
 :::
 
 ## What changed in v0.2

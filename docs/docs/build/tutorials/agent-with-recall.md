@@ -3,6 +3,7 @@ id: agent-with-recall
 title: "Tutorial: Agent with Recall"
 sidebar_label: Agent with Recall
 description: Build a token-efficient agent that uses the recall endpoint to surface relevant memories per turn rather than preloading the full fact store.
+audience: Integrator
 ---
 
 # Tutorial: Agent with Recall
@@ -267,7 +268,7 @@ When a new fact about `project:recall-demo` is asserted, the node posts a delive
 **What to do on receipt:** trigger a new `recall` call with the relevant query. The push event is a wake signal — not the new context itself.
 
 :::tip Wake mode
-For agents running inside a process that can read the node's stderr, use `"on_change": "wake"` instead of `"webhook"`. The node writes a JSON object to stderr on each delivery — no webhook server required. This is the low-ceremony option for local or embedded deployments. See the [Subscriptions guide](/docs/guides/subscriptions) for the wake payload shape.
+For agents running inside a process that can read the node's stderr, use `"on_change": "wake"` instead of `"webhook"`. The node writes a JSON object to stderr on each delivery — no webhook server required. This is the low-ceremony option for local or embedded deployments. See the [Subscriptions guide](/docs/build/guides/subscriptions) for the wake payload shape.
 :::
 
 ---
@@ -365,8 +366,8 @@ This pattern is the foundation for the **lazy instruction discovery** approach (
 
 ## Next steps
 
-- [Recall guide](/docs/guides/recall) — weight tuning, MMR, full parameter reference
-- [Embeddings guide](/docs/guides/embeddings) — model selection, reindexing, mixed-model safety
-- [Subscriptions guide](/docs/guides/subscriptions) — webhook retries, circuit breaker, replay window
-- [Memory Gardens guide](/docs/guides/memory-gardens) — multi-tenant scoping and recall across gardens
-- [Querying facts guide](/docs/guides/querying-facts) — structured predicate queries when `recall` is overkill
+- [Recall guide](/docs/build/guides/recall) — weight tuning, MMR, full parameter reference
+- [Embeddings guide](/docs/build/guides/embeddings) — model selection, reindexing, mixed-model safety
+- [Subscriptions guide](/docs/build/guides/subscriptions) — webhook retries, circuit breaker, replay window
+- [Memory Gardens guide](/docs/build/guides/memory-gardens) — multi-tenant scoping and recall across gardens
+- [Querying facts guide](/docs/build/guides/querying-facts) — structured predicate queries when `recall` is overkill

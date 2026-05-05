@@ -2,6 +2,7 @@
 id: index
 title: API Reference (v0.2)
 sidebar_label: Overview
+audience: Integrator
 ---
 
 # API Reference (v0.2)
@@ -18,4 +19,4 @@ This documents the v0.2 wire format. The v0.2 API is a subset of the current v0.
 | GET | `/v1/facts` | Query facts |
 | GET | `/.well-known/stigmem` | Node metadata |
 
-See the [v0.5 API reference](/docs/api-reference) for the full current endpoint set.
+See the [v0.5 API reference](/docs/v0.2/reference/api) for the full current endpoint set.

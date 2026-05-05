@@ -2,6 +2,7 @@
 id: cursor
 title: Cursor
 sidebar_label: Cursor
+audience: Integrator
 ---
 
 # Stigmem in Cursor
@@ -89,4 +90,4 @@ is published to npm:
 ## See also
 
 - [Zed](./zed) — similar MCP config for Zed
-- [Authentication](../authentication) — API key setup
+- [Authentication](../guides/authentication) — API key setup

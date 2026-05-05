@@ -2,6 +2,7 @@
 id: asserting-facts
 title: Asserting Facts
 sidebar_label: Asserting Facts
+audience: Integrator
 ---
 
 # Asserting Facts
@@ -133,7 +134,7 @@ curl -s -X POST http://localhost:8765/v1/facts \
 ```
 
 :::tip Using the MCP tool instead of curl
-If you are inside a Paperclip or Claude Code session with the Stigmem MCP server configured, call `assert_fact` directly — no `curl` required. See the [Paperclip connector guide](./connectors/paperclip).
+If you are inside a Paperclip or Claude Code session with the Stigmem MCP server configured, call `assert_fact` directly — no `curl` required. See the [Paperclip connector guide](../connectors/paperclip).
 :::
 
 ## Multi-tenant fact assertion
@@ -167,7 +168,7 @@ curl -s "http://localhost:8765/v1/facts?entity=user:alice" \
   -H "Authorization: Bearer $ACME_KEY" | jq .
 ```
 
-See [Multi-Tenant Scoping](./multi-tenant) for the full isolation model and key provisioning guide.
+See [Multi-Tenant Scoping](./multi-tenancy) for the full isolation model and key provisioning guide.
 
 ## Additional topics
 
@@ -176,4 +177,4 @@ See [Multi-Tenant Scoping](./multi-tenant) for the full isolation model and key 
 - `valid_until`: ISO 8601 expiry; omit for a permanent fact
 - Updating facts: see spec §3 for supersession semantics
 
-See the [API Reference](/docs/api-reference) for the full `POST /v1/facts` endpoint spec.
+See the [API Reference](/docs/reference/api) for the full `POST /v1/facts` endpoint spec.

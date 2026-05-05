@@ -2,6 +2,7 @@
 id: querying-facts
 title: Querying Facts
 sidebar_label: Querying Facts
+audience: Integrator
 ---
 
 # Querying Facts
@@ -36,4 +37,4 @@ curl -s 'http://localhost:8000/v1/facts?min_confidence=0.8' \
 - Including contradicted and expired facts
 - Scoped access (local vs company facts)
 
-See the [API Reference](/docs/api-reference) for the full `GET /v1/facts` endpoint spec.
+See the [API Reference](/docs/reference/api) for the full `GET /v1/facts` endpoint spec.

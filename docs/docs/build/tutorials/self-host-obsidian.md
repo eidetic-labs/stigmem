@@ -3,6 +3,7 @@ id: self-host-obsidian
 title: "Tutorial: Self-host a stigmem node and sync your Obsidian vault"
 sidebar_label: Self-host + Obsidian Sync
 description: End-to-end walkthrough — deploy a stigmem node on Fly.io or Docker Compose, connect an Obsidian vault, write your first cross-vault fact, and recall it from a second vault.
+audience: Integrator
 ---
 
 # Tutorial: Self-host a stigmem node and sync your Obsidian vault
@@ -39,7 +40,7 @@ This tutorial uses **SQLite with a persistent volume** — zero external depende
 - You can tolerate the data living on that host's disk.
 - You do not need multi-region reads.
 
-If you already run Postgres or want multi-region replication, work through the [Choose Your Backend](/docs/operating/choose-backend) decision tree before continuing. The connection steps in Steps 4–6 below are identical regardless of backend.
+If you already run Postgres or want multi-region replication, work through the [Choose Your Backend](/docs/operate/backends/choose-backend) decision tree before continuing. The connection steps in Steps 4–6 below are identical regardless of backend.
 
 ---
 
@@ -269,8 +270,8 @@ These are estimates based on ~50 ms per HTTPS round-trip to a Fly `iad` Machine 
 
 ## What's next
 
-- **Add authentication** — set `STIGMEM_AUTH_REQUIRED=true` and `STIGMEM_API_KEY_HASH` on the node; add `api_key = "sk-..."` to `.stigmem-sync.toml`. See the [Operator's Handbook](/docs/operating).
-- **Back up your facts** — the [Backup & Restore runbook](/docs/operating/backup-restore) covers signed snapshots and point-in-time recovery.
-- **Add a second node (federation)** — follow the [Two-Org Federated Network tutorial](/docs/tutorials/two-org-federation) to peer two nodes and replicate facts across org boundaries.
-- **Switch to libSQL / Turso** — if you need multi-region reads or want off-node durability, see the [Fly.io deploy runbook](/docs/operating/deploy-runbooks) Turso section.
-- **Monitor** — `GET /metrics` (Prometheus) is exposed at `:9091`. See the [Monitoring guide](/docs/operating/monitoring).
+- **Add authentication** — set `STIGMEM_AUTH_REQUIRED=true` and `STIGMEM_API_KEY_HASH` on the node; add `api_key = "sk-..."` to `.stigmem-sync.toml`. See the [Operator's Handbook](/docs/operate).
+- **Back up your facts** — the [Backup & Restore runbook](/docs/operate/runbooks/backup-restore) covers signed snapshots and point-in-time recovery.
+- **Add a second node (federation)** — follow the [Two-Org Federated Network tutorial](/docs/build/tutorials/two-org-federation) to peer two nodes and replicate facts across org boundaries.
+- **Switch to libSQL / Turso** — if you need multi-region reads or want off-node durability, see the [Fly.io deploy runbook](/docs/operate/runbooks/deploy-runbooks) Turso section.
+- **Monitor** — `GET /metrics` (Prometheus) is exposed at `:9091`. See the [Monitoring guide](/docs/operate/observability/monitoring).

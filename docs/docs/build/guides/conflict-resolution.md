@@ -2,6 +2,7 @@
 id: conflict-resolution
 title: Conflict Resolution
 sidebar_label: Conflict Resolution
+audience: Integrator
 ---
 
 # Conflict Resolution
@@ -50,4 +51,4 @@ curl -s -X POST http://localhost:8000/v1/conflicts/<conflict-id>/resolve \
 - Conflict propagation across federated nodes
 - Using the `include_contradicted` query flag
 
-See the [API Reference](/docs/api-reference) for `GET /v1/conflicts` and `POST /v1/conflicts/{id}/resolve`.
+See the [API Reference](/docs/reference/api) for `GET /v1/conflicts` and `POST /v1/conflicts/{id}/resolve`.

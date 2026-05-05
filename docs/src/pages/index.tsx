@@ -10,14 +10,18 @@ function HomepageHeader(): JSX.Element {
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
-        <img src="img/logo.svg" alt="Stigmem logo" width={80} style={{ marginBottom: '1rem' }} />
+        <img
+          src="img/logo.svg"
+          alt="Stigmem logo"
+          className={styles.heroLogo}
+        />
         <h1 className="hero__title">{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
-          <Link className="button button--secondary button--lg" to="/docs/getting-started/quickstart">
+          <Link className="button button--secondary button--lg" to="/docs/learn/quickstart/quickstart-tutorial">
             Quickstart — under 5 minutes →
           </Link>
-          <Link className="button button--outline button--secondary button--lg" to="/docs/getting-started">
+          <Link className="button button--outline button--secondary button--lg" to="/docs/learn/quickstart">
             Getting Started
           </Link>
         </div>

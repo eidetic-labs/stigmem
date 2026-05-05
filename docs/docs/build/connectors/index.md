@@ -3,6 +3,7 @@ id: connectors-index
 title: Connectors
 sidebar_label: Overview
 sidebar_position: 1
+audience: Integrator
 ---
 
 # Connectors

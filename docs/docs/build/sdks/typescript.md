@@ -1,8 +1,8 @@
 ---
-id: typescript-sdk
 title: TypeScript SDK Reference
 sidebar_label: TypeScript SDK
 description: API reference for stigmem-ts — StigmemClient, types, value constructors, and error classes.
+audience: Integrator
 ---
 
 # TypeScript SDK Reference
@@ -408,5 +408,5 @@ See the [Time-Travel Queries guide](../guides/time-travel.md).
 - [Memory Cards guide](../guides/memory-cards.md) — card lifecycle and divergence policy
 - [Asserting facts](../guides/asserting-facts.md) — detailed fact write patterns
 - [Querying facts](../guides/querying-facts.md) — structured predicate queries
-- [Python SDK Reference](../guides/python-sdk.md) — equivalent Python client
+- [Python SDK Reference](/docs/build/sdks/python) — equivalent Python client
 - [Go SDK Reference](./go.md) — Go client

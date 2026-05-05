@@ -2,6 +2,7 @@
 id: zed
 title: Zed
 sidebar_label: Zed
+audience: Integrator
 ---
 
 # Stigmem in Zed
@@ -75,5 +76,5 @@ for a valid response.
 
 ## See also
 
-- [MCP server reference](../../architecture) — tool schema and protocol notes
-- [Authentication](../authentication) — API key and OIDC setup
+- [MCP server reference](../../reference/architecture) — tool schema and protocol notes
+- [Authentication](../guides/authentication) — API key and OIDC setup

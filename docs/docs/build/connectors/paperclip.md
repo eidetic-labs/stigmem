@@ -2,6 +2,7 @@
 id: paperclip
 title: Paperclip / Claude Code
 sidebar_label: Paperclip / Claude Code
+audience: Integrator
 ---
 
 # Stigmem in Paperclip and Claude Code
@@ -22,7 +23,7 @@ Stigmem HTTP request, and the result comes back as structured JSON.
 
 ## Prerequisites
 
-- A running Stigmem node (see [persistent service setup](../../getting-started/installation#running-as-a-persistent-service-macos) or Docker)
+- A running Stigmem node (see [persistent service setup](../../learn/quickstart/installation#running-as-a-persistent-service-macos) or Docker)
 - Node.js ≥ 18
 - The MCP server built:
 
@@ -59,7 +60,7 @@ Omit `STIGMEM_API_KEY` if your node runs without auth (the default for local dev
 :::tip Keep the node running
 Use `bash scripts/service-install.sh` to register stigmem as a macOS LaunchAgent
 that starts at login and restarts on crash. See the
-[installation guide](../../getting-started/installation#running-as-a-persistent-service-macos).
+[installation guide](../../learn/quickstart/installation#running-as-a-persistent-service-macos).
 :::
 
 ## Available tools
@@ -87,7 +88,7 @@ The MCP server exposes five tools:
 }
 ```
 
-The `value` field is a typed object — see [Asserting Facts](../asserting-facts#factvalue-schema) for the full schema.
+The `value` field is a typed object — see [Asserting Facts](../guides/asserting-facts#factvalue-schema) for the full schema.
 
 ### `query_facts`
 
@@ -210,7 +211,7 @@ it expires and doesn't linger in the graph:
 :::note Relation namespacing
 Always prefix relations with a namespace (`acme:`, `memory:`, etc.). Bare relation
 names such as `goal_state` are accepted but emit a server warning and risk
-collisions. See [Asserting Facts](../asserting-facts#relation-naming-convention).
+collisions. See [Asserting Facts](../guides/asserting-facts#relation-naming-convention).
 :::
 
 ## Smoke test
@@ -230,7 +231,7 @@ bash adapters/mcp/tests/smoke.sh
 
 ## See also
 
-- [Installation — persistent service](../../getting-started/installation#running-as-a-persistent-service-macos)
-- [Asserting Facts](../asserting-facts) — FactValue schema and relation naming
+- [Installation — persistent service](../../learn/quickstart/installation#running-as-a-persistent-service-macos)
+- [Asserting Facts](../guides/asserting-facts) — FactValue schema and relation naming
 - [Cursor](./cursor) — similar MCP config for Cursor editor
-- [Authentication](../authentication) — API key setup
+- [Authentication](../guides/authentication) — API key setup

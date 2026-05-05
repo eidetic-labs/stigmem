@@ -2,6 +2,7 @@
 id: design-partner-notes
 title: Design Partner Notes — Phase 6 Pilots
 sidebar_label: Design Partner Notes
+audience: Integrator
 ---
 
 # Design Partner Notes — Phase 6 Pilots
@@ -61,7 +62,7 @@ Cognee builds knowledge graphs from unstructured text. The adapter bridges stigm
 - The `source` field (provenance) was well-received for audit purposes: Cognee users needed to know which document a fact came from. The adapter populates `source=cognee:doc:<hash>`.
 - Fuzzy entity resolution  was flagged as important: Cognee often extracts the same entity with slightly different text forms (`"alice"` vs `"Alice Smith"`). The fuzzy entity resolver was accelerated by this feedback.
 
-**See also:** Fuzzy entity resolver guide ; [Namespace registry spec §9](/docs/spec/)
+**See also:** Fuzzy entity resolver guide ; [Namespace registry spec §9](/docs/reference/spec/)
 
 ## Cross-pilot patterns
 

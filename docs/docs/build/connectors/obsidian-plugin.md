@@ -2,6 +2,7 @@
 id: obsidian-plugin
 title: Obsidian Community Plugin
 sidebar_label: Obsidian Plugin
+audience: Integrator
 ---
 
 # Obsidian Community Plugin
@@ -34,7 +35,7 @@ it like any other community plugin and point it at your stigmem node.
 ## Requirements
 
 - Obsidian ≥ 1.4.0
-- A running stigmem node. See [Deploy runbooks](../../operating/deploy-runbooks.md).
+- A running stigmem node. See [Deploy runbooks](../../operate/runbooks/deploy-runbooks.md).
 
 ## Installation
 

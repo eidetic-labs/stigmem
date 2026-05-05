@@ -2,6 +2,8 @@
 id: memory-gardens
 title: Memory Gardens
 sidebar_label: Memory Gardens
+audience: Integrator
+status: Experimental
 ---
 
 # Memory Gardens

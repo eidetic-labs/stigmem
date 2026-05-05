@@ -1,6 +1,7 @@
 .PHONY: sdk-ts sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack help \
         eval-soak eval-soak-smoke \
-        eval-fast eval-adversarial eval-recall eval-fast-baseline
+        eval-fast eval-adversarial eval-recall eval-fast-baseline \
+        gen-cli-docs
 
 OPENAPI_SPEC  := docs/openapi/stigmem.json
 SDK_TS_DIR    := sdks/stigmem-ts
@@ -81,3 +82,12 @@ eval-recall:
 eval-fast-baseline:
 	@echo "→ Freezing recall baseline"
 	uv run python -m eval.harness.recall --save-baseline
+
+# ---------------------------------------------------------------------------
+# CLI reference docs
+# ---------------------------------------------------------------------------
+
+gen-cli-docs:
+	@echo "→ Regenerating CLI reference docs"
+	uv run python docs/scripts/gen-cli-docs.py
+	@echo "✓ CLI docs written to docs/docs/reference/cli/"

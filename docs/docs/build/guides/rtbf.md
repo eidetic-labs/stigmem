@@ -2,6 +2,7 @@
 id: rtbf
 title: Right to Be Forgotten (RTBF)
 sidebar_label: RTBF Tombstones
+audience: Integrator
 ---
 
 # Right to Be Forgotten (RTBF)

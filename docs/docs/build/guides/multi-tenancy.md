@@ -2,6 +2,8 @@
 id: multi-tenancy
 title: Multi-Tenant Scoping
 sidebar_label: Multi-Tenant Scoping
+audience: Integrator
+status: Beta
 ---
 
 # Multi-Tenant Scoping

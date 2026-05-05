@@ -2,12 +2,13 @@
 id: index
 title: Specification (v0.2)
 sidebar_label: Overview
+audience: Spec
 ---
 
 # Stigmem Specification v0.2
 
 :::note
-This is the **v0.2** specification — the first public draft. For the current spec see [v0.5](/docs/spec).
+This is the **v0.2** specification — the first public draft. For the current spec see [v0.5](/docs/v0.2/reference/spec).
 :::
 
 v0.2 is the foundation spec. Key concepts introduced:

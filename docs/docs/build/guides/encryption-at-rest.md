@@ -3,6 +3,7 @@ id: encryption-at-rest
 title: Encryption at Rest
 sidebar_label: Encryption at Rest
 description: How to enable SQLCipher or libSQL native encryption for the Stigmem reference node, including key management and key-rotation runbook.
+audience: Integrator
 ---
 
 # Encryption at Rest

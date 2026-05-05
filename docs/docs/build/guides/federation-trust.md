@@ -3,6 +3,7 @@ id: federation-trust
 title: Federation Trust (§19)
 sidebar_label: Federation Trust
 description: Org manifests, capability tokens, source-trust scoring, quarantine garden, provenance chains, and the recall-time sanitizer — §19 normative in spec v1.1.
+audience: Integrator
 ---
 
 # Federation Trust
@@ -449,5 +450,5 @@ Nodes MUST extend their `/.well-known/stigmem` response to declare federation tr
 :::info See also
 - [Federation guide](./federation.md) — peer handshake and §6 wire protocol
 - [4-node federation topology](./federation-4node.md) — multi-node setup examples
-- [Source Attestation §18](../spec/index.md) — the §18 foundation §19 builds on
+- [Source Attestation §18](../../reference/spec/index.md) — the §18 foundation §19 builds on
 :::

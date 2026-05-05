@@ -2,6 +2,7 @@
 id: index
 title: Guides
 sidebar_label: Overview
+audience: Integrator
 ---
 
 # Guides
@@ -39,7 +40,7 @@ New DRAFT normative sections in v1.1 (spec §20).
 | [Recall](./recall) | §20.3 | Hybrid recall — lexical + dense + graph pipeline, token budget, weight tuning |
 | [Memory Cards](./memory-cards) | §20.4 | Per-entity pre-aggregated summaries — stale-on-write, refresh-on-read, divergence policy |
 | [Subscriptions](./subscriptions) | §20.3–§20.6 | Standing fact-change watches — webhook and wake delivery, circuit breaker, replay window |
-| [Python SDK](./python-sdk) | — | `StigmemClient` / `AsyncStigmemClient` API reference — all methods, models, exceptions |
+| [Python SDK](/docs/build/sdks/python) | — | `StigmemClient` / `AsyncStigmemClient` API reference — all methods, models, exceptions |
 
 ---
 
@@ -79,7 +80,7 @@ New normative sections in v1.0 (spec §§17–18) and supporting node capabiliti
 | [4-Node Topology](./federation-4node) | §6 | Full-mesh 4-node cluster setup, soak tooling, and failure modes |
 | [Relay Backpressure](./relay-backpressure) | §6.7 | Lag signals and throttle behavior in N-node relay topologies |
 | [Scope Propagation](./scope-propagation) | §6.8 | Transitive scope non-escalation and `company` re-federation restriction |
-| [DB-Loss Recovery](./cursor-reset-recovery) | §6 | `cursor-export` / `cursor-import` runbook — bounds re-pull cost after DB loss |
+| [DB-Loss Recovery](../../operate/runbooks/cursor-reset-recovery) | §6 | `cursor-export` / `cursor-import` runbook — bounds re-pull cost after DB loss |
 
 ---
 

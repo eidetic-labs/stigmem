@@ -3,6 +3,7 @@ id: authoring-lazy-discovery-instructions
 title: "Tutorial: Authoring Lazy-Discovery Instructions"
 sidebar_label: Authoring Lazy-Discovery Instructions
 description: A concrete walkthrough — migrate an instruction set to lazy discovery, tune manifest triggers, run a shadow audit, and flip. Includes real coverage and token numbers from two production rollouts.
+audience: Integrator
 ---
 
 # Tutorial: Authoring Lazy-Discovery Instructions
@@ -258,7 +259,7 @@ stigmem instruction audit \
 | 10 | Hiring/team | 493t | 43.7% | 100% | 0 |
 | **Median** | | **525t** | **46.5%** | **100%** | **0** |
 
-This agent's instruction set is compact (1 129t eager), so the token-budget target is ≤ 50% rather than the < 25% target used for larger sets. See [Lazy Instructions — token budget planning](/docs/guides/lazy-instructions#token-budget-planning) for calibration guidance.
+This agent's instruction set is compact (1 129t eager), so the token-budget target is ≤ 50% rather than the < 25% target used for larger sets. See [Lazy Instructions — token budget planning](/docs/build/guides/lazy-instructions#token-budget-planning) for calibration guidance.
 
 ### Example: project-manager agent (23 chunks, 3 190t eager)
 
@@ -383,6 +384,6 @@ No database changes are needed — the Stigmem facts and manifest remain intact.
 
 ## What to read next
 
-- [Lazy Instructions guide](/docs/guides/lazy-instructions) — boot stub format, manifest schema, and trigger design reference
-- [Instruction Migration guide](/docs/guides/instruction-migration) — full CLI reference for `stigmem instruction migrate`
-- [Recall guide](/docs/guides/recall) — the underlying §20.3 recall pipeline
+- [Lazy Instructions guide](/docs/build/guides/lazy-instructions) — boot stub format, manifest schema, and trigger design reference
+- [Instruction Migration guide](/docs/build/guides/instruction-migration) — full CLI reference for `stigmem instruction migrate`
+- [Recall guide](/docs/build/guides/recall) — the underlying §20.3 recall pipeline

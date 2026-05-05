@@ -2,6 +2,7 @@
 id: gemini
 title: Gemini
 sidebar_label: Gemini
+audience: Integrator
 ---
 
 # Stigmem in Gemini (E5)
@@ -126,4 +127,4 @@ translation — you do not need to adjust tool declarations manually.
 ## See also
 
 - [OSS adapters (Ollama / LiteLLM)](./ollama-litellm) — OpenAI-compatible format for local models
-- [MCP server](../../architecture) — for hosts that do support MCP natively
+- [MCP server](../../reference/architecture) — for hosts that do support MCP natively

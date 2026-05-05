@@ -2,6 +2,7 @@
 id: intent-envelopes
 title: Intent Envelopes
 sidebar_label: Intent Envelopes
+audience: Integrator
 ---
 
 # Intent Envelopes

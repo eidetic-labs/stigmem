@@ -3,6 +3,7 @@ id: time-travel
 title: Time-Travel Queries
 sidebar_label: Time-Travel Queries
 description: Query facts as they existed at a past point in time using the as_of parameter (spec §24).
+audience: Integrator
 ---
 
 # Time-Travel Queries
@@ -142,4 +143,4 @@ If not set, there is no floor — queries can go back to the earliest fact in th
 - [RTBF Tombstones](./rtbf.md) — entity erasure and how tombstones interact with time-travel
 - [Content Addressing](./content-addressing.md) — CID-based fact lookup across time
 - [Recall guide](./recall.md) — hybrid recall without the time-travel parameter
-- [API Reference](/docs/api-reference) — full endpoint documentation
+- [API Reference](/docs/reference/api) — full endpoint documentation

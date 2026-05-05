@@ -3,6 +3,7 @@ id: recall
 title: Recall
 sidebar_label: Recall
 description: When to use recall vs query_facts, how token-budget packing works, and how to tune stage weights.
+audience: Integrator
 ---
 
 # Recall
@@ -191,7 +192,7 @@ Memory cards are per-entity, per-scope pre-aggregated summaries stored in the `m
 
 ## Related guides
 
-- [Querying facts](/docs/guides/querying-facts) — structured, predicate-based fact queries
-- [Embeddings](/docs/guides/embeddings) — model selection, reindexing, and mixed-model safety
-- [Memory Gardens](/docs/guides/memory-gardens) — garden ACL and recall scoping
-- [Subscriptions](/docs/guides/subscriptions) — push notifications when watched facts change
+- [Querying facts](/docs/build/guides/querying-facts) — structured, predicate-based fact queries
+- [Embeddings](/docs/build/guides/embeddings) — model selection, reindexing, and mixed-model safety
+- [Memory Gardens](/docs/build/guides/memory-gardens) — garden ACL and recall scoping
+- [Subscriptions](/docs/build/guides/subscriptions) — push notifications when watched facts change

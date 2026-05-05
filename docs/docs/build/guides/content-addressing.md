@@ -3,6 +3,7 @@ id: content-addressing
 title: Content-Addressed Fact IDs (CIDs)
 sidebar_label: Content Addressing
 description: Deterministic content-addressed identifiers for facts — deduplication, integrity verification, and external citation (spec §25).
+audience: Integrator
 ---
 
 # Content-Addressed Fact IDs (CIDs)
@@ -246,4 +247,4 @@ Because the CID is derived from content, the same fact on two federated nodes ha
 - [Time-Travel Queries](./time-travel.md) — query historical fact state
 - [RTBF Tombstones](./rtbf.md) — entity erasure
 - [Source Attestation](./source-attestation.md) — provenance and trust
-- [API Reference](/docs/api-reference) — full endpoint documentation
+- [API Reference](/docs/reference/api) — full endpoint documentation

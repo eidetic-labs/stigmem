@@ -2,6 +2,7 @@
 id: relay-backpressure
 title: N-node Relay Backpressure
 sidebar_label: Relay Backpressure
+audience: Integrator
 ---
 
 # N-node Relay Backpressure
@@ -110,7 +111,7 @@ For multi-hop topologies:
 
 ## See also
 
-- [Federation guide](/docs/guides/federation) — peer registration, pull protocol, and PeerDeclaration setup
-- [Scope propagation guide](/docs/guides/scope-propagation) — scope invariants in N-node topologies
+- [Federation guide](/docs/build/guides/federation) — peer registration, pull protocol, and PeerDeclaration setup
+- [Scope propagation guide](/docs/build/guides/scope-propagation) — scope invariants in N-node topologies
 - Spec §6.7 — N-node backpressure patterns
 - Spec §6 — Federation protocol

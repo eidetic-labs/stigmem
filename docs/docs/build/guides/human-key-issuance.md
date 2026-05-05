@@ -2,6 +2,7 @@
 id: human-key-issuance
 title: Human Key Issuance — Garden-Scoped Permissions
 sidebar_label: Human Key Issuance
+audience: Integrator
 ---
 
 # Human Key Issuance — Garden-Scoped Permissions

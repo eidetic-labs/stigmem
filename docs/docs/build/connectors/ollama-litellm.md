@@ -2,6 +2,7 @@
 id: ollama-litellm
 title: Ollama / LiteLLM
 sidebar_label: Ollama / LiteLLM
+audience: Integrator
 ---
 
 # Stigmem with Ollama and LiteLLM (E6)
@@ -165,4 +166,4 @@ opposite of Gemini's upper-case format. If you need both, use each adapter separ
 ## See also
 
 - [Gemini adapter](./gemini) — Google's `FunctionDeclaration` format
-- [MCP server](../../architecture) — for hosts that speak MCP natively (Claude Code, Codex CLI, Cursor, Zed)
+- [MCP server](../../reference/architecture) — for hosts that speak MCP natively (Claude Code, Codex CLI, Cursor, Zed)

@@ -2,6 +2,7 @@
 id: obsidian
 title: Obsidian / Markdown Vault
 sidebar_label: Obsidian Vault
+audience: Integrator
 ---
 
 # Obsidian Vault Adapter

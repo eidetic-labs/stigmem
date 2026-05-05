@@ -2,6 +2,7 @@
 id: authentication
 title: Authentication
 sidebar_label: Authentication
+audience: Integrator
 ---
 
 # Authentication
@@ -79,7 +80,7 @@ key = create_api_key(
 )
 ```
 
-See [Multi-Tenant Scoping](./multi-tenant) for the full isolation model and migration details.
+See [Multi-Tenant Scoping](./multi-tenancy) for the full isolation model and migration details.
 
 ## Environment variables
 
@@ -93,5 +94,5 @@ See [Multi-Tenant Scoping](./multi-tenant) for the full isolation model and migr
 - [Agent Keypairs](./agent-keypairs) — C1: Ed25519 keypair registration and attested source claims
 - [Human Key Issuance](./human-key-issuance) — C2: per-garden key scoping on top of OIDC
 - [Audit Log](./audit-log) — C3: querying the principal → source → fact audit trail
-- [Multi-Tenant Scoping](./multi-tenant) — tenant_id isolation model and migration 012
+- [Multi-Tenant Scoping](./multi-tenancy) — tenant_id isolation model and migration 012
 - [Billing Hooks](./billing-hooks) — per-tenant usage events emitted on every write

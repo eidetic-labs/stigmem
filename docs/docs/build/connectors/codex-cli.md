@@ -2,6 +2,7 @@
 id: codex-cli
 title: Codex CLI
 sidebar_label: Codex CLI
+audience: Integrator
 ---
 
 # Stigmem in Codex CLI
@@ -85,5 +86,5 @@ from that directory.
 
 ## See also
 
-- [Claude Code](../authentication) — Claude Code uses `.claude/mcp_servers.json` (same server, different config location)
+- [Claude Code](../guides/authentication) — Claude Code uses `.claude/mcp_servers.json` (same server, different config location)
 - [Cursor](./cursor) — Cursor config reference

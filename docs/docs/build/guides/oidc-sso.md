@@ -2,6 +2,8 @@
 id: oidc-sso
 title: OIDC / SSO Integration
 sidebar_label: OIDC / SSO
+audience: Integrator
+status: Beta
 ---
 
 # OIDC / SSO Integration

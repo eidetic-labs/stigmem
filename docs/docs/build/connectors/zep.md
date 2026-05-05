@@ -2,6 +2,7 @@
 id: zep
 title: Zep
 sidebar_label: Zep
+audience: Integrator
 ---
 
 # Stigmem ↔ Zep
@@ -104,4 +105,4 @@ No live Zep instance required — Zep client calls are mocked with
 ## See also
 
 - [Gemini connector](./gemini) — Gemini native function-calling format
-- [Authentication](../authentication) — Stigmem API key setup
+- [Authentication](../guides/authentication) — Stigmem API key setup

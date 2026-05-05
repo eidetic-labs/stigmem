@@ -1,26 +1,413 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 /**
  * Stigmem docs site theme — Infima CSS custom properties.
- * WCAG 2.1 AA contrast verified for primary colour on white background.
+ * Palette derived from the Stigmem logo (site/logo.svg):
+ *   #070912  logo canvas (dark mode background)
+ *   #1e1b4b  logo radial-gradient stop (hero glow)
+ *   #818cf8  primary brain-graph stroke (indigo-400)
+ *   #a78bfa  secondary brain-graph stroke (violet-400)
+ *   #c4b5fd  bright nodes (violet-300)
+ * WCAG 2.1 AA contrast verified for #6e73c8 on white and #818cf8 on #070912.
  */
 :root {
-  --ifm-color-primary: #2563eb;
-  --ifm-color-primary-dark: #1d4ed8;
-  --ifm-color-primary-darker: #1e40af;
-  --ifm-color-primary-darkest: #1e3a8a;
-  --ifm-color-primary-light: #3b82f6;
-  --ifm-color-primary-lighter: #60a5fa;
-  --ifm-color-primary-lightest: #93c5fd;
+  --ifm-color-primary: #6e73c8;
+  --ifm-color-primary-dark: #5a5fb0;
+  --ifm-color-primary-darker: #4d5198;
+  --ifm-color-primary-darkest: #3f4380;
+  --ifm-color-primary-light: #818cf8;
+  --ifm-color-primary-lighter: #a78bfa;
+  --ifm-color-primary-lightest: #c4b5fd;
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --docusaurus-highlighted-code-line-bg: rgba(129, 140, 248, 0.12);
+  --stigmem-logo-bg: #070912;
+  --stigmem-logo-glow: #1e1b4b;
+  --audience-operator: #e67e22;
+  --audience-integrator: #3b82f6;
+  --audience-spec: #8b5cf6;
 }
 
 [data-theme='dark'] {
-  --ifm-color-primary: #60a5fa;
-  --ifm-color-primary-dark: #3b82f6;
-  --ifm-color-primary-darker: #2563eb;
-  --ifm-color-primary-darkest: #1d4ed8;
-  --ifm-color-primary-light: #93c5fd;
-  --ifm-color-primary-lighter: #bfdbfe;
-  --ifm-color-primary-lightest: #dbeafe;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-background-color: #070912;
+  --ifm-background-surface-color: #15182a;
+  --ifm-color-primary: #818cf8;
+  --ifm-color-primary-dark: #6e73c8;
+  --ifm-color-primary-darker: #5a5fb0;
+  --ifm-color-primary-darkest: #4d5198;
+  --ifm-color-primary-light: #a78bfa;
+  --ifm-color-primary-lighter: #c4b5fd;
+  --ifm-color-primary-lightest: #e2e4f2;
+  --ifm-color-content: #e2e4f2;
+  --ifm-color-content-secondary: #8c90a6;
+  --docusaurus-highlighted-code-line-bg: rgba(129, 140, 248, 0.18);
+  --audience-operator: #f59e0b;
+  --audience-integrator: #60a5fa;
+  --audience-spec: #a78bfa;
+}
+
+/* Hero / landing surfaces inherit the logo's radial glow so the logo sits seamlessly. */
+.hero--primary {
+  background:
+    radial-gradient(ellipse at 50% 47%, var(--stigmem-logo-glow) 0%, var(--stigmem-logo-bg) 70%),
+    var(--stigmem-logo-bg);
+  color: #e2e4f2;
+}
+
+/* --- Visual lift: typography, surfaces, polish --------------------------------
+ * Goal: replace the default Infima look with a more polished, brand-aligned
+ * surface inspired by modern docs sites (Stripe, Vercel, Linear). No new JS deps.
+ */
+
+:root {
+  --ifm-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Helvetica Neue', Arial, sans-serif;
+  --ifm-font-family-monospace: 'JetBrains Mono', ui-monospace, SFMono-Regular,
+    'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --ifm-heading-font-weight: 650;
+  --ifm-heading-line-height: 1.2;
+  --ifm-h1-font-size: 2.4rem;
+  --ifm-h2-font-size: 1.7rem;
+  --ifm-h3-font-size: 1.3rem;
+  --ifm-line-height-base: 1.65;
+  --ifm-paragraph-margin-bottom: 1.05rem;
+  --ifm-leading-desktop: 1.4;
+  --ifm-spacing-horizontal: 1.25rem;
+  --ifm-global-radius: 8px;
+  --ifm-card-border-radius: 12px;
+  --ifm-toc-border-color: transparent;
+  --ifm-navbar-shadow: 0 1px 0 color-mix(in srgb, var(--ifm-color-primary) 12%, transparent);
+}
+
+/* Headings: tighter, more confident hierarchy */
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  letter-spacing: -0.015em;
+}
+.markdown h2 {
+  border-top: 1px solid color-mix(in srgb, var(--ifm-color-content) 12%, transparent);
+  padding-top: 1.6rem;
+  margin-top: 2.4rem;
+}
+[data-theme='dark'] .markdown h2 {
+  border-top-color: color-mix(in srgb, var(--ifm-color-primary-light) 28%, transparent);
+}
+
+/* Inline code chips */
+.markdown :not(pre) > code {
+  background: color-mix(in srgb, var(--ifm-color-primary) 10%, transparent);
+  color: var(--ifm-color-primary-darker);
+  border: 1px solid color-mix(in srgb, var(--ifm-color-primary) 18%, transparent);
+  padding: 0.1em 0.45em;
+  border-radius: 6px;
+  font-size: 0.88em;
+}
+[data-theme='dark'] .markdown :not(pre) > code {
+  color: var(--ifm-color-primary-lightest);
+  background: color-mix(in srgb, var(--ifm-color-primary) 18%, transparent);
+  border-color: color-mix(in srgb, var(--ifm-color-primary) 30%, transparent);
+}
+
+/* Code block surface — subtle gradient frame, rounded, indigo-tinted */
+.theme-code-block,
+pre {
+  border-radius: 12px !important;
+  border: 1px solid color-mix(in srgb, var(--ifm-color-primary) 14%, transparent);
+  box-shadow: 0 1px 2px rgba(7, 9, 18, 0.04), 0 8px 24px -12px rgba(7, 9, 18, 0.12);
+}
+[data-theme='dark'] .theme-code-block,
+[data-theme='dark'] pre {
+  border-color: color-mix(in srgb, var(--ifm-color-primary) 24%, transparent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Admonitions as cards with a coloured edge — feels like Stripe / Linear */
+.theme-admonition,
+.alert {
+  border-radius: 12px !important;
+  border: 1px solid color-mix(in srgb, var(--ifm-color-primary) 14%, transparent) !important;
+  border-left-width: 4px !important;
+  box-shadow: 0 1px 3px rgba(7, 9, 18, 0.04);
+  padding: 1rem 1.1rem !important;
+}
+.theme-admonition-info { border-left-color: #3b82f6 !important; }
+.theme-admonition-tip,
+.theme-admonition-success { border-left-color: #10b981 !important; }
+.theme-admonition-warning,
+.theme-admonition-caution { border-left-color: #f59e0b !important; }
+.theme-admonition-danger { border-left-color: #ef4444 !important; }
+.theme-admonition-note { border-left-color: var(--ifm-color-primary) !important; }
+[data-theme='dark'] .theme-admonition,
+[data-theme='dark'] .alert {
+  border-color: color-mix(in srgb, var(--ifm-color-primary-light) 28%, transparent) !important;
+  background: color-mix(in srgb, var(--ifm-background-surface-color) 70%, var(--stigmem-logo-bg)) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Tables: cleaner separators, hover state, no chrome */
+.markdown table {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ifm-color-content) 14%, transparent);
+}
+.markdown table tr,
+.markdown table td,
+.markdown table th {
+  border-color: color-mix(in srgb, var(--ifm-color-content) 12%, transparent);
+}
+.markdown th {
+  background: color-mix(in srgb, var(--ifm-color-primary) 5%, transparent);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--ifm-color-content-secondary);
+}
+.markdown tbody tr:hover {
+  background: color-mix(in srgb, var(--ifm-color-primary) 4%, transparent);
+}
+[data-theme='dark'] .markdown table {
+  border-color: color-mix(in srgb, var(--ifm-color-primary-light) 30%, transparent);
+}
+[data-theme='dark'] .markdown table tr,
+[data-theme='dark'] .markdown table td,
+[data-theme='dark'] .markdown table th {
+  border-color: color-mix(in srgb, var(--ifm-color-primary-light) 22%, transparent);
+}
+[data-theme='dark'] .markdown th {
+  background: color-mix(in srgb, var(--ifm-color-primary) 16%, transparent);
+  color: var(--ifm-color-primary-lightest);
+}
+[data-theme='dark'] .markdown tbody tr:hover {
+  background: color-mix(in srgb, var(--ifm-color-primary) 12%, transparent);
+}
+
+/* Sidebar polish — soften default underline, accent the active item */
+.menu__link {
+  border-radius: 6px;
+  font-size: 0.92rem;
+}
+.menu__link--active {
+  background: color-mix(in srgb, var(--ifm-color-primary) 12%, transparent);
+  color: var(--ifm-color-primary-darker);
+  font-weight: 600;
+}
+[data-theme='dark'] .menu__link--active {
+  color: var(--ifm-color-primary-lightest);
+  background: color-mix(in srgb, var(--ifm-color-primary) 24%, transparent);
+}
+/* Sidebar separator + scroll edge: visible on dark mode */
+[data-theme='dark'] .theme-doc-sidebar-container,
+[data-theme='dark'] .theme-doc-sidebar-menu {
+  border-color: color-mix(in srgb, var(--ifm-color-primary-light) 18%, transparent) !important;
+}
+
+/* Navbar: slimmer, with subtle gradient glow */
+.navbar {
+  backdrop-filter: saturate(140%) blur(8px);
+  background: color-mix(in srgb, var(--ifm-background-color) 88%, transparent);
+}
+[data-theme='dark'] .navbar {
+  background: color-mix(in srgb, var(--stigmem-logo-bg) 88%, transparent);
+}
+
+/* Mermaid: tone down default neutrals to match the brand. Dark theme is set in
+   docusaurus.config.js as `dark` (was `forest` — illegible on the indigo bg). */
+[data-theme='dark'] .docusaurus-mermaid-container svg {
+  background: transparent !important;
+}
+.docusaurus-mermaid-container .nodeLabel {
+  font-family: var(--ifm-font-family-base) !important;
+}
+/* Force visible strokes on dark mode where the diagram theme renders thin lines. */
+[data-theme='dark'] .docusaurus-mermaid-container .edgePath path,
+[data-theme='dark'] .docusaurus-mermaid-container .flowchart-link {
+  stroke: var(--ifm-color-primary-lighter) !important;
+  stroke-width: 1.6px !important;
+}
+[data-theme='dark'] .docusaurus-mermaid-container .node rect,
+[data-theme='dark'] .docusaurus-mermaid-container .node polygon,
+[data-theme='dark'] .docusaurus-mermaid-container .node circle {
+  stroke: var(--ifm-color-primary-light) !important;
+  fill: color-mix(in srgb, var(--ifm-color-primary) 22%, var(--stigmem-logo-bg)) !important;
+}
+[data-theme='dark'] .docusaurus-mermaid-container .nodeLabel,
+[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel {
+  color: var(--ifm-color-content) !important;
+  fill: var(--ifm-color-content) !important;
+}
+
+/* Hero buttons — softer, more clickable. The hero is always dark (it inherits
+ * the logo glow regardless of theme), so we explicitly fix button text colors
+ * to be readable on dark in both themes; `!important` is necessary because
+ * Infima's `.button--outline.button--secondary` defaults to a dark text color
+ * in light mode that would otherwise win on specificity. */
+.hero .button--lg {
+  border-radius: 8px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+}
+.hero .button--secondary:not(.button--outline) {
+  background: #818cf8 !important;       /* logo indigo-400 */
+  border-color: #6e73c8 !important;
+  color: #070912 !important;             /* logo canvas — dark text on indigo for AA contrast */
+}
+.hero .button--secondary:not(.button--outline):hover {
+  background: #a78bfa !important;        /* violet-400 on hover */
+  border-color: #818cf8 !important;
+  color: #070912 !important;
+}
+.hero .button--outline.button--secondary {
+  border-color: rgba(196, 181, 253, 0.6) !important;  /* pale lavender, semi-transparent */
+  color: #e2e4f2 !important;             /* high-contrast pale lavender for the dark hero */
+  background: transparent !important;
+}
+.hero .button--outline.button--secondary:hover {
+  border-color: #c4b5fd !important;
+  background: rgba(196, 181, 253, 0.12) !important;
+  color: #e2e4f2 !important;
+}
+
+/* Navbar GitHub Star/Fork pills are styled via the React component's CSS module
+ * (docs/src/components/GitHubButton/styles.module.css). No global rules needed. */
+
+/* --- Footer ----------------------------------------------------------------
+ * No `style: 'dark'` in the footer config — the footer inherits the page
+ * background (white in light mode, logo canvas in dark mode). Below we tune
+ * typography and spacing to feel like part of the page rather than a slab. */
+.footer {
+  background: var(--ifm-background-color);
+  border-top: 1px solid color-mix(in srgb, var(--ifm-color-content) 10%, transparent);
+  padding: 3rem 0 2rem;
+}
+[data-theme='dark'] .footer {
+  background: var(--stigmem-logo-bg);
+  border-top-color: color-mix(in srgb, var(--ifm-color-primary-light) 18%, transparent);
+}
+.footer__title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--ifm-color-content-secondary);
+  margin-bottom: 0.9rem;
+}
+.footer__items {
+  gap: 0.4rem;
+}
+.footer__link-item {
+  font-size: 0.92rem;
+  color: var(--ifm-color-content);
+  opacity: 0.82;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+.footer__link-item:hover {
+  opacity: 1;
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+.footer__copyright {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--ifm-color-content) 8%, transparent);
+  font-size: 0.82rem;
+  color: var(--ifm-color-content-secondary);
+  text-align: center;
+}
+[data-theme='dark'] .footer__copyright {
+  border-top-color: color-mix(in srgb, var(--ifm-color-primary-light) 14%, transparent);
+}
+
+/* Light/dark color-mode toggle: give it equal breathing room on both sides so
+ * it sits centered between the search box (left) and the GitHub pills (right)
+ * instead of crowding the Fork pill. The class name is hashed by Docusaurus
+ * (e.g. colorModeToggle_DEke) so we target via wildcard. */
+.navbar__items--right > [class*="colorModeToggle"] {
+  margin-left: 0.6rem;
+  margin-right: 0.6rem;
+}
+
+/* --- (deprecated) GitHub icon button styles, retained in case of swizzle reuse --- */
+.header-github-link::before {
+  content: '';
+  width: 24px;
+  height: 24px;
+  display: flex;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E")
+    no-repeat;
+}
+
+[data-theme='dark'] .header-github-link::before {
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='white' d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E")
+    no-repeat;
+}
+
+/* --- Audience badge row (when title is authored in markdown, not synthetic) ---
+ * No negative top margin — that overlapped the Docusaurus version badge chip
+ * (which renders just above the doc content on multi-versioned pages).
+ */
+.audience-badge-row {
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+/* Give the version badge a clear gap below itself so the audience chip never
+ * collides with it regardless of theme version-badge changes. */
+.theme-doc-version-badge {
+  margin-bottom: 0.75rem;
+}
+
+/* --- Responsive TOC: right-rail at 1280px+, inline accordion below --- */
+@media (max-width: 1279px) {
+  .theme-doc-toc-desktop {
+    display: none !important;
+  }
+  .col[class*="docItemCol"] {
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .theme-doc-toc-mobile {
+    display: block !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .theme-doc-toc-mobile {
+    display: none !important;
+  }
+}
+
+/* --- Mobile hamburger drawer at 768px --- */
+@media (max-width: 767px) {
+  .navbar__items--right > .header-github-link {
+    display: none;
+  }
+  .navbar-sidebar .header-github-link::before {
+    content: 'GitHub';
+    width: auto;
+    height: auto;
+    background: none;
+    display: inline;
+    font: inherit;
+  }
+}
+
+@media (min-width: 768px) {
+  .navbar__toggle {
+    display: none !important;
+  }
+  .navbar-sidebar-toggle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .navbar__items {
+    display: none !important;
+  }
+  .navbar__toggle {
+    display: flex !important;
+  }
 }

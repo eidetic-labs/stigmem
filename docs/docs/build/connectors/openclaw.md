@@ -2,6 +2,7 @@
 id: openclaw
 title: OpenClaw
 sidebar_label: OpenClaw
+audience: Integrator
 ---
 
 # Stigmem in OpenClaw
@@ -149,7 +150,7 @@ docker run --rm -p 8765:8765 \
 ```
 
 For a production setup with auth, a persistent volume, and TLS, see the
-[installation guide](../../getting-started/installation).
+[installation guide](../../learn/quickstart/installation).
 
 ## Smoke test
 
@@ -166,6 +167,6 @@ print("boot ok:", ctx.summary[:80] if ctx else "(no prior context)")
 ## See also
 
 - [`adapters/openclaw` README](https://github.com/Eidetic-Labs/stigmem/tree/main/adapters/openclaw#readme) — package source, changelog, full security model
-- [Federation guide](../federation) — external node onboarding and multi-node topology
+- [Federation guide](../guides/federation) — external node onboarding and multi-node topology
 - [Paperclip / Claude Code](./paperclip) — MCP-based integration for Paperclip agents
-- [Authentication](../authentication) — API key setup and OIDC options
+- [Authentication](../guides/authentication) — API key setup and OIDC options

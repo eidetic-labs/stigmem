@@ -2,6 +2,7 @@
 id: synthesis
 title: Synthesis
 sidebar_label: Synthesis
+audience: Integrator
 ---
 
 # Synthesis
@@ -180,7 +181,7 @@ The three Phase 6 operational tools answer different questions:
 
 ## See also
 
-- [Decay guide](/docs/guides/decay) — apply configured decay policies before synthesizing for the cleanest view
-- [Conflict resolution guide](/docs/guides/conflict-resolution) — resolve the contradictions synthesis surfaces
+- [Decay guide](/docs/build/guides/decay) — apply configured decay policies before synthesizing for the cleanest view
+- [Conflict resolution guide](/docs/build/guides/conflict-resolution) — resolve the contradictions synthesis surfaces
 - Spec §16 — Synthesis (authoritative algorithm and wire format)
 - Spec §3.3 — Contradiction resolution order

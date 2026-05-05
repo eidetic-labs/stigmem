@@ -3,6 +3,7 @@ id: instruction-migration
 title: Instruction Migration
 sidebar_label: Instruction Migration
 description: Use stigmem instruction migrate to publish markdown instruction files as atomic facts and a lazy-loaded manifest.
+audience: Integrator
 ---
 
 # Instruction Migration
@@ -271,7 +272,7 @@ The `--db` flag reads existing fact content and the previous manifest directly f
 
 ## Related guides
 
-- [Recall](/docs/guides/recall) — Hybrid recall pipeline for general fact retrieval
-- [Asserting facts](/docs/guides/asserting-facts) — Low-level fact write API
-- [Agent keypairs](/docs/guides/agent-keypairs) — Ed25519 key registration for agent identity
-- [Audit log](/docs/guides/audit-log) — End-to-end audit trail for fact writes
+- [Recall](/docs/build/guides/recall) — Hybrid recall pipeline for general fact retrieval
+- [Asserting facts](/docs/build/guides/asserting-facts) — Low-level fact write API
+- [Agent keypairs](/docs/build/guides/agent-keypairs) — Ed25519 key registration for agent identity
+- [Audit log](/docs/build/guides/audit-log) — End-to-end audit trail for fact writes

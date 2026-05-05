@@ -3,6 +3,7 @@ id: embeddings
 title: Embeddings
 sidebar_label: Embeddings
 description: Choosing an embedding model, dimensionality tradeoffs, and mixed-model safety.
+audience: Integrator
 ---
 
 # Embeddings
@@ -12,7 +13,7 @@ description: Choosing an embedding model, dimensionality tradeoffs, and mixed-mo
 
 ---
 
-Stigmem stores a dense vector embedding alongside each fact at write time. These embeddings power the vector stage of the [`recall`](/docs/guides/recall) pipeline. This guide covers model selection, dimensionality tradeoffs, and safe migration between models.
+Stigmem stores a dense vector embedding alongside each fact at write time. These embeddings power the vector stage of the [`recall`](/docs/build/guides/recall) pipeline. This guide covers model selection, dimensionality tradeoffs, and safe migration between models.
 
 ## How embeddings are stored
 
@@ -153,5 +154,5 @@ Facts with effective confidence below this threshold have their `vec_facts` entr
 
 ## Related guides
 
-- [Recall](/docs/guides/recall) — how embeddings are used in the recall pipeline
-- [Decay](/docs/guides/decay) — confidence-based fact retirement and tombstoning
+- [Recall](/docs/build/guides/recall) — how embeddings are used in the recall pipeline
+- [Decay](/docs/build/guides/decay) — confidence-based fact retirement and tombstoning

@@ -2,6 +2,7 @@
 id: fuzzy-entity-resolver
 title: Fuzzy Entity Resolver
 sidebar_label: Fuzzy Entity Resolver
+audience: Integrator
 ---
 
 # Fuzzy Entity Resolver

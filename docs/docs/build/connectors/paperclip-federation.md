@@ -2,6 +2,7 @@
 id: paperclip-federation
 title: Paperclip — Federation Integration
 sidebar_label: Paperclip Federation
+audience: Integrator
 ---
 
 # Paperclip — Federation Integration Guide
@@ -89,7 +90,7 @@ curl http://localhost:8765/.well-known/stigmem | jq '{node_id, version, federati
 
 ### Option B: Kubernetes (production)
 
-See the [Helm install guide](../../getting-started/quickstart#kubernetes-install-helm) for
+See the [Helm install guide](../../learn/quickstart/quickstart-tutorial#kubernetes-install-helm) for
 `federation-values.yaml` and the `stigmem-keys` Kubernetes Secret setup.
 
 ### Persistent node on macOS (dev/dogfood)
@@ -198,7 +199,7 @@ curl http://localhost:8765/.well-known/stigmem | jq '{node_id, federation}'
 
 ### 5b. Generate a declaration signature
 
-Use the signing snippet from the [federation guide](../federation#peer-declaration) or the
+Use the signing snippet from the [federation guide](../guides/federation#peer-declaration) or the
 automated `scripts/federation-init.py` helper. For a manual one-off:
 
 ```python
@@ -343,7 +344,7 @@ garden ACLs.
 ## See also
 
 - [Paperclip connector](./paperclip) — MCP config, tool reference, heartbeat pattern
-- [Federation guide](../federation) — key generation, peer tokens, scope enforcement
-- [Asserting facts](../asserting-facts) — FactValue schema, relation naming, TTLs
-- [Querying facts](../querying-facts) — filtering, pagination, cursor polling
-- [Quickstart](../../getting-started/quickstart) — local two-node federation in under 5 minutes
+- [Federation guide](../guides/federation) — key generation, peer tokens, scope enforcement
+- [Asserting facts](../guides/asserting-facts) — FactValue schema, relation naming, TTLs
+- [Querying facts](../guides/querying-facts) — filtering, pagination, cursor polling
+- [Quickstart](../../learn/quickstart/quickstart-tutorial) — local two-node federation in under 5 minutes

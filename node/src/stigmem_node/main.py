@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import signal
+import ssl
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from typing import Annotated
 
 import uvicorn
-from fastapi import Depends, FastAPI
-from fastapi.responses import FileResponse
+from fastapi import Depends, FastAPI, Request
+from fastapi.responses import FileResponse, JSONResponse
 
 from .auth import Identity, resolve_identity
 from .db import apply_migrations
@@ -35,6 +37,7 @@ from .routes.recall import router as recall_router
 from .routes.subscriptions import router as subscriptions_router
 from .routes.instruction import router as instruction_router
 from .routes.synthesize import router as synthesize_router
+from .routes.admin_audit import router as admin_audit_router
 from .routes.wellknown import router as wellknown_router
 from .settings import settings
 
@@ -93,6 +96,22 @@ def create_app() -> FastAPI:
 
     app.add_middleware(RateLimitMiddleware)
 
+    if settings.mtls_enabled:
+        @app.middleware("http")
+        async def mtls_plaintext_guard(request: Request, call_next):  # type: ignore[return]
+            """Reject plaintext federation requests when mTLS is configured (§22.1)."""
+            if request.url.path.startswith("/v1/federation") and request.url.scheme != "https":
+                return JSONResponse(
+                    {
+                        "error": "mTLS required",
+                        "detail": "Federation transport requires mutual TLS (spec §22.1). "
+                        "Connect via HTTPS with a valid node certificate.",
+                    },
+                    status_code=421,
+                )
+            return await call_next(request)
+
+    app.include_router(admin_audit_router)
     app.include_router(auth_router)
     app.include_router(agent_keys_router)
     app.include_router(audit_router)
@@ -118,6 +137,15 @@ def create_app() -> FastAPI:
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    @app.get("/metrics", include_in_schema=False, tags=["ops"])
+    def prometheus_metrics():  # type: ignore[return]
+        from .metrics import make_metrics_response
+        resp = make_metrics_response()
+        if resp is None:
+            from fastapi.responses import PlainTextResponse
+            return PlainTextResponse("# prometheus_client not installed\n", status_code=200)
+        return resp
+
     @app.get("/v1/me", tags=["auth"])
     def whoami(identity: Annotated[Identity, Depends(resolve_identity)]) -> dict:
         return {
@@ -137,13 +165,60 @@ app = create_app()
 
 
 def run() -> None:
-    uvicorn.run(
+    if not settings.mtls_enabled:
+        uvicorn.run(
+            "stigmem_node.main:app",
+            host=settings.host,
+            port=settings.port,
+            log_level=settings.log_level,
+            reload=False,
+        )
+        return
+
+    from .tls import cert_watcher_task, reload_tls_cert
+
+    # Let uvicorn build the SSL context from cert/key files, then enforce TLS 1.3
+    # floor and mTLS client-cert requirement on the resulting context object.
+    config = uvicorn.Config(
         "stigmem_node.main:app",
         host=settings.host,
         port=settings.port,
         log_level=settings.log_level,
         reload=False,
+        ssl_certfile=settings.tls_cert_path,
+        ssl_keyfile=settings.tls_key_path,
+        ssl_ca_certs=settings.tls_ca_bundle or None,
+        ssl_cert_reqs=ssl.CERT_REQUIRED,
     )
+    config.load()
+
+    if config.ssl:
+        config.ssl.minimum_version = ssl.TLSVersion.TLSv1_3
+    ssl_ctx = config.ssl
+
+    async def _serve_with_cert_watcher() -> None:
+        loop = asyncio.get_running_loop()
+        if ssl_ctx is not None:
+            loop.add_signal_handler(
+                signal.SIGHUP,
+                lambda: reload_tls_cert(ssl_ctx),
+            )
+
+        server = uvicorn.Server(config)
+        watcher_task: asyncio.Task[None] | None = None
+        if ssl_ctx is not None:
+            watcher_task = asyncio.create_task(cert_watcher_task(ssl_ctx))
+
+        try:
+            await server.serve()
+        finally:
+            if watcher_task is not None:
+                watcher_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await watcher_task
+
+    config.setup_event_loop()
+    asyncio.run(_serve_with_cert_watcher())
 
 
 if __name__ == "__main__":

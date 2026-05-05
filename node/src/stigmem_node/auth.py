@@ -55,6 +55,10 @@ class Identity:
     def can_federate(self) -> bool:
         return "federate" in self.permissions
 
+    def can_audit(self) -> bool:
+        """True when the principal holds the audit.read capability (spec §22.3)."""
+        return "audit.read" in self.permissions
+
 
 _ANON = Identity("anon:trusted", ["read", "write", "federate"], tenant_id="default")
 

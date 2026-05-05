@@ -70,6 +70,7 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | §22.5 | Replay protection (±5 min clock-skew, persistent nonce cache, 5 error codes) | **DRAFT normative (v1.1-draft rev 11)** |
 | §22.6 | Container baseline (distroless, non-root UID 1000, read-only-fs, seccomp, Cosign signing) | **DRAFT normative (v1.1-draft rev 11)** |
 | §22.7 | Transparency log own-instance decision memo (5-criterion gate; reference deployment defers self-hosted Rekor) | **DRAFT normative (v1.1-draft rev 11)** |
+| §22.7.5 | Transparency log public-key rotation (Rekor root-key; 30-day update SLA; `transparency_log_key_mismatch` audit event) | **DRAFT normative (v1.1-draft rev 11)** |
 
 ## Key concepts
 

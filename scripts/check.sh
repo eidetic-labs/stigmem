@@ -108,6 +108,7 @@ run_obsidian() {
   if [[ "${CHECK_SKIP_OBSIDIAN_INSTALL:-0}" != "1" ]]; then
     npm ci
   fi
+  npm test
   npm run build
 }
 

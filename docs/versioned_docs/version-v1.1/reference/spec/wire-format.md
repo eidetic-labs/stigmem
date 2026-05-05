@@ -683,6 +683,14 @@ The `garden_id` query parameter is additive with other filters (`entity`, `relat
 
 ### §5.21 Publish an org manifest {#section-5-21}
 
+Publishing an org manifest is the bootstrap step for the federation trust model
+(§19). The admin uploads a self-signed manifest that declares the node's public
+key and the entity URIs it speaks for. The node verifies the signature against
+the embedded public key, stores the manifest, and (if configured) submits it to
+the transparency log (§19.2) for independent auditability. This endpoint
+replaces manual key exchange — peers can now resolve the manifest dynamically
+via §5.22.
+
 ```
 PUT /v1/federation/manifest
 Authorization: Bearer <admin api-key>
@@ -709,6 +717,12 @@ Content-Type: application/json
 
 ### §5.22 Resolve an org manifest {#section-5-22}
 
+Peers call this endpoint during the federation handshake to retrieve the
+manifest for a given entity URI. The response contains the full manifest object
+including the public key, entity list, rotation events, and signature — giving
+the peer everything it needs to verify capability tokens (§19.3) issued by
+this node.
+
 ```
 GET /v1/federation/manifest/:entity_uri_encoded
 → 200 { ...manifest object... }
@@ -716,6 +730,12 @@ GET /v1/federation/manifest/:entity_uri_encoded
 ```
 
 ### §5.23 Issue a capability token {#section-5-23}
+
+Capability tokens (§19.3) are short-lived, scoped credentials that replace
+static API keys for inter-node operations. This endpoint mints a signed token
+granting the named `subject` a specific `verb` on a specific `object` (scope or
+garden URI). The token is self-contained — the receiving peer verifies it using
+the issuer's manifest public key without calling back to the issuing node.
 
 ```
 POST /v1/federation/capability-tokens
@@ -735,6 +755,11 @@ Authorization: Bearer <admin api-key>
 
 ### §5.24 Revoke a capability token {#section-5-24}
 
+Revocation invalidates a previously-issued token before its natural expiry. The
+revocation event is recorded in the local revocation list and submitted to the
+transparency log (§19.2.5) so that peers can independently verify the
+revocation without trusting the issuing node's runtime state.
+
 ```
 POST /v1/federation/capability-tokens/:token_id/revoke
 Authorization: Bearer <admin api-key>
@@ -745,6 +770,12 @@ Authorization: Bearer <admin api-key>
 ```
 
 ### §5.25 Quarantine garden operations {#section-5-25}
+
+Facts that arrive from untrusted or low-scoring federation sources land in a
+quarantine garden (§19.7) rather than the target scope. These operations let a
+moderator review quarantined facts and either promote them to the intended
+destination or reject them permanently. Both actions are auditable — the
+`promoted_by` / `rejected_by` field records who made the decision.
 
 ```
 // Promote a fact from quarantine to a target garden

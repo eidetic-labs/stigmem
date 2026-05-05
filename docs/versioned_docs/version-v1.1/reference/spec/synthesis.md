@@ -33,6 +33,14 @@ knowledge without needing to manually filter contradictions, expired facts, or l
 
 ### §16.1 SynthesisEntry Shape {#section-16-1}
 
+Each row in the synthesis response is a `SynthesisEntry` — the collapsed,
+current-state view of a single `(entity, relation, scope)` triple. Where a raw
+fact query might return ten historical assertions for "Alice's role," synthesis
+returns one entry with the highest-confidence live value. If that triple is
+contradicted (two live values competing), synthesis surfaces both via the
+`alt_value`/`alt_confidence` fields and flags `contradicted: true` so the
+consuming agent can decide whether to act on or escalate the ambiguity.
+
 ```
 SynthesisEntry {
   entity:        URI

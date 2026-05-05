@@ -58,6 +58,14 @@ a given `(entity, relation, scope)` triple wins unless contradiction policy appl
 
 ### §2.1 FactValue {#section-2-1}
 
+A `FactValue` is a discriminated union that constrains what a fact can assert.
+The `type` tag forces consumers to handle each variant explicitly — there is no
+"any" escape hatch — so that queries, indexing, and synthesis can operate on
+typed data without runtime introspection. The seven variants cover the practical
+range of agent knowledge: short labels (`string`), longer prose (`text`),
+numeric measurements, booleans, timestamps, inter-entity pointers (`ref`), and
+an explicit "unknown" sentinel (`null`).
+
 ```
 FactValue =
   | { type: "string",    v: string }          // short identifier or label (≤1 KB recommended)
@@ -69,9 +77,23 @@ FactValue =
   | { type: "null" }                          // explicit "unknown / not applicable"
 ```
 
+The `string` vs `text` distinction exists because short labels (a role name, a
+preference tag) have different indexing and display characteristics than
+multi-paragraph narratives. Nodes index `string` values for exact-match
+queries; `text` values feed the embedding pipeline (§20.2) for semantic recall.
+The `ref` type creates typed edges in the knowledge graph — the recall pipeline
+(§20.1) traverses `ref` values during k-hop expansion.
+
 **`text` size guidance (v0.4):** Inline `text` values SHOULD be ≤ 64 KB. For larger payloads, assert a `ref` fact pointing to external storage and keep the text value as a summary. Nodes MAY reject `text` values above their configured limit; they MUST return HTTP 413 if they do.
 
 ### §2.2 FactScope {#section-2-2}
+
+Scope is the visibility fence that determines which facts leave a node during
+federation. It is a single string enum — not a complex policy document —
+because the common case is simple ("this stays here" vs "this can be shared")
+and complex cross-scope propagation rules (§6.4) build on top of this
+primitive. The four levels form a strict hierarchy from most private to most
+shareable:
 
 ```
 FactScope =
@@ -87,7 +109,17 @@ includes `"company"` in `allowed_scopes` (see §6.1).
 
 ### §2.3 Reification (N-ary Relationships) {#section-2-3}
 
-Mint a synthetic entity `stigmem:rel:{uuid}` and assert facts about it:
+The fact tuple is binary — one entity, one relation, one value — but real-world
+knowledge often involves three or more parties (e.g. "Company A approved
+Company B's policy via board vote"). Reification handles this by minting a
+synthetic entity that *represents the relationship itself*, then attaching the
+participants as facts about that entity. This pattern avoids adding an
+`object` column to the fact table (which would complicate queries and indexing
+for the overwhelmingly binary common case) while still supporting complex
+relationships when they arise.
+
+To create an N-ary relationship, mint a synthetic entity `stigmem:rel:{uuid}`
+and assert facts about it:
 
 ```
 (entity="stigmem:rel:abc123", relation="rel:subject",  value={type:"ref", v:"stigmem://company.example/company/a"})
@@ -95,17 +127,29 @@ Mint a synthetic entity `stigmem:rel:{uuid}` and assert facts about it:
 (entity="stigmem:rel:abc123", relation="rel:type",     value={type:"string", v:"policy:board-approval"})
 ```
 
-`rel:subject`, `rel:object`, and `rel:type` are reserved in the `rel:` namespace (see §9).
+`rel:subject`, `rel:object`, and `rel:type` are reserved in the `rel:` namespace (see §9). The graph traversal engine (§20.1) follows `ref` values out of reified entities the same way it follows any other `ref`, so reified relationships participate naturally in k-hop recall.
 
 ### §2.4 Hybrid Logical Clock (HLC) — v0.5 {#section-2-4}
 
-Every node maintains a **Hybrid Logical Clock**:
+Wall-clock timestamps alone cannot establish causality in a distributed system
+because clocks drift. A pure logical clock (Lamport-style) preserves causality
+but loses correlation with real time. Stigmem uses a **Hybrid Logical Clock**
+that combines both: the `wall_ms` component anchors events to real time (for
+human debugging and time-travel queries — §24), while the `counter` component
+preserves causality even when two events share the same millisecond.
+
+Every node maintains a single HLC value:
 
 ```
 HLC = wall_ms || counter
 ```
 
 Format: `"{wall_ms_utc}.{counter}"` — e.g. `"1746230400000.003"`.
+
+The string encoding uses a dot separator so that lexicographic string comparison
+produces correct causal ordering without parsing. The `wall_ms` component is
+zero-padded to 13 digits (sufficient until year 2286); the `counter` component
+is zero-padded to 3 digits per node (overflow creates a new millisecond bucket).
 
 **Advance rules:**
 1. On local write: `hlc = max(now_ms, last_hlc_ms)` as `wall_ms`; increment `counter` if `wall_ms` unchanged.

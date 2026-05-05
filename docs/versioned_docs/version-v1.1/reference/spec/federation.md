@@ -34,7 +34,14 @@ Each subsection below shows the most recent normative text from the spec source.
 
 ### §6.1 Peer Declaration {#section-6-1}
 
-Two nodes federate when operators on both sides exchange a signed **PeerDeclaration**.
+Two nodes federate when operators on both sides exchange a signed
+**PeerDeclaration**. The declaration serves three purposes: it identifies the
+peer (via `node_id` and `node_url`), establishes a cryptographic trust root
+(via `federation_pubkey`), and sets the scope boundary for what data may flow
+between the two nodes (via `allowed_scopes`). The signature over the canonical
+JSON body ensures that a declaration cannot be replayed or tampered with in
+transit — the receiving node verifies it against the sender's published key
+before activating the relationship.
 
 ```
 PeerDeclaration {
@@ -53,6 +60,12 @@ RateLimit {
 }
 ```
 
+The `rate_limit` field is optional because most deployments do not need
+per-peer throttling — it exists for operators who federate with high-volume
+peers and want to cap inbound load without rejecting the relationship entirely.
+The `RateLimit` uses a token-bucket model: `facts_per_second` is the refill
+rate; `burst` is the bucket depth.
+
 **Canonical JSON** for signing: fields in lexicographic key order, no whitespace, UTF-8.
 
 **Key lifecycle:**
@@ -68,7 +81,12 @@ RateLimit {
 nodes that support federation, based on implementation experience from two Phase 4 adapters.
 
 After peer registration, nodes MUST exchange capability advertisements before the first
-replication pull:
+replication pull. The advertisement tells the peer what relation namespaces the
+node understands, how it handles conflicts on those relations, and which
+replication mode it supports. Without this exchange, a peer cannot distinguish
+relations it can meaningfully process from opaque forwarded data — leading to
+silent contradiction storms when two nodes disagree on conflict resolution
+semantics for a shared relation.
 
 ```
 CapabilityAd {
@@ -124,6 +142,14 @@ exponentially with jitter. Max backoff: 5 minutes. See §6.7 for N-node cascade
 backpressure patterns.
 
 #### Idempotent ingestion
+
+The ingestion handler MUST be idempotent: receiving the same fact twice (whether
+from the same peer or a different one in a multi-hop topology) produces exactly
+one stored record. The existence check uses the fact's UUID, not its content,
+because two distinct facts could contain the same assertion at different times.
+A `stigmem:received_from` meta-fact is written alongside the main fact to
+preserve provenance — this is what the federation audit endpoint (§5.8) queries
+to answer "which peer delivered fact X?"
 
 ```python
 def ingest_fact(fact):

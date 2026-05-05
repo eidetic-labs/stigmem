@@ -41,7 +41,13 @@ This meta-fact is stored locally and MUST NOT be re-replicated.
 **`valid_until`:** Facts whose `valid_until` has passed MUST NOT be returned unless
 the caller sends `include_expired=true`. Expired facts remain in the store.
 
-**TTL meta-fact:**
+**TTL meta-fact:** Operators or agents that want to schedule a future expiry on
+a fact that was originally asserted without `valid_until` can attach one
+retroactively via a TTL meta-fact. The meta-fact's entity is the target fact's
+ID; the relation uses the reserved `stigmem:ttl` namespace; and the value is
+the intended expiry datetime. The decay sweeper (§15) honours TTL meta-facts
+during its sweep pass.
+
 ```
 (entity=<fact-id>, relation="stigmem:ttl", value={type:"datetime", v:<expiry>}, ...)
 ```
@@ -69,8 +75,12 @@ A **contradiction** exists when two facts `a`, `b` satisfy all of:
 2. Equal confidence → higher `hlc` wins (causal ordering).
 3. Tie → both returned with `contradicted: true` on each; caller decides.
 
-**Contradiction fact (v0.5):** When a contradiction is detected on write, the node
-MUST assert a system-generated contradiction record:
+**Contradiction fact (v0.5):** When a contradiction is detected on write, the
+node MUST assert a system-generated contradiction record. The contradiction is
+itself a first-class entity in the `stigmem:conflict:` namespace — this reifies
+the disagreement as queryable data rather than hiding it in a separate table.
+The `stigmem:conflict:between` fact links the two competing fact IDs; a
+companion status fact tracks whether the contradiction has been resolved.
 
 ```
 POST /v1/facts  (system-generated, source="system:stigmem")
@@ -84,7 +94,10 @@ POST /v1/facts  (system-generated, source="system:stigmem")
 }
 ```
 
-A second fact records status:
+A second fact records the conflict's resolution state. It starts as
+`"unresolved"` and transitions to `"resolved"` when a caller invokes the
+conflict resolution endpoint (§5.10):
+
 ```
 (entity="stigmem:conflict:<uuid>", relation="stigmem:conflict:status",
  value={type:"string", v:"unresolved"}, ...)
@@ -149,6 +162,12 @@ SourceAttestationMode = "enforce" | "warn" | "off"
 restrictions and peer-token auth for federation.
 
 #### Identity shape
+
+An `Identity` binds a credential (API key) to an entity URI and constrains
+which scopes that credential may access. The `entity_uri` field becomes the
+`source` on any fact asserted with this key — this is how Stigmem attributes
+assertions to their originator and enables provenance queries ("which agent
+asserted this?").
 
 ```
 Identity {

@@ -68,6 +68,34 @@ jobs:
       - name: Contract fast gates
         run: bash scripts/check.sh contract
 
+  sdk-compat-smoke:
+    name: SDK compatibility smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: SDK compatibility fast gate
+        run: bash scripts/check_sdk_compat.sh
+
   go-tests:
     name: Go SDK tests
     runs-on: ubuntu-latest

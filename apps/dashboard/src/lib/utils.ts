@@ -22,7 +22,7 @@ export function fmtValue(type: string, v: string | number | boolean | null): str
   return String(v);
 }
 
-export const SCOPES = ["local", "team", "public"] as const;
+export const SCOPES = ["local", "team", "company", "public"] as const;
 export type Scope = (typeof SCOPES)[number];
 
 export const ROLES = ["reader", "writer", "admin"] as const;

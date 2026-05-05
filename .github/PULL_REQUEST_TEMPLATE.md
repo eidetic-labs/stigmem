@@ -12,6 +12,8 @@
 - [ ] New spec text follows the existing style (tables, code blocks with explicit type labels)
 - [ ] If this adds a new field or endpoint: the open-questions section (§8) is updated accordingly
 - [ ] If this resolves an open question from §8: that item is removed and the decision is logged in §7
+- [ ] I ran the relevant local gates (`make check` or the focused `make check-*` targets) for the touched surfaces
+- [ ] Any skipped or quarantined test has a linked issue, a named owner, and a review date
 
 ## For design-partner contributions
 

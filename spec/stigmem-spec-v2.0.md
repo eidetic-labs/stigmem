@@ -196,6 +196,8 @@ Authorization: Bearer <api-key> (must hold quarantine:moderator role)
 
 ## 19. Federation Trust
 
+**Status:** Normative (v2.0). §19.1–§19.9 carry MUST/SHOULD/MAY normative language.
+
 ### 19.1 Org Manifest
 
 #### 19.1.1 Purpose

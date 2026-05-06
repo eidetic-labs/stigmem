@@ -1,6 +1,7 @@
 ---
 title: Migrating from v1.x to v2.0
 sidebar_label: v1.x → v2.0
+description: "Step-by-step upgrade guide for Stigmem v1.x to v2.0 — federation trust, recall, lazy instructions, security hardening, RTBF, time-travel, CIDs."
 audience: Operator
 ---
 

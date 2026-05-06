@@ -340,6 +340,10 @@ The existing scope model (`local | team | company | public`) is a coarse, operat
 
 ### 17.2 Garden Primitive
 
+A garden is represented by two related structures: `Garden` (the container itself) and `GardenMember` (a principal's membership within it). The `Garden` record binds a human-readable slug to a fixed `FactScope`, ensuring all facts tagged with that garden share a single visibility tier. The `scope` field is set at creation time and cannot be changed — this invariant allows the ACL layer (§17.3) to reject scope-mismatched writes without consulting the facts table.
+
+Membership uses a three-tier role model (`GardenRole`). Roles are coarse by design: fine-grained per-relation permissions would complicate the already-layered access control stack (scope + garden + federation), so the protocol defers to operators who need them to implement a proxy or plugin. The `added_by` field supports audit trails without requiring a separate history table.
+
 ```
 Garden {
   id:          UUID              // internal primary key
@@ -424,7 +428,8 @@ A garden's `scope` field declares which scope its facts inhabit. This means:
 
 ### 17.6 Conventions
 
-**Relation namespace:** Garden membership metadata is stored as system facts using the `garden:` prefix:
+**Relation namespace:** Garden membership metadata is stored as system facts using the `garden:` prefix. The node writes these automatically when callers add or remove members via the garden management endpoints; they use `source="system:stigmem"` so that attestation checks (§18) can distinguish operator-managed membership from agent-authored assertions. The `garden:member` relation links the garden to a member entity, while `garden:role:<entity_uri>` records the member's permission level (reader, writer, or admin).
+
 ```
 (entity=<garden_id>, relation="garden:member",   value={type:"ref", v:<member_entity_uri>}, source="system:stigmem", ...)
 (entity=<garden_id>, relation="garden:role:<entity_uri>", value={type:"string", v:"writer"}, ...)
@@ -535,6 +540,12 @@ Source attestation depends on the node knowing the caller's authorized `entity_u
 
 #### Key creation
 
+A key is created with a single POST that binds the `entity_uri`, scope
+permissions, and optional delegation list at creation time. The node returns
+the raw API key exactly once in the response; only its SHA-256 digest is
+stored server-side. The `entity_uri` is immutable after creation to prevent
+retroactive re-attribution of facts already written with this key.
+
 ```
 POST /v1/auth/keys
 Authorization: Bearer <admin-key>
@@ -566,6 +577,11 @@ The caller MUST store `raw_key` securely — it is not retrievable after creatio
 ```
 
 #### Updated `Identity` shape (v0.9)
+
+The v0.9 `Identity` shape extends the v0.8 shape with the `allowed_source_entities`
+field needed for delegation (§18.9). This is the object the node constructs
+from the API key record when authenticating a request — it drives every
+attestation check in the write path.
 
 ```
 Identity {
@@ -633,7 +649,13 @@ This key may write facts with `source` equal to any of: the adapter itself, the 
 
 ### 18.10 Full Key Management API
 
-All key management routes require a key with `admin=true`.
+All key management routes require a key with `admin=true`. The key management
+API covers the full lifecycle: creation, inspection, scope/delegation updates,
+and revocation. Revocation is a soft delete — the key record is retained with a
+`revoked_at` timestamp for audit purposes, but all subsequent authentication
+attempts with the revoked key are rejected. A separate attestation-audit
+endpoint provides a searchable event log of every attestation decision the node
+has made, filterable by key, outcome, and time.
 
 ```
 POST   /v1/auth/keys                             // create key
@@ -646,6 +668,13 @@ GET    /v1/auth/attestation-audit                // attestation event log (admin
 ```
 
 `PATCH` request body may include `description`, `allowed_scopes`, `allowed_source_entities`. `entity_uri` and `admin` are immutable after creation.
+
+The attestation audit endpoint returns a paginated log of every attestation
+decision the node has made. Each event records the key that was used, the
+`source` value the caller claimed, whether attestation passed, and — when it
+failed — the specific rejection reason. This log is essential for operators
+transitioning from `warn` to `enforce` mode: querying for `attested=false`
+events surfaces all callers that would break under strict enforcement.
 
 ```
 GET /v1/auth/attestation-audit?key_id=<id>&attested=false&limit=50
@@ -668,6 +697,14 @@ Filter params: `key_id`, `attested` (true/false), `after` (pagination cursor), `
 Track C3 () builds a consolidated audit surface joining `(principal, attested-source, fact-id)` across `api_keys`, `attestation_audit`, and `facts`.
 
 ### 18.11 Schema Migration (Migration 005)
+
+Migration 005 adds two tables to support source attestation. The `api_keys`
+table formalizes key storage that was previously external to the database,
+binding each key to an `entity_uri` and carrying its scope permissions and
+delegation list. The `attestation_audit` table provides the append-only event
+log queried by the admin audit endpoint (§18.10). Both tables are additive and
+do not alter the existing `facts` schema — the `attested` column on `facts`
+was already added in §2.7.
 
 ```sql
 -- API key management (spec §18.7)

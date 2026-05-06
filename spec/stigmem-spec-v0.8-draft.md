@@ -55,6 +55,14 @@ a given `(entity, relation, scope)` triple wins unless contradiction policy appl
 
 ### 2.1 FactValue
 
+A `FactValue` is a discriminated union that constrains what a fact can assert.
+The `type` tag forces consumers to handle each variant explicitly — there is no
+"any" escape hatch — so that queries, indexing, and synthesis can operate on
+typed data without runtime introspection. The seven variants cover the practical
+range of agent knowledge: short labels (`string`), longer prose (`text`),
+numeric measurements, booleans, timestamps, inter-entity pointers (`ref`), and
+an explicit "unknown" sentinel (`null`).
+
 ```
 FactValue =
   | { type: "string",    v: string }          // short identifier or label (≤1 KB recommended)
@@ -66,9 +74,23 @@ FactValue =
   | { type: "null" }                          // explicit "unknown / not applicable"
 ```
 
+The `string` vs `text` distinction exists because short labels (a role name, a
+preference tag) have different indexing and display characteristics than
+multi-paragraph narratives. Nodes index `string` values for exact-match
+queries; `text` values feed the embedding pipeline (§20.2) for semantic recall.
+The `ref` type creates typed edges in the knowledge graph — the recall pipeline
+(§20.1) traverses `ref` values during k-hop expansion.
+
 **`text` size guidance (v0.4):** Inline `text` values SHOULD be ≤ 64 KB. For larger payloads, assert a `ref` fact pointing to external storage and keep the text value as a summary. Nodes MAY reject `text` values above their configured limit; they MUST return HTTP 413 if they do.
 
 ### 2.2 FactScope
+
+Scope is the visibility fence that determines which facts leave a node during
+federation. It is a single string enum — not a complex policy document —
+because the common case is simple ("this stays here" vs "this can be shared")
+and complex cross-scope propagation rules (§6.4) build on top of this
+primitive. The four levels form a strict hierarchy from most private to most
+shareable:
 
 ```
 FactScope =
@@ -84,7 +106,17 @@ includes `"company"` in `allowed_scopes` (see §6.1).
 
 ### 2.3 Reification (N-ary Relationships)
 
-Mint a synthetic entity `stigmem:rel:{uuid}` and assert facts about it:
+The fact tuple is binary — one entity, one relation, one value — but real-world
+knowledge often involves three or more parties (e.g. "Company A approved
+Company B's policy via board vote"). Reification handles this by minting a
+synthetic entity that *represents the relationship itself*, then attaching the
+participants as facts about that entity. This pattern avoids adding an
+`object` column to the fact table (which would complicate queries and indexing
+for the overwhelmingly binary common case) while still supporting complex
+relationships when they arise.
+
+To create an N-ary relationship, mint a synthetic entity `stigmem:rel:{uuid}`
+and assert facts about it:
 
 ```
 (entity="stigmem:rel:abc123", relation="rel:subject",  value={type:"ref", v:"stigmem://company.example/company/a"})
@@ -92,17 +124,29 @@ Mint a synthetic entity `stigmem:rel:{uuid}` and assert facts about it:
 (entity="stigmem:rel:abc123", relation="rel:type",     value={type:"string", v:"policy:board-approval"})
 ```
 
-`rel:subject`, `rel:object`, and `rel:type` are reserved in the `rel:` namespace (see §9).
+`rel:subject`, `rel:object`, and `rel:type` are reserved in the `rel:` namespace (see §9). The graph traversal engine (§20.1) follows `ref` values out of reified entities the same way it follows any other `ref`, so reified relationships participate naturally in k-hop recall.
 
 ### 2.4 Hybrid Logical Clock (HLC) — v0.5
 
-Every node maintains a **Hybrid Logical Clock**:
+Wall-clock timestamps alone cannot establish causality in a distributed system
+because clocks drift. A pure logical clock (Lamport-style) preserves causality
+but loses correlation with real time. Stigmem uses a **Hybrid Logical Clock**
+that combines both: the `wall_ms` component anchors events to real time (for
+human debugging and time-travel queries — §24), while the `counter` component
+preserves causality even when two events share the same millisecond.
+
+Every node maintains a single HLC value:
 
 ```
 HLC = wall_ms || counter
 ```
 
 Format: `"{wall_ms_utc}.{counter}"` — e.g. `"1746230400000.003"`.
+
+The string encoding uses a dot separator so that lexicographic string comparison
+produces correct causal ordering without parsing. The `wall_ms` component is
+zero-padded to 13 digits (sufficient until year 2286); the `counter` component
+is zero-padded to 3 digits per node (overflow creates a new millisecond bucket).
 
 **Advance rules:**
 1. On local write: `hlc = max(now_ms, last_hlc_ms)` as `wall_ms`; increment `counter` if `wall_ms` unchanged.
@@ -325,7 +369,13 @@ This meta-fact is stored locally and MUST NOT be re-replicated.
 **`valid_until`:** Facts whose `valid_until` has passed MUST NOT be returned unless
 the caller sends `include_expired=true`. Expired facts remain in the store.
 
-**TTL meta-fact:**
+**TTL meta-fact:** Operators or agents that want to schedule a future expiry on
+a fact that was originally asserted without `valid_until` can attach one
+retroactively via a TTL meta-fact. The meta-fact's entity is the target fact's
+ID; the relation uses the reserved `stigmem:ttl` namespace; and the value is
+the intended expiry datetime. The decay sweeper (§15) honours TTL meta-facts
+during its sweep pass.
+
 ```
 (entity=<fact-id>, relation="stigmem:ttl", value={type:"datetime", v:<expiry>}, ...)
 ```
@@ -353,8 +403,12 @@ A **contradiction** exists when two facts `a`, `b` satisfy all of:
 2. Equal confidence → higher `hlc` wins (causal ordering).
 3. Tie → both returned with `contradicted: true` on each; caller decides.
 
-**Contradiction fact (v0.5):** When a contradiction is detected on write, the node
-MUST assert a system-generated contradiction record:
+**Contradiction fact (v0.5):** When a contradiction is detected on write, the
+node MUST assert a system-generated contradiction record. The contradiction is
+itself a first-class entity in the `stigmem:conflict:` namespace — this reifies
+the disagreement as queryable data rather than hiding it in a separate table.
+The `stigmem:conflict:between` fact links the two competing fact IDs; a
+companion status fact tracks whether the contradiction has been resolved.
 
 ```
 POST /v1/facts  (system-generated, source="system:stigmem")
@@ -368,7 +422,10 @@ POST /v1/facts  (system-generated, source="system:stigmem")
 }
 ```
 
-A second fact records status:
+A second fact records the conflict's resolution state. It starts as
+`"unresolved"` and transitions to `"resolved"` when a caller invokes the
+conflict resolution endpoint (§5.10):
+
 ```
 (entity="stigmem:conflict:<uuid>", relation="stigmem:conflict:status",
  value={type:"string", v:"unresolved"}, ...)
@@ -396,6 +453,12 @@ facts whose scope exceeds what the peer is authorized to write. See §6.4.
 restrictions and peer-token auth for federation.
 
 #### Identity shape
+
+An `Identity` binds a credential (API key) to an entity URI and constrains
+which scopes that credential may access. The `entity_uri` field becomes the
+`source` on any fact asserted with this key — this is how Stigmem attributes
+assertions to their originator and enables provenance queries ("which agent
+asserted this?").
 
 ```
 Identity {
@@ -447,6 +510,13 @@ Receiving nodes MUST verify:
 ## 4. Intent Envelope
 
 An **intent envelope** is a structured message expressing desired transitions.
+Where atomic facts (§2) record what *is* known, an intent envelope records what
+an agent (or human) *wants* to happen — a goal plus the rules and context
+needed to act on it. Envelopes are the unit Stigmem uses to coordinate
+multi-agent work without inventing a bespoke handshake protocol per pair of
+participants.
+
+The envelope shape is fixed:
 
 ```
 IntentEnvelope {
@@ -464,32 +534,84 @@ IntentEnvelope {
 }
 ```
 
+The fields split cleanly by purpose: `from`/`to` carry routing; `goal`,
+`constraint`, `preference`, `deference` describe the work; `escalation`,
+`handoff`, and `expires_at` describe what to do when execution falls off the
+happy path. Each is detailed below.
+
 ### 4.1 `goal`
 
-Agents SHOULD also write a machine-readable goal fact:
+A free-text statement of what the sender wants done. Free-text is acceptable
+because the goal is read by an agent that already has access to the same fact
+substrate the sender does — full natural-language is more expressive than any
+enumerated set of intents, and the recipient can interrogate the substrate
+to fill in context.
+
+So that the goal is also queryable by other agents (not just the recipient),
+agents SHOULD additionally assert a machine-readable goal fact at envelope
+creation time:
+
 ```
 (entity=<intent-id>, relation="intent:goal", value={type:"string", v:"..."}, ...)
 ```
 
+The `entity` is the envelope's `id`; the `relation` is the reserved
+`intent:goal`; the `value` is the same string as the envelope's `goal` field.
+Asserting this fact lets observers query for "what intents are currently in
+flight against goal X?" without needing direct access to envelope traffic.
+
 ### 4.2 `constraint`
+
+A constraint is a hard limit the recipient MUST respect. Unlike preferences
+(§4.3), constraint violations are failures — if the recipient cannot satisfy
+all listed constraints, it MUST escalate (§4.5) rather than partially satisfy:
 
 ```
 Constraint { kind: string, limit: FactValue, unit: string? }
 ```
 
+`kind` is the constraint axis (`budget`, `deadline`, `latency_ms`,
+`max_calls`, etc. — see §9 namespace registry for reserved kinds). `limit`
+carries the threshold using the typed `FactValue` shape from §2.1 so units
+and types are explicit. `unit` is optional and only used when `kind` doesn't
+imply one (e.g. `budget` always takes a money value with a currency code in
+the `FactValue`, so `unit` would be redundant).
+
 ### 4.3 `preference`
+
+A preference is a soft-weighted hint. Unlike constraints, the recipient MAY
+violate preferences if doing so is necessary to satisfy a constraint; it
+SHOULD optimize against them otherwise:
 
 ```
 Preference { kind: string, value: FactValue, weight: float [0,1] }
 ```
 
+`weight` allows expressing relative importance when multiple preferences
+compete (e.g. "minimize cost weight=0.9, minimize latency weight=0.3" tells
+the recipient to prefer cost optimization roughly 3× more than latency).
+
 ### 4.4 `deference`
+
+A deference rule names another agent or system to consult before deciding
+on a particular axis. Use it when the sender has specialised authority but
+wants a second opinion on certain dimensions:
 
 ```
 DeferenceRule { condition: string, defer_to: URI, timeout_s: integer? }
 ```
 
+`condition` is a short predicate-style string (e.g. `cost > 100`,
+`requires_legal_review`). `defer_to` is the URI of the agent or human to
+consult. `timeout_s` bounds how long the recipient should wait for the
+deferred party — on timeout, the recipient proceeds with its own judgment
+and SHOULD record the timeout as a fact for audit.
+
 ### 4.5 `escalation`
+
+The escalation policy fires when the recipient cannot satisfy the envelope
+within its own authority — typically because a constraint can't be met or
+no deference target responded in time:
 
 ```
 EscalationPolicy {
@@ -500,7 +622,21 @@ EscalationPolicy {
 }
 ```
 
+`escalate_to` is the URI of the human or agent to notify. `channel` selects
+the delivery mechanism; v0.1 only supports `"stigmem"` (escalation arrives
+as a fact in the escalator's inbox). `priority` is informational — it does
+not change Stigmem's wire behaviour, but recipients can use it to drive
+their own UX. `include_context` controls whether the escalation message
+embeds the full envelope plus referenced facts (`true`) or just the
+envelope ID with a query hint (`false`); set `false` when escalations
+travel over channels with size limits.
+
 ### 4.6 `handoff`
+
+A handoff is the payload sent to the next agent in a multi-step plan. It
+exists separately from the envelope itself because handoffs MAY carry
+artefacts (files, structured documents) that aren't appropriate to embed in
+every envelope:
 
 ```
 HandoffPayload {
@@ -511,13 +647,34 @@ HandoffPayload {
 }
 ```
 
+`summary` is the one-paragraph human-readable handoff note. `fact_refs` MUST
+be present and non-empty so the receiving agent can reconstitute context by
+querying those facts (this requirement is what lets handoffs be terse —
+the receiver has the same fact substrate as the sender). `continuation` is
+an optional structured cursor for resumable workflows. `artifacts` carries
+external content references (a deck URL, a spreadsheet, a diff) without
+embedding them inline.
+
 `handoff` MUST include `fact_refs` for context reconstitution.
 
 ---
 
 ## 5. Wire Format
 
+This section defines the HTTP endpoints that constitute the Stigmem REST API.
+Every operation is expressed as a JSON-over-HTTP request so that any language
+with an HTTP client can participate — no SDK is required. Endpoints are grouped
+by function: fact CRUD (§5.1–§5.5), federation lifecycle (§5.6–§5.8, §5.11),
+conflict management (§5.9–§5.10), and higher-order operations (§5.12–§5.13).
+
 ### 5.1 Assert a fact
+
+Asserting a fact is the primary write operation in Stigmem. The caller supplies
+the full `(entity, relation, value, source, confidence, scope)` tuple and the
+node stores it as an immutable record, stamping it with a server-generated `id`,
+wall-clock `timestamp`, and hybrid logical clock (`hlc`) value. Because facts
+are append-only, this endpoint never overwrites an existing record — every call
+produces a new row, even if the same tuple was asserted before.
 
 ```
 POST /v1/facts
@@ -529,6 +686,14 @@ POST /v1/facts
 
 ### 5.2 Query facts
 
+Querying is the primary read path. Callers filter by any combination of the
+fact dimensions — `entity`, `relation`, `source`, `scope` — and the node
+returns the matching facts sorted by recency. The response is cursor-paginated
+so that large result sets can be consumed incrementally without holding server
+resources. By default the query excludes contradicted and expired facts; callers
+can opt in to those via the `include_contradicted` and `include_expired` flags
+when they need a full audit trail.
+
 ```
 GET /v1/facts?entity=stigmem://company.example/user/alice&relation=memory:role
 → 200 { "facts": [...], "total": 1, "cursor": null }
@@ -538,6 +703,15 @@ Query params: `entity`, `relation`, `source`, `scope`, `min_confidence`,
 `after`, `include_contradicted`, `include_expired`, `cursor`, `limit`.
 
 ### 5.3 Node metadata
+
+Every Stigmem node exposes a discovery document at the well-known path so that
+clients and peers can learn the node's capabilities before making any
+authenticated call. The document advertises the spec version the node
+implements, whether authentication is required, whether federation is enabled,
+and — when federation is active — the node's public key, supported federation
+version, and the concrete endpoint paths for peer management and replication.
+This is the first endpoint a federation peer contacts during mutual discovery
+(§6.1).
 
 ```
 GET /.well-known/stigmem
@@ -577,6 +751,11 @@ POST /v1/facts
 
 ### 5.5 Get a single fact
 
+Retrieve a single fact by its server-assigned UUID. This is useful for
+dereferencing a fact ID obtained from another endpoint — for example, when
+inspecting the two sides of a conflict (§5.9), following a `fact_refs` link
+from a handoff payload (§4.6), or auditing a specific assertion.
+
 ```
 GET /v1/facts/:id
 → 200 { ...fact... }
@@ -584,6 +763,15 @@ GET /v1/facts/:id
 ```
 
 ### 5.6 Register a peer — v0.5
+
+Peer registration is the first step of the federation handshake. The calling
+node presents a signed declaration containing its identity (`node_id`),
+reachable URL, Ed25519 public key, and the scopes it is willing to share. The
+receiving node stores the declaration in `pending_verification` status and then
+runs the verification flow described below — fetching the caller's
+`/.well-known/stigmem` document to confirm the public key matches. Federation
+traffic (§5.8, §5.11) cannot begin until both sides have registered each other
+and both declarations reach `active` status.
 
 ```
 POST /v1/federation/peers
@@ -615,6 +803,13 @@ Authorization: Bearer <api-key with federate permission>
 
 ### 5.7 List peers — v0.5
 
+Returns the set of federation peers known to this node. Each entry includes the
+peer's status (`active`, `pending_verification`, `rejected`, or `revoked`),
+the scopes that peer is allowed to replicate, and the timestamp when the
+relationship was established. Operators use this endpoint to audit federation
+topology; automated tooling uses it to confirm mutual registration before
+triggering replication.
+
 ```
 GET /v1/federation/peers
 → 200 { "peers": [{ "peer_id": "...", "node_id": "...", "node_url": "...",
@@ -623,6 +818,14 @@ GET /v1/federation/peers
 ```
 
 ### 5.8 Pull replication — v0.5
+
+Pull replication is the default mechanism for synchronising facts between
+federated peers. The requesting node supplies an opaque cursor (received from
+the previous pull, or `null` to start from the beginning) and a limit. The
+responding node returns facts that were created or received after the cursor's
+HLC position, filtered to the scopes the requesting peer is authorised to see.
+Pull is idempotent: re-requesting the same cursor returns the same facts, and
+ingesting a duplicate fact on the receiving side is a silent no-op.
 
 ```
 GET /v1/federation/facts?scope=public&cursor=<cursor>&limit=100
@@ -648,6 +851,13 @@ the existing record.
 
 ### 5.9 List conflicts — v0.5
 
+When two facts for the same `(entity, relation, scope)` tuple arrive with
+conflicting values — whether from local assertions or federated replication —
+the node records them as a conflict (§7). This endpoint returns the set of
+detected conflicts, filterable by status. Each conflict entry carries references
+to both original facts so that a human operator or automated resolver can
+inspect the competing claims and choose a winner (§5.10).
+
 ```
 GET /v1/conflicts?status=unresolved&cursor=<cursor>&limit=50
 → 200 {
@@ -665,6 +875,15 @@ GET /v1/conflicts?status=unresolved&cursor=<cursor>&limit=50
 ```
 
 ### 5.10 Resolve a conflict — v0.5
+
+Resolving a conflict is an explicit human- or agent-driven decision that picks
+a winner, optionally supplies a fresh reconciliation value, and records the
+rationale as auditable facts. The caller identifies which of the two competing
+facts wins (or passes `null` to reject both in favour of a new value). The node
+then asserts the resolution as a new fact, links it to the conflict via a
+`stigmem:resolves` meta-fact (§2), and marks the conflict as resolved. Both
+original competing facts remain immutable in the store — resolution is additive,
+never destructive.
 
 ```
 POST /v1/conflicts/:conflict_id/resolve
@@ -693,7 +912,15 @@ Both original conflicting facts remain immutable in the store.
 
 ### 5.11 Push replication (optional) — v0.5
 
-Nodes that advertise a non-null `federation_endpoints.push` MUST accept:
+Push replication is an opt-in, low-latency complement to pull (§5.8). Where
+pull requires the consuming node to poll on a schedule, push lets the producing
+node forward facts to a peer as soon as they are committed. This is useful for
+time-sensitive federation scenarios — for example, when an agent on node A
+asserts a fact that a workflow on node B needs within seconds. Push is guarded
+by a feature flag (`STIGMEM_FEDERATION_PUSH_ENABLED`, default `false`) because
+it adds outbound network traffic and requires the receiving node to expose an
+ingestion endpoint. Nodes that advertise a non-null
+`federation_endpoints.push` MUST accept:
 
 ```
 POST /v1/federation/facts/push
@@ -709,7 +936,13 @@ SHOULD prefer pull; push is provided for low-latency delivery behind a feature f
 
 ### 5.12 Lint — v0.7 Normative
 
-See §14 for semantics and wire shape.
+The lint endpoint runs a configurable set of data-quality checks against a
+scope and returns machine-readable findings. It is the diagnostic counterpart
+to the decay sweeper (§15): lint identifies problems (contradictions, stale
+facts, low-confidence assertions); decay acts on them. The `checks` array lets
+the caller select which analyses to run so that expensive checks can be skipped
+in latency-sensitive contexts. See §14 for the full finding schema and check
+catalogue.
 
 ```
 POST /v1/lint
@@ -721,7 +954,14 @@ Authorization: Bearer <api-key>
 
 ### 5.13 Synthesize scope — v0.8 Draft
 
-See §16 for semantics. Returns a confidence-weighted summary view of a scope's live facts.
+Synthesis produces a confidence-weighted summary of everything a scope knows
+about a given entity (or the entire scope when no entity filter is supplied).
+Where a raw query (§5.2) returns every historical assertion, synthesis collapses
+the timeline: for each `(entity, relation)` pair it surfaces the single
+highest-confidence live value, flags active contradictions, and reports the
+total fact count. This makes synthesis the go-to read path when an agent needs
+a consolidated world-view rather than a change log. See §16 for the full
+summary-item schema and contradiction-handling rules.
 
 ```
 POST /v1/synthesis
@@ -739,7 +979,14 @@ Authorization: Bearer <api-key>
 
 ### 6.1 Peer Declaration
 
-Two nodes federate when operators on both sides exchange a signed **PeerDeclaration**.
+Two nodes federate when operators on both sides exchange a signed
+**PeerDeclaration**. The declaration serves three purposes: it identifies the
+peer (via `node_id` and `node_url`), establishes a cryptographic trust root
+(via `federation_pubkey`), and sets the scope boundary for what data may flow
+between the two nodes (via `allowed_scopes`). The signature over the canonical
+JSON body ensures that a declaration cannot be replayed or tampered with in
+transit — the receiving node verifies it against the sender's published key
+before activating the relationship.
 
 ```
 PeerDeclaration {
@@ -758,6 +1005,12 @@ RateLimit {
 }
 ```
 
+The `rate_limit` field is optional because most deployments do not need
+per-peer throttling — it exists for operators who federate with high-volume
+peers and want to cap inbound load without rejecting the relationship entirely.
+The `RateLimit` uses a token-bucket model: `facts_per_second` is the refill
+rate; `burst` is the bucket depth.
+
 **Canonical JSON** for signing: fields in lexicographic key order, no whitespace, UTF-8.
 
 **Key lifecycle:**
@@ -773,7 +1026,12 @@ RateLimit {
 nodes that support federation, based on implementation experience from two Phase 4 adapters.
 
 After peer registration, nodes MUST exchange capability advertisements before the first
-replication pull:
+replication pull. The advertisement tells the peer what relation namespaces the
+node understands, how it handles conflicts on those relations, and which
+replication mode it supports. Without this exchange, a peer cannot distinguish
+relations it can meaningfully process from opaque forwarded data — leading to
+silent contradiction storms when two nodes disagree on conflict resolution
+semantics for a shared relation.
 
 ```
 CapabilityAd {
@@ -829,6 +1087,14 @@ exponentially with jitter. Max backoff: 5 minutes. See §6.7 for N-node cascade
 backpressure patterns.
 
 #### Idempotent ingestion
+
+The ingestion handler MUST be idempotent: receiving the same fact twice (whether
+from the same peer or a different one in a multi-hop topology) produces exactly
+one stored record. The existence check uses the fact's UUID, not its content,
+because two distinct facts could contain the same assertion at different times.
+A `stigmem:received_from` meta-fact is written alongside the main fact to
+preserve provenance — this is what the federation audit endpoint (§5.8) queries
+to answer "which peer delivered fact X?"
 
 ```python
 def ingest_fact(fact):
@@ -1166,10 +1432,22 @@ The following edge cases were identified during Phase 6 4-node topology testing:
 
 ## 10. Schema and Migration (v0.5 + v0.7)
 
-Production nodes SHOULD use a migration-versioned schema. The reference implementation
-uses numbered SQL migration files applied at startup.
+Production nodes SHOULD use a migration-versioned schema. The reference
+implementation uses numbered SQL migration files applied at startup. Each
+migration is additive — columns are added, never removed, and new tables do not
+alter existing ones — so that a node can be upgraded in place without data loss.
+The sections below show the cumulative schema across spec versions: the
+original v0.4 `facts` table, then the federation and data-quality tables added
+in v0.5, the entity-alias table from v0.7, and the scope-propagation columns
+from v0.8.
 
 ### Existing tables (v0.4, unchanged)
+
+The `facts` table is the single source of truth for all assertions in a
+Stigmem node. Each row is an immutable fact record whose columns map directly
+to the atomic fact shape defined in §2. The table is append-only: retractions,
+confidence updates, and conflict resolutions are all expressed as new rows
+rather than mutations to existing ones.
 
 ```sql
 facts (
@@ -1190,12 +1468,45 @@ facts (
 
 ### New columns — migration 002 (v0.5)
 
+Federation (§6) requires two pieces of per-fact metadata that the v0.4 schema
+did not carry. `hlc` stores the hybrid logical clock timestamp used for
+cursor-based replication ordering (§5.8) — it is `NULL` for facts created
+before v0.5. `received_from` records the `node_id` of the peer that delivered
+the fact; it is `NULL` for locally-asserted facts. Together these columns let
+the node distinguish local assertions from federated ones and provide a total
+order for pull replication.
+
 ```sql
 ALTER TABLE facts ADD COLUMN hlc           TEXT;          -- HLC timestamp; NULL for pre-v0.5 facts
 ALTER TABLE facts ADD COLUMN received_from TEXT;          -- node_id if federated; NULL if local
 ```
 
 ### New tables — migration 002 (v0.5)
+
+Migration 002 introduces four tables that support the federation and
+data-quality features added in v0.5.
+
+**`peers`** stores the bilateral peer declarations described in §6.1. Each row
+represents one direction of a federation relationship: the remote node's
+identity, its Ed25519 public key, the scopes it is allowed to replicate, and
+the lifecycle status of the declaration.
+
+**`replication_cursors`** tracks the HLC watermark for each peer in each
+direction (inbound and outbound). The cursor is the opaque token returned by
+pull replication (§5.8); persisting it lets the node resume replication from
+where it left off after a restart.
+
+**`conflicts`** records pairs of facts that the conflict detector (§7) flagged
+as contradictory. The table carries references to both original facts and the
+resolution fact (if any), enabling an audit trail for every resolution decision.
+
+**`federation_audit`** is an append-only security log. Every rejected fact,
+rejected token, scope violation, or replay attempt during federation is
+recorded here so that operators can diagnose trust failures and detect
+misbehaving peers.
+
+**`nonce_cache`** prevents replay attacks on federation tokens (§3). Each nonce
+is stored with its expiry time; a background pruning job removes expired entries.
 
 ```sql
 peers (
@@ -1251,6 +1562,13 @@ nonce_cache (
 
 ### New tables — migration 003 (v0.7)
 
+The v0.7 entity normalizer (§2.6) ensures that all new facts use canonical
+URIs, but facts created before v0.7 may contain non-canonical forms (e.g.
+mixed-case or trailing-slash variants). The `entity_aliases` table maps each
+raw, non-canonical URI to its normalized canonical form so that queries
+transparently match pre-v0.7 data without requiring a destructive
+back-migration of the `facts` table.
+
 ```sql
 -- Entity alias table for pre-v0.7 migration tooling (spec §2.6.6)
 CREATE TABLE IF NOT EXISTS entity_aliases (
@@ -1264,6 +1582,16 @@ CREATE INDEX IF NOT EXISTS idx_entity_aliases_canonical ON entity_aliases(canoni
 ```
 
 ### New columns — migration 004 (v0.8)
+
+In an N-node federation topology a fact may traverse multiple relay hops. These
+three columns track the fact's provenance so that a receiving node can enforce
+scope propagation invariants (§6.8). `origin_node_id` identifies the node that
+originally asserted the fact (as opposed to the immediate peer that delivered
+it). `origin_allowed_scopes` records the scope set the originator granted, so
+that downstream relays can check whether re-federation is permitted.
+`re_federation_blocked` is a computed flag set to `1` when company-scoped facts
+must not be forwarded to third nodes — this is the default behaviour described
+in §6.8.2.
 
 ```sql
 -- Scope propagation tracking for N-node federation (spec §6.8.1)
@@ -1928,7 +2256,9 @@ on them.
 
 ### 15.1 DecayPolicy
 
-A `DecayPolicy` configures how facts of a given relation (or all relations) decay over time.
+A `DecayPolicy` configures how facts of a given relation (or all relations) decay over time. Operators deploy one or more policies to ensure knowledge does not accumulate indefinitely — stale facts degrade confidence or are retracted without requiring agents to remember which facts they once asserted.
+
+The struct exposes two mutually-exclusive decay modes. **Retraction** (`ttl_s`) is an aggressive binary cut-off suited for ephemeral state such as "user is online" — once the TTL expires the fact is no longer credible and a zero-confidence retraction is written. **Confidence reduction** (`half_life_s`) provides a smoother signal for beliefs that age gradually; each sweep halves the original confidence until it hits `min_confidence`. The `relation` and `scope` wildcards (`"*"`) allow broad catch-all policies while the `exempt_relations` escape hatch protects system-generated facts (§3.5) and reification primitives whose removal would corrupt the graph.
 
 ```
 DecayPolicy {
@@ -1965,7 +2295,13 @@ The `exempt_relations` field on individual policies may add further exemptions.
 
 ### 15.2 Decay Sweep Wire Format
 
+The sweep endpoint triggers evaluation of all matching decay policies against a single scope. Callers specify the target `scope` and may optionally override the decay mode (e.g. forcing `dry_run` for a preview without side effects) or restrict evaluation to a single named policy. The response returns counters that let operators and monitoring systems track how many facts were affected, supporting both automated alerting and manual audit.
+
+The request/response split between "actual" and "dry-run" counters is intentional: `facts_retracted` and `facts_reduced` are always zero in `dry_run` mode, while `dry_run_would_retract` and `dry_run_would_reduce` are always zero outside it. This avoids ambiguity about whether writes occurred.
+
 #### Request
+
+The caller supplies the `scope` to sweep and may optionally force a `mode` override (e.g. `dry_run` to preview the sweep without side effects) or restrict evaluation to a single named `policy_id`. All three fields use the same types defined in §15.1; `scope` is the only required parameter.
 
 ```
 POST /v1/decay/sweep
@@ -1980,6 +2316,8 @@ Content-Type: application/json
 ```
 
 #### Response
+
+The response reports aggregate counters split by actual vs. dry-run activity. In normal mode `facts_retracted` and `facts_reduced` are populated while the `dry_run_*` fields are zero; in `dry_run` mode the reverse holds. This makes it unambiguous whether the sweep wrote anything — operators can pipe the JSON into monitoring dashboards without parsing the request to determine the mode.
 
 ```
 200 OK
@@ -2078,7 +2416,7 @@ The sweep is **idempotent**: running it twice in a row on the same data produces
 same result (the second run sees the retractions written by the first run and finds
 no additional facts to retract at the same TTL threshold).
 
-**Cron configuration pattern:**
+**Cron configuration pattern:** Operators define decay policies as a JSON array in the `STIGMEM_DECAY_POLICIES` environment variable. Each entry declares a relation glob, scope, mode, and the relevant timing parameter (`half_life_s` for confidence decay, `ttl_s` for hard retraction). The sweep endpoint evaluates every matching policy against facts in the requested scope — multiple policies can coexist so that different relation families decay at different rates.
 
 ```
 STIGMEM_DECAY_POLICIES=[
@@ -2134,6 +2472,14 @@ knowledge without needing to manually filter contradictions, expired facts, or l
 
 ### 16.1 SynthesisEntry Shape
 
+Each row in the synthesis response is a `SynthesisEntry` — the collapsed,
+current-state view of a single `(entity, relation, scope)` triple. Where a raw
+fact query might return ten historical assertions for "Alice's role," synthesis
+returns one entry with the highest-confidence live value. If that triple is
+contradicted (two live values competing), synthesis surfaces both via the
+`alt_value`/`alt_confidence` fields and flags `contradicted: true` so the
+consuming agent can decide whether to act on or escalate the ambiguity.
+
 ```
 SynthesisEntry {
   entity:        URI
@@ -2161,7 +2507,11 @@ Expired facts (`valid_until < now`) and retracted facts (`confidence=0.0`) are e
 
 ### 16.3 Wire Format
 
+The synthesis endpoint follows the same request/response conventions as decay (§15.2) and lint (§14). Because synthesis is a read-only aggregation, it never writes facts — the response is a snapshot that may change on the next call if facts are asserted, decayed, or retracted in the interim.
+
 #### Request
+
+The caller specifies the `scope` to synthesize and may narrow results to a single `entity` URI. The `min_confidence` filter is applied after synthesis: entries whose winning confidence falls below the threshold are excluded from the response, which is useful for agents that only want high-certainty knowledge.
 
 ```
 POST /v1/synthesis
@@ -2177,6 +2527,8 @@ Content-Type: application/json
 ```
 
 #### Response
+
+The `summary` array contains one `SynthesisEntry` (§16.1) per live `(entity, relation, scope)` triple. The `contradiction_count` gives a quick signal for whether the scope has unresolved ambiguity — a non-zero value means at least one triple has competing live values. `filtered_count` reports how many entries were excluded by the `min_confidence` threshold, so callers can tell whether lowering the threshold would surface more data.
 
 ```
 200 OK

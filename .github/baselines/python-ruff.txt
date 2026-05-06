@@ -500,12 +500,12 @@ node/src/stigmem_node/vector_search.py:92:25:UP037:Remove quotes from type annot
 node/tests/conftest.py:167:9:SIM105:Use `contextlib.suppress(ImportError)` instead of `try`-`except`-`pass`
 node/tests/conftest.py:182:13:B010:Do not call `setattr` with a constant attribute value. It is not any safer than normal property access.
 node/tests/conftest.py:193:13:B010:Do not call `setattr` with a constant attribute value. It is not any safer than normal property access.
-node/tests/conftest.py:278:101:E501:Line too long (105 > 100)
-node/tests/conftest.py:293:101:E501:Line too long (108 > 100)
-node/tests/conftest.py:337:101:E501:Line too long (109 > 100)
-node/tests/conftest.py:338:101:E501:Line too long (111 > 100)
-node/tests/conftest.py:389:101:E501:Line too long (109 > 100)
-node/tests/conftest.py:390:101:E501:Line too long (111 > 100)
+node/tests/conftest.py:283:101:E501:Line too long (105 > 100)
+node/tests/conftest.py:298:101:E501:Line too long (108 > 100)
+node/tests/conftest.py:342:101:E501:Line too long (109 > 100)
+node/tests/conftest.py:343:101:E501:Line too long (111 > 100)
+node/tests/conftest.py:394:101:E501:Line too long (109 > 100)
+node/tests/conftest.py:395:101:E501:Line too long (111 > 100)
 node/tests/conftest.py:95:101:E501:Line too long (101 > 100)
 node/tests/test_4node_federation.py:114:101:E501:Line too long (108 > 100)
 node/tests/test_4node_federation.py:115:101:E501:Line too long (110 > 100)

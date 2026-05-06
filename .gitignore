@@ -46,4 +46,8 @@ Thumbs.db
 data/*.db
 data/*.db-shm
 data/*.db-wal
+stigmem.db
 logs/
+
+# Eval results (CI-generated artifacts)
+eval/results/

@@ -1,0 +1,509 @@
+{
+  "learnSidebar": [
+    {
+      "type": "doc",
+      "id": "learn/index",
+      "label": "Overview"
+    },
+    {
+      "type": "doc",
+      "id": "learn/features",
+      "label": "Features"
+    },
+    {
+      "type": "category",
+      "label": "Concepts",
+      "link": {
+        "type": "doc",
+        "id": "learn/concepts/index"
+      },
+      "items": [
+        "learn/concepts/memory-garden",
+        "learn/concepts/security-model"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "How It Works",
+      "link": {
+        "type": "doc",
+        "id": "learn/how-it-works/index"
+      },
+      "items": [
+        "learn/how-it-works/why-immutable-typed-facts",
+        "learn/how-it-works/hybrid-logical-clocks",
+        "learn/how-it-works/conflict-semantics",
+        "learn/how-it-works/decay-and-confidence",
+        "learn/how-it-works/federation-handshake",
+        "learn/how-it-works/source-trust-and-quarantine",
+        "learn/how-it-works/recall-pipeline",
+        "learn/how-it-works/memory-cards-as-fast-path",
+        "learn/how-it-works/lazy-instruction-loading",
+        "learn/how-it-works/content-addressing",
+        "learn/how-it-works/time-travel-queries",
+        "learn/how-it-works/tombstones-and-rtbf"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Quickstart",
+      "link": {
+        "type": "doc",
+        "id": "learn/quickstart/index"
+      },
+      "items": [
+        "learn/quickstart/installation",
+        "learn/quickstart/quickstart-tutorial",
+        "learn/quickstart/upgrade-v1"
+      ]
+    }
+  ],
+  "buildSidebar": [
+    {
+      "type": "category",
+      "label": "Guides",
+      "link": {
+        "type": "doc",
+        "id": "build/guides/index"
+      },
+      "items": [
+        {
+          "type": "category",
+          "label": "Facts",
+          "collapsed": true,
+          "items": [
+            "build/guides/asserting-facts",
+            "build/guides/querying-facts",
+            "build/guides/conflict-resolution",
+            "build/guides/content-addressing",
+            "build/guides/fuzzy-entity-resolver"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Lifecycle",
+          "collapsed": true,
+          "items": [
+            "build/guides/decay",
+            "build/guides/synthesis",
+            "build/guides/time-travel",
+            "build/guides/rtbf"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Recall & Memory",
+          "collapsed": true,
+          "items": [
+            "build/guides/recall",
+            "build/guides/memory-cards",
+            "build/guides/memory-gardens",
+            "build/guides/embeddings",
+            "build/guides/subscriptions"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Federation",
+          "collapsed": true,
+          "items": [
+            "build/guides/federation",
+            "build/guides/federation-trust",
+            "build/guides/federation-4node",
+            "build/guides/scope-propagation",
+            "build/guides/relay-backpressure"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Auth & Security",
+          "collapsed": true,
+          "items": [
+            "build/guides/authentication",
+            "build/guides/agent-keypairs",
+            "build/guides/source-attestation",
+            "build/guides/audit-log",
+            "build/guides/encryption-at-rest",
+            "build/guides/oidc-sso",
+            "build/guides/multi-tenancy",
+            "build/guides/human-key-issuance",
+            "build/guides/human-surface"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Agent Integration",
+          "collapsed": true,
+          "items": [
+            "build/guides/intent-envelopes",
+            "build/guides/lazy-instructions",
+            "build/guides/instruction-migration"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Operations",
+          "collapsed": true,
+          "items": [
+            "build/guides/async-jobs",
+            "build/guides/billing-hooks",
+            "build/guides/conformance",
+            "build/guides/libsql-pitr",
+            "build/guides/design-partner-notes"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Connectors",
+      "link": {
+        "type": "doc",
+        "id": "build/connectors/connectors-index"
+      },
+      "items": [
+        {
+          "type": "category",
+          "label": "MCP Host Connectors",
+          "collapsed": true,
+          "items": [
+            "build/connectors/cursor",
+            "build/connectors/zed",
+            "build/connectors/codex-cli",
+            "build/connectors/continue-dev"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Runtime Adapters",
+          "collapsed": true,
+          "items": [
+            "build/connectors/gemini",
+            "build/connectors/ollama-litellm"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Agent Platform Adapters",
+          "collapsed": true,
+          "items": [
+            "build/connectors/openclaw",
+            "build/connectors/paperclip",
+            "build/connectors/paperclip-federation"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Vault & Note-taking",
+          "collapsed": true,
+          "items": [
+            "build/connectors/obsidian",
+            "build/connectors/obsidian-plugin"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Memory Federation",
+          "collapsed": true,
+          "items": [
+            "build/connectors/zep"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "SDKs",
+      "collapsed": false,
+      "items": [
+        "build/sdks/python",
+        "build/sdks/typescript",
+        "build/sdks/go"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Tutorials",
+      "collapsed": true,
+      "items": [
+        "build/tutorials/sdk-quickstart",
+        "build/tutorials/agent-with-recall",
+        "build/tutorials/two-org-federation",
+        "build/tutorials/self-host-obsidian",
+        "build/tutorials/authoring-lazy-discovery-instructions",
+        "build/tutorials/hardening-a-stigmem-deployment"
+      ]
+    }
+  ],
+  "operateSidebar": [
+    "operate/index",
+    {
+      "type": "category",
+      "label": "Deployment",
+      "collapsed": true,
+      "items": [
+        "operate/deployment/install",
+        "operate/deployment/helm"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Storage Backends",
+      "link": {
+        "type": "doc",
+        "id": "operate/backends/backends"
+      },
+      "collapsed": true,
+      "items": [
+        "operate/backends/choose-backend"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Runbooks",
+      "collapsed": true,
+      "items": [
+        "operate/runbooks/deploy-runbooks",
+        "operate/runbooks/federation-setup",
+        "operate/runbooks/key-rotation",
+        "operate/runbooks/backup-restore",
+        "operate/runbooks/cursor-reset-recovery"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Security",
+      "link": {
+        "type": "doc",
+        "id": "operate/security/security"
+      },
+      "collapsed": true,
+      "items": [
+        "operate/security/mtls",
+        "operate/security/audit-and-quotas",
+        "operate/security/container-hardening",
+        "operate/security/pen-test"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Observability",
+      "link": {
+        "type": "doc",
+        "id": "operate/observability/index"
+      },
+      "collapsed": true,
+      "items": [
+        "operate/observability/monitoring",
+        "operate/observability/eval-harness"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "CLI Reference",
+      "link": {
+        "type": "doc",
+        "id": "operate/cli/index"
+      },
+      "collapsed": true,
+      "items": [
+        "operate/cli/stigmem",
+        "operate/cli/stigmem-node"
+      ]
+    },
+    "operate/cost-calculator"
+  ],
+  "referenceSidebar": [
+    {
+      "type": "doc",
+      "id": "reference/index",
+      "label": "Overview"
+    },
+    {
+      "type": "category",
+      "label": "API Reference",
+      "link": {
+        "type": "doc",
+        "id": "reference/api/index"
+      },
+      "collapsed": false,
+      "items": [
+        {
+          "type": "doc",
+          "id": "reference/api/generated/stigmem-reference-node"
+        },
+        {
+          "type": "category",
+          "label": "Facts",
+          "link": {
+            "type": "doc",
+            "id": "reference/api/generated/facts"
+          },
+          "items": [
+            {
+              "type": "doc",
+              "id": "reference/api/generated/assert-fact",
+              "label": "Assert a fact",
+              "className": "api-method post"
+            },
+            {
+              "type": "doc",
+              "id": "reference/api/generated/query-facts",
+              "label": "Query facts",
+              "className": "api-method get"
+            },
+            {
+              "type": "doc",
+              "id": "reference/api/generated/get-fact",
+              "label": "Get a single fact",
+              "className": "api-method get"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Federation",
+          "link": {
+            "type": "doc",
+            "id": "reference/api/generated/federation"
+          },
+          "items": [
+            {
+              "type": "doc",
+              "id": "reference/api/generated/register-peer",
+              "label": "Register a peer",
+              "className": "api-method post"
+            },
+            {
+              "type": "doc",
+              "id": "reference/api/generated/list-peers",
+              "label": "List registered peers",
+              "className": "api-method get"
+            },
+            {
+              "type": "doc",
+              "id": "reference/api/generated/federation-pull-facts",
+              "label": "Pull replication endpoint",
+              "className": "api-method get"
+            },
+            {
+              "type": "doc",
+              "id": "reference/api/generated/federation-push-facts",
+              "label": "Push replication endpoint (optional)",
+              "className": "api-method post"
+            },
+            {
+              "type": "doc",
+              "id": "reference/api/generated/get-federation-audit",
+              "label": "Federation audit log",
+              "className": "api-method get"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Conflicts",
+          "link": {
+            "type": "doc",
+            "id": "reference/api/generated/conflicts"
+          },
+          "items": [
+            {
+              "type": "doc",
+              "id": "reference/api/generated/list-conflicts",
+              "label": "List conflicts",
+              "className": "api-method get"
+            },
+            {
+              "type": "doc",
+              "id": "reference/api/generated/resolve-conflict",
+              "label": "Resolve a conflict",
+              "className": "api-method post"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Node Metadata",
+          "link": {
+            "type": "doc",
+            "id": "reference/api/generated/node-metadata"
+          },
+          "items": [
+            {
+              "type": "doc",
+              "id": "reference/api/generated/get-well-known",
+              "label": "Node identity and capabilities",
+              "className": "api-method get"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Health",
+          "link": {
+            "type": "doc",
+            "id": "reference/api/generated/health"
+          },
+          "items": [
+            {
+              "type": "doc",
+              "id": "reference/api/generated/health-check",
+              "label": "Health check",
+              "className": "api-method get"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Specification",
+      "link": {
+        "type": "doc",
+        "id": "reference/spec/index"
+      },
+      "collapsed": true,
+      "items": [
+        "reference/spec/motivation",
+        "reference/spec/atomic-fact-shape",
+        "reference/spec/fact-semantics",
+        "reference/spec/intent-envelope",
+        "reference/spec/wire-format",
+        "reference/spec/federation",
+        "reference/spec/design-decisions-log",
+        "reference/spec/open-questions",
+        "reference/spec/namespace-registry",
+        "reference/spec/schema-and-migration",
+        "reference/spec/failure-mode-scenarios",
+        "reference/spec/adapter-abi",
+        "reference/spec/lint-semantics",
+        "reference/spec/decay-semantics",
+        "reference/spec/synthesis",
+        "reference/spec/memory-garden",
+        "reference/spec/source-attestation",
+        "reference/spec/federation-trust",
+        "reference/spec/recall-graph",
+        "reference/spec/lazy-instruction-discovery",
+        "reference/spec/security-hardening",
+        "reference/spec/right-to-be-forgotten-tombstones",
+        "reference/spec/time-travel-as-of-queries",
+        "reference/spec/content-addressed-fact-ids"
+      ]
+    },
+    {
+      "type": "autogenerated",
+      "dirName": "reference/architecture"
+    },
+    {
+      "type": "autogenerated",
+      "dirName": "reference/glossary"
+    }
+  ],
+  "communitySidebar": [
+    {
+      "type": "autogenerated",
+      "dirName": "community"
+    }
+  ]
+}

@@ -237,10 +237,13 @@ jobs:
             --cov-report=xml:coverage/python/coverage.xml \
             --cov-report=term
 
+      - name: Build TypeScript packages
+        run: pnpm build
+
       - name: TypeScript coverage
         run: |
           pnpm --filter stigmem-ts exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
-          pnpm --filter stigmem-mcp exec vitest run --exclude dist/** --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
+          pnpm --filter stigmem-mcp exec vitest run --exclude 'dist/**' --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
           pnpm --filter dashboard exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
 
       - name: Upload coverage artifacts
@@ -326,6 +329,20 @@ jobs:
           helm template stigmem ./infra/helm/stigmem \
             --debug \
             --set image.pullPolicy=Never
+
+  docs-drift:
+    name: Docs drift watchdog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run drift check
+        run: python docs/scripts/check_drift.py
 
   container-smoke:
     name: Container hardening smoke test

@@ -78,6 +78,135 @@ uv run pytest node/tests/test_conformance_v1.py -v
 
 6. **Do not add vectors with `requires_auth: true` to files in `data/conformance/v1.0/`.** Zero skips are enforced by CI; auth-dependent scenarios belong in the dedicated auth test module.
 
+## CLI reference docs
+
+Regenerate the CLI reference pages (under `docs/docs/reference/cli/`) after changing CLI flags or adding subcommands: `make gen-cli-docs`.
+
+## Per-phase docs-delta requirement
+
+Every phase of the roadmap MUST ship a docs-improvement deliverable. This is a board mandate (2026-05-03).
+
+**What counts as a docs-delta:**
+
+- A new guide, reference page, or conceptual doc added to the docs site.
+- A substantive update to existing content (not just typo fixes).
+- A new working code example for a feature that shipped in the phase.
+- An updated architecture diagram reflecting the phase's changes.
+- A Features-table row update (see below).
+
+**How to declare it in a PR:**
+
+Include a `docs-delta:` line in the PR body listing what docs shipped with the phase. Example:
+
+```
+docs-delta: Added federation-trust guide (docs/docs/build/guides/federation-trust.md),
+updated Features table row for org manifests.
+```
+
+Phase PRs without a docs-delta line will be flagged during review.
+
+## Features page update procedure
+
+The [Features page](docs/docs/learn/features.md) status table is the **single source of truth** for what Stigmem can do today. When a feature ships:
+
+1. Open `docs/docs/learn/features.md`.
+2. Find or add the row for the capability in the appropriate section table.
+3. Set its **Status** column to one of: `Stable`, `Beta`, `Experimental`, or `Planned`.
+4. Fill the **Spec** column with the relevant spec section (e.g., `§20.3`).
+5. Fill the **Docs** column with a relative link to the guide or reference page.
+6. If a previously `Planned` or `Experimental` feature is promoted, update the row in place — do not add a duplicate.
+
+The Features page intentionally avoids calendar dates. Do not add target-quarter references.
+
+## Docs versioning snapshot procedure
+
+Stigmem docs use [Docusaurus versioned docs](https://docusaurus.io/docs/versioning). The `current` (in-development) docs live in `docs/docs/`; released snapshots live in `docs/versioned_docs/version-<tag>/` with matching sidebars in `docs/versioned_sidebars/`.
+
+When a new spec version ships (post v1.1), create a versioned snapshot:
+
+1. Merge all docs IA restructuring, de-duplication, and content updates for the release.
+2. From the `docs/` directory:
+
+```bash
+npm run docusaurus docs:version <version-tag>
+```
+
+This copies `docs/docs/` → `docs/versioned_docs/version-<version-tag>/` and `docs/sidebars.js` → `docs/versioned_sidebars/version-<version-tag>-sidebars.json`, then prepends the tag to `docs/versions.json`.
+
+3. Update `docusaurus.config.js` → `docs.versions`:
+   - Set `lastVersion` to the new tag (e.g., `'v2.0'`) so bare `/docs/*` URLs resolve to the released version.
+   - Add the new version entry: `'v2.0': { label: 'v2.0', badge: true }`.
+   - Relabel `current`: `{ label: 'v2.1-draft', path: 'next', badge: true, banner: 'unreleased' }`.
+
+4. Run `npm run build` — must exit 0 with no broken links.
+
+**Version naming:** use `v<major>.<minor>` matching spec releases (e.g., `v0.2`, `v1.1`, `v2.0`). The `current` label is always `<next>-draft`.
+
+## Audience and status frontmatter conventions
+
+Every docs page must include an `audience` field in its YAML frontmatter:
+
+```yaml
+---
+id: my-page
+title: My Page
+audience: Integrator
+---
+```
+
+**Allowed audience values:**
+
+| Value         | Who it addresses                                     |
+|---------------|------------------------------------------------------|
+| `Curious`     | Evaluators, newcomers deciding whether to adopt      |
+| `Integrator`  | Developers building on Stigmem (agent devs, SDK consumers) |
+| `Operator`    | Node operators running and maintaining a Stigmem node |
+| `Spec`        | Spec contributors and reference-node developers      |
+
+Pages under `learn/` default to `Curious`; pages under `build/` default to `Integrator`; pages under `operate/` default to `Operator`; spec and architecture pages use `Spec`. Always set the field explicitly rather than relying on defaults.
+
+The build-time validation plugin (`docs/plugins/validate-audience.js`) will fail the build if any doc page is missing a valid `audience` field. Auto-generated API reference pages (under `reference/api/generated/`) are exempt.
+
+**Optional `status` field:**
+
+Pages describing non-stable features may include a `status` field, which renders a prominent admonition banner:
+
+| Value          | Admonition type | Meaning |
+|----------------|-----------------|---------|
+| `Experimental` | caution         | Behind a flag, breaking changes expected |
+| `Beta`         | warning         | Early adopters, minor breaking changes possible |
+| `Planned`      | info            | Spec draft exists, not yet implemented |
+
+Stable features do not need a `status` field. The Features page table remains the single source of truth for overall feature status.
+
+## Docs drift watchdog
+
+CI runs `docs/scripts/check_drift.py` on every push and PR to catch stale or forbidden content in the docs tree. It checks for:
+
+- **Forbidden strings** — product names or terms that must not appear (e.g., references to unrelated products).
+- **Calendar quarter dates** — `Q1 2025`-style strings outside exempt historical/roadmap files, which go stale quickly.
+- **Stale claims** — absolute statements that are no longer true (e.g., "no vector search" after that feature shipped).
+- **Bare tracker IDs** — internal issue tracker references (e.g., `ACM-123`) that leaked into public docs.
+
+Rules live in `docs/scripts/drift-rules.json`. To add a new rule, edit the appropriate section in that file — no code changes required. Run locally:
+
+```bash
+python docs/scripts/check_drift.py
+```
+
+To exempt a file from the calendar-quarter check (e.g., a new changelog page), add its path to the `exempt_globs` array in `drift-rules.json`.
+
+### Rule types in `drift-rules.json`
+
+| Key                  | Purpose                                               | How to add a new entry                                        |
+|----------------------|-------------------------------------------------------|---------------------------------------------------------------|
+| `forbidden_strings`  | Block specific terms from the docs tree               | Add `{ "pattern": "...", "flags": "i", "description": "..." }` to the array |
+| `calendar_quarters`  | Flag `Q1 2025`-style refs that go stale               | Update `exempt_globs` to whitelist new historical pages       |
+| `stale_claims`       | Catch absolute negatives disproved by shipped features | Add `{ "pattern": "...", "flags": "i", "description": "..." }` to the array |
+| `bare_ticket_ids`    | Prevent internal tracker IDs from leaking             | Add the prefix string to `tracker_prefixes`                   |
+
+After editing `drift-rules.json`, run `python docs/scripts/check_drift.py` locally to verify no false positives before pushing.
+
 ## Prototype contributions
 
 The prototype in `prototype/` is a minimal reference implementation — not production software. Contributions that validate spec behavior are welcome; contributions that add production-hardening, auth, or persistence layers should wait until Phase 2 scope is set.

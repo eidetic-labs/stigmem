@@ -98,7 +98,7 @@ run_docs() {
   need_cmd npm
   cd "$ROOT_DIR/docs"
   if [[ "${CHECK_SKIP_DOCS_INSTALL:-0}" != "1" ]]; then
-    npm ci
+    npm ci --ignore-scripts
   fi
   npm run build
 }

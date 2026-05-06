@@ -62,6 +62,14 @@ Where:
 
 ### 5.21 Publish an org manifest
 
+Publishing an org manifest is the bootstrap step for the federation trust model
+(§19). The admin uploads a self-signed manifest that declares the node's public
+key and the entity URIs it speaks for. The node verifies the signature against
+the embedded public key, stores the manifest, and (if configured) submits it to
+the transparency log (§19.2) for independent auditability. This endpoint
+replaces manual key exchange — peers can now resolve the manifest dynamically
+via §5.22.
+
 ```
 PUT /v1/federation/manifest
 Authorization: Bearer <admin api-key>
@@ -88,6 +96,12 @@ Content-Type: application/json
 
 ### 5.22 Resolve an org manifest
 
+Peers call this endpoint during the federation handshake to retrieve the
+manifest for a given entity URI. The response contains the full manifest object
+including the public key, entity list, rotation events, and signature — giving
+the peer everything it needs to verify capability tokens (§19.3) issued by
+this node.
+
 ```
 GET /v1/federation/manifest/:entity_uri_encoded
 → 200 { ...manifest object... }
@@ -95,6 +109,12 @@ GET /v1/federation/manifest/:entity_uri_encoded
 ```
 
 ### 5.23 Issue a capability token
+
+Capability tokens (§19.3) are short-lived, scoped credentials that replace
+static API keys for inter-node operations. This endpoint mints a signed token
+granting the named `subject` a specific `verb` on a specific `object` (scope or
+garden URI). The token is self-contained — the receiving peer verifies it using
+the issuer's manifest public key without calling back to the issuing node.
 
 ```
 POST /v1/federation/capability-tokens
@@ -114,6 +134,11 @@ Authorization: Bearer <admin api-key>
 
 ### 5.24 Revoke a capability token
 
+Revocation invalidates a previously-issued token before its natural expiry. The
+revocation event is recorded in the local revocation list and submitted to the
+transparency log (§19.2.5) so that peers can independently verify the
+revocation without trusting the issuing node's runtime state.
+
 ```
 POST /v1/federation/capability-tokens/:token_id/revoke
 Authorization: Bearer <admin api-key>
@@ -124,6 +149,12 @@ Authorization: Bearer <admin api-key>
 ```
 
 ### 5.25 Quarantine garden operations
+
+Facts that arrive from untrusted or low-scoring federation sources land in a
+quarantine garden (§19.7) rather than the target scope. These operations let a
+moderator review quarantined facts and either promote them to the intended
+destination or reject them permanently. Both actions are auditable — the
+`promoted_by` / `rejected_by` field records who made the decision.
 
 ```
 // Promote a fact from quarantine to a target garden
@@ -165,6 +196,8 @@ Authorization: Bearer <api-key> (must hold quarantine:moderator role)
 An **org manifest** is a signed document that declares the canonical public key for a Stigmem node or organisation and the set of entity URIs that the manifest is authoritative for. Peers MUST use the manifest public key to verify capability tokens (§19.3), provenance signatures (§19.6), and recall-time sanitizer trust decisions (§19.7).
 
 #### 19.1.2 Manifest Fields
+
+The `OrgManifest` struct carries everything a verifier needs to validate tokens and provenance from a given node: the node's public key, the set of entities it speaks for, and a rotation chain that lets peers verify key changes without out-of-band coordination. The `signature` field covers all other fields via JCS canonical encoding (§19.1.3), making the manifest self-verifiable — a peer can check integrity without contacting the issuer. The `expires_at` ceiling forces regular re-publication, limiting the window during which a compromised key remains trusted.
 
 ```
 OrgManifest:
@@ -295,6 +328,8 @@ A capability token is a signed, short-lived credential that grants a specific na
 
 #### 19.3.2 Token Shape
 
+A `CapabilityToken` encodes a single permission grant: one issuer delegates one verb on one object to one subject, with a bounded lifetime. The struct is intentionally narrow — a principal that needs both `read` and `write` must hold two tokens, which keeps revocation granular and audit logs unambiguous. The `nonce` field prevents replay attacks (§19.3.5), while `expiry` caps token lifetime at 90 days to bound the blast radius of a stolen credential. The `signature` covers all other fields using the issuer's manifest key (§19.1), binding the token to a verifiable identity chain.
+
 ```
 CapabilityToken:
   token_version: integer    // MUST be 1 for this spec version
@@ -364,6 +399,8 @@ The `nonce` field MUST be 32 bytes of cryptographically random data (e.g., from 
 The source-trust score `t` is a scalar in [0.0, 1.0] that expresses how much confidence a node should place in facts asserted by a given source URI. It modulates the effective confidence of recalled facts: `effective_confidence = fact.confidence × t`. This makes the recall layer trust-aware without altering stored fact confidence values.
 
 #### 19.4.2 Derivation Formula
+
+The trust score is a weighted linear combination of four independent signals, each measuring a different dimension of source credibility. The weights sum to 1.0, and the result is clamped to [0.0, 1.0] to stay within the confidence domain. `identity_strength` rewards sources with strong authentication (manifest-backed keys score higher than anonymous API keys). `peer_history` tracks the source's track record on this node — sources whose facts are frequently contradicted or retracted score lower. `scope_authority` reflects whether the source is operating within its natural scope (a company-scoped agent writing company facts scores higher than a local agent writing to company scope). `attestation_mode_factor` rewards nodes running in `enforce` mode (§18.2), since facts from enforce-mode nodes have cryptographically verified provenance.
 
 ```
 t = clamp(
@@ -668,6 +705,8 @@ ts:                RFC3339
 
 ### 19.8 Schema Migration (Migration 006)
 
+Migration 006 adds three tables to support the federation trust layer. `federation_manifests` stores org manifests indexed by `entity_uri` and `key_id` for fast lookup during token verification. `capability_tokens` records every token the node has issued or accepted, indexed by issuer/subject/verb for capability checks and by expiry for garbage collection. `source_trust_scores` caches computed trust scores (§19.4) per source URI and scope pair, with a TTL-based invalidation column so the node can recompute scores after peer history changes without scanning the full facts table.
+
 ```sql
 -- Org manifest storage
 CREATE TABLE IF NOT EXISTS federation_manifests (
@@ -796,6 +835,8 @@ Nodes MUST extend their `/.well-known/stigmem` response to include federation tr
 The facts table is a flat relation keyed by entity URI. Entity-to-entity connections exist implicitly: any fact whose `value.type = "ref"` and whose value URI denotes a known entity constitutes a directed edge from the subject entity to the referenced entity. Without a materialized adjacency structure, multi-hop traversal requires O(k × |F|) full table scans per recall query. §20 mandates a materialized `entity_edges` table to enable efficient bounded-depth BFS.
 
 #### 20.1.2 Schema
+
+The `entity_edges` table materializes the implicit graph encoded in `ref`-typed fact values. Each row corresponds to a single ref-fact and mirrors its confidence and scope so the graph traversal stage can filter by scope and sort by edge weight without joining back to the facts table. The `source_trust` column caches the trust score from §19.4 at edge-creation time; it is nullable because trust scoring is an optional feature. The `decay_epoch` column tracks when the decay sweeper (§15) last touched this edge, allowing the sweeper to skip recently processed rows. Three indexes cover the two traversal directions (subject→object, object→subject) and a subject+relation composite for relation-filtered neighbor queries.
 
 ```sql
 CREATE TABLE IF NOT EXISTS entity_edges (
@@ -994,6 +1035,8 @@ Both contradicting facts retain their embeddings. The contradiction penalty is a
 ### 20.3 Recall API
 
 #### 20.3.1 Route
+
+The recall endpoint supports both GET and POST. GET is convenient for short queries and cacheable at HTTP intermediaries; POST is preferred when the query string exceeds 1000 characters to avoid URI length limits imposed by proxies and load balancers.
 
 ```
 GET  /v1/recall
@@ -1248,6 +1291,8 @@ When raw facts contradict the card's synthesized summary (i.e., a fact's current
 
 #### 20.5.1 Route
 
+The subscription API follows standard REST conventions: POST to create, GET to list or inspect, DELETE to cancel. Subscription state is server-managed — the node tracks cursors internally and delivers events via the configured change mechanism.
+
 ```
 POST   /v1/subscriptions
 GET    /v1/subscriptions
@@ -1256,6 +1301,8 @@ DELETE /v1/subscriptions/:id
 ```
 
 #### 20.5.2 Request Shape
+
+A subscription request binds a `target` (either a scope or a specific entity) to a change-notification mechanism. The `on_change` field selects between two delivery modes: `webhook` for HTTP-based push delivery, and `wake` for Paperclip-integrated agent wake-ups. The `event_filter` array lets callers subscribe to a subset of event types, reducing noise for consumers that only care about specific lifecycle events. The `idempotency_key` ensures that retried creation requests do not produce duplicate subscriptions.
 
 ```json
 {
@@ -1629,6 +1676,12 @@ The manifest is stored as a stigmem fact under the `instruction:` scope (§21.4)
 
 #### 21.3.1 Request Shape
 
+The request shape is intentionally minimal: the `intent` field is the only
+required parameter. `max_chunks` and `token_budget` let the caller balance
+context-window cost against coverage. `manifest_hint` provides an escape hatch
+for cases where the agent already knows which units it needs, bypassing ranked
+retrieval for those specific units.
+
 ```json
 {
   "intent":        "I need to check out an issue and start work",
@@ -1646,6 +1699,12 @@ The manifest is stored as a stigmem fact under the `instruction:` scope (§21.4)
 | `manifest_hint` | MAY | Explicit unit names from the manifest; these are loaded first before ranked retrieval |
 
 #### 21.3.2 Response Shape
+
+The response carries the retrieved instruction chunks ranked by relevance,
+along with metadata that the agent and runtime need for budget management and
+audit. The `audit_token` is a first-class field rather than a header because
+the agent must pass it back when submitting usage feedback (§21.5.2) — embedding
+it in the body ensures it cannot be silently dropped by middleware.
 
 ```json
 {
@@ -1792,6 +1851,12 @@ The discovery audit provides a per-heartbeat signal for tuning manifest descript
 
 #### 21.5.1 Audit Record Shape
 
+Each `recall_instruction` invocation produces an audit record that captures
+what the agent asked for (`intent`), what was returned (`loaded_chunks`), and —
+once the heartbeat completes — what the agent actually used (`used_chunks`) and
+what it needed but did not receive (`missed_chunks`). This four-way comparison
+is the raw input for the evaluation metrics defined in §21.5.3.
+
 ```json
 {
   "id":            "audevent_01J...",
@@ -1825,6 +1890,12 @@ The discovery audit provides a per-heartbeat signal for tuning manifest descript
 `used_chunks` and `missed_chunks` MAY be populated by the runtime (if it tracks tool-call traces) or by the agent via self-report at heartbeat end. Agents SHOULD self-report usage when runtime tracking is unavailable.
 
 #### 21.5.2 Audit Submission API
+
+At the end of a heartbeat, the agent (or runtime) submits usage feedback by
+reporting which chunks were actually applied and which were needed but missing.
+The `audit_token` from the original `recall_instruction` response ties the
+submission to the correct record. This endpoint is idempotent — a duplicate
+submission with the same token is a silent success.
 
 ```
 POST /v1/instruction/audit
@@ -1951,7 +2022,21 @@ This is a SHOULD (not MUST) because manual migration is always acceptable.
 
 ### 21.7 Schema Migrations
 
-The following DDL MUST be applied when upgrading to Phase 10 (§21 compliance):
+The following DDL MUST be applied when upgrading to Phase 10 (§21 compliance).
+Three tables support the lazy instruction layer:
+
+**`instruction_manifests`** stores versioned snapshots of each agent's
+instruction manifest. Previous versions are retained (with a `superseded_at`
+timestamp) so that the audit system can replay recalls against the manifest
+that was active at the time.
+
+**`instruction_audit`** is the append-only log backing the discovery audit
+(§21.5). Each row captures one `recall_instruction` invocation and its
+usage-feedback follow-up.
+
+**`boot_stubs`** caches the rendered boot stub for each `(agent_id,
+adapter_profile)` pair. The cache is invalidated whenever the agent's manifest
+version changes or the stub schema version increments.
 
 ```sql
 -- Instruction manifest registry
@@ -2006,6 +2091,13 @@ The following routes supplement §5. Implementations MUST provide all MUST-label
 
 #### 21.8.1 Get Boot Stub (MUST)
 
+Returns the agent's rendered boot stub as a markdown document. The response
+includes headers that let the runtime verify freshness: `X-Stub-Version` is
+the stub schema version, `X-Manifest-Version` is the backing manifest version,
+and `X-Token-Count` is the stub's token cost. Only the agent itself or an admin
+may call this endpoint — a peer agent requesting another agent's stub is
+rejected with 403 to enforce instruction confidentiality (§21.4.5).
+
 ```
 GET /v1/agents/{agent_id}/boot-stub[?profile={adapter_profile}]
 Authorization: Bearer <agent api-key or admin api-key>
@@ -2024,6 +2116,12 @@ If `profile` is absent, MUST default to `generic`. Unknown profiles MUST be trea
 
 #### 21.8.2 Get Instruction Manifest (MUST)
 
+Retrieves the current (non-superseded) instruction manifest for an agent. The
+response is a structured JSON object containing the manifest version, backing
+stigmem fact URI, token count, and the full array of manifest entries (§21.2.2).
+This is the endpoint the boot stub references at `manifest_uri` — but it is
+also useful for operators inspecting an agent's configuration.
+
 ```
 GET /v1/agents/{agent_id}/instruction-manifest
 Authorization: Bearer <agent api-key or admin api-key>
@@ -2040,6 +2138,14 @@ Authorization: Bearer <agent api-key or admin api-key>
 ```
 
 #### 21.8.3 Publish / Replace Instruction Manifest (MUST)
+
+Publishes a new version of the agent's instruction manifest, replacing the
+current version. This endpoint is the gate through which all manifest changes
+must pass — it enforces the token budget (1000 tokens), validates entry
+structure, runs the paraphrase coverage gate (Approach A), and atomically
+updates the backing stigmem fact, the `instruction_manifests` table, and the
+boot stub cache. Manifest versions are immutable: once a version string is
+published, it cannot be overwritten (409 on collision).
 
 ```
 PUT /v1/agents/{agent_id}/instruction-manifest
@@ -2086,6 +2192,12 @@ This route MUST atomically: (1) run coverage gate, (2) write the manifest fact t
 
 #### 21.8.4 Recall Instructions (MUST)
 
+This is the HTTP route that backs the `recall_instruction` tool contract
+(§21.3). The agent's runtime calls this endpoint on behalf of the agent when
+it invokes the tool. Scope validation ensures that an agent can only recall
+its own instructions — cross-agent recall is rejected with 403
+`instruction_scope_denied`.
+
 ```
 POST /v1/agents/{agent_id}/recall-instruction
 Authorization: Bearer <agent api-key>
@@ -2107,6 +2219,11 @@ Content-Type: application/json
 
 #### 21.8.5 Submit Discovery Audit (SHOULD)
 
+The wire-level route for the audit submission described in §21.5.2. This is a
+SHOULD (not MUST) because the audit is best-effort — an agent that cannot
+submit usage feedback does not break the instruction system, it only degrades
+evaluation quality. The request body and semantics are identical to §21.5.2.
+
 ```
 POST /v1/instruction/audit
 Authorization: Bearer <agent api-key>
@@ -2124,6 +2241,13 @@ Content-Type: application/json
 ```
 
 #### 21.8.6 Get Manifest Coverage Report (SHOULD)
+
+Returns per-unit retrieval quality metrics for the agent's current manifest.
+This is the primary operator tool for diagnosing instruction units that may be
+under-retrieved before they produce production misses. Agent-key callers
+receive only raw numeric metrics; admin-key callers also receive the
+`coverage_status` categorical label to limit the retrieval-quality oracle
+surface for non-admin callers (§22 S11).
 
 ```
 GET /v1/agents/{agent_id}/instruction-manifest/coverage
@@ -2238,7 +2362,12 @@ This section applies to two key types:
 
 #### 22.2.3 Transparency Log Entry on Rotation
 
-Every key rotation MUST produce a transparency log entry. The log entry payload:
+Every key rotation MUST produce a transparency log entry so that federation
+peers and auditors can verify the chain of identity across key transitions.
+The entry is signed by the **old** (retiring) key — this anchors the new key
+to the prior identity and prevents a compromised new key from fabricating a
+rotation event. The signed payload uses RFC 8785 JSON Canonicalization Scheme
+(JCS) to ensure deterministic byte-for-byte serialisation.
 
 ```
 KeyRotationLogEntry:
@@ -2299,7 +2428,11 @@ Audit log events MUST be totally ordered by a monotonically increasing sequence 
 
 #### 22.3.4 Admin Export Shape
 
-Admins MUST be able to export audit logs via the following HTTP route:
+Admins MUST be able to export audit logs via the following HTTP route. The
+export endpoint supports time-range filtering, event-type filtering, and
+cursor-based pagination so that large exports can be consumed incrementally.
+Events are returned in ascending sequence order to support idempotent
+incremental ingestion by SIEM systems and compliance pipelines.
 
 ```
 GET /v1/admin/audit-log
@@ -2341,7 +2474,13 @@ Response:
 
 #### 22.4.1 Model
 
-Stigmem implements per-principal rate limiting using a **token-bucket** model. Each `(principal, dimension)` pair maintains an independent token bucket. The principal is the `actor_entity` URI derived from the authenticated caller's capability token or API key.
+Stigmem implements per-principal rate limiting using a **token-bucket** model.
+Each `(principal, dimension)` pair maintains an independent token bucket. The
+principal is the `actor_entity` URI derived from the authenticated caller's
+capability token or API key. The bucket shape below describes the state
+maintained per principal per quota dimension — `capacity` sets the burst
+ceiling, `rate` controls sustained throughput, and `current` / `last_refill`
+track the live token count.
 
 ```
 TokenBucket:
@@ -2513,7 +2652,11 @@ The Eidetic-Labs reference deployment uses the **public Rekor instance** (`https
 
 #### 22.7.4 Configuration
 
-When using the public Rekor instance (default):
+Two environment variables configure the transparency log connection. The URL
+points to the Rekor instance (public or self-hosted), and the public key is
+pinned explicitly rather than discovered at runtime — this ensures the node
+always verifies log entries against a known trust anchor even if the Rekor URL
+is compromised. When using the public Rekor instance (default):
 
 ```
 STIGMEM_TRANSPARENCY_LOG_URL=https://rekor.sigstore.dev
@@ -2544,6 +2687,14 @@ Tombstones are a protocol primitive, not a legal determination. Operators MUST o
 ### 23.2 Tombstone Record Shape
 
 #### 23.2.1 Schema
+
+A tombstone record is a self-contained, cryptographically signed directive. It
+identifies the target entity, the scopes to suppress, and the admin who
+authorised the erasure. The `signature` field covers the canonical JSON of all
+other fields (except `reason`, which is excluded to allow redaction during
+federation rebroadcast — see §23.2.4). The `key_id` is included in the signed
+body so that verifiers can resolve the correct historical signing key without
+trial-verifying against the entire rotation chain.
 
 ```
 TombstoneRecord:
@@ -2598,7 +2749,12 @@ The `"key_id"` field MUST be included in the signed canonical body so that verif
 
 #### 23.2.5 Tombstone Revocation
 
-A tombstone may be revoked by an admin who has a documented legal basis (e.g., a legal hold set by court order). Revocation is expressed via a `TombstoneRevocation` record:
+A tombstone may be revoked by an admin who has a documented legal basis (e.g.,
+a legal hold set by court order). Revocation is expressed via a separate
+`TombstoneRevocation` record rather than deleting the tombstone, because
+tombstone records are immutable — the revocation creates an auditable
+counterpart that references the original tombstone ID. Both records are
+retained indefinitely for compliance evidence.
 
 ```
 TombstoneRevocationRecord:
@@ -2664,7 +2820,11 @@ Nodes MUST accept tombstones from any trusted federation peer (peers listed in t
 
 #### 23.4.3 Tombstone Federation Route
 
-Tombstones are exchanged via a dedicated federation route:
+Tombstones are exchanged via a dedicated federation route, separate from the
+fact replication path (§5.8). This separation ensures that tombstones can be
+propagated even when fact replication is paused or throttled. The route returns
+both tombstone records and revocation records in a single paginated response so
+that peers can apply both in a single pass.
 
 ```
 GET /v1/federation/tombstones?since=<ISO8601>&limit=<N>
@@ -2684,7 +2844,11 @@ The peer capability token (§19.3) MUST include the `"tombstone:read"` verb in i
 
 #### 23.5.1 New Methods
 
-The following methods MUST be added to the storage trait:
+The following methods MUST be added to the storage trait. `tombstone()` creates
+a tombstone record, `is_tombstoned()` is the hot-path check called at recall
+time, `list_tombstones()` supports the federation replication and admin
+inspection endpoints, and `revoke_tombstone()` lifts a suppression when a legal
+basis exists.
 
 ```
 tombstone(
@@ -2722,6 +2886,14 @@ revoke_tombstone(
 
 #### 23.5.3 Schema Migration
 
+Migration 013a adds the `tombstones` and `tombstone_revocations` tables.
+Tombstones are indexed by `entity_uri` for the hot-path `is_tombstoned()`
+lookup. Migration 013c adds the `fact_retractions` table, an append-only log
+of retraction events needed by time-travel queries (§24) — existing retraction
+semantics (setting `facts.confidence = 0.0`) remain unchanged, but all
+retraction writes MUST also insert into this log so that `as_of` queries can
+reconstruct the knowledge graph at a past point in time.
+
 ```sql
 -- Migration 013a: RTBF tombstones
 CREATE TABLE tombstones (
@@ -2747,6 +2919,8 @@ CREATE TABLE tombstone_revocations (
 );
 ```
 
+A separate migration adds the retraction log table required by time-travel queries (§24). Retractions in the base schema set `facts.confidence = 0.0` in place, which destroys the temporal record. The `fact_retractions` table preserves the retraction timestamp and actor so that `as_of` queries can reconstruct which facts were live at any historical point.
+
 ```sql
 -- Migration 013c: append-only retraction log (time-travel compat — §24.2.1 c.3)
 -- Retraction writes MUST insert here in addition to setting facts.confidence = 0.0.
@@ -2764,6 +2938,11 @@ CREATE INDEX idx_fact_retractions_retracted_at ON fact_retractions(retracted_at)
 ### 23.6 Wire Format
 
 #### 23.6.1 Issue a Tombstone
+
+Creates a new tombstone for the specified entity. The server signs the record
+with the node's active admin signing key before returning it. Only admin API
+keys may call this endpoint — agent keys are rejected with 403 because
+tombstone issuance is an administrative action with compliance implications.
 
 ```
 POST /v1/tombstones
@@ -2787,6 +2966,12 @@ The server MUST sign the tombstone with the node's active admin signing key befo
 
 #### 23.6.2 Check Tombstone Status
 
+Returns the tombstone status for a given entity URI. The response indicates
+whether the entity is currently tombstoned and includes all tombstone and
+revocation records for audit. This endpoint is admin-only because the existence
+of a tombstone for a specific entity is itself sensitive information that could
+reveal the identity of a data-erasure requester.
+
 ```
 GET /v1/tombstones/:entity_uri_encoded
 Authorization: Bearer <admin api-key>
@@ -2799,6 +2984,13 @@ Authorization: Bearer <admin api-key>
 This endpoint MUST NOT be accessible with agent API keys — the existence of a tombstone for a given entity is itself sensitive information.
 
 #### 23.6.3 Revoke a Tombstone
+
+Revokes an active tombstone, reinstating the suppressed entity's facts in
+future recall responses. The caller MUST provide a documented reason (e.g., a
+court order reference) because revocations have compliance implications — the
+`reason` field is required (not optional) for this endpoint. The node signs
+the revocation record and propagates it to federation peers alongside future
+tombstone replication.
 
 ```
 POST /v1/tombstones/:tombstone_id/revoke
@@ -2947,6 +3139,8 @@ The `is_admin_caller` parameter governs `legal_hold` fact visibility: when `fals
 
 #### 24.5.1 As-Of Recall
 
+Time-travel recall uses the same `POST /v1/recall` endpoint with an additional `as_of` parameter. The response shape is identical to a standard recall response but includes a `tombstone_notices` array that surfaces any RTBF tombstones (§23) affecting the result set. Legal-hold visibility is governed by the caller's API key type: agent keys receive silently filtered results to prevent information leakage, while admin keys receive explicit tombstone notices.
+
 ```
 POST /v1/recall
 Authorization: Bearer <agent or admin api-key>
@@ -2976,6 +3170,8 @@ Agent API key callers MUST NOT receive any response that reveals the existence o
 `tombstone_notices` is populated only when `legal_hold` tombstones apply AND the caller is an admin API key.
 
 #### 24.5.2 As-Of Fact Query
+
+The structured fact query endpoint also accepts `as_of` for time-travel. Unlike the recall endpoint, the fact query returns raw `FactRecord` objects rather than recall chunks, making it suitable for programmatic audits and compliance reporting. The same tombstone-filtering and legal-hold visibility rules from §24.5.1 apply.
 
 ```
 GET /v1/facts?entity_uri=user:alice&as_of=2025-01-01T00:00:00Z&scope=company
@@ -3018,7 +3214,12 @@ CIDs enable:
 
 #### 25.2.1 Canonical Fact Body
 
-The **canonical fact body** for CID computation is a JSON object containing the following fact fields in lexicographic key order per RFC 8785 (JCS — JSON Canonicalization Scheme):
+The **canonical fact body** for CID computation is a JSON object containing
+the following fact fields in lexicographic key order per RFC 8785 (JCS — JSON
+Canonicalization Scheme). Only the six fields that define *what the fact
+asserts* are included; all metadata that varies by node, time, or transport
+path is excluded so that two nodes asserting the same knowledge independently
+produce the same CID.
 
 ```json
 {
@@ -3053,7 +3254,10 @@ The following excluded fields are **security-relevant** and require independent 
 
 #### 25.2.2 Hash Function
 
-The CID MUST be computed as:
+The CID is a prefix-tagged hex-encoded hash of the canonical fact body. The
+`sha256:` prefix is included in every CID string so that nodes can detect and
+handle future hash-algorithm rotations (§25.2.4) without ambiguity. The CID
+MUST be computed as:
 
 ```
 CID = "sha256:" + hex_lowercase(SHA-256(RFC8785(canonical_fact_body)))
@@ -3092,7 +3296,12 @@ If SHA-256 is deprecated, nodes MUST:
 
 #### 25.3.1 Alias Table
 
-A `fact_cid_aliases` table MUST be maintained to allow both UUID-style `fact_id` and CID addressing:
+During the migration window both UUID-style `fact_id` and content-addressed
+CID must be valid addressing keys. The `fact_cid_aliases` table provides this
+dual-addressing: a unique index on `cid` allows O(1) lookup by CID, while the
+existing primary key on `facts.id` continues to serve UUID-based lookups. A new
+nullable `cid` column is also added directly to the `facts` table for
+single-join access patterns.
 
 ```sql
 -- Migration 013b: Content-addressed fact IDs
@@ -3122,7 +3331,10 @@ After the migration window, `fact_id`-only addressing SHOULD be deprecated; a fu
 
 #### 25.3.3 `cid` Field on FactRecord
 
-A `cid` field MUST be added to the `FactRecord` schema (v1.1 Phase 13 addition):
+A `cid` field MUST be added to the `FactRecord` schema (v1.1 Phase 13
+addition). The field is nullable only to accommodate pre-Phase-13 records that
+have not yet been backfilled (§25.7.2); all new facts MUST be written with a
+non-null CID.
 
 ```
 FactRecord (Phase 13 addition):
@@ -3136,7 +3348,12 @@ New facts MUST be written with a non-null `cid`. Pre-Phase-13 facts will have `c
 
 #### 25.4.1 CID in Federation Payloads
 
-The federation fact envelope (§5, §6) MUST carry the `cid` field alongside the legacy `fact_id` for the duration of the migration window:
+The federation fact envelope (§5, §6) MUST carry the `cid` field alongside
+the legacy `fact_id` for the duration of the migration window. Receiving nodes
+MUST independently recompute the CID from the inbound fact body and reject
+facts where the declared CID does not match — this provides tamper detection
+at the federation boundary without requiring a round-trip to the originating
+node.
 
 ```json
 {
@@ -3160,7 +3377,11 @@ The `derived_from` field (§2.8) MAY carry CIDs in addition to, or instead of, U
 
 ### 25.5 Storage-Trait Extensions
 
-The following storage-trait methods MUST be extended or added:
+The following storage-trait methods MUST be extended or added. `get_fact` is
+broadened to accept either addressing format. `assert_fact` now computes and
+persists the CID atomically. `compute_cid` is exposed as a standalone utility
+so that federation receivers and the backfill runner can recompute CIDs without
+going through the full write path.
 
 ```
 get_fact(id: string) → FactRecord | null
@@ -3177,6 +3398,11 @@ compute_cid(body: CanonicalFactBody) → string
 
 #### 25.6.1 Lookup by CID or fact_id
 
+The existing single-fact endpoint (§5.5) is extended to accept either a
+UUID-style `fact_id` or a `sha256:` CID in the path parameter. The node
+detects the format by prefix: strings starting with `sha256:` are routed
+through the CID alias index; all others use the primary key.
+
 ```
 GET /v1/facts/:cid_or_fact_id
 Authorization: Bearer <agent or admin api-key>
@@ -3187,6 +3413,13 @@ Authorization: Bearer <agent or admin api-key>
 ```
 
 #### 25.6.2 Verify CID
+
+An on-demand integrity check that recomputes the CID from the stored fact body
+and compares it against the persisted CID. This endpoint is useful for
+periodic data-integrity audits and for investigating `cid_mismatch` alerts
+from the federation layer. A `cid_valid: false` response indicates either
+data corruption or a canonicalization bug and SHOULD trigger an operator
+investigation.
 
 ```
 POST /v1/facts/:fact_id/verify-cid
@@ -3203,6 +3436,10 @@ Authorization: Bearer <agent or admin api-key>
 Any `cid_valid: false` response SHOULD trigger an operator audit investigation.
 
 #### 25.6.3 Backfill Status
+
+Reports the progress of the CID backfill runner (§25.7.2). Operators use this
+endpoint to monitor migration progress and to determine when the node has
+achieved full CID coverage for its fact store.
 
 ```
 GET /v1/admin/cid-backfill/status

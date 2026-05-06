@@ -206,7 +206,12 @@ def _make_enc_settings(db_file: str, backend: str, encrypt: str, **overrides: ob
     ``pg_dsn`` and ``pg_schema`` are extracted automatically unless supplied
     in *overrides*.
     """
-    kwargs: dict[str, object] = {"db_path": db_file, "storage_backend": backend, **overrides}
+    kwargs: dict[str, object] = {
+        "db_path": db_file,
+        "storage_backend": backend,
+        "subscription_delivery_sweep_s": 86400,
+        **overrides,
+    }
     if backend == "postgres" and db_file.startswith("pg:") and "pg_dsn" not in overrides:
         _, dsn, schema = db_file.split(":", 2)
         kwargs["pg_dsn"] = dsn

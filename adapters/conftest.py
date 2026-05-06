@@ -1,26 +1,26 @@
-"""Top-level conftest for adapters/ — fixes sys.modules isolation between adapters.
+"""Top-level conftest for adapters/ test isolation.
 
-Each adapter ships its own adapter.py and exposes it via `from adapter import X`.
-When all adapters are collected in a single pytest session, the first adapter's
-adapter.py gets cached in sys.modules['adapter'], causing ImportError for every
-subsequent adapter that tries the same import.
-
-The pytest_collect_file hook below clears that cache and re-orders sys.path so
-the correct adapter.py is always imported first for each test file.
+Several adapters expose their implementation as ``from adapter import ...`` and
+also keep tests under same-named ``tests/`` directories. During aggregate test
+collection, pytest would otherwise reuse the first imported ``adapter`` module
+for subsequent adapter suites. The hook below resets that shared import and
+promotes the correct adapter directory on ``sys.path`` before each adapter test
+module is imported.
 """
 
 import sys
-from pathlib import Path
+from contextlib import suppress
 
 
 def pytest_collect_file(parent, file_path):
     """Ensure each adapter test file sees its own adapter.py."""
-    if file_path.name != "test_adapter.py":
+    if file_path.suffix != ".py" or not file_path.name.startswith("test_"):
         return None
 
-    # test_adapter.py lives at adapter_dir/tests/test_adapter.py
-    adapter_dir = file_path.parent.parent
-    if adapter_dir.parent.name != "adapters":
+    # adapter tests live at adapters/<adapter>/tests/test_*.py
+    tests_dir = file_path.parent
+    adapter_dir = tests_dir.parent
+    if tests_dir.name != "tests" or adapter_dir.parent.name != "adapters":
         return None
 
     adapter_str = str(adapter_dir)
@@ -30,10 +30,8 @@ def pytest_collect_file(parent, file_path):
 
     # Promote this adapter's directory to the front of sys.path so the
     # subsequent module import resolves to the right adapter.py
-    try:
+    with suppress(ValueError):
         sys.path.remove(adapter_str)
-    except ValueError:
-        pass
     sys.path.insert(0, adapter_str)
 
     return None

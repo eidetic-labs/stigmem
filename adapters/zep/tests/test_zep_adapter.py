@@ -10,8 +10,6 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-import pytest
-
 from adapter import (
     StigmemZepAdapter,
     fact_to_message_content,
@@ -138,7 +136,11 @@ def test_assert_to_zep_passes_session_id() -> None:
 
 def test_assert_to_zep_message_content_contains_fact() -> None:
     adapter, mock_zep = _mock_adapter()
-    fact = _fact(entity="user:bob", relation="preference:lang", value={"type": "string", "v": "python"})
+    fact = _fact(
+        entity="user:bob",
+        relation="preference:lang",
+        value={"type": "string", "v": "python"},
+    )
     adapter.assert_to_zep(fact, SESSION_ID)
     call_args = mock_zep.memory.add.call_args
     messages = call_args.kwargs["messages"]
@@ -158,7 +160,10 @@ def test_assert_to_zep_message_has_system_role() -> None:
 
 def test_assert_to_zep_returns_content_in_result() -> None:
     adapter, mock_zep = _mock_adapter()
-    result = adapter.assert_to_zep(_fact(entity="proj:x", relation="status:phase"), SESSION_ID)
+    result = adapter.assert_to_zep(
+        _fact(entity="proj:x", relation="status:phase"),
+        SESSION_ID,
+    )
     assert "proj:x" in result["content"]
     assert "status:phase" in result["content"]
 
@@ -169,7 +174,9 @@ def test_assert_to_zep_returns_content_in_result() -> None:
 
 def test_query_from_zep_returns_stigmem_records() -> None:
     adapter, mock_zep = _mock_adapter()
-    mock_zep.memory.get.return_value = _mock_memory(["Alice is an engineer", "Alice prefers Python"])
+    mock_zep.memory.get.return_value = _mock_memory(
+        ["Alice is an engineer", "Alice prefers Python"]
+    )
     records = adapter.query_from_zep("company", SESSION_ID)
     assert len(records) == 2
     assert all(r["relation"] == "zep:episodic_fact" for r in records)

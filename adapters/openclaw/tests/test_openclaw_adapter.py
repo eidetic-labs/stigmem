@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 from unittest.mock import patch
 
 import httpx
@@ -470,10 +471,8 @@ def test_from_env_defaults() -> None:
 # Conformance vector smoke tests (mocked, no live node)
 # ---------------------------------------------------------------------------
 
-from pathlib import Path as _Path
-
 _CONFORMANCE_DIR = (
-    _Path(__file__).parent  # tests/
+    Path(__file__).parent  # tests/
     .parent                 # openclaw/
     .parent                 # adapters/
     .parent                 # stigmem/

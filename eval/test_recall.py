@@ -5,38 +5,22 @@ Run via:
 
 Or as part of make eval-fast.
 
-CI blocking rules (spec §2 from research-memo):
+CI blocking rules:
 - Primary metric: nDCG@10
 - Regression threshold: 3% relative drop vs baseline.json
-- Two-consecutive-run rule: CI blocks only after two consecutive regressions
-  (tracked via eval/results/consecutive_failures.txt).
+- Any regression beyond that threshold blocks immediately.
 """
 
 from __future__ import annotations
 
 import json
 import pathlib
-from datetime import UTC, datetime
 
 import pytest
 
 from eval.harness.recall import run
-from eval.harness.utils import load_baseline, load_probes
 
 RESULTS_DIR = pathlib.Path(__file__).parent / "results"
-CONSECUTIVE_FAILURES_FILE = RESULTS_DIR / "consecutive_failures.txt"
-
-
-def _get_consecutive_failures() -> int:
-    try:
-        return int(CONSECUTIVE_FAILURES_FILE.read_text().strip())
-    except (FileNotFoundError, ValueError):
-        return 0
-
-
-def _set_consecutive_failures(n: int) -> None:
-    RESULTS_DIR.mkdir(exist_ok=True)
-    CONSECUTIVE_FAILURES_FILE.write_text(str(n))
 
 
 def test_recall_probe_count(recall_probes):
@@ -62,8 +46,6 @@ def test_recall_ttl_probes(recall_probes):
 
 def test_recall_benchmark(eval_node, git_sha):
     """Run recall benchmark; check nDCG@10 regression vs baseline.json.
-
-    CI blocking is gated on two consecutive failures (not a single regression).
     """
     report = run(client=eval_node)
 
@@ -81,21 +63,12 @@ def test_recall_benchmark(eval_node, git_sha):
     regression_triggered = regression.get("triggered", False)
 
     if regression_triggered:
-        consecutive = _get_consecutive_failures() + 1
-        _set_consecutive_failures(consecutive)
         delta_pct = regression.get("delta_pct", 0.0)
-        msg = (
-            f"nDCG@10 regression: {delta_pct:.2f}% drop "
-            f"(run {consecutive}/2 needed to block CI). "
-            f"Current={ndcg:.4f}, Baseline={regression.get('baseline_ndcg', '?'):.4f}"
+        pytest.fail(
+            "CI BLOCKED on recall regression: "
+            f"nDCG@10 dropped by {delta_pct:.2f}% "
+            f"(Current={ndcg:.4f}, Baseline={regression.get('baseline_ndcg', '?'):.4f})"
         )
-        if consecutive >= 2:
-            pytest.fail(f"CI BLOCKED after 2 consecutive regressions: {msg}")
-        else:
-            pytest.xfail(f"First regression detected (not yet blocking): {msg}")
-    else:
-        # Reset consecutive failure counter on success
-        _set_consecutive_failures(0)
 
     print(f"\n=== Recall Benchmark ===")
     print(f"nDCG@10: {ndcg:.4f}")

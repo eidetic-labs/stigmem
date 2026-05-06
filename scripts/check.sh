@@ -3,16 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PNPM_SHIM_DIR=""
-
-python_adapter_tests=(
-  adapters/cognee/tests
-  adapters/gemini/tests
-  adapters/letta/tests
-  adapters/obsidian/tests
-  adapters/openai-tools/tests
-  adapters/openclaw/tests
-  adapters/zep/tests
-)
+TIMING_LINES=()
 
 need_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -42,6 +33,49 @@ pnpm_cmd() {
   pnpm "$@"
 }
 
+pytest_args() {
+  local args=("-q" "--tb=short")
+  if [[ -n "${PYTEST_TIMEOUT_SECONDS:-}" ]]; then
+    args+=("--timeout=${PYTEST_TIMEOUT_SECONDS}")
+  fi
+  printf '%s\n' "${args[@]}"
+}
+
+timed_run() {
+  local name="$1"
+  shift
+  local start_ms end_ms duration_ms
+  start_ms="$(date +%s%3N)"
+  "$@"
+  end_ms="$(date +%s%3N)"
+  duration_ms="$((end_ms - start_ms))"
+  TIMING_LINES+=("${name}:${duration_ms}")
+}
+
+write_timing_report() {
+  local output_path="${CHECK_TIMING_OUTPUT:-}"
+  [[ -n "${output_path}" ]] || return 0
+  python3 - "$output_path" "${TIMING_LINES[@]}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+output = Path(sys.argv[1])
+rows = []
+for raw in sys.argv[2:]:
+    name, duration_ms = raw.split(":", 1)
+    rows.append(
+        {
+            "name": name,
+            "duration_ms": int(duration_ms),
+            "duration_s": round(int(duration_ms) / 1000, 3),
+        }
+    )
+output.parent.mkdir(parents=True, exist_ok=True)
+output.write_text(json.dumps(rows, indent=2) + "\n", encoding="utf-8")
+PY
+}
+
 run_python() {
   need_cmd uv
   cd "$ROOT_DIR"
@@ -49,13 +83,19 @@ run_python() {
     uv sync --all-packages
   fi
 
+  mapfile -t common_pytest_args < <(pytest_args)
   uv run python scripts/check_ruff_baseline.py
   uv run python scripts/check_mypy_baseline.py
-  uv run pytest node/tests/ sdks/stigmem-py/tests/ -q --tb=short
-
-  for test_dir in "${python_adapter_tests[@]}"; do
-    uv run pytest "$test_dir" -q --tb=short
-  done
+  local junit_dir="${PYTEST_JUNIT_DIR:-}"
+  local core_args=("${common_pytest_args[@]}")
+  local adapter_args=("${common_pytest_args[@]}")
+  if [[ -n "${junit_dir}" ]]; then
+    mkdir -p "${junit_dir}"
+    core_args+=("--junitxml=${junit_dir}/python-core.xml")
+    adapter_args+=("--junitxml=${junit_dir}/python-adapters.xml")
+  fi
+  uv run pytest "${core_args[@]}" node/tests/ sdks/stigmem-py/tests/
+  uv run pytest "${adapter_args[@]}" adapters/
 
   uv run pip-audit --progress-spinner off
   uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml -q
@@ -69,16 +109,16 @@ run_node() {
     pnpm_cmd install --frozen-lockfile
   fi
 
-  pnpm_cmd build
-  pnpm_cmd type-check
-  pnpm_cmd --filter stigmem-ts test
-  pnpm_cmd --filter stigmem-mcp test
-  pnpm_cmd --filter dashboard test
-  pnpm_cmd audit --audit-level=moderate
+  timed_run build pnpm_cmd build
+  timed_run type-check pnpm_cmd type-check
+  timed_run stigmem-ts-test pnpm_cmd --filter stigmem-ts test
+  timed_run stigmem-mcp-test pnpm_cmd --filter stigmem-mcp test
+  timed_run dashboard-test pnpm_cmd --filter dashboard test
+  timed_run pnpm-audit pnpm_cmd audit --audit-level=moderate
 
   (
     cd "$ROOT_DIR/sdks/stigmem-ts"
-    pnpm_cmd exec esbuild src/index.ts \
+    timed_run ts-smoke pnpm_cmd exec esbuild src/index.ts \
       --bundle \
       --platform=node \
       --format=cjs \
@@ -86,6 +126,7 @@ run_node() {
       --log-level=warning
     node -e "const s = require('./dist/smoke.cjs'); console.log('esbuild smoke OK — exports:', Object.keys(s).join(', '))"
   )
+  write_timing_report
 }
 
 run_go() {

@@ -72,7 +72,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dashboard-playwright-${{ github.run_id }}
-          path: apps/dashboard/playwright-report/
+          path: |
+            apps/dashboard/test-results/
+            apps/dashboard/playwright-report/
           retention-days: 30
 
   sdk-backward-compat:
@@ -132,6 +134,7 @@ jobs:
         run: |
           mkdir -p artifacts
           uv run pytest node/tests/test_migration_compat.py -q --tb=short \
+            --timeout=120 \
             --junitxml=artifacts/migration-compat-junit.xml
 
       - name: Upload migration report

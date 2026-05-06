@@ -39,22 +39,20 @@ From the repository root, run all adapter test suites together:
 uv run pytest adapters/ -v
 ```
 
-Expected output: **96 tests passed** across the five connector adapters (plus any
-additional adapters in this directory).
+Expected output: roughly **159 adapter tests** across the connector suites in
+this directory. The exact count may drift as adapters are added or expanded.
 
 > **How module-name collisions are avoided**
 >
-> Each adapter ships `tests/test_adapter.py` and `tests/conftest.py` with
-> identical Python module names.  Three changes work together to prevent
-> collection-time collisions:
+> Several adapters ship `tests/test_*.py` files plus local `tests/conftest.py`
+> helpers. Two repo-level choices keep aggregate collection working:
 >
-> 1. An empty `__init__.py` at each adapter root (e.g. `adapters/letta/__init__.py`)
->    lets pytest compute unique package paths such as `letta.tests.conftest`
->    instead of the generic `tests.conftest`.
-> 2. `--import-mode=importlib` in the root `pyproject.toml` `addopts` lets pytest
->    handle the `openai-tools` directory name (which contains a hyphen and is not
->    a valid Python identifier in normal import mode).
-> 3. `adapters/conftest.py` provides a `pytest_collect_file` hook that clears
+> 1. `--import-mode=importlib` in the root `pyproject.toml` makes pytest import
+>    test modules by path instead of relying on package names. That avoids
+>    collisions even for adapter directories such as `openai-tools/` whose names
+>    are not valid Python identifiers.
+> 2. `adapters/conftest.py` provides a `pytest_collect_file` hook that clears
 >    `sys.modules['adapter']` and promotes the correct adapter directory to the
->    front of `sys.path` before each test file is imported, preventing the shared
->    `adapter` module name from resolving to the wrong adapter's implementation.
+>    front of `sys.path` before each adapter test module is imported,
+>    preventing the shared `adapter` module name from resolving to the wrong
+>    adapter implementation.

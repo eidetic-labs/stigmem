@@ -9,8 +9,35 @@ permissions:
   contents: read
 
 jobs:
+  detect-changes:
+    name: Detect eval surfaces
+    runs-on: ubuntu-latest
+    outputs:
+      eval: ${{ steps.filter.outputs.eval }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            eval:
+              - ".github/workflows/eval-fast.yml"
+              - "pyproject.toml"
+              - "uv.lock"
+              - "conftest.py"
+              - "eval/**"
+              - "node/**"
+              - "sdks/stigmem-py/**"
+              - "spec/**"
+              - "data/conformance/**"
+
   eval-fast:
     name: Eval harness (adversarial + recall, ≤5 min)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.eval == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 

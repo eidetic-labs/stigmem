@@ -28,7 +28,6 @@ ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/apps/dashboard/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/dashboard/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/dashboard/.next/static ./apps/dashboard/.next/static
 

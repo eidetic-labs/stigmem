@@ -216,6 +216,7 @@ Track the remaining test-infrastructure follow-up after the merged PR gate tight
 ## Review
 
 - Implemented:
+  - post-merge dashboard publish fix by removing the stale `public/` copy from `apps/dashboard/Dockerfile`
   - immediate-fail recall regression gating
   - required-check-safe eval-fast topology
   - global pytest strict markers

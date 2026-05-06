@@ -9,7 +9,7 @@ sidebar_position: 6
 # Stigmem Protocol Specification
 
 :::note Authoritative source
-Spec source markdown lives in [`spec/stigmem-spec-v1.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) and [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md). Each section below renders the source text inline.
+Spec source markdown lives in [`spec/stigmem-spec-v2.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v2.0.md). Each section below renders the source text inline. Prior drafts are archived under [`spec/archive/`](https://github.com/Eidetic-Labs/stigmem/tree/main/spec/archive/).
 :::
 
 :::info Security disclosure
@@ -37,14 +37,14 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | [§16. Synthesis](./synthesis) | Stable | POST /v1/synthesis — confidence-weighted current-state snapshots. |
 | [§17. Memory Garden](./memory-garden) | Normative (v1.0) | Named, ACL'd partitions of the fact store. |
 | [§18. Source Attestation](./source-attestation) | Normative (v1.0) | API-key → entity_uri binding. |
-| [§19. Federation Trust](./federation-trust) | Normative (v1.1) | Org manifests, capability tokens, source-trust score, quarantine. |
-| [§20. Recall & Graph](./recall-graph) | Normative (v1.1) | Graph adjacency index, vector embeddings, hybrid recall pipeline. |
-| [§21. Lazy Instruction Discovery](./lazy-instruction-discovery) | DRAFT normative | Boot stub + manifest + on-demand recall. |
-| [§22. Security Hardening](./security-hardening) | DRAFT normative | mTLS federation, key rotation, audit log, per-principal quotas. |
-| [§23. Right-to-be-Forgotten Tombstones](./right-to-be-forgotten-tombstones) | DRAFT normative | Cryptographic tombstones, recall-time suppression. |
-| [§24. Time-Travel / As-Of Queries](./time-travel-as-of-queries) | DRAFT normative | as_of parameter on /v1/recall and /v1/facts. |
-| [§25. Content-Addressed Fact IDs](./content-addressed-fact-ids) | DRAFT normative | SHA-256 CIDs for deduplication and tamper detection. |
+| [§19. Federation Trust](./federation-trust) | Normative (v2.0) | Org manifests, capability tokens, source-trust score, quarantine. |
+| [§20. Recall & Graph](./recall-graph) | Normative (v2.0) | Graph adjacency index, vector embeddings, hybrid recall pipeline. |
+| [§21. Lazy Instruction Discovery](./lazy-instruction-discovery) | Normative (v2.0) | Boot stub + manifest + on-demand recall. |
+| [§22. Security Hardening](./security-hardening) | Normative (v2.0) | mTLS federation, key rotation, audit log, per-principal quotas. |
+| [§23. Right-to-be-Forgotten Tombstones](./right-to-be-forgotten-tombstones) | Normative (v2.0) | Cryptographic tombstones, recall-time suppression. |
+| [§24. Time-Travel / As-Of Queries](./time-travel-as-of-queries) | Normative (v2.0) | as_of parameter on /v1/recall and /v1/facts. |
+| [§25. Content-Addressed Fact IDs](./content-addressed-fact-ids) | Normative (v2.0) | SHA-256 CIDs for deduplication and tamper detection. |
 
 ## Archive
 
-Previous spec versions are available via the version dropdown (v1.1, v0.2).
+Previous spec versions are available via the version dropdown (v1.1, v0.2). Draft history is preserved in [`spec/archive/`](https://github.com/Eidetic-Labs/stigmem/tree/main/spec/archive/).

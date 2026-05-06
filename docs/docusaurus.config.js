@@ -18,7 +18,7 @@ const config = {
   url: 'https://docs.stigmem.dev',
   baseUrl,
 
-  onBrokenLinks: 'warn',
+  onBrokenLinks: 'throw',
 
   i18n: {
     defaultLocale: 'en',
@@ -237,38 +237,20 @@ const config = {
           { type: 'docsVersionDropdown', position: 'left' },
           {
             type: 'docSidebar',
-            sidebarId: 'getStartedSidebar',
-            label: 'Get Started',
+            sidebarId: 'learnSidebar',
+            label: 'Learn',
             position: 'left',
           },
           {
             type: 'docSidebar',
-            sidebarId: 'conceptsSidebar',
-            label: 'Concepts',
+            sidebarId: 'buildSidebar',
+            label: 'Build',
             position: 'left',
           },
           {
             type: 'docSidebar',
-            sidebarId: 'sdksSidebar',
-            label: 'SDKs',
-            position: 'left',
-          },
-          {
-            type: 'docSidebar',
-            sidebarId: 'operatorsSidebar',
-            label: 'Operators',
-            position: 'left',
-          },
-          {
-            type: 'docSidebar',
-            sidebarId: 'securitySidebar',
-            label: 'Security',
-            position: 'left',
-          },
-          {
-            type: 'docSidebar',
-            sidebarId: 'specSidebar',
-            label: 'Spec',
+            sidebarId: 'operateSidebar',
+            label: 'Operate',
             position: 'left',
           },
           {
@@ -278,6 +260,12 @@ const config = {
             position: 'left',
           },
           { to: '/blog', label: 'Blog', position: 'left' },
+          {
+            type: 'docSidebar',
+            sidebarId: 'communitySidebar',
+            label: 'Community',
+            position: 'left',
+          },
           { type: 'custom-githubButton', position: 'right', variant: 'star' },
           { type: 'custom-githubButton', position: 'right', variant: 'fork' },
         ],
@@ -289,13 +277,11 @@ const config = {
           {
             title: 'Docs',
             items: [
-              { label: 'Get Started', to: '/docs/next/get-started' },
-              { label: 'Concepts', to: '/docs/next/concepts' },
-              { label: 'SDKs', to: '/docs/next/sdks' },
-              { label: 'Operators', to: '/docs/next/operators' },
-              { label: 'Security', to: '/docs/next/security' },
-              { label: 'Spec', to: '/docs/next/spec' },
+              { label: 'Learn', to: '/docs/next/concepts' },
+              { label: 'Build', to: '/docs/next/concepts/facts/asserting-facts' },
+              { label: 'Operate', to: '/docs/next/operators' },
               { label: 'Reference', to: '/docs/reference' },
+              { label: 'Features', to: '/docs/next/concepts/features' },
             ],
           },
           {

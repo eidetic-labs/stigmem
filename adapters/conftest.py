@@ -8,8 +8,8 @@ promotes the correct adapter directory on ``sys.path`` before each adapter test
 module is imported.
 """
 
-from contextlib import suppress
 import sys
+from contextlib import suppress
 
 
 def pytest_collect_file(parent, file_path):

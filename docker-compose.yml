@@ -12,6 +12,7 @@ services:
     environment:
       STIGMEM_NODE_URL: "http://node-a:8765"
       STIGMEM_FEDERATION_ENABLED: "true"
+      STIGMEM_AUTH_REQUIRED: "false"
       STIGMEM_DB_PATH: "/data/stigmem.db"
       STIGMEM_LOG_LEVEL: "info"
     volumes:
@@ -41,6 +42,7 @@ services:
     environment:
       STIGMEM_NODE_URL: "http://node-b:8765"
       STIGMEM_FEDERATION_ENABLED: "true"
+      STIGMEM_AUTH_REQUIRED: "false"
       STIGMEM_DB_PATH: "/data/stigmem.db"
       STIGMEM_LOG_LEVEL: "info"
     volumes:

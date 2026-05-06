@@ -21,7 +21,7 @@ Interactive endpoint documentation auto-generated from the OpenAPI schema. Cover
 
 The normative Stigmem specification, broken out by section. Covers the fact model, wire format, federation protocol, schema migrations, security hardening, and every extension added since v0.8.
 
-[Go to Specification →](./spec/index.md)
+[Go to Specification →](../spec/index.md)
 
 ## Architecture
 

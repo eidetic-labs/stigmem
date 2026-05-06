@@ -3,7 +3,7 @@ const VALID_AUDIENCES = ['Operator', 'Integrator', 'Spec'];
 // Audience badges are only meaningful where the page's audience is non-obvious from
 // its top-level section. The Learn section name already implies a general reader, so
 // pages under learn/ (and a few catch-all sections) opt out of the audience requirement.
-const AUDIENCE_OPTIONAL_PREFIXES = ['learn/', 'community/', 'reference/glossary'];
+const AUDIENCE_OPTIONAL_PREFIXES = ['get-started/', 'concepts/', 'learn/', 'community/', 'reference/glossary'];
 
 module.exports = function validateAudiencePlugin() {
   return {

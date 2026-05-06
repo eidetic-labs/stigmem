@@ -1,0 +1,15 @@
+---
+title: Concepts
+sidebar_position: 2
+---
+
+# Concepts
+
+Core ideas behind the Stigmem protocol — how facts, scopes, federation, recall, and time-travel work together.
+
+## Sections
+
+- **[Facts](./facts/immutable-typed-facts.md)** — the atomic unit of knowledge: entity, relation, value triples with provenance and confidence.
+- **[Federation](./federation/federation-handshake.md)** — how peer nodes exchange facts across trust boundaries.
+- **[Recall](./recall/recall-pipeline.md)** — retrieving relevant facts at query time via embeddings, subscriptions, and memory cards.
+- **[Lifecycle](./lifecycle/decay-and-confidence.md)** — decay, synthesis, time-travel queries, and the right to be forgotten.

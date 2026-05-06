@@ -1,5 +1,4 @@
 ---
-id: typescript-sdk
 title: TypeScript SDK Reference
 sidebar_label: TypeScript SDK
 description: API reference for stigmem-ts — StigmemClient, types, value constructors, and error classes.
@@ -384,7 +383,7 @@ const factByUuid = await client.getFact("550e8400-e29b-41d4-a716-446655440000");
 const factByCid  = await client.getFact("sha256:a3f2b8c901d4...");
 ```
 
-Asserting the same (entity, relation, value, source, scope) tuple twice returns the existing fact — CID-based deduplication is automatic. See the [Content Addressing guide](../build/guides/content-addressing.md).
+Asserting the same (entity, relation, value, source, scope) tuple twice returns the existing fact — CID-based deduplication is automatic. See the [Content Addressing guide](../concepts/facts/content-addressing.md).
 
 ### Time-travel queries (§24)
 
@@ -398,16 +397,16 @@ const res = await fetch(
 const { facts } = await res.json();
 ```
 
-See the [Time-Travel Queries guide](../build/guides/time-travel.md).
+See the [Time-Travel Queries guide](../concepts/lifecycle/time-travel.md).
 
 ---
 
 ## See also
 
-- [Tutorial: SDK Quickstart](../build/tutorials/sdk-quickstart.md) — assert, recall, and subscribe in Python / TS / Go
-- [Recall guide](../build/guides/recall.md) — hybrid recall, weight tuning, fast-path
-- [Memory Cards guide](../build/guides/memory-cards.md) — card lifecycle and divergence policy
-- [Asserting facts](../build/guides/asserting-facts.md) — detailed fact write patterns
-- [Querying facts](../build/guides/querying-facts.md) — structured predicate queries
-- [Go SDK Reference](./go.md) — equivalent Go client
+- [Tutorial: SDK Quickstart](../tutorials/sdk-quickstart.md) — assert, recall, and subscribe in Python / TS / Go
+- [Recall guide](../concepts/recall/recall.md) — hybrid recall, weight tuning, fast-path
+- [Memory Cards guide](../concepts/recall/memory-cards.md) — card lifecycle and divergence policy
+- [Asserting facts](../concepts/facts/asserting-facts.md) — detailed fact write patterns
+- [Querying facts](../concepts/facts/querying-facts.md) — structured predicate queries
+- [Python SDK Reference](/docs/build/sdks/python) — equivalent Python client
 - [Go SDK Reference](./go.md) — Go client

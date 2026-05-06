@@ -68,7 +68,7 @@ For the formal threat model (trust boundaries, STRIDE analysis, risk register), 
 | Social engineering or phishing | Out of scope for all security programs |
 | `https://docs.stigmem.dev` (static docs site) | No user data; no dynamic server-side logic |
 
-For the full structured engagement guide — including the report template, reproducer expectations, and recognition model — see the [Community Pen-Test Handbook](../operate/security/pen-test.md).
+For the full structured engagement guide — including the report template, reproducer expectations, and recognition model — see the [Community Pen-Test Handbook](../security/pen-test.md).
 
 ---
 
@@ -169,7 +169,7 @@ For federation testing, the `docker-compose.federation.yml` spins up a 2-node to
 docker compose -f docker-compose.federation.yml up -d
 ```
 
-A 4-node test topology is documented in [Federation: 4-Node Soak](../build/guides/federation-4node.md).
+A 4-node test topology is documented in [Federation: 4-Node Soak](../concepts/federation/federation-4node.md).
 
 ---
 
@@ -193,7 +193,7 @@ Stigmem does not currently operate a paid bug bounty program. Valid findings are
 
 ## See also
 
-- [Community Pen-Test Handbook](../operate/security/pen-test.md) — full engagement guide with report template
-- [Container Hardening](../operate/security/container-hardening.md) — distroless, seccomp, non-root
-- [Key Rotation](../operate/runbooks/key-rotation.md) — Ed25519 key lifecycle and dual-trust windows
-- [Audit & Quotas](../operate/security/audit-and-quotas.md) — audit log surface and per-principal rate limiting
+- [Community Pen-Test Handbook](../security/pen-test.md) — full engagement guide with report template
+- [Container Hardening](../security/container-hardening.md) — distroless, seccomp, non-root
+- [Key Rotation](../security/key-rotation.md) — Ed25519 key lifecycle and dual-trust windows
+- [Audit & Quotas](../security/audit-and-quotas.md) — audit log surface and per-principal rate limiting

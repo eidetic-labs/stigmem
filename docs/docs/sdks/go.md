@@ -1,4 +1,6 @@
 ---
+title: Go SDK
+sidebar_label: Go SDK
 audience: Integrator
 ---
 
@@ -189,7 +191,7 @@ factByUUID, _ := c.GetFact(ctx, "550e8400-e29b-41d4-a716-446655440000")
 factByCID, _  := c.GetFact(ctx, "sha256:a3f2b8c901d4...")
 ```
 
-Asserting the same (entity, relation, value, source, scope) tuple twice returns the existing fact — CID-based deduplication is automatic. See the [Content Addressing guide](../build/guides/content-addressing.md).
+Asserting the same (entity, relation, value, source, scope) tuple twice returns the existing fact — CID-based deduplication is automatic. See the [Content Addressing guide](../concepts/facts/content-addressing.md).
 
 ### Time-travel queries (§24)
 
@@ -202,15 +204,15 @@ req.Header.Set("Authorization", "Bearer "+apiKey)
 resp, _ := http.DefaultClient.Do(req)
 ```
 
-See the [Time-Travel Queries guide](../build/guides/time-travel.md).
+See the [Time-Travel Queries guide](../concepts/lifecycle/time-travel.md).
 
 ---
 
 ## See also
 
-- [Tutorial: SDK Quickstart](../build/tutorials/sdk-quickstart.md) — assert, recall, and subscribe in Python / TS / Go
+- [Tutorial: SDK Quickstart](../tutorials/sdk-quickstart.md) — assert, recall, and subscribe in Python / TS / Go
 - [TypeScript SDK Reference](./typescript.md) — TypeScript client
-- [Python SDK](../build/guides/asserting-facts.md) — fact assertion patterns (Python examples included)
+- [Python SDK Reference](/docs/build/sdks/python) — Python client
 
 ---
 

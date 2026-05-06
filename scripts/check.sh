@@ -80,12 +80,19 @@ run_python() {
   need_cmd uv
   cd "$ROOT_DIR"
   if [[ "${CHECK_SKIP_PYTHON_SYNC:-0}" != "1" ]]; then
-    uv sync --all-packages
+    timed_run python-sync uv sync --all-packages
   fi
 
   mapfile -t common_pytest_args < <(pytest_args)
-  uv run python scripts/check_ruff_baseline.py
-  uv run python scripts/check_mypy_baseline.py
+  timed_run python-ruff-baseline uv run python scripts/check_ruff_baseline.py
+  timed_run python-mypy-baseline uv run python scripts/check_mypy_baseline.py
+  timed_run python-sdk-ruff uv run ruff check sdks/stigmem-py/src sdks/stigmem-py/tests
+  timed_run python-sdk-mypy uv run mypy \
+    --show-error-codes \
+    --hide-error-context \
+    --no-color-output \
+    --no-pretty \
+    sdks/stigmem-py/src
   local junit_dir="${PYTEST_JUNIT_DIR:-}"
   local core_args=("${common_pytest_args[@]}")
   local adapter_args=("${common_pytest_args[@]}")
@@ -94,12 +101,13 @@ run_python() {
     core_args+=("--junitxml=${junit_dir}/python-core.xml")
     adapter_args+=("--junitxml=${junit_dir}/python-adapters.xml")
   fi
-  uv run pytest "${core_args[@]}" node/tests/ sdks/stigmem-py/tests/
-  uv run pytest "${adapter_args[@]}" adapters/
+  timed_run python-core-pytest uv run pytest "${core_args[@]}" node/tests/ sdks/stigmem-py/tests/
+  timed_run python-adapter-pytest uv run pytest "${adapter_args[@]}" adapters/
 
-  uv run pip-audit --progress-spinner off
-  uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml -q
-  uv run python scripts/check_constant_time.py node/src/ sdks/stigmem-py/src/
+  timed_run python-pip-audit uv run pip-audit --progress-spinner off
+  timed_run python-bandit uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml -q
+  timed_run python-constant-time uv run python scripts/check_constant_time.py node/src/ sdks/stigmem-py/src/
+  write_timing_report
 }
 
 run_node() {

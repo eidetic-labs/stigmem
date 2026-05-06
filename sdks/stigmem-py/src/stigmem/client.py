@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from typing import Any
 
 import httpx
@@ -17,7 +17,6 @@ from .exceptions import (
 )
 from .models import (
     AssertRequest,
-    Conflict,
     ConflictPage,
     ConflictResolution,
     Fact,

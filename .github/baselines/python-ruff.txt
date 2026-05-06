@@ -9,21 +9,12 @@ adapters/cognee/demo.py:46:1:I001:Import block is un-sorted or un-formatted
 adapters/cognee/demo.py:48:36:F401:`stigmem.string_value` imported but unused
 adapters/cognee/demo.py:48:50:F401:`stigmem.number_value` imported but unused
 adapters/cognee/demo.py:48:64:F401:`stigmem.ref_value` imported but unused
-adapters/cognee/tests/test_adapter.py:11:1:I001:Import block is un-sorted or un-formatted
-adapters/cognee/tests/test_adapter.py:16:49:F401:`unittest.mock.patch` imported but unused
-adapters/conftest.py:13:21:F401:`pathlib.Path` imported but unused
-adapters/conftest.py:33:5:SIM105:Use `contextlib.suppress(ValueError)` instead of `try`-`except`-`pass`
 adapters/gemini/adapter.py:103:101:E501:Line too long (102 > 100)
 adapters/gemini/adapter.py:253:101:E501:Line too long (103 > 100)
 adapters/gemini/adapter.py:28:1:I001:Import block is un-sorted or un-formatted
 adapters/gemini/adapter.py:296:26:UP037:Remove quotes from type annotation
-adapters/gemini/tests/test_adapter.py:12:8:F401:`os` imported but unused
 adapters/letta/adapter.py:171:26:UP037:Remove quotes from type annotation
 adapters/letta/adapter.py:70:5:SIM108:Use ternary operator `vstr = "null" if vtype == "null" or v is None else str(v)` instead of `if`-`else`-block
-adapters/letta/tests/test_adapter.py:13:38:F401:`unittest.mock.patch` imported but unused
-adapters/letta/tests/test_adapter.py:163:36:S105:Possible hardcoded password assigned to: "_letta_token"
-adapters/letta/tests/test_adapter.py:54:68:S106:Possible hardcoded password assigned to argument: "letta_token"
-adapters/letta/tests/test_adapter.py:9:1:I001:Import block is un-sorted or un-formatted
 adapters/obsidian/src/stigmem_obsidian/cli.py:37:101:E501:Line too long (128 > 100)
 adapters/obsidian/src/stigmem_obsidian/cli.py:67:101:E501:Line too long (106 > 100)
 adapters/obsidian/src/stigmem_obsidian/config.py:54:39:UP037:Remove quotes from type annotation
@@ -66,14 +57,9 @@ adapters/openclaw/src/stigmem_openclaw/adapter.py:278:101:E501:Line too long (11
 adapters/openclaw/src/stigmem_openclaw/adapter.py:281:101:E501:Line too long (101 > 100)
 adapters/openclaw/src/stigmem_openclaw/adapter.py:328:101:E501:Line too long (104 > 100)
 adapters/openclaw/src/stigmem_openclaw/adapter.py:58:26:UP037:Remove quotes from type annotation
-adapters/openclaw/tests/test_adapter.py:473:1:E402:Module level import not at top of file
 adapters/zep/adapter.py:148:26:UP037:Remove quotes from type annotation
 adapters/zep/demo.py:24:1:I001:Import block is un-sorted or un-formatted
 adapters/zep/demo.py:25:8:F401:`sys` imported but unused
-adapters/zep/tests/test_adapter.py:13:8:F401:`pytest` imported but unused
-adapters/zep/tests/test_adapter.py:141:101:E501:Line too long (104 > 100)
-adapters/zep/tests/test_adapter.py:172:101:E501:Line too long (101 > 100)
-adapters/zep/tests/test_adapter.py:8:1:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_conformance/__main__.py:68:5:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_conformance/report.py:56:101:E501:Line too long (102 > 100)
 node/src/stigmem_conformance/report.py:60:13:F541:f-string without any placeholders
@@ -887,12 +873,3 @@ node/tests/test_tombstones.py:45:5:F401:`stigmem_node.tombstones.invalidate_tomb
 node/tests/test_tombstones.py:535:101:E501:Line too long (101 > 100)
 node/tests/test_tombstones.py:920:9:I001:Import block is un-sorted or un-formatted
 node/tests/test_tombstones.py:948:9:I001:Import block is un-sorted or un-formatted
-sdks/stigmem-py/src/stigmem/client.py:20:5:F401:`.models.Conflict` imported but unused
-sdks/stigmem-py/src/stigmem/client.py:3:1:I001:Import block is un-sorted or un-formatted
-sdks/stigmem-py/src/stigmem/models.py:3:1:I001:Import block is un-sorted or un-formatted
-sdks/stigmem-py/src/stigmem/models.py:41:101:E501:Line too long (103 > 100)
-sdks/stigmem-py/tests/test_client.py:159:101:E501:Line too long (108 > 100)
-sdks/stigmem-py/tests/test_client.py:16:5:F401:`stigmem.ref_value` imported but unused
-sdks/stigmem-py/tests/test_client.py:17:5:F401:`stigmem.null_value` imported but unused
-sdks/stigmem-py/tests/test_client.py:19:54:F401:`stigmem.models.Peer` imported but unused
-sdks/stigmem-py/tests/test_client.py:3:1:I001:Import block is un-sorted or un-formatted

@@ -68,7 +68,11 @@ Expired facts (`valid_until < now`) and retracted facts (`confidence=0.0`) are e
 
 ### §16.3 Wire Format {#section-16-3}
 
+The synthesis endpoint follows the same request/response conventions as decay (§15.2) and lint (§14). Because synthesis is a read-only aggregation, it never writes facts — the response is a snapshot that may change on the next call if facts are asserted, decayed, or retracted in the interim.
+
 #### Request
+
+The caller specifies the `scope` to synthesize and may narrow results to a single `entity` URI. The `min_confidence` filter is applied after synthesis: entries whose winning confidence falls below the threshold are excluded from the response, which is useful for agents that only want high-certainty knowledge.
 
 ```
 POST /v1/synthesis
@@ -84,6 +88,8 @@ Content-Type: application/json
 ```
 
 #### Response
+
+The `summary` array contains one `SynthesisEntry` (§16.1) per live `(entity, relation, scope)` triple. The `contradiction_count` gives a quick signal for whether the scope has unresolved ambiguity — a non-zero value means at least one triple has competing live values. `filtered_count` reports how many entries were excluded by the `min_confidence` threshold, so callers can tell whether lowering the threshold would surface more data.
 
 ```
 200 OK

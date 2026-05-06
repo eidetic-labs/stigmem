@@ -427,7 +427,8 @@ A garden's `scope` field declares which scope its facts inhabit. This means:
 
 ### 17.6 Conventions
 
-**Relation namespace:** Garden membership metadata is stored as system facts using the `garden:` prefix:
+**Relation namespace:** Garden membership metadata is stored as system facts using the `garden:` prefix. The node writes these automatically when callers add or remove members via the garden management endpoints; they use `source="system:stigmem"` so that attestation checks (§18) can distinguish operator-managed membership from agent-authored assertions. The `garden:member` relation links the garden to a member entity, while `garden:role:<entity_uri>` records the member's permission level (reader, writer, or admin).
+
 ```
 (entity=<garden_id>, relation="garden:member",   value={type:"ref", v:<member_entity_uri>}, source="system:stigmem", ...)
 (entity=<garden_id>, relation="garden:role:<entity_uri>", value={type:"string", v:"writer"}, ...)

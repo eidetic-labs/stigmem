@@ -75,6 +75,8 @@ The request/response split between "actual" and "dry-run" counters is intentiona
 
 #### Request
 
+The caller supplies the `scope` to sweep and may optionally force a `mode` override (e.g. `dry_run` to preview the sweep without side effects) or restrict evaluation to a single named `policy_id`. All three fields use the same types defined in §15.1; `scope` is the only required parameter.
+
 ```
 POST /v1/decay/sweep
 Authorization: Bearer <api-key>
@@ -88,6 +90,8 @@ Content-Type: application/json
 ```
 
 #### Response
+
+The response reports aggregate counters split by actual vs. dry-run activity. In normal mode `facts_retracted` and `facts_reduced` are populated while the `dry_run_*` fields are zero; in `dry_run` mode the reverse holds. This makes it unambiguous whether the sweep wrote anything — operators can pipe the JSON into monitoring dashboards without parsing the request to determine the mode.
 
 ```
 200 OK
@@ -186,7 +190,7 @@ The sweep is **idempotent**: running it twice in a row on the same data produces
 same result (the second run sees the retractions written by the first run and finds
 no additional facts to retract at the same TTL threshold).
 
-**Cron configuration pattern:**
+**Cron configuration pattern:** Operators define decay policies as a JSON array in the `STIGMEM_DECAY_POLICIES` environment variable. Each entry declares a relation glob, scope, mode, and the relevant timing parameter (`half_life_s` for confidence decay, `ttl_s` for hard retraction). The sweep endpoint evaluates every matching policy against facts in the requested scope — multiple policies can coexist so that different relation families decay at different rates.
 
 ```
 STIGMEM_DECAY_POLICIES=[

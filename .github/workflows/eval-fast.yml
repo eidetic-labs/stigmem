@@ -2,8 +2,28 @@ name: Eval fast subset
 
 on:
   pull_request:
+    paths:
+      - ".github/workflows/eval-fast.yml"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "conftest.py"
+      - "eval/**"
+      - "node/**"
+      - "sdks/stigmem-py/**"
+      - "spec/**"
+      - "data/conformance/**"
   push:
     branches: ["main", "phase/**", "feat/**"]
+    paths:
+      - ".github/workflows/eval-fast.yml"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "conftest.py"
+      - "eval/**"
+      - "node/**"
+      - "sdks/stigmem-py/**"
+      - "spec/**"
+      - "data/conformance/**"
 
 permissions:
   contents: read

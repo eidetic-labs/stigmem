@@ -21,6 +21,9 @@ jobs:
       go: ${{ steps.filter.outputs.go }}
       docs: ${{ steps.filter.outputs.docs }}
       obsidian: ${{ steps.filter.outputs.obsidian }}
+      dashboard_e2e: ${{ steps.filter.outputs.dashboard_e2e }}
+      migration_compat: ${{ steps.filter.outputs.migration_compat }}
+      quickstart: ${{ steps.filter.outputs.quickstart }}
       helm: ${{ steps.filter.outputs.helm }}
       container: ${{ steps.filter.outputs.container }}
     steps:
@@ -92,6 +95,23 @@ jobs:
               - '.github/workflows/ci.yml'
               - 'scripts/check.sh'
               - 'adapters/obsidian-plugin/**'
+            dashboard_e2e:
+              - '.github/workflows/ci.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'apps/dashboard/**'
+            migration_compat:
+              - '.github/workflows/ci.yml'
+              - 'node/migrations/**'
+              - 'node/src/**'
+              - 'node/tests/test_migration_compat.py'
+              - 'scripts/check.sh'
+            quickstart:
+              - '.github/workflows/ci.yml'
+              - 'docker-compose.yml'
+              - 'scripts/quickstart-verify.sh'
+              - 'node/**'
+              - 'deploy/**'
             helm:
               - '.github/workflows/ci.yml'
               - 'infra/helm/**'
@@ -110,6 +130,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -119,10 +141,23 @@ jobs:
       - name: Set up Python
         run: uv python install 3.11
 
+      - name: Changed-file Python strictness
+        run: uv run python scripts/check_changed_python_quality.py
+
       - name: Python fast gates
         env:
           HYPOTHESIS_SEED: "0"
+          PYTEST_TIMEOUT_SECONDS: "120"
+          PYTEST_JUNIT_DIR: artifacts/python-junit
         run: bash scripts/check.sh python
+
+      - name: Upload Python test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-test-artifacts
+          path: artifacts/python-junit/
+          retention-days: 14
 
   node-tests:
     name: TypeScript checks (SDK + MCP + dashboard)
@@ -140,7 +175,17 @@ jobs:
           cache: "pnpm"
 
       - name: TypeScript fast gates
+        env:
+          CHECK_TIMING_OUTPUT: artifacts/node-check-timings.json
         run: bash scripts/check.sh node
+
+      - name: Upload Node timing artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-check-timings
+          path: artifacts/node-check-timings.json
+          retention-days: 14
 
   contract-checks:
     name: Contract checks (OpenAPI + generated SDK)
@@ -201,7 +246,7 @@ jobs:
   coverage-report:
     name: Coverage report
     needs: detect-changes
-    if: needs.detect-changes.outputs.coverage == 'true'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.coverage == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -246,12 +291,18 @@ jobs:
           pnpm --filter stigmem-mcp exec vitest run --exclude 'dist/**' --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
           pnpm --filter dashboard exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
 
+      - name: Summarize per-package coverage
+        run: |
+          uv run python scripts/summarize_coverage.py | tee coverage/summary.md
+          cat coverage/summary.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
           name: coverage-artifacts
           path: |
             coverage/python/coverage.xml
+            coverage/summary.md
             sdks/stigmem-ts/coverage/**
             adapters/mcp/coverage/**
             apps/dashboard/coverage/**
@@ -304,6 +355,87 @@ jobs:
 
       - name: Obsidian fast gates
         run: bash scripts/check.sh obsidian
+
+  dashboard-e2e:
+    name: Dashboard Playwright smoke
+    needs: detect-changes
+    if: needs.detect-changes.outputs.dashboard_e2e == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: pnpm --filter dashboard exec playwright install --with-deps chromium
+
+      - name: Run dashboard browser smoke
+        run: pnpm --filter dashboard exec playwright test
+
+      - name: Upload dashboard test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-playwright-pr
+          path: |
+            apps/dashboard/test-results/
+            apps/dashboard/playwright-report/
+          retention-days: 14
+
+  migration-compat:
+    name: Schema migration compatibility
+    needs: detect-changes
+    if: needs.detect-changes.outputs.migration_compat == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install workspace packages
+        run: uv sync --all-packages
+
+      - name: Run migration compatibility tests
+        run: |
+          mkdir -p artifacts
+          uv run pytest node/tests/test_migration_compat.py -q --tb=short \
+            --timeout=120 \
+            --junitxml=artifacts/migration-compat-junit.xml
+
+      - name: Upload migration test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-compat-pr
+          path: artifacts/migration-compat-junit.xml
+          retention-days: 14
+
+  quickstart-smoke:
+    name: Quickstart Docker smoke
+    needs: detect-changes
+    if: needs.detect-changes.outputs.quickstart == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run quickstart smoke
+        run: bash scripts/quickstart-verify.sh
 
   helm-lint:
     name: Helm chart lint

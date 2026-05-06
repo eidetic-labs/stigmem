@@ -16,6 +16,7 @@ htmlcov/
 .coverage
 coverage.xml
 *.cover
+coverage/
 
 # Node / pnpm
 node_modules/
@@ -23,6 +24,9 @@ node_modules/
 .turbo/
 dist/
 *.tsbuildinfo
+apps/dashboard/coverage/
+adapters/mcp/coverage/
+sdks/stigmem-ts/coverage/
 
 # Environment
 .env
@@ -39,6 +43,9 @@ dist/
 .DS_Store
 Thumbs.db
 
+# Local Codex project instructions
+AGENTS.md
+
 # Docker
 *.log
 
@@ -48,6 +55,5 @@ data/*.db-shm
 data/*.db-wal
 stigmem.db
 logs/
-
 # Eval results (CI-generated artifacts)
 eval/results/

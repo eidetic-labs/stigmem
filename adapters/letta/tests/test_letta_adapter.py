@@ -10,18 +10,17 @@ from __future__ import annotations
 
 import sys
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 # conftest.py adds the adapter directory to sys.path
 from adapter import (
+    _STIGMEM_PREFIX,
     StigmemLettaAdapter,
     _fact_to_text,
     _parse_fact_text,
-    _STIGMEM_PREFIX,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures / helpers
@@ -51,7 +50,10 @@ def _fact(
 
 
 def _adapter() -> StigmemLettaAdapter:
-    return StigmemLettaAdapter(letta_url="http://letta-test:8283", letta_token="tok-test")
+    return StigmemLettaAdapter(  # noqa: S106
+        letta_url="http://letta-test:8283",
+        letta_token="fixture-token-value",  # noqa: S106
+    )
 
 
 @pytest.fixture()
@@ -157,10 +159,11 @@ def test_from_env_reads_url(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_from_env_reads_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    token_value = "fixture-token-value"  # noqa: S105
     monkeypatch.setenv("LETTA_URL", "http://letta")
-    monkeypatch.setenv("LETTA_TOKEN", "tok-xyz")
+    monkeypatch.setenv("LETTA_TOKEN", token_value)
     adapter = StigmemLettaAdapter.from_env()
-    assert adapter._letta_token == "tok-xyz"
+    assert adapter._letta_token == token_value
 
 
 # ---------------------------------------------------------------------------

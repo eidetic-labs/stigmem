@@ -5,6 +5,13 @@ const port = Number(process.env.PLAYWRIGHT_DASHBOARD_PORT ?? "3100");
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
+  reporter: process.env.CI
+    ? [
+        ["list"],
+        ["junit", { outputFile: "test-results/playwright-junit.xml" }],
+        ["html", { outputFolder: "playwright-report", open: "never" }],
+      ]
+    : "list",
   use: {
     baseURL: `http://127.0.0.1:${port}`,
     trace: "on-first-retry",

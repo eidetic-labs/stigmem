@@ -1,9 +1,17 @@
 # Stigmem Threat Model
 
-**Revision:** 1.0 — Phase 12 (2026-05-04)
-**Status:** Under review by design office.
-**Applies to:** Stigmem v1.1-draft and reference node implementation.
-**Spec cross-reference:** §19 (Federation Trust), §20 (Recall & Graph), §22 (Security Hardening).
+**Revision:** 2.0 — v2.0 release (2026-05-05)
+**Status:** Current. Phase 12 items re-reviewed and closed; v2.0 sections §21–§25 added.
+**Previous revision:** 1.0 — Phase 12 (2026-05-04) — archived.
+**Applies to:** Stigmem v2.0 and reference node implementation.
+**Spec cross-reference:** §19 (Federation Trust), §20 (Recall & Graph), §21 (Lazy Instruction Discovery), §22 (Security Hardening), §23 (RTBF Tombstones), §24 (Time-Travel Queries), §25 (Content-Addressed Fact IDs).
+
+### Revision 2.0 change summary
+
+- **Phase 12 hardening closed:** R-01 (mTLS), R-02 (quotas), R-03 (key max-age), R-06 (replay fuzz), R-09 (audit log), R-10 (key-rotation log), R-11 (container), R-12 (agent quota), R-14 (capability token validation) all **Mitigated** — code shipped in Phase 12 PR (#24) and verified in `tls.py`, `rate_limit.py`, `auth.py`, `audit_event.py`, `identity/key_rotation.py`, `identity/capability.py`, `Dockerfile`, and corresponding test suites.
+- **Auth documentation corrected:** §4 assumption 2 and T1-S1 previously stated "Argon2id" but implementation uses SHA-256 (`hashlib.sha256`). Keys are UUID4-derived (128-bit entropy), so offline brute-force is infeasible. Risk remains Low; documentation corrected to match code.
+- **New TB-9 added:** Lazy Instruction Discovery (§21) introduces a new trust boundary between agent runtimes and the instruction recall path.
+- **New risks R-15–R-18:** v2.0 sections §21–§25 introduce four new risks: instruction-scope injection (R-15), tombstone-based DoS (R-16), legal-hold historical data exposure (R-17), and CID field-exclusion tampering (R-18).
 
 ---
 
@@ -90,7 +98,7 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 
 | ID | Boundary | From | To | Authentication |
 |---|---|---|---|---|
-| **TB-1** | Internet → Node API | Agents, end clients | Node HTTP API | API key (Argon2id hashed) + TLS 1.3 |
+| **TB-1** | Internet → Node API | Agents, end clients | Node HTTP API | API key (SHA-256 hashed; 128-bit UUID4 entropy) + TLS 1.3 |
 | **TB-2** | Node ↔ Peer node | Federation replication | HTTP API on peer | mTLS (§22.1) + Ed25519 capability tokens (§19.3) |
 | **TB-3** | Agent tool → Node | MCP / OpenClaw adapter | Node HTTP API | API key; tool call may carry adversarial content |
 | **TB-4** | Node → Storage | Node process | DB file / libSQL / PG | Local filesystem or network (libSQL cloud) |
@@ -98,6 +106,7 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 | **TB-6** | Obsidian adapter → Node | Local plugin or CLI | Node HTTP API | API key stored in plugin config |
 | **TB-7** | Admin → Node | Human / automation | Node admin API | Admin-scope API key |
 | **TB-8** | Recall pipeline → Embedding | Node | Cloud embedding provider | Provider API key (opt-in only) |
+| **TB-9** | Agent runtime → Instruction recall | Agent boot stub (§21.1) | Node `recall_instruction` tool via HTTP API | API key; `instruction:` scope; same transport as TB-1 |
 
 ---
 
@@ -111,6 +120,8 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 | **Obsidian plugin** | Local process with user-granted API key; same trust as authenticated agent | Semi-trusted |
 | **Transparency log** | Append-only external service; provides verifiable audit of manifest rotations | Trusted read-only verifier |
 | **LLM runtime** | Consumes recalled facts via MCP / OpenClaw adapter; may be prompt-injected | Untrusted content source |
+| **Agent boot stub runtime** | Loads instructions via `recall_instruction` (§21.3); instruction content may be adversarially planted | Untrusted content source |
+| **Data subject (RTBF requestor)** | End-user requesting fact erasure via §23 tombstone mechanism | External; interacts via admin |
 | **External attacker** | Unauthenticated or credential-holding adversary attempting exploitation | Untrusted |
 
 ---
@@ -118,7 +129,7 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 ## 4. Assumptions
 
 1. **Key confidentiality:** Ed25519 private signing keys are generated and stored on the operator's infrastructure. If a node signing key is compromised, the adversary can issue arbitrary capability tokens and org manifests. Key rotation (§22.2) and transparency log publication are the recovery mechanisms.
-2. **API key storage:** API keys are Argon2id-hashed at rest. Plaintext API keys are visible only at issuance time. Compromised keys must be revoked and rotated via the admin API.
+2. **API key storage:** API keys are SHA-256-hashed at rest (`hashlib.sha256` in `auth.py`). Note: the v1.0 threat model incorrectly stated "Argon2id" — the implementation uses SHA-256. This is acceptable because keys are generated as UUID4 hex strings (128-bit random entropy), making offline brute-force infeasible regardless of hash speed. Plaintext API keys are visible only at issuance time. Compromised keys must be revoked and rotated via the admin API. Should key generation ever change to a lower-entropy scheme, upgrading to Argon2id would be required.
 3. **mTLS as the federation transport:** TB-2 analysis assumes §22.1 mTLS deployment. Pre-§22.1 deployments (TLS only, no client cert) have a weaker peer-authentication posture; R-01 applies.
 4. **SQLite at-rest encryption is opt-in (SQLCipher).** The default deployment does not encrypt the fact store at rest. Operators in regulated environments must enable SQLCipher explicitly.
 5. **Recall sanitizer is best-effort:** The recall-time content sanitizer (§19.7) strips known prompt-injection sentinels, but cannot exhaustively detect all injection patterns in stored `value` fields.
@@ -146,7 +157,7 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 
 | # | Threat | Class | Description | Existing control | Residual risk |
 |---|---|---|---|---|---|
-| T1-S1 | API key theft | Spoofing | Attacker obtains a leaked API key and impersonates a legitimate agent | Argon2id hashing at rest; keys visible only at issuance | Key rotation not enforced (R-03); no max-age |
+| T1-S1 | API key theft | Spoofing | Attacker obtains a leaked API key and impersonates a legitimate agent | SHA-256 hashing at rest (128-bit UUID4 key entropy; offline brute-force infeasible); keys visible only at issuance; `expires_at` now enforced (R-03 mitigated) | Key revocation must still be performed manually via admin API on suspected compromise |
 | T1-S2 | Unauthenticated endpoint access | Spoofing | Attacker reaches write endpoints without a valid key | All write endpoints require `Authorization` header | — |
 | T1-T1 | Tampered fact payload | Tampering | Attacker replays or modifies a fact assertion with a stolen key | Facts are scoped; replay of old payloads creates duplicate, auditable facts | No per-request integrity seal beyond TLS |
 | T1-R1 | Missing read audit trail | Repudiation | Agent reads sensitive-scope facts; no record of what was returned | Audit log (§22.3) — `fact_read` event type | Audit log is Phase 12 delivery; not yet in v1.0-rc |
@@ -227,6 +238,32 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 | T8-I1 | Fact content sent to external service | Info. disclosure | Every `"{entity} {relation} {value}"` string is sent to the cloud embedding API | Opt-in only; default is offline nomic-embed-text-v1.5 | Operators must understand data flows before enabling cloud embed |
 | T8-D1 | Provider rate limits block recall | Denial of service | Cloud embedding rate limit causes recall failures | Per-provider retry with backoff; local fallback if configured | No automatic local fallback in v1.1-draft |
 
+### 6.9 TB-9 — Agent Runtime → Instruction Recall (§21 Lazy Instruction Discovery)
+
+*Added in Rev 2.0. §21 is Normative in v2.0.*
+
+| # | Threat | Class | Description | Existing control | Residual risk |
+|---|---|---|---|---|---|
+| T9-S1 | Instruction manifest spoofing | Spoofing | Attacker with `instruction:` scope write access stores a fraudulent instruction manifest that overrides the agent's heartbeat contract | Scope enforcement at API layer (§3.5); only keys with `write` on `instruction:` scope can write | Any agent or system holding `write` on `instruction:` scope is a potential vector — least-privilege key issuance is critical |
+| T9-T1 | Adversarial instruction injection | Tampering | Attacker plants adversarial content in an `instruction:` scope fact that the agent loads as operational instruction via `recall_instruction`; unlike T3-S1 (prompt injection in recalled data), injection here lands in the system/instruction context before task processing begins | Scope enforcement restricts who can write to `instruction:`; recall sanitizer (§19.7) | Sanitizer is best-effort (R-05); instruction-scope writes should be treated with admin-tier scrutiny even if the key has only `write` permission (R-15) |
+| T9-R1 | Instruction loads unattributed | Repudiation | `recall_instruction` calls not tied to agent identity in audit log if a shared API key is used | `instruction_audit` event type in §22.3.1 audit log | Shared keys lose per-agent attribution |
+| T9-I1 | Cross-agent instruction leakage | Info. disclosure | Agent with `instruction:` read scope may retrieve instruction documents intended for a different agent | Scope namespacing (e.g., `instruction:acme/agent/cto/` vs `instruction:acme/agent/engineer/`) | Namespace isolation is by convention, not enforced by the protocol; misconfigured key scope allows cross-agent reads |
+| T9-D1 | Instruction manifest flooding | Denial of service | Attacker floods the `instruction:` scope with large manifests, exhausting storage or degrading recall latency | Per-principal write quotas (§22.4, R-02 mitigated) | Quota applies but instruction: scope writes share the `fact_write` bucket with regular writes |
+| T9-E1 | Instruction-scope key with effective admin power | Elevation of privilege | An agent holding `write` on `instruction:` scope can inject directives that cause other agents to perform privileged operations (e.g., "escalate everything to done", "ignore approval gates") | Boot stub MUST embed unconditional prohibitions directly (§21.1.1 guidance: always-applicable rules bypass lazy-load) | Operators must audit which agents hold `instruction:` write scope — this permission is functionally equivalent to agent instruction authoring |
+
+---
+
+### 6.10 TB-7 additions — Tombstones and Time-Travel (§23, §24)
+
+*Added in Rev 2.0. These threats extend TB-7 (Admin → Node) with new v2.0 admin API surfaces.*
+
+| # | Threat | Class | Description | Existing control | Residual risk |
+|---|---|---|---|---|---|
+| T7-T2 | Tombstone forgery | Tampering | Attacker forges a tombstone record (§23) to suppress legitimate facts by crafting a plausible `TombstoneRecord` without a valid Ed25519 signature | Ed25519 signature on tombstone (§23.2.4); `signed_by` must hold admin API key | Requires admin key compromise (T7-S1); if compromised, attacker can issue validly-signed tombstones |
+| T7-T3 | Tombstone `valid_until` extension via CID bypass | Tampering | Federated peer extends a fact's `valid_until` field without changing its CID (§25.2.1 known limitation), keeping tombstoned facts alive past their expiry in peers that accept the extended timestamp | Spec §25.2.1 mandates local rejection of `valid_until` extensions beyond observed values | Implementation must enforce this check; see R-18 |
+| T7-I1 | Legal-hold historical data exposure | Info. disclosure | After RTBF tombstone with `legal_hold: true`, admin key compromise leaks pre-tombstone historical facts via `as_of` time-travel queries (§24.3.2) | Legal-hold `as_of` responses restricted to admin API keys; `rtbf_legal_hold_issued` audit event required | Admin key compromise post-tombstone retroactively exposes erased data — see R-17 |
+| T7-D2 | Tombstone DoS | Denial of service | Attacker with compromised admin key issues tombstones for key entity URIs, permanently suppressing facts and disrupting dependent agents | Tombstone requires admin key (`signed_by` MUST hold active admin API key at issuance); `admin_action` audit event | Tombstone is irreversible without a `TombstoneRevocation` record — blast radius is high for any entity tombstoned (R-16) |
+
 ---
 
 ## 7. Risk Register
@@ -236,66 +273,95 @@ Each risk is rated on:
 - **Impact**: Critical / High / Medium / Low
 - **Priority**: product of the two
 
-| ID | Threat refs | Finding | Likelihood | Impact | Priority | Spec ref | Phase 12? | Status |
+| ID | Threat refs | Finding | Likelihood | Impact | Priority | Spec ref | Status | Closed by |
 |---|---|---|---|---|---|---|---|---|
-| R-01 | T2-S1 | No mTLS: federation peer impersonation possible without client cert verification | Medium | High | High | §22.1 | Yes | Open |
-| R-02 | T1-D1, T1-D2, T3-D1 | No per-principal rate limits on writes and recalls | High | Medium | High | §22.4 | Yes | Open |
-| R-03 | T1-S1, T7-S1 | No enforced API key max-age; keys do not expire | Medium | High | High | §22.2 | Yes | Open |
-| R-04 | T4-I1 | At-rest encryption (SQLCipher) opt-in; default deployment stores facts in plaintext | Medium | High | High | §3 | Partial | Open |
-| R-05 | T3-S1 | Prompt injection via adversarial facts recalled into agent context | High | High | Critical | §19.7 | Mitigated (sanitizer) | Residual |
-| R-06 | T2-T1 | Federation replay protection fuzz test coverage incomplete | Low | High | Medium | §22.5 | Yes | Open |
-| R-07 | T6-S1 | Obsidian plugin API key stored in plaintext settings | Low | Medium | Low | — | No | Accepted |
-| R-08 | T4-T2, T4-I2 | libSQL cloud backend: facts in transit to Turso without additional app-layer encryption | Medium | Medium | Medium | §3.2 | No | Accepted (operator TLS) |
-| R-09 | T1-R1, T7-R1 | No general-purpose audit log for sensitive scope reads or admin actions | High | Medium | High | §22.3 | Yes | Open |
-| R-10 | T5-R1 | Org manifest rotation events not consistently submitted to transparency log | Low | Medium | Low | §19.2.6, §22.7 | Yes | Open |
-| R-11 | — | Container not distroless; Linux capabilities not fully dropped | Low | Low | Low | §22.6 | Yes | Open |
-| R-12 | T3-D1, T3-E1 | Agent tool surface: no per-agent budget or rate limit without §22.4 | High | Medium | High | §22.4, §21 | Yes | Open |
-| R-13 | T8-I1 | Cloud embedding opt-in: fact content sent to external provider when enabled | Low | Medium | Low | §20.2 | No | Accepted (opt-in) |
-| R-14 | T2-E1 | Capability token scope/verb not fully validated at federation admission in v1.0-rc | Low | High | Medium | §19.3.3 | Amended in §22 | Open |
+| R-01 | T2-S1 | No mTLS: federation peer impersonation possible without client cert verification | Medium | High | High | §22.1 | **Mitigated** | Phase 12: `tls.py` (TLS 1.3 floor, `CERT_REQUIRED`), `test_mtls.py` (491 lines) |
+| R-02 | T1-D1, T1-D2, T3-D1 | No per-principal rate limits on writes and recalls | High | Medium | High | §22.4 | **Mitigated** | Phase 12: `rate_limit.py` token-bucket quotas, migration `022_quota_buckets.sql`, `test_quota.py`. Kill-switch at both limits=0 (dev only). |
+| R-03 | T1-S1, T7-S1 | No enforced API key max-age; keys do not expire | Medium | High | High | §22.2 | **Mitigated** | Phase 12: `expires_at` enforced in `auth.py:113`; `key_rotation.py`; `test_phase12_key_rotation.py` (799 lines). |
+| R-04 | T4-I1 | At-rest encryption (SQLCipher) opt-in; default deployment stores facts in plaintext | Medium | High | High | §3 | **Accepted** | Deliberate tradeoff for deployment simplicity; operators in regulated environments must enable SQLCipher. |
+| R-05 | T3-S1, T9-T1 | Prompt injection via adversarial facts recalled into agent context; now also via `instruction:` scope (§21) | High | High | Critical | §19.7, §22.5 | **Residual** | Sanitizer shipped (§19.7); fuzz tests added Phase 12 (`test_phase12_replay_fuzz.py`). Instruction-scope injection (R-15) is a distinct escalation of this class. |
+| R-06 | T2-T1 | Federation replay protection fuzz test coverage incomplete | Low | High | Medium | §22.5 | **Mitigated** | Phase 12: `test_phase12_replay_fuzz.py` (394 lines); nonce cache survival test. |
+| R-07 | T6-S1 | Obsidian plugin API key stored in plaintext settings | Low | Medium | Low | — | **Accepted** | Requires local filesystem access; rotate key if another plugin suspected. |
+| R-08 | T4-T2, T4-I2 | libSQL cloud backend: facts in transit to Turso without additional app-layer encryption | Medium | Medium | Medium | §3.2 | **Accepted** | Operator TLS; Turso data residency controls apply. |
+| R-09 | T1-R1, T7-R1 | No general-purpose audit log for sensitive scope reads or admin actions | High | Medium | High | §22.3 | **Mitigated** | Phase 12: `audit_event.py` (13 event types, WAL semantics, `fact_audit_log` table); `routes/admin_audit.py`; `test_admin_audit.py` (205 lines). |
+| R-10 | T5-R1 | Org manifest rotation events not consistently submitted to transparency log | Low | Medium | Low | §19.2.6, §22.2.3 | **Mitigated** | Phase 12: `key_rotation.py` emits `KeyRotationLogEntry` before activation; `key_rotation` audit event (§22.3.1). |
+| R-11 | — | Container not distroless; Linux capabilities not fully dropped | Low | Low | Low | §22.6 | **Mitigated** | Phase 12: `Dockerfile` updated to distroless base, non-root UID 1000, `readOnlyRootFilesystem`, seccomp; Helm chart updated. |
+| R-12 | T3-D1, T3-E1 | Agent tool surface: no per-agent budget or rate limit without §22.4 | High | Medium | High | §22.4 | **Mitigated** | Same as R-02; per-agent quota dimension in §22.4. |
+| R-13 | T8-I1 | Cloud embedding opt-in: fact content sent to external provider when enabled | Low | Medium | Low | §20.2 | **Accepted** | Opt-in only; default is offline nomic-embed-text-v1.5. Operators must review data classification before enabling. |
+| R-14 | T2-E1 | Capability token scope/verb not fully validated at federation admission in v1.0-rc | Low | High | Medium | §19.3.3 | **Mitigated** | Phase 12: normative verb/object validation in `identity/capability.py`; §22 amendments shipped. |
+| R-15 | T9-T1, T9-E1 | Instruction-scope write confers effective instruction-authoring authority over any agent using §21 lazy discovery | Low | Critical | High | §21.1, §3.5 | **Open** | Mitigations: scope-based access control (existing); operators must treat `instruction:` write as admin-equivalent and audit key grants. Boot stub MUST embed unconditional prohibitions (§21.1.1). No current technical enforcement gate separating `instruction:` write from `write` permission. |
+| R-16 | T7-D2 | Admin key compromise enables tombstone DoS: irreversible entity suppression (§23) | Low | High | Medium | §23.2 | **Open** | Requires admin key. Tombstone requires `TombstoneRevocation` to undo — no self-healing path. Mitigations: admin key rotation (R-03 mitigated); `admin_action` audit event; tombstone audit trail. |
+| R-17 | T7-I1 | Legal-hold tombstone + admin key compromise leaks pre-tombstone historical facts via `as_of` (§24) | Low | High | Medium | §24.3.2 | **Open** | Requires admin key compromise post-tombstone. Legal-hold `as_of` facts are visible only to admin keys; `rtbf_legal_hold_issued` audit event required. Residual: RTBF data subject assumes erasure but erased data exists in time-travel path under legal hold. |
+| R-18 | T7-T3 | Federated peer can extend `valid_until` or supply inflated `source_trust` without changing CID (§25.2.1 exclusion) | Low | Medium | Low | §25.2.1 | **Open** | Spec §25.2.1 mandates local `valid_until` extension rejection and local `source_trust` recomputation. Implementation compliance should be verified in integration tests; no regression test currently covers this path. |
 
 ### Risk register key
 
-- **Open** — not yet mitigated; awaiting Phase 12 delivery or design decision.
-- **Residual** — partially mitigated; residual risk documented.
+- **Open** — not yet mitigated; requires design decision or implementation work.
+- **Mitigated** — control implemented and verified (code and test exist); no residual risk beyond stated notes.
+- **Residual** — partially mitigated; residual risk documented and accepted.
 - **Accepted** — risk acknowledged; no planned mitigation for the stated reason.
 
 ---
 
-## 8. Mitigations Summary (Phase 12 Targets)
+## 8. Mitigations Summary
 
-| Risk | Mitigation | Spec section |
+### 8.1 Phase 12 — shipped and verified (v2.0 baseline)
+
+| Risk | Mitigation | Spec section | Evidence |
+|---|---|---|---|
+| R-01 | mTLS on all federation ports; TLS 1.3 floor; SAN/entity_uri binding | §22.1 | `tls.py`; `test_mtls.py` (491 lines) |
+| R-02 | Per-principal token-bucket quotas on 7 dimensions | §22.4 | `rate_limit.py`; `test_quota.py`; migration `022_quota_buckets.sql` |
+| R-03 | Enforced key max-age (`expires_at`); rotation runbook | §22.2 | `auth.py:113`; `key_rotation.py`; `test_phase12_key_rotation.py` (799 lines) |
+| R-05 | Recall-time content sanitizer + fuzz-tested replay protection | §19.7, §22.5 | `test_phase12_replay_fuzz.py` (394 lines) |
+| R-06 | Fuzz tests on federation replay protection; nonce cache survival test | §22.5 | `test_phase12_replay_fuzz.py` |
+| R-09 | 13-event-type audit log with WAL ordering and 90-day retention | §22.3 | `audit_event.py`; `routes/admin_audit.py`; `test_admin_audit.py` (205 lines) |
+| R-10 | `key_rotation` log entry mandatory on every rotation; logged before activation | §22.2.3 | `key_rotation.py` |
+| R-11 | Distroless base image; non-root UID 1000; read-only fs; seccomp | §22.6 | `Dockerfile`; Helm chart |
+| R-12 | Per-agent quota dimension (same as R-02) | §22.4 | Same as R-02 |
+| R-14 | Normative verb/object validation at capability token admission | §19.3.3 | `identity/capability.py` |
+
+### 8.2 Open risks — v2.0 (require follow-up)
+
+| Risk | Recommended mitigation | Priority |
 |---|---|---|
-| R-01 | mTLS on all federation ports; TLS 1.3 floor; SAN/entity_uri binding | §22.1 |
-| R-02 | Per-principal token-bucket quotas on 7 dimensions | §22.4 |
-| R-03 | Enforced key max-age; expiring-soon surface; rotation runbook | §22.2 |
-| R-05 | Recall-time content sanitizer (shipped); fuzz-tested (Phase 12) | §19.7, §22.5 |
-| R-06 | Fuzz tests on federation replay protection; nonce cache survival test | §22.5 |
-| R-09 | 13-event-type audit log with WAL ordering and 90-day retention | §22.3 |
-| R-10 | `key_rotation` log entry mandatory on every rotation; logged before activation | §22.2.3 |
-| R-11 | Distroless base image; non-root UID 1000; read-only fs; seccomp | §22.6 |
-| R-12 | Same as R-02; per-agent quota dimension in §22.4 | §22.4 |
-| R-14 | Normative verb/object validation at capability token admission (§22 amendments) | §19.3.3 |
+| R-15 | Add a dedicated `instruction_write` permission tier separate from general `write`; require admin approval to grant it; enforce in key issuance API | High |
+| R-16 | Document tombstone-DoS runbook; require second admin approval for tombstone issuance on entity URIs with >N dependent agents | Medium |
+| R-17 | Add integration test asserting that non-admin keys cannot access legal-hold `as_of` facts; add operator runbook for legal-hold management | Medium |
+| R-18 | Add integration test: assert federation ingest rejects `valid_until` extension and local `source_trust` re-computation; link to §25.2.1 | Low |
 
 ---
 
-## 9. Residual Risk After Phase 12
+## 9. Residual Risk — v2.0 Baseline
 
-After Phase 12 hardening is complete:
+Phase 12 hardening is complete. The following risks remain in the v2.0 baseline.
 
-1. **Prompt injection (R-05)** remains the most difficult residual risk. The sanitizer (§19.7) provides defense-in-depth but cannot exhaustively block novel injection patterns. Mitigations: sandboxed agent execution at the agent-runtime layer; token budget controls that limit context window exposure.
+### 9.1 Carried from v1.x (unchanged)
+
+1. **Prompt injection (R-05)** remains the most difficult residual risk. The sanitizer (§19.7) provides defense-in-depth but cannot exhaustively block novel injection patterns. §21 Lazy Instruction Discovery escalates the severity: adversarial content in `instruction:` scope lands in agent system context, not just in recalled data. See R-15 for the distinct `instruction:` scope risk.
 
 2. **At-rest encryption (R-04)** is operator-configurable but not default-on. Operators handling regulated data must explicitly enable SQLCipher. This is a deliberate tradeoff for deployment simplicity.
 
-3. **Obsidian plugin key storage (R-07)** depends on the OS keychain or Obsidian's own plugin isolation, which Stigmem does not control. Mitigation: rotate keys promptly if another plugin is suspected of access.
+3. **Obsidian plugin key storage (R-07)** depends on OS keychain or Obsidian's own plugin isolation. Rotate keys promptly if another plugin is suspected of access.
 
-4. **Cloud embedding data residency (R-13)** is an accepted risk for operators who opt into cloud embedding. Fact payloads are sent to the embedding provider. Operators must review their data classification before enabling.
+4. **Cloud embedding data residency (R-13)** is accepted for opt-in cloud embedding. Operators must review data classification before enabling.
 
-5. **HLC cursor manipulation (T2-T2)** has no current normative bound. Operators who run federated deployments should monitor for anomalous HLC drift.
+5. **HLC cursor manipulation (T2-T2)** has no current normative bound. Operators running federated deployments should monitor for anomalous HLC drift.
+
+### 9.2 New residual risks from v2.0 features
+
+6. **Instruction-scope write authority (R-15)** is the highest-priority new risk. Any key with `write` permission to `instruction:` scope can author agent instructions. Until a dedicated `instruction_write` permission tier exists, operators must treat `instruction:` write grants as admin-equivalent and audit them accordingly.
+
+7. **Tombstone DoS (R-16)** is irreversible without a `TombstoneRevocation` record. Admin key compromise that leads to tombstone issuance cannot be automatically remediated. Operators must rotate admin keys immediately on suspected compromise.
+
+8. **Legal-hold data exposure (R-17)** means RTBF-tombstoned data with `legal_hold: true` remains accessible via time-travel queries to admin key holders. Data subjects should be informed that legal holds preserve historical data for lawful purposes.
+
+9. **CID field-exclusion tampering (R-18)** is a protocol-level correctness concern: `valid_until` extension and `source_trust` inflation by federation peers must be rejected locally per §25.2.1. Integration test coverage is needed to confirm this invariant holds in the implementation.
 
 ---
 
 ## 10. Review and Maintenance
 
 - This threat model is reviewed on every spec revision that introduces a new trust boundary or modifies an existing one.
-- Phase 12 closed items will be updated to **Mitigated** in the risk register upon hardening spec delivery and regression test confirmation.
+- **Rev 2.0 (2026-05-05):** Phase 12 items closed; v2.0 spec sections §21–§25 modeled; SHA-256/Argon2id documentation corrected; R-15–R-18 added.
+- R-15, R-16, R-17, and R-18 are open and require implementation or documentation follow-up — see §8.2 for recommended mitigations.
 - Community pen-test findings that fall outside this model's scope should be submitted via the [Community Pen-Test Handbook](../../docs/docs/security/pen-test.md).

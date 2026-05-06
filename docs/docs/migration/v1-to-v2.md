@@ -1,6 +1,7 @@
 ---
 title: Migrating from v1.x to v2.0
 sidebar_label: v1.x → v2.0
+description: "Step-by-step upgrade guide for Stigmem v1.x to v2.0 — federation trust, recall, lazy instructions, security hardening, RTBF, time-travel, CIDs."
 audience: Operator
 ---
 
@@ -39,6 +40,32 @@ v2.0 introduces new database migrations, mandatory mTLS for federation, and new 
 5. **RTBF tombstones (§23)** — enable the tombstone API and federation route.
 6. **Time-travel queries (§24)** — available immediately after §23 migrations.
 7. **Content-addressed IDs (§25)** — run `stigmem backfill-cids` last (non-blocking).
+
+---
+
+## What changed, what's experimental, what to watch
+
+### Experimental features (not production-ready for all workloads)
+
+Four v2.0 features are marked **EXPERIMENTAL** and carry warnings in their spec pages. They are shipped but are not yet recommended for all production use cases:
+
+| Feature | Section | Primary risk | Constraint |
+|---------|---------|-------------|------------|
+| Lazy Instruction Discovery | §21 | Prompt injection via mutable manifest | Do not use for agents handling sensitive data or irreversible tool use until GA |
+| RTBF Tombstones | §23 | Federated erasure may silently fail across nodes | Do not rely on tombstone federation for GDPR/CCPA compliance in multi-node deployments |
+| Time-Travel Queries | §24 | `as_of` + tombstones can return post-erased data | Test isolation behavior on your production backend before compliance use |
+| Content-Addressed Fact IDs | §25 | CID-less facts accepted from upgraded peers | Do not rely on CID as a security control in untrusted federation topologies |
+
+See the [Experimental Features reference page](../reference/experimental-features.md) for the full canonical list and GA criteria.
+
+### Operator warnings (GA features with non-obvious risks)
+
+| Feature | Risk | Required action |
+|---------|------|-----------------|
+| §22.1 mTLS | Silent plaintext fallback behind reverse proxies | Set `STIGMEM_MTLS_REQUIRED=true` in production |
+| §19.4 Source-trust cache | Per-worker incoherence in multi-worker deployments | Set `STIGMEM_TRUST_CACHE_BACKEND=redis` for production multi-worker |
+| §6.7–§6.8 N-node backpressure/scope propagation | Draft spec; relay topologies not yet conformance-tested | Test your topology in staging |
+| §19.5 Quarantine Garden | `trust_mode=strict` without quarantine garden permanently drops low-trust facts | Pre-create quarantine garden before enabling strict mode |
 
 ---
 
@@ -442,6 +469,10 @@ The `cid` column and `fact_cid_aliases` table can be dropped. Facts revert to UU
 | `STIGMEM_REPLAY_WINDOW_S` | `300` | §22 |
 | `STIGMEM_TOMBSTONE_CACHE_TTL_S` | `60` | §23 |
 | `STIGMEM_CID_BACKFILL_BATCH` | `1000` | §25 |
+| `STIGMEM_MTLS_REQUIRED` | `false` | §22.1 — set `true` when a reverse proxy terminates TLS |
+| `STIGMEM_TRUST_CACHE_BACKEND` | `memory` | §19.4 — set `redis` for multi-worker deployments |
+| `STIGMEM_REDIS_URL` | _(none)_ | §19.4 — required when `STIGMEM_TRUST_CACHE_BACKEND=redis` |
+| `STIGMEM_REQUIRE_CID` | `false` | §25 — set `true` to reject CID-less facts from upgraded peers |
 
 ---
 

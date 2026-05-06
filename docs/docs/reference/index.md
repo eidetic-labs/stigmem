@@ -34,3 +34,9 @@ Engineer-facing deep dives into the node internals — single-host layout, feder
 Definitions of domain terms used throughout the docs and spec.
 
 [Go to Glossary →](./glossary/index.md)
+
+## Experimental Features
+
+Canonical list of features shipped with EXPERIMENTAL status in v2.0 — their risks, constraints, and GA criteria.
+
+[Go to Experimental Features →](./experimental-features.md)

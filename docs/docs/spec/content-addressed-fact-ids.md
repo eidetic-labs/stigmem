@@ -13,6 +13,13 @@ SHA-256 CIDs for deduplication, tamper detection, dual UUID/CID addressing.
 
 **Authoritative source:** [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md)
 
+:::caution EXPERIMENTAL
+CID-based federation tamper detection is not yet enforced by default. The dual-format migration window (12 months from `phase13_ga_at`) means CID-less facts from upgraded peers are currently accepted. Until §25 reaches GA:
+
+- Do not rely on CID verification as a security control in untrusted federation topologies.
+- Set `STIGMEM_REQUIRE_CID=true` in isolated test environments to validate your fact pipeline before enforcement is on by default.
+:::
+
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::

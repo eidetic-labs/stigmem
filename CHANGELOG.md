@@ -7,6 +7,47 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ---
 
+## [2.0.0] — 2026-05-05
+
+**Spec:** [v2.0](spec/stigmem-spec-v2.0.md) — §19–§25 promoted to normative.
+
+### Added
+
+- **Federation trust (§19)** — org manifest signing (Ed25519 + RFC 8785 JCS), transparency log integration (Rekor), capability tokens with 6 verbs and 90-day expiry, source-trust scoring, quarantine garden, recall-time content sanitizer.
+- **Recall & graph (§20)** — materialized `entity_edges` graph index, vector embeddings via `sqlite-vec` (nomic-embed-text-v1.5 default, 768-dim), hybrid recall pipeline (BM25 + ANN + graph BFS + MMR packing), memory cards (per-entity 4000-token summaries), subscriptions with webhook delivery, causal/derivation links (`derived_from` DAG).
+- **Lazy instruction discovery (§21)** — boot stub (≤500 tokens), instruction manifest (≤1000 tokens), `recall_instruction` tool contract, task-type preloads with `guarantee_load`, discovery audit (Recall@k, Hit@k, miss-rate), 5-stage file → stigmem migration, `stigmem instruction migrate` CLI.
+- **Security hardening (§22)** — mTLS federation transport (TLS 1.3 floor), Ed25519 key rotation (90-day dual-trust period), structured audit log (13 event types, write-ahead, 90-day retention), per-principal token-bucket quotas (7 dimensions, HTTP 429), replay protection (±5 min window + nonce cache), container baseline (distroless, non-root, seccomp).
+- **RTBF tombstones (§23)** — `TombstoneRecord` shape with signed `entity_uri` + scope suppression, recall-time filter (direct + graph reference + memory card), federation propagation with signature verification, `TombstoneRevocation` for legal holds, `GET /v1/federation/tombstones` poll route.
+- **Time-travel queries (§24)** — `as_of` parameter on `/v1/recall` and `/v1/facts`, fact visibility at time T, append-only `fact_retractions` log, retroactive tombstone suppression, `legal_hold: true` preserves facts for admin `as_of` access, `tombstone_notices` response annotation.
+- **Content-addressed fact IDs (§25)** — CID format (`sha256:` + hex SHA-256 of RFC 8785 canonical body over 6 fields), `fact_cid_aliases` table for dual UUID/CID addressing, 12-month migration window, federation tamper detection (`cid_mismatch` rejection), `stigmem backfill-cids` CLI, `POST /v1/facts/:id/verify-cid` integrity check.
+- **Storage backend trait (Phase 8)** — `StorageBackend` abstraction, `LibSQLBackend` for Turso/libSQL embedded-replica, `STIGMEM_STORAGE_BACKEND` env var, backend-parameterized test runner.
+- **Conformance vectors** — v2.0 wire-format vectors for §19–§25 in `data/conformance/v2.0/`.
+- **Migration guide** — `docs/docs/migration/v1-to-v2.md` with breaking-change matrices, cutover order, and rollback notes.
+
+### Changed
+
+- OpenAPI spec version bumped to 2.0.0.
+- `FactRecord` extended with `cid`, `derived_from`, `attestation_chain`, `source_trust` fields.
+- Retraction semantics: `confidence = 0.0` in-place retained for live-query compat; authoritative retraction timestamp now in `fact_retractions` table.
+- Documentation site information architecture restructured for §19–§25 content.
+
+### Migration
+
+- **013a** — `tombstones` + `tombstone_revocations` tables.
+- **013b** — `facts.cid` column + `fact_cid_aliases` table.
+- **013c** — `fact_retractions` append-only log.
+- Apply order: 013a → 013c → 013b (foreign-key dependencies).
+- Run `stigmem backfill-cids` after migrations to populate CIDs for pre-v2.0 facts.
+
+### Breaking
+
+- Federation requires mTLS (TLS 1.3+) and org manifests — plaintext peer connections rejected.
+- Mixed v1.x/v2.0 federation is not supported; all peers must upgrade together.
+- `STIGMEM_EMBED_DIMENSIONS` is immutable after first embedding write; changing requires full re-index.
+- Graph depth capped at 3 (`depth > 3` returns HTTP 400 `graph_depth_exceeded`).
+
+---
+
 ## [Unreleased] — Phase 10 — Instruction migration + lazy instruction discovery (§21)
 
 ### Added

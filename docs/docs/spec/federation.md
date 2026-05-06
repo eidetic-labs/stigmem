@@ -230,6 +230,10 @@ The following invariants MUST hold at all times:
    a partition. All divergent writes MUST be ingested; contradictions are surfaced to
    callers.
 
+:::note Draft sections — §6.7 and §6.8
+Multi-node relay topologies (3+ nodes) are supported but §6.7 (backpressure) and §6.8 (scope propagation) are draft specifications not yet covered by the conformance test suite. Test your topology before relying on it in production. Scope propagation behavior in relay chains will be formally validated in v2.1.
+:::
+
 ### §6.7 N-node Backpressure Patterns — v0.8 Draft {#section-6-7}
 
 > **v0.8 status:** These patterns were identified during Phase 6 4-node local topology

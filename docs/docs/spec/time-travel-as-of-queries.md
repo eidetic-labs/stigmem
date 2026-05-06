@@ -13,6 +13,14 @@ as_of parameter on /v1/recall and /v1/facts; append-only retraction log.
 
 **Authoritative source:** [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md)
 
+:::caution EXPERIMENTAL
+Time-travel semantics interact with tombstones in ways that are still being finalized. Specifically:
+
+- Queries at a time `T` before a tombstone's `issued_at` may return erased data on some backends. Review your deletion workflow before relying on this for compliance.
+- Isolation guarantees differ between SQLite (`BEGIN IMMEDIATE`) and PostgreSQL (`READ COMMITTED`). Test your workload on the production backend before going live.
+- `legal_hold` fact handling requires the admin key; key management for this path is not yet documented.
+:::
+
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::

@@ -13,6 +13,14 @@ Cryptographic tombstones, recall-time suppression, federation propagation, legal
 
 **Authoritative source:** [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md)
 
+:::caution EXPERIMENTAL
+The tombstone signing format and federation propagation rules are still under security review. Until §23 reaches GA:
+
+- Do **not** rely on tombstone federation for compliance workflows in multi-node deployments.
+- Tombstone `DELETE` operations are locally reliable; cross-node propagation is best-effort.
+- Operators with GDPR/CCPA obligations should implement manual deletion coordination across nodes until federation is confirmed correct.
+:::
+
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::

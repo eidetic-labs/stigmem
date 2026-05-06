@@ -320,6 +320,10 @@ Where `t(fact.source)` is recomputed live at recall time using current peer stat
 
 Recall results SHOULD include `effective_confidence` alongside `confidence` when `trust_mode` is `strict` or `relaxed`. Callers MUST NOT rely on `effective_confidence` being identical to `confidence`.
 
+:::warning Multi-worker deployments
+The default source-trust cache is per-worker and in-memory. In multi-worker deployments (gunicorn, uvicorn `--workers`), each worker holds an independent cache. Cache misses and stale entries can cause non-deterministic trust scoring. For production multi-worker deployments, configure `STIGMEM_TRUST_CACHE_BACKEND=redis` and provide `STIGMEM_REDIS_URL`. This will be required in a future release.
+:::
+
 #### §19.4.5 Bounds and Defaults {#section-19-4-5}
 
 - `t` is always clamped to [0.0, 1.0].
@@ -366,6 +370,10 @@ When `trust_mode: strict` is set (§19.4.3), the node MUST route inbound federat
 When no quarantine garden has been designated, the node MUST reject these facts with HTTP 403 `trust_below_threshold` rather than silently dropping them.
 
 The node MAY also quarantine facts that trigger the recall-time sanitizer (§19.7) in `quarantine` enforcement mode.
+
+:::warning Pre-flight check: configure a quarantine garden before enabling strict mode
+Enabling `trust_mode=strict` without configuring a quarantine garden will cause all low-trust facts (score < 0.2) to be permanently rejected with `403 trust_below_threshold`. Before setting `trust_mode=strict`, create a quarantine garden and set `quarantine_garden_id` in your federation config. A future release will add a startup check that enforces this.
+:::
 
 #### §19.5.5 Promote and Reject Mechanics {#section-19-5-5}
 

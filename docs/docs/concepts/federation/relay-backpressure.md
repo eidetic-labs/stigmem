@@ -110,7 +110,7 @@ For multi-hop topologies:
 
 ## See also
 
-- [Federation guide](/docs/build/guides/federation) — peer registration, pull protocol, and PeerDeclaration setup
-- [Scope propagation guide](/docs/build/guides/scope-propagation) — scope invariants in N-node topologies
+- [Federation guide](./)  — peer registration, pull protocol, and PeerDeclaration setup
+- [Scope propagation guide](./scope-propagation) — scope invariants in N-node topologies
 - Spec §6.7 — N-node backpressure patterns
 - Spec §6 — Federation protocol

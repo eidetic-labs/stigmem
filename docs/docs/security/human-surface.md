@@ -125,5 +125,5 @@ Every UI action maps to a REST endpoint:
 
 - [OIDC / SSO Integration](./oidc-sso) — how to sign in via your organisation's IdP instead of a static key
 - [Authentication](./authentication) — full API key and permission model
-- [Asserting Facts](./asserting-facts) — `curl` examples for the same operations
-- [Gardens API](./asserting-facts) — spec §17 for the data model behind the Gardens tab
+- [Asserting Facts](../concepts/facts/asserting-facts) — `curl` examples for the same operations
+- [Gardens API](../concepts/facts/asserting-facts) — spec §17 for the data model behind the Gardens tab

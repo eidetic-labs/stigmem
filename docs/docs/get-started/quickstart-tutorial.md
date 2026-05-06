@@ -245,11 +245,11 @@ Re-running `federation-init` (e.g., after `make down && make up`) is safe — HT
 
 ## What's next
 
-- [Assert facts guide](../../concepts/facts/asserting-facts.md) — full fact schema, scopes, and TTLs
-- [Federation guide](../../concepts/federation/federation.md) — scope enforcement, conflict resolution, production keys
-- [4-node topology](../../concepts/federation/federation-4node.md) — full-mesh setup, failure injection, soak metrics
-- [API reference](/docs/next/reference/api/index.md) — full endpoint reference
-- [Architecture](/docs/next/reference/architecture/index.md) — HLC, PeerDeclaration internals, spec §6
+- [Assert facts guide](../concepts/facts/asserting-facts.md) — full fact schema, scopes, and TTLs
+- [Federation guide](../concepts/federation/) — scope enforcement, conflict resolution, production keys
+- [4-node topology](../concepts/federation/federation-4node.md) — full-mesh setup, failure injection, soak metrics
+- [API reference](../reference/api/index.md) — full endpoint reference
+- [Architecture](../reference/architecture/index.md) — HLC, PeerDeclaration internals, spec §6
 
 ## Teardown
 

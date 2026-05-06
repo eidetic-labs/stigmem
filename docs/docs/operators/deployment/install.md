@@ -9,7 +9,7 @@ audience: Operator
 **Audience:** node operators installing Stigmem for the first time, or migrating an existing bare-metal install to Docker.
 
 :::tip Operator handbook
-For narrative runbooks covering Fly.io, Helm, systemd, PaaS, and backend selection, see **[Operating Stigmem → Deploy runbooks](./runbooks/deploy-runbooks)**.
+For narrative runbooks covering Fly.io, Helm, systemd, PaaS, and backend selection, see **[Operating Stigmem → Deploy runbooks](../runbooks/deploy-runbooks)**.
 :::
 
 The reference node ships as a Docker image. Docker Compose is the recommended deployment path for both local development and single-host production. For development against source, see [Running without Docker](#running-without-docker).

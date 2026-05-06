@@ -403,10 +403,10 @@ See the [Time-Travel Queries guide](../concepts/lifecycle/time-travel.md).
 
 ## See also
 
-- [Tutorial: SDK Quickstart](../tutorials/sdk-quickstart.md) — assert, recall, and subscribe in Python / TS / Go
-- [Recall guide](../concepts/recall/recall.md) — hybrid recall, weight tuning, fast-path
+- [Tutorial: SDK Quickstart](../get-started/sdk-quickstart.md) — assert, recall, and subscribe in Python / TS / Go
+- [Recall guide](../concepts/recall/) — hybrid recall, weight tuning, fast-path
 - [Memory Cards guide](../concepts/recall/memory-cards.md) — card lifecycle and divergence policy
 - [Asserting facts](../concepts/facts/asserting-facts.md) — detailed fact write patterns
 - [Querying facts](../concepts/facts/querying-facts.md) — structured predicate queries
-- [Python SDK Reference](/docs/build/sdks/python) — equivalent Python client
+- [Python SDK Reference](./python) — equivalent Python client
 - [Go SDK Reference](./go.md) — Go client

@@ -43,7 +43,7 @@ Letta is an agent framework with first-class persistent memory blocks. The adapt
 - Decay policies were useful for memory block hygiene: Letta agent memory tends to accumulate stale "task status" facts. The `memory:last_seen` retract policy cleaned these automatically.
 - Contradiction detection fired frequently for task-status facts when two agents held different views. The Letta pilot drove the `alt_value` / `alt_confidence` fields in the `SynthesisEntry` response — callers needed to see the losing value, not just know a contradiction existed.
 
-**See also:** [Synthesis guide](./synthesis), [Decay guide](./decay)
+**See also:** [Synthesis guide](../concepts/lifecycle/synthesis), [Decay guide](../concepts/lifecycle/decay)
 
 ## Cognee
 
@@ -61,7 +61,7 @@ Cognee builds knowledge graphs from unstructured text. The adapter bridges stigm
 - The `source` field (provenance) was well-received for audit purposes: Cognee users needed to know which document a fact came from. The adapter populates `source=cognee:doc:<hash>`.
 - Fuzzy entity resolution  was flagged as important: Cognee often extracts the same entity with slightly different text forms (`"alice"` vs `"Alice Smith"`). The fuzzy entity resolver was accelerated by this feedback.
 
-**See also:** Fuzzy entity resolver guide ; [Namespace registry spec §9](/docs/spec/)
+**See also:** Fuzzy entity resolver guide ; [Namespace registry spec §9](../spec/)
 
 ## Cross-pilot patterns
 

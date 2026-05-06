@@ -125,17 +125,17 @@ curl -X POST http://localhost:8765/v1/facts \
 curl "http://localhost:8765/v1/facts?entity=user:alice&relation=memory:role"
 ```
 
-See the [Quickstart guide](../quickstart) for a full walkthrough including the MCP adapter setup and your first federated peer.
+See the [Quickstart guide](../get-started) for a full walkthrough including the MCP adapter setup and your first federated peer.
 
 ---
 
 ## What Memory Garden is not
 
-- **Not a generic RAG system.** Memory Garden does retrieval — `POST /v1/recall` fuses lexical (FTS5/BM25), dense vector (sqlite-vec ANN), and graph-expansion signals — but the unit of retrieval is a *typed atomic fact*, not an opaque text chunk. Each embedding has an explicit `(entity, relation, value)` contract. Recall results are filterable by entity, scope, confidence, and `as_of`; chunks are not. A memory-card fast path lets 80–90% of recalls short-circuit raw-fact ranking entirely. See [How recall works](../../concepts/recall/recall) for the full pipeline.
+- **Not a generic RAG system.** Memory Garden does retrieval — `POST /v1/recall` fuses lexical (FTS5/BM25), dense vector (sqlite-vec ANN), and graph-expansion signals — but the unit of retrieval is a *typed atomic fact*, not an opaque text chunk. Each embedding has an explicit `(entity, relation, value)` contract. Recall results are filterable by entity, scope, confidence, and `as_of`; chunks are not. A memory-card fast path lets 80–90% of recalls short-circuit raw-fact ranking entirely. See [How recall works](./recall/) for the full pipeline.
 - **Not an agent runtime.** Memory Garden sits above agent platforms (Claude Code, Paperclip, LangChain) and below the open internet. It does not orchestrate agents or run tools.
 - **Not a compliance tool.** The provenance trail Memory Garden produces is useful for audit — but building GRC workflows on top of it is the job of a separate application layer.
 - **Not a general-purpose database.** Facts are append-only knowledge records — typed, scoped, provenance-tagged, decay-aware. For arbitrary mutable state, use a real database. Use Memory Garden for knowledge that needs to travel and carry provenance.
 
 ---
 
-*Memory Garden / Stigmem — Apache 2.0. [Spec](../../reference/spec) · [GitHub](https://github.com/Eidetic-Labs/stigmem) · [Contributing](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md)*
+*Memory Garden / Stigmem — Apache 2.0. [Spec](../spec/) · [GitHub](https://github.com/Eidetic-Labs/stigmem) · [Contributing](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md)*

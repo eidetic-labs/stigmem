@@ -130,7 +130,7 @@ STIGMEM_AUTH_REQUIRED=true
 STIGMEM_SOURCE_ATTESTATION_MODE=enforce
 ```
 
-See [Source Attestation](./source-attestation) and the [Features page](../../learn/features) for the full hardening checklist.
+See [Source Attestation](./source-attestation) and the [Features page](../concepts/features) for the full hardening checklist.
 
 ## Tenant naming
 
@@ -143,8 +143,8 @@ See [Source Attestation](./source-attestation) and the [Features page](../../lea
 ## See also
 
 - [Authentication](./authentication) — API key lifecycle, permissions
-- [Billing Hooks](./billing-hooks) — per-tenant billing event emission
+- [Billing Hooks](../operators/billing-hooks) — per-tenant billing event emission
 - [Audit Log](./audit-log) — querying the tenant-scoped audit trail
 - [Source Attestation](./source-attestation) — enforce `entity_uri` binding per tenant
-- [Upgrade to v1.0](../../learn/quickstart/upgrade-v1) — migrating from single-tenant v0.x deployments
-- [Installation](../../get-started/installation) — node setup and environment configuration
+- [Upgrade to v1.0](../get-started/upgrade-v1) — migrating from single-tenant v0.x deployments
+- [Installation](../get-started/installation) — node setup and environment configuration

@@ -243,7 +243,7 @@ Because the CID is derived from content, the same fact on two federated nodes ha
 
 ## See also
 
-- [Time-Travel Queries](./time-travel.md) — query historical fact state
-- [RTBF Tombstones](./rtbf.md) — entity erasure
-- [Source Attestation](./source-attestation.md) — provenance and trust
+- [Time-Travel Queries](../lifecycle/time-travel.md) — query historical fact state
+- [RTBF Tombstones](../lifecycle/rtbf.md) — entity erasure
+- [Source Attestation](../../security/source-attestation.md) — provenance and trust
 - [API Reference](/docs/reference/api) — full endpoint documentation

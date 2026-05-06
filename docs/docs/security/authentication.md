@@ -94,4 +94,4 @@ See [Multi-Tenant Scoping](./multi-tenancy) for the full isolation model and mig
 - [Human Key Issuance](./human-key-issuance) — C2: per-garden key scoping on top of OIDC
 - [Audit Log](./audit-log) — C3: querying the principal → source → fact audit trail
 - [Multi-Tenant Scoping](./multi-tenancy) — tenant_id isolation model and migration 012
-- [Billing Hooks](./billing-hooks) — per-tenant usage events emitted on every write
+- [Billing Hooks](../operators/billing-hooks) — per-tenant usage events emitted on every write

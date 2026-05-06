@@ -17,7 +17,7 @@ This tutorial walks through three operations that cover the core Stigmem workflo
 
 **Prerequisites:**
 
-- A running Stigmem node at `http://localhost:8765` (see [Installation](/docs/learn/quickstart/installation))
+- A running Stigmem node at `http://localhost:8765` (see [Installation](./installation))
 - An API key (`STIGMEM_API_KEY` environment variable)
 
 ---
@@ -230,16 +230,16 @@ In each language, you completed the core Stigmem workflow:
 | Recall | `POST /v1/recall` | Hybrid search (BM25 + vector + graph) that packs results into a token budget |
 | Subscribe | `GET /v1/facts` (polling) | Watches a scope for new facts and delivers batches |
 
-Each fact you asserted received a UUID (`id`) and a content identifier (`cid`) — see the [Content Addressing guide](/docs/build/guides/content-addressing) for how CIDs enable deduplication and cross-node citation.
+Each fact you asserted received a UUID (`id`) and a content identifier (`cid`) — see the [Content Addressing guide](../concepts/facts/content-addressing) for how CIDs enable deduplication and cross-node citation.
 
 ---
 
 ## Next steps
 
-- [Recall guide](/docs/build/guides/recall) — weight tuning, memory card fast-path, depth control
-- [Time-Travel Queries](/docs/build/guides/time-travel) — query facts as they existed at a past timestamp
-- [RTBF Tombstones](/docs/build/guides/rtbf) — entity erasure for GDPR/CCPA compliance
-- [Observability](/docs/operate/observability/) — Prometheus metrics and OpenTelemetry tracing
-- [TypeScript SDK Reference](/docs/build/sdks/typescript) — full API reference
-- [Go SDK Reference](/docs/build/sdks/go) — full API reference
-- [Python SDK Reference](/docs/build/sdks/python) — full API reference
+- [Recall guide](../concepts/recall/) — weight tuning, memory card fast-path, depth control
+- [Time-Travel Queries](../concepts/lifecycle/time-travel) — query facts as they existed at a past timestamp
+- [RTBF Tombstones](../concepts/lifecycle/rtbf) — entity erasure for GDPR/CCPA compliance
+- [Observability](../operators/observability/) — Prometheus metrics and OpenTelemetry tracing
+- [TypeScript SDK Reference](../sdks/typescript) — full API reference
+- [Go SDK Reference](../sdks/go) — full API reference
+- [Python SDK Reference](../sdks/python) — full API reference

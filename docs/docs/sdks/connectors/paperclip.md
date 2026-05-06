@@ -87,7 +87,7 @@ The MCP server exposes five tools:
 }
 ```
 
-The `value` field is a typed object — see [Asserting Facts](../guides/asserting-facts#factvalue-schema) for the full schema.
+The `value` field is a typed object — see [Asserting Facts](../../concepts/facts/asserting-facts#factvalue-schema) for the full schema.
 
 ### `query_facts`
 
@@ -210,7 +210,7 @@ it expires and doesn't linger in the graph:
 :::note Relation namespacing
 Always prefix relations with a namespace (`acme:`, `memory:`, etc.). Bare relation
 names such as `goal_state` are accepted but emit a server warning and risk
-collisions. See [Asserting Facts](../guides/asserting-facts#relation-naming-convention).
+collisions. See [Asserting Facts](../../concepts/facts/asserting-facts#relation-naming-convention).
 :::
 
 ## Smoke test
@@ -231,6 +231,6 @@ bash adapters/mcp/tests/smoke.sh
 ## See also
 
 - [Installation — persistent service](../../get-started/installation#running-as-a-persistent-service-macos)
-- [Asserting Facts](../guides/asserting-facts) — FactValue schema and relation naming
+- [Asserting Facts](../../concepts/facts/asserting-facts) — FactValue schema and relation naming
 - [Cursor](./cursor) — similar MCP config for Cursor editor
-- [Authentication](../security/authentication) — API key setup
+- [Authentication](../../security/authentication) — API key setup

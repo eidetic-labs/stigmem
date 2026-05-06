@@ -104,4 +104,4 @@ No live Zep instance required — Zep client calls are mocked with
 ## See also
 
 - [Gemini connector](./gemini) — Gemini native function-calling format
-- [Authentication](../security/authentication) — Stigmem API key setup
+- [Authentication](../../security/authentication) — Stigmem API key setup

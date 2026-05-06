@@ -140,6 +140,6 @@ If not set, there is no floor — queries can go back to the earliest fact in th
 ## See also
 
 - [RTBF Tombstones](./rtbf.md) — entity erasure and how tombstones interact with time-travel
-- [Content Addressing](./content-addressing.md) — CID-based fact lookup across time
-- [Recall guide](./recall.md) — hybrid recall without the time-travel parameter
+- [Content Addressing](../facts/content-addressing.md) — CID-based fact lookup across time
+- [Recall guide](../recall/recall.md) — hybrid recall without the time-travel parameter
 - [API Reference](/docs/reference/api) — full endpoint documentation

@@ -225,8 +225,8 @@ curl -s "http://localhost:8000/v1/facts?relation=intent:from&value=agent:orchest
 
 ## See also
 
-- [Asserting Facts](./asserting-facts) — the atomic fact model underlying intents
-- [Querying Facts](./querying-facts) — filter intent facts by relation and value
-- [Federation](./federation) — scope rules apply to intent facts identically to data facts
+- [Asserting Facts](../concepts/facts/asserting-facts) — the atomic fact model underlying intents
+- [Querying Facts](../concepts/facts/querying-facts) — filter intent facts by relation and value
+- [Federation](../concepts/federation/) — scope rules apply to intent facts identically to data facts
 - Spec §4 — IntentEnvelope schema and field semantics
 - Spec §5.14 — Wire route formalization

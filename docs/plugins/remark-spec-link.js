@@ -31,7 +31,7 @@ function refToTarget(ref) {
 function remarkSpecLink() {
   return (tree, file) => {
     const filePath = file?.history?.[0] ?? '';
-    if (filePath.includes('reference/spec/')) return;
+    if (filePath.includes('reference/spec/') || filePath.includes('docs/spec/')) return;
 
     visit(tree, 'text', (node, index, parent) => {
       if (!parent) return;

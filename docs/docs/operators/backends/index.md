@@ -228,7 +228,7 @@ Air-gapped or sovereign deployment?
 
 Once you have chosen a backend, pick a **[deploy recipe](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/README.md)**
 that matches your environment (Fly.io, Compose, Helm, systemd, or PaaS), or follow the
-step-by-step **[deploy runbooks](./runbooks/deploy-runbooks)** in the Operator Handbook.
+step-by-step **[deploy runbooks](../runbooks/deploy-runbooks)** in the Operator Handbook.
 Each recipe ships a ready-to-use `STIGMEM_STORAGE_BACKEND` env-var template.
 
 ---
@@ -454,4 +454,4 @@ The Obsidian adapter is generic enough to handle other markdown-based knowledge 
 
 All four modes use the same bidirectional sync engine. No separate codebase is needed per tool.
 
-See the [Features](/docs/learn/features) page for the current status of all Stigmem capabilities including the Obsidian adapter.
+See the [Features](../../concepts/features) page for the current status of all Stigmem capabilities including the Obsidian adapter.

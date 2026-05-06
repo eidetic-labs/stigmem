@@ -267,7 +267,7 @@ When a new fact about `project:recall-demo` is asserted, the node posts a delive
 **What to do on receipt:** trigger a new `recall` call with the relevant query. The push event is a wake signal — not the new context itself.
 
 :::tip Wake mode
-For agents running inside a process that can read the node's stderr, use `"on_change": "wake"` instead of `"webhook"`. The node writes a JSON object to stderr on each delivery — no webhook server required. This is the low-ceremony option for local or embedded deployments. See the [Subscriptions guide](/docs/build/guides/subscriptions) for the wake payload shape.
+For agents running inside a process that can read the node's stderr, use `"on_change": "wake"` instead of `"webhook"`. The node writes a JSON object to stderr on each delivery — no webhook server required. This is the low-ceremony option for local or embedded deployments. See the [Subscriptions guide](../concepts/recall/subscriptions) for the wake payload shape.
 :::
 
 ---
@@ -365,8 +365,8 @@ This pattern is the foundation for the **lazy instruction discovery** approach (
 
 ## Next steps
 
-- [Recall guide](/docs/build/guides/recall) — weight tuning, MMR, full parameter reference
-- [Embeddings guide](/docs/build/guides/embeddings) — model selection, reindexing, mixed-model safety
-- [Subscriptions guide](/docs/build/guides/subscriptions) — webhook retries, circuit breaker, replay window
-- [Memory Gardens guide](/docs/build/guides/memory-gardens) — multi-tenant scoping and recall across gardens
-- [Querying facts guide](/docs/build/guides/querying-facts) — structured predicate queries when `recall` is overkill
+- [Recall guide](../concepts/recall/) — weight tuning, MMR, full parameter reference
+- [Embeddings guide](../concepts/recall/embeddings) — model selection, reindexing, mixed-model safety
+- [Subscriptions guide](../concepts/recall/subscriptions) — webhook retries, circuit breaker, replay window
+- [Memory Gardens guide](../concepts/recall/memory-gardens) — multi-tenant scoping and recall across gardens
+- [Querying facts guide](../concepts/facts/querying-facts) — structured predicate queries when `recall` is overkill

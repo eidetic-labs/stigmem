@@ -37,7 +37,7 @@ Step 7 — Container: switch to the hardened image and verify seccomp
 
 ## Step 1 — Generate a federation CA and node cert
 
-Start with a self-managed CA (suitable for small clusters and test environments).  For larger clusters, replace this step with a cert-manager `ClusterIssuer` — see [mTLS Federation Transport](../../security/mtls.md#cert-manager-kubernetes).
+Start with a self-managed CA (suitable for small clusters and test environments).  For larger clusters, replace this step with a cert-manager `ClusterIssuer` — see [mTLS Federation Transport](../security/mtls.md#cert-manager-kubernetes).
 
 ```bash
 # Create a working directory for TLS material
@@ -109,7 +109,7 @@ curl http://localhost:8765/healthz 2>&1 | grep -i "empty reply\|SSL\|refused"
 
 > If you see an HTTP response here, TLS is not yet active — check that `STIGMEM_TLS_CERT_PATH` and `STIGMEM_TLS_KEY_PATH` are set and the files are readable.
 
-For full configuration reference and troubleshooting, see [mTLS Federation Transport](../../security/mtls.md).
+For full configuration reference and troubleshooting, see [mTLS Federation Transport](../security/mtls.md).
 
 ---
 
@@ -186,7 +186,7 @@ Update the `STIGMEM_ISSUER_PRIVATE_KEY` secret and restart the node the same way
 - [ ] Existing capability tokens verified with `stigmem capability verify`
 - [ ] Retiring key archived in read-only secrets until `dual_trust_expires_at`
 
-For the full security model and threat notes, see [Key Rotation Runbook](../../security/key-rotation.md).
+For the full security model and threat notes, see [Key Rotation Runbook](../security/key-rotation.md).
 
 ---
 
@@ -239,7 +239,7 @@ A 429 confirms the token-bucket quota is active.  The response body includes `re
 }
 ```
 
-For the full quota model and Prometheus metrics, see [Audit Log & Per-Principal Quotas](../../security/audit-and-quotas.md#per-principal-quotas-224).
+For the full quota model and Prometheus metrics, see [Audit Log & Per-Principal Quotas](../security/audit-and-quotas.md#per-principal-quotas-224).
 
 ---
 
@@ -336,7 +336,7 @@ docker exec $(docker ps -qf name=stigmem-node) \
 # → touch: /etc/test: Read-only file system
 ```
 
-For Kubernetes / Helm security context configuration and SBOM verification, see [Container Hardening](../../security/container-hardening.md).
+For Kubernetes / Helm security context configuration and SBOM verification, see [Container Hardening](../security/container-hardening.md).
 
 ---
 
@@ -380,7 +380,7 @@ curl -s https://your-node.example.com/healthz | jq .status
 | Per-principal token-bucket quotas | §22.4 | Active |
 | Non-root distroless container, read-only fs, dropped caps | §22.6 | Active |
 
-Your deployment is now at the Phase 12 hardened posture.  Run the [Community Pen-Test Handbook](../../security/pen-test.md) test matrix against it to verify from the attacker's perspective.
+Your deployment is now at the Phase 12 hardened posture.  Run the [Community Pen-Test Handbook](../security/pen-test.md) test matrix against it to verify from the attacker's perspective.
 
 ---
 
@@ -388,5 +388,5 @@ Your deployment is now at the Phase 12 hardened posture.  Run the [Community Pen
 
 - Schedule key rotation reminders: issuer key every 90 days, identity key every 365 days.
 - Configure SIEM retention — export `fact_audit_log` rows to immutable storage before the 90-day minimum window.
-- Review the [Key Rotation Runbook](../../security/key-rotation.md#rotation-checklist) post-rotation checklist.
-- For cert-manager-based auto-rotation on Kubernetes, see [mTLS — cert-manager](../../security/mtls.md#cert-manager-kubernetes).
+- Review the [Key Rotation Runbook](../security/key-rotation.md#rotation-checklist) post-rotation checklist.
+- For cert-manager-based auto-rotation on Kubernetes, see [mTLS — cert-manager](../security/mtls.md#cert-manager-kubernetes).

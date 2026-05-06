@@ -219,5 +219,5 @@ eval/
 ## See also
 
 - [Observability](./) — Prometheus metrics and OpenTelemetry tracing
-- [Security section](/docs/operate/security) — threat model and pen-test handbook
+- [Security section](../../security/) — threat model and pen-test handbook
 - [Conformance guide](../../operators/conformance.md) — spec conformance testing

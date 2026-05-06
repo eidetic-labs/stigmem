@@ -447,7 +447,7 @@ Nodes MUST extend their `/.well-known/stigmem` response to declare federation tr
 ---
 
 :::info See also
-- [Federation guide](./federation.md) — peer handshake and §6 wire protocol
+- [Federation guide](./)  — peer handshake and §6 wire protocol
 - [4-node federation topology](./federation-4node.md) — multi-node setup examples
-- [Source Attestation §18](../.../spec/index.md) — the §18 foundation §19 builds on
+- [Source Attestation §18](../../spec/index.md) — the §18 foundation §19 builds on
 :::

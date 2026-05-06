@@ -210,9 +210,9 @@ See the [Time-Travel Queries guide](../concepts/lifecycle/time-travel.md).
 
 ## See also
 
-- [Tutorial: SDK Quickstart](../tutorials/sdk-quickstart.md) — assert, recall, and subscribe in Python / TS / Go
+- [Tutorial: SDK Quickstart](../get-started/sdk-quickstart.md) — assert, recall, and subscribe in Python / TS / Go
 - [TypeScript SDK Reference](./typescript.md) — TypeScript client
-- [Python SDK Reference](/docs/build/sdks/python) — Python client
+- [Python SDK Reference](./python) — Python client
 
 ---
 

@@ -39,7 +39,7 @@ This tutorial uses **SQLite with a persistent volume** — zero external depende
 - You can tolerate the data living on that host's disk.
 - You do not need multi-region reads.
 
-If you already run Postgres or want multi-region replication, work through the [Choose Your Backend](/docs/operate/backends/choose-backend) decision tree before continuing. The connection steps in Steps 4–6 below are identical regardless of backend.
+If you already run Postgres or want multi-region replication, work through the [Choose Your Backend](./backends/choose-backend) decision tree before continuing. The connection steps in Steps 4–6 below are identical regardless of backend.
 
 ---
 
@@ -269,8 +269,8 @@ These are estimates based on ~50 ms per HTTPS round-trip to a Fly `iad` Machine 
 
 ## What's next
 
-- **Add authentication** — set `STIGMEM_AUTH_REQUIRED=true` and `STIGMEM_API_KEY_HASH` on the node; add `api_key = "sk-..."` to `.stigmem-sync.toml`. See the [Operator's Handbook](/docs/operate).
-- **Back up your facts** — the [Backup & Restore runbook](/docs/operate/runbooks/backup-restore) covers signed snapshots and point-in-time recovery.
-- **Add a second node (federation)** — follow the [Two-Org Federated Network tutorial](/docs/build/tutorials/two-org-federation) to peer two nodes and replicate facts across org boundaries.
-- **Switch to libSQL / Turso** — if you need multi-region reads or want off-node durability, see the [Fly.io deploy runbook](/docs/operate/runbooks/deploy-runbooks) Turso section.
-- **Monitor** — `GET /metrics` (Prometheus) is exposed at `:9091`. See the [Monitoring guide](/docs/operate/observability/monitoring).
+- **Add authentication** — set `STIGMEM_AUTH_REQUIRED=true` and `STIGMEM_API_KEY_HASH` on the node; add `api_key = "sk-..."` to `.stigmem-sync.toml`. See the [Security guide](../security/).
+- **Back up your facts** — the [Backup & Restore runbook](./runbooks/backup-restore) covers signed snapshots and point-in-time recovery.
+- **Add a second node (federation)** — follow the [Two-Org Federated Network tutorial](../sdks/tutorial-two-org-federation) to peer two nodes and replicate facts across org boundaries.
+- **Switch to libSQL / Turso** — if you need multi-region reads or want off-node durability, see the [Fly.io deploy runbook](./runbooks/deploy-runbooks) Turso section.
+- **Monitor** — `GET /metrics` (Prometheus) is exposed at `:9091`. See the [Monitoring guide](./observability/monitoring).

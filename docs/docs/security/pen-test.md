@@ -109,7 +109,7 @@ For **federation testing**, a 2-node topology is available:
 docker compose -f docker-compose.federation.yml up -d
 ```
 
-For a **4-node federation soak** including backpressure and scope-propagation invariants, see the [Federation: 4-Node Soak guide](../../concepts/federation/federation-4node.md).
+For a **4-node federation soak** including backpressure and scope-propagation invariants, see the [Federation: 4-Node Soak guide](../concepts/federation/federation-4node.md).
 
 ### Recommended test matrix
 

@@ -405,7 +405,7 @@ Peer registrations are seeded by `infra/soak/setup_peers.py`. See the
 ## See also
 
 - [Quickstart — two nodes federating](../../get-started/quickstart-tutorial) — local two-node test in under 5 minutes
-- [Paperclip connector](../connectors/paperclip) — deploying stigmem as a Paperclip agent fleet's persistent fact store
+- [Paperclip connector](../../sdks/connectors/paperclip) — deploying stigmem as a Paperclip agent fleet's persistent fact store
 - [4-node topology](./federation-4node) — full-mesh setup, failure injection, soak metrics
 - [Federation API Reference](../../reference/api) — full endpoint reference
 - [Architecture](../../reference/architecture) — HLC, PeerDeclaration internals, spec §6

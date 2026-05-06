@@ -219,7 +219,7 @@ stigmem instruction audit \
 | Token budget | < 25% of eager for large sets; < 50% for small sets |
 | Regressions | 0 |
 
-When coverage dips below 95%, inspect the missed chunk and add keywords. See [Tutorial: Authoring Lazy-Discovery Instructions](/docs/build/tutorials/authoring-lazy-discovery-instructions) for a worked example with before/after measurements.
+When coverage dips below 95%, inspect the missed chunk and add keywords. See [Tutorial: Lazy Discovery](./tutorial-lazy-discovery) for a worked example with before/after measurements.
 
 ### Production rollout summary
 
@@ -290,6 +290,6 @@ This is the recommended pre-production gate for agents with large instruction se
 
 ## Related
 
-- [Instruction Migration guide](/docs/build/guides/instruction-migration) — `stigmem instruction migrate` CLI reference
-- [Recall guide](/docs/build/guides/recall) — the underlying recall pipeline (§20.3)
-- [Tutorial: Authoring Lazy-Discovery Instructions](/docs/build/tutorials/authoring-lazy-discovery-instructions) — end-to-end walkthrough with real coverage and token numbers
+- [Instruction Migration guide](./instruction-migration) — `stigmem instruction migrate` CLI reference
+- [Recall guide](../concepts/recall/) — the underlying recall pipeline (§20.3)
+- [Tutorial: Lazy Discovery](./tutorial-lazy-discovery) — end-to-end walkthrough with real coverage and token numbers

@@ -191,7 +191,7 @@ Memory cards are per-entity, per-scope pre-aggregated summaries stored in the `m
 
 ## Related guides
 
-- [Querying facts](/docs/build/guides/querying-facts) — structured, predicate-based fact queries
-- [Embeddings](/docs/build/guides/embeddings) — model selection, reindexing, and mixed-model safety
-- [Memory Gardens](/docs/build/guides/memory-gardens) — garden ACL and recall scoping
-- [Subscriptions](/docs/build/guides/subscriptions) — push notifications when watched facts change
+- [Querying facts](../facts/querying-facts) — structured, predicate-based fact queries
+- [Embeddings](./embeddings) — model selection, reindexing, and mixed-model safety
+- [Memory Gardens](./memory-gardens) — garden ACL and recall scoping
+- [Subscriptions](./subscriptions) — push notifications when watched facts change

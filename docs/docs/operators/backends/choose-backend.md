@@ -70,7 +70,7 @@ services:
       - stigmem-data:/app/data
 ```
 
-**Add encryption at rest:** install the `encryption,sqlcipher` extras and set `STIGMEM_AT_REST_ENCRYPTION=on`. See the [Key rotation](../security/key-rotation) runbook for the full setup and rotation procedure.
+**Add encryption at rest:** install the `encryption,sqlcipher` extras and set `STIGMEM_AT_REST_ENCRYPTION=on`. See the [Key rotation](../../security/key-rotation) runbook for the full setup and rotation procedure.
 
 **Recovery:** use `stigmem snapshot create` to take signed snapshots to durable off-node storage (S3, GCS, SFTP). See [Backup & restore](../runbooks/backup-restore).
 
@@ -149,4 +149,4 @@ Switching backends does **not** copy existing data. Take a signed snapshot befor
 
 ## Next step
 
-Once you've chosen a backend, follow the [deploy runbook](./runbooks/deploy-runbooks) for your environment.
+Once you've chosen a backend, follow the [deploy runbook](../runbooks/deploy-runbooks) for your environment.

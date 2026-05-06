@@ -221,6 +221,6 @@ After committing, update your secrets manager and restart the node — the same 
 
 ## See also
 
-- [Backup & Restore](./backup-restore) — snapshot signing uses the same Ed25519 keys
-- [Per-Agent Keypair Registration](../../build/guides/agent-keypairs) — C1 attestation key lifecycle (separate from node/issuer keys)
+- [Backup & Restore](../operators/runbooks/backup-restore) — snapshot signing uses the same Ed25519 keys
+- [Per-Agent Keypair Registration](./agent-keypairs) — C1 attestation key lifecycle (separate from node/issuer keys)
 - [Audit & Quotas](../security/audit-and-quotas) — `key_rotation` audit events

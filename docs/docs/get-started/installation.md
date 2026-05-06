@@ -59,7 +59,7 @@ For multi-node deployments, use the soak Compose file:
 docker compose -f infra/docker-compose.soak.yml up --build -d
 ```
 
-This starts four nodes (`node-a` through `node-d` on ports 8765–8768) in a full-mesh topology. See the [4-node topology guide](../../concepts/federation/federation-4node) for peer wiring, failure injection, and soak metrics.
+This starts four nodes (`node-a` through `node-d` on ports 8765–8768) in a full-mesh topology. See the [4-node topology guide](../concepts/federation/federation-4node) for peer wiring, failure injection, and soak metrics.
 
 ## Running without Docker (development)
 

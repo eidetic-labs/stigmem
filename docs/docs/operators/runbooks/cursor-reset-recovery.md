@@ -230,5 +230,5 @@ warning — re-register the peer first and re-run.
 
 ## See also
 
-- [Federation guide](../../concepts/federation/federation) — peer registration, pull loop, and scope enforcement
-- [4-node soak results](../../concepts/federation/federation#soak-results) — cursor-resume behavior verified under failure injection
+- [Federation guide](../../concepts/federation/) — peer registration, pull loop, and scope enforcement
+- [4-node soak results](../../concepts/federation/#soak-results) — cursor-resume behavior verified under failure injection

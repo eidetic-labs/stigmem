@@ -196,5 +196,5 @@ Memory cards are part of spec §20, currently a draft. The API shape is stable f
 ## See also
 
 - [Recall guide](./recall.md) — how the card fast-path integrates into hybrid recall
-- [Architecture: memory cards](/docs/next/reference/architecture/index.md#memory-cards) — design rationale and garden ACL requirement (R2)
-- [Python SDK reference](/docs/build/sdks/python) — full `StigmemClient` API
+- [Architecture: memory cards](../../reference/architecture/index.md#memory-cards) — design rationale and garden ACL requirement (R2)
+- [Python SDK reference](../../sdks/python) — full `StigmemClient` API

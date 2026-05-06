@@ -184,7 +184,7 @@ turso db snapshot list stigmem-prod
 turso db restore stigmem-prod --timestamp 2026-06-01T03:00:00Z --name stigmem-restored
 ```
 
-After restoring to a new Turso database, update `STIGMEM_LIBSQL_URL` in your secrets to point at the restored database and restart the node. For detailed libSQL point-in-time restore via the Turso replica protocol, see the [libSQL PITR guide](../../operators/libsql-pitr).
+After restoring to a new Turso database, update `STIGMEM_LIBSQL_URL` in your secrets to point at the restored database and restart the node. For detailed libSQL point-in-time restore via the Turso replica protocol, see the [libSQL PITR guide](../libsql-pitr).
 
 ### Postgres
 
@@ -216,5 +216,5 @@ Test restore from backup at least once per quarter.
 ## Security notes
 
 - Snapshot tarballs may contain sensitive fact data and secret peer keys. Store them with appropriate permissions and encrypt at rest.
-- The Ed25519 signature covers the manifest body (artifact names + SHA-256 hashes + metadata) but not the signer's private key. Compromise of the private key lets an attacker forge future snapshots. Rotate the federation keypair and update your `trusted-backup-keys.json` if you suspect compromise — see [Key Rotation](./key-rotation).
+- The Ed25519 signature covers the manifest body (artifact names + SHA-256 hashes + metadata) but not the signer's private key. Compromise of the private key lets an attacker forge future snapshots. Rotate the federation keypair and update your `trusted-backup-keys.json` if you suspect compromise — see [Key Rotation](../../security/key-rotation).
 - `--force-unverified` is always logged at `WARNING` level regardless of the node's configured log level. Audit your logs after any forced restore.

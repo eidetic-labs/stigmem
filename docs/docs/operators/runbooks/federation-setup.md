@@ -9,7 +9,7 @@ audience: Operator
 
 **Audience:** operators setting up cross-node federation for the first time; operators adding or removing peers.  
 **Spec reference:** §5 (peer declaration wire format), §6 (federation pull protocol), §19 (federation trust).  
-**See also:** [Federation guide](../../concepts/federation/federation), [Federation trust](../../concepts/federation/federation-trust).
+**See also:** [Federation guide](../../concepts/federation/), [Federation trust](../../concepts/federation/federation-trust).
 
 ---
 

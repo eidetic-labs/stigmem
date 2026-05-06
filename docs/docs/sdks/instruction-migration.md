@@ -271,7 +271,7 @@ The `--db` flag reads existing fact content and the previous manifest directly f
 
 ## Related guides
 
-- [Recall](/docs/build/guides/recall) — Hybrid recall pipeline for general fact retrieval
-- [Asserting facts](/docs/build/guides/asserting-facts) — Low-level fact write API
-- [Agent keypairs](/docs/build/guides/agent-keypairs) — Ed25519 key registration for agent identity
-- [Audit log](/docs/build/guides/audit-log) — End-to-end audit trail for fact writes
+- [Recall](../concepts/recall/) — Hybrid recall pipeline for general fact retrieval
+- [Asserting facts](../concepts/facts/asserting-facts) — Low-level fact write API
+- [Agent keypairs](../security/agent-keypairs) — Ed25519 key registration for agent identity
+- [Audit log](../security/audit-log) — End-to-end audit trail for fact writes

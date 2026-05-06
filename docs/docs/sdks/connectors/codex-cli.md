@@ -85,5 +85,5 @@ from that directory.
 
 ## See also
 
-- [Claude Code](../security/authentication) — Claude Code uses `.claude/mcp_servers.json` (same server, different config location)
+- [Claude Code](../../security/authentication) — Claude Code uses `.claude/mcp_servers.json` (same server, different config location)
 - [Cursor](./cursor) — Cursor config reference

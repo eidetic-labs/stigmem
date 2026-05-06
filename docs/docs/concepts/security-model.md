@@ -19,7 +19,7 @@ Every fact is written with one of four scopes:
 | `company` | Federated only when the active `PeerDeclaration` explicitly includes `"company"` in `allowed_scopes`. |
 | `public`  | Federated by default between registered peers.                                              |
 
-Scope enforcement is **read- and write-time**. A misconfigured peer cannot escalate `team` facts to `public` because the scope is checked before the fact is admitted to the federation pipeline. See [§3.5](/docs/reference/spec) for the normative spec.
+Scope enforcement is **read- and write-time**. A misconfigured peer cannot escalate `team` facts to `public` because the scope is checked before the fact is admitted to the federation pipeline. See [§3.5](../spec/) for the normative spec.
 
 ## Signing — Ed25519 over every cross-node payload
 
@@ -37,7 +37,7 @@ Each cross-org write is admitted via a **source-trust score** `t ∈ [0,1]` deri
 
 Facts below a configurable trust threshold land in a **quarantine garden** for human review before entering the canonical fact store. The quarantine garden is itself a Memory Garden (§17) with admin-only ACL — operators triage, accept, or reject quarantined writes from a single dashboard.
 
-Facts also accumulate `derived_from: [fact_hash...]` and `attestation_chain: [signature...]` for tamper-evident audit. See [Federation Trust](/docs/build/guides/federation-trust) for the operator runbook.
+Facts also accumulate `derived_from: [fact_hash...]` and `attestation_chain: [signature...]` for tamper-evident audit. See [Federation Trust](./federation/federation-trust) for the operator runbook.
 
 ## Source Attestation — binding writes to identities
 
@@ -70,8 +70,8 @@ A typical write path under the full security model:
 
 ## Reading on
 
-- [Federation Trust guide](/docs/build/guides/federation-trust) — operator setup end-to-end.
-- [Audit Log & Quotas](/docs/operate/security/audit-and-quotas) — what's logged, retention, and how to read the audit stream.
-- [Key Rotation runbook](/docs/operate/runbooks/key-rotation) — dual-trust window mechanics.
-- [Container Hardening](/docs/operate/security/container-hardening) — the deployment-side security posture.
-- [Security Disclosure](/docs/community/security-disclosure) — reporting vulnerabilities responsibly.
+- [Federation Trust guide](./federation/federation-trust) — operator setup end-to-end.
+- [Audit Log & Quotas](../security/audit-and-quotas) — what's logged, retention, and how to read the audit stream.
+- [Key Rotation runbook](../security/key-rotation) — dual-trust window mechanics.
+- [Container Hardening](../security/container-hardening) — the deployment-side security posture.
+- [Security Disclosure](../community/security-disclosure) — reporting vulnerabilities responsibly.

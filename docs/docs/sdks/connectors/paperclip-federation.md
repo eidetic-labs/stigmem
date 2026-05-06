@@ -198,7 +198,7 @@ curl http://localhost:8765/.well-known/stigmem | jq '{node_id, federation}'
 
 ### 5b. Generate a declaration signature
 
-Use the signing snippet from the [federation guide](../guides/federation#peer-declaration) or the
+Use the signing snippet from the [federation guide](../../concepts/federation/#peer-declaration) or the
 automated `scripts/federation-init.py` helper. For a manual one-off:
 
 ```python
@@ -343,7 +343,7 @@ garden ACLs.
 ## See also
 
 - [Paperclip connector](./paperclip) — MCP config, tool reference, heartbeat pattern
-- [Federation guide](../guides/federation) — key generation, peer tokens, scope enforcement
-- [Asserting facts](../guides/asserting-facts) — FactValue schema, relation naming, TTLs
-- [Querying facts](../guides/querying-facts) — filtering, pagination, cursor polling
+- [Federation guide](../../concepts/federation/) — key generation, peer tokens, scope enforcement
+- [Asserting facts](../../concepts/facts/asserting-facts) — FactValue schema, relation naming, TTLs
+- [Querying facts](../../concepts/facts/querying-facts) — filtering, pagination, cursor polling
 - [Quickstart](../../get-started/quickstart-tutorial) — local two-node federation in under 5 minutes

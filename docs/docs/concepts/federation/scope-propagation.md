@@ -108,8 +108,8 @@ Monitor these entries to detect misconfigured PeerDeclarations before they cause
 
 ## See also
 
-- [Federation guide](/docs/build/guides/federation) — PeerDeclaration registration and pull protocol
-- [Relay backpressure guide](/docs/build/guides/relay-backpressure) — lag signals in N-node topologies
+- [Federation guide](./)  — PeerDeclaration registration and pull protocol
+- [Relay backpressure guide](./relay-backpressure) — lag signals in N-node topologies
 - Spec §6.8 — Scope Propagation Invariants
 - Spec §6 — Federation protocol
 - Spec §8.5 (v0.7) — Open question resolved by §6.8.2

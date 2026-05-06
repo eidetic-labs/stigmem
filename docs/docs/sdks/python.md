@@ -135,7 +135,7 @@ client.recall(
 ) -> RecallResponse
 ```
 
-Hybrid recall — return the most salient facts for `query` within `token_budget`. Combines lexical (FTS5/BM25), dense-vector (ANN), and graph-traversal signals. See the [Recall guide](/docs/build/guides/recall) for details.
+Hybrid recall — return the most salient facts for `query` within `token_budget`. Combines lexical (FTS5/BM25), dense-vector (ANN), and graph-traversal signals. See the [Recall guide](../concepts/recall/) for details.
 
 `RecallResponse` fields:
 
@@ -317,7 +317,7 @@ except StigmemAuthError:
 
 ## See also
 
-- [Recall guide](/docs/build/guides/recall) — hybrid recall, weight tuning, fast-path
-- [Memory Cards guide](/docs/build/guides/memory-cards) — card lifecycle and divergence policy
-- [Asserting facts](/docs/build/guides/asserting-facts) — detailed fact write patterns
-- [Querying facts](/docs/build/guides/querying-facts) — structured predicate queries
+- [Recall guide](../concepts/recall/) — hybrid recall, weight tuning, fast-path
+- [Memory Cards guide](../concepts/recall/memory-cards) — card lifecycle and divergence policy
+- [Asserting facts](../concepts/facts/asserting-facts) — detailed fact write patterns
+- [Querying facts](../concepts/facts/querying-facts) — structured predicate queries

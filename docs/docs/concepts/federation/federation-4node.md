@@ -156,7 +156,7 @@ The `-v` flag removes data volumes so the next run starts from a clean state.
 ## See also
 
 - [Quickstart](../../get-started/quickstart-tutorial) — two-node setup in under 10 minutes
-- [Federation guide](./federation) — PeerDeclaration registration, cursor behavior, and audit log
+- [Federation guide](./)  — PeerDeclaration registration, cursor behavior, and audit log
 - [Relay backpressure](./relay-backpressure) — lag signals in N-node topologies (§6.7)
 - [Scope propagation](./scope-propagation) — scope invariants across relay hops (§6.8)
 - Spec §6 — Federation protocol

@@ -502,5 +502,5 @@ You now have a working two-org federated Stigmem network with:
 - **4-node topology:** see the [4-Node Federation guide](../concepts/federation/federation-4node.md) for N-node backpressure, relay configuration, and scope propagation invariants (§6.7–6.8).
 - **Key rotation:** rotate Org A's signing key without federation downtime — see the Key Rotation section in the [Federation Trust guide](../concepts/federation/federation-trust.md).
 - **Trust mode tuning:** lower `STIGMEM_QUARANTINE_TRUST_THRESHOLD` to admit more facts automatically from known peers.
-- **Encrypted storage:** add `STIGMEM_AT_REST_ENCRYPTION=on` before going to production — [Backends guide](../../operate/backends/#encrypted-at-rest).
-- **Signed snapshots:** back up both nodes — [Backends guide](../../operate/backends/#backup-and-restore).
+- **Encrypted storage:** add `STIGMEM_AT_REST_ENCRYPTION=on` before going to production — [Backends guide](../operators/backends/#encrypted-at-rest).
+- **Signed snapshots:** back up both nodes — [Backends guide](../operators/backends/#backup-and-restore).

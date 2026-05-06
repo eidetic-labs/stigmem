@@ -88,5 +88,5 @@ Job state is stable once `done` or `error` — multiple GET polls return the sam
 
 ## See also
 
-- [Decay semantics](./decay) — `DecayPolicy` configuration and confidence reduction
-- [Querying facts](./querying-facts) — filter by confidence after a decay sweep
+- [Decay semantics](../concepts/lifecycle/decay) — `DecayPolicy` configuration and confidence reduction
+- [Querying facts](../concepts/facts/querying-facts) — filter by confidence after a decay sweep

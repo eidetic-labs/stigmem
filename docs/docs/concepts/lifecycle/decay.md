@@ -169,11 +169,11 @@ Decayed facts follow the same visibility rules as manual retractions:
 - **Confidence-reduced facts** remain visible with their updated confidence value
 - Decay-sourced facts carry `source="system:stigmem:decay"` — filter on this field to distinguish system retractions from agent-authored ones
 
-To get a clean current-state view after running decay, use [`synthesize_scope`](/docs/build/guides/synthesis) — it automatically excludes retracted facts and picks the highest-confidence value for each `(entity, relation)` pair.
+To get a clean current-state view after running decay, use [`synthesize_scope`](./synthesis) — it automatically excludes retracted facts and picks the highest-confidence value for each `(entity, relation)` pair.
 
 ## See also
 
-- [Synthesis guide](/docs/build/guides/synthesis) — confidence-weighted summary of live facts
-- [Conflict resolution guide](/docs/build/guides/conflict-resolution) — resolving contradictions before decay
+- [Synthesis guide](./synthesis) — confidence-weighted summary of live facts
+- [Conflict resolution guide](../facts/conflict-resolution) — resolving contradictions before decay
 - Spec §15 — Decay Semantics (authoritative wire format and invariants)
 - Spec §3 — Fact immutability and retraction semantics

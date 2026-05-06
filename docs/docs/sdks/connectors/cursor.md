@@ -89,4 +89,4 @@ is published to npm:
 ## See also
 
 - [Zed](./zed) — similar MCP config for Zed
-- [Authentication](../security/authentication) — API key setup
+- [Authentication](../../security/authentication) — API key setup

@@ -191,7 +191,7 @@ set_hook_bus(StripeMeterBus())
 
 ## See also
 
-- [Multi-Tenant Scoping](./multi-tenancy) — how `tenant_id` is stamped on API keys and flows to writes
-- [Authentication](./authentication) — API key creation and `tenant_id` parameter
-- [Asserting Facts](./asserting-facts) — the write endpoint that triggers `"fact_written"` events
-- [Memory Gardens](./memory-gardens) — the create-garden endpoint that triggers `"garden_created"` events
+- [Multi-Tenant Scoping](../security/multi-tenancy) — how `tenant_id` is stamped on API keys and flows to writes
+- [Authentication](../security/authentication) — API key creation and `tenant_id` parameter
+- [Asserting Facts](../concepts/facts/asserting-facts) — the write endpoint that triggers `"fact_written"` events
+- [Memory Gardens](../concepts/recall/memory-gardens) — the create-garden endpoint that triggers `"garden_created"` events

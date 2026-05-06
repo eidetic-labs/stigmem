@@ -237,10 +237,13 @@ jobs:
             --cov-report=xml:coverage/python/coverage.xml \
             --cov-report=term
 
+      - name: Build TypeScript packages
+        run: pnpm build
+
       - name: TypeScript coverage
         run: |
           pnpm --filter stigmem-ts exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
-          pnpm --filter stigmem-mcp exec vitest run --exclude dist/** --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
+          pnpm --filter stigmem-mcp exec vitest run --exclude 'dist/**' --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
           pnpm --filter dashboard exec vitest run --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov
 
       - name: Upload coverage artifacts

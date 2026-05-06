@@ -89,7 +89,7 @@ def main() -> int:
     print("Running strict Ruff on changed Python files:")
     for path in changed_args:
         print(f"  - {path}")
-    ruff = _run(["ruff", "check", *changed_args], check=False)
+    ruff = _run(["uv", "run", "ruff", "check", *changed_args], check=False)
     _print_output(ruff)
     if ruff.returncode != 0:
         return ruff.returncode
@@ -108,6 +108,8 @@ def main() -> int:
         print(f"  - {path}")
     mypy = _run(
         [
+            "uv",
+            "run",
             "mypy",
             "--show-error-codes",
             "--hide-error-context",

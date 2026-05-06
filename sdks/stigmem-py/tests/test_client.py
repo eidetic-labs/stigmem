@@ -2,21 +2,19 @@
 
 from __future__ import annotations
 
+import httpx
 import pytest
 import respx
-import httpx
 
 from stigmem import (
     AsyncStigmemClient,
-    StigmemClient,
     StigmemAuthError,
+    StigmemClient,
     StigmemNotFoundError,
     string_value,
     text_value,
-    ref_value,
-    null_value,
 )
-from stigmem.models import Fact, FactPage, NodeInfo, Peer, ConflictPage, ConflictResolution
+from stigmem.models import ConflictPage, ConflictResolution, Fact, FactPage, NodeInfo
 
 BASE = "http://test-node"
 KEY = "sk-test"
@@ -150,13 +148,20 @@ def test_list_conflicts() -> None:
 @respx.mock
 def test_resolve_conflict() -> None:
     respx.post(f"{BASE}/v1/conflicts/c-001/resolve").mock(
-        return_value=httpx.Response(200, json={
-            "resolution_fact_id": "fact-999",
-            "conflict_status": "resolved",
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "resolution_fact_id": "fact-999",
+                "conflict_status": "resolved",
+            },
+        )
     )
     client = StigmemClient(url=BASE, api_key=KEY)
-    result = client.resolve_conflict("c-001", winning_fact_id="fact-001", resolution_note="prefer fact-001")
+    result = client.resolve_conflict(
+        "c-001",
+        winning_fact_id="fact-001",
+        resolution_note="prefer fact-001",
+    )
     assert isinstance(result, ConflictResolution)
     assert result.conflict_status == "resolved"
 

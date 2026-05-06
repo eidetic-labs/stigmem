@@ -15,12 +15,12 @@ jobs:
     outputs:
       eval: ${{ steps.filter.outputs.eval }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             eval:
@@ -42,44 +42,81 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           version: "latest"
 
       - name: Set up Python
         run: uv python install 3.11
 
-      - name: Install all workspace packages
-        run: uv sync --all-packages
-
-      - name: Run adversarial corpus (79 scenarios)
+      - name: Run eval suite and capture timings
+        env:
+          STIGMEM_EVAL_URL: ""
         run: |
-          mkdir -p eval/results
+          mkdir -p artifacts eval/results
+          sync_start_ms="$(date +%s%3N)"
+          uv sync --all-packages
+          sync_end_ms="$(date +%s%3N)"
+
           uv run pytest eval/test_adversarial.py -v --tb=short \
             --rootdir=. \
             -p no:cacheprovider \
             -p no:cov
-        env:
-          STIGMEM_EVAL_URL: ""
+          adversarial_end_ms="$(date +%s%3N)"
 
-      - name: Run recall benchmark (400 probes)
-        run: |
           uv run pytest eval/test_recall.py -v --tb=short \
             --rootdir=. \
             -p no:cacheprovider \
             -p no:cov
-        env:
-          STIGMEM_EVAL_URL: ""
+          recall_end_ms="$(date +%s%3N)"
+
+          python3 - <<'EOF' \
+            "$sync_start_ms" \
+            "$sync_end_ms" \
+            "$adversarial_end_ms" \
+            "$recall_end_ms"
+          import json
+          import sys
+          from pathlib import Path
+
+          labels = [
+              ("uv-sync", int(sys.argv[1]), int(sys.argv[2])),
+              ("adversarial-pytest", int(sys.argv[2]), int(sys.argv[3])),
+              ("recall-pytest", int(sys.argv[3]), int(sys.argv[4])),
+          ]
+          rows = []
+          for name, start_ms, end_ms in labels:
+              duration_ms = end_ms - start_ms
+              rows.append(
+                  {
+                      "name": name,
+                      "duration_ms": duration_ms,
+                      "duration_s": round(duration_ms / 1000, 3),
+                  }
+              )
+          Path("artifacts/eval-fast-timings.json").write_text(
+              json.dumps(rows, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          EOF
 
       - name: Upload eval artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: eval-results-${{ github.sha }}
           path: eval/results/
+          retention-days: 30
+
+      - name: Upload eval timing artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: eval-fast-timings-${{ github.sha }}
+          path: artifacts/eval-fast-timings.json
           retention-days: 30
 
       - name: Check adversarial total count

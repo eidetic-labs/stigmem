@@ -23,7 +23,7 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -46,11 +46,11 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push (linux/amd64 + linux/arm64)
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./node/Dockerfile
@@ -82,7 +82,7 @@ jobs:
           upload-release-assets: false
 
       - name: Upload SBOM as workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: stigmem-node-sbom
           path: stigmem-node-sbom.spdx.json
@@ -106,7 +106,7 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -126,11 +126,11 @@ jobs:
             type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./apps/dashboard/Dockerfile
@@ -161,11 +161,11 @@ jobs:
       id-token: write   # for npm provenance
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "pnpm"

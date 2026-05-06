@@ -6,7 +6,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # FactValue
 # ---------------------------------------------------------------------------
@@ -15,30 +14,44 @@ class StringValue(BaseModel):
     type: Literal["string"]
     v: str
 
+
 class TextValue(BaseModel):
     type: Literal["text"]
     v: str
+
 
 class NumberValue(BaseModel):
     type: Literal["number"]
     v: float
 
+
 class BooleanValue(BaseModel):
     type: Literal["boolean"]
     v: bool
+
 
 class DatetimeValue(BaseModel):
     type: Literal["datetime"]
     v: str  # ISO 8601
 
+
 class RefValue(BaseModel):
     type: Literal["ref"]
     v: str  # URI
 
+
 class NullValue(BaseModel):
     type: Literal["null"]
 
-FactValue = StringValue | TextValue | NumberValue | BooleanValue | DatetimeValue | RefValue | NullValue
+FactValue = (
+    StringValue
+    | TextValue
+    | NumberValue
+    | BooleanValue
+    | DatetimeValue
+    | RefValue
+    | NullValue
+)
 
 FactScope = Literal["local", "team", "company", "public"]
 
@@ -46,20 +59,26 @@ FactScope = Literal["local", "team", "company", "public"]
 def string_value(v: str) -> StringValue:
     return StringValue(type="string", v=v)
 
+
 def text_value(v: str) -> TextValue:
     return TextValue(type="text", v=v)
+
 
 def number_value(v: float) -> NumberValue:
     return NumberValue(type="number", v=v)
 
+
 def boolean_value(v: bool) -> BooleanValue:
     return BooleanValue(type="boolean", v=v)
+
 
 def datetime_value(v: str) -> DatetimeValue:
     return DatetimeValue(type="datetime", v=v)
 
+
 def ref_value(v: str) -> RefValue:
     return RefValue(type="ref", v=v)
+
 
 def null_value() -> NullValue:
     return NullValue(type="null")
@@ -98,6 +117,7 @@ class FactPage(BaseModel):
 
 PeerStatus = Literal["pending_verification", "active", "rejected", "revoked"]
 
+
 class Peer(BaseModel):
     peer_id: str
     node_id: str
@@ -122,6 +142,7 @@ class FederationEndpoints(BaseModel):
     facts: str
     push: str | None = None
 
+
 class NodeInfo(BaseModel):
     version: str
     node_id: str
@@ -142,6 +163,7 @@ class NodeInfo(BaseModel):
 # ---------------------------------------------------------------------------
 
 ConflictStatus = Literal["unresolved", "resolved"]
+
 
 class Conflict(BaseModel):
     conflict_id: str
@@ -203,6 +225,7 @@ class ResolveRequest(BaseModel):
 
 class RecallWeights(BaseModel):
     """Per-signal weights for the hybrid ranker."""
+
     lexical: float = 0.35
     semantic: float = 0.35
     graph: float = 0.15

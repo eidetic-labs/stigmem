@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "npm"
@@ -26,7 +26,7 @@ jobs:
         run: bash scripts/check.sh docs
 
       - name: Upload docs artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docs-build-${{ github.run_id }}
           path: docs/build/
@@ -38,7 +38,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run quickstart smoke
         run: bash scripts/quickstart-verify.sh
@@ -49,11 +49,11 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "pnpm"
@@ -69,7 +69,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dashboard-playwright-${{ github.run_id }}
           path: |
@@ -83,21 +83,21 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           version: "latest"
 
       - name: Set up Python
         run: uv python install 3.11
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "pnpm"
@@ -106,7 +106,7 @@ jobs:
         run: bash scripts/check_sdk_backward_compat.sh
 
       - name: Upload compatibility report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sdk-backward-compat-${{ github.run_id }}
           path: artifacts/sdk-backward-compat.json
@@ -117,10 +117,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           version: "latest"
 
@@ -138,7 +138,7 @@ jobs:
             --junitxml=artifacts/migration-compat-junit.xml
 
       - name: Upload migration report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: migration-compat-${{ github.run_id }}
           path: artifacts/migration-compat-junit.xml
@@ -150,13 +150,13 @@ jobs:
     timeout-minutes: 90     # 1-hour soak + 30 min buffer for build/teardown
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Cache Docker layers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ hashFiles('node/Dockerfile', 'uv.lock') }}
@@ -164,7 +164,7 @@ jobs:
             ${{ runner.os }}-buildx-
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           version: "latest"
 
@@ -175,7 +175,7 @@ jobs:
         run: uv sync --all-packages
 
       - name: Pre-build stigmem image (cache warm-up)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./node/Dockerfile
@@ -196,7 +196,7 @@ jobs:
 
       - name: Upload soak artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: soak-results-${{ github.run_id }}
           path: eval/results/

@@ -13,6 +13,10 @@ Boot stub + manifest + on-demand recall for token-efficient agent instruction lo
 
 **Authoritative source:** [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md)
 
+:::caution EXPERIMENTAL
+The boot-stub schema and instruction-manifest format are not yet finalized and may change in a future minor release. Do not deploy lazy-discovered instructions in production agents handling sensitive data or irreversible tool use until this section reaches GA. Always pin `instructions_manifest_uri` to a trusted, integrity-verified source.
+:::
+
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::

@@ -38,6 +38,10 @@ This section specifies mutual TLS requirements for all transport connections bet
 4. Node certificate Subject Alternative Names (SANs) MUST include the node's canonical `entity_uri` (as a URI SAN). Verifying nodes MUST check that the peer's SAN matches the `entity_uri` declared in the peer's org manifest (§19.1.2) before accepting the connection as authenticated.
 5. Nodes MUST reject any federation connection from a peer whose certificate chain cannot be verified against a locally configured trust root or whose SAN does not match the expected `entity_uri`.
 
+:::warning Reverse-proxy deployments
+If a reverse proxy (nginx, Caddy, Envoy) terminates TLS before the stigmem node process, mTLS peer certificate validation is bypassed. Set `STIGMEM_MTLS_REQUIRED=true` to force the node to reject any connection without a verified peer certificate, even behind a proxy. Verify this configuration in staging before enabling federation.
+:::
+
 #### §22.1.3 Cert Rotation Hook into §19 Manifest {#section-22-1-3}
 
 When a node rotates its mTLS node certificate:

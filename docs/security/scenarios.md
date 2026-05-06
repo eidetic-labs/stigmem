@@ -2,7 +2,7 @@
 
 **Applies to:** Stigmem v2.0 and the reference node implementation.
 **Audience:** Operators — people who deploy, configure, and maintain a Stigmem node. No security background required.
-**Purpose:** For every known vulnerability class in the [Threat Model](../spec/security/threat-model.md), this document answers the plain question: *"What actually happens to my deployment if this goes wrong?"*
+**Purpose:** For every known vulnerability class in the [Threat Model](../../spec/security/threat-model.md), this document answers the plain question: *"What actually happens to my deployment if this goes wrong?"*
 
 Use this guide to understand the blast radius of each scenario and decide which mitigations matter most for your deployment profile.
 
@@ -518,4 +518,4 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 ---
 
-*This document is maintained alongside the [Threat Model](../spec/security/threat-model.md). When the threat model is revised, this document should be updated to reflect new or closed risks.*
+*This document is maintained alongside the [Threat Model](../../spec/security/threat-model.md). When the threat model is revised, this document should be updated to reflect new or closed risks.*

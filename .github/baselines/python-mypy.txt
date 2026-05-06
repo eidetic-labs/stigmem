@@ -42,12 +42,12 @@ node/src/stigmem_node/identity/capability.py:72:type-arg:Missing type arguments 
 node/src/stigmem_node/identity/manifest.py:94:unused-ignore:Unused "type: ignore" comment
 node/src/stigmem_node/identity/transparency_log.py:100:no-any-return:Returning Any from function declared to return "dict[str, Any] | None"
 node/src/stigmem_node/identity/transparency_log.py:292:unused-ignore:Unused "type: ignore" comment
-node/src/stigmem_node/main.py:116:no-untyped-def:Function is missing a return type annotation
-node/src/stigmem_node/main.py:116:no-untyped-def:Function is missing a type annotation for one or more parameters
-node/src/stigmem_node/main.py:116:unused-ignore:Unused "type: ignore" comment
-node/src/stigmem_node/main.py:158:no-untyped-def:Function is missing a return type annotation
-node/src/stigmem_node/main.py:158:unused-ignore:Unused "type: ignore" comment
-node/src/stigmem_node/main.py:167:type-arg:Missing type arguments for generic type "dict"
+node/src/stigmem_node/main.py:117:no-untyped-def:Function is missing a return type annotation
+node/src/stigmem_node/main.py:117:no-untyped-def:Function is missing a type annotation for one or more parameters
+node/src/stigmem_node/main.py:117:unused-ignore:Unused "type: ignore" comment
+node/src/stigmem_node/main.py:159:no-untyped-def:Function is missing a return type annotation
+node/src/stigmem_node/main.py:159:unused-ignore:Unused "type: ignore" comment
+node/src/stigmem_node/main.py:168:type-arg:Missing type arguments for generic type "dict"
 node/src/stigmem_node/metrics.py:138:unused-ignore:Unused "type: ignore" comment
 node/src/stigmem_node/metrics.py:139:unused-ignore:Unused "type: ignore" comment
 node/src/stigmem_node/metrics.py:140:unused-ignore:Unused "type: ignore" comment

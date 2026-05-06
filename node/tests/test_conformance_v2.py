@@ -22,6 +22,7 @@ Vector fields (inherits all v1 types, plus v2.0 additions):
 """
 from __future__ import annotations
 
+import contextlib
 import json
 from pathlib import Path
 from typing import Any
@@ -141,10 +142,8 @@ def test_conformance_vector_v2(client: TestClient, vector: dict[str, Any]) -> No
 
     resp = _do_request(client, vector)
     body: Any = {}
-    try:
+    with contextlib.suppress(Exception):
         body = resp.json()
-    except Exception:
-        pass
 
     # Status assertion
     expected_status = vector.get("expected_status")

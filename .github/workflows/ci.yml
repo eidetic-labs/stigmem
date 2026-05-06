@@ -141,9 +141,6 @@ jobs:
       - name: Set up Python
         run: uv python install 3.11
 
-      - name: Changed-file Python strictness
-        run: uv run python scripts/check_changed_python_quality.py
-
       - name: Python fast gates
         env:
           HYPOTHESIS_SEED: "0"
@@ -151,6 +148,9 @@ jobs:
           PYTEST_JUNIT_DIR: artifacts/python-junit
           CHECK_TIMING_OUTPUT: artifacts/python-check-timings.json
         run: bash scripts/check.sh python
+
+      - name: Changed-file Python strictness
+        run: uv run python scripts/check_changed_python_quality.py
 
       - name: Upload Python test artifacts
         if: always()

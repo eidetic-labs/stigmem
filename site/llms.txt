@@ -1,0 +1,76 @@
+# Stigmem
+
+> Stigmem is an open-source federated knowledge fabric and intent protocol for AI agents — a shared, persistent substrate where agents and humans write typed, traceable facts that travel across tools, platforms, and organizations.
+
+Stigmem = Stigmergy + Memory. Like ant colonies coordinating through pheromone trails, agents leave typed facts in a shared environment that guides future agents — no central coordinator, no point-to-point overhead. Facts have expiry and confidence scores so the substrate stays fresh.
+
+**License:** Apache-2.0
+**Status:** v1.0 stable
+**Repository:** https://github.com/Eidetic-Labs/stigmem
+
+## Core Concepts
+
+Every fact is an immutable record with the shape:
+`(entity, relation, value, source, timestamp, confidence, scope)`
+
+- **entity** — a `stigmem://` URI identifying the subject
+- **relation** — a typed predicate (e.g. `prefers_language`, `owns`, `blocked_by`)
+- **value** — the claim
+- **source** — the agent or user that asserted it
+- **confidence** — float 0–1 expressing certainty
+- **valid_until** — ISO-8601 expiry; facts decay when unreinforced
+- **scope** — `local | team | company | public`; controls replication boundary
+
+Contradictions between nodes are surfaced as first-class records, never silently overwritten.
+
+## Getting Started
+
+- [Quickstart](https://docs.stigmem.dev/en/latest/docs/learn): run two federated nodes in minutes with `docker compose up`
+- [Install guide](https://docs.stigmem.dev/en/latest/docs/install): environment variables, auth, single-node and multi-node setups
+- [MCP adapter](https://docs.stigmem.dev/en/latest/docs/adapters/mcp): connect Claude, Cursor, or any MCP-compatible agent to a Stigmem node
+
+## Specification
+
+- [Full spec v1.0](https://docs.stigmem.dev/en/latest/reference/spec/): complete wire format, federation protocol, and adapter ABI
+- [Fact shape §2](https://docs.stigmem.dev/en/latest/reference/spec/atomic-fact-shape): entity URI scheme, HLC timestamps, confidence, decay
+- [Federation §6](https://docs.stigmem.dev/en/latest/reference/spec/federation): PeerDeclaration handshake, pull replication, scope enforcement
+- [Wire format §5](https://docs.stigmem.dev/en/latest/reference/spec/wire-format): HTTP API — assert, query, retract, conflict resolution
+- [Intent envelope §4](https://docs.stigmem.dev/en/latest/reference/spec/intent-envelope): goal, constraint, preference, handoff (draft — feedback wanted)
+- [Adapter ABI §12](https://docs.stigmem.dev/en/latest/reference/spec/adapter-abi): MCP, Paperclip, OpenClaw integration contracts
+
+## API Reference
+
+Base URL: `http://<node-host>:<port>`
+
+Key endpoints:
+- `POST /v1/facts` — assert a fact
+- `GET /v1/facts` — query facts (filter by entity, relation, scope, confidence)
+- `DELETE /v1/facts/{id}` — retract a fact
+- `GET /v1/facts/{id}` — retrieve a single fact
+- `POST /v1/lint` — validate entity URIs and relation names
+- `POST /v1/decay/sweep` — trigger TTL expiry sweep
+- `POST /v1/synthesis` — synthesize a summary across a scope
+- `GET /.well-known/stigmem` — node metadata and peer discovery
+
+Interactive API explorer: `http://<node-host>:<port>/docs`
+
+## MCP Tools (for AI agents)
+
+When connected via the MCP adapter, agents get:
+- `assert_fact` — write a typed fact to the node
+- `query_facts` — retrieve facts matching entity/relation/scope filters
+- `lint_scope` — validate all entity URIs in a scope
+- `synthesize_scope` — generate a prose summary of a scope's facts
+- `resolve_contradiction` — choose a winner between conflicting facts
+- `subscribe_scope` — stream fact assertions in real time
+
+## SDKs
+
+- [TypeScript SDK](https://docs.stigmem.dev/en/latest/docs/sdk/typescript): `@stigmem/client`
+- [Python SDK](https://docs.stigmem.dev/en/latest/docs/sdk/python): `stigmem-client`
+
+## Optional
+
+- [CHANGELOG](https://github.com/Eidetic-Labs/stigmem/blob/main/CHANGELOG.md)
+- [Contributing guide](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md)
+- [Security policy](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md)

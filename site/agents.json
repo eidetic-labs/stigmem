@@ -1,0 +1,37 @@
+{
+  "name": "Stigmem",
+  "description": "Federated knowledge fabric and intent protocol for AI agents. Provides typed, traceable, decaying facts that replicate across nodes and organizations.",
+  "url": "https://stigmem.dev",
+  "documentation": "https://docs.stigmem.dev/en/latest/docs/learn",
+  "repository": "https://github.com/Eidetic-Labs/stigmem",
+  "license": "Apache-2.0",
+  "version": "1.0.0",
+  "capabilities": [
+    "federated-knowledge-storage",
+    "typed-fact-assertion",
+    "fact-query",
+    "fact-decay",
+    "conflict-resolution",
+    "scope-based-replication",
+    "mcp-adapter",
+    "synthesis"
+  ],
+  "integrations": {
+    "mcp": {
+      "description": "Model Context Protocol adapter — connect any MCP-compatible agent to a Stigmem node",
+      "docs": "https://docs.stigmem.dev/en/latest/docs/adapters/mcp",
+      "tools": [
+        "assert_fact",
+        "query_facts",
+        "lint_scope",
+        "synthesize_scope",
+        "resolve_contradiction",
+        "subscribe_scope"
+      ]
+    }
+  },
+  "quickstart": "git clone https://github.com/Eidetic-Labs/stigmem && cd stigmem && docker compose up --build -d",
+  "contact": {
+    "github": "https://github.com/Eidetic-Labs/stigmem/issues"
+  }
+}

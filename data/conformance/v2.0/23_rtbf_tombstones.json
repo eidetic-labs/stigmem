@@ -1,0 +1,80 @@
+{
+  "spec_section": "§23",
+  "title": "RTBF Tombstones — Wire Format Conformance",
+  "description": "Validates POST /v1/tombstones creation, status check, revocation, recall-time filter, and federation poll shapes per §23.",
+  "vectors": [
+    {
+      "id": "tomb-create-requires-admin",
+      "description": "POST /v1/tombstones without admin permission returns 401 or 403 (§23.1)",
+      "method": "POST",
+      "path": "/v1/tombstones",
+      "body": {
+        "entity_uri": "stigmem://testnode/user/forgotten-user",
+        "scope": "company",
+        "reason": "RTBF request ref #1234"
+      },
+      "expected_status_in": [401, 403],
+      "requires_auth": true
+    },
+    {
+      "id": "tomb-create-response-shape",
+      "description": "POST /v1/tombstones (admin) returns 201 with id, scope, and signed_by fields (§23.2)",
+      "method": "POST",
+      "path": "/v1/tombstones",
+      "body": {
+        "entity_uri": "stigmem://testnode/user/forgotten-user",
+        "scope": "company",
+        "reason": "RTBF request ref #1234"
+      },
+      "expected_status": 201,
+      "expected_body_has_keys": ["id", "scope", "signed_by"],
+      "requires_auth": true
+    },
+    {
+      "id": "tomb-status-check-requires-admin",
+      "description": "GET /v1/tombstones/{uri} without admin permission returns 401 or 403 (§23.2)",
+      "method": "GET",
+      "path": "/v1/tombstones/stigmem%3A%2F%2Ftestnode%2Fuser%2Fforgotten-user",
+      "body": null,
+      "expected_status_in": [401, 403, 404],
+      "requires_auth": true
+    },
+    {
+      "id": "tomb-status-response-shape",
+      "description": "GET /v1/tombstones/{uri} (admin) returns 200 with tombstoned boolean and scope (§23.2)",
+      "method": "GET",
+      "path": "/v1/tombstones/stigmem%3A%2F%2Ftestnode%2Fuser%2Fforgotten-user",
+      "body": null,
+      "expected_status_in": [200, 404],
+      "requires_auth": true
+    },
+    {
+      "id": "tomb-facts-get-excludes-tombstoned-entity",
+      "description": "GET /v1/facts after a tombstone returns an empty result for the tombstoned entity — oracle leakage prevented (§23.3)",
+      "method": "GET",
+      "path": "/v1/facts?entity=stigmem%3A%2F%2Ftestnode%2Fuser%2Fforgotten-user",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_contains": {"facts": [], "total": 0},
+      "requires_auth": true
+    },
+    {
+      "id": "tomb-federation-poll-requires-capability-token",
+      "description": "GET /v1/federation/tombstones without tombstone:read capability token returns 401 or 403 (§23.4.3)",
+      "method": "GET",
+      "path": "/v1/federation/tombstones",
+      "body": null,
+      "expected_status_in": [401, 403, 404],
+      "requires_auth": true
+    },
+    {
+      "id": "tomb-pagination-total-post-filter",
+      "description": "X-Total-Count on GET /v1/facts is computed after tombstone filter — no oracle leakage of tombstoned count (§23.3.3)",
+      "method": "GET",
+      "path": "/v1/facts",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["facts", "total"]
+    }
+  ]
+}

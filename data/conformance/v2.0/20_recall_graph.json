@@ -1,0 +1,190 @@
+{
+  "spec_section": "§20",
+  "title": "Recall & Graph — Wire Format Conformance",
+  "description": "Validates POST /v1/recall response shape, token-budget semantics, and GET /v1/graph/neighbors traversal contract per §20.",
+  "vectors": [
+    {
+      "id": "recall-seed-fact",
+      "description": "Seed: assert a string fact used by downstream recall vectors (internal setup vector)",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/agent/recall-subject",
+        "relation": "memory:description",
+        "value": {"type": "string", "v": "recall subject is the primary engineer on the atlas project"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "local"
+      },
+      "expected_status": 201
+    },
+    {
+      "id": "recall-response-shape",
+      "description": "POST /v1/recall returns 200 with all required top-level response fields (§20.2)",
+      "method": "POST",
+      "path": "/v1/recall",
+      "body": {
+        "query": "atlas project engineer",
+        "scope": "local",
+        "token_budget": 4000,
+        "depth": 1,
+        "include_neighbors": false
+      },
+      "requires_setup": "recall-seed-fact",
+      "expected_status": 200,
+      "expected_body_has_keys": [
+        "recall_id",
+        "query_hash",
+        "facts",
+        "total_scored",
+        "token_budget",
+        "tokens_used",
+        "truncated"
+      ]
+    },
+    {
+      "id": "recall-id-is-uuid",
+      "description": "recall_id is a 36-character UUID string (§20.2)",
+      "method": "POST",
+      "path": "/v1/recall",
+      "body": {
+        "query": "atlas project engineer",
+        "scope": "local",
+        "token_budget": 4000,
+        "depth": 1,
+        "include_neighbors": false
+      },
+      "requires_setup": "recall-seed-fact",
+      "expected_status": 200,
+      "expected_field_length": {"recall_id": 36, "query_hash": 64}
+    },
+    {
+      "id": "recall-empty-db-shape",
+      "description": "Recall on a query with no matching facts returns empty result with correct zero values (§20.3)",
+      "method": "POST",
+      "path": "/v1/recall",
+      "body": {
+        "query": "zzz-no-such-entity-xyz-nonexistent-token-abc",
+        "scope": "local",
+        "token_budget": 4000,
+        "depth": 1,
+        "include_neighbors": false
+      },
+      "expected_status": 200,
+      "expected_body_contains": {
+        "facts": [],
+        "total_scored": 0,
+        "tokens_used": 0,
+        "truncated": false
+      }
+    },
+    {
+      "id": "recall-score-breakdown-fields",
+      "description": "Each returned fact carries score, score_breakdown with all six components, token_estimate, and hop_distance (§20.4)",
+      "method": "POST",
+      "path": "/v1/recall",
+      "body": {
+        "query": "recall subject atlas project engineer",
+        "scope": "local",
+        "token_budget": 4000,
+        "depth": 1,
+        "include_neighbors": false
+      },
+      "requires_setup": "recall-seed-fact",
+      "expected_status": 200,
+      "expected_first_fact_has_keys": [
+        "score",
+        "score_breakdown",
+        "token_estimate",
+        "hop_distance"
+      ],
+      "expected_first_fact_score_breakdown_keys": [
+        "lexical", "semantic", "graph", "source_trust", "recency", "weighted_total"
+      ]
+    },
+    {
+      "id": "recall-token-budget-too-small",
+      "description": "token_budget=1 causes no facts to be packed (minimum token_estimate > 1) — truncated=false, facts=[] (§20.5)",
+      "method": "POST",
+      "path": "/v1/recall",
+      "body": {
+        "query": "atlas project engineer",
+        "scope": "local",
+        "token_budget": 1,
+        "depth": 1,
+        "include_neighbors": false
+      },
+      "requires_setup": "recall-seed-fact",
+      "expected_status": 200,
+      "expected_body_contains": {
+        "facts": [],
+        "tokens_used": 0
+      }
+    },
+    {
+      "id": "recall-missing-query-field",
+      "description": "POST /v1/recall without required query field returns 422 (§20.1)",
+      "method": "POST",
+      "path": "/v1/recall",
+      "body": {
+        "scope": "local",
+        "token_budget": 4000
+      },
+      "expected_status": 422
+    },
+    {
+      "id": "graph-seed-ref-fact",
+      "description": "Seed: assert a ref fact that creates an edge alice→bob (internal setup vector)",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/agent/graph-alice",
+        "relation": "memory:knows",
+        "value": {"type": "ref", "v": "stigmem://testnode/agent/graph-bob"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "local"
+      },
+      "expected_status": 201
+    },
+    {
+      "id": "graph-neighbors-response-shape",
+      "description": "GET /v1/graph/neighbors returns 200 with entity and neighbors array (§20.6)",
+      "method": "GET",
+      "path": "/v1/graph/neighbors?entity=stigmem%3A%2F%2Ftestnode%2Fagent%2Fgraph-alice&depth=1&scope=local",
+      "body": null,
+      "requires_setup": "graph-seed-ref-fact",
+      "expected_status": 200,
+      "expected_body_has_keys": ["entity", "neighbors"]
+    },
+    {
+      "id": "graph-neighbors-entry-shape",
+      "description": "Each neighbor entry has entity, hops, and path fields (§20.6)",
+      "method": "GET",
+      "path": "/v1/graph/neighbors?entity=stigmem%3A%2F%2Ftestnode%2Fagent%2Fgraph-alice&depth=1&scope=local",
+      "body": null,
+      "requires_setup": "graph-seed-ref-fact",
+      "expected_status": 200,
+      "expected_body_contains": {
+        "entity": "stigmem://testnode/agent/graph-alice"
+      }
+    },
+    {
+      "id": "graph-depth-cap-exceeded",
+      "description": "Depth > 3 (max traversal cap) returns 400 to prevent unbounded traversal (§20.7)",
+      "method": "GET",
+      "path": "/v1/graph/neighbors?entity=stigmem%3A%2F%2Ftestnode%2Fagent%2Falice&depth=4&scope=local",
+      "body": null,
+      "expected_status": 400
+    },
+    {
+      "id": "graph-nonexistent-entity-empty",
+      "description": "GET /v1/graph/neighbors for an entity with no edges returns 200 with empty neighbors (§20.6)",
+      "method": "GET",
+      "path": "/v1/graph/neighbors?entity=stigmem%3A%2F%2Ftestnode%2Fagent%2Fno-such-entity-xyz&depth=1&scope=local",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["entity", "neighbors"]
+    }
+  ]
+}

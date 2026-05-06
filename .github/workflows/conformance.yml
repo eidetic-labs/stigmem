@@ -52,6 +52,38 @@ jobs:
           STIGMEM_SOURCE_ATTESTATION_MODE: "warn"
 
   # -------------------------------------------------------------------------
+  # v2.0 wire-format conformance vectors (§19–§25, zero-skip enforced)
+  # -------------------------------------------------------------------------
+  conformance-vectors-v2:
+    name: Stigmem v2.0 Wire Conformance (vectors)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install stigmem-node with dev dependencies
+        run: |
+          pip install -e "node[dev]" cryptography PyJWT
+
+      - name: Run v2.0 conformance suite (zero skips enforced)
+        run: |
+          pytest node/tests/test_conformance_v2.py \
+            -v \
+            --tb=short \
+            -p no:randomly \
+            --strict-markers
+        env:
+          STIGMEM_DB_PATH: ":memory:"
+          STIGMEM_AUTH_REQUIRED: "false"
+          STIGMEM_SOURCE_ATTESTATION_MODE: "warn"
+
+  # -------------------------------------------------------------------------
   # Multi-backend behavioral conformance suite (Phase 11)
   # Parameterized over sqlite, libsql, and postgres (feature-flagged).
   # -------------------------------------------------------------------------
@@ -120,7 +152,7 @@ jobs:
   # -------------------------------------------------------------------------
   conformance-gate:
     name: Conformance gate (all backends)
-    needs: [conformance-vectors, conformance-multi-backend]
+    needs: [conformance-vectors, conformance-vectors-v2, conformance-multi-backend]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -128,6 +160,9 @@ jobs:
         run: |
           if [[ "${{ needs.conformance-vectors.result }}" != "success" ]]; then
             echo "conformance-vectors failed" && exit 1
+          fi
+          if [[ "${{ needs.conformance-vectors-v2.result }}" != "success" ]]; then
+            echo "conformance-vectors-v2 failed" && exit 1
           fi
           if [[ "${{ needs.conformance-multi-backend.result }}" != "success" ]]; then
             echo "conformance-multi-backend failed" && exit 1

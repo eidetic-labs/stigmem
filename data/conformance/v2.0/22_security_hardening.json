@@ -1,0 +1,67 @@
+{
+  "spec_section": "§22",
+  "title": "Security Hardening — Wire Format Conformance",
+  "description": "Validates auth-default-true behaviour, unauthenticated request rejection, and always-open endpoints per §22.",
+  "vectors": [
+    {
+      "id": "sec-healthz-always-open",
+      "description": "GET /healthz returns 200 even when auth is required — health endpoint must never require credentials (§22.1)",
+      "method": "GET",
+      "path": "/healthz",
+      "body": null,
+      "expected_status": 200
+    },
+    {
+      "id": "sec-wellknown-always-open",
+      "description": "GET /.well-known/stigmem returns 200 without auth — discovery endpoint is always open (§22.1)",
+      "method": "GET",
+      "path": "/.well-known/stigmem",
+      "body": null,
+      "expected_status": 200
+    },
+    {
+      "id": "sec-wellknown-has-auth-field",
+      "description": "/.well-known/stigmem exposes auth field (§22.2, §18.3)",
+      "method": "GET",
+      "path": "/.well-known/stigmem",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["auth"]
+    },
+    {
+      "id": "sec-wellknown-source-attestation-field",
+      "description": "/.well-known/stigmem exposes source_attestation field with valid enum value (§22.2, §18.3)",
+      "method": "GET",
+      "path": "/.well-known/stigmem",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_value_in": {
+        "source_attestation": ["enforce", "warn", "off"]
+      }
+    },
+    {
+      "id": "sec-facts-get-rejected-when-auth-enabled",
+      "description": "GET /v1/facts without credentials returns 401 when STIGMEM_AUTH_REQUIRED=true (§22.3)",
+      "method": "GET",
+      "path": "/v1/facts?entity=user%3Aalice&scope=company",
+      "body": null,
+      "expected_status": 401,
+      "requires_auth": true
+    },
+    {
+      "id": "sec-facts-post-rejected-when-auth-enabled",
+      "description": "POST /v1/facts without credentials returns 401 when STIGMEM_AUTH_REQUIRED=true (§22.3)",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "user:alice",
+        "relation": "memory:role",
+        "value": {"type": "string", "v": "CEO"},
+        "source": "agent:test",
+        "scope": "company"
+      },
+      "expected_status": 401,
+      "requires_auth": true
+    }
+  ]
+}

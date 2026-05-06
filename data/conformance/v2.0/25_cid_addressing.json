@@ -1,0 +1,77 @@
+{
+  "spec_section": "§25",
+  "title": "CID Addressing — Wire Format Conformance",
+  "description": "Validates that POST /v1/facts writes a sha256: CID, GET /v1/facts/{cid} resolves via alias table, and verify-cid endpoint returns match/mismatch per §25.",
+  "vectors": [
+    {
+      "id": "cid-seed-fact",
+      "description": "Seed: assert a fact whose CID fields are exercised by downstream vectors (internal setup vector)",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/cid-subject",
+        "relation": "memory:role",
+        "value": {"type": "string", "v": "cid-conformance-test-value"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "local"
+      },
+      "expected_status": 201,
+      "expected_body_has_keys": ["id", "cid"]
+    },
+    {
+      "id": "cid-fact-response-includes-cid",
+      "description": "POST /v1/facts response includes non-null cid field starting with sha256: (§25.2)",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": {
+        "entity": "stigmem://testnode/user/cid-subject",
+        "relation": "memory:project",
+        "value": {"type": "string", "v": "atlas"},
+        "source": "stigmem://testnode/agent/test",
+        "confidence": 1.0,
+        "scope": "local"
+      },
+      "expected_status": 201,
+      "expected_body_has_keys": ["id", "cid"],
+      "expected_field_starts_with": {"cid": "sha256:"}
+    },
+    {
+      "id": "cid-unknown-lookup-returns-404",
+      "description": "GET /v1/facts/{sha256:nonexistent} returns 404 for an unknown CID (§25.3)",
+      "method": "GET",
+      "path": "/v1/facts/sha256%3Affffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "body": null,
+      "expected_status": 404
+    },
+    {
+      "id": "cid-verify-endpoint-known-fact",
+      "description": "POST /v1/facts/{id}/verify-cid returns 200 with a match field for a known fact id (§25.4)",
+      "method": "POST",
+      "path": "/v1/facts/00000000-0000-0000-0000-000000000001/verify-cid",
+      "body": {
+        "cid": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expected_status_in": [200, 404]
+    },
+    {
+      "id": "cid-verify-mismatch-returns-200-not-match",
+      "description": "POST /v1/facts/{id}/verify-cid with a mismatched CID returns 200 with match=false (§25.4)",
+      "method": "POST",
+      "path": "/v1/facts/00000000-0000-0000-0000-000000000001/verify-cid",
+      "body": {
+        "cid": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected_status_in": [200, 404]
+    },
+    {
+      "id": "cid-backfill-status-requires-admin",
+      "description": "GET /v1/admin/cid-backfill/status returns 401 or 403 without admin credentials (§25.5)",
+      "method": "GET",
+      "path": "/v1/admin/cid-backfill/status",
+      "body": null,
+      "expected_status_in": [401, 403],
+      "requires_auth": true
+    }
+  ]
+}

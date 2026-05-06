@@ -1,0 +1,109 @@
+{
+  "spec_section": "§24",
+  "title": "Time-Travel (as_of) — Wire Format Conformance",
+  "description": "Validates GET /v1/facts?as_of and POST /v1/recall?as_of parameter validation, past-timestamp filtering, and error codes per §24.",
+  "vectors": [
+    {
+      "id": "as-of-invalid-timestamp-format",
+      "description": "GET /v1/facts?as_of=not-a-date returns 400 with detail.code=as_of_invalid_timestamp (§24.1)",
+      "method": "GET",
+      "path": "/v1/facts?as_of=not-a-date",
+      "body": null,
+      "expected_status": 400,
+      "expected_nested": {
+        "detail.code": "as_of_invalid_timestamp"
+      }
+    },
+    {
+      "id": "as-of-future-rejected",
+      "description": "GET /v1/facts?as_of with a future timestamp returns 400 with detail.code=as_of_future (§24.1)",
+      "method": "GET",
+      "path": "/v1/facts?as_of=2099-01-01T00%3A00%3A00Z",
+      "body": null,
+      "expected_status": 400,
+      "expected_nested": {
+        "detail.code": "as_of_future"
+      }
+    },
+    {
+      "id": "as-of-valid-past-accepted",
+      "description": "GET /v1/facts?as_of with a well-formed past timestamp returns 200 with facts and total (§24.2)",
+      "method": "GET",
+      "path": "/v1/facts?as_of=2020-01-01T00%3A00%3A00Z",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["facts", "total"]
+    },
+    {
+      "id": "as-of-facts-only-up-to-timestamp",
+      "description": "Facts asserted after as_of are excluded; facts at or before as_of are returned (§24.2)",
+      "method": "GET",
+      "path": "/v1/facts?as_of=2020-01-01T00%3A00%3A00Z",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_contains": {
+        "facts": [],
+        "total": 0
+      }
+    },
+    {
+      "id": "as-of-recall-invalid-timestamp",
+      "description": "POST /v1/recall with as_of=not-a-date returns 400 or 422 (§24.3)",
+      "method": "POST",
+      "path": "/v1/recall",
+      "body": {
+        "query": "test",
+        "scope": "local",
+        "token_budget": 4000,
+        "depth": 1,
+        "as_of": "not-a-date"
+      },
+      "expected_status_in": [400, 422]
+    },
+    {
+      "id": "as-of-recall-valid-past",
+      "description": "POST /v1/recall with well-formed past as_of returns 200 with recall response shape (§24.3)",
+      "method": "POST",
+      "path": "/v1/recall",
+      "body": {
+        "query": "test",
+        "scope": "local",
+        "token_budget": 4000,
+        "depth": 1,
+        "as_of": "2020-01-01T00:00:00Z"
+      },
+      "expected_status": 200,
+      "expected_body_has_keys": [
+        "recall_id",
+        "query_hash",
+        "facts",
+        "total_scored",
+        "tokens_used",
+        "truncated"
+      ]
+    },
+    {
+      "id": "as-of-recall-future-rejected",
+      "description": "POST /v1/recall with as_of in the future returns 400 (§24.3)",
+      "method": "POST",
+      "path": "/v1/recall",
+      "body": {
+        "query": "test",
+        "scope": "local",
+        "token_budget": 4000,
+        "depth": 1,
+        "as_of": "2099-01-01T00:00:00Z"
+      },
+      "expected_status_in": [400, 422]
+    },
+    {
+      "id": "as-of-tombstone-retroactive-suppression",
+      "description": "Tombstoned entity is excluded even when as_of < tombstone.created_at — retroactive suppression per legal hold (§24.4)",
+      "method": "GET",
+      "path": "/v1/facts?entity=stigmem%3A%2F%2Ftestnode%2Fuser%2Fforgotten-user&as_of=2020-01-01T00%3A00%3A00Z",
+      "body": null,
+      "expected_status": 200,
+      "requires_auth": true
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "spec_section": "§21",
+  "title": "Instruction Discovery — Wire Format Conformance",
+  "description": "Validates lazy instruction manifest publish, boot-stub generation, and recall_instruction scoring per §21.",
+  "vectors": [
+    {
+      "id": "instruction-wellknown-open",
+      "description": "/.well-known/stigmem is accessible without auth and includes standard node fields (§21, §3.2)",
+      "method": "GET",
+      "path": "/.well-known/stigmem",
+      "body": null,
+      "expected_status": 200,
+      "expected_body_has_keys": ["version", "node_id", "node_url"]
+    },
+    {
+      "id": "instruction-manifest-publish-requires-admin",
+      "description": "POST instruction manifest without admin permission returns 401 or 403 (§21.2)",
+      "method": "POST",
+      "path": "/v1/agents/00000000-0000-0000-0000-000000000001/instruction-manifest",
+      "body": {
+        "version": "v1",
+        "entries": [
+          {
+            "name": "heartbeat-procedure",
+            "description": "Heartbeat procedure for the agent.",
+            "fact_uri": "instruction:test/agent/00000000-0000-0000-0000-000000000001/heartbeat-procedure/v1",
+            "load_triggers": {
+              "intents": ["how do I start a heartbeat"],
+              "keywords": ["heartbeat", "checkout"],
+              "task_types": ["issue_assigned"]
+            }
+          }
+        ],
+        "skip_coverage_gate": true
+      },
+      "expected_status_in": [401, 403],
+      "requires_auth": true
+    },
+    {
+      "id": "instruction-entry-both-fact-uri-and-path-rejected",
+      "description": "Manifest entry with both fact_uri and path is rejected 422 — exactly one content pointer required (§21.3)",
+      "method": "POST",
+      "path": "/v1/agents/00000000-0000-0000-0000-000000000001/instruction-manifest",
+      "body": {
+        "version": "v1",
+        "entries": [
+          {
+            "name": "bad-entry",
+            "description": "Has both fact_uri and path — invalid.",
+            "fact_uri": "instruction:test/agent/bad/v1",
+            "path": "/dev/null",
+            "load_triggers": {}
+          }
+        ],
+        "skip_coverage_gate": true
+      },
+      "expected_status_in": [401, 403, 422],
+      "requires_auth": true
+    },
+    {
+      "id": "instruction-entry-neither-fact-uri-nor-path-rejected",
+      "description": "Manifest entry with neither fact_uri nor path is rejected 422 (§21.3)",
+      "method": "POST",
+      "path": "/v1/agents/00000000-0000-0000-0000-000000000001/instruction-manifest",
+      "body": {
+        "version": "v1",
+        "entries": [
+          {
+            "name": "also-bad",
+            "description": "Has neither fact_uri nor path — invalid.",
+            "load_triggers": {}
+          }
+        ],
+        "skip_coverage_gate": true
+      },
+      "expected_status_in": [401, 403, 422],
+      "requires_auth": true
+    },
+    {
+      "id": "instruction-guaranteed-cap",
+      "description": "Manifest with more than 5 guaranteed-load entries is rejected — max 5 units per §21.4",
+      "method": "POST",
+      "path": "/v1/agents/00000000-0000-0000-0000-000000000001/instruction-manifest",
+      "body": {
+        "version": "v1",
+        "entries": [
+          {"name": "e1", "description": "d1", "fact_uri": "instruction:test/e1/v1", "load_triggers": {"intents": [], "keywords": [], "task_types": []}, "guaranteed_load": true},
+          {"name": "e2", "description": "d2", "fact_uri": "instruction:test/e2/v1", "load_triggers": {"intents": [], "keywords": [], "task_types": []}, "guaranteed_load": true},
+          {"name": "e3", "description": "d3", "fact_uri": "instruction:test/e3/v1", "load_triggers": {"intents": [], "keywords": [], "task_types": []}, "guaranteed_load": true},
+          {"name": "e4", "description": "d4", "fact_uri": "instruction:test/e4/v1", "load_triggers": {"intents": [], "keywords": [], "task_types": []}, "guaranteed_load": true},
+          {"name": "e5", "description": "d5", "fact_uri": "instruction:test/e5/v1", "load_triggers": {"intents": [], "keywords": [], "task_types": []}, "guaranteed_load": true},
+          {"name": "e6", "description": "d6", "fact_uri": "instruction:test/e6/v1", "load_triggers": {"intents": [], "keywords": [], "task_types": []}, "guaranteed_load": true}
+        ],
+        "skip_coverage_gate": true
+      },
+      "expected_status_in": [401, 403, 422],
+      "requires_auth": true
+    }
+  ]
+}

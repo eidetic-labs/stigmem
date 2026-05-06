@@ -5,8 +5,7 @@ build:
   tools:
     nodejs: "22"
   commands:
-    - cd docs && npm ci
-    - cd docs && npm run gen-api-docs
+    - cd docs && npm ci --ignore-scripts
     - cd docs && npm run build
     - mkdir -p $READTHEDOCS_OUTPUT/html
     - cp -r docs/build/. $READTHEDOCS_OUTPUT/html

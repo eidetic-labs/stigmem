@@ -18,27 +18,27 @@ from fastapi.responses import FileResponse, JSONResponse
 from .auth import Identity, resolve_identity
 from .db import apply_migrations
 from .rate_limit import RateLimitMiddleware
+from .routes.admin_audit import router as admin_audit_router
 from .routes.agent_keys import router as agent_keys_router
 from .routes.aliases import router as aliases_router
 from .routes.audit import router as audit_router
 from .routes.auth import router as auth_router
+from .routes.cards import router as cards_router
+from .routes.cid_admin import router as cid_admin_router
 from .routes.decay import router as decay_router
 from .routes.facts import router as facts_router
 from .routes.federation import router as federation_router
 from .routes.gardens import router as gardens_router
 from .routes.graph import router as graph_router
 from .routes.identity import router as identity_router
+from .routes.instruction import router as instruction_router
 from .routes.intents import router as intents_router
 from .routes.lint import router as lint_router
 from .routes.quarantine import router as quarantine_router
-from .routes.resolver import router as resolver_router
-from .routes.cards import router as cards_router
 from .routes.recall import router as recall_router
+from .routes.resolver import router as resolver_router
 from .routes.subscriptions import router as subscriptions_router
-from .routes.instruction import router as instruction_router
 from .routes.synthesize import router as synthesize_router
-from .routes.admin_audit import router as admin_audit_router
-from .routes.cid_admin import router as cid_admin_router
 from .routes.tombstones import router as tombstones_router
 from .routes.wellknown import router as wellknown_router
 from .settings import settings
@@ -67,12 +67,12 @@ def create_app() -> FastAPI:
 
         pull_task: asyncio.Task[None] | None = None
         if settings.federation_enabled:
-            from .peer_token import init_federation_keys
             from .federation_pull import pull_loop_task
+            from .peer_token import init_federation_keys
 
             init_federation_keys()
             pull_task = asyncio.create_task(pull_loop_task())
-            logger.info("Stigmem federation enabled — pull interval %ds", settings.federation_pull_interval_s)
+            logger.info("Federation enabled — pull %ds", settings.federation_pull_interval_s)
 
         from .subscription_delivery import sweep_loop as _sub_sweep_loop
         sweep_task: asyncio.Task[None] = asyncio.create_task(_sub_sweep_loop())

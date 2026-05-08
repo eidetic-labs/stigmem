@@ -212,12 +212,14 @@ surfaces:
   #
   # The surfaces below auto-mirror stigmem packages from upstream registries.
   # We don't publish to them; they pull from PyPI / npm / etc. on their own
-  # cadence. They're documented here so the team isn't surprised when they
-  # see stigmem appear in places we never directly published.
+  # cadence. Documented here so the team isn't surprised when they see
+  # stigmem appear in places we never directly published.
   #
   # Mirrors are NOT entries in the version-consistency CI — the manifest
   # tracks surfaces we control. Including them as comments keeps the audit
   # trail visible without making them enforceable.
+  #
+  # ─── PyPI auto-mirrors ────────────────────────────────────────────────────
   #
   # piwheels (https://www.piwheels.org/)
   #   Auto-builds ARM wheels from PyPI sdists for the Raspberry Pi community.
@@ -228,45 +230,167 @@ surfaces:
   #                  https://www.piwheels.org/project/stigmem-py/   (will populate after first PyPI publish)
   #                  https://www.piwheels.org/project/stigmem-node/ (same)
   #
-  # PyPI BigQuery / npm-stat / libraries.io
-  #   Read-only analytics; not a deployment surface.
+  # ─── npm auto-mirrors (CDN frontends to the npm registry) ─────────────────
   #
-  # GitHub Mirrors / Software Heritage
-  #   The repo itself is mirrored to Software Heritage (https://archive.softwareheritage.org)
-  #   for long-term preservation. Not a publish target; archival only.
+  # All four below pull continuously from registry.npmjs.org. When we publish
+  # stigmem-ts@0.9.0-alpha.1 to npm, all four mirror it automatically — no
+  # account, no token, no separate publish.
+  #
+  # unpkg.com (https://unpkg.com/)
+  #   `https://unpkg.com/stigmem-ts@0.9.0-alpha.1/dist/index.js` — direct file
+  #   serving from npm tarballs. Used by browsers + ad-hoc HTML demos.
+  #
+  # jsDelivr (https://www.jsdelivr.com/)
+  #   `https://cdn.jsdelivr.net/npm/stigmem-ts@0.9.0-alpha.1` — multi-CDN with
+  #   higher uptime than unpkg. Default for many docs sites.
+  #
+  # esm.sh (https://esm.sh/)
+  #   `https://esm.sh/stigmem-ts@0.9.0-alpha.1` — serves npm packages as ES
+  #   modules. Used by Deno + browser-native ESM consumers.
+  #
+  # Skypack (https://www.skypack.dev/)
+  #   Maintenance mode as of 2024 but still serves cached entries. Not a
+  #   reliable surface to plan around but documented for completeness.
+  #
+  # ─── Analytics / observers (not a deployment surface) ─────────────────────
+  #
+  # PyPI BigQuery / npm-stat / libraries.io
+  #   Read-only analytics. Show download counts, dependency graphs, semver
+  #   range adoption. We don't publish; we appear by virtue of upstream.
+  #
+  # ─── Archival ─────────────────────────────────────────────────────────────
+  #
+  # Software Heritage (https://archive.softwareheritage.org)
+  #   Mirrors the GitHub repo itself for long-term preservation. Not a publish
+  #   target; archival only. Becomes relevant if we ever need a reproducible
+  #   reference to a specific commit ID outside GitHub's control.
 
   # ──────────────────────────────────────────────────────────────────────────
-  # Future surfaces (commented; activate when stigmem ships to them)
+  # Community-maintained ecosystems (we don't publish; community submits)
   # ──────────────────────────────────────────────────────────────────────────
+  #
+  # These ecosystems have publishers who package upstream projects on behalf
+  # of their users. We don't push to them. If a maintainer wants to package
+  # stigmem for their ecosystem, they open a PR / submission in their own
+  # repository; we cooperate but don't drive.
+  #
+  # AUR (Arch User Repository, https://aur.archlinux.org/)
+  #   Community-maintained PKGBUILDs. If/when stigmem-node has Arch users,
+  #   someone in the community will submit a PKGBUILD. We can post a one-liner
+  #   in MAINTAINERS.md acknowledging community packagers but don't own it.
+  #
+  # nixpkgs / Nix Flakes
+  #   Community-maintained derivations in nixpkgs (NixOS) or as flake outputs.
+  #   Same model as AUR.
+  #
+  # Snap / Flatpak
+  #   Linux desktop-app packaging. Doesn't fit stigmem (server, not desktop)
+  #   but mentioned for completeness — community can publish if they want.
 
-  # - id: docker-hub-stigmem-node
-  #   kind: external-registry
-  #   category: container-image
-  #   file: <Dockerfile-or-build-script-path>
-  #   field: <tag-emission-field>
-  #   spelling: shorthand
-  #   sort_authority: pep440
-  #   notes: Tag convention — `stigmem/node:v0.9.0a1` and `stigmem/node:0.9` rolling.
-
+  # ──────────────────────────────────────────────────────────────────────────
+  # Future direct-publish surfaces (we WOULD publish if we add them)
+  #
+  # Each entry below is a candidate target with a current-state note + an
+  # explicit recommendation. When we activate one, uncomment the entry, fill
+  # in file/field if file-backed, and add publish steps to .github/workflows/
+  # publish.yml. New entries do not require ADR amendment unless they
+  # introduce a new spelling rule (per ADR-019 §Adding a new release surface).
+  # ──────────────────────────────────────────────────────────────────────────
+  #
+  # ─── Container images (recommended; partially wired) ──────────────────────
+  #
+  # Current state (2026-05-08):
+  # The publish.yml workflow ALREADY contains `publish-node` and
+  # `publish-dashboard` jobs targeting GHCR (ghcr.io/eidetic-labs/stigmem-node
+  # and stigmem-dashboard). They use the auto-provisioned GITHUB_TOKEN — no
+  # setup needed. They run on push to main + on release publish. They have
+  # never actually run (the repo has never had a v0.9.0a1+ tag pushed yet).
+  # Once PR 0 lands and we tag v0.9.0a1, GHCR images appear automatically.
+  # Including SBOM (syft + SPDX-JSON) and cosign keyless signing.
+  #
+  # Docker Hub is not currently wired. Adding it requires creating a
+  # docker.com account/org for Eidetic Labs, generating a publish token, and
+  # adding a parallel docker/login-action step in publish.yml.
+  #
+  # Recommendation: GHCR auto-runs on first tag (no action). Docker Hub is a
+  # nice-to-have for discoverability (operators searching docker.com find
+  # stigmem alongside Postgres/Redis); add post-v1.0 if there's pull-rate
+  # justification. Not a PR 0 prerequisite.
+  #
   # - id: ghcr-stigmem-node
   #   kind: external-registry
   #   category: container-image
-  #   file: <publish-workflow-path>
+  #   file: .github/workflows/publish.yml
   #   spelling: shorthand
   #   sort_authority: pep440
-
-  # - id: homebrew-stigmem
+  #   notes: Already wired; auto-publishes on git tag matching v*. Multi-arch
+  #     (linux/amd64 + linux/arm64), SBOM-attached, cosign-signed.
+  #
+  # - id: ghcr-stigmem-dashboard
+  #   kind: external-registry
+  #   category: container-image
+  #   file: .github/workflows/publish.yml
+  #   spelling: shorthand
+  #   sort_authority: pep440
+  #
+  # - id: docker-hub-stigmem-node (DEFERRED — post-v1.0; needs DOCKERHUB_TOKEN)
+  #   kind: external-registry
+  #   category: container-image
+  #   spelling: shorthand
+  #   sort_authority: pep440
+  #
+  # ─── Homebrew (deferred; stigmem isn't a CLI tool) ────────────────────────
+  #
+  # Current state (2026-05-08):
+  # No tap exists. Homebrew is a natural distribution channel for CLIs that
+  # macOS/Linux developers brew install (`brew install stigmem-node` would be
+  # the imagined command). Stigmem is a server/protocol; the natural deploy
+  # path is Docker, not brew. Recommendation: defer indefinitely.
+  #
+  # If we ever add a CLI like `stigmem` (federation handshake helper, scope
+  # linter, etc.), brew makes sense for that — open a tap repo
+  # `Eidetic-Labs/homebrew-stigmem` and put a Formula/stigmem.rb file in it.
+  #
+  # - id: homebrew-stigmem (DEFERRED — stigmem isn't a CLI; revisit if we ship one)
   #   kind: external-registry
   #   category: homebrew-formula
-  #   file: <tap-path>/Formula/stigmem.rb
-  #   field: version
   #   spelling: semver
   #   sort_authority: semver
-
-  # - id: conda-forge-stigmem
+  #
+  # ─── conda-forge (deferred until demand) ──────────────────────────────────
+  #
+  # Current state (2026-05-08):
+  # No conda-forge feedstock. Adding one requires a PR to
+  # https://github.com/conda-forge/staged-recipes with a recipe/meta.yaml,
+  # then ongoing maintenance of an auto-generated feedstock repo. Review
+  # cycles take days to weeks. Recommendation: defer until a Python+conda
+  # adopter explicitly asks. Most stigmem-py users will be fine with
+  # `pip install --pre stigmem-py`.
+  #
+  # - id: conda-forge-stigmem-py (DEFERRED — wait for first demand signal)
   #   kind: external-registry
   #   category: python-package
-  #   file: <feedstock-recipe-path>/recipe/meta.yaml
-  #   field: package.version
   #   spelling: pep440
   #   sort_authority: pep440
+  #
+  # ─── Linux distro packages — apt/.deb, rpm (deferred indefinitely) ────────
+  #
+  # Current state (2026-05-08):
+  # None. Adding these is very-high-effort: separate maintainer relationships
+  # with Debian/Ubuntu/Fedora/RHEL, signing keys, repository hosting,
+  # dependency graph compatibility per distro, etc. Pre-v1.0 federated
+  # infrastructure projects almost never ship distro packages — the audience
+  # for `apt install stigmem-node` doesn't exist yet. Operators self-hosting
+  # stigmem use Docker. Recommendation: defer indefinitely.
+  #
+  # - id: apt-stigmem-node (DEFERRED — not aligned with current audience)
+  #   kind: external-registry
+  #   category: os-package
+  #   spelling: semver
+  #   sort_authority: semver
+  #
+  # - id: rpm-stigmem-node (DEFERRED — same as apt)
+  #   kind: external-registry
+  #   category: os-package
+  #   spelling: semver
+  #   sort_authority: semver

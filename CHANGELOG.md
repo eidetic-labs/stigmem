@@ -19,7 +19,7 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 
 **Per-ecosystem version strings (per ADR-019):**
 - PyPI / Python: `stigmem 0.9.0a1` (PEP 440)
-- npm / Node:    `stigmem-ts@0.9.0-alpha.1` (semver) — **first npm release.** Root `package.json` is `private: true` (workspace root); `stigmem-ts` is the publishable SDK.
+- npm / Node:    `@eidetic-labs/stigmem-ts@0.9.0-alpha.1` (semver) — **first npm release.** Scoped under `@eidetic-labs` so all org Owners can manage the package without npm's free-tier limitation on team-bound package permissions. Root `package.json` is `private: true` (workspace root). Adopters install via `npm install @eidetic-labs/stigmem-ts`.
 - Helm `appVersion`: `0.9.0-alpha.1` (semver)
 - Git tag, GitHub release, prose: `v0.9.0a1` (shorthand)
 
@@ -52,7 +52,7 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 ### Deprecated
 
 - **No PyPI deprecation needed.** Audit on 2026-05-08 confirmed `stigmem 1.0.0rc1` was never actually published to PyPI; the canonical `stigmem` name is unclaimed and PR 0 is the first publish. The only stigmem-related PyPI artifact that ever shipped is `stigmem-openclaw` (1.0.3, 1.0.5 — independently versioned, continues forward on its own line).
-- **No npm package was previously published**, so there is nothing to deprecate on npm. `stigmem-ts@0.9.0-alpha.1` is the **first** npm release of the TypeScript SDK; it ships in PR 0 alongside the PyPI release.
+- **No npm package was previously published**, so there is nothing to deprecate on npm. `@eidetic-labs/stigmem-ts@0.9.0-alpha.1` is the **first** npm release of the TypeScript SDK; it ships in PR 0 alongside the PyPI release.
 
 ### Stability commitment
 

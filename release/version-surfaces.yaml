@@ -65,6 +65,13 @@ surfaces:
     field: version
     spelling: semver
     sort_authority: semver
+    notes: >-
+      Published as scoped package `@eidetic-labs/stigmem-ts` (decision
+      2026-05-08). Scoping under the `@eidetic-labs` namespace lets all org
+      Owners manage the package without bumping into npm's free-tier
+      limitation on team-bound package permissions. Adopters install via
+      `npm install @eidetic-labs/stigmem-ts`. Generates a per-package CI
+      token scoped to `@eidetic-labs/stigmem-ts` for NPM_TOKEN.
 
   # ClawHub skill version is INDEPENDENTLY VERSIONED (same pattern as adapter
   # pyproject.toml files at independent 0.x). The skill's `version:` field
@@ -233,19 +240,19 @@ surfaces:
   # ─── npm auto-mirrors (CDN frontends to the npm registry) ─────────────────
   #
   # All four below pull continuously from registry.npmjs.org. When we publish
-  # stigmem-ts@0.9.0-alpha.1 to npm, all four mirror it automatically — no
+  # @eidetic-labs/stigmem-ts@0.9.0-alpha.1 to npm, all four mirror it automatically — no
   # account, no token, no separate publish.
   #
   # unpkg.com (https://unpkg.com/)
-  #   `https://unpkg.com/stigmem-ts@0.9.0-alpha.1/dist/index.js` — direct file
+  #   `https://unpkg.com/@eidetic-labs/stigmem-ts@0.9.0-alpha.1/dist/index.js` — direct file
   #   serving from npm tarballs. Used by browsers + ad-hoc HTML demos.
   #
   # jsDelivr (https://www.jsdelivr.com/)
-  #   `https://cdn.jsdelivr.net/npm/stigmem-ts@0.9.0-alpha.1` — multi-CDN with
+  #   `https://cdn.jsdelivr.net/npm/@eidetic-labs/stigmem-ts@0.9.0-alpha.1` — multi-CDN with
   #   higher uptime than unpkg. Default for many docs sites.
   #
   # esm.sh (https://esm.sh/)
-  #   `https://esm.sh/stigmem-ts@0.9.0-alpha.1` — serves npm packages as ES
+  #   `https://esm.sh/@eidetic-labs/stigmem-ts@0.9.0-alpha.1` — serves npm packages as ES
   #   modules. Used by Deno + browser-native ESM consumers.
   #
   # Skypack (https://www.skypack.dev/)

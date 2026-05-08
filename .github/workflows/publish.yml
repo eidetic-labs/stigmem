@@ -171,7 +171,7 @@ jobs:
             "${{ env.DASHBOARD_IMAGE }}@${{ steps.build.outputs.digest }}"
 
   publish-sdk-ts:
-    name: Publish stigmem-ts to npm
+    name: Publish @eidetic-labs/stigmem-ts to npm
     runs-on: ubuntu-latest
     # Only publish on tagged releases that look like semver (e.g. v1.0.0)
     if: startsWith(github.ref, 'refs/tags/v')
@@ -193,11 +193,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build stigmem-ts
-        run: pnpm --filter stigmem-ts build
+      # Filter by directory rather than package name — name-independent and
+      # survives renames/scope changes (e.g. stigmem-ts → @eidetic-labs/stigmem-ts).
+      - name: Build SDK
+        run: pnpm --filter "./sdks/stigmem-ts" build
 
       - name: Run tests (gate before publish)
-        run: pnpm --filter stigmem-ts test
+        run: pnpm --filter "./sdks/stigmem-ts" test
 
       # Translate the PEP-440-style git tag (v0.9.0a1) to the semver string
       # npm requires (0.9.0-alpha.1). Per ADR-019 §Per-ecosystem spelling.
@@ -209,7 +211,7 @@ jobs:
         run: |
           cd sdks/stigmem-ts
           pnpm pkg set version="${{ steps.ver.outputs.semver }}"
-          echo "Publishing stigmem-ts@${{ steps.ver.outputs.semver }}"
+          echo "Publishing @eidetic-labs/stigmem-ts@${{ steps.ver.outputs.semver }}"
 
       - name: Sanity check — package version is valid semver
         run: |

@@ -207,6 +207,35 @@ surfaces:
       docs/versioned_docs/version-X/ are scope-checked separately.
 
   # ──────────────────────────────────────────────────────────────────────────
+  # Downstream mirrors (informational — we do NOT push to these)
+  # ──────────────────────────────────────────────────────────────────────────
+  #
+  # The surfaces below auto-mirror stigmem packages from upstream registries.
+  # We don't publish to them; they pull from PyPI / npm / etc. on their own
+  # cadence. They're documented here so the team isn't surprised when they
+  # see stigmem appear in places we never directly published.
+  #
+  # Mirrors are NOT entries in the version-consistency CI — the manifest
+  # tracks surfaces we control. Including them as comments keeps the audit
+  # trail visible without making them enforceable.
+  #
+  # piwheels (https://www.piwheels.org/)
+  #   Auto-builds ARM wheels from PyPI sdists for the Raspberry Pi community.
+  #   Already mirrors stigmem-openclaw at the versions PyPI has (1.0.3, 1.0.5).
+  #   Will pick up future stigmem-py / stigmem-node / stigmem-openclaw publishes
+  #   within hours of a PyPI upload. Respects PyPI yanks.
+  #   Project pages: https://www.piwheels.org/project/stigmem-openclaw/
+  #                  https://www.piwheels.org/project/stigmem-py/   (will populate after first PyPI publish)
+  #                  https://www.piwheels.org/project/stigmem-node/ (same)
+  #
+  # PyPI BigQuery / npm-stat / libraries.io
+  #   Read-only analytics; not a deployment surface.
+  #
+  # GitHub Mirrors / Software Heritage
+  #   The repo itself is mirrored to Software Heritage (https://archive.softwareheritage.org)
+  #   for long-term preservation. Not a publish target; archival only.
+
+  # ──────────────────────────────────────────────────────────────────────────
   # Future surfaces (commented; activate when stigmem ships to them)
   # ──────────────────────────────────────────────────────────────────────────
 

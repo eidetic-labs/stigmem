@@ -1,6 +1,10 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 
+[![CI](https://github.com/Eidetic-Labs/stigmem/actions/workflows/ci.yml/badge.svg)](https://github.com/Eidetic-Labs/stigmem/actions/workflows/ci.yml)
 [![Conformance](https://github.com/Eidetic-Labs/stigmem/actions/workflows/conformance.yml/badge.svg)](https://github.com/Eidetic-Labs/stigmem/actions/workflows/conformance.yml)
+[![PyPI version](https://img.shields.io/pypi/v/stigmem?include_prereleases&label=pypi)](https://pypi.org/project/stigmem/)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Stability: preview alpha](https://img.shields.io/badge/stability-preview%20alpha-orange.svg)](#why-v090a1-and-not-v10)
 
 > **Status: `v0.9.0a1` — preview alpha, pre-stable · Apache-2.0**
 > **Repository:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem)

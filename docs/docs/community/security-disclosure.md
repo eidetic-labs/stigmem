@@ -38,9 +38,11 @@ For the formal threat model (trust boundaries, STRIDE analysis, risk register), 
 
 | Version | Supported |
 | ------- | --------- |
-| 1.0-rc  | Yes       |
-| 0.x     | Yes (until v1.0 stable) |
-| < 0.9   | No        |
+| `0.9.0a*` (Phase A alpha — current) | Yes — pre-release; no stability guarantee. |
+| `1.0.0rc1` (retracted) | No — yanked from PyPI; see the retraction post linked from `README.md`. |
+| `< 0.9.0a1` (development checkpoints `v0.2`–`v2.0`) | No — internal checkpoints, not tagged releases. |
+
+The canonical `SECURITY.md` at the repo root is the source of truth for supported versions; this page mirrors it.
 
 ---
 
@@ -99,13 +101,15 @@ Use CVSS v3.1 as the primary severity signal. For Stigmem-specific surfaces:
 
 ---
 
-## Security posture — v1.0-rc
+## Security posture — v0.9.0a1
 
-As of 2026-05-03, the v1.0-rc release has **zero unaddressed security concerns**:
+> **Posture-reset note.** The 2026-05-08 reset to `v0.9.0a1` carried forward the dependency-fix posture from the original `v1.0-rc` 2026-05-03 snapshot — the same patched package versions are still in effect. Several **threat-model** controls (mTLS-default federation, persistent audit log, per-principal rate limits, capability-level cross-org instruction validation, bounded HLC skew, the [ADR-016](../../adr/016-storage-immutability-enforcement.md) storage-immutability stack) are scheduled for Phase B and are **not yet in effect** at v0.9.0a1. Adopters running federation across organizational boundaries should wait for Phase B per [LIMITATIONS.md](../../../LIMITATIONS.md). The canonical security posture lives in repo-root `SECURITY.md`; this page mirrors the dependency-alert summary.
+
+The dependency-alert posture (carried forward from the 2026-05-03 v1.0-rc snapshot to v0.9.0a1) has **zero unaddressed Dependabot alerts**:
 
 | Category | Count |
 | -------- | ----- |
-| Dependabot alerts resolved by the v1.0-rc dep upgrade sweep | 20 |
+| Dependabot alerts resolved by the dep upgrade sweep | 20 |
 | Docs build toolchain alerts (non-exploitable, suppressed) | 7 |
 | Unaddressed / escalated blockers | 0 |
 

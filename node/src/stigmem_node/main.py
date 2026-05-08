@@ -100,11 +100,12 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="Stigmem Reference Node",
-        version="2.0.0",
+        version="0.9.0a1",
         description=(
-            "Reference node implementing the Stigmem v2.0 HTTP API — facts, federation, "
-            "gardens, recall, subscriptions, audit, identity, RTBF tombstones, time-travel "
-            "queries, and content-addressed fact IDs."
+            "Reference node implementing the Stigmem v0.9.0a1 HTTP API — facts, federation, "
+            "gardens, recall, subscriptions, audit, identity, content-addressed fact IDs. "
+            "RTBF tombstones, time-travel queries, multi-tenant, and other cross-cutting "
+            "features moved to opt-in plugins per ADR-011."
         ),
         license_info={"name": "Apache-2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0"},
         lifespan=lifespan,

@@ -1,0 +1,36 @@
+name: version-consistency
+
+on:
+  pull_request:
+    paths:
+      - "pyproject.toml"
+      - "**/pyproject.toml"
+      - "package.json"
+      - "**/package.json"
+      - "**/Chart.yaml"
+      - "release/version-surfaces.yaml"
+      - "scripts/check_version_consistency.py"
+      - "scripts/validate_version_surfaces.py"
+      - ".github/workflows/version-consistency.yml"
+  push:
+    branches: [main]
+
+jobs:
+  version-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PyYAML
+        run: python -m pip install --upgrade pip pyyaml
+
+      - name: Validate version-surfaces manifest schema
+        run: python scripts/validate_version_surfaces.py
+
+      - name: Check version consistency across surfaces
+        run: python scripts/check_version_consistency.py --verbose

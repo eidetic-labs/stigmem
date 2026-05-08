@@ -2,7 +2,7 @@
 name: stigmem-node
 title: Stigmem
 description: Persistent federated memory for OpenClaw agents — boot handshake, handoff, decision, and escalation surfaces backed by a Stigmem node.
-version: 1.0.5
+version: 1.0.6
 metadata:
   openclaw:
     emoji: "🧠"
@@ -24,7 +24,7 @@ metadata:
         description: "Entity URI that identifies this agent in the fact graph (default: agent:openclaw)."
     install:
       - kind: uv
-        package: "stigmem-py>=1.0.0,<2.0.0"
+        package: "stigmem-py>=0.9.0a1,<1.0.0"
 ---
 
 # Stigmem

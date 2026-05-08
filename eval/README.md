@@ -93,7 +93,7 @@ The `eval-fast` job runs on every PR via `.github/workflows/eval-fast.yml`.
   "nDCG@10": 0.0,
   "Recall@5": 0.0,
   "corpus_sha": "<sha256[:16] of probes.json>",
-  "server_version": "1.0.0rc1",
+  "server_version": "0.9.0a1",
   "recorded_at": "<ISO8601 UTC>"
 }
 ```

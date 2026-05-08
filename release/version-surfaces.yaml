@@ -1,0 +1,243 @@
+# release/version-surfaces.yaml
+#
+# Source of truth for stigmem's release surfaces and their canonical version-string
+# spellings. Consumed by scripts/check_version_consistency.py.
+#
+# Policy (the durable rules) lives in ADR-019.
+# This file is the operational inventory — current state of which surfaces stigmem
+# emits version strings on. Adding a new surface that uses an existing spelling
+# rule (pep440 / semver / shorthand) does NOT require an ADR amendment; just
+# append an entry and add a CI test fixture.
+#
+# Two query axes:
+#   kind     — audience / failure-mode class (external-registry, internal-protocol,
+#              internal-build-artifact, documentation)
+#   category — domain (python-package, node-package, container-image, http-header,
+#              transparency-log, chart-metadata, prose)
+#
+# Retirement: set `retired: YYYY-MM-DD` on the entry; keep the row (tombstone).
+# Schema validation: scripts/validate_version_surfaces.py.
+
+schema_version: 1
+
+surfaces:
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # External registries — published artifacts
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - id: pypi-stigmem
+    kind: external-registry
+    category: python-package
+    file: pyproject.toml
+    field: project.version
+    spelling: pep440
+    sort_authority: pep440
+
+  - id: pypi-stigmem-node
+    kind: external-registry
+    category: python-package
+    file: node/pyproject.toml
+    field: project.version
+    spelling: pep440
+    sort_authority: pep440
+
+  - id: pypi-stigmem-py
+    kind: external-registry
+    category: python-package
+    file: sdks/stigmem-py/pyproject.toml
+    field: project.version
+    spelling: pep440
+    sort_authority: pep440
+
+  - id: npm-stigmem-root
+    kind: external-registry
+    category: node-package
+    file: package.json
+    field: version
+    spelling: semver
+    sort_authority: semver
+
+  - id: npm-stigmem-ts
+    kind: external-registry
+    category: node-package
+    file: sdks/stigmem-ts/package.json
+    field: version
+    spelling: semver
+    sort_authority: semver
+
+  # ClawHub skill version is INDEPENDENTLY VERSIONED (same pattern as adapter
+  # pyproject.toml files at independent 0.x). The skill's `version:` field
+  # tracks the skill's own ClawHub release line, not the stigmem protocol
+  # version. The skill's `package:` field (its pin on stigmem-py) is what
+  # ties it to a stigmem release; that pin is enforced by adapters/openclaw/
+  # pyproject.toml's dependency declaration (already aligned to stigmem-py
+  # >= canonical) and not duplicated here.
+  #
+  # Re-enable as a manifest entry only if/when we want a dependency-pin CI
+  # check separate from protocol-version CI.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # External registries — Helm chart metadata
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - id: helm-infra-app-version
+    kind: external-registry
+    category: chart-metadata
+    file: infra/helm/stigmem/Chart.yaml
+    field: appVersion
+    spelling: semver
+    sort_authority: semver
+
+  - id: helm-deploy-app-version
+    kind: external-registry
+    category: chart-metadata
+    file: deploy/helm/stigmem/Chart.yaml
+    field: appVersion
+    spelling: semver
+    sort_authority: semver
+
+  # Note: Helm Chart.yaml's `version:` field (chart-package version) is
+  # independent of stigmem's protocol version. Not registered here — it has
+  # its own lifecycle owned by the chart maintainer.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Internal-protocol surfaces — emitted at runtime, not at build time
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - id: stigmem-version-header
+    kind: internal-protocol
+    category: http-header
+    spelling: shorthand
+    sort_authority: pep440
+    spec: ADR-012
+    notes: >-
+      `Stigmem-Version` HTTP header carries the wire-format version negotiated
+      between client and node. Value is the shorthand form (`v0.9.0a1`).
+
+  - id: stigmem-beta-header
+    kind: internal-protocol
+    category: http-header
+    spelling: shorthand
+    sort_authority: pep440
+    spec: ADR-012
+
+  - id: openapi-info-version
+    kind: internal-protocol
+    category: api-metadata
+    file: docs/openapi/stigmem.json
+    field: info.version
+    spelling: shorthand
+    sort_authority: pep440
+
+  - id: fastapi-app-version
+    kind: internal-protocol
+    category: api-metadata
+    file: node/src/stigmem_node/main.py
+    field: app_version  # set on FastAPI(version=...) constructor
+    spelling: shorthand
+    sort_authority: pep440
+
+  - id: federation-handshake-version
+    kind: internal-protocol
+    category: protocol-handshake
+    spelling: shorthand
+    sort_authority: pep440
+    spec: spec  # cross-reference to federation spec section
+    notes: >-
+      Version field exchanged during federation peer handshake. Currently
+      internal; becomes external when third parties write peer
+      implementations — re-evaluate `kind:` then.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Internal-build-artifact — Sigstore / Rekor / supply-chain
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - id: rekor-manifest-version
+    kind: internal-build-artifact
+    category: transparency-log
+    spelling: shorthand
+    sort_authority: pep440
+    spec: ADR-016
+    notes: >-
+      Version field in the Sigstore Rekor inclusion manifest (per ADR-016 L5).
+      Records which stigmem release the entry belongs to.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Documentation surfaces — version strings in prose / frontmatter
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - id: readme-status-banner
+    kind: documentation
+    category: prose
+    file: README.md
+    spelling: shorthand
+    sort_authority: pep440
+    notes: Status banner at top of README.
+
+  - id: changelog-top-version
+    kind: documentation
+    category: prose
+    file: CHANGELOG.md
+    spelling: shorthand
+    sort_authority: pep440
+
+  - id: limitations-applies-to
+    kind: documentation
+    category: prose
+    file: LIMITATIONS.md
+    spelling: shorthand
+    sort_authority: pep440
+
+  - id: security-applies-to
+    kind: documentation
+    category: prose
+    file: SECURITY.md
+    spelling: shorthand
+    sort_authority: pep440
+
+  - id: docusaurus-versions
+    kind: documentation
+    category: docs-site
+    file: docs/versions.json
+    spelling: shorthand
+    sort_authority: pep440
+    notes: >-
+      Docusaurus-managed versioned-docs registry. Per-version sidebars under
+      docs/versioned_docs/version-X/ are scope-checked separately.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Future surfaces (commented; activate when stigmem ships to them)
+  # ──────────────────────────────────────────────────────────────────────────
+
+  # - id: docker-hub-stigmem-node
+  #   kind: external-registry
+  #   category: container-image
+  #   file: <Dockerfile-or-build-script-path>
+  #   field: <tag-emission-field>
+  #   spelling: shorthand
+  #   sort_authority: pep440
+  #   notes: Tag convention — `stigmem/node:v0.9.0a1` and `stigmem/node:0.9` rolling.
+
+  # - id: ghcr-stigmem-node
+  #   kind: external-registry
+  #   category: container-image
+  #   file: <publish-workflow-path>
+  #   spelling: shorthand
+  #   sort_authority: pep440
+
+  # - id: homebrew-stigmem
+  #   kind: external-registry
+  #   category: homebrew-formula
+  #   file: <tap-path>/Formula/stigmem.rb
+  #   field: version
+  #   spelling: semver
+  #   sort_authority: semver
+
+  # - id: conda-forge-stigmem
+  #   kind: external-registry
+  #   category: python-package
+  #   file: <feedstock-recipe-path>/recipe/meta.yaml
+  #   field: package.version
+  #   spelling: pep440
+  #   sort_authority: pep440

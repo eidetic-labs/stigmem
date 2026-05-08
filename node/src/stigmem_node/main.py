@@ -6,13 +6,13 @@ import asyncio
 import logging
 import signal
 import ssl
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any, cast
 
 import uvicorn
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, Response
 from fastapi.responses import FileResponse, JSONResponse
 
 from .auth import Identity, resolve_identity
@@ -114,7 +114,10 @@ def create_app() -> FastAPI:
 
     if settings.mtls_enabled:
         @app.middleware("http")
-        async def mtls_plaintext_guard(request: Request, call_next):  # type: ignore[return]
+        async def mtls_plaintext_guard(
+            request: Request,
+            call_next: Callable[[Request], Awaitable[Response]],
+        ) -> Response:
             """Reject plaintext federation requests when mTLS is configured (§22.1)."""
             if request.url.path.startswith("/v1/federation") and request.url.scheme != "https":
                 return JSONResponse(
@@ -156,16 +159,16 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     @app.get("/metrics", include_in_schema=False, tags=["ops"])
-    def prometheus_metrics():  # type: ignore[return]
+    def prometheus_metrics() -> Response:
         from .metrics import make_metrics_response
         resp = make_metrics_response()
         if resp is None:
             from fastapi.responses import PlainTextResponse
             return PlainTextResponse("# prometheus_client not installed\n", status_code=200)
-        return resp
+        return cast(Response, resp)
 
     @app.get("/v1/me", tags=["auth"])
-    def whoami(identity: Annotated[Identity, Depends(resolve_identity)]) -> dict:
+    def whoami(identity: Annotated[Identity, Depends(resolve_identity)]) -> dict[str, Any]:
         return {
             "entity_uri": identity.entity_uri,
             "permissions": sorted(identity.permissions),

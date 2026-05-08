@@ -3,7 +3,66 @@
 All notable changes to Stigmem are documented here.
 This file covers the reference node (`stigmem-node`), Python SDK (`stigmem-py`), TypeScript SDK (`stigmem-ts`), and MCP adapter. Spec changes are in [`spec/CHANGELOG.md`](spec/CHANGELOG.md).
 
-Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-release version strings follow [PEP 440](https://peps.python.org/pep-0440/) (Python artifacts) and [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) (npm/Helm artifacts) per [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md).
+
+---
+
+## Pre-1.0 history note (2026-05-08)
+
+The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled internal development checkpoints, not tagged releases anyone deployed in production. The canonical version line of stigmem is being reset to `v0.9.0a1` as the *first build* per [ADR-001](docs/adr/001-versioning.md) and [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). The historical entries below are preserved as the development record; they do not represent prior public releases.
+
+---
+
+## [0.9.0a1] — 2026-05-08
+
+**Status:** preview alpha — pre-stable, not for production federation across organizational boundaries. See [LIMITATIONS.md](LIMITATIONS.md).
+
+**Per-ecosystem version strings (per ADR-019):**
+- PyPI / Python: `stigmem 0.9.0a1` (PEP 440)
+- npm / Node:    `stigmem@0.9.0-alpha.1`, `stigmem-ts@0.9.0-alpha.1` (semver)
+- Helm `appVersion`: `0.9.0-alpha.1` (semver)
+- Git tag, GitHub release, prose: `v0.9.0a1` (shorthand)
+
+### Added
+
+- **Repository artifacts establishing the reset:**
+  - `LIMITATIONS.md` at repo root — adopter-facing constraints, known gaps, deployment-pattern guidance.
+  - `MAINTAINERS.md` at repo root — current maintainers and the [ADR-001 §Contributor approval rule](docs/adr/001-versioning.md).
+  - `release/version-surfaces.yaml` — canonical inventory of release surfaces and their per-ecosystem spellings; consumed by `scripts/check_version_consistency.py`.
+  - `scripts/check_version_consistency.py`, `scripts/validate_version_surfaces.py`, and `.github/workflows/version-consistency.yml` — CI gate preventing the version-state inconsistency that triggered the v1.0 retraction.
+  - 19 ADRs committed under `docs/adr/` (per [ADR-005](docs/adr/005-docs-ia.md), [ADR-009](docs/adr/009-repo-structure.md)).
+  - **README §Security posture** — at-a-glance security entry point with links to LIMITATIONS, threat-model, SECURITY.md, security architecture, operator hardening (per master-checklist; replaces a top-level `THREATS.md`).
+  - **README §AI-authorship disclosure** — names which paths have been human-reviewed in depth and which haven't.
+- **Spec section §25 — Content-addressed fact IDs (CIDs)** retained as a core feature (per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md), amending [ADR-011](docs/adr/011-cross-cutting-extraction.md)). CIDs are load-bearing for the storage-immutability stack ([ADR-016](docs/adr/016-storage-immutability-enforcement.md)) and the prompt-injection trust boundary ([ADR-003](docs/adr/003-prompt-injection.md) L2).
+
+### Changed
+
+- **Canonical version line reset.** `pyproject.toml`, `package.json`, `sdks/stigmem-py/pyproject.toml`, `sdks/stigmem-ts/package.json`, `node/pyproject.toml`, `infra/helm/stigmem/Chart.yaml`, `deploy/helm/stigmem/Chart.yaml`, README status banner, SECURITY.md "Applies to" line, and threat model "Applies to" line all updated to v0.9.0a1 (PEP 440) or 0.9.0-alpha.1 (semver) per their per-surface convention. `adapters/openclaw/pyproject.toml` `stigmem-py` dependency range bumped to `>=0.9.0a1`.
+- **LICENSE replaced** with canonical Apache-2.0 SPDX template. Verified ~10 substantive deviations from canonical Apache-2.0 in the previous LICENSE; replaced wholesale.
+- **SECURITY.md** "Supported versions" table updated: `1.0.0-rc` retired; `0.9.0a1` listed as the current supported pre-release. v0.9.0a1 carries no stability guarantee — breaking changes during the Phase A/B hardening window are expected and called out in this changelog.
+- **Default install scope shrunk.** Multi-tenant, RTBF tombstones, time-travel queries, lazy instruction discovery, advanced memory-garden ACL, and source attestation move to `experimental/` as opt-in plugins per [ADR-011](docs/adr/011-cross-cutting-extraction.md). The default install matches the v1.0 critical-path scope from [ADR-002](docs/adr/002-v1-scope.md). Operators who need experimental features install them via the plugin system.
+- **Spec content under earlier version markers preserved.** The protocol-spec content from `stigmem-spec-v0.2.md` through `stigmem-spec-v2.0.md` is being reviewed section-by-section against the actual implementation and migrated forward into the v0.9.0a1 canonical structure. Earlier evolutionary spec files move to `spec/archive/evolution/` after their content has been forward-migrated. Nothing is being deleted.
+
+### Security
+
+- **Threat model status header** updated to v0.9.0a1 posture. Risks the original v1.0 announcement claimed mitigated but had not (mTLS-default federation, persistent audit log, per-principal rate limits, capability validation, bounded HLC skew) are now correctly listed as Open or Residual, scheduled for Phase B per the strengthening plan.
+- **R-23** (admin-level storage tampering / fact mutation) added to the risk register; mitigation is the [ADR-016](docs/adr/016-storage-immutability-enforcement.md) L1–L5 storage-immutability stack, scheduled for Phase B.
+- **No CVE-class fixes in this release.** This is a posture reset, not a security-patch release.
+
+### Deprecated
+
+- `stigmem 1.0.0rc1` on PyPI is **yanked in PR 0.5** (PEP 592). Yanked releases remain installable when explicitly pinned (`pip install stigmem==1.0.0rc1`) but are not picked up by new resolutions.
+- `stigmem@1.0.0-rc` and `stigmem-ts@1.0.0-rc` on npm are **deprecated in PR 0.5** with a one-line message linking the retraction post.
+
+### Stability commitment
+
+`v0.9.0a1` carries **no stability guarantee**. Wire format, public Python API, and SDK contracts may change during the Phase A and Phase B hardening windows. Stability commitments begin at `v1.0.0` GA, after a 30-day external-operator soak per [ADR-001](docs/adr/001-versioning.md). Pin to specific pre-release versions; auto-upgrade is not safe.
+
+---
+
+## Historical development checkpoints (preserved as record, not prior releases)
+
+The entries below labeled `v0.2` through `v2.0` and `1.0.0-rc` documented internal development checkpoints. They are preserved here as the development record. Per [ADR-001](docs/adr/001-versioning.md) and [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md), the canonical version line of stigmem begins at `v0.9.0a1` above.
 
 ---
 

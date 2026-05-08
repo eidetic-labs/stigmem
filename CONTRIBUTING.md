@@ -284,6 +284,29 @@ Do not silently quarantine flaky tests.
 
 The spec file records authors in its header. RFC contributors who make substantive changes to spec content are listed. Implementation-only contributors are acknowledged in CHANGELOG.
 
+## AI-authorship disclosure
+
+Stigmem is built by two contributors with heavy AI-coding assistance. We disclose this because a category whose product is trust shouldn't quietly hide where the work came from. The same disclosure appears in [README.md](README.md#ai-authorship-disclosure).
+
+**Paths with deeper human review (line-by-line):**
+- `spec/` — protocol specification text
+- `docs/adr/` — Architecture Decision Records
+- `LIMITATIONS.md`, `SECURITY.md`, `MAINTAINERS.md`, root `README.md`
+- All threat-model entries (`spec/security/`, `docs/security/`)
+
+**Paths with lighter human review (high-level direction + spot-checks):**
+- `node/src/` — implementation
+- `adapters/` — adapter implementations
+- `sdks/` — SDK stubs
+- `apps/` — UI scaffolding
+- Test suites
+- Documentation pages outside the spec and ADRs
+
+**What we ask of contributors:**
+- When submitting a PR that includes AI-generated code, say so in the PR description. We don't reject AI-generated contributions — we calibrate review effort. Code in deeper-review paths gets line-by-line attention regardless of authorship.
+- When reviewing a PR, treat lighter-reviewed paths as you would any AI-written code: verify behavior against the spec, run the conformance suite, and audit before merging.
+- Disclosing AI assistance is a calibration aid, not a defect notice.
+
 ## Code of conduct
 
 Be direct and technically rigorous. Assume good faith. Disagree with arguments, not people. There is no formal CoC document yet; interim standard is the [Contributor Covenant v2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).

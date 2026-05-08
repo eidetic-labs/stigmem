@@ -2,14 +2,63 @@
 
 [![Conformance](https://github.com/Eidetic-Labs/stigmem/actions/workflows/conformance.yml/badge.svg)](https://github.com/Eidetic-Labs/stigmem/actions/workflows/conformance.yml)
 
-> **Status: v1.0 stable · Phase 7 (substrate) · Apache-2.0**
+> **Status: `v0.9.0a1` — preview alpha, pre-stable · Apache-2.0**
 > **Repository:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem)
+> **Not yet recommended for production federation across organizational boundaries.** See [LIMITATIONS.md](LIMITATIONS.md) and the [retraction post](#why-v090a1-and-not-v10) for context.
 
 Stigmem is an open specification and reference implementation for a federated knowledge fabric: a shared, persistent layer where AI agents and humans write typed, traceable facts that travel across tools, platforms, and organizations.
 
 Every fact is an immutable record — `(entity, relation, value, source, timestamp, confidence, scope)` — with full provenance, a hybrid logical clock timestamp, and a defined expiry. Nodes can peer with each other via a signed handshake; facts replicate across scope boundaries under explicit permission. Contradictions between nodes are surfaced as first-class records, not silently overwritten.
 
 Stigmem does **not** replace company orchestration platforms, agent runtimes, or tool protocols like MCP. It sits above them — the shared cognitive layer they all reason over.
+
+---
+
+## Why `v0.9.0a1` and not `v1.0`
+
+We previously announced `v1.0` and walked it back. Several controls our own threat model identifies as required for stable production — mTLS-default federation, persistent audit log, per-principal rate limits, capability-level validation for cross-org instructions, bounded HLC skew enforcement — were still in flight when the `v1.0` label shipped. Velocity outran validation.
+
+The canonical version line is being reset. **`v0.9.0a1` is the *first build* of stigmem.** Earlier version markers (`v0.2` through `v2.0`) labeled internal development checkpoints, not tagged releases anyone deployed in production. The spec *content* under those markers is real product specification — it is being reviewed section by section against the actual implementation and migrated forward into the v0.9.0 canonical structure. Only the implied chronology is being corrected.
+
+We chose `v0.9.0a1` (PEP 440 alpha) over `v0.9.0-preview` because alpha-beta-rc has built-in iteration semantics (`a1`, `a2`, `b1`, `rc1`) and ecosystem-native sort ordering in PyPI and npm — see [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) (Internal-Comms repo).
+
+For the full story, read [the retraction post](https://dev.to/<TBD-on-publish>) — published as part of PR 0.5 in the [GA Readiness Plan](https://github.com/orgs/Eidetic-Labs/projects/3).
+
+---
+
+## Security posture
+
+Stigmem is pre-stable. Adopters should read these documents *before* integrating against the API:
+
+- **[LIMITATIONS.md](LIMITATIONS.md)** — adopter-facing constraints, known gaps, deployment patterns that are safe vs. unsafe at the current alpha.
+- **[SECURITY.md](SECURITY.md)** — vulnerability disclosure policy, supported versions, contact path.
+- **[`spec/security/threat-model.md`](spec/security/threat-model.md)** — STRIDE risk register with per-risk status (Mitigated / Residual / Open / Accepted) per release.
+- **[Security architecture](docs/docs/Secure/architecture.md)** (Docs site, *Secure* tab) — capability boundaries, federation trust model, prompt-injection handling per [ADR-003](docs/adr/003-prompt-injection.md).
+- **Operator hardening guide** — *coming in Phase B* (per the strengthening plan); single-org single-node deployments are the only currently-supported deployment pattern.
+
+A federated-memory protocol earns trust by being correct under adversarial conditions. This release is a substrate to build against and review, not a production system.
+
+---
+
+## AI-authorship disclosure
+
+Stigmem is built by two contributors with heavy AI-coding assistance. We disclose this because a category whose product is trust shouldn't quietly hide where the work came from.
+
+**Paths with deeper human review (line-by-line):**
+- `spec/` — protocol specification text
+- `docs/adr/` — Architecture Decision Records
+- `LIMITATIONS.md`, `SECURITY.md`, `MAINTAINERS.md`, root `README.md`
+- All threat-model entries (`spec/security/`, `docs/security/`)
+
+**Paths with lighter human review (high-level direction + spot-checks):**
+- `node/src/` — implementation
+- `adapters/` — adapter implementations
+- `sdks/` — SDK stubs
+- `apps/` — UI scaffolding
+- Test suites
+- Documentation pages outside the spec and ADRs
+
+This disclosure is also in [`CONTRIBUTING.md`](CONTRIBUTING.md). It is not a defect notice — it's a calibration aid for anyone evaluating whether to trust stigmem with their workload. Treat the lighter-reviewed paths as you would any AI-written code: verify behavior against the spec, run the conformance suite, and audit before adopting.
 
 ---
 
@@ -27,24 +76,26 @@ The **Memory** half reflects persistence and decay: facts have `valid_until` exp
 
 ## Current status
 
-| Area | Status | Spec section |
+The features below are **implemented in code** but have **not yet completed adversarial validation** at v0.9.0a1. Read [LIMITATIONS.md](LIMITATIONS.md) for which deployment patterns are currently safe.
+
+| Area | Implementation | Spec section |
 |------|--------|-------------|
-| Core fact shape (`entity`, `relation`, `value`, `source`, `timestamp`, `confidence`, `scope`) | **Implemented** | §2 |
-| `valid_until` decay, provenance, contradiction | **Implemented** | §3 |
-| HTTP wire format (assert, query, retract, single-fact GET) | **Implemented** | §5.1–5.5 |
-| Auth: API keys, per-scope restrictions | **Implemented** | §3.5 |
-| `/.well-known/stigmem` node metadata | **Implemented** | §5.3 |
-| Hybrid Logical Clock (HLC) | **Implemented** | §2.4 |
-| Federation: PeerDeclaration handshake (Ed25519), pull replication, scope enforcement | **Implemented** | §6 |
-| Conflict-first-class: auto-generated conflict records, resolution API | **Implemented** | §3.3, §5.9–5.10 |
-| Failure modes: split-brain, malicious peer, partial failure, replay attack | **Automated tests** | §11 |
-| Entity URI scheme (`stigmem://`) | **Implemented** | §2.5 |
-| Entity naming rules + lint semantics (`POST /v1/lint`, `lint_scope` MCP tool) | **Implemented** | §2.6, §14 |
-| Adapter ABI (MCP, Paperclip, OpenClaw) | **Implemented** | §12 |
-| Decay sweep (`POST /v1/decay/sweep`, configurable TTL + confidence-decay policies) | **Implemented** | §15 |
-| Synthesis (`POST /v1/synthesis`, `synthesize_scope` MCP tool) | **Implemented** | §16 |
-| Cursor-checkpoint export/import (bounded DB-loss recovery) | **Implemented** | §6 |
-| N-node federation backpressure + scope propagation invariants | **Implemented** | §6.7–6.8 |
+| Core fact shape (`entity`, `relation`, `value`, `source`, `timestamp`, `confidence`, `scope`) | Implemented | §2 |
+| `valid_until` decay, provenance, contradiction | Implemented | §3 |
+| HTTP wire format (assert, query, retract, single-fact GET) | Implemented | §5.1–5.5 |
+| Auth: API keys, per-scope restrictions | Implemented | §3.5 |
+| `/.well-known/stigmem` node metadata | Implemented | §5.3 |
+| Hybrid Logical Clock (HLC) | Implemented | §2.4 |
+| Federation: PeerDeclaration handshake (Ed25519), pull replication, scope enforcement | Implemented | §6 |
+| Conflict-first-class: auto-generated conflict records, resolution API | Implemented | §3.3, §5.9–5.10 |
+| Failure modes: split-brain, malicious peer, partial failure, replay attack | Automated tests | §11 |
+| Entity URI scheme (`stigmem://`) | Implemented | §2.5 |
+| Entity naming rules + lint semantics (`POST /v1/lint`, `lint_scope` MCP tool) | Implemented | §2.6, §14 |
+| Adapter ABI (MCP, Paperclip, OpenClaw) | Implemented | §12 |
+| Decay sweep (`POST /v1/decay/sweep`, configurable TTL + confidence-decay policies) | Implemented | §15 |
+| Synthesis (`POST /v1/synthesis`, `synthesize_scope` MCP tool) | Implemented | §16 |
+| Cursor-checkpoint export/import (bounded DB-loss recovery) | Implemented | §6 |
+| N-node federation backpressure + scope propagation invariants | Implemented | §6.7–6.8 |
 | Browser UI (human surface) | In progress | — |
 | Intent envelope (`goal`, `constraint`, `preference`, `handoff`) | Draft — feedback wanted | §4 |
 
@@ -84,6 +135,12 @@ Key environment variables (`STIGMEM_` prefix, set in `docker-compose.yml` `envir
 ```bash
 cd stigmem/node
 uv run python -m stigmem_node
+```
+
+**Pre-release install via `pip`:** because v0.9.0a1 is a PEP 440 pre-release, `pip install stigmem` (default channel) will *not* pick it up. To install the alpha explicitly:
+
+```bash
+pip install --pre stigmem
 ```
 
 **Migrating from bare-metal to Docker?** See the [upgrade path guide](docs/docs/install.md#upgrade).
@@ -136,10 +193,11 @@ uv run pytest tests/ -v
 
 ```
 stigmem/
-├── spec/           ← canonical specification (v0.2 → v1.0 stable)
-├── node/           ← reference node: FastAPI + SQLite, 74 tests
+├── spec/           ← canonical specification (under review for v0.9.0a1 first-build canonicalization)
+├── node/           ← reference node: FastAPI + SQLite
 ├── adapters/       ← MCP server (TypeScript), OpenClaw (Python), Paperclip (JS hook)
-├── dogfood/        ← CEO memory migration scripts
+├── sdks/           ← Python and TypeScript client SDKs
+├── apps/           ← Dashboard (in progress)
 └── docs/           ← Docusaurus 3 documentation site
 ```
 
@@ -162,7 +220,7 @@ It fills the gap none of them fill: typed, provenance-traceable, federated, enti
 
 The canonical specification lives in [`spec/`](spec/). See [`spec/README.md`](spec/README.md) for the section-by-section status table.
 
-Current stable version: **[`spec/stigmem-spec-v1.0.md`](spec/stigmem-spec-v1.0.md)** — §1–18 all stable; §17 Memory Garden and §18 Source Attestation promoted from v0.9-draft.
+The spec is being reviewed and improved into the v0.9.0a1 canonical structure: core sections first, then experimental sections move to `experimental/<feature>/spec.md` per [ADR-008](docs/adr/008-experimental-gates.md) and [ADR-010](docs/adr/010-modular-specs.md). Earlier evolutionary spec files (`stigmem-spec-v0.2.md` through `stigmem-spec-v1.1-draft.md`) move to `spec/archive/evolution/` after their content has been forward-migrated. Nothing from the spec is being deleted.
 
 ---
 
@@ -172,16 +230,20 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the RFC process. Short version:
 
 1. Open an issue using the [RFC template](.github/ISSUE_TEMPLATE/rfc.yml)
 2. Discuss and iterate
-3. Submit a PR against the canonical spec ([`spec/stigmem-spec-v1.0.md`](spec/stigmem-spec-v1.0.md)) — new sections start as draft blocks inside the stable spec file
-4. Spec changes merge with ≥2 approvals from active contributors
+3. Submit a PR against the canonical spec — new sections start as draft blocks inside the relevant spec file
+4. Spec changes merge per the **[ADR-001 §Contributor approval rule](docs/adr/001-versioning.md)**: two contributors *or* the founder alone, through Phase B.
 
 For bugs in the reference node, use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.yml).
+
+Maintainers and contributors are listed in [MAINTAINERS.md](MAINTAINERS.md).
 
 ---
 
 ## Security
 
-To report a vulnerability, use GitHub's private advisory process — **do not open a public issue**. See [SECURITY.md](SECURITY.md) for the full disclosure policy and the v1.0-rc security posture statement.
+To report a vulnerability, use GitHub's private advisory process — **do not open a public issue**. See [SECURITY.md](SECURITY.md) for the full disclosure policy and the v0.9.0a1 security posture statement.
+
+The full STRIDE threat model with per-release risk-register status lives at [`spec/security/threat-model.md`](spec/security/threat-model.md). See also [Security posture](#security-posture) above.
 
 ---
 

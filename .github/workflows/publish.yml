@@ -32,15 +32,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Compute PEP 440 and semver forms from the tag (per ADR-019). The git
+      # tag uses PEP 440 shorthand (v0.9.0a1); semver-strict consumers (npm,
+      # docker/metadata-action `type=semver`) need 0.9.0-alpha.1.
+      - name: Translate tag → PEP 440 + semver
+        id: ver
+        if: startsWith(github.ref, 'refs/tags/')
+        run: python3 scripts/translate_version.py "$GITHUB_REF_NAME" --gh-output
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
+        env:
+          DOCKER_METADATA_PR_HEAD_SHA: "true"
         with:
           images: ${{ env.NODE_IMAGE }}
+          # Three release tags on tagged builds: PEP 440 form (matches git tag),
+          # semver form (matches npm spelling), and `latest`-on-main otherwise.
           tags: |
             type=sha,prefix=
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=${{ steps.ver.outputs.pep440 }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=${{ steps.ver.outputs.semver }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
 
       - name: Set up QEMU (multi-arch)
         uses: docker/setup-qemu-action@v3
@@ -115,6 +128,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Translate tag → PEP 440 + semver
+        id: ver
+        if: startsWith(github.ref, 'refs/tags/')
+        run: python3 scripts/translate_version.py "$GITHUB_REF_NAME" --gh-output
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -123,7 +141,8 @@ jobs:
           tags: |
             type=sha,prefix=
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=${{ steps.ver.outputs.pep440 }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=${{ steps.ver.outputs.semver }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -180,12 +199,34 @@ jobs:
       - name: Run tests (gate before publish)
         run: pnpm --filter stigmem-ts test
 
-      - name: Stamp release version from tag
+      # Translate the PEP-440-style git tag (v0.9.0a1) to the semver string
+      # npm requires (0.9.0-alpha.1). Per ADR-019 §Per-ecosystem spelling.
+      - name: Translate tag → PEP 440 + semver
+        id: ver
+        run: python3 scripts/translate_version.py "$GITHUB_REF_NAME" --gh-output
+
+      - name: Stamp release version from tag (semver form for npm)
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
           cd sdks/stigmem-ts
-          pnpm pkg set version="$TAG"
-          echo "Publishing stigmem-ts@$TAG"
+          pnpm pkg set version="${{ steps.ver.outputs.semver }}"
+          echo "Publishing stigmem-ts@${{ steps.ver.outputs.semver }}"
+
+      - name: Sanity check — package version is valid semver
+        run: |
+          cd sdks/stigmem-ts
+          PUBLISHED_VER=$(node -p "require('./package.json').version")
+          if ! node -e "
+            const semver = require('semver');
+            const v = process.argv[1];
+            if (!semver.valid(v)) {
+              console.error('Invalid semver:', v);
+              process.exit(1);
+            }
+            console.log('OK:', v, 'is valid semver');
+          " "$PUBLISHED_VER"; then
+            echo "::error::package.json version $PUBLISHED_VER is not valid semver. The tag→semver translation is broken."
+            exit 1
+          fi
 
       - name: Publish to npm (with provenance)
         run: |

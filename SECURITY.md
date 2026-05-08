@@ -13,7 +13,7 @@ Stigmem follows the alpha-beta-rc pre-release convention per [ADR-019](docs/adr/
 | `0.9.0a*` (Phase A alpha series — current) | Yes — current pre-release line. **No stability guarantee.** Breaking changes during the hardening window are expected and documented in [CHANGELOG.md](CHANGELOG.md). |
 | `0.9.0b*` (Phase B beta series — future) | Will be supported when published. |
 | `1.0.0rc*` / `1.0.0` (Phase C / GA — future) | Will be supported when published. |
-| `1.0.0rc1` (retracted) | **No.** Yanked from PyPI per [PEP 592](https://peps.python.org/pep-0592/); pinned installs continue to resolve, new resolutions get `0.9.0a1` or later. The label was withdrawn — see the retraction post linked from [README §Why v0.9.0a1 and not v1.0](README.md#why-v090a1-and-not-v10). |
+| `1.0.0rc1` (retracted label, never shipped) | **N/A.** The label was announced publicly in 2026-05-03 but the package was never actually published to PyPI (audit 2026-05-08: `pypi.org/pypi/stigmem` returns 404). Nothing to install; nothing to yank. The label was withdrawn — see the retraction post linked from [README §Why v0.9.0a1 and not v1.0](README.md#why-v090a1-and-not-v10). |
 | `< 0.9.0a1` (development checkpoints — `v0.2` through `v2.0`) | **No.** These were internal development checkpoints, not tagged releases. The canonical version line begins at `v0.9.0a1`. |
 
 ## Reporting a Vulnerability

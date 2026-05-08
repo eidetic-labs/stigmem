@@ -51,7 +51,7 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 
 ### Deprecated
 
-- `stigmem 1.0.0rc1` on PyPI is **yanked in PR 0.5** (PEP 592). Yanked releases remain installable when explicitly pinned (`pip install stigmem==1.0.0rc1`) but are not picked up by new resolutions.
+- **No PyPI deprecation needed.** Audit on 2026-05-08 confirmed `stigmem 1.0.0rc1` was never actually published to PyPI; the canonical `stigmem` name is unclaimed and PR 0 is the first publish. The only stigmem-related PyPI artifact that ever shipped is `stigmem-openclaw` (1.0.3, 1.0.5 — independently versioned, continues forward on its own line).
 - **No npm package was previously published**, so there is nothing to deprecate on npm. `stigmem-ts@0.9.0-alpha.1` is the **first** npm release of the TypeScript SDK; it ships in PR 0 alongside the PyPI release.
 
 ### Stability commitment

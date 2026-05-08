@@ -19,7 +19,7 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 
 **Per-ecosystem version strings (per ADR-019):**
 - PyPI / Python: `stigmem 0.9.0a1` (PEP 440)
-- npm / Node:    `stigmem@0.9.0-alpha.1`, `stigmem-ts@0.9.0-alpha.1` (semver)
+- npm / Node:    `stigmem-ts@0.9.0-alpha.1` (semver) — **first npm release.** Root `package.json` is `private: true` (workspace root); `stigmem-ts` is the publishable SDK.
 - Helm `appVersion`: `0.9.0-alpha.1` (semver)
 - Git tag, GitHub release, prose: `v0.9.0a1` (shorthand)
 
@@ -52,7 +52,7 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 ### Deprecated
 
 - `stigmem 1.0.0rc1` on PyPI is **yanked in PR 0.5** (PEP 592). Yanked releases remain installable when explicitly pinned (`pip install stigmem==1.0.0rc1`) but are not picked up by new resolutions.
-- `stigmem@1.0.0-rc` and `stigmem-ts@1.0.0-rc` on npm are **deprecated in PR 0.5** with a one-line message linking the retraction post.
+- **No npm package was previously published**, so there is nothing to deprecate on npm. `stigmem-ts@0.9.0-alpha.1` is the **first** npm release of the TypeScript SDK; it ships in PR 0 alongside the PyPI release.
 
 ### Stability commitment
 

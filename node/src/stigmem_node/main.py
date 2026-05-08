@@ -104,8 +104,7 @@ def create_app() -> FastAPI:
         description=(
             "Reference node implementing the Stigmem v0.9.0a1 HTTP API — facts, federation, "
             "gardens, recall, subscriptions, audit, identity, content-addressed fact IDs. "
-            "RTBF tombstones, time-travel queries, multi-tenant, and other cross-cutting "
-            "features moved to opt-in plugins per ADR-011."
+            "Cross-cutting features (tombstones, time-travel, multi-tenant) are opt-in plugins."
         ),
         license_info={"name": "Apache-2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0"},
         lifespan=lifespan,

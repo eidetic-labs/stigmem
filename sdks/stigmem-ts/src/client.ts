@@ -1,5 +1,5 @@
 /**
- * Stigmem TypeScript client SDK — spec v1.0.
+ * Stigmem TypeScript client SDK.
  */
 
 import type {

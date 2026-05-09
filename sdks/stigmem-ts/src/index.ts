@@ -1,9 +1,9 @@
 /**
- * stigmem-ts — TypeScript client SDK for Stigmem (spec v1.0).
+ * stigmem-ts — TypeScript client SDK for Stigmem.
  *
  * @example
  * ```ts
- * import { StigmemClient, sv, tv } from "stigmem-ts";
+ * import { StigmemClient, sv, tv } from "@eidetic-labs/stigmem-ts";
  *
  * const client = new StigmemClient({ url: "http://localhost:8765", apiKey: "sk-..." });
  * const fact = await client.assertFact("user:alice", "memory:role", sv("CEO"), "agent:cto");

@@ -6,11 +6,15 @@
 
 ## Supported Versions
 
-| Version   | Supported |
-| --------- | --------- |
-| 1.0-rc    | Yes       |
-| 0.x       | Yes (until v1.0 stable)  |
-| < 0.9     | No        |
+Stigmem follows the alpha-beta-rc pre-release convention per [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). The first build of stigmem is `v0.9.0a1`; stable v1.0 has not shipped.
+
+| Version | Supported |
+| ------- | --------- |
+| `0.9.0a*` (Phase A alpha series — current) | Yes — current pre-release line. **No stability guarantee.** Breaking changes during the hardening window are expected and documented in [CHANGELOG.md](CHANGELOG.md). |
+| `0.9.0b*` (Phase B beta series — future) | Will be supported when published. |
+| `1.0.0rc*` / `1.0.0` (Phase C / GA — future) | Will be supported when published. |
+| `1.0.0rc1` (retracted label, never shipped) | **N/A.** The label was announced publicly in 2026-05-03 but the package was never actually published to PyPI (audit 2026-05-08: `pypi.org/pypi/stigmem` returns 404). Nothing to install; nothing to yank. The label was withdrawn — see the retraction post linked from [README §Why v0.9.0a1 and not v1.0](README.md#why-v090a1-and-not-v10). |
+| `< 0.9.0a1` (development checkpoints — `v0.2` through `v2.0`) | **No.** These were internal development checkpoints, not tagged releases. The canonical version line begins at `v0.9.0a1`. |
 
 ## Reporting a Vulnerability
 
@@ -44,9 +48,13 @@ We follow coordinated disclosure. We ask reporters to give us 90 days before pub
 
 ---
 
-## Security Posture — v1.0-rc (2026-05-03)
+## Security Posture — v0.9.0a1 (2026-05-08)
 
-This section documents the current security posture of the stigmem v1.0-rc release, including a triage of all open Dependabot alerts against Eidetic-Labs/stigmem as of 2026-05-03.
+> **Posture-reset note.** Stigmem's `v1.0` announcement was withdrawn on 2026-05-08; the canonical version line was reset to `v0.9.0a1` per [ADR-001](docs/adr/001-versioning.md) and [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). The dependency-alert triage in this section was originally compiled for `v1.0-rc` on 2026-05-03 and is **carried forward to v0.9.0a1** because the underlying dependency upgrades remain in effect — the same fixed package versions that resolved the alerts at v1.0-rc are still installed at v0.9.0a1. The supported-version posture changed (see "Supported Versions" above); the dependency-fix evidence did not.
+>
+> **Open security gaps named explicitly:** several controls our threat model identifies as required for stable production — mTLS-default federation, persistent audit log, per-principal rate limits, capability-level validation for cross-org instructions, bounded HLC skew enforcement, the storage-immutability stack ([ADR-016](docs/adr/016-storage-immutability-enforcement.md)) — are scheduled for Phase B and are **not yet in effect at v0.9.0a1**. Adopters running federation across organizational boundaries should wait for Phase B per [LIMITATIONS.md](LIMITATIONS.md).
+
+This section documents the current security posture of the stigmem `v0.9.0a1` release, including a triage of all open Dependabot alerts against Eidetic-Labs/stigmem as of the 2026-05-03 v1.0-rc snapshot (carried forward; see note above).
 
 ### Summary
 
@@ -56,11 +64,11 @@ This section documents the current security posture of the stigmem v1.0-rc relea
 | Alerts in docs build toolchain (non-exploitable, suppressed) | 7 |
 | Unaddressed / escalated blockers | 0 |
 
-**Net result: zero unaddressed security concerns for v1.0-rc.**
+**Net result: zero unaddressed Dependabot alerts at v0.9.0a1** (same dependency-fix posture carried forward from the v1.0-rc 2026-05-03 snapshot). Note that Dependabot alerts are a *dependency* concern — separately from the threat-model risks named in the posture-reset banner above.
 
 ---
 
-### Group A — Resolved by v1.0-rc dep upgrade (20 alerts)
+### Group A — Resolved by the dep upgrade sweep that landed pre-v0.9.0a1 (20 alerts)
 
 The `chore(deps): TypeScript dep upgrade sweep + Node CVE remediation` commit upgraded the following packages to patched versions. Dependabot alerts will auto-close on the next GitHub rescan after the branch merges.
 
@@ -88,7 +96,7 @@ The `apps/dashboard` Next.js curator dashboard was pinned at Next.js 14 and accu
 | #2 | MEDIUM | CVE-2024-47831 | DoS via image optimization | `next@15.5.15` ≥ patched `14.2.7` |
 | #1 | HIGH | CVE-2024-46982 | Cache poisoning | `next@15.5.15` ≥ patched `14.2.10` |
 
-> **Deployment gate:** The `apps/dashboard` is marked "In progress" and is not deployed to production for v1.0-rc. Even so, all CVEs above are fixed in the installed version. No deployment should occur on any prior version.
+> **Deployment gate:** The `apps/dashboard` is marked "In progress" and is not deployed to production at v0.9.0a1. Even so, all CVEs above are fixed in the installed version. No deployment should occur on any prior version.
 
 #### vite — 1 alert
 
@@ -136,7 +144,9 @@ The stigmem reference node (`stigmem/node/`) is implemented in Python with FastA
 
 ---
 
-### Security Controls in Effect (v1.0-rc)
+### Security Controls in Effect (v0.9.0a1)
+
+> The controls listed here are **dependency- and code-level controls** that are in effect at v0.9.0a1. **Federation-level and threat-model-level controls** named in the posture-reset banner at the top of this section (mTLS-default, audit log, rate limits, capability validation, bounded HLC skew, storage-immutability stack) are **not yet in effect** and are scheduled for Phase B.
 
 - **Authentication:** API keys enforced on all write endpoints; per-scope restrictions supported (§3.5).
 - **Federation:** Peer handshake uses Ed25519 signing; replay attack resistance via HLC timestamps (§6).

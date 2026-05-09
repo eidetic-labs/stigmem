@@ -1,7 +1,7 @@
 {
-  "name": "stigmem-ts",
-  "version": "1.0.0-rc",
-  "description": "TypeScript client SDK for Stigmem — the federated knowledge fabric (spec v1.0)",
+  "name": "@eidetic-labs/stigmem-ts",
+  "version": "0.9.0-alpha.1",
+  "description": "TypeScript client SDK for Stigmem — the federated knowledge fabric",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {

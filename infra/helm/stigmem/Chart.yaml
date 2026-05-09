@@ -3,7 +3,7 @@ name: stigmem
 description: Stigmem — federated knowledge fabric for AI agents
 type: application
 version: 0.1.0
-appVersion: "1.0.0-rc"
+appVersion: "0.9.0-alpha.1"
 keywords:
   - stigmem
   - knowledge-graph

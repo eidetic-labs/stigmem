@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { StigmemAuthError } from "stigmem-ts";
+import { StigmemAuthError } from "@eidetic-labs/stigmem-ts";
 
 import { TOOLS, handleToolCall } from "./server.js";
 

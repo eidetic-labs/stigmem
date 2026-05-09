@@ -1,8 +1,17 @@
 name: Publish
 
 on:
+  # Push to main: GHCR images get sha + latest tags. PyPI / npm / release-
+  # creation jobs are gated by `if: startsWith(github.ref, 'refs/tags/v')`
+  # and skip on plain main pushes.
   push:
     branches: ["main"]
+    # Tag push (v0.9.0a1, v0.9.0b1, v1.0.0rc1, v1.0.0): fires the full publish
+    # cascade — GHCR with version tags, npm publish, PyPI publish, GitHub
+    # release auto-creation with CHANGELOG-extracted notes.
+    tags: ["v*"]
+  # Release-published trigger kept for manual release creation as a fallback
+  # path (e.g., recovering from a failed create-release job).
   release:
     types: [published]
 
@@ -32,15 +41,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Compute PEP 440 and semver forms from the tag (per ADR-019). The git
+      # tag uses PEP 440 shorthand (v0.9.0a1); semver-strict consumers (npm,
+      # docker/metadata-action `type=semver`) need 0.9.0-alpha.1.
+      - name: Translate tag → PEP 440 + semver
+        id: ver
+        if: startsWith(github.ref, 'refs/tags/')
+        run: python3 scripts/translate_version.py "$GITHUB_REF_NAME" --gh-output
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
+        env:
+          DOCKER_METADATA_PR_HEAD_SHA: "true"
         with:
           images: ${{ env.NODE_IMAGE }}
+          # Three release tags on tagged builds: PEP 440 form (matches git tag),
+          # semver form (matches npm spelling), and `latest`-on-main otherwise.
           tags: |
             type=sha,prefix=
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=${{ steps.ver.outputs.pep440 }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=${{ steps.ver.outputs.semver }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
 
       - name: Set up QEMU (multi-arch)
         uses: docker/setup-qemu-action@v3
@@ -115,6 +137,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Translate tag → PEP 440 + semver
+        id: ver
+        if: startsWith(github.ref, 'refs/tags/')
+        run: python3 scripts/translate_version.py "$GITHUB_REF_NAME" --gh-output
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -123,7 +150,8 @@ jobs:
           tags: |
             type=sha,prefix=
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=${{ steps.ver.outputs.pep440 }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=${{ steps.ver.outputs.semver }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -152,7 +180,7 @@ jobs:
             "${{ env.DASHBOARD_IMAGE }}@${{ steps.build.outputs.digest }}"
 
   publish-sdk-ts:
-    name: Publish stigmem-ts to npm
+    name: Publish @eidetic-labs/stigmem-ts to npm
     runs-on: ubuntu-latest
     # Only publish on tagged releases that look like semver (e.g. v1.0.0)
     if: startsWith(github.ref, 'refs/tags/v')
@@ -174,22 +202,211 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build stigmem-ts
-        run: pnpm --filter stigmem-ts build
+      # Filter by directory rather than package name — name-independent and
+      # survives renames/scope changes (e.g. stigmem-ts → @eidetic-labs/stigmem-ts).
+      - name: Build SDK
+        run: pnpm --filter "./sdks/stigmem-ts" build
 
       - name: Run tests (gate before publish)
-        run: pnpm --filter stigmem-ts test
+        run: pnpm --filter "./sdks/stigmem-ts" test
 
-      - name: Stamp release version from tag
+      # Translate the PEP-440-style git tag (v0.9.0a1) to the semver string
+      # npm requires (0.9.0-alpha.1). Per ADR-019 §Per-ecosystem spelling.
+      - name: Translate tag → PEP 440 + semver
+        id: ver
+        run: python3 scripts/translate_version.py "$GITHUB_REF_NAME" --gh-output
+
+      - name: Stamp release version from tag (semver form for npm)
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
           cd sdks/stigmem-ts
-          pnpm pkg set version="$TAG"
-          echo "Publishing stigmem-ts@$TAG"
+          pnpm pkg set version="${{ steps.ver.outputs.semver }}"
+          echo "Publishing @eidetic-labs/stigmem-ts@${{ steps.ver.outputs.semver }}"
+
+      - name: Sanity check — package version is valid semver
+        run: |
+          cd sdks/stigmem-ts
+          PUBLISHED_VER=$(node -p "require('./package.json').version")
+          if ! node -e "
+            const semver = require('semver');
+            const v = process.argv[1];
+            if (!semver.valid(v)) {
+              console.error('Invalid semver:', v);
+              process.exit(1);
+            }
+            console.log('OK:', v, 'is valid semver');
+          " "$PUBLISHED_VER"; then
+            echo "::error::package.json version $PUBLISHED_VER is not valid semver. The tag→semver translation is broken."
+            exit 1
+          fi
 
       - name: Publish to npm (with provenance)
+        # --tag is required for prereleases; npm rejects publish without it.
+        # alpha/beta/rc go to their own dist-tags so `npm install <pkg>`
+        # (no --tag) waits for a stable release on `latest`.
         run: |
           cd sdks/stigmem-ts
-          npm publish --provenance --access public
+          npm publish --provenance --access public --tag "${{ steps.ver.outputs.npm_tag }}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-python:
+    name: Build & publish Python packages to PyPI
+    runs-on: ubuntu-latest
+    # Tagged releases only — same gate as publish-sdk-ts.
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      id-token: write   # for PyPI OIDC trusted publisher
+
+    strategy:
+      # Don't cancel siblings on first failure — partial publish is preferable to none.
+      # Each package's PyPI Trusted Publisher config is independent.
+      fail-fast: false
+      matrix:
+        package:
+          # Protocol package (root pyproject.toml)
+          - name: stigmem
+            dir: .
+          # Python SDK
+          - name: stigmem-py
+            dir: sdks/stigmem-py
+          # FastAPI reference node service
+          - name: stigmem-node
+            dir: node
+          # OpenClaw adapter — reset from 1.0.5 to 0.9.0a1 to align with the
+          # canonical version line. v1.0.3 and v1.0.5 are yanked from PyPI
+          # (declared a never-published stigmem-py>=1.0.0rc1 dep, were
+          # uninstallable end-to-end). v0.9.0a1 is the first installable
+          # release.
+          - name: stigmem-openclaw
+            dir: adapters/openclaw
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tooling
+        run: python -m pip install --upgrade pip build
+
+      - name: Build wheel + sdist for ${{ matrix.package.name }}
+        run: |
+          cd "${{ matrix.package.dir }}"
+          python -m build
+
+      - name: Verify package metadata (twine check)
+        run: |
+          python -m pip install --upgrade twine
+          twine check "${{ matrix.package.dir }}/dist/"*
+
+      # Auth path: hybrid. Primary is PyPI Trusted Publishers via OIDC (no
+      # long-lived secret). Bridge fallback is a personal API token via the
+      # PYPI_API_TOKEN repo secret — used when pypi/warehouse#20006 (broken
+      # pending-publisher flow) blocks pre-publish trusted-publisher config
+      # for new projects. The action treats `password:` as authoritative when
+      # set; falls through to OIDC when the secret is empty.
+      #
+      # Path-of-least-privilege: once first publish creates the projects on
+      # PyPI, configure Trusted Publishers for each via the (now-working)
+      # post-create flow. Then revoke the API token and remove the secret;
+      # the workflow auto-falls-back to OIDC on the next release.
+      - name: Publish ${{ matrix.package.name }} to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: ${{ matrix.package.dir }}/dist
+          # If PYPI_API_TOKEN secret is set, use it; else action falls back
+          # to OIDC trusted-publisher (requires `id-token: write` permission).
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          # skip-existing prevents failure if a re-run hits an already-published
+          # version (e.g., re-tagging the same v0.9.0a1 by accident); useful safety
+          # net for the matrix (one pkg succeeded, others retried).
+          skip-existing: true
+
+  create-release:
+    name: Create GitHub release with CHANGELOG notes
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    # Run AFTER the core publishes succeed so the release page links at
+    # working artifacts. Dashboard is intentionally excluded from `needs`
+    # because it's marked "In progress" in the README — a dashboard publish
+    # failure shouldn't block release-page creation for the working publishes.
+    needs: [publish-node, publish-sdk-ts, publish-python]
+    permissions:
+      contents: write   # required to create the release
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Translate tag → PEP 440 + semver + npm dist-tag
+        id: ver
+        run: python3 scripts/translate_version.py "$GITHUB_REF_NAME" --gh-output
+
+      - name: Extract CHANGELOG section for this release
+        id: notes
+        run: |
+          set -eo pipefail
+          VER="${{ steps.ver.outputs.pep440 }}"
+
+          # Extract from "## [<VER>]" line through the line before the next "## ["
+          # (or EOF). Awk handles both cases cleanly.
+          awk -v ver="$VER" '
+            /^## \[/ {
+              if (in_section) { exit }
+              if ($0 ~ "\\[" ver "\\]") { in_section = 1 }
+            }
+            in_section { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+
+          if [ ! -s /tmp/release-notes.md ]; then
+            echo "::error::No CHANGELOG section found for [$VER]. Add a top entry to CHANGELOG.md before tagging."
+            exit 1
+          fi
+
+          # Prepend a small header so the release page reads cleanly.
+          {
+            echo "Published artifacts:"
+            echo ""
+            echo "- **PyPI:** \`pip install --pre stigmem-py==$VER\` (also: \`stigmem\`, \`stigmem-node\`, \`stigmem-openclaw\`)"
+            echo "- **npm:** \`npm install @eidetic-labs/stigmem-ts@${{ steps.ver.outputs.semver }}\`"
+            echo "- **GHCR:** \`docker pull ghcr.io/eidetic-labs/stigmem-node:$VER\` (also \`:${{ steps.ver.outputs.semver }}\`)"
+            echo ""
+            echo "---"
+            echo ""
+            cat /tmp/release-notes.md
+          } > /tmp/release-page.md
+
+          echo "Extracted $(wc -l < /tmp/release-notes.md) CHANGELOG lines + header → $(wc -l < /tmp/release-page.md) total"
+          echo ""
+          echo "First 10 lines of release page body:"
+          head -10 /tmp/release-page.md
+
+      - name: Determine release type (final vs prerelease)
+        id: kind
+        run: |
+          # final releases use the `latest` npm dist-tag; everything else is prerelease
+          if [ "${{ steps.ver.outputs.npm_tag }}" = "latest" ]; then
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "title=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+            case "${{ steps.ver.outputs.npm_tag }}" in
+              alpha) suffix="preview alpha" ;;
+              beta)  suffix="preview beta" ;;
+              rc)    suffix="release candidate" ;;
+              *)     suffix="prerelease" ;;
+            esac
+            echo "title=${{ github.ref_name }} — ${suffix}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ steps.kind.outputs.title }}
+          body_path: /tmp/release-page.md
+          prerelease: ${{ steps.kind.outputs.is_prerelease == 'true' }}
+          draft: false
+          token: ${{ secrets.GITHUB_TOKEN }}

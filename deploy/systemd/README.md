@@ -89,7 +89,7 @@ Update `STIGMEM_NODE_URL` in `.env` to the public HTTPS URL after configuring TL
 
 ```bash
 # On a connected machine, download wheels:
-pip3 download "stigmem-node==1.0.0rc1" -d wheels/
+pip3 download --pre "stigmem-node==0.9.0a1" -d wheels/
 
 # Copy wheels/ to the target, then:
 STIGMEM_OFFLINE=1 WHEEL_DIR=/path/to/wheels \

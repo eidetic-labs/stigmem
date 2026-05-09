@@ -6,39 +6,39 @@ import asyncio
 import logging
 import signal
 import ssl
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any, cast
 
 import uvicorn
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, Response
 from fastapi.responses import FileResponse, JSONResponse
 
 from .auth import Identity, resolve_identity
 from .db import apply_migrations
 from .rate_limit import RateLimitMiddleware
+from .routes.admin_audit import router as admin_audit_router
 from .routes.agent_keys import router as agent_keys_router
 from .routes.aliases import router as aliases_router
 from .routes.audit import router as audit_router
 from .routes.auth import router as auth_router
+from .routes.cards import router as cards_router
+from .routes.cid_admin import router as cid_admin_router
 from .routes.decay import router as decay_router
 from .routes.facts import router as facts_router
 from .routes.federation import router as federation_router
 from .routes.gardens import router as gardens_router
 from .routes.graph import router as graph_router
 from .routes.identity import router as identity_router
+from .routes.instruction import router as instruction_router
 from .routes.intents import router as intents_router
 from .routes.lint import router as lint_router
 from .routes.quarantine import router as quarantine_router
-from .routes.resolver import router as resolver_router
-from .routes.cards import router as cards_router
 from .routes.recall import router as recall_router
+from .routes.resolver import router as resolver_router
 from .routes.subscriptions import router as subscriptions_router
-from .routes.instruction import router as instruction_router
 from .routes.synthesize import router as synthesize_router
-from .routes.admin_audit import router as admin_audit_router
-from .routes.cid_admin import router as cid_admin_router
 from .routes.tombstones import router as tombstones_router
 from .routes.wellknown import router as wellknown_router
 from .settings import settings
@@ -67,12 +67,12 @@ def create_app() -> FastAPI:
 
         pull_task: asyncio.Task[None] | None = None
         if settings.federation_enabled:
-            from .peer_token import init_federation_keys
             from .federation_pull import pull_loop_task
+            from .peer_token import init_federation_keys
 
             init_federation_keys()
             pull_task = asyncio.create_task(pull_loop_task())
-            logger.info("Stigmem federation enabled — pull interval %ds", settings.federation_pull_interval_s)
+            logger.info("Federation enabled — pull %ds", settings.federation_pull_interval_s)
 
         from .subscription_delivery import sweep_loop as _sub_sweep_loop
         sweep_task: asyncio.Task[None] = asyncio.create_task(_sub_sweep_loop())
@@ -100,11 +100,11 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="Stigmem Reference Node",
-        version="2.0.0",
+        version="0.9.0a1",
         description=(
-            "Reference node implementing the Stigmem v2.0 HTTP API — facts, federation, "
-            "gardens, recall, subscriptions, audit, identity, RTBF tombstones, time-travel "
-            "queries, and content-addressed fact IDs."
+            "Reference node implementing the Stigmem v0.9.0a1 HTTP API — facts, federation, "
+            "gardens, recall, subscriptions, audit, identity, content-addressed fact IDs. "
+            "Cross-cutting features (tombstones, time-travel, multi-tenant) are opt-in plugins."
         ),
         license_info={"name": "Apache-2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0"},
         lifespan=lifespan,
@@ -114,7 +114,10 @@ def create_app() -> FastAPI:
 
     if settings.mtls_enabled:
         @app.middleware("http")
-        async def mtls_plaintext_guard(request: Request, call_next):  # type: ignore[return]
+        async def mtls_plaintext_guard(
+            request: Request,
+            call_next: Callable[[Request], Awaitable[Response]],
+        ) -> Response:
             """Reject plaintext federation requests when mTLS is configured (§22.1)."""
             if request.url.path.startswith("/v1/federation") and request.url.scheme != "https":
                 return JSONResponse(
@@ -156,16 +159,16 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     @app.get("/metrics", include_in_schema=False, tags=["ops"])
-    def prometheus_metrics():  # type: ignore[return]
+    def prometheus_metrics() -> Response:
         from .metrics import make_metrics_response
         resp = make_metrics_response()
         if resp is None:
             from fastapi.responses import PlainTextResponse
             return PlainTextResponse("# prometheus_client not installed\n", status_code=200)
-        return resp
+        return cast(Response, resp)
 
     @app.get("/v1/me", tags=["auth"])
-    def whoami(identity: Annotated[Identity, Depends(resolve_identity)]) -> dict:
+    def whoami(identity: Annotated[Identity, Depends(resolve_identity)]) -> dict[str, Any]:
         return {
             "entity_uri": identity.entity_uri,
             "permissions": sorted(identity.permissions),

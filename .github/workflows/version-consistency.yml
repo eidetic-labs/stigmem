@@ -15,6 +15,13 @@ on:
   push:
     branches: [main]
 
+# Workflow runs read-only: validates manifest schema + checks version-string
+# consistency. Doesn't push, doesn't comment, doesn't create releases. Restrict
+# GITHUB_TOKEN to the minimum (`contents: read`) per CodeQL Workflow-permissions
+# recommendation.
+permissions:
+  contents: read
+
 jobs:
   version-consistency:
     runs-on: ubuntu-latest

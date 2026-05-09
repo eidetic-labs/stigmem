@@ -2,7 +2,7 @@
 
 > **Stigmem v0.9.0a1.** Not yet suitable for production federation across organizational boundaries. Read this before deploying.
 >
-> Last updated: 2026-05-06 · Applies to: v0.9.0a1
+> Last updated: 2026-05-09 · Applies to: v0.9.0a1
 
 ---
 
@@ -153,6 +153,53 @@ The capability-based redesign (where facts carry an `interpret_as` field that de
 **What to do today:** if your federation use case is single-organization or trusted bilateral peering, the four-scope model is sufficient. For coalition, multi-peer, or project-bounded patterns, evaluate whether stigmem v0.9.0a1 meets your needs before deploying. The basic memory-garden primitive that addresses these patterns is targeted for v1.x once `Spec-X5` graduates from experimental via the ADR-008 gate process. Operators with these requirements who want to influence prioritization should [open an issue](https://github.com/eidetic-labs/stigmem/issues) tagged `area/federation-expressivity`.
 
 **Why we chose this for v0.9.0a1:** expanding the scope model in v1.0 would be exactly the kind of scope churn ADR-002 is designed to prevent. The decision is to ship the smaller defensible thing (four scopes, simple federation) and grow expressivity through gardens once they pass the ADR-008 gates. The full analysis is in `stigmem-scope-model-analysis.md`.
+
+---
+
+## Install footguns specific to v0.9.0a1
+
+These are pre-release-era install behaviors that surprise adopters who don't expect them. Each is the *correct* behavior for a pre-stable release; documenting so the surprise is named, not eliminated.
+
+### `pip install stigmem` returns "no matching distribution found"
+
+**Cause:** v0.9.0a1 is a PEP 440 pre-release (`a1` = alpha 1). `pip` excludes pre-releases from default resolution; it returns a "no matching distribution found" error rather than installing the alpha.
+
+**Fix:** add `--pre`:
+
+```bash
+pip install --pre stigmem            # SDK only (default)
+pip install --pre stigmem[node]      # SDK + reference node service
+pip install --pre stigmem[all]       # everything published from this monorepo
+```
+
+This is intentional — adopters running `pip install <pkg>` in CI shouldn't accidentally pull in pre-stable software. It will go away when v1.0 ships (no `--pre` needed for stable releases).
+
+### `stigmem` is a meta-package, not the actual code
+
+**What you get:** `pip install --pre stigmem` installs an empty wheel called `stigmem` plus its declared dependency `stigmem-py>=0.9.0a1,<1.0.0`. The actual SDK code is in `stigmem-py`. Adopters who run `pip show stigmem` see ~5 metadata files and no Python source — that's correct.
+
+**Why:** the canonical name `stigmem` should resolve to a useful install. Most adopters want the SDK (the most common use case in client/server software). Operators self-hosting want the server, available via `stigmem[node]` or `pip install --pre stigmem-node` directly. Mirrors the pattern of `redis`/`psycopg`/`elasticsearch` — bare-name install always = client SDK.
+
+**If you want the actual SDK code path:** `import stigmem` in Python imports from `stigmem-py`'s installed location. The meta-package's empty wheel doesn't intercept anything.
+
+### npm SDK is scoped under `@eidetic-labs`
+
+**What works:**
+```bash
+npm install @eidetic-labs/stigmem-ts          # ⚠ no version: gets the LATEST stable, which is currently nothing
+npm install @eidetic-labs/stigmem-ts@alpha    # gets the latest 0.9.0-alpha.* prerelease
+npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.1   # explicit pin
+```
+
+**Why scoped:** npm's free-tier organization permissions don't allow team-bound package access controls; scoping under `@eidetic-labs` sidesteps that limitation entirely.
+
+**The `@alpha` dist-tag is required during the v0.9.0a* line.** Bare `npm install` resolves the `latest` tag, which won't exist until v1.0 ships. This is the npm equivalent of pip's `--pre` flag — same intent, different syntax.
+
+### Pre-release packages don't auto-upgrade
+
+**What this means:** if you pin to `stigmem==0.9.0a1` and we publish `0.9.0a2` next week, `pip install --upgrade stigmem` won't pick up `a2` unless you also pass `--pre`. Same for npm: `npm update @eidetic-labs/stigmem-ts` won't pick up the new alpha unless you `npm install @eidetic-labs/stigmem-ts@alpha` (which always tracks the latest alpha).
+
+**Recommendation:** during the v0.9.0a* and v0.9.0b* phase, explicitly pin or explicitly request the dist-tag. Auto-upgrade is unsafe for pre-stable software anyway — we may break the wire format between alphas.
 
 ---
 

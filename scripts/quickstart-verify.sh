@@ -22,16 +22,6 @@ set -euo pipefail
 
 PULL_WAIT_S="${PULL_WAIT_S:-35}"
 KEEP_UP="${KEEP_UP:-0}"
-
-# Smoke test uses non-conflicting host ports by default to avoid colliding
-# with other stigmem-node instances on the dev box (e.g., Paperclip-managed
-# instances, manual `uv run python -m stigmem_node` sessions, etc.). The
-# canonical adopter UX in docker-compose.yml is still 8765/8766. Override
-# via env if you specifically want to test the canonical port mapping.
-export STIGMEM_NODE_A_HOST_PORT="${STIGMEM_NODE_A_HOST_PORT:-18765}"
-export STIGMEM_NODE_B_HOST_PORT="${STIGMEM_NODE_B_HOST_PORT:-18766}"
-NODE_A="http://localhost:${STIGMEM_NODE_A_HOST_PORT}"
-NODE_B="http://localhost:${STIGMEM_NODE_B_HOST_PORT}"
 START_TIME=$(date +%s)
 
 # ---- helpers -----------------------------------------------------------------
@@ -39,6 +29,31 @@ START_TIME=$(date +%s)
 log()  { echo "[$(date '+%H:%M:%S')] $*"; }
 ok()   { echo "  ✓ $*"; }
 fail() { echo "  ✗ $*" >&2; exit 1; }
+
+# Returns 0 if the given TCP port is bound by ANY process, 1 if free.
+# Uses lsof (macOS/Linux); falls back to a /dev/tcp probe if lsof unavailable.
+port_in_use() {
+    local port="$1"
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -nP -iTCP:"$port" -sTCP:LISTEN 2>/dev/null | grep -q LISTEN
+    else
+        # /dev/tcp probe as a fallback (bash builtin; no extra deps)
+        (echo > /dev/tcp/127.0.0.1/"$port") >/dev/null 2>&1
+    fi
+}
+
+# Find the next free TCP port at-or-above $1, capped at $1+200 to avoid runaway.
+find_free_port() {
+    local port="$1" cap=$(( $1 + 200 ))
+    while [[ "$port" -le "$cap" ]]; do
+        if ! port_in_use "$port"; then
+            echo "$port"
+            return 0
+        fi
+        port=$(( port + 1 ))
+    done
+    fail "no free TCP port found in range $1..$cap"
+}
 
 wait_healthy() {
     local url="$1" label="$2" retries=30 i
@@ -52,6 +67,45 @@ wait_healthy() {
     done
     fail "$label did not become healthy after $((retries * 2)) s"
 }
+
+# ---- port selection ----------------------------------------------------------
+#
+# Smoke test picks two free host ports starting from 18765. Any process
+# bound to a candidate port (other stigmem-node instances, Paperclip-managed
+# servers, dev tunnels, unrelated services) gets skipped automatically. The
+# canonical adopter UX in docker-compose.yml is still 8765/8766; override
+# explicitly via STIGMEM_NODE_A_HOST_PORT / STIGMEM_NODE_B_HOST_PORT in env
+# if you want to test the canonical port mapping (and accept the collision
+# risk).
+
+if [[ -n "${STIGMEM_NODE_A_HOST_PORT:-}" && -n "${STIGMEM_NODE_B_HOST_PORT:-}" ]]; then
+    log "Using explicit host ports from env: A=${STIGMEM_NODE_A_HOST_PORT} B=${STIGMEM_NODE_B_HOST_PORT}"
+    if port_in_use "${STIGMEM_NODE_A_HOST_PORT}"; then
+        fail "STIGMEM_NODE_A_HOST_PORT=${STIGMEM_NODE_A_HOST_PORT} is in use"
+    fi
+    if port_in_use "${STIGMEM_NODE_B_HOST_PORT}"; then
+        fail "STIGMEM_NODE_B_HOST_PORT=${STIGMEM_NODE_B_HOST_PORT} is in use"
+    fi
+else
+    NODE_A_PORT=$(find_free_port 18765)
+    NODE_B_PORT=$(find_free_port $(( NODE_A_PORT + 1 )))
+    export STIGMEM_NODE_A_HOST_PORT="$NODE_A_PORT"
+    export STIGMEM_NODE_B_HOST_PORT="$NODE_B_PORT"
+    log "Auto-selected free host ports: node-a=$NODE_A_PORT  node-b=$NODE_B_PORT"
+fi
+NODE_A="http://localhost:${STIGMEM_NODE_A_HOST_PORT}"
+NODE_B="http://localhost:${STIGMEM_NODE_B_HOST_PORT}"
+
+# ---- pre-flight: clear stale state -------------------------------------------
+#
+# Belt-and-suspenders teardown of any previous run that exited dirty (KEEP_UP=1
+# left up; SIGINT during run; previous failure before the teardown step).
+# Removes the volumes too — peer registrations and ingested facts live in
+# /data/stigmem.db inside the volume, so leaving them around would cause
+# "peer already registered (409)" responses on the next run's handshake.
+
+log "Pre-flight: clearing any stale containers + volumes from a prior run…"
+docker compose down -v --remove-orphans 2>&1 | tail -3 || true
 
 # ---- step 0: build + start ---------------------------------------------------
 
@@ -157,6 +211,6 @@ echo "========================================"
 
 if [[ "$KEEP_UP" != "1" ]]; then
     log "Tearing down…"
-    docker compose down -v
+    docker compose down -v --remove-orphans
     ok "Cleaned up"
 fi

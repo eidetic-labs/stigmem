@@ -227,21 +227,19 @@ jobs:
           echo "Publishing @eidetic-labs/stigmem-ts@${{ steps.ver.outputs.semver }}"
 
       - name: Sanity check — package version is valid semver
+        # Bash regex check: the `semver` npm package isn't a dependency of
+        # stigmem-ts, so `require('semver')` fails at module-resolution. The
+        # regex covers the only forms `scripts/translate_version.py` ever
+        # emits (X.Y.Z, X.Y.Z-pre.N, plus optional +build) — that script is
+        # the upstream source of truth and has its own validation.
         run: |
           cd sdks/stigmem-ts
           PUBLISHED_VER=$(node -p "require('./package.json').version")
-          if ! node -e "
-            const semver = require('semver');
-            const v = process.argv[1];
-            if (!semver.valid(v)) {
-              console.error('Invalid semver:', v);
-              process.exit(1);
-            }
-            console.log('OK:', v, 'is valid semver');
-          " "$PUBLISHED_VER"; then
+          if ! [[ "$PUBLISHED_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?$ ]]; then
             echo "::error::package.json version $PUBLISHED_VER is not valid semver. The tag→semver translation is broken."
             exit 1
           fi
+          echo "OK: $PUBLISHED_VER is valid semver"
 
       - name: Publish to npm (with provenance)
         # --tag is required for prereleases; npm rejects publish without it.

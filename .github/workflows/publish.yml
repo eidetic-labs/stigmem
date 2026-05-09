@@ -217,9 +217,13 @@ jobs:
         run: python3 scripts/translate_version.py "$GITHUB_REF_NAME" --gh-output
 
       - name: Stamp release version from tag (semver form for npm)
+        # `pnpm pkg set` doesn't exist (ERR_PNPM_NOT_IMPLEMENTED). Use the
+        # `npm` CLI directly — it reads/writes the same package.json. Caught
+        # in v0.9.0a1's first publish attempt; npm CLI is bundled with Node
+        # so it's already available in this job.
         run: |
           cd sdks/stigmem-ts
-          pnpm pkg set version="${{ steps.ver.outputs.semver }}"
+          npm pkg set version="${{ steps.ver.outputs.semver }}"
           echo "Publishing @eidetic-labs/stigmem-ts@${{ steps.ver.outputs.semver }}"
 
       - name: Sanity check — package version is valid semver

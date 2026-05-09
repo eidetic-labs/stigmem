@@ -112,8 +112,10 @@ The features below are **implemented in code** but have **not yet completed adve
 ```bash
 git clone https://github.com/Eidetic-Labs/stigmem
 cd stigmem
-docker compose up --build -d
+docker compose up -d
 ```
+
+`docker compose up` pulls pre-built multi-arch images from GHCR (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a1`, signed via Sigstore cosign with attached SBOMs). If you're a contributor working on changes, use `docker compose up --build -d` to force a local rebuild.
 
 Two federated nodes start immediately:
 
@@ -161,9 +163,9 @@ pip install --pre stigmem[all]       # everything published from this repo
 Quick summary:
 
 ```bash
-# 1. Start two nodes
+# 1. Start two nodes (pulls signed images from GHCR; add --build for contributors)
 git clone https://github.com/Eidetic-Labs/stigmem && cd stigmem
-docker compose up --build -d
+docker compose up -d
 
 # 2. Federation handshake (register both directions)
 docker exec stigmem-node-a-1 \

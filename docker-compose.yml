@@ -1,9 +1,20 @@
 # Two-node stigmem federation quickstart.
-# Build context is the repo root (Dockerfile lives in node/).
-# Usage: docker compose up --build -d
-# Then follow docs/quickstart.md to complete the federation handshake.
+#
+# Default behavior: pull pre-built multi-arch images from GHCR
+# (ghcr.io/eidetic-labs/stigmem-node:0.9.0a1). Falls back to local
+# build from node/Dockerfile if the image can't be pulled (e.g.,
+# pre-first-publish working copy, or in air-gapped environments).
+#
+# Adopter usage:
+#   docker compose up -d                  # pulls from GHCR; fast
+# Contributor usage:
+#   docker compose up --build -d          # forces local rebuild
+#
+# After v0.9.0a1 publishes, the image: tag below is the canonical
+# artifact. Bump it on each release per docs/internal/release-cadence.md.
 services:
   node-a:
+    image: ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
     build:
       context: .
       dockerfile: node/Dockerfile
@@ -34,6 +45,7 @@ services:
       start_period: 5s
 
   node-b:
+    image: ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
     build:
       context: .
       dockerfile: node/Dockerfile

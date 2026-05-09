@@ -36,6 +36,12 @@ The Sigstore identity mapping for Eidetic Labs is documented separately in `docs
 
 ---
 
+## Release cadence
+
+The operational runbook for cutting a new tagged release lives at [`docs/internal/release-cadence.md`](docs/internal/release-cadence.md). It covers pre-release checklist, version-string sweep across all surfaces, tag-and-publish flow, post-publish verification, ClawHub manual push, and rollback procedures. Any maintainer about to push a `v*` tag should walk that runbook end-to-end.
+
+---
+
 ## Credential rotation
 
 External-registry credentials used by CI to publish stigmem artifacts rotate on a **90-day cadence**, owned by the founder through Phase A. The cadence balances rotation hygiene against the operational cost of regenerating + redistributing tokens.

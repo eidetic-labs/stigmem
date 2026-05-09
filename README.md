@@ -39,6 +39,7 @@ Stigmem is pre-stable. Adopters should read these documents *before* integrating
 - **[`spec/security/threat-model.md`](spec/security/threat-model.md)** — STRIDE risk register with per-risk status (Mitigated / Residual / Open / Accepted) per release.
 - **[Security architecture](docs/docs/Secure/architecture.md)** (Docs site, *Secure* tab) — capability boundaries, federation trust model, prompt-injection handling per [ADR-003](docs/adr/003-prompt-injection.md).
 - **Operator hardening guide** — *coming in Phase B* (per the strengthening plan); single-org single-node deployments are the only currently-supported deployment pattern.
+- **Release-cadence runbook & rollback** — `docs/internal/release-cadence.md` (maintainer-facing) covers how releases are cut, what gets verified post-publish, and the rollback procedure if a release ships broken (PyPI yank, npm deprecate, GHCR fix-forward). Adopters who hit issues in a release: see the rollback table for what we'll do, then file an issue with `severity:high` if it warrants a yank.
 
 A federated-memory protocol earns trust by being correct under adversarial conditions. This release is a substrate to build against and review, not a production system.
 

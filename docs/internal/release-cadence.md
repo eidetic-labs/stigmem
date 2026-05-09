@@ -25,6 +25,9 @@ Before pushing a tag, verify:
 - [ ] If this release closes any GitHub issues, those issues are linked from the CHANGELOG entry.
 - [ ] `MAINTAINERS.md § Credential rotation` table is up to date — no expired tokens.
 - [ ] Any pending Trusted Publisher (PyPI) configurations for new packages added in this release are registered at pypi.org.
+- [ ] **Local smoke-build:** all four Python wheels build cleanly via `uv build --package <name>` and pass `uv run twine check dist/*`. Catches package-metadata issues that the version-consistency CI gate doesn't see (missing files, broken `[build-system]`, etc.).
+- [ ] **OpenAPI spec is current:** `uv run python scripts/export_openapi.py && git diff --exit-code docs/openapi/stigmem.json` produces no diff. If there's drift, the FastAPI `app.version` was changed but the exported spec wasn't regenerated.
+- [ ] **Meta-package dep ranges updated** (if applicable). The root `stigmem` `pyproject.toml` `dependencies` and `[project.optional-dependencies]` lists pin to e.g. `stigmem-py>=0.9.0a2,<1.0.0` — when bumping the canonical line, the lower bound should bump too. If you're cutting a beta from an alpha (`0.9.0a3` → `0.9.0b1`), the upper bound stays at `<1.0.0`; if cutting `1.0.0`, the meta-package's bounds get a major-version bump (separate decision; revisit before then).
 
 If any item fails, fix or document before proceeding.
 
@@ -74,16 +77,19 @@ git pull --ff-only origin main
 # Tag with the PEP 440 shorthand (per ADR-019)
 git tag v0.9.0a2          # adjust version
 git push origin v0.9.0a2
+
+# Watch the workflow run
+gh run watch --repo Eidetic-Labs/stigmem $(gh run list --workflow=publish.yml --limit 1 --json databaseId --jq '.[0].databaseId')
 ```
 
 Pushing the tag triggers `.github/workflows/publish.yml`, which fans out into:
 
-1. **`publish-node`** — multi-arch (linux/amd64 + linux/arm64) GHCR image; Sigstore cosign keyless signed; SBOM (SPDX JSON) attached.
+1. **`publish-node`** — multi-arch (linux/amd64 + linux/arm64) GHCR image; Sigstore cosign keyless signed; SBOM (SPDX JSON) attached. Image gets BOTH PEP 440 and semver tags (e.g. `:0.9.0a2` and `:0.9.0-alpha.2`) so adopters can pull via either form.
 2. **`publish-dashboard`** — same shape for the Next.js dashboard.
-3. **`publish-sdk-ts`** — npm publish of `@eidetic-labs/stigmem-ts` with `--tag <alpha|beta|rc|latest>` derived from the version, with provenance attestation via OIDC.
+3. **`publish-sdk-ts`** — npm publish of `@eidetic-labs/stigmem-ts` with `--tag <alpha|beta|rc|latest>` (derived from the version via `scripts/translate_version.py` — no manual computation needed), with provenance attestation via OIDC.
 4. **`publish-python`** — matrix publishes `stigmem`, `stigmem-py`, `stigmem-node`, `stigmem-openclaw` to PyPI via Trusted Publishers (OIDC; no API token).
 
-All four jobs run in parallel. Total runtime ~5-8 minutes.
+All four jobs run in parallel. Total runtime ~5-8 minutes. **Stay near the workflow run** until publish-python and publish-sdk-ts finish — if either fails, you'll want to triage immediately rather than discover hours later.
 
 ---
 
@@ -95,8 +101,17 @@ Within ~5 minutes of tag push:
 - [ ] **npm** — `npm view @eidetic-labs/stigmem-ts version` returns the new semver. `npm view @eidetic-labs/stigmem-ts` shows the right `dist-tags` (the new prerelease should be on `alpha`/`beta`/`rc`, not `latest`).
 - [ ] **GHCR** — `docker pull ghcr.io/eidetic-labs/stigmem-node:<tag>` succeeds. Same for `stigmem-dashboard`.
 - [ ] **GHCR visibility** — for first publish of a new package only: visit `https://github.com/orgs/Eidetic-Labs/packages` → find the package → Package settings → Danger Zone → Change visibility → **Public**. Subsequent pushes inherit the visibility setting; this is one-time per package.
-- [ ] **Cosign** — `cosign verify --certificate-identity-regexp 'github.com/Eidetic-Labs/stigmem' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' ghcr.io/eidetic-labs/stigmem-node:<tag>` succeeds.
-- [ ] **GitHub release** — Created automatically by the tag; verify the release page exists at `https://github.com/Eidetic-Labs/stigmem/releases/tag/v0.9.0a2` and links to the CHANGELOG entry.
+- [ ] **Cosign** — replace `<tag>` with the actual version (e.g. `0.9.0a2`):
+  ```bash
+  TAG=0.9.0a2
+  cosign verify \
+    --certificate-identity-regexp 'github.com/Eidetic-Labs/stigmem' \
+    --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+    ghcr.io/eidetic-labs/stigmem-node:$TAG
+  cosign verify ...same... ghcr.io/eidetic-labs/stigmem-dashboard:$TAG
+  ```
+- [ ] **GitHub release** — Created automatically by the tag; verify the release page exists at `https://github.com/Eidetic-Labs/stigmem/releases/tag/v<tag>` and links to the CHANGELOG entry.
+- [ ] **Close the tracking issue** for this release if one was opened (e.g., the PR-N issue in the master-checklist).
 
 Within ~2 hours of tag push:
 
@@ -110,14 +125,21 @@ Within ~2 hours of tag push:
 ClawHub doesn't auto-publish from CI. Maintainer pushes the new skill version from their machine:
 
 ```bash
+# Authenticate (interactive; uses cached creds from a prior login if available)
+openclaw whoami    # confirms you're authenticated as offbyonce
+# If not authenticated:
+openclaw login
+
 cd adapters/openclaw/clawhub-skill
-# Update version: in SKILL.md to next iteration (independently versioned;
-# does NOT match canonical line — see notes in SKILL.md).
-# Update package: in SKILL.md to the new stigmem-py range if changed.
+# Edit SKILL.md:
+#   version: <next iteration> (independently versioned — does NOT match
+#     the canonical line; bump the trailing patch number)
+#   package: "stigmem-py>=<canonical>,<upper-bound>" (update if the
+#     canonical line moved; e.g., to >=0.9.0a2,<1.0.0)
 openclaw skills push
 ```
 
-If the ClawHub skill pins a `stigmem-py` version range that doesn't yet exist on PyPI, this push will succeed (ClawHub doesn't validate transitive Python deps), but `openclaw skills install stigmem-node` will fail at the dep-resolution step. So push ClawHub *after* PyPI publish is confirmed working.
+If the ClawHub skill pins a `stigmem-py` version range that doesn't yet exist on PyPI, this push will succeed (ClawHub doesn't validate transitive Python deps), but `openclaw skills install stigmem-node` will fail at the dep-resolution step. So **push ClawHub *after* PyPI publish is confirmed working** (i.e., after the post-publish PyPI verification above succeeds).
 
 ---
 
@@ -136,11 +158,22 @@ PyPI, npm, GHCR each have different retraction mechanics:
 
 If a release is found broken post-publish:
 
-1. **File a tracking issue** explaining the breakage and the chosen response.
-2. **Yank** PyPI versions where appropriate (PEP 592). **Deprecate** npm versions where appropriate.
-3. **Publish the fix** as the next version (e.g., 0.9.0a2 follows 0.9.0a1) — never reuse a version number.
-4. **Update CHANGELOG** with both entries: the broken version with a brief callout, and the fix version with the diff from the broken one.
-5. **Notify** if the broken version was widely-installed: post to the GitHub Discussions / Issues tracker.
+1. **File a tracking issue** explaining the breakage and the chosen response. Label `severity:high` if adopter-visible.
+2. **Yank PyPI versions where appropriate.** Web UI: pypi.org → Manage → Releases → Options → Yank. Or CLI:
+   ```bash
+   # Generate / use a PyPI API token; OIDC trusted publisher doesn't grant yank rights
+   pip install --upgrade twine
+   twine yank stigmem-py 0.9.0a1 --reason "Withdrawn — <one-line>. Use 0.9.0a2+."
+   # Repeat per affected package
+   ```
+3. **Deprecate npm versions where appropriate.**
+   ```bash
+   npm deprecate "@eidetic-labs/stigmem-ts@0.9.0-alpha.1" "Withdrawn — <one-line>. Use 0.9.0-alpha.2+."
+   ```
+4. **Publish the fix** as the next version (e.g., `0.9.0a2` follows `0.9.0a1`) — never reuse a version number. Walk this same runbook end-to-end for the fix release.
+5. **Update CHANGELOG** with both entries: the broken version with a brief `### Withdrawn` callout, and the fix version with the diff from the broken one.
+6. **Close out the tracking issue** when the fix release is verified.
+7. **Notify** if the broken version was widely-installed: post to the GitHub Discussions / Issues tracker; consider a brief blog/dev.to post if usage was non-trivial.
 
 See ADR-019 for why version numbers are immutable across all our surfaces (PEP 440 / npm both forbid republish under the same number).
 

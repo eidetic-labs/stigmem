@@ -1,0 +1,42 @@
+name: clawhub-skill
+
+on:
+  pull_request:
+    paths:
+      - "adapters/openclaw/clawhub-skill/**"
+      - "scripts/validate_clawhub_skill.py"
+      - ".github/workflows/clawhub-skill.yml"
+  push:
+    branches: [main]
+    paths:
+      - "adapters/openclaw/clawhub-skill/**"
+      - "scripts/validate_clawhub_skill.py"
+      - ".github/workflows/clawhub-skill.yml"
+
+# Read-only: parses SKILL.md, calls PyPI/clawhub.ai over the network for
+# liveness checks. Doesn't push, comment, or create artifacts.
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pyyaml packaging
+
+      - name: Validate ClawHub skill manifest (schema + conventions)
+        run: python scripts/validate_clawhub_skill.py
+
+      - name: Validate ClawHub skill manifest (with link liveness + PyPI pins)
+        # These hit the network. Run them as a separate step so a transient
+        # outage on clawhub.ai or pypi.org reports as a network-step failure
+        # rather than masking a real schema bug above.
+        run: python scripts/validate_clawhub_skill.py --check-links --check-pypi

@@ -18,7 +18,7 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 **Status:** preview alpha — pre-stable, not for production federation across organizational boundaries. See [LIMITATIONS.md](LIMITATIONS.md).
 
 **Per-ecosystem version strings (per ADR-019):**
-- PyPI / Python: `stigmem 0.9.0a1` (PEP 440)
+- PyPI / Python: `stigmem 0.9.0a1` (PEP 440) — **meta-package**: empty wheel that depends on `stigmem-py>=0.9.0a1,<1.0.0` by default. Extras: `stigmem[node]` adds the server, `stigmem[openclaw]` adds the adapter, `stigmem[all]` adds everything. Real code ships under `stigmem-py`, `stigmem-node`, `stigmem-openclaw`. The bare `stigmem` name is the convenience entry-point for adopters who want the SDK with one command (matches the convention of `redis`, `psycopg`, `elasticsearch`, `pymongo` — bare-name = client SDK).
 - npm / Node:    `@eidetic-labs/stigmem-ts@0.9.0-alpha.1` (semver) — **first npm release.** Scoped under `@eidetic-labs` so all org Owners can manage the package without npm's free-tier limitation on team-bound package permissions. Root `package.json` is `private: true` (workspace root). Adopters install via `npm install @eidetic-labs/stigmem-ts`.
 - Helm `appVersion`: `0.9.0-alpha.1` (semver)
 - Git tag, GitHub release, prose: `v0.9.0a1` (shorthand)

@@ -33,6 +33,15 @@ surfaces:
     field: project.version
     spelling: pep440
     sort_authority: pep440
+    notes: >-
+      Meta-package (decision 2026-05-09). Empty wheel that depends on
+      `stigmem-py>=0.9.0a1,<1.0.0` by default; extras `[node]`, `[openclaw]`,
+      `[all]` add the corresponding sub-packages. Bare-name install matches
+      industry convention for client/server software in Python (redis,
+      psycopg, elasticsearch, pymongo all use the same shape — bare-name =
+      client SDK; server distributed separately). Build via `setuptools` with
+      `packages = []`. Real code lives in `stigmem-py`, `stigmem-node`,
+      `stigmem-openclaw`.
 
   - id: pypi-stigmem-node
     kind: external-registry

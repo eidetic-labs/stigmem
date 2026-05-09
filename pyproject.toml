@@ -1,13 +1,60 @@
 [project]
 name = "stigmem"
 version = "0.9.0a1"
-description = "Stigmem — federated knowledge fabric for AI agents"
+description = "Stigmem — federated knowledge fabric for AI agents (meta-package)"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
 authors = [
   { name = "Eidetic Labs", email = "oss@eidetic-labs.ai" },
 ]
+keywords = ["stigmem", "federation", "memory", "ai", "agents"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# `pip install stigmem` → installs the Python SDK (most common adopter path).
+# Operators self-hosting a node use `pip install stigmem[node]` or
+# `pip install stigmem-node` directly. See the install table below for extras.
+dependencies = [
+  "stigmem-py>=0.9.0a1,<1.0.0",
+]
+
+[project.optional-dependencies]
+# pip install stigmem[node] → SDK + reference node service
+node = ["stigmem-node>=0.9.0a1,<1.0.0"]
+# pip install stigmem[openclaw] → SDK + OpenClaw adapter
+openclaw = ["stigmem-openclaw>=0.9.0a1,<1.0.0"]
+# pip install stigmem[all] → everything published from this monorepo
+all = [
+  "stigmem-node>=0.9.0a1,<1.0.0",
+  "stigmem-openclaw>=0.9.0a1,<1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Eidetic-Labs/stigmem"
+Documentation = "https://docs.stigmem.dev"
+Repository = "https://github.com/Eidetic-Labs/stigmem"
+Issues = "https://github.com/Eidetic-Labs/stigmem/issues"
+Changelog = "https://github.com/Eidetic-Labs/stigmem/blob/main/CHANGELOG.md"
+
+# stigmem is a meta-package: it carries no Python code of its own.
+# `[tool.setuptools] packages = []` tells setuptools "no Python packages to
+# bundle" — the wheel is intentionally empty. The point of this distribution
+# is to claim the canonical `stigmem` name on PyPI and make `pip install stigmem`
+# resolve to the right collection of real packages via dependencies + extras.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = []
 
 [tool.uv.workspace]
 members = [

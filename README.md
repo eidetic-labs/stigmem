@@ -141,11 +141,16 @@ cd stigmem/node
 uv run python -m stigmem_node
 ```
 
-**Pre-release install via `pip`:** because v0.9.0a1 is a PEP 440 pre-release, `pip install stigmem` (default channel) will *not* pick it up. To install the alpha explicitly:
+**Pre-release install via `pip`:** because v0.9.0a1 is a PEP 440 pre-release, `pip install stigmem` (default channel) will *not* pick it up. Use `--pre` to opt in to the alpha line, and pick the install scope appropriate to your role:
 
 ```bash
-pip install --pre stigmem
+pip install --pre stigmem            # SDK only — most common; for apps calling a stigmem node
+pip install --pre stigmem[node]      # SDK + reference node service (self-host the server)
+pip install --pre stigmem[openclaw]  # SDK + OpenClaw adapter
+pip install --pre stigmem[all]       # everything published from this repo
 ```
+
+`stigmem` is a meta-package; the actual code ships under `stigmem-py` (SDK), `stigmem-node` (server), and `stigmem-openclaw` (adapter). You can install any of those directly if you'd rather skip the meta-package: `pip install --pre stigmem-py`, etc.
 
 **Migrating from bare-metal to Docker?** See the [upgrade path guide](docs/docs/install.md#upgrade).
 

@@ -1,11 +1,23 @@
 FROM node:20-alpine AS base
-RUN npm install -g pnpm
+# Pin pnpm to the major version that produced pnpm-lock.yaml (matches
+# `packageManager` field in root package.json). Without this pin,
+# `npm install -g pnpm` installs the latest (10.x) and fails against
+# a 9.x-format lockfile.
+RUN npm install -g pnpm@9
 
 # ── deps ──────────────────────────────────────────────────────────────────────
 FROM base AS deps
 WORKDIR /app
+# Copy workspace config + lockfile + every workspace member's package.json.
+# pnpm install --frozen-lockfile validates the lockfile against the full set of
+# workspace packages. Missing any member's package.json causes pnpm to install a
+# partial dep tree, which surfaces as cryptic "Failed to install required
+# TypeScript dependencies" / "different major version of pnpm" errors at build
+# time. Keep this list in sync with pnpm-workspace.yaml.
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY adapters/mcp/package.json ./adapters/mcp/
 COPY apps/dashboard/package.json ./apps/dashboard/
+COPY sdks/stigmem-ts/package.json ./sdks/stigmem-ts/
 RUN pnpm install --frozen-lockfile
 
 # ── builder ───────────────────────────────────────────────────────────────────

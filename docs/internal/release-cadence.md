@@ -88,8 +88,11 @@ Pushing the tag triggers `.github/workflows/publish.yml`, which fans out into:
 2. **`publish-dashboard`** — same shape for the Next.js dashboard.
 3. **`publish-sdk-ts`** — npm publish of `@eidetic-labs/stigmem-ts` with `--tag <alpha|beta|rc|latest>` (derived from the version via `scripts/translate_version.py` — no manual computation needed), with provenance attestation via OIDC.
 4. **`publish-python`** — matrix publishes `stigmem`, `stigmem-py`, `stigmem-node`, `stigmem-openclaw` to PyPI via Trusted Publishers (OIDC; no API token).
+5. **`create-release`** — runs after publish-node + publish-sdk-ts + publish-python succeed. Extracts the `## [<version>]` section from `CHANGELOG.md`, prepends a "Published artifacts" header with the install commands for each registry, creates the GitHub release with that body. Marks as prerelease for any non-`latest` dist-tag (alpha/beta/rc). Title format: `v0.9.0aN — preview alpha`, `v0.9.0bN — preview beta`, `v1.0.0rcN — release candidate`, or just the tag for final releases.
 
-All four jobs run in parallel. Total runtime ~5-8 minutes. **Stay near the workflow run** until publish-python and publish-sdk-ts finish — if either fails, you'll want to triage immediately rather than discover hours later.
+The first four publish jobs run in parallel (~5-8 minutes total). The release-creation job runs after to ensure the release page only links at working artifacts. **Stay near the workflow run** until the release page appears — if anything fails, you'll want to triage immediately rather than discover hours later.
+
+> **Important precondition for `create-release`:** the CHANGELOG must already have a `## [<version>]` entry. If you forget to add it before tagging, the job fails fast with `::error:: No CHANGELOG section found for [<version>]`. The release won't be created; the package publishes already happened. Recover by adding the CHANGELOG entry, then either re-run the failed `create-release` job (`gh run rerun`) or create the release manually via `gh release create`.
 
 ---
 
@@ -110,7 +113,7 @@ Within ~5 minutes of tag push:
     ghcr.io/eidetic-labs/stigmem-node:$TAG
   cosign verify ...same... ghcr.io/eidetic-labs/stigmem-dashboard:$TAG
   ```
-- [ ] **GitHub release** — Created automatically by the tag; verify the release page exists at `https://github.com/Eidetic-Labs/stigmem/releases/tag/v<tag>` and links to the CHANGELOG entry.
+- [ ] **GitHub release** — Created automatically by `publish.yml` `create-release` job. Verify the release page at `https://github.com/Eidetic-Labs/stigmem/releases/tag/v<tag>` shows: (1) the install-commands header, (2) the full CHANGELOG section for this version, (3) the prerelease badge (for alpha/beta/rc) or no badge (for final). If the page is missing or notes are empty, check the `create-release` job log for an extraction error.
 - [ ] **Close the tracking issue** for this release if one was opened (e.g., the PR-N issue in the master-checklist).
 
 Within ~2 hours of tag push:

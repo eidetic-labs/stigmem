@@ -309,3 +309,89 @@ jobs:
           # version (e.g., re-tagging the same v0.9.0a1 by accident); useful safety
           # net for the matrix (one pkg succeeded, others retried).
           skip-existing: true
+
+  create-release:
+    name: Create GitHub release with CHANGELOG notes
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    # Run AFTER the core publishes succeed so the release page links at
+    # working artifacts. Dashboard is intentionally excluded from `needs`
+    # because it's marked "In progress" in the README — a dashboard publish
+    # failure shouldn't block release-page creation for the working publishes.
+    needs: [publish-node, publish-sdk-ts, publish-python]
+    permissions:
+      contents: write   # required to create the release
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Translate tag → PEP 440 + semver + npm dist-tag
+        id: ver
+        run: python3 scripts/translate_version.py "$GITHUB_REF_NAME" --gh-output
+
+      - name: Extract CHANGELOG section for this release
+        id: notes
+        run: |
+          set -eo pipefail
+          VER="${{ steps.ver.outputs.pep440 }}"
+
+          # Extract from "## [<VER>]" line through the line before the next "## ["
+          # (or EOF). Awk handles both cases cleanly.
+          awk -v ver="$VER" '
+            /^## \[/ {
+              if (in_section) { exit }
+              if ($0 ~ "\\[" ver "\\]") { in_section = 1 }
+            }
+            in_section { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+
+          if [ ! -s /tmp/release-notes.md ]; then
+            echo "::error::No CHANGELOG section found for [$VER]. Add a top entry to CHANGELOG.md before tagging."
+            exit 1
+          fi
+
+          # Prepend a small header so the release page reads cleanly.
+          {
+            echo "Published artifacts:"
+            echo ""
+            echo "- **PyPI:** \`pip install --pre stigmem-py==$VER\` (also: \`stigmem\`, \`stigmem-node\`, \`stigmem-openclaw\`)"
+            echo "- **npm:** \`npm install @eidetic-labs/stigmem-ts@${{ steps.ver.outputs.semver }}\`"
+            echo "- **GHCR:** \`docker pull ghcr.io/eidetic-labs/stigmem-node:$VER\` (also \`:${{ steps.ver.outputs.semver }}\`)"
+            echo ""
+            echo "---"
+            echo ""
+            cat /tmp/release-notes.md
+          } > /tmp/release-page.md
+
+          echo "Extracted $(wc -l < /tmp/release-notes.md) CHANGELOG lines + header → $(wc -l < /tmp/release-page.md) total"
+          echo ""
+          echo "First 10 lines of release page body:"
+          head -10 /tmp/release-page.md
+
+      - name: Determine release type (final vs prerelease)
+        id: kind
+        run: |
+          # final releases use the `latest` npm dist-tag; everything else is prerelease
+          if [ "${{ steps.ver.outputs.npm_tag }}" = "latest" ]; then
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "title=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+            case "${{ steps.ver.outputs.npm_tag }}" in
+              alpha) suffix="preview alpha" ;;
+              beta)  suffix="preview beta" ;;
+              rc)    suffix="release candidate" ;;
+              *)     suffix="prerelease" ;;
+            esac
+            echo "title=${{ github.ref_name }} — ${suffix}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ steps.kind.outputs.title }}
+          body_path: /tmp/release-page.md
+          prerelease: ${{ steps.kind.outputs.is_prerelease == 'true' }}
+          draft: false
+          token: ${{ secrets.GITHUB_TOKEN }}

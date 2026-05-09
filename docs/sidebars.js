@@ -8,7 +8,26 @@ try {
   // Run `npm run gen-api-docs` to populate the interactive API sidebar.
 }
 
-/** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
+/**
+ * Sidebars for v0.9.0a1.
+ *
+ * Surface restricted to features actually shipped in the v0.9.0a1 KEEP scope
+ * per `Internal-Comms/stigmem/plans/version-prioritization.md`. Pages for
+ * deferred features (lazy instruction discovery, RTBF tombstones, time-travel,
+ * memory-garden ACL, source attestation, OIDC SSO, multi-tenant, recall-graph
+ * embeddings, memory cards, MCP-host connectors, non-OpenClaw adapters, Helm
+ * chart, billing, async jobs, eval harness, etc.) have been moved to
+ * `Internal-Comms/stigmem/plans/aspirational-future-versions/docs-archive/`
+ * with frontmatter annotations linking each page to the experimental feature
+ * + restoration phase.
+ *
+ * To bring deferred docs back: each archived page's frontmatter includes
+ * `feature` + `restore_when` + `archived_from` — copy back to the original
+ * path, refresh content against actual graduation state, re-add the sidebar
+ * entry below.
+ *
+ * @type {import('@docusaurus/plugin-content-docs').SidebarsConfig}
+ */
 const sidebars = {
   learnSidebar: [
     { type: 'doc', id: 'concepts/index', label: 'Overview' },
@@ -28,15 +47,9 @@ const sidebars = {
         'concepts/facts/immutable-typed-facts',
         'concepts/hybrid-logical-clocks',
         'concepts/facts/conflict-semantics',
-        'concepts/lifecycle/decay-and-confidence',
         'concepts/federation/federation-handshake',
         'concepts/federation/source-trust-and-quarantine',
-        'concepts/recall/recall-pipeline',
-        'concepts/recall/memory-cards-as-fast-path',
-        'concepts/recall/lazy-instruction-loading',
         'concepts/facts/content-addressing',
-        'concepts/lifecycle/time-travel-queries',
-        'concepts/lifecycle/tombstones-and-rtbf',
       ],
     },
     {
@@ -65,30 +78,14 @@ const sidebars = {
             'concepts/facts/querying-facts',
             'concepts/facts/conflict-resolution',
             'concepts/facts/content-addressing-guide',
-            'concepts/facts/fuzzy-entity-resolver',
           ],
         },
         {
           type: 'category',
-          label: 'Lifecycle',
-          collapsed: true,
-          items: [
-            'concepts/lifecycle/decay',
-            'concepts/lifecycle/synthesis',
-            'concepts/lifecycle/time-travel',
-            'concepts/lifecycle/rtbf',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Recall & Memory',
+          label: 'Recall',
           collapsed: true,
           items: [
             'concepts/recall/recall',
-            'concepts/recall/memory-cards',
-            'concepts/recall/memory-gardens',
-            'concepts/recall/embeddings',
-            'concepts/recall/subscriptions',
           ],
         },
         {
@@ -110,23 +107,10 @@ const sidebars = {
           items: [
             'security/authentication',
             'security/agent-keypairs',
-            'security/source-attestation',
             'security/audit-log',
             'security/encryption-at-rest',
-            'security/oidc-sso',
-            'security/multi-tenancy',
             'security/human-key-issuance',
             'security/human-surface',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Agent Integration',
-          collapsed: true,
-          items: [
-            'sdks/intent-envelopes',
-            'sdks/lazy-instructions',
-            'sdks/instruction-migration',
           ],
         },
         {
@@ -134,10 +118,7 @@ const sidebars = {
           label: 'Operations',
           collapsed: true,
           items: [
-            'operators/async-jobs',
-            'operators/billing-hooks',
             'operators/conformance',
-            'operators/libsql-pitr',
             'operators/design-partner-notes',
           ],
         },
@@ -150,49 +131,10 @@ const sidebars = {
       items: [
         {
           type: 'category',
-          label: 'MCP Host Connectors',
-          collapsed: true,
-          items: [
-            'sdks/connectors/cursor',
-            'sdks/connectors/zed',
-            'sdks/connectors/codex-cli',
-            'sdks/connectors/continue-dev',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Runtime Adapters',
-          collapsed: true,
-          items: [
-            'sdks/connectors/gemini',
-            'sdks/connectors/ollama-litellm',
-          ],
-        },
-        {
-          type: 'category',
           label: 'Agent Platform Adapters',
-          collapsed: true,
+          collapsed: false,
           items: [
             'sdks/connectors/openclaw',
-            'sdks/connectors/paperclip',
-            'sdks/connectors/paperclip-federation',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Vault & Note-taking',
-          collapsed: true,
-          items: [
-            'sdks/connectors/obsidian',
-            'sdks/connectors/obsidian-plugin',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Memory Federation',
-          collapsed: true,
-          items: [
-            'sdks/connectors/zep',
           ],
         },
       ],
@@ -204,7 +146,6 @@ const sidebars = {
       items: [
         'sdks/python',
         'sdks/typescript',
-        'sdks/go',
       ],
     },
     {
@@ -213,10 +154,7 @@ const sidebars = {
       collapsed: true,
       items: [
         'get-started/sdk-quickstart',
-        'sdks/tutorial-agent-with-recall',
         'sdks/tutorial-two-org-federation',
-        'operators/tutorial-self-host-obsidian',
-        'sdks/tutorial-lazy-discovery',
         'operators/tutorial-hardening',
       ],
     },
@@ -230,16 +168,6 @@ const sidebars = {
       collapsed: true,
       items: [
         'operators/deployment/install',
-        'operators/deployment/helm',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Storage Backends',
-      link: { type: 'doc', id: 'operators/backends/index' },
-      collapsed: true,
-      items: [
-        'operators/backends/choose-backend',
       ],
     },
     {
@@ -273,7 +201,6 @@ const sidebars = {
       collapsed: true,
       items: [
         'operators/observability/monitoring',
-        'operators/observability/eval-harness',
       ],
     },
     {
@@ -286,7 +213,6 @@ const sidebars = {
         'reference/cli/stigmem-node',
       ],
     },
-    'operators/cost-calculator',
   ],
 
   referenceSidebar: [
@@ -317,16 +243,8 @@ const sidebars = {
         'spec/failure-mode-scenarios',
         'spec/adapter-abi',
         'spec/lint-semantics',
-        'spec/decay-semantics',
-        'spec/synthesis',
-        'spec/memory-garden',
-        'spec/source-attestation',
         'spec/federation-trust',
-        'spec/recall-graph',
-        'spec/lazy-instruction-discovery',
         'spec/security-hardening',
-        'spec/right-to-be-forgotten-tombstones',
-        'spec/time-travel-as-of-queries',
         'spec/content-addressed-fact-ids',
         'spec/section-13',
       ],

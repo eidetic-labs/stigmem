@@ -1,104 +1,89 @@
 ---
-title: Experimental Features
-sidebar_label: Experimental Features
+title: Experimental & Deferred Features
+sidebar_label: Experimental & Deferred
 sidebar_position: 5
 audience: Operator
-description: "Canonical list of Stigmem features marked EXPERIMENTAL in v2.0, their risks, constraints, and GA criteria."
+description: "Features deferred from v0.9.0a1 default install, planned for staged re-introduction per ADR-008."
 ---
 
-# Experimental Features
+# Experimental & Deferred Features
 
-This page is the canonical list of features shipped in v2.0 with **EXPERIMENTAL** status. Each entry describes the risk, the constraint operators must accept, and the criteria that will promote the feature to GA.
+This page lists features that are **not in v0.9.0a1's default install**. They were part of pre-reset specs but are deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) (v1 critical-path scope) and [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md) (plugin architecture). Each will return through the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) five-gate process: threat-model delta, ADR, conformance vectors, 30-day external operator soak, and adopter migration story.
 
-An EXPERIMENTAL feature is shipped and functional, but is **not recommended for all production workloads**. The spec section, wire format, or operational guarantees may change in a future minor release.
-
----
-
-## §21 — Lazy Instruction Discovery
-
-**Status:** EXPERIMENTAL  
-**Spec page:** [§21 Lazy Instruction Discovery](../spec/lazy-instruction-discovery.md)
-
-**Risk:** The boot-stub schema and instruction-manifest format are not yet finalized. A mutable or externally-resolvable instruction manifest is a prompt-injection attack surface: if an attacker can influence the manifest URI or cache, they can substitute agent instructions.
-
-**Constraint:** Do not deploy lazy-discovered instructions in production agents handling sensitive data or irreversible tool use until this section reaches GA. Always pin `instructions_manifest_uri` to a trusted, integrity-verified source.
-
-**GA criteria:**
-- Boot-stub schema and manifest versioning format stabilized across all spec drafts.
-- Manifest signing guarantees cover the URI and cache poisoning attack surface.
-- Conformance tests for instruction manifest integrity added to the test suite.
+This is the public surface of `Internal-Comms/stigmem/plans/version-prioritization.md` — the living tracker that maps every deferred feature to its re-introduction phase and PR.
 
 ---
 
-## §23 — RTBF Tombstones
+## Deferred protocol features
 
-**Status:** EXPERIMENTAL  
-**Spec page:** [§23 Right-to-be-Forgotten Tombstones](../spec/right-to-be-forgotten-tombstones.md)
+| Spec | Feature | Phase | PR |
+|---|---|---|---|
+| §17 | Memory garden — advanced ACL (admin/writer/reader role model) | Phase A | PR 4e |
+| §18 | Source attestation (`entity_uri` binding, three modes, audit log) | Phase A | PR 4f |
+| §20 | Recall graph (vector embeddings, BM25+ANN+graph BFS+MMR, memory cards) | Phase A | TBD |
+| §21 | Lazy instruction discovery (boot stub, manifest, `recall_instruction` tool) | Phase A | PR 4a |
+| §23 | RTBF tombstones (signed entity_uri+scope suppression, federation propagation) | Phase A | PR 4d |
+| §24 | Time-travel queries (`as_of` parameter, append-only retraction log) | Phase A | PR 4c |
+| — | Subscriptions / push federation | Deferred | TBD |
 
-**Risk:** The tombstone signing format and federation propagation rules are under active security review. The field-exclusion signing pattern may allow federated re-broadcast to produce tombstones that pass local validation but fail downstream signature checks, silently leaving personal data un-erased on remote nodes. This is a compliance risk (GDPR Art. 17, CCPA §1798.105) masked as a cryptography issue.
+Note: §25 Content-addressed fact IDs (CIDs) **stays in core** per ADR-017 — CIDs are load-bearing for the storage immutability stack and prompt-injection trust boundary.
 
-**Constraint:**
-- Do **not** rely on tombstone federation for compliance workflows in multi-node deployments.
-- Tombstone `DELETE` operations are locally reliable; cross-node propagation is best-effort.
-- Operators with GDPR/CCPA obligations should implement manual deletion coordination across nodes until federation is confirmed correct.
+## Deferred auth & integration
 
-**GA criteria:**
-- All spec amendment issues (F1–F11 series) resolved.
-- Federation propagation conformance tests passing across 2-node and 4-node topologies.
-- Field-exclusion signing pattern validated against adversarial federation scenarios.
+| Feature | Phase | Notes |
+|---|---|---|
+| OIDC SSO integration | Phase A | New auth trust boundary, not threat-modeled adversarially yet |
+| Multi-tenant isolation | Phase A (PR 4g) | Most complex plugin; default install is single-tenant |
+| Fuzzy entity resolver | Deferred | Convenience feature, not on critical path |
 
----
+## Deferred storage backends
 
-## §24 — Time-Travel Queries
+| Feature | Phase | Notes |
+|---|---|---|
+| PostgreSQL backend | Deferred | Highest-priority candidate after SQLite operator-validates |
+| libSQL / Turso backend | Deferred | Adds third-party trust dependency |
 
-**Status:** EXPERIMENTAL  
-**Spec page:** [§24 Time-Travel / As-Of Queries](../spec/time-travel-as-of-queries.md)
+## Deferred adapters & integrations
 
-**Risk:** `as_of` queries combined with retroactive tombstone suppression can return data that a tombstone was meant to erase. Isolation semantics differ between SQLite (`BEGIN IMMEDIATE`) and PostgreSQL (`READ COMMITTED`), meaning behavior may silently differ between development and production environments. The `legal_hold` key management path is not yet documented.
+`stigmem-openclaw` is the only adapter shipped at v0.9.0a1. The following are kept in the codebase but will not graduate until OpenClaw v0.9 validates the contract:
 
-**Constraint:**
-- Queries at time `T` before a tombstone's `issued_at` may return erased data on some backends. Review your deletion workflow before relying on this for compliance.
-- Test your workload on the production backend (not just SQLite in dev).
-- `legal_hold` fact handling requires the admin key; do not use this path until key management is documented.
+- Obsidian + Obsidian-plugin adapters
+- Letta, Zep, Cognee, Gemini, OpenAI-tools, Paperclip adapters
+- MCP host connectors (Cursor, Zed, Codex CLI, Continue.dev) — the underlying `stigmem-mcp` adapter is at `0.4.0` and not aligned to v0.9.0a1
+- Curator dashboard (Next.js)
 
-**GA criteria:**
-- Tombstone interaction semantics fully specified and conformance-tested across both backends.
-- `legal_hold` key management path documented and tested.
-- Integration tests for concurrent retraction + `as_of` workloads on both SQLite and PostgreSQL.
+## Deferred SDKs
 
----
+Only the Python SDK (`stigmem-py`) and TypeScript SDK (`@eidetic-labs/stigmem-ts`) ship at v0.9.0a1. The Go SDK is deferred until the Python SDK is operator-validated.
 
-## §25 — Content-Addressed Fact IDs
+## Deferred deployment surfaces
 
-**Status:** EXPERIMENTAL  
-**Spec page:** [§25 Content-Addressed Fact IDs](../spec/content-addressed-fact-ids.md)
+Docker Compose is the only deployment surface in v0.9.0a1. Helm chart, Fly.io configs, systemd units, Grafana dashboards, and PaaS configs all defer.
 
-**Risk:** CID-based federation tamper detection is not enforced by default. The 12-month dual-format migration window means CID-less facts from upgraded peers are currently accepted. A MITM attacker on a federated connection can strip CIDs to evade tamper detection.
+## Deferred commercial / operational features
 
-**Constraint:**
-- Do not rely on CID verification as a security control in untrusted federation topologies.
-- Set `STIGMEM_REQUIRE_CID=true` in isolated test environments to validate your fact pipeline before enforcement is on by default.
-
-**GA criteria:**
-- `STIGMEM_REQUIRE_CID=true` made the default for CID-capable peer connections.
-- Full conformance vector suite for on-wire CID presence logic.
-- Dual-path migration window formally ended in spec.
-
----
-
-## Operator warnings (GA features with non-obvious risks)
-
-These features are **GA** but have operational risks that are non-obvious. Each section page carries a callout; the summary is reproduced here for reference.
-
-| Feature | Section | Risk | Required action |
-|---------|---------|------|-----------------|
-| mTLS (reverse-proxy) | §22.1 | Silent plaintext fallback when TLS terminates at proxy | Set `STIGMEM_MTLS_REQUIRED=true` |
-| Source-trust cache | §19.4 | Per-worker incoherence in multi-worker deployments | `STIGMEM_TRUST_CACHE_BACKEND=redis` for production |
-| N-node backpressure/scope | §6.7–§6.8 | Draft spec; relay topologies not conformance-tested | Test topology in staging before production |
-| Quarantine garden pre-flight | §19.5 | `trust_mode=strict` without quarantine garden permanently drops low-trust facts | Pre-create quarantine garden before enabling strict mode |
+| Feature | Notes |
+|---|---|
+| Billing hooks | Commercial concern; belongs in hosted offering |
+| Memory cards (synthesis) | Synthesis path; defer |
+| Decay sweep | Cron-driven; can be disabled |
+| Async lint/decay job APIs | Blocked on lint/decay graduation |
 
 ---
 
-## Requesting GA promotion
+## What this means for adopters
 
-If you are running an experimental feature in production and want to accelerate GA promotion, open an issue in the [stigmem repository](https://github.com/Eidetic-Labs/stigmem) with your topology, workload characteristics, and any anomalies observed. Production data helps prioritize the remaining conformance work.
+If you read about a feature in an older blog post, AI-generated summary, or third-party integration guide that doesn't appear in the current docs sidebar, it is almost certainly on this list. The implementation generally exists in the codebase but is gated, off by default, or not graduation-ready. **Do not depend on deferred features in production workloads** — they will return only after passing the ADR-008 gates, and the wire format may change between now and then.
+
+## Restoration tracking
+
+When a deferred feature graduates, its docs are restored from `Internal-Comms/stigmem/plans/aspirational-future-versions/docs-archive/<feature-slug>/`. Each archived page carries frontmatter mapping it back to its original repo path so restoration is mechanical:
+
+```yaml
+archived_from: docs/docs/<original-path>
+archived_at: 2026-05-09
+v0_9_0a1_status: deferred
+feature: <feature-slug>
+restore_when: <Phase A PR-X | TBD>
+manifest_ref: stigmem/plans/aspirational-future-versions/docs-manifest.md
+```

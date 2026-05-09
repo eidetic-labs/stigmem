@@ -37,7 +37,7 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 
 ### Changed
 
-- **Canonical version line reset.** `pyproject.toml`, `package.json`, `sdks/stigmem-py/pyproject.toml`, `sdks/stigmem-ts/package.json`, `node/pyproject.toml`, `infra/helm/stigmem/Chart.yaml`, `deploy/helm/stigmem/Chart.yaml`, README status banner, SECURITY.md "Applies to" line, and threat model "Applies to" line all updated to v0.9.0a1 (PEP 440) or 0.9.0-alpha.1 (semver) per their per-surface convention. `adapters/openclaw/pyproject.toml` `stigmem-py` dependency range bumped to `>=0.9.0a1`.
+- **Canonical version line reset.** `pyproject.toml`, `package.json`, `sdks/stigmem-py/pyproject.toml`, `sdks/stigmem-ts/package.json`, `node/pyproject.toml`, `infra/helm/stigmem/Chart.yaml`, `deploy/helm/stigmem/Chart.yaml`, `adapters/openclaw/pyproject.toml`, README status banner, SECURITY.md "Applies to" line, and threat model "Applies to" line all updated to v0.9.0a1 (PEP 440) or 0.9.0-alpha.1 (semver) per their per-surface convention. `adapters/openclaw/pyproject.toml` `stigmem-py` dependency range bumped from `>=1.0.0rc1` (the never-published constraint) to `>=0.9.0a1,<1.0.0`. `adapters/openclaw` Development Status classifier dropped from "5 - Production/Stable" to "3 - Alpha" to match actual maturity.
 - **LICENSE replaced** with canonical Apache-2.0 SPDX template. Verified ~10 substantive deviations from canonical Apache-2.0 in the previous LICENSE; replaced wholesale.
 - **SECURITY.md** "Supported versions" table updated: `1.0.0-rc` retired; `0.9.0a1` listed as the current supported pre-release. v0.9.0a1 carries no stability guarantee — breaking changes during the Phase A/B hardening window are expected and called out in this changelog.
 - **Default install scope shrunk.** Multi-tenant, RTBF tombstones, time-travel queries, lazy instruction discovery, advanced memory-garden ACL, and source attestation move to `experimental/` as opt-in plugins per [ADR-011](docs/adr/011-cross-cutting-extraction.md). The default install matches the v1.0 critical-path scope from [ADR-002](docs/adr/002-v1-scope.md). Operators who need experimental features install them via the plugin system.
@@ -51,7 +51,9 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 
 ### Deprecated
 
-- **No PyPI deprecation needed.** Audit on 2026-05-08 confirmed `stigmem 1.0.0rc1` was never actually published to PyPI; the canonical `stigmem` name is unclaimed and PR 0 is the first publish. The only stigmem-related PyPI artifact that ever shipped is `stigmem-openclaw` (1.0.3, 1.0.5 — independently versioned, continues forward on its own line).
+- **No PyPI deprecation of the canonical packages needed.** Audit on 2026-05-08 confirmed `stigmem 1.0.0rc1` was never actually published to PyPI; the canonical `stigmem` name is unclaimed and PR 0 is the first publish.
+
+- **`stigmem-openclaw` 1.0.3 and 1.0.5 are yanked** (PEP 592) as part of PR 0. Both versions declared `stigmem-py>=1.0.0rc1` as a hard dependency; `stigmem-py 1.0.0rc1` was never published, so both adapter versions were end-to-end **uninstallable** since publish (verified 2026-05-09 via `uv pip install --dry-run stigmem-openclaw==1.0.5` — fails with "stigmem-py was not found in the package registry"). The retraction-narrative concern that motivated PR 0 — declaring maturity not yet earned — applies as much to these adapter publishes as it did to the v1.0 announcement; the yanks correct the record. Pinned installs of `==1.0.3` or `==1.0.5` continue to resolve to those versions (PEP 592 yank does not remove); new resolutions skip them. **`stigmem-openclaw 0.9.0a1`** is the first version that is actually installable.
 - **No npm package was previously published**, so there is nothing to deprecate on npm. `@eidetic-labs/stigmem-ts@0.9.0-alpha.1` is the **first** npm release of the TypeScript SDK; it ships in PR 0 alongside the PyPI release.
 
 ### Stability commitment

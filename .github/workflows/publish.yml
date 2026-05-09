@@ -293,18 +293,24 @@ jobs:
           python -m pip install --upgrade twine
           twine check "${{ matrix.package.dir }}/dist/"*
 
-      # Uses PyPI Trusted Publishers (OIDC) — no PYPI_API_TOKEN secret needed.
-      # Per-package Trusted Publisher must be configured at pypi.org first:
-      #   PyPI → Account → Publishing → Add a new pending publisher
-      #     Project name: <matrix.package.name>
-      #     Owner: Eidetic-Labs
-      #     Repository: stigmem
-      #     Workflow: publish.yml
-      #     Environment: (leave blank)
+      # Auth path: hybrid. Primary is PyPI Trusted Publishers via OIDC (no
+      # long-lived secret). Bridge fallback is a personal API token via the
+      # PYPI_API_TOKEN repo secret — used when pypi/warehouse#20006 (broken
+      # pending-publisher flow) blocks pre-publish trusted-publisher config
+      # for new projects. The action treats `password:` as authoritative when
+      # set; falls through to OIDC when the secret is empty.
+      #
+      # Path-of-least-privilege: once first publish creates the projects on
+      # PyPI, configure Trusted Publishers for each via the (now-working)
+      # post-create flow. Then revoke the API token and remove the secret;
+      # the workflow auto-falls-back to OIDC on the next release.
       - name: Publish ${{ matrix.package.name }} to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: ${{ matrix.package.dir }}/dist
+          # If PYPI_API_TOKEN secret is set, use it; else action falls back
+          # to OIDC trusted-publisher (requires `id-token: write` permission).
+          password: ${{ secrets.PYPI_API_TOKEN }}
           # skip-existing prevents failure if a re-run hits an already-published
           # version (e.g., re-tagging the same v0.9.0a1 by accident); useful safety
           # net for the matrix (one pkg succeeded, others retried).

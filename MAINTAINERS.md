@@ -36,6 +36,41 @@ The Sigstore identity mapping for Eidetic Labs is documented separately in `docs
 
 ---
 
+## Credential rotation
+
+External-registry credentials used by CI to publish stigmem artifacts rotate on a **90-day cadence**, owned by the founder through Phase A. The cadence balances rotation hygiene against the operational cost of regenerating + redistributing tokens.
+
+### Active credentials
+
+| Credential | GH secret name | Scope | Created | Rotate by | Owner |
+|---|---|---|---|---|---|
+| npm granular access token | `NPM_TOKEN` | Read+Write on `@eidetic-labs/*` (scope-level) | 2026-05-08 | **2026-08-06** | @offbyonce |
+| PyPI API token / OIDC trusted publisher | `PYPI_API_TOKEN` (if token) or n/a (if OIDC) | `stigmem`, `stigmem-py`, `stigmem-node` projects | _pending #45_ | _90 days from creation_ | @offbyonce |
+
+### Rotation procedure
+
+1. **Generate replacement** at the registry (npm Settings → Access Tokens → Generate New Token; or PyPI account settings → API tokens → Add API token). New token uses naming convention `<repo>-gh-actions-<purpose>-<YYYY-MM-DD>` (e.g., `stigmem-gh-actions-publish-2026-08-06`).
+2. **Update GH repo secret** at `Eidetic-Labs/stigmem` → Settings → Secrets and variables → Actions. Edit the existing `NPM_TOKEN` (or `PYPI_API_TOKEN`) and paste the new value. The secret name stays the same; the value is rotated in place.
+3. **Verify CI can publish** — manually trigger the `publish.yml` workflow (or wait for the next tag push) and confirm the publish step succeeds with the new token.
+4. **Revoke the old token** at the registry. **Do not** revoke before step 3 confirms the new token works — race window for failed publishes.
+5. **Update this file** with the new "Created" + "Rotate by" dates.
+
+### Authentication path-of-least-privilege
+
+The CI tokens above grant publish authority to GitHub Actions runs on tagged releases. Human maintainers do **not** use these tokens for ad-hoc publishes — they use their own personal credentials with team-membership-based permissions (npm `@eidetic-labs:publishers` team for npm; PyPI maintainer access for PyPI). Compromise of the GH secret does not compromise founder/contributor personal accounts and vice versa.
+
+### Compromise response
+
+If a CI token is suspected compromised:
+
+1. **Revoke immediately** at the registry (do not wait for rotation cadence).
+2. **Audit recent publishes** for that scope — npm registry shows a per-version publisher; PyPI shows uploader email per release.
+3. **Yank or unpublish unauthorized versions** within the registry's allowed window (npm: 72h since publish; PyPI: PEP 592 yank, no time limit).
+4. **Generate replacement** per Rotation procedure §1–3.
+5. **File an incident note** in `docs/internal/incidents/` (per Phase A operator-hardening doc work) describing the incident, the response, and any operator-visible impact.
+
+---
+
 ## Updating this file
 
 - **Adding an entry:** the person being added must explicitly consent in writing (via PR comment, email, or other auditable channel). The PR must reference the consent.
@@ -45,4 +80,4 @@ The Sigstore identity mapping for Eidetic Labs is documented separately in `docs
 
 ---
 
-*Last updated: 2026-05-07. Updated per [ADR-001 § *Contributor approval rule*](docs/adr/001-versioning.md).*
+*Last updated: 2026-05-08. Updated per [ADR-001 § *Contributor approval rule*](docs/adr/001-versioning.md). Credential-rotation section added 2026-05-08 alongside the first NPM_TOKEN registration.*

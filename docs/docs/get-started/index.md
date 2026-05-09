@@ -12,4 +12,3 @@ Install Stigmem, run your first fact assertion, and connect an SDK in under five
 | [Install](./installation.md) | Set up a local Stigmem node |
 | [Quickstart tutorial](./quickstart-tutorial.md) | Assert, query, and recall your first facts |
 | [SDK quickstart](./sdk-quickstart.md) | Connect from Python, TypeScript, or Go |
-| [Upgrade to v2](./upgrade-v1.md) | Migrate from v1.x to the v2.0 wire format |

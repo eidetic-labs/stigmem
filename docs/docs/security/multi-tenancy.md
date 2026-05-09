@@ -11,8 +11,8 @@ status: Beta
 
 Multi-tenancy is a reference-node feature (not a spec §). A single stigmem process can serve multiple tenants with complete data isolation — facts, gardens, audit records, and API keys are partitioned by `tenant_id` at the database level.
 
-:::info v1.0 reference node
-Tenant isolation shipped in migration `012_multi_tenant` with the v1.0-rc reference node. All pre-migration rows are automatically assigned `tenant_id = "default"`, so single-tenant deployments require no configuration change.
+:::info Reference-node feature
+Tenant isolation is implemented in migration `012_multi_tenant` in the reference node. All pre-migration rows are automatically assigned `tenant_id = "default"`, so single-tenant deployments require no configuration change.
 :::
 
 ## How it works
@@ -107,7 +107,7 @@ curl -s -H "Authorization: Bearer $KEY_B" \
 
 ## Default tenant
 
-Keys created without an explicit `tenant_id` are assigned `tenant_id = "default"`. All pre-v1.0 data already lives in `"default"`. This means:
+Keys created without an explicit `tenant_id` are assigned `tenant_id = "default"`. All pre-multi-tenant data already lives in `"default"`. This means:
 
 - Single-tenant deployments continue working with zero changes.
 - If you want to add a second tenant, you create new keys with a different `tenant_id` — existing keys remain in `"default"`.
@@ -146,5 +146,4 @@ See [Source Attestation](./source-attestation) and the [Features page](../concep
 - [Billing Hooks](../operators/billing-hooks) — per-tenant billing event emission
 - [Audit Log](./audit-log) — querying the tenant-scoped audit trail
 - [Source Attestation](./source-attestation) — enforce `entity_uri` binding per tenant
-- [Upgrade to v1.0](../get-started/upgrade-v1) — migrating from single-tenant v0.x deployments
 - [Installation](../get-started/installation) — node setup and environment configuration

@@ -140,7 +140,7 @@ A complete reproducer includes:
 **Example reproducer for a hypothetical scope bypass:**
 
 ```
-Environment: stigmem v1.0-rc, SQLite backend, Docker Compose
+Environment: stigmem v0.9.0a1, SQLite backend, Docker Compose
 Commit: abc1234
 
 Setup:

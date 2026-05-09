@@ -23,7 +23,7 @@ Stigmem ships two complementary conformance layers:
 
 ## Wire conformance (v1 vectors)
 
-The Stigmem v1.0 conformance suite is the normative test contract for the wire format. Any node implementation that passes every vector in `data/conformance/v1.0/` is a conforming Stigmem node.
+The Stigmem **wire-spec v1.0** conformance suite is the normative test contract for the wire format. Any node implementation that passes every vector in `data/conformance/v1.0/` is a conforming Stigmem node. (The wire spec is versioned independently from the project's package release line — current package release is `0.9.0a1`.)
 
 ### Running the suite
 

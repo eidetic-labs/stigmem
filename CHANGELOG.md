@@ -83,7 +83,7 @@ The entries below labeled `v0.2` through `v2.0` and `1.0.0-rc` documented intern
 - **Content-addressed fact IDs (§25)** — CID format (`sha256:` + hex SHA-256 of RFC 8785 canonical body over 6 fields), `fact_cid_aliases` table for dual UUID/CID addressing, 12-month migration window, federation tamper detection (`cid_mismatch` rejection), `stigmem backfill-cids` CLI, `POST /v1/facts/:id/verify-cid` integrity check.
 - **Storage backend trait (Phase 8)** — `StorageBackend` abstraction, `LibSQLBackend` for Turso/libSQL embedded-replica, `STIGMEM_STORAGE_BACKEND` env var, backend-parameterized test runner.
 - **Conformance vectors** — v2.0 wire-format vectors for §19–§25 in `data/conformance/v2.0/`.
-- **Migration guide** — `docs/docs/migration/v1-to-v2.md` with breaking-change matrices, cutover order, and rollback notes.
+- **Migration guide** with breaking-change matrices, cutover order, and rollback notes (aspirational; archived to internal repo as part of the v0.9.0a1 reset since v1→v2 migration was never shipped publicly).
 
 ### Changed
 
@@ -217,7 +217,7 @@ The entries below labeled `v0.2` through `v2.0` and `1.0.0-rc` documented intern
 
 - Run migration 004 (gardens table) and migration 005 (api_keys extension + attestation_audit) before starting the node. Both are idempotent.
 - Set `STIGMEM_TENANT_HEADER_REQUIRED=true` if you want tenant isolation enforced at the ingress layer.
-- See the [v1.0 upgrade guide](docs/docs/getting-started/upgrade-v1.md) for the full migration checklist.
+- A v1.0 upgrade guide was drafted but never shipped publicly; it has been archived to the internal repo as part of the v0.9.0a1 reset.
 
 ---
 

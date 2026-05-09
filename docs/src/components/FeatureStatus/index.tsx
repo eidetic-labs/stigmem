@@ -17,7 +17,7 @@ export default function FeatureStatus({ status }: { status: FeatureStatusValue }
     <Admonition type={meta.type} title={`${meta.label} feature`}>
       This feature is <strong>{meta.label}</strong>. Breaking changes may occur
       before it reaches Stable.{' '}
-      <Link to={`/docs/learn/features${meta.anchor}`}>
+      <Link to={`/docs/concepts/features${meta.anchor}`}>
         See feature status definitions →
       </Link>
     </Admonition>

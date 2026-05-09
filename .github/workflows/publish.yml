@@ -231,8 +231,11 @@ jobs:
           fi
 
       - name: Publish to npm (with provenance)
+        # --tag is required for prereleases; npm rejects publish without it.
+        # alpha/beta/rc go to their own dist-tags so `npm install <pkg>`
+        # (no --tag) waits for a stable release on `latest`.
         run: |
           cd sdks/stigmem-ts
-          npm publish --provenance --access public
+          npm publish --provenance --access public --tag "${{ steps.ver.outputs.npm_tag }}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

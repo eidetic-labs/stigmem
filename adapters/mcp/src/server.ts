@@ -24,7 +24,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 
-import { StigmemClient, StigmemError } from "stigmem-ts";
+import { StigmemClient, StigmemError } from "@eidetic-labs/stigmem-ts";
 
 // ---------------------------------------------------------------------------
 // Config

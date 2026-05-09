@@ -22,8 +22,16 @@ set -euo pipefail
 
 PULL_WAIT_S="${PULL_WAIT_S:-35}"
 KEEP_UP="${KEEP_UP:-0}"
-NODE_A="http://localhost:8765"
-NODE_B="http://localhost:8766"
+
+# Smoke test uses non-conflicting host ports by default to avoid colliding
+# with other stigmem-node instances on the dev box (e.g., Paperclip-managed
+# instances, manual `uv run python -m stigmem_node` sessions, etc.). The
+# canonical adopter UX in docker-compose.yml is still 8765/8766. Override
+# via env if you specifically want to test the canonical port mapping.
+export STIGMEM_NODE_A_HOST_PORT="${STIGMEM_NODE_A_HOST_PORT:-18765}"
+export STIGMEM_NODE_B_HOST_PORT="${STIGMEM_NODE_B_HOST_PORT:-18766}"
+NODE_A="http://localhost:${STIGMEM_NODE_A_HOST_PORT}"
+NODE_B="http://localhost:${STIGMEM_NODE_B_HOST_PORT}"
 START_TIME=$(date +%s)
 
 # ---- helpers -----------------------------------------------------------------

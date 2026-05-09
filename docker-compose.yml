@@ -12,6 +12,13 @@
 #
 # After v0.9.0a1 publishes, the image: tag below is the canonical
 # artifact. Bump it on each release per docs/internal/release-cadence.md.
+#
+# Host ports default to 8765 (node-a) and 8766 (node-b). If those
+# collide with another local stigmem-node (e.g., a Paperclip-managed
+# instance), set STIGMEM_NODE_A_HOST_PORT and STIGMEM_NODE_B_HOST_PORT
+# in your shell or .env to remap. The internal container port stays
+# at 8765 — federation between containers uses the service-network
+# DNS name (`http://node-a:8765`) regardless of the host port.
 services:
   node-a:
     image: ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
@@ -19,7 +26,7 @@ services:
       context: .
       dockerfile: node/Dockerfile
     ports:
-      - "8765:8765"
+      - "${STIGMEM_NODE_A_HOST_PORT:-8765}:8765"
     environment:
       STIGMEM_NODE_URL: "http://node-a:8765"
       STIGMEM_FEDERATION_ENABLED: "true"
@@ -50,7 +57,7 @@ services:
       context: .
       dockerfile: node/Dockerfile
     ports:
-      - "8766:8765"
+      - "${STIGMEM_NODE_B_HOST_PORT:-8766}:8765"
     environment:
       STIGMEM_NODE_URL: "http://node-b:8765"
       STIGMEM_FEDERATION_ENABLED: "true"

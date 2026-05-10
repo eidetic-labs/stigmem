@@ -5,6 +5,7 @@ This directory holds artifacts that are preserved as part of the v0.9.0a1 reset 
 ## Contents
 
 - `devto-lazy-discovery-tokenomics.md` — externally-published dev.to post (moved from `dogfood/` per PR 3 / ADR-009 §11). Preserved at repo root rather than `docs/blog/archive/` because the Docusaurus blog plugin processes everything under `docs/blog/` as a real blog post; this archive lives outside that tree to avoid forcing the post into the build pipeline.
+- `devto-stigmem-v0.9.0a1-retraction.md` — externally-published dev.to retraction post (the post that announces the v1.0 retraction and the v0.9.0a1 reset). Same archive convention as above: lives outside `docs/blog/` so Docusaurus doesn't process it as a current blog post. The dev.to URL is captured in this file's frontmatter `canonical_url` once published.
 
 ## How to read this directory
 

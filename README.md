@@ -26,7 +26,7 @@ The canonical version line is being reset. **`v0.9.0a1` is the *first build* of 
 
 We chose `v0.9.0a1` (PEP 440 alpha) over `v0.9.0-preview` because alpha-beta-rc has built-in iteration semantics (`a1`, `a2`, `b1`, `rc1`) and ecosystem-native sort ordering in PyPI and npm — see [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) (Internal-Comms repo).
 
-For the full story, see the retraction post — landing alongside the v0.9.0a1 publish as PR 0.5 in the [GA Readiness Plan](https://github.com/orgs/Eidetic-Labs/projects/3). This README will be updated with the post URL once published.
+For the full story, see the [retraction post](archive/devto-stigmem-v0.9.0a1-retraction.md) — the in-repo archive of the dev.to post that announces this reset. The dev.to URL will be added to the archive copy's `canonical_url` once the post is live.
 
 ---
 

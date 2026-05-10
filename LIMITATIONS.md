@@ -241,7 +241,7 @@ Read this document, read the threat model, run `make demo` locally, and decide w
 
 ### If you have already integrated against v1.0
 
-Your code does not need to change today; the wire format hasn't changed. **Do not deploy in cross-org federation configurations.** Pin to v0.9.0a1 and expect minor breaking changes during the v0.9.0bN beta series. Read the [retraction post](#) for context on the version change.
+Your code does not need to change today; the wire format hasn't changed. **Do not deploy in cross-org federation configurations.** Pin to v0.9.0a1 and expect minor breaking changes during the v0.9.0bN beta series. Read the [retraction post](archive/devto-stigmem-v0.9.0a1-retraction.md) for context on the version change.
 
 ### If you want to be our first external operator
 

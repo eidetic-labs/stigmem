@@ -3,13 +3,13 @@ name: clawhub-skill
 on:
   pull_request:
     paths:
-      - "adapters/openclaw/clawhub-skill/**"
+      - "adapters/openclaw/skill/**"
       - "scripts/validate_clawhub_skill.py"
       - ".github/workflows/clawhub-skill.yml"
   push:
     branches: [main]
     paths:
-      - "adapters/openclaw/clawhub-skill/**"
+      - "adapters/openclaw/skill/**"
       - "scripts/validate_clawhub_skill.py"
       - ".github/workflows/clawhub-skill.yml"
 

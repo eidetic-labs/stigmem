@@ -141,7 +141,7 @@ The Obsidian plugin (`experimental/obsidian-adapter/plugin/`) is named for Obsid
 | `adapters/zep/` | `experimental/zep-adapter/` |
 | `adapters/boot-stubs/` | `experimental/lazy-instruction-discovery/boot-stubs/` (lives under the lazy-instruction-discovery plugin per ADR-011) |
 
-The `clawhub-skill/` duplicate inside `adapters/openclaw/` is consolidated per OpenClaw audit M1.
+The `clawhub-skill/` duplicate inside `adapters/openclaw/` is consolidated per OpenClaw audit M1; the directory was renamed to `skill/` in v0.9.0a2 (skill v1.0.8) to remove the `clawhub-` prefix that was tripping the publish CLI's name/slug-from-directory inference. See SKILL.md changelog and `.github/workflows/clawhub-publish.yml` for context.
 
 ### 4. SDKs: cut to one
 

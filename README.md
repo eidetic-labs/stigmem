@@ -5,7 +5,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/stigmem?include_prereleases&label=pypi)](https://pypi.org/project/stigmem/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Stability: preview alpha](https://img.shields.io/badge/stability-preview%20alpha-orange.svg)](#why-v090a1-and-not-v10)
-[![Discord](https://img.shields.io/badge/discord-join-5865F2?logo=discord&logoColor=white)](https://discord.gg/Z47Re7FjjV)
+[![Discord](https://img.shields.io/discord/1502847943118684331?label=discord&logo=discord&logoColor=white&color=5865F2)](https://discord.gg/Z47Re7FjjV)
 
 > **Status: `v0.9.0a1` — preview alpha, pre-stable · Apache-2.0**
 > **Repository:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem)

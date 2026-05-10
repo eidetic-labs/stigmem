@@ -1,4 +1,12 @@
-"""stigmem-py — Python client SDK for Stigmem (spec v0.4/v0.5)."""
+"""stigmem-py — Python client SDK for Stigmem.
+
+Compatible with the canonical Stigmem spec at v0.9.0a1 and onward.
+See https://github.com/Eidetic-Labs/stigmem for the protocol spec,
+threat model, and adopter documentation.
+"""
+
+from importlib.metadata import PackageNotFoundError as _PackageNotFoundError
+from importlib.metadata import version as _pkg_version
 
 from .client import AsyncStigmemClient, StigmemClient
 from .exceptions import (
@@ -90,4 +98,12 @@ __all__ = [
     "null_value",
 ]
 
-__version__ = "0.4.0"
+# Read version from installed package metadata so __version__ stays in
+# lockstep with whatever pip installed. Falls back to "0.0.0+unknown" only
+# when the package is run from a non-installed source tree (e.g. uv sync
+# in a workspace context that hasn't built the wheel yet); CI's package
+# build path always populates the metadata.
+try:
+    __version__ = _pkg_version("stigmem-py")
+except _PackageNotFoundError:
+    __version__ = "0.0.0+unknown"

@@ -43,7 +43,7 @@ Letta is an agent framework with first-class persistent memory blocks. The adapt
 - Decay policies were useful for memory block hygiene: Letta agent memory tends to accumulate stale "task status" facts. The `memory:last_seen` retract policy cleaned these automatically.
 - Contradiction detection fired frequently for task-status facts when two agents held different views. The Letta pilot drove the `alt_value` / `alt_confidence` fields in the `SynthesisEntry` response — callers needed to see the losing value, not just know a contradiction existed.
 
-**See also:** [Synthesis guide](../concepts/lifecycle/synthesis), [Decay guide](../concepts/lifecycle/decay)
+**See also:** [Synthesis guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/synthesis), [Decay guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/decay)
 
 ## Cognee
 

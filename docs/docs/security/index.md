@@ -27,7 +27,7 @@ The second-priority new risk is R-21 (agent feedback-loop worm). The OpenClaw v0
 
 For the full risk register: see the **[Threat Model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md)** (`spec/security/threat-model.md`).
 
-For operator-facing scenarios: see the **[Security Scenarios](./scenarios.md)**.
+For operator-facing scenarios: see the **[Security Scenarios](./scenarios)**.
 
 For the trust boundary against prompt injection (L1–L6): see [ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md) § Trust boundary.
 
@@ -84,7 +84,7 @@ Many features documented in earlier checkpoints are deferred from v0.9.0a1's def
 ## Quick-start for security researchers
 
 1. Read the **[Threat Model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md)** to understand the trust boundaries and current risk register.
-2. Read the **[Security Scenarios](./scenarios.md)** for operator-facing narratives.
+2. Read the **[Security Scenarios](./scenarios)** for operator-facing narratives.
 3. Read the **[Pen-test handbook](./pen-test.md)** for the engagement process and reproducer template.
 4. Set up a local node via Docker Compose (handbook §4).
 5. File private advisories at [github.com/eidetic-labs/stigmem/security/advisories](https://github.com/eidetic-labs/stigmem/security/advisories).

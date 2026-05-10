@@ -150,15 +150,15 @@ def _trusted_pubkeys(
             if row:
                 pub_bytes = _b64url_decode(row[0])
                 keys.append(Ed25519PublicKey.from_public_bytes(pub_bytes))
-        except Exception:  # nosec B110 — DB might not exist yet on a fresh restore host
-            pass
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("local federation pubkey unavailable for snapshot verify: %s", exc)
 
     if self_attesting_pubkey:
         try:
             pub_bytes = _b64url_decode(self_attesting_pubkey)
             keys.append(Ed25519PublicKey.from_public_bytes(pub_bytes))
-        except Exception:  # nosec B110 — invalid b64url key is silently skipped
-            pass
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("invalid self-attesting pubkey skipped: %s", exc)
 
     return keys
 
@@ -312,8 +312,12 @@ def snapshot_restore(
         tmp = Path(tmpdir)
 
         # -- 1. Extract ------------------------------------------------------
+        # filter='data' (PEP 706, Python 3.11.4+) rejects absolute paths,
+        # `..` traversal, symlinks pointing outside the destination, device
+        # files, setuid/setgid bits, etc. — closes the path-traversal hole
+        # that bare extractall() leaves open even with a controlled tmpdir.
         with tarfile.open(tarball_path, "r:gz") as tf:
-            tf.extractall(tmp)  # nosec B202 — path is a controlled temp dir
+            tf.extractall(tmp, filter="data")
 
         manifest_path = tmp / "manifest.json"
         if not manifest_path.exists():

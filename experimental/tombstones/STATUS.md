@@ -1,7 +1,9 @@
-# §23 RTBF Tombstones — Status
+# Spec-X2-RTBF-Tombstones — Status
 
-> Per ADR-008, gate status for `experimental/23-rtbf-tombstones/`.
+> Per [ADR-008](../../docs/adr/008-experimental-gates.md), gate status for `experimental/tombstones/`. Spec ID per [ADR-010](../../docs/adr/010-modular-specs.md).
 
+**Spec ID:** `Spec-X2-RTBF-Tombstones`
+**Legacy section:** §23
 **Status:** Dormant
 **Active version:** v0.9.0a1 (code last functional under retracted v1.0)
 **Last updated:** 2026-05-06

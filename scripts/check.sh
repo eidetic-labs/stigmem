@@ -101,7 +101,11 @@ run_python() {
     core_args+=("--junitxml=${junit_dir}/python-core.xml")
     adapter_args+=("--junitxml=${junit_dir}/python-adapters.xml")
   fi
-  timed_run python-core-pytest uv run pytest "${core_args[@]}" node/tests/ sdks/stigmem-py/tests/
+  # Wrap core-pytest in `coverage run` so the produced .coverage file feeds
+  # the coverage-baseline ratchet step in CI (scripts/check_coverage_baseline.py).
+  # Adapter tests stay outside coverage measurement (the ratchet only tracks node/src).
+  timed_run python-core-pytest uv run coverage run -m pytest \
+    "${core_args[@]}" node/tests/ sdks/stigmem-py/tests/
   timed_run python-adapter-pytest uv run pytest "${adapter_args[@]}" adapters/
 
   timed_run python-pip-audit uv run pip-audit --progress-spinner off

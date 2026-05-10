@@ -1,14 +1,15 @@
-# archive/ — repo-root archive for non-canonical artifacts
+# archive/ — repo-root archive for blog-post sources and historical artifacts
 
-This directory holds artifacts that are preserved as part of the v0.9.0a1 reset per ADR-009 §11 + master-checklist §4.3a binding preservation principle, but are NOT part of the canonical docs site, code, or build.
+This directory holds files that should not be picked up by the Docusaurus blog plugin (anything under `docs/blog/` becomes a current blog post on the docs site) but **do** belong in the repo as either canonical sources for external publications or historical preservation per ADR-009 §11 + master-checklist §4.3a.
 
 ## Contents
 
-- `devto-lazy-discovery-tokenomics.md` — externally-published dev.to post (moved from `dogfood/` per PR 3 / ADR-009 §11). Preserved at repo root rather than `docs/blog/archive/` because the Docusaurus blog plugin processes everything under `docs/blog/` as a real blog post; this archive lives outside that tree to avoid forcing the post into the build pipeline.
+- `devto-lazy-discovery-tokenomics.md` — externally-published dev.to post from the pre-reset era (moved from `dogfood/` per PR 3 / ADR-009 §11). Historical record only; do not edit.
+- `devto-stigmem-v0.9.0a1-retraction.md` — **canonical source** of the dev.to retraction post that announces the v1.0 retraction and the v0.9.0a1 reset. The stigmem repo is the authoritative home for this post; the dev.to publication mirrors this content. After publish, fill in `canonical_url` in the frontmatter; corrections ship as follow-up posts or PEP 440 `.post1` errata per `docs/internal/release-cadence.md` §Rule 3, not as in-place edits.
 
 ## How to read this directory
 
-Files here are read-only historical artifacts. Do not edit; do not link adopters here as current docs. The current canonical surfaces are:
+Most files here are read-only historical artifacts (do not edit; do not link adopters here as current docs). The exception is canonical sources for external publications (e.g., the retraction post) which are editable until the external publication goes live, then frozen. Each file's header banner declares which mode it's in. The current canonical *docs* surfaces (where adopters should be linked) are:
 
 - [`README.md`](../README.md) — repo entry point
 - [`CHANGELOG.md`](../CHANGELOG.md) — current changelog

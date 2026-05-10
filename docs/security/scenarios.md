@@ -492,6 +492,178 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 ---
 
+## Scenario 1.5 — What if rate limits are disabled in production?
+
+**Risk ID:** R-02 / T1-D1 (re-opened by misconfiguration)
+
+**What if** an operator ports a development configuration to production and ships with `STIGMEM_RATE_LIMIT_WRITE_PER_HOUR=0` and `STIGMEM_RATE_LIMIT_READ_PER_HOUR=0`?
+
+**Who is the attacker?** Any caller holding a valid API key, including a runaway agent or a compromised key. Most often the attacker is unintentional — the operator's own misconfigured workload.
+
+**What can they do?**
+- Issue unbounded writes and reads against the node, exhausting CPU, memory, or storage.
+- A compromised key now has no rate-of-attack ceiling; the node will keep accepting requests until it falls over.
+- Combined with embedding cloud opt-in (R-13), unbounded writes can run up significant cloud-embedding costs.
+
+**What can't they do?** Bypass scope enforcement or read facts outside their scope ceiling — quotas are an availability and cost control, not a confidentiality control.
+
+**How would you know?** Watch for sustained CPU spikes on the node, storage growth above baseline, or fact-write rates above your normal application throughput. The audit log records `fact_write` and `fact_read` events; an unusual rate from a single principal is the signal. Without quotas, there are no `quota_breach` events to alert on — you must watch the underlying resource metrics.
+
+**How do you recover?**
+1. Set `STIGMEM_RATE_LIMIT_WRITE_PER_HOUR` and `STIGMEM_RATE_LIMIT_READ_PER_HOUR` to non-zero values matching your production workload and redeploy.
+2. If the abusive activity came from a specific key, revoke it.
+3. If storage growth was significant, review whether the node's vector index or fact store needs trimming.
+
+**Current protection status:** **Operational responsibility.** v0.9.0a1 ships rate-limit enforcement (R-02 Mitigated), but the kill-switch (`limits=0`) is intended for isolated dev/test environments only. v0.9.x adds a startup warning when both limits are zero so this misconfiguration is loud.
+
+---
+
+## Scenario 4.3 — What if the cloud embedding provider returns adversarial vectors?
+
+**Risk ID:** R-20 / T8-T1
+
+**What if** you have opted into cloud embedding and the provider — either malicious or compromised — returns embedding vectors specifically crafted to manipulate recall ranking?
+
+**Who is affected?** Only deployments that have set `STIGMEM_EMBED_MODEL_PROVIDER=openai` (or an equivalent cloud provider). The default offline `nomic-embed-text-v1.5` deployment is not affected.
+
+**Who is the attacker?** A malicious cloud provider, a compromised cloud provider, or an attacker positioned to MITM the provider connection (rare with TLS; more plausible if you proxy through an intermediary).
+
+**What can they do?**
+- Return embedding vectors that systematically rank attacker-controlled facts higher in recall results.
+- Suppress retrieval of legitimate facts by returning vectors that rank them low.
+- Cause subtle behavioral drift in agents that depend on recall ranking — agents respond to the wrong context without obviously malformed inputs.
+
+**What can't they do?** Read fact content beyond what they already see (the `entity + relation + value` string is sent to them at embed time; they are not gaining new read access). They cannot assert facts on your behalf.
+
+**How would you know?** This is **inherently difficult to detect** at the node layer. Signals to watch:
+- Unexpected drift in agent behavior when nothing else has changed (correlated with the time you enabled cloud embedding).
+- Recall results that seem to surface unexpected facts; missing facts that should have ranked.
+- Periodic spot-checks: pick a sample of facts, re-embed locally with `nomic-embed-text-v1.5`, and compare ranking against the cloud provider's results. Significant divergence is a signal.
+
+**How do you reduce the risk?**
+- Stay on the default offline embedding model unless you have a specific quality reason to use cloud embedding.
+- If you must use cloud embedding, classify the data; do not enable for sensitive scopes.
+- Periodically run a parallel embedding pass with the local model and compare.
+
+**Current protection status:** **Accepted** (R-20). Operator opt-in only; node-layer integrity check on returned vectors is a v2.0+ follow-up. Until that ships, treat cloud embedding as a quality and cost optimization that requires you to trust the provider's integrity.
+
+---
+
+## Scenario 5.2 — What if a prompt-injected agent writes attacker-chosen facts back to the federation? (Worm vector)
+
+**Risk ID:** R-21 / T3-S1 (write-side) → T2-S1 (replication)
+
+**What if** an LLM-driven agent is compromised via prompt injection (Scenario 5.1), holds a writer key, and uses that key to assert attacker-chosen facts? Those facts then federate to your peers, where their agents may read them and re-inject the attack downstream.
+
+**Who is the attacker?** Whoever planted the original injection. The LLM agent itself is the unwitting carrier. The attack proceeds without the original attacker needing further access.
+
+**Why is this different from Scenario 5.1?** Scenario 5.1 is about what the LLM does *in-session* with the injected content (e.g., wrong outputs, unauthorized API calls within its current task). Scenario 5.2 is about *the agent writing new authoritative-looking facts* that survive the session and propagate. The blast radius extends from one agent invocation to the entire federation graph.
+
+**What can they do?**
+- Cause the LLM to call `assert_fact` (or the equivalent through the OpenClaw adapter's `emit_handoff` / `emit_decision` / `emit_escalation`) with attacker-chosen entity URIs, relations, and values.
+- The asserted facts carry your organization's source attribution; downstream readers see them as authoritative.
+- Replication propagates the facts to federation peers; their agents may read and re-inject the same content.
+- Repeated cycles compound the spread (worm pattern).
+
+**What can't they do?** Write to scopes the agent's writer key does not have permission for. The attack is bounded by the principle of least privilege applied to agent keys — but few deployments enforce this tightly enough.
+
+**How would you know?**
+- Watch for unusual `fact_write` patterns from agent keys: writes outside the relations the agent normally produces, action-rate spikes, or sustained write loops.
+- The OpenClaw adapter v0.9 logs a `low_confidence_anomaly` flag on boot context when too many recalled facts are below the high-confidence floor — this can be an early signal that a peer is being used as a write vector.
+- Cross-correlate: if multiple agents in your federation simultaneously start writing similar attacker-shaped facts, that is the worm signature.
+
+**How do you recover?**
+1. Identify the originating injection — usually a fact in a `read`-able scope whose value contains injection content.
+2. Retract the originating fact and any facts asserted by agents that read it after the injection.
+3. Revoke the writer keys of agents that processed the injected content; reissue with reduced scope.
+4. Notify federation peers if the worm has propagated outbound; coordinate retractions with them.
+5. Review your agent-key issuance: any agent that both reads federated content and writes to non-trivial scopes is a worm-propagation candidate. Consider scope splitting.
+
+**Current protection status:** **Open** (R-21, High priority).
+- **OpenClaw v0.9 partial defense:** the new handoff allowlist defends against the handoff variant of this attack — an injected agent cannot delegate to an arbitrary admin entity. This is a structural fix at the adapter layer.
+- **Structural fix at protocol layer:** per-session read/write graph isolation, ADR-003 capability separation, and outbound replication exclusion for transitive recalls are targeted for v0.9.x (strengthening-plan Phase B (capability redesign)).
+- **Until those land:** issue agent writer keys with the narrowest possible scope, never overlapping the scopes the same agent reads from.
+
+---
+
+## Scenario 5.3 — What if an injected agent emits a handoff to an admin entity? (OpenClaw adapter)
+
+**Risk ID:** R-21 (handoff variant) / T3-S1 → T7-S1 escalation
+
+**What if** an LLM-driven agent using the OpenClaw adapter is prompt-injected into emitting a handoff to an admin entity, causing the admin's next session to boot with attacker-controlled summary content in its system prompt?
+
+**Who is affected?** Deployments using the OpenClaw adapter for delegation between agents, especially where admin operators run their own LLM-driven sessions that boot through the adapter.
+
+**Who is the attacker?** Whoever planted the injection (typically via a write to a federated scope the agent reads). The agent itself is the unwitting carrier.
+
+**What can they do?**
+- Cause the agent to call `emit_handoff(to_entity="agent:admin", summary=<attacker text>, ...)`.
+- Without an allowlist, the handoff is accepted; on the admin's next session, the boot pulls `intent:handoff_to`, `intent:handoff_summary`, and `intent:continuation` for the admin entity into the system prompt.
+- The admin's LLM session now operates with attacker-controlled context. Any further actions the admin agent takes can be influenced by the injected handoff.
+
+**What can't they do?** Emit a handoff to a target outside the configured allowlist if the OpenClaw v0.9+ adapter is used. Calls to `emit_handoff` with non-allowlisted `to_entity` raise `StigmemHandoffError` and never write.
+
+**How would you know?**
+- The audit log records every `fact_write` for handoff facts. Watch for handoff writes whose `to_entity` is outside your expected delegation graph.
+- The admin agent's session log: handoff content that doesn't correspond to any legitimate prior delegation.
+- The OpenClaw v0.9 adapter logs at WARNING when partial-validation drops fact_refs; sustained partial-validation events from a single source agent is a signal.
+
+**How do you recover?**
+1. Identify the injected agent (the one that called `emit_handoff` with the malicious target).
+2. Revoke its writer key.
+3. Retract the handoff facts and any continuation facts it created.
+4. Review the admin's session activity in the window since the malicious handoff was written.
+5. If the v1.0 OpenClaw adapter is still in use, upgrade to v0.9 (the new adapter's allowlist makes this attack structurally impossible).
+
+**Current protection status:** **Mitigated** in v0.9 OpenClaw adapter via the handoff allowlist (audit finding C4 closed).
+- Configure `allowed_handoff_targets` at adapter construction or via `STIGMEM_OPENCLAW_HANDOFF_ALLOWLIST`.
+- Without an allowlist, all `emit_handoff` calls fail closed — the adapter refuses to operate rather than allowing arbitrary delegation.
+- Operators upgrading from v1.0 must explicitly configure their allowlist; this is a deliberate breaking change documented in the adapter migration notes.
+
+---
+
+## Scenario 10.1 — What if the stigmem build pipeline is compromised?
+
+**Risk ID:** R-22 / T10-T1
+
+**What if** an attacker compromises the Eidetic Labs CI/CD or release pipeline and publishes a backdoored stigmem release to PyPI, ClawHub, or a container registry?
+
+**Who is affected?** Every operator who installs the compromised release before the compromise is detected and patched.
+
+**Who is the attacker?** Anyone who can compromise a maintainer's GitHub credentials, hijack a release-publishing token, or insert malicious code via a compromised dependency in the build environment.
+
+**What can they do?**
+- Insert code that exfiltrates fact content, signing keys, or API keys from operator deployments.
+- Insert code that creates a backdoor for later remote access.
+- Tamper with security controls (e.g., silently disable rate limits or TLS verification).
+- Time-bomb the malicious code to activate after wide deployment.
+
+**What can't they do?** Compromise operators who have not yet upgraded to the malicious version, and operators running pinned older versions remain unaffected until they upgrade.
+
+**How would you know?** Today, **detection is out-of-band**: community reports, dependency-scanner alerts, anomalous behavior reports from operators, or a security advisory from Eidetic Labs after upstream detects the compromise. Stigmem v0.9.0a1 does not publish Sigstore signatures or reproducible-build attestations, so operators cannot cryptographically verify that an installed binary corresponds to a specific source commit.
+
+**How do you reduce the risk today?**
+- Pin to specific stigmem versions in your deployment configs; do not auto-upgrade.
+- Verify SHA256 checksums published in release notes against your downloaded artifacts.
+- Watch the [security advisory channel](https://github.com/eidetic-labs/stigmem/security/advisories) and subscribe to release announcements.
+- Run stigmem in an environment with restricted network egress so a compromised binary cannot freely exfiltrate.
+
+**How do you recover?**
+1. Identify whether your deployed version is in the compromised range.
+2. If yes, treat all data and keys handled by the compromised node as potentially exposed: rotate API keys, capability tokens, and the org signing key; review the audit log for the compromise window.
+3. Upgrade to a verified-clean version.
+4. Coordinate with federation peers — if your node was compromised, peers must treat replicated facts from your node during the compromise window as untrusted.
+
+**Current protection status:** **Open** (R-22, High priority). Phase C ships:
+- Sigstore-signed releases (operators can verify cryptographic origin).
+- Reproducible builds (operators can independently verify a given commit produces a given binary).
+- SBOM publication (operators can audit the dependency tree).
+- Rekor entries for every release (transparency log of release events).
+
+Until those ship, operators rely on out-of-band trust signals.
+
+---
+
 ## Summary Table
 
 | Scenario | Risk | Status | Operator action required? |
@@ -515,6 +687,11 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 | 8.1 Instruction-scope injection | R-15 | Open (**High**) | **Audit `instruction:` write grants now**; embed unconditional prohibitions in boot stub |
 | 8.2 Cross-agent instruction read | T9-I1 | Operational | Scope each agent key to its own instruction namespace |
 | 9.1 Obsidian plugin key exposure | R-07 | Accepted | Issue minimum-scope key; rotate on suspicion |
+| 1.5 Rate limits disabled in production | R-02 (re-opened by misconfig) | Operational | Set non-zero rate limits before production deploy |
+| 4.3 Adversarial cloud embedding vectors | R-20 | Accepted | Stay on offline default; spot-check ranking if cloud-enabled |
+| 5.2 Feedback-loop worm | R-21 | Open (**High**) | Issue narrow-scope writer keys; **upgrade OpenClaw to v0.9**; await ADR-003 |
+| 5.3 OpenClaw handoff to admin entity | R-21 (handoff variant) | Mitigated in OpenClaw v0.9 | Configure `allowed_handoff_targets` |
+| 10.1 Build-pipeline compromise | R-22 | Open (**High**) | Pin versions; verify SHA256; watch advisories until Sigstore ships |
 
 ---
 

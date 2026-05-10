@@ -10,6 +10,16 @@ description: >
   Stigmem v1.0 is stable. A shared, provenance-tagged, federated knowledge substrate for AI agents — open-source, self-hostable, and MCP-compatible.
 ---
 
+:::warning Retracted: this v1.0 announcement was withdrawn
+
+This post announced stigmem v1.0 on 2026-05-03. **The v1.0 label was withdrawn shortly after.** The canonical version line of stigmem now begins at `v0.9.0a1` per [ADR-001](/docs/adr/001-versioning) and [ADR-019](/docs/adr/019-amendment-to-adr-001-prerelease-version-strings). This post is preserved in place to keep external links from breaking; it is not the current state of the project.
+
+For the current posture, the retraction's reasoning, and what changed, see the retraction announcement (link forthcoming with PR 0.5) and [LIMITATIONS.md](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md).
+
+:::
+
+---
+
 Today we're releasing **stigmem v1.0** — a stable, open-source specification and reference implementation for a federated knowledge fabric for AI agents.
 
 If you've ever wanted your AI agents to share what they know — across tools, platforms, and organizations — without a central database or a proprietary protocol, stigmem is built for that.

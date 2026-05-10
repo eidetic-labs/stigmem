@@ -18,13 +18,13 @@ This handbook covers everything you need to run a Stigmem node in production, fr
 
 | Page | What you'll find |
 |---|---|
-| [Choose your backend](./backends/choose-backend) | Decision tree: SQLite vs libSQL vs Postgres |
+| [Choose your backend (experimental)](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/storage-backends) | Decision tree: SQLite vs libSQL vs Postgres |
 | [Deploy runbooks](./runbooks/deploy-runbooks) | Step-by-step runbooks for Fly, Compose, Helm, systemd, and PaaS |
 | [Federation peer setup](./runbooks/federation-setup) | Key generation, pinning, and source-trust tuning |
 | [Backup & restore](./runbooks/backup-restore) | Signed snapshot workflow and cloud PITR |
 | [Monitoring & debugging](./observability/monitoring) | Health checks, metrics, and recall-latency diagnosis |
-| [Eval harness](./observability/eval-harness) | Automated evaluation and regression testing |
-| [Cost calculator](./cost-calculator) | Estimating storage, egress, embedding, and operator costs |
+| [Eval harness](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/eval-harness) | Automated evaluation and regression testing |
+| [Cost calculator](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing) | Estimating storage, egress, embedding, and operator costs |
 
 ---
 
@@ -49,7 +49,7 @@ A production Stigmem node has four operational concerns:
 ```
 
 **Start here** if you haven't deployed yet:
-1. [Choose your backend](./backends/choose-backend) — picks your persistence strategy.
+1. [Choose your backend (experimental)](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/storage-backends) — picks your persistence strategy.
 2. [Deploy runbooks](./runbooks/deploy-runbooks) — gets the node running in your environment.
 3. [Federation peer setup](./runbooks/federation-setup) — connects your node to peers.
 
@@ -57,4 +57,4 @@ A production Stigmem node has four operational concerns:
 - [Backup & restore](./runbooks/backup-restore) — protect against data loss.
 - [Monitoring & debugging](./observability/monitoring) — observe and diagnose your node.
 
-**Planning a deployment?** The [cost calculator](./cost-calculator) helps you estimate storage growth, egress, embedding spend, and operator time before you commit to infrastructure.
+**Planning a deployment?** The [cost calculator](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing) helps you estimate storage growth, egress, embedding spend, and operator time before you commit to infrastructure.

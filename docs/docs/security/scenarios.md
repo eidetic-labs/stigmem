@@ -1,8 +1,15 @@
+---
+title: Security Scenarios
+sidebar_label: Scenarios
+audience: Security
+description: Operator impact guide for every threat-model vulnerability class.
+---
+
 # Security Scenarios — Operator Impact Guide
 
 **Applies to:** Stigmem v0.9.0a1 and the reference node implementation.
 **Audience:** Operators — people who deploy, configure, and maintain a Stigmem node. No security background required.
-**Purpose:** For every known vulnerability class in the [Threat Model](../../spec/security/threat-model.md), this document answers the plain question: *"What actually happens to my deployment if this goes wrong?"*
+**Purpose:** For every known vulnerability class in the [Threat Model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md), this document answers the plain question: *"What actually happens to my deployment if this goes wrong?"*
 
 Use this guide to understand the blast radius of each scenario and decide which mitigations matter most for your deployment profile.
 
@@ -120,7 +127,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **How do you recover?** If you discover tampered facts, use the audit log to identify when they were written, then retract them and reassert the correct values.
 
-**Current protection status:** **Operational responsibility.** TLS 1.3 protects the transport when end-to-end. If TLS terminates at a proxy (load balancer, WAF), the internal path between proxy and node MUST also be encrypted; otherwise the residual applies and a local network attacker can tamper with payloads. CIDs (§25, core in v0.9.0a1 per [ADR-017](../../adr/017-amendment-to-adr-011-cids-as-core.md)) provide tamper detection at the fact level once verification is enabled on the read path.
+**Current protection status:** **Operational responsibility.** TLS 1.3 protects the transport when end-to-end. If TLS terminates at a proxy (load balancer, WAF), the internal path between proxy and node MUST also be encrypted; otherwise the residual applies and a local network attacker can tamper with payloads. CIDs (§25, core in v0.9.0a1 per [ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)) provide tamper detection at the fact level once verification is enabled on the read path.
 
 ---
 
@@ -214,11 +221,11 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **How would you know?** Monitor HLC values in federation-ingested facts. A large spike in the HLC from a single peer is a signal.
 
-**Current protection status:** **Open until v0.9.x** (R-19). The HLC implementation in v0.9.0a1 clamps skew but there is no protocol-level normative bound on accepted HLC drift across the federation. Mitigation in v0.9.x per [ADR-004](../../adr/004-federation-observability.md):
+**Current protection status:** **Open until v0.9.x** (R-19). The HLC implementation in v0.9.0a1 clamps skew but there is no protocol-level normative bound on accepted HLC drift across the federation. Mitigation in v0.9.x per [ADR-004](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/004-federation-observability.md):
 
 - **Bounded-skew enforcement** — reject inbound HLC values >5 minutes ahead of local. Configurable via `STIGMEM_HLC_MAX_SKEW_SECONDS`.
 - **`peer_hlc_anomaly` audit event** — emitted when a peer's drift exceeds threshold; per-peer drift tracking surfaces in the audit log.
-- **Concrete operator alert threshold** — alert when a single peer's average HLC advance per replication exceeds 60 seconds, or when `peer_hlc_anomaly` events from a single peer exceed 5/hour. See [ADR-004 § Layer 2 Alerts](../../adr/004-federation-observability.md) for the full alert taxonomy.
+- **Concrete operator alert threshold** — alert when a single peer's average HLC advance per replication exceeds 60 seconds, or when `peer_hlc_anomaly` events from a single peer exceed 5/hour. See [ADR-004 § Layer 2 Alerts](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/004-federation-observability.md) for the full alert taxonomy.
 
 Until R-19's mitigation ships, federation operators must monitor HLC drift out-of-band (custom log analysis or Prometheus metrics on per-peer HLC values).
 
@@ -707,4 +714,4 @@ Until those ship, operators rely on out-of-band trust signals.
 
 ---
 
-*This document is maintained alongside the [Threat Model](../../spec/security/threat-model.md). When the threat model is revised, this document should be updated to reflect new or closed risks.*
+*This document is maintained alongside the [Threat Model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md). When the threat model is revised, this document should be updated to reflect new or closed risks.*

@@ -419,4 +419,4 @@ Configure your platform's health check to hit `GET /healthz`. The response is:
 1. **Connect to peers** → [Federation peer setup](./federation-setup)
 2. **Schedule backups** → [Backup & restore](./backup-restore)
 3. **Set up monitoring** → [Monitoring & debugging](../observability/monitoring)
-4. **Estimate costs** → [Cost calculator](../cost-calculator)
+4. **Estimate costs** → [Cost calculator](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing)

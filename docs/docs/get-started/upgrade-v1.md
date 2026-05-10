@@ -19,15 +19,15 @@ v1.0 adds `tenant_id` columns to `facts`, `gardens`, `api_keys`, and `fact_audit
 - All existing API keys continue to work and operate in the `"default"` tenant.
 - Single-tenant deployments require zero configuration changes.
 
-See [Multi-Tenancy](../security/multi-tenancy) for the full model.
+See [Multi-Tenancy](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) for the full model.
 
 ### Billing hooks
 
-A new `stigmem_node.billing` module emits a `BillingEvent` after every fact write and garden creation. The default implementation logs structured JSON to stderr — no configuration needed unless you want a custom backend. See [Billing Hooks](../operators/billing-hooks).
+A new `stigmem_node.billing` module emits a `BillingEvent` after every fact write and garden creation. The default implementation logs structured JSON to stderr — no configuration needed unless you want a custom backend. See [Billing Hooks](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing).
 
 ### Source attestation (v1.0 normative)
 
-Source attestation was experimental in v0.9-draft. In v1.0 it is normative (§18). The default mode is unchanged (`warn`), so existing deployments are unaffected. To harden a production node, set `STIGMEM_SOURCE_ATTESTATION_MODE=enforce`. See [Source Attestation](../security/source-attestation).
+Source attestation was experimental in v0.9-draft. In v1.0 it is normative (§18). The default mode is unchanged (`warn`), so existing deployments are unaffected. To harden a production node, set `STIGMEM_SOURCE_ATTESTATION_MODE=enforce`. See [Source Attestation](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation).
 
 ### Conformance test suite
 
@@ -106,7 +106,7 @@ curl -s -X POST http://localhost:8765/v1/auth/keys \
   }'
 ```
 
-Keys issued for `beta-inc` see only facts written by `beta-inc` keys. See [Multi-Tenancy → Isolation in practice](../security/multi-tenancy#isolation-in-practice) for a cross-tenant verification example.
+Keys issued for `beta-inc` see only facts written by `beta-inc` keys. See [Multi-Tenancy → Isolation in practice](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) for a cross-tenant verification example.
 
 ---
 
@@ -136,7 +136,7 @@ All migrations run automatically at startup in ascending numeric order. There is
 ## See also
 
 - [Installation](./installation) — fresh install with Docker Compose
-- [Multi-Tenancy](../security/multi-tenancy) — tenant isolation model
-- [Billing Hooks](../operators/billing-hooks) — hooking into write events
-- [Source Attestation](../security/source-attestation) — hardening entity_uri binding
+- [Multi-Tenancy](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) — tenant isolation model
+- [Billing Hooks](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing) — hooking into write events
+- [Source Attestation](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation) — hardening entity_uri binding
 - [Audit Log](../security/audit-log) — querying the per-principal write trail

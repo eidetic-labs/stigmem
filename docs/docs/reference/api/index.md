@@ -163,7 +163,7 @@ curl -s "http://localhost:8000/v1/cards/stigmem%3A%2F%2Fcompany.example%2Fuser%2
 | 403 | API key lacks read permission |
 | 404 | No live facts exist for the entity |
 
-See the [Memory Cards guide](../../concepts/recall/memory-cards.md) for the full lifecycle, schema, and Python SDK usage.
+See the [Memory Cards guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/recall-graph) for the full lifecycle, schema, and Python SDK usage.
 
 ---
 
@@ -266,7 +266,7 @@ The manifest is written with a versioned identifier (`{version}-{timestamp}`) so
 
 **Response:** `200 OK` on success; the stored manifest body with `created_at` and `superseded_at` timestamps.
 
-Typically published automatically by `stigmem instruction migrate`. See the [Instruction Migration guide](../../sdks/instruction-migration.md) for the full workflow.
+Typically published automatically by `stigmem instruction migrate`. See the [Instruction Migration guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery) for the full workflow.
 
 ---
 
@@ -337,7 +337,7 @@ curl -s -X POST \
 | `missed_hints` | `manifest_hint` names that were not found in the manifest |
 | `audit_token` | Submit to `POST /v1/instruction/audit` to log which chunks were used |
 
-See the [Instruction Migration guide](../../sdks/instruction-migration.md) for the full dry-run → migrate → recall-instruction workflow.
+See the [Instruction Migration guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery) for the full dry-run → migrate → recall-instruction workflow.
 
 ---
 
@@ -363,7 +363,7 @@ stigmem instruction migrate PATH --skill SKILL --agent-id UUID [options]
 | `--dry-run` | — | Print diff, exit without writing |
 | `-y` / `--yes` | — | Skip confirmation prompt |
 
-Full documentation, idempotency semantics, and the tombstone lifecycle are in the [Instruction Migration guide](../../sdks/instruction-migration.md).
+Full documentation, idempotency semantics, and the tombstone lifecycle are in the [Instruction Migration guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery).
 
 ## Authentication
 
@@ -377,7 +377,7 @@ Set `STIGMEM_AUTH_REQUIRED=false` to disable auth in development.
 
 ### OIDC / SSO
 
-Human principals can obtain an API key via OIDC. Configure `STIGMEM_OIDC_*` env vars; the node validates the JWT and maps role claims to `admin|writer|reader`. See [OIDC / SSO Integration](../../security/oidc-sso).
+Human principals can obtain an API key via OIDC. Configure `STIGMEM_OIDC_*` env vars; the node validates the JWT and maps role claims to `admin|writer|reader`. See [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso).
 
 ### Multi-tenant requests
 
@@ -389,7 +389,7 @@ curl -H 'Authorization: Bearer <your-key>' \
      http://localhost:8000/v1/facts
 ```
 
-The header is required when `STIGMEM_TENANT_HEADER_REQUIRED=true`. See [Multi-Tenant Scoping](../../security/multi-tenancy).
+The header is required when `STIGMEM_TENANT_HEADER_REQUIRED=true`. See [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant).
 
 ### Federation peer tokens
 

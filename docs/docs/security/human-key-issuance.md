@@ -10,7 +10,7 @@ audience: Integrator
 
 Track C — C2 adds a permission ceiling to the OIDC exchange: the scoped key issued to a human is capped by that person's garden membership role. Node operators no longer need to manage permission grants manually — they flow from the curator roster.
 
-This page covers the garden membership scoping layer. For the full OIDC bridge configuration (env vars, IdP setup, token exchange flow), see [OIDC / SSO Integration](./oidc-sso).
+This page covers the garden membership scoping layer. For the full OIDC bridge configuration (env vars, IdP setup, token exchange flow), see [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso).
 
 ---
 
@@ -117,7 +117,7 @@ curl -H "Authorization: Bearer $API_KEY" http://localhost:8000/v1/facts
 
 ## See also
 
-- [OIDC / SSO Integration](./oidc-sso) — full OIDC bridge configuration and exchange flow
+- [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) — full OIDC bridge configuration and exchange flow
 - [Authentication](./authentication) — Bearer-key model overview
 - [Agent Keypairs](./agent-keypairs) — C1: Ed25519 keypair registration for agent principals
 - [Audit Log](./audit-log) — C3: querying the principal → attested-source → fact-id trail

@@ -15,7 +15,7 @@ Client libraries and integration connectors for Stigmem.
 |----------|---------|
 | [Python](./python.md) | `stigmem` on PyPI |
 | [TypeScript](./typescript.md) | `@stigmem/sdk` on npm |
-| [Go](./go.md) | `github.com/Eidetic-Labs/stigmem-go` |
+| [Go](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/sdk-go) | `github.com/Eidetic-Labs/stigmem-go` |
 
 ## Connectors
 
@@ -25,6 +25,6 @@ See the [Connectors index](./connectors/index.md) for the full list.
 
 ## Integration Guides
 
-- [Intent envelopes](./intent-envelopes.md) — wrapping fact operations in typed intents
-- [Lazy instruction loading](./lazy-instructions.md) — on-demand instruction discovery
-- [Instruction migration](./instruction-migration.md) — upgrading instruction schemas across versions
+- [Intent envelopes](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/intent-envelope) — wrapping fact operations in typed intents
+- [Lazy instruction loading](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery) — on-demand instruction discovery
+- [Instruction migration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery) — upgrading instruction schemas across versions

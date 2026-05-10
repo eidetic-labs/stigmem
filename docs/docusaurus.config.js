@@ -28,7 +28,7 @@ const config = {
   // and visible in build output.
   //
   // Set back to 'throw' once the cross-link cleanup lands.
-  onBrokenLinks: 'warn',
+  onBrokenLinks: 'throw',
 
   i18n: {
     defaultLocale: 'en',

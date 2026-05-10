@@ -19,7 +19,7 @@ The Web UI is a single-page application served by the node at `/ui`. It is built
 Your credentials are saved in `localStorage` (`sm_url` / `sm_key`) so you do not need to re-enter them on reload.
 
 :::info Obtaining an API key
-Use the [OIDC / SSO](./oidc-sso) exchange flow if your organisation runs an IdP, or ask your node operator to provision a static key. See [Authentication](./authentication) for the full key model.
+Use the [OIDC / SSO](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) exchange flow if your organisation runs an IdP, or ask your node operator to provision a static key. See [Authentication](./authentication) for the full key model.
 :::
 
 ## Personas and roles
@@ -123,7 +123,7 @@ Every UI action maps to a REST endpoint:
 
 ## See also
 
-- [OIDC / SSO Integration](./oidc-sso) — how to sign in via your organisation's IdP instead of a static key
+- [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) — how to sign in via your organisation's IdP instead of a static key
 - [Authentication](./authentication) — full API key and permission model
 - [Asserting Facts](../concepts/facts/asserting-facts) — `curl` examples for the same operations
 - [Gardens API](../concepts/facts/asserting-facts) — spec §17 for the data model behind the Gardens tab

@@ -18,7 +18,10 @@ on:
 env:
   REGISTRY: ghcr.io
   NODE_IMAGE: ghcr.io/eidetic-labs/stigmem-node
-  DASHBOARD_IMAGE: ghcr.io/eidetic-labs/stigmem-dashboard
+  # Dashboard image is intentionally not published in v0.9.0a1: per ADR-002
+  # the dashboard is deferred (lives at experimental/dashboard/). When/if it
+  # graduates per ADR-008, restore a publish-dashboard job and add
+  # DASHBOARD_IMAGE here.
   SDK_TS_VERSION_TAG: "v${{ github.ref_name }}"
 
 jobs:
@@ -119,65 +122,12 @@ jobs:
           cosign sign --yes \
             "${{ env.NODE_IMAGE }}@${{ steps.build.outputs.digest }}"
 
-  publish-dashboard:
-    name: Build & push stigmem-dashboard
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Translate tag → PEP 440 + semver
-        id: ver
-        if: startsWith(github.ref, 'refs/tags/')
-        run: python3 scripts/translate_version.py "$GITHUB_REF_NAME" --gh-output
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.DASHBOARD_IMAGE }}
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=${{ steps.ver.outputs.pep440 }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
-            type=raw,value=${{ steps.ver.outputs.semver }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build and push
-        id: build
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ./experimental/dashboard/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            NEXT_PUBLIC_STIGMEM_API_URL=${{ vars.NEXT_PUBLIC_STIGMEM_API_URL }}
-
-      # ── Image signing ──────────────────────────────────────────────────────
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Sign image (keyless)
-        run: |
-          cosign sign --yes \
-            "${{ env.DASHBOARD_IMAGE }}@${{ steps.build.outputs.digest }}"
+  # publish-dashboard intentionally removed: per ADR-002 the dashboard is
+  # deferred and lives at experimental/dashboard/, so it does not ship as a
+  # v0.9.0a1 published artifact. To restore: revert this hunk and update
+  # the COPY paths in experimental/dashboard/Dockerfile to match the new
+  # location (currently still references the pre-PR-#60 apps/dashboard/
+  # path, which is why every push-to-main publish run was failing).
 
   publish-sdk-ts:
     name: Publish @eidetic-labs/stigmem-ts to npm

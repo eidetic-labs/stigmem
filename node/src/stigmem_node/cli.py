@@ -1060,8 +1060,18 @@ def _build_parser() -> argparse.ArgumentParser:
     bk_p = auth_sub.add_parser(
         "bootstrap-key",
         help=(
-            "mint the first admin API key on a fresh install "
-            "(refuses to run if the api_keys table is non-empty)"
+            "register a caller-provided admin API key on a fresh install "
+            "(refuses if api_keys is non-empty; system never generates the key)"
+        ),
+    )
+    bk_p.add_argument(
+        "--key",
+        dest="key",
+        default=None,
+        metavar="VALUE",
+        help=(
+            "raw API key value to register. Generate externally; e.g., "
+            "`openssl rand -hex 32`. Alternative: STIGMEM_BOOTSTRAP_KEY env var."
         ),
     )
     bk_p.add_argument(
@@ -1595,15 +1605,46 @@ def _cmd_backfill_cids(args: argparse.Namespace) -> int:
 
 
 def _cmd_auth_bootstrap_key(args: argparse.Namespace) -> int:
-    """Mint the first admin-scope API key on a fresh install.
+    """Register a caller-provided admin-scope API key on a fresh install.
+
+    The caller supplies the key value via `--key` or the
+    `STIGMEM_BOOTSTRAP_KEY` env var; we hash and store it. This is by
+    design: the system is not the credential-generation surface. The
+    user keeps full custody of the raw key from the moment it exists.
 
     Refuses to run if the api_keys table is non-empty — bootstrap is
-    one-shot. After bootstrap, additional keys must go through the
-    `POST /v1/auth/keys` API authenticated with the bootstrap key
-    (or any later admin key).
+    one-shot. After bootstrap, additional keys go through
+    `POST /v1/auth/keys` authenticated with the bootstrap key.
     """
-    from .auth import create_api_key
+    import os
+
+    from .auth import register_api_key
     from .db import db
+
+    # Resolve key material from the caller. We do NOT generate one.
+    key_value: str | None = args.key or os.environ.get("STIGMEM_BOOTSTRAP_KEY")
+    if not key_value:
+        print(
+            "ERROR: no key value provided. Generate one externally and pass via\n"
+            "  --key VALUE   or   STIGMEM_BOOTSTRAP_KEY=VALUE\n\n"
+            "Example:\n"
+            "  KEY=$(openssl rand -hex 32)\n"
+            "  stigmem auth bootstrap-key --key \"$KEY\"\n"
+            "  # then use $KEY as `Authorization: Bearer $KEY` for API calls",
+            file=sys.stderr,
+        )
+        return 2
+
+    # Minimum-length check. Not a substitute for proper entropy
+    # validation — we trust the caller used a CSPRNG — but it catches
+    # obvious mistakes like `--key admin` or `--key password`.
+    if len(key_value) < 16:
+        print(
+            f"ERROR: key must be at least 16 characters (got {len(key_value)}). "
+            "Use `openssl rand -hex 32` or similar to generate sufficient entropy.",
+            file=sys.stderr,
+        )
+        return 2
 
     with db() as conn:
         row = conn.execute("SELECT COUNT(*) FROM api_keys").fetchone()
@@ -1612,10 +1653,7 @@ def _cmd_auth_bootstrap_key(args: argparse.Namespace) -> int:
     if existing > 0:
         print(
             f"ERROR: api_keys table is not empty ({existing} row(s)). "
-            "Bootstrap is one-shot.",
-            file=sys.stderr,
-        )
-        print(
+            "Bootstrap is one-shot.\n"
             "Mint additional keys via `POST /v1/auth/keys` "
             "authenticated with an existing admin key.",
             file=sys.stderr,
@@ -1625,30 +1663,21 @@ def _cmd_auth_bootstrap_key(args: argparse.Namespace) -> int:
     permissions: list[str] = (
         args.permissions.split(",") if args.permissions else ["admin", "write", "read"]
     )
-    expires_at = None  # never; mirrors create_api_key default
 
-    raw_key = create_api_key(
+    key_id = register_api_key(
+        raw_key=key_value,
         entity_uri=args.entity_uri,
         permissions=permissions,
-        expires_at=expires_at,
     )
 
-    # The raw key is intentionally written to stdout once. This is the only
-    # opportunity to capture it — the persisted form is a SHA-256 hash and
-    # cannot be recovered. Same pattern as `ssh-keygen`, `aws iam create-
-    # access-key`, GitHub PAT minting, etc.: a one-shot credential reveal
-    # is the contract callers expect from a bootstrap-key command.
-    # Stderr text is decorative (won't appear in a captured `KEY=$(stigmem auth
-    # bootstrap-key)` shell substitution); stdout carries only the key.
-    sys.stdout.write(raw_key + "\n")  # codeql[py/clear-text-logging-sensitive-data]
+    # Confirmation message only — the raw key is never printed. The caller
+    # already has it from their `--key` / env-var input. We surface the
+    # key_id so they can reference this specific row in `/v1/auth/keys`.
     print(
-        f"# stigmem auth bootstrap-key: minted admin key for "
-        f"entity={args.entity_uri!r} permissions={permissions!r}",
-        file=sys.stderr,
-    )
-    print(
-        "# Save the value above — you will not see it again. "
-        "Use it as `Authorization: Bearer <key>` for all subsequent requests.",
+        f"Registered admin API key (key_id={key_id}) for entity={args.entity_uri!r} "
+        f"permissions={permissions!r}.\n"
+        "Use your --key / STIGMEM_BOOTSTRAP_KEY value as "
+        "`Authorization: Bearer <key>` for subsequent requests.",
         file=sys.stderr,
     )
     return 0

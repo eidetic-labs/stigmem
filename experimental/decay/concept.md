@@ -7,7 +7,7 @@ audience: Integrator
 # Decay Semantics
 
 :::caution Experimental
-`POST /v1/decay/sweep` and `DecayPolicy` are **draft** in spec v0.8 (§15). The API shape is stable for testing but will be promoted to normative in v0.9. Operator config via environment variable only; admin API is forthcoming.
+`POST /v1/decay/sweep` and `DecayPolicy` are **draft** in the pre-reset spec (§15). The API shape is stable for testing but will be promoted to normative in the pre-reset spec. Operator config via environment variable only; admin API is forthcoming.
 :::
 
 **Audience:** Node operators and agent developers who need to manage fact freshness — retracting stale data or reducing confidence of aged assertions over time.

@@ -38,7 +38,7 @@ Stigmem is pre-stable. Adopters should read these documents *before* integrating
 - **[SECURITY.md](SECURITY.md)** — vulnerability disclosure policy, supported versions, contact path.
 - **[`spec/security/threat-model.md`](spec/security/threat-model.md)** — STRIDE risk register with per-risk status (Mitigated / Residual / Open / Accepted) per release.
 - **[Security architecture](docs/docs/security/index.md)** (Docs site, *Secure* tab) — capability boundaries, federation trust model, prompt-injection handling per [ADR-003](docs/adr/003-prompt-injection.md).
-- **Operator hardening guide** — *coming in Phase B* (per the strengthening plan); single-org single-node deployments are the only currently-supported deployment pattern.
+- **Operator hardening guide** — *coming in the v0.9.0bN beta series* (per [`ROADMAP.md`](ROADMAP.md)); single-org single-node deployments are the only currently-supported deployment pattern.
 - **Release-cadence runbook & rollback** — `docs/internal/release-cadence.md` (maintainer-facing) covers how releases are cut, what gets verified post-publish, and the rollback procedure if a release ships broken (PyPI yank, npm deprecate, GHCR fix-forward). Adopters who hit issues in a release: see the rollback table for what we'll do, then file an issue with `severity:high` if it warrants a yank.
 
 A federated-memory protocol earns trust by being correct under adversarial conditions. This release is a substrate to build against and review, not a production system.
@@ -232,7 +232,7 @@ It fills the gap none of them fill: typed, provenance-traceable, federated, enti
 
 The canonical specification lives in [`spec/`](spec/). See [`spec/README.md`](spec/README.md) for the section-by-section status table.
 
-The spec is being reviewed and improved into the v0.9.0a1 canonical structure: core sections first, then experimental sections move to `experimental/<feature>/spec.md` per [ADR-008](docs/adr/008-experimental-gates.md) and [ADR-010](docs/adr/010-modular-specs.md). Earlier evolutionary spec files (`stigmem-spec-v0.2.md` through `stigmem-spec-v1.1-draft.md`) move to `spec/archive/evolution/` after their content has been forward-migrated. Nothing from the spec is being deleted.
+The spec is being reviewed and improved into the v0.9.0a1 canonical structure: core sections first, then experimental sections move to `experimental/<feature>/spec.md` per [ADR-008](docs/adr/008-experimental-gates.md) and [ADR-010](docs/adr/010-modular-specs.md). Earlier evolutionary spec files (`stigmem-spec-pre-reset.md` through `stigmem-spec-pre-reset draft.md`) move to `spec/archive/evolution/` after their content has been forward-migrated. Nothing from the spec is being deleted.
 
 ---
 
@@ -243,7 +243,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the RFC process. Short version:
 1. Open an issue using the [RFC template](.github/ISSUE_TEMPLATE/rfc.yml)
 2. Discuss and iterate
 3. Submit a PR against the canonical spec — new sections start as draft blocks inside the relevant spec file
-4. Spec changes merge per the **[ADR-001 §Contributor approval rule](docs/adr/001-versioning.md)**: two contributors *or* the founder alone, through Phase B.
+4. Spec changes merge per the **[ADR-001 §Contributor approval rule](docs/adr/001-versioning.md)**: two contributors *or* the founder alone, through the v0.9.0bN beta series.
 
 For bugs in the reference node, use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.yml).
 

@@ -15,7 +15,7 @@ If you have a stale dependency pinned to a `v1.x` or `v2.0` version that doesn't
 
 :::
 
-**Audience:** Operators and developers running a stigmem node on v1.0 or v1.1-draft who want to upgrade to v2.0.
+**Audience:** Operators and developers running a stigmem node on v1.0 or pre-reset draft who want to upgrade to v2.0.
 
 **Spec reference:** v2.0 promotes §19–§25 from draft to normative. §1–§18 are unchanged.
 
@@ -418,7 +418,7 @@ Time-travel is a read-only feature. Dropping the `fact_retractions` table disabl
 | `cid` field on all new facts | All writes produce a `sha256:` CID alongside the UUID `fact_id` | No action — automatic |
 | Dual-addressing during 12-month migration window | APIs accept both `fact_id` and `cid` as identifiers | Update clients to prefer CID addressing |
 | Federation tamper detection | Inbound facts with mismatched CID are rejected | Ensure all peers are on v2.0 |
-| `phase13_ga_at` federation envelope field | Peers reject `cid: null` for facts created after GA | Coordinate upgrade timing with peers |
+| `v1_1_ga_at` federation envelope field | Peers reject `cid: null` for facts created after GA | Coordinate upgrade timing with peers |
 
 ### Migration steps
 

@@ -8,7 +8,7 @@ audience: Integrator
 
 **Audience:** Agent developers who need to communicate structured intent between agents using the Stigmem fact fabric as the wire format.
 
-Spec §4, §5.14 (v0.8). Implemented in Track F.
+Spec §4, §5.14 (pre-reset). Implemented in Track F.
 
 An **IntentEnvelope** is a structured message (goal, targets, escalation policy, handoff context, constraints, preferences, deferences) that the node decomposes into a set of reified facts sharing a single `intent_id`. This allows intent history to be queried, filtered, and federated using the same machinery as any other fact.
 

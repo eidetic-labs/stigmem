@@ -7,11 +7,11 @@ description: "Stigmem spec section 21 — Boot stub + manifest + on-demand recal
 
 # §21. Lazy Instruction Discovery {#section-21}
 
-**Status:** DRAFT normative (v1.1-draft, Phase 10)
+**Status:** DRAFT normative (DRAFT normative, pre-reset)
 
 Boot stub + manifest + on-demand recall for token-efficient agent instruction loading.
 
-**Authoritative source:** [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md)
+**Authoritative source:** [`spec/stigmem-spec-pre-reset draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-pre-reset draft.md)
 
 :::caution EXPERIMENTAL
 The boot-stub schema and instruction-manifest format are not yet finalized and may change in a future minor release. Do not deploy lazy-discovered instructions in production agents handling sensitive data or irreversible tool use until this section reaches GA. Always pin `instructions_manifest_uri` to a trusted, integrity-verified source.
@@ -21,7 +21,7 @@ The boot-stub schema and instruction-manifest format are not yet finalized and m
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-**Status: DRAFT normative (Phase 10)**
+**Status: DRAFT normative (pre-reset instruction-discovery design)**
 
 This section specifies how agents discover and load their instructions on demand rather than preloading every instruction document at startup. The mechanism has three runtime components — a **boot stub**, an **instruction manifest**, and the **`recall_instruction` tool** — and one off-path component, the **discovery audit**, used for continuous retrieval-quality evaluation.
 
@@ -428,7 +428,7 @@ Replay procedure: given an audit record with `intent` and the stigmem state at `
 
 The `recall@k` and `hit@k` metrics SHOULD be computed against the post-hoc replay set (ground truth: all instruction units the agent actually needed, reconstructed from the full heartbeat trace) to measure manifest coverage independently of what the agent happened to load.
 
-> **Known limitation — endogeneity of `used_chunks` (non-normative):** Recall@k, Hit@k, and miss rate are all computed relative to `used_chunks`, which is itself derived from agent behavior during the heartbeat being measured. An agent that chronically fails to load a required instruction unit will never reference it, so the unit will never appear in `used_chunks`. The chronic miss is therefore invisible to all three live-audit metrics. This is an accepted limitation for Phase 10: the live audit is a useful signal for units the agent *does* interact with, but it cannot independently surface units the agent has never successfully retrieved.
+> **Known limitation — endogeneity of `used_chunks` (non-normative):** Recall@k, Hit@k, and miss rate are all computed relative to `used_chunks`, which is itself derived from agent behavior during the heartbeat being measured. An agent that chronically fails to load a required instruction unit will never reference it, so the unit will never appear in `used_chunks`. The chronic miss is therefore invisible to all three live-audit metrics. This is an accepted limitation for the design: the live audit is a useful signal for units the agent *does* interact with, but it cannot independently surface units the agent has never successfully retrieved.
 >
 > #### 21.5.4 Probe-Set Eval (follow-on, non-normative)
 >
@@ -450,9 +450,9 @@ The `recall@k` and `hit@k` metrics SHOULD be computed against the post-hoc repla
 > }
 > ```
 >
-> A follow-on spec revision (Phase 11) will formalize the probe-set storage format, the evaluation runner contract, alert thresholds, and the soft-lift mechanism described below.
+> A follow-on spec revision (the pre-reset multi-backend work) will formalize the probe-set storage format, the evaluation runner contract, alert thresholds, and the soft-lift mechanism described below.
 >
-> #### 21.5.5 Probe-Set Coverage Sampling with Soft Score Lift (Phase 11 roadmap, non-normative)
+> #### 21.5.5 Probe-Set Coverage Sampling with Soft Score Lift (the pre-reset multi-backend work roadmap, non-normative)
 >
 > Approaches B and augmented A (§21.1.5, §21.8.3) address structurally-predictable and trigger-quality misses at authoring time. The residual problem — semantic-drift misses and embedding-model staleness causing gradual coverage degradation without any live-audit signal — requires an exogenous coverage signal independent of both the retrieval path and agent behavior.
 >
@@ -522,7 +522,7 @@ This is a SHOULD (not MUST) because manual migration is always acceptable.
 
 ### §21.7 Schema Migrations {#section-21-7}
 
-The following DDL MUST be applied when upgrading to Phase 10 (§21 compliance).
+The following DDL MUST be applied when upgrading to pre-reset instruction-discovery design (§21 compliance).
 Three tables support the lazy instruction layer:
 
 **`instruction_manifests`** stores versioned snapshots of each agent's
@@ -780,7 +780,7 @@ Admin-key response: same as above, plus "coverage_status" field per unit.
 
 **Categorical label restriction (S11):** The `coverage_status` categorical label (`"ok"`, `"coverage_critical"`, `"not_evaluated"`) SHOULD be returned only in admin-key responses. Agent-key responses SHOULD return only raw `coverage_pct` and `hit_at_10` values, omitting the categorical label. This limits the retrieval-quality oracle surface for non-admin callers.
 
-`coverage_status` values (admin-only): `"ok"` (hit@10 ≥ 0.4), `"coverage_critical"` (hit@10 < 0.4, soft-lift eligible in Phase 11), `"not_evaluated"` (probe run not yet completed). This endpoint is the primary operator signal for diagnosing instruction units before they produce production misses.
+`coverage_status` values (admin-only): `"ok"` (hit@10 ≥ 0.4), `"coverage_critical"` (hit@10 < 0.4, soft-lift eligible in the pre-reset multi-backend work), `"not_evaluated"` (probe run not yet completed). This endpoint is the primary operator signal for diagnosing instruction units before they produce production misses.
 
 ---
 

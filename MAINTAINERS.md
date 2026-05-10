@@ -22,7 +22,7 @@ Contributions from anyone outside the listed roles above are recorded in git his
 
 ## Authority and approval
 
-Per [ADR-001 § *Contributor approval rule*](docs/adr/001-versioning.md), sign-off on ADRs, ADR amendments, and PRs through Phase B requires **either** two contributors **or** the founder alone. The founder takes responsibility for the validation discipline whenever signing alone — the guardrail against AI-velocity-outrunning-validation (per the v1.0 retraction narrative) lives with the founder when they approve solo.
+Per [ADR-001 § *Contributor approval rule*](docs/adr/001-versioning.md), sign-off on ADRs, ADR amendments, and PRs through the v0.9.0bN beta series requires **either** two contributors **or** the founder alone. The founder takes responsibility for the validation discipline whenever signing alone — the guardrail against AI-velocity-outrunning-validation (per the v1.0 retraction narrative) lives with the founder when they approve solo.
 
 Audit logs (plugin registration per ADR-011, PR approval records, ADR sign-off commits) show the actual signing identities. This file describes who currently holds the roles; git history is the durable record of who exercised them.
 
@@ -30,9 +30,9 @@ Audit logs (plugin registration per ADR-011, PR approval records, ADR sign-off c
 
 ## Plugin signing identities (per ADR-011)
 
-When the C1 plugin architecture (ADR-011) ships its production signing infrastructure, **Eidetic Labs** is the default trusted publisher for stigmem core plugins (the seven cross-cutting feature plugins shipped in Phase A). Operators may add additional trusted publishers in their own deployments.
+When the C1 plugin architecture (ADR-011) ships its production signing infrastructure, **Eidetic Labs** is the default trusted publisher for stigmem core plugins (the seven cross-cutting feature plugins shipped in the v0.9.0aN alpha series). Operators may add additional trusted publishers in their own deployments.
 
-The Sigstore identity mapping for Eidetic Labs is documented separately in `docs/Operate/Plugins/signing.md` (per ADR-005 IA, lands in Phase A docs work).
+The Sigstore identity mapping for Eidetic Labs is documented separately in `docs/Operate/Plugins/signing.md` (per ADR-005 IA, lands in v0.9.0aN docs work).
 
 ---
 
@@ -44,7 +44,7 @@ The operational runbook for cutting a new tagged release lives at [`docs/interna
 
 ## Credential rotation
 
-External-registry credentials used by CI to publish stigmem artifacts rotate on a **90-day cadence**, owned by the founder through Phase A. The cadence balances rotation hygiene against the operational cost of regenerating + redistributing tokens.
+External-registry credentials used by CI to publish stigmem artifacts rotate on a **90-day cadence**, owned by the founder through the v0.9.0aN alpha series. The cadence balances rotation hygiene against the operational cost of regenerating + redistributing tokens.
 
 ### Active credentials
 
@@ -73,7 +73,7 @@ If a CI token is suspected compromised:
 2. **Audit recent publishes** for that scope — npm registry shows a per-version publisher; PyPI shows uploader email per release.
 3. **Yank or unpublish unauthorized versions** within the registry's allowed window (npm: 72h since publish; PyPI: PEP 592 yank, no time limit).
 4. **Generate replacement** per Rotation procedure §1–3.
-5. **File an incident note** in `docs/internal/incidents/` (per Phase A operator-hardening doc work) describing the incident, the response, and any operator-visible impact.
+5. **File an incident note** in `docs/internal/incidents/` (per v0.9.0aN operator-hardening doc work) describing the incident, the response, and any operator-visible impact.
 
 ---
 

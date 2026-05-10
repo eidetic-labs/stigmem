@@ -7,7 +7,7 @@ audience: Integrator
 # Synthesis
 
 :::caution Experimental
-`POST /v1/synthesis` and `synthesize_scope` MCP tool are **draft** in spec v0.8 (§16). The API shape is stable for testing; will be promoted to normative in v0.9.
+`POST /v1/synthesis` and `synthesize_scope` MCP tool are **draft** in the pre-reset spec (§16). The API shape is stable for testing; will be promoted to normative in the pre-reset spec.
 :::
 
 **Audience:** Agent developers who need a clean, contradiction-aware snapshot of current knowledge in a scope — particularly useful for injecting context at agent boot time.
@@ -155,7 +155,7 @@ result = await mcp.call_tool("synthesize_scope", {
 
 ## The lint → decay → synthesis pipeline (§16.5)
 
-The three Phase 6 operational tools answer different questions:
+The three the pre-reset design-partner window operational tools answer different questions:
 
 | Tool | Question | Writes? |
 |---|---|---|

@@ -180,7 +180,7 @@ cd sdks/stigmem-go
 go test ./... -race
 ```
 
-## Phase 13 features
+## advanced features (pre-reset design)
 
 ### Content-addressed fact IDs (§25)
 

@@ -11,7 +11,7 @@ description: What Stigmem does today in v0.9.0a1 — feature status table calibr
 
 Stigmem is an open, federated knowledge protocol — a layer where AI agents and humans store typed, traceable facts that travel across tools, platforms, and organizations. Each fact is an immutable record `(entity, relation, value, source, timestamp, confidence, scope)` written once, queryable forever, with full provenance and a defined expiry.
 
-**This page describes v0.9.0a1.** The canonical version line of stigmem begins at `v0.9.0a1` per [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md) + [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). Earlier version *markers* (`v0.2`, `v1.1`, `v2.0`) labeled internal development checkpoints, not tagged releases. Many features that earlier docs described as "Stable" were deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) — the v1 critical-path scope cut. Those features remain in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md), gated, off by default.
+**This page describes v0.9.0a1.** The canonical version line of stigmem begins at `v0.9.0a1` per [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md) + [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). Earlier version *markers* (`pre-reset`, `v1.1`, `v2.0`) labeled internal development checkpoints, not tagged releases. Many features that earlier docs described as "Stable" were deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) — the v1 critical-path scope cut. Those features remain in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md), gated, off by default.
 
 ---
 
@@ -57,7 +57,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 | Two-node mTLS federation (TLS 1.3 floor, SAN ↔ entity_uri binding) | Stable | §22.1 |
 | Ed25519 signed manifests at `/.well-known/stigmem-manifest.json` | Stable | §19 |
 | Capability tokens (≤90d, Ed25519, verb+object validated at admission) | Stable | §19 |
-| Bounded HLC skew + per-peer drift tracking | Targeted v0.9.x (R-19) | §22.5 |
+| Bounded HLC skew + per-peer drift tracking | Targeted the pre-reset spec.x (R-19) | §22.5 |
 | Quarantine garden (federation inbound writes) | Stable | §19   |
 | Pull replication                    | Stable     | §6     |
 
@@ -65,10 +65,10 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 | Capability                          | Status     | Spec   |
 |-------------------------------------|------------|--------|
-| API-key authentication (per-scope)  | Stable (SHA-256 in v0.9.0a1; Argon2id migration in v0.9.x per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 |
+| API-key authentication (per-scope)  | Stable (SHA-256 in v0.9.0a1; Argon2id migration in the pre-reset spec.x per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 |
 | Enforced API key max-age (default 90d) | Stable | §22.2 |
 | Per-principal token-bucket rate limits (7 dimensions) | Stable | §22.4 |
-| Capability-based instruction handling (`interpret_as`) | Targeted v0.9.x ([ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)) | §3 |
+| Capability-based instruction handling (`interpret_as`) | Targeted the pre-reset spec.x ([ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)) | §3 |
 
 ## Observability (v0.9.0a1 critical path)
 
@@ -102,7 +102,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 | Adapter                             | Status     |
 |-------------------------------------|------------|
-| OpenClaw (`stigmem-openclaw`)       | Preview — published in v0.9.0a1 with the `experimental` flag pending Phase B safety hardening + external operator soak per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) |
+| OpenClaw (`stigmem-openclaw`)       | Preview — published in v0.9.0a1 with the `experimental` flag pending the v0.9.0bN beta series safety hardening + external operator soak per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) |
 | MCP adapter                         | Deferred (`stigmem-mcp` at v0.4.0; not aligned to v0.9.0a1; lives in `adapters/mcp/`) |
 | Obsidian / Obsidian-plugin          | Deferred to `experimental/obsidian-adapter/` |
 | Letta, Zep, Cognee, Gemini, OpenAI-tools, Paperclip | Deferred to `experimental/<adapter>-adapter/` |
@@ -120,7 +120,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 The following features are in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) but are **not in v0.9.0a1's default install**. They graduate back to core via the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) five-gate process and ship as opt-in plugins per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md) in the v0.9.0a2..a8 series:
 
-| Feature                             | Spec § | Phase A target |
+| Feature                             | Spec § | the v0.9.0aN alpha series target |
 |-------------------------------------|--------|----------------|
 | Lazy instruction discovery          | §21    | v0.9.0a2 (PR 4a) |
 | Time-travel `as_of` queries         | §24    | v0.9.0a4 (PR 4c) |
@@ -128,10 +128,10 @@ The following features are in the codebase under [`experimental/<feature>/`](htt
 | Memory garden — advanced ACL        | §17 advanced | v0.9.0a6 (PR 4e) |
 | Source attestation                  | §18    | v0.9.0a7 (PR 4f) |
 | Multi-tenant isolation              | (cross-cutting) | v0.9.0a8 (PR 4g) |
-| §20 Recall & Graph (vector embeddings, MMR, memory cards, subscriptions) | §20 | Phase A |
+| §20 Recall & Graph (vector embeddings, MMR, memory cards, subscriptions) | §20 | the v0.9.0aN alpha series |
 | Decay sweep                         | §15    | Deferred (commercial path) |
 | Synthesis                           | §16    | Deferred (commercial path) |
-| OIDC SSO                            | —      | Phase A |
+| OIDC SSO                            | —      | the v0.9.0aN alpha series |
 | PostgreSQL backend, libSQL/Turso    | —      | Deferred (operator-validated demand) |
 | Cloud embedding                     | —      | Deferred (R-20 accepted) |
 | Curator dashboard                   | —      | Deferred |
@@ -153,8 +153,8 @@ See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com
 The phase progression is in [ROADMAP.md](https://github.com/Eidetic-Labs/stigmem/blob/main/ROADMAP.md). At a high level:
 
 1. **v0.9.0a2 through v0.9.0a8** — incremental plugin extraction per ADR-011 (lazy-instruction-discovery → CIDs as core → time-travel → tombstones → memory-garden-acl → source-attestation → multi-tenant).
-2. **v0.9.0bN (Phase B)** — capability redesign per ADR-003, federation hardening, OpenClaw safety, modular spec migration per ADR-010, storage immutability stack per ADR-016, Argon2id migration per ADR-007, 30-day external operator soak.
-3. **v1.0.0-rcN → v1.0.0 (Phase C)** — Sigstore-signed releases, reproducible builds, SBOM, 3+ external operators in production. Wire format frozen.
+2. **v0.9.0bN (the v0.9.0bN beta series)** — capability redesign per ADR-003, federation hardening, OpenClaw safety, modular spec migration per ADR-010, storage immutability stack per ADR-016, Argon2id migration per ADR-007, 30-day external operator soak.
+3. **v1.0.0-rcN → v1.0.0 (the v1.0.0rcN release-candidate series)** — Sigstore-signed releases, reproducible builds, SBOM, 3+ external operators in production. Wire format frozen.
 
 ---
 

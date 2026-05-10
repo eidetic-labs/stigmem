@@ -7,7 +7,7 @@ description: "Stigmem spec section 22 — mTLS federation, key rotation, audit l
 
 # §22. Security Hardening {#section-22}
 
-**Status:** DRAFT normative (v1.1-draft, Phase 12)
+**Status:** DRAFT normative (pre-reset draft, pre-reset hardening)
 
 mTLS federation, key rotation, audit log, per-principal quotas, container baseline.
 
@@ -17,7 +17,7 @@ mTLS federation, key rotation, audit log, per-principal quotas, container baseli
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-**Status:** DRAFT normative (Phase 12). §22.1–§22.7 carry MUST/SHOULD/MAY normative language.
+**Status:** DRAFT normative (pre-reset hardening). §22.1–§22.7 carry MUST/SHOULD/MAY normative language.
 
 ### §22.1 mTLS Federation Transport {#section-22-1}
 
@@ -366,7 +366,7 @@ The Eidetic-Labs reference deployment uses the **public Rekor instance** (`https
 | Independent peer accessibility | Not evaluated — moot given above |
 | Dedicated key ceremony team | Not evaluated — moot given above |
 
-**Decision: defer self-hosted Rekor to backlog.** A self-hosted Rekor instance for the Eidetic-Labs reference deployment does not meet the minimum decision criteria at this phase. A backlog issue SHOULD be filed when the following change conditions are met: (a) a private-network deployment tier is productised, or (b) a dedicated SRE function is established. Implementation of a self-hosted instance is explicitly out of scope for Phase 12.
+**Decision: defer self-hosted Rekor to backlog.** A self-hosted Rekor instance for the Eidetic-Labs reference deployment does not meet the minimum decision criteria at this phase. A backlog issue SHOULD be filed when the following change conditions are met: (a) a private-network deployment tier is productised, or (b) a dedicated SRE function is established. Implementation of a self-hosted instance is explicitly out of scope for pre-reset hardening.
 
 #### §22.7.4 Configuration {#section-22-7-4}
 

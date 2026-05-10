@@ -73,14 +73,14 @@ Status notation: `1✓ 2✓ 3· 4· 5·` means gates 1 and 2 passed, gates 3–5
 
 | Feature | STATUS | Gates | Notes |
 |---|---|---|---|
-| Obsidian adapter | [STATUS](obsidian-adapter/STATUS.md) | `1· 2· 3· 4· 5·` | Separate threat model (TB-6); worth doing after OpenClaw v0.9 validates the contract. |
+| Obsidian adapter | [STATUS](obsidian-adapter/STATUS.md) | `1· 2· 3· 4· 5·` | Separate threat model (TB-6); worth doing after OpenClaw the pre-reset spec validates the contract. |
 | Letta adapter | [STATUS](letta-adapter/STATUS.md) | `1· 2· 3· 4· 5·` | Reintroduce after OpenClaw validation. |
 | Zep adapter | [STATUS](zep-adapter/STATUS.md) | `1· 2· 3· 4· 5·` | Reintroduce after OpenClaw validation. |
 | Cognee adapter | [STATUS](cognee-adapter/STATUS.md) | `1· 2· 3· 4· 5·` | Reintroduce after OpenClaw validation. |
 | Gemini adapter | [STATUS](gemini-adapter/STATUS.md) | `1· 2· 3· 4· 5·` | Reintroduce after OpenClaw validation. |
 | OpenAI-tools adapter | [STATUS](openai-tools-adapter/STATUS.md) | `1· 2· 3· 4· 5·` | Reintroduce after OpenClaw validation. |
 | Paperclip adapter | [STATUS](paperclip-adapter/STATUS.md) | `1· 2· 3· 4· 5·` | Reintroduce after OpenClaw validation. |
-| Curator dashboard | [STATUS](dashboard/STATUS.md) | `1· 2· 3· 4· 5·` | Defer until v1.0 stable; not on critical path. |
+| Curator dashboard | [STATUS](dashboard/STATUS.md) | `1· 2· 3· 4· 5·` | Defer until v1.0.0 stable; not on critical path. |
 
 ### SDKs
 

@@ -7,7 +7,7 @@ description: "Stigmem spec section 2 — The fact tuple, value types, scopes, HL
 
 # §2. Atomic Fact Shape {#section-2}
 
-**Status:** Stable (v1.0; v1.1 §2.8)
+**Status:** Stable in v0.9.0a1
 
 The fact tuple, value types, scopes, HLC, identity, federation-trust fields.
 
@@ -20,9 +20,9 @@ Each subsection below shows the most recent normative text from the spec source.
 *Stable sections §2.1–§2.7 unchanged from v1.0. The following fields are added to the fact record.*
 
 <details>
-<summary>Revisions before v1.1-draft: v0.8-draft, v0.9-draft, v1.0</summary>
+<summary>Revisions before pre-reset draft: the pre-reset spec-draft, pre-reset draft, v1.0</summary>
 
-**From `stigmem-spec-v0.8-draft.md`:**
+**From `stigmem-spec-the pre-reset spec-draft.md`:**
 
 Every piece of knowledge in Stigmem is an **atomic fact**:
 
@@ -46,13 +46,13 @@ A fact is **immutable once written**. Updates are new facts. The latest fact for
 a given `(entity, relation, scope)` triple wins unless contradiction policy applies
 (see §3.3).
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-*Stable sections §2.1–§2.6 unchanged from v0.8. The following fields are added to the fact record.*
+*Stable sections §2.1–§2.6 unchanged from the pre-reset spec. The following fields are added to the fact record.*
 
 **From `stigmem-spec-v1.0.md`:**
 
-*Stable sections §2.1–§2.6 unchanged from v0.8. The following fields are added to the fact record.*
+*Stable sections §2.1–§2.6 unchanged from the pre-reset spec. The following fields are added to the fact record.*
 
 </details>
 
@@ -129,7 +129,7 @@ and assert facts about it:
 
 `rel:subject`, `rel:object`, and `rel:type` are reserved in the `rel:` namespace (see §9). The graph traversal engine (§20.1) follows `ref` values out of reified entities the same way it follows any other `ref`, so reified relationships participate naturally in k-hop recall.
 
-### §2.4 Hybrid Logical Clock (HLC) — v0.5 {#section-2-4}
+### §2.4 Hybrid Logical Clock (HLC) — pre-reset {#section-2-4}
 
 Wall-clock timestamps alone cannot establish causality in a distributed system
 because clocks drift. A pure logical clock (Lamport-style) preserves causality
@@ -159,9 +159,9 @@ is zero-padded to 3 digits per node (overflow creates a new millisecond bucket).
 
 **Wire encoding:** `hlc` is included in all fact responses and replication payloads. Clients that do not understand HLC MAY ignore the field; nodes MUST store and propagate it.
 
-### §2.5 Entity URI Scheme — v0.6 Normative {#section-2-5}
+### §2.5 Entity URI Scheme — pre-reset Normative {#section-2-5}
 
-**v0.5 open question §8.1 resolved.** The entity URI scheme is now normative.
+**pre-reset open question §8.1 resolved.** The entity URI scheme is now normative.
 
 #### Formal URI scheme
 
@@ -184,7 +184,7 @@ stigmem://{authority}/{type}/{id}
 #### Deprecation of informal URIs
 
 Informal URIs (colon-separated shorthand such as `user:alice`, `agent:cto`,
-`project:acme-roadmap`) are **deprecated as of v0.6**.
+`project:acme-roadmap`) are **deprecated as of pre-reset**.
 
 **Node behavior:**
 - Nodes MUST accept informal URIs without rejecting them (backward compatibility).
@@ -196,22 +196,22 @@ Informal URIs (colon-separated shorthand such as `user:alice`, `agent:cto`,
   silently alter provenance).
 
 **Adapter behavior:**
-- Adapters SHOULD use formal URIs for all new fact assertions as of v0.6.
-- Adapters MUST NOT emit informal URIs in new code targeting v0.6 or later.
-- Existing stored facts with informal URIs remain valid through at least v0.8.
+- Adapters SHOULD use formal URIs for all new fact assertions as of pre-reset.
+- Adapters MUST NOT emit informal URIs in new code targeting pre-reset or later.
+- Existing stored facts with informal URIs remain valid through at least the pre-reset spec.
 
 **Collision rationale:** Informal URIs are inherently ambiguous once federation
 is active. `user:alice` on node A and `user:alice` on node B may refer to different
 people. The formal scheme binds the authority to the URI, preventing silent identity
 collisions across federated nodes.
 
-**v0.7 note:** All components of the formal URI are normalized to lowercase on ingest (§2.6). `stigmem://company.example/issue/EG-42` is stored as `stigmem://company.example/issue/eg-42`.
+**pre-reset note:** All components of the formal URI are normalized to lowercase on ingest (§2.6). `stigmem://company.example/issue/EG-42` is stored as `stigmem://company.example/issue/eg-42`.
 
-### §2.6 Entity Naming Rules — v0.7 Normative {#section-2-6}
+### §2.6 Entity Naming Rules — pre-reset Normative {#section-2-6}
 
 This section defines canonical entity naming rules and the **strict normalizer** contract. The goal is to prevent **silent entity fragmentation**: multiple facts about the same real-world entity using different URI representations that create disconnected entity nodes in the store.
 
-**v0.7 scope:** The strict normalizer addresses case-based and whitespace-based fragmentation deterministically. Full alias resolution (e.g. `user:alice` ≡ `user:a.smith`) is deferred to the Phase 6 fuzzy resolver.
+**pre-reset scope:** The strict normalizer addresses case-based and whitespace-based fragmentation deterministically. Full alias resolution (e.g. `user:alice` ≡ `user:a.smith`) is deferred to the pre-reset design-partner window fuzzy resolver.
 
 #### §2.6.1 The fragmentation problem {#section-2-6-1}
 
@@ -287,7 +287,7 @@ def normalize_entity_uri(raw: str) -> str:
 3. **Total on valid inputs:** every non-empty string produces exactly one output; invalid inputs raise `NormalizationError`.
 
 **What the strict normalizer does NOT do:**
-- Alias resolution (e.g., `user:alice` ≡ `user:a.smith`) — Phase 6 fuzzy resolver.
+- Alias resolution (e.g., `user:alice` ≡ `user:a.smith`) — the pre-reset design-partner window fuzzy resolver.
 - Existence validation against the fact store.
 - Semantic similarity matching.
 - Conversion of informal URIs to formal URIs (§2.5 prohibits silent auto-rewrite).
@@ -311,23 +311,23 @@ HTTP 400
 
 #### §2.6.5 Query-time backward compatibility {#section-2-6-5}
 
-For nodes upgrading to v0.7, **query parameters are also normalized** before matching:
+For nodes upgrading to pre-reset, **query parameters are also normalized** before matching:
 
 ```
 GET /v1/facts?entity=<raw>&...
 ```
 
-The node MUST apply `normalize_entity_uri` to the `entity` and `source` query parameters before executing the database query. This allows clients holding references to pre-normalization forms to still retrieve existing facts written after v0.7 is deployed.
+The node MUST apply `normalize_entity_uri` to the `entity` and `source` query parameters before executing the database query. This allows clients holding references to pre-normalization forms to still retrieve existing facts written after pre-reset is deployed.
 
-For pre-v0.7 facts stored with non-canonical URIs, the alias table (§2.6.6, migration 003) is the recommended migration path.
+For pre-pre-reset facts stored with non-canonical URIs, the alias table (§2.6.6, migration 003) is the recommended migration path.
 
 #### §2.6.6 Migration guide for existing facts {#section-2-6-6}
 
-Facts stored before v0.7 strict normalization was deployed may use informal URIs or non-canonical formal URIs. Because facts are immutable (§2), they cannot be rewritten in place. The following migration strategies are available:
+Facts stored before pre-reset strict normalization was deployed may use informal URIs or non-canonical formal URIs. Because facts are immutable (§2), they cannot be rewritten in place. The following migration strategies are available:
 
 **Option A — Alias table (recommended for production nodes)**
 
-Migration 003 adds an `entity_aliases` table that maps known informal/legacy URIs to their canonical equivalents (see §10). Populate it by scanning the `facts` table for non-canonical `entity` and `source` values and inserting the raw → canonical mapping. At query time, the node can join against this table to find pre-v0.7 facts via canonical queries.
+Migration 003 adds an `entity_aliases` table that maps known informal/legacy URIs to their canonical equivalents (see §10). Populate it by scanning the `facts` table for non-canonical `entity` and `source` values and inserting the raw → canonical mapping. At query time, the node can join against this table to find pre-pre-reset facts via canonical queries.
 
 **Option B — Re-assertion sweep (for smaller nodes or clean migration windows)**
 
@@ -341,10 +341,10 @@ The original facts are retained in the store with `confidence=0.0` for audit pur
 
 | Phase | Action |
 |-------|--------|
-| v0.7 deploy | Enable strict normalizer on ingest. Query normalization enabled. |
+| pre-reset deploy | Enable strict normalizer on ingest. Query normalization enabled. |
 | +2 weeks | Scan facts table; populate alias table for any non-canonical existing facts. |
 | +4 weeks | Run re-assertion sweep for nodes with < 10k facts; otherwise maintain alias table. |
-| v0.8 target | Remove alias table read path; all facts use canonical URIs. |
+| the pre-reset spec target | Remove alias table read path; all facts use canonical URIs. |
 
 ---
 
@@ -353,8 +353,8 @@ The original facts are retained in the store with `confidence=0.0` for audit pur
 An optional `garden_id` field on a fact associates it with a Memory Garden (§17).
 
 ```
-FactRecord (v0.9 extension):
-  ...all v0.8 fields...
+FactRecord (the pre-reset spec extension):
+  ...all the pre-reset spec fields...
   garden_id: URI | null    // stigmem://authority/garden/{slug}; null = no garden
   attested:  boolean | null  // source attestation result (§18); null = not applicable
 ```
@@ -378,19 +378,19 @@ FactRecord (v0.9 extension):
 ---
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-### 2.7 Garden Field — v0.9
+### 2.7 Garden Field — the pre-reset spec
 
 An optional `garden_id` field on a fact associates it with a Memory Garden (§17).
 
 ```
-FactRecord (v0.9 extension):
-  ...all v0.8 fields...
-  garden_id: URI | null    // v0.9: stigmem://authority/garden/{slug}; null = no garden
-  attested:  boolean | null  // v0.9: source attestation result (§18); null = not applicable
+FactRecord (the pre-reset spec extension):
+  ...all the pre-reset spec fields...
+  garden_id: URI | null    // the pre-reset spec: stigmem://authority/garden/{slug}; null = no garden
+  attested:  boolean | null  // the pre-reset spec: source attestation result (§18); null = not applicable
 ```
 
 **`garden_id` invariant:** When `garden_id` is set:
@@ -418,8 +418,8 @@ FactRecord (v0.9 extension):
 Three optional fields extend the fact record to carry provenance, attestation evidence, and source-trust information:
 
 ```
-FactRecord (v1.1 extension):
-  ...all v1.0 fields...
+FactRecord (v0.9.0a1):
+  ...all canonical FactRecord fields...
   derived_from:      [FactHash]  | null  // provenance: hashes of facts this derives from (§19.6)
   attestation_chain: [Signature] | null  // ordered attestation signatures (§19.6)
   source_trust:      float | null        // cached source-trust score at write time (§19.4); null = not computed

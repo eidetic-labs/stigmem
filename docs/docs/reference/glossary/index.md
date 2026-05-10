@@ -14,7 +14,7 @@ Canonical definitions for terms used throughout the Stigmem protocol specificati
 
 A signed, short-lived credential that grants a specific named permission (verb) to a specific subject from a specific issuer. Capability tokens replace ad-hoc per-peer trust agreements with a verifiable, revocable, auditable delegation primitive. Each token carries an Ed25519 signature, a `verb` (`read`, `write`, `admin`, `federate`, `subscribe`, `tombstone:read`), an `object` (the resource it applies to), and a mandatory expiry (max 90 days).
 
-**Spec:** §19.3 (v1.1-draft)
+**Spec:** §19.3 (DRAFT normative, pre-reset)
 
 ```json
 {
@@ -33,7 +33,7 @@ A signed, short-lived credential that grants a specific named permission (verb) 
 
 A content-addressed hash that uniquely identifies a fact by its canonical body. Computed as `sha256:` followed by the hex-encoded SHA-256 digest of the fact's deterministic canonical JSON serialization. CIDs enable deduplication, tamper detection, and idempotent federation ingestion without requiring a central ID authority.
 
-**Spec:** §25 (v1.1-draft)
+**Spec:** §25 (DRAFT normative, pre-reset)
 
 ```
 sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
@@ -145,4 +145,4 @@ curl -X POST http://localhost:8765/v1/facts \
 
 A signed right-to-be-forgotten (RTBF) marker for retracted facts. Tombstones go beyond normal retraction (`confidence = 0.0`) by providing a cryptographically signed record with an expiry that instructs all receiving nodes to purge the target fact from storage, vector indexes, and caches. Tombstones are replicated via the federation tombstone route and are the primary mechanism for GDPR/RTBF compliance in federated deployments.
 
-**Spec:** §23 (v1.1-draft)
+**Spec:** §23 (DRAFT normative, pre-reset)

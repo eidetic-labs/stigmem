@@ -8,7 +8,7 @@ audience: Integrator
 # Tutorial: Two-Org Federated Network
 
 **Audience:** node operators and protocol implementers setting up cross-org federation for the first time.
-**Spec references:** §6 Federation, §19 Federation Trust (normative, v1.1), §5.21–5.25 wire format.
+**Spec references:** §6 Federation, §19 Federation Trust (canonicalized at v0.9.0a1; see [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)), §5.21–5.25 wire format.
 **Time:** ~30 minutes on two local machines or two cloud VMs. A laptop with two terminal windows works fine.
 
 ---

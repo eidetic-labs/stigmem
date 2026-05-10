@@ -20,7 +20,7 @@ Use this when you want to propose a spec change, add a new field or endpoint, ch
    - Alternatives you considered
    - Open questions
 2. **Discuss** on the issue. Aim for at least one week of async discussion before calling for merge.
-3. **Submit a PR** against the active spec file (currently `spec/stigmem-spec-v0.9.0a1.md`; see [`ROADMAP.md`](ROADMAP.md) §Spec naming convention for the modular per-topic spec layout that lands in Phase B). Reference the issue.
+3. **Submit a PR** against the active spec file (currently `spec/stigmem-spec-v0.9.0a1.md`; see [`ROADMAP.md`](ROADMAP.md) §Spec naming convention for the modular per-topic spec layout that lands in the v0.9.0bN beta series). Reference the issue.
 4. **Merge criteria:** ≥2 approvals from contributors who have merged at least one prior PR. The spec maintainer may veto with a written rationale.
 
 For small fixes (typos, clarity, example corrections), skip the RFC issue and send a PR directly.
@@ -82,28 +82,28 @@ uv run pytest node/tests/test_conformance_v1.py -v
 
 Regenerate the CLI reference pages (under `docs/docs/reference/cli/`) after changing CLI flags or adding subcommands: `make gen-cli-docs`.
 
-## Per-phase docs-delta requirement
+## Per-version-line docs-delta requirement
 
-Every phase of the roadmap MUST ship a docs-improvement deliverable. This is a board mandate (2026-05-03).
+Every version line of the roadmap MUST ship a docs-improvement deliverable. This is a board mandate (2026-05-03).
 
 **What counts as a docs-delta:**
 
 - A new guide, reference page, or conceptual doc added to the docs site.
 - A substantive update to existing content (not just typo fixes).
-- A new working code example for a feature that shipped in the phase.
-- An updated architecture diagram reflecting the phase's changes.
+- A new working code example for a feature that shipped in the version line.
+- An updated architecture diagram reflecting the version line's changes.
 - A Features-table row update (see below).
 
 **How to declare it in a PR:**
 
-Include a `docs-delta:` line in the PR body listing what docs shipped with the phase. Example:
+Include a `docs-delta:` line in the PR body listing what docs shipped with the release. Example:
 
 ```
 docs-delta: Added federation-trust guide (docs/docs/build/guides/federation-trust.md),
 updated Features table row for org manifests.
 ```
 
-Phase PRs without a docs-delta line will be flagged during review.
+Release PRs without a docs-delta line will be flagged during review.
 
 ## Features page update procedure
 
@@ -136,7 +136,7 @@ This copies `docs/docs/` → `docs/versioned_docs/version-v1.0.0/` and `docs/sid
 3. Update `docusaurus.config.js` → `docs.versions`:
    - Set `lastVersion` to the new tag (e.g., `'v1.0.0'`) so bare `/docs/*` URLs resolve to the released version.
    - Add the new version entry: `'v1.0.0': { label: 'v1.0.0', badge: true }`.
-   - Relabel `current`: `{ label: 'v1.1-draft', path: 'next', badge: true, banner: 'unreleased' }`.
+   - Relabel `current`: `{ label: 'pre-reset draft', path: 'next', badge: true, banner: 'unreleased' }`.
 
 4. Run `npm run build` — must exit 0 with no broken links.
 
@@ -210,7 +210,7 @@ After editing `drift-rules.json`, run `python docs/scripts/check_drift.py` local
 
 ## Prototype contributions
 
-The prototype in `prototype/` is a minimal reference implementation — not production software. Contributions that validate spec behavior are welcome; contributions that add production-hardening, auth, or persistence layers should wait until Phase 2 scope is set.
+The prototype in `prototype/` is a minimal reference implementation — not production software. Contributions that validate spec behavior are welcome; contributions that add production-hardening, auth, or persistence layers should wait until the corresponding version-line scope is set.
 
 To run it:
 

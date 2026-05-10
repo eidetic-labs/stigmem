@@ -36,7 +36,7 @@ The Stigmem reference node exposes a REST API implementing spec §5. The interac
 
 ---
 
-## Phase 9 endpoints (§20 — normative)
+## pre-reset graph & recall design endpoints (§20 — normative)
 
 ### `GET /v1/recall` · `POST /v1/recall`
 
@@ -229,7 +229,7 @@ curl -s http://localhost:8000/v1/facts/abc123/provenance \
 
 ---
 
-## Phase 10 endpoints (§21 — DRAFT)
+## Lazy instruction discovery endpoints (§21 — DRAFT)
 
 ### `PUT /v1/agents/{agent_id}/instruction-manifest`
 

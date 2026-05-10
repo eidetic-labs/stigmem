@@ -200,13 +200,13 @@ Federation envelopes carry the CID for each fact. The receiving node:
 2. Compares it against the envelope's declared CID.
 3. Rejects the fact if they diverge — this detects tampering in transit.
 
-Facts with `cid: null` whose `created_at` is after the Phase 13 GA date are rejected. Legacy facts (pre-Phase 13) with `cid: null` are accepted during the backfill window.
+Facts with `cid: null` whose `created_at` is after the v1.1 GA date are rejected. Legacy facts (pre-v1.1) with `cid: null` are accepted during the backfill window.
 
 ---
 
 ## CID backfill (§25.7.2)
 
-Existing facts created before Phase 13 do not have CIDs. The node backfills them in the background:
+Existing facts created before the pre-reset design window do not have CIDs. The node backfills them in the background:
 
 ```bash
 # Check backfill progress

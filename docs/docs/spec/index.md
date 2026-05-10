@@ -9,7 +9,7 @@ sidebar_position: 6
 # Stigmem Protocol Specification
 
 :::note Authoritative source
-Canonical spec is [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md). Each section below renders the canonical source text inline (review-and-migrate in flight per master-checklist §4.3a). Earlier evolutionary snapshots (`v0.2` through `v2.0`) are at [`spec/archive/evolution/`](https://github.com/Eidetic-Labs/stigmem/tree/main/spec/archive/evolution).
+Canonical spec is [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md). Each section below renders the canonical source text inline (review-and-migrate in flight per master-checklist §4.3a). Earlier evolutionary snapshots (`pre-reset` through `v2.0`) are at [`spec/archive/evolution/`](https://github.com/Eidetic-Labs/stigmem/tree/main/spec/archive/evolution).
 :::
 
 :::info Security disclosure
@@ -25,7 +25,7 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | [§3. Fact Semantics](./fact-semantics) | Stable (v1.0) | Read/write semantics, retraction, contradiction, identity binding. |
 | §4. Intent Envelope | Deferred indefinitely | Per ADR-001. Spec text + STATUS at [`experimental/intent-envelope/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/intent-envelope). Goal/constraint/preference/handoff envelope types — design intent preserved as ADR-008 reintroduction candidate. |
 | [§5. Wire Format](./wire-format) | Stable (v1.0; v1.1 §5.21–5.25) | JSON/HTTP wire format for facts, peers, gardens, trust manifests, and capability tokens. |
-| [§6. Federation](./federation) | Stable (v0.8 N-node) | Peer handshake, pull replication, scope enforcement, conflict semantics, backpressure. |
+| [§6. Federation](./federation) | Stable (the pre-reset spec N-node) | Peer handshake, pull replication, scope enforcement, conflict semantics, backpressure. |
 | [§7. Design Decisions Log](./design-decisions-log) | Stable | Why the spec made the calls it did. |
 | [§8. Open Questions](./open-questions) | Living | Currently-unresolved questions. |
 | [§9. Namespace Registry](./namespace-registry) | Stable | Reserved relation prefixes and community registry process. |
@@ -47,4 +47,4 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 
 ## Archive
 
-Previous evolutionary spec snapshots (`v0.2` through `v2.0`) are preserved at [`spec/archive/evolution/`](https://github.com/Eidetic-Labs/stigmem/tree/main/spec/archive/evolution) — see that directory's README. Per [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md), those version *markers* labeled internal development checkpoints, not tagged releases; the canonical version line of stigmem begins at v0.9.0a1.
+Previous evolutionary spec snapshots (`pre-reset` through `v2.0`) are preserved at [`spec/archive/evolution/`](https://github.com/Eidetic-Labs/stigmem/tree/main/spec/archive/evolution) — see that directory's README. Per [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md), those version *markers* labeled internal development checkpoints, not tagged releases; the canonical version line of stigmem begins at v0.9.0a1.

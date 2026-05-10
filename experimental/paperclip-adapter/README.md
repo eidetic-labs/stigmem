@@ -110,7 +110,7 @@ client.assert_fact(
 
 ## CEO dogfood configuration
 
-For the Phase 4 7-day dogfood window, the CEO agent should set:
+For the pre-reset design work 7-day dogfood window, the CEO agent should set:
 
 ```bash
 STIGMEM_URL=http://localhost:8765

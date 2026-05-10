@@ -1633,8 +1633,14 @@ def _cmd_auth_bootstrap_key(args: argparse.Namespace) -> int:
         expires_at=expires_at,
     )
 
-    # Print key to stdout (capture-able), informational to stderr.
-    print(raw_key)
+    # The raw key is intentionally written to stdout once. This is the only
+    # opportunity to capture it — the persisted form is a SHA-256 hash and
+    # cannot be recovered. Same pattern as `ssh-keygen`, `aws iam create-
+    # access-key`, GitHub PAT minting, etc.: a one-shot credential reveal
+    # is the contract callers expect from a bootstrap-key command.
+    # Stderr text is decorative (won't appear in a captured `KEY=$(stigmem auth
+    # bootstrap-key)` shell substitution); stdout carries only the key.
+    sys.stdout.write(raw_key + "\n")  # codeql[py/clear-text-logging-sensitive-data]
     print(
         f"# stigmem auth bootstrap-key: minted admin key for "
         f"entity={args.entity_uri!r} permissions={permissions!r}",

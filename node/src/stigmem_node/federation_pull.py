@@ -29,7 +29,7 @@ _BASE_BACKOFF_S = 1.0
 
 
 def _jitter(base: float) -> float:
-    return base * (1 + random.uniform(-0.2, 0.2))  # noqa: S311  retry jitter, not cryptographic
+    return base * (1 + random.uniform(-0.2, 0.2))  # noqa: S311  # nosec B311 — retry jitter, not crypto
 
 
 def load_cursor(peer_id: str) -> str | None:

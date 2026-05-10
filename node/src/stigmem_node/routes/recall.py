@@ -138,17 +138,15 @@ def _like_search(
         pat = f"%{w}%"
         params.extend([pat, pat])
     params.extend([scope, tenant_id, min_confidence, now, k])
+    sql = (
+        "SELECT id AS fact_id, confidence AS rank FROM facts"
+        f" WHERE ({clauses})"  # nosec B608 — clauses built from literal "?" placeholders
+        " AND scope = ? AND tenant_id = ? AND confidence >= ?"
+        " AND (valid_until IS NULL OR valid_until > ?)"
+        " ORDER BY confidence DESC LIMIT ?"
+    )
     try:
-        rows = conn.execute(
-            (  # nosec B608
-                "SELECT id AS fact_id, confidence AS rank FROM facts"
-                f" WHERE ({clauses})"
-                " AND scope = ? AND tenant_id = ? AND confidence >= ?"
-                " AND (valid_until IS NULL OR valid_until > ?)"
-                " ORDER BY confidence DESC LIMIT ?"
-            ),
-            params,
-        ).fetchall()
+        rows = conn.execute(sql, params).fetchall()
     except Exception as exc:
         logger.warning("LIKE fallback search failed: %s", exc)
         return {}

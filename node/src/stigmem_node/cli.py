@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
+
+logger = logging.getLogger("stigmem.cli")
 
 
 def _cmd_capability_issue(args: argparse.Namespace) -> int:
     """Issue a capability token via the local node HTTP API."""
     import json
+
     import httpx
 
     payload = {
@@ -56,6 +60,7 @@ def _cmd_capability_issue(args: argparse.Namespace) -> int:
 def _cmd_capability_verify(args: argparse.Namespace) -> int:
     """Verify a capability token via the local node HTTP API."""
     import json
+
     import httpx
 
     token_json_str = args.token_json
@@ -104,6 +109,7 @@ def _cmd_capability_verify(args: argparse.Namespace) -> int:
 def _cmd_capability_revoke(args: argparse.Namespace) -> int:
     """Revoke a capability token via the local node HTTP API."""
     import json
+
     import httpx
 
     payload: dict[str, str] = {}
@@ -740,7 +746,10 @@ def _build_parser() -> argparse.ArgumentParser:
         "--out",
         metavar="PATH",
         default=None,
-        help="output path for the .tar.gz (default: auto-named stigmem-snapshot-<ts>-<hash>.tar.gz)",
+        help=(
+            "output path for the .tar.gz "
+            "(default: auto-named stigmem-snapshot-<ts>-<hash>.tar.gz)"
+        ),
     )
     sc_p.add_argument(
         "--sign-with",
@@ -781,7 +790,10 @@ def _build_parser() -> argparse.ArgumentParser:
         "--force-unverified",
         dest="force_unverified",
         action="store_true",
-        help="restore even if signature or hash verification fails (logged loudly; NOT recommended)",
+        help=(
+            "restore even if signature or hash verification fails "
+            "(logged loudly; NOT recommended)"
+        ),
     )
     sr_p.add_argument(
         "--db",
@@ -848,7 +860,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "generate",
         help="generate a manifest JSON from a directory of markdown instruction files",
     )
-    img_p.add_argument("path", metavar="PATH", help="directory containing markdown instruction files")
+    img_p.add_argument(
+        "path", metavar="PATH", help="directory containing markdown instruction files"
+    )
     img_p.add_argument(
         "--agent-id",
         dest="agent_id",
@@ -883,8 +897,12 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     imig_p.add_argument("path", metavar="PATH", help="markdown file or directory to migrate")
     scope_grp = imig_p.add_mutually_exclusive_group(required=True)
-    scope_grp.add_argument("--role", default=None, metavar="ROLE", help="agent role name (e.g. cto)")
-    scope_grp.add_argument("--skill", default=None, metavar="SKILL", help="skill name (e.g. paperclip)")
+    scope_grp.add_argument(
+        "--role", default=None, metavar="ROLE", help="agent role name (e.g. cto)"
+    )
+    scope_grp.add_argument(
+        "--skill", default=None, metavar="SKILL", help="skill name (e.g. paperclip)"
+    )
     imig_p.add_argument(
         "--agent-id",
         dest="agent_id",
@@ -1045,10 +1063,6 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
     from .instruction_migrate import (
         compute_diff,
         format_preview,
-        load_existing_facts_from_api,
-        load_existing_facts_from_db,
-        load_prev_manifest_names_from_api,
-        load_prev_manifest_names_from_db,
         parse_instruction_chunks,
         publish_manifest,
         scope_prefix_for_role,
@@ -1078,7 +1092,10 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
     # Parse
     chunks = parse_instruction_chunks(path)
     if not chunks:
-        print("No instruction chunks found. Check that the path contains .md files.", file=sys.stderr)
+        print(
+            "No instruction chunks found. Check that the path contains .md files.",
+            file=sys.stderr,
+        )
         return 0
 
     # Load existing state for idempotency checks
@@ -1089,7 +1106,6 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
     prev_names: set[str] = set()
 
     if args.db:
-        from .instruction_migrate import load_existing_facts_from_db as _lef_db, load_prev_manifest_names_from_db as _lpn_db
         # We need DiffEntry stubs for the DB loader — use dict approach
         import sqlite3
         try:
@@ -1104,7 +1120,8 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
                     existing_content[uri] = str(row["value_v"])
             # Previous manifest names
             row = conn.execute(
-                "SELECT body FROM instruction_manifests WHERE agent_id = ? AND superseded_at IS NULL"
+                "SELECT body FROM instruction_manifests"
+                " WHERE agent_id = ? AND superseded_at IS NULL"
                 " ORDER BY created_at DESC LIMIT 1",
                 (agent_id,),
             ).fetchone()
@@ -1116,25 +1133,34 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
             print(f"warning: db query failed: {exc}", file=sys.stderr)
     elif api_key:
         try:
-            import httpx as _httpx  # noqa: F401
             import httpx
+            import httpx as _httpx  # noqa: F401
             headers = {"Authorization": f"Bearer {api_key}"}
             base = node_url.rstrip("/")
             for uri in stub_diff_uris:
                 try:
-                    r = httpx.get(f"{base}/v1/facts", params={"entity": uri, "limit": 1}, headers=headers, timeout=10.0)
+                    r = httpx.get(
+                        f"{base}/v1/facts",
+                        params={"entity": uri, "limit": 1},
+                        headers=headers,
+                        timeout=10.0,
+                    )
                     if r.status_code == 200:
                         facts = r.json().get("facts", [])
                         if facts:
                             existing_content[uri] = str(facts[0]["value"]["v"])
-                except Exception:  # nosec B110 — best-effort pre-flight; node may not be reachable
-                    pass
+                except Exception as exc:  # nosec B110 — best-effort pre-flight
+                    logger.debug("instruction migrate pre-flight fact fetch failed: %s", exc)
             try:
-                r = httpx.get(f"{base}/v1/agents/{agent_id}/instruction-manifest", headers=headers, timeout=10.0)
+                r = httpx.get(
+                    f"{base}/v1/agents/{agent_id}/instruction-manifest",
+                    headers=headers,
+                    timeout=10.0,
+                )
                 if r.status_code == 200:
                     prev_names = {e["name"] for e in r.json().get("entries", [])}
-            except Exception:  # nosec B110 — best-effort pre-flight; node may not be reachable
-                pass
+            except Exception as exc:  # nosec B110 — best-effort pre-flight
+                logger.debug("instruction migrate pre-flight manifest fetch failed: %s", exc)
         except ImportError:
             print("warning: httpx not installed — skipping idempotency checks", file=sys.stderr)
 
@@ -1167,13 +1193,19 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
             return 1
 
     if not api_key:
-        print("error: --api-key or STIGMEM_API_KEY env var required to write facts", file=sys.stderr)
+        print(
+            "error: --api-key or STIGMEM_API_KEY env var required to write facts",
+            file=sys.stderr,
+        )
         return 1
 
     # Write facts
     written, failed = write_facts(diff, node_url, api_key)
     if failed > 0:
-        print(f"\n{failed} fact(s) failed to write. Manifest will NOT be published.", file=sys.stderr)
+        print(
+            f"\n{failed} fact(s) failed to write. Manifest will NOT be published.",
+            file=sys.stderr,
+        )
         return 1
 
     # Publish manifest with a unique version per run (timestamp suffix)
@@ -1190,7 +1222,6 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
 def _cmd_instruction_manifest_generate(args: argparse.Namespace) -> int:
     """Generate an instruction manifest JSON from a directory of markdown files."""
     import json
-    import os
     import re
     from pathlib import Path
 
@@ -1223,7 +1254,9 @@ def _cmd_instruction_manifest_generate(args: argparse.Namespace) -> int:
                 i += 2
             else:
                 if sections[i].strip():
-                    chunks.append(("# " + md_file.stem.replace("-", " ").title(), sections[i].strip()))
+                    chunks.append(
+                        ("# " + md_file.stem.replace("-", " ").title(), sections[i].strip())
+                    )
                 i += 1
 
         if not chunks:
@@ -1236,9 +1269,19 @@ def _cmd_instruction_manifest_generate(args: argparse.Namespace) -> int:
                 slug = md_file.stem
             unit_name = f"{md_file.stem}-{slug}" if md_file.stem not in slug else slug
 
-            keywords = list({w.lower() for w in re.findall(r"\b[a-zA-Z]{4,}\b", heading_text + " " + body[:200])})[:8]
+            keywords = list(
+                {
+                    w.lower()
+                    for w in re.findall(
+                        r"\b[a-zA-Z]{4,}\b", heading_text + " " + body[:200]
+                    )
+                }
+            )[:8]
             token_est = max(1, len(body) // 4)
-            fact_uri = f"instruction:{args.deployment}/agent/{args.agent_id}/{unit_name}/{args.version}"
+            fact_uri = (
+                f"instruction:{args.deployment}/agent/{args.agent_id}"
+                f"/{unit_name}/{args.version}"
+            )
 
             entries.append({
                 "name": unit_name,
@@ -1312,7 +1355,7 @@ def _cmd_audit_discovery(args: argparse.Namespace) -> int:
         return 0
 
     total = len(rows)
-    recall_at_k_num = 0
+    recall_at_k_num: float = 0.0
     hit_at_k_num = 0
     total_used = 0
     total_missed = 0
@@ -1335,7 +1378,9 @@ def _cmd_audit_discovery(args: argparse.Namespace) -> int:
 
     recall_at_k_avg = recall_at_k_num / total if total > 0 else 0.0
     hit_at_k_avg = hit_at_k_num / total if total > 0 else 0.0
-    miss_rate = total_missed / (total_used + total_missed) if (total_used + total_missed) > 0 else 0.0
+    miss_rate = (
+        total_missed / (total_used + total_missed) if (total_used + total_missed) > 0 else 0.0
+    )
 
     report = {
         "agent": agent_filter,
@@ -1376,15 +1421,14 @@ def _cmd_identity_rotate_key(args: argparse.Namespace) -> int:
     from .db import apply_migrations
     from .identity.capability import load_node_private_key
     from .identity.key_rotation import rotate_key
-    from .identity.manifest import manifest_from_dict, verify_manifest
-
-    from .settings import settings as _settings
+    from .identity.manifest import manifest_from_dict
 
     if args.db:
         import stigmem_node.settings as settings_module
+
         from .settings import Settings
         patched = Settings(db_path=args.db)
-        settings_module.settings = patched  # type: ignore[assignment]
+        settings_module.settings = patched
 
     from .settings import settings
 
@@ -1453,6 +1497,7 @@ def _cmd_identity_rotate_key(args: argparse.Namespace) -> int:
 def _cmd_backfill_cids(args: argparse.Namespace) -> int:
     """Compute and persist CIDs for facts that pre-date Phase 13 (spec §25.6.3)."""
     import sqlite3 as _sqlite3
+
     from .cid import compute_cid as _compute_cid
 
     db_path: str | None = getattr(args, "db", None)

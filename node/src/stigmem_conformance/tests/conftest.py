@@ -27,6 +27,8 @@ from typing import NamedTuple
 import pytest
 from fastapi.testclient import TestClient
 
+from stigmem_node.settings import Settings
+
 _MIGRATIONS_DIR = (
     Path(__file__).resolve().parent.parent.parent.parent  # node/src
     .parent  # node
@@ -41,7 +43,7 @@ _ALL_BACKENDS = ["sqlite", "libsql", "postgres"]
 # ---------------------------------------------------------------------------
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:  # type: ignore[name-defined]
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--conformance-backend",
         default=None,
@@ -72,46 +74,45 @@ _PATCHABLE_MODULES = [
 ]
 
 
-def _get_extra_modules() -> list:
-    mods = []
+def _get_extra_modules() -> list[object]:
+    import contextlib
+    mods: list[object] = []
     for name in _PATCHABLE_MODULES:
-        try:
+        with contextlib.suppress(ImportError):
             mods.append(importlib.import_module(name))
-        except ImportError:
-            pass
     return mods
 
 
-def _patch_settings(test_settings: object) -> list:
+def _patch_settings(test_settings: Settings) -> list[object]:
     import stigmem_node.auth as auth_mod
     import stigmem_node.db as db_mod
     import stigmem_node.routes.wellknown as wk_mod
     import stigmem_node.settings as settings_module
 
     extra = _get_extra_modules()
-    settings_module.settings = test_settings  # type: ignore[assignment]
-    auth_mod.settings = test_settings  # type: ignore[assignment]
-    db_mod.settings = test_settings  # type: ignore[assignment]
-    wk_mod.settings = test_settings  # type: ignore[assignment]
+    settings_module.settings = test_settings
+    auth_mod.settings = test_settings
+    db_mod.settings = test_settings
+    wk_mod.settings = test_settings
     for mod in extra:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", test_settings)
+            mod.settings = test_settings
     return extra
 
 
-def _restore_settings(original: object, extra: list) -> None:
+def _restore_settings(original: Settings, extra: list[object]) -> None:
     import stigmem_node.auth as auth_mod
     import stigmem_node.db as db_mod
     import stigmem_node.routes.wellknown as wk_mod
     import stigmem_node.settings as settings_module
 
-    settings_module.settings = original  # type: ignore[assignment]
-    auth_mod.settings = original  # type: ignore[assignment]
-    db_mod.settings = original  # type: ignore[assignment]
-    wk_mod.settings = original  # type: ignore[assignment]
+    settings_module.settings = original
+    auth_mod.settings = original
+    db_mod.settings = original
+    wk_mod.settings = original
     for mod in extra:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", original)
+            mod.settings = original
 
 
 # ---------------------------------------------------------------------------
@@ -123,12 +124,12 @@ def _backend_available(backend_name: str) -> tuple[bool, str]:
     """Return (available, skip_reason)."""
     if backend_name == "libsql":
         try:
-            import libsql_experimental  # type: ignore[import]  # noqa: F401
+            import libsql_experimental  # noqa: F401
         except ImportError:
             return False, "libsql-experimental not installed (pip install 'stigmem-node[libsql]')"
     elif backend_name == "postgres":
         try:
-            import psycopg2  # type: ignore[import]  # noqa: F401
+            import psycopg2  # noqa: F401
         except ImportError:
             return False, "psycopg2 not installed (pip install 'stigmem-node[postgres]')"
         if not os.environ.get("STIGMEM_TEST_PG_DSN"):
@@ -152,10 +153,9 @@ def _build_client(
     pg_dsn: str = "",
     pg_schema: str = "",
 ) -> Generator[ConformanceClient, None, None]:
-    from stigmem_node.main import create_app
-    from stigmem_node.settings import Settings
-    from stigmem_node.storage import make_backend
     import stigmem_node.settings as settings_module
+    from stigmem_node.main import create_app
+    from stigmem_node.storage import make_backend
 
     original = settings_module.settings
 
@@ -187,18 +187,21 @@ def _build_client(
         yield ConformanceClient(client=c, backend=backend_name)
     _restore_settings(original, extra)
 
-    # Drop Postgres schema to clean up
+    # Drop Postgres schema to clean up; best-effort, CI job isolation handles the rest.
     if backend_name == "postgres":
+        import logging as _log
         try:
-            import psycopg2  # type: ignore[import]
+            import psycopg2
 
             conn = psycopg2.connect(pg_dsn)
             conn.autocommit = True
             with conn.cursor() as cur:
                 cur.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")  # noqa: S608
             conn.close()
-        except Exception:
-            pass  # best-effort cleanup; CI job isolation handles the rest
+        except Exception as exc:
+            _log.getLogger("stigmem.conformance").debug(
+                "postgres schema drop failed (best-effort): %s", exc
+            )
 
 
 @pytest.fixture(params=_ALL_BACKENDS)

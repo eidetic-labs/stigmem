@@ -12,6 +12,8 @@ Justified skip:
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from .conftest import ConformanceClient
@@ -24,7 +26,7 @@ _EMBED_SKIP_REASON = (
 _E = "stigmem://conformance/embed/entity"
 
 
-def _fact(v: str = "embedding test content") -> dict:
+def _fact(v: str = "embedding test content") -> dict[str, Any]:
     return {
         "entity": _E,
         "relation": "memory:note",

@@ -15,7 +15,6 @@ Public API::
 
 from __future__ import annotations
 
-import json
 import logging
 import struct
 from datetime import UTC, datetime
@@ -89,7 +88,7 @@ def check_or_register_model(conn: Any, model_id: str, dimension: int) -> None:
 # Encode / decode vectors for sqlite-vec BLOB storage
 # ---------------------------------------------------------------------------
 
-def _encode_vector(vec: "Vector") -> bytes:
+def _encode_vector(vec: Vector) -> bytes:
     """Encode a float list as a little-endian IEEE 754 BLOB for sqlite-vec."""
     return struct.pack(f"<{len(vec)}f", *vec)
 
@@ -98,7 +97,7 @@ def _encode_vector(vec: "Vector") -> bytes:
 # Write-path: store a single embedding
 # ---------------------------------------------------------------------------
 
-def store_embedding(conn: Any, fact_id: str, vec: "Vector") -> None:
+def store_embedding(conn: Any, fact_id: str, vec: Vector) -> None:
     """Upsert a vector into ``vec_facts`` and mark the fact as embedded."""
     blob = _encode_vector(vec)
     conn.execute(
@@ -118,7 +117,7 @@ def embed_and_store_fact(
     value_type: str,
     value_v: str,
     conn: Any,
-    model: "EmbeddingModel",
+    model: EmbeddingModel,
 ) -> None:
     """Embed one fact and persist the vector.  Caller owns the transaction."""
     from .embedding.base import compose_triple_text
@@ -134,7 +133,7 @@ def embed_and_store_fact(
 
 def backfill_missing_embeddings(
     conn: Any,
-    model: "EmbeddingModel",
+    model: EmbeddingModel,
     limit: int = 500,
 ) -> int:
     """Embed facts with ``embedding_missing = 1``.
@@ -172,12 +171,12 @@ def backfill_missing_embeddings(
 # ---------------------------------------------------------------------------
 
 def vector_search(
-    query_embedding: "Vector",
+    query_embedding: Vector,
     k: int = 10,
     scope_filter: str | None = None,
     tenant_id: str = "default",
     conn: Any = None,
-) -> list[tuple["FactRecord", float]]:
+) -> list[tuple[FactRecord, float]]:
     """Return the top-k facts closest to *query_embedding* by cosine similarity.
 
     *query_embedding* MUST be L2-normalised (stored vectors are also normalised,
@@ -198,11 +197,11 @@ def vector_search(
 
     blob = _encode_vector(query_embedding)
 
-    def _run(c: Any) -> list[tuple["FactRecord", float]]:
+    def _run(c: Any) -> list[tuple[FactRecord, float]]:
         # scope_clause is a literal SQL fragment ("AND f.scope = ?" or ""),
         # never user-supplied text; the actual scope value flows through scope_params.
         scope_clause = "AND f.scope = ?" if scope_filter else ""
-        scope_params: tuple = (scope_filter,) if scope_filter else ()
+        scope_params: tuple[Any, ...] = (scope_filter,) if scope_filter else ()
 
         sql = f"""
             SELECT f.*, v.distance
@@ -215,10 +214,10 @@ def vector_search(
               {scope_clause}
             ORDER BY v.distance
         """  # nosec B608 — scope_clause is a literal fragment; all user values in params
-        params: tuple = (blob, k, tenant_id) + scope_params
+        params: tuple[Any, ...] = (blob, k, tenant_id) + scope_params
 
         rows = c.execute(sql, params).fetchall()
-        results: list[tuple["FactRecord", float]] = []
+        results: list[tuple[FactRecord, float]] = []
         for row in rows:
             distance = float(row["distance"])
             similarity = max(0.0, 1.0 - distance)

@@ -8,6 +8,8 @@ sets ``status=resolved`` on the conflict via the API.
 
 from __future__ import annotations
 
+from typing import Any
+
 from .conftest import ConformanceClient
 
 _ALICE = "stigmem://conformance/contradiction/alice"
@@ -15,7 +17,7 @@ _SRC_A = "stigmem://conformance/source/a"
 _SRC_B = "stigmem://conformance/source/b"
 
 
-def _fact(entity: str, v: str, source: str, conf: float = 0.9) -> dict:
+def _fact(entity: str, v: str, source: str, conf: float = 0.9) -> dict[str, Any]:
     return {
         "entity": entity,
         "relation": "test:role",
@@ -86,7 +88,9 @@ class TestContradictionResolution:
             return
         # Each item has "conflict_id" key (not "id") per spec §5.10
         item0 = items[0]
-        conflict_id = item0.get("conflict_id") or item0.get("id") if isinstance(item0, dict) else item0
+        conflict_id = (
+            item0.get("conflict_id") or item0.get("id") if isinstance(item0, dict) else item0
+        )
         # Resolution payload: winning_fact_id selects which fact wins (spec §5.10)
         r = c.post(f"/v1/conflicts/{conflict_id}/resolve", json={"winning_fact_id": fact_a_id})
         assert r.status_code in (200, 204, 404)  # 404 if resolution not yet wired

@@ -77,7 +77,7 @@ def create_peer_token(
         "nonce": str(uuid.uuid4()),
         "scopes": scopes,
     }
-    return jwt.encode(payload, private_key, algorithm="EdDSA")  # type: ignore[arg-type]
+    return jwt.encode(payload, private_key, algorithm="EdDSA")
 
 
 class TokenError(Exception):
@@ -107,10 +107,10 @@ def verify_peer_token(
         public_key = _pubkey_obj_from_b64(peer_pubkey_b64)
         payload: dict[str, Any] = jwt.decode(
             raw_token,
-            public_key,  # type: ignore[arg-type]
+            public_key,
             algorithms=["EdDSA"],
             options={
-                # exp/iat are epoch_ms per spec §3.5 — disable library checks, validate manually below
+                # exp/iat are epoch_ms per spec §3.5 — disable library checks, validate manually
                 "verify_exp": False,
                 "verify_nbf": False,
                 "verify_iat": False,
@@ -151,8 +151,8 @@ def verify_peer_token(
                 "DELETE FROM nonce_cache WHERE expires_at < ?",
                 (datetime.now(UTC).isoformat(),),
             )
-    except sqlite3.IntegrityError:
-        raise TokenError("nonce_already_seen")
+    except sqlite3.IntegrityError as exc:
+        raise TokenError("nonce_already_seen") from exc
 
     return payload
 

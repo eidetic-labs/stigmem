@@ -28,8 +28,6 @@ evaluate_auto_rules(source_uri, scope) returns:
 from __future__ import annotations
 
 import logging
-from functools import lru_cache
-from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("stigmem.trust_rules")
@@ -37,7 +35,7 @@ logger = logging.getLogger("stigmem.trust_rules")
 
 def _load_yaml_rules(path: str) -> dict[str, list[dict[str, Any]]]:
     try:
-        import yaml  # type: ignore[import]
+        import yaml
     except ImportError:
         logger.warning("PyYAML not installed — trust_rules_file ignored")
         return {}
@@ -61,9 +59,7 @@ def _rule_matches(rule: dict[str, Any], source_uri: str, scope: str) -> bool:
     if rule.get("org_uri") != source_uri:
         return False
     rule_scope = rule.get("scope")
-    if rule_scope is not None and rule_scope != scope:
-        return False
-    return True
+    return not (rule_scope is not None and rule_scope != scope)
 
 
 def evaluate_auto_rules(source_uri: str, scope: str) -> float | None:

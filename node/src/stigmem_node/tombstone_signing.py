@@ -13,13 +13,12 @@ Public surface:
 from __future__ import annotations
 
 import base64
-import hashlib
 import logging
 from typing import Any
 
 import canonicaljson
 from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 from .models import TombstoneRecord, TombstoneRevocationRecord
 
@@ -32,7 +31,7 @@ def _pad(b64url: str) -> str:
 
 def _pubkey_from_b64(b64: str) -> Ed25519PublicKey:
     raw = base64.urlsafe_b64decode(_pad(b64))
-    return Ed25519PublicKey.from_public_bytes(raw)  # type: ignore[return-value]
+    return Ed25519PublicKey.from_public_bytes(raw)
 
 
 def _signing_body(record: TombstoneRecord) -> bytes:

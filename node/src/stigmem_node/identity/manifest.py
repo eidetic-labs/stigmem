@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import base64
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import canonicaljson
@@ -91,7 +91,7 @@ def _pad(s: str) -> str:
 
 def _pubkey_from_b64(b64: str) -> Ed25519PublicKey:
     raw = base64.urlsafe_b64decode(_pad(b64))
-    return Ed25519PublicKey.from_public_bytes(raw)  # type: ignore[return-value]
+    return Ed25519PublicKey.from_public_bytes(raw)
 
 
 def _rotation_event_to_dict(evt: RotationEvent) -> dict[str, Any]:

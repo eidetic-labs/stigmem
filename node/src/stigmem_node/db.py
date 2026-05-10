@@ -12,12 +12,12 @@ and database path without touching the environment.
 from __future__ import annotations
 
 import uuid
+from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
-from .settings import settings
+from .settings import settings as settings
 from .storage import make_backend
 
 # Resolved once at import time; exposed for test fixtures that need the path.

@@ -11,8 +11,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import ssl
-from contextlib import suppress
 from pathlib import Path
+from typing import Any
 
 from .settings import settings
 
@@ -88,7 +88,7 @@ def reload_tls_cert(
     logger.info("TLS certificate reloaded from %s", cert)
 
 
-def check_peer_san(peer_cert: dict, expected_entity_uri: str) -> bool:
+def check_peer_san(peer_cert: dict[str, Any], expected_entity_uri: str) -> bool:
     """Return True iff the peer's certificate contains entity_uri as a URI SAN.
 
     peer_cert is the dict returned by ssl.SSLSocket.getpeercert().

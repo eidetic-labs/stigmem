@@ -10,7 +10,7 @@ All assertions use the HTTP API only.
 
 from __future__ import annotations
 
-import pytest
+from typing import Any
 
 from .conftest import ConformanceClient
 
@@ -18,7 +18,7 @@ _ALICE = "stigmem://conformance/decay/alice"
 _BOB   = "stigmem://conformance/decay/bob"
 
 
-def _fact(entity: str, v: str, confidence: float = 0.9, scope: str = "local") -> dict:
+def _fact(entity: str, v: str, confidence: float = 0.9, scope: str = "local") -> dict[str, Any]:
     return {
         "entity": entity,
         "relation": "test:decay",

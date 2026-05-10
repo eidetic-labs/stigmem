@@ -21,7 +21,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .db import db
-from .settings import settings
+from .settings import settings as settings
 
 
 def _hash_key(raw: str) -> str:
@@ -137,7 +137,8 @@ def create_api_key(
     with db() as conn:
         conn.execute(
             """INSERT INTO api_keys
-               (id, key_hash, entity_uri, permissions, description, created_at, expires_at, oidc_sub, tenant_id)
+               (id, key_hash, entity_uri, permissions, description,
+                created_at, expires_at, oidc_sub, tenant_id)
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
                 key_id,

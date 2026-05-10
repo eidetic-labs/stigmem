@@ -9,7 +9,7 @@ import ssl
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 
 import uvicorn
 from fastapi import Depends, FastAPI, Request, Response
@@ -165,7 +165,7 @@ def create_app() -> FastAPI:
         if resp is None:
             from fastapi.responses import PlainTextResponse
             return PlainTextResponse("# prometheus_client not installed\n", status_code=200)
-        return cast(Response, resp)
+        return resp
 
     @app.get("/v1/me", tags=["auth"])
     def whoami(identity: Annotated[Identity, Depends(resolve_identity)]) -> dict[str, Any]:

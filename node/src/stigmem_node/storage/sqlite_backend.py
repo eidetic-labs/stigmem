@@ -16,10 +16,11 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 from .base import StorageBackend
 
@@ -57,7 +58,7 @@ class SQLiteBackend(StorageBackend):
         """Open and return a raw (un-transacted) connection, WAL + FK enabled."""
         if self._encryption_key is not None:
             try:
-                import sqlcipher3 as _sc  # type: ignore[import]
+                import sqlcipher3 as _sc
             except ImportError as exc:
                 raise RuntimeError(
                     "sqlcipher3 is required for SQLite encryption-at-rest. "
@@ -79,7 +80,7 @@ class SQLiteBackend(StorageBackend):
     def _load_sqlite_vec(self, conn: Any) -> None:
         """Load the sqlite-vec extension and ensure vec_facts virtual table exists."""
         try:
-            import sqlite_vec  # type: ignore[import]
+            import sqlite_vec
         except ImportError as exc:
             raise RuntimeError(
                 "sqlite-vec is required when embed_enabled=true. "
@@ -143,7 +144,7 @@ class SQLiteBackend(StorageBackend):
         """
         if self._encryption_key is not None:
             try:
-                import sqlcipher3 as _sc  # type: ignore[import]
+                import sqlcipher3 as _sc
             except ImportError as exc:
                 raise RuntimeError(
                     "sqlcipher3 is required to snapshot an encrypted SQLite database."

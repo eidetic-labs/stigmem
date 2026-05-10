@@ -7,6 +7,8 @@ and serves accurate traversal results at varying depths and scopes.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from .conftest import ConformanceClient
@@ -16,7 +18,9 @@ _B = "stigmem://conformance/graph/bob"
 _C = "stigmem://conformance/graph/carol"
 
 
-def _ref(entity: str, rel: str, target: str, scope: str = "local", conf: float = 1.0) -> dict:
+def _ref(
+    entity: str, rel: str, target: str, scope: str = "local", conf: float = 1.0
+) -> dict[str, Any]:
     return {
         "entity": entity,
         "relation": rel,
@@ -46,7 +50,9 @@ class TestGraphNeighbors:
         entities = [n["entity"] for n in body["neighbors"]]
         assert _B in entities
 
-    def test_hops_field_is_1_for_direct_neighbor(self, conformance_client: ConformanceClient) -> None:
+    def test_hops_field_is_1_for_direct_neighbor(
+        self, conformance_client: ConformanceClient
+    ) -> None:
         c = conformance_client.client
         c.post("/v1/facts", json=_ref(_A, "memory:knows", _B))
         body = c.get(f"/v1/graph/neighbors?entity={_A}&depth=1&scope=local").json()

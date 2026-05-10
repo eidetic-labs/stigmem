@@ -26,13 +26,21 @@ Gauges:
 
 from __future__ import annotations
 
+import contextlib
+import logging
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger("stigmem.metrics")
+
+if TYPE_CHECKING:
+    from starlette.responses import Response
 
 try:
     import prometheus_client as _prom
-    from prometheus_client import Counter, Gauge, Histogram, REGISTRY  # noqa: F401
+    from prometheus_client import REGISTRY, Counter, Gauge, Histogram  # noqa: F401
 
     _ENABLED = True
 
@@ -114,7 +122,7 @@ except ImportError:
     _ENABLED = False
 
     class _Noop:
-        def labels(self, **_: Any) -> "_Noop":
+        def labels(self, **_: Any) -> _Noop:
             return self
 
         def inc(self, amount: float = 1) -> None:
@@ -135,30 +143,30 @@ except ImportError:
     _noop = _Noop()
 
     # Counters
-    FACT_WRITE = _noop        # type: ignore[assignment]
-    FACT_READ = _noop         # type: ignore[assignment]
-    QUOTA_BREACH = _noop      # type: ignore[assignment]
-    AUDIT_EVENT = _noop       # type: ignore[assignment]
-    CONTRADICTION = _noop     # type: ignore[assignment]
-    FEDERATION_INGRESS = _noop  # type: ignore[assignment]
-    FEDERATION_EGRESS = _noop   # type: ignore[assignment]
-    SUBSCRIPTION_EVENT = _noop  # type: ignore[assignment]
+    FACT_WRITE = _noop
+    FACT_READ = _noop
+    QUOTA_BREACH = _noop
+    AUDIT_EVENT = _noop
+    CONTRADICTION = _noop
+    FEDERATION_INGRESS = _noop
+    FEDERATION_EGRESS = _noop
+    SUBSCRIPTION_EVENT = _noop
 
     # Histograms
-    REQUEST_LATENCY = _noop           # type: ignore[assignment]
-    RECALL_RANKER_DURATION = _noop    # type: ignore[assignment]
-    CAPABILITY_VERIFY_DURATION = _noop  # type: ignore[assignment]
+    REQUEST_LATENCY = _noop
+    RECALL_RANKER_DURATION = _noop
+    CAPABILITY_VERIFY_DURATION = _noop
 
     # Gauges
-    SUBSCRIPTION_CONNECTIONS = _noop  # type: ignore[assignment]
-    REPLICATION_LAG = _noop           # type: ignore[assignment]
+    SUBSCRIPTION_CONNECTIONS = _noop
+    REPLICATION_LAG = _noop
 
 
 def metrics_enabled() -> bool:
     return _ENABLED
 
 
-def make_metrics_response() -> Any:
+def make_metrics_response() -> Response | None:
     """Return a Starlette ``Response`` with the Prometheus text exposition."""
     if not _ENABLED:
         return None
@@ -177,7 +185,5 @@ def observe_duration(histogram: Any, labels: dict[str, str]) -> Generator[None, 
         yield
     finally:
         elapsed = time.perf_counter() - start
-        try:
+        with contextlib.suppress(Exception):  # nosec B110 — metrics best-effort
             histogram.labels(**labels).observe(elapsed)
-        except Exception:  # noqa: BLE001  # nosec B110
-            pass

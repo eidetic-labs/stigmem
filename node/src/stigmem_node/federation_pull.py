@@ -29,7 +29,7 @@ _BASE_BACKOFF_S = 1.0
 
 
 def _jitter(base: float) -> float:
-    return base * (1 + random.uniform(-0.2, 0.2))  # nosec B311 — retry jitter, not cryptographic
+    return base * (1 + random.uniform(-0.2, 0.2))  # noqa: S311  # nosec B311 — retry jitter, not crypto
 
 
 def load_cursor(peer_id: str) -> str | None:
@@ -93,13 +93,18 @@ async def pull_from_peer_once(
         # §22.1.2.4 — validate server cert URI SAN before consuming any data.
         if settings.mtls_enabled:
             ssl_obj = resp.extensions.get("ssl_object")
-            peer_cert: dict = ssl_obj.getpeercert() if ssl_obj is not None else {}
+            peer_cert: dict[str, Any] = ssl_obj.getpeercert() if ssl_obj is not None else {}
             if not check_peer_san(peer_cert, peer["node_id"]):
                 logger.warning(
-                    "Client-side SAN mismatch from peer %s — cert URI SAN does not match node_id; discarding response",
+                    "Client-side SAN mismatch from peer %s — cert URI SAN does not "
+                    "match node_id; discarding response",
                     peer["node_id"],
                 )
-                write_audit_log(peer["node_id"], "san_mismatch", {"peer_node_id": peer["node_id"], "direction": "pull"})
+                write_audit_log(
+                    peer["node_id"],
+                    "san_mismatch",
+                    {"peer_node_id": peer["node_id"], "direction": "pull"},
+                )
                 return cursor  # fail-closed: no data ingested from identity-mismatched peer
 
         data = resp.json()
@@ -130,8 +135,8 @@ async def pull_from_peer_once(
                     cursor_ts = cursor_ts.replace(tzinfo=UTC)
                 lag_s = max(0.0, (datetime.now(UTC) - cursor_ts).total_seconds())
                 REPLICATION_LAG.labels(peer_id=peer["node_id"]).set(lag_s)
-        except Exception:  # noqa: BLE001  # nosec B110
-            pass
+        except Exception as exc:  # noqa: BLE001  # nosec B110 — best-effort lag metric
+            logger.debug("replication lag metric update failed: %s", exc)
 
         return new_cursor
 
@@ -198,8 +203,8 @@ async def pull_tombstones_from_peer_once(
         )
 
     # Ingest tombstones and revocations
-    from .tombstones import apply_inbound_tombstone, apply_inbound_revocation
     from .models import TombstoneRecord, TombstoneRevocationRecord
+    from .tombstones import apply_inbound_revocation, apply_inbound_tombstone
     for t in tombstones:
         try:
             record = TombstoneRecord(**t)
@@ -220,7 +225,8 @@ async def pull_tombstones_from_peer_once(
 def _load_tombstone_cursor(peer_id: str) -> str | None:
     with db() as conn:
         row = conn.execute(
-            "SELECT cursor FROM replication_cursors WHERE peer_id = ? AND direction = 'tombstone_inbound'",
+            "SELECT cursor FROM replication_cursors"
+            " WHERE peer_id = ? AND direction = 'tombstone_inbound'",
             (peer_id,),
         ).fetchone()
     return row["cursor"] if row else None

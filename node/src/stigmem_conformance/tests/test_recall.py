@@ -7,14 +7,19 @@ scoring algorithm.
 
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
+from typing import Any
 
 from .conftest import ConformanceClient
 
 _E = "stigmem://conformance/recall/entity"
 
 
-def _fact(entity: str = _E, relation: str = "memory:knows", v: str = "test", scope: str = "local") -> dict:
+def _fact(
+    entity: str = _E,
+    relation: str = "memory:knows",
+    v: str = "test",
+    scope: str = "local",
+) -> dict[str, Any]:
     return {
         "entity": entity,
         "relation": relation,
@@ -25,8 +30,19 @@ def _fact(entity: str = _E, relation: str = "memory:knows", v: str = "test", sco
     }
 
 
-def _recall(query: str = "test", scope: str = "local", budget: int = 4000, **kw) -> dict:
-    body = {"query": query, "scope": scope, "token_budget": budget, "depth": 1, "include_neighbors": False}
+def _recall(
+    query: str = "test",
+    scope: str = "local",
+    budget: int = 4000,
+    **kw: Any,
+) -> dict[str, Any]:
+    body: dict[str, Any] = {
+        "query": query,
+        "scope": scope,
+        "token_budget": budget,
+        "depth": 1,
+        "include_neighbors": False,
+    }
     body.update(kw)
     return body
 
@@ -52,7 +68,9 @@ class TestRecallBasics:
         assert len(body["query_hash"]) == 64
 
     def test_empty_db_returns_empty_facts(self, conformance_client: ConformanceClient) -> None:
-        body = conformance_client.client.post("/v1/recall", json=_recall(query="nothing-here-xyz")).json()
+        body = conformance_client.client.post(
+            "/v1/recall", json=_recall(query="nothing-here-xyz")
+        ).json()
         assert body["facts"] == []
         assert body["total_scored"] == 0
         assert body["truncated"] is False
@@ -84,7 +102,9 @@ class TestRecallResults:
         for f in body["facts"]:
             assert f["fact"].get("scope") != "company"
 
-    def test_token_budget_zero_returns_truncated(self, conformance_client: ConformanceClient) -> None:
+    def test_token_budget_zero_returns_truncated(
+        self, conformance_client: ConformanceClient
+    ) -> None:
         c = conformance_client.client
         c.post("/v1/facts", json=_fact(v="budget test content"))
         body = c.post("/v1/recall", json=_recall(query="budget", budget=1)).json()
@@ -96,5 +116,7 @@ class TestRecallResults:
         assert r.status_code in (400, 422)
 
     def test_query_required(self, conformance_client: ConformanceClient) -> None:
-        r = conformance_client.client.post("/v1/recall", json={"scope": "local", "token_budget": 1000})
+        r = conformance_client.client.post(
+            "/v1/recall", json={"scope": "local", "token_budget": 1000}
+        )
         assert r.status_code in (400, 422)

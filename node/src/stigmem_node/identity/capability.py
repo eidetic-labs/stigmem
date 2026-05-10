@@ -21,8 +21,9 @@ import base64
 import hmac
 import json
 import logging
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Callable
+from typing import Any
 
 import canonicaljson
 from cryptography.exceptions import InvalidSignature
@@ -60,16 +61,16 @@ def _pad(s: str) -> str:
 
 def _pubkey_from_b64(b64: str) -> Ed25519PublicKey:
     raw = base64.urlsafe_b64decode(_pad(b64))
-    return Ed25519PublicKey.from_public_bytes(raw)  # type: ignore[return-value]
+    return Ed25519PublicKey.from_public_bytes(raw)
 
 
-def _token_signing_body(token_body: dict) -> bytes:
+def _token_signing_body(token_body: dict[str, Any]) -> bytes:
     """JCS-canonical bytes over all token_body fields except 'signature'."""
     body = {k: v for k, v in token_body.items() if k != "signature"}
     return canonicaljson.encode_canonical_json(body)
 
 
-def _revocation_signing_body(event: dict) -> bytes:
+def _revocation_signing_body(event: dict[str, Any]) -> bytes:
     """JCS-canonical bytes over all event fields except 'signature'."""
     body = {k: v for k, v in event.items() if k != "signature"}
     return canonicaljson.encode_canonical_json(body)
@@ -112,7 +113,7 @@ def load_node_private_key() -> Ed25519PrivateKey | None:
 # ---------------------------------------------------------------------------
 
 
-def sign_token(token_body: dict) -> str:
+def sign_token(token_body: dict[str, Any]) -> str:
     """Sign *token_body* with the node private key. Returns base64url signature.
 
     Raises RuntimeError if STIGMEM_NODE_PRIVATE_KEY is not configured.
@@ -126,7 +127,7 @@ def sign_token(token_body: dict) -> str:
     return base64.urlsafe_b64encode(sig_bytes).decode().rstrip("=")
 
 
-def sign_revocation_event(event: dict) -> str:
+def sign_revocation_event(event: dict[str, Any]) -> str:
     """Sign a revocation event with the node private key. Returns base64url signature.
 
     Raises RuntimeError if STIGMEM_NODE_PRIVATE_KEY is not configured.
@@ -145,7 +146,9 @@ def sign_revocation_event(event: dict) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _verify_token_signature(token: dict, manifest: OrgManifest, sig_b64: str) -> None:
+def _verify_token_signature(
+    token: dict[str, Any], manifest: OrgManifest, sig_b64: str
+) -> None:
     """Verify token signature against the current key or a dual-trust window key.
 
     Tries manifest.public_key first.  On failure, walks manifest.rotation_events

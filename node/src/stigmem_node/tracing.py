@@ -16,17 +16,20 @@ Usage from routes::
 from __future__ import annotations
 
 import contextlib
-import time
-from typing import Any, Generator
+import logging
+from collections.abc import Generator
+from typing import Any
+
+logger = logging.getLogger("stigmem.tracing")
 
 _OTEL_ENABLED = False
 _tracer: Any = None
 
 
 try:
-    from opentelemetry import trace as _otel_trace
-    from opentelemetry.sdk.resources import Resource
-    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry import trace as _otel_trace  # noqa: F401  (probe for OTel availability)
+    from opentelemetry.sdk.resources import Resource  # noqa: F401
+    from opentelemetry.sdk.trace import TracerProvider  # noqa: F401
     _OTEL_SDK_AVAILABLE = True
 except ImportError:
     _OTEL_SDK_AVAILABLE = False
@@ -36,7 +39,6 @@ def init_tracing(service_name: str, otlp_endpoint: str) -> None:
     """Initialize the OTel SDK.  Called once at app startup when otel_enabled=True."""
     global _OTEL_ENABLED, _tracer
     if not _OTEL_SDK_AVAILABLE:
-        import logging
         logging.getLogger("stigmem").warning(
             "STIGMEM_OTEL_ENABLED=true but opentelemetry-sdk is not installed; "
             "install stigmem-node[observability] to enable tracing."
@@ -63,7 +65,7 @@ def init_tracing(service_name: str, otlp_endpoint: str) -> None:
 
         if not _exporter_added:
             try:
-                from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (  # type: ignore[import-not-found]
+                from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
                     OTLPSpanExporter as GrpcOTLPSpanExporter,
                 )
                 grpc_exporter = GrpcOTLPSpanExporter(endpoint=otlp_endpoint)
@@ -112,8 +114,8 @@ def start_span(name: str, **initial_attributes: Any) -> Generator[_NoopSpan | An
                 from opentelemetry.trace import StatusCode
                 span.record_exception(exc)
                 span.set_status(StatusCode.ERROR, str(exc))
-            except Exception:  # noqa: BLE001  # nosec B110
-                pass
+            except Exception as inner_exc:  # noqa: BLE001  # nosec B110 — best-effort
+                logger.debug("OTel span error recording failed: %s", inner_exc)
             raise
 
 

@@ -68,7 +68,8 @@ def fan_out(
             event_id = str(uuid.uuid4())
             conn.execute(
                 """INSERT INTO subscription_events
-                   (id, subscription_id, event_type, entity_uri, fact_id, payload, created_at, delivery_status)
+                   (id, subscription_id, event_type, entity_uri, fact_id,
+                    payload, created_at, delivery_status)
                    VALUES (?,?,?,?,?,?,?,'pending')""",
                 (event_id, sub["id"], "fact_asserted", entity, fact_id, fact_payload_json, now),
             )
@@ -115,7 +116,7 @@ def deliver_pending() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _deliver_one(event: Any, payload: dict) -> bool:
+def _deliver_one(event: Any, payload: dict[str, Any]) -> bool:
     on_change = event["on_change"]
     if on_change == "webhook":
         return _deliver_webhook(event, payload)
@@ -148,7 +149,7 @@ def _subscriber_has_active_key(entity_uri: str, tenant_id: str) -> bool:
     return row is not None
 
 
-def _sanitize_payload(event: Any, payload: dict) -> dict | None:
+def _sanitize_payload(event: Any, payload: dict[str, Any]) -> dict[str, Any] | None:
     """Apply §17 garden ACL and §19 sanitizer.  Returns None to suppress delivery."""
     from .models import FactRecord, FactValue
 
@@ -201,7 +202,7 @@ def _sanitize_payload(event: Any, payload: dict) -> dict | None:
         return payload
 
 
-def _deliver_webhook(event: Any, payload: dict) -> bool:
+def _deliver_webhook(event: Any, payload: dict[str, Any]) -> bool:
     sanitized = _sanitize_payload(event, payload)
     if sanitized is None:
         # ACL/sanitizer blocked — mark delivered, don't retry
@@ -243,7 +244,7 @@ def _deliver_webhook(event: Any, payload: dict) -> bool:
         return False
 
 
-def _deliver_wake(event: Any, payload: dict) -> bool:
+def _deliver_wake(event: Any, payload: dict[str, Any]) -> bool:
     sanitized = _sanitize_payload(event, payload)
     if sanitized is None:
         return True  # ACL blocked; mark delivered
@@ -305,7 +306,8 @@ def _record_result(event: Any, success: bool) -> None:
             "SELECT consecutive_failures FROM subscriptions WHERE id=?",
             (event["subscription_id"],),
         ).fetchone()
-        if sub and sub["consecutive_failures"] >= _settings_pkg.settings.subscription_circuit_threshold:
+        threshold = _settings_pkg.settings.subscription_circuit_threshold
+        if sub and sub["consecutive_failures"] >= threshold:
             conn.execute(
                 "UPDATE subscriptions SET circuit_open=1 WHERE id=?",
                 (event["subscription_id"],),
@@ -322,7 +324,9 @@ def _mark_delivered(event_id: str, subscription_id: str) -> None:
     with db() as conn:
         conn.execute(
             """UPDATE subscription_events
-               SET delivered_at=?, delivery_status='delivered', delivery_attempts=delivery_attempts+1
+               SET delivered_at=?,
+                   delivery_status='delivered',
+                   delivery_attempts=delivery_attempts+1
                WHERE id=?""",
             (now, event_id),
         )

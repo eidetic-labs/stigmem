@@ -19,10 +19,11 @@ Install the optional dependency before use::
 from __future__ import annotations
 
 import re
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 from .base import StorageBackend
 
@@ -67,10 +68,10 @@ class _LibSQLRow:
 
     __slots__ = ("_data", "_values")
 
-    def __init__(self, cursor: Any, row: tuple) -> None:
+    def __init__(self, cursor: Any, row: tuple[Any, ...]) -> None:
         cols = [d[0] for d in cursor.description]
-        self._values: tuple = row
-        self._data: dict[str, Any] = dict(zip(cols, row))
+        self._values: tuple[Any, ...] = row
+        self._data: dict[str, Any] = dict(zip(cols, row, strict=True))
 
     def __getitem__(self, key: str | int) -> Any:
         if isinstance(key, int):
@@ -109,16 +110,17 @@ class _LibSQLCursor:
 
     @property
     def rowcount(self) -> int:
-        return self._cur.rowcount
+        count: int = self._cur.rowcount
+        return count
 
     def fetchone(self) -> Any:
         row = self._cur.fetchone()
         return None if row is None else _LibSQLRow(self._cur, row)
 
-    def fetchall(self) -> list:
+    def fetchall(self) -> list[_LibSQLRow]:
         return [_LibSQLRow(self._cur, r) for r in self._cur.fetchall()]
 
-    def fetchmany(self, size: int | None = None) -> list:
+    def fetchmany(self, size: int | None = None) -> list[_LibSQLRow]:
         rows = self._cur.fetchmany(size) if size is not None else self._cur.fetchmany()
         return [_LibSQLRow(self._cur, r) for r in rows]
 
@@ -182,7 +184,7 @@ class LibSQLBackend(StorageBackend):
 
     def _connect(self) -> Any:
         try:
-            import libsql_experimental as libsql  # type: ignore[import]
+            import libsql_experimental as libsql
         except ImportError as exc:
             raise RuntimeError(
                 "libsql-experimental is required for the libSQL backend. "

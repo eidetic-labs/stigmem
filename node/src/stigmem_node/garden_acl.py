@@ -7,13 +7,17 @@ Quarantine gardens extend this with the quarantine:moderator role (v1.1).
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import HTTPException, status
 
 from .auth import Identity
 from .db import db
 
 
-def get_garden_by_slug_or_id(slug_or_id: str, tenant_id: str | None = None) -> dict | None:
+def get_garden_by_slug_or_id(
+    slug_or_id: str, tenant_id: str | None = None
+) -> dict[str, Any] | None:
     """Return a garden row by slug or by its UUID id.
 
     When tenant_id is provided, slug lookups are scoped to that tenant so that
@@ -35,7 +39,9 @@ def get_garden_by_slug_or_id(slug_or_id: str, tenant_id: str | None = None) -> d
     return dict(row) if row is not None else None
 
 
-def get_garden_by_garden_uri(garden_uri: str, tenant_id: str | None = None) -> dict | None:
+def get_garden_by_garden_uri(
+    garden_uri: str, tenant_id: str | None = None
+) -> dict[str, Any] | None:
     """Return a garden row by its stigmem://authority/garden/{slug} URI."""
     # Extract slug from URI: stigmem://authority/garden/{slug}
     parts = garden_uri.split("/garden/", 1)
@@ -55,7 +61,7 @@ def get_member_role(garden_id: str, entity_uri: str) -> str | None:
     return row["role"] if row is not None else None
 
 
-def require_garden_write(garden: dict, identity: Identity) -> None:
+def require_garden_write(garden: dict[str, Any], identity: Identity) -> None:
     """Raise 403 if identity cannot write facts into this garden (spec §17.3)."""
     role = get_member_role(garden["id"], identity.entity_uri)
     if role not in ("admin", "writer"):
@@ -70,7 +76,7 @@ def require_garden_write(garden: dict, identity: Identity) -> None:
         )
 
 
-def require_garden_read(garden: dict, identity: Identity) -> None:
+def require_garden_read(garden: dict[str, Any], identity: Identity) -> None:
     """Raise 403 if identity cannot read facts from this garden (spec §17.3)."""
     role = get_member_role(garden["id"], identity.entity_uri)
     if role is None:
@@ -80,7 +86,7 @@ def require_garden_read(garden: dict, identity: Identity) -> None:
         )
 
 
-def require_garden_admin(garden: dict, identity: Identity) -> None:
+def require_garden_admin(garden: dict[str, Any], identity: Identity) -> None:
     """Raise 403 if identity is not an admin of this garden."""
     role = get_member_role(garden["id"], identity.entity_uri)
     if role != "admin":
@@ -101,7 +107,7 @@ def is_node_admin(identity: Identity) -> bool:
     return identity.can_write()
 
 
-def require_quarantine_moderator_or_admin(garden: dict, identity: Identity) -> None:
+def require_quarantine_moderator_or_admin(garden: dict[str, Any], identity: Identity) -> None:
     """Raise 403 if identity cannot promote/reject quarantined facts (spec §19.5.3).
 
     Allowed roles: 'admin' or 'quarantine:moderator'.
@@ -114,7 +120,7 @@ def require_quarantine_moderator_or_admin(garden: dict, identity: Identity) -> N
         )
 
 
-def has_elevated_quarantine_role(garden: dict, identity: Identity) -> bool:
+def has_elevated_quarantine_role(garden: dict[str, Any], identity: Identity) -> bool:
     """True if identity holds admin or quarantine:moderator in a quarantine garden."""
     role = get_member_role(garden["id"], identity.entity_uri)
     return role in ("admin", "quarantine:moderator")
@@ -124,7 +130,8 @@ def quarantine_garden_has_pending_facts(garden_uuid: str) -> bool:
     """True if the quarantine garden holds at least one fact with quarantine_status='pending'."""
     with db() as conn:
         row = conn.execute(
-            "SELECT id FROM facts WHERE quarantine_garden_id = ? AND quarantine_status = 'pending' LIMIT 1",
+            "SELECT id FROM facts"
+            " WHERE quarantine_garden_id = ? AND quarantine_status = 'pending' LIMIT 1",
             (garden_uuid,),
         ).fetchone()
     return row is not None

@@ -81,8 +81,9 @@ class FactRecord(BaseModel):
     garden_id: str | None = None    # v0.9: garden URI; null = no garden
     attested: bool | None = None    # v0.9: source attestation result; null = not applicable
     contradicted: bool = False
-    warnings: list[str] = Field(default_factory=list)  # write-time convention warnings (assert only)
-    # v1.1: source-trust snapshot (§19.4); recomputed live at recall — stored value is for audit only
+    # write-time convention warnings (assert only)
+    warnings: list[str] = Field(default_factory=list)
+    # v1.1: source-trust snapshot (§19.4); recomputed live at recall — stored is audit only
     source_trust: float | None = None
     # v1.1: quarantine metadata (§19.5)
     quarantine_status: str | None = None
@@ -99,7 +100,7 @@ class QueryResponse(BaseModel):
     facts: list[FactRecord]
     total: int | None = None
     cursor: str | None
-    tombstone_notices: list["TombstoneNotice"] = Field(default_factory=list)
+    tombstone_notices: list[TombstoneNotice] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -302,7 +303,9 @@ def row_to_record(
         warnings=warnings or [],
         source_trust=source_trust,
         quarantine_status=row["quarantine_status"] if "quarantine_status" in keys else None,
-        quarantine_garden_id=row["quarantine_garden_id"] if "quarantine_garden_id" in keys else None,
+        quarantine_garden_id=(
+            row["quarantine_garden_id"] if "quarantine_garden_id" in keys else None
+        ),
         effective_confidence=effective_confidence,
         sanitizer_warnings=sanitizer_warnings or [],
         sanitizer_redacted=sanitizer_redacted,
@@ -325,7 +328,9 @@ def _parse_v(vtype: str, raw: str) -> Any:
 # ---------------------------------------------------------------------------
 
 class AgentKeyRegisterRequest(BaseModel):
-    public_key: str = Field(..., min_length=1, description="base64url-encoded Ed25519 raw public key")
+    public_key: str = Field(
+        ..., min_length=1, description="base64url-encoded Ed25519 raw public key"
+    )
     description: str | None = None
 
 
@@ -454,7 +459,9 @@ class IntentEnvelopeRequest(BaseModel):
         description="Optional client-generated intent ID (UUID). Auto-assigned when omitted.",
     )
     from_uri: str = Field(..., alias="from", min_length=1, description="Sender entity URI")
-    to: list[str] = Field(..., min_length=1, description="Target entity URIs (at least one required)")
+    to: list[str] = Field(
+        ..., min_length=1, description="Target entity URIs (at least one required)"
+    )
     goal: str = Field(..., min_length=1, max_length=2048)
     scope: str = Field("company")
     expires_at: str | None = Field(None, description="ISO 8601 UTC expiry; null = non-expiring")
@@ -550,7 +557,7 @@ class SubscriptionEventRecord(BaseModel):
     event_type: str
     entity_uri: str | None
     fact_id: str | None
-    payload: dict
+    payload: dict[str, Any]
     created_at: str
     delivered_at: str | None
     delivery_status: str
@@ -618,13 +625,13 @@ class TombstoneRevokeRequest(BaseModel):
 
 class TombstoneStatusResponse(BaseModel):
     tombstoned: bool
-    tombstones: list["TombstoneRecord"]
-    revocations: list["TombstoneRevocationRecord"]
+    tombstones: list[TombstoneRecord]
+    revocations: list[TombstoneRevocationRecord]
 
 
 class FederationTombstonesResponse(BaseModel):
-    tombstones: list["TombstoneRecord"]
-    revocations: list["TombstoneRevocationRecord"]
+    tombstones: list[TombstoneRecord]
+    revocations: list[TombstoneRevocationRecord]
     cursor: str | None
 
 

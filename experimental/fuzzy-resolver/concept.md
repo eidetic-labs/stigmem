@@ -8,7 +8,7 @@ audience: Integrator
 
 **Audience:** Agent developers and node operators who need to match variant entity URIs (abbreviated names, legacy aliases, typos) to a canonical entity in the fact store.
 
-Spec §2.6.6 (v0.8). Implemented in Track F.
+Spec §2.6.6 (pre-reset). Implemented in Track F.
 
 Human-authored facts routinely produce variant URIs for the same real-world entity — `user:alice`, `user:a.smith`, `user:alice-smith` — because the canonical normalizer collapses whitespace and case but cannot infer that two different id segments refer to the same person. The fuzzy entity resolver bridges this gap.
 
@@ -180,7 +180,7 @@ curl -s "http://localhost:8000/v1/facts?entity=$(python3 -c "import urllib.parse
 
 - **Type-prefix scoped:** Layer 3 only searches entities with the same type prefix (`user:`, `agent:`, etc.). Cross-type resolution is not supported.
 - **Formal URIs excluded from Layer 3:** `stigmem://` URIs bypass Layer 3 (use Layer 1 normalisation only).
-- **No phonetic / NLP matching yet:** The full Kompl-style resolver (phonetic matching, NLP-based entity linking) is deferred to Phase 7. Layer 3 covers the common case of abbreviated names and initials.
+- **No phonetic / NLP matching yet:** The full Kompl-style resolver (phonetic matching, NLP-based entity linking) is deferred to the pre-reset substrate work. Layer 3 covers the common case of abbreviated names and initials.
 
 ---
 

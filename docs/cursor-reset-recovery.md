@@ -2,7 +2,7 @@
 
 **Failure mode:** FM-3 edge case — [failure-modes-4node.md § FM-3](./failure-modes-4node.md)  
 **Track:** F (pre-GA hardening)  
-**Protocol version:** stigmem spec v0.7-draft (§6)
+**Protocol version:** stigmem spec pre-reset-draft (§6)
 
 ---
 

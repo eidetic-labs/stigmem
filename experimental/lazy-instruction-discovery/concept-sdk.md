@@ -8,7 +8,7 @@ audience: Integrator
 # Lazy Instruction Discovery
 
 **Audience:** Agent operators authoring or migrating instruction files for Stigmem-backed agents.  
-**Spec reference:** §21 Lazy Instruction Discovery (Phase 10).
+**Spec reference:** §21 Lazy Instruction Discovery (pre-reset instruction-discovery design).
 
 ---
 
@@ -241,7 +241,7 @@ The bimodal shape is structural, not a tuning gap. Architecture intents legitima
 
 ## Instruction scope confidentiality
 
-**Spec reference:** §21.4 (v1.1-draft rev 6; SE-reviewed rev 10).
+**Spec reference:** §21.4 (pre-reset draft rev 6; SE-reviewed rev 10).
 
 Facts stored under the `instruction:` scope are accessible to any caller authorized on the agent — including calls triggered by adversarial prompt injection. **Content MUST NOT rely on retrieval difficulty as a confidentiality control.**
 
@@ -260,7 +260,7 @@ Instruction content is not private. An attacker who can influence the agent's pr
 
 ## Discovery audit eval metrics
 
-**Spec reference:** §21.5 (v1.1-draft rev 6; RS-reviewed rev 9).
+**Spec reference:** §21.5 (pre-reset draft rev 6; RS-reviewed rev 9).
 
 The shadow audit protocol produces per-heartbeat metrics for evaluating recall quality. Three primary metrics:
 

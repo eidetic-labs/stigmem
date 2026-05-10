@@ -37,16 +37,16 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 
 ### Changed
 
-- **Canonical version line reset.** `pyproject.toml`, `package.json`, `sdks/stigmem-py/pyproject.toml`, `sdks/stigmem-ts/package.json`, `node/pyproject.toml`, `infra/helm/stigmem/Chart.yaml`, `deploy/helm/stigmem/Chart.yaml`, `adapters/openclaw/pyproject.toml`, README status banner, SECURITY.md "Applies to" line, and threat model "Applies to" line all updated to v0.9.0a1 (PEP 440) or 0.9.0-alpha.1 (semver) per their per-surface convention. `adapters/openclaw/pyproject.toml` `stigmem-py` dependency range bumped from `>=1.0.0rc1` (the never-published constraint) to `>=0.9.0a1,<1.0.0`. `adapters/openclaw` Development Status classifier dropped from "5 - Production/Stable" to "3 - Alpha" to match actual maturity.
+- **Canonical version line reset.** `pyproject.toml`, `package.json`, `sdks/stigmem-py/pyproject.toml`, `sdks/stigmem-ts/package.json`, `node/pyproject.toml`, `adapters/openclaw/pyproject.toml`, README status banner, SECURITY.md "Applies to" line, and threat model "Applies to" line all updated to v0.9.0a1 (PEP 440) or 0.9.0-alpha.1 (semver) per their per-surface convention. The pre-reset Helm Chart.yaml files (later consolidated to `experimental/deploy-helm/` per PR 3) were retired in `release/version-surfaces.yaml` rather than re-stamped. `adapters/openclaw/pyproject.toml` `stigmem-py` dependency range bumped from `>=1.0.0rc1` (the never-published constraint) to `>=0.9.0a1,<1.0.0`. `adapters/openclaw` Development Status classifier dropped from "5 - Production/Stable" to "3 - Alpha" to match actual maturity.
 - **LICENSE replaced** with canonical Apache-2.0 SPDX template. Verified ~10 substantive deviations from canonical Apache-2.0 in the previous LICENSE; replaced wholesale.
-- **SECURITY.md** "Supported versions" table updated: `1.0.0-rc` retired; `0.9.0a1` listed as the current supported pre-release. v0.9.0a1 carries no stability guarantee — breaking changes during the Phase A/B hardening window are expected and called out in this changelog.
+- **SECURITY.md** "Supported versions" table updated: `1.0.0-rc` retired; `0.9.0a1` listed as the current supported pre-release. v0.9.0a1 carries no stability guarantee — breaking changes during the v0.9.0aN alpha and v0.9.0bN beta series hardening window are expected and called out in this changelog.
 - **Default install scope shrunk.** Multi-tenant, RTBF tombstones, time-travel queries, lazy instruction discovery, advanced memory-garden ACL, and source attestation move to `experimental/` as opt-in plugins per [ADR-011](docs/adr/011-cross-cutting-extraction.md). The default install matches the v1.0 critical-path scope from [ADR-002](docs/adr/002-v1-scope.md). Operators who need experimental features install them via the plugin system.
 - **Spec content under earlier version markers preserved.** The protocol-spec content from `stigmem-spec-v0.2.md` through `stigmem-spec-v2.0.md` is being reviewed section-by-section against the actual implementation and migrated forward into the v0.9.0a1 canonical structure. Earlier evolutionary spec files move to `spec/archive/evolution/` after their content has been forward-migrated. Nothing is being deleted.
 
 ### Security
 
-- **Threat model status header** updated to v0.9.0a1 posture. Risks the original v1.0 announcement claimed mitigated but had not (mTLS-default federation, persistent audit log, per-principal rate limits, capability validation, bounded HLC skew) are now correctly listed as Open or Residual, scheduled for Phase B per the strengthening plan.
-- **R-23** (admin-level storage tampering / fact mutation) added to the risk register; mitigation is the [ADR-016](docs/adr/016-storage-immutability-enforcement.md) L1–L5 storage-immutability stack, scheduled for Phase B.
+- **Threat model status header** updated to v0.9.0a1 posture. Risks the original v1.0 announcement claimed mitigated but had not (mTLS-default federation, persistent audit log, per-principal rate limits, capability validation, bounded HLC skew) are now correctly listed as Open or Residual, scheduled for the v0.9.0bN beta series per [`ROADMAP.md`](ROADMAP.md).
+- **R-23** (admin-level storage tampering / fact mutation) added to the risk register; mitigation is the [ADR-016](docs/adr/016-storage-immutability-enforcement.md) L1–L5 storage-immutability stack, scheduled for the v0.9.0bN beta series.
 - **No CVE-class fixes in this release.** This is a posture reset, not a security-patch release.
 
 ### Deprecated
@@ -58,7 +58,15 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 
 ### Stability commitment
 
-`v0.9.0a1` carries **no stability guarantee**. Wire format, public Python API, and SDK contracts may change during the Phase A and Phase B hardening windows. Stability commitments begin at `v1.0.0` GA, after a 30-day external-operator soak per [ADR-001](docs/adr/001-versioning.md). Pin to specific pre-release versions; auto-upgrade is not safe.
+`v0.9.0a1` carries **no stability guarantee**. Wire format, public Python API, and SDK contracts may change during the `v0.9.0aN` alpha and `v0.9.0bN` beta series hardening windows. Stability commitments begin at `v1.0.0` GA, after a 30-day external-operator soak per [ADR-001](docs/adr/001-versioning.md). Pin to specific pre-release versions; auto-upgrade is not safe.
+
+### Known follow-ups for v0.9.0a2
+
+These items were intentionally deferred from `v0.9.0a1` to keep the first build narrowly scoped. They are queued for the next alpha:
+
+- **Internal refactor — split god files** (`node/src/stigmem_node/cli.py`, `routes/federation.py`, `routes/facts.py`). Pure code-movement; no behavioral change. Tracked at [PR #69](https://github.com/Eidetic-Labs/stigmem/pull/69).
+- **Lint baseline tightening** — reduce the `check_ruff_baseline.py` known-issues count (currently 578) through targeted cleanup in touched files. Each PR carries its own baseline-reduction quota.
+- **Retraction-post URL backfill** — `README.md` line 11 and `LIMITATIONS.md` line 244 reference the retraction post but the URL is not yet known at v0.9.0a1 publish time. A `v0.9.0a1.post1` (PEP 440 post-release) lands the URLs once the retraction post is live, per the [release-cadence runbook §Rule 3](docs/internal/release-cadence.md#rule-3--all-errata-go-to-the-next-version).
 
 ---
 
@@ -81,7 +89,7 @@ The entries below labeled `v0.2` through `v2.0` and `1.0.0-rc` documented intern
 - **RTBF tombstones (§23)** — `TombstoneRecord` shape with signed `entity_uri` + scope suppression, recall-time filter (direct + graph reference + memory card), federation propagation with signature verification, `TombstoneRevocation` for legal holds, `GET /v1/federation/tombstones` poll route.
 - **Time-travel queries (§24)** — `as_of` parameter on `/v1/recall` and `/v1/facts`, fact visibility at time T, append-only `fact_retractions` log, retroactive tombstone suppression, `legal_hold: true` preserves facts for admin `as_of` access, `tombstone_notices` response annotation.
 - **Content-addressed fact IDs (§25)** — CID format (`sha256:` + hex SHA-256 of RFC 8785 canonical body over 6 fields), `fact_cid_aliases` table for dual UUID/CID addressing, 12-month migration window, federation tamper detection (`cid_mismatch` rejection), `stigmem backfill-cids` CLI, `POST /v1/facts/:id/verify-cid` integrity check.
-- **Storage backend trait (Phase 8)** — `StorageBackend` abstraction, `LibSQLBackend` for Turso/libSQL embedded-replica, `STIGMEM_STORAGE_BACKEND` env var, backend-parameterized test runner.
+- **Storage backend trait (pre-reset)** — `StorageBackend` abstraction, `LibSQLBackend` for Turso/libSQL embedded-replica, `STIGMEM_STORAGE_BACKEND` env var, backend-parameterized test runner.
 - **Conformance vectors** — v2.0 wire-format vectors for §19–§25 in `data/conformance/v2.0/`.
 - **Migration guide** — `docs/docs/migration/v1-to-v2.md` with breaking-change matrices, cutover order, and rollback notes.
 
@@ -109,7 +117,7 @@ The entries below labeled `v0.2` through `v2.0` and `1.0.0-rc` documented intern
 
 ---
 
-## [Unreleased] — Phase 10 — Instruction migration + lazy instruction discovery (§21)
+## [Unreleased — pre-reset] — Instruction migration + lazy instruction discovery (§21)
 
 ### Added
 
@@ -131,11 +139,11 @@ The entries below labeled `v0.2` through `v2.0` and `1.0.0-rc` documented intern
 - **Tombstone semantics** — units removed between migration runs receive `TOMBSTONE` action;
   their manifest entries are dropped while the underlying facts are preserved for audit history.
 - **Docs** — Instruction Migration guide (`docs/docs/guides/instruction-migration.md`);
-  Phase 10 endpoint reference in `docs/docs/api-reference/index.md`.
+  lazy-instruction endpoint reference in `docs/docs/api-reference/index.md`.
 
 ---
 
-## [Unreleased] — Phase 8 — Storage adapter trait + libSQL/Turso backend
+## [Unreleased — pre-reset] — Storage adapter trait + libSQL/Turso backend
 
 ### Added
 

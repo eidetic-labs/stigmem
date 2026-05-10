@@ -20,9 +20,9 @@ Each subsection below shows the most recent normative text from the spec source.
 *§5.1–§5.20 unchanged from v1.0. The following routes are added.*
 
 <details>
-<summary>Revisions before v1.1-draft: v0.8-draft, v0.9-draft, v1.0</summary>
+<summary>Revisions before pre-reset draft: the pre-reset spec-draft, pre-reset draft, v1.0</summary>
 
-**From `stigmem-spec-v0.8-draft.md`:**
+**From `stigmem-spec-the pre-reset spec-draft.md`:**
 
 This section defines the HTTP endpoints that constitute the Stigmem REST API.
 Every operation is expressed as a JSON-over-HTTP request so that any language
@@ -30,13 +30,13 @@ with an HTTP client can participate — no SDK is required. Endpoints are groupe
 by function: fact CRUD (§5.1–§5.5), federation lifecycle (§5.6–§5.8, §5.11),
 conflict management (§5.9–§5.10), and higher-order operations (§5.12–§5.13).
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-*§5.1–§5.13 unchanged from v0.8.*
+*§5.1–§5.13 unchanged from the pre-reset spec.*
 
 **From `stigmem-spec-v1.0.md`:**
 
-*§5.1–§5.13 unchanged from v0.8.*
+*§5.1–§5.13 unchanged from the pre-reset spec.*
 
 </details>
 
@@ -94,9 +94,9 @@ GET /.well-known/stigmem
     "node_url":           string,
     "auth":               "none" | "required",
     "federation":         "disabled" | "enabled",
-    "federation_pubkey":  string,   // v0.5: base64url Ed25519 public key; omit if federation disabled
-    "federation_version": string,   // v0.5: semver range this node speaks, e.g. "0.8"
-    "federation_endpoints": {       // v0.5: advertised federation routes
+    "federation_pubkey":  string,   // pre-reset: base64url Ed25519 public key; omit if federation disabled
+    "federation_version": string,   // pre-reset: semver range this node speaks, e.g. "0.8"
+    "federation_endpoints": {       // pre-reset: advertised federation routes
       "peers":    string,           // e.g. "/v1/federation/peers"
       "facts":    string,           // e.g. "/v1/federation/facts"
       "push":     string | null     // null if push not supported
@@ -135,7 +135,7 @@ GET /v1/facts/:id
 → 404 if not found
 ```
 
-### §5.6 Register a peer — v0.5 {#section-5-6}
+### §5.6 Register a peer — pre-reset {#section-5-6}
 
 Peer registration is the first step of the federation handshake. The calling
 node presents a signed declaration containing its identity (`node_id`),
@@ -174,7 +174,7 @@ Authorization: Bearer <api-key with federate permission>
 4. Mutual federation requires both sides to register each other. A node MAY auto-register
    a reciprocal peer declaration; it MUST NOT begin replicating until both sides are `"active"`.
 
-### §5.7 List peers — v0.5 {#section-5-7}
+### §5.7 List peers — pre-reset {#section-5-7}
 
 Returns the set of federation peers known to this node. Each entry includes the
 peer's status (`active`, `pending_verification`, `rejected`, or `revoked`),
@@ -190,7 +190,7 @@ GET /v1/federation/peers
                      "allowed_scopes": [...], "established_at": "..." }] }
 ```
 
-### §5.8 Pull replication — v0.5 {#section-5-8}
+### §5.8 Pull replication — pre-reset {#section-5-8}
 
 Pull replication is the default mechanism for synchronising facts between
 federated peers. The requesting node supplies an opaque cursor (received from
@@ -222,7 +222,7 @@ in the PeerDeclaration and the token's `scopes` claim.
 exists locally is a silent no-op; the node MUST NOT create a duplicate or update
 the existing record.
 
-### §5.9 List conflicts — v0.5 {#section-5-9}
+### §5.9 List conflicts — pre-reset {#section-5-9}
 
 When two facts for the same `(entity, relation, scope)` tuple arrive with
 conflicting values — whether from local assertions or federated replication —
@@ -247,7 +247,7 @@ GET /v1/conflicts?status=unresolved&cursor=<cursor>&limit=50
   }
 ```
 
-### §5.10 Resolve a conflict — v0.5 {#section-5-10}
+### §5.10 Resolve a conflict — pre-reset {#section-5-10}
 
 Resolving a conflict is an explicit human- or agent-driven decision that picks
 a winner, optionally supplies a fresh reconciliation value, and records the
@@ -283,7 +283,7 @@ Authorization: Bearer <api-key>
 
 Both original conflicting facts remain immutable in the store.
 
-### §5.11 Push replication (optional) — v0.5 {#section-5-11}
+### §5.11 Push replication (optional) — pre-reset {#section-5-11}
 
 Push replication is an opt-in, low-latency complement to pull (§5.8). Where
 pull requires the consuming node to poll on a schedule, push lets the producing
@@ -307,7 +307,7 @@ Push is opt-in. Nodes that do not support push SHOULD return 405. Implementation
 SHOULD prefer pull; push is provided for low-latency delivery behind a feature flag
 (`STIGMEM_FEDERATION_PUSH_ENABLED`, default `false`).
 
-### §5.12 Lint — v0.7 Normative {#section-5-12}
+### §5.12 Lint — pre-reset Normative {#section-5-12}
 
 The lint endpoint runs a configurable set of data-quality checks against a
 scope and returns machine-readable findings. It is the diagnostic counterpart
@@ -325,7 +325,7 @@ Authorization: Bearer <api-key>
          "checks_run": ["contradiction","stale"], "fact_count": 142 }
 ```
 
-### §5.13 Synthesize scope — v0.8 Draft {#section-5-13}
+### §5.13 Synthesize scope — the pre-reset spec Draft {#section-5-13}
 
 Synthesis produces a confidence-weighted summary of everything a scope knows
 about a given entity (or the entire scope when no entity filter is supplied).
@@ -381,11 +381,11 @@ The creating principal is automatically added as `admin`.
 **Slug rules:** Must match `^[a-z0-9][a-z0-9\-]{0,62}$`. Stored and matched case-insensitively.
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-### 5.14 Create a garden — v0.9
+### 5.14 Create a garden — the pre-reset spec
 
 ```
 POST /v1/gardens
@@ -432,11 +432,11 @@ Authorization: Bearer <api-key>
 Returns only gardens where the caller holds any role (admin, writer, or reader). Admins of the node (callers with `write` permission) see all gardens.
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-### 5.15 List gardens — v0.9
+### 5.15 List gardens — the pre-reset spec
 
 ```
 GET /v1/gardens
@@ -459,11 +459,11 @@ Authorization: Bearer <api-key>
 ```
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-### 5.16 Get a garden — v0.9
+### 5.16 Get a garden — the pre-reset spec
 
 ```
 GET /v1/gardens/:garden_id_or_slug
@@ -488,11 +488,11 @@ Authorization: Bearer <api-key>
 Deleting a garden does NOT delete its associated facts. The `garden_id` field on orphaned facts becomes a dangling reference. Nodes SHOULD surface these in lint output (§14).
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-### 5.17 Delete a garden — v0.9
+### 5.17 Delete a garden — the pre-reset spec
 
 ```
 DELETE /v1/gardens/:garden_id_or_slug
@@ -551,11 +551,11 @@ Authorization: Bearer <api-key> (must be any member)
 ```
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-### 5.18 Garden membership — v0.9
+### 5.18 Garden membership — the pre-reset spec
 
 **Add member:**
 
@@ -623,11 +623,11 @@ Authorization: Bearer <api-key with write permission>
 ```
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-### 5.19 Assert a fact into a garden — v0.9
+### 5.19 Assert a fact into a garden — the pre-reset spec
 
 Facts are associated with a garden by including `garden_id` in the assert request:
 
@@ -663,11 +663,11 @@ The `garden_id` query parameter is additive with other filters (`entity`, `relat
 ---
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-### 5.20 Query facts with garden filter — v0.9
+### 5.20 Query facts with garden filter — the pre-reset spec
 
 ```
 GET /v1/facts?garden_id=stigmem://node.example.com/garden/project-atlas

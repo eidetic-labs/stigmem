@@ -6,8 +6,8 @@ audience: Integrator
 
 # Scope Propagation Invariants
 
-:::info v0.8 — Normative
-Scope propagation invariants are **normative** in spec v0.8 (§6.8). These close the open question in §8.5 of v0.7 regarding `company`-scoped fact re-federation. All nodes running v0.8 or later MUST implement invariant 6.8.1 and 6.8.2.
+:::info the pre-reset spec — Normative
+Scope propagation invariants are **normative** in spec the pre-reset spec (§6.8). These close the open question in §8.5 of pre-reset regarding `company`-scoped fact re-federation. All nodes running the pre-reset spec or later MUST implement invariant 6.8.1 and 6.8.2.
 :::
 
 **Audience:** Node operators and federation architects building multi-hop topologies where facts cross organizational boundaries.
@@ -37,7 +37,7 @@ If the intersection is empty (e.g., A granted B `team` scope but C's PeerDeclara
 
 ## Company-scoped facts: no re-federation (§6.8.2)
 
-This invariant resolves v0.7 §8.5 directly.
+This invariant resolves pre-reset §8.5 directly.
 
 **Invariant 6.8.2:** A node that receives a `company`-scoped fact MUST NOT re-federate it to any third node, regardless of the third node's PeerDeclaration.
 
@@ -112,4 +112,4 @@ Monitor these entries to detect misconfigured PeerDeclarations before they cause
 - [Relay backpressure guide](./relay-backpressure) — lag signals in N-node topologies
 - Spec §6.8 — Scope Propagation Invariants
 - Spec §6 — Federation protocol
-- Spec §8.5 (v0.7) — Open question resolved by §6.8.2
+- Spec §8.5 (pre-reset) — Open question resolved by §6.8.2

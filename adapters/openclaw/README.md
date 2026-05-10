@@ -103,7 +103,7 @@ OpenClaw agents are persistent and channel-agnostic. The Stigmem adapter hooks i
 
 ### OpenClaw surface inventory
 
-Built against OpenClaw's public API surfaces only — no holdco outreach per Phase 0
+Built against OpenClaw's public API surfaces only — no holdco outreach during the earliest pre-reset design work
 constraint. The adapter wraps Stigmem's HTTP API via `stigmem-py`; OpenClaw-hosted
 agents import it as a standard Python library.
 
@@ -162,7 +162,7 @@ else:
 # - **preference:lang** on `user:alice`: en
 #
 # ### roadmap
-# - **roadmap:constraint** on `project:acme-roadmap`: Must ship Phase 1 before 2026-06-01
+# - **roadmap:constraint** on `project:acme-roadmap`: Must ship the pre-reset design work before 2026-06-01
 #
 # ### intent
 # - **intent:context_ref** on `handoff:5f3a`: fact-004
@@ -180,7 +180,7 @@ adapter.emit_decision(
 # 4b. Escalate to the CTO when the agent hits a scope boundary
 adapter.emit_escalation(
     to_entity="agent:cto",
-    goal="Approve increased Stripe webhook rate limit for Phase 2 load.",
+    goal="Approve increased Stripe webhook rate limit for the pre-reset design work load.",
     priority="high",
 )
 

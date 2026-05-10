@@ -24,13 +24,13 @@ The canonical spec is in flight — content arrives section-by-section as the ma
 | §24 Time-Travel Queries | Deferred | [`experimental/time-travel/spec.md`](../experimental/time-travel/spec.md) |
 | §25 Content-Addressed Fact IDs (CIDs) | **Stable in core** per [ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md) | This file → canonical spec |
 
-## Modular spec migration (Phase B work per ADR-010)
+## Modular spec migration (v0.9.0bN beta-series work per ADR-010)
 
-Per [ADR-010](../docs/adr/010-modular-specs.md), the spec decomposes into ~14 core specs (`spec/specs/01-core.md` through `Spec-14`) with independent versioning during Phase B. Until that lands, this single canonical file is the spec.
+Per [ADR-010](../docs/adr/010-modular-specs.md), the spec decomposes into ~14 core specs (`spec/specs/01-core.md` through `Spec-14`) with independent versioning during the v0.9.0bN beta series. Until that lands, this single canonical file is the spec.
 
 ## Evolution
 
-The protocol-spec content evolved through development checkpoints from v0.2 to v2.0. Snapshots preserved at [`spec/archive/evolution/`](archive/evolution/) — see that directory's README. The development-checkpoint changelog is at [`spec/EVOLUTION.md`](EVOLUTION.md) (renamed from `spec/CHANGELOG.md` 2026-05-09 per master-checklist §4.3a). The protocol-release-level changelog going forward is at [`CHANGELOG.md`](../CHANGELOG.md) at repo root.
+The protocol-spec content evolved through development checkpoints from pre-reset to v2.0. Snapshots preserved at [`spec/archive/evolution/`](archive/evolution/) — see that directory's README. The development-checkpoint changelog is at [`spec/EVOLUTION.md`](EVOLUTION.md) (renamed from `spec/CHANGELOG.md` 2026-05-09 per master-checklist §4.3a). The protocol-release-level changelog going forward is at [`CHANGELOG.md`](../CHANGELOG.md) at repo root.
 
 ## Conformance
 

@@ -2,13 +2,73 @@
 
 How stigmem publishes a new release. Internal-facing maintainer doc; not part of the public docs site.
 
-This document is a **runbook**, not a policy. The policy (versioning rules, phase mapping, stability commitments) lives in [ADR-001](../../docs/adr/001-versioning.md), [ADR-019](../../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md), and `release/version-surfaces.yaml`. This doc describes the operational sequence a maintainer follows to ship.
+This document is a **runbook**, not a policy. The policy (versioning rules, stability commitments, contributor approval rule) lives in [ADR-001](../../docs/adr/001-versioning.md), [ADR-019](../../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md), and `release/version-surfaces.yaml`. This doc describes the operational sequence a maintainer follows to ship — and the discipline that prevents the v1.0 retraction failure mode from recurring.
+
+---
+
+## Release discipline (the durable rules)
+
+These exist because the v1.0 retraction had a single root cause: **the tag, the docs, and the published artifact got out of sync** because the project kept changing under the v1.0 label without re-tagging or freezing. The rules below are the operational guardrails that prevent that drift.
+
+### Rule 1 — PyPI/npm versions are immutable
+
+PyPI and npm enforce this at the registry: once `stigmem-py 0.9.0a1` is uploaded, it cannot be replaced — only **yanked** (PEP 592 on PyPI) or **deprecated** (npm). This is not our policy; it's the ecosystem's. We design around it.
+
+### Rule 2 — Tags are immutable after publish
+
+The git tag is the bridge between commit history and the registry artifact. Once the registry has the artifact, **the tag must never move.** Force-moving a tag after publish desyncs the artifact from its declared source — exactly what failed with v1.0.
+
+The corollary: **don't push a `v*` tag until you are confident the commit at the tag is what you want to ship.** Iterate on `main` first; tag once.
+
+### Rule 3 — All errata go to the next version
+
+If we publish `v0.9.0a1` and find a problem afterward, **we do not patch `v0.9.0a1` in place.** Two paths:
+
+- **Doc-only or non-functional fix** (typo, broken link, stale CHANGELOG entry): ship `v0.9.0a1.post1` per [PEP 440 §Post-releases](https://peps.python.org/pep-0440/#post-releases). Post-releases are explicitly for "trivial errata" and do not signal new functionality.
+- **Code fix or behavior change** (any source change): ship `v0.9.0a2`. Increment the alpha counter; new tag; full publish.
+
+Never patch in place under the same label. This is the single rule that v1.0 violated.
+
+### Rule 4 — Tag protection on GitHub
+
+Tag pattern `v*` is protected via Settings → Tags → Tag protection rule. Force-pushing or deleting a `v*` tag requires admin override and is recorded in the audit log. Hard guard against accidental Rule-2 violation.
+
+### Rule 5 — No `--force` on `main` or release branches, ever
+
+`main` is protected per ADR-001 §Contributor approval rule. When `release/v1.x` exists (post-v1.0.0 GA, see §Release-branch strategy below), it gets the same protection.
+
+---
+
+## Release-branch strategy
+
+### Pre-1.0 (`v0.9.0aN` alpha → `v0.9.0bN` beta → `v1.0.0rcN` release-candidate)
+
+**No release branches.** Each pre-release is allowed to break the previous per ADR-001 stability commitments. Discipline:
+
+- Tag a commit on `main`.
+- Publish.
+- Don't move the tag.
+- Next release picks up from `main` HEAD wherever `main` happens to be.
+
+We are not committing to support old alpha releases. Adopters who pinned to `v0.9.0a1` stay on `v0.9.0a1` until they upgrade.
+
+### At v1.0.0 GA (the cutover)
+
+When `v1.0.0` GA ships:
+
+1. Cut `release/v1.x` from the tagged commit.
+2. Apply branch protection (no force-push, require PR, status checks must pass).
+3. From this point, `main` moves toward `v1.1`, `v2.0`, etc. independently.
+4. **`v1.0.x` patch releases land on `release/v1.x`**, not on `main`. Cherry-pick or merge-forward to `main` as appropriate.
+5. **`v1.1.0` minor releases** ship from `main` directly. When `v1.1.0` GA ships, fast-forward `release/v1.x` to that tag (or cut `release/v1.1.x`, depending on how minor lines diverge).
+
+This is the standard pattern used by Python, Django, FastAPI, and similar mature projects.
 
 ---
 
 ## Audience
 
-A maintainer with publish rights (founder during Phase A) preparing a new tagged release of stigmem. Assumes you've already merged the work into `main` and CI is green.
+A maintainer with publish rights (founder during the v0.9.0aN alpha series) preparing a new tagged release of stigmem. Assumes you've already merged the work into `main` and CI is green.
 
 ---
 
@@ -102,7 +162,7 @@ Within ~5 minutes of tag push:
 
 - [ ] **PyPI** — `pip install --pre stigmem` resolves to the new version. `pip show stigmem` returns the expected `Version:`. Repeat for `stigmem-py`, `stigmem-node`, `stigmem-openclaw`.
 - [ ] **npm** — `npm view @eidetic-labs/stigmem-ts version` returns the new semver. `npm view @eidetic-labs/stigmem-ts` shows the right `dist-tags` (the new prerelease should be on `alpha`/`beta`/`rc`, not `latest`).
-- [ ] **GHCR** — `docker pull ghcr.io/eidetic-labs/stigmem-node:<tag>` succeeds. Same for `stigmem-dashboard`.
+- [ ] **GHCR** — `docker pull ghcr.io/eidetic-labs/stigmem-node:<tag>` succeeds. (No `stigmem-dashboard` image: dashboard is deferred per ADR-002; `publish-dashboard` was removed from `publish.yml` in PR #64.)
 - [ ] **GHCR visibility** — for first publish of a new package only: visit `https://github.com/orgs/Eidetic-Labs/packages` → find the package → Package settings → Danger Zone → Change visibility → **Public**. Subsequent pushes inherit the visibility setting; this is one-time per package.
 - [ ] **Cosign** — replace `<tag>` with the actual version (e.g. `0.9.0a2`):
   ```bash
@@ -111,7 +171,6 @@ Within ~5 minutes of tag push:
     --certificate-identity-regexp 'github.com/Eidetic-Labs/stigmem' \
     --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
     ghcr.io/eidetic-labs/stigmem-node:$TAG
-  cosign verify ...same... ghcr.io/eidetic-labs/stigmem-dashboard:$TAG
   ```
 - [ ] **GitHub release** — Created automatically by `publish.yml` `create-release` job. Verify the release page at `https://github.com/Eidetic-Labs/stigmem/releases/tag/v<tag>` shows: (1) the install-commands header, (2) the full CHANGELOG section for this version, (3) the prerelease badge (for alpha/beta/rc) or no badge (for final). If the page is missing or notes are empty, check the `create-release` job log for an extraction error.
 - [ ] **Close the tracking issue** for this release if one was opened (e.g., the PR-N issue in the master-checklist).
@@ -184,4 +243,4 @@ See ADR-019 for why version numbers are immutable across all our surfaces (PEP 4
 
 ## Annual review
 
-This document is reviewed once per major release cycle (Phase A → B, B → C, C → GA, etc.) to incorporate operational lessons. Last reviewed: **2026-05-09** (created — Phase A in progress).
+This document is reviewed once per major release cycle (the v0.9.0aN alpha series → B, B → C, C → GA, etc.) to incorporate operational lessons. Last reviewed: **2026-05-09** (created — the v0.9.0aN alpha series in progress).

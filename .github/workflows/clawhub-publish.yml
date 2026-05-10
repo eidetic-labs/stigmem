@@ -93,6 +93,16 @@ jobs:
 
       - name: Publish to ClawHub
         if: steps.gate.outputs.skip == 'false'
+        # Pass changelog and version via `env:` rather than ${{ }} interpolation
+        # in the run script. The changelog body in SKILL.md contains backticks
+        # (e.g., `clawhub-skill`, `clawhub-`); if those are interpolated
+        # directly into the bash heredoc, bash treats them as command
+        # substitutions and tries to execute the contents as shell commands,
+        # crashing the publish with "command not found" errors and "too many
+        # arguments" once the substitution mangles the argv.
+        env:
+          CHANGELOG: ${{ steps.changelog.outputs.notes }}
+          VERSION: ${{ steps.ver.outputs.version }}
         run: |
           # `--name "Stigmem"` is hard-coded here as belt-and-suspenders.
           # Historically the clawhub CLI inferred the display name from the
@@ -112,8 +122,8 @@ jobs:
           clawhub skill publish \
             --slug stigmem-node \
             --name "Stigmem" \
-            --version "${{ steps.ver.outputs.version }}" \
-            --changelog "${{ steps.changelog.outputs.notes }}" \
+            --version "$VERSION" \
+            --changelog "$CHANGELOG" \
             adapters/openclaw/skill/
 
       - name: Verify post-publish state

@@ -7,6 +7,8 @@ and serves accurate traversal results at varying depths and scopes.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from .conftest import ConformanceClient
@@ -16,7 +18,9 @@ _B = "stigmem://conformance/graph/bob"
 _C = "stigmem://conformance/graph/carol"
 
 
-def _ref(entity: str, rel: str, target: str, scope: str = "local", conf: float = 1.0) -> dict:
+def _ref(
+    entity: str, rel: str, target: str, scope: str = "local", conf: float = 1.0
+) -> dict[str, Any]:
     return {
         "entity": entity,
         "relation": rel,

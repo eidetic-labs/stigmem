@@ -28,7 +28,10 @@ from __future__ import annotations
 
 import time
 from contextlib import contextmanager
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any, Generator
+
+if TYPE_CHECKING:
+    from starlette.responses import Response
 
 try:
     import prometheus_client as _prom
@@ -135,30 +138,30 @@ except ImportError:
     _noop = _Noop()
 
     # Counters
-    FACT_WRITE = _noop        # type: ignore[assignment]
-    FACT_READ = _noop         # type: ignore[assignment]
-    QUOTA_BREACH = _noop      # type: ignore[assignment]
-    AUDIT_EVENT = _noop       # type: ignore[assignment]
-    CONTRADICTION = _noop     # type: ignore[assignment]
-    FEDERATION_INGRESS = _noop  # type: ignore[assignment]
-    FEDERATION_EGRESS = _noop   # type: ignore[assignment]
-    SUBSCRIPTION_EVENT = _noop  # type: ignore[assignment]
+    FACT_WRITE = _noop
+    FACT_READ = _noop
+    QUOTA_BREACH = _noop
+    AUDIT_EVENT = _noop
+    CONTRADICTION = _noop
+    FEDERATION_INGRESS = _noop
+    FEDERATION_EGRESS = _noop
+    SUBSCRIPTION_EVENT = _noop
 
     # Histograms
-    REQUEST_LATENCY = _noop           # type: ignore[assignment]
-    RECALL_RANKER_DURATION = _noop    # type: ignore[assignment]
-    CAPABILITY_VERIFY_DURATION = _noop  # type: ignore[assignment]
+    REQUEST_LATENCY = _noop
+    RECALL_RANKER_DURATION = _noop
+    CAPABILITY_VERIFY_DURATION = _noop
 
     # Gauges
-    SUBSCRIPTION_CONNECTIONS = _noop  # type: ignore[assignment]
-    REPLICATION_LAG = _noop           # type: ignore[assignment]
+    SUBSCRIPTION_CONNECTIONS = _noop
+    REPLICATION_LAG = _noop
 
 
 def metrics_enabled() -> bool:
     return _ENABLED
 
 
-def make_metrics_response() -> Any:
+def make_metrics_response() -> "Response | None":
     """Return a Starlette ``Response`` with the Prometheus text exposition."""
     if not _ENABLED:
         return None

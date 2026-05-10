@@ -75,7 +75,7 @@ def _allowed_output_scopes(peer: dict[str, Any], token_payload: dict[str, Any]) 
 # ---------------------------------------------------------------------------
 
 
-def _get_mtls_peer_cert(request: Request) -> dict:
+def _get_mtls_peer_cert(request: Request) -> dict[str, Any]:
     """Extract the TLS peer certificate dict from the ASGI transport (uvicorn).
 
     Returns an empty dict when not running under TLS (tests, plaintext mode).
@@ -945,9 +945,9 @@ def resolve_conflict(
 
 @router.get("/v1/federation/tombstones", response_model=FederationTombstonesResponse)
 def federation_list_tombstones(
+    request: Request,
     since: str | None = None,
     limit: int = 200,
-    request: Request = None,
     token_header: Annotated[str | None, Header(alias="Authorization")] = None,
 ) -> FederationTombstonesResponse:
     """Tombstone poll route (§23.4.3). Requires tombstone:read capability token."""
@@ -1001,11 +1001,11 @@ def federation_list_tombstones(
 
 @router.post("/v1/federation/tombstones/ingest", status_code=status.HTTP_200_OK)
 def federation_ingest_tombstone(
-    payload: dict,
-    request: Request = None,
+    request: Request,
+    payload: dict[str, Any],
     authorization: Annotated[str | None, Header(alias="Authorization")] = None,
     x_stigmem_capability: Annotated[str | None, Header(alias="x-stigmem-capability")] = None,
-) -> dict:
+) -> dict[str, Any]:
     """Inbound tombstone push from a federation peer (§23.4.2).
 
     Auth: peer JWT or capability token with tombstone:write verb (mirrors push_facts).
@@ -1107,10 +1107,12 @@ def federation_ingest_tombstone(
 def _resolve_pubkey_for_key_id(manifest: Any, key_id: str) -> str | None:
     """Return base64url public key from manifest matching key_id, or None."""
     if manifest.key_id == key_id:
-        return manifest.public_key
+        pk: str = manifest.public_key
+        return pk
     for evt in getattr(manifest, "rotation_events", []):
         if getattr(evt, "new_key_id", None) == key_id:
-            return getattr(evt, "new_public_key", None)
+            new_pk: str | None = getattr(evt, "new_public_key", None)
+            return new_pk
     return None
 
 

@@ -97,7 +97,8 @@ class LocalAppendOnlyLog(TransparencyLog):
         lines = self._path.read_text().strip().splitlines()
         if not lines:
             return None
-        return json.loads(lines[-1])
+        entry: dict[str, Any] = json.loads(lines[-1])
+        return entry
 
     def _chain_hash(self, prev_hash: str, leaf_hash: str) -> str:
         combined = (prev_hash + leaf_hash).encode()
@@ -289,7 +290,7 @@ class RekorLog(TransparencyLog):
             # ImportError (sigstore not installed) is a warned skip; any other failure
             # means the log checkpoint cannot be trusted and is a hard error.
             try:
-                from sigstore.transparency import LogEntry as SigstoreLogEntry  # type: ignore[import-not-found]
+                from sigstore.transparency import LogEntry as SigstoreLogEntry
                 _ = SigstoreLogEntry.from_response(data)
             except ImportError as exc:
                 logger.warning("sigstore not installed; STH checkpoint verification skipped: %s", exc)

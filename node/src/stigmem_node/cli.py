@@ -1312,7 +1312,7 @@ def _cmd_audit_discovery(args: argparse.Namespace) -> int:
         return 0
 
     total = len(rows)
-    recall_at_k_num = 0
+    recall_at_k_num: float = 0.0
     hit_at_k_num = 0
     total_used = 0
     total_missed = 0
@@ -1384,7 +1384,7 @@ def _cmd_identity_rotate_key(args: argparse.Namespace) -> int:
         import stigmem_node.settings as settings_module
         from .settings import Settings
         patched = Settings(db_path=args.db)
-        settings_module.settings = patched  # type: ignore[assignment]
+        settings_module.settings = patched
 
     from .settings import settings
 

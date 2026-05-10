@@ -7,12 +7,14 @@ are through the HTTP API (no direct DB reads).
 
 from __future__ import annotations
 
+from typing import Any
+
 from .conftest import ConformanceClient
 
 _E = "stigmem://conformance/provenance/alice"
 
 
-def _fact(v: str = "provenance test", scope: str = "local") -> dict:
+def _fact(v: str = "provenance test", scope: str = "local") -> dict[str, Any]:
     return {
         "entity": _E,
         "relation": "memory:note",

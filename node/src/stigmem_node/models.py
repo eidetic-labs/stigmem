@@ -550,7 +550,7 @@ class SubscriptionEventRecord(BaseModel):
     event_type: str
     entity_uri: str | None
     fact_id: str | None
-    payload: dict
+    payload: dict[str, Any]
     created_at: str
     delivered_at: str | None
     delivery_status: str

@@ -202,7 +202,7 @@ def vector_search(
         # scope_clause is a literal SQL fragment ("AND f.scope = ?" or ""),
         # never user-supplied text; the actual scope value flows through scope_params.
         scope_clause = "AND f.scope = ?" if scope_filter else ""
-        scope_params: tuple = (scope_filter,) if scope_filter else ()
+        scope_params: tuple[Any, ...] = (scope_filter,) if scope_filter else ()
 
         sql = f"""
             SELECT f.*, v.distance
@@ -215,7 +215,7 @@ def vector_search(
               {scope_clause}
             ORDER BY v.distance
         """  # nosec B608 — scope_clause is a literal fragment; all user values in params
-        params: tuple = (blob, k, tenant_id) + scope_params
+        params: tuple[Any, ...] = (blob, k, tenant_id) + scope_params
 
         rows = c.execute(sql, params).fetchall()
         results: list[tuple["FactRecord", float]] = []

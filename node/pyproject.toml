@@ -97,6 +97,7 @@ ignore = ["S101", "S105", "S106"]
 "tests/**" = ["S"]
 
 [tool.mypy]
+plugins = ["pydantic.mypy"]
 python_version = "3.11"
 strict = true
 ignore_missing_imports = true

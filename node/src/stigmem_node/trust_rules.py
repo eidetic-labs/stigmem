@@ -37,7 +37,7 @@ logger = logging.getLogger("stigmem.trust_rules")
 
 def _load_yaml_rules(path: str) -> dict[str, list[dict[str, Any]]]:
     try:
-        import yaml  # type: ignore[import]
+        import yaml
     except ImportError:
         logger.warning("PyYAML not installed — trust_rules_file ignored")
         return {}

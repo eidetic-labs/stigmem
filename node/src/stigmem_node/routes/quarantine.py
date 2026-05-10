@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -56,7 +56,7 @@ def list_quarantined_facts(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
 
     filters: list[str] = ["f.quarantine_garden_id IS NOT NULL"]
-    params: list = []
+    params: list[Any] = []
 
     if quarantine_status:
         filters.append("f.quarantine_status = ?")
@@ -133,7 +133,7 @@ def admit_fact(
     identity: Annotated[Identity, Depends(resolve_identity)],
     target_garden_id: str | None = Query(None, description="Target garden UUID or slug"),
     reason: str = Query("", description="Reason for admission"),
-) -> dict:
+) -> dict[str, Any]:
     """Promote a quarantined fact to the main fabric (or a specific target garden).
 
     Requires quarantine:moderator or admin role in the fact's quarantine garden.
@@ -182,7 +182,7 @@ def reject_fact(
     fact_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
     reason: str = Query("", description="Reason for rejection"),
-) -> dict:
+) -> dict[str, Any]:
     """Permanently reject a quarantined fact.
 
     Sets confidence = 0.0 and quarantine_status = 'rejected'.
@@ -223,7 +223,9 @@ def reject_fact(
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _get_quarantined_fact(fact_id: str, identity: Identity) -> tuple[dict, dict]:
+def _get_quarantined_fact(
+    fact_id: str, identity: Identity
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """Return (fact_row, garden_row) for a pending quarantined fact.
 
     Raises 404 or 409 as appropriate.  Checks moderator access.
@@ -253,7 +255,9 @@ def _get_quarantined_fact(fact_id: str, identity: Identity) -> tuple[dict, dict]
     return dict(row), garden
 
 
-def _write_quarantine_audit(conn, fact_id: str, event_type: str, identity: Identity, now: str) -> None:
+def _write_quarantine_audit(
+    conn: Any, fact_id: str, event_type: str, identity: Identity, now: str
+) -> None:
     audit_id = str(uuid.uuid4())
     conn.execute(
         "INSERT INTO fact_audit_log (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts) VALUES (?,?,?,?,?,?,?,?)",

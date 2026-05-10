@@ -63,7 +63,7 @@ def init_tracing(service_name: str, otlp_endpoint: str) -> None:
 
         if not _exporter_added:
             try:
-                from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (  # type: ignore[import-not-found]
+                from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
                     OTLPSpanExporter as GrpcOTLPSpanExporter,
                 )
                 grpc_exporter = GrpcOTLPSpanExporter(endpoint=otlp_endpoint)

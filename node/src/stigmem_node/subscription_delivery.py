@@ -115,7 +115,7 @@ def deliver_pending() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _deliver_one(event: Any, payload: dict) -> bool:
+def _deliver_one(event: Any, payload: dict[str, Any]) -> bool:
     on_change = event["on_change"]
     if on_change == "webhook":
         return _deliver_webhook(event, payload)
@@ -148,7 +148,7 @@ def _subscriber_has_active_key(entity_uri: str, tenant_id: str) -> bool:
     return row is not None
 
 
-def _sanitize_payload(event: Any, payload: dict) -> dict | None:
+def _sanitize_payload(event: Any, payload: dict[str, Any]) -> dict[str, Any] | None:
     """Apply §17 garden ACL and §19 sanitizer.  Returns None to suppress delivery."""
     from .models import FactRecord, FactValue
 
@@ -201,7 +201,7 @@ def _sanitize_payload(event: Any, payload: dict) -> dict | None:
         return payload
 
 
-def _deliver_webhook(event: Any, payload: dict) -> bool:
+def _deliver_webhook(event: Any, payload: dict[str, Any]) -> bool:
     sanitized = _sanitize_payload(event, payload)
     if sanitized is None:
         # ACL/sanitizer blocked — mark delivered, don't retry
@@ -243,7 +243,7 @@ def _deliver_webhook(event: Any, payload: dict) -> bool:
         return False
 
 
-def _deliver_wake(event: Any, payload: dict) -> bool:
+def _deliver_wake(event: Any, payload: dict[str, Any]) -> bool:
     sanitized = _sanitize_payload(event, payload)
     if sanitized is None:
         return True  # ACL blocked; mark delivered

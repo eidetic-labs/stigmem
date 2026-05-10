@@ -7,6 +7,8 @@ scoring algorithm.
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi.testclient import TestClient
 
 from .conftest import ConformanceClient
@@ -14,7 +16,12 @@ from .conftest import ConformanceClient
 _E = "stigmem://conformance/recall/entity"
 
 
-def _fact(entity: str = _E, relation: str = "memory:knows", v: str = "test", scope: str = "local") -> dict:
+def _fact(
+    entity: str = _E,
+    relation: str = "memory:knows",
+    v: str = "test",
+    scope: str = "local",
+) -> dict[str, Any]:
     return {
         "entity": entity,
         "relation": relation,
@@ -25,8 +32,19 @@ def _fact(entity: str = _E, relation: str = "memory:knows", v: str = "test", sco
     }
 
 
-def _recall(query: str = "test", scope: str = "local", budget: int = 4000, **kw) -> dict:
-    body = {"query": query, "scope": scope, "token_budget": budget, "depth": 1, "include_neighbors": False}
+def _recall(
+    query: str = "test",
+    scope: str = "local",
+    budget: int = 4000,
+    **kw: Any,
+) -> dict[str, Any]:
+    body: dict[str, Any] = {
+        "query": query,
+        "scope": scope,
+        "token_budget": budget,
+        "depth": 1,
+        "include_neighbors": False,
+    }
     body.update(kw)
     return body
 

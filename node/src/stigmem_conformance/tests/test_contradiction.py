@@ -8,6 +8,8 @@ sets ``status=resolved`` on the conflict via the API.
 
 from __future__ import annotations
 
+from typing import Any
+
 from .conftest import ConformanceClient
 
 _ALICE = "stigmem://conformance/contradiction/alice"
@@ -15,7 +17,7 @@ _SRC_A = "stigmem://conformance/source/a"
 _SRC_B = "stigmem://conformance/source/b"
 
 
-def _fact(entity: str, v: str, source: str, conf: float = 0.9) -> dict:
+def _fact(entity: str, v: str, source: str, conf: float = 0.9) -> dict[str, Any]:
     return {
         "entity": entity,
         "relation": "test:role",

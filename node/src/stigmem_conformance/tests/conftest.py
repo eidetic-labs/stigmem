@@ -41,7 +41,7 @@ _ALL_BACKENDS = ["sqlite", "libsql", "postgres"]
 # ---------------------------------------------------------------------------
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:  # type: ignore[name-defined]
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--conformance-backend",
         default=None,
@@ -72,8 +72,8 @@ _PATCHABLE_MODULES = [
 ]
 
 
-def _get_extra_modules() -> list:
-    mods = []
+def _get_extra_modules() -> list[object]:
+    mods: list[object] = []
     for name in _PATCHABLE_MODULES:
         try:
             mods.append(importlib.import_module(name))
@@ -82,33 +82,35 @@ def _get_extra_modules() -> list:
     return mods
 
 
-def _patch_settings(test_settings: object) -> list:
+def _patch_settings(test_settings: object) -> list[object]:
     import stigmem_node.auth as auth_mod
     import stigmem_node.db as db_mod
     import stigmem_node.routes.wellknown as wk_mod
     import stigmem_node.settings as settings_module
 
     extra = _get_extra_modules()
-    settings_module.settings = test_settings  # type: ignore[assignment]
-    auth_mod.settings = test_settings  # type: ignore[assignment]
-    db_mod.settings = test_settings  # type: ignore[assignment]
-    wk_mod.settings = test_settings  # type: ignore[assignment]
+    # Dynamic re-binding of module-level `settings` references for test isolation.
+    # setattr() avoids needing each production module to publicly export `settings`.
+    setattr(settings_module, "settings", test_settings)
+    setattr(auth_mod, "settings", test_settings)
+    setattr(db_mod, "settings", test_settings)
+    setattr(wk_mod, "settings", test_settings)
     for mod in extra:
         if hasattr(mod, "settings"):
             setattr(mod, "settings", test_settings)
     return extra
 
 
-def _restore_settings(original: object, extra: list) -> None:
+def _restore_settings(original: object, extra: list[object]) -> None:
     import stigmem_node.auth as auth_mod
     import stigmem_node.db as db_mod
     import stigmem_node.routes.wellknown as wk_mod
     import stigmem_node.settings as settings_module
 
-    settings_module.settings = original  # type: ignore[assignment]
-    auth_mod.settings = original  # type: ignore[assignment]
-    db_mod.settings = original  # type: ignore[assignment]
-    wk_mod.settings = original  # type: ignore[assignment]
+    setattr(settings_module, "settings", original)
+    setattr(auth_mod, "settings", original)
+    setattr(db_mod, "settings", original)
+    setattr(wk_mod, "settings", original)
     for mod in extra:
         if hasattr(mod, "settings"):
             setattr(mod, "settings", original)
@@ -123,12 +125,12 @@ def _backend_available(backend_name: str) -> tuple[bool, str]:
     """Return (available, skip_reason)."""
     if backend_name == "libsql":
         try:
-            import libsql_experimental  # type: ignore[import]  # noqa: F401
+            import libsql_experimental  # noqa: F401
         except ImportError:
             return False, "libsql-experimental not installed (pip install 'stigmem-node[libsql]')"
     elif backend_name == "postgres":
         try:
-            import psycopg2  # type: ignore[import]  # noqa: F401
+            import psycopg2  # noqa: F401
         except ImportError:
             return False, "psycopg2 not installed (pip install 'stigmem-node[postgres]')"
         if not os.environ.get("STIGMEM_TEST_PG_DSN"):
@@ -190,7 +192,7 @@ def _build_client(
     # Drop Postgres schema to clean up
     if backend_name == "postgres":
         try:
-            import psycopg2  # type: ignore[import]
+            import psycopg2
 
             conn = psycopg2.connect(pg_dsn)
             conn.autocommit = True

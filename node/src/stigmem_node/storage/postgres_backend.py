@@ -209,7 +209,7 @@ class _PGRow:
 
     __slots__ = ("_d", "_vals")
 
-    def __init__(self, d: dict, vals: tuple) -> None:
+    def __init__(self, d: dict[str, Any], vals: tuple[Any, ...]) -> None:
         self._d = d
         self._vals = vals
 
@@ -274,7 +274,7 @@ class _PGConn:
         self._conn = pg_conn
 
     def execute(self, sql: str, params: Any = ()) -> _PGCursor:
-        import psycopg2.extras  # type: ignore[import]
+        import psycopg2.extras
 
         translated = _pg_translate(sql)
         cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -352,7 +352,7 @@ class PostgresBackend(StorageBackend):
         if self._pool is not None:
             return self._pool
         try:
-            import psycopg2.pool  # type: ignore[import]
+            import psycopg2.pool
         except ImportError as exc:
             raise RuntimeError(
                 "psycopg2 is required for the PostgreSQL backend. "
@@ -369,7 +369,7 @@ class PostgresBackend(StorageBackend):
     def _open_raw_conn(self) -> Any:
         """Open a direct psycopg2 connection (used by apply_migrations)."""
         try:
-            import psycopg2  # type: ignore[import]
+            import psycopg2
         except ImportError as exc:
             raise RuntimeError(
                 "psycopg2 is required for the PostgreSQL backend. "
@@ -435,7 +435,7 @@ class PostgresBackend(StorageBackend):
                 )
             conn.commit()
 
-            import psycopg2.extras  # type: ignore[import]
+            import psycopg2.extras
 
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute("SELECT version FROM schema_migrations")
@@ -471,7 +471,7 @@ class PostgresBackend(StorageBackend):
     def _ensure_vec_table(self, conn: Any) -> None:
         """Create the pgvector ``vec_facts`` table and index (idempotent)."""
         try:
-            from pgvector.psycopg2 import register_vector  # type: ignore[import]
+            from pgvector.psycopg2 import register_vector
         except ImportError as exc:
             raise RuntimeError(
                 "pgvector is required for Postgres vector search. "

@@ -93,7 +93,7 @@ async def pull_from_peer_once(
         # §22.1.2.4 — validate server cert URI SAN before consuming any data.
         if settings.mtls_enabled:
             ssl_obj = resp.extensions.get("ssl_object")
-            peer_cert: dict = ssl_obj.getpeercert() if ssl_obj is not None else {}
+            peer_cert: dict[str, Any] = ssl_obj.getpeercert() if ssl_obj is not None else {}
             if not check_peer_san(peer_cert, peer["node_id"]):
                 logger.warning(
                     "Client-side SAN mismatch from peer %s — cert URI SAN does not match node_id; discarding response",

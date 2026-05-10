@@ -112,14 +112,14 @@ def derive_key(passphrase: bytes) -> bytes:
     Requires ``argon2-cffi``; install with ``pip install 'stigmem-node[encryption]'``.
     """
     try:
-        import argon2.low_level as _argon2  # type: ignore[import]
+        import argon2.low_level as _argon2
     except ImportError as exc:
         raise RuntimeError(
             "argon2-cffi is required for passphrase-based key derivation. "
             "Install it with: pip install 'stigmem-node[encryption]'"
         ) from exc
 
-    return _argon2.hash_secret_raw(  # type: ignore[return-value]
+    derived: bytes = _argon2.hash_secret_raw(
         secret=passphrase,
         salt=_ARGON2_SALT,
         time_cost=3,
@@ -128,6 +128,7 @@ def derive_key(passphrase: bytes) -> bytes:
         hash_len=32,
         type=_argon2.Type.ID,
     )
+    return derived
 
 
 def _reset_key_cache() -> None:

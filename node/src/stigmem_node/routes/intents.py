@@ -224,10 +224,11 @@ def _reconstruct(intent_id: str, rows_by_entity: dict[str, list[Any]]) -> Intent
                 name=art_by_rel.get("intent:artifact:name", ""),
                 ref=art_by_rel.get("intent:artifact:ref", ""),
             ))
+        _cont = by_rel.get("intent:continuation")
         handoff = HandoffPayload(
             summary=by_rel["intent:handoff_summary"][0],
             fact_refs=by_rel.get("intent:context_ref", []),
-            continuation=(by_rel.get("intent:continuation") or [None])[0],
+            continuation=_cont[0] if _cont else None,
             artifacts=artifacts,
         )
 

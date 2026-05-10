@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import UTC, datetime
+from typing import Any
 
 from .entity_normalizer import NormalizationError, normalize_entity_uri
 
@@ -42,7 +43,7 @@ def register_alias(
     canonical_uri: str,
     *,
     kind: str = "user",
-) -> dict:
+) -> dict[str, Any]:
     """Register or replace a semantic alias (raw_uri resolves to canonical_uri).
 
     Both URIs are Layer 1–normalized before storage so the caller need not

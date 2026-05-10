@@ -116,7 +116,7 @@ class AuditSubmitRequest(BaseModel):
 def _approx_tokens(text: str) -> int:
     """Approximate cl100k token count (4 chars ≈ 1 token)."""
     try:
-        import tiktoken  # type: ignore[import]
+        import tiktoken
         enc = tiktoken.get_encoding("cl100k_base")
         return len(enc.encode(text))
     except Exception:
@@ -144,7 +144,7 @@ def _check_agent_access(identity: Identity, agent_id: str) -> None:
     )
 
 
-def _get_current_manifest(conn: Any, agent_id: str) -> dict | None:
+def _get_current_manifest(conn: Any, agent_id: str) -> dict[str, Any] | None:
     row = conn.execute(
         "SELECT * FROM instruction_manifests WHERE agent_id = ? AND superseded_at IS NULL"
         " ORDER BY created_at DESC LIMIT 1",
@@ -288,7 +288,8 @@ def _get_fact_valid_until(fact_uri: str) -> str | None:
             (fact_uri,),
         ).fetchone()
     if row:
-        return row["valid_until"]
+        valid_until: str | None = row["valid_until"]
+        return valid_until
     return None
 
 
@@ -366,7 +367,7 @@ def _derive_agent_role(agent_id: str, conn: Any) -> str:
         (f"%{agent_id}%",),
     ).fetchone()
     if row:
-        uri = row["entity_uri"]
+        uri: str = row["entity_uri"]
         # e.g. "agent:cto" or "stigmem://org/agent/cto"
         parts = uri.replace("//", "/").rstrip("/").split("/")
         if parts:
@@ -383,7 +384,7 @@ def _derive_agent_role(agent_id: str, conn: Any) -> str:
 def get_instruction_manifest(
     agent_id: str,
     identity: Identity = Depends(resolve_identity),
-) -> dict:
+) -> dict[str, Any]:
     _check_agent_access(identity, agent_id)
 
     with db() as conn:
@@ -415,7 +416,7 @@ def publish_instruction_manifest(
     agent_id: str,
     req: PublishManifestRequest,
     identity: Identity = Depends(resolve_identity),
-) -> dict:
+) -> dict[str, Any]:
     if not _is_admin(identity):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="admin key required")
 
@@ -532,7 +533,7 @@ def recall_instruction(
     agent_id: str,
     req: RecallInstructionRequest,
     identity: Identity = Depends(resolve_identity),
-) -> dict:
+) -> dict[str, Any]:
     _check_agent_access(identity, agent_id)
 
     with db() as conn:
@@ -541,11 +542,11 @@ def recall_instruction(
     if manifest_row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="manifest_not_found")
 
-    entries_raw: list[dict] = json.loads(manifest_row["body"])
+    entries_raw: list[dict[str, Any]] = json.loads(manifest_row["body"])
     entries: list[ManifestEntry] = [ManifestEntry(**e) for e in entries_raw]
 
     # --- Step 1: resolve manifest_hint entries (highest priority) ---
-    chunks: list[dict] = []
+    chunks: list[dict[str, Any]] = []
     missed_hints: list[str] = []
     used_names: set[str] = set()
     tokens_used = 0
@@ -659,7 +660,9 @@ def recall_instruction(
     }
 
 
-def _make_chunk(entry: ManifestEntry, content: str, tokens: int, source: str, score: float) -> dict:
+def _make_chunk(
+    entry: ManifestEntry, content: str, tokens: int, source: str, score: float
+) -> dict[str, Any]:
     valid_until = _get_fact_valid_until(entry.fact_uri) if entry.fact_uri else None
     # Extract version from fact_uri, e.g. "instruction:.../v2" → "v2"
     version = "v1"
@@ -731,7 +734,7 @@ def submit_discovery_audit(
 def get_manifest_coverage(
     agent_id: str,
     identity: Identity = Depends(resolve_identity),
-) -> dict:
+) -> dict[str, Any]:
     # Scope validation (S9)
     _check_agent_access(identity, agent_id)
 
@@ -740,7 +743,7 @@ def get_manifest_coverage(
         if manifest_row is None:
             raise HTTPException(status_code=404, detail="manifest_not_found")
 
-        entries_raw: list[dict] = json.loads(manifest_row["body"])
+        entries_raw: list[dict[str, Any]] = json.loads(manifest_row["body"])
         entries = [ManifestEntry(**e) for e in entries_raw]
 
         # Compute per-unit metrics from audit log
@@ -753,7 +756,7 @@ def get_manifest_coverage(
     is_admin = _is_admin(identity)
     now_iso = datetime.now(UTC).isoformat()
 
-    unit_stats: dict[str, dict] = {}
+    unit_stats: dict[str, dict[str, int]] = {}
     for entry in entries:
         unit_stats[entry.name] = {"loaded": 0, "used": 0, "total": len(audit_rows)}
 
@@ -772,7 +775,7 @@ def get_manifest_coverage(
         total = stats["total"]
         hit_at_10 = stats["loaded"] / total if total > 0 else 0.0
         coverage_pct = stats["used"] / total if total > 0 else 0.0
-        unit_info: dict = {
+        unit_info: dict[str, Any] = {
             "name": entry.name,
             "coverage_pct": round(coverage_pct, 4),
             "hit_at_10": round(hit_at_10, 4),
@@ -791,10 +794,8 @@ def get_manifest_coverage(
         units_out.append(unit_info)
 
     # Best-effort embedding model version
-    try:
-        from ..vector_search import _MODEL_NAME as emb_model  # type: ignore[import]
-    except Exception:
-        emb_model = "unknown"
+    from ..settings import settings as _settings_for_model
+    emb_model: str = getattr(_settings_for_model, "embed_model_id", "unknown")
 
     return {
         "manifest_version": manifest_row["version"],

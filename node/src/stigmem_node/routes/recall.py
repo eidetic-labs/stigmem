@@ -244,10 +244,10 @@ def _semantic_search(
     if not settings.embed_enabled:
         return {}
     try:
-        from ..embedding import get_model
+        from ..embedding import get_embedding_model
         from ..vector_search import vector_search
 
-        model = get_model()
+        model = get_embedding_model()
         vecs = model.embed([query])
         if not vecs:
             return {}

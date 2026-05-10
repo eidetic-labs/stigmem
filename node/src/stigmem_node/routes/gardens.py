@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import uuid
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -63,7 +63,7 @@ def _members_for_garden(garden_uuid: str) -> list[GardenMemberRecord]:
     ]
 
 
-def _row_to_garden_record(row: dict, include_members: bool = True) -> GardenRecord:
+def _row_to_garden_record(row: dict[str, Any], include_members: bool = True) -> GardenRecord:
     members = _members_for_garden(row["id"]) if include_members else []
     return GardenRecord(
         id=row["id"],
@@ -365,7 +365,7 @@ def promote_fact(
     garden_slug_or_id: str,
     req: QuarantinePromoteRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
-) -> dict:
+) -> dict[str, Any]:
     """Promote a quarantined fact to a target garden (spec §5.25, §19.5.5).
 
     Requires quarantine:moderator or admin role.
@@ -440,7 +440,7 @@ def reject_fact(
     garden_slug_or_id: str,
     req: QuarantineRejectRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
-) -> dict:
+) -> dict[str, Any]:
     """Reject a quarantined fact (spec §5.25, §19.5.5).
 
     Sets confidence = 0.0 and quarantine_status = 'rejected'.

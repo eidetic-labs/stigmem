@@ -59,6 +59,18 @@ surfaces:
     spelling: pep440
     sort_authority: pep440
 
+  - id: pypi-stigmem-openclaw
+    kind: external-registry
+    category: python-package
+    file: adapters/openclaw/pyproject.toml
+    field: project.version
+    spelling: pep440
+    sort_authority: pep440
+    notes: >-
+      Published from this monorepo since v0.9.0a1 (decision 2026-05-09).
+      Pre-reset versions 1.0.3 and 1.0.5 were yanked (PEP 592) because their
+      `stigmem-py>=1.0.0rc1` dependency was end-to-end uninstallable.
+
   - id: npm-stigmem-root
     kind: external-registry
     category: node-package

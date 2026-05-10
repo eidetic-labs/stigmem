@@ -54,7 +54,7 @@ We follow coordinated disclosure. We ask reporters to give us 90 days before pub
 >
 > **Open security gaps named explicitly:** several controls our threat model identifies as required for stable production — mTLS-default federation, persistent audit log, per-principal rate limits, capability-level validation for cross-org instructions, bounded HLC skew enforcement, the storage-immutability stack ([ADR-016](docs/adr/016-storage-immutability-enforcement.md)) — are scheduled for the v0.9.0bN beta series and are **not yet in effect at v0.9.0a1**. Adopters running federation across organizational boundaries should wait for the v0.9.0bN beta series per [LIMITATIONS.md](LIMITATIONS.md).
 
-This section documents the current security posture of the stigmem `v0.9.0a1` release, including a triage of all open Dependabot alerts against Eidetic-Labs/stigmem as of the 2026-05-03 the pre-reset v1.0-rc snapshot snapshot (carried forward; see note above).
+This section documents the current security posture of the stigmem `v0.9.0a1` release, including a triage of all open Dependabot alerts against Eidetic-Labs/stigmem as of the 2026-05-03 pre-reset v1.0-rc snapshot (carried forward; see note above).
 
 ### Summary
 
@@ -72,9 +72,9 @@ This section documents the current security posture of the stigmem `v0.9.0a1` re
 
 The `chore(deps): TypeScript dep upgrade sweep + Node CVE remediation` commit upgraded the following packages to patched versions. Dependabot alerts will auto-close on the next GitHub rescan after the branch merges.
 
-#### Next.js (apps/dashboard) — 16 alerts
+#### Next.js (`experimental/dashboard/`, deferred per ADR-002) — 16 alerts
 
-The `apps/dashboard` Next.js curator dashboard was pinned at Next.js 14 and accumulated CVEs from three major Next.js disclosure cycles. The dep sweep upgraded it to `next@15.5.15`, which is the patched release for all outstanding CVEs.
+The Next.js curator dashboard (`experimental/dashboard/`) was pinned at Next.js 14 and accumulated CVEs from three major Next.js disclosure cycles. The dep sweep upgraded it to `next@15.5.15`, which is the patched release for all outstanding CVEs.
 
 | Alert | Severity | CVE | Summary | Resolution |
 | ----- | -------- | --- | ------- | ---------- |
@@ -96,7 +96,7 @@ The `apps/dashboard` Next.js curator dashboard was pinned at Next.js 14 and accu
 | #2 | MEDIUM | CVE-2024-47831 | DoS via image optimization | `next@15.5.15` ≥ patched `14.2.7` |
 | #1 | HIGH | CVE-2024-46982 | Cache poisoning | `next@15.5.15` ≥ patched `14.2.10` |
 
-> **Deployment gate:** The `apps/dashboard` is marked "In progress" and is not deployed to production at v0.9.0a1. Even so, all CVEs above are fixed in the installed version. No deployment should occur on any prior version.
+> **Deployment gate:** The dashboard at `experimental/dashboard/` is deferred per ADR-002 and is not deployed to production at v0.9.0a1. Even so, all CVEs above are fixed in the installed version. No deployment should occur on any prior version.
 
 #### vite — 1 alert
 

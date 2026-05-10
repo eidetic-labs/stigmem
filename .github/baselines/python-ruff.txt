@@ -98,43 +98,6 @@ node/src/stigmem_node/routes/auth.py:77:101:E501:Line too long (115 > 100)
 node/src/stigmem_node/routes/auth.py:79:101:E501:Line too long (113 > 100)
 node/src/stigmem_node/routes/cards.py:15:33:F401:`..card_materializer.CARD_MIN_CONFIDENCE` imported but unused
 node/src/stigmem_node/routes/cid_admin.py:32:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:147:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/routes/facts.py:152:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/facts.py:195:101:E501:Line too long (106 > 100)
-node/src/stigmem_node/routes/facts.py:250:101:E501:Line too long (109 > 100)
-node/src/stigmem_node/routes/facts.py:313:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/facts.py:320:21:UP012:Unnecessary UTF-8 `encoding` argument to `encode`
-node/src/stigmem_node/routes/facts.py:339:101:E501:Line too long (114 > 100)
-node/src/stigmem_node/routes/facts.py:373:101:E501:Line too long (110 > 100)
-node/src/stigmem_node/routes/facts.py:3:1:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/facts.py:42:36:F401:`..settings.settings` imported but unused
-node/src/stigmem_node/routes/facts.py:514:101:E501:Line too long (112 > 100)
-node/src/stigmem_node/routes/facts.py:546:9:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/facts.py:576:5:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/facts.py:596:9:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/facts.py:59:35:F401:`..tombstone_cache.is_tombstoned` imported but unused
-node/src/stigmem_node/routes/facts.py:5:8:F401:`json` imported but unused
-node/src/stigmem_node/routes/facts.py:674:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:677:101:E501:Line too long (105 > 100)
-node/src/stigmem_node/routes/facts.py:678:101:E501:Line too long (103 > 100)
-node/src/stigmem_node/routes/facts.py:679:101:E501:Line too long (120 > 100)
-node/src/stigmem_node/routes/facts.py:680:101:E501:Line too long (118 > 100)
-node/src/stigmem_node/routes/facts.py:682:101:E501:Line too long (119 > 100)
-node/src/stigmem_node/routes/facts.py:684:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:70:9:SIM105:Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/facts.py:72:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/facts.py:743:9:SIM105:Use `contextlib.suppress(NormalizationError)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/facts.py:756:9:SIM105:Use `contextlib.suppress(NormalizationError)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/facts.py:836:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:83:5:SIM105:Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/facts.py:844:101:E501:Line too long (110 > 100)
-node/src/stigmem_node/routes/facts.py:85:5:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/facts.py:868:8:SIM118:Use `key in dict` instead of `key in dict.keys()`
-node/src/stigmem_node/routes/facts.py:905:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:914:28:SIM118:Use `key in dict` instead of `key in dict.keys()`
-node/src/stigmem_node/routes/facts.py:956:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:966:47:SIM118:Use `key in dict` instead of `key in dict.keys()`
-node/src/stigmem_node/routes/facts.py:967:29:SIM118:Use `key in dict` instead of `key in dict.keys()`
 node/src/stigmem_node/routes/graph.py:97:101:E501:Line too long (107 > 100)
 node/src/stigmem_node/routes/identity.py:122:9:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
 node/src/stigmem_node/routes/identity.py:134:13:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling

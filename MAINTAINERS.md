@@ -40,6 +40,18 @@ The Sigstore identity mapping for Eidetic Labs is documented separately in `docs
 
 The operational runbook for cutting a new tagged release lives at [`docs/internal/release-cadence.md`](docs/internal/release-cadence.md). It covers pre-release checklist, version-string sweep across all surfaces, tag-and-publish flow, post-publish verification, ClawHub manual push, and rollback procedures. Any maintainer about to push a `v*` tag should walk that runbook end-to-end.
 
+### Release discipline (non-negotiable)
+
+The runbook documents five durable rules that prevent the v1.0 retraction failure mode from recurring. Summary for fast reference:
+
+1. **PyPI/npm versions are immutable** (registry-enforced).
+2. **Tags are immutable after publish** — never force-move a `v*` tag once the registry has the artifact.
+3. **All errata go to the next version** — never patch in place. Doc-only fixes ship as PEP 440 `.postN`; code fixes ship as the next alpha/beta/rc/patch.
+4. **Tag protection on GitHub** for pattern `v*`.
+5. **No `--force` on `main` or release branches, ever.**
+
+Pre-1.0 (`v0.9.0aN` → `v0.9.0bN` → `v1.0.0rcN`): no release branches; tag-and-publish from `main` HEAD. **At v1.0.0 GA: cut `release/v1.x`** and patch releases ship from there. See [the runbook §Release-branch strategy](docs/internal/release-cadence.md#release-branch-strategy) for the full cutover procedure.
+
 ---
 
 ## Credential rotation

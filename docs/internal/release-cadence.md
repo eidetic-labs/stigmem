@@ -115,7 +115,7 @@ Every published version string in the repo must agree with the new release. The 
 - `node/src/stigmem_conformance/__init__.py` `__version__`.
 - `eval/README.md` baseline JSON `server_version` example.
 - `deploy/systemd/README.md` `pip3 download` example.
-- `adapters/openclaw/clawhub-skill/SKILL.md` (if cutting a new ClawHub skill release alongside).
+- `adapters/openclaw/skill/SKILL.md` (if cutting a new ClawHub skill release alongside).
 
 **Compose surfaces** (added to release cadence on 2026-05-09):
 
@@ -192,7 +192,7 @@ openclaw whoami    # confirms you're authenticated as offbyonce
 # If not authenticated:
 openclaw login
 
-cd adapters/openclaw/clawhub-skill
+cd adapters/openclaw/skill
 # Edit SKILL.md:
 #   version: <next iteration> (independently versioned — does NOT match
 #     the canonical line; bump the trailing patch number)

@@ -3,14 +3,14 @@ name: Publish ClawHub skill
 on:
   # Run on every push to main that touches the skill directory. The skill
   # is independently versioned along its own semver line (see
-  # release/version-surfaces.yaml + adapters/openclaw/clawhub-skill/SKILL.md
+  # release/version-surfaces.yaml + adapters/openclaw/skill/SKILL.md
   # changelog header note); it does NOT track the stigmem tag/version line.
   # That's why this workflow doesn't trigger on `v*` tag pushes the way
   # publish.yml does.
   push:
     branches: ["main"]
     paths:
-      - "adapters/openclaw/clawhub-skill/**"
+      - "adapters/openclaw/skill/**"
       - ".github/workflows/clawhub-publish.yml"
   # Manual override for cases where the path filter didn't catch a needed
   # republish (e.g., recovering from a partially-failed publish).
@@ -45,7 +45,7 @@ jobs:
       - name: Read SKILL.md version
         id: ver
         run: |
-          VERSION=$(awk '/^version:/{print $2; exit}' adapters/openclaw/clawhub-skill/SKILL.md)
+          VERSION=$(awk '/^version:/{print $2; exit}' adapters/openclaw/skill/SKILL.md)
           if [ -z "$VERSION" ]; then
             echo "::error::Could not read version from SKILL.md frontmatter"
             exit 1
@@ -76,7 +76,7 @@ jobs:
             $0 == ver { capture=1; next }
             capture && /^### v/ { exit }
             capture { print }
-          ' adapters/openclaw/clawhub-skill/SKILL.md)
+          ' adapters/openclaw/skill/SKILL.md)
           if [ -z "$NOTES" ]; then
             NOTES="See SKILL.md changelog for v${VERSION}."
           fi
@@ -89,23 +89,27 @@ jobs:
       - name: Publish to ClawHub
         if: steps.gate.outputs.skip == 'false'
         run: |
-          # `--name "Stigmem"` is hard-coded here on purpose. The clawhub CLI
-          # infers the display name from the directory name when --name is
-          # omitted, which produces "Clawhub Skill" (because our directory
-          # is adapters/openclaw/clawhub-skill/). That bug shipped twice
-          # historically: v1.0.3 fixed it manually, then v1.0.6 regressed
-          # because a manual CLI invocation omitted --name. Hard-coding it
-          # in CI is the structural fix.
+          # `--name "Stigmem"` is hard-coded here as belt-and-suspenders.
+          # Historically the clawhub CLI inferred the display name from the
+          # directory name when --name was omitted; while our directory was
+          # `adapters/openclaw/clawhub-skill/`, that produced "Clawhub Skill",
+          # which shipped to the registry twice (v1.0.3 fix, v1.0.6 regression
+          # via a manual CLI invocation that omitted --name). v1.0.8 renamed
+          # the directory to `adapters/openclaw/skill/`, removing the
+          # inference dependency entirely. Keeping --name pinned here so the
+          # display name cannot drift even if the CLI's inference behavior
+          # changes again.
           #
           # `--slug stigmem-node` matches the live registry slug; passing it
           # explicitly also avoids the directory-name slug-inference path
-          # which trips ClawHub's protected-namespace check ("clawhub-*").
+          # which historically tripped ClawHub's protected-namespace check
+          # ("clawhub-*"). Same belt-and-suspenders rationale post-rename.
           clawhub skill publish \
             --slug stigmem-node \
             --name "Stigmem" \
             --version "${{ steps.ver.outputs.version }}" \
             --changelog "${{ steps.changelog.outputs.notes }}" \
-            adapters/openclaw/clawhub-skill/
+            adapters/openclaw/skill/
 
       - name: Verify post-publish state
         if: steps.gate.outputs.skip == 'false'

@@ -62,11 +62,13 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 
 ### Known follow-ups for v0.9.0a2
 
-These items were intentionally deferred from `v0.9.0a1` to keep the first build narrowly scoped. They are queued for the next alpha:
+These items were intentionally deferred from `v0.9.0a1` to keep the first build narrowly scoped, or surfaced from publish-day verification. They are queued for the next alpha:
 
-- **Internal refactor — split god files** (`node/src/stigmem_node/cli.py`, `routes/federation.py`, `routes/facts.py`). Pure code-movement; no behavioral change. Tracked at [PR #69](https://github.com/Eidetic-Labs/stigmem/pull/69).
+- **Internal refactor — split god files** (`node/src/stigmem_node/cli.py`, `routes/federation.py`, `routes/facts.py`). Pure code-movement; no behavioral change. Preserved on branch [`feat/godfile-split-v0.9.0a2`](https://github.com/Eidetic-Labs/stigmem/tree/feat/godfile-split-v0.9.0a2); reverted from v0.9.0a1 in PR #73 to match the documented scope.
 - **Lint baseline tightening** — reduce the `check_ruff_baseline.py` known-issues count (currently 578) through targeted cleanup in touched files. Each PR carries its own baseline-reduction quota.
-- **Retraction-post URL backfill** — `README.md` line 11 and `LIMITATIONS.md` line 244 reference the retraction post but the URL is not yet known at v0.9.0a1 publish time. A `v0.9.0a1.post1` (PEP 440 post-release) lands the URLs once the retraction post is live, per the [release-cadence runbook §Rule 3](docs/internal/release-cadence.md#rule-3--all-errata-go-to-the-next-version).
+- **Retraction-post URL backfill** — `README.md` and `LIMITATIONS.md` reference the dev.to retraction post but the URL was not yet known at v0.9.0a1 publish time. The links resolve to placeholders / the in-repo archive copy until then. The next wheel publish (v0.9.0a2) refreshes the bundled `README.md` content on PyPI's project pages with the live URL; the GitHub-visible files update on `main` whenever the URL is filled in.
+- **`sdks/stigmem-ts/README.md`** — npm publishes the package without a README in the package directory, so the npm project page (https://www.npmjs.com/package/@eidetic-labs/stigmem-ts) currently displays no usage content. Add a minimal SDK README covering install, basic usage, and links to the docs site. Cosmetic, low priority.
+- **npm `latest` dist-tag convention** — surfaced post-publish; corrected in `LIMITATIONS.md` on `main` ([PR #75](https://github.com/Eidetic-Labs/stigmem/pull/75)) along with a workflow change so future prereleases advance `latest` automatically. The published wheel for v0.9.0a1 carries the older bundled `README.md`; the v0.9.0a2 wheel refresh will pick up the corrected text. (No `.post1` needed since the wrong claim was in `LIMITATIONS.md` — GitHub-only, not bundled.)
 
 ---
 

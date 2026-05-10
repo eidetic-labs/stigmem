@@ -33,7 +33,6 @@ import pytest
 import stigmem_node.cli as cli_mod
 import stigmem_node.db as db_mod
 from stigmem_node.auth import create_api_key
-from stigmem_node.db import apply_migrations
 
 
 @pytest.fixture()
@@ -41,7 +40,7 @@ def fresh_db(tmp_path: object, monkeypatch: pytest.MonkeyPatch) -> str:
     """Migrated SQLite DB with no rows in api_keys. Patches the settings
     `db_path` so `db()` / `register_api_key()` resolve to this temp file."""
     path = str(tmp_path) + "/cli-test.db"  # type: ignore[operator]
-    apply_migrations(db_path=path)
+    db_mod.apply_migrations(db_path=path)
     import stigmem_node.settings as settings_mod
     monkeypatch.setattr(settings_mod.settings, "db_path", path)
     monkeypatch.setattr(db_mod, "settings", settings_mod.settings)

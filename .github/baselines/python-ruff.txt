@@ -168,9 +168,6 @@ node/src/stigmem_node/settings.py:28:101:E501:Line too long (106 > 100)
 node/src/stigmem_node/settings.py:33:101:E501:Line too long (104 > 100)
 node/src/stigmem_node/settings.py:37:101:E501:Line too long (121 > 100)
 node/src/stigmem_node/settings.py:39:101:E501:Line too long (114 > 100)
-node/src/stigmem_node/snapshot.py:153:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/snapshot.py:160:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/snapshot.py:316:13:S202:Uses of `tarfile.extractall()`
 node/src/stigmem_node/source_trust.py:101:101:E501:Line too long (114 > 100)
 node/src/stigmem_node/source_trust.py:148:5:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_node/source_trust.py:179:61:UP037:Remove quotes from type annotation

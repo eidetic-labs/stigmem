@@ -1,0 +1,34 @@
+# Gitleaks configuration for stigmem.
+#
+# Inherits all default rules; only adds an allowlist for known false-positive
+# patterns documented below. Re-run `gitleaks detect` after editing.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "stigmem-specific false positive allowlist"
+regexTarget = "match"
+paths = [
+  # Build artifacts (not git-tracked, but `gitleaks detect --no-git` scans them).
+  '''apps/dashboard/\.next/.*''',
+  '''docs/build/.*''',
+  '''docs/\.docusaurus/.*''',
+  '''sdks/stigmem-ts/dist/.*''',
+  '''.*/__pycache__/.*''',
+  '''node_modules/.*''',
+]
+regexes = [
+  # Python type-annotation literal — flagged by generic-api-key heuristic.
+  '''Ed25519PublicKey|Ed25519PrivateKey''',
+  # Tutorial/documentation placeholder bearer tokens used in curl examples.
+  '''Bearer secret-(admin|reader|writer|editor)-[a-z]''',
+  '''Bearer my-static-key''',
+  '''X-API-Key:\s*my-static-key''',
+  # Adversarial test fixtures explicitly marked invalid.
+  '''eyJ[A-Za-z0-9_-]+\.invalid''',
+  # Docusaurus generated API reference MDX embeds zlib-compressed OpenAPI
+  # payloads as base64 strings starting with "eJ" — these are spec
+  # descriptors, not credentials.
+  '''eJ[A-Za-z0-9+/=]{40,}''',
+]

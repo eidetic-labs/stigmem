@@ -235,6 +235,14 @@ const config = {
               { label: 'Blog', to: '/blog' },
             ],
           },
+          {
+            title: 'Community',
+            items: [
+              { label: 'Discord', href: 'https://discord.gg/Z47Re7FjjV' },
+              { label: 'Discussions', href: 'https://github.com/Eidetic-Labs/stigmem/discussions' },
+              { label: 'Issues', href: 'https://github.com/Eidetic-Labs/stigmem/issues' },
+            ],
+          },
         ],
         copyright: `© ${new Date().getFullYear()} Eidetic Labs · Apache 2.0`,
       },

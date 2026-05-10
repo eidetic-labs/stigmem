@@ -5,6 +5,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/stigmem?include_prereleases&label=pypi)](https://pypi.org/project/stigmem/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Stability: preview alpha](https://img.shields.io/badge/stability-preview%20alpha-orange.svg)](#why-v090a1-and-not-v10)
+[![Discord](https://img.shields.io/discord/1502847943118684331?label=discord&logo=discord&logoColor=white&color=5865F2)](https://discord.gg/Z47Re7FjjV)
 
 > **Status: `v0.9.0a1` — preview alpha, pre-stable · Apache-2.0**
 > **Repository:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem)
@@ -233,6 +234,18 @@ It fills the gap none of them fill: typed, provenance-traceable, federated, enti
 The canonical specification lives in [`spec/`](spec/). See [`spec/README.md`](spec/README.md) for the section-by-section status table.
 
 The spec is being reviewed and improved into the v0.9.0a1 canonical structure: core sections first, then experimental sections move to `experimental/<feature>/spec.md` per [ADR-008](docs/adr/008-experimental-gates.md) and [ADR-010](docs/adr/010-modular-specs.md). Earlier evolutionary spec files (`stigmem-spec-pre-reset.md` through `stigmem-spec-pre-reset draft.md`) move to `spec/archive/evolution/` after their content has been forward-migrated. Nothing from the spec is being deleted.
+
+---
+
+## Community
+
+Real-time chat: **[discord.gg/Z47Re7FjjV](https://discord.gg/Z47Re7FjjV)**.
+
+The Stigmem Discord is where adopters, contributors, and operators discuss installation, federation, the spec, and SDK use. Help channels are organized by topic (`#install-help`, `#usage-questions`, `#federation-help`, `#troubleshooting`); spec and contributor discussion lives under the **Development** category. Asynchronous discussion continues to happen in [GitHub Discussions](https://github.com/Eidetic-Labs/stigmem/discussions) — both work.
+
+If you're already running Stigmem in production and would consider participating in the v0.9.0bN external operator soak, mention it in `#dev-general` or DM `@offbyonce`. We're recruiting.
+
+For security disclosures, see [SECURITY.md](SECURITY.md) — never report vulnerabilities in Discord.
 
 ---
 

@@ -194,20 +194,53 @@ This is intentional — adopters running `pip install <pkg>` in CI shouldn't acc
 
 **What works:**
 ```bash
-npm install @eidetic-labs/stigmem-ts          # ⚠ no version: gets the LATEST stable, which is currently nothing
-npm install @eidetic-labs/stigmem-ts@alpha    # gets the latest 0.9.0-alpha.* prerelease
+npm install @eidetic-labs/stigmem-ts                 # gets the most recent published version (currently a prerelease)
+npm install @eidetic-labs/stigmem-ts@alpha           # gets the most recent 0.9.0-alpha.* prerelease
 npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.1   # explicit pin
 ```
 
 **Why scoped:** npm's free-tier organization permissions don't allow team-bound package access controls; scoping under `@eidetic-labs` sidesteps that limitation entirely.
 
-**The `@alpha` dist-tag is required during the v0.9.0a* line.** Bare `npm install` resolves the `latest` tag, which won't exist until v1.0.0 ships. This is the npm equivalent of pip's `--pre` flag — same intent, different syntax.
+### npm `latest` dist-tag — what it means in this project
 
-### Pre-release packages don't auto-upgrade
+npm requires every package to have a `latest` dist-tag; there is no way to publish without one. By **standard npm convention** `latest` is interpreted as "the recommended stable version" — but the wire-mandatory rule means `latest` *exists* as soon as a package is published, regardless of stability tier.
 
-**What this means:** if you pin to `stigmem==0.9.0a1` and we publish `0.9.0a2` next week, `pip install --upgrade stigmem` won't pick up `a2` unless you also pass `--pre`. Same for npm: `npm update @eidetic-labs/stigmem-ts` won't pick up the new alpha unless you `npm install @eidetic-labs/stigmem-ts@alpha` (which always tracks the latest alpha).
+**Our convention is different and explicit:**
 
-**Recommendation:** during the v0.9.0a* and v0.9.0b* pre-stable lines, explicitly pin or explicitly request the dist-tag. Auto-upgrade is unsafe for pre-stable software anyway — we may break the wire format between alphas.
+> Until v1.0.0 GA ships, `latest` tracks the **most recent published version** — stable or prerelease. It walks forward through `0.9.0aN` and `0.9.0bN` releases automatically, then locks onto the v1.0.0 line at GA.
+
+**What this means concretely:**
+
+| Adopter command | What you get today (v0.9.0a1) | What you'll get over time |
+|---|---|---|
+| `npm install @eidetic-labs/stigmem-ts` | `0.9.0-alpha.1` | The most recent published version, advancing through `0.9.0-alpha.N` → `0.9.0-beta.N` → `1.0.0-rc.N` → `1.0.0` |
+| `npm install @eidetic-labs/stigmem-ts@alpha` | `0.9.0-alpha.1` | The most recent alpha; locks at the last `0.9.0-alpha.N` once we move to beta |
+| `npm install @eidetic-labs/stigmem-ts@beta` | (no version yet) | The most recent beta, once `0.9.0-beta.1` ships |
+| `npm install @eidetic-labs/stigmem-ts@rc` | (no version yet) | The most recent v1.0.0 release candidate |
+
+**Stability signal lives in the version string,** not the dist-tag. Any version ending in `-alpha.N`, `-beta.N`, or `-rc.N` is pre-stable and carries no compatibility guarantee. Adopters who need stability **must** pin a v1.x version once the v1.0.0 line ships. Until then, the version string is the only honest stability indicator.
+
+This convention deviates from typical npm projects (where `latest` = stable). It exists because the alternative — leaving `latest` pinned at the very first prerelease until v1.0.0 GA — is worse for adopters: they'd silently get the oldest preview build forever, instead of tracking the most recent.
+
+### pip `--pre` flag is required for pre-1.0 installs
+
+**Why:** PyPI considers any version with `aN` / `bN` / `rcN` suffix a pre-release. `pip install` excludes pre-releases by default unless `--pre` is passed.
+
+```bash
+pip install --pre stigmem                     # required for the alpha/beta/rc lines
+pip install --pre stigmem==0.9.0a1            # explicit pin
+```
+
+This is intentional — adopters running `pip install` in CI without `--pre` shouldn't accidentally pull in pre-stable software. It will go away when v1.0.0 ships (no `--pre` needed for stable releases).
+
+### Pre-release packages don't auto-upgrade silently
+
+**What this means:**
+
+- **PyPI:** if you pin to `stigmem==0.9.0a1` and we publish `0.9.0a2` next week, `pip install --upgrade stigmem` won't pick up `a2` unless you also pass `--pre`.
+- **npm:** `npm update @eidetic-labs/stigmem-ts` will resolve to whatever `latest` points at — i.e., the most recent published version under our convention above. If you want to stay on the alpha line specifically (and not jump to a beta when one ships), use `npm install @eidetic-labs/stigmem-ts@alpha`.
+
+**Recommendation:** during the v0.9.0a* and v0.9.0b* pre-stable lines, explicitly pin (e.g., `0.9.0a1`) or explicitly request the line-specific dist-tag (`@alpha`, `@beta`). Auto-upgrade across release tiers is unsafe for pre-stable software anyway — we may break the wire format between alphas.
 
 ---
 

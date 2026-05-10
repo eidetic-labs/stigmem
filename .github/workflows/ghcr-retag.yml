@@ -57,6 +57,13 @@ jobs:
             exit 1
           fi
 
+      - name: Lowercase repository owner
+        # OCI references must be lowercase; github.repository_owner preserves
+        # case (e.g. "Eidetic-Labs"), so lowercase it for the image ref.
+        id: owner
+        run: |
+          echo "lc=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
       - name: Install crane
         uses: imjasonh/setup-crane@v0.4
 
@@ -67,21 +74,21 @@ jobs:
 
       - name: Show source + destination digests (before)
         run: |
-          SRC="ghcr.io/${{ github.repository_owner }}/stigmem-node:${{ inputs.source_tag }}"
-          DST="ghcr.io/${{ github.repository_owner }}/stigmem-node:${{ inputs.destination_tag }}"
+          SRC="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.source_tag }}"
+          DST="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.destination_tag }}"
           echo "Source ($SRC):      $(crane digest "$SRC")"
           echo "Dest   ($DST):      $(crane digest "$DST" 2>&1 || echo '(does not exist yet)')"
 
       - name: Copy manifest (retag)
         run: |
-          SRC="ghcr.io/${{ github.repository_owner }}/stigmem-node:${{ inputs.source_tag }}"
-          DST="ghcr.io/${{ github.repository_owner }}/stigmem-node:${{ inputs.destination_tag }}"
+          SRC="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.source_tag }}"
+          DST="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.destination_tag }}"
           crane copy "$SRC" "$DST"
 
       - name: Verify post-copy digests match
         run: |
-          SRC="ghcr.io/${{ github.repository_owner }}/stigmem-node:${{ inputs.source_tag }}"
-          DST="ghcr.io/${{ github.repository_owner }}/stigmem-node:${{ inputs.destination_tag }}"
+          SRC="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.source_tag }}"
+          DST="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.destination_tag }}"
           SRC_D=$(crane digest "$SRC")
           DST_D=$(crane digest "$DST")
           echo "Source: $SRC_D"

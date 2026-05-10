@@ -18,17 +18,11 @@ const config = {
   url: 'https://docs.stigmem.dev',
   baseUrl,
 
-  // 'warn' (not 'throw') is a temporary state during the v0.9.0a1 reset
-  // window. Sub-phase 2.5.G moved ~30 deferred-feature pages out of canonical
-  // docs/docs/ into experimental/<feature>/. Surviving public pages still
-  // have markdown cross-links to those moved pages — each link breaks until
-  // it's individually rewritten to either prose or a GitHub URL pointing at
-  // experimental/<feature>/. That cleanup is acknowledged as a follow-up
-  // commit within PR 2.5 or a follow-up PR; the warning surface is bounded
-  // and visible in build output.
-  //
-  // Set back to 'throw' once the cross-link cleanup lands.
-  onBrokenLinks: 'warn',
+  // Flipped back to 'throw' after the cross-link cleanup landed
+  // (sub-phase 2.5-cleanup, 2026-05-09). Every URL in the docs site
+  // resolves; deferred-feature pages link out to experimental/<feature>/
+  // via GitHub URLs.
+  onBrokenLinks: 'throw',
 
   i18n: {
     defaultLocale: 'en',

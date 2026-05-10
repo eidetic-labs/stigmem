@@ -184,7 +184,7 @@ turso db snapshot list stigmem-prod
 turso db restore stigmem-prod --timestamp 2026-06-01T03:00:00Z --name stigmem-restored
 ```
 
-After restoring to a new Turso database, update `STIGMEM_LIBSQL_URL` in your secrets to point at the restored database and restart the node. For detailed libSQL point-in-time restore via the Turso replica protocol, see the [libSQL PITR guide](../libsql-pitr).
+After restoring to a new Turso database, update `STIGMEM_LIBSQL_URL` in your secrets to point at the restored database and restart the node. For detailed libSQL point-in-time restore via the Turso replica protocol, see the [libSQL PITR guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/storage-libsql).
 
 ### Postgres
 

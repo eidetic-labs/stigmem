@@ -1,0 +1,105 @@
+# `@eidetic-labs/stigmem-ts`
+
+TypeScript / JavaScript client SDK for **[Stigmem](https://github.com/Eidetic-Labs/stigmem)** — a federated knowledge fabric for AI agents that stores facts as immutable, signed assertions and replicates them across peer nodes.
+
+> **Status: preview alpha.** No stability guarantee on the wire format or public API until `v1.0.0` GA. See [LIMITATIONS.md](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md) and the [retraction post](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) for context on why we reset to `v0.9.0a1` as the first build.
+
+## Install
+
+```bash
+npm install @eidetic-labs/stigmem-ts
+# or
+pnpm add @eidetic-labs/stigmem-ts
+# or
+yarn add @eidetic-labs/stigmem-ts
+```
+
+Provenance is attested via npm + GitHub Actions OIDC. Verify with:
+
+```bash
+npm audit signatures
+```
+
+## Quick start
+
+```ts
+import { StigmemClient, sv, tv } from "@eidetic-labs/stigmem-ts";
+
+const client = new StigmemClient({
+  url: "http://localhost:8765",
+  apiKey: process.env.STIGMEM_API_KEY,
+});
+
+// Assert a fact
+const fact = await client.assertFact(
+  "user:alice",            // entity URI
+  "memory:role",           // relation
+  sv("CEO"),               // value (string)
+  "agent:cto",             // source
+);
+
+// Query facts
+const page = await client.queryFacts({ entity: "user:alice", scope: "company" });
+console.log(page.facts);
+
+// Semantic recall
+const recall = await client.recall("Alice's current role", { token_budget: 500 });
+
+// Memory card (synthesized snapshot for a single entity)
+const card = await client.getCard("user:alice");
+```
+
+## Value constructors
+
+Facts carry a typed `value`. Use these helpers to build well-formed values:
+
+| Helper | TypeScript | Wire-format type |
+|---|---|---|
+| `sv(s)` | `(s: string)` | `StringValue` |
+| `tv(s)` | `(s: string)` | `TextValue` (longer free-form) |
+| `nv(n)` | `(n: number)` | `NumberValue` |
+| `bv(b)` | `(b: boolean)` | `BooleanValue` |
+| `dtv(s)` | `(iso8601: string)` | `DatetimeValue` |
+| `rv(uri)` | `(entityURI: string)` | `RefValue` (entity reference) |
+| `nullv()` | `()` | `NullValue` |
+
+## API surface
+
+The full client surface covers:
+
+- **Facts**: `assertFact`, `getFact`, `queryFacts`, `retractFact`, `verifyCid`
+- **Recall**: `recall` (semantic, weighted retrieval), `getCard` (synthesized memory card per entity)
+- **Conflicts**: `listConflicts`, `resolveConflict`
+- **Lint**: `lint` (validate facts before assert)
+- **Federation**: `listPeers`, `registerPeer`, `getNodeInfo`
+- **Subscriptions**: `subscribe` (push federation, opt-in)
+
+Full TypeScript types are exported from the main package — your editor will autocomplete and check at compile time.
+
+## Compatibility
+
+| `stigmem-node` server | `@eidetic-labs/stigmem-ts` SDK |
+|---|---|
+| `0.9.0a1` (preview alpha) | `0.9.0-alpha.1` |
+| `0.9.0aN` / `0.9.0bN` (alpha + beta lines) | `0.9.0-alpha.N` / `0.9.0-beta.N` |
+| `1.0.0` (GA — future) | `1.0.0` and later |
+
+The SDK and server advance together along the version line; pin compatible versions in production-leaning environments.
+
+## npm `latest` dist-tag — what it points at
+
+Until `v1.0.0` GA, `latest` tracks the **most recent published version** regardless of stability tier. Today that's `0.9.0-alpha.1`; it walks forward through `0.9.0-alpha.N` → `0.9.0-beta.N` → `1.0.0-rc.N` → `1.0.0`. This is a deliberate deviation from the standard "`latest` = stable" npm convention; full rationale in [LIMITATIONS.md §npm `latest` dist-tag](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md).
+
+Stability lives in the version string itself: any version ending in `-alpha.N`, `-beta.N`, or `-rc.N` is pre-stable and carries no compatibility guarantee.
+
+## Documentation
+
+- **[stigmem.dev](https://stigmem.dev)** — landing page
+- **[docs.stigmem.dev](https://docs.stigmem.dev)** — full docs site (Learn / Build / Operate / Secure)
+- **[Repository](https://github.com/Eidetic-Labs/stigmem)** — source, issue tracker, contributor guide
+- **[Threat model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md)** — STRIDE risk register; read before deploying federation across organizational boundaries
+- **[LIMITATIONS.md](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md)** — adopter-facing constraints, known gaps, deployment-pattern guidance
+
+## License
+
+[Apache-2.0](https://github.com/Eidetic-Labs/stigmem/blob/main/LICENSE).

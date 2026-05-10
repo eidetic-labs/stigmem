@@ -264,6 +264,11 @@ class QuarantineListResponse(BaseModel):
     total: int
 
 
+def _optional_col(row: sqlite3.Row, col: str, keys: Any) -> Any:
+    """Return row[col] if column is in the result set, else None."""
+    return row[col] if col in keys else None
+
+
 def row_to_record(
     row: sqlite3.Row,
     contradicted: bool = False,
@@ -274,13 +279,13 @@ def row_to_record(
 ) -> FactRecord:
     import json as _json
     keys = row.keys()
-    attested_raw = row["attested"] if "attested" in keys else None
+    attested_raw = _optional_col(row, "attested", keys)
     attested: bool | None = None if attested_raw is None else bool(attested_raw)
-    raw_scopes = row["origin_allowed_scopes"] if "origin_allowed_scopes" in keys else None
+    raw_scopes = _optional_col(row, "origin_allowed_scopes", keys)
     origin_allowed_scopes: list[str] | None = (
         _json.loads(raw_scopes) if raw_scopes else None
     )
-    source_trust_raw = row["source_trust"] if "source_trust" in keys else None
+    source_trust_raw = _optional_col(row, "source_trust", keys)
     source_trust: float | None = float(source_trust_raw) if source_trust_raw is not None else None
     return FactRecord(
         id=row["id"],
@@ -289,27 +294,25 @@ def row_to_record(
         value=FactValue(type=row["value_type"], v=_parse_v(row["value_type"], row["value_v"])),
         source=row["source"],
         timestamp=row["timestamp"],
-        hlc=row["hlc"] if "hlc" in keys else None,
-        received_from=row["received_from"] if "received_from" in keys else None,
+        hlc=_optional_col(row, "hlc", keys),
+        received_from=_optional_col(row, "received_from", keys),
         valid_until=row["valid_until"],
         confidence=row["confidence"],
         scope=row["scope"],
-        attested_key_id=row["attested_key_id"] if "attested_key_id" in keys else None,
-        origin_node_id=row["origin_node_id"] if "origin_node_id" in keys else None,
+        attested_key_id=_optional_col(row, "attested_key_id", keys),
+        origin_node_id=_optional_col(row, "origin_node_id", keys),
         origin_allowed_scopes=origin_allowed_scopes,
-        garden_id=row["garden_id"] if "garden_id" in keys else None,
+        garden_id=_optional_col(row, "garden_id", keys),
         attested=attested,
         contradicted=contradicted,
         warnings=warnings or [],
         source_trust=source_trust,
-        quarantine_status=row["quarantine_status"] if "quarantine_status" in keys else None,
-        quarantine_garden_id=(
-            row["quarantine_garden_id"] if "quarantine_garden_id" in keys else None
-        ),
+        quarantine_status=_optional_col(row, "quarantine_status", keys),
+        quarantine_garden_id=_optional_col(row, "quarantine_garden_id", keys),
         effective_confidence=effective_confidence,
         sanitizer_warnings=sanitizer_warnings or [],
         sanitizer_redacted=sanitizer_redacted,
-        cid=row["cid"] if "cid" in keys else None,
+        cid=_optional_col(row, "cid", keys),
     )
 
 

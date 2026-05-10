@@ -501,6 +501,100 @@ def pull_facts(
 # ---------------------------------------------------------------------------
 
 
+def _verify_push_cap_token(x_stigmem_capability: str) -> dict[str, Any]:
+    """Verify a capability-token header for the push path (H-SEC-2).
+
+    On verification failure logs ``capability_rejected`` and raises 401.
+    On success returns the decoded token dict and logs ``capability_verified``.
+    """
+    try:
+        verify_token(
+            x_stigmem_capability,
+            lambda uri: get_peer_manifest(
+                uri, refresh_if_expired=True, trust_mode=settings.trust_mode
+            ),
+            trust_mode=settings.trust_mode,
+        )
+    except CapabilityTokenError as exc:
+        # M-SEC-4: log capability_rejected
+        import uuid as _uuid
+        from datetime import UTC as _UTC
+        from datetime import datetime as _datetime
+        _now = _datetime.now(_UTC).isoformat()
+        try:
+            import json as _json
+            with db() as conn:
+                conn.execute(
+                    """INSERT INTO fact_audit_log
+                       (id, fact_id, event_type, entity_uri, oidc_sub, source,
+                        attested_key_id, detail, ts)
+                       VALUES (?,?,?,?,?,?,?,?,?)""",
+                    (
+                        str(_uuid.uuid4()),
+                        "capability:rejected",
+                        "capability_rejected",
+                        None,
+                        None,
+                        "system:capability",
+                        None,
+                        _json.dumps({"reason": str(exc)}),
+                        _now,
+                    ),
+                )
+        except Exception as audit_exc:  # nosec B110 — audit log best-effort
+            logger.debug("capability_rejected audit log failed: %s", audit_exc)
+        raise HTTPException(
+            status_code=401, detail=f"capability token invalid: {exc}"
+        ) from exc
+
+    try:
+        cap_token: dict[str, Any] = json.loads(x_stigmem_capability)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=400, detail=f"malformed capability token JSON: {exc}"
+        ) from exc
+
+    if cap_token.get("verb") != "write":
+        raise HTTPException(
+            status_code=403,
+            detail="insufficient_capability: token verb must be 'write' for push",
+        )
+
+    # M-SEC-4: log capability_verified
+    import uuid as _uuid2
+    from datetime import UTC as _UTC2
+    from datetime import datetime as _datetime2
+    _now2 = _datetime2.now(_UTC2).isoformat()
+    try:
+        with db() as conn:
+            conn.execute(
+                """INSERT INTO fact_audit_log
+                   (id, fact_id, event_type, entity_uri, oidc_sub, source,
+                    attested_key_id, detail, ts)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                (
+                    str(_uuid2.uuid4()),
+                    cap_token.get("token_id", "unknown"),
+                    "capability_verified",
+                    cap_token.get("subject"),
+                    None,
+                    "system:capability",
+                    None,
+                    json.dumps({
+                        "token_id": cap_token.get("token_id"),
+                        "issuer": cap_token.get("issuer"),
+                        "verb": cap_token.get("verb"),
+                        "object": cap_token.get("object"),
+                    }),
+                    _now2,
+                ),
+            )
+    except Exception as audit_exc:  # nosec B110 — audit log best-effort
+        logger.debug("capability_verified audit log failed: %s", audit_exc)
+
+    return cap_token
+
+
 @router.post("/v1/federation/facts/push", status_code=202)
 def push_facts(
     request: Request,
@@ -537,92 +631,8 @@ def push_facts(
                 detail="peer certificate URI SAN does not match node_id",
             )
     elif x_stigmem_capability is not None:
-        # --- Phase 2: capability-token fallback (H-SEC-2) ---
-        try:
-            verify_token(
-                x_stigmem_capability,
-                lambda uri: get_peer_manifest(
-                    uri, refresh_if_expired=True, trust_mode=settings.trust_mode
-                ),
-                trust_mode=settings.trust_mode,
-            )
-        except CapabilityTokenError as exc:
-            # M-SEC-4: log capability_rejected
-            import uuid as _uuid
-            from datetime import UTC as _UTC
-            from datetime import datetime as _datetime
-            _now = _datetime.now(_UTC).isoformat()
-            try:
-                import json as _json
-                with db() as conn:
-                    conn.execute(
-                        """INSERT INTO fact_audit_log
-                           (id, fact_id, event_type, entity_uri, oidc_sub, source,
-                            attested_key_id, detail, ts)
-                           VALUES (?,?,?,?,?,?,?,?,?)""",
-                        (
-                            str(_uuid.uuid4()),
-                            "capability:rejected",
-                            "capability_rejected",
-                            None,
-                            None,
-                            "system:capability",
-                            None,
-                            _json.dumps({"reason": str(exc)}),
-                            _now,
-                        ),
-                    )
-            except Exception as audit_exc:  # nosec B110 — audit log best-effort
-                logger.debug("capability_rejected audit log failed: %s", audit_exc)
-            raise HTTPException(
-                status_code=401, detail=f"capability token invalid: {exc}"
-            ) from exc
-
-        try:
-            cap_token = json.loads(x_stigmem_capability)
-        except json.JSONDecodeError as exc:
-            raise HTTPException(
-                status_code=400, detail=f"malformed capability token JSON: {exc}"
-            ) from exc
-
-        if cap_token.get("verb") != "write":
-            raise HTTPException(
-                status_code=403,
-                detail="insufficient_capability: token verb must be 'write' for push",
-            )
+        cap_token = _verify_push_cap_token(x_stigmem_capability)
         using_cap_token = True
-
-        # M-SEC-4: log capability_verified
-        import uuid as _uuid2
-        from datetime import UTC as _UTC2
-        from datetime import datetime as _datetime2
-        _now2 = _datetime2.now(_UTC2).isoformat()
-        try:
-            with db() as conn:
-                conn.execute(
-                    """INSERT INTO fact_audit_log
-                       (id, fact_id, event_type, entity_uri, oidc_sub, source,
-                        attested_key_id, detail, ts)
-                       VALUES (?,?,?,?,?,?,?,?,?)""",
-                    (
-                        str(_uuid2.uuid4()),
-                        cap_token.get("token_id", "unknown"),
-                        "capability_verified",
-                        cap_token.get("subject"),
-                        None,
-                        "system:capability",
-                        None,
-                        json.dumps({
-                            "token_id": cap_token.get("token_id"),
-                            "issuer": cap_token.get("issuer"),
-                            "verb": cap_token.get("verb"),
-                            "object": cap_token.get("object"),
-                        }),
-                        _now2,
-                    ),
-                )
-        except Exception as audit_exc:  # nosec B110 — audit log best-effort
-            logger.debug("capability_verified audit log failed: %s", audit_exc)
     else:
         raise HTTPException(
             status_code=401,
@@ -638,76 +648,98 @@ def push_facts(
         fact_scope = fact.get("scope", "")
 
         if using_cap_token:
-            # H-SEC-2: verify capability token object covers this fact's scope
             assert cap_token is not None
-            token_object = cap_token.get("object", "")
-            if not _cap_token_covers_scope(token_object, fact_scope):
-                rejected += 1
-                errors.append({
-                    "fact_id": fact.get("id"),
-                    "error": "insufficient_capability: token object does not cover scope",
-                })
-                continue
-
-            sender_node_id = cap_token.get("subject", "")
-            fact_source = fact.get("source", "")
-            # Source non-forgery: source must match capability token subject
-            if fact_source != sender_node_id:
-                rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": "source_not_owned"})
-                continue
-
-            try:
-                ingest_fact(
-                    fact,
-                    sender_node_id,
-                    identity_strength_boost=0.5,  # §19.4.2 boost for valid capability token
-                )
-                accepted += 1
-            except Exception:
-                rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": "ingest_error"})
+            ok, err = _push_fact_with_cap_token(fact, fact_scope, cap_token)
         else:
             assert peer is not None and token_payload is not None
-            permitted = _allowed_output_scopes(peer, token_payload)
+            ok, err = _push_fact_with_peer_token(fact, fact_scope, peer, token_payload)
 
-            if fact_scope not in permitted:
-                write_audit_log(
-                    peer["id"], "scope_violation",
-                    {"fact_id": fact.get("id"), "scope": fact_scope},
-                )
-                rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": "scope_not_permitted"})
-                continue
-
-            # Source non-forgery: source must match the sending peer's node_id (§6.4)
-            fact_source = fact.get("source", "")
-            if fact_source != peer["node_id"]:
-                write_audit_log(
-                    peer["id"], "rejected_fact",
-                    {
-                        "fact_id": fact.get("id"),
-                        "reason": "source_not_owned",
-                        "source": fact_source,
-                        "peer_node_id": peer["node_id"],
-                    },
-                )
-                rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": "source_not_owned"})
-                continue
-
-            try:
-                ingest_fact(
-                    fact,
-                    peer["node_id"],
-                    origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
-                )
-                accepted += 1
-            except Exception:
-                rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": "ingest_error"})
+        if ok:
+            accepted += 1
+        else:
+            rejected += 1
+            if err is not None:
+                errors.append(err)
 
     return {"accepted": accepted, "rejected": rejected, "errors": errors}
+
+
+def _push_fact_with_cap_token(
+    fact: dict[str, Any],
+    fact_scope: str,
+    cap_token: dict[str, Any],
+) -> tuple[bool, dict[str, Any] | None]:
+    """Validate + ingest a single fact under capability-token auth.
+
+    Returns (ok, error_dict_or_None).
+    """
+    # H-SEC-2: verify capability token object covers this fact's scope
+    token_object = cap_token.get("object", "")
+    if not _cap_token_covers_scope(token_object, fact_scope):
+        return False, {
+            "fact_id": fact.get("id"),
+            "error": "insufficient_capability: token object does not cover scope",
+        }
+
+    sender_node_id = cap_token.get("subject", "")
+    fact_source = fact.get("source", "")
+    # Source non-forgery: source must match capability token subject
+    if fact_source != sender_node_id:
+        return False, {"fact_id": fact.get("id"), "error": "source_not_owned"}
+
+    try:
+        ingest_fact(
+            fact,
+            sender_node_id,
+            identity_strength_boost=0.5,  # §19.4.2 boost for valid capability token
+        )
+        return True, None
+    except Exception:
+        return False, {"fact_id": fact.get("id"), "error": "ingest_error"}
+
+
+def _push_fact_with_peer_token(
+    fact: dict[str, Any],
+    fact_scope: str,
+    peer: dict[str, Any],
+    token_payload: dict[str, Any],
+) -> tuple[bool, dict[str, Any] | None]:
+    """Validate + ingest a single fact under peer-JWT auth.
+
+    Returns (ok, error_dict_or_None).
+    """
+    permitted = _allowed_output_scopes(peer, token_payload)
+
+    if fact_scope not in permitted:
+        write_audit_log(
+            peer["id"], "scope_violation",
+            {"fact_id": fact.get("id"), "scope": fact_scope},
+        )
+        return False, {"fact_id": fact.get("id"), "error": "scope_not_permitted"}
+
+    # Source non-forgery: source must match the sending peer's node_id (§6.4)
+    fact_source = fact.get("source", "")
+    if fact_source != peer["node_id"]:
+        write_audit_log(
+            peer["id"], "rejected_fact",
+            {
+                "fact_id": fact.get("id"),
+                "reason": "source_not_owned",
+                "source": fact_source,
+                "peer_node_id": peer["node_id"],
+            },
+        )
+        return False, {"fact_id": fact.get("id"), "error": "source_not_owned"}
+
+    try:
+        ingest_fact(
+            fact,
+            peer["node_id"],
+            origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
+        )
+        return True, None
+    except Exception:
+        return False, {"fact_id": fact.get("id"), "error": "ingest_error"}
 
 
 # ---------------------------------------------------------------------------

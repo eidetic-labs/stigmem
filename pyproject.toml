@@ -57,18 +57,23 @@ build-backend = "setuptools.build_meta"
 packages = []
 
 [tool.uv.workspace]
+# Per ADR-002 v1 critical-path scope + ADR-009 §2(b): only critical-path
+# packages in the default workspace. experimental/ is excluded so default
+# `uv sync` doesn't pull deferred-feature dependencies. Operators who want
+# an experimental feature install its package explicitly via
+# `pip install stigmem-plugin-<feature>` (when ADR-011 plugin packaging
+# lands) or by adding the experimental/<feature>/ path to their workspace.
 members = [
   "node",
   "sdks/stigmem-py",
   "adapters/openclaw",
-  "adapters/obsidian",
 ]
+exclude = ["experimental/**"]
 
 [tool.uv.sources]
 stigmem-node = { workspace = true }
 stigmem-py = { workspace = true }
 stigmem-openclaw = { workspace = true }
-stigmem-obsidian = { workspace = true }
 
 [dependency-groups]
 dev = [

@@ -55,7 +55,7 @@ jobs:
               - 'turbo.json'
               - 'scripts/check.sh'
               - 'adapters/mcp/**'
-              - 'apps/dashboard/**'
+              - 'experimental/dashboard/**'
               - 'sdks/stigmem-ts/**'
             contract:
               - '.github/workflows/ci.yml'
@@ -72,7 +72,7 @@ jobs:
               - 'node/**'
               - 'sdks/stigmem-py/**'
               - 'sdks/stigmem-ts/**'
-              - 'sdks/stigmem-go/**'
+              - 'experimental/sdk-go/**'
             coverage:
               - '.github/workflows/ci.yml'
               - 'pyproject.toml'
@@ -82,11 +82,11 @@ jobs:
               - 'sdks/stigmem-py/**'
               - 'sdks/stigmem-ts/**'
               - 'adapters/mcp/**'
-              - 'apps/dashboard/**'
+              - 'experimental/dashboard/**'
             go:
               - '.github/workflows/ci.yml'
               - 'scripts/check.sh'
-              - 'sdks/stigmem-go/**'
+              - 'experimental/sdk-go/**'
             docs:
               - '.github/workflows/ci.yml'
               - 'scripts/check.sh'
@@ -94,12 +94,12 @@ jobs:
             obsidian:
               - '.github/workflows/ci.yml'
               - 'scripts/check.sh'
-              - 'adapters/obsidian-plugin/**'
+              - 'experimental/obsidian-adapter/plugin/**'
             dashboard_e2e:
               - '.github/workflows/ci.yml'
               - 'package.json'
               - 'pnpm-lock.yaml'
-              - 'apps/dashboard/**'
+              - 'experimental/dashboard/**'
             migration_compat:
               - '.github/workflows/ci.yml'
               - 'node/migrations/**'
@@ -114,8 +114,8 @@ jobs:
               - 'deploy/**'
             helm:
               - '.github/workflows/ci.yml'
-              - 'infra/helm/**'
-              - 'deploy/helm/**'
+              - 'experimental/deploy-helm/**'
+              - 'experimental/deploy-helm/**'
             container:
               - '.github/workflows/ci.yml'
               - 'node/**'
@@ -245,7 +245,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: "1.22"
-          cache-dependency-path: sdks/stigmem-go/go.mod
+          cache-dependency-path: experimental/sdk-go/go.mod
 
       - name: SDK compatibility fast gate
         run: bash scripts/check_sdk_compat.sh
@@ -313,7 +313,7 @@ jobs:
             coverage/summary.md
             sdks/stigmem-ts/coverage/**
             adapters/mcp/coverage/**
-            apps/dashboard/coverage/**
+            experimental/dashboard/coverage/**
 
   go-tests:
     name: Go SDK tests
@@ -326,7 +326,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: "1.22"
-          cache-dependency-path: sdks/stigmem-go/go.mod
+          cache-dependency-path: experimental/sdk-go/go.mod
 
       - name: Go fast gates
         run: bash scripts/check.sh go
@@ -360,7 +360,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: adapters/obsidian-plugin/package-lock.json
+          cache-dependency-path: experimental/obsidian-adapter/plugin/package-lock.json
 
       - name: Obsidian fast gates
         run: bash scripts/check.sh obsidian
@@ -396,8 +396,8 @@ jobs:
         with:
           name: dashboard-playwright-pr
           path: |
-            apps/dashboard/test-results/
-            apps/dashboard/playwright-report/
+            experimental/dashboard/test-results/
+            experimental/dashboard/playwright-report/
           retention-days: 14
 
   migration-compat:
@@ -461,14 +461,14 @@ jobs:
           version: "3.17.0"
 
       - name: Lint stigmem chart (infra)
-        run: helm lint infra/helm/stigmem
+        run: helm lint experimental/deploy-helm/stigmem
 
       - name: Lint stigmem chart (deploy)
-        run: helm lint deploy/helm/stigmem
+        run: helm lint experimental/deploy-helm/stigmem
 
       - name: Dry-run install (template rendering)
         run: |
-          helm template stigmem ./infra/helm/stigmem \
+          helm template stigmem ./experimental/deploy-helm/stigmem \
             --debug \
             --set image.pullPolicy=Never
 

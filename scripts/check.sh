@@ -139,7 +139,15 @@ run_node() {
 
 run_go() {
   need_cmd go
-  cd "$ROOT_DIR/sdks/stigmem-go"
+  # Go SDK was deferred to experimental/ per PR 3 (ADR-002 critical-path
+  # cut + ADR-009 §4). Per master-checklist §4.4 "skip experimental/ in
+  # default jobs"; this gate now runs only against the experimental tree
+  # when an operator opts in.
+  if [[ ! -d "$ROOT_DIR/experimental/sdk-go" ]]; then
+    echo "Go SDK gate: experimental/sdk-go/ not present; skipping (deferred per ADR-002)"
+    return 0
+  fi
+  cd "$ROOT_DIR/experimental/sdk-go"
   go test ./...
 }
 
@@ -154,7 +162,15 @@ run_docs() {
 
 run_obsidian() {
   need_cmd npm
-  cd "$ROOT_DIR/adapters/obsidian-plugin"
+  # Obsidian plugin was deferred to experimental/ per PR 3 (ADR-002 critical-
+  # path cut + ADR-009 §3). Per master-checklist §4.4 "skip experimental/
+  # in default jobs"; this gate now runs only against the experimental
+  # tree when an operator opts in.
+  if [[ ! -d "$ROOT_DIR/experimental/obsidian-adapter/plugin" ]]; then
+    echo "Obsidian plugin gate: experimental/obsidian-adapter/plugin not present; skipping (deferred per ADR-002)"
+    return 0
+  fi
+  cd "$ROOT_DIR/experimental/obsidian-adapter/plugin"
   if [[ "${CHECK_SKIP_OBSIDIAN_INSTALL:-0}" != "1" ]]; then
     npm ci
   fi

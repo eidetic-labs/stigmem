@@ -136,7 +136,16 @@ func main() {
 	panic("go query failed")
 }
 EOF
-(cd "${ROOT_DIR}/sdks/stigmem-go" && go run "${GO_SMOKE_FILE}" "${URL}")
+# Go SDK was deferred to experimental/sdk-go/ per PR 3 (ADR-002 critical-
+# path cut + ADR-009 §4). The compat smoke test now runs only when an
+# operator opts in by leaving the experimental Go SDK present.
+if [ -d "${ROOT_DIR}/experimental/sdk-go" ]; then
+	(cd "${ROOT_DIR}/experimental/sdk-go" && go run "${GO_SMOKE_FILE}" "${URL}")
+elif [ -d "${ROOT_DIR}/sdks/stigmem-go" ]; then
+	(cd "${ROOT_DIR}/sdks/stigmem-go" && go run "${GO_SMOKE_FILE}" "${URL}")
+else
+	echo "Go SDK compat: experimental/sdk-go/ not present; skipping (deferred per ADR-002)"
+fi
 rm -f "${GO_SMOKE_FILE}"
 
 uv run python - <<'PY' "${URL}"

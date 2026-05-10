@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import contextlib
 import logging
 import sys
+import threading
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
@@ -14,16 +14,19 @@ from pydantic import BaseModel
 
 from .. import settings as _settings_pkg  # access via module so test patches propagate
 from ..auth import Identity, resolve_identity
-from ..cid import compute_cid_from_row, is_cid, is_valid_cid
+from ..billing import BillingEvent, get_hook_bus
+from ..cid import compute_cid, compute_cid_from_row, is_cid, is_valid_cid
 from ..db import db
-from ..entity_normalizer import NormalizationError, normalize_entity_uri
+from ..entity_normalizer import NormalizationError, is_informal, normalize_entity_uri
+from ..fuzzy_resolver import resolve_entity
 from ..garden_acl import (
     caller_can_see_garden,
     get_garden_by_garden_uri,
     require_garden_read,
+    require_garden_write,
 )
 from ..hlc import node_hlc
-from ..metrics import FACT_READ
+from ..metrics import CONTRADICTION, FACT_READ, FACT_WRITE
 from ..models import (
     VALID_SCOPES,
     AssertRequest,
@@ -61,14 +64,13 @@ def _get_tombstone_filter(
     placeholders = ",".join("?" * len(entity_uris))
     # BEGIN IMMEDIATE for SQLite consistency (§23.3.3 rule 5).
     # On postgres this is a syntax error; rollback clears the failed txn state.
-    # Catch Exception (not sqlite3.Error) because conn may be a psycopg2/libsql
-    # connection and each raises its own backend-specific error type.
     try:
         conn.execute("BEGIN IMMEDIATE")
-    except Exception as _begin_exc:  # noqa: BLE001
-        logger.debug("BEGIN IMMEDIATE failed (likely non-sqlite backend): %s", _begin_exc)
-        with contextlib.suppress(Exception):  # noqa: BLE001
+    except Exception:  # nosec B110
+        try:  # noqa: SIM105
             conn.rollback()
+        except Exception:  # nosec B110  # noqa: S110
+            pass
     rows = conn.execute(
         f"""SELECT t.id, t.entity_uri, t.scope, t.created_at, t.legal_hold
             FROM tombstones t
@@ -78,8 +80,10 @@ def _get_tombstone_filter(
             )""",  # noqa: S608  # nosec B608
         entity_uris,
     ).fetchall()
-    with contextlib.suppress(Exception):  # noqa: BLE001
+    try:  # noqa: SIM105
         conn.execute("COMMIT")
+    except Exception:  # nosec B110  # noqa: S110
+        pass
 
     excluded: set[str] = set()
     notices: list[TombstoneNotice] = []
@@ -140,16 +144,13 @@ def _validate_as_of(as_of: str) -> datetime:
                     status_code=400,
                     detail={
                         "code": "as_of_before_retention_floor",
-                        "message": (
-                            "as_of predates the retention horizon "
-                            "for this deployment (§24.2.2)"
-                        ),
+                        "message": "as_of predates the retention horizon for this deployment (§24.2.2)",  # noqa: E501
                     },
                 )
         except HTTPException:
             raise
-        except (ValueError, TypeError) as _floor_exc:
-            logger.debug("as_of retention floor parse failed: %s", _floor_exc)
+        except Exception:  # nosec B110  # noqa: S110
+            pass
     return ts
 
 
@@ -191,10 +192,7 @@ def _query_facts_as_of_impl(
         "f.tenant_id = ?",
         "f.timestamp <= ?",
         "(f.valid_until IS NULL OR f.valid_until > ?)",
-        (
-            "NOT EXISTS (SELECT 1 FROM fact_retractions fr"
-            " WHERE fr.fact_id = f.id AND fr.retracted_at <= ?)"
-        ),
+        "NOT EXISTS (SELECT 1 FROM fact_retractions fr WHERE fr.fact_id = f.id AND fr.retracted_at <= ?)",  # noqa: E501
     ]
     params: list[Any] = [tenant_id, as_of, as_of, as_of]
 
@@ -249,12 +247,7 @@ def _query_facts_as_of_impl(
     next_cursor = rows[-1]["id"] if has_more and rows else None
     # §23.3.3 r.3: suppress total when tombstone filtering was applied to prevent oracle leakage
     total = None if tombstone_filtered else len(records)
-    return QueryResponse(
-        facts=records,
-        total=total,
-        cursor=next_cursor,
-        tombstone_notices=tombstone_notices,
-    )
+    return QueryResponse(facts=records, total=total, cursor=next_cursor, tombstone_notices=tombstone_notices)  # noqa: E501
 
 
 def _validate_relation(relation: str) -> list[str]:
@@ -304,13 +297,287 @@ def assert_fact(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> FactRecord:
     """Assert a fact into the fabric (spec §5.1, §2.6). Normalizes entity/source URIs on ingest."""
-    from ._facts_assert import assert_fact_impl
-
     with start_span(
         "stigmem.assert_fact",
         **{"stigmem.tenant": identity.tenant_id, "stigmem.principal": identity.entity_uri},
     ) as _span:
-        return assert_fact_impl(req, identity, _span)
+        return _assert_fact_impl(req, identity, _span)
+
+
+def _assert_fact_impl(
+    req: AssertRequest,
+    identity: Identity,
+    _span: object,
+) -> FactRecord:
+    if not identity.can_write():
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")  # noqa: E501
+
+    # C1: attestation enforcement — verify or require attestation token
+    attested_key_id: str | None = None
+    if req.attestation is not None:
+        from .agent_keys import verify_attestation
+        value_v_for_sig = _encode_v(req.value.type, req.value.v)
+        canonical = (
+            f"{req.entity}\n{req.relation}\n{req.value.type}\n{value_v_for_sig}\n{req.source}"
+        ).encode()
+        attested_key_id = verify_attestation(
+            key_id=req.attestation.key_id,
+            signature_b64=req.attestation.signature,
+            canonical_message=canonical,
+            caller_entity_uri=identity.entity_uri,
+        )
+    elif _settings_pkg.settings.attestation_required:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="attestation required; register an agent key at POST /v1/auth/agent-keys",
+        )
+
+    try:
+        entity = normalize_entity_uri(req.entity)
+        source = normalize_entity_uri(req.source)
+    except NormalizationError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"invalid_entity_uri: {exc}") from exc  # noqa: E501
+
+    # Deprecation warning for informal URIs (spec §2.5)
+    if is_informal(req.entity):
+        print(
+            f"[stigmem] DEPRECATED: informal entity URI {req.entity!r} — "
+            f"use stigmem://authority/type/id format (spec §2.5)",
+            file=sys.stderr,
+        )
+    if is_informal(req.source):
+        print(
+            f"[stigmem] DEPRECATED: informal source URI {req.source!r} — "
+            f"use stigmem://authority/type/id format (spec §2.5)",
+            file=sys.stderr,
+        )
+
+    # Layer 2: resolve user-defined semantic aliases (spec §2.6.6).
+    # Runs after strict normalization (Layer 1) so the alias table is keyed on canonical forms.
+    with db() as _alias_conn:
+        entity = resolve_entity(_alias_conn, entity)
+        source = resolve_entity(_alias_conn, source)
+
+    # --- Source attestation (spec §18) ---
+    attested = _check_source_attestation(source, identity)
+
+    # --- Garden ACL (spec §17.3) ---
+    garden = None
+    if req.garden_id is not None:
+        garden = get_garden_by_garden_uri(req.garden_id, tenant_id=identity.tenant_id)
+        if garden is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
+        if garden["scope"] != req.scope:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"scope mismatch: garden scope is '{garden['scope']}' but fact scope is '{req.scope}'",  # noqa: E501
+            )
+        require_garden_write(garden, identity)
+
+    garden_uuid = garden["id"] if garden is not None else None
+    attested_int = None if attested is None else (1 if attested else 0)
+
+    # Relation namespacing convention check (see relation-convention.md)
+    relation_warnings = _validate_relation(req.relation)
+    for w in relation_warnings:
+        print(f"[stigmem] WARN: relation naming: {w}", file=sys.stderr)
+
+    fact_id = str(uuid.uuid4())
+    now = datetime.now(UTC).isoformat()
+    hlc = node_hlc.tick()
+    value_v = _encode_v(req.value.type, req.value.v)
+
+    # §25.7.3: compute CID before write; persisted in the same transaction
+    fact_cid = compute_cid(
+        entity=entity,
+        relation=req.relation,
+        value_type=req.value.type,
+        value_v=value_v or "",
+        source=source,
+        scope=req.scope,
+        confidence=req.confidence,
+    )
+
+    _embed_enabled = _settings_pkg.settings.embed_enabled
+    embedding_missing_val = 1 if _embed_enabled else None
+
+    # F-10 §25.7.3: idempotent CID pre-check — if CID already exists, return existing record
+    with db() as _precheck_conn:
+        existing_alias = _precheck_conn.execute(
+            "SELECT fact_id FROM fact_cid_aliases WHERE cid = ?", (fact_cid,)
+        ).fetchone()
+        if existing_alias is not None:
+            existing_row = _precheck_conn.execute(
+                "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
+                (existing_alias["fact_id"], identity.tenant_id),
+            ).fetchone()
+            if existing_row is not None:
+                return row_to_record(existing_row, contradicted=False)
+
+    with db() as conn:
+        conn.execute(
+            """INSERT INTO facts
+               (id, entity, relation, value_type, value_v, source, timestamp,
+                valid_until, confidence, scope, hlc, received_from, attested_key_id,
+                garden_id, attested, tenant_id, embedding_missing, cid)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                fact_id,
+                entity,    # normalized (spec §2.6)
+                req.relation,
+                req.value.type,
+                value_v,
+                source,    # normalized (spec §2.6)
+                now,
+                req.valid_until,
+                req.confidence,
+                req.scope,
+                hlc,
+                None,  # local write; not received from a peer
+                attested_key_id,
+                garden_uuid,
+                attested_int,
+                identity.tenant_id,
+                embedding_missing_val,
+                fact_cid,
+            ),
+        )
+
+        # F-10 §25.7.3: alias table row — idempotent upsert on CID collision
+        alias_result = conn.execute(
+            "INSERT OR IGNORE INTO fact_cid_aliases (fact_id, cid) VALUES (?, ?)",
+            (fact_id, fact_cid),
+        )
+        if alias_result.rowcount == 0:
+            # Concurrent same-CID write race: return existing record
+            existing = conn.execute(
+                "SELECT f.* FROM facts f JOIN fact_cid_aliases a ON a.fact_id = f.id"
+                " WHERE a.cid = ? AND f.tenant_id = ?",
+                (fact_cid, identity.tenant_id),
+            ).fetchone()
+            if existing is not None:
+                return row_to_record(existing, contradicted=False)
+
+        # C3 / §22.3: write-ahead audit entry for fact_write event (same transaction)
+        from ..audit_event import emit as _emit_audit
+        _emit_audit(
+            "fact_write",
+            entity_uri=identity.entity_uri,
+            tenant_id=identity.tenant_id,
+            oidc_sub=identity.oidc_sub,
+            fact_id=fact_id,
+            source=source,
+            attested_key_id=attested_key_id,
+            scope=req.scope,
+            conn=conn,
+        )
+
+        # Graph adjacency index (§20.1.1): materialize edge for ref-typed facts
+        if req.value.type == "ref" and value_v and _is_valid_entity_uri(value_v):
+            from ..graph_index import upsert_edge as _upsert_edge
+            _upsert_edge(
+                conn,
+                fact_id=fact_id,
+                subject=entity,
+                relation=req.relation,
+                object_uri=value_v,
+                scope=req.scope,
+                confidence=req.confidence,
+                garden_id=garden_uuid,
+                tenant_id=identity.tenant_id,
+                received_from=None,
+                source_trust=None,
+                valid_until=req.valid_until,
+            )
+
+        row = conn.execute("SELECT * FROM facts WHERE id=?", (fact_id,)).fetchone()
+
+        # Contradiction detection: skip bare stigmem: system facts — they are state
+        # transitions, not semantic content, and are never in conflict (§9.1).
+        # stigmem:// URI entities are user content and ARE subject to detection.
+        _is_system = (
+            entity.startswith(_SYSTEM_RELATION_PREFIX) and not entity.startswith("stigmem://")
+        ) or (
+            req.relation.startswith(_SYSTEM_RELATION_PREFIX) and not req.relation.startswith("stigmem://")
+        )
+        siblings: list[Any] = []
+        if not _is_system:
+            siblings = conn.execute(
+                """SELECT id FROM facts
+                   WHERE entity=? AND relation=? AND scope=? AND id!=? AND confidence>0.0
+                     AND tenant_id=?""",
+                (entity, req.relation, req.scope, fact_id, identity.tenant_id),
+            ).fetchall()
+        contradicted = len(siblings) > 0
+
+        if contradicted:
+            _record_contradictions(conn, fact_id, entity, req.relation, req.scope, siblings, identity.tenant_id)  # noqa: E501
+            print(
+                f"[stigmem] WARN: collision — entity={entity!r} relation={req.relation!r} "
+                f"scope={req.scope!r}: fact {fact_id!r} contradicts {len(siblings)} existing "
+                f"fact(s); verify relation namespacing (see relation-convention.md)",
+                file=sys.stderr,
+            )
+
+    # Phase 9: mark entity's memory card stale on every write (ACM-214)
+    try:
+        from ..card_materializer import mark_entity_stale as _mark_stale
+        _mark_stale(entity, req.scope, identity.tenant_id)
+    except Exception as _card_exc:
+        logger.warning("card mark_stale failed for %r: %s", entity, _card_exc)
+
+    # Phase 9 §2: write-time embedding (background thread, graceful fallback)
+    if _embed_enabled:
+        threading.Thread(
+            target=_embed_fact_background,
+            args=(fact_id, entity, req.relation, req.value.type, value_v or ""),
+            daemon=True,
+        ).start()
+
+    get_hook_bus().emit(BillingEvent(
+        event_type="fact_written",
+        tenant_id=identity.tenant_id,
+        entity_uri=identity.entity_uri,
+        fact_id=fact_id,
+    ))
+
+    # §20: fan out to subscribers (fast DB insert only; delivery happens in sweep loop)
+    try:
+        import json as _json
+
+        from ..subscription_delivery import fan_out as _subscription_fan_out
+        _subscription_fan_out(
+            fact_id=fact_id,
+            entity=entity,
+            scope=req.scope,
+            garden_id=garden_uuid,
+            tenant_id=identity.tenant_id,
+            fact_payload_json=_json.dumps({
+                "id": fact_id,
+                "entity": entity,
+                "relation": req.relation,
+                "value_type": req.value.type,
+                "value_v": value_v,
+                "source": source,
+                "timestamp": now,
+                "scope": req.scope,
+                "confidence": req.confidence,
+                "garden_id": garden_uuid,
+            }),
+        )
+    except Exception as _sub_exc:
+        print(f"[stigmem] WARN: subscription fan_out failed: {_sub_exc}", file=sys.stderr)
+
+    FACT_WRITE.labels(principal=identity.entity_uri, tenant=identity.tenant_id).inc()
+    if contradicted:
+        CONTRADICTION.labels(tenant=identity.tenant_id).inc()
+    try:
+        _span.set_attribute("stigmem.fact_id", fact_id)  # type: ignore[attr-defined]
+        _span.set_attribute("stigmem.contradicted", contradicted)  # type: ignore[attr-defined]
+    except Exception:  # noqa: BLE001, S110# nosec B110
+        pass
+
+    return row_to_record(row, contradicted=contradicted, warnings=relation_warnings)
 
 
 def _is_valid_entity_uri(uri: str) -> bool:
@@ -394,14 +661,7 @@ def _record_contradictions(
         )
 
 
-@router.get(
-    "",
-    response_model=QueryResponse,
-    description=(
-        "Query facts by pattern (spec §5.2, §5.20). "
-        "Omitted fields are wildcards. Entity/source are normalized (§2.6)."
-    ),
-)
+@router.get("", response_model=QueryResponse)
 def query_facts(
     identity: Annotated[Identity, Depends(resolve_identity)],
     response: Response,
@@ -412,32 +672,17 @@ def query_facts(
     min_confidence: float = Query(0.0, ge=0.0, le=1.0),
     include_contradicted: bool = Query(False),
     include_expired: bool = Query(False),
-    after: str | None = Query(
-        None, description="Return facts with timestamp > this ISO 8601 value"
-    ),
+    after: str | None = Query(None, description="Return facts with timestamp > this ISO 8601 value"),  # noqa: E501
     cursor: str | None = Query(None, description="Opaque pagination cursor (fact id)"),
     limit: int = Query(50, ge=1, le=500),
-    garden_id: str | None = Query(
-        None, description="v0.9: filter to facts in this garden (spec §5.20)"
-    ),
-    attested: bool | None = Query(
-        None, description="v0.9: filter by attestation status (spec §18.6)"
-    ),
-    include_low_trust: bool = Query(
-        False,
-        description="v1.1: include facts with effective_confidence < 0.3 (§19.4.4)",
-    ),
-    as_of: str | None = Query(
-        None,
-        description="§24: time-travel — return facts visible at this ISO 8601 timestamp",
-    ),
+    garden_id: str | None = Query(None, description="v0.9: filter to facts in this garden (spec §5.20)"),  # noqa: E501
+    attested: bool | None = Query(None, description="v0.9: filter by attestation status (spec §18.6)"),  # noqa: E501
+    include_low_trust: bool = Query(False, description="v1.1: include facts with effective_confidence < 0.3 (§19.4.4)"),  # noqa: E501
+    as_of: str | None = Query(None, description="§24: time-travel — return facts visible at this ISO 8601 timestamp"),  # noqa: E501
 ) -> QueryResponse:
-    """Query facts by pattern (spec §5.2, §5.20)."""
+    """Query facts by pattern (spec §5.2, §5.20). Omitted fields are wildcards. Entity/source are normalized (§2.6)."""  # noqa: E501
     if not identity.can_read():
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="read permission required",
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
 
     # §24.4: time-travel query — delegate to as_of implementation
     if as_of is not None:
@@ -496,9 +741,10 @@ def query_facts(
         params.append(1 if attested else 0)
 
     if entity:
-        # malformed query — fall through to exact-match with raw value
-        with contextlib.suppress(NormalizationError):
+        try:  # noqa: SIM105
             entity = normalize_entity_uri(entity)
+        except NormalizationError:
+            pass  # malformed query — fall through to exact-match with raw value
         conditions.append(
             "(entity = ? OR entity IN"
             " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
@@ -508,8 +754,10 @@ def query_facts(
         conditions.append("relation = ?")
         params.append(relation)
     if source:
-        with contextlib.suppress(NormalizationError):
+        try:  # noqa: SIM105
             source = normalize_entity_uri(source)
+        except NormalizationError:
+            pass  # malformed query — fall through to exact-match with raw value
         conditions.append(
             "(source = ? OR source IN"
             " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
@@ -586,10 +834,7 @@ def get_fact(
 ) -> FactRecord:
     """Retrieve a single fact by UUID or sha256: CID (spec v0.4 §5.5, §17.3, §25.5)."""
     if not identity.can_read():
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="read permission required",
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
 
     # §25.5: dual addressing — resolve CID to UUID via alias table
     resolved_fact_id = fact_id
@@ -597,10 +842,7 @@ def get_fact(
         if not is_valid_cid(fact_id):
             raise HTTPException(
                 status_code=400,
-                detail={
-                    "code": "cid_malformed",
-                    "message": "CID must be 'sha256:' followed by 64 hex chars",
-                },
+                detail={"code": "cid_malformed", "message": "CID must be 'sha256:' followed by 64 hex chars"},  # noqa: E501
             )
         with db() as conn:
             alias = conn.execute(
@@ -624,7 +866,7 @@ def get_fact(
         raise HTTPException(status_code=404, detail="fact not found")
 
     # Garden ACL: fact in a garden is only readable by members (spec §17.3)
-    if "garden_id" in row.keys() and row["garden_id"] is not None:  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
+    if "garden_id" in row.keys() and row["garden_id"] is not None:  # noqa: SIM118
         with db() as conn:
             garden_row = conn.execute(
                 "SELECT * FROM gardens WHERE id = ? AND tenant_id = ?",
@@ -661,10 +903,7 @@ def verify_cid(
 ) -> _CidVerifyResponse:
     """Verify a fact's stored CID against a freshly computed one (spec §25.6.2)."""
     if not identity.can_read():
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="read permission required",
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
     with db() as conn:
         row = conn.execute(
             "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
@@ -673,7 +912,7 @@ def verify_cid(
     if row is None:
         raise HTTPException(status_code=404, detail="fact not found")
     computed = compute_cid_from_row(row)
-    stored = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
+    stored = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118
     if stored is None:
         return _CidVerifyResponse(
             cid_valid=False,
@@ -715,10 +954,7 @@ def get_provenance(
     import json as _prov_json
 
     if not identity.can_read():
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="read permission required",
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
 
     with db() as conn:
         row = conn.execute(
@@ -728,8 +964,8 @@ def get_provenance(
     if row is None:
         raise HTTPException(status_code=404, detail="fact not found")
 
-    derived_from_raw = row["derived_from"] if "derived_from" in row.keys() else None  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
-    cid_val = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
+    derived_from_raw = row["derived_from"] if "derived_from" in row.keys() else None  # noqa: SIM118
+    cid_val = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118
     root_scope: str = row["scope"] or "local"
 
     if not derived_from_raw:

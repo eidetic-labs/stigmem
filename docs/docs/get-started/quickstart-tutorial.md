@@ -129,7 +129,6 @@ curl -s http://localhost:8766/v1/federation/audit | jq '.entries[-3:]'
 | `make down` | Stop containers; keep data volumes. |
 | `make logs` | Tail logs from all services (`docker compose logs -f`). |
 | `make verify` | End-to-end smoke test — starts nodes, asserts a fact, verifies replication, tears down. |
-| `make helm-lint` | Lint the Helm chart at `infra/helm/stigmem/`. |
 
 To run without the dev overlay (production-only):
 
@@ -153,61 +152,9 @@ make up COMPOSE_FLAGS="-f docker-compose.yml"
 docker compose -f docker-compose.yml up --build -d
 ```
 
-## Kubernetes install (Helm)
-
-The chart at `infra/helm/stigmem/` deploys a **single** stigmem node (chart v0.1.0, app v1.0).
-
-### Basic install
-
-```bash
-helm install stigmem ./infra/helm/stigmem
-```
-
-Verify:
-
-```bash
-kubectl get pods -l app.kubernetes.io/name=stigmem
-kubectl port-forward svc/stigmem 8765:8765
-curl http://localhost:8765/healthz   # {"status":"ok"}
-```
-
-### Enable federation
-
-Create a values override file:
-
-```yaml
-# federation-values.yaml
-node:
-  url: "https://stigmem.example.com"   # public ingress URL
-  federation:
-    enabled: true
-    pubkey: "<base64url-encoded Ed25519 pubkey>"
-    privkeySecretRef: "stigmem-keys"   # Kubernetes Secret name
-    pullIntervalS: 30
-```
-
-Create the Secret before installing:
-
-```bash
-kubectl create secret generic stigmem-keys \
-  --from-literal=federation-privkey="<base64url-encoded Ed25519 privkey>"
-```
-
-Install with the override:
-
-```bash
-helm install stigmem ./infra/helm/stigmem -f federation-values.yaml
-```
-
-After the node is running, register peers manually from any node with network access:
-
-```bash
-docker exec stigmem-node-a-1 \
-  stigmem federation register-peer \
-    --local-url  https://stigmem.example.com \
-    --remote-url https://stigmem-peer.example.com \
-    --scopes company,public
-```
+:::caution Helm / Kubernetes is deferred in v0.9.0a1
+The Helm chart has been moved to [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md). It remains buildable but is unsupported until the [ADR-008 reintroduction gates](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) pass. The supported v0.9.0a1 deployment surface is Docker Compose (above).
+:::
 
 :::tip Key generation
 Generate Ed25519 keypairs with `python3 infra/soak/keys.py`. Keys must be base64url-encoded without padding (`=`).

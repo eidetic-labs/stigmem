@@ -45,10 +45,7 @@ Store both values in your secrets manager. **Never commit them to version contro
 Set them on your node before starting:
 
 ```bash
-# Fly.io
-fly secrets set STIGMEM_FEDERATION_PUBKEY="..." STIGMEM_FEDERATION_PRIVKEY="..."
-
-# Docker Compose / systemd — add to your env file
+# Docker Compose — add to deploy/compose/.env (or the environment: block of your compose file)
 STIGMEM_FEDERATION_PUBKEY=...
 STIGMEM_FEDERATION_PRIVKEY=...
 ```

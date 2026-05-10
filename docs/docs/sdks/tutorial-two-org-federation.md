@@ -9,7 +9,7 @@ audience: Integrator
 
 **Audience:** node operators and protocol implementers setting up cross-org federation for the first time.
 **Spec references:** §6 Federation, §19 Federation Trust (normative, v1.1), §5.21–5.25 wire format.
-**Time:** ~30 minutes on two local machines or two Fly.io apps. A laptop with two terminal windows works fine.
+**Time:** ~30 minutes on two local machines or two cloud VMs. A laptop with two terminal windows works fine.
 
 ---
 
@@ -29,7 +29,7 @@ By the end you will have:
 - Python 3.11+ with `pip`
 - `openssl` (standard on macOS/Linux)
 - `curl` (standard) and `jq` (for pretty-printing responses)
-- Two terminal windows (or two machines / Fly.io apps). This tutorial calls them **Terminal A** and **Terminal B**.
+- Two terminal windows (or two machines / cloud VMs). This tutorial calls them **Terminal A** and **Terminal B**.
 
 Install the node with the `libsql` extra disabled (we use the default SQLite backend for local testing):
 

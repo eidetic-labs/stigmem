@@ -58,23 +58,12 @@ The signature uses the node's federation private key (`STIGMEM_FEDERATION_PRIVKE
 
 ## Scheduling backups
 
-### Daily cron (systemd or bare metal)
+### Daily cron (host-side)
 
 ```bash
 # /etc/cron.d/stigmem-backup
-0 3 * * * stigmem /usr/local/bin/stigmem snapshot create \
+0 3 * * * stigmem docker exec stigmem-node-a stigmem snapshot create \
   --out /backups/stigmem-$(date +\%Y\%m\%d).tar.gz >> /var/log/stigmem-backup.log 2>&1
-```
-
-### Fly.io scheduled machine
-
-```bash
-# Run a one-off machine daily at 03:00 UTC to snapshot and upload to S3
-fly machine run ghcr.io/eidetic-labs/stigmem:latest \
-  --schedule daily \
-  --env STIGMEM_DB_PATH=/app/data/stigmem.db \
-  --command "stigmem snapshot create --out /backups/snap.tar.gz && \
-             aws s3 cp /backups/snap.tar.gz s3://your-bucket/stigmem/"
 ```
 
 ### Upload to S3-compatible storage

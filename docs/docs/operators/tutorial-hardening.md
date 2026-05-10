@@ -147,9 +147,6 @@ ACTION REQUIRED — update your secrets manager with the new private key:
 **Update the secret and restart:**
 
 ```bash
-# Fly.io
-fly secrets set STIGMEM_NODE_PRIVATE_KEY=<new-seed>
-
 # Docker Compose — update the env file, then restart
 sed -i 's|^STIGMEM_NODE_PRIVATE_KEY=.*|STIGMEM_NODE_PRIVATE_KEY=<new-seed>|' .env
 docker compose up -d

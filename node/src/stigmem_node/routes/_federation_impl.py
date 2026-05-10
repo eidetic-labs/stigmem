@@ -50,6 +50,7 @@ async def register_peer_impl(
     # ``federation.settings`` continue to take effect.  Cast to ``Any`` because
     # ``httpx`` and ``settings`` are not in the stub-friendly ``__all__``.
     from typing import cast as _cast
+
     from . import federation as _fed_mod
     _fed = _cast(Any, _fed_mod)
 
@@ -136,6 +137,7 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
     # ``federation.write_audit_log`` — accessing via the module preserves
     # those patches.
     from typing import cast as _cast
+
     from . import federation as _fed_mod
     _fed = _cast(Any, _fed_mod)
 
@@ -231,6 +233,7 @@ def federation_ingest_tombstone_impl(
     """
     # Lazy lookup: tests monkey-patch ``federation.settings``.
     from typing import cast as _cast
+
     from . import federation as _fed_mod
     _fed = _cast(Any, _fed_mod)
     from ..tombstone_signing import verify_revocation_signature, verify_tombstone_signature

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import json
+import contextlib
 import logging
+import sqlite3
 import sys
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -14,8 +15,6 @@ from pydantic import BaseModel
 
 from .. import settings as _settings_pkg  # access via module so test patches propagate
 from ..auth import Identity, resolve_identity
-# Re-exported binding used by tests that monkey-patch ``routes.facts._settings``.
-from ..settings import settings as _settings  # noqa: F401
 from ..cid import compute_cid_from_row, is_cid, is_valid_cid
 from ..db import db
 from ..entity_normalizer import NormalizationError, normalize_entity_uri
@@ -37,6 +36,9 @@ from ..models import (
     row_to_record,
 )
 from ..recall_pipeline import apply_recall_pipeline
+
+# Re-exported binding used by tests that monkey-patch ``routes.facts._settings``.
+from ..settings import settings as _settings  # noqa: F401
 from ..tracing import start_span
 
 logger = logging.getLogger("stigmem.facts")
@@ -53,7 +55,6 @@ def _get_tombstone_filter(
     excluded_entity_uris: entities under active (non-legal-hold) tombstones.
     tombstone_notices: annotations for legal_hold tombstones visible to admin callers.
     """
-    from ..tombstone_cache import is_tombstoned
 
     if not entity_uris:
         return set(), []
@@ -63,11 +64,10 @@ def _get_tombstone_filter(
     # On postgres this is a syntax error; rollback clears the failed txn state.
     try:
         conn.execute("BEGIN IMMEDIATE")
-    except Exception:  # nosec B110
-        try:
+    except sqlite3.Error as _begin_exc:  # nosec B110
+        logger.debug("BEGIN IMMEDIATE failed (likely non-sqlite backend): %s", _begin_exc)
+        with contextlib.suppress(sqlite3.Error):
             conn.rollback()
-        except Exception:  # nosec B110
-            pass
     rows = conn.execute(
         f"""SELECT t.id, t.entity_uri, t.scope, t.created_at, t.legal_hold
             FROM tombstones t
@@ -77,10 +77,8 @@ def _get_tombstone_filter(
             )""",  # noqa: S608  # nosec B608
         entity_uris,
     ).fetchall()
-    try:
+    with contextlib.suppress(sqlite3.Error):
         conn.execute("COMMIT")
-    except Exception:  # nosec B110
-        pass
 
     excluded: set[str] = set()
     notices: list[TombstoneNotice] = []
@@ -141,13 +139,16 @@ def _validate_as_of(as_of: str) -> datetime:
                     status_code=400,
                     detail={
                         "code": "as_of_before_retention_floor",
-                        "message": "as_of predates the retention horizon for this deployment (§24.2.2)",
+                        "message": (
+                            "as_of predates the retention horizon "
+                            "for this deployment (§24.2.2)"
+                        ),
                     },
                 )
         except HTTPException:
             raise
-        except Exception:  # nosec B110
-            pass
+        except (ValueError, TypeError) as _floor_exc:
+            logger.debug("as_of retention floor parse failed: %s", _floor_exc)
     return ts
 
 
@@ -189,7 +190,10 @@ def _query_facts_as_of_impl(
         "f.tenant_id = ?",
         "f.timestamp <= ?",
         "(f.valid_until IS NULL OR f.valid_until > ?)",
-        "NOT EXISTS (SELECT 1 FROM fact_retractions fr WHERE fr.fact_id = f.id AND fr.retracted_at <= ?)",
+        (
+            "NOT EXISTS (SELECT 1 FROM fact_retractions fr"
+            " WHERE fr.fact_id = f.id AND fr.retracted_at <= ?)"
+        ),
     ]
     params: list[Any] = [tenant_id, as_of, as_of, as_of]
 
@@ -244,7 +248,12 @@ def _query_facts_as_of_impl(
     next_cursor = rows[-1]["id"] if has_more and rows else None
     # §23.3.3 r.3: suppress total when tombstone filtering was applied to prevent oracle leakage
     total = None if tombstone_filtered else len(records)
-    return QueryResponse(facts=records, total=total, cursor=next_cursor, tombstone_notices=tombstone_notices)
+    return QueryResponse(
+        facts=records,
+        total=total,
+        cursor=next_cursor,
+        tombstone_notices=tombstone_notices,
+    )
 
 
 def _validate_relation(relation: str) -> list[str]:
@@ -318,9 +327,9 @@ def _embed_fact_background(
     """Background thread: embed one fact and persist to vec_facts."""
     try:
         from .. import settings as settings_pkg
+        from ..db import db
         from ..embedding import get_embedding_model
         from ..vector_search import check_or_register_model, embed_and_store_fact
-        from ..db import db
 
         model = get_embedding_model(settings_pkg.settings)
         with db() as conn:
@@ -395,17 +404,35 @@ def query_facts(
     min_confidence: float = Query(0.0, ge=0.0, le=1.0),
     include_contradicted: bool = Query(False),
     include_expired: bool = Query(False),
-    after: str | None = Query(None, description="Return facts with timestamp > this ISO 8601 value"),
+    after: str | None = Query(
+        None, description="Return facts with timestamp > this ISO 8601 value"
+    ),
     cursor: str | None = Query(None, description="Opaque pagination cursor (fact id)"),
     limit: int = Query(50, ge=1, le=500),
-    garden_id: str | None = Query(None, description="v0.9: filter to facts in this garden (spec §5.20)"),
-    attested: bool | None = Query(None, description="v0.9: filter by attestation status (spec §18.6)"),
-    include_low_trust: bool = Query(False, description="v1.1: include facts with effective_confidence < 0.3 (§19.4.4)"),
-    as_of: str | None = Query(None, description="§24: time-travel — return facts visible at this ISO 8601 timestamp"),
+    garden_id: str | None = Query(
+        None, description="v0.9: filter to facts in this garden (spec §5.20)"
+    ),
+    attested: bool | None = Query(
+        None, description="v0.9: filter by attestation status (spec §18.6)"
+    ),
+    include_low_trust: bool = Query(
+        False,
+        description="v1.1: include facts with effective_confidence < 0.3 (§19.4.4)",
+    ),
+    as_of: str | None = Query(
+        None,
+        description="§24: time-travel — return facts visible at this ISO 8601 timestamp",
+    ),
 ) -> QueryResponse:
-    """Query facts by pattern (spec §5.2, §5.20). Omitted fields are wildcards. Entity/source are normalized (§2.6)."""
+    """Query facts by pattern (spec §5.2, §5.20).
+
+    Omitted fields are wildcards. Entity/source are normalized (§2.6).
+    """
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="read permission required",
+        )
 
     # §24.4: time-travel query — delegate to as_of implementation
     if as_of is not None:
@@ -464,10 +491,9 @@ def query_facts(
         params.append(1 if attested else 0)
 
     if entity:
-        try:
+        # malformed query — fall through to exact-match with raw value
+        with contextlib.suppress(NormalizationError):
             entity = normalize_entity_uri(entity)
-        except NormalizationError:
-            pass  # malformed query — fall through to exact-match with raw value
         conditions.append(
             "(entity = ? OR entity IN"
             " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
@@ -477,10 +503,8 @@ def query_facts(
         conditions.append("relation = ?")
         params.append(relation)
     if source:
-        try:
+        with contextlib.suppress(NormalizationError):
             source = normalize_entity_uri(source)
-        except NormalizationError:
-            pass
         conditions.append(
             "(source = ? OR source IN"
             " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
@@ -557,7 +581,10 @@ def get_fact(
 ) -> FactRecord:
     """Retrieve a single fact by UUID or sha256: CID (spec v0.4 §5.5, §17.3, §25.5)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="read permission required",
+        )
 
     # §25.5: dual addressing — resolve CID to UUID via alias table
     resolved_fact_id = fact_id
@@ -565,7 +592,10 @@ def get_fact(
         if not is_valid_cid(fact_id):
             raise HTTPException(
                 status_code=400,
-                detail={"code": "cid_malformed", "message": "CID must be 'sha256:' followed by 64 hex chars"},
+                detail={
+                    "code": "cid_malformed",
+                    "message": "CID must be 'sha256:' followed by 64 hex chars",
+                },
             )
         with db() as conn:
             alias = conn.execute(
@@ -589,7 +619,7 @@ def get_fact(
         raise HTTPException(status_code=404, detail="fact not found")
 
     # Garden ACL: fact in a garden is only readable by members (spec §17.3)
-    if "garden_id" in row.keys() and row["garden_id"] is not None:
+    if "garden_id" in row.keys() and row["garden_id"] is not None:  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
         with db() as conn:
             garden_row = conn.execute(
                 "SELECT * FROM gardens WHERE id = ? AND tenant_id = ?",
@@ -626,7 +656,10 @@ def verify_cid(
 ) -> _CidVerifyResponse:
     """Verify a fact's stored CID against a freshly computed one (spec §25.6.2)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="read permission required",
+        )
     with db() as conn:
         row = conn.execute(
             "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
@@ -635,7 +668,7 @@ def verify_cid(
     if row is None:
         raise HTTPException(status_code=404, detail="fact not found")
     computed = compute_cid_from_row(row)
-    stored = row["cid"] if "cid" in row.keys() else None
+    stored = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
     if stored is None:
         return _CidVerifyResponse(
             cid_valid=False,
@@ -677,7 +710,10 @@ def get_provenance(
     import json as _prov_json
 
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="read permission required",
+        )
 
     with db() as conn:
         row = conn.execute(
@@ -687,8 +723,8 @@ def get_provenance(
     if row is None:
         raise HTTPException(status_code=404, detail="fact not found")
 
-    derived_from_raw = row["derived_from"] if "derived_from" in row.keys() else None
-    cid_val = row["cid"] if "cid" in row.keys() else None
+    derived_from_raw = row["derived_from"] if "derived_from" in row.keys() else None  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
+    cid_val = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
     root_scope: str = row["scope"] or "local"
 
     if not derived_from_raw:

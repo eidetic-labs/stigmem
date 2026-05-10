@@ -237,7 +237,8 @@ async def register_peer(
     background_tasks: BackgroundTasks,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> PeerRegisterResponse:
-    """Register a peer (§5.6). Thin wrapper — see ``_federation_impl.register_peer_impl``."""
+    """Register a peer. Fetches its well-known doc and verifies declaration_sig (§5.6)."""
+    # Implementation lives in _federation_impl.register_peer_impl.
     return await register_peer_impl(req, background_tasks, identity)
 
 
@@ -886,8 +887,10 @@ def federation_ingest_tombstone(
 ) -> dict[str, Any]:
     """Inbound tombstone push from a federation peer (§23.4.2).
 
-    Thin wrapper — see ``_federation_impl.federation_ingest_tombstone_impl``.
+    Auth: peer JWT or capability token with tombstone:write verb (mirrors push_facts).
+    Verifies signature against org manifest, writes to local tombstones table.
     """
+    # Implementation lives in _federation_impl.federation_ingest_tombstone_impl.
     return federation_ingest_tombstone_impl(
         request,
         payload,

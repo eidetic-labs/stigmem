@@ -32,6 +32,20 @@ from ..metrics import CONTRADICTION, FACT_WRITE
 from ..models import AssertRequest, FactRecord, row_to_record
 from ..settings import settings as _settings  # noqa: F401  — kept for parity
 
+
+def _live_settings() -> Any:
+    """Return the live Settings singleton.
+
+    Uses sys.modules directly because some test fixtures replace
+    `stigmem_node.settings` (the module attribute on the parent package) with
+    a Settings instance. `from .. import settings` and `import x.y` both go
+    through that patched attribute and would return the instance instead of
+    the module — sys.modules['stigmem_node.settings'] is the only path that
+    reliably reaches the original module so we can read its `.settings`
+    singleton (which IS what tests intend to swap).
+    """
+    return sys.modules["stigmem_node.settings"].settings
+
 logger = logging.getLogger("stigmem.facts")
 
 
@@ -50,10 +64,12 @@ def assert_fact_impl(
         _record_contradictions,
         _validate_relation,
     )
-    from .. import settings as _settings_pkg
 
     if not identity.can_write():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="write permission required",
+        )
 
     # C1: attestation enforcement — verify or require attestation token
     attested_key_id: str | None = None
@@ -62,14 +78,14 @@ def assert_fact_impl(
         value_v_for_sig = _encode_v(req.value.type, req.value.v)
         canonical = (
             f"{req.entity}\n{req.relation}\n{req.value.type}\n{value_v_for_sig}\n{req.source}"
-        ).encode("utf-8")
+        ).encode()
         attested_key_id = verify_attestation(
             key_id=req.attestation.key_id,
             signature_b64=req.attestation.signature,
             canonical_message=canonical,
             caller_entity_uri=identity.entity_uri,
         )
-    elif _settings_pkg.settings.attestation_required:
+    elif _live_settings().attestation_required:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="attestation required; register an agent key at POST /v1/auth/agent-keys",
@@ -79,7 +95,10 @@ def assert_fact_impl(
         entity = normalize_entity_uri(req.entity)
         source = normalize_entity_uri(req.source)
     except NormalizationError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"invalid_entity_uri: {exc}") from exc
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"invalid_entity_uri: {exc}",
+        ) from exc
 
     # Deprecation warning for informal URIs (spec §2.5)
     if is_informal(req.entity):
@@ -113,7 +132,10 @@ def assert_fact_impl(
         if garden["scope"] != req.scope:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"scope mismatch: garden scope is '{garden['scope']}' but fact scope is '{req.scope}'",
+                detail=(
+                    f"scope mismatch: garden scope is '{garden['scope']}' "
+                    f"but fact scope is '{req.scope}'"
+                ),
             )
         require_garden_write(garden, identity)
 
@@ -141,7 +163,7 @@ def assert_fact_impl(
         confidence=req.confidence,
     )
 
-    _embed_enabled = _settings_pkg.settings.embed_enabled
+    _embed_enabled = _live_settings().embed_enabled
     embedding_missing_val = 1 if _embed_enabled else None
 
     # F-10 §25.7.3: idempotent CID pre-check — if CID already exists, return existing record
@@ -254,7 +276,15 @@ def assert_fact_impl(
         contradicted = len(siblings) > 0
 
         if contradicted:
-            _record_contradictions(conn, fact_id, entity, req.relation, req.scope, siblings, identity.tenant_id)
+            _record_contradictions(
+                conn,
+                fact_id,
+                entity,
+                req.relation,
+                req.scope,
+                siblings,
+                identity.tenant_id,
+            )
             print(
                 f"[stigmem] WARN: collision — entity={entity!r} relation={req.relation!r} "
                 f"scope={req.scope!r}: fact {fact_id!r} contradicts {len(siblings)} existing "
@@ -287,6 +317,7 @@ def assert_fact_impl(
     # §20: fan out to subscribers (fast DB insert only; delivery happens in sweep loop)
     try:
         import json as _json
+
         from ..subscription_delivery import fan_out as _subscription_fan_out
         _subscription_fan_out(
             fact_id=fact_id,
@@ -316,7 +347,7 @@ def assert_fact_impl(
     try:
         _span.set_attribute("stigmem.fact_id", fact_id)  # type: ignore[attr-defined]
         _span.set_attribute("stigmem.contradicted", contradicted)  # type: ignore[attr-defined]
-    except Exception:  # noqa: BLE001  # nosec B110
-        pass
+    except AttributeError as _span_exc:
+        logger.debug("span attribute set skipped: %s", _span_exc)
 
     return row_to_record(row, contradicted=contradicted, warnings=relation_warnings)

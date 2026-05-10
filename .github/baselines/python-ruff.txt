@@ -75,17 +75,6 @@ node/src/stigmem_node/recall_pipeline.py:240:5:I001:Import block is un-sorted or
 node/src/stigmem_node/recall_pipeline.py:262:101:E501:Line too long (102 > 100)
 node/src/stigmem_node/recall_pipeline.py:278:101:E501:Line too long (122 > 100)
 node/src/stigmem_node/recall_pipeline.py:280:101:E501:Line too long (113 > 100)
-node/src/stigmem_node/routes/_facts_assert.py:116:101:E501:Line too long (110 > 100)
-node/src/stigmem_node/routes/_facts_assert.py:257:101:E501:Line too long (112 > 100)
-node/src/stigmem_node/routes/_facts_assert.py:289:9:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/_facts_assert.py:319:5:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/_facts_assert.py:44:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/_facts_assert.py:56:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/_facts_assert.py:63:21:UP012:Unnecessary UTF-8 `encoding` argument to `encode`
-node/src/stigmem_node/routes/_facts_assert.py:82:101:E501:Line too long (114 > 100)
-node/src/stigmem_node/routes/_federation_impl.py:138:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/_federation_impl.py:233:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/_federation_impl.py:52:5:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_node/routes/admin_audit.py:71:101:E501:Line too long (112 > 100)
 node/src/stigmem_node/routes/agent_keys.py:47:101:E501:Line too long (102 > 100)
 node/src/stigmem_node/routes/agent_keys.py:62:101:E501:Line too long (102 > 100)
@@ -109,35 +98,6 @@ node/src/stigmem_node/routes/auth.py:77:101:E501:Line too long (115 > 100)
 node/src/stigmem_node/routes/auth.py:79:101:E501:Line too long (113 > 100)
 node/src/stigmem_node/routes/cards.py:15:33:F401:`..card_materializer.CARD_MIN_CONFIDENCE` imported but unused
 node/src/stigmem_node/routes/cid_admin.py:32:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:144:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/routes/facts.py:149:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/facts.py:192:101:E501:Line too long (106 > 100)
-node/src/stigmem_node/routes/facts.py:247:101:E501:Line too long (109 > 100)
-node/src/stigmem_node/routes/facts.py:320:9:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/facts.py:398:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:3:1:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/facts.py:401:101:E501:Line too long (105 > 100)
-node/src/stigmem_node/routes/facts.py:402:101:E501:Line too long (103 > 100)
-node/src/stigmem_node/routes/facts.py:403:101:E501:Line too long (120 > 100)
-node/src/stigmem_node/routes/facts.py:404:101:E501:Line too long (118 > 100)
-node/src/stigmem_node/routes/facts.py:406:101:E501:Line too long (119 > 100)
-node/src/stigmem_node/routes/facts.py:408:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:467:9:SIM105:Use `contextlib.suppress(NormalizationError)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/facts.py:480:9:SIM105:Use `contextlib.suppress(NormalizationError)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/facts.py:560:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:568:101:E501:Line too long (110 > 100)
-node/src/stigmem_node/routes/facts.py:56:35:F401:`..tombstone_cache.is_tombstoned` imported but unused
-node/src/stigmem_node/routes/facts.py:592:8:SIM118:Use `key in dict` instead of `key in dict.keys()`
-node/src/stigmem_node/routes/facts.py:5:8:F401:`json` imported but unused
-node/src/stigmem_node/routes/facts.py:629:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:638:28:SIM118:Use `key in dict` instead of `key in dict.keys()`
-node/src/stigmem_node/routes/facts.py:67:9:SIM105:Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/facts.py:680:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/facts.py:690:47:SIM118:Use `key in dict` instead of `key in dict.keys()`
-node/src/stigmem_node/routes/facts.py:691:29:SIM118:Use `key in dict` instead of `key in dict.keys()`
-node/src/stigmem_node/routes/facts.py:69:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/facts.py:80:5:SIM105:Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/facts.py:82:5:S110:`try`-`except`-`pass` detected, consider logging the exception
 node/src/stigmem_node/routes/graph.py:97:101:E501:Line too long (107 > 100)
 node/src/stigmem_node/routes/identity.py:122:9:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
 node/src/stigmem_node/routes/identity.py:134:13:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling

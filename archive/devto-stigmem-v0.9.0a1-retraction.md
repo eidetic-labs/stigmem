@@ -1,5 +1,5 @@
 <!--
-This file is the **canonical source** of the v0.9.0a1 retraction post —
+This file is the **canonical source** of the v0.9.0a1 retraction post:
 the public dev.to announcement of the reset. The stigmem repo is its
 authoritative home; the dev.to publication mirrors this content.
 
@@ -30,7 +30,7 @@ Last week we announced v1.0 of [stigmem](https://github.com/eidetic-labs/stigmem
 
 That label was wrong. We're walking it back. And on review, the broader version history we'd been carrying (v0.2 through v2.0 across our spec files and versioned docs) was overstating the project's maturity in the same way. None of those were tagged releases anyone deployed in production; they were development checkpoints. The version *labels* on them implied a release chronology we hadn't earned. (The spec *content* is real and current; we're reviewing it section by section as part of this reset, not throwing it away.)
 
-So we're doing two things together: walking back the v1.0 announcement, and resetting the canonical version line. **v0.9.0a1 — a preview alpha — is the first build of stigmem.** The spec is being reviewed and improved into the v0.9.0a1 canonical structure: core sections first, then experimental ones move to clearly-labeled experimental status. Nothing from the spec is being deleted.
+So we're doing two things together: walking back the v1.0 announcement, and resetting the canonical version line. **v0.9.0a1, a preview alpha, is the first build of stigmem.** The spec is being reviewed and improved into the v0.9.0a1 canonical structure: core sections first, then experimental ones move to clearly-labeled experimental status. Nothing from the spec is being deleted.
 
 This post explains what happened, what we're changing, and what we'd recommend for anyone evaluating stigmem today. If you came in on the v1.0 announcement and have already integrated against it: please read the "If you were planning to deploy this week" section below before continuing.
 
@@ -61,21 +61,23 @@ Velocity ran ahead of validation. We had a spec through §25, a versioned docs s
 
 Concrete actions, all landing this week:
 
-1. **Re-versioned to v0.9.0a1 as the first build.** The `pyproject.toml`, README, docs, and GitHub release reflect this. v0.9.0a1 is the first public release of `stigmem`, `stigmem-py`, `stigmem-node`, and `stigmem-openclaw` on PyPI, and of `@eidetic-labs/stigmem-ts` on npm.
-
-   Worth being precise here. When we audited what we'd actually shipped under the v1.0 label, we found that most of the artifacts that would have made it real never landed. Neither `stigmem` on PyPI nor any `stigmem*` package on npm was ever published; the canonical-package names are still unclaimed. The OpenClaw adapter (`stigmem-openclaw`) did upload to PyPI at v1.0.3 and v1.0.5 — but both declared `stigmem-py>=1.0.0rc1` as a hard dependency, and `stigmem-py 1.0.0rc1` was never published either. Those adapter uploads were end-to-end uninstallable: the listing existed, the wheel was downloadable, but `pip install stigmem-openclaw` failed with an unsatisfiable constraint.
-
-   We're correcting that as part of this reset: v1.0.3 and v1.0.5 are yanked from PyPI today (PEP 592 — they remain reachable for anyone who pinned them, but new resolutions skip them); `stigmem-openclaw 0.9.0a1` ships alongside the canonical packages and is the first installable version of the adapter. The ClawHub package (`clawhub.ai/offbyonce/stigmem-node`) is updated with the package README pointing at this retraction post.
-
-   The spec content from earlier development checkpoints is being reviewed section by section against actual implementation and migrated into the v0.9.0a1 canonical spec; the original evolutionary snapshots move to `spec/archive/evolution/` as reference material once their content has been forward-migrated. Nothing about the spec is being deleted.
+1. **Re-versioned to v0.9.0a1 as the first build.** The `pyproject.toml`, README, docs, and GitHub release reflect this. v0.9.0a1 is the first public release of `stigmem`, `stigmem-py`, `stigmem-node`, and `stigmem-openclaw` on PyPI, and of `@eidetic-labs/stigmem-ts` on npm. (See *What the audit found* below for the precise pre-publish state on PyPI and npm.)
 
 2. **The threat model moves to the docs front page**, not buried under `spec/security/`. It now includes a per-release status header naming which risks are mitigated, residual, open, and accepted as of the current version. This will be updated on every release; the changelog reflects it.
 
 3. **A milestone-based plan to v1.0.0 is published openly.** It includes a capability-based redesign of our prompt-injection handling (replacing the sanitizer-stripping approach we currently use, which doesn't survive contact with motivated adversaries), federation hardening (mTLS by default, bounded HLC skew, per-peer drift tracking), persistent audit log, and, critically, a 30-day public soak with at least one external operator before v1.0.0 ships. The plan is in [`ROADMAP.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/ROADMAP.md), with regular engineering log posts to come.
 
-4. **We've cut surface.** A substantial set of features that were labeled v1.0 are moving to `experimental/` as opt-in, gated work: RTBF tombstones, time-travel queries, lazy instruction discovery, advanced memory-garden ACL, source attestation, multi-tenant isolation, the curator dashboard, OIDC SSO, billing hooks, multi-backend storage, several connector adapters (Letta, Zep, Cognee, Gemini, OpenAI-tools, Paperclip), Helm/Fly.io/systemd/PaaS deploy recipes, and additional SDK languages. Each re-emerges through structured reintroduction gates — threat-model delta, ADR, conformance vectors, 30-day operator soak, documentation parity — with no default-on path until those gates pass. Content-addressed fact IDs (CIDs) stay in core: they're load-bearing for our storage-immutability stack and prompt-injection trust boundary, so they're a default-install feature in v0.9.0a1, not deferred. Our v1.0.0 surface will be smaller than what we announced, and defensible.
+4. **We've cut surface.** A substantial set of features that were labeled v1.0 are moving to `experimental/` as opt-in, gated work: RTBF tombstones, time-travel queries, lazy instruction discovery, advanced memory-garden ACL, source attestation, multi-tenant isolation, the curator dashboard, OIDC SSO, billing hooks, multi-backend storage, several connector adapters (Letta, Zep, Cognee, Gemini, OpenAI-tools, Paperclip), Helm/Fly.io/systemd/PaaS deploy recipes, and additional SDK languages. Each re-emerges through structured reintroduction gates (threat-model delta, ADR, conformance vectors, 30-day operator soak, documentation parity), with no default-on path until those gates pass. Content-addressed fact IDs (CIDs) stay in core: they're load-bearing for our storage-immutability stack and prompt-injection trust boundary, so they're a default-install feature in v0.9.0a1, not deferred. Our v1.0.0 surface will be smaller than what we announced, and defensible.
 
 5. **We're disclosing AI-authorship clearly.** The README and `CONTRIBUTING.md` now name which paths in the codebase have been human-reviewed in depth and which haven't. This shouldn't be a controversial disclosure, but in a category where trust is the product, hiding it would have been worse than naming it.
+
+### What the audit found
+
+When we audited what we'd actually shipped under the v1.0 label, we found that most of the artifacts that would have made it real never landed. Neither `stigmem` on PyPI nor any `stigmem*` package on npm was ever published; the canonical-package names were still unclaimed at the time of the audit. The OpenClaw adapter (`stigmem-openclaw`) did upload to PyPI at v1.0.3 and v1.0.5, but both declared `stigmem-py>=1.0.0rc1` as a hard dependency, and `stigmem-py 1.0.0rc1` was never published either. Those adapter uploads were end-to-end uninstallable: the listing existed, the wheel was downloadable, but `pip install stigmem-openclaw` failed with an unsatisfiable constraint.
+
+We're correcting that as part of this reset. v1.0.3 and v1.0.5 are yanked from PyPI (PEP 592: they remain reachable for anyone who pinned them, but new resolutions skip them). `stigmem-openclaw 0.9.0a1` ships alongside the canonical packages and is the first installable version of the adapter. The ClawHub package (`clawhub.ai/offbyonce/stigmem-node`) is updated with the package README pointing at this retraction post.
+
+The spec content from earlier development checkpoints is being reviewed section by section against actual implementation and migrated into the v0.9.0a1 canonical spec. The original evolutionary snapshots move to `spec/archive/evolution/` as reference material once their content has been forward-migrated. Nothing about the spec is being deleted.
 
 ## What's not changing
 
@@ -93,7 +95,7 @@ For single-org, single-node deployments where you're experimenting and have no p
 
 We aren't committing to a calendar for the hardened-core milestone; we'll complete it at a pace that aligns with our resourcing, and we'll publish updates as each item lands. Subscribe to the repo or watch the engineering log for progress.
 
-If you've already integrated against v1.0: nothing about your code needs to change today. The core wire format hasn't changed. Some endpoints from v1.0 — RTBF tombstones, time-travel queries, lazy instruction discovery — moved to experimental and are not in the default install of v0.9.0a1, so applications relying on those will need to install the corresponding `experimental/<feature>/` plugin (when it ships) or pin to a v1.0 era image. v0.9.0a1 comes with no stability guarantee; expect breaking changes during the `v0.9.0aN` alpha and `v0.9.0bN` beta series. We'll document them in the changelog.
+If you've already integrated against v1.0: nothing about your code needs to change today. The core wire format hasn't changed. Some endpoints from v1.0 (RTBF tombstones, time-travel queries, lazy instruction discovery) moved to experimental and are not in the default install of v0.9.0a1, so applications relying on those will need to install the corresponding `experimental/<feature>/` plugin (when it ships) or pin to a v1.0 era image. v0.9.0a1 comes with no stability guarantee; expect breaking changes during the `v0.9.0aN` alpha and `v0.9.0bN` beta series. We'll document them in the changelog.
 
 ## We're looking for our first external operator
 

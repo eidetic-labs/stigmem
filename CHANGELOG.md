@@ -60,6 +60,14 @@ The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled inter
 
 `v0.9.0a1` carries **no stability guarantee**. Wire format, public Python API, and SDK contracts may change during the `v0.9.0aN` alpha and `v0.9.0bN` beta series hardening windows. Stability commitments begin at `v1.0.0` GA, after a 30-day external-operator soak per [ADR-001](docs/adr/001-versioning.md). Pin to specific pre-release versions; auto-upgrade is not safe.
 
+### Known follow-ups for v0.9.0a2
+
+These items were intentionally deferred from `v0.9.0a1` to keep the first build narrowly scoped. They are queued for the next alpha:
+
+- **Internal refactor — split god files** (`node/src/stigmem_node/cli.py`, `routes/federation.py`, `routes/facts.py`). Pure code-movement; no behavioral change. Tracked at [PR #69](https://github.com/Eidetic-Labs/stigmem/pull/69).
+- **Lint baseline tightening** — reduce the `check_ruff_baseline.py` known-issues count (currently 578) through targeted cleanup in touched files. Each PR carries its own baseline-reduction quota.
+- **Retraction-post URL backfill** — `README.md` line 11 and `LIMITATIONS.md` line 244 reference the retraction post but the URL is not yet known at v0.9.0a1 publish time. A `v0.9.0a1.post1` (PEP 440 post-release) lands the URLs once the retraction post is live, per the [release-cadence runbook §Rule 3](docs/internal/release-cadence.md#rule-3--all-errata-go-to-the-next-version).
+
 ---
 
 ## Historical development checkpoints (preserved as record, not prior releases)

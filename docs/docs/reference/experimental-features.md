@@ -17,7 +17,7 @@ An EXPERIMENTAL feature is shipped and functional, but is **not recommended for 
 ## §21 — Lazy Instruction Discovery
 
 **Status:** EXPERIMENTAL  
-**Spec page:** [§21 Lazy Instruction Discovery](../spec/lazy-instruction-discovery.md)
+**Spec page:** [§21 Lazy Instruction Discovery](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/lazy-instruction-discovery/spec.md)
 
 **Risk:** The boot-stub schema and instruction-manifest format are not yet finalized. A mutable or externally-resolvable instruction manifest is a prompt-injection attack surface: if an attacker can influence the manifest URI or cache, they can substitute agent instructions.
 
@@ -33,7 +33,7 @@ An EXPERIMENTAL feature is shipped and functional, but is **not recommended for 
 ## §23 — RTBF Tombstones
 
 **Status:** EXPERIMENTAL  
-**Spec page:** [§23 Right-to-be-Forgotten Tombstones](../spec/right-to-be-forgotten-tombstones.md)
+**Spec page:** [§23 Right-to-be-Forgotten Tombstones](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/tombstones/spec.md)
 
 **Risk:** The tombstone signing format and federation propagation rules are under active security review. The field-exclusion signing pattern may allow federated re-broadcast to produce tombstones that pass local validation but fail downstream signature checks, silently leaving personal data un-erased on remote nodes. This is a compliance risk (GDPR Art. 17, CCPA §1798.105) masked as a cryptography issue.
 
@@ -52,7 +52,7 @@ An EXPERIMENTAL feature is shipped and functional, but is **not recommended for 
 ## §24 — Time-Travel Queries
 
 **Status:** EXPERIMENTAL  
-**Spec page:** [§24 Time-Travel / As-Of Queries](../spec/time-travel-as-of-queries.md)
+**Spec page:** [§24 Time-Travel / As-Of Queries](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/time-travel/spec.md)
 
 **Risk:** `as_of` queries combined with retroactive tombstone suppression can return data that a tombstone was meant to erase. Isolation semantics differ between SQLite (`BEGIN IMMEDIATE`) and PostgreSQL (`READ COMMITTED`), meaning behavior may silently differ between development and production environments. The `legal_hold` key management path is not yet documented.
 

@@ -1,16 +1,27 @@
-# Stigmem — Federated Knowledge Fabric + Intent Protocol
-## Specification v0.9 — Draft
+> **⚠️ Archived — evolutionary snapshot, not the canonical spec.**
+>
+> This file was a pre-v0.9.0a1 development checkpoint of the stigmem protocol specification. Per [ADR-001](../../../docs/adr/001-versioning.md), the canonical version line of stigmem begins at `v0.9.0a1` (2026-05-09); the version *marker* on this snapshot labeled an internal development step, not a tagged release.
+>
+> The current canonical spec is at [`spec/stigmem-spec-v0.9.0a1.md`](../../stigmem-spec-v0.9.0a1.md). Content from this snapshot was reviewed section-by-section against actual implementation in `node/` and migrated forward into the canonical spec where applicable; deferred sections moved to `experimental/<feature>/spec.md` per [ADR-002](../../../docs/adr/002-v1-scope.md) + [ADR-011](../../../docs/adr/011-cross-cutting-extraction.md).
+>
+> This snapshot is preserved as historical reference; it is not normative.
 
-**Status:** Working draft — Phase 7. §1–§16 promoted to stable (normative) from v0.8. §17 Memory Garden new (draft). §18 Source Attestation new (draft). §5 extended with garden and attestation routes (§5.14–§5.20). §2 extended with `garden_id` and `attested` fact fields. §3.5 extended with source attestation enforcement. §10 migration 004 (gardens) + migration 005 (api_keys + attestation_audit).
+---
+
+# Stigmem — Federated Knowledge Fabric + Intent Protocol
+## Specification v1.0
+
+**Status:** v1.0 — Stable. §1–§18 normative.
 **License:** Apache-2.0
 **Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
+- v1.0 (2026-05-03): Promoted §17 Memory Garden and §18 Source Attestation from draft to normative. All sections stable.
 - v0.9 (Phase 7 — substrate): §17 Memory Garden — named, ACL'd partition above scope with admin/writer/reader role model and entity membership. §18 Source Attestation — `entity_uri` bound to API key at creation (immutable); enforcement at write time via enforce/warn/off modes; auto-fill source from key's entity_uri when omitted; delegation via `allowed_source_entities`; key management API (`POST/GET/PATCH/DELETE /v1/auth/keys`); attestation audit log; migration 005 (api_keys, attestation_audit). §5.14–§5.20 garden + attestation wire routes. §2 `garden_id` and `attested` fields on FactRecord. §3.5 source attestation rules + updated Identity shape with `allowed_source_entities`. §9 `garden:` prefix reserved. §10 migrations 004–005.
 - v0.8 (Phase 6 — public beta): §15 Decay Semantics; §16 Synthesis; §6.7–§6.8 N-node federation backpressure and scope propagation invariants. §§1–§14 promoted to stable.
 - [Prior changelog in stigmem-spec-v0.8-draft.md]
 
-> **Reading guide:** §1–§16 are unchanged from v0.8-draft. Only §17–§18 are new normative sections in this file. §2, §3.5, §5, §7, §8, §9, §10 carry targeted v0.9 additions; all other content in those sections is stable from v0.8.
+> **Reading guide:** §1–§16 are unchanged from v0.8. §17–§18 are fully normative in v1.0. §2, §3.5, §5, §7, §8, §9, §10 carry v0.9 additions; all other content in those sections is stable from v0.8.
 
 ---
 
@@ -18,15 +29,15 @@
 
 *Stable sections §2.1–§2.6 unchanged from v0.8. The following fields are added to the fact record.*
 
-### 2.7 Garden Field — v0.9
+### 2.7 Garden Field
 
 An optional `garden_id` field on a fact associates it with a Memory Garden (§17).
 
 ```
 FactRecord (v0.9 extension):
   ...all v0.8 fields...
-  garden_id: URI | null    // v0.9: stigmem://authority/garden/{slug}; null = no garden
-  attested:  boolean | null  // v0.9: source attestation result (§18); null = not applicable
+  garden_id: URI | null    // stigmem://authority/garden/{slug}; null = no garden
+  attested:  boolean | null  // source attestation result (§18); null = not applicable
 ```
 
 **`garden_id` invariant:** When `garden_id` is set:
@@ -51,7 +62,7 @@ FactRecord (v0.9 extension):
 
 *§3.1–§3.4 unchanged. §3.5 is extended below.*
 
-### 3.5 Identity and Auth — Source Attestation (v0.9 extension)
+### 3.5 Identity and Auth — Source Attestation
 
 *Prior content (API-key model, per-scope key restrictions, federation peer tokens) unchanged from v0.8.*
 
@@ -87,7 +98,7 @@ SourceAttestationMode = "enforce" | "warn" | "off"
 
 *§5.1–§5.13 unchanged from v0.8.*
 
-### 5.14 Create a garden — v0.9
+### 5.14 Create a garden
 
 ```
 POST /v1/gardens
@@ -121,7 +132,7 @@ The creating principal is automatically added as `admin`.
 
 **Slug rules:** Must match `^[a-z0-9][a-z0-9\-]{0,62}$`. Stored and matched case-insensitively.
 
-### 5.15 List gardens — v0.9
+### 5.15 List gardens
 
 ```
 GET /v1/gardens
@@ -131,7 +142,7 @@ Authorization: Bearer <api-key>
 
 Returns only gardens where the caller holds any role (admin, writer, or reader). Admins of the node (callers with `write` permission) see all gardens.
 
-### 5.16 Get a garden — v0.9
+### 5.16 Get a garden
 
 ```
 GET /v1/gardens/:garden_id_or_slug
@@ -141,7 +152,7 @@ Authorization: Bearer <api-key>
 → 404 if not found
 ```
 
-### 5.17 Delete a garden — v0.9
+### 5.17 Delete a garden
 
 ```
 DELETE /v1/gardens/:garden_id_or_slug
@@ -153,7 +164,7 @@ Authorization: Bearer <api-key>
 
 Deleting a garden does NOT delete its associated facts. The `garden_id` field on orphaned facts becomes a dangling reference. Nodes SHOULD surface these in lint output (§14).
 
-### 5.18 Garden membership — v0.9
+### 5.18 Garden membership
 
 **Add member:**
 
@@ -197,7 +208,7 @@ Authorization: Bearer <api-key> (must be any member)
 → 200 { "members": [ ...GardenMemberRecord... ] }
 ```
 
-### 5.19 Assert a fact into a garden — v0.9
+### 5.19 Assert a fact into a garden
 
 Facts are associated with a garden by including `garden_id` in the assert request:
 
@@ -218,7 +229,7 @@ Authorization: Bearer <api-key with write permission>
 → 404 if garden not found
 ```
 
-### 5.20 Query facts with garden filter — v0.9
+### 5.20 Query facts with garden filter
 
 ```
 GET /v1/facts?garden_id=stigmem://node.example.com/garden/project-atlas
@@ -254,7 +265,7 @@ The `garden_id` query parameter is additive with other filters (`entity`, `relat
 
 ---
 
-## 8. Open Questions (v0.9)
+## 8. Open Questions
 
 1. **Cross-node garden membership.** A garden's members are resolved against the local node's `entity_uri` namespace. In a federated deployment, `stigmem://node-a/user/alice` may be unknown to `node-b`. How should guest membership work across nodes? *Deferred to Phase 8 federation design.*
 
@@ -263,8 +274,6 @@ The `garden_id` query parameter is additive with other filters (`entity`, `relat
 3. **`attested` field and retraction.** If a fact was written in `warn` mode with `attested: false`, should a retraction (same `entity/relation/scope` with `confidence=0.0`) require `enforce` mode to be trusted? *Recommendation: attestation is per-fact, not per-operation. A retraction with `attested: false` is still a valid immutable record; query consumers can filter on `attested`.*
 
 4. **Garden capacity limits.** No current limit on number of gardens or members per garden. Operators should apply application-level limits; a future spec section may add advisory guidance.
-
-*(Prior open questions §8.1–§8.6 from v0.8 are unchanged.)*
 
 ---
 
@@ -328,7 +337,7 @@ ALTER TABLE facts ADD COLUMN attested INTEGER;  -- 1=true, 0=false, NULL=not-app
 
 ---
 
-## 17. Memory Garden — v0.9 Draft
+## 17. Memory Garden
 
 ### 17.1 Motivation
 
@@ -439,7 +448,7 @@ These system facts are written automatically on membership changes and MUST NOT 
 
 ---
 
-## 18. Source Attestation — v0.9 Draft
+## 18. Source Attestation
 
 ### 18.1 Motivation
 
@@ -513,9 +522,9 @@ A retraction (fact with `confidence=0.0`) is subject to the same attestation rul
 
 ### 18.5 Integration with Track C (Per-Agent Keypairs)
 
-Phase 7 Track C will add per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
+Phase 7 Track C adds per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
 
-v0.9 source attestation is a first step. v0.9 `attested: true` means the bearer-token-level check passed. Track C will extend this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
+v0.9 source attestation is a first step. v0.9 `attested: true` means the bearer-token-level check passed. Track C extends this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
 
 ### 18.6 Querying by Attestation
 
@@ -576,9 +585,9 @@ The caller MUST store `raw_key` securely — it is not retrievable after creatio
   "detail": "entity_uri cannot be changed after creation; revoke and re-create the key" }
 ```
 
-#### Updated `Identity` shape (v0.9)
+#### Updated `Identity` shape
 
-The v0.9 `Identity` shape extends the v0.8 shape with the `allowed_source_entities`
+The `Identity` shape extends the v0.8 shape with the `allowed_source_entities`
 field needed for delegation (§18.9). This is the object the node constructs
 from the API key record when authenticating a request — it drives every
 attestation check in the write path.
@@ -589,7 +598,7 @@ Identity {
   credential:              string         // API key (SHA-256 stored server-side)
   node_url:                string
   allowed_scopes:          FactScope[]
-  allowed_source_entities: URI[]          // v0.9: additional source URIs this key may claim (see §18.9)
+  allowed_source_entities: URI[]          // additional source URIs this key may claim (see §18.9)
 }
 ```
 
@@ -694,8 +703,6 @@ GET /v1/auth/attestation-audit?key_id=<id>&attested=false&limit=50
 
 Filter params: `key_id`, `attested` (true/false), `after` (pagination cursor), `limit` (max 500).
 
-Track C3 () builds a consolidated audit surface joining `(principal, attested-source, fact-id)` across `api_keys`, `attestation_audit`, and `facts`.
-
 ### 18.11 Schema Migration (Migration 005)
 
 Migration 005 adds two tables to support source attestation. The `api_keys`
@@ -754,4 +761,18 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(a
 
 ---
 
-*v0.9-draft — §17 and §18 open for community feedback. See [CONTRIBUTING.md](../CONTRIBUTING.md).*
+## 19. Security Policy
+
+*This section is non-normative.*
+
+The active security policy — supported versions, vulnerability reporting instructions, scope definitions, and the coordinated disclosure timeline — is maintained in [`SECURITY.md`](../SECURITY.md) at the root of the repository.
+
+**Reporting:** Do not open a public GitHub issue for security vulnerabilities. Report via the [GitHub private advisory path](https://github.com/eidetic-labs/stigmem/security/advisories). We acknowledge within 48 hours and target a patch within 14 days for critical vulnerabilities.
+
+**Disclosure timeline:** 90 days from the report date before public disclosure, except for vulnerabilities already being actively exploited in the wild.
+
+For the current security posture and Dependabot alert triage covering v1.0-rc, see the [Security Posture section of SECURITY.md](../SECURITY.md#security-posture--v10-rc-2026-05-03).
+
+---
+
+*v1.0 — Stable. All sections normative. Apache-2.0.*

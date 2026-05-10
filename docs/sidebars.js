@@ -305,6 +305,14 @@ const sidebars = {
       label: 'Specification',
       link: { type: 'doc', id: 'spec/index' },
       collapsed: true,
+      // Per master-checklist §4.3a, sections deferred from v0.9.0a1
+      // critical-path scope (§15 decay, §16 synthesis, §17 memory-garden
+      // advanced ACL, §18 source attestation, §20 recall-graph, §21 lazy
+      // instruction discovery, §23 RTBF tombstones, §24 time-travel) live
+      // at experimental/<feature>/spec.md per ADR-009 + ADR-011 and are
+      // not part of the canonical-spec sidebar surface. They appear in
+      // the Experimental & Deferred index (rendered separately) and
+      // surface via the canonical spec's section-disposition table.
       items: [
         'spec/motivation',
         'spec/atomic-fact-shape',
@@ -319,16 +327,8 @@ const sidebars = {
         'spec/failure-mode-scenarios',
         'spec/adapter-abi',
         'spec/lint-semantics',
-        'spec/decay-semantics',
-        'spec/synthesis',
-        'spec/memory-garden',
-        'spec/source-attestation',
         'spec/federation-trust',
-        'spec/recall-graph',
-        'spec/lazy-instruction-discovery',
         'spec/security-hardening',
-        'spec/right-to-be-forgotten-tombstones',
-        'spec/time-travel-as-of-queries',
         'spec/content-addressed-fact-ids',
         'spec/section-13',
       ],

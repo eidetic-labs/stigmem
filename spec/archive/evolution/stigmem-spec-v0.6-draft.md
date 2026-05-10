@@ -1,13 +1,22 @@
-# Stigmem — Federated Knowledge Fabric + Intent Protocol
-## Specification v0.7 — Draft
+> **⚠️ Archived — evolutionary snapshot, not the canonical spec.**
+>
+> This file was a pre-v0.9.0a1 development checkpoint of the stigmem protocol specification. Per [ADR-001](../../../docs/adr/001-versioning.md), the canonical version line of stigmem begins at `v0.9.0a1` (2026-05-09); the version *marker* on this snapshot labeled an internal development step, not a tagged release.
+>
+> The current canonical spec is at [`spec/stigmem-spec-v0.9.0a1.md`](../../stigmem-spec-v0.9.0a1.md). Content from this snapshot was reviewed section-by-section against actual implementation in `node/` and migrated forward into the canonical spec where applicable; deferred sections moved to `experimental/<feature>/spec.md` per [ADR-002](../../../docs/adr/002-v1-scope.md) + [ADR-011](../../../docs/adr/011-cross-cutting-extraction.md).
+>
+> This snapshot is preserved as historical reference; it is not normative.
 
-**Status:** Working draft — Phase 5, Deliverables 3 + 4. §1–12 promoted from v0.6 (stable). §14 Lint Semantics new (normative). §2.6 Entity Naming Rules new (normative). §13 updated to reflect Phase 5 progress.
+---
+
+# Stigmem — Federated Knowledge Fabric + Intent Protocol
+## Specification v0.6 — Draft
+
+**Status:** Working draft — CTO reviewed. §1–5, §7–10 promoted from v0.5 (stable). §6 stable. §11 stable. §12 Adapter ABI promoted from Phase 4 reserved to normative. §2.5 Entity URI scheme new (normative). §6.2 capability negotiation now required. Phase 5 additions: §2.6 entity naming rules (normative, implemented), §5.12 lint-semantics (normative, implemented).
 **License:** Apache-2.0
 **Authors:** Eidetic-Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
-- v0.7 (Deliverable 4 — entity normalization): §2.6 Entity Naming Rules new normative section — strict normalizer on ingest path (case normalization, whitespace collapse, idempotent + deterministic); query-time backward compatibility; migration guide for existing facts; §10 adds migration 003 (entity_aliases table); §3.3 Contradiction notes fragmentation fix; §7 Design Decisions extended; §8 entity fragmentation resolved.
-- v0.7 (Deliverable 3 — lint): §14 Lint Semantics new normative section — lint promoted to first-class spec operation alongside assert/query/resolve_contradiction/subscribe; four health checks (contradiction, stale, orphan, broken_ref); `POST /v1/lint` wire route; MCP tool `lint_scope`; conformance test vectors (LINT_VECTORS). §9.1 `stigmem:lint:` prefix reserved. §13 updated (lint and entity normalization no longer reserved — addressed in Phase 5 deliverables). Design decisions §7 extended with lint rationale.
+- v0.6+phase5: §2.6 entity naming rules normative (strict normalizer shipped); §5.12 lint-semantics new (lint_scope MCP tool + backend route); §5.10 resolution semantics corrected — resolution facts now namespace to `stigmem:resolution:<conflict-id>` to prevent cascade contradiction wave; query_facts `include_contradicted=false` default now enforced server-side.
 - v0.6 (CTO review pass): §12.5 context injection schema corrected to match `_facts_to_summary` reference impl (namespace grouping, conditional confidence annotation, em-dash header); §12.4.1 informal URI caveat added with v0.7 migration note; §12.3.2 step 1 documents preference-relation filter; §12.2 `STIGMEM_SOURCE_ENTITY` default clarified as adapter-specific.
 - v0.6: §2.5 Entity URI scheme formal scheme (`stigmem://`) now normative; informal URIs deprecated with warning (resolves §8.1); §6.2 capability negotiation promoted from optional to required (resolves §8.4); §12 Adapter ABI promoted from Phase 4 reserved to concrete normative spec based on three shipped adapters (MCP, Paperclip, OpenClaw); §13 Reserved for Phase 5+.
 - v0.5: §6 Federation promoted from RFC stub to concrete implementable spec; new federation wire routes (§5.6–§5.10); HLC timestamps (§2.4); per-scope key restrictions on `api_keys` (§3.5); conflict-first-class semantics formalized (§3.3, §6.5); §11 Failure Modes acceptance scenarios; schema additions (§10); design decisions updated.
@@ -45,10 +54,10 @@ Every piece of knowledge in Stigmem is an **atomic fact**:
 
 | Field         | Type                              | Description |
 |---------------|-----------------------------------|-------------|
-| `entity`      | URI (see §2.5, §2.6)              | What this fact is about. Formal: `stigmem://company.example/user/alice`. Informal (deprecated): `user:alice`. Stored in canonical normalized form (§2.6). |
+| `entity`      | URI (see §2.5)                    | What this fact is about. Formal: `stigmem://company.example/user/alice`. Informal (deprecated): `user:alice`. |
 | `relation`    | string (namespaced predicate)     | What kind of statement this is. Examples: `memory:role`, `roadmap:status`, `preference:timezone`. |
 | `value`       | `FactValue` (see §2.1)            | The asserted value. |
-| `source`      | URI (see §2.5, §2.6)              | Who asserted the fact. Examples: `stigmem://company.example/agent/assistant`, `stigmem://company.example/user/alice`. Stored in canonical normalized form (§2.6). |
+| `source`      | URI (see §2.5)                    | Who asserted the fact. Examples: `stigmem://company.example/agent/assistant`, `stigmem://company.example/user/alice`. |
 | `timestamp`   | ISO 8601 UTC datetime             | Wall-clock time when the fact was asserted. Set by the node at write time; clients may suggest. |
 | `hlc`         | HLC string (see §2.4)            | Hybrid Logical Clock timestamp. Causality-preserving; required for federation. |
 | `valid_until` | ISO 8601 UTC datetime or null     | Optional. If set, the fact is expired after this time. |
@@ -164,146 +173,56 @@ is active. `user:alice` on node A and `user:alice` on node B may refer to differ
 people. The formal scheme binds the authority to the URI, preventing silent identity
 collisions across federated nodes.
 
-**v0.7 note:** All components of the formal URI are normalized to lowercase on ingest (§2.6). `stigmem://company.example/issue/EG-42` is stored as `stigmem://company.example/issue/eg-42`.
+---
 
-### 2.6 Entity Naming Rules — v0.7 Normative
+### 2.6 Entity Naming Rules — Phase 5 (v0.7 Normative)
 
-This section defines canonical entity naming rules and the **strict normalizer** contract. The goal is to prevent **silent entity fragmentation**: multiple facts about the same real-world entity using different URI representations that create disconnected entity nodes in the store.
+**Root cause of entity fragmentation (Bug 1):** Two agents writing
+`project/eg-18`, `project/EG-18`, and `phase4` create three silent entity
+fragments that never merge. The node has no basis to treat them as the same entity.
+The v0.7 normalization layer closes this gap.
 
-**v0.7 scope:** The strict normalizer addresses case-based and whitespace-based fragmentation deterministically. Full alias resolution (e.g. `user:alice` ≡ `user:a.smith`) is deferred to the Phase 6 fuzzy resolver.
+#### Canonical form
 
-#### 2.6.1 The fragmentation problem
+The **canonical form** of an entity URI is the unique key used for storage and
+lookup. The canonicalization algorithm is:
 
-Before strict normalization, the following assertions create separate entities for the same project:
+1. Trim surrounding whitespace.
+2. If the URI matches `stigmem://{authority}/{type}/{id}` (formal scheme):
+   - Lowercase `authority`, `type`, and `id`.
+   - Collapse any internal whitespace in `id` to a single hyphen.
+   - Reject if any component is empty after normalization.
+   - Return `stigmem://{authority}/{type}/{id}`.
+3. Otherwise (informal URI):
+   - Lowercase the entire string.
+   - Collapse whitespace to hyphens.
+   - Return as-is (do NOT convert informal to formal; that is a migration concern).
 
-```
-entity="project/eg-18"                            (informal, slash separator, lowercase)
-entity="project/EG-18"                            (informal, slash separator, uppercase)
-entity="stigmem://company.example/project/eg-18"     (formal, lowercase id)
-entity="stigmem://company.example/project/EG-18"     (formal, uppercase id)
-```
+The algorithm is **deterministic and idempotent**: `normalize(normalize(x)) = normalize(x)`.
 
-All four refer to the same project. Without normalization, queries for any one form miss the others entirely, and contradiction detection never fires for facts that should conflict.
+#### Node behavior (v0.7)
 
-#### 2.6.2 Canonical form
+- Nodes MUST normalize the `entity` and `source` fields on every `assert_fact`
+  write using the algorithm above before storing and before contradiction detection.
+- Nodes MUST normalize the `entity` and `source` query parameters on every
+  `query_facts` call before executing the lookup.
+- If normalization fails (empty component), the node MUST return `400 Bad Request`
+  with error code `invalid_entity_uri`.
+- Nodes MUST NOT apply normalization to `relation` — relation namespacing is governed
+  by the convention in §9 and the migration guide.
 
-The canonical form of an entity URI after normalization is the lowercase form of that URI with surrounding whitespace trimmed and internal whitespace in the `id` component collapsed to hyphens.
+#### What normalization does NOT do
 
-For **formal URIs** (`stigmem://authority/type/id`):
+- Does **not** resolve aliases (`user:alice` ≠ `stigmem://company.example/user/alice`).
+  Alias resolution is a Phase 6 fuzzy-resolver concern (§8 open question).
+- Does **not** rewrite stored facts. Normalization is applied on write and query only.
+- Does **not** merge distinct entities that happen to look similar. Two formally
+  distinct URIs are always two entities.
 
-| Component   | Canonical rule |
-|-------------|---------------|
-| `authority` | Lowercase; trim surrounding whitespace |
-| `type`      | Lowercase; trim surrounding whitespace |
-| `id`        | Lowercase; trim surrounding whitespace; collapse internal whitespace runs to a single hyphen |
+#### Reference implementation
 
-For **informal URIs** (any non-`stigmem://` form):
-- Lowercase the entire string; trim surrounding whitespace; collapse internal whitespace to hyphens.
-- The URI format is **preserved** (informal stays informal — not converted to formal).
-- The §2.5 constraint "nodes MUST NOT auto-rewrite informal URIs to formal URIs" is honored: lowercasing the informal form is not the same as expanding it to the formal scheme.
-
-#### 2.6.3 Strict normalizer — normative algorithm
-
-Reference implementation at `stigmem/node/src/stigmem_node/entity_normalizer.py`:
-
-```python
-import re
-
-_FORMAL_URI_RE = re.compile(r"^stigmem://([^/]+)/([^/]+)/(.+)$")
-_WHITESPACE_RE = re.compile(r"\s+")
-
-class NormalizationError(ValueError):
-    pass
-
-def normalize_entity_uri(raw: str) -> str:
-    """Return the canonical form of an entity URI string.
-
-    Raises NormalizationError on empty or whitespace-only input.
-    """
-    if not raw or not raw.strip():
-        raise NormalizationError("entity URI must not be empty")
-
-    stripped = raw.strip()
-    m = _FORMAL_URI_RE.match(stripped)
-    if m:
-        authority = m.group(1).strip().lower()
-        type_slug = m.group(2).strip().lower()
-        id_part   = _WHITESPACE_RE.sub("-", m.group(3).strip().lower())
-        if not authority or not type_slug or not id_part:
-            raise NormalizationError(
-                f"normalization produced empty component in formal URI: {raw!r}"
-            )
-        return f"stigmem://{authority}/{type_slug}/{id_part}"
-
-    # Informal URI: lowercase and collapse whitespace; format preserved
-    return _WHITESPACE_RE.sub("-", stripped.lower())
-```
-
-**Invariants the normalizer MUST satisfy:**
-
-1. **Deterministic:** identical inputs always produce identical outputs.
-2. **Idempotent:** `normalize(normalize(x)) == normalize(x)` for all valid inputs.
-3. **Total on valid inputs:** every non-empty string produces exactly one output; invalid inputs raise `NormalizationError`.
-
-**What the strict normalizer does NOT do:**
-- Alias resolution (e.g., `user:alice` ≡ `user:a.smith`) — Phase 6 fuzzy resolver.
-- Existence validation against the fact store.
-- Semantic similarity matching.
-- Conversion of informal URIs to formal URIs (§2.5 prohibits silent auto-rewrite).
-
-#### 2.6.4 Ingest-path contract
-
-Nodes MUST apply the strict normalizer to the `entity` and `source` fields of every incoming fact **before** persistence:
-
-1. If `normalize_entity_uri` returns a canonical URI, store the canonical form.
-2. If the input was an informal URI (does not match `stigmem://`), also emit a deprecation warning to stderr as specified in §2.5.
-3. If `normalize_entity_uri` raises `NormalizationError`, reject the fact:
-
-```
-HTTP 400
-{ "error": "invalid_entity_uri", "detail": "<NormalizationError message>" }
-```
-
-**Why normalize at ingest (not query):** Query-time normalization would require every consumer to carry normalization logic and would leave non-canonical data permanently in the store. Ingest normalization ensures the stored form is always canonical; all queries use exact string matching on the canonical form, keeping query performance O(1) on indexed lookups.
-
-**Retraction and contradiction compatibility:** Ingest normalization is safe for retractions (§5.4) and contradiction detection (§3.3). If a retraction and the original fact both normalize to the same canonical entity, they match correctly. A client sending a retraction for a non-canonical URI normalizes to the same canonical form as the original, and retraction semantics apply as expected.
-
-#### 2.6.5 Query-time backward compatibility
-
-For nodes upgrading to v0.7, **query parameters are also normalized** before matching:
-
-```
-GET /v1/facts?entity=<raw>&...
-```
-
-The node MUST apply `normalize_entity_uri` to the `entity` and `source` query parameters before executing the database query. This allows clients holding references to pre-normalization forms to still retrieve existing facts written after v0.7 is deployed.
-
-For pre-v0.7 facts stored with non-canonical URIs, the alias table (§2.6.6, migration 003) is the recommended migration path.
-
-#### 2.6.6 Migration guide for existing facts
-
-Facts stored before v0.7 strict normalization was deployed may use informal URIs or non-canonical formal URIs. Because facts are immutable (§2), they cannot be rewritten in place. The following migration strategies are available:
-
-**Option A — Alias table (recommended for production nodes)**
-
-Migration 003 adds an `entity_aliases` table that maps known informal/legacy URIs to their canonical equivalents (see §10). Populate it by scanning the `facts` table for non-canonical `entity` and `source` values and inserting the raw → canonical mapping. At query time, the node can join against this table to find pre-v0.7 facts via canonical queries.
-
-**Option B — Re-assertion sweep (for smaller nodes or clean migration windows)**
-
-For each fact with a non-canonical entity URI:
-1. Assert a new fact with the canonical entity, the same `(relation, value, scope, confidence)`, and provenance `source="system:stigmem:migration"`.
-2. Retract the original fact by asserting `confidence=0.0` for the original `(entity_raw, relation, scope)`.
-
-The original facts are retained in the store with `confidence=0.0` for audit purposes.
-
-**Phased rollout recommendation:**
-
-| Phase | Action |
-|-------|--------|
-| v0.7 deploy | Enable strict normalizer on ingest. Query normalization enabled. |
-| +2 weeks | Scan facts table; populate alias table for any non-canonical existing facts. |
-| +4 weeks | Run re-assertion sweep for nodes with < 10k facts; otherwise maintain alias table. |
-| v0.8 target | Remove alias table read path; all facts use canonical URIs. |
+`stigmem/node/src/stigmem_node/entity_normalizer.py` — `normalize_entity_uri()` and
+`is_informal()`. The v0.6 node already applies this on every write and query.
 
 ---
 
@@ -349,8 +268,6 @@ A **contradiction** exists when two facts `a`, `b` satisfy all of:
 - `a.confidence > 0.0 && b.confidence > 0.0`
 
 **Both facts are retained. Neither is silently overwritten.**
-
-**v0.7 note:** Because `entity` is normalized on ingest (§2.6), two facts about the same real-world entity written with different cases (e.g. `project/EG-18` vs `project/eg-18`) now normalize to the same canonical entity and correctly trigger contradiction detection. Pre-v0.7 fragmented facts are not retroactively merged — use the alias table or re-assertion sweep (§2.6.6) to consolidate them.
 
 **Resolution order at query time:**
 1. Higher `confidence` wins.
@@ -544,13 +461,13 @@ Query params: `entity`, `relation`, `source`, `scope`, `min_confidence`,
 ```
 GET /.well-known/stigmem
 → 200 {
-    "version":            "0.7",
+    "version":            "0.6",
     "node_id":            URI,
     "node_url":           string,
     "auth":               "none" | "required",
     "federation":         "disabled" | "enabled",
     "federation_pubkey":  string,   // v0.5: base64url Ed25519 public key; omit if federation disabled
-    "federation_version": string,   // v0.5: semver range this node speaks, e.g. "0.7"
+    "federation_version": string,   // v0.5: semver range this node speaks, e.g. "0.6"
     "federation_endpoints": {       // v0.5: advertised federation routes
       "peers":    string,           // e.g. "/v1/federation/peers"
       "facts":    string,           // e.g. "/v1/federation/facts"
@@ -683,11 +600,16 @@ Authorization: Bearer <api-key>
 ```
 
 **Resolution semantics:** The node asserts:
-1. A new fact for `(entity, relation, scope)` with the winning or new value and `confidence=1.0`.
+1. A new **resolution fact** written under the namespaced entity
+   `stigmem:resolution:<conflict_id>` (not the conflicting facts' entity) with the
+   winning or new value and `confidence=1.0`. Using a dedicated entity prevents
+   the resolution fact from sharing the `(entity, relation, scope)` triple with the
+   conflicting facts, which would otherwise trigger a cascading contradiction wave
+   when the fact is federated to peer nodes (§6.5).
 2. A `stigmem:resolves` meta-fact:
    ```
    (entity=<resolution-fact-id>, relation="stigmem:resolves",
-    value={type:"ref", v:"<conflict_id>"}, source=<caller's entity_uri>, ...)
+    value={type:"ref", v:"<conflict_id>"}, source="system:stigmem", ...)
    ```
 3. Updates the conflict's `stigmem:conflict:status` to `"resolved"`.
 
@@ -709,17 +631,61 @@ Push is opt-in. Nodes that do not support push SHOULD return 405. Implementation
 SHOULD prefer pull; push is provided for low-latency delivery behind a feature flag
 (`STIGMEM_FEDERATION_PUSH_ENABLED`, default `false`).
 
-### 5.12 Lint — v0.7 Normative
+---
 
-See §14 for semantics and wire shape.
+### 5.12 Lint a scope — Phase 5
+
+Lint is a first-class operation that performs health-check sweeps on a scope.
+It is the spec vocabulary for the planned decay engine and sweep work.
 
 ```
 POST /v1/lint
 Authorization: Bearer <api-key>
-{ "scope": "company", "checks": ["contradiction", "stale"] }
-→ 200 { "findings": [...], "checked_at": "...", "scope": "company",
-         "checks_run": ["contradiction","stale"], "fact_count": 142 }
+{
+  "scope":             "local" | "team" | "company" | "public",
+  "checks":            ["contradiction","stale","orphan","broken_ref"],  // optional; omit = all
+  "entity":            string,   // optional: restrict to one entity URI
+  "relation":          string,   // optional: restrict to one relation
+  "stale_lookahead_s": int       // optional: also flag facts expiring within N seconds
+}
+→ 200 {
+    "findings": [
+      {
+        "check":    "contradiction" | "stale" | "orphan" | "broken_ref",
+        "severity": "error" | "warning" | "info",
+        "entity":   string,
+        "relation": string | null,
+        "fact_ids": string[],
+        "detail":   string
+      }, ...
+    ],
+    "checked_at":  ISO 8601,
+    "scope":       string,
+    "checks_run":  string[],
+    "fact_count":  int
+  }
 ```
+
+**Lint checks:**
+
+| Check | Severity | Description |
+|-------|----------|-------------|
+| `contradiction` | `error` | Facts in unresolved conflicts in the `conflicts` table |
+| `stale` | `warning` (expired) / `info` (expiring soon) | Facts with `valid_until ≤ now`; also flags within `stale_lookahead_s` |
+| `orphan` | `info` | Source URIs that never appear as `entity` in the given scope |
+| `broken_ref` | `warning` | Facts with `value_type="ref"` where `value_v` is not a known fact ID |
+
+**Scope:** Lint operates within a single required scope (`local`, `team`, `company`, `public`).
+
+**Read-only:** Lint MUST NOT modify any stored data. It is a health-check read.
+Cleanup actions (deleting orphans, removing stale facts) are operator decisions,
+not automatic side-effects of lint.
+
+**Performance:** Lint is an O(n) scan of the facts table for the given scope.
+Callers SHOULD rate-limit lint calls in production. Nodes MAY return `429 Too Many Requests`
+if lint is called more frequently than once per minute per scope.
+
+**MCP tool:** `lint_scope` — see §12 Adapter ABI for the MCP tool definition.
 
 ---
 
@@ -934,47 +900,35 @@ The following invariants MUST hold at all times:
 | Formal entity URI scheme in v0.6 | Informal `user:alice` URIs are ambiguous under federation — two peers can have different `user:alice`. Formal `stigmem://authority/type/id` binds identity to the node that owns the namespace. Deprecation-warning approach preserves backward compat while driving migration. |
 | Capability negotiation required in v0.6 | Phase 4 shipped two adapters with distinct relation namespaces. Without capability exchange, federated peers silently replicate relations they cannot interpret. Required negotiation prevents contradiction storms on semantically-opaque relations. |
 | Crash-forbidden adapter contract | Adapters are middleware in existing agent processes; a Stigmem node failure must not take down the agent. Crash-forbidden is an explicit ABI invariant so all adapter authors share the same degradation model. |
-| Case normalization at ingest (v0.7) | `project/EG-18` and `project/eg-18` created silent entity fragments — the root cause in earlier work. Normalizing at ingest (not query) keeps query O(1) on indexed lookups and prevents non-canonical data from accumulating in the store. Informal URIs are lowercased in place (not converted to formal) to preserve the §2.5 anti-rewrite invariant. |
-| Lint as first-class operation (v0.7) | Karpathy LLM-Wiki analysis (Phase 5) identified that adapter-side ad-hoc contradiction/stale queries are inconsistent and fragile. A single normative `POST /v1/lint` provides uniform sweep semantics with deterministic severity levels, enabling the decay engine (Phase 6) to delegate sweep discovery to the node rather than each adapter reimplementing it. |
-| Lint uses POST, not GET (v0.7) | The lint request body can include multiple optional filter fields (`entity`, `relation`, `checks`, `stale_lookahead_s`). A GET query string with complex filters risks URL-length limits and encoding ambiguity. POST body is unambiguous. Lint is idempotent despite using POST; this is documented explicitly (§14.5). |
-| Lint is strictly read-only (v0.7) | Diagnostic operations must not modify state. A lint sweep that auto-retracted stale facts would conflate discovery with action, removing the human/agent approval step before retraction. Lint observes; retraction is a deliberate subsequent operation. |
-| Four lint checks, independently selectable (v0.7) | Contradiction detection is an operational concern (run continuously); stale/orphan sweeps are maintenance tasks (run on schedule); broken-ref detection is a data-quality check (run during ingestion audits). Decoupling them lets callers compose the sweep they need without paying for all four. |
 
 ---
 
-## 8. Open Questions (v0.7)
+## 8. Open Questions (v0.6)
 
 **Resolved in v0.6:**
 - ~~§8.1 Entity URI scheme~~ — resolved: formal `stigmem://` scheme normative; informal deprecated with warning (§2.5).
 - ~~§8.4 Capability negotiation requirement~~ — resolved: capability negotiation required for federation-enabled nodes (§6.2).
-
-**Resolved in v0.7:**
-- ~~Lint primitive vocabulary~~ — resolved: lint promoted to first-class operation; §14 Lint Semantics normative; `POST /v1/lint` route; `lint_scope` MCP tool.
-- ~~Entity fragmentation from case variation~~ — resolved: strict normalizer on ingest (§2.6); case normalization and whitespace collapse applied to `entity` and `source` fields; migration 003 (entity_aliases table) for pre-v0.7 data.
 
 **Remaining open:**
 
 1. **Intent envelope scope.** Phase 2 implemented fact model only. Intent envelope wired
    through Phase 4 adapters (handoff, escalation, decision facts), but the full
    `IntentEnvelope` wire route is not yet implemented. Proposing to defer full envelope
-   route to Phase 6.
+   route to Phase 5.
 
 2. **Multi-node federation (3+ nodes).** v0.5 specifies two-node federation. Gossip
-   protocols for N>2 are deferred to Phase 6. Phase 5 MUST NOT design in a way that
+   protocols for N>2 are deferred to Phase 5. Phase 4 MUST NOT design in a way that
    makes N-node extension impossible.
 
 3. **Conflict resolution policy plugins.** Should operators be able to register custom
-   resolution functions? Deferred until a concrete use case emerges from Phase 5 testing.
+   resolution functions? Deferred until a concrete use case emerges from Phase 4 testing.
 
 4. **Audit log retention.** The federation audit log has no specified retention policy.
-   Nodes SHOULD retain at least 7 days (time-based policy is a Phase 7 concern).
+   Nodes SHOULD retain at least 7 heartbeats (initial test period; time-based policy is a Phase 7 concern).
 
 5. **`company`-scoped federation.** The spec allows `company` facts to cross federation
-   with explicit opt-in. Phase 5 testing should confirm whether this is too permissive.
-
-6. **Async lint job API.** The synchronous lint route (§14.5) is sufficient for scopes
-   under 100,000 facts. The async job API (`GET /v1/lint/jobs/:job_id`) is specified but
-   not yet implemented. Phase 6 target.
+   with explicit opt-in. Phase 4 testing should confirm whether this is too permissive.
+   The Phase 3 test matrix covered scope-leak attempts; Phase 4 findings will inform v0.7.
 
 ---
 
@@ -986,7 +940,6 @@ The following invariants MUST hold at all times:
 |---|---|---|
 | `stigmem:` | Spec maintainers | Core protocol relations: `stigmem:ttl`, `stigmem:received_from`, `stigmem:member`, `stigmem:conflict:between`, `stigmem:conflict:status`, `stigmem:resolves` |
 | `rel:` | Spec maintainers | Reification primitives: `rel:subject`, `rel:object`, `rel:type` |
-| `stigmem:lint:` | Spec maintainers | Reserved for future lint-related protocol relations. v0.7 lint is a pure API operation (no fact assertions); this prefix is reserved to prevent squatting ahead of Phase 6 lint enhancements. |
 
 ### 9.2 Community-registered prefixes
 
@@ -1004,7 +957,7 @@ The following invariants MUST hold at all times:
 
 ---
 
-## 10. Schema and Migration (v0.5 + v0.7)
+## 10. Schema and Migration (v0.5)
 
 Production nodes SHOULD use a migration-versioned schema. The reference implementation
 uses numbered SQL migration files applied at startup.
@@ -1088,23 +1041,6 @@ nonce_cache (
 - `nonce_cache(expires_at)` for TTL pruning
 - `facts(hlc)` for cursor-based replication queries
 - `facts(received_from)` for provenance queries
-
-### New tables — migration 003 (v0.7)
-
-```sql
--- Entity alias table for pre-v0.7 migration tooling (spec §2.6.6)
--- Populated by scanning facts table for non-canonical entity/source values.
-CREATE TABLE IF NOT EXISTS entity_aliases (
-    raw_uri       TEXT NOT NULL,          -- original non-canonical stored form
-    canonical_uri TEXT NOT NULL,          -- normalized form (output of normalize_entity_uri)
-    created_at    TEXT NOT NULL,
-    PRIMARY KEY (raw_uri)
-);
-
-CREATE INDEX IF NOT EXISTS idx_entity_aliases_canonical ON entity_aliases(canonical_uri);
-```
-
-**Note:** No columns are added to the `facts` table in migration 003. The strict normalizer operates at the application layer; existing facts are not rewritten.
 
 ---
 
@@ -1241,7 +1177,7 @@ Expected response shape:
 
 ```json
 {
-  "version":    "0.7",
+  "version":    "0.6",
   "node_id":    "<URI>",
   "node_url":   "<string>",
   "auth":       "none" | "required",
@@ -1470,7 +1406,6 @@ The vectors are JSON-serialisable dicts shared across the Python and TypeScript 
 | `ASSERT_VECTORS` | `assert-string`, `assert-text`, `assert-ref`, `retract` | `POST /v1/facts` with each FactValue type; `confidence=0.0` retraction |
 | `QUERY_VECTORS` | `query-by-entity`, `query-by-entity-relation`, `query-min-confidence`, `query-include-contradicted` | `GET /v1/facts` filtering; required response fields |
 | `NODE_INFO_VECTOR` | `node-info` | `GET /.well-known/stigmem` required fields: `version`, `node_id`, `node_url`, `auth`, `federation` |
-| `LINT_VECTORS` | `lint-contradiction`, `lint-stale`, `lint-stale-lookahead`, `lint-orphan`, `lint-broken-ref`, `lint-broken-ref-intent`, `lint-clean`, `lint-scope-filter` | `POST /v1/lint` — all four checks; severity mapping; scope isolation |
 
 **Running conformance:**
 ```bash
@@ -1489,247 +1424,21 @@ verifies:
    reaching the node (validated client-side) or are caught in the node's response.
 
 A compliant adapter is one that passes all `ASSERT_VECTORS`, `QUERY_VECTORS`,
-`NODE_INFO_VECTOR`, `LINT_VECTORS`, and its adapter-specific lifecycle tests with a
-live Stigmem node.
+`NODE_INFO_VECTOR`, and its adapter-specific lifecycle tests with a live Stigmem node.
 
 ---
 
-## 13. Phase 5+ Remaining Work
+## 13. Reserved for Phase 5+
 
-The following Phase 5 deliverables are addressed in v0.7:
-
-- **Lint primitive** (Phase 5 Deliverable 3): §14 Lint Semantics normative. Done.
-- **Entity normalization layer** (Phase 5 Deliverable 4): §2.6 Entity Naming Rules normative; strict normalizer on ingest path implemented (`entity_normalizer.py`); migration 003 (entity_aliases). Done.
-- **Bug fixes in progress**: §resolution-semantics (Deliverable 1) and §query-semantics (Deliverable 2) tracked separately.
-
-The following are deferred to Phase 6+:
+The following are explicitly out of scope for v0.6 / Phase 4:
 
 - Multi-tenant RBAC / OIDC
 - N > 2 node gossip (multi-node federation)
 - Binary wire encoding
-- Full `IntentEnvelope` wire route (§4 remains spec-only; Phase 6 target)
+- Full `IntentEnvelope` wire route (§4 remains spec-only; Phase 5 target)
 - Entity URI migration tooling (auto-rewrite from informal to formal URIs)
 - Hosted public Stigmem node
-- Async lint job API (`GET /v1/lint/jobs/:job_id`) — synchronous lint covers Phase 5 needs
-- Fuzzy entity resolver (Kompl-style 3-layer) — Phase 5 ships normalizer rules; Phase 6 ships matcher
 
 ---
 
-## 14. Lint Semantics — v0.7 Normative
-
-The **lint** operation is a first-class Stigmem protocol operation that performs
-health-check sweeps over a bounded scope or entity. Lint is strictly **read-only**:
-it observes and reports issues without writing facts or modifying node state.
-
-Lint bridges the decay engine (planned Phase 6) and the current production node.
-Running `lint_scope` against a live node reveals knowledge-base health degradation
-before it affects query results or agent behavior.
-
-### 14.1 Lint Checks
-
-Four normative checks, each independently selectable:
-
-| Check | What it detects |
-|---|---|
-| `contradiction` | Facts sharing the same `(entity, relation, scope)` tuple where both have `confidence > 0.0` and the conflict is unresolved (status `"unresolved"` in the `conflicts` table). |
-| `stale` | Facts whose `valid_until < now` and whose `confidence > 0.0`; optionally, facts whose `valid_until < now + stale_lookahead_s` (approaching expiry). |
-| `orphan` | Entities where every known fact is either retracted (`confidence = 0.0`) or expired (`valid_until < now`). No live facts remain for the entity. |
-| `broken_ref` | Facts with `value.type = "ref"` whose `value.v` targets an entity or fact ID that has no live (non-retracted, non-expired) facts on this node. |
-
-**Default behavior:** If `checks` is omitted or empty, all four checks run.
-
-**Scope of search:** Each check operates within the `scope` specified in the lint
-request. Checks never cross scope boundaries — a `broken_ref` finding in `company` scope
-is only reported if the broken ref also falls within `company` scope.
-
-### 14.2 LintFinding Shape
-
-```
-LintFinding {
-  check:    "contradiction" | "stale" | "orphan" | "broken_ref"
-  severity: "error" | "warning" | "info"
-  entity:   URI               // entity under examination
-  relation: string | null     // relevant relation; null for the orphan check
-  fact_ids: UUID[]            // IDs of the fact(s) involved in the finding
-  detail:   string            // human-readable explanation suitable for display
-}
-```
-
-### 14.3 Severity Mapping
-
-| Check | Condition | Severity |
-|---|---|---|
-| `contradiction` | Unresolved conflict between two live facts | `error` |
-| `stale` | `valid_until < now` and `confidence > 0.0` | `warning` |
-| `stale` | `valid_until < now + stale_lookahead_s` (not yet expired but approaching) | `info` |
-| `orphan` | Entity has no live facts | `info` |
-| `broken_ref` | Ref target entity has no live facts in this node's store | `warning` |
-| `broken_ref` | Broken ref where `relation` is `intent:handoff_to` or `intent:context_ref` | `error` |
-
-**Severity rationale:**
-- `contradiction` is always `error` — unresolved contradictions corrupt query results for all callers.
-- `stale` and `orphan` are non-critical health signals; expired or empty entities do not block reads.
-- `broken_ref` on intent-routing relations (`intent:handoff_to`, `intent:context_ref`) is `error`
-  because a broken handoff silently discards agent context during delegation.
-
-### 14.4 Wire Format
-
-#### Request
-
-```
-POST /v1/lint
-Authorization: Bearer <api-key>
-Content-Type: application/json
-
-{
-  "scope":             FactScope,   // required: which scope to sweep
-  "checks":            string[],    // optional; default: ["contradiction","stale","orphan","broken_ref"]
-  "entity":            URI?,        // optional: restrict sweep to one entity
-  "relation":          string?,     // optional: restrict sweep to one relation
-  "stale_lookahead_s": integer?     // optional: also flag facts expiring within N seconds; default 0
-}
-```
-
-#### Response
-
-```
-200 OK
-{
-  "findings":   LintFinding[],   // zero or more findings; empty array = clean
-  "checked_at": string,          // ISO 8601 UTC timestamp of when the sweep ran
-  "scope":      FactScope,       // echoed from the request
-  "checks_run": string[],        // which checks actually ran (echoed or defaulted)
-  "fact_count": integer          // number of facts scanned (not findings; helps gauge sweep completeness)
-}
-```
-
-#### Authorization
-
-The caller's API key must have read access to the requested `scope` (§3.5). Nodes MUST
-return HTTP 403 if the key's `allowed_scopes` does not include the requested `scope`.
-
-#### Error responses
-
-| HTTP | Condition |
-|---|---|
-| 400 | `scope` field missing or invalid; unknown `checks` value |
-| 403 | Caller's key is not authorized for the requested scope |
-| 202 | Scope exceeds 100,000 facts (async path; see §14.5) |
-
-### 14.5 Performance Contract
-
-- `POST /v1/lint` MUST respond synchronously within **30 seconds** for scopes with fewer
-  than 100,000 facts.
-- For scopes exceeding 100,000 facts, nodes MAY respond with **HTTP 202**:
-  ```
-  202 Accepted
-  { "job_id": "<uuid>", "status": "pending", "estimated_s": integer }
-  ```
-  The caller polls `GET /v1/lint/jobs/:job_id` until `status` is `"done"` or `"failed"`.
-  The async job API is specified here but deferred to Phase 6 implementation.
-- The sweep MUST be **read-only**. Nodes MUST NOT assert, retract, or update any fact
-  as a side effect of a lint call. This invariant applies even to internal bookkeeping.
-
-### 14.6 Relationship to Other Operations
-
-Lint is **diagnostic**, not prescriptive:
-
-| Finding type | Lint reports | Remediation action (separate call) |
-|---|---|---|
-| `contradiction` | Which facts conflict | `POST /v1/conflicts/:id/resolve` (§5.10) |
-| `stale` | Which facts have expired | `POST /v1/facts` with `confidence=0.0` (retraction, §5.4) |
-| `orphan` | Which entities have no live facts | No action required; orphans are informational |
-| `broken_ref` | Which ref facts have missing targets | Assert missing target entity, or retract the broken ref |
-
-### 14.7 MCP Tool: `lint_scope`
-
-The `lint_scope` MCP tool exposes `POST /v1/lint` to any MCP-aware agent without SDK
-installation.
-
-#### Tool definition
-
-```json
-{
-  "name": "lint_scope",
-  "description": "Sweep a Stigmem scope for knowledge-base health issues. Checks for: unresolved contradictions, stale or expiring facts, orphaned entities with no live facts, and broken cross-references. Read-only — reports findings without modifying any facts. Use resolve_contradiction to fix contradictions found here.",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "scope": {
-        "type": "string",
-        "enum": ["local", "team", "company", "public"],
-        "description": "The fact scope to sweep."
-      },
-      "checks": {
-        "type": "array",
-        "items": {
-          "type": "string",
-          "enum": ["contradiction", "stale", "orphan", "broken_ref"]
-        },
-        "description": "Which checks to run. Omit to run all four."
-      },
-      "entity": {
-        "type": "string",
-        "description": "Optional. Restrict sweep to facts about a single entity URI."
-      },
-      "relation": {
-        "type": "string",
-        "description": "Optional. Restrict sweep to a single relation."
-      },
-      "stale_lookahead_s": {
-        "type": "integer",
-        "description": "Optional. Also flag facts expiring within this many seconds. Default 0 (expired-only)."
-      }
-    },
-    "required": ["scope"]
-  }
-}
-```
-
-#### Output shape (tool result `text` field)
-
-```json
-{
-  "findings": [
-    {
-      "check": "contradiction",
-      "severity": "error",
-      "entity": "stigmem://company.example/user/alice",
-      "relation": "memory:role",
-      "fact_ids": ["fact-uuid-1", "fact-uuid-2"],
-      "detail": "Two live facts with different values for (entity, relation, scope)"
-    }
-  ],
-  "checked_at": "2026-05-02T14:00:00Z",
-  "scope": "company",
-  "checks_run": ["contradiction", "stale", "orphan", "broken_ref"],
-  "fact_count": 1024
-}
-```
-
-An empty `findings` array means the scope is clean for the requested checks.
-
-### 14.8 Conformance Test Vectors
-
-Normative lint vectors are defined in `sdks/stigmem-py/tests/conformance_vectors.py`
-under `LINT_VECTORS`. Each vector includes a `setup` list of fact assertions to run
-before the lint sweep, so results are deterministic.
-
-**Required vectors for conformance:**
-
-| Vector ID | Check | Scenario | Expected `findings` |
-|---|---|---|---|
-| `lint-contradiction` | `contradiction` | Two facts same (entity, relation, scope), different values, both confidence > 0 | ≥1 finding, check=`contradiction`, severity=`error` |
-| `lint-stale` | `stale` | Fact with `valid_until` in the past | ≥1 finding, check=`stale`, severity=`warning` |
-| `lint-stale-lookahead` | `stale` | Fact with `valid_until` within lookahead window but not yet elapsed | ≥1 finding, check=`stale`, severity=`info` |
-| `lint-orphan` | `orphan` | Entity with only retracted facts (confidence=0.0) | ≥1 finding, check=`orphan`, severity=`info` |
-| `lint-broken-ref` | `broken_ref` | Ref fact pointing to entity with no live facts | ≥1 finding, check=`broken_ref`, severity=`warning` |
-| `lint-broken-ref-intent` | `broken_ref` | Broken ref on `intent:handoff_to` relation | ≥1 finding, check=`broken_ref`, severity=`error` |
-| `lint-clean` | all | Scope with only one healthy live fact | findings = `[]` |
-| `lint-scope-filter` | `contradiction` | Contradiction exists in `company` scope; lint request on `local` scope | findings = `[]` (scope isolation) |
-
-All eight vectors MUST pass against a reference Stigmem node for conformance.
-
----
-
-*v0.7-draft — §14 Lint Semantics is the primary new section. §13 updated for Phase 5 progress. Open for CTO review before promotion to stable.*
+*v0.6-draft — §2.5 (Entity URI scheme), §6.2 (capability negotiation), and §12 (Adapter ABI) are the primary new sections. §13 replaces the old §12 Phase 4 reserved block. Open for CTO review before promotion to stable.*

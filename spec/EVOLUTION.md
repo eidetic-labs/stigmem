@@ -1,6 +1,29 @@
-# Stigmem Spec Changelog
+# Stigmem Spec Evolution
 
-All notable changes to the Stigmem protocol specification. Versions correspond to the files in this directory.
+> **Renamed from `CHANGELOG.md` (2026-05-09).** This document records how the stigmem protocol specification evolved through development checkpoints (`v0.2` through `v2.0`) into the canonical v0.9.0a1 baseline.
+>
+> Per [ADR-001](../docs/adr/001-versioning.md): the canonical version line of stigmem begins at `v0.9.0a1` (2026-05-09); the version *markers* on earlier checkpoints labeled internal development steps, not tagged releases. The spec *content* under each marker was real protocol specification — reviewed section-by-section against actual implementation in `node/` and migrated forward into [`spec/stigmem-spec-v0.9.0a1.md`](stigmem-spec-v0.9.0a1.md) per master-checklist §4.3a.
+>
+> The evolutionary snapshots themselves are preserved at [`spec/archive/evolution/`](archive/evolution/) as reference material. Each retains a header banner pointing at the canonical v0.9.0a1 equivalent.
+>
+> This file (`EVOLUTION.md`) records the development-checkpoint history; the protocol-release-level changelog going forward is at [`CHANGELOG.md`](../CHANGELOG.md) (repo root).
+
+## How the spec evolved through checkpoints
+
+Each checkpoint below captured what the spec said at that step. Major themes that grew across checkpoints:
+
+- **§1–§3** (motivation, atomic-fact-shape, fact-semantics): stable since v0.5; minor clarity improvements through v2.0.
+- **§6 federation**: structure stable since v0.6; capability tokens (§19) added in v0.9 drafts; mTLS (§22.1) and audit log (§22.3) added in v1.0-rc.
+- **§17 memory garden**: introduced in v0.9 drafts as concept; advanced ACL deferred per [ADR-002](../docs/adr/002-v1-scope.md) + [ADR-011](../docs/adr/011-cross-cutting-extraction.md) → `experimental/memory-garden-acl/spec.md`.
+- **§19–§25**: introduced in v2.0 (retracted-label snapshot); deferred to `experimental/<feature>/spec.md` per ADR-002.
+
+For per-section provenance, read the relevant snapshot at `spec/archive/evolution/`.
+
+---
+
+## Historical changelog (preserved verbatim from pre-rename `CHANGELOG.md`)
+
+The version *markers* in entries below labeled internal development checkpoints, not tagged releases. The changes themselves were real spec evolution.
 
 ---
 

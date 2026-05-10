@@ -1,3 +1,13 @@
+> **⚠️ Archived — evolutionary snapshot, not the canonical spec.**
+>
+> This file was a pre-v0.9.0a1 development checkpoint of the stigmem protocol specification. Per [ADR-001](../../../docs/adr/001-versioning.md), the canonical version line of stigmem begins at `v0.9.0a1` (2026-05-09); the version *marker* on this snapshot labeled an internal development step, not a tagged release.
+>
+> The current canonical spec is at [`spec/stigmem-spec-v0.9.0a1.md`](../../stigmem-spec-v0.9.0a1.md). Content from this snapshot was reviewed section-by-section against actual implementation in `node/` and migrated forward into the canonical spec where applicable; deferred sections moved to `experimental/<feature>/spec.md` per [ADR-002](../../../docs/adr/002-v1-scope.md) + [ADR-011](../../../docs/adr/011-cross-cutting-extraction.md).
+>
+> This snapshot is preserved as historical reference; it is not normative.
+
+---
+
 ---
 version: "2.0"
 status: "release"

@@ -1,88 +1,48 @@
-# Stigmem Spec — Status Table
+# Stigmem Spec — Index
 
-This directory contains the canonical specification for the Stigmem federated knowledge protocol.
+This directory contains the canonical specification for the stigmem federated knowledge protocol.
 
-| File | Version | Status | Key additions vs prior |
-|------|---------|--------|------------------------|
-| [`stigmem-spec-v1.0.md`](stigmem-spec-v1.0.md) | **v1.0** | **Canonical stable** | §17 Memory Garden + §18 Source Attestation promoted to stable; v1.0 conformance suite (`data/conformance/v1.0/`); §4 Intent Envelope deferred indefinitely |
-| [`stigmem-spec-v0.2.md`](stigmem-spec-v0.2.md) | v0.2 | Stable baseline | `text` FactValue type, reification pattern, `valid_until` field |
-| [`stigmem-spec-v0.3-draft.md`](stigmem-spec-v0.3-draft.md) | v0.3 | Stable | Auth stub (§3.5), namespace registry plan (§9), federation as community-feedback stub (§6), `stigmem:channel` escalation fix |
-| [`stigmem-spec-v0.4-draft.md`](stigmem-spec-v0.4-draft.md) | v0.4 | Stable | Auth promoted to implemented (§3.5), `PATCH /v1/facts/:id/confidence` retraction (§5.4), `GET /v1/facts/:id` single-fact route (§5.5), `text` size guidance, migration-friendliness note on schema (§10) |
-| [`stigmem-spec-v0.5-draft.md`](stigmem-spec-v0.5-draft.md) | v0.5 | Stable | §6 Federation promoted to normative concrete spec, new federation wire routes (§5.6–5.10), HLC timestamps (§2.4), per-scope key restrictions (§3.5), conflict-first-class semantics formalized (§3.3), §11 Failure Modes acceptance scenarios |
-| [`stigmem-spec-v0.6-draft.md`](stigmem-spec-v0.6-draft.md) | v0.6 | Stable | §2.5 Entity URI scheme (`stigmem://`) normative, §6.2 capability negotiation now required, §12 Adapter ABI normative (MCP, Paperclip, OpenClaw), §13 reserved for Phase 5+ |
-| [`stigmem-spec-v0.7-draft.md`](stigmem-spec-v0.7-draft.md) | v0.7 | Stable | §14 Lint Semantics normative (`POST /v1/lint`, MCP `lint_scope`, `LINT_VECTORS`); §2.6 Entity Naming Rules normative; `stigmem:lint:` prefix reserved; §6 promoted v0.6 → stable |
-| [`stigmem-spec-v0.8-draft.md`](stigmem-spec-v0.8-draft.md) | v0.8 | Stable | §15 Decay Semantics (`POST /v1/decay/sweep`, `DecayPolicy` registry, `decay_scope` MCP tool); §16 Synthesis (`POST /v1/synthesis`, `synthesize_scope` MCP tool); §6.7 N-node federation backpressure; §6.8 scope propagation invariants; §1–14 promoted to stable; `stigmem:decay:` prefix reserved |
-| [`stigmem-spec-v0.9-draft.md`](stigmem-spec-v0.9-draft.md) | v0.9 | Working draft | §17 Memory Garden primitive (named ACL'd partitions, admin/writer/reader roles, garden-tagged facts); §18 Source Attestation (`entity_uri` bound to API key, enforce/warn/off modes); §5.14–§5.20 garden + attestation wire routes; §2 `garden_id` and `attested` fields on FactRecord; `garden:` prefix reserved |
+## Canonical spec
 
----
+**[`stigmem-spec-v0.9.0a1.md`](stigmem-spec-v0.9.0a1.md)** is the canonical specification as of 2026-05-09. Per [ADR-001](../docs/adr/001-versioning.md) + [ADR-019](../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md), v0.9.0a1 is the first build of stigmem; the version *markers* on earlier evolutionary checkpoints labeled internal development steps, not tagged releases.
 
-## Section status by version
+The canonical spec is in flight — content arrives section-by-section as the master-checklist §4.3a per-section review completes against actual implementation in `node/`. Until a section is fully migrated, refer to the corresponding section in the v2.0 evolutionary snapshot at [`archive/evolution/stigmem-spec-v2.0.md`](archive/evolution/stigmem-spec-v2.0.md) (the most-complete pre-reset content).
 
-| Section | v0.2 | v0.3 | v0.4 | v0.5 | v0.6 | v0.7 | v0.8 | Notes |
-|---------|------|------|------|------|------|------|------|-------|
-| §1 Motivation | Stable | Stable | Stable | Stable | Stable | Stable | Stable | Unchanged since v0.2 |
-| §2 Atomic Fact Shape | Stable | Stable | Stable | Stable | Stable | Stable | Stable | `hlc` field added v0.5 |
-| §2.1 FactValue | Stable | Stable | Stable | Stable | Stable | Stable | Stable | `text` size guidance added v0.4 |
-| §2.2 FactScope | Stable | Stable | Stable | Stable | Stable | Stable | Stable | Federation enforcement clarified v0.5 |
-| §2.3 Reification | Stable | Stable | Stable | Stable | Stable | Stable | Stable | |
-| §2.4 HLC Timestamps | — | — | — | **New (normative)** | Stable | Stable | Stable | Required for federation causality |
-| §2.5 Entity URI scheme | — | — | — | — | **New (normative)** | Stable | Stable | `stigmem://` formal scheme; informal URIs deprecated |
-| §2.6 Entity Naming Rules | — | — | — | — | — | **New (normative)** | Stable | Strict normalizer on ingest; case normalization; migration 003 |
-| §3.1 Provenance | Stable | Stable | Stable | Stable | Stable | Stable | Stable | Federated provenance meta-fact added v0.5 |
-| §3.2 Decay / `valid_until` | Stable | Stable | Stable | Stable | Stable | Stable | Stable | |
-| §3.3 Contradiction | Draft | Draft | Stable | **Formalized (normative)** | Stable | Stable | Stable | `stigmem:conflict:*` facts + resolution API formalized v0.5 |
-| §3.4 Scope Enforcement | Stable | Stable | Stable | Stable | Stable | Stable | Stable | Federation enforcement added v0.5 |
-| §3.5 Auth / Identity | — | Stub | **Implemented (normative)** | Extended (peer tokens) | Stable | Stable | Stable | Phase 2: API keys. Phase 3: Ed25519 peer tokens |
-| §4 Intent Envelope | Draft | Draft | Draft | Draft | Draft | Draft | Draft | Community feedback wanted; not yet implemented |
-| §5 HTTP Wire Format (§5.1–5.5) | — | Stable | Stable | Stable | Stable | Stable | Stable | Core CRUD + retraction + single-fact GET |
-| §5.6–5.10 Federation Wire Routes | — | — | — | **New (normative)** | Stable | Stable | Stable | Peer registration, handshake, pull, push, conflicts, audit |
-| §6 Federation Protocol | — | Stub | RFC stub | **Normative** | Stable | Stable | Stable | Two-node federation, HLC replication, Ed25519 peer tokens |
-| §6.2 Capability Negotiation | — | — | Optional | Optional | **Required** | Required | Required | Promoted to required in v0.6 |
-| §6.7 N-node Backpressure | — | — | — | — | — | — | **New (draft)** | Relay lag signals, HTTP 503 throttle for multi-hop topologies |
-| §6.8 Scope Propagation Invariants | — | — | — | — | — | — | **New (normative)** | `company`-scoped facts MUST NOT be re-federated (closes §8.5) |
-| §7 Client SDKs | — | — | — | Referenced | Referenced | Referenced | Referenced | Python + TypeScript SDKs; not spec-normative |
-| §8 Implementation Gaps | — | — | Informative | Informative | Informative | Informative | Informative | Captured during Phase 2; three v0.5.1 errata items from Phase 3 |
-| §9 Namespace Registry | — | Stable | Stable | Stable | Stable | Stable | Stable | `stigmem:`, `rel:`, `memory:` governance |
-| §10 Database Schema | — | — | Stable | Stable | Stable | Stable | Stable | Migration-friendly SQLite schema |
-| §11 Failure Modes | — | — | — | **New (normative)** | Stable | Stable | Stable | Split-brain, malicious peer, partial failure, replay attack |
-| §12 Adapter ABI | — | — | — | — | **New (normative)** | Stable | Stable | MCP, Paperclip, OpenClaw adapter contracts |
-| §13 Phase 5+ Reserved | — | — | — | — | Updated | Updated | Updated | Lint + entity normalization addressed; remainder deferred to Phase 6+ |
-| §14 Lint Semantics | — | — | — | — | — | **New (normative)** | Stable | `POST /v1/lint`; four checks; MCP `lint_scope`; `LINT_VECTORS` conformance vectors |
-| §15 Decay Semantics | — | — | — | — | — | — | **New (draft)** | `POST /v1/decay/sweep`; configurable TTL + confidence-decay policies |
-| §16 Synthesis | — | — | — | — | — | — | **New (draft)** | `POST /v1/synthesis`; `synthesize_scope` MCP tool; confidence-weighted snapshots |
+### Section disposition (full table in the canonical spec)
 
----
+| Section group | Status | Destination |
+|---|---|---|
+| §1–§14 (core protocol foundation) | Stable in v0.9.0a1 | This file → canonical spec |
+| §15 Decay, §16 Synthesis | Deferred per [ADR-002](../docs/adr/002-v1-scope.md) | [`experimental/decay/spec.md`](../experimental/decay/spec.md), [`experimental/synthesis/spec.md`](../experimental/synthesis/spec.md) |
+| §17 Memory Garden | Basic concept stable; advanced ACL deferred per [ADR-011](../docs/adr/011-cross-cutting-extraction.md) | Canonical (basic); [`experimental/memory-garden-acl/spec.md`](../experimental/memory-garden-acl/spec.md) (advanced) |
+| §18 Source Attestation | Deferred | [`experimental/source-attestation/spec.md`](../experimental/source-attestation/spec.md) |
+| §19 Federation Trust | Basic stable (mTLS, capability tokens); advanced trust scoring deferred | Canonical (basic); future `experimental/federation-trust-extensions/spec.md` (advanced) |
+| §20 Recall and Graph (advanced) | Deferred | [`experimental/recall-graph/spec.md`](../experimental/recall-graph/spec.md) |
+| §21 Lazy Instruction Discovery | Deferred | [`experimental/lazy-instruction-discovery/spec.md`](../experimental/lazy-instruction-discovery/spec.md) |
+| §22 Security Hardening | Stable | This file → canonical spec |
+| §23 RTBF Tombstones | Deferred | [`experimental/tombstones/spec.md`](../experimental/tombstones/spec.md) |
+| §24 Time-Travel Queries | Deferred | [`experimental/time-travel/spec.md`](../experimental/time-travel/spec.md) |
+| §25 Content-Addressed Fact IDs (CIDs) | **Stable in core** per [ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md) | This file → canonical spec |
 
-## What "stable" means here
+## Modular spec migration (Phase B work per ADR-010)
 
-A section marked **Stable** has a shipped implementation in `stigmem/node/` that passes the test suite. Changes to stable sections require a spec PR with CTO review and a corresponding test update.
+Per [ADR-010](../docs/adr/010-modular-specs.md), the spec decomposes into ~14 core specs (`spec/specs/01-core.md` through `Spec-14`) with independent versioning during Phase B. Until that lands, this single canonical file is the spec.
 
-A section marked **Draft** has partial or no implementation. Breaking changes are permitted without a version increment until the section is promoted to Stable.
+## Evolution
 
-A section marked **RFC stub** or **Community feedback wanted** has spec text but no implementation. Comments and PRs are open.
+The protocol-spec content evolved through development checkpoints from v0.2 to v2.0. Snapshots preserved at [`spec/archive/evolution/`](archive/evolution/) — see that directory's README. The development-checkpoint changelog is at [`spec/EVOLUTION.md`](EVOLUTION.md) (renamed from `spec/CHANGELOG.md` 2026-05-09 per master-checklist §4.3a). The protocol-release-level changelog going forward is at [`CHANGELOG.md`](../CHANGELOG.md) at repo root.
 
----
+## Conformance
 
-## Canonical stable spec
+Conformance vectors at `data/conformance/<spec-version>/` — see `data/conformance/README.md` for the suite layout.
 
-The canonical specification is **[`stigmem-spec-v1.0.md`](stigmem-spec-v1.0.md)**. All sections §1–18 are stable. This is the reference document for conformance testing; all entries in `data/conformance/v1.0/` are validated against it.
+## Cross-references
 
-**v1.0 (promoted from v0.9-draft):**
-- §17 Memory Garden — promoted to stable: named ACL'd partitions (`garden_id`), admin/writer/reader roles, garden-tagged facts; `garden:` prefix reserved
-- §18 Source Attestation — promoted to stable: `entity_uri` bound to API key, enforce/warn/off modes; `attested` field on FactRecord
-- §5.14–§5.20 garden + attestation wire routes — stable
-- §2 extended: `garden_id` and `attested` fields on FactRecord — stable
-- §4 Intent Envelope — deferred indefinitely (not implemented; removed from active roadmap)
-
-**Phase 6 additions (v0.8):**
-- §15 Decay Semantics — configurable TTL + confidence-decay policies, `POST /v1/decay/sweep`, `DecayPolicy` registry
-- §16 Synthesis — confidence-weighted snapshot API, `POST /v1/synthesis`, `synthesize_scope` MCP tool
-- §6.7 N-node federation backpressure — cascade behavior in relay nodes, 4-node topology
-- §6.8 Scope propagation invariants — transitive escalation prevention, re-federation restrictions
-
-**Phase 3 errata resolved in Phase 4:**
-1. §6 signing spec now enumerates excluded fields (the `declaration_sig` exclusion from its own preimage)
-2. §6.3 idempotency + conflict: re-ingestion of an existing-conflict fact is a no-op
-3. §2.4 threading note added for concurrent HLC implementors
-
-*Source: Phase 3 exit memo.*
+- [`spec/stigmem-spec-v0.9.0a1.md`](stigmem-spec-v0.9.0a1.md) — canonical spec
+- [`spec/EVOLUTION.md`](EVOLUTION.md) — development-checkpoint history
+- [`spec/archive/evolution/`](archive/evolution/) — superseded evolutionary snapshots
+- [`spec/security/threat-model.md`](security/threat-model.md) — threat model
+- [`docs/adr/`](../docs/adr/) — architecture decision records
+- [`experimental/<feature>/spec.md`](../experimental/) — per-feature spec content for deferred sections
+- [`CHANGELOG.md`](../CHANGELOG.md) — protocol-release-level changelog
+- [`ROADMAP.md`](../ROADMAP.md) — public roadmap

@@ -152,7 +152,11 @@ const config = {
         title: 'Stigmem',
         logo: { alt: 'Stigmem by Eidetic Labs', src: 'img/logo.svg' },
         items: [
-          { type: 'docsVersionDropdown', position: 'left' },
+          // Four-tab IA per ADR-005: Learn / Build / Operate / Secure.
+          // Reference dissolves: API → Build, Specification → Secure,
+          // Architecture splits Build/Operate, Glossary → footer utility.
+          // Community dissolves: security-disclosure → Secure,
+          // project-resources → footer.
           {
             type: 'docSidebar',
             sidebarId: 'learnSidebar',
@@ -173,17 +177,11 @@ const config = {
           },
           {
             type: 'docSidebar',
-            sidebarId: 'referenceSidebar',
-            label: 'Reference',
+            sidebarId: 'secureSidebar',
+            label: 'Secure',
             position: 'left',
           },
           { to: '/blog', label: 'Blog', position: 'left' },
-          {
-            type: 'docSidebar',
-            sidebarId: 'communitySidebar',
-            label: 'Community',
-            position: 'left',
-          },
           { type: 'custom-githubButton', position: 'right', variant: 'star' },
           { type: 'custom-githubButton', position: 'right', variant: 'fork' },
         ],
@@ -195,20 +193,20 @@ const config = {
           {
             title: 'Docs',
             items: [
-              { label: 'Concepts', to: '/docs/concepts/' },
-              { label: 'Get started', to: '/docs/get-started/' },
-              { label: 'SDKs', to: '/docs/sdks/' },
-              { label: 'Operators', to: '/docs/operators/' },
-              { label: 'Reference', to: '/docs/reference/' },
+              { label: 'Learn', to: '/docs/concepts/' },
+              { label: 'Build', to: '/docs/concepts/facts/asserting-facts' },
+              { label: 'Operate', to: '/docs/operators/' },
+              { label: 'Secure', to: '/docs/security/' },
               { label: 'Features', to: '/docs/concepts/features' },
             ],
           },
           {
-            title: 'Community',
+            title: 'Reference',
             items: [
-              { label: 'Contributing', to: '/docs/community/security-disclosure' },
+              { label: 'Glossary', to: '/docs/reference/glossary/' },
+              { label: 'Architecture', to: '/docs/reference/architecture/' },
+              { label: 'Experimental & Deferred', to: '/docs/reference/experimental-features' },
               { label: 'Project Resources', to: '/docs/community/project-resources' },
-              { label: 'Blog', to: '/blog' },
             ],
           },
           {
@@ -217,6 +215,7 @@ const config = {
               { label: 'GitHub', href: 'https://github.com/Eidetic-Labs/stigmem' },
               { label: 'License (Apache 2.0)', href: 'https://github.com/Eidetic-Labs/stigmem/blob/main/LICENSE' },
               { label: 'Security policy', href: 'https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md' },
+              { label: 'Blog', to: '/blog' },
             ],
           },
         ],

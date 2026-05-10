@@ -1,6 +1,9 @@
-# memory-garden-acl — Status
+# Spec-X5-Memory-Garden — Status
 
 > Per [ADR-008](../../docs/adr/008-experimental-gates.md), gate status for `experimental/memory-garden-acl/`.
+
+**Spec ID:** `Spec-X5-Memory-Garden`  
+**Legacy section:** §17 (advanced)
 
 **Status:** Dormant
 **Active version:** v0.9.0a1 (last tested against)

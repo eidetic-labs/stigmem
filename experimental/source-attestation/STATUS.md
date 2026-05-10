@@ -1,6 +1,9 @@
-# source-attestation — Status
+# Spec-X6-Source-Attestation — Status
 
 > Per [ADR-008](../../docs/adr/008-experimental-gates.md), gate status for `experimental/source-attestation/`.
+
+**Spec ID:** `Spec-X6-Source-Attestation`  
+**Legacy section:** §18
 
 **Status:** Dormant
 **Active version:** v0.9.0a1 (last tested against)

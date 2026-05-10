@@ -1,6 +1,9 @@
-# subscriptions — Status
+# Spec-X7-Subscriptions — Status
 
 > Per [ADR-008](../../docs/adr/008-experimental-gates.md), gate status for `experimental/subscriptions/`.
+
+**Spec ID:** `Spec-X7-Subscriptions`  
+**Legacy section:** (new)
 
 **Status:** Dormant
 **Active version:** v0.9.0a1 (last tested against)

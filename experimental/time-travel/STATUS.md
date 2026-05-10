@@ -1,6 +1,9 @@
-# time-travel — Status
+# Spec-X3-Time-Travel — Status
 
 > Per [ADR-008](../../docs/adr/008-experimental-gates.md), gate status for `experimental/time-travel/`.
+
+**Spec ID:** `Spec-X3-Time-Travel`  
+**Legacy section:** §24
 
 **Status:** Dormant
 **Active version:** v0.9.0a1 (last tested against)

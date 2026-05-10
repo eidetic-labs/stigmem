@@ -31,10 +31,10 @@ The work is organized into four sequential phases. Each phase has explicit entry
 
 ### Phase A work
 - [x] **PR 0** — Reset to v0.9.0a1 (technical work; published 2026-05-09)
-- [ ] **PR 2** — Honesty pass on docs and ADRs (this PR)
-- [ ] **PR 2.5** — Docs site restructure (per [ADR-005](docs/adr/005-docs-ia.md): four-tab IA — Learn / Build / Operate / Secure)
-- [ ] **PR 3** — Cuts to `experimental/` (per [ADR-009](docs/adr/009-repo-structure.md))
-- [ ] **PR 0.5** — Public retraction announcement (after docs are coherent)
+- [x] **PR 2** — Honesty pass on docs and ADRs (#54, merged 2026-05-10)
+- [x] **PR 2.5** — Docs site restructure (per [ADR-005](docs/adr/005-docs-ia.md): four-tab IA — Learn / Build / Operate / Secure) (#56 + #59 cross-link sweep, merged 2026-05-10)
+- [x] **PR 3** — Cuts to `experimental/` (per [ADR-009](docs/adr/009-repo-structure.md)) (#60, merged 2026-05-10; spec-naming follow-ups in #61, #63)
+- [ ] **PR 0.5** — Public retraction announcement (after docs are coherent; in flight, blocking on v0.9.0a1 PyPI/npm publish completion)
 - [ ] **PR 4 series** — Plugin infrastructure + seven cross-cutting plugins per ADR-011:
   - **PR 4-INF.1–4** — Hook registry + lifecycle + signing + testing infrastructure + plugin author docs
   - **v0.9.0a2** — `Spec-X1-Lazy-Instruction-Discovery` graduates → `stigmem-plugin-lazy-instruction-discovery` ([§21 legacy])

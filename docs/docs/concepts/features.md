@@ -94,7 +94,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 | SDK                                 | Status     |
 |-------------------------------------|------------|
-| Python SDK (`stigmem-py`)           | Stable (sole supported SDK in v1.0.0 per ADR-002) |
+| Python SDK (`stigmem-py`)           | Stable (sole fully-supported SDK in v0.9.0a1 per ADR-002) |
 | TypeScript SDK (`@eidetic-labs/stigmem-ts`) | Preview (published as part of v0.9.0a1; pin to specific versions) |
 | Go SDK (`stigmem-go`)               | Deferred to `experimental/sdk-go/` |
 
@@ -102,7 +102,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 | Adapter                             | Status     |
 |-------------------------------------|------------|
-| OpenClaw (`stigmem-openclaw`)       | Stable in core (hardened v0.9; experimental flag until external operator soak per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md)) |
+| OpenClaw (`stigmem-openclaw`)       | Preview — published in v0.9.0a1 with the `experimental` flag pending Phase B safety hardening + external operator soak per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) |
 | MCP adapter                         | Deferred (`stigmem-mcp` at v0.4.0; not aligned to v0.9.0a1; lives in `adapters/mcp/`) |
 | Obsidian / Obsidian-plugin          | Deferred to `experimental/obsidian-adapter/` |
 | Letta, Zep, Cognee, Gemini, OpenAI-tools, Paperclip | Deferred to `experimental/<adapter>-adapter/` |

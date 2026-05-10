@@ -12,7 +12,7 @@ Three design-partner pilots ran during Phase 6: Zep, Letta, and Cognee. Each pil
 
 ## Zep
 
-**Adapter:** `adapters/zep/`
+**Adapter:** [`experimental/zep-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/zep-adapter) (deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
 
 Zep stores agent memory as session-scoped "propositions" extracted from dialogue. The adapter bridges these into stigmem facts and back.
 
@@ -29,7 +29,7 @@ Zep stores agent memory as session-scoped "propositions" extracted from dialogue
 
 ## Letta
 
-**Adapter:** `adapters/letta/`
+**Adapter:** [`experimental/letta-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/letta-adapter) (deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
 
 Letta is an agent framework with first-class persistent memory blocks. The adapter federates stigmem facts into Letta's in-context memory and back.
 
@@ -47,7 +47,7 @@ Letta is an agent framework with first-class persistent memory blocks. The adapt
 
 ## Cognee
 
-**Adapter:** `adapters/cognee/`
+**Adapter:** [`experimental/cognee-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/cognee-adapter) (deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
 
 Cognee builds knowledge graphs from unstructured text. The adapter bridges stigmem's (entity, relation, value) triple model with Cognee's graph representation.
 

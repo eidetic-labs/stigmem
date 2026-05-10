@@ -26,7 +26,7 @@ The canonical version line is being reset. **`v0.9.0a1` is the *first build* of 
 
 We chose `v0.9.0a1` (PEP 440 alpha) over `v0.9.0-preview` because alpha-beta-rc has built-in iteration semantics (`a1`, `a2`, `b1`, `rc1`) and ecosystem-native sort ordering in PyPI and npm — see [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) (Internal-Comms repo).
 
-For the full story, read [the retraction post](https://dev.to/<TBD-on-publish>) — published as part of PR 0.5 in the [GA Readiness Plan](https://github.com/orgs/Eidetic-Labs/projects/3).
+For the full story, see the retraction post — landing alongside the v0.9.0a1 publish as PR 0.5 in the [GA Readiness Plan](https://github.com/orgs/Eidetic-Labs/projects/3). This README will be updated with the post URL once published.
 
 ---
 
@@ -37,7 +37,7 @@ Stigmem is pre-stable. Adopters should read these documents *before* integrating
 - **[LIMITATIONS.md](LIMITATIONS.md)** — adopter-facing constraints, known gaps, deployment patterns that are safe vs. unsafe at the current alpha.
 - **[SECURITY.md](SECURITY.md)** — vulnerability disclosure policy, supported versions, contact path.
 - **[`spec/security/threat-model.md`](spec/security/threat-model.md)** — STRIDE risk register with per-risk status (Mitigated / Residual / Open / Accepted) per release.
-- **[Security architecture](docs/docs/Secure/architecture.md)** (Docs site, *Secure* tab) — capability boundaries, federation trust model, prompt-injection handling per [ADR-003](docs/adr/003-prompt-injection.md).
+- **[Security architecture](docs/docs/security/index.md)** (Docs site, *Secure* tab) — capability boundaries, federation trust model, prompt-injection handling per [ADR-003](docs/adr/003-prompt-injection.md).
 - **Operator hardening guide** — *coming in Phase B* (per the strengthening plan); single-org single-node deployments are the only currently-supported deployment pattern.
 - **Release-cadence runbook & rollback** — `docs/internal/release-cadence.md` (maintainer-facing) covers how releases are cut, what gets verified post-publish, and the rollback procedure if a release ships broken (PyPI yank, npm deprecate, GHCR fix-forward). Adopters who hit issues in a release: see the rollback table for what we'll do, then file an issue with `severity:high` if it warrants a yank.
 
@@ -101,8 +101,8 @@ The features below are **implemented in code** but have **not yet completed adve
 | Synthesis (`POST /v1/synthesis`, `synthesize_scope` MCP tool) | Implemented | §16 |
 | Cursor-checkpoint export/import (bounded DB-loss recovery) | Implemented | §6 |
 | N-node federation backpressure + scope propagation invariants | Implemented | §6.7–6.8 |
-| Browser UI (human surface) | In progress | — |
-| Intent envelope (`goal`, `constraint`, `preference`, `handoff`) | Draft — feedback wanted | §4 |
+| Browser UI (human surface) | Deferred (`experimental/dashboard/`, per [ADR-002](docs/adr/002-v1-scope.md)) | — |
+| Intent envelope (`goal`, `constraint`, `preference`, `handoff`) | Deferred indefinitely (`experimental/intent-envelope/`, per [ADR-001](docs/adr/001-versioning.md)) | §4 (legacy) |
 
 ---
 
@@ -135,7 +135,7 @@ Key environment variables (`STIGMEM_` prefix, set in `docker-compose.yml` `envir
 | `STIGMEM_AUTH_REQUIRED` | `true` | Require Bearer token on every request. Set `false` for local dev only |
 | `STIGMEM_DB_PATH` | `stigmem.db` | SQLite database path |
 
-→ Full environment variable reference: **[docs/docs/install.md](docs/docs/install.md)**
+→ Full environment variable reference: **[Operating Stigmem → Install](docs/docs/operators/deployment/install.md)**
 
 **Single node (Python / uv):**
 
@@ -155,11 +155,11 @@ pip install --pre stigmem[all]       # everything published from this repo
 
 `stigmem` is a meta-package; the actual code ships under `stigmem-py` (SDK), `stigmem-node` (server), and `stigmem-openclaw` (adapter). You can install any of those directly if you'd rather skip the meta-package: `pip install --pre stigmem-py`, etc.
 
-**Migrating from bare-metal to Docker?** See the [upgrade path guide](docs/docs/install.md#upgrade).
+**Migrating from bare-metal to Docker?** See the [upgrade path guide](docs/docs/get-started/upgrade-v1.md).
 
 ## Quickstart — two nodes federating
 
-→ **[docs/docs/getting-started/quickstart.md](docs/docs/getting-started/quickstart.md)** — zero to two-node federation in under 10 minutes.
+→ **[Get started → Quickstart tutorial](docs/docs/get-started/quickstart-tutorial.md)** — zero to two-node federation in under 10 minutes.
 
 Quick summary:
 
@@ -207,13 +207,13 @@ uv run pytest tests/ -v
 stigmem/
 ├── spec/           ← canonical specification (under review for v0.9.0a1 first-build canonicalization)
 ├── node/           ← reference node: FastAPI + SQLite
-├── adapters/       ← MCP server (TypeScript), OpenClaw (Python), Paperclip (JS hook)
-├── sdks/           ← Python and TypeScript client SDKs
-├── apps/           ← Dashboard (in progress)
+├── adapters/       ← v0.9.0a1 supported adapters (MCP server, OpenClaw)
+├── sdks/           ← Python and TypeScript client SDKs (Go SDK deferred)
+├── experimental/   ← deferred features per ADR-002 (dashboard, additional adapters, deploy recipes, more)
 └── docs/           ← Docusaurus 3 documentation site
 ```
 
-See [`docs/docs/architecture/`](docs/docs/architecture/index.md) for the full architecture reference, or [`docs/docs/about/state-of-stigmem.md`](docs/docs/about/state-of-stigmem.md) for the current-state narrative.
+See [`docs/docs/reference/architecture/`](docs/docs/reference/architecture/index.md) for the full architecture reference, or [`docs/docs/concepts/overview.md`](docs/docs/concepts/overview.md) for the conceptual entry point.
 
 ---
 

@@ -20,7 +20,7 @@ Use this when you want to propose a spec change, add a new field or endpoint, ch
    - Alternatives you considered
    - Open questions
 2. **Discuss** on the issue. Aim for at least one week of async discussion before calling for merge.
-3. **Submit a PR** against the active spec file (e.g., `spec/stigmem-spec-v0.2.md`). Reference the issue.
+3. **Submit a PR** against the active spec file (currently `spec/stigmem-spec-v0.9.0a1.md`; see [`ROADMAP.md`](ROADMAP.md) §Spec naming convention for the modular per-topic spec layout that lands in Phase B). Reference the issue.
 4. **Merge criteria:** ≥2 approvals from contributors who have merged at least one prior PR. The spec maintainer may veto with a written rationale.
 
 For small fixes (typos, clarity, example corrections), skip the RFC issue and send a PR directly.
@@ -107,40 +107,40 @@ Phase PRs without a docs-delta line will be flagged during review.
 
 ## Features page update procedure
 
-The [Features page](docs/docs/learn/features.md) status table is the **single source of truth** for what Stigmem can do today. When a feature ships:
+The [Features page](docs/docs/concepts/features.md) status table is the **single source of truth** for what Stigmem can do today. When a feature ships:
 
-1. Open `docs/docs/learn/features.md`.
+1. Open `docs/docs/concepts/features.md`.
 2. Find or add the row for the capability in the appropriate section table.
-3. Set its **Status** column to one of: `Stable`, `Beta`, `Experimental`, or `Planned`.
-4. Fill the **Spec** column with the relevant spec section (e.g., `§20.3`).
+3. Set its **Status** column to one of: `Stable`, `Preview`, `Experimental`, or `Deferred`.
+4. Fill the **Spec** column with the relevant Spec ID (e.g., `Spec-X3-Time-Travel`) or legacy section (e.g., `§20.3`).
 5. Fill the **Docs** column with a relative link to the guide or reference page.
-6. If a previously `Planned` or `Experimental` feature is promoted, update the row in place — do not add a duplicate.
+6. If a previously `Deferred` or `Experimental` feature graduates per [ADR-008](docs/adr/008-experimental-gates.md), update the row in place — do not add a duplicate. Run the [graduation procedure](ROADMAP.md#spec-graduation-process) for any spec moving from `experimental/` into the canonical surface.
 
 The Features page intentionally avoids calendar dates. Do not add target-quarter references.
 
 ## Docs versioning snapshot procedure
 
-Stigmem docs use [Docusaurus versioned docs](https://docusaurus.io/docs/versioning). The `current` (in-development) docs live in `docs/docs/`; released snapshots live in `docs/versioned_docs/version-<tag>/` with matching sidebars in `docs/versioned_sidebars/`.
+Stigmem docs are currently in **single-version mode** (current = `v0.9.0a1`). No versioned snapshots are created during the alpha series. The first versioned snapshot will be cut at **v1.0.0 GA** per [ADR-001](docs/adr/001-versioning.md).
 
-When a new spec version ships (post v1.1), create a versioned snapshot:
+When v1.0.0 GA ships, create a versioned snapshot:
 
 1. Merge all docs IA restructuring, de-duplication, and content updates for the release.
 2. From the `docs/` directory:
 
 ```bash
-npm run docusaurus docs:version <version-tag>
+npm run docusaurus docs:version v1.0.0
 ```
 
-This copies `docs/docs/` → `docs/versioned_docs/version-<version-tag>/` and `docs/sidebars.js` → `docs/versioned_sidebars/version-<version-tag>-sidebars.json`, then prepends the tag to `docs/versions.json`.
+This copies `docs/docs/` → `docs/versioned_docs/version-v1.0.0/` and `docs/sidebars.js` → `docs/versioned_sidebars/version-v1.0.0-sidebars.json`, then prepends the tag to `docs/versions.json`.
 
 3. Update `docusaurus.config.js` → `docs.versions`:
-   - Set `lastVersion` to the new tag (e.g., `'v2.0'`) so bare `/docs/*` URLs resolve to the released version.
-   - Add the new version entry: `'v2.0': { label: 'v2.0', badge: true }`.
-   - Relabel `current`: `{ label: 'v2.1-draft', path: 'next', badge: true, banner: 'unreleased' }`.
+   - Set `lastVersion` to the new tag (e.g., `'v1.0.0'`) so bare `/docs/*` URLs resolve to the released version.
+   - Add the new version entry: `'v1.0.0': { label: 'v1.0.0', badge: true }`.
+   - Relabel `current`: `{ label: 'v1.1-draft', path: 'next', badge: true, banner: 'unreleased' }`.
 
 4. Run `npm run build` — must exit 0 with no broken links.
 
-**Version naming:** use `v<major>.<minor>` matching spec releases (e.g., `v0.2`, `v1.1`, `v2.0`). The `current` label is always `<next>-draft`.
+**Version naming:** use `v<major>.<minor>.<patch>` matching the released git tag for stable releases. Pre-release tags (`v0.9.0a1`, `v0.9.0a2`, …) do not get versioned snapshots — the `current` site is the alpha-series source of truth.
 
 ## Audience and status frontmatter conventions
 
@@ -154,16 +154,17 @@ audience: Integrator
 ---
 ```
 
-**Allowed audience values:**
+**Allowed audience values** (enforced by `docs/plugins/validate-audience.js`):
 
 | Value         | Who it addresses                                     |
 |---------------|------------------------------------------------------|
-| `Curious`     | Evaluators, newcomers deciding whether to adopt      |
+| `Evaluator`   | Newcomers deciding whether to adopt                  |
 | `Integrator`  | Developers building on Stigmem (agent devs, SDK consumers) |
 | `Operator`    | Node operators running and maintaining a Stigmem node |
+| `Security`    | Security reviewers, threat-model readers, secure-tab landings |
 | `Spec`        | Spec contributors and reference-node developers      |
 
-Pages under `learn/` default to `Curious`; pages under `build/` default to `Integrator`; pages under `operate/` default to `Operator`; spec and architecture pages use `Spec`. Always set the field explicitly rather than relying on defaults.
+In the post-PR-#56 four-tab IA, pages under `concepts/` and `get-started/` default to `Evaluator` or `Integrator`; pages under `operators/` default to `Operator`; pages under `security/` default to `Security`; pages under `reference/` (spec, architecture, API) use `Spec`. Always set the field explicitly rather than relying on defaults.
 
 The build-time validation plugin (`docs/plugins/validate-audience.js`) will fail the build if any doc page is missing a valid `audience` field. Auto-generated API reference pages (under `reference/api/generated/`) are exempt.
 

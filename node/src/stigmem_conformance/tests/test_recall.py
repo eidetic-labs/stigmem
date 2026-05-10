@@ -9,8 +9,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi.testclient import TestClient
-
 from .conftest import ConformanceClient
 
 _E = "stigmem://conformance/recall/entity"

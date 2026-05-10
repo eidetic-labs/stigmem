@@ -27,6 +27,8 @@ from typing import NamedTuple
 import pytest
 from fastapi.testclient import TestClient
 
+from stigmem_node.settings import Settings
+
 _MIGRATIONS_DIR = (
     Path(__file__).resolve().parent.parent.parent.parent  # node/src
     .parent  # node
@@ -82,35 +84,33 @@ def _get_extra_modules() -> list[object]:
     return mods
 
 
-def _patch_settings(test_settings: object) -> list[object]:
+def _patch_settings(test_settings: Settings) -> list[object]:
     import stigmem_node.auth as auth_mod
     import stigmem_node.db as db_mod
     import stigmem_node.routes.wellknown as wk_mod
     import stigmem_node.settings as settings_module
 
     extra = _get_extra_modules()
-    # Dynamic re-binding of module-level `settings` references for test isolation.
-    # setattr() avoids needing each production module to publicly export `settings`.
-    setattr(settings_module, "settings", test_settings)
-    setattr(auth_mod, "settings", test_settings)
-    setattr(db_mod, "settings", test_settings)
-    setattr(wk_mod, "settings", test_settings)
+    settings_module.settings = test_settings
+    auth_mod.settings = test_settings
+    db_mod.settings = test_settings
+    wk_mod.settings = test_settings
     for mod in extra:
         if hasattr(mod, "settings"):
             setattr(mod, "settings", test_settings)
     return extra
 
 
-def _restore_settings(original: object, extra: list[object]) -> None:
+def _restore_settings(original: Settings, extra: list[object]) -> None:
     import stigmem_node.auth as auth_mod
     import stigmem_node.db as db_mod
     import stigmem_node.routes.wellknown as wk_mod
     import stigmem_node.settings as settings_module
 
-    setattr(settings_module, "settings", original)
-    setattr(auth_mod, "settings", original)
-    setattr(db_mod, "settings", original)
-    setattr(wk_mod, "settings", original)
+    settings_module.settings = original
+    auth_mod.settings = original
+    db_mod.settings = original
+    wk_mod.settings = original
     for mod in extra:
         if hasattr(mod, "settings"):
             setattr(mod, "settings", original)
@@ -155,7 +155,6 @@ def _build_client(
     pg_schema: str = "",
 ) -> Generator[ConformanceClient, None, None]:
     from stigmem_node.main import create_app
-    from stigmem_node.settings import Settings
     from stigmem_node.storage import make_backend
     import stigmem_node.settings as settings_module
 

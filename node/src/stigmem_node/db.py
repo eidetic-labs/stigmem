@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Generator
 
-from .settings import settings
+from .settings import settings as settings
 from .storage import make_backend
 
 # Resolved once at import time; exposed for test fixtures that need the path.

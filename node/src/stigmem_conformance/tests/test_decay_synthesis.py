@@ -12,8 +12,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import pytest
-
 from .conftest import ConformanceClient
 
 _ALICE = "stigmem://conformance/decay/alice"

@@ -21,7 +21,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .db import db
-from .settings import settings
+from .settings import settings as settings
 
 
 def _hash_key(raw: str) -> str:

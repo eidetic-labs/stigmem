@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from ..db import get_or_create_node_id
-from ..settings import settings
+from ..settings import settings as settings
 
 router = APIRouter(tags=["discovery"])
 

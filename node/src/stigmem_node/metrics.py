@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 try:
     import prometheus_client as _prom
-    from prometheus_client import Counter, Gauge, Histogram, REGISTRY  # noqa: F401
+    from prometheus_client import REGISTRY, Counter, Gauge, Histogram  # noqa: F401
 
     _ENABLED = True
 
@@ -117,7 +117,7 @@ except ImportError:
     _ENABLED = False
 
     class _Noop:
-        def labels(self, **_: Any) -> "_Noop":
+        def labels(self, **_: Any) -> _Noop:
             return self
 
         def inc(self, amount: float = 1) -> None:
@@ -161,7 +161,7 @@ def metrics_enabled() -> bool:
     return _ENABLED
 
 
-def make_metrics_response() -> "Response | None":
+def make_metrics_response() -> Response | None:
     """Return a Starlette ``Response`` with the Prometheus text exposition."""
     if not _ENABLED:
         return None

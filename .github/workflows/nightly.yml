@@ -73,8 +73,8 @@ jobs:
         with:
           name: dashboard-playwright-${{ github.run_id }}
           path: |
-            apps/dashboard/test-results/
-            apps/dashboard/playwright-report/
+            experimental/dashboard/test-results/
+            experimental/dashboard/playwright-report/
           retention-days: 30
 
   sdk-backward-compat:

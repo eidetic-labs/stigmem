@@ -162,7 +162,7 @@ Within ~5 minutes of tag push:
 
 - [ ] **PyPI** — `pip install --pre stigmem` resolves to the new version. `pip show stigmem` returns the expected `Version:`. Repeat for `stigmem-py`, `stigmem-node`, `stigmem-openclaw`.
 - [ ] **npm** — `npm view @eidetic-labs/stigmem-ts version` returns the new semver. `npm view @eidetic-labs/stigmem-ts` shows the right `dist-tags` (the new prerelease should be on `alpha`/`beta`/`rc`, not `latest`).
-- [ ] **GHCR** — `docker pull ghcr.io/eidetic-labs/stigmem-node:<tag>` succeeds. Same for `stigmem-dashboard`.
+- [ ] **GHCR** — `docker pull ghcr.io/eidetic-labs/stigmem-node:<tag>` succeeds. (No `stigmem-dashboard` image: dashboard is deferred per ADR-002; `publish-dashboard` was removed from `publish.yml` in PR #64.)
 - [ ] **GHCR visibility** — for first publish of a new package only: visit `https://github.com/orgs/Eidetic-Labs/packages` → find the package → Package settings → Danger Zone → Change visibility → **Public**. Subsequent pushes inherit the visibility setting; this is one-time per package.
 - [ ] **Cosign** — replace `<tag>` with the actual version (e.g. `0.9.0a2`):
   ```bash
@@ -171,7 +171,6 @@ Within ~5 minutes of tag push:
     --certificate-identity-regexp 'github.com/Eidetic-Labs/stigmem' \
     --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
     ghcr.io/eidetic-labs/stigmem-node:$TAG
-  cosign verify ...same... ghcr.io/eidetic-labs/stigmem-dashboard:$TAG
   ```
 - [ ] **GitHub release** — Created automatically by `publish.yml` `create-release` job. Verify the release page at `https://github.com/Eidetic-Labs/stigmem/releases/tag/v<tag>` shows: (1) the install-commands header, (2) the full CHANGELOG section for this version, (3) the prerelease badge (for alpha/beta/rc) or no badge (for final). If the page is missing or notes are empty, check the `create-release` job log for an extraction error.
 - [ ] **Close the tracking issue** for this release if one was opened (e.g., the PR-N issue in the master-checklist).

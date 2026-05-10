@@ -1,4 +1,17 @@
-const VALID_AUDIENCES = ['Operator', 'Integrator', 'Spec'];
+// Audience taxonomy per ADR-005 + master-checklist §4.3a:
+//   - Evaluator  — first-time visitor assessing whether stigmem fits.
+//   - Integrator — developer writing code against stigmem.
+//   - Operator   — running a node in production.
+//   - Security   — security engineer or compliance team auditing the design.
+//   - Spec       — protocol contributor or spec implementer.
+//
+// Pre-reset taxonomy was 3 values (Operator/Integrator/Spec); extended to 5
+// during sub-phase 2.5.I per ADR-005 §8.4. Per-page backfill against the new
+// 5-value vocabulary is acknowledged as a follow-up sweep; this commit
+// extends the validator to accept the new values without forcing the
+// backfill in one pass.
+
+const VALID_AUDIENCES = ['Evaluator', 'Integrator', 'Operator', 'Security', 'Spec'];
 
 // Audience badges are only meaningful where the page's audience is non-obvious from
 // its top-level section. The Learn section name already implies a general reader, so

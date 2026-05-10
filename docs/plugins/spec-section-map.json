@@ -2,7 +2,6 @@
   "1": "motivation",
   "2": "atomic-fact-shape",
   "3": "fact-semantics",
-  "4": "intent-envelope",
   "5": "wire-format",
   "6": "federation",
   "7": "design-decisions-log",
@@ -13,15 +12,7 @@
   "12": "adapter-abi",
   "13": "section-13",
   "14": "lint-semantics",
-  "15": "decay-semantics",
-  "16": "synthesis",
-  "17": "memory-garden",
-  "18": "source-attestation",
   "19": "federation-trust",
-  "20": "recall-graph",
-  "21": "lazy-instruction-discovery",
   "22": "security-hardening",
-  "23": "right-to-be-forgotten-tombstones",
-  "24": "time-travel-as-of-queries",
   "25": "content-addressed-fact-ids"
 }

@@ -1,7 +1,7 @@
 /**
  * Remark plugin that converts bare `§X.Y[.Z]` spec-section references in
  * prose into markdown links pointing at the matching per-section spec page,
- * e.g. /docs/reference/spec/19-federation-trust#section-19-3.
+ * e.g. /docs/spec/19-federation-trust#section-19-3.
  *
  * - Only matches refs whose top-level number is 1–30 (so unrelated citations
  *   like California Civil Code §1798.105 are left alone) AND whose top-level
@@ -21,11 +21,11 @@ function refToTarget(ref) {
   if (!slug) return null;
   if (ref === top) {
     // §X — link to the section page top.
-    return `/docs/reference/spec/${slug}`;
+    return `/docs/spec/${slug}`;
   }
   // §X.Y[.Z] — link to the matching subsection anchor on the per-section page.
   const anchor = 'section-' + ref.replace(/\./g, '-');
-  return `/docs/reference/spec/${slug}#${anchor}`;
+  return `/docs/spec/${slug}#${anchor}`;
 }
 
 function remarkSpecLink() {

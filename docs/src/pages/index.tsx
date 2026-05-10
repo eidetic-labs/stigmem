@@ -18,10 +18,10 @@ function HomepageHeader(): JSX.Element {
         <h1 className="hero__title">{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
-          <Link className="button button--secondary button--lg" to="/docs/learn/quickstart/quickstart-tutorial">
+          <Link className="button button--secondary button--lg" to="/docs/get-started/quickstart-tutorial">
             Quickstart — under 5 minutes →
           </Link>
-          <Link className="button button--outline button--secondary button--lg" to="/docs/learn/quickstart">
+          <Link className="button button--outline button--secondary button--lg" to="/docs/get-started/">
             Getting Started
           </Link>
         </div>

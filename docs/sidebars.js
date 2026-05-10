@@ -8,35 +8,49 @@ try {
   // Run `npm run gen-api-docs` to populate the interactive API sidebar.
 }
 
-/** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
+/**
+ * Sidebars for v0.9.0a1 — four-tab IA per ADR-005.
+ *
+ * Tab structure (Learn / Build / Operate / Secure) replaces the pre-reset
+ * five-tab structure (Learn / Build / Operate / Reference / Community).
+ * Reference dissolves: API → Build, Specification → Secure, Architecture
+ * splits into Build (data-flow) + Operate (deployment topology), Glossary
+ * → footer utility, Experimental Features → auto-generated index per
+ * ADR-012. Community dissolves: security-disclosure → Secure,
+ * project-resources → footer.
+ *
+ * Per founder direction (plan §13, 2026-05-09): "Concepts" + "How It Works"
+ * merge into a single flat "Key concepts" category in Learn — Option (a).
+ *
+ * Pages for deferred features (lazy-instruction-discovery, RTBF tombstones,
+ * time-travel, memory-garden ACL, source attestation, multi-tenant, recall-
+ * graph advanced features, MCP-host connectors, non-OpenClaw adapters,
+ * Helm/Fly/etc deploy targets, Go SDK) live at experimental/<feature>/
+ * per ADR-009 + ADR-011 — they appear in the Reference → Experimental &
+ * Deferred index, not in the operating tabs.
+ *
+ * @type {import('@docusaurus/plugin-content-docs').SidebarsConfig}
+ */
 const sidebars = {
+  // ─────────────────────────────────────────────────────────────────────
+  // LEARN — "What is stigmem and why would I use it?"
+  // ─────────────────────────────────────────────────────────────────────
   learnSidebar: [
     { type: 'doc', id: 'concepts/index', label: 'Overview' },
     { type: 'doc', id: 'concepts/features', label: 'Features' },
     {
       type: 'category',
-      label: 'Concepts',
-      items: [
-        'concepts/memory-garden',
-        'concepts/security-model',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'How It Works',
+      label: 'Key concepts',
+      collapsed: false,
       items: [
         'concepts/facts/immutable-typed-facts',
         'concepts/hybrid-logical-clocks',
         'concepts/facts/conflict-semantics',
-        'concepts/lifecycle/decay-and-confidence',
         'concepts/federation/federation-handshake',
         'concepts/federation/source-trust-and-quarantine',
-        'concepts/recall/recall-pipeline',
-        'concepts/recall/memory-cards-as-fast-path',
-        'concepts/recall/lazy-instruction-loading',
         'concepts/facts/content-addressing',
-        'concepts/lifecycle/time-travel-queries',
-        'concepts/lifecycle/tombstones-and-rtbf',
+        'concepts/memory-garden',
+        'concepts/security-model',
       ],
     },
     {
@@ -46,12 +60,13 @@ const sidebars = {
       items: [
         'get-started/installation',
         'get-started/quickstart-tutorial',
-        'get-started/upgrade-v1',
-        'migration/v1-to-v2',
       ],
     },
   ],
 
+  // ─────────────────────────────────────────────────────────────────────
+  // BUILD — "How do I integrate with stigmem from my code?"
+  // ─────────────────────────────────────────────────────────────────────
   buildSidebar: [
     {
       type: 'category',
@@ -67,30 +82,14 @@ const sidebars = {
             'concepts/facts/querying-facts',
             'concepts/facts/conflict-resolution',
             'concepts/facts/content-addressing-guide',
-            'concepts/facts/fuzzy-entity-resolver',
           ],
         },
         {
           type: 'category',
-          label: 'Lifecycle',
-          collapsed: true,
-          items: [
-            'concepts/lifecycle/decay',
-            'concepts/lifecycle/synthesis',
-            'concepts/lifecycle/time-travel',
-            'concepts/lifecycle/rtbf',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Recall & Memory',
+          label: 'Recall',
           collapsed: true,
           items: [
             'concepts/recall/recall',
-            'concepts/recall/memory-cards',
-            'concepts/recall/memory-gardens',
-            'concepts/recall/embeddings',
-            'concepts/recall/subscriptions',
           ],
         },
         {
@@ -105,99 +104,14 @@ const sidebars = {
             'concepts/federation/relay-backpressure',
           ],
         },
-        {
-          type: 'category',
-          label: 'Auth & Security',
-          collapsed: true,
-          items: [
-            'security/authentication',
-            'security/agent-keypairs',
-            'security/source-attestation',
-            'security/audit-log',
-            'security/encryption-at-rest',
-            'security/oidc-sso',
-            'security/multi-tenancy',
-            'security/human-key-issuance',
-            'security/human-surface',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Agent Integration',
-          collapsed: true,
-          items: [
-            'sdks/intent-envelopes',
-            'sdks/lazy-instructions',
-            'sdks/instruction-migration',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Operations',
-          collapsed: true,
-          items: [
-            'operators/async-jobs',
-            'operators/billing-hooks',
-            'operators/conformance',
-            'operators/libsql-pitr',
-            'operators/design-partner-notes',
-          ],
-        },
       ],
     },
     {
       type: 'category',
-      label: 'Connectors',
-      link: { type: 'doc', id: 'sdks/connectors/index' },
-      items: [
-        {
-          type: 'category',
-          label: 'MCP Host Connectors',
-          collapsed: true,
-          items: [
-            'sdks/connectors/cursor',
-            'sdks/connectors/zed',
-            'sdks/connectors/codex-cli',
-            'sdks/connectors/continue-dev',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Runtime Adapters',
-          collapsed: true,
-          items: [
-            'sdks/connectors/gemini',
-            'sdks/connectors/ollama-litellm',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Agent Platform Adapters',
-          collapsed: true,
-          items: [
-            'sdks/connectors/openclaw',
-            'sdks/connectors/paperclip',
-            'sdks/connectors/paperclip-federation',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Vault & Note-taking',
-          collapsed: true,
-          items: [
-            'sdks/connectors/obsidian',
-            'sdks/connectors/obsidian-plugin',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Memory Federation',
-          collapsed: true,
-          items: [
-            'sdks/connectors/zep',
-          ],
-        },
-      ],
+      label: 'API Reference',
+      link: { type: 'doc', id: 'reference/api/index' },
+      collapsed: false,
+      items: apiGeneratedItems,
     },
     {
       type: 'category',
@@ -206,7 +120,22 @@ const sidebars = {
       items: [
         'sdks/python',
         'sdks/typescript',
-        'sdks/go',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Connectors',
+      link: { type: 'doc', id: 'sdks/connectors/index' },
+      items: [
+        'sdks/connectors/openclaw',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Architecture',
+      collapsed: true,
+      items: [
+        'reference/architecture/recall-pipeline',
       ],
     },
     {
@@ -215,15 +144,15 @@ const sidebars = {
       collapsed: true,
       items: [
         'get-started/sdk-quickstart',
-        'sdks/tutorial-agent-with-recall',
         'sdks/tutorial-two-org-federation',
-        'operators/tutorial-self-host-obsidian',
-        'sdks/tutorial-lazy-discovery',
         'operators/tutorial-hardening',
       ],
     },
   ],
 
+  // ─────────────────────────────────────────────────────────────────────
+  // OPERATE — "How do I run a stigmem node in production?"
+  // ─────────────────────────────────────────────────────────────────────
   operateSidebar: [
     { type: 'doc', id: 'operators/index', label: 'Overview' },
     {
@@ -232,16 +161,6 @@ const sidebars = {
       collapsed: true,
       items: [
         'operators/deployment/install',
-        'operators/deployment/helm',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Storage Backends',
-      link: { type: 'doc', id: 'operators/backends/index' },
-      collapsed: true,
-      items: [
-        'operators/backends/choose-backend',
       ],
     },
     {
@@ -251,21 +170,8 @@ const sidebars = {
       items: [
         'operators/runbooks/deploy-runbooks',
         'operators/runbooks/federation-setup',
-        'security/key-rotation',
         'operators/runbooks/backup-restore',
         'operators/runbooks/cursor-reset-recovery',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Security',
-      link: { type: 'doc', id: 'security/index' },
-      collapsed: true,
-      items: [
-        'security/mtls',
-        'security/audit-and-quotas',
-        'security/container-hardening',
-        'security/pen-test',
       ],
     },
     {
@@ -275,12 +181,20 @@ const sidebars = {
       collapsed: true,
       items: [
         'operators/observability/monitoring',
-        'operators/observability/eval-harness',
       ],
     },
     {
       type: 'category',
-      label: 'CLI Reference',
+      label: 'Architecture',
+      collapsed: true,
+      items: [
+        'reference/architecture/single-host-node',
+        'reference/architecture/federated-network',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'CLI',
       link: { type: 'doc', id: 'reference/cli/index' },
       collapsed: true,
       items: [
@@ -288,17 +202,40 @@ const sidebars = {
         'reference/cli/stigmem-node',
       ],
     },
-    'operators/cost-calculator',
+    'operators/conformance',
+    'operators/compatibility',
+    'operators/design-partner-notes',
   ],
 
-  referenceSidebar: [
-    { type: 'doc', id: 'reference/index', label: 'Overview' },
+  // ─────────────────────────────────────────────────────────────────────
+  // SECURE — "Can I trust this with my data and my federation peers?"
+  // ─────────────────────────────────────────────────────────────────────
+  secureSidebar: [
+    { type: 'doc', id: 'security/index', label: 'Overview' },
     {
       type: 'category',
-      label: 'API Reference',
-      link: { type: 'doc', id: 'reference/api/index' },
+      label: 'Security architecture',
       collapsed: false,
-      items: apiGeneratedItems,
+      items: [
+        'security/authentication',
+        'security/agent-keypairs',
+        'security/audit-log',
+        'security/audit-and-quotas',
+        'security/key-rotation',
+        'security/mtls',
+        'security/encryption-at-rest',
+        'security/container-hardening',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Operator surfaces',
+      collapsed: true,
+      items: [
+        'security/human-key-issuance',
+        'security/human-surface',
+        'security/pen-test',
+      ],
     },
     {
       type: 'category',
@@ -309,7 +246,6 @@ const sidebars = {
         'spec/motivation',
         'spec/atomic-fact-shape',
         'spec/fact-semantics',
-        'spec/intent-envelope',
         'spec/wire-format',
         'spec/federation',
         'spec/design-decisions-log',
@@ -319,28 +255,21 @@ const sidebars = {
         'spec/failure-mode-scenarios',
         'spec/adapter-abi',
         'spec/lint-semantics',
-        'spec/decay-semantics',
-        'spec/synthesis',
-        'spec/memory-garden',
-        'spec/source-attestation',
         'spec/federation-trust',
-        'spec/recall-graph',
-        'spec/lazy-instruction-discovery',
         'spec/security-hardening',
-        'spec/right-to-be-forgotten-tombstones',
-        'spec/time-travel-as-of-queries',
         'spec/content-addressed-fact-ids',
-        'spec/section-13',
       ],
     },
-    { type: 'doc', id: 'reference/experimental-features', label: 'Experimental Features' },
-    { type: 'doc', id: 'release-notes/v2.0', label: 'v2.0 Release Notes' },
-    { type: 'autogenerated', dirName: 'reference/architecture' },
-    { type: 'autogenerated', dirName: 'reference/glossary' },
-  ],
-
-  communitySidebar: [
-    { type: 'autogenerated', dirName: 'community' },
+    {
+      type: 'category',
+      label: 'Disclosure & policy',
+      collapsed: true,
+      items: [
+        'community/security-disclosure',
+        'security/compatibility-commitment',
+      ],
+    },
+    { type: 'doc', id: 'reference/experimental-features', label: 'Experimental & Deferred' },
   ],
 };
 

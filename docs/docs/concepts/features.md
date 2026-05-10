@@ -2,7 +2,7 @@
 title: Features
 sidebar_label: Features
 sidebar_position: 1
-description: What Stigmem can do today — feature status table for evaluators, integrators, and operators.
+description: What Stigmem does today in v0.9.0a1 — feature status table calibrated to ADR-002 v1 critical-path scope.
 ---
 
 # Features
@@ -11,162 +11,150 @@ description: What Stigmem can do today — feature status table for evaluators, 
 
 Stigmem is an open, federated knowledge protocol — a layer where AI agents and humans store typed, traceable facts that travel across tools, platforms, and organizations. Each fact is an immutable record `(entity, relation, value, source, timestamp, confidence, scope)` written once, queryable forever, with full provenance and a defined expiry.
 
+**This page describes v0.9.0a1.** The canonical version line of stigmem begins at `v0.9.0a1` per [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md) + [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). Earlier version *markers* (`v0.2`, `v1.1`, `v2.0`) labeled internal development checkpoints, not tagged releases. Many features that earlier docs described as "Stable" were deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) — the v1 critical-path scope cut. Those features remain in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md), gated, off by default.
+
 ---
 
 ## How to read this page
 
 | Status         | Meaning                                                                    |
 |----------------|----------------------------------------------------------------------------|
-| **Stable**     | Spec section normative. In production. Eval-covered. No breaking changes planned. |
-| **Beta**       | Spec normative. Feature-flagged or in early adopters. Minor breaking changes possible before next major. |
-| **Experimental** | Implemented behind a flag. Spec section is `draft`. Breaking changes expected. |
-| **Planned**    | Spec draft exists. Not yet implemented.                                    |
+| **Stable**     | Spec section normative in v0.9.0a1; in core; no breaking changes within v0.9.0a series wire-format scope. |
+| **Preview**    | Shipped as part of v0.9.0a1 with no stability guarantee; pin to specific versions. |
+| **Experimental** | Implementation in `experimental/<feature>/`; opt-in plugin per ADR-011 in v0.9.0a2..a8 series; not in default install. |
+| **Deferred**   | Code exists but is not part of the v1 critical-path; lives in `experimental/` with `STATUS.md` per [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). |
 
-This page does not show calendar dates. Stigmem ships when ready, not on a quarter boundary. To follow what's currently in flight, see [What's coming next](#whats-coming-next) below.
+**No calendar dates.** Stigmem is phase-gated, not time-gated. Phase progression is documented in [ROADMAP.md](https://github.com/Eidetic-Labs/stigmem/blob/main/ROADMAP.md).
 
-> **Why pick Stigmem over a vector-RAG product?** Stigmem retrieves *typed atomic facts*, not opaque chunks. Each embedding has an explicit `(entity, relation, value)` contract. Recall is hybrid (lexical + dense + graph) with provenance preserved end-to-end, and a memory-card fast path that 80–90% of recalls hit. Read the full deep-dive in the [Recall guide](./recall/).
+> **Why pick Stigmem over a vector-RAG product?** Stigmem retrieves *typed atomic facts*, not opaque chunks. Each embedding has an explicit `(entity, relation, value)` contract. Recall in v0.9.0a1 covers basic typed-fact retrieval; advanced recall (graph BFS, vector embeddings, MMR packing, memory cards) is deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) and ships incrementally as plugins. Read the spec at [spec/stigmem-spec-v0.9.0a1.md](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md).
 
 ---
 
-## Core memory model
+## Core memory model (v0.9.0a1 critical path)
 
-| Capability                          | Status     | Spec      | Docs                                   |
-|-------------------------------------|------------|-----------|----------------------------------------|
-| Immutable typed facts (entity, relation, value, source, timestamp, confidence, scope) | Stable | §2, §3    | [Asserting facts](../concepts/facts/asserting-facts.md) |
-| Scope enforcement (`local` / `team` / `company` / `public`) | Stable | §3.5      | [Scope propagation](../concepts/federation/scope-propagation.md) |
-| Confidence + decay (`valid_until`, retraction) | Stable | §15       | [Decay guide](../concepts/lifecycle/decay.md) |
-| Synthesis (confidence-weighted current state) | Stable | §16       | [Synthesis guide](../concepts/lifecycle/synthesis.md) |
-| Conflict surfacing & resolution     | Stable     | §6.3      | [Conflict resolution](../concepts/facts/conflict-resolution.md) |
-| Entity naming rules                 | Stable     | §2.5–§2.6 | [Asserting facts](../concepts/facts/asserting-facts.md) |
-| Lint semantics                      | Stable     | §14       | [Conformance](../operators/conformance.md) |
-| Content-addressed fact IDs (CID)    | Stable     | §25       | [Content addressing](./facts/content-addressing.md) |
-| Time-travel / `as_of` queries       | Stable     | §24       | [Time-travel](./lifecycle/time-travel.md) |
-| Right-to-be-forgotten (tombstones)  | Stable     | §23       | [RTBF](./lifecycle/rtbf.md) |
+| Capability                          | Status     | Spec      |
+|-------------------------------------|------------|-----------|
+| Immutable typed facts (entity, relation, value, source, timestamp, confidence, scope) | Stable | §2, §3    |
+| Scope enforcement (`local` / `team` / `company` / `public`) | Stable | §3.5      |
+| Confidence (`valid_until`, retraction) | Stable | §3        |
+| Conflict surfacing & resolution     | Stable     | §6.3      |
+| Entity naming rules                 | Stable     | §2.5–§2.6 |
+| Lint semantics                      | Stable     | §14       |
+| Content-addressed fact IDs (CIDs)   | Stable in core ([ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | §25 |
 
-## Recall, graph, and cards
+## Recall (v0.9.0a1 critical path)
 
-| Capability                          | Status     | Spec   | Docs                                |
-|-------------------------------------|------------|--------|-------------------------------------|
-| `POST /v1/recall` hybrid pipeline (lexical + dense + graph) | Stable | §20.3  | [Recall guide](./recall/) |
-| Vector embeddings (sqlite-vec, nomic-embed-text-v1.5 default) | Stable | §20.2  | [Embeddings](./recall/embeddings.md) |
-| Graph adjacency index (`GET /v1/graph/neighbors`) | Stable | §20.1  | [Recall guide](./recall/) |
-| Memory cards (stale-on-write, refresh-on-read) | Stable | §20.4  | [Memory cards](./recall/memory-cards.md) |
-| Subscriptions (webhook + wake)      | Stable     | §20.5  | [Subscriptions](./recall/subscriptions.md) |
-| Causal links (`derived_from`)       | Stable     | §20.6  | [Recall guide](./recall/) |
+| Capability                          | Status     | Spec   |
+|-------------------------------------|------------|--------|
+| `POST /v1/recall` basic typed-fact retrieval | Stable | §6   |
+| `query_facts` operation             | Stable     | §3     |
+| `assert_fact` operation             | Stable     | §3     |
 
-## Federation
+## Federation (v0.9.0a1 critical path)
 
-| Capability                          | Status     | Spec   | Docs                                |
-|-------------------------------------|------------|--------|-------------------------------------|
-| Two-node federation (Ed25519 handshake, HLC cursors) | Stable | §6     | [Federation guide](./federation/) |
-| Pull replication                    | Stable     | §6     | [Federation setup](../operators/runbooks/federation-setup.md) |
-| N-node soak (4-node topology)       | Stable     | §6.7–§6.8 | [4-node federation](../concepts/federation/federation-4node.md) |
-| Cross-org capability tokens         | Stable     | §19    | [Federation Trust](../concepts/federation/federation-trust.md) |
-| Org manifests + transparency log    | Stable     | §19    | [Federation Trust](../concepts/federation/federation-trust.md) |
-| Source-trust score & quarantine garden | Stable  | §19    | [Federation Trust](../concepts/federation/federation-trust.md) |
-| Recall-time content sanitizer       | Stable     | §19    | [Federation Trust](../concepts/federation/federation-trust.md) |
-| mTLS for peer connections           | Stable     | §22.1  | [mTLS](../security/mtls.md) |
+| Capability                          | Status     | Spec   |
+|-------------------------------------|------------|--------|
+| Two-node mTLS federation (TLS 1.3 floor, SAN ↔ entity_uri binding) | Stable | §22.1 |
+| Ed25519 signed manifests at `/.well-known/stigmem-manifest.json` | Stable | §19 |
+| Capability tokens (≤90d, Ed25519, verb+object validated at admission) | Stable | §19 |
+| Bounded HLC skew + per-peer drift tracking | Targeted v0.9.x (R-19) | §22.5 |
+| Quarantine garden (federation inbound writes) | Stable | §19   |
+| Pull replication                    | Stable     | §6     |
 
-## Storage & persistence
+## Authentication & authorization (v0.9.0a1 critical path)
 
-| Capability                          | Status     | Spec | Docs                                  |
-|-------------------------------------|------------|------|---------------------------------------|
-| SQLite backend                      | Stable     | —    | [Backends](../operators/backends/index.md) |
-| libSQL backend (Turso-compatible)   | Stable     | —    | [Backends](../operators/backends/index.md) |
-| Postgres backend (with pgvector)    | Beta       | —    | [Backends](../operators/backends/index.md) |
-| SQLCipher at-rest encryption        | Stable     | —    | [Encryption at rest](../security/encryption-at-rest.md) |
-| Signed snapshot backup + PITR       | Stable     | —    | [Backup / restore](../operators/runbooks/backup-restore.md) |
-| Cursor-checkpoint export/import     | Stable     | §6.6 | [Cursor reset recovery](../operators/runbooks/cursor-reset-recovery.md) |
+| Capability                          | Status     | Spec   |
+|-------------------------------------|------------|--------|
+| API-key authentication (per-scope)  | Stable (SHA-256 in v0.9.0a1; Argon2id migration in v0.9.x per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 |
+| Enforced API key max-age (default 90d) | Stable | §22.2 |
+| Per-principal token-bucket rate limits (7 dimensions) | Stable | §22.4 |
+| Capability-based instruction handling (`interpret_as`) | Targeted v0.9.x ([ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)) | §3 |
 
-## Trust, safety & operations
+## Observability (v0.9.0a1 critical path)
 
-| Capability                          | Status     | Spec   | Docs                                |
-|-------------------------------------|------------|--------|-------------------------------------|
-| API-key authentication (per-scope)  | Stable     | §3.5   | [Authentication](../security/authentication.md) |
-| Source attestation                  | Stable     | §18    | [Source attestation](../security/source-attestation.md) |
-| Audit log (13 event types)          | Stable     | §22.3  | [Audit & quotas](../security/audit-and-quotas.md) |
-| Per-principal token-bucket quotas   | Stable     | §22.4  | [Audit & quotas](../security/audit-and-quotas.md) |
-| Ed25519 key rotation (dual-trust)   | Stable     | §22.2  | [Key rotation](../security/key-rotation.md) |
-| Container hardening (distroless, seccomp, non-root) | Stable | §22.6 | [Container hardening](../security/container-hardening.md) |
-| OIDC / SSO                          | Beta       | —      | [OIDC SSO](../security/oidc-sso.md) |
-| Multi-tenancy                       | Beta       | —      | [Multi-tenancy](../security/multi-tenancy.md) |
-| Right-to-be-forgotten (legal hold)  | Stable     | §23    | [RTBF](./lifecycle/rtbf.md) |
+| Capability                          | Status     | Spec   |
+|-------------------------------------|------------|--------|
+| WAL-ordered audit log (13 event types, 90-day retention) | Stable | §22.3 |
+| Prometheus metrics (node health, request rates, quotas, federation peer status) | Stable | §22.3 |
 
-## Gardens & curation
+## Storage (v0.9.0a1 critical path)
 
-| Capability                          | Status       | Spec | Docs                                  |
-|-------------------------------------|--------------|------|---------------------------------------|
-| Memory Garden partitions (admin/writer/reader ACL) | Stable | §17 | [Memory gardens](./recall/memory-gardens.md) |
-| Quarantine garden (untrusted writes review) | Stable | §19 | [Federation Trust](../concepts/federation/federation-trust.md) |
-| Curator dashboard prototype         | Experimental | §17  | [Memory gardens](./recall/memory-gardens.md) |
+| Capability                          | Status     |
+|-------------------------------------|------------|
+| SQLite backend                      | Stable     |
+| SQLCipher at-rest encryption (opt-in) | Stable   |
 
-## Agent integration
+## Embedding (v0.9.0a1 critical path)
 
-| Capability                          | Status     | Docs                                   |
-|-------------------------------------|------------|----------------------------------------|
-| MCP adapter (TypeScript)            | Stable     | [MCP / Claude Code](../sdks/connectors/index.md) |
-| OpenClaw / Claude Code adapter      | Stable     | [OpenClaw](../sdks/connectors/openclaw.md) |
-| Paperclip hook adapter              | Stable     | [Paperclip](../sdks/connectors/paperclip.md) |
-| Cursor connector                    | Stable     | [Cursor](../sdks/connectors/cursor.md) |
-| Zed connector                       | Stable     | [Zed](../sdks/connectors/zed.md) |
-| Codex CLI connector                 | Stable     | [Codex CLI](../sdks/connectors/codex-cli.md) |
-| Continue.dev connector              | Stable     | [Continue.dev](../sdks/connectors/continue-dev.md) |
-| Gemini connector                    | Stable     | [Gemini](../sdks/connectors/gemini.md) |
-| Ollama / LiteLLM connector          | Stable     | [Ollama / LiteLLM](../sdks/connectors/ollama-litellm.md) |
-| Obsidian vault adapter (CLI/daemon) | Stable     | [Obsidian](../sdks/connectors/obsidian.md) |
-| Obsidian community plugin           | Stable     | [Obsidian plugin](../sdks/connectors/obsidian-plugin.md) |
-| Zep adapter                         | Stable     | [Zep](../sdks/connectors/zep.md) |
-| Lazy instruction discovery          | Stable     | [Lazy instructions](../sdks/lazy-instructions.md) |
+| Capability                          | Status     |
+|-------------------------------------|------------|
+| Local `nomic-embed-text-v1.5` (default, offline) | Stable |
 
-## SDKs & tooling
+## SDKs
 
-| Capability                          | Status     | Docs                                |
-|-------------------------------------|------------|-------------------------------------|
-| Python SDK (`stigmem-py`)           | Stable     | [Python SDK](../sdks/python.md) |
-| TypeScript SDK (`stigmem-ts`)       | Stable     | [TypeScript SDK](../sdks/typescript.md) |
-| Go SDK (`stigmem-go`)               | Stable     | [Go SDK](../sdks/go.md) |
-| Conformance test suite              | Stable     | [Conformance](../operators/conformance.md) |
-| Eval harness (79 adversarial + 400 recall probes) | Stable | [Eval harness](../operators/observability/eval-harness.md) |
+| SDK                                 | Status     |
+|-------------------------------------|------------|
+| Python SDK (`stigmem-py`)           | Stable (sole supported SDK in v1.0.0 per ADR-002) |
+| TypeScript SDK (`@eidetic-labs/stigmem-ts`) | Preview (published as part of v0.9.0a1; pin to specific versions) |
+| Go SDK (`stigmem-go`)               | Deferred to `experimental/sdk-go/` |
 
-## Observability
+## Adapters
 
-| Capability                          | Status     | Docs                                |
-|-------------------------------------|------------|-------------------------------------|
-| Prometheus metrics (8 counters / 3 histograms / 2 gauges) | Stable | [Observability](../operators/observability/index.md) |
-| OpenTelemetry traces                | Stable     | [Observability](../operators/observability/index.md) |
-| Grafana dashboards                  | Stable     | [Observability](../operators/observability/index.md) |
-| Cost calculator                     | Stable     | [Cost calculator](../operators/cost-calculator.md) |
+| Adapter                             | Status     |
+|-------------------------------------|------------|
+| OpenClaw (`stigmem-openclaw`)       | Stable in core (hardened v0.9; experimental flag until external operator soak per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md)) |
+| MCP adapter                         | Deferred (`stigmem-mcp` at v0.4.0; not aligned to v0.9.0a1; lives in `adapters/mcp/`) |
+| Obsidian / Obsidian-plugin          | Deferred to `experimental/obsidian-adapter/` |
+| Letta, Zep, Cognee, Gemini, OpenAI-tools, Paperclip | Deferred to `experimental/<adapter>-adapter/` |
 
-## Deployment
+## Operations (v0.9.0a1 critical path)
 
-| Recipe                              | Status     | Docs                                |
-|-------------------------------------|------------|-------------------------------------|
-| Docker Compose                      | Stable     | [Deploy runbooks](../operators/runbooks/deploy-runbooks.md) |
-| Helm / Kubernetes                   | Stable     | [Helm](../operators/deployment/helm.md) |
-| Fly.io                              | Stable     | [Deploy runbooks](../operators/runbooks/deploy-runbooks.md) |
-| systemd / bare metal                | Stable     | [Deploy runbooks](../operators/runbooks/deploy-runbooks.md) |
-| PaaS one-pagers (Render / Railway / App Runner / Cloud Run) | Stable | [Deploy runbooks](../operators/runbooks/deploy-runbooks.md) |
+| Capability                          | Status     |
+|-------------------------------------|------------|
+| Docker Compose reference deployment (`make demo`, `make demo-attack`) | Stable |
+| Container hardening (distroless, non-root UID, read-only fs, seccomp) | Stable |
+| Helm / Kubernetes                   | Deferred to `experimental/deploy-helm/` |
+| Fly.io / systemd / Grafana / PaaS configs | Deferred to `experimental/deploy-*/` |
 
-## Spec v2.0 — in flight
+## Experimental & deferred features
 
-| Capability                          | Status     | Spec                |
-|-------------------------------------|------------|---------------------|
-| §19 Federation Trust → confirm normative | Planned | v2.0 tag         |
-| §20 Recall & Graph → normative      | Planned    | v2.0 tag            |
-| Instruction-manifest pattern → normative | Planned | v2.0 tag         |
-| Source-trust model → normative      | Planned    | v2.0 tag            |
-| Migration guide v1.0 → v2.0         | Planned    | v2.0 tag            |
+The following features are in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) but are **not in v0.9.0a1's default install**. They graduate back to core via the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) five-gate process and ship as opt-in plugins per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md) in the v0.9.0a2..a8 series:
+
+| Feature                             | Spec § | Phase A target |
+|-------------------------------------|--------|----------------|
+| Lazy instruction discovery          | §21    | v0.9.0a2 (PR 4a) |
+| Time-travel `as_of` queries         | §24    | v0.9.0a4 (PR 4c) |
+| RTBF tombstones                     | §23    | v0.9.0a5 (PR 4d) |
+| Memory garden — advanced ACL        | §17 advanced | v0.9.0a6 (PR 4e) |
+| Source attestation                  | §18    | v0.9.0a7 (PR 4f) |
+| Multi-tenant isolation              | (cross-cutting) | v0.9.0a8 (PR 4g) |
+| §20 Recall & Graph (vector embeddings, MMR, memory cards, subscriptions) | §20 | Phase A |
+| Decay sweep                         | §15    | Deferred (commercial path) |
+| Synthesis                           | §16    | Deferred (commercial path) |
+| OIDC SSO                            | —      | Phase A |
+| PostgreSQL backend, libSQL/Turso    | —      | Deferred (operator-validated demand) |
+| Cloud embedding                     | —      | Deferred (R-20 accepted) |
+| Curator dashboard                   | —      | Deferred |
+| Billing hooks                       | —      | Deferred (commercial path) |
+| Async lint/decay job APIs           | —      | Blocked on lint/decay graduation |
+
+See the full deferred-features list at [Experimental & Deferred Features](../reference/experimental-features.md).
+
+## v0.9.0a1 architecture in flight (Option A acknowledgment)
+
+The v0.9.0a1 default install ships with feature-specific code in `node/src/stigmem_node/` for several deferred features (`tombstones.py`, `instruction_migrate.py`, `card_materializer.py`, `source_trust.py`, etc.). The routes are mounted but the features are dormant unless explicitly configured. Per [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per ADR-011's C1 plugin architecture; after v0.9.0a8, default install will be true to ADR-011's commitment.
+
+See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md) for the full architectural-gap acknowledgment.
 
 ---
 
 ## What's coming next {#whats-coming-next}
 
-The two next milestones, in order:
+The phase progression is in [ROADMAP.md](https://github.com/Eidetic-Labs/stigmem/blob/main/ROADMAP.md). At a high level:
 
-1. **Spec v2.0 tag** — closes federation-trust, recall, instruction-manifest, and source-trust as normative; ships the migration guide.
-2. **Curator dashboard GA** — promotes the §17 dashboard from Experimental to Beta; first external connector demo using Source Attestation.
-
-Anything beyond these two milestones is in spec drafts under the [Spec section](../spec/index.md) and is subject to scope changes.
+1. **v0.9.0a2 through v0.9.0a8** — incremental plugin extraction per ADR-011 (lazy-instruction-discovery → CIDs as core → time-travel → tombstones → memory-garden-acl → source-attestation → multi-tenant).
+2. **v0.9.0bN (Phase B)** — capability redesign per ADR-003, federation hardening, OpenClaw safety, modular spec migration per ADR-010, storage immutability stack per ADR-016, Argon2id migration per ADR-007, 30-day external operator soak.
+3. **v1.0.0-rcN → v1.0.0 (Phase C)** — Sigstore-signed releases, reproducible builds, SBOM, 3+ external operators in production. Wire format frozen.
 
 ---
 
@@ -176,9 +164,9 @@ Anything beyond these two milestones is in spec drafts under the [Spec section](
 - **A competing agent runtime** to OpenClaw / Claude Code / LangChain etc.
 - **A multi-agent orchestration layer.** Stigmem is a memory substrate — it makes existing agent frameworks, IDEs, and workflow tools more capable, not redundant.
 - **An in-house GRC / compliance product.** Stigmem provides provenance primitives; compliance application logic is out of scope.
-- **A vertical agent product** (support agent, bookkeeping agent, etc.) until post-v2.0.
+- **A vertical agent product** (support agent, bookkeeping agent, etc.) until post-v1.0.0.
 - **A chatbot of any kind.**
 
 ---
 
-*The previous State of Stigmem and Roadmap pages have been retired in favour of this single source of truth.*
+*This page is regenerated each release to reflect actual ship-state. The previous "Spec v2.0 — in flight" framing was retired during the v0.9.0a1 reset (master-checklist §4.3a). For the development history, see [`spec/EVOLUTION.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/EVOLUTION.md).*

@@ -1,44 +1,6 @@
 # Ruff baseline for staged rollout.
 # One issue fingerprint per line: path:row:col:code:message
 
-adapters/cognee/adapter.py:120:13:SIM105:Use `contextlib.suppress(ValueError)` instead of `try`-`except`-`pass`
-adapters/cognee/adapter.py:180:26:UP037:Remove quotes from type annotation
-adapters/cognee/demo.py:163:101:E501:Line too long (106 > 100)
-adapters/cognee/demo.py:31:8:F401:`json` imported but unused
-adapters/cognee/demo.py:46:1:I001:Import block is un-sorted or un-formatted
-adapters/cognee/demo.py:48:36:F401:`stigmem.string_value` imported but unused
-adapters/cognee/demo.py:48:50:F401:`stigmem.number_value` imported but unused
-adapters/cognee/demo.py:48:64:F401:`stigmem.ref_value` imported but unused
-adapters/gemini/adapter.py:103:101:E501:Line too long (102 > 100)
-adapters/gemini/adapter.py:253:101:E501:Line too long (103 > 100)
-adapters/gemini/adapter.py:28:1:I001:Import block is un-sorted or un-formatted
-adapters/gemini/adapter.py:296:26:UP037:Remove quotes from type annotation
-adapters/letta/adapter.py:171:26:UP037:Remove quotes from type annotation
-adapters/letta/adapter.py:70:5:SIM108:Use ternary operator `vstr = "null" if vtype == "null" or v is None else str(v)` instead of `if`-`else`-block
-adapters/obsidian/src/stigmem_obsidian/cli.py:37:101:E501:Line too long (128 > 100)
-adapters/obsidian/src/stigmem_obsidian/cli.py:67:101:E501:Line too long (106 > 100)
-adapters/obsidian/src/stigmem_obsidian/config.py:54:39:UP037:Remove quotes from type annotation
-adapters/obsidian/src/stigmem_obsidian/config.py:88:49:UP037:Remove quotes from type annotation
-adapters/obsidian/src/stigmem_obsidian/config.py:9:4:UP036:Version block is outdated for minimum Python version
-adapters/obsidian/src/stigmem_obsidian/parser.py:3:1:I001:Import block is un-sorted or un-formatted
-adapters/obsidian/src/stigmem_obsidian/parser.py:62:5:I001:Import block is un-sorted or un-formatted
-adapters/obsidian/src/stigmem_obsidian/parser.py:6:36:F401:`dataclasses.field` imported but unused
-adapters/obsidian/src/stigmem_obsidian/syncer.py:10:61:F401:`stigmem.text_value` imported but unused
-adapters/obsidian/src/stigmem_obsidian/vault_reader.py:111:28:UP037:Remove quotes from type annotation
-adapters/obsidian/src/stigmem_obsidian/vault_reader.py:8:1:UP035:Import from `collections.abc` instead: `Callable`
-adapters/obsidian/tests/test_parser.py:3:1:I001:Import block is un-sorted or un-formatted
-adapters/obsidian/tests/test_parser.py:7:8:F401:`pytest` imported but unused
-adapters/obsidian/tests/test_syncer.py:133:5:F841:Local variable `result` is assigned to but never used
-adapters/obsidian/tests/test_syncer.py:14:27:F401:`unittest.mock.patch` imported but unused
-adapters/obsidian/tests/test_syncer.py:17:8:F401:`pytest` imported but unused
-adapters/obsidian/tests/test_syncer.py:348:101:E501:Line too long (111 > 100)
-adapters/obsidian/tests/test_syncer.py:370:101:E501:Line too long (106 > 100)
-adapters/obsidian/tests/test_vault_writer.py:31:5:I001:Import block is un-sorted or un-formatted
-adapters/openai-tools/adapter.py:210:101:E501:Line too long (103 > 100)
-adapters/openai-tools/adapter.py:24:1:I001:Import block is un-sorted or un-formatted
-adapters/openai-tools/adapter.py:255:101:E501:Line too long (105 > 100)
-adapters/openai-tools/adapter.py:301:26:UP037:Remove quotes from type annotation
-adapters/openai-tools/tests/conftest.py:10:101:E501:Line too long (106 > 100)
 adapters/openclaw/clawhub-skill/adapter.py:178:101:E501:Line too long (109 > 100)
 adapters/openclaw/clawhub-skill/adapter.py:179:101:E501:Line too long (113 > 100)
 adapters/openclaw/clawhub-skill/adapter.py:181:101:E501:Line too long (108 > 100)
@@ -57,9 +19,6 @@ adapters/openclaw/src/stigmem_openclaw/adapter.py:278:101:E501:Line too long (11
 adapters/openclaw/src/stigmem_openclaw/adapter.py:281:101:E501:Line too long (101 > 100)
 adapters/openclaw/src/stigmem_openclaw/adapter.py:328:101:E501:Line too long (104 > 100)
 adapters/openclaw/src/stigmem_openclaw/adapter.py:58:26:UP037:Remove quotes from type annotation
-adapters/zep/adapter.py:148:26:UP037:Remove quotes from type annotation
-adapters/zep/demo.py:24:1:I001:Import block is un-sorted or un-formatted
-adapters/zep/demo.py:25:8:F401:`sys` imported but unused
 node/src/stigmem_conformance/__main__.py:68:5:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_conformance/report.py:56:101:E501:Line too long (102 > 100)
 node/src/stigmem_conformance/report.py:60:13:F541:f-string without any placeholders

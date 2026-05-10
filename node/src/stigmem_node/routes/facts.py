@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 import logging
-import sqlite3
 import sys
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -62,11 +61,13 @@ def _get_tombstone_filter(
     placeholders = ",".join("?" * len(entity_uris))
     # BEGIN IMMEDIATE for SQLite consistency (§23.3.3 rule 5).
     # On postgres this is a syntax error; rollback clears the failed txn state.
+    # Catch Exception (not sqlite3.Error) because conn may be a psycopg2/libsql
+    # connection and each raises its own backend-specific error type.
     try:
         conn.execute("BEGIN IMMEDIATE")
-    except sqlite3.Error as _begin_exc:  # nosec B110
+    except Exception as _begin_exc:  # noqa: BLE001
         logger.debug("BEGIN IMMEDIATE failed (likely non-sqlite backend): %s", _begin_exc)
-        with contextlib.suppress(sqlite3.Error):
+        with contextlib.suppress(Exception):  # noqa: BLE001
             conn.rollback()
     rows = conn.execute(
         f"""SELECT t.id, t.entity_uri, t.scope, t.created_at, t.legal_hold
@@ -77,7 +78,7 @@ def _get_tombstone_filter(
             )""",  # noqa: S608  # nosec B608
         entity_uris,
     ).fetchall()
-    with contextlib.suppress(sqlite3.Error):
+    with contextlib.suppress(Exception):  # noqa: BLE001
         conn.execute("COMMIT")
 
     excluded: set[str] = set()
@@ -393,7 +394,14 @@ def _record_contradictions(
         )
 
 
-@router.get("", response_model=QueryResponse)
+@router.get(
+    "",
+    response_model=QueryResponse,
+    description=(
+        "Query facts by pattern (spec §5.2, §5.20). "
+        "Omitted fields are wildcards. Entity/source are normalized (§2.6)."
+    ),
+)
 def query_facts(
     identity: Annotated[Identity, Depends(resolve_identity)],
     response: Response,
@@ -424,10 +432,7 @@ def query_facts(
         description="§24: time-travel — return facts visible at this ISO 8601 timestamp",
     ),
 ) -> QueryResponse:
-    """Query facts by pattern (spec §5.2, §5.20).
-
-    Omitted fields are wildcards. Entity/source are normalized (§2.6).
-    """
+    """Query facts by pattern (spec §5.2, §5.20)."""
     if not identity.can_read():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

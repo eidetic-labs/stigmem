@@ -192,9 +192,15 @@ jobs:
           echo "OK: $PUBLISHED_VER is valid semver"
 
       - name: Publish to npm (with provenance)
-        # --tag is required for prereleases; npm rejects publish without it.
-        # alpha/beta/rc go to their own dist-tags so `npm install <pkg>`
-        # (no --tag) waits for a stable release on `latest`.
+        # --tag advances the per-line dist-tag (alpha/beta/rc/latest) computed
+        # from the version via scripts/translate_version.py. npm requires
+        # `latest` to exist on every package, so on first publish it is
+        # auto-set to the just-published version regardless of --tag. Our
+        # convention (per LIMITATIONS.md §npm install behavior): `latest`
+        # tracks the most recent published version — stable when v1.0.0
+        # ships, prerelease until then. The post-publish step below moves
+        # `latest` forward explicitly on every prerelease so adopters running
+        # bare `npm install` get the most recent build, not the very first.
         run: |
           cd sdks/stigmem-ts
           PKG_NAME=$(node -p "require('./package.json').name")
@@ -208,6 +214,23 @@ jobs:
             exit 0
           fi
           npm publish --provenance --access public --tag "${{ steps.ver.outputs.npm_tag }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Advance latest dist-tag to this version
+        # Project convention: `latest` tracks the most recent published version
+        # regardless of stability tier. Stability is communicated by the
+        # version string itself (`-alpha.N`, `-beta.N`, `-rc.N` suffixes are
+        # unmistakable) — not by the `latest` tag. This makes bare
+        # `npm install` always return the most recent build.
+        #
+        # Idempotent: `npm dist-tag add` with an already-set value is a no-op.
+        run: |
+          cd sdks/stigmem-ts
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VER=$(node -p "require('./package.json').version")
+          npm dist-tag add "${PKG_NAME}@${PKG_VER}" latest
+          echo "::notice::Set latest → ${PKG_NAME}@${PKG_VER}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -363,7 +386,12 @@ jobs:
       - name: Determine release type (final vs prerelease)
         id: kind
         run: |
-          # final releases use the `latest` npm dist-tag; everything else is prerelease
+          # Source-of-truth for stability is the version-string suffix (alpha/
+          # beta/rc), not the dist-tag — the `latest` dist-tag is set on every
+          # publish per the project convention in LIMITATIONS.md §npm
+          # `latest` dist-tag. translate_version.py derives `npm_tag` from the
+          # version suffix: `latest` only when there is no suffix (final
+          # release), otherwise alpha/beta/rc.
           if [ "${{ steps.ver.outputs.npm_tag }}" = "latest" ]; then
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
             echo "title=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"

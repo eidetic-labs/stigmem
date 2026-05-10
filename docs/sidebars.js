@@ -317,7 +317,10 @@ const sidebars = {
         'spec/motivation',
         'spec/atomic-fact-shape',
         'spec/fact-semantics',
-        'spec/intent-envelope',
+        // 'spec/intent-envelope' moved to experimental/intent-envelope/spec.md
+        // per master-checklist §4.3a stale-page evaluation. §4 was deferred
+        // indefinitely per ADR-001; design intent preserved as ADR-008
+        // reintroduction candidate.
         'spec/wire-format',
         'spec/federation',
         'spec/design-decisions-log',
@@ -330,7 +333,10 @@ const sidebars = {
         'spec/federation-trust',
         'spec/security-hardening',
         'spec/content-addressed-fact-ids',
-        'spec/section-13',
+        // 'spec/section-13' archived to docs/archive/placeholder-pages/spec/
+        // per master-checklist §4.3a stale-page evaluation. §13 was reserved
+        // for "Phase 5+" without a real concept; preserved as institutional
+        // memory of the placeholder.
       ],
     },
     { type: 'doc', id: 'reference/experimental-features', label: 'Experimental Features' },

@@ -23,7 +23,7 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | [§1. Motivation](./motivation) | Stable (v1.0) | Why immutable typed facts beat per-agent mutable stores. |
 | [§2. Atomic Fact Shape](./atomic-fact-shape) | Stable (v1.0; v1.1 §2.8) | The fact tuple, value types, scopes, HLC, identity, federation-trust fields. |
 | [§3. Fact Semantics](./fact-semantics) | Stable (v1.0) | Read/write semantics, retraction, contradiction, identity binding. |
-| [§4. Intent Envelope](./intent-envelope) | Stable (v1.0) | Goal/constraint/preference/handoff envelope types. |
+| §4. Intent Envelope | Deferred indefinitely | Per ADR-001. Spec text + STATUS at [`experimental/intent-envelope/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/intent-envelope). Goal/constraint/preference/handoff envelope types — design intent preserved as ADR-008 reintroduction candidate. |
 | [§5. Wire Format](./wire-format) | Stable (v1.0; v1.1 §5.21–5.25) | JSON/HTTP wire format for facts, peers, gardens, trust manifests, and capability tokens. |
 | [§6. Federation](./federation) | Stable (v0.8 N-node) | Peer handshake, pull replication, scope enforcement, conflict semantics, backpressure. |
 | [§7. Design Decisions Log](./design-decisions-log) | Stable | Why the spec made the calls it did. |

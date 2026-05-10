@@ -757,7 +757,7 @@ def query_facts(
         try:  # noqa: SIM105
             source = normalize_entity_uri(source)
         except NormalizationError:
-            pass
+            pass  # malformed query — fall through to exact-match with raw value
         conditions.append(
             "(source = ? OR source IN"
             " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"

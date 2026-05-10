@@ -1,15 +1,21 @@
 <!--
-This file is the in-repo archive copy of the v0.9.0a1 retraction post,
-preserved per master-checklist §4.3a binding-preservation principle.
-It is the public dev.to post that announced the reset.
+This file is the **canonical source** of the v0.9.0a1 retraction post —
+the public dev.to announcement of the reset. The stigmem repo is its
+authoritative home; the dev.to publication mirrors this content.
 
-Original publication: dev.to (URL captured in the README §References below
-once the post is live).
+Lives under archive/ because (a) it sits outside the Docusaurus blog
+tree (docs/blog/) so the build pipeline doesn't process it as a current
+blog post, and (b) once the dev.to publication goes live, this file
+also serves as the in-repo historical record of what was published.
 
-Edits to this file should not happen. If the published post needs a
-correction, ship a follow-up post or PEP 440 .post1 errata per
-docs/internal/release-cadence.md §Rule 3 — and add a new archive entry
-rather than modifying this one.
+Once published, fill in the dev.to URL in the canonical_url frontmatter
+field below.
+
+Editing policy: this file is the pre-publication source of truth; edit
+freely until publish. After dev.to publication, do not modify in place.
+If the published post needs a correction, ship a follow-up post or
+PEP 440 .post1 errata per docs/internal/release-cadence.md §Rule 3,
+and add a new archive entry rather than modifying this one.
 -->
 
 ---

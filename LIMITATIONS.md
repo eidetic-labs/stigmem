@@ -221,7 +221,7 @@ Running one stigmem node on your own infrastructure, populated by your own agent
 
 ### Local development and prototyping
 
-Developers building agent applications who want to evaluate whether typed-fact memory is the right shape for their problem. Pin to a specific the pre-reset spec.x version, expect breaking changes during the v0.9.0bN beta-series hardening window, and treat the data as throwaway.
+Developers building agent applications who want to evaluate whether typed-fact memory is the right shape for their problem. Pin to a specific v0.9.0a* version, expect breaking changes during the v0.9.0bN beta-series hardening window, and treat the data as throwaway.
 
 ### Internal tooling within a single trust boundary
 

@@ -221,7 +221,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **How would you know?** Monitor HLC values in federation-ingested facts. A large spike in the HLC from a single peer is a signal.
 
-**Current protection status:** **Open until the pre-reset spec.x** (R-19). The HLC implementation in v0.9.0a1 clamps skew but there is no protocol-level normative bound on accepted HLC drift across the federation. Mitigation in the pre-reset spec.x per [ADR-004](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/004-federation-observability.md):
+**Current protection status:** **Open until v0.9.0bN beta series** (R-19). The HLC implementation in v0.9.0a1 clamps skew but there is no protocol-level normative bound on accepted HLC drift across the federation. Mitigation in v0.9.0bN beta series per [ADR-004](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/004-federation-observability.md):
 
 - **Bounded-skew enforcement** — reject inbound HLC values >5 minutes ahead of local. Configurable via `STIGMEM_HLC_MAX_SKEW_SECONDS`.
 - **`peer_hlc_anomaly` audit event** — emitted when a peer's drift exceeds threshold; per-peer drift tracking surfaces in the audit log.
@@ -533,7 +533,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 2. If the abusive activity came from a specific key, revoke it.
 3. If storage growth was significant, review whether the node's vector index or fact store needs trimming.
 
-**Current protection status:** **Operational responsibility.** v0.9.0a1 ships rate-limit enforcement (R-02 Mitigated), but the kill-switch (`limits=0`) is intended for isolated dev/test environments only. the pre-reset spec.x adds a startup warning when both limits are zero so this misconfiguration is loud.
+**Current protection status:** **Operational responsibility.** v0.9.0a1 ships rate-limit enforcement (R-02 Mitigated), but the kill-switch (`limits=0`) is intended for isolated dev/test environments only. v0.9.0bN beta series adds a startup warning when both limits are zero so this misconfiguration is loud.
 
 ---
 
@@ -600,7 +600,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 
 **Current protection status:** **Open** (R-21, High priority).
 - **OpenClaw the pre-reset spec partial defense:** the new handoff allowlist defends against the handoff variant of this attack — an injected agent cannot delegate to an arbitrary admin entity. This is a structural fix at the adapter layer.
-- **Structural fix at protocol layer:** per-session read/write graph isolation, ADR-003 capability separation, and outbound replication exclusion for transitive recalls are targeted for the pre-reset spec.x (the v0.9.0bN beta series (capability redesign)).
+- **Structural fix at protocol layer:** per-session read/write graph isolation, ADR-003 capability separation, and outbound replication exclusion for transitive recalls are targeted for the v0.9.0bN beta series ( (capability redesign)).
 - **Until those land:** issue agent writer keys with the narrowest possible scope, never overlapping the scopes the same agent reads from.
 
 ---

@@ -57,7 +57,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 | Two-node mTLS federation (TLS 1.3 floor, SAN ↔ entity_uri binding) | Stable | §22.1 |
 | Ed25519 signed manifests at `/.well-known/stigmem-manifest.json` | Stable | §19 |
 | Capability tokens (≤90d, Ed25519, verb+object validated at admission) | Stable | §19 |
-| Bounded HLC skew + per-peer drift tracking | Targeted the pre-reset spec.x (R-19) | §22.5 |
+| Bounded HLC skew + per-peer drift tracking | Targeted v0.9.0bN beta series (R-19) | §22.5 |
 | Quarantine garden (federation inbound writes) | Stable | §19   |
 | Pull replication                    | Stable     | §6     |
 
@@ -65,10 +65,10 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 | Capability                          | Status     | Spec   |
 |-------------------------------------|------------|--------|
-| API-key authentication (per-scope)  | Stable (SHA-256 in v0.9.0a1; Argon2id migration in the pre-reset spec.x per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 |
+| API-key authentication (per-scope)  | Stable (SHA-256 in v0.9.0a1; Argon2id migration in v0.9.0bN beta series per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 |
 | Enforced API key max-age (default 90d) | Stable | §22.2 |
 | Per-principal token-bucket rate limits (7 dimensions) | Stable | §22.4 |
-| Capability-based instruction handling (`interpret_as`) | Targeted the pre-reset spec.x ([ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)) | §3 |
+| Capability-based instruction handling (`interpret_as`) | Targeted v0.9.0bN beta series ([ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)) | §3 |
 
 ## Observability (v0.9.0a1 critical path)
 

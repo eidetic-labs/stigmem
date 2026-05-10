@@ -1,12 +1,22 @@
 """API-key authentication for the Stigmem reference node.
 
-Phase 2 auth model (spec §3.5):
+Auth model (spec §3.5):
   - Callers present `Authorization: Bearer <raw-key>` on every request.
   - Raw keys are never stored; only their SHA-256 hex digest is persisted.
   - Each key maps to an entity_uri and a JSON-array of permissions:
     ["read"], ["read","write"], or ["read","write","federate"].
-  - When STIGMEM_AUTH_REQUIRED=false (default), all callers are treated as
-    fully-trusted; auth header is accepted but not required.
+  - `STIGMEM_AUTH_REQUIRED` defaults to **True** — every request must
+    present a valid Bearer token. Set `STIGMEM_AUTH_REQUIRED=false` to
+    opt into anonymous-mode for single-operator development; this is
+    NOT appropriate for any deployment that accepts requests from
+    agents you don't fully control. See LIMITATIONS.md §"LLM agents
+    holding admin-scope API keys" for context.
+
+Bootstrapping the first key (single-operator install):
+  $ stigmem auth bootstrap-key
+  This subcommand mints an admin key when the api_keys table is empty
+  and refuses to run otherwise; subsequent keys go through the
+  `POST /v1/auth/keys` API.
 """
 
 from __future__ import annotations

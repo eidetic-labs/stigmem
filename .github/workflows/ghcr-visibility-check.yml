@@ -1,0 +1,43 @@
+name: GHCR visibility check
+
+# Verifies that the stigmem-node container image on GHCR is publicly
+# pullable. Surfaced as a CI gate after a dogfooding finding (issue #103):
+# the GHCR package shipped private and adopters following the README's
+# `docker pull` instruction got 403 Forbidden.
+#
+# Runs:
+# - On every push to main (immediate detection of accidental privatization)
+# - Daily at 14:00 UTC (catch silent regressions; e.g. someone manually
+#   flips visibility back to private via the UI)
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "scripts/check_ghcr_public.py"
+      - ".github/workflows/ghcr-visibility-check.yml"
+  schedule:
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Verify stigmem-node image is publicly pullable
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Probe GHCR for anonymous pullability
+        # No `--image` / `--tag` overrides; uses the defaults baked into
+        # the script (ghcr.io/eidetic-labs/stigmem-node:0.9.0a1). The
+        # 0.9.0a1 tag is immutable per release-cadence.md Rule 2, so the
+        # probe target stays stable across alpha versions.
+        run: python3 scripts/check_ghcr_public.py

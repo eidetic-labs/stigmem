@@ -1051,6 +1051,38 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     bc_p.set_defaults(func=_cmd_backfill_cids)
 
+    # ------------------------------------------------------------------ auth
+    auth_p = sub.add_parser("auth", help="API key management (spec §3.5)")
+    auth_sub = auth_p.add_subparsers(dest="auth_command", metavar="SUBCOMMAND")
+    auth_sub.required = True
+
+    # auth bootstrap-key
+    bk_p = auth_sub.add_parser(
+        "bootstrap-key",
+        help=(
+            "mint the first admin API key on a fresh install "
+            "(refuses to run if the api_keys table is non-empty)"
+        ),
+    )
+    bk_p.add_argument(
+        "--entity-uri",
+        dest="entity_uri",
+        default="agent:admin",
+        metavar="URI",
+        help="entity URI to associate with the bootstrap key (default: agent:admin)",
+    )
+    bk_p.add_argument(
+        "--permissions",
+        dest="permissions",
+        default="admin,write,read",
+        metavar="LIST",
+        help=(
+            "comma-separated permissions for the bootstrap key "
+            "(default: admin,write,read)"
+        ),
+    )
+    bk_p.set_defaults(func=_cmd_auth_bootstrap_key)
+
     return parser
 
 
@@ -1559,6 +1591,58 @@ def _cmd_backfill_cids(args: argparse.Namespace) -> int:
             + (f", {collision_skipped} CID collisions skipped" if collision_skipped else ""),
             file=sys.stderr,
         )
+    return 0
+
+
+def _cmd_auth_bootstrap_key(args: argparse.Namespace) -> int:
+    """Mint the first admin-scope API key on a fresh install.
+
+    Refuses to run if the api_keys table is non-empty — bootstrap is
+    one-shot. After bootstrap, additional keys must go through the
+    `POST /v1/auth/keys` API authenticated with the bootstrap key
+    (or any later admin key).
+    """
+    from .auth import create_api_key
+    from .db import db
+
+    with db() as conn:
+        row = conn.execute("SELECT COUNT(*) FROM api_keys").fetchone()
+        existing = int(row[0]) if row else 0
+
+    if existing > 0:
+        print(
+            f"ERROR: api_keys table is not empty ({existing} row(s)). "
+            "Bootstrap is one-shot.",
+            file=sys.stderr,
+        )
+        print(
+            "Mint additional keys via `POST /v1/auth/keys` "
+            "authenticated with an existing admin key.",
+            file=sys.stderr,
+        )
+        return 1
+
+    permissions: list[str] = args.permissions.split(",") if args.permissions else ["admin", "write", "read"]
+    expires_at = None  # never; mirrors create_api_key default
+
+    raw_key = create_api_key(
+        entity_uri=args.entity_uri,
+        permissions=permissions,
+        expires_at=expires_at,
+    )
+
+    # Print key to stdout (capture-able), informational to stderr.
+    print(raw_key)
+    print(
+        f"# stigmem auth bootstrap-key: minted admin key for "
+        f"entity={args.entity_uri!r} permissions={permissions!r}",
+        file=sys.stderr,
+    )
+    print(
+        "# Save the value above — you will not see it again. "
+        "Use it as `Authorization: Bearer <key>` for all subsequent requests.",
+        file=sys.stderr,
+    )
     return 0
 
 

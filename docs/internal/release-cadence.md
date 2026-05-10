@@ -37,6 +37,20 @@ Tag pattern `v*` is protected via Settings → Tags → Tag protection rule. For
 
 `main` is protected per ADR-001 §Contributor approval rule. When `release/v1.x` exists (post-v1.0.0 GA, see §Release-branch strategy below), it gets the same protection.
 
+### Rule 6 — GHCR images must be set to Public after first publish
+
+Added 2026-05-10 after the dogfooding finding (#103) that `stigmem-node` shipped private and broke the README's `docker pull` quickstart.
+
+GHCR packages default to **private** when first published. Adopters following the documented Docker quickstart will hit 403 Forbidden until the visibility is manually flipped.
+
+**Required after the first publish of any new GHCR image:**
+
+1. Go to `https://github.com/orgs/Eidetic-Labs/packages/container/<package-name>/settings`
+2. **Danger Zone** → **Change visibility** → **Public**
+3. Confirm
+
+**Mechanically enforced by** the `GHCR visibility check` workflow at `.github/workflows/ghcr-visibility-check.yml`, which runs on every push to main + daily at 14:00 UTC. The workflow probes the GHCR token endpoint anonymously; failure means the image is private. Add new images to the check by extending `scripts/check_ghcr_public.py` with their reference.
+
 ---
 
 ## Release-branch strategy

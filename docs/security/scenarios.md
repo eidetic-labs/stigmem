@@ -1,6 +1,6 @@
 # Security Scenarios — Operator Impact Guide
 
-**Applies to:** Stigmem v2.0 and the reference node implementation.
+**Applies to:** Stigmem v0.9.0a1 and the reference node implementation.
 **Audience:** Operators — people who deploy, configure, and maintain a Stigmem node. No security background required.
 **Purpose:** For every known vulnerability class in the [Threat Model](../../spec/security/threat-model.md), this document answers the plain question: *"What actually happens to my deployment if this goes wrong?"*
 
@@ -120,7 +120,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **How do you recover?** If you discover tampered facts, use the audit log to identify when they were written, then retract them and reassert the correct values.
 
-**Current protection status:** **No outstanding risk** for standard deployments — TLS 1.3 protects the transport. Internal-path encryption is an operator responsibility.
+**Current protection status:** **Operational responsibility.** TLS 1.3 protects the transport when end-to-end. If TLS terminates at a proxy (load balancer, WAF), the internal path between proxy and node MUST also be encrypted; otherwise the residual applies and a local network attacker can tamper with payloads. CIDs (§25, core in v0.9.0a1 per [ADR-017](../../adr/017-amendment-to-adr-011-cids-as-core.md)) provide tamper detection at the fact level once verification is enabled on the read path.
 
 ---
 
@@ -214,7 +214,13 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **How would you know?** Monitor HLC values in federation-ingested facts. A large spike in the HLC from a single peer is a signal.
 
-**Current protection status:** **No normative bound** — the HLC implementation clamps skew but there is no protocol-level maximum. Operators running federated deployments should monitor for anomalous HLC drift.
+**Current protection status:** **Open until v0.9.x** (R-19). The HLC implementation in v0.9.0a1 clamps skew but there is no protocol-level normative bound on accepted HLC drift across the federation. Mitigation in v0.9.x per [ADR-004](../../adr/004-federation-observability.md):
+
+- **Bounded-skew enforcement** — reject inbound HLC values >5 minutes ahead of local. Configurable via `STIGMEM_HLC_MAX_SKEW_SECONDS`.
+- **`peer_hlc_anomaly` audit event** — emitted when a peer's drift exceeds threshold; per-peer drift tracking surfaces in the audit log.
+- **Concrete operator alert threshold** — alert when a single peer's average HLC advance per replication exceeds 60 seconds, or when `peer_hlc_anomaly` events from a single peer exceed 5/hour. See [ADR-004 § Layer 2 Alerts](../../adr/004-federation-observability.md) for the full alert taxonomy.
+
+Until R-19's mitigation ships, federation operators must monitor HLC drift out-of-band (custom log analysis or Prometheus metrics on per-peer HLC values).
 
 ---
 
@@ -314,6 +320,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 - When an agent calls `recall` with a matching intent, the adversarial value appears in the recalled context.
 - The LLM consuming that context may interpret the injected text as an instruction and act on it — deleting facts, creating unauthorized API calls, or exfiltrating information via side channels it has access to.
 - The blast radius depends on the permissions of the LLM agent's API key. An agent with only `read` scope cannot write facts but may still take harmful external actions if the injection instructs it to use other tools it has access to.
+- **If the agent holds a writer key:** the LLM can use that key to assert attacker-chosen facts. Those facts look authoritative coming from your organization. They federate to peer organizations, where their agents may read and re-inject — the worm vector. This is covered in detail in [Scenario 5.2](#scenario-52--what-if-a-prompt-injected-agent-writes-attacker-chosen-facts-back-to-the-federation-worm-vector) (R-21).
 
 **What can't the attacker do?** Bypass the recall sanitizer for known injection patterns. §19.7 strips common prompt-injection sentinels at recall time. Novel or obfuscated injection patterns may still pass through.
 
@@ -324,7 +331,12 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 - Run agents in a sandboxed execution environment that limits what external actions they can take.
 - Set tight per-agent token budgets so a compromised agent cannot loop recall calls or exfiltrate large volumes of data.
 
-**How would you know?** This is inherently difficult to detect because the attack happens inside the LLM's inference. Monitor for unexpected agent actions in your broader system audit trails. The Stigmem audit log records what facts were recalled and by which key.
+**How would you know?** This is inherently difficult to detect because the attack happens inside the LLM's inference. Monitor for unexpected agent actions in your broader system audit trails. The Stigmem audit log records what facts were recalled and by which key. Concrete signals to watch:
+
+- **`fact_write` patterns from agent keys** — sustained writes outside the agent's normal relation namespace, agent action-rate spikes, recall-loop frequency above baseline. The audit log captures every `fact_write`; a sudden change in pattern from a single agent identity is the signal.
+- **Recall query patterns** — repeated recalls against scopes the agent does not normally read from, or recall queries containing attacker-style strings.
+- **Adapter-level signals (OpenClaw v0.9):** `low_confidence_anomaly` flag on boot context indicates many recalled facts below the high-confidence floor — a peer may be a write vector for adversarial content.
+- **External system logs** — calls to dangerous tools, network egress to unfamiliar destinations, API errors from operations the agent should not be performing.
 
 **Current protection status:** **Residual** — sanitizer is shipped and fuzz-tested; novel injection patterns remain a residual risk.
 

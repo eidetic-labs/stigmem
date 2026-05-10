@@ -1,7 +1,8 @@
 ---
 feature: intent-envelope
 status: deferred-indefinitely
-spec_id: §4 (former)
+spec_id: (no Spec-X assigned — deferred indefinitely per ADR-001; if reintroduced, gets next available Spec-X number per ADR-010)
+legacy_section: §4
 applies_to: stigmem v0.9.0a1
 last_updated: 2026-05-09
 ---

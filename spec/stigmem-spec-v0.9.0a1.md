@@ -15,35 +15,41 @@
 
 ## How to read this document
 
-The spec is divided into core sections (§1–§14, §22, §25 — kept in canonical) and deferred sections (§15–§21, §23, §24 — migrated to per-feature `experimental/<feature>/spec.md`). Cross-references between sections use the per-section anchor convention (`spec/stigmem-spec-v0.9.0a1.md#section-N-M`).
+Per [ADR-010](../docs/adr/010-modular-specs.md), the canonical spec naming convention is `Spec-NN-Topic-Name` for core specs and `Spec-XN-Topic-Name` for experimental specs. Until Phase B's full per-spec file decomposition lands (master-checklist §5.1), this monolithic file remains canonical and the section-disposition table below uses **`Spec-XN-Name` as the primary identifier** with `[§N legacy]` as a transitional aid for readers familiar with the pre-reset numbering.
 
-| Section | Title | Status in v0.9.0a1 | Canonical destination |
-|---|---|---|---|
-| §1 | Motivation | Stable | This file |
-| §2 | Atomic fact shape | Stable | This file |
-| §3 | Fact semantics | Stable | This file |
-| §4 | Intent envelope | **Deferred indefinitely** ([ADR-001](../docs/adr/001-versioning.md)) | `experimental/intent-envelope/spec.md` (placeholder for future reintroduction per ADR-008) |
-| §5 | Wire format | Stable | This file |
-| §6 | Federation (basic) | Stable | This file |
-| §7 | Design decisions log | Stable | This file |
-| §8 | Open questions | Stable | This file |
-| §9 | Namespace registry | Stable | This file |
-| §10 | Schema and migration | Stable | This file |
-| §11 | Failure-mode scenarios | Stable | This file |
-| §12 | Adapter ABI | Stable | This file |
-| §13 | (reserved) | Placeholder | `docs/archive/placeholder-pages/spec/section-13.md` if no real concept; otherwise `experimental/<concept>/` |
-| §14 | Lint semantics | Stable | This file |
-| §15 | Decay semantics | **Deferred** ([ADR-002](../docs/adr/002-v1-scope.md)) | `experimental/decay/spec.md` |
-| §16 | Synthesis | **Deferred** | `experimental/synthesis/spec.md` |
-| §17 | Memory garden (basic concept) | Stable; advanced ACL deferred | This file (basic); `experimental/memory-garden-acl/spec.md` (advanced ACL per [ADR-011](../docs/adr/011-cross-cutting-extraction.md)) |
-| §18 | Source attestation | **Deferred** | `experimental/source-attestation/spec.md` |
-| §19 | Federation trust (capability tokens, manifests, basic) | Stable for the core parts (basic mTLS + capabilities); advanced trust scoring deferred | This file (basic); `experimental/federation-trust-extensions/spec.md` (advanced) |
-| §20 | Recall and graph (advanced) | **Deferred** | `experimental/recall-graph/spec.md` |
-| §21 | Lazy instruction discovery | **Deferred** | `experimental/lazy-instruction-discovery/spec.md` |
-| §22 | Security hardening (mTLS, audit, quotas, container) | Stable | This file |
-| §23 | RTBF tombstones | **Deferred** | `experimental/tombstones/spec.md` |
-| §24 | Time-travel queries | **Deferred** | `experimental/time-travel/spec.md` |
-| §25 | Content-addressed fact IDs (CIDs) | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md) — moved from plugin scope back to core) | This file |
+The spec is divided into core sections (kept in this canonical file) and deferred sections (migrated to per-feature `experimental/<feature>/spec.md`).
+
+| Spec ID (target) | Topic | Legacy § | Status in v0.9.0a1 | Canonical destination |
+|---|---|---|---|---|
+| `Spec-01-Core` (part) | Motivation | §1 | Stable | This file |
+| `Spec-01-Core` (part) | Atomic fact shape | §2 | Stable | This file |
+| `Spec-01-Core` (part) | Fact semantics | §3 | Stable | This file |
+| (deferred indefinitely) | Intent envelope | §4 | **Deferred indefinitely** ([ADR-001](../docs/adr/001-versioning.md)) | `experimental/intent-envelope/spec.md` (placeholder for future reintroduction per ADR-008) |
+| `Spec-01-Core` (part) | Wire format | §5 | Stable | This file |
+| `Spec-05-Federation-Trust` (basic parts) + `Spec-07-Recall-Pipeline` (basic) | Federation (basic) | §6 | Stable | This file |
+| `Spec-01-Core` (part) | Design decisions log | §7 | Stable | This file |
+| `Spec-01-Core` (part) | Open questions | §8 | Stable | This file |
+| `Spec-01-Core` (part) | Namespace registry | §9 | Stable | This file |
+| `Spec-01-Core` (part) | Schema and migration | §10 | Stable | This file |
+| `Spec-01-Core` (part) | Failure-mode scenarios | §11 | Stable | This file |
+| `Spec-01-Core` (part) | Adapter ABI | §12 | Stable | This file |
+| (placeholder) | (reserved) | §13 | Placeholder | `docs/archive/placeholder-pages/spec/section-13.md` |
+| `Spec-01-Core` (part) | Lint semantics | §14 | Stable | This file |
+| (deferred) | Decay semantics | §15 | **Deferred** ([ADR-002](../docs/adr/002-v1-scope.md)) | `experimental/decay/spec.md` |
+| (deferred) | Synthesis | §16 | **Deferred** | `experimental/synthesis/spec.md` |
+| `Spec-02-Scopes-and-ACL` (basic) + `Spec-X5-Memory-Garden` (advanced) | Memory garden | §17 | Basic Stable; advanced ACL deferred | This file (basic); `experimental/memory-garden-acl/spec.md` (advanced ACL per [ADR-011](../docs/adr/011-cross-cutting-extraction.md)) |
+| `Spec-X6-Source-Attestation` | Source attestation | §18 | **Deferred** | `experimental/source-attestation/spec.md` |
+| `Spec-04-Manifests` + `Spec-05-Federation-Trust` + `Spec-06-Capability-Tokens` | Federation trust | §19 | Basic Stable; advanced trust scoring deferred | This file (basic); `experimental/federation-trust-extensions/spec.md` (advanced) |
+| (advanced parts of `Spec-07-Recall-Pipeline`) | Recall and graph (advanced) | §20 | **Deferred** | `experimental/recall-graph/spec.md` |
+| `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | §21 | **Deferred** | `experimental/lazy-instruction-discovery/spec.md` |
+| `Spec-09-Audit-Log` + `Spec-10-Hardening` + `Spec-11-Replay-Protection` | Security hardening | §22 | Stable | This file |
+| `Spec-X2-RTBF-Tombstones` | RTBF tombstones | §23 | **Deferred** | `experimental/tombstones/spec.md` |
+| `Spec-X3-Time-Travel` | Time-travel queries | §24 | **Deferred** | `experimental/time-travel/spec.md` |
+| `Spec-X4-Content-Addressed-IDs` | Content-addressed fact IDs (CIDs) | §25 | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md)). Will graduate at v0.9.0a3 (per ROADMAP) into a core spec ID once modular migration lands. | This file |
+| `Spec-12-HLC-Bounded-Skew` | HLC bounded skew (R-19) | (new in v0.9.x) | Targeted v0.9.x | (Phase B) |
+| `Spec-13-Capability-Based-Instructions` | Capability-based instructions per ADR-003 | (new in v0.9.x) | Targeted v0.9.x | (Phase B) |
+| `Spec-14-Batch-Assert` | Batch assert API per ADR-006 | (new in v0.9.x) | Targeted v0.9.x | (Phase B) |
+| `Spec-X7-Subscriptions` | Subscriptions / push federation | (new) | **Deferred** | `experimental/subscriptions/spec.md` |
 
 ## Section status
 

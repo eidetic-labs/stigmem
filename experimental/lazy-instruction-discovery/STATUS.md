@@ -1,7 +1,9 @@
-# §21 Lazy Instruction Discovery — Status
+# Spec-X1-Lazy-Instruction-Discovery — Status
 
-> Per ADR-008, gate status for `experimental/21-lazy-instruction-discovery/`.
+> Per [ADR-008](../../docs/adr/008-experimental-gates.md), gate status for `experimental/lazy-instruction-discovery/`. Spec ID per [ADR-010](../../docs/adr/010-modular-specs.md).
 
+**Spec ID:** `Spec-X1-Lazy-Instruction-Discovery`
+**Legacy section:** §21
 **Status:** Blocked
 **Active version:** v0.9.0a1 (code last functional under retracted v1.0)
 **Last updated:** 2026-05-06

@@ -17,7 +17,6 @@ from typing import Any
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -334,8 +333,8 @@ class TestDecaySweep:
         capsys: pytest.CaptureFixture,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        from stigmem_node.cli import _cmd_decay_sweep
         from stigmem_node import db as db_mod
+        from stigmem_node.cli import _cmd_decay_sweep
 
         db = _migrated_db(tmp_path)
         # decay sweep uses module-level settings.db_path under the hood
@@ -357,8 +356,8 @@ class TestDecaySweep:
         capsys: pytest.CaptureFixture,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        from stigmem_node.cli import _cmd_decay_sweep
         from stigmem_node import db as db_mod
+        from stigmem_node.cli import _cmd_decay_sweep
 
         db = _migrated_db(tmp_path)
         monkeypatch.setattr(db_mod.settings, "db_path", db)
@@ -603,8 +602,9 @@ class TestAuditDiscovery:
     def test_summary_human_output(
         self, tmp_path: Path, capsys: pytest.CaptureFixture,
     ) -> None:
-        from stigmem_node.cli import _cmd_audit_discovery
         import time as _time
+
+        from stigmem_node.cli import _cmd_audit_discovery
 
         db = _migrated_db(tmp_path)
         now_ms = int(_time.time() * 1000)
@@ -624,8 +624,9 @@ class TestAuditDiscovery:
     def test_high_miss_rate_triggers_alert(
         self, tmp_path: Path, capsys: pytest.CaptureFixture,
     ) -> None:
-        from stigmem_node.cli import _cmd_audit_discovery
         import time as _time
+
+        from stigmem_node.cli import _cmd_audit_discovery
 
         db = _migrated_db(tmp_path)
         now_ms = int(_time.time() * 1000)
@@ -641,8 +642,9 @@ class TestAuditDiscovery:
     def test_json_output(
         self, tmp_path: Path, capsys: pytest.CaptureFixture,
     ) -> None:
-        from stigmem_node.cli import _cmd_audit_discovery
         import time as _time
+
+        from stigmem_node.cli import _cmd_audit_discovery
 
         db = _migrated_db(tmp_path)
         now_ms = int(_time.time() * 1000)
@@ -707,8 +709,8 @@ class TestSnapshotRestore:
         self, tmp_path: Path, capsys: pytest.CaptureFixture,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        from stigmem_node.cli import _cmd_snapshot_restore
         from stigmem_node import snapshot as snap_mod
+        from stigmem_node.cli import _cmd_snapshot_restore
 
         db = _migrated_db(tmp_path)
 

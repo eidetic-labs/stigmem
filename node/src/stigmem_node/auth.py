@@ -137,7 +137,8 @@ def create_api_key(
     with db() as conn:
         conn.execute(
             """INSERT INTO api_keys
-               (id, key_hash, entity_uri, permissions, description, created_at, expires_at, oidc_sub, tenant_id)
+               (id, key_hash, entity_uri, permissions, description,
+                created_at, expires_at, oidc_sub, tenant_id)
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
                 key_id,

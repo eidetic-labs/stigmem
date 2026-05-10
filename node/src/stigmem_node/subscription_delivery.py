@@ -68,7 +68,8 @@ def fan_out(
             event_id = str(uuid.uuid4())
             conn.execute(
                 """INSERT INTO subscription_events
-                   (id, subscription_id, event_type, entity_uri, fact_id, payload, created_at, delivery_status)
+                   (id, subscription_id, event_type, entity_uri, fact_id,
+                    payload, created_at, delivery_status)
                    VALUES (?,?,?,?,?,?,?,'pending')""",
                 (event_id, sub["id"], "fact_asserted", entity, fact_id, fact_payload_json, now),
             )
@@ -305,7 +306,8 @@ def _record_result(event: Any, success: bool) -> None:
             "SELECT consecutive_failures FROM subscriptions WHERE id=?",
             (event["subscription_id"],),
         ).fetchone()
-        if sub and sub["consecutive_failures"] >= _settings_pkg.settings.subscription_circuit_threshold:
+        threshold = _settings_pkg.settings.subscription_circuit_threshold
+        if sub and sub["consecutive_failures"] >= threshold:
             conn.execute(
                 "UPDATE subscriptions SET circuit_open=1 WHERE id=?",
                 (event["subscription_id"],),
@@ -322,7 +324,9 @@ def _mark_delivered(event_id: str, subscription_id: str) -> None:
     with db() as conn:
         conn.execute(
             """UPDATE subscription_events
-               SET delivered_at=?, delivery_status='delivered', delivery_attempts=delivery_attempts+1
+               SET delivered_at=?,
+                   delivery_status='delivered',
+                   delivery_attempts=delivery_attempts+1
                WHERE id=?""",
             (now, event_id),
         )

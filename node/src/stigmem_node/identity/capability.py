@@ -21,8 +21,9 @@ import base64
 import hmac
 import json
 import logging
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any, Callable
+from typing import Any
 
 import canonicaljson
 from cryptography.exceptions import InvalidSignature

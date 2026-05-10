@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import base64
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import canonicaljson

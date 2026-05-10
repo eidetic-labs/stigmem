@@ -110,7 +110,7 @@ def verify_peer_token(
             public_key,
             algorithms=["EdDSA"],
             options={
-                # exp/iat are epoch_ms per spec §3.5 — disable library checks, validate manually below
+                # exp/iat are epoch_ms per spec §3.5 — disable library checks, validate manually
                 "verify_exp": False,
                 "verify_nbf": False,
                 "verify_iat": False,
@@ -151,8 +151,8 @@ def verify_peer_token(
                 "DELETE FROM nonce_cache WHERE expires_at < ?",
                 (datetime.now(UTC).isoformat(),),
             )
-    except sqlite3.IntegrityError:
-        raise TokenError("nonce_already_seen")
+    except sqlite3.IntegrityError as exc:
+        raise TokenError("nonce_already_seen") from exc
 
     return payload
 

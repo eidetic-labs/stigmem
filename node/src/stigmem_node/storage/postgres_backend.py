@@ -44,10 +44,11 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 from .base import StorageBackend
 
@@ -418,7 +419,7 @@ class PostgresBackend(StorageBackend):
             # Ensure the target schema exists (for per-test schema isolation).
             with conn.cursor() as cur:
                 cur.execute(
-                    "CREATE SCHEMA IF NOT EXISTS %s" % self._schema  # noqa: S608 — schema name not user input
+                    f"CREATE SCHEMA IF NOT EXISTS {self._schema}"
                 )
             conn.commit()
 

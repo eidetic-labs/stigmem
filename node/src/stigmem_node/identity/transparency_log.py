@@ -293,7 +293,9 @@ class RekorLog(TransparencyLog):
                 from sigstore.transparency import LogEntry as SigstoreLogEntry
                 _ = SigstoreLogEntry.from_response(data)
             except ImportError as exc:
-                logger.warning("sigstore not installed; STH checkpoint verification skipped: %s", exc)
+                logger.warning(
+                    "sigstore not installed; STH checkpoint verification skipped: %s", exc
+                )
             except Exception as exc:
                 raise ValueError(f"Rekor STH checkpoint verification failed: {exc}") from exc
 

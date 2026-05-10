@@ -64,66 +64,13 @@ node/src/stigmem_conformance/__main__.py:68:5:I001:Import block is un-sorted or 
 node/src/stigmem_conformance/report.py:56:101:E501:Line too long (102 > 100)
 node/src/stigmem_conformance/report.py:60:13:F541:f-string without any placeholders
 node/src/stigmem_conformance/report.py:61:13:F541:f-string without any placeholders
-node/src/stigmem_conformance/tests/conftest.py:100:13:B010:Do not call `setattr` with a constant attribute value. It is not any safer than normal property access.
-node/src/stigmem_conformance/tests/conftest.py:116:13:B010:Do not call `setattr` with a constant attribute value. It is not any safer than normal property access.
-node/src/stigmem_conformance/tests/conftest.py:157:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_conformance/tests/conftest.py:201:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_conformance/tests/conftest.py:80:9:SIM105:Use `contextlib.suppress(ImportError)` instead of `try`-`except`-`pass`
-node/src/stigmem_conformance/tests/test_contradiction.py:91:101:E501:Line too long (103 > 100)
 node/src/stigmem_conformance/tests/test_facts.py:11:32:F401:`fastapi.testclient.TestClient` imported but unused
 node/src/stigmem_conformance/tests/test_facts.py:134:101:E501:Line too long (101 > 100)
 node/src/stigmem_conformance/tests/test_facts.py:141:101:E501:Line too long (126 > 100)
 node/src/stigmem_conformance/tests/test_facts.py:73:101:E501:Line too long (105 > 100)
 node/src/stigmem_conformance/tests/test_facts.py:90:101:E501:Line too long (105 > 100)
 node/src/stigmem_conformance/tests/test_federation.py:60:101:E501:Line too long (101 > 100)
-node/src/stigmem_conformance/tests/test_graph.py:53:101:E501:Line too long (102 > 100)
-node/src/stigmem_conformance/tests/test_provenance.py:79:101:E501:Line too long (105 > 100)
-node/src/stigmem_conformance/tests/test_recall.py:103:101:E501:Line too long (102 > 100)
-node/src/stigmem_conformance/tests/test_recall.py:115:101:E501:Line too long (103 > 100)
-node/src/stigmem_conformance/tests/test_recall.py:71:101:E501:Line too long (106 > 100)
-node/src/stigmem_node/auth.py:140:101:E501:Line too long (112 > 100)
 node/src/stigmem_node/cid.py:46:101:E501:Line too long (107 > 100)
-node/src/stigmem_node/cli.py:1048:9:F401:`.instruction_migrate.load_existing_facts_from_api` imported but unused
-node/src/stigmem_node/cli.py:1049:9:F401:`.instruction_migrate.load_existing_facts_from_db` imported but unused
-node/src/stigmem_node/cli.py:1050:9:F401:`.instruction_migrate.load_prev_manifest_names_from_api` imported but unused
-node/src/stigmem_node/cli.py:1051:9:F401:`.instruction_migrate.load_prev_manifest_names_from_db` imported but unused
-node/src/stigmem_node/cli.py:106:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/cli.py:1081:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/cli.py:1092:101:E501:Line too long (124 > 100)
-node/src/stigmem_node/cli.py:1092:118:F401:`.instruction_migrate.load_prev_manifest_names_from_db` imported but unused
-node/src/stigmem_node/cli.py:1092:73:F401:`.instruction_migrate.load_existing_facts_from_db` imported but unused
-node/src/stigmem_node/cli.py:1092:9:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/cli.py:1107:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/cli.py:1119:13:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/cli.py:1125:101:E501:Line too long (120 > 100)
-node/src/stigmem_node/cli.py:1130:17:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/cli.py:1133:101:E501:Line too long (113 > 100)
-node/src/stigmem_node/cli.py:1136:13:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/cli.py:1170:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/cli.py:1176:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/cli.py:1193:12:F401:`os` imported but unused
-node/src/stigmem_node/cli.py:11:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/cli.py:1226:101:E501:Line too long (103 > 100)
-node/src/stigmem_node/cli.py:1239:101:E501:Line too long (118 > 100)
-node/src/stigmem_node/cli.py:1241:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/cli.py:1338:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/cli.py:1374:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/cli.py:1379:56:F401:`.identity.manifest.verify_manifest` imported but unused
-node/src/stigmem_node/cli.py:1381:39:F401:`.settings.settings` imported but unused
-node/src/stigmem_node/cli.py:1384:9:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/cli.py:1455:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/cli.py:58:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/cli.py:743:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/cli.py:784:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/cli.py:851:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/cli.py:886:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/cli.py:887:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/db.py:16:22:F401:`datetime.UTC` imported but unused
-node/src/stigmem_node/db.py:16:27:F401:`datetime.datetime` imported but unused
-node/src/stigmem_node/db.py:18:1:UP035:Import from `collections.abc` instead: `Generator`
-node/src/stigmem_node/decay.py:62:17:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/decay.py:73:17:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/decay.py:89:17:S608:Possible SQL injection vector through string-based query construction
 node/src/stigmem_node/decay.py:95:101:E501:Line too long (110 > 100)
 node/src/stigmem_node/embedding/__init__.py:10:1:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_node/embedding/base.py:3:1:I001:Import block is un-sorted or un-formatted
@@ -134,21 +81,10 @@ node/src/stigmem_node/embedding/stub_adapter.py:38:19:S311:Standard pseudo-rando
 node/src/stigmem_node/entity_resolver.py:24:1:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_node/entity_resolver.py:32:74:F401:`.entity_normalizer.is_informal` imported but unused
 node/src/stigmem_node/federation_ingest.py:158:101:E501:Line too long (103 > 100)
-node/src/stigmem_node/federation_pull.py:102:101:E501:Line too long (120 > 100)
-node/src/stigmem_node/federation_pull.py:133:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/federation_pull.py:201:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/federation_pull.py:223:101:E501:Line too long (107 > 100)
-node/src/stigmem_node/federation_pull.py:32:24:S311:Standard pseudo-random generators are not suitable for cryptographic purposes
-node/src/stigmem_node/federation_pull.py:99:101:E501:Line too long (119 > 100)
-node/src/stigmem_node/garden_acl.py:133:101:E501:Line too long (108 > 100)
 node/src/stigmem_node/graph.py:123:15:UP037:Remove quotes from type annotation
 node/src/stigmem_node/graph.py:161:9:SIM102:Use a single `if` statement instead of nested `if` statements
 node/src/stigmem_node/graph.py:45:15:UP037:Remove quotes from type annotation
-node/src/stigmem_node/graph_index.py:78:9:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/identity/capability.py:25:1:UP035:Import from `collections.abc` instead: `Callable`
 node/src/stigmem_node/identity/key_rotation.py:43:41:F401:`.transparency_log.TransparencyLogUnavailable` imported but unused
-node/src/stigmem_node/identity/manifest.py:24:22:F401:`datetime.UTC` imported but unused
-node/src/stigmem_node/identity/transparency_log.py:296:101:E501:Line too long (102 > 100)
 node/src/stigmem_node/identity/trust_store.py:252:5:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_node/instruction_migrate.py:132:9:SIM102:Use a single `if` statement instead of nested `if` statements
 node/src/stigmem_node/instruction_migrate.py:14:1:I001:Import block is un-sorted or un-formatted
@@ -158,22 +94,7 @@ node/src/stigmem_node/instruction_migrate.py:296:9:S110:`try`-`except`-`pass` de
 node/src/stigmem_node/instruction_migrate.py:318:5:S110:`try`-`except`-`pass` detected, consider logging the exception
 node/src/stigmem_node/instruction_migrate.py:338:5:S110:`try`-`except`-`pass` detected, consider logging the exception
 node/src/stigmem_node/instruction_migrate.py:431:101:E501:Line too long (110 > 100)
-node/src/stigmem_node/metrics.py:183:9:SIM105:Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/metrics.py:185:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/metrics.py:31:1:UP035:Import from `collections.abc` instead: `Generator`
-node/src/stigmem_node/models.py:102:29:UP037:Remove quotes from type annotation
-node/src/stigmem_node/models.py:305:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/models.py:328:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/models.py:457:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/models.py:621:22:UP037:Remove quotes from type annotation
-node/src/stigmem_node/models.py:622:23:UP037:Remove quotes from type annotation
-node/src/stigmem_node/models.py:626:22:UP037:Remove quotes from type annotation
-node/src/stigmem_node/models.py:627:23:UP037:Remove quotes from type annotation
-node/src/stigmem_node/models.py:84:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/models.py:85:101:E501:Line too long (101 > 100)
 node/src/stigmem_node/peer_auth.py:14:1:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/peer_token.py:113:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/peer_token.py:155:9:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
 node/src/stigmem_node/rate_limit.py:157:101:E501:Line too long (104 > 100)
 node/src/stigmem_node/rate_limit.py:163:5:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_node/rate_limit.py:164:20:F401:`json` imported but unused
@@ -202,7 +123,6 @@ node/src/stigmem_node/routes/aliases.py:112:101:E501:Line too long (108 > 100)
 node/src/stigmem_node/routes/aliases.py:44:101:E501:Line too long (102 > 100)
 node/src/stigmem_node/routes/aliases.py:59:101:E501:Line too long (103 > 100)
 node/src/stigmem_node/routes/aliases.py:63:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/aliases.py:84:13:S608:Possible SQL injection vector through string-based query construction
 node/src/stigmem_node/routes/aliases.py:99:101:E501:Line too long (102 > 100)
 node/src/stigmem_node/routes/audit.py:144:101:E501:Line too long (101 > 100)
 node/src/stigmem_node/routes/audit.py:171:101:E501:Line too long (101 > 100)
@@ -222,7 +142,6 @@ node/src/stigmem_node/routes/cid_admin.py:32:101:E501:Line too long (101 > 100)
 node/src/stigmem_node/routes/facts.py:147:101:E501:Line too long (104 > 100)
 node/src/stigmem_node/routes/facts.py:152:9:S110:`try`-`except`-`pass` detected, consider logging the exception
 node/src/stigmem_node/routes/facts.py:195:101:E501:Line too long (106 > 100)
-node/src/stigmem_node/routes/facts.py:218:11:S608:Possible SQL injection vector through string-based query construction
 node/src/stigmem_node/routes/facts.py:250:101:E501:Line too long (109 > 100)
 node/src/stigmem_node/routes/facts.py:313:101:E501:Line too long (102 > 100)
 node/src/stigmem_node/routes/facts.py:320:21:UP012:Unnecessary UTF-8 `encoding` argument to `encode`
@@ -247,7 +166,6 @@ node/src/stigmem_node/routes/facts.py:70:9:SIM105:Use `contextlib.suppress(Excep
 node/src/stigmem_node/routes/facts.py:72:9:S110:`try`-`except`-`pass` detected, consider logging the exception
 node/src/stigmem_node/routes/facts.py:743:9:SIM105:Use `contextlib.suppress(NormalizationError)` instead of `try`-`except`-`pass`
 node/src/stigmem_node/routes/facts.py:756:9:SIM105:Use `contextlib.suppress(NormalizationError)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/facts.py:783:11:S608:Possible SQL injection vector through string-based query construction
 node/src/stigmem_node/routes/facts.py:836:101:E501:Line too long (101 > 100)
 node/src/stigmem_node/routes/facts.py:83:5:SIM105:Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
 node/src/stigmem_node/routes/facts.py:844:101:E501:Line too long (110 > 100)
@@ -258,68 +176,6 @@ node/src/stigmem_node/routes/facts.py:914:28:SIM118:Use `key in dict` instead of
 node/src/stigmem_node/routes/facts.py:956:101:E501:Line too long (101 > 100)
 node/src/stigmem_node/routes/facts.py:966:47:SIM118:Use `key in dict` instead of `key in dict.keys()`
 node/src/stigmem_node/routes/facts.py:967:29:SIM118:Use `key in dict` instead of `key in dict.keys()`
-node/src/stigmem_node/routes/federation.py:1014:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/federation.py:1019:5:F841:Local variable `log` is assigned to but never used
-node/src/stigmem_node/routes/federation.py:1027:101:E501:Line too long (110 > 100)
-node/src/stigmem_node/routes/federation.py:1032:101:E501:Line too long (108 > 100)
-node/src/stigmem_node/routes/federation.py:1036:13:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
-node/src/stigmem_node/routes/federation.py:1040:13:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
-node/src/stigmem_node/routes/federation.py:1043:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/routes/federation.py:1057:101:E501:Line too long (112 > 100)
-node/src/stigmem_node/routes/federation.py:1084:101:E501:Line too long (107 > 100)
-node/src/stigmem_node/routes/federation.py:119:9:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
-node/src/stigmem_node/routes/federation.py:140:9:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
-node/src/stigmem_node/routes/federation.py:147:101:E501:Line too long (106 > 100)
-node/src/stigmem_node/routes/federation.py:17:1:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/federation.py:25:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/federation.py:269:5:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/federation.py:276:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/federation.py:28:22:F401:`..db.get_or_create_node_id` imported but unused
-node/src/stigmem_node/routes/federation.py:32:23:F401:`..tracing.start_span` imported but unused
-node/src/stigmem_node/routes/federation.py:335:13:SIM105:Use `contextlib.suppress(ManifestError)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/federation.py:363:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/federation.py:42:5:F401:`..models.FactRecord` imported but unused
-node/src/stigmem_node/routes/federation.py:43:5:F401:`..models.PeerRecord` imported but unused
-node/src/stigmem_node/routes/federation.py:466:13:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/federation.py:524:101:E501:Line too long (110 > 100)
-node/src/stigmem_node/routes/federation.py:530:101:E501:Line too long (108 > 100)
-node/src/stigmem_node/routes/federation.py:535:13:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/federation.py:543:101:E501:Line too long (111 > 100)
-node/src/stigmem_node/routes/federation.py:557:13:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/federation.py:559:13:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
-node/src/stigmem_node/routes/federation.py:564:13:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
-node/src/stigmem_node/routes/federation.py:574:9:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/federation.py:581:101:E501:Line too long (107 > 100)
-node/src/stigmem_node/routes/federation.py:600:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/federation.py:718:13:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/federation.py:771:13:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/federation.py:817:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/federation.py:829:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/federation.py:830:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/federation.py:954:5:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/federation.py:981:101:E501:Line too long (108 > 100)
-node/src/stigmem_node/routes/gardens.py:115:101:E501:Line too long (118 > 100)
-node/src/stigmem_node/routes/gardens.py:117:101:E501:Line too long (137 > 100)
-node/src/stigmem_node/routes/gardens.py:142:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/gardens.py:169:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/gardens.py:245:101:E501:Line too long (103 > 100)
-node/src/stigmem_node/routes/gardens.py:303:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/routes/gardens.py:394:101:E501:Line too long (116 > 100)
-node/src/stigmem_node/routes/gardens.py:3:1:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/gardens.py:407:101:E501:Line too long (108 > 100)
-node/src/stigmem_node/routes/gardens.py:422:24:F401:`json` imported but unused
-node/src/stigmem_node/routes/gardens.py:422:9:E401:Multiple imports on one line
-node/src/stigmem_node/routes/gardens.py:422:9:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/gardens.py:425:101:E501:Line too long (143 > 100)
-node/src/stigmem_node/routes/gardens.py:426:101:E501:Line too long (130 > 100)
-node/src/stigmem_node/routes/gardens.py:470:101:E501:Line too long (116 > 100)
-node/src/stigmem_node/routes/gardens.py:491:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/gardens.py:496:24:F401:`json` imported but unused
-node/src/stigmem_node/routes/gardens.py:496:9:E401:Multiple imports on one line
-node/src/stigmem_node/routes/gardens.py:496:9:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/gardens.py:499:101:E501:Line too long (143 > 100)
-node/src/stigmem_node/routes/gardens.py:500:101:E501:Line too long (129 > 100)
-node/src/stigmem_node/routes/gardens.py:89:101:E501:Line too long (102 > 100)
 node/src/stigmem_node/routes/graph.py:97:101:E501:Line too long (107 > 100)
 node/src/stigmem_node/routes/identity.py:122:9:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
 node/src/stigmem_node/routes/identity.py:134:13:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
@@ -329,75 +185,7 @@ node/src/stigmem_node/routes/identity.py:32:56:F401:`fastapi.Query` imported but
 node/src/stigmem_node/routes/identity.py:336:5:SIM105:Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
 node/src/stigmem_node/routes/identity.py:338:5:S110:`try`-`except`-`pass` detected, consider logging the exception
 node/src/stigmem_node/routes/identity.py:460:13:B904:Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
-node/src/stigmem_node/routes/instruction.py:14:8:F401:`hashlib` imported but unused
-node/src/stigmem_node/routes/instruction.py:221:101:E501:Line too long (116 > 100)
-node/src/stigmem_node/routes/instruction.py:223:101:E501:Line too long (113 > 100)
-node/src/stigmem_node/routes/instruction.py:227:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/instruction.py:22:20:F401:`typing.Annotated` imported but unused
-node/src/stigmem_node/routes/instruction.py:233:101:E501:Line too long (109 > 100)
-node/src/stigmem_node/routes/instruction.py:235:101:E501:Line too long (143 > 100)
-node/src/stigmem_node/routes/instruction.py:241:101:E501:Line too long (144 > 100)
-node/src/stigmem_node/routes/instruction.py:269:101:E501:Line too long (106 > 100)
-node/src/stigmem_node/routes/instruction.py:275:16:F401:`os` imported but unused
-node/src/stigmem_node/routes/instruction.py:305:26:B008:Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
-node/src/stigmem_node/routes/instruction.py:314:101:E501:Line too long (116 > 100)
-node/src/stigmem_node/routes/instruction.py:326:13:F841:Local variable `entries` is assigned to but never used
-node/src/stigmem_node/routes/instruction.py:340:101:E501:Line too long (111 > 100)
-node/src/stigmem_node/routes/instruction.py:386:26:B008:Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
-node/src/stigmem_node/routes/instruction.py:418:26:B008:Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
-node/src/stigmem_node/routes/instruction.py:429:101:E501:Line too long (116 > 100)
-node/src/stigmem_node/routes/instruction.py:451:101:E501:Line too long (111 > 100)
-node/src/stigmem_node/routes/instruction.py:456:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/routes/instruction.py:481:101:E501:Line too long (110 > 100)
-node/src/stigmem_node/routes/instruction.py:486:101:E501:Line too long (113 > 100)
-node/src/stigmem_node/routes/instruction.py:517:101:E501:Line too long (120 > 100)
-node/src/stigmem_node/routes/instruction.py:535:26:B008:Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
-node/src/stigmem_node/routes/instruction.py:693:26:B008:Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
-node/src/stigmem_node/routes/instruction.py:716:101:E501:Line too long (118 > 100)
-node/src/stigmem_node/routes/instruction.py:736:26:B008:Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
-node/src/stigmem_node/routes/instruction.py:752:101:E501:Line too long (110 > 100)
-node/src/stigmem_node/routes/intents.py:130:101:E501:Line too long (106 > 100)
-node/src/stigmem_node/routes/intents.py:178:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/intents.py:319:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/intents.py:33:1:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/intents.py:354:101:E501:Line too long (107 > 100)
-node/src/stigmem_node/routes/intents.py:389:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/intents.py:55:5:F401:`..models.VALID_SCOPES` imported but unused
-node/src/stigmem_node/routes/lint.py:110:17:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/lint.py:140:17:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/lint.py:159:17:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/lint.py:187:17:S608:Possible SQL injection vector through string-based query construction
 node/src/stigmem_node/routes/lint.py:266:101:E501:Line too long (103 > 100)
-node/src/stigmem_node/routes/lint.py:87:21:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/lint.py:92:17:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/quarantine.py:13:1:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/quarantine.py:151:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/routes/quarantine.py:209:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/quarantine.py:240:101:E501:Line too long (103 > 100)
-node/src/stigmem_node/routes/quarantine.py:250:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/routes/quarantine.py:263:101:E501:Line too long (139 > 100)
-node/src/stigmem_node/routes/quarantine.py:264:101:E501:Line too long (112 > 100)
-node/src/stigmem_node/routes/quarantine.py:35:101:E501:Line too long (102 > 100)
-node/src/stigmem_node/routes/quarantine.py:46:101:E501:Line too long (109 > 100)
-node/src/stigmem_node/routes/quarantine.py:56:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/quarantine.py:88:13:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/quarantine.py:94:13:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/recall.py:10:1:I001:Import block is un-sorted or un-formatted
-node/src/stigmem_node/routes/recall.py:139:101:E501:Line too long (215 > 100)
-node/src/stigmem_node/routes/recall.py:139:13:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/recall.py:215:9:SIM105:Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
-node/src/stigmem_node/routes/recall.py:217:9:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/routes/recall.py:284:9:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/recall.py:313:9:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/recall.py:345:9:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/routes/recall.py:378:9:SIM108:Use ternary operator `contradiction_factor = 0.1 if record.contradicted else 1.0` instead of `if`-`else`-block
-node/src/stigmem_node/routes/recall.py:537:101:E501:Line too long (110 > 100)
-node/src/stigmem_node/routes/recall.py:593:9:B007:Loop control variable `fact_id` not used within loop body
-node/src/stigmem_node/routes/recall.py:602:101:E501:Line too long (111 > 100)
-node/src/stigmem_node/routes/recall.py:666:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/routes/recall.py:73:101:E501:Line too long (117 > 100)
-node/src/stigmem_node/routes/recall.py:751:101:E501:Line too long (121 > 100)
-node/src/stigmem_node/routes/recall.py:867:5:S110:`try`-`except`-`pass` detected, consider logging the exception
 node/src/stigmem_node/routes/subscriptions.py:113:101:E501:Line too long (112 > 100)
 node/src/stigmem_node/routes/subscriptions.py:125:101:E501:Line too long (103 > 100)
 node/src/stigmem_node/routes/subscriptions.py:156:101:E501:Line too long (101 > 100)
@@ -432,17 +220,6 @@ node/src/stigmem_node/source_trust.py:52:15:UP037:Remove quotes from type annota
 node/src/stigmem_node/source_trust.py:67:101:E501:Line too long (110 > 100)
 node/src/stigmem_node/source_trust.py:76:15:UP037:Remove quotes from type annotation
 node/src/stigmem_node/storage/base.py:8:1:UP035:Import from `collections.abc` instead: `Generator`
-node/src/stigmem_node/storage/libsql_backend.py:25:1:UP035:Import from `collections.abc` instead: `Generator`
-node/src/stigmem_node/storage/libsql_backend.py:73:43:B905:`zip()` without an explicit `strict=` parameter
-node/src/stigmem_node/storage/postgres_backend.py:421:21:UP031:Use format specifiers instead of percent format
-node/src/stigmem_node/storage/postgres_backend.py:50:1:UP035:Import from `collections.abc` instead: `Generator`
-node/src/stigmem_node/storage/sqlite_backend.py:22:1:UP035:Import from `collections.abc` instead: `Generator`
-node/src/stigmem_node/subscription_delivery.py:308:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/subscription_delivery.py:325:101:E501:Line too long (101 > 100)
-node/src/stigmem_node/subscription_delivery.py:71:101:E501:Line too long (111 > 100)
-node/src/stigmem_node/tls.py:14:24:F401:`contextlib.suppress` imported but unused
-node/src/stigmem_node/tombstone_signing.py:16:8:F401:`hashlib` imported but unused
-node/src/stigmem_node/tombstone_signing.py:22:63:F401:`cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PrivateKey` imported but unused
 node/src/stigmem_node/tombstones.py:145:101:E501:Line too long (101 > 100)
 node/src/stigmem_node/tombstones.py:151:101:E501:Line too long (111 > 100)
 node/src/stigmem_node/tombstones.py:153:101:E501:Line too long (120 > 100)
@@ -453,25 +230,6 @@ node/src/stigmem_node/tombstones.py:265:101:E501:Line too long (111 > 100)
 node/src/stigmem_node/tombstones.py:292:101:E501:Line too long (110 > 100)
 node/src/stigmem_node/tombstones.py:299:101:E501:Line too long (117 > 100)
 node/src/stigmem_node/tombstones.py:89:5:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/tracing.py:115:13:S110:`try`-`except`-`pass` detected, consider logging the exception
-node/src/stigmem_node/tracing.py:19:8:F401:`time` imported but unused
-node/src/stigmem_node/tracing.py:20:1:UP035:Import from `collections.abc` instead: `Generator`
-node/src/stigmem_node/tracing.py:27:40:F401:`opentelemetry.trace` imported but unused; consider using `importlib.util.find_spec` to test for availability
-node/src/stigmem_node/tracing.py:28:45:F401:`opentelemetry.sdk.resources.Resource` imported but unused; consider using `importlib.util.find_spec` to test for availability
-node/src/stigmem_node/tracing.py:29:41:F401:`opentelemetry.sdk.trace.TracerProvider` imported but unused; consider using `importlib.util.find_spec` to test for availability
-node/src/stigmem_node/trust_rules.py:31:23:F401:`functools.lru_cache` imported but unused
-node/src/stigmem_node/trust_rules.py:32:21:F401:`pathlib.Path` imported but unused
-node/src/stigmem_node/trust_rules.py:64:5:SIM103:Return the negated condition directly
-node/src/stigmem_node/vector_search.py:101:51:UP037:Remove quotes from type annotation
-node/src/stigmem_node/vector_search.py:121:12:UP037:Remove quotes from type annotation
-node/src/stigmem_node/vector_search.py:137:12:UP037:Remove quotes from type annotation
-node/src/stigmem_node/vector_search.py:175:22:UP037:Remove quotes from type annotation
-node/src/stigmem_node/vector_search.py:180:17:UP037:Remove quotes from type annotation
-node/src/stigmem_node/vector_search.py:18:8:F401:`json` imported but unused
-node/src/stigmem_node/vector_search.py:201:36:UP037:Remove quotes from type annotation
-node/src/stigmem_node/vector_search.py:207:15:S608:Possible SQL injection vector through string-based query construction
-node/src/stigmem_node/vector_search.py:221:29:UP037:Remove quotes from type annotation
-node/src/stigmem_node/vector_search.py:92:25:UP037:Remove quotes from type annotation
 node/tests/conftest.py:167:9:SIM105:Use `contextlib.suppress(ImportError)` instead of `try`-`except`-`pass`
 node/tests/conftest.py:182:13:B010:Do not call `setattr` with a constant attribute value. It is not any safer than normal property access.
 node/tests/conftest.py:193:13:B010:Do not call `setattr` with a constant attribute value. It is not any safer than normal property access.

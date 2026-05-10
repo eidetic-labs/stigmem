@@ -11,7 +11,6 @@ Routes:
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import re
@@ -218,27 +217,57 @@ def _validate_manifest_entries(entries: list[ManifestEntry]) -> None:
         has_fact = bool(entry.fact_uri)
         has_path = bool(entry.path)
         if not has_fact and not has_path:
-            raise HTTPException(400, detail=f"manifest_entry_invalid: '{entry.name}' has neither fact_uri nor path")
+            raise HTTPException(
+                400,
+                detail=(
+                    f"manifest_entry_invalid: '{entry.name}' has neither "
+                    "fact_uri nor path"
+                ),
+            )
         if has_fact and has_path:
-            raise HTTPException(400, detail=f"manifest_entry_invalid: '{entry.name}' has both fact_uri and path")
+            raise HTTPException(
+                400,
+                detail=(
+                    f"manifest_entry_invalid: '{entry.name}' has both "
+                    "fact_uri and path"
+                ),
+            )
 
         # Unique names
         if entry.name in seen_names:
-            raise HTTPException(400, detail=f"manifest_entry_invalid: duplicate name '{entry.name}'")
+            raise HTTPException(
+                400,
+                detail=f"manifest_entry_invalid: duplicate name '{entry.name}'",
+            )
         seen_names.add(entry.name)
 
         # Validate required_by_task_types
         for tt in entry.required_by_task_types:
             if tt not in _KNOWN_WAKE_REASONS:
-                raise HTTPException(400, detail=f"task_type_unknown: '{tt}' is not a registered wake-reason")
+                raise HTTPException(
+                    400,
+                    detail=f"task_type_unknown: '{tt}' is not a registered wake-reason",
+                )
         if len(entry.required_by_task_types) > 2:
-            raise HTTPException(400, detail="task_types_approval_required: entry declares > 2 required_by_task_types; admin approval required")
+            raise HTTPException(
+                400,
+                detail=(
+                    "task_types_approval_required: entry declares > 2 "
+                    "required_by_task_types; admin approval required"
+                ),
+            )
 
         if entry.guarantee_load:
             guarantee_count += 1
 
     if guarantee_count > _GUARANTEE_LOAD_CAP:
-        raise HTTPException(400, detail=f"guarantee_cap_exceeded: at most {_GUARANTEE_LOAD_CAP} entries may have guarantee_load=true per agent")
+        raise HTTPException(
+            400,
+            detail=(
+                f"guarantee_cap_exceeded: at most {_GUARANTEE_LOAD_CAP} entries "
+                "may have guarantee_load=true per agent"
+            ),
+        )
 
 
 def _score_intent_against_entry(intent: str, entry: ManifestEntry) -> float:
@@ -266,13 +295,13 @@ def _fetch_instruction_content(entry: ManifestEntry) -> tuple[str, str]:
     if entry.fact_uri:
         with db() as conn:
             row = conn.execute(
-                "SELECT value_v, valid_until FROM facts WHERE entity = ? ORDER BY timestamp DESC LIMIT 1",
+                "SELECT value_v, valid_until FROM facts"
+                " WHERE entity = ? ORDER BY timestamp DESC LIMIT 1",
                 (entry.fact_uri,),
             ).fetchone()
             if row:
                 return str(row["value_v"]), "stigmem"
     if entry.path:
-        import os
         try:
             with open(entry.path) as f:
                 return f.read(), "fallback_path"
@@ -301,8 +330,8 @@ def _get_fact_valid_until(fact_uri: str) -> str | None:
 @router.get("/v1/agents/{agent_id}/boot-stub", response_class=PlainTextResponse)
 def get_boot_stub(
     agent_id: str,
+    identity: Annotated[Identity, Depends(resolve_identity)],
     profile: str = "generic",
-    identity: Identity = Depends(resolve_identity),
 ) -> PlainTextResponse:
     _check_agent_access(identity, agent_id)
 
@@ -311,7 +340,8 @@ def get_boot_stub(
 
     with db() as conn:
         stub_row = conn.execute(
-            "SELECT body, token_count, manifest_version FROM boot_stubs WHERE agent_id = ? AND adapter_profile = ?",
+            "SELECT body, token_count, manifest_version FROM boot_stubs"
+            " WHERE agent_id = ? AND adapter_profile = ?",
             (agent_id, profile),
         ).fetchone()
 
@@ -323,7 +353,6 @@ def get_boot_stub(
                     detail="boot_stub_not_found",
                 )
             # Generate on the fly from manifest
-            entries = json.loads(manifest_row["body"])
             agent_role = _derive_agent_role(agent_id, conn)
             manifest_uri = manifest_row["fact_uri"]
             stub_body = _build_boot_stub(
@@ -337,7 +366,8 @@ def get_boot_stub(
             now_ms = _now_ms()
             conn.execute(
                 """INSERT OR REPLACE INTO boot_stubs
-                   (agent_id, adapter_profile, stub_version, body, token_count, generated_at, manifest_version)
+                   (agent_id, adapter_profile, stub_version, body, token_count,
+                    generated_at, manifest_version)
                    VALUES (?,?,?,?,?,?,?)""",
                 (agent_id, profile, 1, stub_body, token_count, now_ms, manifest_row["version"]),
             )
@@ -383,7 +413,7 @@ def _derive_agent_role(agent_id: str, conn: Any) -> str:
 @router.get("/v1/agents/{agent_id}/instruction-manifest")
 def get_instruction_manifest(
     agent_id: str,
-    identity: Identity = Depends(resolve_identity),
+    identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> dict[str, Any]:
     _check_agent_access(identity, agent_id)
 
@@ -415,7 +445,7 @@ def get_instruction_manifest(
 def publish_instruction_manifest(
     agent_id: str,
     req: PublishManifestRequest,
-    identity: Identity = Depends(resolve_identity),
+    identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> dict[str, Any]:
     if not _is_admin(identity):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="admin key required")
@@ -426,7 +456,13 @@ def publish_instruction_manifest(
     entries_json = json.dumps([e.model_dump() for e in req.entries])
     token_count = _approx_tokens(entries_json)
     if token_count > _MANIFEST_TOKEN_LIMIT:
-        raise HTTPException(400, detail=f"manifest_too_large: {token_count} tokens exceeds {_MANIFEST_TOKEN_LIMIT}")
+        raise HTTPException(
+            400,
+            detail=(
+                f"manifest_too_large: {token_count} tokens "
+                f"exceeds {_MANIFEST_TOKEN_LIMIT}"
+            ),
+        )
 
     # Build the instruction: URI for this manifest
     fact_uri = f"instruction:default/agent/{agent_id}/manifest/{req.version}"
@@ -448,12 +484,13 @@ def publish_instruction_manifest(
                 coverage_pct = 1.0
                 passed = True
             else:
-                # Lightweight check: verify fact_uri exists if specified (full N=5 paraphrase eval is Phase 11)
+                # Lightweight check: verify fact_uri exists if specified
+                # (full N=5 paraphrase eval is Phase 11)
                 if entry.fact_uri:
                     row = conn.execute(
                         "SELECT id FROM facts WHERE entity = ? LIMIT 1", (entry.fact_uri,)
                     ).fetchone()
-                    # If fact doesn't exist yet (pre-seeding), treat as coverage warning but don't block
+                    # If fact doesn't exist yet (pre-seeding), warn but don't block
                     coverage_pct = 1.0 if row else 0.5
                     passed = coverage_pct >= 0.80
                 else:
@@ -478,12 +515,14 @@ def publish_instruction_manifest(
 
         # Supersede previous current version
         conn.execute(
-            "UPDATE instruction_manifests SET superseded_at = ? WHERE agent_id = ? AND superseded_at IS NULL",
+            "UPDATE instruction_manifests SET superseded_at = ?"
+            " WHERE agent_id = ? AND superseded_at IS NULL",
             (now_ms, agent_id),
         )
 
         conn.execute(
-            """INSERT INTO instruction_manifests (id, agent_id, version, fact_uri, token_count, body, created_at)
+            """INSERT INTO instruction_manifests
+                 (id, agent_id, version, fact_uri, token_count, body, created_at)
                VALUES (?,?,?,?,?,?,?)""",
             (manifest_id, agent_id, req.version, fact_uri, token_count, entries_json, now_ms),
         )
@@ -514,7 +553,12 @@ def publish_instruction_manifest(
             ),
         )
 
-    logger.info("Instruction manifest published: agent=%s version=%s units=%d", agent_id, req.version, len(req.entries))
+    logger.info(
+        "Instruction manifest published: agent=%s version=%s units=%d",
+        agent_id,
+        req.version,
+        len(req.entries),
+    )
 
     return {
         "fact_uri": fact_uri,
@@ -532,7 +576,7 @@ def publish_instruction_manifest(
 def recall_instruction(
     agent_id: str,
     req: RecallInstructionRequest,
-    identity: Identity = Depends(resolve_identity),
+    identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> dict[str, Any]:
     _check_agent_access(identity, agent_id)
 
@@ -690,7 +734,7 @@ def _make_chunk(
 @router.post("/v1/instruction/audit", status_code=status.HTTP_204_NO_CONTENT)
 def submit_discovery_audit(
     req: AuditSubmitRequest,
-    identity: Identity = Depends(resolve_identity),
+    identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> Response:
     now_ms = _now_ms()
 
@@ -713,7 +757,9 @@ def submit_discovery_audit(
             raise HTTPException(400, detail="audit_token_expired")
 
         conn.execute(
-            "UPDATE instruction_audit SET used_chunks = ?, missed_chunks = ?, audit_closed = ? WHERE audit_token = ?",
+            "UPDATE instruction_audit"
+            " SET used_chunks = ?, missed_chunks = ?, audit_closed = ?"
+            " WHERE audit_token = ?",
             (
                 json.dumps(req.used_chunks),
                 json.dumps(req.missed_chunks),
@@ -733,7 +779,7 @@ def submit_discovery_audit(
 @router.get("/v1/agents/{agent_id}/instruction-manifest/coverage")
 def get_manifest_coverage(
     agent_id: str,
-    identity: Identity = Depends(resolve_identity),
+    identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> dict[str, Any]:
     # Scope validation (S9)
     _check_agent_access(identity, agent_id)
@@ -749,7 +795,8 @@ def get_manifest_coverage(
         # Compute per-unit metrics from audit log
         cutoff_ms = _now_ms() - 7 * 86_400 * 1000  # 7-day window
         audit_rows = conn.execute(
-            "SELECT loaded_chunks, used_chunks FROM instruction_audit WHERE agent_id = ? AND created_at >= ?",
+            "SELECT loaded_chunks, used_chunks FROM instruction_audit"
+            " WHERE agent_id = ? AND created_at >= ?",
             (agent_id, cutoff_ms),
         ).fetchall()
 

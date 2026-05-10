@@ -16,40 +16,50 @@ Federation handshake extension (§19.2.3):
 
 from __future__ import annotations
 
+import contextlib
 import json
+import logging
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+    status,
+)
 
 from ..auth import Identity, resolve_identity
-from ..db import db, get_or_create_node_id
-from ..net_util import assert_safe_url
+from ..db import db
 from ..federation_ingest import ingest_fact, write_audit_log
-from ..metrics import FEDERATION_EGRESS
-from ..tracing import start_span
 from ..hlc import node_hlc
 from ..identity.capability import CapabilityTokenError, verify_token
 from ..identity.manifest import ManifestError, manifest_from_dict, verify_manifest
 from ..identity.transparency_log import LogEntry, TransparencyLogUnavailable, make_transparency_log
 from ..identity.trust_store import get_peer_manifest, store_peer_manifest
+from ..metrics import FEDERATION_EGRESS
 from ..models import (
     ConflictResolveRequest,
     FederationFactsResponse,
     FederationTombstonesResponse,
-    FactRecord,
-    PeerRecord,
     PeerRegisterRequest,
     PeerRegisterResponse,
     TombstoneRecord,
     TombstoneRevocationRecord,
     row_to_record,
 )
+from ..net_util import assert_safe_url
 from ..peer_token import TokenError, verify_declaration_sig, verify_peer_token
 from ..settings import settings
 from ..tls import check_peer_san
+
+logger = logging.getLogger("stigmem.federation")
 
 router = APIRouter(tags=["federation"])
 
@@ -115,8 +125,8 @@ def _require_peer_token(
             },
             algorithms=["EdDSA"],
         )
-    except Exception:
-        raise HTTPException(status_code=401, detail="malformed token")
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="malformed token") from exc
 
     iss = unverified.get("iss", "")
 
@@ -137,14 +147,17 @@ def _require_peer_token(
     except TokenError as exc:
         event = "replay_attempt" if exc.kind == "nonce_already_seen" else "rejected_token"
         write_audit_log(peer["id"], event, {"reason": exc.kind})
-        raise HTTPException(status_code=401, detail=exc.kind)
+        raise HTTPException(status_code=401, detail=exc.kind) from exc
 
     # §22.1.2.4 — bind TLS cert identity to JWT iss; rejects cert-swapping attacks.
     if settings.mtls_enabled:
         peer_cert = _get_mtls_peer_cert(request)
         if not check_peer_san(peer_cert, peer["node_id"]):
             write_audit_log(peer["id"], "san_mismatch", {"node_id": peer["node_id"]})
-            raise HTTPException(status_code=401, detail="peer certificate URI SAN does not match node_id")
+            raise HTTPException(
+                status_code=401,
+                detail="peer certificate URI SAN does not match node_id",
+            )
 
     return peer, payload
 
@@ -266,14 +279,14 @@ async def register_peer(
             wk_resp = await client.get(f"{req.node_url}/.well-known/stigmem")
         if wk_resp.status_code == 200:
             fetched_pubkey = wk_resp.json().get("federation_pubkey")
-    except Exception:
-        pass  # nosec B110 — fetched_pubkey stays None → rejected below
+    except Exception as exc:  # nosec B110 — fetched_pubkey stays None → rejected below
+        logger.debug("peer .well-known fetch failed: %s", exc)
 
     final_status = "rejected"
     verified_at: str | None = None
 
     if fetched_pubkey and fetched_pubkey == req.federation_pubkey:
-        # Signed fields are everything except declaration_sig itself (spec §6.1 struct "above fields")
+        # Signed fields = everything except declaration_sig (spec §6.1 struct "above fields")
         signed_fields: dict[str, Any] = {
             "allowed_scopes": req.allowed_scopes,
             "federation_pubkey": req.federation_pubkey,
@@ -332,10 +345,8 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
         # Check whether the manifest has a TL entry recorded
         existing = get_peer_manifest(manifest_obj.entity_uri, refresh_if_expired=False)
         if existing is None:
-            try:
+            with contextlib.suppress(ManifestError):
                 store_peer_manifest(manifest_obj.entity_uri, manifest_obj, trust_mode=trust_mode)
-            except ManifestError:
-                pass
 
         # Try to verify TL inclusion
         try:
@@ -358,10 +369,10 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
                 )
                 tl.verify_inclusion(le)
                 has_tl_proof = True
-        except TransparencyLogUnavailable:
-            pass
-        except Exception:  # nosec B110 — TL inclusion check is best-effort; failure is non-fatal
-            pass
+        except TransparencyLogUnavailable as exc:
+            logger.debug("transparency log unavailable for TL inclusion check: %s", exc)
+        except Exception as exc:  # nosec B110 — TL inclusion check is best-effort
+            logger.debug("TL inclusion check failed: %s", exc)
 
     if not has_tl_proof:
         if trust_mode == "strict":
@@ -521,26 +532,33 @@ def push_facts(
             peer_cert = _get_mtls_peer_cert(request)
             if not check_peer_san(peer_cert, peer["node_id"]):
                 write_audit_log(peer["id"], "san_mismatch", {"node_id": peer["node_id"]})
-                raise HTTPException(status_code=401, detail="peer certificate URI SAN does not match node_id")
+                raise HTTPException(
+                status_code=401,
+                detail="peer certificate URI SAN does not match node_id",
+            )
     elif x_stigmem_capability is not None:
         # --- Phase 2: capability-token fallback (H-SEC-2) ---
         try:
             verify_token(
                 x_stigmem_capability,
-                lambda uri: get_peer_manifest(uri, refresh_if_expired=True, trust_mode=settings.trust_mode),
+                lambda uri: get_peer_manifest(
+                    uri, refresh_if_expired=True, trust_mode=settings.trust_mode
+                ),
                 trust_mode=settings.trust_mode,
             )
         except CapabilityTokenError as exc:
             # M-SEC-4: log capability_rejected
             import uuid as _uuid
-            from datetime import UTC as _UTC, datetime as _datetime
+            from datetime import UTC as _UTC
+            from datetime import datetime as _datetime
             _now = _datetime.now(_UTC).isoformat()
             try:
                 import json as _json
                 with db() as conn:
                     conn.execute(
                         """INSERT INTO fact_audit_log
-                           (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, detail, ts)
+                           (id, fact_id, event_type, entity_uri, oidc_sub, source,
+                            attested_key_id, detail, ts)
                            VALUES (?,?,?,?,?,?,?,?,?)""",
                         (
                             str(_uuid.uuid4()),
@@ -554,14 +572,18 @@ def push_facts(
                             _now,
                         ),
                     )
-            except Exception:
-                pass  # nosec B110 — audit log is best-effort here
-            raise HTTPException(status_code=401, detail=f"capability token invalid: {exc}")
+            except Exception as audit_exc:  # nosec B110 — audit log best-effort
+                logger.debug("capability_rejected audit log failed: %s", audit_exc)
+            raise HTTPException(
+                status_code=401, detail=f"capability token invalid: {exc}"
+            ) from exc
 
         try:
             cap_token = json.loads(x_stigmem_capability)
         except json.JSONDecodeError as exc:
-            raise HTTPException(status_code=400, detail=f"malformed capability token JSON: {exc}")
+            raise HTTPException(
+                status_code=400, detail=f"malformed capability token JSON: {exc}"
+            ) from exc
 
         if cap_token.get("verb") != "write":
             raise HTTPException(
@@ -572,13 +594,15 @@ def push_facts(
 
         # M-SEC-4: log capability_verified
         import uuid as _uuid2
-        from datetime import UTC as _UTC2, datetime as _datetime2
+        from datetime import UTC as _UTC2
+        from datetime import datetime as _datetime2
         _now2 = _datetime2.now(_UTC2).isoformat()
         try:
             with db() as conn:
                 conn.execute(
                     """INSERT INTO fact_audit_log
-                       (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, detail, ts)
+                       (id, fact_id, event_type, entity_uri, oidc_sub, source,
+                        attested_key_id, detail, ts)
                        VALUES (?,?,?,?,?,?,?,?,?)""",
                     (
                         str(_uuid2.uuid4()),
@@ -597,8 +621,8 @@ def push_facts(
                         _now2,
                     ),
                 )
-        except Exception:
-            pass  # nosec B110 — audit log is best-effort
+        except Exception as audit_exc:  # nosec B110 — audit log best-effort
+            logger.debug("capability_verified audit log failed: %s", audit_exc)
     else:
         raise HTTPException(
             status_code=401,
@@ -814,7 +838,9 @@ def resolve_conflict(
 ) -> dict[str, Any]:
     """Assert a canonical resolution fact and close the conflict (spec §5.10)."""
     if not identity.can_write():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="write permission required"
+        )
 
     with db() as conn:
         conflict = conn.execute(
@@ -826,8 +852,12 @@ def resolve_conflict(
         if conflict["status"] == "resolved":
             raise HTTPException(status_code=409, detail="conflict already resolved")
 
-        fact_a = conn.execute("SELECT * FROM facts WHERE id = ?", (conflict["fact_a_id"],)).fetchone()
-        fact_b = conn.execute("SELECT * FROM facts WHERE id = ?", (conflict["fact_b_id"],)).fetchone()
+        fact_a = conn.execute(
+            "SELECT * FROM facts WHERE id = ?", (conflict["fact_a_id"],)
+        ).fetchone()
+        fact_b = conn.execute(
+            "SELECT * FROM facts WHERE id = ?", (conflict["fact_b_id"],)
+        ).fetchone()
 
         if fact_a is None or fact_b is None:
             raise HTTPException(status_code=500, detail="conflicting facts not found in store")
@@ -951,8 +981,8 @@ def federation_list_tombstones(
     token_header: Annotated[str | None, Header(alias="Authorization")] = None,
 ) -> FederationTombstonesResponse:
     """Tombstone poll route (§23.4.3). Requires tombstone:read capability token."""
-    from ..tombstones import list_tombstones, list_revocations
     from ..identity.capability import CapabilityTokenError, verify_token
+    from ..tombstones import list_revocations, list_tombstones
 
     raw_token = None
     if token_header and token_header.startswith("Bearer "):
@@ -978,7 +1008,9 @@ def federation_list_tombstones(
                 )
             verify_token(
                 raw_token,
-                lambda uri: get_peer_manifest(uri, refresh_if_expired=True, trust_mode=settings.trust_mode),
+                lambda uri: get_peer_manifest(
+                    uri, refresh_if_expired=True, trust_mode=settings.trust_mode
+                ),
                 trust_mode=settings.trust_mode,
             )
         except CapabilityTokenError as exc:
@@ -1011,12 +1043,9 @@ def federation_ingest_tombstone(
     Auth: peer JWT or capability token with tombstone:write verb (mirrors push_facts).
     Verifies signature against org manifest, writes to local tombstones table.
     """
-    from ..tombstones import apply_inbound_tombstone, apply_inbound_revocation
-    from ..tombstone_signing import verify_tombstone_signature, verify_revocation_signature
     from ..identity.trust_store import get_peer_manifest
-    import logging as _logging
-
-    log = _logging.getLogger("stigmem.tombstones.ingest")
+    from ..tombstone_signing import verify_revocation_signature, verify_tombstone_signature
+    from ..tombstones import apply_inbound_revocation, apply_inbound_tombstone
 
     # --- Caller authentication (F-1 fix) ---
     peer_auth = _try_peer_token_auth(authorization)
@@ -1024,23 +1053,34 @@ def federation_ingest_tombstone(
         if settings.mtls_enabled and request is not None:
             peer_cert = _get_mtls_peer_cert(request)
             if not check_peer_san(peer_cert, peer_auth[0]["node_id"]):
-                raise HTTPException(status_code=401, detail="peer certificate URI SAN does not match node_id")
+                raise HTTPException(
+                status_code=401,
+                detail="peer certificate URI SAN does not match node_id",
+            )
     elif x_stigmem_capability is not None:
         try:
             verify_token(
                 x_stigmem_capability,
-                lambda uri: get_peer_manifest(uri, refresh_if_expired=True, trust_mode=settings.trust_mode),
+                lambda uri: get_peer_manifest(
+                    uri, refresh_if_expired=True, trust_mode=settings.trust_mode
+                ),
                 trust_mode=settings.trust_mode,
             )
         except CapabilityTokenError as exc:
-            raise HTTPException(status_code=401, detail=f"capability token invalid: {exc}")
+            raise HTTPException(
+                status_code=401, detail=f"capability token invalid: {exc}"
+            ) from exc
         try:
             cap_token = json.loads(x_stigmem_capability)
         except json.JSONDecodeError as exc:
-            raise HTTPException(status_code=400, detail=f"malformed capability token JSON: {exc}")
+            raise HTTPException(
+                status_code=400, detail=f"malformed capability token JSON: {exc}"
+            ) from exc
         verb = cap_token.get("verb", "")
         if verb not in ("tombstone:write", "write"):
-            raise HTTPException(status_code=403, detail="capability token missing tombstone:write verb")
+            raise HTTPException(
+                status_code=403, detail="capability token missing tombstone:write verb"
+            )
     else:
         raise HTTPException(status_code=401, detail="peer token or capability token required")
 
@@ -1054,7 +1094,10 @@ def federation_ingest_tombstone(
         # F-2 fix: verify revocation signature before applying (skip when trust_mode=off)
         if settings.trust_mode != "off":
             if not rev.key_id:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="revocation missing key_id")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="revocation missing key_id",
+                )
             manifest = get_peer_manifest(rev.signed_by)
             if manifest is None:
                 raise HTTPException(status_code=401, detail="no manifest for revocation signer")
@@ -1081,7 +1124,10 @@ def federation_ingest_tombstone(
     # §23.4.2.1 — fail-closed signature verification (skip when trust_mode=off)
     if settings.trust_mode != "off":
         if not record.key_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="tombstone missing key_id")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="tombstone missing key_id",
+            )
 
         manifest = get_peer_manifest(record.signed_by)
         if manifest is None:

@@ -68,7 +68,9 @@ class TestRecallBasics:
         assert len(body["query_hash"]) == 64
 
     def test_empty_db_returns_empty_facts(self, conformance_client: ConformanceClient) -> None:
-        body = conformance_client.client.post("/v1/recall", json=_recall(query="nothing-here-xyz")).json()
+        body = conformance_client.client.post(
+            "/v1/recall", json=_recall(query="nothing-here-xyz")
+        ).json()
         assert body["facts"] == []
         assert body["total_scored"] == 0
         assert body["truncated"] is False
@@ -100,7 +102,9 @@ class TestRecallResults:
         for f in body["facts"]:
             assert f["fact"].get("scope") != "company"
 
-    def test_token_budget_zero_returns_truncated(self, conformance_client: ConformanceClient) -> None:
+    def test_token_budget_zero_returns_truncated(
+        self, conformance_client: ConformanceClient
+    ) -> None:
         c = conformance_client.client
         c.post("/v1/facts", json=_fact(v="budget test content"))
         body = c.post("/v1/recall", json=_recall(query="budget", budget=1)).json()
@@ -112,5 +116,7 @@ class TestRecallResults:
         assert r.status_code in (400, 422)
 
     def test_query_required(self, conformance_client: ConformanceClient) -> None:
-        r = conformance_client.client.post("/v1/recall", json={"scope": "local", "token_budget": 1000})
+        r = conformance_client.client.post(
+            "/v1/recall", json={"scope": "local", "token_budget": 1000}
+        )
         assert r.status_code in (400, 422)

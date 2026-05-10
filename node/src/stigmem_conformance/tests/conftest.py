@@ -75,12 +75,11 @@ _PATCHABLE_MODULES = [
 
 
 def _get_extra_modules() -> list[object]:
+    import contextlib
     mods: list[object] = []
     for name in _PATCHABLE_MODULES:
-        try:
+        with contextlib.suppress(ImportError):
             mods.append(importlib.import_module(name))
-        except ImportError:
-            pass
     return mods
 
 
@@ -97,7 +96,7 @@ def _patch_settings(test_settings: Settings) -> list[object]:
     wk_mod.settings = test_settings
     for mod in extra:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", test_settings)
+            mod.settings = test_settings
     return extra
 
 
@@ -113,7 +112,7 @@ def _restore_settings(original: Settings, extra: list[object]) -> None:
     wk_mod.settings = original
     for mod in extra:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", original)
+            mod.settings = original
 
 
 # ---------------------------------------------------------------------------
@@ -154,9 +153,9 @@ def _build_client(
     pg_dsn: str = "",
     pg_schema: str = "",
 ) -> Generator[ConformanceClient, None, None]:
+    import stigmem_node.settings as settings_module
     from stigmem_node.main import create_app
     from stigmem_node.storage import make_backend
-    import stigmem_node.settings as settings_module
 
     original = settings_module.settings
 
@@ -188,8 +187,9 @@ def _build_client(
         yield ConformanceClient(client=c, backend=backend_name)
     _restore_settings(original, extra)
 
-    # Drop Postgres schema to clean up
+    # Drop Postgres schema to clean up; best-effort, CI job isolation handles the rest.
     if backend_name == "postgres":
+        import logging as _log
         try:
             import psycopg2
 
@@ -198,8 +198,10 @@ def _build_client(
             with conn.cursor() as cur:
                 cur.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")  # noqa: S608
             conn.close()
-        except Exception:
-            pass  # best-effort cleanup; CI job isolation handles the rest
+        except Exception as exc:
+            _log.getLogger("stigmem.conformance").debug(
+                "postgres schema drop failed (best-effort): %s", exc
+            )
 
 
 @pytest.fixture(params=_ALL_BACKENDS)

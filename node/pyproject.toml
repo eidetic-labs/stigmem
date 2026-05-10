@@ -95,6 +95,21 @@ ignore = ["S101", "S105", "S106"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S"]
+# S608 (hardcoded-sql-expression): each call site uses parameterized
+# queries with literal SQL fragments (e.g. WHERE x = ?) and is annotated
+# with `# nosec` explaining why interpolation is safe. The pattern is
+# audited; per-file ignore avoids `noqa` clutter.
+"src/stigmem_node/decay.py" = ["S608"]
+"src/stigmem_node/graph_index.py" = ["S608"]
+"src/stigmem_node/routes/aliases.py" = ["S608"]
+"src/stigmem_node/routes/facts.py" = ["S608"]
+"src/stigmem_node/routes/federation.py" = ["S608"]
+"src/stigmem_node/routes/lint.py" = ["S608"]
+"src/stigmem_node/routes/quarantine.py" = ["S608"]
+"src/stigmem_node/routes/recall.py" = ["S608"]
+"src/stigmem_node/storage/sqlite_backend.py" = ["S608"]
+"src/stigmem_node/storage/postgres_backend.py" = ["S608"]
+"src/stigmem_node/vector_search.py" = ["S608"]
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]

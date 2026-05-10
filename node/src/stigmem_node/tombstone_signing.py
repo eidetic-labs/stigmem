@@ -13,13 +13,12 @@ Public surface:
 from __future__ import annotations
 
 import base64
-import hashlib
 import logging
 from typing import Any
 
 import canonicaljson
 from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 from .models import TombstoneRecord, TombstoneRevocationRecord
 

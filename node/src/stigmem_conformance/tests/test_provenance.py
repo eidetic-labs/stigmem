@@ -76,7 +76,13 @@ class TestRecallAudit:
 
     def test_two_recalls_have_distinct_ids(self, conformance_client: ConformanceClient) -> None:
         c = conformance_client.client
-        q = {"query": "x", "scope": "local", "token_budget": 100, "depth": 1, "include_neighbors": False}
+        q = {
+            "query": "x",
+            "scope": "local",
+            "token_budget": 100,
+            "depth": 1,
+            "include_neighbors": False,
+        }
         id1 = c.post("/v1/recall", json=q).json()["recall_id"]
         id2 = c.post("/v1/recall", json=q).json()["recall_id"]
         assert id1 != id2

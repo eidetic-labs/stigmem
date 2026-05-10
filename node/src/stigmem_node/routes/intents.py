@@ -52,7 +52,6 @@ from ..models import (
     IntentEnvelopeRecord,
     IntentEnvelopeRequest,
     Preference,
-    VALID_SCOPES,
 )
 
 router = APIRouter(prefix="/v1/intents", tags=["intents"])
@@ -127,7 +126,12 @@ def _decompose(
         ins(intent_id, "intent:escalation",          "string", esc.priority)
         ins(intent_id, "intent:escalate_to",         "ref",    esc.escalate_to)
         ins(intent_id, "intent:escalation:channel",  "string", esc.channel)
-        ins(intent_id, "intent:escalation:context",  "string", "true" if esc.include_context else "false")
+        ins(
+            intent_id,
+            "intent:escalation:context",
+            "string",
+            "true" if esc.include_context else "false",
+        )
 
     # Handoff
     if req.handoff:
@@ -175,7 +179,9 @@ def _decompose(
     return ids
 
 
-def _reconstruct(intent_id: str, rows_by_entity: dict[str, list[Any]]) -> IntentEnvelopeRecord | None:
+def _reconstruct(
+    intent_id: str, rows_by_entity: dict[str, list[Any]]
+) -> IntentEnvelopeRecord | None:
     """Rebuild an IntentEnvelopeRecord from raw DB rows grouped by entity."""
     root = rows_by_entity.get(intent_id, [])
     if not root:
@@ -316,7 +322,9 @@ def submit_intent(
     has a ``intent:goal`` fact in the fabric, returns 409 Conflict.
     """
     if not identity.can_write():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="write permission required"
+        )
 
     # Normalize URIs
     try:
@@ -351,7 +359,10 @@ def submit_intent(
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"intent {intent_id!r} already exists; supply a new id or omit for auto-generation",
+                detail=(
+                    f"intent {intent_id!r} already exists; supply a new id "
+                    "or omit for auto-generation"
+                ),
             )
 
         # Build a normalised copy for decomposition
@@ -386,7 +397,9 @@ def get_intent(
 ) -> IntentEnvelopeRecord:
     """Retrieve an IntentEnvelope by ID, reconstructed from its reified facts (spec §5.14)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     now = datetime.now(UTC).isoformat()
     prefix = f"{intent_id}:%"

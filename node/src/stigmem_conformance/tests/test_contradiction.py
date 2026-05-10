@@ -88,7 +88,9 @@ class TestContradictionResolution:
             return
         # Each item has "conflict_id" key (not "id") per spec §5.10
         item0 = items[0]
-        conflict_id = item0.get("conflict_id") or item0.get("id") if isinstance(item0, dict) else item0
+        conflict_id = (
+            item0.get("conflict_id") or item0.get("id") if isinstance(item0, dict) else item0
+        )
         # Resolution payload: winning_fact_id selects which fact wins (spec §5.10)
         r = c.post(f"/v1/conflicts/{conflict_id}/resolve", json={"winning_fact_id": fact_a_id})
         assert r.status_code in (200, 204, 404)  # 404 if resolution not yet wired

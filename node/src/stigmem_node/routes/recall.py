@@ -9,6 +9,7 @@ POST /v1/recall  Hybrid ranker combining:
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import logging
 import re
@@ -22,10 +23,10 @@ from pydantic import BaseModel, Field
 from ..auth import Identity, resolve_identity
 from ..card_materializer import CARD_MIN_CONFIDENCE, get_fresh_card
 from ..db import db
-from ..metrics import FACT_READ, RECALL_RANKER_DURATION, observe_duration
 from ..garden_acl import caller_can_see_garden
 from ..graph import MAX_DEPTH, bfs_neighbors
-from ..models import FactRecord, FactValue, VALID_SCOPES, TombstoneNotice, row_to_record
+from ..metrics import FACT_READ, RECALL_RANKER_DURATION, observe_duration
+from ..models import VALID_SCOPES, FactRecord, FactValue, TombstoneNotice, row_to_record
 from ..recall_pipeline import apply_recall_pipeline
 from ..settings import settings
 from ..source_trust import compute_source_trust
@@ -70,7 +71,10 @@ class RecallRequest(BaseModel):
     min_confidence: float = Field(0.1, ge=0.0, le=1.0)
     include_neighbors: bool = Field(True)
     limit: int = Field(100, ge=1, le=500, description="Max candidates before token-budget packing")
-    as_of: str | None = Field(None, description="§24: time-travel — return facts visible at this ISO 8601 timestamp")
+    as_of: str | None = Field(
+        None,
+        description="§24: time-travel — return facts visible at this ISO 8601 timestamp",
+    )
 
 
 class ScoreBreakdown(BaseModel):
@@ -136,7 +140,13 @@ def _like_search(
     params.extend([scope, tenant_id, min_confidence, now, k])
     try:
         rows = conn.execute(
-            f"SELECT id AS fact_id, confidence AS rank FROM facts WHERE ({clauses}) AND scope = ? AND tenant_id = ? AND confidence >= ? AND (valid_until IS NULL OR valid_until > ?) ORDER BY confidence DESC LIMIT ?",  # nosec B608
+            (  # nosec B608
+                "SELECT id AS fact_id, confidence AS rank FROM facts"
+                f" WHERE ({clauses})"
+                " AND scope = ? AND tenant_id = ? AND confidence >= ?"
+                " AND (valid_until IS NULL OR valid_until > ?)"
+                " ORDER BY confidence DESC LIMIT ?"
+            ),
             params,
         ).fetchall()
     except Exception as exc:
@@ -212,10 +222,8 @@ def _lexical_search(
         conn.execute("RELEASE SAVEPOINT _fts_search")
     except Exception as exc:
         logger.warning("FTS5 lexical search failed: %s", exc)
-        try:
+        with contextlib.suppress(Exception):  # nosec B110 — best-effort rollback
             conn.execute("ROLLBACK TO SAVEPOINT _fts_search")
-        except Exception:  # nosec B110 — best-effort rollback; failure is unrecoverable
-            pass
         return _like_search(conn, query, scope, tenant_id, k, min_confidence, now)
 
     if not rows:
@@ -375,10 +383,7 @@ def _score_candidates(
             continue
 
         # Salience signal: contradiction-resolution status
-        if record.contradicted:
-            contradiction_factor = 0.1
-        else:
-            contradiction_factor = 1.0
+        contradiction_factor = 0.1 if record.contradicted else 1.0
 
         # Salience signal: garden tier (quarantine garden = 0, normal = 1)
         garden_factor = 1.0
@@ -534,7 +539,8 @@ def _recall_as_of_impl(
     weights: RecallWeights,
     depth: int,
 ) -> tuple[list[ScoredFact], list[TombstoneNotice], bool]:
-    """Return (scored_facts, tombstone_notices, tombstone_filtered) for a time-travel recall at as_of (§24.4).
+    """Return (scored_facts, tombstone_notices, tombstone_filtered) for a time-travel
+    recall at as_of (§24.4).
 
     Fetches facts visible at as_of (existing, not expired, not retracted at T),
     scores them, applies tombstone filter, and returns packed chunks.
@@ -590,7 +596,7 @@ def _recall_as_of_impl(
     if total_weight <= 0:
         total_weight = 1.0
 
-    for fact_id, record in all_facts.items():
+    for record in all_facts.values():
         if record.quarantine_status == "pending":
             continue
         text = f"{record.entity} {record.relation} {record.value.v or ''}".lower()
@@ -599,7 +605,11 @@ def _recall_as_of_impl(
         trust_s = 0.5
         if settings.trust_mode != "off":
             trust_s = compute_source_trust(record.source, record.scope, identity)
-        raw = (weights.lexical * lex + weights.recency * rec_s + weights.source_trust * trust_s) / total_weight
+        raw = (
+            weights.lexical * lex
+            + weights.recency * rec_s
+            + weights.source_trust * trust_s
+        ) / total_weight
         final_score = raw * max(0.0, record.confidence)
         scored.append(ScoredFact(
             fact=record,
@@ -663,7 +673,9 @@ def _recall_impl(
     _span: object,
 ) -> RecallResponse:
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     FACT_READ.labels(principal=identity.entity_uri, tenant=identity.tenant_id).inc()
 
@@ -748,7 +760,11 @@ def _recall_impl(
         # --- Graph expansion from top direct-match seeds ---
         graph_hops: dict[str, int] = {}
         if req.include_neighbors and req.weights.graph > 0 and direct_ids:
-            top_seeds = sorted(direct_ids, key=lambda fid: lex_scores.get(fid, 0) + sem_scores.get(fid, 0), reverse=True)
+            top_seeds = sorted(
+                direct_ids,
+                key=lambda fid: lex_scores.get(fid, 0) + sem_scores.get(fid, 0),
+                reverse=True,
+            )
             top_seeds = top_seeds[: _MAX_SEED_ENTITIES]
             graph_hops = _graph_expand(
                 conn, top_seeds, req.depth, req.scope, identity.tenant_id,
@@ -864,8 +880,8 @@ def _recall_impl(
         _span.set_attribute("stigmem.total_scored", total_scored)  # type: ignore[attr-defined]
         _span.set_attribute("stigmem.tokens_used", tokens_used)  # type: ignore[attr-defined]
         _span.set_attribute("stigmem.truncated", truncated)  # type: ignore[attr-defined]
-    except Exception:  # noqa: BLE001  # nosec B110
-        pass
+    except Exception as exc:  # noqa: BLE001  # nosec B110 — span attrs best-effort
+        logger.debug("recall span attribute set failed: %s", exc)
 
     # §23.3.3 r.3: suppress total_scored when tombstone filtering was applied
     return RecallResponse(

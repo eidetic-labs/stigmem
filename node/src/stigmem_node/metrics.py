@@ -26,9 +26,14 @@ Gauges:
 
 from __future__ import annotations
 
+import contextlib
+import logging
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Generator
+from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger("stigmem.metrics")
 
 if TYPE_CHECKING:
     from starlette.responses import Response
@@ -180,7 +185,5 @@ def observe_duration(histogram: Any, labels: dict[str, str]) -> Generator[None, 
         yield
     finally:
         elapsed = time.perf_counter() - start
-        try:
+        with contextlib.suppress(Exception):  # nosec B110 — metrics best-effort
             histogram.labels(**labels).observe(elapsed)
-        except Exception:  # noqa: BLE001  # nosec B110
-            pass

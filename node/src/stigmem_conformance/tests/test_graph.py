@@ -50,7 +50,9 @@ class TestGraphNeighbors:
         entities = [n["entity"] for n in body["neighbors"]]
         assert _B in entities
 
-    def test_hops_field_is_1_for_direct_neighbor(self, conformance_client: ConformanceClient) -> None:
+    def test_hops_field_is_1_for_direct_neighbor(
+        self, conformance_client: ConformanceClient
+    ) -> None:
         c = conformance_client.client
         c.post("/v1/facts", json=_ref(_A, "memory:knows", _B))
         body = c.get(f"/v1/graph/neighbors?entity={_A}&depth=1&scope=local").json()

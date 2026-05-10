@@ -19,10 +19,11 @@ Install the optional dependency before use::
 from __future__ import annotations
 
 import re
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 from .base import StorageBackend
 
@@ -70,7 +71,7 @@ class _LibSQLRow:
     def __init__(self, cursor: Any, row: tuple[Any, ...]) -> None:
         cols = [d[0] for d in cursor.description]
         self._values: tuple[Any, ...] = row
-        self._data: dict[str, Any] = dict(zip(cols, row))
+        self._data: dict[str, Any] = dict(zip(cols, row, strict=True))
 
     def __getitem__(self, key: str | int) -> Any:
         if isinstance(key, int):

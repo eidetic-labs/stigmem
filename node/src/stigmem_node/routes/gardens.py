@@ -22,6 +22,7 @@ from ..garden_acl import (
     require_quarantine_moderator_or_admin,
 )
 from ..models import (
+    VALID_SCOPES,
     GardenCreateRequest,
     GardenMemberRecord,
     GardenMemberRequest,
@@ -29,7 +30,6 @@ from ..models import (
     GardenRecord,
     QuarantinePromoteRequest,
     QuarantineRejectRequest,
-    VALID_SCOPES,
 )
 from ..settings import settings
 
@@ -86,7 +86,9 @@ def create_garden(
 ) -> GardenRecord:
     """Create a new garden (spec §5.14). Creator is auto-added as admin."""
     if not identity.can_write():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="write permission required"
+        )
 
     slug = req.slug.lower().strip()
     if not _SLUG_RE.match(slug):
@@ -112,9 +114,21 @@ def create_garden(
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="slug already exists")
 
         conn.execute(
-            """INSERT INTO gardens (id, slug, name, scope, description, created_by, created_at, tenant_id, quarantine)
+            """INSERT INTO gardens
+                 (id, slug, name, scope, description, created_by, created_at,
+                  tenant_id, quarantine)
                VALUES (?,?,?,?,?,?,?,?,?)""",
-            (garden_uuid, slug, req.name, req.scope, req.description, identity.entity_uri, now, identity.tenant_id, int(req.quarantine)),
+            (
+                garden_uuid,
+                slug,
+                req.name,
+                req.scope,
+                req.description,
+                identity.entity_uri,
+                now,
+                identity.tenant_id,
+                int(req.quarantine),
+            ),
         )
         conn.execute(
             """INSERT INTO garden_members (garden_id, entity_uri, role, added_by, added_at)
@@ -139,7 +153,9 @@ def list_gardens(
 ) -> list[GardenRecord]:
     """List accessible gardens (spec §5.15). Node admins see all; others see only their gardens."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     with db() as conn:
         if is_node_admin(identity):
@@ -166,7 +182,9 @@ def get_garden(
 ) -> GardenRecord:
     """Get a garden by slug or UUID (spec §5.16)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
@@ -242,7 +260,10 @@ def add_member(
     if existing_role is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"entity is already a member with role '{existing_role}'; use PATCH to change role",
+            detail=(
+                f"entity is already a member with role '{existing_role}'; "
+                "use PATCH to change role"
+            ),
         )
 
     now = datetime.now(UTC).isoformat()
@@ -300,7 +321,10 @@ def update_member_role(
     )
 
 
-@router.delete("/{garden_slug_or_id}/members/{entity_uri:path}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{garden_slug_or_id}/members/{entity_uri:path}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 def remove_member(
     garden_slug_or_id: str,
     entity_uri: str,
@@ -391,7 +415,10 @@ def promote_fact(
         ).fetchone()
 
         if fact_row is None or fact_row["quarantine_garden_id"] != garden["id"]:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fact not found in quarantine garden")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="fact not found in quarantine garden",
+            )
 
         if fact_row["quarantine_status"] != "pending":
             raise HTTPException(
@@ -404,7 +431,10 @@ def promote_fact(
         if req.target_garden_id:
             tg = get_garden_by_slug_or_id(req.target_garden_id, tenant_id=identity.tenant_id)
             if tg is None:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="target garden not found")
+                raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="target garden not found",
+            )
             target_garden_db_id = tg["id"]
 
         conn.execute(
@@ -415,15 +445,33 @@ def promote_fact(
                    quarantine_acted_at = ?,
                    quarantine_reason = ?
                WHERE id = ?""",
-            (target_garden_db_id, identity.entity_uri, now, req.reason or "promoted", req.fact_id),
+            (
+                target_garden_db_id,
+                identity.entity_uri,
+                now,
+                req.reason or "promoted",
+                req.fact_id,
+            ),
         )
 
         # Audit log (§19.5.6)
-        import json as _json, uuid as _uuid
+        import uuid as _uuid
         audit_id = str(_uuid.uuid4())
         conn.execute(
-            "INSERT INTO fact_audit_log (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts) VALUES (?,?,?,?,?,?,?,?)",
-            (audit_id, req.fact_id, "quarantine_promote", identity.entity_uri, identity.oidc_sub, identity.entity_uri, None, now),
+            "INSERT INTO fact_audit_log"
+            " (id, fact_id, event_type, entity_uri, oidc_sub, source,"
+            "  attested_key_id, ts)"
+            " VALUES (?,?,?,?,?,?,?,?)",
+            (
+                audit_id,
+                req.fact_id,
+                "quarantine_promote",
+                identity.entity_uri,
+                identity.oidc_sub,
+                identity.entity_uri,
+                None,
+                now,
+            ),
         )
 
     return {
@@ -467,7 +515,10 @@ def reject_fact(
         ).fetchone()
 
         if fact_row is None or fact_row["quarantine_garden_id"] != garden["id"]:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fact not found in quarantine garden")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="fact not found in quarantine garden",
+            )
 
         if fact_row["quarantine_status"] != "pending":
             raise HTTPException(
@@ -488,16 +539,29 @@ def reject_fact(
 
         # Append-only retraction log (§24.2.1 c.3)
         conn.execute(
-            "INSERT INTO fact_retractions (id, fact_id, retracted_at, retracted_by) VALUES (?,?,?,?)",
+            "INSERT INTO fact_retractions"
+            " (id, fact_id, retracted_at, retracted_by) VALUES (?,?,?,?)",
             (str(uuid.uuid4()), req.fact_id, now, identity.entity_uri),
         )
 
         # Audit log (§19.5.6)
-        import json as _json, uuid as _uuid
+        import uuid as _uuid
         audit_id = str(_uuid.uuid4())
         conn.execute(
-            "INSERT INTO fact_audit_log (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts) VALUES (?,?,?,?,?,?,?,?)",
-            (audit_id, req.fact_id, "quarantine_reject", identity.entity_uri, identity.oidc_sub, identity.entity_uri, None, now),
+            "INSERT INTO fact_audit_log"
+            " (id, fact_id, event_type, entity_uri, oidc_sub, source,"
+            "  attested_key_id, ts)"
+            " VALUES (?,?,?,?,?,?,?,?)",
+            (
+                audit_id,
+                req.fact_id,
+                "quarantine_reject",
+                identity.entity_uri,
+                identity.oidc_sub,
+                identity.entity_uri,
+                None,
+                now,
+            ),
         )
 
     return {

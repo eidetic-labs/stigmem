@@ -1,15 +1,15 @@
 # Ruff baseline for staged rollout.
 # One issue fingerprint per line: path:row:col:code:message
 
-adapters/openclaw/clawhub-skill/adapter.py:178:101:E501:Line too long (109 > 100)
-adapters/openclaw/clawhub-skill/adapter.py:179:101:E501:Line too long (113 > 100)
-adapters/openclaw/clawhub-skill/adapter.py:181:101:E501:Line too long (108 > 100)
-adapters/openclaw/clawhub-skill/adapter.py:183:101:E501:Line too long (119 > 100)
-adapters/openclaw/clawhub-skill/adapter.py:229:40:UP017:Use `datetime.UTC` alias
-adapters/openclaw/clawhub-skill/adapter.py:278:101:E501:Line too long (119 > 100)
-adapters/openclaw/clawhub-skill/adapter.py:281:101:E501:Line too long (101 > 100)
-adapters/openclaw/clawhub-skill/adapter.py:328:101:E501:Line too long (104 > 100)
-adapters/openclaw/clawhub-skill/adapter.py:58:26:UP037:Remove quotes from type annotation
+adapters/openclaw/skill/adapter.py:178:101:E501:Line too long (109 > 100)
+adapters/openclaw/skill/adapter.py:179:101:E501:Line too long (113 > 100)
+adapters/openclaw/skill/adapter.py:181:101:E501:Line too long (108 > 100)
+adapters/openclaw/skill/adapter.py:183:101:E501:Line too long (119 > 100)
+adapters/openclaw/skill/adapter.py:229:40:UP017:Use `datetime.UTC` alias
+adapters/openclaw/skill/adapter.py:278:101:E501:Line too long (119 > 100)
+adapters/openclaw/skill/adapter.py:281:101:E501:Line too long (101 > 100)
+adapters/openclaw/skill/adapter.py:328:101:E501:Line too long (104 > 100)
+adapters/openclaw/skill/adapter.py:58:26:UP037:Remove quotes from type annotation
 adapters/openclaw/src/stigmem_openclaw/adapter.py:178:101:E501:Line too long (109 > 100)
 adapters/openclaw/src/stigmem_openclaw/adapter.py:179:101:E501:Line too long (113 > 100)
 adapters/openclaw/src/stigmem_openclaw/adapter.py:181:101:E501:Line too long (108 > 100)

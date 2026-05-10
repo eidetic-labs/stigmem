@@ -197,6 +197,16 @@ jobs:
         # (no --tag) waits for a stable release on `latest`.
         run: |
           cd sdks/stigmem-ts
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VER=$(node -p "require('./package.json').version")
+          # Idempotency: skip publish if this exact version is already on the
+          # registry (re-run after partial-success workflow, retag, etc.).
+          # Without this guard `npm publish` returns EPUBLISHCONFLICT (409)
+          # which fails the job and blocks the downstream create-release step.
+          if npm view "${PKG_NAME}@${PKG_VER}" version 2>/dev/null | grep -qx "$PKG_VER"; then
+            echo "::notice::${PKG_NAME}@${PKG_VER} already on the registry; skipping npm publish."
+            exit 0
+          fi
           npm publish --provenance --access public --tag "${{ steps.ver.outputs.npm_tag }}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -216,15 +226,23 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          # Protocol package (root pyproject.toml)
+          # Protocol package (root pyproject.toml). Uses OIDC (Trusted Publisher)
+          # because PyPI's "too many new projects" rate-limit is per-uploader;
+          # the personal API token's account hit the limit during the initial
+          # v0.9.0a1 publish run, but OIDC is a separate identity pool. The
+          # pending Trusted Publisher for `stigmem` was registered before the
+          # first publish and activates on first OIDC upload.
           - name: stigmem
             dir: .
+            use_oidc: true
           # Python SDK
           - name: stigmem-py
             dir: sdks/stigmem-py
+            use_oidc: false
           # FastAPI reference node service
           - name: stigmem-node
             dir: node
+            use_oidc: false
           # OpenClaw adapter — reset from 1.0.5 to 0.9.0a1 to align with the
           # canonical version line. v1.0.3 and v1.0.5 are yanked from PyPI
           # (declared a never-published stigmem-py>=1.0.0rc1 dep, were
@@ -232,6 +250,7 @@ jobs:
           # release.
           - name: stigmem-openclaw
             dir: adapters/openclaw
+            use_oidc: false
 
     steps:
       - uses: actions/checkout@v6
@@ -254,27 +273,33 @@ jobs:
           python -m pip install --upgrade twine
           twine check "${{ matrix.package.dir }}/dist/"*
 
-      # Auth path: hybrid. Primary is PyPI Trusted Publishers via OIDC (no
-      # long-lived secret). Bridge fallback is a personal API token via the
-      # PYPI_API_TOKEN repo secret — used when pypi/warehouse#20006 (broken
-      # pending-publisher flow) blocks pre-publish trusted-publisher config
-      # for new projects. The action treats `password:` as authoritative when
-      # set; falls through to OIDC when the secret is empty.
+      # Auth path: per-package. `stigmem` (the meta-package) uses OIDC via its
+      # pending Trusted Publisher (configured pre-first-publish). The other
+      # three Python packages use a personal API token via the PYPI_API_TOKEN
+      # repo secret as a bridge until their Trusted Publishers are configured
+      # post-first-publish. Once all four projects exist on PyPI and have
+      # Trusted Publishers configured, the API-token branch + the secret can
+      # be retired in favor of unified OIDC.
       #
-      # Path-of-least-privilege: once first publish creates the projects on
-      # PyPI, configure Trusted Publishers for each via the (now-working)
-      # post-create flow. Then revoke the API token and remove the secret;
-      # the workflow auto-falls-back to OIDC on the next release.
-      - name: Publish ${{ matrix.package.name }} to PyPI
+      # The pypa/gh-action-pypi-publish action treats `password:` as
+      # authoritative when set; falls through to OIDC when omitted (requires
+      # `id-token: write` permission, granted at the job level above).
+      - name: Publish ${{ matrix.package.name }} to PyPI (OIDC)
+        if: matrix.package.use_oidc
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: ${{ matrix.package.dir }}/dist
-          # If PYPI_API_TOKEN secret is set, use it; else action falls back
-          # to OIDC trusted-publisher (requires `id-token: write` permission).
-          password: ${{ secrets.PYPI_API_TOKEN }}
           # skip-existing prevents failure if a re-run hits an already-published
           # version (e.g., re-tagging the same v0.9.0a1 by accident); useful safety
           # net for the matrix (one pkg succeeded, others retried).
+          skip-existing: true
+
+      - name: Publish ${{ matrix.package.name }} to PyPI (API token)
+        if: ${{ !matrix.package.use_oidc }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: ${{ matrix.package.dir }}/dist
+          password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
 
   create-release:

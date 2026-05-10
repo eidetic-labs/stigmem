@@ -203,6 +203,7 @@ const sidebars = {
       ],
     },
     'operators/conformance',
+    'operators/compatibility',
     'operators/design-partner-notes',
   ],
 
@@ -265,6 +266,7 @@ const sidebars = {
       collapsed: true,
       items: [
         'community/security-disclosure',
+        'security/compatibility-commitment',
       ],
     },
     { type: 'doc', id: 'reference/experimental-features', label: 'Experimental & Deferred' },

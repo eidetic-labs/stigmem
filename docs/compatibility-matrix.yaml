@@ -1,0 +1,180 @@
+# release/compatibility-matrix.yaml — per ADR-014
+#
+# Source-of-truth YAML for cross-package compatibility relationships.
+# Consumed by scripts/check_compatibility_matrix.py (CI validator) and a
+# Docusaurus plugin that renders this as the Operate → Compatibility page.
+#
+# Initial population at v0.9.0a1 baseline. Update on every release.
+
+generated_for_protocol_version: 0.9.0a1
+
+packages:
+  node:
+    name: stigmem-node
+    versions:
+      - "0.9.0a1"
+    repository: github.com/Eidetic-Labs/stigmem
+  python_sdk:
+    name: stigmem-py
+    versions:
+      - "0.9.0a1"
+    repository: github.com/Eidetic-Labs/stigmem
+  typescript_sdk:
+    name: "@eidetic-labs/stigmem-ts"
+    versions:
+      - "0.9.0-alpha.1"
+    repository: github.com/Eidetic-Labs/stigmem
+  meta_package:
+    name: stigmem
+    versions:
+      - "0.9.0a1"
+    repository: github.com/Eidetic-Labs/stigmem
+  openclaw_adapter:
+    name: stigmem-openclaw
+    versions:
+      - "0.9.0a1"
+    repository: github.com/Eidetic-Labs/stigmem
+  go_sdk:
+    name: stigmem-go
+    versions: []  # not shipped in v0.9.0a1; deferred to experimental/sdk-go/
+  mcp_adapter:
+    name: stigmem-mcp
+    versions: []  # not aligned to v0.9.0a1 (current 0.4.0); deferred to experimental/mcp-adapter/
+
+connectors:
+  - id: openclaw
+    name: OpenClaw
+    requires:
+      openclaw_adapter: ">=0.9.0a1,<1.0.0"
+      python_sdk: ">=0.9.0a1,<1.0.0"
+    notes: "Hardened v0.9 adapter; experimental flag until external operator soak per ADR-002."
+
+features:
+  - id: typed-facts
+    name: Immutable typed facts
+    spec_section: §2, §3
+    stability: stable
+    requires:
+      node: ">=0.9.0a1"
+      python_sdk: ">=0.9.0a1"
+    notes: "Core data model. CIDs (§25) are stable in core per ADR-017."
+
+  - id: scope-enforcement
+    name: Scope enforcement (local/team/company/public)
+    spec_section: §3.5
+    stability: stable
+    requires:
+      node: ">=0.9.0a1"
+
+  - id: federation-basic
+    name: Two-node mTLS federation
+    spec_section: §22.1, §19 (basic)
+    stability: stable
+    requires:
+      node: ">=0.9.0a1"
+    notes: "Capability tokens, manifests, mTLS. Advanced trust scoring deferred to experimental/."
+
+  - id: cids
+    name: Content-addressed fact IDs (CIDs)
+    spec_section: §25
+    stability: stable
+    requires:
+      node: ">=0.9.0a1"
+    notes: "Core feature per ADR-017 (amendment to ADR-011). Load-bearing for ADR-003 trust boundary + ADR-016 immutability stack."
+
+  - id: stigmem-version-header
+    name: Wire-format pinning header
+    spec_section: §3
+    stability: documented
+    requires:
+      node: ">=0.9.0a1"
+    notes: "Header documented in v0.9.0a1; node-side honor lands in Phase B per ADR-012."
+
+  - id: argon2id-key-hashing
+    name: Argon2id API key hashing
+    spec_section: §3.5
+    stability: planned
+    requires:
+      node: ">=0.9.0bN"  # Phase B
+    notes: "v0.9.0a1 ships with SHA-256; Argon2id migration per ADR-007 lands in Phase B."
+
+  - id: lazy-instruction-discovery
+    name: Lazy instruction discovery
+    spec_section: §21
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred to experimental/lazy-instruction-discovery/ per ADR-002. Targeted v0.9.0a2."
+
+  - id: rtbf-tombstones
+    name: RTBF tombstones
+    spec_section: §23
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred to experimental/tombstones/. Targeted v0.9.0a5."
+
+  - id: time-travel
+    name: Time-travel queries
+    spec_section: §24
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred to experimental/time-travel/. Targeted v0.9.0a4."
+
+  - id: memory-garden-acl
+    name: Memory garden advanced ACL
+    spec_section: §17 advanced
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Basic memory-garden concept stable in core; advanced ACL deferred to experimental/memory-garden-acl/. Targeted v0.9.0a6."
+
+  - id: source-attestation
+    name: Source attestation
+    spec_section: §18
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred to experimental/source-attestation/. Targeted v0.9.0a7."
+
+  - id: multi-tenant
+    name: Multi-tenant isolation
+    spec_section: (cross-cutting)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred to experimental/multi-tenant/. Targeted v0.9.0a8."
+
+  - id: oidc-sso
+    name: OIDC SSO
+    spec_section: (auth)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred to experimental/oidc-sso/."
+
+  - id: postgres-backend
+    name: PostgreSQL backend
+    spec_section: (storage)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred to experimental/storage-backends/."
+
+  - id: libsql-backend
+    name: libSQL / Turso backend
+    spec_section: (storage)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred to experimental/storage-libsql/."
+
+protocol_compatibility:
+  - protocol_version: "0.9.0a1"
+    supported_by:
+      node: ">=0.9.0a1"
+      python_sdk: ">=0.9.0a1"
+      typescript_sdk: ">=0.9.0-alpha.1"
+      openclaw_adapter: ">=0.9.0a1"
+    deprecation_window: "Pre-1.0 alpha; no stability guarantee. Pin to specific versions per ADR-001."

@@ -81,32 +81,9 @@ docker run -d \
   ghcr.io/eidetic-labs/stigmem-node:latest
 ```
 
-### Kubernetes / Helm
-
-The Helm chart (`deploy/helm/stigmem`) applies the security context by default via `values.yaml`:
-
-```yaml
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 65532
-  runAsGroup: 65532
-  fsGroup: 65532
-  seccompProfile:
-    type: RuntimeDefault    # uses the node's default seccomp policy
-
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  capabilities:
-    drop:
-      - ALL
-```
-
-`seccompProfile.type: RuntimeDefault` applies the container runtime's default seccomp policy (containerd and CRI-O both ship a profile equivalent to Docker's default). For the stigmem-specific denylist, upload the profile to each node and use `type: Localhost` with the path to `stigmem-node.json`.
-
-### Fly.io
-
-Fly machines run inside a micro-VM (gVisor) which provides kernel-level isolation. The non-root user is baked into the image. No additional seccomp or AppArmor configuration is required.
+:::note Kubernetes / Helm and Fly.io
+Helm chart hardening defaults and Fly.io micro-VM guidance lived alongside the v1.0 deploy recipes. Those recipes are deferred to [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) and [`experimental/deploy-fly/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-fly) in v0.9.0a1 and are unsupported until they pass the [ADR-008 reintroduction gates](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). The Docker and Docker Compose hardening guidance above is the supported v0.9.0a1 surface.
+:::
 
 ## Build reproducibility
 

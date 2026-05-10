@@ -57,7 +57,7 @@ openssl rand -base64 32
 Inject it as an environment variable — **never commit it**:
 
 ```bash
-# In your deployment environment (Fly.io, Docker secrets, Kubernetes secret, etc.)
+# In your deployment environment (Docker secrets, AWS Secrets Manager, Vault, etc.)
 MY_STIGMEM_PASSPHRASE=hN2rq8...
 ```
 

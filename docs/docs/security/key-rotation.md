@@ -37,8 +37,6 @@ At-rest re-encryption requires exclusive database access. Stop the node before r
 
 ```bash
 # 1. Stop the node
-systemctl stop stigmem        # systemd
-fly scale count 0             # Fly.io (or pause/stop the machine)
 docker compose stop node      # Docker Compose
 
 # 2. Export the old and new passphrases into env vars
@@ -58,15 +56,12 @@ stigmem db rekey \
 # → VACUUM complete.
 
 # 4. Update your secrets manager with the new passphrase
-#    (Fly secrets, AWS Secrets Manager, Vault, etc.)
-fly secrets set STIGMEM_DB_PASSPHRASE="new-strong-passphrase"
+#    (AWS Secrets Manager, Vault, Doppler, etc.)
 
 # 5. Update the env var name in STIGMEM_AT_REST_KEY_PASSPHRASE_ENV if it changed
 #    and remove the old passphrase from secrets
 
 # 6. Restart the node
-systemctl start stigmem
-fly scale count 1
 docker compose start node
 
 # 7. Verify
@@ -75,7 +70,7 @@ curl -s https://your-node.example.com/healthz
 ```
 
 :::caution Passphrase loss = data loss
-If you lose the passphrase, the database file is irrecoverable. Store it only in a secrets manager — never in `fly.toml`, `docker-compose.yml`, or version control.
+If you lose the passphrase, the database file is irrecoverable. Store it only in a secrets manager — never in `docker-compose.yml` or version control.
 :::
 
 ---
@@ -105,16 +100,8 @@ Share your new public key with each operator who has your node pinned. They must
 ### Step 3 — Update your secrets and restart
 
 ```bash
-# Fly.io
-fly secrets set \
-  STIGMEM_FEDERATION_PUBKEY="<new-pub>" \
-  STIGMEM_FEDERATION_PRIVKEY="<new-priv>"
-fly deploy   # or fly machine restart
-
-# systemd — edit /etc/stigmem/env, then:
-systemctl restart stigmem
-
-# Docker Compose — edit .env, then:
+# Docker Compose — edit deploy/compose/.env (set STIGMEM_FEDERATION_PUBKEY and
+# STIGMEM_FEDERATION_PRIVKEY to the new values), then restart the node:
 docker compose up -d node
 ```
 

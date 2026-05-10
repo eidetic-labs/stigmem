@@ -65,14 +65,8 @@ Key log events and what they mean:
 ### Tailing logs
 
 ```bash
-# systemd
-journalctl -u stigmem -f
-
 # Docker Compose
 docker compose logs -f node
-
-# Fly.io
-fly logs --app stigmem-prod
 ```
 
 ---

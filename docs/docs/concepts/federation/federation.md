@@ -60,9 +60,7 @@ print(f"STIGMEM_FEDERATION_PUBKEY={pub_b64}")
 print(f"STIGMEM_FEDERATION_PRIVKEY={priv_b64}")
 ```
 
-**Never store the private key in source control.** Use a Kubernetes Secret or an environment-specific
-secrets manager; see [Kubernetes install](../../get-started/quickstart-tutorial#kubernetes-install-helm) for a
-`secretRef` example.
+**Never store the private key in source control.** Use an environment-specific secrets manager (Docker secrets, AWS Secrets Manager, Vault, Doppler, etc.). The Helm chart and its `secretRef` example are deferred to [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) in v0.9.0a1.
 
 Provide the keys via environment variables before starting the node:
 

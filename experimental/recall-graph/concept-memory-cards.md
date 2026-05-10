@@ -189,7 +189,7 @@ class MemoryCard(BaseModel):
     has_contradictions: bool
 ```
 
-:::note v1.0 graph & recall — draft
+:::note pre-reset graph & recall design — draft
 Memory cards are part of spec §20, currently a draft. The API shape is stable for testing; it will be promoted to normative in the v1.x stable line.
 :::
 

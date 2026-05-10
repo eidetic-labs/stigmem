@@ -129,7 +129,7 @@ The published versions are listed in `versions.json`. The version scheme:
 |-------|-------------|--------|---------|
 | `v1.1` (latest) | `/docs/` | `versioned_docs/version-v1.1/` | Stable release — unversioned URLs resolve here |
 | `v2.0-draft` | `/docs/next/` | `docs/` (current) | In-development; shows "unreleased" banner |
-| `v0.2` | `/docs/v0.2/` | `versioned_docs/version-v0.2/` | Legacy |
+| `pre-reset` | `/docs/pre-reset/` | `versioned_docs/version-pre-reset/` | Legacy |
 
 #### Creating a new version snapshot
 
@@ -168,7 +168,7 @@ This copies `docs/` to `versioned_docs/version-<label>/` and updates `versions.j
 stigmem/docs/
 ├── docusaurus.config.js        # Site config, plugins, navbar
 ├── sidebars.js                 # Sidebar definitions (learn/build/operate/reference/community)
-├── versions.json               # Published versions list [v1.1, v0.2]
+├── versions.json               # Published versions list [v1.1, pre-reset]
 ├── openapi/
 │   └── stigmem.json            # Local OpenAPI spec (committed)
 ├── plugins/
@@ -182,10 +182,10 @@ stigmem/docs/
 │   └── community/              # Security disclosure, project resources
 ├── versioned_docs/
 │   ├── version-v1.1/           # Stable v1.1 snapshot
-│   └── version-v0.2/           # Legacy v0.2 snapshot
+│   └── version-pre-reset/           # Legacy pre-reset snapshot
 ├── versioned_sidebars/
 │   ├── version-v1.1-sidebars.json
-│   └── version-v0.2-sidebars.json
+│   └── version-pre-reset-sidebars.json
 └── src/
     ├── components/
     │   ├── AudienceBadge/      # Audience pill badge (from frontmatter)

@@ -63,7 +63,7 @@ The v1.0 spec (all 18 sections stable) includes:
 - **MCP adapter** (§12) — ships stigmem as an MCP server so any MCP-compatible agent runtime can read and write facts without knowing the HTTP wire format
 - **Decay sweep** (§15) — configurable TTL and confidence-decay policies via `POST /v1/decay/sweep`
 - **Synthesis** (§16) — `POST /v1/synthesis` aggregates recent facts into a structured summary; also exposed as the `synthesize_scope` MCP tool
-- **Memory Garden** (§17) and **Source Attestation** (§18) — promoted from v0.9 draft to stable
+- **Memory Garden** (§17) and **Source Attestation** (§18) — promoted from the pre-reset spec draft to stable
 
 The reference node is a FastAPI + SQLite implementation with 74 tests, including automated failure-mode tests for split-brain, malicious peers, partial failures, and replay attacks (§11).
 

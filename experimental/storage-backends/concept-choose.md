@@ -114,7 +114,7 @@ STIGMEM_STORAGE_BACKEND=postgres
 STIGMEM_POSTGRES_DSN=postgresql://user:pass@host:5432/stigmem
 ```
 
-The `pgvector` extension is **required** for v1.0 graph & recall vector-embedding recall:
+The `pgvector` extension is **required** for pre-reset graph & recall design vector-embedding recall:
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -126,7 +126,7 @@ Then run migrations:
 stigmem migrate
 ```
 
-**Availability note:** the Postgres backend ships in v0.9 multi-backend window. The conformance test suite (v0.9 multi-backend window) verifies parity with SQLite and libSQL. If you are on an earlier version, pin to libSQL.
+**Availability note:** the Postgres backend ships in the pre-reset multi-backend work. The conformance test suite (the pre-reset multi-backend work) verifies parity with SQLite and libSQL. If you are on an earlier version, pin to libSQL.
 
 **Recovery:** use your managed provider's PITR feature (RDS automated backups, Cloud SQL PITR, Neon branching). No Stigmem-specific snapshot configuration needed. See [Backup & restore](../runbooks/backup-restore) for the hybrid approach.
 

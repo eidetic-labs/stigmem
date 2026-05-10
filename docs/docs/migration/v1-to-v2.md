@@ -15,7 +15,7 @@ If you have a stale dependency pinned to a `v1.x` or `v2.0` version that doesn't
 
 :::
 
-**Audience:** Operators and developers running a stigmem node on v1.0 or v1.1-draft who want to upgrade to v2.0.
+**Audience:** Operators and developers running a stigmem node on v1.0 or pre-reset draft who want to upgrade to v2.0.
 
 **Spec reference:** v2.0 promotes §19–§25 from draft to normative. §1–§18 are unchanged.
 

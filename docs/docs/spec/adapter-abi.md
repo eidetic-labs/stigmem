@@ -17,8 +17,8 @@ Minimum contract for platform adapters: env vars, assert/query, source binding.
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-> **v0.6 status:** Promoted from the v0.6 design window reserved section to normative spec, grounded
-> in the three v0.6 adapters shipped: MCP (`stigmem/adapters/mcp/`), Paperclip
+> **pre-reset status:** Promoted from the pre-reset design work reserved section to normative spec, grounded
+> in the three pre-reset adapters shipped: MCP (`stigmem/adapters/mcp/`), Paperclip
 > (`stigmem/adapters/paperclip/`), and OpenClaw (`stigmem/adapters/openclaw/`).
 
 ### §12.1 Adapter Archetypes {#section-12-1}
@@ -150,11 +150,11 @@ For adapters that instrument platform issue/task lifecycle:
 pings are heartbeat signals for intra-node observability; they MUST NOT be federated.
 
 **Entity URI format note:** The `entity` column above uses informal URI shorthand
-(`issue:{task_id}`). Per §2.5, adapters targeting v0.6+ SHOULD use formal URIs:
+(`issue:{task_id}`). Per §2.5, adapters targeting pre-reset+ SHOULD use formal URIs:
 `stigmem://{node_authority}/issue/{task_id}`, where `{node_authority}` is the
 hostname component of `STIGMEM_URL`. Adapters that do not have access to the
 node authority MAY use the informal form — the node will accept it and emit a
-deprecation warning to stderr. Migration to formal URIs is tracked for v0.7.
+deprecation warning to stderr. Migration to formal URIs is tracked for pre-reset.
 
 #### §12.4.2 Handoff facts {#section-12-4-2}
 

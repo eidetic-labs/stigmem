@@ -1,4 +1,4 @@
-# v1.0 graph & recall Design Memo — Graph Index Shape and Recall Ranking
+# pre-reset graph & recall design Design Memo — Graph Index Shape and Recall Ranking
 
 **Decision scope:** Four engineering decisions that spec §20 (`GET /v1/recall` normative route and MCP tool `recall`) and subsequent implementation issues build against.  
 **Date:** 2026-05-04  
@@ -17,7 +17,7 @@
 
 The facts table is a flat relation: `(id, entity, relation, value, source, confidence, scope, hlc, …)`. Entity-to-entity connections exist implicitly: any fact whose `value.type = "ref"` and whose value URI is a known entity is a directed edge from `entity` to that URI. The current query path (`GET /v1/facts?entity=…`) retrieves facts _about_ one entity but cannot traverse to related entities without round-tripping through the application layer.
 
-v1.0 graph & recall's recall query — "what does this node know that is relevant to query Q?" — needs bounded multi-hop expansion. Without a materialized adjacency structure every traversal hop is a full table scan filtered by entity URI, making even 2-hop traversal prohibitively expensive on stores with > 50k facts.
+pre-reset graph & recall design's recall query — "what does this node know that is relevant to query Q?" — needs bounded multi-hop expansion. Without a materialized adjacency structure every traversal hop is a full table scan filtered by entity URI, making even 2-hop traversal prohibitively expensive on stores with > 50k facts.
 
 ### Options
 
@@ -340,7 +340,7 @@ The hybrid pipeline in §3 is already a partial neural-symbolic system: BM25 pro
 
 Sheaf-theoretic consistency is relevant to federation (§6 / §19) not directly to single-node recall. The intuition: when two federated nodes hold overlapping facts about the same entity, global consistency requires that their local views (sections) be compatible under the restriction maps of the sheaf. The `source_trust` scoring in §19.4 is a practical approximation: it downweights facts from peers whose manifests are unverified.
 
-For v1.0 graph & recall (single-node recall), sheaf theory does not add actionable engineering decisions. It becomes relevant when designing the multi-instance recall merge in §6.7–§6.8 — specifically, which facts from peer nodes are included in a local recall result and how conflicts between local and remote facts are surfaced. Flag for the federation recall extension in v2.
+For pre-reset graph & recall design (single-node recall), sheaf theory does not add actionable engineering decisions. It becomes relevant when designing the multi-instance recall merge in §6.7–§6.8 — specifically, which facts from peer nodes are included in a local recall result and how conflicts between local and remote facts are surfaced. Flag for the federation recall extension in v2.
 
 ---
 
@@ -358,4 +358,4 @@ For v1.0 graph & recall (single-node recall), sheaf theory does not add actionab
 
 ---
 
-*This memo informs spec §20 and implementation subtasks for v1.0 graph & recall. No code changes; written deliverable only. Next action: CTO review and sign-off as substrate for §20.*
+*This memo informs spec §20 and implementation subtasks for pre-reset graph & recall design. No code changes; written deliverable only. Next action: CTO review and sign-off as substrate for §20.*

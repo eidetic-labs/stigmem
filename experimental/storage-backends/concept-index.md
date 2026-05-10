@@ -15,7 +15,7 @@ Looking for a guided decision tree and step-by-step runbooks? See **[Operating S
 
 ---
 
-The Stigmem reference node is storage-backend agnostic from the v0.9 attestation chain window onward. A `StorageBackend` adapter trait separates the protocol logic from the persistence layer. The backend you choose depends on your durability, multi-region, and operational requirements.
+The Stigmem reference node is storage-backend agnostic from the pre-reset attestation-chain work onward. A `StorageBackend` adapter trait separates the protocol logic from the persistence layer. The backend you choose depends on your durability, multi-region, and operational requirements.
 
 ---
 
@@ -157,7 +157,7 @@ turso db replicate stigmem-prod --location fra
 
 Writes always route to the primary regardless of which replica is configured. The node automatically falls back to the primary if the replica is unavailable.
 
-For air-gapped or sovereign deployments where a cloud primary is not acceptable, self-hosted `libsql sqld` is an option — see the Operator's Handbook (v0.9 multi-backend window).
+For air-gapped or sovereign deployments where a cloud primary is not acceptable, self-hosted `libsql sqld` is an option — see the Operator's Handbook (the pre-reset multi-backend work).
 
 ### Encrypt the local replica (optional)
 
@@ -174,7 +174,7 @@ See [Encrypted at Rest](#encrypted-at-rest) below for the full setup and key-rot
 
 ## Postgres + pgvector (enterprise)
 
-The Postgres backend is recommended for operators who already run managed Postgres (RDS, Cloud SQL, Neon, Supabase, etc.) and want to avoid a second persistence tier. It also enables the v1.0 graph & recall vector-embedding recall features without a separate vector store.
+The Postgres backend is recommended for operators who already run managed Postgres (RDS, Cloud SQL, Neon, Supabase, etc.) and want to avoid a second persistence tier. It also enables the pre-reset graph & recall design vector-embedding recall features without a separate vector store.
 
 ```bash
 STIGMEM_STORAGE_BACKEND=postgres
@@ -189,8 +189,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 Point-in-time recovery and read-replica failover use native Postgres features — no Stigmem-specific configuration beyond the DSN.
 
-:::note v0.9 multi-backend window availability
-The Postgres backend ships in v0.9 multi-backend window. The conformance test suite (v0.9 multi-backend window) verifies Postgres parity with SQLite and libSQL.
+:::note the pre-reset multi-backend work availability
+The Postgres backend ships in the pre-reset multi-backend work. The conformance test suite (the pre-reset multi-backend work) verifies Postgres parity with SQLite and libSQL.
 :::
 
 ---
@@ -342,17 +342,17 @@ Restore overwrites `STIGMEM_DB_PATH`. Ensure you have a pre-restore backup of th
 
 ### libSQL / Postgres: cloud-native point-in-time recovery
 
-For libSQL (Turso), use `turso db snapshot` for point-in-time recovery — it operates on the cloud primary without requiring node downtime. For Postgres, use your managed provider's PITR feature. Both are documented in the Operator's Handbook (v0.9 multi-backend window).
+For libSQL (Turso), use `turso db snapshot` for point-in-time recovery — it operates on the cloud primary without requiring node downtime. For Postgres, use your managed provider's PITR feature. Both are documented in the Operator's Handbook (the pre-reset multi-backend work).
 
 ---
 
-## Recall and embedding configuration (v1.0 graph & recall — §20)
+## Recall and embedding configuration (pre-reset graph & recall design — §20)
 
-:::note v1.0 graph & recall — draft
+:::note pre-reset graph & recall design — draft
 The following environment variables are part of spec §20, currently a draft. Variable names and defaults are stable in the draft spec; they may change before §20 is promoted to normative.
 :::
 
-v1.0 graph & recall adds vector embedding and recall capabilities. Configure these variables alongside your storage backend settings.
+pre-reset graph & recall design adds vector embedding and recall capabilities. Configure these variables alongside your storage backend settings.
 
 ### Embedding provider
 
@@ -428,9 +428,9 @@ This distinction matters because:
 
 The vault is a *projection and write surface* — a great UX for vibe-coders and memory-first workflows — not the source of truth.
 
-### Obsidian adapter (v0.9 multi-backend window)
+### Obsidian adapter (the pre-reset multi-backend work)
 
-Two distribution forms ship in v0.9 multi-backend window:
+Two distribution forms ship in the pre-reset multi-backend work:
 
 **CLI/daemon** (`adapters/obsidian/`) — a sync process that watches a vault path and reflects changes both ways:
 - **Vault → Stigmem:** each note becomes an entity. Frontmatter fields → typed facts. `[[wikilinks]]` → relations (default: `references`). Inline `key:: value` (Dataview syntax) → typed facts.

@@ -7,14 +7,14 @@ description: "Stigmem spec section 25 — SHA-256 CIDs for deduplication, tamper
 
 # §25. Content-Addressed Fact IDs {#section-25}
 
-**Status:** DRAFT normative (v1.1-draft, the v1.0 / v1.1 design window)
+**Status:** DRAFT normative (pre-reset draft, the pre-reset design window)
 
 SHA-256 CIDs for deduplication, tamper detection, dual UUID/CID addressing.
 
 **Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::caution EXPERIMENTAL
-CID-based federation tamper detection is not yet enforced by default. The dual-format migration window (12 months from `v1_1_ga_at`) means CID-less facts from upgraded peers are currently accepted. Until §25 reaches GA:
+CID-based federation tamper detection is not yet enforced by default. The dual-format migration window (12 months from `cid_ga_at`) means CID-less facts from upgraded peers are currently accepted. Until §25 reaches GA:
 
 - Do not rely on CID verification as a security control in untrusted federation topologies.
 - Set `STIGMEM_REQUIRE_CID=true` in isolated test environments to validate your fact pipeline before enforcement is on by default.
@@ -24,7 +24,7 @@ CID-based federation tamper detection is not yet enforced by default. The dual-f
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-**Status:** DRAFT normative (the v1.0 / v1.1 design window). §25.1–§25.8 carry MUST/SHOULD/MAY normative language.
+**Status:** DRAFT normative (the pre-reset design window). §25.1–§25.8 carry MUST/SHOULD/MAY normative language.
 
 ### §25.1 Scope {#section-25-1}
 
@@ -141,30 +141,30 @@ CREATE TABLE fact_cid_aliases (
 CREATE UNIQUE INDEX idx_fact_cid_aliases_cid ON fact_cid_aliases(cid);
 ```
 
-Every new fact written MUST have a corresponding row in `fact_cid_aliases`. Existing facts (pre-v1.1) will have `cid IS NULL` until the backfill runner completes (§25.7.2).
+Every new fact written MUST have a corresponding row in `fact_cid_aliases`. Existing facts (pre-v0.9.0a1) will have `cid IS NULL` until the backfill runner completes (§25.7.2).
 
 #### §25.3.2 Dual-Addressing During Migration Window {#section-25-3-2}
 
-During the migration window (until a deployment-configurable end-date; SHOULD be at least **12 months** from v1.1 GA):
+During the migration window (until a deployment-configurable end-date; SHOULD be at least **12 months** from v0.9.0a1 GA):
 
 1. Nodes MUST accept both a `fact_id` (UUID-style, e.g. `"fact_01J..."`) and a `cid` (`"sha256:..."`) as addressing keys in all API routes that accept a fact identifier.
 2. A lookup by CID MUST go through the `fact_cid_aliases` index.
-3. A lookup by `fact_id` MUST behave identically to pre-v1.1 behavior.
+3. A lookup by `fact_id` MUST behave identically to pre-v0.9.0a1 behavior.
 4. Nodes MAY include both `fact_id` and `cid` in all fact record responses during the migration window.
 
 After the migration window, `fact_id`-only addressing SHOULD be deprecated; a future spec revision will formalize the removal timeline.
 
 #### §25.3.3 `cid` Field on FactRecord {#section-25-3-3}
 
-A `cid` field MUST be added to the `FactRecord` schema (v1.1 the v1.0 / v1.1 design window
-addition). The field is nullable only to accommodate pre-v1.1 records that
+A `cid` field MUST be added to the `FactRecord` schema (v0.9.0a1
+addition). The field is nullable only to accommodate pre-v0.9.0a1 records that
 have not yet been backfilled (§25.7.2); all new facts MUST be written with a
 non-null CID.
 
 ```
-FactRecord (v1.1 addition):
+FactRecord (v0.9.0a1 addition):
   ...all prior fields...
-  cid: string | null   // "sha256:<hex64>"; null only for pre-v1.1 records pending backfill
+  cid: string | null   // "sha256:<hex64>"; null only for pre-v0.9.0a1 records pending backfill
 ```
 
 New facts MUST be written with a non-null `cid`. Pre-Phase-13 facts will have `cid: null` until the backfill migration completes.
@@ -194,7 +194,7 @@ Receiving nodes MUST independently compute the CID from the inbound fact body (�
 
 1. If the CIDs match, the fact is accepted as unmodified.
 2. If the CIDs do not match, the fact MUST be rejected; the node MUST emit a `cid_mismatch` audit log event (§22.3) and SHOULD alert the operator.
-3. The federation envelope MUST include a `v1_1_ga_at` field (ISO 8601) indicating the origin node's v1.1 GA timestamp. Receiving nodes MUST reject facts with `cid: null` where `fact.created_at >= v1_1_ga_at`, emitting a `cid_mismatch` audit event (§22.3). Facts with `cid: null` where `fact.created_at < v1_1_ga_at` are accepted as legitimate pre-v1.1 legacy records. Nodes MUST NOT silently accept a fact with `cid: null` whose `created_at` postdates the declared `v1_1_ga_at`. This prevents malicious peers from bypassing tamper detection by stripping the `cid` field and claiming a post-Phase-13 fact is a legacy record.
+3. The federation envelope MUST include a `cid_ga_at` field (ISO 8601) indicating the origin node's v0.9.0a1 GA timestamp. Receiving nodes MUST reject facts with `cid: null` where `fact.created_at >= cid_ga_at`, emitting a `cid_mismatch` audit event (§22.3). Facts with `cid: null` where `fact.created_at < cid_ga_at` are accepted as legitimate pre-v0.9.0a1 legacy records. Nodes MUST NOT silently accept a fact with `cid: null` whose `created_at` postdates the declared `cid_ga_at`. This prevents malicious peers from bypassing tamper detection by stripping the `cid` field and claiming a post-v0.9.0a1 fact is a legacy record.
 
 #### §25.4.2 `derived_from` CID References {#section-25-4-2}
 
@@ -213,7 +213,7 @@ get_fact(id: string) → FactRecord | null
   // MUST accept both "fact_01J..." (UUID-style) and "sha256:..." (CID)
 
 assert_fact(fact: FactInput) → FactRecord
-  // MUST compute and persist cid on every write (v1.1 forward)
+  // MUST compute and persist cid on every write (v0.9.0a1 forward)
 
 compute_cid(body: CanonicalFactBody) → string
   // utility: returns "sha256:<hex64>" for the given canonical body
@@ -283,7 +283,7 @@ Authorization: Bearer <admin api-key>
 
 #### §25.7.1 Schema Migration {#section-25-7-1}
 
-Run Migration 013b (§25.3.1 DDL) as part of the the v1.0 / v1.1 design window upgrade. The full upgrade batch MUST apply migrations in order: 013a (tombstones, §23.5.3), then 013b (CID aliases, §25.3.1), then 013c (retraction log, §23.5.3). 013a and 013c MUST both be applied before 013b to maintain foreign-key integrity.
+Run Migration 013b (§25.3.1 DDL) as part of the pre-reset design window upgrade. The full upgrade batch MUST apply migrations in order: 013a (tombstones, §23.5.3), then 013b (CID aliases, §25.3.1), then 013c (retraction log, §23.5.3). 013a and 013c MUST both be applied before 013b to maintain foreign-key integrity.
 
 #### §25.7.2 Backfill Runner {#section-25-7-2}
 
@@ -300,7 +300,7 @@ The backfill MAY run concurrently with live fact writes. The write-path CID assi
 
 #### §25.7.3 Online Write Path {#section-25-7-3}
 
-From v1.1 forward, `assert_fact` MUST:
+From v0.9.0a1 forward, `assert_fact` MUST:
 
 1. Compute the CID before writing to the `facts` table.
 2. Write the `cid` column in the same transaction as all other fact fields.
@@ -320,7 +320,7 @@ From v1.1 forward, `assert_fact` MUST:
 
 ## Appendix A. Security Policy
 
-*Content unchanged from v1.0 §19 (non-normative).*
+*Content unchanged from §19 (canonical) (non-normative).*
 
 The active security policy — supported versions, vulnerability reporting instructions, scope definitions, and the coordinated disclosure timeline — is maintained in [`SECURITY.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md) at the root of the repository.
 
@@ -328,6 +328,6 @@ The active security policy — supported versions, vulnerability reporting instr
 
 **Disclosure timeline:** 90 days from the report date before public disclosure, except for vulnerabilities already being actively exploited in the wild.
 
-For the current security posture and Dependabot alert triage covering v1.0-rc, see the [Security Posture section of SECURITY.md](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md#security-posture--v10-rc-2026-05-03).
+For the current security posture and Dependabot alert triage covering the pre-reset hardening snapshot, see the [Security Posture section of SECURITY.md](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md#security-posture--v10-rc-2026-05-03).
 
 ---

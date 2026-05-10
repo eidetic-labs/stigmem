@@ -1,7 +1,7 @@
 ---
 title: "Tutorial: Harden a Stigmem Deployment"
 sidebar_label: Harden a Deployment
-description: Walk an operator from a default Stigmem node to a v1.0 hardening–hardened deployment — mTLS, key rotation, per-principal quotas, and a distroless container — end to end.
+description: Walk an operator from a default Stigmem node to a pre-reset hardening–hardened deployment — mTLS, key rotation, per-principal quotas, and a distroless container — end to end.
 audience: Integrator
 ---
 
@@ -377,7 +377,7 @@ curl -s https://your-node.example.com/healthz | jq .status
 | Per-principal token-bucket quotas | §22.4 | Active |
 | Non-root distroless container, read-only fs, dropped caps | §22.6 | Active |
 
-Your deployment is now at the v1.0 hardening hardened posture.  Run the [Community Pen-Test Handbook](../security/pen-test.md) test matrix against it to verify from the attacker's perspective.
+Your deployment is now at the pre-reset hardening hardened posture.  Run the [Community Pen-Test Handbook](../security/pen-test.md) test matrix against it to verify from the attacker's perspective.
 
 ---
 

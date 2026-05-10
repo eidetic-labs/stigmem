@@ -1,14 +1,14 @@
 ---
-title: Design Partner Notes — the v0.8 design-partner window Pilots
+title: Design Partner Notes — the pre-reset design-partner window Pilots
 sidebar_label: Design Partner Notes
 audience: Integrator
 ---
 
-# Design Partner Notes — the v0.8 design-partner window Pilots
+# Design Partner Notes — the pre-reset design-partner window Pilots
 
 **Audience:** Contributors and integrators evaluating stigmem for production adoption.
 
-Three design-partner pilots ran during the v0.8 design-partner window: Zep, Letta, and Cognee. Each pilot produced a working adapter and surfaced feedback that shaped the v0.8 protocol decisions.
+Three design-partner pilots ran during the pre-reset design-partner window: Zep, Letta, and Cognee. Each pilot produced a working adapter and surfaced feedback that shaped the pre-reset spec protocol decisions.
 
 ## Zep
 
@@ -67,7 +67,7 @@ Cognee builds knowledge graphs from unstructured text. The adapter bridges stigm
 
 These themes emerged across all three pilots:
 
-| Theme | Impact on v0.8 |
+| Theme | Impact on the pre-reset spec |
 |-------|----------------|
 | **Synthesis at boot** is the primary query pattern | `POST /v1/synthesis` and `synthesize_scope` MCP tool (§16) |
 | **Contradiction visibility** — callers need the losing value, not just a flag | `alt_value` / `alt_confidence` in `SynthesisEntry` |

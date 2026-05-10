@@ -36,7 +36,7 @@ The Stigmem reference node exposes a REST API implementing spec §5. The interac
 
 ---
 
-## v1.0 graph & recall endpoints (§20 — normative)
+## pre-reset graph & recall design endpoints (§20 — normative)
 
 ### `GET /v1/recall` · `POST /v1/recall`
 

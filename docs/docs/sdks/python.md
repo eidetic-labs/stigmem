@@ -117,7 +117,7 @@ client.query(
 
 Paginated fact query. Use `cursor` from the response to fetch the next page.
 
-### Recall (v1.0 graph & recall — §20.3)
+### Recall (pre-reset graph & recall design — §20.3)
 
 #### `recall`
 
@@ -151,7 +151,7 @@ Hybrid recall — return the most salient facts for `query` within `token_budget
 
 `ScoredFact` fields include `fact`, `score`, `score_breakdown`, `hop_distance`, `token_estimate`, and `from_card` (see below).
 
-### Memory cards (v1.0 graph & recall — §20.4)
+### Memory cards (pre-reset graph & recall design — §20.4)
 
 #### `get_card`
 

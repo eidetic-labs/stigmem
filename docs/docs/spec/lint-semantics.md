@@ -126,7 +126,7 @@ return HTTP 403 if the key's `allowed_scopes` does not include the requested `sc
   { "job_id": "<uuid>", "status": "pending", "estimated_s": integer }
   ```
   The caller polls `GET /v1/lint/jobs/:job_id` until `status` is `"done"` or `"failed"`.
-  The async job API is specified here but deferred to the v0.9 substrate window implementation.
+  The async job API is specified here but deferred to the pre-reset substrate work implementation.
 - The sweep MUST be **read-only**. Nodes MUST NOT assert, retract, or update any fact
   as a side effect of a lint call. This invariant applies even to internal bookkeeping.
 

@@ -8,7 +8,7 @@ audience: Integrator
 # Instruction Migration
 
 **Audience:** Agent operators and system integrators publishing instruction files to a Stigmem node.  
-**Spec reference:** §21 (v1.0 instruction-discovery design).
+**Spec reference:** §21 (pre-reset instruction-discovery design).
 
 ---
 

@@ -30,7 +30,7 @@ Per [ADR-010](../docs/adr/010-modular-specs.md), the spec decomposes into ~14 co
 
 ## Evolution
 
-The protocol-spec content evolved through development checkpoints from v0.2 to v2.0. Snapshots preserved at [`spec/archive/evolution/`](archive/evolution/) — see that directory's README. The development-checkpoint changelog is at [`spec/EVOLUTION.md`](EVOLUTION.md) (renamed from `spec/CHANGELOG.md` 2026-05-09 per master-checklist §4.3a). The protocol-release-level changelog going forward is at [`CHANGELOG.md`](../CHANGELOG.md) at repo root.
+The protocol-spec content evolved through development checkpoints from pre-reset to v2.0. Snapshots preserved at [`spec/archive/evolution/`](archive/evolution/) — see that directory's README. The development-checkpoint changelog is at [`spec/EVOLUTION.md`](EVOLUTION.md) (renamed from `spec/CHANGELOG.md` 2026-05-09 per master-checklist §4.3a). The protocol-release-level changelog going forward is at [`CHANGELOG.md`](../CHANGELOG.md) at repo root.
 
 ## Conformance
 

@@ -1,4 +1,4 @@
-# Reference Boot Stubs — spec §21.1 (v1.0 instruction-discovery design)
+# Reference Boot Stubs — spec §21.1 (pre-reset instruction-discovery design)
 
 This directory contains reference boot stub templates for three adapter profiles.
 Each file is a **Markdown document with YAML frontmatter** as specified in §21.1.2.

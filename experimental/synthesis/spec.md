@@ -17,10 +17,10 @@ POST /v1/synthesis — confidence-weighted current-state snapshots per entity/sc
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-> **v0.8 status:** Draft. The `synthesize_scope` MCP tool and `POST /v1/synthesis` route
+> **Pre-reset status:** Draft. The `synthesize_scope` MCP tool and `POST /v1/synthesis` route
 > are specified here. Implementation is the D4 deliverable. Conformance test
 > vectors (`SYNTHESIS_VECTORS`) will be finalized with D4 implementation. This section
-> will be promoted to normative in v0.9.
+> will be promoted to normative in the pre-reset spec.
 
 The **synthesis** operation produces a **confidence-weighted summary view** of the live
 facts in a scope. Where lint reports raw health findings and decay sweeps apply remediation,
@@ -140,7 +140,7 @@ The `summary` array contains one `SynthesisEntry` (§16.1) per live `(entity, re
 
 ### §16.5 Relationship to Lint and Decay {#section-16-5}
 
-The three the v0.8 design-partner window operational tools form a pipeline:
+The three the pre-reset design-partner window operational tools form a pipeline:
 
 | Tool | Question answered | Writes? |
 |---|---|---|
@@ -155,4 +155,4 @@ The typical agent workflow:
 
 ---
 
-*v0.8-draft — §§1–14 promoted to stable. §15 Decay Semantics and §16 Synthesis are draft, pending D4 implementation. §6.7–§6.8 N-node patterns are draft, pending D1 correctness test validation. Open for CTO review before promotion to stable.*
+*the pre-reset spec-draft — §§1–14 promoted (pre-reset). §15 Decay Semantics and §16 Synthesis are draft, pending D4 implementation. §6.7–§6.8 N-node patterns are draft, pending D1 correctness test validation. Open for CTO review before promotion to stable.*

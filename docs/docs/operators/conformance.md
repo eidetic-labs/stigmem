@@ -116,7 +116,7 @@ Do **not** add vectors with `requires_auth: true` — zero skips are enforced an
 
 ---
 
-## Multi-backend behavioral suite (v0.9 multi-backend window)
+## Multi-backend behavioral suite (the pre-reset multi-backend work)
 
 The behavioral suite in `node/src/stigmem_conformance/tests/` exercises the full behavioral contract against all three storage backends: **SQLite**, **libSQL**, and **Postgres**.
 

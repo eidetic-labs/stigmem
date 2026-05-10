@@ -7,11 +7,11 @@ description: "Stigmem spec section 21 — Boot stub + manifest + on-demand recal
 
 # §21. Lazy Instruction Discovery {#section-21}
 
-**Status:** DRAFT normative (v1.1-draft, instruction discovery)
+**Status:** DRAFT normative (DRAFT normative, pre-reset)
 
 Boot stub + manifest + on-demand recall for token-efficient agent instruction loading.
 
-**Authoritative source:** [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md)
+**Authoritative source:** [`spec/stigmem-spec-pre-reset draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-pre-reset draft.md)
 
 :::caution EXPERIMENTAL
 The boot-stub schema and instruction-manifest format are not yet finalized and may change in a future minor release. Do not deploy lazy-discovered instructions in production agents handling sensitive data or irreversible tool use until this section reaches GA. Always pin `instructions_manifest_uri` to a trusted, integrity-verified source.
@@ -21,7 +21,7 @@ The boot-stub schema and instruction-manifest format are not yet finalized and m
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-**Status: DRAFT normative (v1.0 instruction-discovery design)**
+**Status: DRAFT normative (pre-reset instruction-discovery design)**
 
 This section specifies how agents discover and load their instructions on demand rather than preloading every instruction document at startup. The mechanism has three runtime components — a **boot stub**, an **instruction manifest**, and the **`recall_instruction` tool** — and one off-path component, the **discovery audit**, used for continuous retrieval-quality evaluation.
 
@@ -450,9 +450,9 @@ The `recall@k` and `hit@k` metrics SHOULD be computed against the post-hoc repla
 > }
 > ```
 >
-> A follow-on spec revision (v0.9 multi-backend window) will formalize the probe-set storage format, the evaluation runner contract, alert thresholds, and the soft-lift mechanism described below.
+> A follow-on spec revision (the pre-reset multi-backend work) will formalize the probe-set storage format, the evaluation runner contract, alert thresholds, and the soft-lift mechanism described below.
 >
-> #### 21.5.5 Probe-Set Coverage Sampling with Soft Score Lift (v0.9 multi-backend window roadmap, non-normative)
+> #### 21.5.5 Probe-Set Coverage Sampling with Soft Score Lift (the pre-reset multi-backend work roadmap, non-normative)
 >
 > Approaches B and augmented A (§21.1.5, §21.8.3) address structurally-predictable and trigger-quality misses at authoring time. The residual problem — semantic-drift misses and embedding-model staleness causing gradual coverage degradation without any live-audit signal — requires an exogenous coverage signal independent of both the retrieval path and agent behavior.
 >
@@ -522,7 +522,7 @@ This is a SHOULD (not MUST) because manual migration is always acceptable.
 
 ### §21.7 Schema Migrations {#section-21-7}
 
-The following DDL MUST be applied when upgrading to v1.0 instruction-discovery design (§21 compliance).
+The following DDL MUST be applied when upgrading to pre-reset instruction-discovery design (§21 compliance).
 Three tables support the lazy instruction layer:
 
 **`instruction_manifests`** stores versioned snapshots of each agent's
@@ -780,7 +780,7 @@ Admin-key response: same as above, plus "coverage_status" field per unit.
 
 **Categorical label restriction (S11):** The `coverage_status` categorical label (`"ok"`, `"coverage_critical"`, `"not_evaluated"`) SHOULD be returned only in admin-key responses. Agent-key responses SHOULD return only raw `coverage_pct` and `hit_at_10` values, omitting the categorical label. This limits the retrieval-quality oracle surface for non-admin callers.
 
-`coverage_status` values (admin-only): `"ok"` (hit@10 ≥ 0.4), `"coverage_critical"` (hit@10 < 0.4, soft-lift eligible in v0.9 multi-backend window), `"not_evaluated"` (probe run not yet completed). This endpoint is the primary operator signal for diagnosing instruction units before they produce production misses.
+`coverage_status` values (admin-only): `"ok"` (hit@10 ≥ 0.4), `"coverage_critical"` (hit@10 < 0.4, soft-lift eligible in the pre-reset multi-backend work), `"not_evaluated"` (probe run not yet completed). This endpoint is the primary operator signal for diagnosing instruction units before they produce production misses.
 
 ---
 

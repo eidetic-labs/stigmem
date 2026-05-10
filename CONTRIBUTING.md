@@ -136,7 +136,7 @@ This copies `docs/docs/` → `docs/versioned_docs/version-v1.0.0/` and `docs/sid
 3. Update `docusaurus.config.js` → `docs.versions`:
    - Set `lastVersion` to the new tag (e.g., `'v1.0.0'`) so bare `/docs/*` URLs resolve to the released version.
    - Add the new version entry: `'v1.0.0': { label: 'v1.0.0', badge: true }`.
-   - Relabel `current`: `{ label: 'v1.1-draft', path: 'next', badge: true, banner: 'unreleased' }`.
+   - Relabel `current`: `{ label: 'pre-reset draft', path: 'next', badge: true, banner: 'unreleased' }`.
 
 4. Run `npm run build` — must exit 0 with no broken links.
 

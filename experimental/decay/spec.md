@@ -17,11 +17,11 @@ Configurable TTL and confidence-decay policies; POST /v1/decay/sweep.
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-> **v0.8 status:** Draft. The decay sweeper (`POST /v1/decay/sweep`) and `decay_scope`
+> **Pre-reset status:** Draft. The decay sweeper (`POST /v1/decay/sweep`) and `decay_scope`
 > MCP tool are specified here. Implementation is the D4 deliverable. Wire
 > format and DecayPolicy registry are draft; conformance test vectors (`DECAY_VECTORS`)
 > will be finalized with D4 implementation. This section will be promoted to normative
-> in v0.9 once conformance tests pass against a live node.
+> pre-reset; conformance tests pass against a live node.
 
 The **decay** operation applies operator-configured TTL and confidence-reduction policies
 to live facts, producing retractions or confidence updates. Decay is the **remediation
@@ -54,7 +54,7 @@ DecayMode =
 
 **Policy registry:** Nodes maintain a list of `DecayPolicy` objects configured via:
 - Environment variable: `STIGMEM_DECAY_POLICIES` (JSON array of `DecayPolicy` objects).
-- Admin API: `GET/POST/DELETE /v1/decay/policies` (management endpoint; not yet implemented; the v0.9 substrate window).
+- Admin API: `GET/POST/DELETE /v1/decay/policies` (management endpoint; not yet implemented; the pre-reset substrate work).
 
 **Default policy:** If no policies are configured, the decay sweeper is a no-op. Nodes do
 not apply any automatic decay by default.

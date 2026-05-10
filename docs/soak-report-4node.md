@@ -97,7 +97,7 @@
 |--------------------|----------|
 | TBD | 0 |
 
-Any non-zero violation count is a protocol correctness failure requiring investigation before the spec v0.8 cleanup.
+Any non-zero violation count is a protocol correctness failure requiring investigation before the spec the pre-reset spec cleanup.
 
 ---
 
@@ -132,7 +132,7 @@ Any non-zero violation count is a protocol correctness failure requiring investi
 
 ---
 
-## New Edge Cases for Spec v0.8
+## New Edge Cases for Spec the pre-reset spec
 
 *Surface any decay/backpressure/conflict edge cases discovered that should
 feed into D3 spec cleanup.*
@@ -157,4 +157,4 @@ feed into D3 spec cleanup.*
 
 TBD — populate after soak completes.
 
-**Recommendation for D3 (spec v0.8 cleanup):** TBD
+**Recommendation for D3 (spec the pre-reset spec cleanup):** TBD

@@ -7,7 +7,7 @@ description: "Stigmem spec section 6 — Peer handshake, pull replication, scope
 
 # §6. Federation {#section-6}
 
-**Status:** Stable (v0.8 N-node)
+**Status:** Stable (the pre-reset spec N-node)
 
 Peer handshake, pull replication, scope enforcement, conflict semantics, backpressure.
 
@@ -19,16 +19,16 @@ Each subsection below shows the most recent normative text from the spec source.
 
 **Garden isolation invariant:** Facts with `garden_id` set MUST NOT appear in federation pull or push payloads. Nodes MUST filter them before sending. This invariant is enforced independently of scope — a garden-tagged `public` fact is still garden-isolated from the federation perspective.
 
-*All other §6 content unchanged from v0.8.*
+*All other §6 content unchanged from the pre-reset spec.*
 
 ---
 
 <details>
-<summary>Revisions before v1.0: v0.8-draft</summary>
+<summary>Revisions before v1.0: the pre-reset spec-draft</summary>
 
-**From `stigmem-spec-v0.8-draft.md`:**
+**From `stigmem-spec-the pre-reset spec-draft.md`:**
 
-> **v0.5 status:** §6 promoted from RFC stub to concrete spec. §6.1–§6.6 are stable (normative). §6.7–§6.8 are new v0.8 draft sections covering N-node backpressure and scope propagation invariants.
+> **pre-reset status:** §6 promoted from RFC stub to concrete spec. §6.1–§6.6 are stable (normative). §6.7–§6.8 are new the pre-reset spec draft sections covering N-node backpressure and scope propagation invariants.
 
 </details>
 
@@ -75,10 +75,10 @@ rate; `burst` is the bucket depth.
   new key at `/.well-known/stigmem`. Peers that fail token verification SHOULD
   re-fetch the well-known document once before treating it as an attack.
 
-### §6.2 Capability Negotiation — v0.6 Required {#section-6-2}
+### §6.2 Capability Negotiation — pre-reset Required {#section-6-2}
 
-**v0.5 open question §8.4 resolved.** Capability negotiation is now required for all
-nodes that support federation, based on implementation experience from two v0.6 adapters.
+**pre-reset open question §8.4 resolved.** Capability negotiation is now required for all
+nodes that support federation, based on implementation experience from two pre-reset-era adapters.
 
 After peer registration, nodes MUST exchange capability advertisements before the first
 replication pull. The advertisement tells the peer what relation namespaces the
@@ -110,7 +110,7 @@ supports federation. A node MAY cache the remote capability advertisement for up
   requesting node MAY treat it as `{ federation_mode: "pull", relations_understood: [] }`.
 - Unknown fields in a received `CapabilityAd` MUST be ignored (forward compatibility).
 
-**Why now required:** the v0.6 line shipped the Paperclip and OpenClaw adapters, both of
+**Why now required:** the pre-reset line shipped the Paperclip and OpenClaw adapters, both of
 which use distinct relation namespaces (`paperclip:`, `intent:`). Without capability
 exchange, a federated peer cannot distinguish relations it understands from opaque
 forwarded data — leading to silent contradiction storms on relations the peer cannot
@@ -234,11 +234,11 @@ The following invariants MUST hold at all times:
 Multi-node relay topologies (3+ nodes) are supported but §6.7 (backpressure) and §6.8 (scope propagation) are draft specifications not yet covered by the conformance test suite. Test your topology before relying on it in production. Scope propagation behavior in relay chains will be formally validated in v2.1.
 :::
 
-### §6.7 N-node Backpressure Patterns — v0.8 Draft {#section-6-7}
+### §6.7 N-node Backpressure Patterns — the pre-reset spec Draft {#section-6-7}
 
-> **v0.8 status:** These patterns were identified during v0.8 4-node local topology
+> **Pre-reset status:** These patterns were identified during the pre-reset spec 4-node local topology
 > work. They are draft guidance, pending validation in the D1 correctness test suite.
-> Promotion to normative is a v0.9 target.
+> Promotion to normative is a the pre-reset spec target.
 
 In topologies with N > 2 nodes, backpressure from one publisher can cascade through
 relay nodes (nodes that both ingest from peers and are themselves pulled from).
@@ -291,12 +291,12 @@ These env vars configure relay behavior:
 | `STIGMEM_FEDERATION_RELAY_ENABLED` | `true` | Set `false` to disable relay behavior (leaf nodes) |
 
 Conformance tests for relay backpressure will be added to the 4-node topology test
-suite (`stigmem/node/tests/test_federation_4node.py`) before v0.8 stabilization.
+suite (`stigmem/node/tests/test_federation_4node.py`) before the pre-reset spec stabilization.
 
-### §6.8 Scope Propagation Invariants — v0.8 Draft {#section-6-8}
+### §6.8 Scope Propagation Invariants — the pre-reset spec Draft {#section-6-8}
 
-> **v0.8 status:** These invariants close the transitive scope escalation gap identified
-> during v0.8 4-node topology work. Draft; to be validated against correctness tests
+> **Pre-reset status:** These invariants close the transitive scope escalation gap identified
+> during the pre-reset spec 4-node topology work. Draft; to be validated against correctness tests
 > before promotion to normative.
 
 In a 2-node topology, scope enforcement is bilateral and straightforward. In an N-node
@@ -327,7 +327,7 @@ re-replicated.
 
 #### §6.8.2 Re-federation restriction for company-scoped facts {#section-6-8-2}
 
-**v0.8 resolves §8.5 (v0.7 open question).** The following rule is normative as of v0.8:
+**the pre-reset spec resolves §8.5 (pre-reset open question).** The following rule is normative as of the pre-reset spec:
 
 A node that receives a `company`-scoped fact from peer A (where peer A's declaration
 explicitly includes `"company"` in `allowed_scopes`) MUST NOT re-federate that fact
@@ -350,7 +350,7 @@ is applied.
 
 #### §6.8.3 Scope propagation edge cases {#section-6-8-3}
 
-The following edge cases were identified during v0.8 4-node topology testing:
+The following edge cases were identified during the pre-reset spec 4-node topology testing:
 
 1. **Mixed-scope batch push.** A push payload (`POST /v1/federation/facts/push`) may
    contain facts of multiple scopes. Nodes MUST enforce per-fact scope checking within

@@ -46,9 +46,9 @@ The spec is divided into core sections (kept in this canonical file) and deferre
 | `Spec-X2-RTBF-Tombstones` | RTBF tombstones | §23 | **Deferred** | `experimental/tombstones/spec.md` |
 | `Spec-X3-Time-Travel` | Time-travel queries | §24 | **Deferred** | `experimental/time-travel/spec.md` |
 | `Spec-X4-Content-Addressed-IDs` | Content-addressed fact IDs (CIDs) | §25 | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md)). Will graduate at v0.9.0a3 (per ROADMAP) into a core spec ID once modular migration lands. | This file |
-| `Spec-12-HLC-Bounded-Skew` | HLC bounded skew (R-19) | (new in v0.9.x) | Targeted v0.9.x | (the v0.9.0bN beta series) |
-| `Spec-13-Capability-Based-Instructions` | Capability-based instructions per ADR-003 | (new in v0.9.x) | Targeted v0.9.x | (the v0.9.0bN beta series) |
-| `Spec-14-Batch-Assert` | Batch assert API per ADR-006 | (new in v0.9.x) | Targeted v0.9.x | (the v0.9.0bN beta series) |
+| `Spec-12-HLC-Bounded-Skew` | HLC bounded skew (R-19) | (new in the pre-reset spec.x) | Targeted the pre-reset spec.x | (the v0.9.0bN beta series) |
+| `Spec-13-Capability-Based-Instructions` | Capability-based instructions per ADR-003 | (new in the pre-reset spec.x) | Targeted the pre-reset spec.x | (the v0.9.0bN beta series) |
+| `Spec-14-Batch-Assert` | Batch assert API per ADR-006 | (new in the pre-reset spec.x) | Targeted the pre-reset spec.x | (the v0.9.0bN beta series) |
 | `Spec-X7-Subscriptions` | Subscriptions / push federation | (new) | **Deferred** | `experimental/subscriptions/spec.md` |
 
 ## Section status
@@ -64,7 +64,7 @@ Until a section is migrated, refer to the corresponding section in `spec/archive
 
 ## Cross-references
 
-- [`spec/archive/evolution/`](archive/evolution/) — superseded evolutionary snapshots (`v0.2` through `v2.0`). Each retains a banner pointing here.
+- [`spec/archive/evolution/`](archive/evolution/) — superseded evolutionary snapshots (`pre-reset` through `v2.0`). Each retains a banner pointing here.
 - [`spec/EVOLUTION.md`](EVOLUTION.md) — spec-level changelog (renamed from `spec/CHANGELOG.md`).
 - [`spec/security/threat-model.md`](security/threat-model.md) — threat model; section references in this spec link to the threat model's risk register.
 - [`docs/adr/`](../docs/adr/) — architecture decision records governing the spec evolution.

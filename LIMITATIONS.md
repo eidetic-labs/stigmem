@@ -160,7 +160,7 @@ The v0.9.0bN beta series brings: Argon2id migration with backward-compatible ver
 
 **What to do today:** if your federation use case is single-organization or trusted bilateral peering, the four-scope model is sufficient. For coalition, multi-peer, or project-bounded patterns, evaluate whether stigmem v0.9.0a1 meets your needs before deploying. The basic memory-garden primitive that addresses these patterns is targeted for v1.x once `Spec-X5` graduates from experimental via the ADR-008 gate process. Operators with these requirements who want to influence prioritization should [open an issue](https://github.com/eidetic-labs/stigmem/issues) tagged `area/federation-expressivity`.
 
-**Why we chose this for v0.9.0a1:** expanding the scope model in v1.0 would be exactly the kind of scope churn ADR-002 is designed to prevent. The decision is to ship the smaller defensible thing (four scopes, simple federation) and grow expressivity through gardens once they pass the ADR-008 gates. The full analysis is in `stigmem-scope-model-analysis.md`.
+**Why we chose this for v0.9.0a1:** expanding the scope model in v1.0.0 would be exactly the kind of scope churn ADR-002 is designed to prevent. The decision is to ship the smaller defensible thing (four scopes, simple federation) and grow expressivity through gardens once they pass the ADR-008 gates. The full analysis is in `stigmem-scope-model-analysis.md`.
 
 ---
 
@@ -180,7 +180,7 @@ pip install --pre stigmem[node]      # SDK + reference node service
 pip install --pre stigmem[all]       # everything published from this monorepo
 ```
 
-This is intentional — adopters running `pip install <pkg>` in CI shouldn't accidentally pull in pre-stable software. It will go away when v1.0 ships (no `--pre` needed for stable releases).
+This is intentional — adopters running `pip install <pkg>` in CI shouldn't accidentally pull in pre-stable software. It will go away when v1.0.0 ships (no `--pre` needed for stable releases).
 
 ### `stigmem` is a meta-package, not the actual code
 
@@ -201,7 +201,7 @@ npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.1   # explicit pin
 
 **Why scoped:** npm's free-tier organization permissions don't allow team-bound package access controls; scoping under `@eidetic-labs` sidesteps that limitation entirely.
 
-**The `@alpha` dist-tag is required during the v0.9.0a* line.** Bare `npm install` resolves the `latest` tag, which won't exist until v1.0 ships. This is the npm equivalent of pip's `--pre` flag — same intent, different syntax.
+**The `@alpha` dist-tag is required during the v0.9.0a* line.** Bare `npm install` resolves the `latest` tag, which won't exist until v1.0.0 ships. This is the npm equivalent of pip's `--pre` flag — same intent, different syntax.
 
 ### Pre-release packages don't auto-upgrade
 
@@ -221,7 +221,7 @@ Running one stigmem node on your own infrastructure, populated by your own agent
 
 ### Local development and prototyping
 
-Developers building agent applications who want to evaluate whether typed-fact memory is the right shape for their problem. Pin to a specific v0.9.x version, expect breaking changes during the v0.9.0bN beta-series hardening window, and treat the data as throwaway.
+Developers building agent applications who want to evaluate whether typed-fact memory is the right shape for their problem. Pin to a specific the pre-reset spec.x version, expect breaking changes during the v0.9.0bN beta-series hardening window, and treat the data as throwaway.
 
 ### Internal tooling within a single trust boundary
 
@@ -245,7 +245,7 @@ Your code does not need to change today; the wire format hasn't changed. **Do no
 
 ### If you want to be our first external operator
 
-We're looking for one organization willing to run a stigmem node for 30 days against a real (non-critical) workload, with public bug reporting. We'll help you set up, watch you hit issues we couldn't anticipate, and credit you in the v1.0 release notes. [Open an issue](https://github.com/eidetic-labs/stigmem/issues) tagged `operator-candidate`.
+We're looking for one organization willing to run a stigmem node for 30 days against a real (non-critical) workload, with public bug reporting. We'll help you set up, watch you hit issues we couldn't anticipate, and credit you in the v1.0.0 release notes. [Open an issue](https://github.com/eidetic-labs/stigmem/issues) tagged `operator-candidate`.
 
 ### If you are auditing the security posture
 

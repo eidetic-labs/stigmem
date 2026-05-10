@@ -57,7 +57,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 3. Review the audit log for the key's recent activity.
 4. If an admin key was compromised, treat all capability tokens as potentially tainted and revoke them.
 
-**Current protection status:** **Mitigated** — keys have enforced `expires_at` (v1.0 hardening). Expired keys are rejected at `auth.py:113`. Rotate keys on a schedule; do not issue keys without an expiry.
+**Current protection status:** **Mitigated** — keys have enforced `expires_at` (pre-reset hardening). Expired keys are rejected at `auth.py:113`. Rotate keys on a schedule; do not issue keys without an expiry.
 
 ---
 
@@ -83,7 +83,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 2. Lower the per-principal write and read quotas in your deployment config: set `STIGMEM_RATE_LIMIT_WRITE_PER_HOUR` and `STIGMEM_RATE_LIMIT_READ_PER_HOUR` to tighter values and redeploy.
 3. Review whether the flooding came from a prompt-injected agent — if so, address R-15 (instruction-scope injection, Scenario 8.1).
 
-**Current protection status:** **Mitigated** — per-principal token-bucket quotas shipped in v1.0 hardening (`rate_limit.py`). Set `STIGMEM_RATE_LIMIT_WRITE_PER_HOUR=0` and `STIGMEM_RATE_LIMIT_READ_PER_HOUR=0` only in isolated dev/test environments; never in production.
+**Current protection status:** **Mitigated** — per-principal token-bucket quotas shipped in pre-reset hardening (`rate_limit.py`). Set `STIGMEM_RATE_LIMIT_WRITE_PER_HOUR=0` and `STIGMEM_RATE_LIMIT_READ_PER_HOUR=0` only in isolated dev/test environments; never in production.
 
 ---
 
@@ -148,7 +148,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **What can't they do?** Pass mTLS verification without the legitimate peer's client certificate. mTLS requires a client certificate signed by a CA your node trusts. Without the private key of the legitimate peer, impersonation fails at the TLS handshake.
 
-**What does the "pre-§22.1 deployment" risk mean?** If you deployed a node before v1.0 hardening and did not enable mTLS, peer authentication relies only on the capability token — which is weaker (tokens can be stolen without a private key). Ensure mTLS is enabled: see [mTLS guide](docs/security/mtls.md).
+**What does the "pre-§22.1 deployment" risk mean?** If you deployed a node before pre-reset hardening and did not enable mTLS, peer authentication relies only on the capability token — which is weaker (tokens can be stolen without a private key). Ensure mTLS is enabled: see [mTLS guide](docs/security/mtls.md).
 
 **How would you know?** The audit log records `federation_connect` events. Unexpected peer entity URIs in that log, or an unusual volume of quarantine admissions, are signals.
 
@@ -157,7 +157,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 2. Retract any facts the rogue peer injected.
 3. If the peer's private key was compromised, coordinate with the legitimate peer operator to rotate their node signing key and republish their org manifest with a new key.
 
-**Current protection status:** **Mitigated** — mTLS with `CERT_REQUIRED` shipped in v1.0 hardening. Enable it; do not run federation over plain TLS.
+**Current protection status:** **Mitigated** — mTLS with `CERT_REQUIRED` shipped in pre-reset hardening. Enable it; do not run federation over plain TLS.
 
 ---
 
@@ -177,7 +177,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **How do you recover?** If you see replay attempts, revoke the capability token involved and issue a new one. Investigate whether the token was intercepted on the network.
 
-**Current protection status:** **Mitigated** — nonce + ±5 min timestamp window enforced; nonce cache survives restarts; fuzz tests cover replay edge cases (v1.0 hardening).
+**Current protection status:** **Mitigated** — nonce + ±5 min timestamp window enforced; nonce cache survives restarts; fuzz tests cover replay edge cases (pre-reset hardening).
 
 ---
 
@@ -221,7 +221,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **How would you know?** Monitor HLC values in federation-ingested facts. A large spike in the HLC from a single peer is a signal.
 
-**Current protection status:** **Open until v0.9.x** (R-19). The HLC implementation in v0.9.0a1 clamps skew but there is no protocol-level normative bound on accepted HLC drift across the federation. Mitigation in v0.9.x per [ADR-004](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/004-federation-observability.md):
+**Current protection status:** **Open until the pre-reset spec.x** (R-19). The HLC implementation in v0.9.0a1 clamps skew but there is no protocol-level normative bound on accepted HLC drift across the federation. Mitigation in the pre-reset spec.x per [ADR-004](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/004-federation-observability.md):
 
 - **Bounded-skew enforcement** — reject inbound HLC values >5 minutes ahead of local. Configurable via `STIGMEM_HLC_MAX_SKEW_SECONDS`.
 - **`peer_hlc_anomaly` audit event** — emitted when a peer's drift exceeds threshold; per-peer drift tracking surfaces in the audit log.
@@ -342,7 +342,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 
 - **`fact_write` patterns from agent keys** — sustained writes outside the agent's normal relation namespace, agent action-rate spikes, recall-loop frequency above baseline. The audit log captures every `fact_write`; a sudden change in pattern from a single agent identity is the signal.
 - **Recall query patterns** — repeated recalls against scopes the agent does not normally read from, or recall queries containing attacker-style strings.
-- **Adapter-level signals (OpenClaw v0.9):** `low_confidence_anomaly` flag on boot context indicates many recalled facts below the high-confidence floor — a peer may be a write vector for adversarial content.
+- **Adapter-level signals (OpenClaw the pre-reset spec):** `low_confidence_anomaly` flag on boot context indicates many recalled facts below the high-confidence floor — a peer may be a write vector for adversarial content.
 - **External system logs** — calls to dangerous tools, network egress to unfamiliar destinations, API errors from operations the agent should not be performing.
 
 **Current protection status:** **Residual** — sanitizer is shipped and fuzz-tested; novel injection patterns remain a residual risk.
@@ -366,7 +366,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 - Read all audit logs.
 - Override quota policies.
 - Issue RTBF tombstones that permanently suppress facts for any entity.
-- (v2.0) Access time-travel `as_of` queries including legal-hold data.
+- (deferred to a future release) Access time-travel `as_of` queries including legal-hold data.
 
 **What can't they do?** Read the plaintext of other admin keys (they are SHA-256 hashed), or access the private signing keys stored on the filesystem (those require OS-level access).
 
@@ -437,7 +437,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 
 ---
 
-## Part 8 — Agent Instruction Layer (v2.0)
+## Part 8 — Agent Instruction Layer (deferred to a future release)
 
 ### Scenario 8.1 — What if an attacker plants adversarial instructions that get loaded by agents at startup?
 
@@ -469,7 +469,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 3. Review the audit log for all agents that loaded instructions in the window since the malicious fact was written.
 4. Assess what actions those agents took and whether any need to be reversed.
 
-**Current protection status:** **Open** (High priority). No technical enforcement gate separates `instruction:` write from general `write` permission. This is the highest-priority open risk in v2.0. See §8.2 of the threat model for the recommended fix.
+**Current protection status:** **Open** (High priority). No technical enforcement gate separates `instruction:` write from general `write` permission. This is the highest-priority open risk in this deferred class. See §8.2 of the threat model for the recommended fix.
 
 ---
 
@@ -533,7 +533,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 2. If the abusive activity came from a specific key, revoke it.
 3. If storage growth was significant, review whether the node's vector index or fact store needs trimming.
 
-**Current protection status:** **Operational responsibility.** v0.9.0a1 ships rate-limit enforcement (R-02 Mitigated), but the kill-switch (`limits=0`) is intended for isolated dev/test environments only. v0.9.x adds a startup warning when both limits are zero so this misconfiguration is loud.
+**Current protection status:** **Operational responsibility.** v0.9.0a1 ships rate-limit enforcement (R-02 Mitigated), but the kill-switch (`limits=0`) is intended for isolated dev/test environments only. the pre-reset spec.x adds a startup warning when both limits are zero so this misconfiguration is loud.
 
 ---
 
@@ -564,7 +564,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 - If you must use cloud embedding, classify the data; do not enable for sensitive scopes.
 - Periodically run a parallel embedding pass with the local model and compare.
 
-**Current protection status:** **Accepted** (R-20). Operator opt-in only; node-layer integrity check on returned vectors is a v2.0+ follow-up. Until that ships, treat cloud embedding as a quality and cost optimization that requires you to trust the provider's integrity.
+**Current protection status:** **Accepted** (R-20). Operator opt-in only; node-layer integrity check on returned vectors is a future follow-up. Until that ships, treat cloud embedding as a quality and cost optimization that requires you to trust the provider's integrity.
 
 ---
 
@@ -588,7 +588,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 
 **How would you know?**
 - Watch for unusual `fact_write` patterns from agent keys: writes outside the relations the agent normally produces, action-rate spikes, or sustained write loops.
-- The OpenClaw adapter v0.9 logs a `low_confidence_anomaly` flag on boot context when too many recalled facts are below the high-confidence floor — this can be an early signal that a peer is being used as a write vector.
+- The OpenClaw adapter the pre-reset spec logs a `low_confidence_anomaly` flag on boot context when too many recalled facts are below the high-confidence floor — this can be an early signal that a peer is being used as a write vector.
 - Cross-correlate: if multiple agents in your federation simultaneously start writing similar attacker-shaped facts, that is the worm signature.
 
 **How do you recover?**
@@ -599,8 +599,8 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 5. Review your agent-key issuance: any agent that both reads federated content and writes to non-trivial scopes is a worm-propagation candidate. Consider scope splitting.
 
 **Current protection status:** **Open** (R-21, High priority).
-- **OpenClaw v0.9 partial defense:** the new handoff allowlist defends against the handoff variant of this attack — an injected agent cannot delegate to an arbitrary admin entity. This is a structural fix at the adapter layer.
-- **Structural fix at protocol layer:** per-session read/write graph isolation, ADR-003 capability separation, and outbound replication exclusion for transitive recalls are targeted for v0.9.x (the v0.9.0bN beta series (capability redesign)).
+- **OpenClaw the pre-reset spec partial defense:** the new handoff allowlist defends against the handoff variant of this attack — an injected agent cannot delegate to an arbitrary admin entity. This is a structural fix at the adapter layer.
+- **Structural fix at protocol layer:** per-session read/write graph isolation, ADR-003 capability separation, and outbound replication exclusion for transitive recalls are targeted for the pre-reset spec.x (the v0.9.0bN beta series (capability redesign)).
 - **Until those land:** issue agent writer keys with the narrowest possible scope, never overlapping the scopes the same agent reads from.
 
 ---
@@ -620,24 +620,24 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 - Without an allowlist, the handoff is accepted; on the admin's next session, the boot pulls `intent:handoff_to`, `intent:handoff_summary`, and `intent:continuation` for the admin entity into the system prompt.
 - The admin's LLM session now operates with attacker-controlled context. Any further actions the admin agent takes can be influenced by the injected handoff.
 
-**What can't they do?** Emit a handoff to a target outside the configured allowlist if the OpenClaw v0.9+ adapter is used. Calls to `emit_handoff` with non-allowlisted `to_entity` raise `StigmemHandoffError` and never write.
+**What can't they do?** Emit a handoff to a target outside the configured allowlist if the OpenClaw the pre-reset spec+ adapter is used. Calls to `emit_handoff` with non-allowlisted `to_entity` raise `StigmemHandoffError` and never write.
 
 **How would you know?**
 - The audit log records every `fact_write` for handoff facts. Watch for handoff writes whose `to_entity` is outside your expected delegation graph.
 - The admin agent's session log: handoff content that doesn't correspond to any legitimate prior delegation.
-- The OpenClaw v0.9 adapter logs at WARNING when partial-validation drops fact_refs; sustained partial-validation events from a single source agent is a signal.
+- The OpenClaw the pre-reset spec adapter logs at WARNING when partial-validation drops fact_refs; sustained partial-validation events from a single source agent is a signal.
 
 **How do you recover?**
 1. Identify the injected agent (the one that called `emit_handoff` with the malicious target).
 2. Revoke its writer key.
 3. Retract the handoff facts and any continuation facts it created.
 4. Review the admin's session activity in the window since the malicious handoff was written.
-5. If the v1.0 OpenClaw adapter is still in use, upgrade to v0.9 (the new adapter's allowlist makes this attack structurally impossible).
+5. If a pre-reset OpenClaw adapter version is still in use, upgrade to the v0.9.0a1 adapter (the new adapter's allowlist makes this attack structurally impossible).
 
-**Current protection status:** **Mitigated** in v0.9 OpenClaw adapter via the handoff allowlist (audit finding C4 closed).
+**Current protection status:** **Mitigated** in the pre-reset spec OpenClaw adapter via the handoff allowlist (audit finding C4 closed).
 - Configure `allowed_handoff_targets` at adapter construction or via `STIGMEM_OPENCLAW_HANDOFF_ALLOWLIST`.
 - Without an allowlist, all `emit_handoff` calls fail closed — the adapter refuses to operate rather than allowing arbitrary delegation.
-- Operators upgrading from v1.0 must explicitly configure their allowlist; this is a deliberate breaking change documented in the adapter migration notes.
+- Operators upgrading from a pre-reset OpenClaw adapter must explicitly configure their allowlist; this is a deliberate breaking change documented in the adapter migration notes.
 
 ---
 
@@ -708,8 +708,8 @@ Until those ship, operators rely on out-of-band trust signals.
 | 9.1 Obsidian plugin key exposure | R-07 | Accepted | Issue minimum-scope key; rotate on suspicion |
 | 1.5 Rate limits disabled in production | R-02 (re-opened by misconfig) | Operational | Set non-zero rate limits before production deploy |
 | 4.3 Adversarial cloud embedding vectors | R-20 | Accepted | Stay on offline default; spot-check ranking if cloud-enabled |
-| 5.2 Feedback-loop worm | R-21 | Open (**High**) | Issue narrow-scope writer keys; **upgrade OpenClaw to v0.9**; await ADR-003 |
-| 5.3 OpenClaw handoff to admin entity | R-21 (handoff variant) | Mitigated in OpenClaw v0.9 | Configure `allowed_handoff_targets` |
+| 5.2 Feedback-loop worm | R-21 | Open (**High**) | Issue narrow-scope writer keys; **upgrade OpenClaw to the pre-reset spec**; await ADR-003 |
+| 5.3 OpenClaw handoff to admin entity | R-21 (handoff variant) | Mitigated in OpenClaw the pre-reset spec | Configure `allowed_handoff_targets` |
 | 10.1 Build-pipeline compromise | R-22 | Open (**High**) | Pin versions; verify SHA256; watch advisories until Sigstore ships |
 
 ---

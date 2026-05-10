@@ -8,7 +8,7 @@ audience: Integrator
 
 **Audience:** Operators running Stigmem with `STIGMEM_STORAGE_BACKEND=libsql` and
 a Turso cloud database.  
-**Applies to:** Stigmem the v0.9 attestation chain window (libSQL/Turso adapter)
+**Applies to:** Stigmem the pre-reset attestation-chain work (libSQL/Turso adapter)
 
 ---
 

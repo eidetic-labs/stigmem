@@ -19,7 +19,7 @@ Each subsection below shows the most recent normative text from the spec source.
 
 ### §18.1 Motivation {#section-18-1}
 
-In v0.8, the `source` field in a fact request body is caller-declared:
+In the pre-reset spec, the `source` field in a fact request body is caller-declared:
 
 ```json
 { "entity": "...", "relation": "...", "source": "stigmem://node/user/alice", ... }
@@ -89,20 +89,20 @@ A retraction (fact with `confidence=0.0`) is subject to the same attestation rul
 
 ### §18.5 Integration with Track C (Per-Agent Keypairs) {#section-18-5}
 
-the v0.9 substrate window Track C adds per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
+the pre-reset substrate work Track C adds per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
 
-v0.9 source attestation is a first step. v0.9 `attested: true` means the bearer-token-level check passed. Track C extends this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
+the pre-reset spec source attestation is a first step. the pre-reset spec `attested: true` means the bearer-token-level check passed. Track C extends this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
 ### 18.5 Integration with Track C (Per-Agent Keypairs)
 
-the v0.9 substrate window Track C will add per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
+the pre-reset substrate work Track C will add per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
 
-v0.9 source attestation is a first step. v0.9 `attested: true` means the bearer-token-level check passed. Track C will extend this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
+the pre-reset spec source attestation is a first step. the pre-reset spec `attested: true` means the bearer-token-level check passed. Track C will extend this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
 
 </details>
 
@@ -115,7 +115,7 @@ GET /v1/facts?attested=true    // only source-attested facts
 GET /v1/facts?attested=false   // only non-attested facts (warn/off mode)
 ```
 
-The `attested` query parameter is optional. Omitting it returns all facts (default behavior, unchanged from v0.8).
+The `attested` query parameter is optional. Omitting it returns all facts (default behavior, unchanged from the pre-reset spec).
 
 ### §18.7 Key Registration: Binding `entity_uri` to an API Key {#section-18-7}
 
@@ -167,7 +167,7 @@ The caller MUST store `raw_key` securely — it is not retrievable after creatio
 
 #### Updated `Identity` shape
 
-The `Identity` shape extends the v0.8 shape with the `allowed_source_entities`
+The `Identity` shape extends the pre-reset spec shape with the `allowed_source_entities`
 field needed for delegation (§18.9). This is the object the node constructs
 from the API key record when authenticating a request — it drives every
 attestation check in the write path.
@@ -193,9 +193,9 @@ attested = normalized(fact.source) ∈ { normalized(identity.entity_uri) } ∪ n
 All normalization uses §2.6.3. Delegation set entries are stored in normalized form at key creation.
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
 ### 18.7 Key Registration: Binding `entity_uri` to an API Key
 
@@ -245,9 +245,9 @@ The caller MUST store `raw_key` securely — it is not retrievable after creatio
   "detail": "entity_uri cannot be changed after creation; revoke and re-create the key" }
 ```
 
-#### Updated `Identity` shape (v0.9)
+#### Updated `Identity` shape (pre-reset)
 
-The v0.9 `Identity` shape extends the v0.8 shape with the `allowed_source_entities`
+The the pre-reset spec `Identity` shape extends the pre-reset spec shape with the `allowed_source_entities`
 field needed for delegation (§18.9). This is the object the node constructs
 from the API key record when authenticating a request — it drives every
 attestation check in the write path.
@@ -258,7 +258,7 @@ Identity {
   credential:              string         // API key (SHA-256 stored server-side)
   node_url:                string
   allowed_scopes:          FactScope[]
-  allowed_source_entities: URI[]          // v0.9: additional source URIs this key may claim (see §18.9)
+  allowed_source_entities: URI[]          // the pre-reset spec: additional source URIs this key may claim (see §18.9)
 }
 ```
 
@@ -366,9 +366,9 @@ GET /v1/auth/attestation-audit?key_id=<id>&attested=false&limit=50
 Filter params: `key_id`, `attested` (true/false), `after` (pagination cursor), `limit` (max 500).
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
 ### 18.10 Full Key Management API
 
@@ -463,7 +463,7 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_key_ts   ON attestation_audit(k
 CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(attested, ts);
 ```
 
-**Migration note for existing deployments:** Pre-v0.9 nodes may manage API keys outside the database. Migration 005 formalizes key storage. Operators MUST:
+**Migration note for existing deployments:** Pre-the pre-reset spec nodes may manage API keys outside the database. Migration 005 formalizes key storage. Operators MUST:
 1. Register existing keys via `POST /v1/auth/keys` using an `existing_credential` migration field (accepted for 30 days post-deploy).
 2. Set `STIGMEM_SOURCE_ATTESTATION_MODE=warn` initially.
 3. Register `entity_uri` for all keys, then switch to `enforce` after verifying the audit log shows no `attested=false` writes.
@@ -480,9 +480,9 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(a
 ---
 
 <details>
-<summary>Revisions before v1.0: v0.9-draft</summary>
+<summary>Revisions before v1.0: pre-reset draft</summary>
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
 ### 18.12 Error Reference
 
@@ -495,6 +495,6 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(a
 
 ---
 
-*v0.9-draft — §17 and §18 open for community feedback. See [CONTRIBUTING.md](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md).*
+*pre-reset draft — §17 and §18 open for community feedback. See [CONTRIBUTING.md](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md).*
 
 </details>

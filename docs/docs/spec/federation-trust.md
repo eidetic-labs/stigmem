@@ -25,7 +25,7 @@ The active security policy — supported versions, vulnerability reporting instr
 
 **Disclosure timeline:** 90 days from the report date before public disclosure, except for vulnerabilities already being actively exploited in the wild.
 
-For the current security posture and Dependabot alert triage covering v1.0-rc, see the [Security Posture section of SECURITY.md](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md#security-posture--v10-rc-2026-05-03).
+For the current security posture and Dependabot alert triage covering the pre-reset v1.0-rc snapshot, see the [Security Posture section of SECURITY.md](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md#security-posture--v10-rc-2026-05-03).
 
 ---
 

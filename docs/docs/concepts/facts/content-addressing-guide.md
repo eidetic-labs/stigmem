@@ -206,7 +206,7 @@ Facts with `cid: null` whose `created_at` is after the v1.1 GA date are rejected
 
 ## CID backfill (§25.7.2)
 
-Existing facts created before the v1.0 / v1.1 design window do not have CIDs. The node backfills them in the background:
+Existing facts created before the pre-reset design window do not have CIDs. The node backfills them in the background:
 
 ```bash
 # Check backfill progress

@@ -6,7 +6,7 @@ audience: Operator
 
 # Container hardening
 
-Stigmem's reference node image ships with a hardened container posture as of **v1.0 hardening** (spec §22.6). This page describes the controls baked into the image and how to verify them.
+Stigmem's reference node image ships with a hardened container posture as of **pre-reset hardening** (spec §22.6). This page describes the controls baked into the image and how to verify them.
 
 ## What's included
 
@@ -122,6 +122,6 @@ The `clone`/`clone3` syscalls are **not** denied because Python's threading mode
 
 ## Known limitations
 
-- **Per-distro AppArmor profiles** are out of scope for v1.0 hardening; community contributions welcome.
+- **Per-distro AppArmor profiles** are out of scope for pre-reset hardening; community contributions welcome.
 - **Multi-arch matrix** covers `linux/amd64` and `linux/arm64` only.
 - The `seccompProfile.type: RuntimeDefault` Helm default does not apply the stigmem-specific profile; operators who want the full denylist must load the JSON file as a `Localhost` profile.

@@ -55,9 +55,9 @@ during its sweep pass.
 **`valid_until` vs. `confidence`:** Orthogonal. A historical certain fact has
 `confidence=1.0` and `valid_until` set to when it was superseded.
 
-**Decay sweeper (v0.8):** For operator-managed confidence decay over time, see §15. The decay sweeper handles gradual confidence reduction and bulk TTL retraction without requiring clients to manage each fact's expiry individually.
+**Decay sweeper (pre-reset):** For operator-managed confidence decay over time, see §15. The decay sweeper handles gradual confidence reduction and bulk TTL retraction without requiring clients to manage each fact's expiry individually.
 
-### §3.3 Contradiction — v0.5 formalized {#section-3-3}
+### §3.3 Contradiction — pre-reset formalized {#section-3-3}
 
 A **contradiction** exists when two facts `a`, `b` satisfy all of:
 - `a.entity == b.entity`
@@ -68,14 +68,14 @@ A **contradiction** exists when two facts `a`, `b` satisfy all of:
 
 **Both facts are retained. Neither is silently overwritten.**
 
-**v0.7 note:** Because `entity` is normalized on ingest (§2.6), two facts about the same real-world entity written with different cases (e.g. `project/EG-18` vs `project/eg-18`) now normalize to the same canonical entity and correctly trigger contradiction detection. Pre-v0.7 fragmented facts are not retroactively merged — use the alias table or re-assertion sweep (§2.6.6) to consolidate them.
+**pre-reset note:** Because `entity` is normalized on ingest (§2.6), two facts about the same real-world entity written with different cases (e.g. `project/EG-18` vs `project/eg-18`) now normalize to the same canonical entity and correctly trigger contradiction detection. Pre-pre-reset fragmented facts are not retroactively merged — use the alias table or re-assertion sweep (§2.6.6) to consolidate them.
 
 **Resolution order at query time:**
 1. Higher `confidence` wins.
 2. Equal confidence → higher `hlc` wins (causal ordering).
 3. Tie → both returned with `contradicted: true` on each; caller decides.
 
-**Contradiction fact (v0.5):** When a contradiction is detected on write, the
+**Contradiction fact (pre-reset):** When a contradiction is detected on write, the
 node MUST assert a system-generated contradiction record. The contradiction is
 itself a first-class entity in the `stigmem:conflict:` namespace — this reifies
 the disagreement as queryable data rather than hiding it in a separate table.
@@ -117,17 +117,17 @@ Scope is enforced at read and write time. Cross-scope queries are additive.
 scope is not permitted by the active PeerDeclaration. Nodes MUST reject inbound
 facts whose scope exceeds what the peer is authorized to write. See §6.4.
 
-**v0.8 note:** In N-node topologies, scope enforcement is per-hop, not end-to-end. See §6.8 for the transitive scope propagation invariant that closes the re-federation gap.
+**the pre-reset spec note:** In N-node topologies, scope enforcement is per-hop, not end-to-end. See §6.8 for the transitive scope propagation invariant that closes the re-federation gap.
 
 ### §3.5 Identity and Auth — Source Attestation {#section-3-5}
 
-*Prior content (API-key model, per-scope key restrictions, federation peer tokens) unchanged from v0.8.*
+*Prior content (API-key model, per-scope key restrictions, federation peer tokens) unchanged from the pre-reset spec.*
 
 #### Source attestation
 
-**Problem:** In v0.8, the `source` URI in a fact's request body is caller-declared. An authenticated principal can claim to be anyone by writing `"source": "stigmem://authority/user/someone-else"`. This breaks provenance guarantees — a fact's `source` field cannot be trusted as the actual write origin without an out-of-band verification.
+**Problem:** In the pre-reset spec, the `source` URI in a fact's request body is caller-declared. An authenticated principal can claim to be anyone by writing `"source": "stigmem://authority/user/someone-else"`. This breaks provenance guarantees — a fact's `source` field cannot be trusted as the actual write origin without an out-of-band verification.
 
-**Solution (v0.9):** Source attestation binds the declared `source` to the caller's `entity_uri` registered on their API key at write time (§18.7). The `entity_uri` is immutable after key creation. The binding is enforced by the node in one of three modes:
+**Solution (pre-reset):** Source attestation binds the declared `source` to the caller's `entity_uri` registered on their API key at write time (§18.7). The `entity_uri` is immutable after key creation. The binding is enforced by the node in one of three modes:
 
 ```
 SourceAttestationMode = "enforce" | "warn" | "off"
@@ -145,20 +145,20 @@ SourceAttestationMode = "enforce" | "warn" | "off"
 
 **Auth-disabled mode:** When `STIGMEM_AUTH_REQUIRED=false`, the caller identity is anonymous. Attestation cannot be performed; `attested` is `null` for all writes in this mode.
 
-**Service agents writing on behalf of others:** Use `allowed_source_entities` (§18.9) to delegate specific source claims to an adapter key. This is the explicit delegation path — the v0.9 model does not support implicit delegation.
+**Service agents writing on behalf of others:** Use `allowed_source_entities` (§18.9) to delegate specific source claims to an adapter key. This is the explicit delegation path — the pre-reset spec model does not support implicit delegation.
 
 **Federated facts:** Source attestation is NOT re-applied to facts received via federation. The original `source` is preserved per §3.1. Federated facts MUST have `attested: null` on ingest.
 
 ---
 
 <details>
-<summary>Revisions before v1.0: v0.8-draft, v0.9-draft</summary>
+<summary>Revisions before v1.0: the pre-reset spec-draft, pre-reset draft</summary>
 
-**From `stigmem-spec-v0.8-draft.md`:**
+**From `stigmem-spec-the pre-reset spec-draft.md`:**
 
-### 3.5 Identity and Auth (v0.5 extended)
+### 3.5 Identity and Auth (pre-reset extended)
 
-**Status:** v0.4 API-key model implemented. v0.5 extends with per-scope key
+**Status:** pre-reset API-key model implemented. pre-reset extension with per-scope key
 restrictions and peer-token auth for federation.
 
 #### Identity shape
@@ -174,23 +174,23 @@ Identity {
   entity_uri:     URI
   credential:     string          // API key (SHA-256 stored server-side)
   node_url:       string
-  allowed_scopes: FactScope[]     // v0.5: restricts which scopes this key can read/write
+  allowed_scopes: FactScope[]     // pre-reset: restricts which scopes this key can read/write
 }
 ```
 
-**Per-scope key restrictions (v0.5):** `api_keys` MUST store `allowed_scopes`. Default
+**Per-scope key restrictions (pre-reset):** `api_keys` MUST store `allowed_scopes`. Default
 is `["local","team","company","public"]` (all scopes) for backward compatibility.
 Additive model: if `allowed_scopes` is empty, the key has no access. Operators SHOULD
 restrict service-to-service keys to the minimum required scope.
 
-#### v0.4 API-key model (unchanged)
+#### pre-reset API-key model (unchanged)
 
 Credentials are presented as `Authorization: Bearer <raw-key>`. The node stores only
 the SHA-256 hex digest.
 
 **Auth mode flag:** `/.well-known/stigmem` exposes `"auth": "none" | "required"`.
 
-#### Federation peer tokens (v0.5)
+#### Federation peer tokens (pre-reset)
 
 Federated replication uses short-lived **peer tokens** distinct from API keys:
 
@@ -216,17 +216,17 @@ Receiving nodes MUST verify:
 
 ---
 
-**From `stigmem-spec-v0.9-draft.md`:**
+**From `stigmem-spec-pre-reset draft.md`:**
 
-### 3.5 Identity and Auth — Source Attestation (v0.9 extension)
+### 3.5 Identity and Auth — Source Attestation (the pre-reset spec extension)
 
-*Prior content (API-key model, per-scope key restrictions, federation peer tokens) unchanged from v0.8.*
+*Prior content (API-key model, per-scope key restrictions, federation peer tokens) unchanged from the pre-reset spec.*
 
 #### Source attestation
 
-**Problem:** In v0.8, the `source` URI in a fact's request body is caller-declared. An authenticated principal can claim to be anyone by writing `"source": "stigmem://authority/user/someone-else"`. This breaks provenance guarantees — a fact's `source` field cannot be trusted as the actual write origin without an out-of-band verification.
+**Problem:** In the pre-reset spec, the `source` URI in a fact's request body is caller-declared. An authenticated principal can claim to be anyone by writing `"source": "stigmem://authority/user/someone-else"`. This breaks provenance guarantees — a fact's `source` field cannot be trusted as the actual write origin without an out-of-band verification.
 
-**Solution (v0.9):** Source attestation binds the declared `source` to the caller's `entity_uri` registered on their API key at write time (§18.7). The `entity_uri` is immutable after key creation. The binding is enforced by the node in one of three modes:
+**Solution (pre-reset):** Source attestation binds the declared `source` to the caller's `entity_uri` registered on their API key at write time (§18.7). The `entity_uri` is immutable after key creation. The binding is enforced by the node in one of three modes:
 
 ```
 SourceAttestationMode = "enforce" | "warn" | "off"
@@ -244,7 +244,7 @@ SourceAttestationMode = "enforce" | "warn" | "off"
 
 **Auth-disabled mode:** When `STIGMEM_AUTH_REQUIRED=false`, the caller identity is anonymous. Attestation cannot be performed; `attested` is `null` for all writes in this mode.
 
-**Service agents writing on behalf of others:** Use `allowed_source_entities` (§18.9) to delegate specific source claims to an adapter key. This is the explicit delegation path — the v0.9 model does not support implicit delegation.
+**Service agents writing on behalf of others:** Use `allowed_source_entities` (§18.9) to delegate specific source claims to an adapter key. This is the explicit delegation path — the pre-reset spec model does not support implicit delegation.
 
 **Federated facts:** Source attestation is NOT re-applied to facts received via federation. The original `source` is preserved per §3.1. Federated facts MUST have `attested: null` on ingest.
 

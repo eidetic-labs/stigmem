@@ -27,7 +27,7 @@ This commitment is reviewed at every major release. Tightening or loosening goes
 ### Stable features
 
 - **Wire format:** No breaking changes within the v1.x line after v1.0.0 ships.
-- **Public Python API:** Removing or renaming a public symbol requires a deprecation in v1.x followed by removal no earlier than v2.0.
+- **Public Python API:** Removing or renaming a public symbol requires a deprecation in v1.x followed by removal no earlier than v2.0.0.
 - **Default behavior:** Changing default behavior of a stable feature requires a deprecation cycle.
 
 ### Beta features

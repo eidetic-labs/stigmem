@@ -180,7 +180,7 @@ cd sdks/stigmem-go
 go test ./... -race
 ```
 
-## v1.0 / v1.1 advanced features
+## advanced features (pre-reset design)
 
 ### Content-addressed fact IDs (§25)
 

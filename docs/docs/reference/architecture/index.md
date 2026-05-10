@@ -55,7 +55,7 @@ Every piece of knowledge is an **atomic, immutable fact** (spec §2):
 
 | Field | Type | Why it exists |
 |-------|------|---------------|
-| `entity` | URI (`stigmem://…` formal; informal deprecated in v0.6) | *What* the fact is about. Entity-scoped, not agent-scoped — the same entity URI is shared across all agents and nodes (spec §4.6 origin in `upstream-surfaces.md §4.6`). |
+| `entity` | URI (`stigmem://…` formal; informal deprecated in pre-reset) | *What* the fact is about. Entity-scoped, not agent-scoped — the same entity URI is shared across all agents and nodes (spec §4.6 origin in `upstream-surfaces.md §4.6`). |
 | `relation` | namespaced string (`memory:role`, `roadmap:status`, …) | *What kind* of statement this is. Namespaced to prevent collisions (spec §9 namespace registry). |
 | `value` | `FactValue` union | The asserted value. See §2.1 for the full type lattice: `string`, `text`, `number`, `boolean`, `datetime`, `ref`, `null`. |
 | `source` | URI | *Who* asserted the fact. Stored immutably; relayed facts carry the *originating* source, not the relay chain. |
@@ -172,7 +172,7 @@ A **PeerDeclaration** is a signed JSON document declaring federation intent:
 }
 ```
 
-The signature uses the declaring node's `federation_pubkey`, published at `/.well-known/stigmem`. Registration is mutual: both nodes must `POST /v1/federation/peers` with the declaration to activate the peering. Capability negotiation (§6.2) is required as of v0.6.
+The signature uses the declaring node's `federation_pubkey`, published at `/.well-known/stigmem`. Registration is mutual: both nodes must `POST /v1/federation/peers` with the declaration to activate the peering. Capability negotiation (§6.2) is required as of pre-reset.
 
 ### Replication (§6.3)
 
@@ -200,7 +200,7 @@ All four failure scenarios are automated in `node/tests/test_failure_modes.py`:
 
 ## Auth model (§3.5)
 
-the v0.4 design window implemented API-key auth; the v0.5 design window extended it with peer tokens for federation.
+the pre-reset design work implemented API-key auth; the pre-reset design work extended it with peer tokens for federation.
 
 **API keys (clients):**
 - Presented as `Authorization: Bearer <raw-key>` (or `X-API-Key: <key>` for compatibility).
@@ -220,7 +220,7 @@ Auth mode is advertised at `/.well-known/stigmem` as `"auth": "none" | "required
 
 ```
 stigmem/
-├── spec/                           ← canonical spec (v0.2 → v0.6-draft)
+├── spec/                           ← canonical spec (pre-reset → pre-reset-draft)
 │   └── README.md                   ← spec status table
 │
 ├── node/                           ← reference node (FastAPI + SQLite)
@@ -245,7 +245,7 @@ stigmem/
 │       ├── test_federation.py      ← handshake, pull replication, scope leak attempts
 │       └── test_failure_modes.py   ← §11 acceptance tests: split-brain, malicious peer, partial failure, replay
 │
-├── adapters/                       ← platform adapters (the v0.6 design window, in flight)
+├── adapters/                       ← platform adapters (the pre-reset design work, in flight)
 │   ├── mcp/                        ← MCP server (TypeScript): stigmem_assert + stigmem_query tools
 │   ├── openclaw/                   ← Claude Code / OpenClaw adapter (Python): PARA→fact mapping
 │   └── paperclip/                  ← Paperclip hook adapter (JS): emits lifecycle events as facts
@@ -267,11 +267,11 @@ stigmem/
 
 ## Key implementation notes
 
-**SQLite as the v0.4 design window–4 storage.** The schema (spec §10) is migration-friendly by design: column additions do not require table rewrites. A PostgreSQL backend is feasible for the v0.7 design window+ but not required before v1.0.
+**SQLite as the pre-reset design work–4 storage.** The schema (spec §10) is migration-friendly by design: column additions do not require table rewrites. A PostgreSQL backend is feasible for the pre-reset design work+ but not required before v1.0.
 
-**HLC requires a threading lock.** The in-process HLC state is shared between the HTTP request path and the background federation pull task. Without `threading.Lock`, concurrent writes race and may produce out-of-order HLC values. Fixed in `hlc.py`; noted in the the v0.5 design window exit memo.
+**HLC requires a threading lock.** The in-process HLC state is shared between the HTTP request path and the background federation pull task. Without `threading.Lock`, concurrent writes race and may produce out-of-order HLC values. Fixed in `hlc.py`; noted in the pre-reset design work exit memo.
 
-**Idempotency + conflict edge case.** If fact F arrives from peer A and creates a conflict with local fact G, then F arrives again via replication, the second ingestion is a no-op — it must not create a second conflict record. `federation_ingest.py` handles this; the spec §6.3 needs a normative sentence covering this case before v0.5.1 is finalized.
+**Idempotency + conflict edge case.** If fact F arrives from peer A and creates a conflict with local fact G, then F arrives again via replication, the second ingestion is a no-op — it must not create a second conflict record. `federation_ingest.py` handles this; the spec §6.3 needs a normative sentence covering this case before pre-reset.1 is finalized.
 
 **`declaration_sig` excluded from its own preimage.** The Ed25519 signature over a PeerDeclaration covers all fields *except* `declaration_sig` itself (which obviously does not exist at signing time). The spec §6.1 now enumerates excluded fields explicitly; `peer_auth.py` implements accordingly.
 
@@ -283,19 +283,19 @@ Federation handshake, conflict detection flow, and HLC tick protocol sequence di
 
 ## Graph index and recall pipeline (§20 — draft)
 
-:::note v1.0 graph & recall — draft
-This section describes spec §20, which is currently a draft. The architecture is normative in `spec/stigmem-spec-v1.1-draft.md`; security review of subscription auth and cross-garden recall scoping is in progress. The diagram and formulas below reflect the draft spec and may change before §20 is promoted to normative.
+:::note pre-reset graph & recall design — draft
+This section describes spec §20, which is currently a draft. The architecture is normative in `spec/stigmem-spec-pre-reset draft.md`; security review of subscription auth and cross-garden recall scoping is in progress. The diagram and formulas below reflect the draft spec and may change before §20 is promoted to normative.
 :::
 
 *Audience: engineers building recall-capable agents, implementing the reference node, or contributing to §20.*
 
-v1.0 graph & recall adds three interconnected subsystems to the reference node: a **graph adjacency index**, a **vector embedding store**, and a **hybrid recall pipeline**. Together they let agents retrieve semantically relevant facts by query rather than exact predicate, within a caller-specified token budget.
+pre-reset graph & recall design adds three interconnected subsystems to the reference node: a **graph adjacency index**, a **vector embedding store**, and a **hybrid recall pipeline**. Together they let agents retrieve semantically relevant facts by query rather than exact predicate, within a caller-specified token budget.
 
 ---
 
 ### Graph adjacency index (`entity_edges`)
 
-The facts table is flat: facts are rows with no materialized connections between entities. v1.0 graph & recall adds a side-index that makes entity-to-entity traversal O(edges) rather than O(facts):
+The facts table is flat: facts are rows with no materialized connections between entities. pre-reset graph & recall design adds a side-index that makes entity-to-entity traversal O(edges) rather than O(facts):
 
 ```sql
 CREATE TABLE entity_edges (

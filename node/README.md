@@ -1,6 +1,6 @@
 # Stigmem Reference Node
 
-Single-host Stigmem node implementing [spec v0.8-draft](../spec/stigmem-spec-v0.8-draft.md). Reference implementation.
+Single-host Stigmem node implementing [spec the pre-reset spec-draft](../spec/stigmem-spec-the pre-reset spec-draft.md). Reference implementation.
 
 ## Quick start
 

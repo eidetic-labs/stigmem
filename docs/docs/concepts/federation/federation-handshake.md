@@ -30,16 +30,16 @@ sequenceDiagram
     participant A as Node A
     participant B as Node B
 
-    Note over A,B: Phase 1 — Peer Declaration
+    Note over A,B: the v0.3 design window — Peer Declaration
     A->>B: POST /v1/federation/peers<br/>{node_url, node_id, federation_pubkey,<br/>allowed_scopes, declaration_sig}
     Note over B: Status: pending_verification
 
-    Note over A,B: Phase 2 — Verification
+    Note over A,B: the v0.4 design window — Verification
     B->>A: GET /.well-known/stigmem<br/>(fetch A's public key)
     B->>B: Verify declaration_sig<br/>against A's published pubkey
     Note over B: Status: active (or rejected)
 
-    Note over A,B: Phase 3 — Capability Negotiation
+    Note over A,B: the v0.5 design window — Capability Negotiation
     A->>B: GET /v1/federation/peers/:peer_id/capabilities
     B->>A: GET /v1/federation/peers/:peer_id/capabilities
     Note over A,B: Both nodes know each other's<br/>relations, modes, and policies
@@ -49,7 +49,7 @@ sequenceDiagram
     Note over A: Bearer: fresh peer token (Ed25519 JWT)
 ```
 
-### Phase 1 — Peer Declaration
+### the v0.3 design window — Peer Declaration
 
 Node A sends a signed `PeerDeclaration` to Node B:
 
@@ -66,13 +66,13 @@ Node A sends a signed `PeerDeclaration` to Node B:
 
 The `allowed_scopes` array is the authorization grant: Node A is willing to share `public`-scoped facts with Node B. The signature proves that Node A (holder of the private key) issued this declaration.
 
-### Phase 2 — Verification
+### the v0.4 design window — Verification
 
 Node B fetches Node A's `/.well-known/stigmem` to retrieve the published `federation_pubkey`. It verifies `declaration_sig` against that key. If the key in the declaration doesn't match the published key, the peer is rejected — this prevents a third party from forging declarations.
 
 Mutual federation requires both sides to complete this handshake. Replication does not begin until both peers are `"active"`.
 
-### Phase 3 — Capability Negotiation
+### the v0.5 design window — Capability Negotiation
 
 After verification, nodes exchange capability advertisements:
 

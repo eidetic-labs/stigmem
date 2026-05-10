@@ -37,7 +37,7 @@ Each subsection below shows the most recent normative text from the spec source.
 |---|---|---|
 | `stigmem:` | Spec maintainers | Core protocol relations: `stigmem:ttl`, `stigmem:received_from`, `stigmem:member`, `stigmem:conflict:between`, `stigmem:conflict:status`, `stigmem:resolves` |
 | `rel:` | Spec maintainers | Reification primitives: `rel:subject`, `rel:object`, `rel:type` |
-| `stigmem:lint:` | Spec maintainers | Reserved for future lint-related protocol relations. v0.7 lint is a pure API operation (no fact assertions); this prefix is reserved to prevent squatting ahead of Phase 6 lint enhancements. |
+| `stigmem:lint:` | Spec maintainers | Reserved for future lint-related protocol relations. v0.7 lint is a pure API operation (no fact assertions); this prefix is reserved to prevent squatting ahead of the v0.8 design-partner window lint enhancements. |
 | `stigmem:decay:` | Spec maintainers | Reserved for decay sweeper protocol relations. v0.8 decay sweep is a pure API operation; this prefix is reserved for future decay policy fact assertions (e.g. per-entity decay overrides). |
 
 </details>
@@ -61,7 +61,7 @@ Each subsection below shows the most recent normative text from the spec source.
 | `intent:` | Registered | Intent envelope machine-readable facts; includes `intent:handoff_to`, `intent:handoff_summary`, `intent:context_ref`, `intent:continuation`, `intent:escalation`, `intent:escalate_to`, `intent:goal` |
 | `roadmap:` | Registered | Project/product state facts; includes `roadmap:decision`, `roadmap:constraint`, `roadmap:status`, `roadmap:summary` |
 | `preference:` | Registered | User/agent preferences |
-| `paperclip:` | Registered (Phase 4) | Paperclip adapter lifecycle facts: `paperclip:checkout`, `paperclip:issue_status`, `paperclip:last_active`, `paperclip:blocked_by` |
+| `paperclip:` | Registered (the v0.6 design window) | Paperclip adapter lifecycle facts: `paperclip:checkout`, `paperclip:issue_status`, `paperclip:last_active`, `paperclip:blocked_by` |
 
 </details>
 

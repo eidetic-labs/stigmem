@@ -17,7 +17,7 @@ Graph adjacency index, vector embeddings, hybrid recall pipeline, memory cards, 
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-**Status:** DRAFT normative (Phase 9). Implementation issues build against this section.  
+**Status:** DRAFT normative (v1.0 graph & recall). Implementation issues build against this section.  
 **Depends on:** §2 (fact shape), §5 (wire format), §17 (memory garden), §18 (source attestation), §19 (federation trust).
 
 §20 defines the graph adjacency index, embedding storage, recall API, memory cards, subscription primitive, and causal/derivation link lifecycle.
@@ -645,7 +645,7 @@ When a derived fact is replicated to a peer via federation (§19.3), the `derive
 
 ### §20.7 Schema Migrations {#section-20-7}
 
-The following migrations MUST be applied when upgrading to Phase 9 (v1.1 spec compliance):
+The following migrations MUST be applied when upgrading to v1.0 graph & recall (v1.1 spec compliance):
 
 ```sql
 -- Graph index

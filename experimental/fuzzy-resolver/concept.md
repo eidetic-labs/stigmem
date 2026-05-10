@@ -180,7 +180,7 @@ curl -s "http://localhost:8000/v1/facts?entity=$(python3 -c "import urllib.parse
 
 - **Type-prefix scoped:** Layer 3 only searches entities with the same type prefix (`user:`, `agent:`, etc.). Cross-type resolution is not supported.
 - **Formal URIs excluded from Layer 3:** `stigmem://` URIs bypass Layer 3 (use Layer 1 normalisation only).
-- **No phonetic / NLP matching yet:** The full Kompl-style resolver (phonetic matching, NLP-based entity linking) is deferred to Phase 7. Layer 3 covers the common case of abbreviated names and initials.
+- **No phonetic / NLP matching yet:** The full Kompl-style resolver (phonetic matching, NLP-based entity linking) is deferred to the v0.9 substrate window. Layer 3 covers the common case of abbreviated names and initials.
 
 ---
 

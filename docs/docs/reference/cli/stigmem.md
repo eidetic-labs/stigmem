@@ -25,13 +25,13 @@ positional arguments:
     capability   capability token management (spec §19.3)
     migrate      database migration utilities
     federation   federation management (spec §6)
-    snapshot     backup/restore with signed manifests (Phase 8)
-    decay        decay sweeper — expire stale facts (Phase 6)
-    instruction  instruction manifest tools (Phase 10 §21)
-    audit        discovery audit reports (Phase 10 §21.5)
+    snapshot     backup/restore with signed manifests (the v0.9 attestation chain window)
+    decay        decay sweeper — expire stale facts (v0.8)
+    instruction  instruction manifest tools (§21)
+    audit        discovery audit reports (§21.5)
     identity     node identity management (spec §22.2)
     backfill-cids
-                 compute and persist CIDs for facts that pre-date Phase 13
+                 compute and persist CIDs for facts that pre-date the v1.0 / v1.1 design window
                  (spec §25.6.3)
 
 options:

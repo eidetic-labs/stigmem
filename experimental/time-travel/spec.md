@@ -7,7 +7,7 @@ description: "Stigmem spec section 24 — as_of parameter on /v1/recall and /v1/
 
 # §24. Time-Travel / As-Of Queries {#section-24}
 
-**Status:** DRAFT normative (v1.1-draft, Phase 13)
+**Status:** DRAFT normative (v1.1-draft, the v1.0 / v1.1 design window)
 
 as_of parameter on /v1/recall and /v1/facts; append-only retraction log.
 
@@ -25,7 +25,7 @@ Time-travel semantics interact with tombstones in ways that are still being fina
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-**Status:** DRAFT normative (Phase 13). §24.1–§24.6 carry MUST/SHOULD/MAY normative language.
+**Status:** DRAFT normative (the v1.0 / v1.1 design window). §24.1–§24.6 carry MUST/SHOULD/MAY normative language.
 
 ### §24.1 Scope {#section-24-1}
 

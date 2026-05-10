@@ -8,7 +8,7 @@ audience: Integrator
 # Lazy Instruction Discovery
 
 **Audience:** Agent operators authoring or migrating instruction files for Stigmem-backed agents.  
-**Spec reference:** §21 Lazy Instruction Discovery (Phase 10).
+**Spec reference:** §21 Lazy Instruction Discovery (v1.0 instruction-discovery design).
 
 ---
 

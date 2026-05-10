@@ -61,7 +61,7 @@ Content-Type: application/json
 { ... }
 ```
 
-The pinning header is documented in spec §3 (Wire Format). Server implementation lands in Phase B per master-checklist §5.x.
+The pinning header is documented in spec §3 (Wire Format). Server implementation lands in the v0.9.0bN beta series.x.
 
 ## Beta opt-in via `Stigmem-Beta` header
 

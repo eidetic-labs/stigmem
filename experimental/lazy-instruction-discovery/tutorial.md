@@ -15,7 +15,7 @@ audience: Integrator
 
 ## What you will achieve
 
-Two production agents — a project-manager agent and a backend-engineer agent — were migrated to lazy discovery in Phase 10. The results:
+Two production agents — a project-manager agent and a backend-engineer agent — were migrated to lazy discovery during the v1.0 instruction-discovery design. The results:
 
 | Agent type | Eager tokens/turn | Lazy tokens/turn | % of baseline | Coverage |
 |------------|-------------------|-----------------|---------------|----------|

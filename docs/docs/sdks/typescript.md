@@ -130,7 +130,7 @@ Paginated fact query. `QueryOptions`:
 
 Use `page.cursor` from the response for cursor-based pagination.
 
-### Recall (Phase 9 — §20.3)
+### Recall (v1.0 graph & recall — §20.3)
 
 #### `recall`
 
@@ -168,7 +168,7 @@ Hybrid recall — return the most salient facts for `query` within `token_budget
 
 `RecallWeights` defaults: `{ lexical: 0.35, semantic: 0.35, graph: 0.15, source_trust: 0.10, recency: 0.05 }`.
 
-### Memory cards (Phase 9 — §20.4)
+### Memory cards (v1.0 graph & recall — §20.4)
 
 #### `getCard`
 
@@ -372,7 +372,7 @@ The ergonomic types in `src/types.ts` (tagged-union `FactValue`, value construct
 
 ---
 
-## Phase 13 features
+## v1.0 / v1.1 advanced features
 
 ### Content-addressed fact IDs (§25)
 

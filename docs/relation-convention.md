@@ -1,7 +1,7 @@
 # Stigmem Relation Namespacing Convention
 
 **Scope:** All fact writes to any Stigmem node.  
-**Status:** Normative convention as of Phase 5.  
+**Status:** Normative convention as of the v0.7 design window.  
 **Companion spec:** §9 (Namespace Registry) + §2.6 (Entity Naming Rules).
 
 ---
@@ -117,7 +117,7 @@ Run `lint_scope` again to confirm no unresolved conflicts remain for the migrate
 
 ## Write-time Collision Validator
 
-As of Phase 5, the node validates relation names and detects collisions at write time.
+As of the v0.7 design window, the node validates relation names and detects collisions at write time.
 Two signals are returned in the `POST /v1/facts` response:
 
 1. **`warnings: list[str]`** — populated when the relation violates naming conventions.
@@ -160,4 +160,4 @@ protocol version. For now, warnings are non-blocking.
 
 ---
 
-*Last updated: Phase 5. Maintainer: CTO.*
+*Last updated: the v0.7 design window. Maintainer: CTO.*

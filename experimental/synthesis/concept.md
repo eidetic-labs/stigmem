@@ -155,7 +155,7 @@ result = await mcp.call_tool("synthesize_scope", {
 
 ## The lint → decay → synthesis pipeline (§16.5)
 
-The three Phase 6 operational tools answer different questions:
+The three the v0.8 design-partner window operational tools answer different questions:
 
 | Tool | Question | Writes? |
 |---|---|---|

@@ -17,8 +17,8 @@ Minimum contract for platform adapters: env vars, assert/query, source binding.
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-> **v0.6 status:** Promoted from Phase 4 reserved section to normative spec, grounded
-> in the three Phase 4 adapters shipped: MCP (`stigmem/adapters/mcp/`), Paperclip
+> **v0.6 status:** Promoted from the v0.6 design window reserved section to normative spec, grounded
+> in the three v0.6 adapters shipped: MCP (`stigmem/adapters/mcp/`), Paperclip
 > (`stigmem/adapters/paperclip/`), and OpenClaw (`stigmem/adapters/openclaw/`).
 
 ### §12.1 Adapter Archetypes {#section-12-1}

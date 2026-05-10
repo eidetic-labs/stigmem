@@ -54,7 +54,7 @@ DecayMode =
 
 **Policy registry:** Nodes maintain a list of `DecayPolicy` objects configured via:
 - Environment variable: `STIGMEM_DECAY_POLICIES` (JSON array of `DecayPolicy` objects).
-- Admin API: `GET/POST/DELETE /v1/decay/policies` (management endpoint; not yet implemented; Phase 7).
+- Admin API: `GET/POST/DELETE /v1/decay/policies` (management endpoint; not yet implemented; the v0.9 substrate window).
 
 **Default policy:** If no policies are configured, the decay sweeper is a no-op. Nodes do
 not apply any automatic decay by default.

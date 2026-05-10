@@ -57,7 +57,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 3. Review the audit log for the key's recent activity.
 4. If an admin key was compromised, treat all capability tokens as potentially tainted and revoke them.
 
-**Current protection status:** **Mitigated** — keys have enforced `expires_at` (Phase 12). Expired keys are rejected at `auth.py:113`. Rotate keys on a schedule; do not issue keys without an expiry.
+**Current protection status:** **Mitigated** — keys have enforced `expires_at` (v1.0 hardening). Expired keys are rejected at `auth.py:113`. Rotate keys on a schedule; do not issue keys without an expiry.
 
 ---
 
@@ -83,7 +83,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 2. Lower the per-principal write and read quotas in your deployment config: set `STIGMEM_RATE_LIMIT_WRITE_PER_HOUR` and `STIGMEM_RATE_LIMIT_READ_PER_HOUR` to tighter values and redeploy.
 3. Review whether the flooding came from a prompt-injected agent — if so, address R-15 (instruction-scope injection, Scenario 8.1).
 
-**Current protection status:** **Mitigated** — per-principal token-bucket quotas shipped in Phase 12 (`rate_limit.py`). Set `STIGMEM_RATE_LIMIT_WRITE_PER_HOUR=0` and `STIGMEM_RATE_LIMIT_READ_PER_HOUR=0` only in isolated dev/test environments; never in production.
+**Current protection status:** **Mitigated** — per-principal token-bucket quotas shipped in v1.0 hardening (`rate_limit.py`). Set `STIGMEM_RATE_LIMIT_WRITE_PER_HOUR=0` and `STIGMEM_RATE_LIMIT_READ_PER_HOUR=0` only in isolated dev/test environments; never in production.
 
 ---
 
@@ -148,7 +148,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **What can't they do?** Pass mTLS verification without the legitimate peer's client certificate. mTLS requires a client certificate signed by a CA your node trusts. Without the private key of the legitimate peer, impersonation fails at the TLS handshake.
 
-**What does the "pre-§22.1 deployment" risk mean?** If you deployed a node before Phase 12 and did not enable mTLS, peer authentication relies only on the capability token — which is weaker (tokens can be stolen without a private key). Ensure mTLS is enabled: see [mTLS guide](docs/security/mtls.md).
+**What does the "pre-§22.1 deployment" risk mean?** If you deployed a node before v1.0 hardening and did not enable mTLS, peer authentication relies only on the capability token — which is weaker (tokens can be stolen without a private key). Ensure mTLS is enabled: see [mTLS guide](docs/security/mtls.md).
 
 **How would you know?** The audit log records `federation_connect` events. Unexpected peer entity URIs in that log, or an unusual volume of quarantine admissions, are signals.
 
@@ -157,7 +157,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 2. Retract any facts the rogue peer injected.
 3. If the peer's private key was compromised, coordinate with the legitimate peer operator to rotate their node signing key and republish their org manifest with a new key.
 
-**Current protection status:** **Mitigated** — mTLS with `CERT_REQUIRED` shipped in Phase 12. Enable it; do not run federation over plain TLS.
+**Current protection status:** **Mitigated** — mTLS with `CERT_REQUIRED` shipped in v1.0 hardening. Enable it; do not run federation over plain TLS.
 
 ---
 
@@ -177,7 +177,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **How do you recover?** If you see replay attempts, revoke the capability token involved and issue a new one. Investigate whether the token was intercepted on the network.
 
-**Current protection status:** **Mitigated** — nonce + ±5 min timestamp window enforced; nonce cache survives restarts; fuzz tests cover replay edge cases (Phase 12).
+**Current protection status:** **Mitigated** — nonce + ±5 min timestamp window enforced; nonce cache survives restarts; fuzz tests cover replay edge cases (v1.0 hardening).
 
 ---
 
@@ -600,7 +600,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 
 **Current protection status:** **Open** (R-21, High priority).
 - **OpenClaw v0.9 partial defense:** the new handoff allowlist defends against the handoff variant of this attack — an injected agent cannot delegate to an arbitrary admin entity. This is a structural fix at the adapter layer.
-- **Structural fix at protocol layer:** per-session read/write graph isolation, ADR-003 capability separation, and outbound replication exclusion for transitive recalls are targeted for v0.9.x (strengthening-plan Phase B (capability redesign)).
+- **Structural fix at protocol layer:** per-session read/write graph isolation, ADR-003 capability separation, and outbound replication exclusion for transitive recalls are targeted for v0.9.x (the v0.9.0bN beta series (capability redesign)).
 - **Until those land:** issue agent writer keys with the narrowest possible scope, never overlapping the scopes the same agent reads from.
 
 ---
@@ -673,7 +673,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 3. Upgrade to a verified-clean version.
 4. Coordinate with federation peers — if your node was compromised, peers must treat replicated facts from your node during the compromise window as untrusted.
 
-**Current protection status:** **Open** (R-22, High priority). Phase C ships:
+**Current protection status:** **Open** (R-22, High priority). The v1.0.0rcN line ships:
 - Sigstore-signed releases (operators can verify cryptographic origin).
 - Reproducible builds (operators can independently verify a given commit produces a given binary).
 - SBOM publication (operators can audit the dependency tree).

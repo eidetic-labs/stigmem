@@ -10,7 +10,7 @@ description: Open roles and community engagement paths for the Stigmem project �
 
 ---
 
-The Stigmem project is growing its team. The three roles below are open now and feed directly into the Phase 8–14 build plan. They work alongside the existing engineering and documentation staff on the reference node, the spec, and the adapter ecosystem.
+The Stigmem project is growing its team. The three roles below are open now and feed directly into the the v0.9 attestation chain window–14 build plan. They work alongside the existing engineering and documentation staff on the reference node, the spec, and the adapter ecosystem.
 
 If you are interested in any of these roles, see [How to engage](#how-to-engage) below.
 
@@ -20,17 +20,17 @@ If you are interested in any of these roles, see [How to engage](#how-to-engage)
 
 ### Senior Engineer — Federation & Distributed Systems
 
-**Needed for: Phase 8 (Trust & Persistence Foundation) — shipped**
+**Needed for: the v0.9 attestation chain window (Trust & Persistence Foundation) — shipped**
 
-This is the highest-priority hire — the work starts immediately. Phase 8 adds a federation trust architecture (spec §19 — org manifests, cross-org capability tokens, source-trust scores, quarantine garden behavior) and a multi-backend storage adapter (libSQL, Postgres, SQLCipher). The work is protocol-level distributed systems: signing schemes, HLC cursor semantics, replication under partition, and conflict resolution.
+This is the highest-priority hire — the work starts immediately. the v0.9 attestation chain window adds a federation trust architecture (spec §19 — org manifests, cross-org capability tokens, source-trust scores, quarantine garden behavior) and a multi-backend storage adapter (libSQL, Postgres, SQLCipher). The work is protocol-level distributed systems: signing schemes, HLC cursor semantics, replication under partition, and conflict resolution.
 
 **What you'll work on:**
 
 - Spec §19 Federation Trust draft and reference implementation.
 - `StorageBackend` adapter trait; libSQL and Postgres adapters.
 - Signed-snapshot backup and restore with point-in-time recovery.
-- Federation replay-protection fuzz tests and Phase 12 mTLS / cert-pinning work.
-- Conformance test suite (Phase 11) — verifying backend parity across SQLite, libSQL, and Postgres.
+- Federation replay-protection fuzz tests and v1.0 hardening mTLS / cert-pinning work.
+- Conformance test suite (v0.9 multi-backend window) — verifying backend parity across SQLite, libSQL, and Postgres.
 
 **Background that fits:**
 
@@ -43,18 +43,18 @@ This is the highest-priority hire — the work starts immediately. Phase 8 adds 
 
 ### Security Engineer
 
-**Needed for: Phase 12 (Security Hardening) — shipped**
+**Needed for: v1.0 hardening (Security Hardening) — shipped**
 
-Phase 12 is a hardening phase: mTLS federation, API-key rotation enforcement, per-principal rate limits, container hardening, constant-time crypto audit, and community pen-test coordination. The Security Engineer role feeds the design of spec §19 (federation trust model) from Phase 8 onward and owns Phase 12 delivery.
+v1.0 hardening is a hardening phase: mTLS federation, API-key rotation enforcement, per-principal rate limits, container hardening, constant-time crypto audit, and community pen-test coordination. The Security Engineer role feeds the design of spec §19 (federation trust model) from the v0.9 attestation chain window onward and owns v1.0 hardening delivery.
 
 **What you'll work on:**
 
-- Threat model documentation and Phase 12 hardening checklist.
+- Threat model documentation and v1.0 hardening (carried forward to v0.9.0a1) checklist.
 - mTLS implementation for the federation peer protocol; cert-pinning option.
 - Constant-time crypto audit of the Ed25519 signing and verification path.
 - Transparency log integration (Rekor / Sigstore-equivalent for org-manifest rotation events per §19).
 - Community pen-test coordination — scope, safe-harbor, and engagement path are already started at [Security & Pen Testing](./security-disclosure.md).
-- Phase 13 right-to-be-forgotten tombstone design (cryptographic proof, cross-federation propagation).
+- the v1.0 / v1.1 design window right-to-be-forgotten tombstone design (cryptographic proof, cross-federation propagation).
 
 **Background that fits:**
 
@@ -67,19 +67,19 @@ Phase 12 is a hardening phase: mTLS federation, API-key rotation enforcement, pe
 
 ### Science / Research Agent — Graph Theory & Memory Structures
 
-**Needed for: Phase 9 (Graph Memory & Recall) — shipped**
+**Needed for: v1.0 graph & recall (Graph Memory & Recall) — shipped**
 
-Phase 9 adds a graph adjacency index, vector embeddings, and a `recall` endpoint that serves salience-ranked, budget-bounded memory slices to agents. The research dimension is ongoing: what graph representations, recall algorithms, and memory structures make Stigmem more useful as a cognitive substrate?
+v1.0 graph & recall adds a graph adjacency index, vector embeddings, and a `recall` endpoint that serves salience-ranked, budget-bounded memory slices to agents. The research dimension is ongoing: what graph representations, recall algorithms, and memory structures make Stigmem more useful as a cognitive substrate?
 
 This role thinks through emerging theory and surfaces capabilities the project can incorporate — graph embeddings, hypergraphs, sheaf theory for federated consistency, neural-symbolic recall, temporal knowledge graphs — and translates theoretical capability into spec proposals and testable prototypes.
 
 **What you'll work on:**
 
-- Graph adjacency index design and the Phase 9 `recall` endpoint architecture.
+- Graph adjacency index design and the v1.0 graph & recall `recall` endpoint architecture.
 - Salience-ranking model for the `recall` endpoint (combining recency, access frequency, vector similarity, and source-trust score).
 - Ongoing literature review: higher-order graph embeddings, hypergraphs, sheaf-theoretic approaches to federated consistency, neural-symbolic retrieval, temporal knowledge graphs.
 - Spec §20 "Recall & Graph" proposals.
-- Phase 13 eval harness design — adversarial fact injection, recall accuracy benchmarks, comparative analysis across retrieval approaches.
+- the v1.0 / v1.1 design window eval harness design — adversarial fact injection, recall accuracy benchmarks, comparative analysis across retrieval approaches.
 
 **Background that fits:**
 

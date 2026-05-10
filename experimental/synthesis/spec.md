@@ -140,7 +140,7 @@ The `summary` array contains one `SynthesisEntry` (§16.1) per live `(entity, re
 
 ### §16.5 Relationship to Lint and Decay {#section-16-5}
 
-The three Phase 6 operational tools form a pipeline:
+The three the v0.8 design-partner window operational tools form a pipeline:
 
 | Tool | Question answered | Writes? |
 |---|---|---|

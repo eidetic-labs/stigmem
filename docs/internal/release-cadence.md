@@ -8,7 +8,7 @@ This document is a **runbook**, not a policy. The policy (versioning rules, phas
 
 ## Audience
 
-A maintainer with publish rights (founder during Phase A) preparing a new tagged release of stigmem. Assumes you've already merged the work into `main` and CI is green.
+A maintainer with publish rights (founder during the v0.9.0aN alpha series) preparing a new tagged release of stigmem. Assumes you've already merged the work into `main` and CI is green.
 
 ---
 
@@ -184,4 +184,4 @@ See ADR-019 for why version numbers are immutable across all our surfaces (PEP 4
 
 ## Annual review
 
-This document is reviewed once per major release cycle (Phase A → B, B → C, C → GA, etc.) to incorporate operational lessons. Last reviewed: **2026-05-09** (created — Phase A in progress).
+This document is reviewed once per major release cycle (the v0.9.0aN alpha series → B, B → C, C → GA, etc.) to incorporate operational lessons. Last reviewed: **2026-05-09** (created — the v0.9.0aN alpha series in progress).

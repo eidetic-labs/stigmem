@@ -69,7 +69,7 @@ adapter.emit_decision(
 # Escalate to another agent
 adapter.emit_escalation(
     to_entity="agent:cto",
-    goal="Approve increased Stripe webhook rate limit for Phase 2 load.",
+    goal="Approve increased Stripe webhook rate limit for the v0.4 design window load.",
     priority="high",
 )
 

@@ -158,7 +158,7 @@ SourceAttestationMode = "enforce" | "warn" | "off"
 
 ### 3.5 Identity and Auth (v0.5 extended)
 
-**Status:** Phase 2 API-key model implemented. v0.5 extends with per-scope key
+**Status:** v0.4 API-key model implemented. v0.5 extends with per-scope key
 restrictions and peer-token auth for federation.
 
 #### Identity shape
@@ -183,7 +183,7 @@ is `["local","team","company","public"]` (all scopes) for backward compatibility
 Additive model: if `allowed_scopes` is empty, the key has no access. Operators SHOULD
 restrict service-to-service keys to the minimum required scope.
 
-#### Phase 2 API-key model (unchanged)
+#### v0.4 API-key model (unchanged)
 
 Credentials are presented as `Authorization: Bearer <raw-key>`. The node stores only
 the SHA-256 hex digest.

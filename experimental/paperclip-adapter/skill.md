@@ -62,7 +62,7 @@ node stigmem/adapters/paperclip/emit-fact.js assert \
 node stigmem/adapters/paperclip/emit-fact.js assert \
   --entity "decision:${DECISION_SLUG}" \
   --relation "roadmap:decision" \
-  --value '{"type":"text","v":"Chose SQLite for Phase 1 because ..."}' \
+  --value '{"type":"text","v":"Chose SQLite for the v0.3 design window because ..."}' \
   --source "${STIGMEM_SOURCE_ENTITY}" \
   --scope company
 ```

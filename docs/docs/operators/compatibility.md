@@ -39,8 +39,8 @@ Per [ADR-014](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/014-com
 | Scope enforcement | Stable | §3.5 | `node>=0.9.0a1` |
 | Two-node mTLS federation | Stable | §22.1, §19 (basic) | `node>=0.9.0a1` |
 | Content-addressed fact IDs (CIDs) | Stable in core ([ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | §25 | `node>=0.9.0a1` |
-| `Stigmem-Version` header | Documented (impl Phase B) | §3 | TBD |
-| Argon2id API key hashing | Planned (Phase B per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 | TBD |
+| `Stigmem-Version` header | Documented (impl the v0.9.0bN beta series) | §3 | TBD |
+| Argon2id API key hashing | Planned (the v0.9.0bN beta series per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 | TBD |
 | Lazy instruction discovery (§21) | Experimental | §21 | [`experimental/lazy-instruction-discovery/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery) — targeted v0.9.0a2 |
 | RTBF tombstones (§23) | Experimental | §23 | [`experimental/tombstones/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/tombstones) — targeted v0.9.0a5 |
 | Time-travel queries (§24) | Experimental | §24 | [`experimental/time-travel/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/time-travel) — targeted v0.9.0a4 |

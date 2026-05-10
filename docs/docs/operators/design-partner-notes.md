@@ -1,14 +1,14 @@
 ---
-title: Design Partner Notes — Phase 6 Pilots
+title: Design Partner Notes — the v0.8 design-partner window Pilots
 sidebar_label: Design Partner Notes
 audience: Integrator
 ---
 
-# Design Partner Notes — Phase 6 Pilots
+# Design Partner Notes — the v0.8 design-partner window Pilots
 
 **Audience:** Contributors and integrators evaluating stigmem for production adoption.
 
-Three design-partner pilots ran during Phase 6: Zep, Letta, and Cognee. Each pilot produced a working adapter and surfaced feedback that shaped the v0.8 protocol decisions.
+Three design-partner pilots ran during the v0.8 design-partner window: Zep, Letta, and Cognee. Each pilot produced a working adapter and surfaced feedback that shaped the v0.8 protocol decisions.
 
 ## Zep
 

@@ -24,9 +24,9 @@ The canonical spec is in flight — content arrives section-by-section as the ma
 | §24 Time-Travel Queries | Deferred | [`experimental/time-travel/spec.md`](../experimental/time-travel/spec.md) |
 | §25 Content-Addressed Fact IDs (CIDs) | **Stable in core** per [ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md) | This file → canonical spec |
 
-## Modular spec migration (Phase B work per ADR-010)
+## Modular spec migration (v0.9.0bN beta-series work per ADR-010)
 
-Per [ADR-010](../docs/adr/010-modular-specs.md), the spec decomposes into ~14 core specs (`spec/specs/01-core.md` through `Spec-14`) with independent versioning during Phase B. Until that lands, this single canonical file is the spec.
+Per [ADR-010](../docs/adr/010-modular-specs.md), the spec decomposes into ~14 core specs (`spec/specs/01-core.md` through `Spec-14`) with independent versioning during the v0.9.0bN beta series. Until that lands, this single canonical file is the spec.
 
 ## Evolution
 

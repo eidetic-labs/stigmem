@@ -78,7 +78,7 @@ rate; `burst` is the bucket depth.
 ### §6.2 Capability Negotiation — v0.6 Required {#section-6-2}
 
 **v0.5 open question §8.4 resolved.** Capability negotiation is now required for all
-nodes that support federation, based on implementation experience from two Phase 4 adapters.
+nodes that support federation, based on implementation experience from two v0.6 adapters.
 
 After peer registration, nodes MUST exchange capability advertisements before the first
 replication pull. The advertisement tells the peer what relation namespaces the
@@ -110,7 +110,7 @@ supports federation. A node MAY cache the remote capability advertisement for up
   requesting node MAY treat it as `{ federation_mode: "pull", relations_understood: [] }`.
 - Unknown fields in a received `CapabilityAd` MUST be ignored (forward compatibility).
 
-**Why now required:** Phase 4 shipped the Paperclip and OpenClaw adapters, both of
+**Why now required:** the v0.6 line shipped the Paperclip and OpenClaw adapters, both of
 which use distinct relation namespaces (`paperclip:`, `intent:`). Without capability
 exchange, a federated peer cannot distinguish relations it understands from opaque
 forwarded data — leading to silent contradiction storms on relations the peer cannot
@@ -236,7 +236,7 @@ Multi-node relay topologies (3+ nodes) are supported but §6.7 (backpressure) an
 
 ### §6.7 N-node Backpressure Patterns — v0.8 Draft {#section-6-7}
 
-> **v0.8 status:** These patterns were identified during Phase 6 4-node local topology
+> **v0.8 status:** These patterns were identified during v0.8 4-node local topology
 > work. They are draft guidance, pending validation in the D1 correctness test suite.
 > Promotion to normative is a v0.9 target.
 
@@ -296,7 +296,7 @@ suite (`stigmem/node/tests/test_federation_4node.py`) before v0.8 stabilization.
 ### §6.8 Scope Propagation Invariants — v0.8 Draft {#section-6-8}
 
 > **v0.8 status:** These invariants close the transitive scope escalation gap identified
-> during Phase 6 4-node topology work. Draft; to be validated against correctness tests
+> during v0.8 4-node topology work. Draft; to be validated against correctness tests
 > before promotion to normative.
 
 In a 2-node topology, scope enforcement is bilateral and straightforward. In an N-node
@@ -350,7 +350,7 @@ is applied.
 
 #### §6.8.3 Scope propagation edge cases {#section-6-8-3}
 
-The following edge cases were identified during Phase 6 4-node topology testing:
+The following edge cases were identified during v0.8 4-node topology testing:
 
 1. **Mixed-scope batch push.** A push payload (`POST /v1/federation/facts/push`) may
    contain facts of multiple scopes. Nodes MUST enforce per-fact scope checking within

@@ -6,7 +6,7 @@ audience: Operator
 
 # Observability — Prometheus, Grafana, and OpenTelemetry
 
-This runbook covers the full observability stack shipped with the Stigmem reference node (Phase 13).
+This runbook covers the full observability stack shipped with the Stigmem reference node (the v1.0 / v1.1 design window).
 
 ## What is included
 

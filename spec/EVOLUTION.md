@@ -27,7 +27,7 @@ The version *markers* in entries below labeled internal development checkpoints,
 
 ---
 
-## [v1.1-draft] — 2026-05 · Phase 9 (Graph Memory & Recall) — DRAFT
+## [v1.1-draft] — 2026-05 · v1.0 graph & recall (Graph Memory & Recall) — DRAFT
 
 **Promoted from:** v1.0
 
@@ -42,7 +42,7 @@ The version *markers* in entries below labeled internal development checkpoints,
 
 ### Extended sections
 
-- **§2** — `derived_from` field added to `FactRecord` for causal lineage (complementing Phase 8 `attestation_chain`).
+- **§2** — `derived_from` field added to `FactRecord` for causal lineage (complementing the v0.9 attestation_chain).
 - **§5** — New routes §20.3 (`/v1/recall`), §20.1 (`/v1/graph/neighbors`), §20.5 (`/v1/subscriptions`), §20.6 (`/v1/facts/:id/provenance`).
 - **§10 Database Schema** — migrations for `entity_edges`, `vec_facts`, `subscriptions`, `subscription_events`.
 
@@ -57,12 +57,12 @@ The version *markers* in entries below labeled internal development checkpoints,
 | `STIGMEM_SUBSCRIPTION_REPLAY_S` | `3600` | Event replay window for subscriptions |
 | `STIGMEM_CURSOR_TTL_S` | `300` | Pagination cursor TTL for `/v1/graph/neighbors` |
 
-### Documentation updates (Phase 9)
+### Documentation updates (v1.0 graph & recall)
 
-- `docs/docs/roadmap.md` — Phase 9 row updated; §20 draft noted.
+- `docs/docs/roadmap.md` — v1.0 graph & recall row updated; §20 draft noted.
 - `docs/docs/api-reference/index.md` — Recall, Graph, Subscriptions, and Provenance endpoint groups added.
 - `docs/docs/architecture/index.md` — Graph index and recall pipeline section added (three-stage pipeline, MMR, memory cards).
-- `docs/docs/backends.md` — Phase 9 recall and embedding env vars table added.
+- `docs/docs/backends.md` — v1.0 graph & recall and embedding env vars table added.
 
 ### Status
 
@@ -98,7 +98,7 @@ No new database migrations. v0.9 migrations 004 (gardens) and 005 (api_keys + at
 
 ---
 
-## [v0.9] — 2026-04 · Working draft (Phase 7 — substrate)
+## [v0.9] — 2026-04 · Working draft (v0.9 substrate)
 
 **Promoted from:** v0.8
 
@@ -117,7 +117,7 @@ No new database migrations. v0.9 migrations 004 (gardens) and 005 (api_keys + at
 
 ---
 
-## [v0.8] — 2026-03 · Public beta (Phase 6)
+## [v0.8] — 2026-03 · Public beta (v0.8)
 
 **Promoted from:** v0.7
 
@@ -134,7 +134,7 @@ No new database migrations. v0.9 migrations 004 (gardens) and 005 (api_keys + at
 
 ---
 
-## [v0.7] — 2026-02 · Phase 5
+## [v0.7] — 2026-02 · the v0.7 design window
 
 ### New sections
 
@@ -143,7 +143,7 @@ No new database migrations. v0.9 migrations 004 (gardens) and 005 (api_keys + at
 
 ---
 
-## [v0.6] — 2026-01 · Phase 4
+## [v0.6] — 2026-01 · the v0.6 design window
 
 ### New sections
 
@@ -156,7 +156,7 @@ No new database migrations. v0.9 migrations 004 (gardens) and 005 (api_keys + at
 
 ---
 
-## [v0.5] — 2025-12 · Phase 3
+## [v0.5] — 2025-12 · the v0.5 design window
 
 ### New sections
 
@@ -172,7 +172,7 @@ No new database migrations. v0.9 migrations 004 (gardens) and 005 (api_keys + at
 
 ---
 
-## [v0.4] — 2025-11 · Phase 2
+## [v0.4] — 2025-11 · the v0.4 design window
 
 ### Extended sections
 
@@ -183,7 +183,7 @@ No new database migrations. v0.9 migrations 004 (gardens) and 005 (api_keys + at
 
 ---
 
-## [v0.3] — 2025-10 · Phase 1
+## [v0.3] — 2025-10 · the v0.3 design window
 
 ### Extended sections
 

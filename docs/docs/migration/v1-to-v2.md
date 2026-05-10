@@ -418,7 +418,7 @@ Time-travel is a read-only feature. Dropping the `fact_retractions` table disabl
 | `cid` field on all new facts | All writes produce a `sha256:` CID alongside the UUID `fact_id` | No action — automatic |
 | Dual-addressing during 12-month migration window | APIs accept both `fact_id` and `cid` as identifiers | Update clients to prefer CID addressing |
 | Federation tamper detection | Inbound facts with mismatched CID are rejected | Ensure all peers are on v2.0 |
-| `phase13_ga_at` federation envelope field | Peers reject `cid: null` for facts created after GA | Coordinate upgrade timing with peers |
+| `v1_1_ga_at` federation envelope field | Peers reject `cid: null` for facts created after GA | Coordinate upgrade timing with peers |
 
 ### Migration steps
 

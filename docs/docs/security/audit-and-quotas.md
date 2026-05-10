@@ -7,7 +7,7 @@ audience: Operator
 
 # Audit Log & Per-Principal Quotas
 
-This guide covers two Phase 12 security hardening features (spec §22.3 and §22.4):
+This guide covers two v1.0 hardening security hardening features (spec §22.3 and §22.4):
 
 - **Audit log surface** — how to mint an `audit.read` API key and query the structured audit log.
 - **Per-principal quotas** — the 7 token-bucket dimensions, their defaults, and how to tune them via environment variables.

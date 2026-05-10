@@ -89,7 +89,7 @@ A retraction (fact with `confidence=0.0`) is subject to the same attestation rul
 
 ### §18.5 Integration with Track C (Per-Agent Keypairs) {#section-18-5}
 
-Phase 7 Track C adds per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
+the v0.9 substrate window Track C adds per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
 
 v0.9 source attestation is a first step. v0.9 `attested: true` means the bearer-token-level check passed. Track C extends this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
 
@@ -100,7 +100,7 @@ v0.9 source attestation is a first step. v0.9 `attested: true` means the bearer-
 
 ### 18.5 Integration with Track C (Per-Agent Keypairs)
 
-Phase 7 Track C will add per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
+the v0.9 substrate window Track C will add per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
 
 v0.9 source attestation is a first step. v0.9 `attested: true` means the bearer-token-level check passed. Track C will extend this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
 

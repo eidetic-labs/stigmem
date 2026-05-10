@@ -211,7 +211,7 @@ collisions across federated nodes.
 
 This section defines canonical entity naming rules and the **strict normalizer** contract. The goal is to prevent **silent entity fragmentation**: multiple facts about the same real-world entity using different URI representations that create disconnected entity nodes in the store.
 
-**v0.7 scope:** The strict normalizer addresses case-based and whitespace-based fragmentation deterministically. Full alias resolution (e.g. `user:alice` ≡ `user:a.smith`) is deferred to the Phase 6 fuzzy resolver.
+**v0.7 scope:** The strict normalizer addresses case-based and whitespace-based fragmentation deterministically. Full alias resolution (e.g. `user:alice` ≡ `user:a.smith`) is deferred to the the v0.8 design-partner window fuzzy resolver.
 
 #### §2.6.1 The fragmentation problem {#section-2-6-1}
 
@@ -287,7 +287,7 @@ def normalize_entity_uri(raw: str) -> str:
 3. **Total on valid inputs:** every non-empty string produces exactly one output; invalid inputs raise `NormalizationError`.
 
 **What the strict normalizer does NOT do:**
-- Alias resolution (e.g., `user:alice` ≡ `user:a.smith`) — Phase 6 fuzzy resolver.
+- Alias resolution (e.g., `user:alice` ≡ `user:a.smith`) — the v0.8 design-partner window fuzzy resolver.
 - Existence validation against the fact store.
 - Semantic similarity matching.
 - Conversion of informal URIs to formal URIs (§2.5 prohibits silent auto-rewrite).

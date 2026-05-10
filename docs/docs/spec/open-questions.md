@@ -17,9 +17,9 @@ Currently-unresolved questions tracked in the spec for community feedback.
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-1. **Cross-node garden membership.** A garden's members are resolved against the local node's `entity_uri` namespace. In a federated deployment, `stigmem://node-a/user/alice` may be unknown to `node-b`. How should guest membership work across nodes? *Deferred to Phase 8 federation design.*
+1. **Cross-node garden membership.** A garden's members are resolved against the local node's `entity_uri` namespace. In a federated deployment, `stigmem://node-a/user/alice` may be unknown to `node-b`. How should guest membership work across nodes? *Deferred to the v0.9 attestation chain window federation design.*
 
-2. **Garden-scoped contradiction detection.** Currently contradiction detection operates on `(entity, relation, scope)`. Should `garden_id` be a fourth dimension? Two facts could have the same `(entity, relation, scope)` but different `garden_id` values. *Proposing: contradiction detection remains scope-only; garden isolation means garden-A facts and garden-B facts about the same entity do not contradict each other by default. An opt-in cross-garden contradiction check is a Phase 8 concern.*
+2. **Garden-scoped contradiction detection.** Currently contradiction detection operates on `(entity, relation, scope)`. Should `garden_id` be a fourth dimension? Two facts could have the same `(entity, relation, scope)` but different `garden_id` values. *Proposing: contradiction detection remains scope-only; garden isolation means garden-A facts and garden-B facts about the same entity do not contradict each other by default. An opt-in cross-garden contradiction check is a the v0.9 attestation chain window concern.*
 
 3. **`attested` field and retraction.** If a fact was written in `warn` mode with `attested: false`, should a retraction (same `entity/relation/scope` with `confidence=0.0`) require `enforce` mode to be trusted? *Recommendation: attestation is per-fact, not per-operation. A retraction with `attested: false` is still a valid immutable record; query consumers can filter on `attested`.*
 
@@ -46,19 +46,19 @@ Each subsection below shows the most recent normative text from the spec source.
 
 **Remaining open:**
 
-1. **Intent envelope wire route.** Phase 2 implemented fact model only. Intent envelope wired
-   through Phase 4 adapters (handoff, escalation, decision facts), but the full
-   `IntentEnvelope` wire route is not yet implemented. Deferred to Phase 7.
+1. **Intent envelope wire route.** the v0.4 design window implemented fact model only. Intent envelope wired
+   through v0.6 adapters (handoff, escalation, decision facts), but the full
+   `IntentEnvelope` wire route is not yet implemented. Deferred to the v0.9 substrate window.
 
 2. **Conflict resolution policy plugins.** Should operators be able to register custom
-   resolution functions? Deferred until a concrete use case emerges from Phase 6 testing.
+   resolution functions? Deferred until a concrete use case emerges from the v0.8 design-partner window testing.
 
 3. **Audit log retention.** The federation audit log has no specified retention policy.
-   Nodes SHOULD retain at least 7 days (time-based policy is a Phase 7 concern).
+   Nodes SHOULD retain at least 7 days (time-based policy is a the v0.9 substrate window concern).
 
 4. **Async lint job API.** The synchronous lint route (§14.5) is sufficient for scopes
    under 100,000 facts. The async job API (`GET /v1/lint/jobs/:job_id`) is specified but
-   not yet implemented. Phase 7 target.
+   not yet implemented. the v0.9 substrate window target.
 
 5. **Async decay sweep API.** The synchronous decay sweep (§15.4) is appropriate for
    moderate scope sizes. Async sweep for large scopes (>100,000 facts) follows the lint
@@ -66,21 +66,21 @@ Each subsection below shows the most recent normative text from the spec source.
 
 6. **Fuzzy entity resolver.** Alias-based resolution (§2.6.6) handles canonical URI
    lookup. Semantic similarity matching (e.g. `user:alice` ≡ `user:a.smith`) is
-   deferred to the Phase 7 fuzzy resolver (Kompl-style 3-layer matcher).
+   deferred to the the v0.9 substrate window fuzzy resolver (Kompl-style 3-layer matcher).
 
 7. **Synthesis aggregation strategy for contradicted facts.** When `synthesize_scope`
    encounters a contradicted `(entity, relation, scope)` triple, it currently returns
    the highest-confidence value and annotates the output with `contradicted: true`.
    Whether synthesis should surface both values or attempt a weighted merge is an open
-   question for Phase 7.
+   question for the v0.9 substrate window.
 
 ---
 
 **From `stigmem-spec-v0.9-draft.md`:**
 
-1. **Cross-node garden membership.** A garden's members are resolved against the local node's `entity_uri` namespace. In a federated deployment, `stigmem://node-a/user/alice` may be unknown to `node-b`. How should guest membership work across nodes? *Deferred to Phase 8 federation design.*
+1. **Cross-node garden membership.** A garden's members are resolved against the local node's `entity_uri` namespace. In a federated deployment, `stigmem://node-a/user/alice` may be unknown to `node-b`. How should guest membership work across nodes? *Deferred to the v0.9 attestation chain window federation design.*
 
-2. **Garden-scoped contradiction detection.** Currently contradiction detection operates on `(entity, relation, scope)`. Should `garden_id` be a fourth dimension? Two facts could have the same `(entity, relation, scope)` but different `garden_id` values. *Proposing: contradiction detection remains scope-only; garden isolation means garden-A facts and garden-B facts about the same entity do not contradict each other by default. An opt-in cross-garden contradiction check is a Phase 8 concern.*
+2. **Garden-scoped contradiction detection.** Currently contradiction detection operates on `(entity, relation, scope)`. Should `garden_id` be a fourth dimension? Two facts could have the same `(entity, relation, scope)` but different `garden_id` values. *Proposing: contradiction detection remains scope-only; garden isolation means garden-A facts and garden-B facts about the same entity do not contradict each other by default. An opt-in cross-garden contradiction check is a the v0.9 attestation chain window concern.*
 
 3. **`attested` field and retraction.** If a fact was written in `warn` mode with `attested: false`, should a retraction (same `entity/relation/scope` with `confidence=0.0`) require `enforce` mode to be trusted? *Recommendation: attestation is per-fact, not per-operation. A retraction with `attested: false` is still a valid immutable record; query consumers can filter on `attested`.*
 

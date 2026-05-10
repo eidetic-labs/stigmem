@@ -17,7 +17,7 @@ Acceptance test scenarios — split-brain, malicious peer, partial failure, repl
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-These scenarios are **acceptance gates** for Phase 3. All four MUST pass before
+These scenarios are **acceptance gates** for the v0.5 design window. All four MUST pass before
 the phase is considered complete.
 
 ### §11.1 Split-Brain {#section-11-1}

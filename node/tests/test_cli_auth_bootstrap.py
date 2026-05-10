@@ -79,9 +79,11 @@ def test_bootstrap_key_registers_provided_key(fresh_db: str) -> None:
     assert rc == 0
     # The raw key MUST NOT appear in stdout (the whole point of the refactor).
     assert raw not in stdout
-    # Confirmation message has key_id, entity, permissions — but never the raw key.
+    # Confirmation message contains entity + permissions but NEVER the raw key
+    # (the whole point of the user-provides-key refactor — the system has no
+    # reveal channel for the credential).
     assert "Registered admin API key" in stderr
-    assert "key_id=" in stderr
+    assert "agent:admin" in stderr
     assert raw not in stderr
 
     row = _row_for_key(fresh_db, raw)

@@ -1,12 +1,28 @@
 """API-key authentication for the Stigmem reference node.
 
-Phase 2 auth model (spec §3.5):
+Auth model (spec §3.5):
   - Callers present `Authorization: Bearer <raw-key>` on every request.
   - Raw keys are never stored; only their SHA-256 hex digest is persisted.
   - Each key maps to an entity_uri and a JSON-array of permissions:
     ["read"], ["read","write"], or ["read","write","federate"].
-  - When STIGMEM_AUTH_REQUIRED=false (default), all callers are treated as
-    fully-trusted; auth header is accepted but not required.
+  - `STIGMEM_AUTH_REQUIRED` defaults to **True** — every request must
+    present a valid Bearer token. Set `STIGMEM_AUTH_REQUIRED=false` to
+    opt into anonymous-mode for single-operator development; this is
+    NOT appropriate for any deployment that accepts requests from
+    agents you don't fully control. See LIMITATIONS.md §"LLM agents
+    holding admin-scope API keys" for context.
+
+Bootstrapping the first key (single-operator install):
+  $ KEY=$(openssl rand -hex 32)
+  $ stigmem auth bootstrap-key --key "$KEY"
+  # then use $KEY as `Authorization: Bearer $KEY` for subsequent requests.
+
+  The system NEVER generates the key — the caller provides the value and
+  retains full custody. We hash and store it. This is by design:
+  removing the system as the credential-generation surface eliminates
+  the "reveal channel" risk entirely. The command refuses to run when
+  api_keys is non-empty (bootstrap is one-shot); after bootstrap,
+  additional keys go through `POST /v1/auth/keys`.
 """
 
 from __future__ import annotations
@@ -121,7 +137,8 @@ def _lookup(raw_key: str) -> Identity | None:
     )
 
 
-def create_api_key(
+def register_api_key(
+    raw_key: str,
     entity_uri: str,
     permissions: list[str] | None = None,
     description: str | None = None,
@@ -129,10 +146,14 @@ def create_api_key(
     oidc_sub: str | None = None,
     tenant_id: str = "default",
 ) -> str:
-    """Mint a new raw API key, persist its hash, and return the raw key."""
+    """Persist the hash of a caller-provided raw API key. Returns the key_id.
+
+    The caller is responsible for generating `raw_key` (e.g., from
+    `secrets.token_hex(32)` or `openssl rand -hex 32`) and for storing it
+    securely. This function never touches the key after hashing.
+    """
     if permissions is None:
         permissions = ["read", "write"]
-    raw = str(uuid.uuid4()).replace("-", "")  # 32-char hex
     key_id = str(uuid.uuid4())
     with db() as conn:
         conn.execute(
@@ -142,7 +163,7 @@ def create_api_key(
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
                 key_id,
-                _hash_key(raw),
+                _hash_key(raw_key),
                 entity_uri,
                 json.dumps(permissions),
                 description,
@@ -152,4 +173,32 @@ def create_api_key(
                 tenant_id,
             ),
         )
+    return key_id
+
+
+def create_api_key(
+    entity_uri: str,
+    permissions: list[str] | None = None,
+    description: str | None = None,
+    expires_at: str | None = None,
+    oidc_sub: str | None = None,
+    tenant_id: str = "default",
+) -> str:
+    """Mint a new raw API key, persist its hash, and return the raw key.
+
+    Internal/test-only convenience over `register_api_key`. Adopter-facing
+    flows should require the caller to provide the key material (see
+    `stigmem auth bootstrap-key`) so the system is never the credential
+    generation surface.
+    """
+    raw = str(uuid.uuid4()).replace("-", "")  # 32-char hex
+    register_api_key(
+        raw_key=raw,
+        entity_uri=entity_uri,
+        permissions=permissions,
+        description=description,
+        expires_at=expires_at,
+        oidc_sub=oidc_sub,
+        tenant_id=tenant_id,
+    )
     return raw

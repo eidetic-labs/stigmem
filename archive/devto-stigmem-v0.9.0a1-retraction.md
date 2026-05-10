@@ -23,7 +23,7 @@ title: "Walking Back Our v1.0 Announcement: Resetting to v0.9.0a1 as the First B
 published: false
 description: Last week we announced v1.0 of stigmem. That label was wrong, and on review the broader version history was overstating maturity too. Here's what we got wrong, what we're changing, and what we'd recommend for anyone evaluating stigmem today.
 tags: opensource, ai, agents, security
-canonical_url:
+canonical_url: https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0
 ---
 
 Last week we announced v1.0 of [stigmem](https://github.com/eidetic-labs/stigmem), our federated agent memory project.

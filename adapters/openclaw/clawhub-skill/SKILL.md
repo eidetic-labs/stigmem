@@ -153,9 +153,16 @@ Stigmem nodes can federate with each other to share public-scoped facts across o
 
 ## Changelog
 
+> **Note on versioning.** This ClawHub skill is independently versioned along its own semver line. The skill's `version:` (currently 1.0.x) tracks the skill's ClawHub release history; the dependency on stigmem is expressed via the `install.package` pin (currently `stigmem-py>=0.9.0a1,<1.0.0`). The bare-stigmem version line was reset to v0.9.0a1 in May 2026 — see [the retraction post](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) — but ClawHub registry rules require monotonically increasing skill versions, so the skill stays on its 1.0.x line. The two version surfaces are intentionally decoupled.
+
+### v1.0.6
+
+- Updated `install.package` pin from `stigmem-py>=1.0.0,<2.0.0` to `stigmem-py>=0.9.0a1,<1.0.0` to match the v0.9.0a1 reset of the stigmem package line. This is the contract that ties the skill to a specific stigmem release line. Adopters who installed earlier ClawHub skill versions (1.0.0–1.0.5) had a `stigmem-py>=1.0.0rc1` dependency that was end-to-end uninstallable (see retraction post, "What the audit found"); v1.0.6 is the first installable skill release in this respect.
+- Documentation: added the retraction-post reference and the independent-versioning note above.
+
 ### v1.0.5
 
-- Fix: corrected documentation URLs to include ReadTheDocs path prefix (`/en/latest/`) — all links now resolve correctly.
+- Fix: corrected documentation URLs to include ReadTheDocs path prefix (`/en/latest/`); all links now resolve correctly.
 
 ### v1.0.4
 

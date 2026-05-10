@@ -482,79 +482,90 @@ def push_facts(
     errors: list[dict[str, Any]] = []
 
     for fact in facts:
-        fact_scope = fact.get("scope", "")
-
         if using_cap_token:
-            # H-SEC-2: verify capability token object covers this fact's scope
             assert cap_token is not None
-            token_object = cap_token.get("object", "")
-            if not _cap_token_covers_scope(token_object, fact_scope):
-                rejected += 1
-                errors.append({
-                    "fact_id": fact.get("id"),
-                    "error": "insufficient_capability: token object does not cover scope",
-                })
-                continue
-
-            sender_node_id = cap_token.get("subject", "")
-            fact_source = fact.get("source", "")
-            # Source non-forgery: source must match capability token subject
-            if fact_source != sender_node_id:
-                rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": "source_not_owned"})
-                continue
-
-            try:
-                ingest_fact(
-                    fact,
-                    sender_node_id,
-                    identity_strength_boost=0.5,  # §19.4.2 boost for valid capability token
-                )
-                accepted += 1
-            except Exception:
-                rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": "ingest_error"})
+            ok, err = _push_fact_with_cap_token(fact, cap_token)
         else:
             assert peer is not None and token_payload is not None
-            permitted = _allowed_output_scopes(peer, token_payload)
-
-            if fact_scope not in permitted:
-                write_audit_log(
-                    peer["id"], "scope_violation",
-                    {"fact_id": fact.get("id"), "scope": fact_scope},
-                )
-                rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": "scope_not_permitted"})
-                continue
-
-            # Source non-forgery: source must match the sending peer's node_id (§6.4)
-            fact_source = fact.get("source", "")
-            if fact_source != peer["node_id"]:
-                write_audit_log(
-                    peer["id"], "rejected_fact",
-                    {
-                        "fact_id": fact.get("id"),
-                        "reason": "source_not_owned",
-                        "source": fact_source,
-                        "peer_node_id": peer["node_id"],
-                    },
-                )
-                rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": "source_not_owned"})
-                continue
-
-            try:
-                ingest_fact(
-                    fact,
-                    peer["node_id"],
-                    origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
-                )
-                accepted += 1
-            except Exception:
-                rejected += 1
-                errors.append({"fact_id": fact.get("id"), "error": "ingest_error"})
+            ok, err = _push_fact_with_peer_token(fact, peer, token_payload)
+        if ok:
+            accepted += 1
+        else:
+            rejected += 1
+            assert err is not None
+            errors.append(err)
 
     return {"accepted": accepted, "rejected": rejected, "errors": errors}
+
+
+def _push_fact_with_cap_token(
+    fact: dict[str, Any], cap_token: dict[str, Any]
+) -> tuple[bool, dict[str, Any] | None]:
+    """Validate + ingest one pushed fact under capability-token auth."""
+    fact_scope = fact.get("scope", "")
+
+    # H-SEC-2: verify capability token object covers this fact's scope
+    token_object = cap_token.get("object", "")
+    if not _cap_token_covers_scope(token_object, fact_scope):
+        return False, {
+            "fact_id": fact.get("id"),
+            "error": "insufficient_capability: token object does not cover scope",
+        }
+
+    sender_node_id = cap_token.get("subject", "")
+    fact_source = fact.get("source", "")
+    # Source non-forgery: source must match capability token subject
+    if fact_source != sender_node_id:
+        return False, {"fact_id": fact.get("id"), "error": "source_not_owned"}
+
+    try:
+        ingest_fact(
+            fact,
+            sender_node_id,
+            identity_strength_boost=0.5,  # §19.4.2 boost for valid capability token
+        )
+        return True, None
+    except Exception:
+        return False, {"fact_id": fact.get("id"), "error": "ingest_error"}
+
+
+def _push_fact_with_peer_token(
+    fact: dict[str, Any], peer: dict[str, Any], token_payload: dict[str, Any]
+) -> tuple[bool, dict[str, Any] | None]:
+    """Validate + ingest one pushed fact under peer-JWT auth."""
+    fact_scope = fact.get("scope", "")
+    permitted = _allowed_output_scopes(peer, token_payload)
+
+    if fact_scope not in permitted:
+        write_audit_log(
+            peer["id"], "scope_violation",
+            {"fact_id": fact.get("id"), "scope": fact_scope},
+        )
+        return False, {"fact_id": fact.get("id"), "error": "scope_not_permitted"}
+
+    # Source non-forgery: source must match the sending peer's node_id (§6.4)
+    fact_source = fact.get("source", "")
+    if fact_source != peer["node_id"]:
+        write_audit_log(
+            peer["id"], "rejected_fact",
+            {
+                "fact_id": fact.get("id"),
+                "reason": "source_not_owned",
+                "source": fact_source,
+                "peer_node_id": peer["node_id"],
+            },
+        )
+        return False, {"fact_id": fact.get("id"), "error": "source_not_owned"}
+
+    try:
+        ingest_fact(
+            fact,
+            peer["node_id"],
+            origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
+        )
+        return True, None
+    except Exception:
+        return False, {"fact_id": fact.get("id"), "error": "ingest_error"}
 
 
 # ---------------------------------------------------------------------------

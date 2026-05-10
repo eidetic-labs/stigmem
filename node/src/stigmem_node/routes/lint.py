@@ -56,6 +56,174 @@ class LintResult(BaseModel):
     fact_count: int
 
 
+def _check_contradictions(conn: Any, fa_filter: str, fa_params: list[Any]) -> list[dict[str, Any]]:
+    """Find unresolved conflict pairs."""
+    conflict_sql = (
+        "SELECT c.id AS conflict_id, c.fact_a_id, c.fact_b_id, fa.entity, fa.relation"
+        " FROM conflicts c"
+        " JOIN facts fa ON fa.id = c.fact_a_id"
+        " JOIN facts fb ON fb.id = c.fact_b_id"
+        f" WHERE c.status = 'unresolved' {fa_filter}"  # nosec B608 — fa_filter built from literal SQL fragments; values in params
+    )
+    return [
+        {
+            "check": "contradiction",
+            "severity": "error",
+            "entity": row["entity"],
+            "relation": row["relation"],
+            "fact_ids": [row["fact_a_id"], row["fact_b_id"]],
+            "detail": f"unresolved conflict {row['conflict_id']}",
+        }
+        for row in conn.execute(conflict_sql, fa_params).fetchall()
+    ]
+
+
+def _check_stale(
+    conn: Any,
+    f_filter: str,
+    f_params: list[Any],
+    now: str,
+    lookahead: str,
+    stale_lookahead_s: int,
+) -> list[dict[str, Any]]:
+    """Find facts that have expired or will expire within the lookahead window."""
+    stale_sql = (
+        "SELECT f.id, f.entity, f.relation, f.valid_until"
+        " FROM facts f"
+        " WHERE f.valid_until IS NOT NULL"
+        " AND f.confidence > 0.0"
+        " AND f.valid_until <= ?"
+        f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
+    )
+    findings: list[dict[str, Any]] = []
+    for row in conn.execute(stale_sql, [lookahead] + f_params).fetchall():
+        expired = row["valid_until"] <= now
+        findings.append({
+            "check": "stale",
+            "severity": "warning" if expired else "info",
+            "entity": row["entity"],
+            "relation": row["relation"],
+            "fact_ids": [row["id"]],
+            "detail": (
+                f"expired at {row['valid_until']}"
+                if expired
+                else f"expires at {row['valid_until']} (within {stale_lookahead_s}s)"
+            ),
+        })
+    return findings
+
+
+def _check_orphans(
+    conn: Any, scope: str, entity: str | None, now: str
+) -> list[dict[str, Any]]:
+    """Find entities with no live facts in scope."""
+    orphan_clauses = "AND scope = ?"
+    orphan_params: list[Any] = [scope]
+    if entity:
+        orphan_clauses += " AND entity = ?"
+        orphan_params.append(entity)
+
+    orphan_sql = (
+        "SELECT entity FROM facts"
+        f" WHERE 1=1 {orphan_clauses}"  # nosec B608 — orphan_clauses built from literal SQL fragments; values in params
+        " GROUP BY entity"
+        " HAVING COUNT(*) > 0"
+        " AND SUM(CASE WHEN confidence > 0.0"
+        " AND (valid_until IS NULL OR valid_until > ?) THEN 1 ELSE 0 END) = 0"
+    )
+    return [
+        {
+            "check": "orphan",
+            "severity": "info",
+            "entity": row["entity"],
+            "relation": None,
+            "fact_ids": [],
+            "detail": f"entity {row['entity']!r} has no live facts in scope={scope}",
+        }
+        for row in conn.execute(orphan_sql, orphan_params + [now]).fetchall()
+    ]
+
+
+def _check_broken_refs(
+    conn: Any, f_filter: str, f_params: list[Any], now: str
+) -> list[dict[str, Any]]:
+    """Find ref-typed facts whose target entity has no live facts."""
+    ref_sql = (
+        "SELECT f.id, f.entity, f.relation, f.value_v"
+        " FROM facts f"
+        " WHERE f.value_type = 'ref'"
+        " AND f.confidence > 0.0"
+        " AND (f.valid_until IS NULL OR f.valid_until > ?)"
+        f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
+    )
+    findings: list[dict[str, Any]] = []
+    for row in conn.execute(ref_sql, [now] + f_params).fetchall():
+        target_entity = row["value_v"]
+        live_count = conn.execute(
+            "SELECT COUNT(*) FROM facts"
+            " WHERE entity = ? AND confidence > 0.0"
+            " AND (valid_until IS NULL OR valid_until > ?)",
+            [target_entity, now],
+        ).fetchone()[0]
+        if live_count == 0:
+            is_intent = row["relation"] in INTENT_ROUTING_RELATIONS
+            findings.append({
+                "check": "broken_ref",
+                "severity": "error" if is_intent else "warning",
+                "entity": row["entity"],
+                "relation": row["relation"],
+                "fact_ids": [row["id"]],
+                "detail": f"ref target entity {target_entity!r} has no live facts",
+            })
+    return findings
+
+
+def _check_namespacing(
+    conn: Any, f_filter: str, f_params: list[Any], now: str
+) -> list[dict[str, Any]]:
+    """Find live facts whose relation lacks a namespace prefix."""
+    ns_sql = (
+        "SELECT f.entity, f.relation, GROUP_CONCAT(f.id) AS ids"
+        " FROM facts f"
+        " WHERE f.confidence > 0.0"
+        " AND (f.valid_until IS NULL OR f.valid_until > ?)"
+        " AND instr(f.relation, ':') = 0"
+        f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
+        " GROUP BY f.entity, f.relation"
+    )
+    return [
+        {
+            "check": "namespacing",
+            "severity": "warning",
+            "entity": row["entity"],
+            "relation": row["relation"],
+            "fact_ids": row["ids"].split(",") if row["ids"] else [],
+            "detail": (
+                f"bare relation {row['relation']!r} has no namespace prefix — "
+                f"rename to 'your-prefix:{row['relation']}' to avoid silent collisions"
+            ),
+        }
+        for row in conn.execute(ns_sql, [now] + f_params).fetchall()
+    ]
+
+
+def _build_lint_filters(
+    scope: str, entity: str | None, relation: str | None, prefix: str
+) -> tuple[str, list[Any]]:
+    """Build the AND-clause SQL fragment and its bound params for lint queries."""
+    clause = f"AND {prefix}.scope = ?"
+    if entity:
+        clause += f" AND {prefix}.entity = ?"
+    if relation:
+        clause += f" AND {prefix}.relation = ?"
+    params: list[Any] = (
+        [scope]
+        + ([entity] if entity else [])
+        + ([relation] if relation else [])
+    )
+    return clause, params
+
+
 def _run_lint_sweep(
     scope: str,
     checks: list[LintCheck],
@@ -68,17 +236,8 @@ def _run_lint_sweep(
     now = now_dt.isoformat()
     lookahead = (now_dt + timedelta(seconds=stale_lookahead_s)).isoformat()
 
-    f_scope = "AND f.scope = ?"
-    f_entity = ("AND f.entity = ?" if entity else "")
-    f_relation = ("AND f.relation = ?" if relation else "")
-    f_filter = f_scope + f_entity + f_relation
-    f_params: list[Any] = [scope] + ([entity] if entity else []) + ([relation] if relation else [])
-
-    fa_scope = "AND fa.scope = ?"
-    fa_entity = ("AND fa.entity = ?" if entity else "")
-    fa_relation = ("AND fa.relation = ?" if relation else "")
-    fa_filter = fa_scope + fa_entity + fa_relation
-    fa_params: list[Any] = [scope] + ([entity] if entity else []) + ([relation] if relation else [])
+    f_filter, f_params = _build_lint_filters(scope, entity, relation, "f")
+    fa_filter, fa_params = _build_lint_filters(scope, entity, relation, "fa")
 
     findings: list[dict[str, Any]] = []
     fact_count = 0
@@ -88,122 +247,21 @@ def _run_lint_sweep(
         fact_count = conn.execute(count_sql, f_params).fetchone()[0]
 
         if "contradiction" in checks:
-            conflict_sql = (
-                "SELECT c.id AS conflict_id, c.fact_a_id, c.fact_b_id, fa.entity, fa.relation"
-                " FROM conflicts c"
-                " JOIN facts fa ON fa.id = c.fact_a_id"
-                " JOIN facts fb ON fb.id = c.fact_b_id"
-                f" WHERE c.status = 'unresolved' {fa_filter}"  # nosec B608 — fa_filter built from literal SQL fragments; values in params
-            )
-            for row in conn.execute(conflict_sql, fa_params).fetchall():
-                findings.append({
-                    "check": "contradiction",
-                    "severity": "error",
-                    "entity": row["entity"],
-                    "relation": row["relation"],
-                    "fact_ids": [row["fact_a_id"], row["fact_b_id"]],
-                    "detail": f"unresolved conflict {row['conflict_id']}",
-                })
+            findings.extend(_check_contradictions(conn, fa_filter, fa_params))
 
         if "stale" in checks:
-            stale_sql = (
-                "SELECT f.id, f.entity, f.relation, f.valid_until"
-                " FROM facts f"
-                " WHERE f.valid_until IS NOT NULL"
-                " AND f.confidence > 0.0"
-                " AND f.valid_until <= ?"
-                f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
+            findings.extend(
+                _check_stale(conn, f_filter, f_params, now, lookahead, stale_lookahead_s)
             )
-            for row in conn.execute(stale_sql, [lookahead] + f_params).fetchall():
-                expired = row["valid_until"] <= now
-                findings.append({
-                    "check": "stale",
-                    "severity": "warning" if expired else "info",
-                    "entity": row["entity"],
-                    "relation": row["relation"],
-                    "fact_ids": [row["id"]],
-                    "detail": (
-                        f"expired at {row['valid_until']}"
-                        if expired
-                        else f"expires at {row['valid_until']} (within {stale_lookahead_s}s)"
-                    ),
-                })
 
         if "orphan" in checks:
-            orphan_clauses = "AND scope = ?"
-            orphan_params: list[Any] = [scope]
-            if entity:
-                orphan_clauses += " AND entity = ?"
-                orphan_params.append(entity)
-
-            orphan_sql = (
-                "SELECT entity FROM facts"
-                f" WHERE 1=1 {orphan_clauses}"  # nosec B608 — orphan_clauses built from literal SQL fragments; values in params
-                " GROUP BY entity"
-                " HAVING COUNT(*) > 0"
-                " AND SUM(CASE WHEN confidence > 0.0"
-                " AND (valid_until IS NULL OR valid_until > ?) THEN 1 ELSE 0 END) = 0"
-            )
-            for row in conn.execute(orphan_sql, orphan_params + [now]).fetchall():
-                findings.append({
-                    "check": "orphan",
-                    "severity": "info",
-                    "entity": row["entity"],
-                    "relation": None,
-                    "fact_ids": [],
-                    "detail": f"entity {row['entity']!r} has no live facts in scope={scope}",
-                })
+            findings.extend(_check_orphans(conn, scope, entity, now))
 
         if "broken_ref" in checks:
-            ref_sql = (
-                "SELECT f.id, f.entity, f.relation, f.value_v"
-                " FROM facts f"
-                " WHERE f.value_type = 'ref'"
-                " AND f.confidence > 0.0"
-                " AND (f.valid_until IS NULL OR f.valid_until > ?)"
-                f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
-            )
-            for row in conn.execute(ref_sql, [now] + f_params).fetchall():
-                target_entity = row["value_v"]
-                live_count = conn.execute(
-                    "SELECT COUNT(*) FROM facts"
-                    " WHERE entity = ? AND confidence > 0.0"
-                    " AND (valid_until IS NULL OR valid_until > ?)",
-                    [target_entity, now],
-                ).fetchone()[0]
-                if live_count == 0:
-                    is_intent = row["relation"] in INTENT_ROUTING_RELATIONS
-                    findings.append({
-                        "check": "broken_ref",
-                        "severity": "error" if is_intent else "warning",
-                        "entity": row["entity"],
-                        "relation": row["relation"],
-                        "fact_ids": [row["id"]],
-                        "detail": f"ref target entity {target_entity!r} has no live facts",
-                    })
+            findings.extend(_check_broken_refs(conn, f_filter, f_params, now))
 
         if "namespacing" in checks:
-            ns_sql = (
-                "SELECT f.entity, f.relation, GROUP_CONCAT(f.id) AS ids"
-                " FROM facts f"
-                " WHERE f.confidence > 0.0"
-                " AND (f.valid_until IS NULL OR f.valid_until > ?)"
-                " AND instr(f.relation, ':') = 0"
-                f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
-                " GROUP BY f.entity, f.relation"
-            )
-            for row in conn.execute(ns_sql, [now] + f_params).fetchall():
-                findings.append({
-                    "check": "namespacing",
-                    "severity": "warning",
-                    "entity": row["entity"],
-                    "relation": row["relation"],
-                    "fact_ids": row["ids"].split(",") if row["ids"] else [],
-                    "detail": (
-                        f"bare relation {row['relation']!r} has no namespace prefix — "
-                        f"rename to 'your-prefix:{row['relation']}' to avoid silent collisions"
-                    ),
-                })
+            findings.extend(_check_namespacing(conn, f_filter, f_params, now))
 
     return {
         "findings": findings,
@@ -263,7 +321,9 @@ def lint_scope(
             content={"job_id": job_id, "status": "pending", "estimated_s": estimated_s},
         )
 
-    result = _run_lint_sweep(req.scope, checks_to_run, req.entity, req.relation, req.stale_lookahead_s)
+    result = _run_lint_sweep(
+        req.scope, checks_to_run, req.entity, req.relation, req.stale_lookahead_s,
+    )
     return LintResult(
         findings=[LintFinding(**f) for f in result["findings"]],
         checked_at=result["checked_at"],

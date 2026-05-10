@@ -153,40 +153,16 @@ def _validate_as_of(as_of: str) -> datetime:
     return ts
 
 
-def _query_facts_as_of_impl(
-    conn: Any,
+def _build_as_of_where_clause(
     *,
     entity: str | None,
     scope: str | None,
     relation: str | None,
     as_of: str,
-    is_admin_caller: bool,
     tenant_id: str,
-    limit: int,
     cursor: str | None,
-) -> QueryResponse:
-    """Return facts visible at as_of per §24.4.
-
-    Retraction gating uses fact_retractions.retracted_at (append-only log), NOT facts.confidence.
-    Expiry gating uses facts.valid_until.
-    Tombstone filter per §24.3: retroactive RTBF unless legal_hold=true AND is_admin_caller.
-    """
-    # F-14 §24.3.2: pre-check — agent-key callers get empty results if a legal-hold
-    # tombstone covers the queried entity (short-circuit before executing the query)
-    if entity and not is_admin_caller:
-        legal_hold_row = conn.execute(
-            """SELECT 1 FROM tombstones t
-               WHERE t.entity_uri = ?
-               AND t.legal_hold = 1
-               AND NOT EXISTS (
-                   SELECT 1 FROM tombstone_revocations r WHERE r.tombstone_id = t.id
-               )
-               LIMIT 1""",
-            (entity,),
-        ).fetchone()
-        if legal_hold_row is not None:
-            return QueryResponse(facts=[], total=0, cursor=None)
-
+) -> tuple[list[str], list[Any]]:
+    """Build conditions and bound params for the as_of facts query."""
     conditions = [
         "f.tenant_id = ?",
         "f.timestamp <= ?",
@@ -215,6 +191,55 @@ def _query_facts_as_of_impl(
     if cursor:
         conditions.append("f.id > ?")
         params.append(cursor)
+    return conditions, params
+
+
+def _legal_hold_blocks_query(conn: Any, entity: str) -> bool:
+    """Return True if a non-revoked legal-hold tombstone covers entity."""
+    legal_hold_row = conn.execute(
+        """SELECT 1 FROM tombstones t
+           WHERE t.entity_uri = ?
+           AND t.legal_hold = 1
+           AND NOT EXISTS (
+               SELECT 1 FROM tombstone_revocations r WHERE r.tombstone_id = t.id
+           )
+           LIMIT 1""",
+        (entity,),
+    ).fetchone()
+    return legal_hold_row is not None
+
+
+def _query_facts_as_of_impl(
+    conn: Any,
+    *,
+    entity: str | None,
+    scope: str | None,
+    relation: str | None,
+    as_of: str,
+    is_admin_caller: bool,
+    tenant_id: str,
+    limit: int,
+    cursor: str | None,
+) -> QueryResponse:
+    """Return facts visible at as_of per §24.4.
+
+    Retraction gating uses fact_retractions.retracted_at (append-only log), NOT facts.confidence.
+    Expiry gating uses facts.valid_until.
+    Tombstone filter per §24.3: retroactive RTBF unless legal_hold=true AND is_admin_caller.
+    """
+    # F-14 §24.3.2: pre-check — agent-key callers get empty results if a legal-hold
+    # tombstone covers the queried entity (short-circuit before executing the query)
+    if entity and not is_admin_caller and _legal_hold_blocks_query(conn, entity):
+        return QueryResponse(facts=[], total=0, cursor=None)
+
+    conditions, params = _build_as_of_where_clause(
+        entity=entity,
+        scope=scope,
+        relation=relation,
+        as_of=as_of,
+        tenant_id=tenant_id,
+        cursor=cursor,
+    )
 
     where = " AND ".join(conditions)
     sql = f"SELECT f.* FROM facts f WHERE {where} ORDER BY f.timestamp DESC, f.id DESC LIMIT ?"  # nosec B608
@@ -700,6 +725,54 @@ def _encode_v(vtype: str, v: Any) -> str:
     return str(v)
 
 
+def _resolve_provenance_entry(
+    entry: Any, tenant_id: str
+) -> tuple[str, Any] | None:
+    """Resolve a single derived_from entry to (hash_val, ref_row | None).
+
+    Returns None when the entry is malformed (skipped entirely).
+    """
+    if not isinstance(entry, dict):
+        return None
+    hash_val: str = entry.get("hash", "")
+    entry_fact_id: str | None = entry.get("fact_id")
+
+    ref_row = None
+    with db() as conn:
+        if entry_fact_id:
+            ref_row = conn.execute(
+                "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
+                (entry_fact_id, tenant_id),
+            ).fetchone()
+        elif hash_val.startswith("sha256:"):
+            alias = conn.execute(
+                "SELECT fact_id FROM fact_cid_aliases WHERE cid = ?",
+                (hash_val,),
+            ).fetchone()
+            if alias:
+                ref_row = conn.execute(
+                    "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
+                    (alias["fact_id"], tenant_id),
+                ).fetchone()
+    return hash_val, ref_row
+
+
+def _format_provenance_entry(
+    hash_val: str, ref_row: Any, excluded: set[str]
+) -> ProvenanceEntry:
+    """Build the response entry — tombstoned/missing rows collapse to exists=False."""
+    if ref_row is None:
+        return ProvenanceEntry(hash=hash_val, exists=False)
+    if ref_row["entity"] in excluded:
+        return ProvenanceEntry(hash=hash_val, exists=False)
+    return ProvenanceEntry(
+        hash=hash_val,
+        fact_id=ref_row["id"],
+        entity=ref_row["entity"],
+        exists=True,
+    )
+
+
 @router.get("/{fact_id}/provenance", response_model=ProvenanceResponse)
 def get_provenance(
     fact_id: str,
@@ -743,29 +816,9 @@ def get_provenance(
     # Resolve each derived_from entry to its referenced fact row
     resolved: list[tuple[str, Any]] = []  # (hash_val, ref_row | None)
     for entry in entries_raw:
-        if not isinstance(entry, dict):
-            continue
-        hash_val: str = entry.get("hash", "")
-        entry_fact_id: str | None = entry.get("fact_id")
-
-        ref_row = None
-        with db() as conn:
-            if entry_fact_id:
-                ref_row = conn.execute(
-                    "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
-                    (entry_fact_id, identity.tenant_id),
-                ).fetchone()
-            elif hash_val.startswith("sha256:"):
-                alias = conn.execute(
-                    "SELECT fact_id FROM fact_cid_aliases WHERE cid = ?",
-                    (hash_val,),
-                ).fetchone()
-                if alias:
-                    ref_row = conn.execute(
-                        "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
-                        (alias["fact_id"], identity.tenant_id),
-                    ).fetchone()
-        resolved.append((hash_val, ref_row))
+        resolved_entry = _resolve_provenance_entry(entry, identity.tenant_id)
+        if resolved_entry is not None:
+            resolved.append(resolved_entry)
 
     # Single tombstone filter call across all resolved entity URIs (§23.3.2 r.4)
     accessible_entities = [ref_row["entity"] for _, ref_row in resolved if ref_row is not None]
@@ -778,19 +831,9 @@ def get_provenance(
             )
 
     # Build response — §23.3.2 r.4 tombstone and §20.6.2 unauthorized share identical shape
-    result: list[ProvenanceEntry] = []
-    for hash_val, ref_row in resolved:
-        if ref_row is None:
-            result.append(ProvenanceEntry(hash=hash_val, exists=False))
-            continue
-        if ref_row["entity"] in excluded:
-            result.append(ProvenanceEntry(hash=hash_val, exists=False))
-            continue
-        result.append(ProvenanceEntry(
-            hash=hash_val,
-            fact_id=ref_row["id"],
-            entity=ref_row["entity"],
-            exists=True,
-        ))
+    result: list[ProvenanceEntry] = [
+        _format_provenance_entry(hash_val, ref_row, excluded)
+        for hash_val, ref_row in resolved
+    ]
 
     return ProvenanceResponse(fact_id=fact_id, cid=cid_val, derived_from=result)

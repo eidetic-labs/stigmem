@@ -13,12 +13,14 @@ Public API:
 
 from __future__ import annotations
 
+import logging
 import re
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+logger = logging.getLogger("stigmem.instruction_migrate")
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -81,25 +83,89 @@ def _extract_keywords(heading: str, body_prefix: str) -> list[str]:
     return result
 
 
+def _collect_md_files(path: Path) -> list[Path]:
+    """Return ordered, deduplicated list of *.md files under path."""
+    if path.is_file():
+        return [path]
+    seen_paths: set[Path] = set()
+    md_files: list[Path] = []
+    for p in sorted(path.glob("*.md")):
+        if p not in seen_paths:
+            seen_paths.add(p)
+            md_files.append(p)
+    for p in sorted(path.glob("**/*.md")):
+        if p not in seen_paths:
+            seen_paths.add(p)
+            md_files.append(p)
+    return md_files
+
+
+def _split_into_section_pairs(text: str, md_file: Path) -> list[tuple[str, str]]:
+    """Split frontmatter-stripped text into (heading, body) pairs."""
+    sections = _HEADING_RE.split(text)
+    file_pairs: list[tuple[str, str]] = []
+    i = 0
+    while i < len(sections):
+        part = sections[i]
+        if _HEADING_RE.match(part.strip()):
+            heading = part.strip()
+            body = sections[i + 1].strip() if i + 1 < len(sections) else ""
+            file_pairs.append((heading, body))
+            i += 2
+        else:
+            if part.strip():
+                fallback_heading = "# " + md_file.stem.replace("-", " ").title()
+                file_pairs.append((fallback_heading, part.strip()))
+            i += 1
+
+    if not file_pairs and text.strip():
+        file_pairs = [("# " + md_file.stem.replace("-", " ").title(), text.strip())]
+    return file_pairs
+
+
+def _disambiguate_slug(base_slug: str, md_file_stem: str, seen_slugs: dict[str, int]) -> str:
+    """Resolve slug collisions across files using stem prefix and counter."""
+    if base_slug not in seen_slugs:
+        return base_slug
+    slug = f"{md_file_stem}-{base_slug}"
+    # Still might collide; append counter
+    if slug in seen_slugs:
+        seen_slugs[slug] = seen_slugs.get(slug, 0) + 1
+        slug = f"{slug}-{seen_slugs[slug]}"
+    return slug
+
+
+def _build_chunk(
+    heading: str, body: str, md_file: Path, seen_slugs: dict[str, int]
+) -> Chunk:
+    """Build a Chunk from one (heading, body) pair, updating slug bookkeeping."""
+    heading_text = _HEADING_PREFIX_RE.sub("", heading).strip()
+    base_slug = _to_slug(heading_text, md_file.stem)
+
+    slug = _disambiguate_slug(base_slug, md_file.stem, seen_slugs)
+    seen_slugs[slug] = seen_slugs.get(slug, 0) + 1
+
+    content = f"{heading}\n\n{body}".strip() if body else heading.strip()
+    keywords = _extract_keywords(heading_text, body[:200])
+    token_estimate = max(1, len(content) // 4)
+
+    return Chunk(
+        filename=md_file.stem,
+        heading_text=heading_text,
+        slug=slug,
+        content=content,
+        keywords=keywords,
+        token_estimate=token_estimate,
+    )
+
+
 def parse_instruction_chunks(path: Path) -> list[Chunk]:
     """Parse *.md files under *path* into atomic instruction chunks.
 
     One chunk per H1/H2/H3 heading (or one chunk per file if no headings).
     Strips YAML frontmatter. Deduplicates slugs across files.
     """
-    if path.is_file():
-        md_files: list[Path] = [path]
-    else:
-        seen_paths: set[Path] = set()
-        md_files = []
-        for p in sorted(path.glob("*.md")):
-            if p not in seen_paths:
-                seen_paths.add(p)
-                md_files.append(p)
-        for p in sorted(path.glob("**/*.md")):
-            if p not in seen_paths:
-                seen_paths.add(p)
-                md_files.append(p)
+    md_files = _collect_md_files(path)
 
     chunks: list[Chunk] = []
     seen_slugs: dict[str, int] = {}
@@ -112,55 +178,10 @@ def parse_instruction_chunks(path: Path) -> list[Chunk]:
             continue
 
         text = _strip_frontmatter(text)
-        sections = _HEADING_RE.split(text)
-
-        file_pairs: list[tuple[str, str]] = []
-        i = 0
-        while i < len(sections):
-            part = sections[i]
-            if _HEADING_RE.match(part.strip()):
-                heading = part.strip()
-                body = sections[i + 1].strip() if i + 1 < len(sections) else ""
-                file_pairs.append((heading, body))
-                i += 2
-            else:
-                if part.strip():
-                    fallback_heading = "# " + md_file.stem.replace("-", " ").title()
-                    file_pairs.append((fallback_heading, part.strip()))
-                i += 1
-
-        if not file_pairs:
-            if text.strip():
-                file_pairs = [("# " + md_file.stem.replace("-", " ").title(), text.strip())]
+        file_pairs = _split_into_section_pairs(text, md_file)
 
         for heading, body in file_pairs:
-            heading_text = _HEADING_PREFIX_RE.sub("", heading).strip()
-            base_slug = _to_slug(heading_text, md_file.stem)
-
-            # Disambiguate slugs across files using the file stem prefix when needed
-            if base_slug in seen_slugs:
-                slug = f"{md_file.stem}-{base_slug}"
-                # Still might collide; append counter
-                if slug in seen_slugs:
-                    seen_slugs[slug] = seen_slugs.get(slug, 0) + 1
-                    slug = f"{slug}-{seen_slugs[slug]}"
-            else:
-                slug = base_slug
-
-            seen_slugs[slug] = seen_slugs.get(slug, 0) + 1
-
-            content = f"{heading}\n\n{body}".strip() if body else heading.strip()
-            keywords = _extract_keywords(heading_text, body[:200])
-            token_estimate = max(1, len(content) // 4)
-
-            chunks.append(Chunk(
-                filename=md_file.stem,
-                heading_text=heading_text,
-                slug=slug,
-                content=content,
-                keywords=keywords,
-                token_estimate=token_estimate,
-            ))
+            chunks.append(_build_chunk(heading, body, md_file, seen_slugs))
 
     return chunks
 
@@ -288,13 +309,18 @@ def load_existing_facts_from_api(
         if not d.fact_uri:
             continue
         try:
-            r = httpx.get(url, params={"entity": d.fact_uri, "limit": 1}, headers=headers, timeout=10.0)
+            r = httpx.get(
+                url,
+                params={"entity": d.fact_uri, "limit": 1},
+                headers=headers,
+                timeout=10.0,
+            )
             if r.status_code == 200:
                 facts = r.json().get("facts", [])
                 if facts:
                     result[d.fact_uri] = str(facts[0]["value"]["v"])
-        except Exception:  # nosec B110 — best-effort pre-flight; node may not be reachable
-            pass
+        except Exception as exc:  # noqa: BLE001  best-effort pre-flight
+            logger.debug("pre-flight fact fetch for %s failed: %s", d.fact_uri, exc)
     return result
 
 
@@ -315,8 +341,8 @@ def load_prev_manifest_names_from_db(agent_id: str, db_path: str) -> set[str]:
         if row:
             entries = json.loads(row["body"])
             return {e["name"] for e in entries}
-    except Exception:  # nosec B110 — best-effort read; DB may be absent or schema may differ
-        pass
+    except Exception as exc:  # noqa: BLE001  best-effort read
+        logger.debug("local manifest read failed (DB or schema unavailable): %s", exc)
     return set()
 
 
@@ -335,8 +361,8 @@ def load_prev_manifest_names_from_api(agent_id: str, node_url: str, api_key: str
         )
         if r.status_code == 200:
             return {e["name"] for e in r.json().get("entries", [])}
-    except Exception:  # nosec B110 — best-effort pre-flight; node may not be reachable
-        pass
+    except Exception as exc:  # noqa: BLE001  best-effort pre-flight
+        logger.debug("remote manifest pre-flight failed: %s", exc)
     return set()
 
 
@@ -428,7 +454,10 @@ def write_facts(
                 written += 1
                 print(f"  [{d.action}] {d.unit_name} ✓")
             else:
-                print(f"  [{d.action}] {d.unit_name} FAILED: {r.status_code} {r.text[:120]}", file=sys.stderr)
+                print(
+                    f"  [{d.action}] {d.unit_name} FAILED: {r.status_code} {r.text[:120]}",
+                    file=sys.stderr,
+                )
                 failed += 1
         except Exception as exc:
             print(f"  [{d.action}] {d.unit_name} FAILED: {exc}", file=sys.stderr)

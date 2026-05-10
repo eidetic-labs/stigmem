@@ -274,6 +274,32 @@ After Phase B ships and a 30-day operator soak completes, this document will be 
 
 ---
 
+## v0.9.0a1 architecture in flight
+
+The default install of v0.9.0a1 ships with feature-specific code in `node/src/stigmem_node/` — `tombstones.py`, `instruction_migrate.py`, `card_materializer.py`, `source_trust.py`, `decay.py`, and others — for features that are deferred from v1.0 critical-path scope per [ADR-002](docs/adr/002-v1-scope.md).
+
+This is by design as the alpha-line iteration semantics ([ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)) support: each PR in the v0.9.0a series extracts one cross-cutting feature into a plugin per [ADR-011](docs/adr/011-cross-cutting-extraction.md)'s C1 plugin architecture.
+
+**What this means for you as an adopter today.** The routes for these features are mounted in v0.9.0a1's default install but the features are dormant unless explicitly configured by the operator (capability tokens, migrations, manifests). A single-org adopter running `make demo` experiences single-tenant behavior with no tombstones, time-travel, lazy-instruction-discovery, advanced memory-garden ACL, or source-attestation activated. The v1.0 critical-path scope claim describes user-visible *behavior*, not code architecture.
+
+**What changes between now and v1.0.0.** v0.9.0a2 through v0.9.0a8 each extract one cross-cutting feature into a separate plugin package (`stigmem-plugin-<feature>`). After v0.9.0a8, the default install will be true to ADR-011's commitment: core has no feature-specific code; cross-cutting concerns are expressed exclusively through the hook registry; plugins are opt-in.
+
+The retraction post (PR 0.5) calls this gap out explicitly. We chose to ship the honest reset before completing the architectural cleanup so adopters read against the actual shipped artifacts rather than future-state claims.
+
+| Cross-cutting feature | Current home | Plugin destination | Target release |
+|---|---|---|---|
+| Lazy instruction discovery (§21) | `node/src/stigmem_node/instruction_migrate.py` + `routes/instruction.py` | `experimental/lazy-instruction-discovery/` plugin | v0.9.0a2 |
+| Content-addressed fact IDs (§25) | `node/src/stigmem_node/cid.py` | **Stays in core** ([ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | v0.9.0a3 |
+| Time-travel queries (§24) | pervasive `as_of` references in `node/src/stigmem_node/` | `experimental/time-travel/` plugin | v0.9.0a4 |
+| RTBF tombstones (§23) | `node/src/stigmem_node/tombstones.py` + 55 refs in facts.py + recall.py | `experimental/tombstones/` plugin | v0.9.0a5 |
+| Memory-garden advanced ACL (§17) | `node/src/stigmem_node/garden_acl.py` | `experimental/memory-garden-acl/` plugin | v0.9.0a6 |
+| Source attestation (§18) | `node/src/stigmem_node/source_trust.py` | `experimental/source-attestation/` plugin | v0.9.0a7 |
+| Multi-tenant isolation | `tenant_id` in 23 core files | `experimental/multi-tenant/` plugin | v0.9.0a8 |
+
+The CID exception is deliberate. CIDs are load-bearing for the storage immutability stack ([ADR-016](docs/adr/016-storage-immutability-enforcement.md) L3) and the prompt-injection trust boundary ([ADR-003](docs/adr/003-prompt-injection.md) L1–L2). Keeping CIDs as a plugin would mean default install lacks integrity verification that the spec's claims depend on; ADR-017 corrects that.
+
+---
+
 ## How to read this document over time
 
 Every release of stigmem ships with an updated LIMITATIONS.md. Each entry has one of three lifecycle states:

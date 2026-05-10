@@ -1622,7 +1622,9 @@ def _cmd_auth_bootstrap_key(args: argparse.Namespace) -> int:
         )
         return 1
 
-    permissions: list[str] = args.permissions.split(",") if args.permissions else ["admin", "write", "read"]
+    permissions: list[str] = (
+        args.permissions.split(",") if args.permissions else ["admin", "write", "read"]
+    )
     expires_at = None  # never; mirrors create_api_key default
 
     raw_key = create_api_key(

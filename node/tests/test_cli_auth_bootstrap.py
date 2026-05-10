@@ -14,7 +14,6 @@ Test surface:
 
 from __future__ import annotations
 
-import argparse
 import io
 from contextlib import redirect_stderr, redirect_stdout
 
@@ -66,7 +65,10 @@ def test_bootstrap_key_mints_on_empty_table(fresh_db: str) -> None:
 
     conn = sqlite3.connect(fresh_db)
     key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
-    rows = conn.execute("SELECT entity_uri, permissions FROM api_keys WHERE key_hash = ?", (key_hash,)).fetchall()
+    rows = conn.execute(
+        "SELECT entity_uri, permissions FROM api_keys WHERE key_hash = ?",
+        (key_hash,),
+    ).fetchall()
     conn.close()
     assert len(rows) == 1
     assert rows[0][0] == "agent:admin"

@@ -2,6 +2,8 @@
 
 > Per [ADR-008](../../docs/adr/008-experimental-gates.md), gate status for `experimental/paperclip-adapter/`.
 
+**Spec ID:** (no Spec-X assigned — deferred per [ADR-002](../../docs/adr/002-v1-scope.md); if reintroduced, gets next available Spec-X number per [ADR-010](../../docs/adr/010-modular-specs.md))
+
 **Status:** Dormant
 **Active version:** v0.9.0a1 (last tested against)
 **Last updated:** 2026-05-09

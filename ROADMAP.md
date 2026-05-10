@@ -37,7 +37,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [ ] **PR 4 series** — Plugin infrastructure + seven cross-cutting plugins per ADR-011:
   - **PR 4-INF.1–4** — Hook registry + lifecycle + signing + testing infrastructure + plugin author docs
   - **v0.9.0a2** — `Spec-X1-Lazy-Instruction-Discovery` graduates → `stigmem-plugin-lazy-instruction-discovery` ([§21 legacy]). Also includes the deferred-from-v0.9.0a1 work and post-publish-verification follow-ups: god-file split refactor (preserved on branch [`feat/godfile-split-v0.9.0a2`](https://github.com/Eidetic-Labs/stigmem/tree/feat/godfile-split-v0.9.0a2), pure code-movement, no behavior change), lint-baseline tightening (reduce the `check_ruff_baseline.py` known-issues count from 578 through targeted cleanup), retraction-post URL backfill in `README.md` and `LIMITATIONS.md` (refreshes the bundled README on PyPI project pages), an npm SDK README at `sdks/stigmem-ts/README.md` (the npm project page is currently bare because no README was in the published tarball), and the bundled-README pickup of the npm `latest` dist-tag convention clarification ([PR #75](https://github.com/Eidetic-Labs/stigmem/pull/75)).
-  - **v0.9.0a3** — `Spec-X4-Content-Addressed-IDs` graduates **to core** ([ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md); [§25 legacy])
+  - **v0.9.0a3** — `Spec-X4-Content-Addressed-IDs` formally renamed `Spec-NN-CIDs` in the modular spec set. CIDs are already core in v0.9.0a1 per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md); the v0.9.0a3 step is the spec-naming/file-decomposition cleanup, not a code graduation. [§25 legacy]
   - **v0.9.0a4** — `Spec-X3-Time-Travel` graduates → `stigmem-plugin-time-travel` ([§24 legacy])
   - **v0.9.0a5** — `Spec-X2-RTBF-Tombstones` graduates → `stigmem-plugin-tombstones` ([§23 legacy])
   - **v0.9.0a6** — `Spec-X5-Memory-Garden` graduates → `stigmem-plugin-memory-garden-acl` ([§17 advanced legacy])
@@ -108,7 +108,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 
 ### Work
 - Experimental features graduate back to core via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates (each gate produces a concrete artifact: threat-model delta, ADR, conformance vectors, 30-day soak, documentation parity).
-- Multi-tenant likely the highest-priority graduation candidate based on adopter demand.
+- Multi-tenant remains a plugin (`stigmem-plugin-multi-tenant`); the cross-cutting plugin shape per ADR-011 is the permanent home, not a stop on the path to core. Adopters who need multi-tenancy install the plugin explicitly.
 - Modular spec evolution.
 - Plugin ecosystem matures; third-party plugins become first-class.
 
@@ -165,7 +165,7 @@ The pre-reset stigmem spec was a single monolithic document with sections number
 | `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | `experimental/lazy-instruction-discovery/spec.md` | §21 |
 | `Spec-X2-RTBF-Tombstones` | RTBF tombstones | `experimental/tombstones/spec.md` | §23 |
 | `Spec-X3-Time-Travel` | `as_of` time-travel queries | `experimental/time-travel/spec.md` | §24 |
-| `Spec-X4-Content-Addressed-IDs` | CIDs (graduates **to core** at v0.9.0a3 per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | `experimental/cids/spec.md` until graduation | §25 |
+| `Spec-X4-Content-Addressed-IDs` | CIDs (already **core in v0.9.0a1** per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md); the v0.9.0a3 step is a formal rename to `Spec-NN-CIDs` during the modular spec migration, not a code graduation) | n/a (in core); will move to `spec/specs/NN-cids.md` during the modular spec migration | §25 |
 | `Spec-X5-Memory-Garden` | Memory garden advanced ACL | `experimental/memory-garden-acl/spec.md` | §17 advanced |
 | `Spec-X6-Source-Attestation` | Source attestation | `experimental/source-attestation/spec.md` | §18 |
 | `Spec-X7-Subscriptions` | Subscriptions / push federation | `experimental/subscriptions/spec.md` | (new) |

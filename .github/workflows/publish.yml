@@ -249,23 +249,29 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          # Protocol package (root pyproject.toml). Uses OIDC (Trusted Publisher)
-          # because PyPI's "too many new projects" rate-limit is per-uploader;
-          # the personal API token's account hit the limit during the initial
-          # v0.9.0a1 publish run, but OIDC is a separate identity pool. The
-          # pending Trusted Publisher for `stigmem` was registered before the
-          # first publish and activates on first OIDC upload.
+          # All four PyPI projects use OIDC (Trusted Publisher) per the
+          # path-of-least-privilege intent. Each project has its Trusted
+          # Publisher configured at pypi.org/manage/project/<name>/settings/publishing/
+          # for repository=Eidetic-Labs/stigmem, workflow=publish.yml.
+          #
+          # The `stigmem` meta-package was first published via OIDC against
+          # a pending Trusted Publisher (configured pre-first-publish to
+          # bypass the per-uploader rate-limit hit by the API-token bridge).
+          # The other three were first published via the API-token bridge
+          # (PYPI_API_TOKEN secret); their post-create Trusted Publishers
+          # were configured post-publish (2026-05-10), at which point the
+          # `use_oidc: false` entries flipped to `true`.
+          #
+          # The PYPI_API_TOKEN secret can now be revoked.
           - name: stigmem
             dir: .
             use_oidc: true
-          # Python SDK
           - name: stigmem-py
             dir: sdks/stigmem-py
-            use_oidc: false
-          # FastAPI reference node service
+            use_oidc: true
           - name: stigmem-node
             dir: node
-            use_oidc: false
+            use_oidc: true
           # OpenClaw adapter — reset from 1.0.5 to 0.9.0a1 to align with the
           # canonical version line. v1.0.3 and v1.0.5 are yanked from PyPI
           # (declared a never-published stigmem-py>=1.0.0rc1 dep, were
@@ -273,7 +279,7 @@ jobs:
           # release.
           - name: stigmem-openclaw
             dir: adapters/openclaw
-            use_oidc: false
+            use_oidc: true
 
     steps:
       - uses: actions/checkout@v6
@@ -296,17 +302,15 @@ jobs:
           python -m pip install --upgrade twine
           twine check "${{ matrix.package.dir }}/dist/"*
 
-      # Auth path: per-package. `stigmem` (the meta-package) uses OIDC via its
-      # pending Trusted Publisher (configured pre-first-publish). The other
-      # three Python packages use a personal API token via the PYPI_API_TOKEN
-      # repo secret as a bridge until their Trusted Publishers are configured
-      # post-first-publish. Once all four projects exist on PyPI and have
-      # Trusted Publishers configured, the API-token branch + the secret can
-      # be retired in favor of unified OIDC.
+      # Auth path: OIDC (Trusted Publishers) for all four packages. The
+      # `id-token: write` permission granted at the job level above is what
+      # the action exchanges with PyPI for a short-lived OIDC token. No
+      # long-lived secret in the repo.
       #
-      # The pypa/gh-action-pypi-publish action treats `password:` as
-      # authoritative when set; falls through to OIDC when omitted (requires
-      # `id-token: write` permission, granted at the job level above).
+      # The `use_oidc` matrix field is retained (rather than dropped) so a
+      # future package whose Trusted Publisher is not yet configured can
+      # set `use_oidc: false` to use the API-token bridge below as a
+      # one-release fallback, then flip to `true` post-first-publish.
       - name: Publish ${{ matrix.package.name }} to PyPI (OIDC)
         if: matrix.package.use_oidc
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -317,7 +321,13 @@ jobs:
           # net for the matrix (one pkg succeeded, others retried).
           skip-existing: true
 
-      - name: Publish ${{ matrix.package.name }} to PyPI (API token)
+      # API-token bridge: kept as a fallback for new packages whose post-create
+      # Trusted Publisher hasn't been configured yet. Currently unused by all
+      # four entries above (use_oidc: true). When `PYPI_API_TOKEN` is revoked
+      # this branch will hard-fail any publish that tries to use it — which
+      # is the right failure mode (forces TP configuration before publishing
+      # a new package).
+      - name: Publish ${{ matrix.package.name }} to PyPI (API token bridge)
         if: ${{ !matrix.package.use_oidc }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

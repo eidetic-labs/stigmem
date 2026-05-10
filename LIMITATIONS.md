@@ -317,7 +317,7 @@ This is by design as the alpha-line iteration semantics ([ADR-019](docs/adr/019-
 
 **What changes between now and v1.0.0.** v0.9.0a2 through v0.9.0a8 each extract one cross-cutting feature into a separate plugin package (`stigmem-plugin-<feature>`). After v0.9.0a8, the default install will be true to ADR-011's commitment: core has no feature-specific code; cross-cutting concerns are expressed exclusively through the hook registry; plugins are opt-in.
 
-The retraction post (PR 0.5) calls this gap out explicitly. We chose to ship the honest reset before completing the architectural cleanup so adopters read against the actual shipped artifacts rather than future-state claims.
+[The retraction post](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) calls this gap out explicitly. We chose to ship the honest reset before completing the architectural cleanup so adopters read against the actual shipped artifacts rather than future-state claims.
 
 | Cross-cutting feature | Current home | Plugin destination | Target release |
 |---|---|---|---|

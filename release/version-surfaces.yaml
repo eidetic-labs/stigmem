@@ -97,21 +97,32 @@ surfaces:
   # External registries — Helm chart metadata
   # ──────────────────────────────────────────────────────────────────────────
 
+  # Helm chart metadata: retired from default version-consistency surfaces.
+  # Per ADR-002 + ADR-009, the Helm chart was deferred from v1 critical-path
+  # scope. Both infra/helm/ and deploy/helm/ consolidated to
+  # experimental/deploy-helm/ in PR 3 (2026-05-09). The chart's appVersion
+  # is no longer subject to the canonical version-consistency check;
+  # operators installing the experimental chart pin to whatever the chart
+  # itself ships. Tombstone retained per ADR-019 §Retiring a release surface.
   - id: helm-infra-app-version
     kind: external-registry
     category: chart-metadata
-    file: infra/helm/stigmem/Chart.yaml
-    field: appVersion
     spelling: semver
     sort_authority: semver
+    retired: 2026-05-09
+    notes: >-
+      Retired with PR 3 cuts to experimental/. infra/helm/ + deploy/helm/
+      consolidated to experimental/deploy-helm/. Re-introduce via ADR-008
+      gates if/when Helm graduates back to critical-path.
 
   - id: helm-deploy-app-version
     kind: external-registry
     category: chart-metadata
-    file: deploy/helm/stigmem/Chart.yaml
-    field: appVersion
     spelling: semver
     sort_authority: semver
+    retired: 2026-05-09
+    notes: >-
+      Same as helm-infra-app-version. Retired with PR 3.
 
   # Note: Helm Chart.yaml's `version:` field (chart-package version) is
   # independent of stigmem's protocol version. Not registered here — it has

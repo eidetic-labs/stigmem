@@ -35,7 +35,12 @@ jobs:
           node-version: "20"
 
       - name: Install clawhub CLI
-        run: npm install --global @openclaw/clawhub-cli
+        # The CLI is published as the unscoped `clawhub` package on npm
+        # (https://www.npmjs.com/package/clawhub). The previously-used
+        # `@openclaw/clawhub-cli` was wrong — that package doesn't exist
+        # in the npm registry, which broke this workflow silently from
+        # PR #82 (2026-05-10) until the rename in PR #95 surfaced it.
+        run: npm install --global clawhub
 
       - name: Authenticate clawhub
         env:

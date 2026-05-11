@@ -124,7 +124,7 @@ The `declaration_sig` field is sent alongside the declaration body in the regist
 ```bash
 curl -X POST https://node-b.example.com/v1/federation/peers \
   -H 'Content-Type: application/json' \
-  -H 'X-API-Key: <nodeB-key>' \
+  -H 'Authorization: Bearer <nodeB-key>' \
   -d '{
     "node_id":          "stigmem:node:node-a",
     "node_url":         "https://node-a.example.com",

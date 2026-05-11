@@ -22,7 +22,7 @@ A conflict occurs when two facts share the same (entity, relation, scope) tuple 
 
 ```bash
 curl -s 'http://localhost:8000/v1/conflicts?status=open' \
-  -H 'X-API-Key: dev-key' | jq .
+  -H 'Authorization: Bearer dev-key' | jq .
 ```
 
 ## Resolve by selecting a winner
@@ -30,7 +30,7 @@ curl -s 'http://localhost:8000/v1/conflicts?status=open' \
 ```bash
 curl -s -X POST http://localhost:8000/v1/conflicts/<conflict-id>/resolve \
   -H 'Content-Type: application/json' \
-  -H 'X-API-Key: dev-key' \
+  -H 'Authorization: Bearer dev-key' \
   -d '{"winning_fact_id": "<fact-a-or-fact-b-id>"}' | jq .
 ```
 
@@ -39,7 +39,7 @@ curl -s -X POST http://localhost:8000/v1/conflicts/<conflict-id>/resolve \
 ```bash
 curl -s -X POST http://localhost:8000/v1/conflicts/<conflict-id>/resolve \
   -H 'Content-Type: application/json' \
-  -H 'X-API-Key: dev-key' \
+  -H 'Authorization: Bearer dev-key' \
   -d '{"new_value": "dark mode (user confirmed)"}' | jq .
 ```
 

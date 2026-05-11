@@ -3,14 +3,14 @@ title: Experimental Features
 sidebar_label: Experimental Features
 sidebar_position: 5
 audience: Operator
-description: "Canonical list of Stigmem features marked EXPERIMENTAL in v2.0, their risks, constraints, and GA criteria."
+description: "Canonical list of Stigmem features outside the v0.9.0a1 default surface, their risks, constraints, and graduation criteria."
 ---
 
 # Experimental Features
 
-This page is the canonical list of features shipped in v2.0 with **EXPERIMENTAL** status. Each entry describes the risk, the constraint operators must accept, and the criteria that will promote the feature to GA.
+This page is the canonical list of features that exist outside the v0.9.0a1 default surface. Each entry describes the risk, the constraint operators must accept, and the criteria that will promote the feature through the ADR-008 gates.
 
-An EXPERIMENTAL feature is shipped and functional, but is **not recommended for all production workloads**. The spec section, wire format, or operational guarantees may change in a future minor release.
+An EXPERIMENTAL feature may have draft spec text, prototype code, or dormant in-core implementation from the pre-reset work, but it is **not part of the supported default install**. The spec section, wire format, or operational guarantees may change before graduation.
 
 ---
 

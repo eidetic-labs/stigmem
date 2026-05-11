@@ -17,15 +17,15 @@ Full guide content is planned for the next docs sprint.
 ```bash
 # All facts for a specific entity
 curl -s 'http://localhost:8000/v1/facts?entity=user:alice' \
-  -H 'X-API-Key: dev-key' | jq .facts
+  -H 'Authorization: Bearer dev-key' | jq .facts
 
 # Filter by entity + relation
 curl -s 'http://localhost:8000/v1/facts?entity=user:alice&relation=memory:prefers' \
-  -H 'X-API-Key: dev-key' | jq '.facts[0].value'
+  -H 'Authorization: Bearer dev-key' | jq '.facts[0].value'
 
 # Only high-confidence facts
 curl -s 'http://localhost:8000/v1/facts?min_confidence=0.8' \
-  -H 'X-API-Key: dev-key' | jq .
+  -H 'Authorization: Bearer dev-key' | jq .
 ```
 
 ## Topics to be covered

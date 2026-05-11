@@ -203,7 +203,7 @@ All four failure scenarios are automated in `node/tests/test_failure_modes.py`:
 the pre-reset design work implemented API-key auth; the pre-reset design work extended it with peer tokens for federation.
 
 **API keys (clients):**
-- Presented as `Authorization: Bearer <raw-key>` (or `X-API-Key: <key>` for compatibility).
+- Presented as `Authorization: Bearer <raw-key>`.
 - Node stores only the SHA-256 hex digest; the raw key is never retained.
 - Each key maps to an `entity_uri`, a set of permissions (`read`, `write`, `federate`), and `allowed_scopes`.
 

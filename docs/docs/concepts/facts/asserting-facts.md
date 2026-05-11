@@ -42,7 +42,7 @@ infra:deploy_sha
 ```bash
 curl -s -X POST http://localhost:8765/v1/facts \
   -H 'Content-Type: application/json' \
-  -H 'X-API-Key: dev-key' \
+  -H 'Authorization: Bearer dev-key' \
   -d '{
     "entity":     "user:alice",
     "relation":   "memory:prefers",

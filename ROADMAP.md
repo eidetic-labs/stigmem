@@ -16,7 +16,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 | **`v0.9.0aN` — alpha series** | Public posture matches reality. v0.9.0a1 reset; cross-cutting features extracted to plugins per [ADR-011](docs/adr/011-cross-cutting-extraction.md); docs site restructured. |
 | **`v0.9.0bN` — beta series (hardened core)** | Every Open risk in the v1.0.0 critical-path threat model closes. Capability redesign, federation hardening, Argon2id migration, OpenClaw safety, modular spec migration, storage immutability stack, 30-day external operator soak. |
 | **`v1.0.0rcN` → `v1.0.0` — release candidates and GA** | Sigstore-signed releases; reproducible builds; SBOM; 3+ external operators in production. Wire format frozen. |
-| **`v1.x.y` — post-GA expansion** | Experimental features graduate back to core via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates; modular spec evolution. |
+| **`v1.x.y` — post-GA expansion** | Experimental features graduate into the supported surface via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates; cross-cutting features remain opt-in plugins per ADR-011; modular spec evolution. |
 
 ---
 
@@ -34,9 +34,9 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [x] **PR 2.5** — Docs site restructure (per [ADR-005](docs/adr/005-docs-ia.md): four-tab IA — Learn / Build / Operate / Secure) (#56 + #59 cross-link sweep, merged 2026-05-10)
 - [x] **PR 3** — Cuts to `experimental/` (per [ADR-009](docs/adr/009-repo-structure.md)) (#60, merged 2026-05-10; spec-naming follow-ups in #61, #63)
 - [x] **PR 0.5** — Public retraction announcement ([live on dev.to](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0), 2026-05-10)
-- [ ] **PR 4 series** — Plugin infrastructure + seven cross-cutting plugins per ADR-011:
+- [ ] **PR 4 series** — Plugin infrastructure + six cross-cutting plugins per ADR-011 as amended by [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md):
   - **PR 4-INF.1–4** — Hook registry + lifecycle + signing + testing infrastructure + plugin author docs
-  - **v0.9.0a2** — `Spec-X1-Lazy-Instruction-Discovery` graduates → `stigmem-plugin-lazy-instruction-discovery` ([§21 legacy]). Also includes the deferred-from-v0.9.0a1 work and post-publish-verification follow-ups: god-file split refactor (preserved on branch [`feat/godfile-split-v0.9.0a2`](https://github.com/Eidetic-Labs/stigmem/tree/feat/godfile-split-v0.9.0a2), pure code-movement, no behavior change), lint-baseline tightening (reduce the `check_ruff_baseline.py` known-issues count from 578 through targeted cleanup), retraction-post URL backfill in `README.md` and `LIMITATIONS.md` (refreshes the bundled README on PyPI project pages), an npm SDK README at `sdks/stigmem-ts/README.md` (the npm project page is currently bare because no README was in the published tarball), and the bundled-README pickup of the npm `latest` dist-tag convention clarification ([PR #75](https://github.com/Eidetic-Labs/stigmem/pull/75)).
+  - **v0.9.0a2** — `Spec-X1-Lazy-Instruction-Discovery` graduates → `stigmem-plugin-lazy-instruction-discovery` ([§21 legacy]). Also includes the deferred-from-v0.9.0a1 work and post-publish-verification follow-ups: lint-baseline tightening (reduce the `check_ruff_baseline.py` known-issues count from 578 through targeted cleanup), retraction-post URL backfill in `README.md` and `LIMITATIONS.md` (refreshes the bundled README on PyPI project pages), an npm SDK README at `sdks/stigmem-ts/README.md` (the npm project page is currently bare because no README was in the published tarball), and the bundled-README pickup of the npm `latest` dist-tag convention clarification ([PR #75](https://github.com/Eidetic-Labs/stigmem/pull/75)). The god-file split is no longer a v0.9.0a2 blocker; it merged on main in PR #109 and closed #91.
   - **v0.9.0a3** — `Spec-X4-Content-Addressed-IDs` formally renamed `Spec-NN-CIDs` in the modular spec set. CIDs are already core in v0.9.0a1 per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md); the v0.9.0a3 step is the spec-naming/file-decomposition cleanup, not a code graduation. [§25 legacy]
   - **v0.9.0a4** — `Spec-X3-Time-Travel` graduates → `stigmem-plugin-time-travel` ([§24 legacy])
   - **v0.9.0a5** — `Spec-X2-RTBF-Tombstones` graduates → `stigmem-plugin-tombstones` ([§23 legacy])
@@ -48,7 +48,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - Public retraction visible.
 - Repo top-level matches ADR-009 shape (~22 entries; `experimental/` is canonical home for deferred features).
 - Plugin infrastructure shipped per ADR-011.
-- All seven cross-cutting features implemented as plugins under `experimental/<feature>/`. Core has no feature-specific code.
+- All six cross-cutting features implemented as plugins under `experimental/<feature>/`; CIDs remain core per ADR-017. Core has no remaining feature-specific code for deferred plugin features.
 - Default install (no plugins registered) produces v1.0.0-critical-path behavior.
 - Multi-tenant adopters opt into `stigmem-plugin-multi-tenant`.
 - All 19 ADRs committed to `docs/adr/`.
@@ -107,7 +107,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 **Status:** not started. Entry blocked on v1.0.0 GA shipping.
 
 ### Work
-- Experimental features graduate back to core via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates (each gate produces a concrete artifact: threat-model delta, ADR, conformance vectors, 30-day soak, documentation parity).
+- Experimental features graduate into the supported surface via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates (each gate produces a concrete artifact: threat-model delta, ADR, conformance vectors, 30-day soak, documentation parity). Cross-cutting features remain opt-in plugins per ADR-011 unless a future ADR explicitly changes that boundary.
 - Multi-tenant remains a plugin (`stigmem-plugin-multi-tenant`); the cross-cutting plugin shape per ADR-011 is the permanent home, not a stop on the path to core. Adopters who need multi-tenancy install the plugin explicitly.
 - Modular spec evolution.
 - Plugin ecosystem matures; third-party plugins become first-class.

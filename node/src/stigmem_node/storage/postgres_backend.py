@@ -79,7 +79,11 @@ _OR_REPLACE_RE = re.compile(
 )
 # SQLite strftime('%s', col) → EXTRACT(EPOCH FROM col::timestamptz)
 # Must be translated before the % → %% escaping step.
-_STRFTIME_EPOCH_RE = re.compile(r"strftime\('%s',\s*([^)]+)\)", re.IGNORECASE)
+# Bounded quantifiers — defends against the ``py/polynomial-redos`` heuristic
+# (CodeQL #21).  Inputs are developer-authored migration SQL in practice, but
+# bounding ``\s{0,16}`` and ``[^)]{1,256}?`` removes any theoretical
+# superlinear-backtracking case and quiets the analyzer permanently.
+_STRFTIME_EPOCH_RE = re.compile(r"strftime\('%s',\s{0,16}([^)]{1,256}?)\)", re.IGNORECASE)
 
 
 def _rewrite_or_ignore(sql: str) -> str:

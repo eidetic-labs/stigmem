@@ -23,23 +23,28 @@ def _is_system(entity: str, relation: str) -> bool:
     )
 
 
+_SYNTHESIZE_SQL = (
+    "SELECT * FROM facts"
+    " WHERE scope = ?"
+    "   AND (? = 1 OR valid_until IS NULL OR valid_until > ?)"
+    " ORDER BY confidence DESC, timestamp DESC"
+    " LIMIT ?"
+)
+
+
 def _build_synthesize_sql(
     scope: str, include_expired: bool, limit: int, now: str
 ) -> tuple[str, list[Any]]:
-    """Build the SQL + params for the synthesize-scope query."""
-    conditions: list[str] = ["scope = ?"]
-    params: list[Any] = [scope]
-    if not include_expired:
-        conditions.append("(valid_until IS NULL OR valid_until > ?)")
-        params.append(now)
-    params.append(limit)
+    """Build the SQL + params for the synthesize-scope query.
 
-    where = " AND ".join(conditions)
-    sql = (
-        f"SELECT * FROM facts WHERE {where} "  # nosec B608 — where built from literal SQL fragments; all user values in params
-        "ORDER BY confidence DESC, timestamp DESC LIMIT ?"
-    )
-    return sql, params
+    The SQL text is a module-level constant — branching on ``include_expired``
+    happens at bind time via the ``? = 1`` sentinel, so no user-controlled
+    value ever flows into the SQL string.  This eliminates the
+    ``py/sql-injection`` taint that the previous f-string assembly tripped
+    (issue #115).
+    """
+    expired_flag = 1 if include_expired else 0
+    return _SYNTHESIZE_SQL, [scope, expired_flag, now, limit]
 
 
 def _count_pair_occurrences(rows: list[Any]) -> dict[tuple[str, str], int]:

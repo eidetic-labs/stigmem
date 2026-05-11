@@ -106,11 +106,6 @@ node/src/stigmem_node/routes/tombstones.py:180:12:F401:`json` imported but unuse
 node/src/stigmem_node/routes/tombstones.py:180:5:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_node/routes/tombstones.py:209:101:E501:Line too long (104 > 100)
 node/src/stigmem_node/routes/tombstones.py:63:101:E501:Line too long (107 > 100)
-node/src/stigmem_node/settings.py:14:17:S104:Possible binding to all interfaces
-node/src/stigmem_node/settings.py:28:101:E501:Line too long (106 > 100)
-node/src/stigmem_node/settings.py:33:101:E501:Line too long (104 > 100)
-node/src/stigmem_node/settings.py:37:101:E501:Line too long (121 > 100)
-node/src/stigmem_node/settings.py:39:101:E501:Line too long (114 > 100)
 node/src/stigmem_node/source_trust.py:101:101:E501:Line too long (114 > 100)
 node/src/stigmem_node/source_trust.py:148:5:I001:Import block is un-sorted or un-formatted
 node/src/stigmem_node/source_trust.py:179:61:UP037:Remove quotes from type annotation

@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     )
 
     db_path: str = "stigmem.db"
-    host: str = "0.0.0.0"  # nosec B104 — overridable via STIGMEM_HOST; intentional server default
+    host: str = "0.0.0.0"  # noqa: S104 — overridable via STIGMEM_HOST; intentional server default
     port: int = 8765
     node_url: str = "http://localhost:8765"
     log_level: str = "info"
@@ -25,18 +25,23 @@ class Settings(BaseSettings):
     # Base64url Ed25519 keypair. If both are empty, auto-generated and stored in node_meta.
     federation_pubkey: str = ""
     federation_privkey: str = ""
-    # Pull replication interval in seconds (spec §6.3); advisory pull_interval_s from peer overrides this.
+    # Pull replication interval in seconds (spec §6.3); advisory pull_interval_s
+    # from peer overrides this.
     federation_pull_interval_s: int = 30
     federation_push_enabled: bool = False
-    # Nonce window: how long (seconds) a nonce is kept to detect replays (spec §6.6, default 5 min).
+    # Nonce window: how long (seconds) a nonce is kept to detect replays
+    # (spec §6.6, default 5 min).
     federation_nonce_window_s: int = 300
-    # Allow team-scoped facts to cross federation boundaries (must be explicitly enabled; audit-logged).
+    # Allow team-scoped facts to cross federation boundaries
+    # (must be explicitly enabled; audit-logged).
     federation_allow_team: bool = False
 
     # Decay sweeper (Phase 6, spec §decay)
-    # 0 = disabled; positive = decay non-expiring facts older than N seconds when sweep runs without explicit ttl_seconds
+    # 0 = disabled; positive = decay non-expiring facts older than N seconds
+    # when sweep runs without explicit ttl_seconds
     decay_ttl_seconds: int = 0
-    # 0.0 = disabled; positive = decay facts below this confidence when sweep runs without explicit min_confidence
+    # 0.0 = disabled; positive = decay facts below this confidence when sweep
+    # runs without explicit min_confidence
     decay_min_confidence: float = 0.0
 
     # Track C / C1: require Ed25519 attestation on all fact assertions.

@@ -68,7 +68,13 @@ Both produced the same conclusion: the durable remediation is structural, not de
 - 7 `# nosec B608` comments removed (no longer needed).
 - Belt-and-suspenders: bounded quantifiers on `_STRFTIME_EPOCH_RE` (`\s{0,16}`, `[^)]{1,256}?`) in case the transitive-taint break alone is not enough to close #21.
 
-**Status:** Closed on PR #117 merge (CodeQL re-scan).
+**Status:** Closed on PR #117 + PR #121 merge (CodeQL re-scan).
+
+**Follow-up — 2026-05-11, issue #121:** CodeQL re-scanned `main` after PR #117 merged and re-opened alerts #22 (`facts.py:263`) and #26 (`synthesize.py:110`). Both moved one line — from the f-string concatenation site that PR #117 removed, to the `conn.execute(sql, params)` call site. Diagnosis: even though the SQL string is now a module-level constant, the builder function (`_build_as_of_query`, `_build_synthesize_sql`) still **returned** the SQL string from a function whose arguments are user-controlled. CodeQL's interprocedural taint engine follows the user input into the function and out via the tuple return, tagging the returned SQL as tainted even though its value is invariant.
+
+Resolution (PR #121): split each builder so the module-level SQL constant is referenced **directly at the call site** and the builder returns **only** the params list (`_build_as_of_params`, `_build_synthesize_params`). This breaks the user-input → tuple-return → SQL data-flow path. No change to the SQL text itself.
+
+Lesson: even after the constant-SQL refactor, the SQL string must never appear in the return type of a function that accepts user input. The taint-precision gap is wider than the f-string-only case originally diagnosed.
 
 **No threat-model entries added:** the exploitation conditions do not exist; recording the alerts in `threat-model.md` would mislead future readers into treating them as real residual risks. The Rev 2.2 entry in `threat-model.md` § 10 documents the triage decision without claiming a new residual risk.
 

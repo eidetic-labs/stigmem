@@ -1,0 +1,100 @@
+name: GHCR retag
+
+# Manually retag a published GHCR image — used to repoint a moving alias
+# (e.g. `:latest`) to a specific release digest without rebuilding. The
+# operation is manifest-level only: source and destination end up pointing
+# at the same digest, layers are not moved, and signatures/SBOMs attached
+# to the source digest remain valid (cosign binds to digest, not tag).
+#
+# Use cases:
+# - Repointing `:latest` after the v0.9.0a1 drift (post-2026-05-10 fix).
+# - Aligning `:latest` if a future release publish surfaces a problem and
+#   we ship `.postN` errata that should not advance `:latest`.
+#
+# Discipline: the immutable version tags (`:0.9.0a1`, `:0.9.0-alpha.1`)
+# must NEVER appear as the destination here. Source-only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_tag:
+        description: "Source tag to copy from (e.g. 0.9.0a1). Must be an immutable release tag."
+        required: true
+        type: string
+      destination_tag:
+        description: "Destination tag to (re)point. Typically `latest` or `edge`. Never a `vX.Y.Z` release tag."
+        required: true
+        type: string
+        default: "latest"
+      confirm:
+        description: 'Type "RETAG" to confirm the operation.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  retag:
+    name: Retag ${{ inputs.source_tag }} → ${{ inputs.destination_tag }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ inputs.confirm }}" != "RETAG" ]; then
+            echo "::error::Confirmation string did not match 'RETAG'. Aborting."
+            exit 1
+          fi
+
+      - name: Reject release-tag destinations
+        run: |
+          DEST="${{ inputs.destination_tag }}"
+          # Block any destination matching a PEP 440 / semver release-tag
+          # pattern. These are immutable per release-cadence.md Rule 2.
+          if echo "$DEST" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(a[0-9]+|b[0-9]+|rc[0-9]+|-alpha\.[0-9]+|-beta\.[0-9]+|-rc\.[0-9]+)?$'; then
+            echo "::error::Destination '$DEST' looks like a release tag. Release tags are immutable. Aborting."
+            exit 1
+          fi
+
+      - name: Lowercase repository owner
+        # OCI references must be lowercase; github.repository_owner preserves
+        # case (e.g. "Eidetic-Labs"), so lowercase it for the image ref.
+        id: owner
+        run: |
+          echo "lc=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Install crane
+        uses: imjasonh/setup-crane@v0.4
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | crane auth login ghcr.io \
+            -u "${{ github.actor }}" --password-stdin
+
+      - name: Show source + destination digests (before)
+        run: |
+          SRC="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.source_tag }}"
+          DST="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.destination_tag }}"
+          echo "Source ($SRC):      $(crane digest "$SRC")"
+          echo "Dest   ($DST):      $(crane digest "$DST" 2>&1 || echo '(does not exist yet)')"
+
+      - name: Copy manifest (retag)
+        run: |
+          SRC="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.source_tag }}"
+          DST="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.destination_tag }}"
+          crane copy "$SRC" "$DST"
+
+      - name: Verify post-copy digests match
+        run: |
+          SRC="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.source_tag }}"
+          DST="ghcr.io/${{ steps.owner.outputs.lc }}/stigmem-node:${{ inputs.destination_tag }}"
+          SRC_D=$(crane digest "$SRC")
+          DST_D=$(crane digest "$DST")
+          echo "Source: $SRC_D"
+          echo "Dest:   $DST_D"
+          if [ "$SRC_D" != "$DST_D" ]; then
+            echo "::error::Digests differ post-copy. Retag failed."
+            exit 1
+          fi
+          echo "::notice::Retag succeeded. ${{ inputs.destination_tag }} now points at digest $DST_D"

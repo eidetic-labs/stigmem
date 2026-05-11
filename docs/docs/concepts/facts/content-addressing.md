@@ -112,7 +112,7 @@ curl -X POST $STIGMEM_URL/v1/facts/fact_01J.../verify-cid
 # → {"cid_valid": true, "computed_cid": "sha256:...", "stored_cid": "sha256:..."}
 ```
 
-Existing facts (pre-Phase 13) have `cid: null` until the backfill migration runs. New facts are always written with a CID.
+Existing facts (pre-v1.1) have `cid: null` until the backfill migration runs. New facts are always written with a CID.
 
 ## Why this is non-obvious
 

@@ -8,6 +8,7 @@ import sys
 
 from .cli_admin_handlers import (
     _cmd_audit_discovery,
+    _cmd_auth_bootstrap_key,
     _cmd_backfill_cids,
     _cmd_identity_rotate_key,
     _cmd_instruction_manifest_generate,
@@ -24,6 +25,7 @@ logger = logging.getLogger("stigmem.cli")
 __all__ = [
     "_build_parser",
     "_cmd_audit_discovery",
+    "_cmd_auth_bootstrap_key",
     "_cmd_backfill_cids",
     "_cmd_capability_issue",
     "_cmd_capability_revoke",
@@ -904,6 +906,48 @@ def _build_parser() -> argparse.ArgumentParser:
         help="suppress progress output",
     )
     bc_p.set_defaults(func=_cmd_backfill_cids)
+
+    # ------------------------------------------------------------------ auth
+    auth_p = sub.add_parser("auth", help="API key management (spec §3.5)")
+    auth_sub = auth_p.add_subparsers(dest="auth_command", metavar="SUBCOMMAND")
+    auth_sub.required = True
+
+    # auth bootstrap-key
+    bk_p = auth_sub.add_parser(
+        "bootstrap-key",
+        help=(
+            "register a caller-provided admin API key on a fresh install "
+            "(refuses if api_keys is non-empty; system never generates the key)"
+        ),
+    )
+    bk_p.add_argument(
+        "--key",
+        dest="key",
+        default=None,
+        metavar="VALUE",
+        help=(
+            "raw API key value to register. Generate externally; e.g., "
+            "`openssl rand -hex 32`. Alternative: STIGMEM_BOOTSTRAP_KEY env var."
+        ),
+    )
+    bk_p.add_argument(
+        "--entity-uri",
+        dest="entity_uri",
+        default="agent:admin",
+        metavar="URI",
+        help="entity URI to associate with the bootstrap key (default: agent:admin)",
+    )
+    bk_p.add_argument(
+        "--permissions",
+        dest="permissions",
+        default="admin,write,read",
+        metavar="LIST",
+        help=(
+            "comma-separated permissions for the bootstrap key "
+            "(default: admin,write,read)"
+        ),
+    )
+    bk_p.set_defaults(func=_cmd_auth_bootstrap_key)
 
     return parser
 

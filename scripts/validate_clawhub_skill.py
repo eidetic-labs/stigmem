@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ClawHub skill manifest validator.
 
-Validates `adapters/openclaw/clawhub-skill/SKILL.md` (the ClawHub catalog
+Validates `adapters/openclaw/skill/SKILL.md` (the ClawHub catalog
 manifest) against the conventions encoded in its own changelog history.
 Every check here corresponds to a real regression we shipped and had to
 fix out-of-cycle in v1.0.2–v1.0.5:
@@ -42,7 +42,7 @@ except ImportError:
     sys.exit(2)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SKILL_PATH = REPO_ROOT / "adapters/openclaw/clawhub-skill/SKILL.md"
+SKILL_PATH = REPO_ROOT / "adapters/openclaw/skill/SKILL.md"
 
 # ---------------------------------------------------------------------------
 # Convention constants — the rules we keep regressing on

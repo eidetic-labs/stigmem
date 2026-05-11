@@ -14,7 +14,7 @@ description: >
 
 This post announced stigmem v1.0 on 2026-05-03. **The v1.0 label was withdrawn shortly after.** The canonical version line of stigmem now begins at `v0.9.0a1` per [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md) and [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). This post is preserved in place to keep external links from breaking; it is not the current state of the project.
 
-For the current posture, the retraction's reasoning, and what changed, see the retraction announcement (link forthcoming with PR 0.5) and [LIMITATIONS.md](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md).
+For the current posture, the retraction's reasoning, and what changed, see [the retraction post on dev.to](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) and [LIMITATIONS.md](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md).
 
 :::
 
@@ -63,7 +63,7 @@ The v1.0 spec (all 18 sections stable) includes:
 - **MCP adapter** (§12) — ships stigmem as an MCP server so any MCP-compatible agent runtime can read and write facts without knowing the HTTP wire format
 - **Decay sweep** (§15) — configurable TTL and confidence-decay policies via `POST /v1/decay/sweep`
 - **Synthesis** (§16) — `POST /v1/synthesis` aggregates recent facts into a structured summary; also exposed as the `synthesize_scope` MCP tool
-- **Memory Garden** (§17) and **Source Attestation** (§18) — promoted from v0.9 draft to stable
+- **Memory Garden** (§17) and **Source Attestation** (§18) — promoted from the pre-reset spec draft to stable
 
 The reference node is a FastAPI + SQLite implementation with 74 tests, including automated failure-mode tests for split-brain, malicious peers, partial failures, and replay attacks (§11).
 

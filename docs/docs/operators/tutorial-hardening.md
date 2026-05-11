@@ -1,7 +1,7 @@
 ---
 title: "Tutorial: Harden a Stigmem Deployment"
 sidebar_label: Harden a Deployment
-description: Walk an operator from a default Stigmem node to a Phase 12–hardened deployment — mTLS, key rotation, per-principal quotas, and a distroless container — end to end.
+description: Walk an operator from a default Stigmem node to a pre-reset hardening–hardened deployment — mTLS, key rotation, per-principal quotas, and a distroless container — end to end.
 audience: Integrator
 ---
 
@@ -12,7 +12,7 @@ audience: Integrator
 **Outcome:** a running Stigmem node with mTLS federation, rotated Ed25519 identity and issuer keys, per-principal quotas tuned to your baseline traffic, and the hardened distroless container image.
 
 **Prerequisites:**
-- A Stigmem node running the Phase 12 image (`ghcr.io/eidetic-labs/stigmem-node:latest`).
+- A Stigmem node running the v0.9.0a1 reference image (`ghcr.io/eidetic-labs/stigmem-node:latest`).
 - Docker Compose installed (`docker compose version`).
 - `openssl`, `curl`, `jq` available.
 - Admin API key (`STIGMEM_ADMIN_KEY`).
@@ -277,7 +277,7 @@ Store `AUDIT_KEY` in your secrets manager and configure your SIEM to poll `/v1/a
 
 ## Step 7 — Switch to the hardened container image
 
-The Phase 12 reference image runs as UID/GID 65532 (non-root) on a distroless base with a read-only root filesystem and a custom seccomp profile.
+The v0.9.0a1 reference image runs as UID/GID 65532 (non-root) on a distroless base with a read-only root filesystem and a custom seccomp profile.
 
 **Pull and verify the image:**
 
@@ -377,7 +377,7 @@ curl -s https://your-node.example.com/healthz | jq .status
 | Per-principal token-bucket quotas | §22.4 | Active |
 | Non-root distroless container, read-only fs, dropped caps | §22.6 | Active |
 
-Your deployment is now at the Phase 12 hardened posture.  Run the [Community Pen-Test Handbook](../security/pen-test.md) test matrix against it to verify from the attacker's perspective.
+Your deployment is now at the pre-reset hardening hardened posture.  Run the [Community Pen-Test Handbook](../security/pen-test.md) test matrix against it to verify from the attacker's perspective.
 
 ---
 

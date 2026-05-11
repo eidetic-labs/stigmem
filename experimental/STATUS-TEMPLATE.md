@@ -17,7 +17,7 @@ One paragraph: what this feature is, what problem it solves, why it's experiment
 
 ## Why deferred
 
-One paragraph: the reasoning from ADR-002 or a subsequent amendment for why this feature is not in v1.0 critical-path scope. Reference the relevant ADRs and risk-register entries.
+One paragraph: the reasoning from ADR-002 or a subsequent amendment for why this feature is not in v1.0.0 critical-path scope. Reference the relevant ADRs and risk-register entries.
 
 ---
 

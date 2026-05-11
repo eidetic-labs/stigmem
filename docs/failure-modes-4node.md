@@ -2,7 +2,7 @@
 
 
 **Status:** Documented from integration test observations and protocol analysis  
-**Protocol version:** stigmem spec v0.7-draft (§6)
+**Protocol version:** stigmem spec pre-reset-draft (§6)
 
 ---
 
@@ -58,7 +58,7 @@ A 4-node full-mesh federation cluster (pull replication, interval 10s default) w
 - No data loss, no contradiction cascade.
 - Other node-pairs not affected.
 
-**Note for spec v0.8:** The `federation_pull_interval_s` advisory from the peer (if we add it) could allow the slow node to signal a preferred pull rate. Currently there is no backpressure signal beyond 429.
+**Note for spec the pre-reset spec:** The `federation_pull_interval_s` advisory from the peer (if we add it) could allow the slow node to signal a preferred pull rate. Currently there is no backpressure signal beyond 429.
 
 ---
 
@@ -95,7 +95,7 @@ A 4-node full-mesh federation cluster (pull replication, interval 10s default) w
 - HLC invariant maintained under storm.
 - `local`-scope conflict system facts do not cross node boundaries.
 
-**Risk:** A sustained storm (e.g., agents continuously asserting conflicting values) can grow the `conflicts` table unboundedly. **No eviction or TTL on conflict records currently exists.** This is a spec v0.8 edge case to address.
+**Risk:** A sustained storm (e.g., agents continuously asserting conflicting values) can grow the `conflicts` table unboundedly. **No eviction or TTL on conflict records currently exists.** This is a spec the pre-reset spec edge case to address.
 
 ---
 
@@ -148,7 +148,7 @@ A 4-node full-mesh federation cluster (pull replication, interval 10s default) w
 
 ---
 
-## Open Edge Cases for Spec v0.8 (D3)
+## Open Edge Cases for Spec the pre-reset spec (D3)
 
 These emerged from test iteration and are surfaced:
 

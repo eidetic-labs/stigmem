@@ -1,56 +1,55 @@
 # Stigmem Roadmap
 
-> Public roadmap for stigmem. Phase-gated, not time-gated — phases complete when their exit criteria are met. Derived from `Internal-Comms/stigmem/plans/strengthening-plan.md` and `master-checklist.md`.
+> Public roadmap for stigmem. Milestone-gated, not time-gated — version lines complete when their exit criteria are met.
 >
-> **Current phase:** Phase A — Honesty Pass.
 > **Current build:** v0.9.0a1 (first build; per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
-> **Last updated:** 2026-05-09.
+> **Last updated:** 2026-05-10.
 
 ---
 
-## Phase model
+## Version-line model
 
-The work is organized into four sequential phases. Each phase has explicit entry and exit criteria. Sub-work within a phase can run in parallel.
+The work is organized into four sequential version lines per [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). Each line has explicit entry and exit criteria. Sub-work within a line can run in parallel.
 
-| Phase | Goal | Build line |
-|---|---|---|
-| **A — Honesty Pass** | Public posture matches reality. v0.9.0a1 reset; cross-cutting features extracted to plugins per [ADR-011](docs/adr/011-cross-cutting-extraction.md); docs site restructured. | `v0.9.0a1` … `v0.9.0a8` |
-| **B — Hardened Core** | Every Open risk in the v1.0 critical-path threat model closes. Capability redesign, federation hardening, Argon2id migration, OpenClaw safety, modular spec migration, storage immutability stack, 30-day external operator soak. | `v0.9.0b1` … `v0.9.0bN` |
-| **C — v1.0.0 GA** | Sigstore-signed releases; reproducible builds; SBOM; 3+ external operators in production. Wire format frozen. | `v1.0.0rc1` … `v1.0.0` |
-| **D — Expansion (post-v1.0)** | Experimental features graduate back to core via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates; modular spec evolution. | `v1.x.y` |
+| Version line | Goal |
+|---|---|
+| **`v0.9.0aN` — alpha series** | Public posture matches reality. v0.9.0a1 reset; cross-cutting features extracted to plugins per [ADR-011](docs/adr/011-cross-cutting-extraction.md); docs site restructured. |
+| **`v0.9.0bN` — beta series (hardened core)** | Every Open risk in the v1.0.0 critical-path threat model closes. Capability redesign, federation hardening, Argon2id migration, OpenClaw safety, modular spec migration, storage immutability stack, 30-day external operator soak. |
+| **`v1.0.0rcN` → `v1.0.0` — release candidates and GA** | Sigstore-signed releases; reproducible builds; SBOM; 3+ external operators in production. Wire format frozen. |
+| **`v1.x.y` — post-GA expansion** | Experimental features graduate back to core via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates; modular spec evolution. |
 
 ---
 
-## Phase A — Honesty Pass
+## `v0.9.0aN` — alpha series
 
 **Status:** in progress.
 
-### Phase A entry criteria
+### Entry criteria
 - [x] Pre-flight contributor decisions complete
 - [x] [ADR-001](docs/adr/001-versioning.md), [ADR-002](docs/adr/002-v1-scope.md), [ADR-008](docs/adr/008-experimental-gates.md), [ADR-011](docs/adr/011-cross-cutting-extraction.md) accepted
 
-### Phase A work
+### Work
 - [x] **PR 0** — Reset to v0.9.0a1 (technical work; published 2026-05-09)
 - [x] **PR 2** — Honesty pass on docs and ADRs (#54, merged 2026-05-10)
 - [x] **PR 2.5** — Docs site restructure (per [ADR-005](docs/adr/005-docs-ia.md): four-tab IA — Learn / Build / Operate / Secure) (#56 + #59 cross-link sweep, merged 2026-05-10)
 - [x] **PR 3** — Cuts to `experimental/` (per [ADR-009](docs/adr/009-repo-structure.md)) (#60, merged 2026-05-10; spec-naming follow-ups in #61, #63)
-- [ ] **PR 0.5** — Public retraction announcement (after docs are coherent; in flight, blocking on v0.9.0a1 PyPI/npm publish completion)
+- [x] **PR 0.5** — Public retraction announcement ([live on dev.to](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0), 2026-05-10)
 - [ ] **PR 4 series** — Plugin infrastructure + seven cross-cutting plugins per ADR-011:
   - **PR 4-INF.1–4** — Hook registry + lifecycle + signing + testing infrastructure + plugin author docs
-  - **v0.9.0a2** — `Spec-X1-Lazy-Instruction-Discovery` graduates → `stigmem-plugin-lazy-instruction-discovery` ([§21 legacy])
-  - **v0.9.0a3** — `Spec-X4-Content-Addressed-IDs` graduates **to core** ([ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md); [§25 legacy])
+  - **v0.9.0a2** — `Spec-X1-Lazy-Instruction-Discovery` graduates → `stigmem-plugin-lazy-instruction-discovery` ([§21 legacy]). Also includes the deferred-from-v0.9.0a1 work and post-publish-verification follow-ups: god-file split refactor (preserved on branch [`feat/godfile-split-v0.9.0a2`](https://github.com/Eidetic-Labs/stigmem/tree/feat/godfile-split-v0.9.0a2), pure code-movement, no behavior change), lint-baseline tightening (reduce the `check_ruff_baseline.py` known-issues count from 578 through targeted cleanup), retraction-post URL backfill in `README.md` and `LIMITATIONS.md` (refreshes the bundled README on PyPI project pages), an npm SDK README at `sdks/stigmem-ts/README.md` (the npm project page is currently bare because no README was in the published tarball), and the bundled-README pickup of the npm `latest` dist-tag convention clarification ([PR #75](https://github.com/Eidetic-Labs/stigmem/pull/75)).
+  - **v0.9.0a3** — `Spec-X4-Content-Addressed-IDs` formally renamed `Spec-NN-CIDs` in the modular spec set. CIDs are already core in v0.9.0a1 per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md); the v0.9.0a3 step is the spec-naming/file-decomposition cleanup, not a code graduation. [§25 legacy]
   - **v0.9.0a4** — `Spec-X3-Time-Travel` graduates → `stigmem-plugin-time-travel` ([§24 legacy])
   - **v0.9.0a5** — `Spec-X2-RTBF-Tombstones` graduates → `stigmem-plugin-tombstones` ([§23 legacy])
   - **v0.9.0a6** — `Spec-X5-Memory-Garden` graduates → `stigmem-plugin-memory-garden-acl` ([§17 advanced legacy])
   - **v0.9.0a7** — `Spec-X6-Source-Attestation` graduates → `stigmem-plugin-source-attestation` ([§18 legacy])
   - **v0.9.0a8** — Multi-tenant graduates → `stigmem-plugin-multi-tenant` (cross-cutting; no §N legacy)
 
-### Phase A exit criteria
+### Exit criteria
 - Public retraction visible.
 - Repo top-level matches ADR-009 shape (~22 entries; `experimental/` is canonical home for deferred features).
 - Plugin infrastructure shipped per ADR-011.
 - All seven cross-cutting features implemented as plugins under `experimental/<feature>/`. Core has no feature-specific code.
-- Default install (no plugins registered) produces v1.0 critical-path behavior.
+- Default install (no plugins registered) produces v1.0.0-critical-path behavior.
 - Multi-tenant adopters opt into `stigmem-plugin-multi-tenant`.
 - All 19 ADRs committed to `docs/adr/`.
 - Threat model and scenarios calibrated to v0.9.0a1 posture.
@@ -59,11 +58,11 @@ The work is organized into four sequential phases. Each phase has explicit entry
 
 ---
 
-## Phase B — Hardened Core (with Operator Validation)
+## `v0.9.0bN` — beta series (hardened core, with operator validation)
 
-**Status:** not started. Entry blocked on Phase A exit.
+**Status:** not started. Entry blocked on the alpha series exit.
 
-### Phase B work (sub-phase ordering matters)
+### Work (sub-work ordering matters)
 
 1. **OpenClaw safety hardening (entry PR)** — closes Critical/High audit findings (C1–C4, H1–H5). See `adapters/openclaw/AUDIT.md`.
 2. **Modular spec migration** per [ADR-010](docs/adr/010-modular-specs.md) — decompose `spec/stigmem-spec-v0.9.0a1.md` into 14 core specs with independent versioning.
@@ -76,19 +75,19 @@ The work is organized into four sequential phases. Each phase has explicit entry
 9. **Operator-facing documentation** — runbooks, observability signals per [ADR-004](docs/adr/004-federation-observability.md), prompt-injection hardening guide.
 10. **30-day external operator soak** — at least one external operator runs against the hardened core with public bug reporting.
 
-### Phase B exit criteria
-- Threat-model risk register has no Open status entries for v1.0 critical-path risks.
+### Exit criteria
+- Threat-model risk register has no Open status entries for v1.0.0-critical-path risks.
 - OpenClaw audit findings all show Closed status.
 - 30-day external operator soak completes; all P0 findings addressed.
-- v1.0.0-rc.0 ready to declare.
+- v1.0.0rc1 ready to declare.
 
 ---
 
-## Phase C — v1.0.0 GA
+## `v1.0.0rcN` → `v1.0.0` — release candidates and GA
 
-**Status:** not started. Entry blocked on Phase B exit + 14 days of v1.0.0-rc.N observation without critical regression.
+**Status:** not started. Entry blocked on the beta-series exit + 14 days of v1.0.0rcN observation without critical regression.
 
-### Phase C work
+### Work
 - Sigstore-signed releases (verifiable on every artifact).
 - Reproducible builds (verified by an independent party).
 - SBOM publication.
@@ -96,24 +95,24 @@ The work is organized into four sequential phases. Each phase has explicit entry
 - Public bug bounty operational.
 - Wire-format freeze; backwards compatibility committed within v1.x.
 
-### Phase C exit criteria
+### Exit criteria
 - v1.0.0 stable shipped.
 - Wire format committed.
 - Compatibility commitment doc per [ADR-013](docs/adr/013-deprecation-policy.md) honored across the v1.x line.
 
 ---
 
-## Phase D — Expansion (post-v1.0)
+## `v1.x.y` — post-GA expansion
 
-**Status:** not started. Entry blocked on Phase C exit (v1.0.0 stable shipped).
+**Status:** not started. Entry blocked on v1.0.0 GA shipping.
 
-### Phase D work
+### Work
 - Experimental features graduate back to core via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates (each gate produces a concrete artifact: threat-model delta, ADR, conformance vectors, 30-day soak, documentation parity).
-- Multi-tenant likely the highest-priority graduation candidate based on adopter demand.
+- Multi-tenant remains a plugin (`stigmem-plugin-multi-tenant`); the cross-cutting plugin shape per ADR-011 is the permanent home, not a stop on the path to core. Adopters who need multi-tenancy install the plugin explicitly.
 - Modular spec evolution.
 - Plugin ecosystem matures; third-party plugins become first-class.
 
-### Phase D exit criteria
+### Exit criteria
 - None defined; this is the project's steady state.
 
 ---
@@ -131,16 +130,16 @@ Per [ADR-010](docs/adr/010-modular-specs.md): the canonical spec naming is **`Sp
 
 ### Why the legacy `§N` numbering is still visible
 
-The pre-reset stigmem spec was a single monolithic document with sections numbered §1 through §25. ADR-010 supersedes that model — but the **full per-spec decomposition is Phase B work** per master-checklist §5.1 and ADR-010's own implementation plan. Until Phase B ships:
+The pre-reset stigmem spec was a single monolithic document with sections numbered §1 through §25. ADR-010 supersedes that model — but the **full per-spec decomposition is beta-series work** per ADR-010's own implementation plan. Until that lands:
 
 - The canonical spec stays as a single file at `spec/stigmem-spec-v0.9.0a1.md`.
 - Cross-references in this ROADMAP use `Spec-XN-Name` as the **primary** identifier with `[§N legacy]` as a transitional aid for readers familiar with the pre-reset numbering.
 - Each `experimental/<feature>/STATUS.md` declares its `spec_id: Spec-XN-Topic-Name` in frontmatter.
-- Per-section file decomposition (`spec/specs/01-core.md` through `spec/specs/14-batch-assert.md`, plus the `spec/PROTOCOL.md` meta-document) lands in Phase B.
+- Per-section file decomposition (`spec/specs/01-core.md` through `spec/specs/14-batch-assert.md`, plus the `spec/PROTOCOL.md` meta-document) lands in the beta series.
 
 ### Spec ID inventory
 
-**Core specs (Phase B target — 14 files):**
+**Core specs (beta-series target — 14 files):**
 
 | Spec ID | Topic | Maps from legacy §§ |
 |---|---|---|
@@ -166,7 +165,7 @@ The pre-reset stigmem spec was a single monolithic document with sections number
 | `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | `experimental/lazy-instruction-discovery/spec.md` | §21 |
 | `Spec-X2-RTBF-Tombstones` | RTBF tombstones | `experimental/tombstones/spec.md` | §23 |
 | `Spec-X3-Time-Travel` | `as_of` time-travel queries | `experimental/time-travel/spec.md` | §24 |
-| `Spec-X4-Content-Addressed-IDs` | CIDs (graduates **to core** at v0.9.0a3 per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | `experimental/cids/spec.md` until graduation | §25 |
+| `Spec-X4-Content-Addressed-IDs` | CIDs (already **core in v0.9.0a1** per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md); the v0.9.0a3 step is a formal rename to `Spec-NN-CIDs` during the modular spec migration, not a code graduation) | n/a (in core); will move to `spec/specs/NN-cids.md` during the modular spec migration | §25 |
 | `Spec-X5-Memory-Garden` | Memory garden advanced ACL | `experimental/memory-garden-acl/spec.md` | §17 advanced |
 | `Spec-X6-Source-Attestation` | Source attestation | `experimental/source-attestation/spec.md` | §18 |
 | `Spec-X7-Subscriptions` | Subscriptions / push federation | `experimental/subscriptions/spec.md` | (new) |
@@ -197,12 +196,11 @@ Using `Spec-X1-Lazy-Instruction-Discovery` graduating at v0.9.0a2 as the worked 
 
 | Surface | Before graduation (v0.9.0a1) | After graduation (v0.9.0a2) |
 |---|---|---|
-| Spec content | `experimental/lazy-instruction-discovery/spec.md` (Spec-X1) | Migrated into core spec under a new `Spec-NN-Lazy-Instruction-Discovery` ID once Phase B's modular spec migration lands; until then, content moves into the canonical `spec/stigmem-spec-v0.9.0aN.md` |
+| Spec content | `experimental/lazy-instruction-discovery/spec.md` (Spec-X1) | Migrated into core spec under a new `Spec-NN-Lazy-Instruction-Discovery` ID once the modular spec migration lands; until then, content moves into the canonical `spec/stigmem-spec-v0.9.0aN.md` |
 | Plugin package | Not published | `stigmem-plugin-lazy-instruction-discovery` published to PyPI |
 | Default install behavior | Routes mounted but feature dormant unless configured (per LIMITATIONS §11) | Plugin is opt-in; default install is unchanged in user-visible behavior. Operators who want the feature install the plugin |
 | `experimental/<feature>/STATUS.md` | `Status: Dormant`, all 5 gates Open | `Status: Graduated`, all 5 gates Done with dates |
-| `Internal-Comms/stigmem/plans/version-prioritization.md` | Listed in DEFER section | Listed in graduated section with the release tag and gate-completion dates |
-| `ROADMAP.md` Phase A table | This row | ✅ Done; deleted from the in-flight table; called out in the changelog |
+| `ROADMAP.md` v0.9.0aN work table | This row | ✅ Done; deleted from the in-flight table; called out in the changelog |
 | `concepts/features.md` | `stability: experimental` | `stability: stable` (or `beta` if the feature ships behind a flag) |
 | `docs/compatibility-matrix.yaml` | `stability: experimental` for the feature | Updated stability tier + concrete version requirements |
 | `CHANGELOG.md` | — | Entry under `### Added` for v0.9.0a2 noting the graduation, the gate evidence, and the migration notes for adopters |
@@ -231,16 +229,16 @@ CI rejects a graduation PR that's missing any of those artifacts (per ADR-013 de
 
 ## How to follow along
 
-- **Public engineering log:** Friday weekly post in `docs/blog/` (Phase A onwards).
+- **Public engineering log:** Friday weekly post in `docs/blog/` (alpha-series onwards).
 - **CHANGELOG.md** at repo root — Keep-a-Changelog format.
 - **GitHub Project — "Stigmem GA Readiness Plan":** [Eidetic-Labs/projects/1](https://github.com/orgs/Eidetic-Labs/projects/1) (flips public at v0.9.0a1 retraction).
 - **ADR index:** [`docs/adr/README.md`](docs/adr/README.md).
-- **Compatibility matrix** (Phase B): published at `docs.stigmem.dev/operate/compatibility`.
-- **Model certification list** (Phase B per ADR-015): published at `docs.stigmem.dev/secure/model-certification`.
+- **Compatibility matrix** (lands during the beta series): published at `docs.stigmem.dev/operate/compatibility`.
+- **Model certification list** (lands during the beta series, per ADR-015): published at `docs.stigmem.dev/secure/model-certification`.
 
 ---
 
-## Stability commitments by phase
+## Stability commitments by version line
 
 Per [ADR-001](docs/adr/001-versioning.md) + [ADR-013](docs/adr/013-deprecation-policy.md):
 
@@ -251,4 +249,4 @@ Per [ADR-001](docs/adr/001-versioning.md) + [ADR-013](docs/adr/013-deprecation-p
 
 ---
 
-*Roadmap is a living document. Updates land alongside ADR amendments and phase transitions. Contributions to roadmap shaping go through the ADR amendment process per [ADR-001](docs/adr/001-versioning.md) §Contributor approval rule.*
+*Roadmap is a living document. Updates land alongside ADR amendments and version-line transitions. Contributions to roadmap shaping go through the ADR amendment process per [ADR-001](docs/adr/001-versioning.md) §Contributor approval rule.*

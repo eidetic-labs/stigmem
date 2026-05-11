@@ -282,6 +282,74 @@ class SnapshotVerificationError(Exception):
     pass
 
 
+def _load_manifest(manifest_path: Path) -> dict[str, Any]:
+    """Load and validate the manifest.json from an extracted snapshot."""
+    if not manifest_path.exists():
+        raise SnapshotVerificationError("snapshot missing manifest.json")
+
+    try:
+        manifest: dict[str, Any] = json.loads(manifest_path.read_text())
+    except json.JSONDecodeError as exc:
+        raise SnapshotVerificationError(f"manifest.json is not valid JSON: {exc}") from exc
+
+    if manifest.get("version") != _MANIFEST_VERSION:
+        raise SnapshotVerificationError(
+            f"unsupported manifest version {manifest.get('version')!r}"
+        )
+    return manifest
+
+
+def _verify_artifact_hashes(manifest: dict[str, Any], tmp: Path) -> None:
+    """Verify SHA-256 of every declared artifact against the manifest."""
+    declared: dict[str, str] = manifest.get("artifacts", {})
+    for arc_name, expected_hash in declared.items():
+        artifact_path = tmp / arc_name
+        if not artifact_path.exists():
+            raise SnapshotVerificationError(f"artifact {arc_name!r} missing from tarball")
+        actual_hash = _sha256_file(artifact_path)
+        if actual_hash != expected_hash:
+            raise SnapshotVerificationError(
+                f"hash mismatch for {arc_name!r}: "
+                f"expected {expected_hash!r}, got {actual_hash!r}"
+            )
+
+
+def _verify_manifest_signature(
+    manifest: dict[str, Any],
+    db_path: str,
+    trusted_keys_path: Path | None,
+) -> None:
+    """Verify the Ed25519 signature on the manifest body against trusted keys."""
+    signer_pubkey_b64: str = manifest.get("signer_pubkey", "")
+    signature_b64: str = manifest.get("signature", "")
+    if not signer_pubkey_b64 or not signature_b64:
+        raise SnapshotVerificationError("manifest missing signer_pubkey or signature")
+
+    body = _canonical_manifest_body(manifest)
+
+    trusted = _trusted_pubkeys(
+        trusted_keys_path,
+        db_path,
+        self_attesting_pubkey=signer_pubkey_b64 if trusted_keys_path is None else None,
+    )
+
+    sig_bytes = _b64url_decode(signature_b64)
+    verified = False
+    for pub_key in trusted:
+        try:
+            pub_key.verify(sig_bytes, body)
+            verified = True
+            break
+        except InvalidSignature:
+            continue
+
+    if not verified:
+        raise SnapshotVerificationError(
+            "manifest signature is invalid — snapshot may have been tampered with. "
+            "Pass --force-unverified to restore anyway (NOT recommended)."
+        )
+
+
 def snapshot_restore(
     tarball_path: Path,
     db_path: str,
@@ -319,63 +387,14 @@ def snapshot_restore(
         with tarfile.open(tarball_path, "r:gz") as tf:
             tf.extractall(tmp, filter="data")
 
-        manifest_path = tmp / "manifest.json"
-        if not manifest_path.exists():
-            raise SnapshotVerificationError("snapshot missing manifest.json")
-
-        try:
-            manifest: dict[str, Any] = json.loads(manifest_path.read_text())
-        except json.JSONDecodeError as exc:
-            raise SnapshotVerificationError(f"manifest.json is not valid JSON: {exc}") from exc
-
-        if manifest.get("version") != _MANIFEST_VERSION:
-            raise SnapshotVerificationError(
-                f"unsupported manifest version {manifest.get('version')!r}"
-            )
+        manifest = _load_manifest(tmp / "manifest.json")
 
         if not force_unverified:
             # -- 2. Verify artifact hashes -----------------------------------
-            declared: dict[str, str] = manifest.get("artifacts", {})
-            for arc_name, expected_hash in declared.items():
-                artifact_path = tmp / arc_name
-                if not artifact_path.exists():
-                    raise SnapshotVerificationError(f"artifact {arc_name!r} missing from tarball")
-                actual_hash = _sha256_file(artifact_path)
-                if actual_hash != expected_hash:
-                    raise SnapshotVerificationError(
-                        f"hash mismatch for {arc_name!r}: "
-                        f"expected {expected_hash!r}, got {actual_hash!r}"
-                    )
+            _verify_artifact_hashes(manifest, tmp)
 
             # -- 3. Verify Ed25519 signature ---------------------------------
-            signer_pubkey_b64: str = manifest.get("signer_pubkey", "")
-            signature_b64: str = manifest.get("signature", "")
-            if not signer_pubkey_b64 or not signature_b64:
-                raise SnapshotVerificationError("manifest missing signer_pubkey or signature")
-
-            body = _canonical_manifest_body(manifest)
-
-            trusted = _trusted_pubkeys(
-                trusted_keys_path,
-                db_path,
-                self_attesting_pubkey=signer_pubkey_b64 if trusted_keys_path is None else None,
-            )
-
-            sig_bytes = _b64url_decode(signature_b64)
-            verified = False
-            for pub_key in trusted:
-                try:
-                    pub_key.verify(sig_bytes, body)
-                    verified = True
-                    break
-                except InvalidSignature:
-                    continue
-
-            if not verified:
-                raise SnapshotVerificationError(
-                    "manifest signature is invalid — snapshot may have been tampered with. "
-                    "Pass --force-unverified to restore anyway (NOT recommended)."
-                )
+            _verify_manifest_signature(manifest, db_path, trusted_keys_path)
 
             logger.info("snapshot verified: signature OK, all artifact hashes match")
         else:

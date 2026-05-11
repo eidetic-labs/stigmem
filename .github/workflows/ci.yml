@@ -150,6 +150,9 @@ jobs:
           CHECK_TIMING_OUTPUT: artifacts/python-check-timings.json
         run: bash scripts/check.sh python
 
+      - name: Coverage baseline ratchet
+        run: uv run python scripts/check_coverage_baseline.py
+
       - name: Changed-file Python strictness
         run: uv run python scripts/check_changed_python_quality.py
 

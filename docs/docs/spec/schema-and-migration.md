@@ -17,7 +17,7 @@ SQL schema migrations 001-013 covering facts, federation, gardens, attestation, 
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-*§10 content from v0.8 unchanged. Migration 004 is additive.*
+*§10 content from the pre-reset spec unchanged. Migration 004 is additive.*
 
 ### Migration 004 — gardens and source attestation
 
@@ -46,22 +46,22 @@ CREATE TABLE IF NOT EXISTS garden_members (
 
 CREATE INDEX IF NOT EXISTS idx_garden_members_entity ON garden_members(entity_uri);
 
--- Add garden_id column to facts (NULL for pre-v0.9 facts)
+-- Add garden_id column to facts (NULL for pre-the pre-reset spec facts)
 ALTER TABLE facts ADD COLUMN garden_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_facts_garden ON facts(garden_id) WHERE garden_id IS NOT NULL;
 
--- Add attested column to facts (NULL for pre-v0.9 facts)
+-- Add attested column to facts (NULL for pre-the pre-reset spec facts)
 ALTER TABLE facts ADD COLUMN attested INTEGER;  -- 1=true, 0=false, NULL=not-applicable
 ```
 
-**Backward compatibility:** Pre-v0.9 facts have `garden_id = NULL` (no garden) and `attested = NULL` (attestation not applicable). Both columns are nullable by design.
+**Backward compatibility:** Pre-the pre-reset spec facts have `garden_id = NULL` (no garden) and `attested = NULL` (attestation not applicable). Both columns are nullable by design.
 
 ---
 
 <details>
-<summary>Revisions before v1.0: v0.8-draft</summary>
+<summary>Revisions before v1.0: the pre-reset spec-draft</summary>
 
-**From `stigmem-spec-v0.8-draft.md`:**
+**From `stigmem-spec-the pre-reset spec-draft.md`:**
 
 Production nodes SHOULD use a migration-versioned schema. The reference
 implementation uses numbered SQL migration files applied at startup. Each
@@ -69,8 +69,8 @@ migration is additive — columns are added, never removed, and new tables do no
 alter existing ones — so that a node can be upgraded in place without data loss.
 The sections below show the cumulative schema across spec versions: the
 original v0.4 `facts` table, then the federation and data-quality tables added
-in v0.5, the entity-alias table from v0.7, and the scope-propagation columns
-from v0.8.
+in pre-reset, the entity-alias table from pre-reset, and the scope-propagation columns
+from the pre-reset spec.
 
 ### Existing tables (v0.4, unchanged)
 
@@ -97,25 +97,25 @@ facts (
 
 **Required indexes:** `(entity, relation)`, `(entity, relation, scope)`, `scope`, `timestamp`.
 
-### New columns — migration 002 (v0.5)
+### New columns — migration 002 (pre-reset)
 
 Federation (§6) requires two pieces of per-fact metadata that the v0.4 schema
 did not carry. `hlc` stores the hybrid logical clock timestamp used for
 cursor-based replication ordering (§5.8) — it is `NULL` for facts created
-before v0.5. `received_from` records the `node_id` of the peer that delivered
+before pre-reset. `received_from` records the `node_id` of the peer that delivered
 the fact; it is `NULL` for locally-asserted facts. Together these columns let
 the node distinguish local assertions from federated ones and provide a total
 order for pull replication.
 
 ```sql
-ALTER TABLE facts ADD COLUMN hlc           TEXT;          -- HLC timestamp; NULL for pre-v0.5 facts
+ALTER TABLE facts ADD COLUMN hlc           TEXT;          -- HLC timestamp; NULL for pre-pre-reset facts
 ALTER TABLE facts ADD COLUMN received_from TEXT;          -- node_id if federated; NULL if local
 ```
 
-### New tables — migration 002 (v0.5)
+### New tables — migration 002 (pre-reset)
 
 Migration 002 introduces four tables that support the federation and
-data-quality features added in v0.5.
+data-quality features added in pre-reset.
 
 **`peers`** stores the bilateral peer declarations described in §6.1. Each row
 represents one direction of a federation relationship: the remote node's
@@ -191,17 +191,17 @@ nonce_cache (
 - `facts(hlc)` for cursor-based replication queries
 - `facts(received_from)` for provenance queries
 
-### New tables — migration 003 (v0.7)
+### New tables — migration 003 (pre-reset)
 
-The v0.7 entity normalizer (§2.6) ensures that all new facts use canonical
-URIs, but facts created before v0.7 may contain non-canonical forms (e.g.
+The pre-reset entity normalizer (§2.6) ensures that all new facts use canonical
+URIs, but facts created before pre-reset may contain non-canonical forms (e.g.
 mixed-case or trailing-slash variants). The `entity_aliases` table maps each
 raw, non-canonical URI to its normalized canonical form so that queries
-transparently match pre-v0.7 data without requiring a destructive
+transparently match pre-pre-reset data without requiring a destructive
 back-migration of the `facts` table.
 
 ```sql
--- Entity alias table for pre-v0.7 migration tooling (spec §2.6.6)
+-- Entity alias table for pre-pre-reset migration tooling (spec §2.6.6)
 CREATE TABLE IF NOT EXISTS entity_aliases (
     raw_uri       TEXT NOT NULL,          -- original non-canonical stored form
     canonical_uri TEXT NOT NULL,          -- normalized form (output of normalize_entity_uri)
@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS entity_aliases (
 CREATE INDEX IF NOT EXISTS idx_entity_aliases_canonical ON entity_aliases(canonical_uri);
 ```
 
-### New columns — migration 004 (v0.8)
+### New columns — migration 004 (pre-reset)
 
 In an N-node federation topology a fact may traverse multiple relay hops. These
 three columns track the fact's provenance so that a receiving node can enforce
@@ -233,9 +233,9 @@ ALTER TABLE facts ADD COLUMN re_federation_blocked INTEGER NOT NULL DEFAULT 0;  
 CREATE INDEX IF NOT EXISTS idx_facts_re_federation ON facts(re_federation_blocked, scope);
 ```
 
-**Note:** Migration 004 columns are NULL for all pre-v0.8 facts. Nodes MUST populate
+**Note:** Migration 004 columns are NULL for all pre-the pre-reset spec facts. Nodes MUST populate
 `origin_node_id` and `origin_allowed_scopes` only for facts received via federation
-after v0.8 is deployed.
+after the pre-reset spec is deployed.
 
 ---
 

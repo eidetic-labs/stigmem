@@ -2,7 +2,7 @@
 name: stigmem-node
 title: Stigmem
 description: Persistent federated memory for OpenClaw agents — boot handshake, handoff, decision, and escalation surfaces backed by a Stigmem node.
-version: 1.0.6
+version: 1.0.8
 metadata:
   openclaw:
     emoji: "🧠"
@@ -69,7 +69,7 @@ adapter.emit_decision(
 # Escalate to another agent
 adapter.emit_escalation(
     to_entity="agent:cto",
-    goal="Approve increased Stripe webhook rate limit for Phase 2 load.",
+    goal="Approve increased Stripe webhook rate limit for the pre-reset design work load.",
     priority="high",
 )
 
@@ -153,9 +153,25 @@ Stigmem nodes can federate with each other to share public-scoped facts across o
 
 ## Changelog
 
+> **Note on versioning.** This ClawHub skill is independently versioned along its own semver line. The skill's `version:` (currently 1.0.x) tracks the skill's ClawHub release history; the dependency on stigmem is expressed via the `install.package` pin (currently `stigmem-py>=0.9.0a1,<1.0.0`). The bare-stigmem version line was reset to v0.9.0a1 in May 2026 — see [the retraction post](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) — but ClawHub registry rules require monotonically increasing skill versions, so the skill stays on its 1.0.x line. The two version surfaces are intentionally decoupled.
+
+### v1.0.8
+
+- **Source directory renamed** from `adapters/openclaw/clawhub-skill/` to `adapters/openclaw/skill/`. The `clawhub-` prefix was the root cause of two publish-time inference bugs: (a) display-name inferred as "Clawhub Skill" when `--name` was omitted (regressed v1.0.3 and v1.0.6), (b) slug inferred as `clawhub-skill` which trips ClawHub's protected-namespace check ("clawhub-*"), forcing every publish to pass `--slug stigmem-node` explicitly. Both worked around in CI via PR #82's hard-coded flags; this rename removes the inference dependency at the source. The CI flags are now belt-and-suspenders rather than required workarounds. Skill behavior unchanged; manifest content unchanged; this is a source-tree refactor only.
+
+### v1.0.7
+
+- Fix: corrected skill display name (was 'Clawhub Skill' on v1.0.6, now 'Stigmem'). Same regression as v1.0.3 — the publish CLI infers the display name from the directory name (which was `adapters/openclaw/clawhub-skill/` at the time; renamed in v1.0.8) when `--name` is not explicitly passed. The v1.0.6 publish was driven by a manual CLI invocation that omitted the flag. Permanent fix: a new `.github/workflows/clawhub-publish.yml` automates the publish on every push to main that touches the skill directory, with `--name "Stigmem"` and `--slug stigmem-node` hard-coded so neither can drift again. v1.0.8 additionally renamed the source directory to drop the inference dependency entirely.
+
+### v1.0.6
+
+- Updated `install.package` pin from `stigmem-py>=1.0.0,<2.0.0` to `stigmem-py>=0.9.0a1,<1.0.0` to match the v0.9.0a1 reset of the stigmem package line. This is the contract that ties the skill to a specific stigmem release line. Adopters who installed earlier ClawHub skill versions (1.0.0–1.0.5) had a `stigmem-py>=1.0.0rc1` dependency that was end-to-end uninstallable (see retraction post, "What the audit found"); v1.0.6 is the first installable skill release in this respect.
+- Documentation: added the retraction-post reference and the independent-versioning note above.
+- **Note (added 2026-05-10):** v1.0.6 shipped with an incorrect display name ("Clawhub Skill" instead of "Stigmem") because the publish-time CLI invocation omitted the `--name` flag. Adopters who installed v1.0.6 see the wrong display name in `clawhub list` etc. Upgrade to v1.0.7 for the corrected display name; the underlying skill behavior is unchanged.
+
 ### v1.0.5
 
-- Fix: corrected documentation URLs to include ReadTheDocs path prefix (`/en/latest/`) — all links now resolve correctly.
+- Fix: corrected documentation URLs to include ReadTheDocs path prefix (`/en/latest/`); all links now resolve correctly.
 
 ### v1.0.4
 

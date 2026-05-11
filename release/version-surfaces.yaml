@@ -59,6 +59,18 @@ surfaces:
     spelling: pep440
     sort_authority: pep440
 
+  - id: pypi-stigmem-openclaw
+    kind: external-registry
+    category: python-package
+    file: adapters/openclaw/pyproject.toml
+    field: project.version
+    spelling: pep440
+    sort_authority: pep440
+    notes: >-
+      Published from this monorepo since v0.9.0a1 (decision 2026-05-09).
+      Pre-reset versions 1.0.3 and 1.0.5 were yanked (PEP 592) because their
+      `stigmem-py>=1.0.0rc1` dependency was end-to-end uninstallable.
+
   - id: npm-stigmem-root
     kind: external-registry
     category: node-package
@@ -326,14 +338,19 @@ surfaces:
   #
   # ─── Container images (recommended; partially wired) ──────────────────────
   #
-  # Current state (2026-05-08):
-  # The publish.yml workflow ALREADY contains `publish-node` and
-  # `publish-dashboard` jobs targeting GHCR (ghcr.io/eidetic-labs/stigmem-node
-  # and stigmem-dashboard). They use the auto-provisioned GITHUB_TOKEN — no
-  # setup needed. They run on push to main + on release publish. They have
-  # never actually run (the repo has never had a v0.9.0a1+ tag pushed yet).
-  # Once PR 0 lands and we tag v0.9.0a1, GHCR images appear automatically.
-  # Including SBOM (syft + SPDX-JSON) and cosign keyless signing.
+  # Current state (2026-05-10):
+  # The publish.yml workflow contains a `publish-node` job targeting GHCR
+  # (ghcr.io/eidetic-labs/stigmem-node). It uses the auto-provisioned
+  # GITHUB_TOKEN — no setup needed. Runs on push to main + on tag publish.
+  # Multi-arch (linux/amd64 + linux/arm64), SBOM-attached (syft + SPDX-JSON),
+  # cosign-signed (keyless via OIDC).
+  #
+  # The `publish-dashboard` job was REMOVED in PR #64 because the dashboard
+  # is deferred per ADR-002 and lives at `experimental/dashboard/`. The
+  # `ghcr.io/eidetic-labs/stigmem-dashboard` image is not part of v0.9.0a1's
+  # published surface and the GHCR package is being decommissioned. If the
+  # dashboard graduates per ADR-008 in a future release, restore the
+  # publish-dashboard job and re-register it here.
   #
   # Docker Hub is not currently wired. Adding it requires creating a
   # docker.com account/org for Eidetic Labs, generating a publish token, and
@@ -354,11 +371,9 @@ surfaces:
   #     (linux/amd64 + linux/arm64), SBOM-attached, cosign-signed.
   #
   # - id: ghcr-stigmem-dashboard
-  #   kind: external-registry
-  #   category: container-image
-  #   file: .github/workflows/publish.yml
-  #   spelling: shorthand
-  #   sort_authority: pep440
+  #   RETIRED 2026-05-10: dashboard is deferred per ADR-002 and lives at
+  #   experimental/dashboard/. The GHCR package was decommissioned. If the
+  #   dashboard graduates per ADR-008 in a future release, restore this entry.
   #
   # - id: docker-hub-stigmem-node (DEFERRED — post-v1.0; needs DOCKERHUB_TOKEN)
   #   kind: external-registry

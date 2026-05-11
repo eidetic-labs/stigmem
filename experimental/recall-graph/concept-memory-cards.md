@@ -189,8 +189,8 @@ class MemoryCard(BaseModel):
     has_contradictions: bool
 ```
 
-:::note Phase 9 — draft
-Memory cards are part of spec §20, currently a draft. The API shape is stable for testing; it will be promoted to normative in Phase 14.
+:::note pre-reset graph & recall design — draft
+Memory cards are part of spec §20, currently a draft. The API shape is stable for testing; it will be promoted to normative in the v1.x stable line.
 :::
 
 ## See also

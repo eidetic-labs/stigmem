@@ -9,7 +9,7 @@ sidebar_label: Upgrading to v1.0
 
 v1.0 is backward compatible with all v0.x data. The upgrade is a `git pull` + container rebuild. No manual SQL or data migration is required.
 
-## What changed in v1.0
+## What changed in v1.0.0
 
 ### Multi-tenant isolation (migration `012`)
 
@@ -27,11 +27,11 @@ A new `stigmem_node.billing` module emits a `BillingEvent` after every fact writ
 
 ### Source attestation (v1.0 normative)
 
-Source attestation was experimental in v0.9-draft. In v1.0 it is normative (§18). The default mode is unchanged (`warn`), so existing deployments are unaffected. To harden a production node, set `STIGMEM_SOURCE_ATTESTATION_MODE=enforce`. See [Source Attestation](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation).
+Source attestation was experimental in pre-reset draft. In v1.0 it is normative (§18). The default mode is unchanged (`warn`), so existing deployments are unaffected. To harden a production node, set `STIGMEM_SOURCE_ATTESTATION_MODE=enforce`. See [Source Attestation](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation).
 
 ### Conformance test suite
 
-v1.0 ships a conformance suite (`node/tests/conformance/`) that any compliant node implementation can run. CI enforces it on every commit.
+v1.0.0 ships a conformance suite (`node/tests/conformance/`) that any compliant node implementation can run. CI enforces it on every commit.
 
 ---
 
@@ -44,7 +44,7 @@ git pull
 docker compose up --build -d
 ```
 
-The node runs `apply_migrations()` on startup. Migration `012_multi_tenant` is idempotent — if it has already run (e.g., on a v0.9-rc build) it is skipped.
+The node runs `apply_migrations()` on startup. Migration `012_multi_tenant` is idempotent — if it has already run (e.g., on a the pre-reset spec-rc build) it is skipped.
 
 Verify the node is healthy and the migration applied:
 

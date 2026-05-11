@@ -113,7 +113,7 @@ sequenceDiagram
 
 **Resolution doesn't delete.** Resolving a conflict asserts a *new* winning fact and marks the conflict as resolved. The original conflicting facts are untouched. This preserves the full decision history: you can reconstruct not just what the final answer was, but what the competing values were and who adjudicated.
 
-**Entity normalization prevents ghost conflicts.** Before v0.7, `project/EG-18` and `project/eg-18` were treated as different entities — so their conflicting facts would never be detected. The strict normalizer (spec §2.6) ensures case-variant URIs map to the same canonical form, closing this gap.
+**Entity normalization prevents ghost conflicts.** Before pre-reset, `project/EG-18` and `project/eg-18` were treated as different entities — so their conflicting facts would never be detected. The strict normalizer (spec §2.6) ensures case-variant URIs map to the same canonical form, closing this gap.
 
 ## What it costs
 

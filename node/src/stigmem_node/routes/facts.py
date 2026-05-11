@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import contextlib
 import logging
-import sqlite3
 import sys
+import threading
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
@@ -15,16 +14,19 @@ from pydantic import BaseModel
 
 from .. import settings as _settings_pkg  # access via module so test patches propagate
 from ..auth import Identity, resolve_identity
-from ..cid import compute_cid_from_row, is_cid, is_valid_cid
+from ..billing import BillingEvent, get_hook_bus
+from ..cid import compute_cid, compute_cid_from_row, is_cid, is_valid_cid
 from ..db import db
-from ..entity_normalizer import NormalizationError, normalize_entity_uri
+from ..entity_normalizer import NormalizationError, is_informal, normalize_entity_uri
+from ..fuzzy_resolver import resolve_entity
 from ..garden_acl import (
     caller_can_see_garden,
     get_garden_by_garden_uri,
     require_garden_read,
+    require_garden_write,
 )
 from ..hlc import node_hlc
-from ..metrics import FACT_READ
+from ..metrics import CONTRADICTION, FACT_READ, FACT_WRITE
 from ..models import (
     VALID_SCOPES,
     AssertRequest,
@@ -40,6 +42,7 @@ from ..recall_pipeline import apply_recall_pipeline
 # Re-exported binding used by tests that monkey-patch ``routes.facts._settings``.
 from ..settings import settings as _settings  # noqa: F401
 from ..tracing import start_span
+from ._facts_assert import assert_fact_impl as _assert_fact_impl
 
 logger = logging.getLogger("stigmem.facts")
 
@@ -64,10 +67,11 @@ def _get_tombstone_filter(
     # On postgres this is a syntax error; rollback clears the failed txn state.
     try:
         conn.execute("BEGIN IMMEDIATE")
-    except sqlite3.Error as _begin_exc:  # nosec B110
-        logger.debug("BEGIN IMMEDIATE failed (likely non-sqlite backend): %s", _begin_exc)
-        with contextlib.suppress(sqlite3.Error):
+    except Exception:  # nosec B110
+        try:  # noqa: SIM105
             conn.rollback()
+        except Exception:  # nosec B110  # noqa: S110
+            pass
     rows = conn.execute(
         f"""SELECT t.id, t.entity_uri, t.scope, t.created_at, t.legal_hold
             FROM tombstones t
@@ -77,8 +81,10 @@ def _get_tombstone_filter(
             )""",  # noqa: S608  # nosec B608
         entity_uris,
     ).fetchall()
-    with contextlib.suppress(sqlite3.Error):
+    try:  # noqa: SIM105
         conn.execute("COMMIT")
+    except Exception:  # nosec B110  # noqa: S110
+        pass
 
     excluded: set[str] = set()
     notices: list[TombstoneNotice] = []
@@ -139,17 +145,69 @@ def _validate_as_of(as_of: str) -> datetime:
                     status_code=400,
                     detail={
                         "code": "as_of_before_retention_floor",
-                        "message": (
-                            "as_of predates the retention horizon "
-                            "for this deployment (§24.2.2)"
-                        ),
+                        "message": "as_of predates the retention horizon for this deployment (§24.2.2)",  # noqa: E501
                     },
                 )
         except HTTPException:
             raise
-        except (ValueError, TypeError) as _floor_exc:
-            logger.debug("as_of retention floor parse failed: %s", _floor_exc)
+        except Exception:  # nosec B110  # noqa: S110
+            pass
     return ts
+
+
+def _legal_hold_blocks_query(conn: Any, entity: str) -> bool:
+    """F-14 §24.3.2: True if a legal-hold tombstone covers *entity* (no active revocation)."""
+    legal_hold_row = conn.execute(
+        """SELECT 1 FROM tombstones t
+           WHERE t.entity_uri = ?
+           AND t.legal_hold = 1
+           AND NOT EXISTS (
+               SELECT 1 FROM tombstone_revocations r WHERE r.tombstone_id = t.id
+           )
+           LIMIT 1""",
+        (entity,),
+    ).fetchone()
+    return legal_hold_row is not None
+
+
+def _build_as_of_where_clause(
+    *,
+    entity: str | None,
+    scope: str | None,
+    relation: str | None,
+    as_of: str,
+    tenant_id: str,
+    cursor: str | None,
+) -> tuple[str, list[Any]]:
+    """Build the WHERE clause + params for the as_of facts query."""
+    conditions = [
+        "f.tenant_id = ?",
+        "f.timestamp <= ?",
+        "(f.valid_until IS NULL OR f.valid_until > ?)",
+        "NOT EXISTS (SELECT 1 FROM fact_retractions fr "
+        "WHERE fr.fact_id = f.id AND fr.retracted_at <= ?)",
+    ]
+    params: list[Any] = [tenant_id, as_of, as_of, as_of]
+
+    if entity:
+        conditions.append(
+            "(f.entity = ? OR f.entity IN"
+            " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+        )
+        params.extend([entity, entity])
+    if relation:
+        conditions.append("f.relation = ?")
+        params.append(relation)
+    if scope:
+        if scope not in VALID_SCOPES:
+            raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
+        conditions.append("f.scope = ?")
+        params.append(scope)
+    if cursor:
+        conditions.append("f.id > ?")
+        params.append(cursor)
+
+    return " AND ".join(conditions), params
 
 
 def _query_facts_as_of_impl(
@@ -172,51 +230,21 @@ def _query_facts_as_of_impl(
     """
     # F-14 §24.3.2: pre-check — agent-key callers get empty results if a legal-hold
     # tombstone covers the queried entity (short-circuit before executing the query)
-    if entity and not is_admin_caller:
-        legal_hold_row = conn.execute(
-            """SELECT 1 FROM tombstones t
-               WHERE t.entity_uri = ?
-               AND t.legal_hold = 1
-               AND NOT EXISTS (
-                   SELECT 1 FROM tombstone_revocations r WHERE r.tombstone_id = t.id
-               )
-               LIMIT 1""",
-            (entity,),
-        ).fetchone()
-        if legal_hold_row is not None:
-            return QueryResponse(facts=[], total=0, cursor=None)
+    if entity and not is_admin_caller and _legal_hold_blocks_query(conn, entity):
+        return QueryResponse(facts=[], total=0, cursor=None)
 
-    conditions = [
-        "f.tenant_id = ?",
-        "f.timestamp <= ?",
-        "(f.valid_until IS NULL OR f.valid_until > ?)",
-        (
-            "NOT EXISTS (SELECT 1 FROM fact_retractions fr"
-            " WHERE fr.fact_id = f.id AND fr.retracted_at <= ?)"
-        ),
-    ]
-    params: list[Any] = [tenant_id, as_of, as_of, as_of]
-
-    if entity:
-        conditions.append(
-            "(f.entity = ? OR f.entity IN"
-            " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
-        )
-        params.extend([entity, entity])
-    if relation:
-        conditions.append("f.relation = ?")
-        params.append(relation)
-    if scope:
-        if scope not in VALID_SCOPES:
-            raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
-        conditions.append("f.scope = ?")
-        params.append(scope)
-    if cursor:
-        conditions.append("f.id > ?")
-        params.append(cursor)
-
-    where = " AND ".join(conditions)
-    sql = f"SELECT f.* FROM facts f WHERE {where} ORDER BY f.timestamp DESC, f.id DESC LIMIT ?"  # nosec B608
+    where, params = _build_as_of_where_clause(
+        entity=entity,
+        scope=scope,
+        relation=relation,
+        as_of=as_of,
+        tenant_id=tenant_id,
+        cursor=cursor,
+    )
+    sql = (
+        f"SELECT f.* FROM facts f WHERE {where} "  # nosec B608
+        "ORDER BY f.timestamp DESC, f.id DESC LIMIT ?"
+    )
     params.append(limit + 1)
 
     rows = conn.execute(sql, params).fetchall()
@@ -303,14 +331,11 @@ def assert_fact(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> FactRecord:
     """Assert a fact into the fabric (spec §5.1, §2.6). Normalizes entity/source URIs on ingest."""
-    from ._facts_assert import assert_fact_impl
-
     with start_span(
         "stigmem.assert_fact",
         **{"stigmem.tenant": identity.tenant_id, "stigmem.principal": identity.entity_uri},
     ) as _span:
-        return assert_fact_impl(req, identity, _span)
-
+        return _assert_fact_impl(req, identity, _span)
 
 def _is_valid_entity_uri(uri: str) -> bool:
     """Minimal check: URI must contain '://' or start with 'urn:'."""
@@ -404,35 +429,17 @@ def query_facts(
     min_confidence: float = Query(0.0, ge=0.0, le=1.0),
     include_contradicted: bool = Query(False),
     include_expired: bool = Query(False),
-    after: str | None = Query(
-        None, description="Return facts with timestamp > this ISO 8601 value"
-    ),
+    after: str | None = Query(None, description="Return facts with timestamp > this ISO 8601 value"),  # noqa: E501
     cursor: str | None = Query(None, description="Opaque pagination cursor (fact id)"),
     limit: int = Query(50, ge=1, le=500),
-    garden_id: str | None = Query(
-        None, description="v0.9: filter to facts in this garden (spec §5.20)"
-    ),
-    attested: bool | None = Query(
-        None, description="v0.9: filter by attestation status (spec §18.6)"
-    ),
-    include_low_trust: bool = Query(
-        False,
-        description="v1.1: include facts with effective_confidence < 0.3 (§19.4.4)",
-    ),
-    as_of: str | None = Query(
-        None,
-        description="§24: time-travel — return facts visible at this ISO 8601 timestamp",
-    ),
+    garden_id: str | None = Query(None, description="v0.9: filter to facts in this garden (spec §5.20)"),  # noqa: E501
+    attested: bool | None = Query(None, description="v0.9: filter by attestation status (spec §18.6)"),  # noqa: E501
+    include_low_trust: bool = Query(False, description="v1.1: include facts with effective_confidence < 0.3 (§19.4.4)"),  # noqa: E501
+    as_of: str | None = Query(None, description="§24: time-travel — return facts visible at this ISO 8601 timestamp"),  # noqa: E501
 ) -> QueryResponse:
-    """Query facts by pattern (spec §5.2, §5.20).
-
-    Omitted fields are wildcards. Entity/source are normalized (§2.6).
-    """
+    """Query facts by pattern (spec §5.2, §5.20). Omitted fields are wildcards. Entity/source are normalized (§2.6)."""  # noqa: E501
     if not identity.can_read():
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="read permission required",
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
 
     # §24.4: time-travel query — delegate to as_of implementation
     if as_of is not None:
@@ -491,9 +498,10 @@ def query_facts(
         params.append(1 if attested else 0)
 
     if entity:
-        # malformed query — fall through to exact-match with raw value
-        with contextlib.suppress(NormalizationError):
+        try:  # noqa: SIM105
             entity = normalize_entity_uri(entity)
+        except NormalizationError:
+            pass  # malformed query — fall through to exact-match with raw value
         conditions.append(
             "(entity = ? OR entity IN"
             " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
@@ -503,8 +511,10 @@ def query_facts(
         conditions.append("relation = ?")
         params.append(relation)
     if source:
-        with contextlib.suppress(NormalizationError):
+        try:  # noqa: SIM105
             source = normalize_entity_uri(source)
+        except NormalizationError:
+            pass  # malformed query — fall through to exact-match with raw value
         conditions.append(
             "(source = ? OR source IN"
             " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
@@ -581,10 +591,7 @@ def get_fact(
 ) -> FactRecord:
     """Retrieve a single fact by UUID or sha256: CID (spec v0.4 §5.5, §17.3, §25.5)."""
     if not identity.can_read():
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="read permission required",
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
 
     # §25.5: dual addressing — resolve CID to UUID via alias table
     resolved_fact_id = fact_id
@@ -592,10 +599,7 @@ def get_fact(
         if not is_valid_cid(fact_id):
             raise HTTPException(
                 status_code=400,
-                detail={
-                    "code": "cid_malformed",
-                    "message": "CID must be 'sha256:' followed by 64 hex chars",
-                },
+                detail={"code": "cid_malformed", "message": "CID must be 'sha256:' followed by 64 hex chars"},  # noqa: E501
             )
         with db() as conn:
             alias = conn.execute(
@@ -619,7 +623,7 @@ def get_fact(
         raise HTTPException(status_code=404, detail="fact not found")
 
     # Garden ACL: fact in a garden is only readable by members (spec §17.3)
-    if "garden_id" in row.keys() and row["garden_id"] is not None:  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
+    if "garden_id" in row.keys() and row["garden_id"] is not None:  # noqa: SIM118
         with db() as conn:
             garden_row = conn.execute(
                 "SELECT * FROM gardens WHERE id = ? AND tenant_id = ?",
@@ -656,10 +660,7 @@ def verify_cid(
 ) -> _CidVerifyResponse:
     """Verify a fact's stored CID against a freshly computed one (spec §25.6.2)."""
     if not identity.can_read():
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="read permission required",
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
     with db() as conn:
         row = conn.execute(
             "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
@@ -668,7 +669,7 @@ def verify_cid(
     if row is None:
         raise HTTPException(status_code=404, detail="fact not found")
     computed = compute_cid_from_row(row)
-    stored = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
+    stored = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118
     if stored is None:
         return _CidVerifyResponse(
             cid_valid=False,
@@ -695,6 +696,51 @@ def _encode_v(vtype: str, v: Any) -> str:
     return str(v)
 
 
+def _resolve_provenance_entry(
+    entry: Any, tenant_id: str
+) -> tuple[str, Any] | None:
+    """Resolve a derived_from entry to (hash_val, ref_row | None); skip non-dict entries."""
+    if not isinstance(entry, dict):
+        return None
+    hash_val: str = entry.get("hash", "")
+    entry_fact_id: str | None = entry.get("fact_id")
+
+    ref_row = None
+    with db() as conn:
+        if entry_fact_id:
+            ref_row = conn.execute(
+                "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
+                (entry_fact_id, tenant_id),
+            ).fetchone()
+        elif hash_val.startswith("sha256:"):
+            alias = conn.execute(
+                "SELECT fact_id FROM fact_cid_aliases WHERE cid = ?",
+                (hash_val,),
+            ).fetchone()
+            if alias:
+                ref_row = conn.execute(
+                    "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
+                    (alias["fact_id"], tenant_id),
+                ).fetchone()
+    return hash_val, ref_row
+
+
+def _format_provenance_entry(
+    hash_val: str, ref_row: Any, excluded: set[str]
+) -> ProvenanceEntry:
+    """Render a resolved entry into a ProvenanceEntry, redacting tombstoned/missing rows."""
+    if ref_row is None:
+        return ProvenanceEntry(hash=hash_val, exists=False)
+    if ref_row["entity"] in excluded:
+        return ProvenanceEntry(hash=hash_val, exists=False)
+    return ProvenanceEntry(
+        hash=hash_val,
+        fact_id=ref_row["id"],
+        entity=ref_row["entity"],
+        exists=True,
+    )
+
+
 @router.get("/{fact_id}/provenance", response_model=ProvenanceResponse)
 def get_provenance(
     fact_id: str,
@@ -711,8 +757,7 @@ def get_provenance(
 
     if not identity.can_read():
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="read permission required",
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
         )
 
     with db() as conn:
@@ -723,8 +768,8 @@ def get_provenance(
     if row is None:
         raise HTTPException(status_code=404, detail="fact not found")
 
-    derived_from_raw = row["derived_from"] if "derived_from" in row.keys() else None  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
-    cid_val = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118  # sqlite3.Row __contains__ checks values not keys
+    derived_from_raw = row["derived_from"] if "derived_from" in row.keys() else None  # noqa: SIM118
+    cid_val = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118
     root_scope: str = row["scope"] or "local"
 
     if not derived_from_raw:
@@ -738,29 +783,9 @@ def get_provenance(
     # Resolve each derived_from entry to its referenced fact row
     resolved: list[tuple[str, Any]] = []  # (hash_val, ref_row | None)
     for entry in entries_raw:
-        if not isinstance(entry, dict):
-            continue
-        hash_val: str = entry.get("hash", "")
-        entry_fact_id: str | None = entry.get("fact_id")
-
-        ref_row = None
-        with db() as conn:
-            if entry_fact_id:
-                ref_row = conn.execute(
-                    "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
-                    (entry_fact_id, identity.tenant_id),
-                ).fetchone()
-            elif hash_val.startswith("sha256:"):
-                alias = conn.execute(
-                    "SELECT fact_id FROM fact_cid_aliases WHERE cid = ?",
-                    (hash_val,),
-                ).fetchone()
-                if alias:
-                    ref_row = conn.execute(
-                        "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
-                        (alias["fact_id"], identity.tenant_id),
-                    ).fetchone()
-        resolved.append((hash_val, ref_row))
+        resolved_entry = _resolve_provenance_entry(entry, identity.tenant_id)
+        if resolved_entry is not None:
+            resolved.append(resolved_entry)
 
     # Single tombstone filter call across all resolved entity URIs (§23.3.2 r.4)
     accessible_entities = [ref_row["entity"] for _, ref_row in resolved if ref_row is not None]
@@ -773,19 +798,9 @@ def get_provenance(
             )
 
     # Build response — §23.3.2 r.4 tombstone and §20.6.2 unauthorized share identical shape
-    result: list[ProvenanceEntry] = []
-    for hash_val, ref_row in resolved:
-        if ref_row is None:
-            result.append(ProvenanceEntry(hash=hash_val, exists=False))
-            continue
-        if ref_row["entity"] in excluded:
-            result.append(ProvenanceEntry(hash=hash_val, exists=False))
-            continue
-        result.append(ProvenanceEntry(
-            hash=hash_val,
-            fact_id=ref_row["id"],
-            entity=ref_row["entity"],
-            exists=True,
-        ))
+    result: list[ProvenanceEntry] = [
+        _format_provenance_entry(hash_val, ref_row, excluded)
+        for hash_val, ref_row in resolved
+    ]
 
     return ProvenanceResponse(fact_id=fact_id, cid=cid_val, derived_from=result)

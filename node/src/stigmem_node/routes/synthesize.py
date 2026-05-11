@@ -23,6 +23,63 @@ def _is_system(entity: str, relation: str) -> bool:
     )
 
 
+def _build_synthesize_sql(
+    scope: str, include_expired: bool, limit: int, now: str
+) -> tuple[str, list[Any]]:
+    """Build the SQL + params for the synthesize-scope query."""
+    conditions: list[str] = ["scope = ?"]
+    params: list[Any] = [scope]
+    if not include_expired:
+        conditions.append("(valid_until IS NULL OR valid_until > ?)")
+        params.append(now)
+    params.append(limit)
+
+    where = " AND ".join(conditions)
+    sql = (
+        f"SELECT * FROM facts WHERE {where} "  # nosec B608 — where built from literal SQL fragments; all user values in params
+        "ORDER BY confidence DESC, timestamp DESC LIMIT ?"
+    )
+    return sql, params
+
+
+def _count_pair_occurrences(rows: list[Any]) -> dict[tuple[str, str], int]:
+    """Count (entity, relation) occurrences for non-system facts."""
+    seen: dict[tuple[str, str], int] = {}
+    for r in rows:
+        if not _is_system(r["entity"], r["relation"]):
+            key = (r["entity"], r["relation"])
+            seen[key] = seen.get(key, 0) + 1
+    return seen
+
+
+def _row_age_seconds(timestamp: str) -> float:
+    """Return seconds elapsed since the row's ISO timestamp; 0.0 on parse error."""
+    try:
+        ts = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        return (datetime.now(UTC) - ts).total_seconds()
+    except (ValueError, TypeError):
+        return 0.0
+
+
+def _build_synthesized_fact(
+    r: Any, is_expired: bool, age_seconds: float, contradicted: bool
+) -> dict[str, Any]:
+    """Build the per-fact dict returned by synthesize_scope."""
+    return {
+        "id": r["id"],
+        "entity": r["entity"],
+        "relation": r["relation"],
+        "value": {"type": r["value_type"], "v": r["value_v"]},
+        "confidence": r["confidence"],
+        "timestamp": r["timestamp"],
+        "valid_until": r["valid_until"],
+        "is_expired": is_expired,
+        "age_seconds": age_seconds,
+        "contradicted": contradicted,
+        "source": r["source"],
+    }
+
+
 @router.get("/{scope}/synthesize")
 def synthesize_scope(
     scope: str,
@@ -42,25 +99,13 @@ def synthesize_scope(
 
     now = datetime.now(UTC).isoformat()
 
-    conditions: list[str] = ["scope = ?"]
-    params: list[Any] = [scope]
-    if not include_expired:
-        conditions.append("(valid_until IS NULL OR valid_until > ?)")
-        params.append(now)
-    params.append(limit)
-
-    where = " AND ".join(conditions)
-    sql = f"SELECT * FROM facts WHERE {where} ORDER BY confidence DESC, timestamp DESC LIMIT ?"  # nosec B608 — where built from literal SQL fragments; all user values in params
+    sql, params = _build_synthesize_sql(scope, include_expired, limit, now)
 
     with db() as conn:
         rows = conn.execute(sql, params).fetchall()
 
     # Count occurrences per (entity, relation) among non-system facts to detect contradictions
-    seen: dict[tuple[str, str], int] = {}
-    for r in rows:
-        if not _is_system(r["entity"], r["relation"]):
-            key = (r["entity"], r["relation"])
-            seen[key] = seen.get(key, 0) + 1
+    seen = _count_pair_occurrences(rows)
 
     facts_out: list[dict[str, Any]] = []
     contradiction_count = 0
@@ -77,26 +122,10 @@ def synthesize_scope(
             if contradicted:
                 contradiction_count += 1
 
-        try:
-            ts = datetime.fromisoformat(r["timestamp"].replace("Z", "+00:00"))
-            age_seconds = (datetime.now(UTC) - ts).total_seconds()
-        except (ValueError, TypeError):
-            age_seconds = 0.0
+        age_seconds = _row_age_seconds(r["timestamp"])
 
         facts_out.append(
-            {
-                "id": r["id"],
-                "entity": r["entity"],
-                "relation": r["relation"],
-                "value": {"type": r["value_type"], "v": r["value_v"]},
-                "confidence": r["confidence"],
-                "timestamp": r["timestamp"],
-                "valid_until": r["valid_until"],
-                "is_expired": is_expired,
-                "age_seconds": age_seconds,
-                "contradicted": contradicted,
-                "source": r["source"],
-            }
+            _build_synthesized_fact(r, is_expired, age_seconds, contradicted)
         )
 
     confidences = [f["confidence"] for f in facts_out]

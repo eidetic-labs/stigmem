@@ -12,7 +12,7 @@ status: Beta
 Multi-tenancy is a reference-node feature (not a spec §). A single stigmem process can serve multiple tenants with complete data isolation — facts, gardens, audit records, and API keys are partitioned by `tenant_id` at the database level.
 
 :::info v1.0 reference node
-Tenant isolation shipped in migration `012_multi_tenant` with the v1.0-rc reference node. All pre-migration rows are automatically assigned `tenant_id = "default"`, so single-tenant deployments require no configuration change.
+Tenant isolation shipped in migration `012_multi_tenant` with the pre-reset v1.0-rc snapshot reference node. All pre-migration rows are automatically assigned `tenant_id = "default"`, so single-tenant deployments require no configuration change.
 :::
 
 ## How it works

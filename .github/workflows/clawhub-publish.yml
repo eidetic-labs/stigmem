@@ -1,0 +1,144 @@
+name: Publish ClawHub skill
+
+on:
+  # Run on every push to main that touches the skill directory. The skill
+  # is independently versioned along its own semver line (see
+  # release/version-surfaces.yaml + adapters/openclaw/skill/SKILL.md
+  # changelog header note); it does NOT track the stigmem tag/version line.
+  # That's why this workflow doesn't trigger on `v*` tag pushes the way
+  # publish.yml does.
+  push:
+    branches: ["main"]
+    paths:
+      - "adapters/openclaw/skill/**"
+      - ".github/workflows/clawhub-publish.yml"
+  # Manual override for cases where the path filter didn't catch a needed
+  # republish (e.g., recovering from a partially-failed publish).
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: clawhub-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish stigmem-node skill
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install clawhub CLI
+        # The CLI is published as the unscoped `clawhub` package on npm
+        # (https://www.npmjs.com/package/clawhub). The previously-used
+        # `@openclaw/clawhub-cli` was wrong — that package doesn't exist
+        # in the npm registry, which broke this workflow silently from
+        # PR #82 (2026-05-10) until the rename in PR #95 surfaced it.
+        run: npm install --global clawhub
+
+      - name: Authenticate clawhub
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: clawhub login --token "$CLAWHUB_TOKEN" --no-browser
+
+      - name: Read SKILL.md version
+        id: ver
+        run: |
+          VERSION=$(awk '/^version:/{print $2; exit}' adapters/openclaw/skill/SKILL.md)
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not read version from SKILL.md frontmatter"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "::notice::SKILL.md version: $VERSION"
+
+      - name: Skip if version already published
+        id: gate
+        run: |
+          LIVE=$(clawhub inspect stigmem-node 2>&1 | awk '/^Latest:/{print $2}')
+          LOCAL="${{ steps.ver.outputs.version }}"
+          echo "::notice::live=$LIVE  local=$LOCAL"
+          if [ "$LIVE" = "$LOCAL" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skill already at $LOCAL on the registry; skipping publish."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract latest changelog entry from SKILL.md
+        if: steps.gate.outputs.skip == 'false'
+        id: changelog
+        run: |
+          # Pull the bullet block under the latest "### v<X.Y.Z>" heading in SKILL.md
+          VERSION="${{ steps.ver.outputs.version }}"
+          NOTES=$(awk -v ver="### v${VERSION}" '
+            $0 == ver { capture=1; next }
+            capture && /^### v/ { exit }
+            capture { print }
+          ' adapters/openclaw/skill/SKILL.md)
+          if [ -z "$NOTES" ]; then
+            NOTES="See SKILL.md changelog for v${VERSION}."
+          fi
+          {
+            echo "notes<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish to ClawHub
+        if: steps.gate.outputs.skip == 'false'
+        # Pass changelog and version via `env:` rather than ${{ }} interpolation
+        # in the run script. The changelog body in SKILL.md contains backticks
+        # (e.g., `clawhub-skill`, `clawhub-`); if those are interpolated
+        # directly into the bash heredoc, bash treats them as command
+        # substitutions and tries to execute the contents as shell commands,
+        # crashing the publish with "command not found" errors and "too many
+        # arguments" once the substitution mangles the argv.
+        env:
+          CHANGELOG: ${{ steps.changelog.outputs.notes }}
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          # `--name "Stigmem"` is hard-coded here as belt-and-suspenders.
+          # Historically the clawhub CLI inferred the display name from the
+          # directory name when --name was omitted; while our directory was
+          # `adapters/openclaw/clawhub-skill/`, that produced "Clawhub Skill",
+          # which shipped to the registry twice (v1.0.3 fix, v1.0.6 regression
+          # via a manual CLI invocation that omitted --name). v1.0.8 renamed
+          # the directory to `adapters/openclaw/skill/`, removing the
+          # inference dependency entirely. Keeping --name pinned here so the
+          # display name cannot drift even if the CLI's inference behavior
+          # changes again.
+          #
+          # `--slug stigmem-node` matches the live registry slug; passing it
+          # explicitly also avoids the directory-name slug-inference path
+          # which historically tripped ClawHub's protected-namespace check
+          # ("clawhub-*"). Same belt-and-suspenders rationale post-rename.
+          clawhub skill publish \
+            --slug stigmem-node \
+            --name "Stigmem" \
+            --version "$VERSION" \
+            --changelog "$CHANGELOG" \
+            adapters/openclaw/skill/
+
+      - name: Verify post-publish state
+        if: steps.gate.outputs.skip == 'false'
+        run: |
+          clawhub inspect stigmem-node | tee /tmp/inspect.txt
+          # Sanity: the live latest should now equal what we just published.
+          LIVE=$(awk '/^Latest:/{print $2}' /tmp/inspect.txt)
+          DISPLAY=$(awk -F'  ' '/^stigmem-node/{print $2}' /tmp/inspect.txt)
+          if [ "$LIVE" != "${{ steps.ver.outputs.version }}" ]; then
+            echo "::error::Live version $LIVE does not match published ${{ steps.ver.outputs.version }} — moderation hold or other issue."
+            exit 1
+          fi
+          if [ "$DISPLAY" != "Stigmem" ]; then
+            echo "::error::Display name is '$DISPLAY' (expected 'Stigmem'); --name flag may not have applied."
+            exit 1
+          fi
+          echo "::notice::ClawHub publish verified: stigmem-node @ $LIVE / display='$DISPLAY'"

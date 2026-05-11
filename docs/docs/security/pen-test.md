@@ -34,8 +34,8 @@ The following surfaces are explicitly in scope for community pen testing:
 | **MCP adapter** | `assert_fact`, `query_facts`, `recall`, `lint_scope` tool surface |
 | **OpenClaw / Claude Code adapter** | Memory read/write paths |
 | **Recall pipeline** | Scope isolation across lexical, vector, and graph stages (spec §20.3) |
-| **Audit log endpoints** (Phase 12) | Access control on `/v1/admin/audit-log`; log tamper-resistance |
-| **Per-principal quota enforcement** (Phase 12) | Correct application of token-bucket ceilings; bypass attempts |
+| **Audit log endpoints** (pre-reset hardening) | Access control on `/v1/admin/audit-log`; log tamper-resistance |
+| **Per-principal quota enforcement** (pre-reset hardening) | Correct application of token-bucket ceilings; bypass attempts |
 
 ### Priority finding categories
 
@@ -61,7 +61,7 @@ The following are explicitly **not in scope**. Testing these will not result in 
 | **Docs build toolchain** (Docusaurus, npm transitive deps) | Build-time only; no user-controlled input path in the deployed docs site |
 | **Third-party dependencies** (libSQL cloud, Turso, PostgreSQL, Rekor/Sigstore) | Report findings to the upstream project directly |
 | **Third-party nodes not operated by you** | You must only test against nodes you operate or have explicit permission to test |
-| **Rate limiting / resource exhaustion with no exploit path** | Tracked as a known gap; use `fact_write` quota dimension (Phase 12) to test post-hardening |
+| **Rate limiting / resource exhaustion with no exploit path** | Tracked as a known gap; use `fact_write` quota dimension (pre-reset hardening) to test post-hardening |
 | **Social engineering or phishing** | Out of scope for all security programs |
 | **Physical access to infrastructure** | Not applicable to community testers |
 
@@ -140,7 +140,7 @@ A complete reproducer includes:
 **Example reproducer for a hypothetical scope bypass:**
 
 ```
-Environment: stigmem v1.0-rc, SQLite backend, Docker Compose
+Environment: stigmem the pre-reset v1.0-rc snapshot, SQLite backend, Docker Compose
 Commit: abc1234
 
 Setup:
@@ -185,7 +185,7 @@ Score: X.X
 Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
 
 ## Affected versions
-[e.g., v1.0-rc, all versions up to commit abc1234]
+[e.g., the pre-reset v1.0-rc snapshot, all versions up to commit abc1234]
 
 ## Environment
 - Stigmem version/commit:
@@ -257,7 +257,7 @@ If you want to run a structured pen test (vs. individual ad-hoc finding reports)
 - Your intended scope (which API surfaces, which spec version, which trust boundary).
 - Your test environment setup (your own node, isolated network, etc.).
 - Your proposed timeline.
-- Any active-hardening context you'd like to know about (e.g., "we're hardening TB-2 in Phase 12 — here's what's already in flight").
+- Any active-hardening context you'd like to know about (e.g., "we're hardening TB-2 in pre-reset hardening — here's what's already in flight").
 
 Maintainers will confirm scope, share any active-hardening context, and coordinate acknowledgment and credit at the end of your engagement.
 
@@ -265,9 +265,9 @@ Maintainers will confirm scope, share any active-hardening context, and coordina
 
 ## 10. Known Hardening Gaps
 
-The following are **known gaps** planned for Phase 12 hardening. You are welcome to test and report them — findings in this list will be triaged as **known** rather than novel, but **novel attack paths** against them (beyond the listed gap) are still valuable findings and eligible for full credit:
+The following are **known gaps** planned for the pre-reset hardening work (carried forward to v0.9.0a1). You are welcome to test and report them — findings in this list will be triaged as **known** rather than novel, but **novel attack paths** against them (beyond the listed gap) are still valuable findings and eligible for full credit:
 
-| Gap | Phase 12 target |
+| Gap | v0.9.0bN beta-series target |
 |---|---|
 | mTLS for federation peer connections (currently TLS only, no client cert) | mTLS + TLS 1.3 floor + SAN/entity_uri binding (spec §22.1) |
 | API-key rotation: no enforced max-age | Enforced max-age + expiring-soon surface (spec §22.2) |

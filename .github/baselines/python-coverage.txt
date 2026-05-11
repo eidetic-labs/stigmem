@@ -1,0 +1,5 @@
+# Coverage baseline for staged rollout.
+# Single integer percentage on a non-comment line.
+# Raise via: `python scripts/check_coverage_baseline.py --write-baseline`
+
+75

@@ -66,7 +66,14 @@ const config = {
             current: {
               label: 'v0.9.0a1',
               badge: true,
-              banner: 'unreleased',
+              // banner: 'none' — v0.9.0a1 was published 2026-05-10
+              // (PyPI: stigmem, stigmem-py, stigmem-node, stigmem-openclaw;
+              // npm: @eidetic-labs/stigmem-ts; GHCR: stigmem-node).
+              // The label remains a preview-alpha (no stability guarantee
+              // until v1.0.0 GA per ADR-001), but the docs are no longer
+              // describing an unreleased build. The 'unreleased' banner
+              // was correct pre-publish and was retired post-publish.
+              banner: 'none',
             },
           },
         },
@@ -226,6 +233,14 @@ const config = {
               { label: 'License (Apache 2.0)', href: 'https://github.com/Eidetic-Labs/stigmem/blob/main/LICENSE' },
               { label: 'Security policy', href: 'https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md' },
               { label: 'Blog', to: '/blog' },
+            ],
+          },
+          {
+            title: 'Community',
+            items: [
+              { label: 'Discord', href: 'https://discord.gg/Z47Re7FjjV' },
+              { label: 'Discussions', href: 'https://github.com/Eidetic-Labs/stigmem/discussions' },
+              { label: 'Issues', href: 'https://github.com/Eidetic-Labs/stigmem/issues' },
             ],
           },
         ],

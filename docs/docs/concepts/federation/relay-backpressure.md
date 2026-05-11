@@ -6,8 +6,8 @@ audience: Integrator
 
 # N-node Relay Backpressure
 
-:::info v0.8
-N-node backpressure patterns are new in spec v0.8 (§6.7). These behaviors are **SHOULD** (recommended), not **MUST** — conformant nodes that omit them will interoperate but downstream nodes may receive stale data without warning.
+:::info the pre-reset spec
+N-node backpressure patterns are new in spec the pre-reset spec (§6.7). These behaviors are **SHOULD** (recommended), not **MUST** — conformant nodes that omit them will interoperate but downstream nodes may receive stale data without warning.
 :::
 
 **Audience:** Node operators configuring multi-hop federation topologies (three or more nodes in a relay chain).

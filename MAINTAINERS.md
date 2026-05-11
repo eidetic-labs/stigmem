@@ -22,7 +22,7 @@ Contributions from anyone outside the listed roles above are recorded in git his
 
 ## Authority and approval
 
-Per [ADR-001 § *Contributor approval rule*](docs/adr/001-versioning.md), sign-off on ADRs, ADR amendments, and PRs through Phase B requires **either** two contributors **or** the founder alone. The founder takes responsibility for the validation discipline whenever signing alone — the guardrail against AI-velocity-outrunning-validation (per the v1.0 retraction narrative) lives with the founder when they approve solo.
+Per [ADR-001 § *Contributor approval rule*](docs/adr/001-versioning.md), sign-off on ADRs, ADR amendments, and PRs through the v0.9.0bN beta series requires **either** two contributors **or** the founder alone. The founder takes responsibility for the validation discipline whenever signing alone — the guardrail against AI-velocity-outrunning-validation (per the v1.0 retraction narrative) lives with the founder when they approve solo.
 
 Audit logs (plugin registration per ADR-011, PR approval records, ADR sign-off commits) show the actual signing identities. This file describes who currently holds the roles; git history is the durable record of who exercised them.
 
@@ -30,9 +30,9 @@ Audit logs (plugin registration per ADR-011, PR approval records, ADR sign-off c
 
 ## Plugin signing identities (per ADR-011)
 
-When the C1 plugin architecture (ADR-011) ships its production signing infrastructure, **Eidetic Labs** is the default trusted publisher for stigmem core plugins (the seven cross-cutting feature plugins shipped in Phase A). Operators may add additional trusted publishers in their own deployments.
+When the C1 plugin architecture (ADR-011) ships its production signing infrastructure, **Eidetic Labs** is the default trusted publisher for stigmem core plugins (the seven cross-cutting feature plugins shipped in the v0.9.0aN alpha series). Operators may add additional trusted publishers in their own deployments.
 
-The Sigstore identity mapping for Eidetic Labs is documented separately in `docs/Operate/Plugins/signing.md` (per ADR-005 IA, lands in Phase A docs work).
+The Sigstore identity mapping for Eidetic Labs is documented separately in `docs/Operate/Plugins/signing.md` (per ADR-005 IA, lands in v0.9.0aN docs work).
 
 ---
 
@@ -40,11 +40,23 @@ The Sigstore identity mapping for Eidetic Labs is documented separately in `docs
 
 The operational runbook for cutting a new tagged release lives at [`docs/internal/release-cadence.md`](docs/internal/release-cadence.md). It covers pre-release checklist, version-string sweep across all surfaces, tag-and-publish flow, post-publish verification, ClawHub manual push, and rollback procedures. Any maintainer about to push a `v*` tag should walk that runbook end-to-end.
 
+### Release discipline (non-negotiable)
+
+The runbook documents five durable rules that prevent the v1.0 retraction failure mode from recurring. Summary for fast reference:
+
+1. **PyPI/npm versions are immutable** (registry-enforced).
+2. **Tags are immutable after publish** — never force-move a `v*` tag once the registry has the artifact.
+3. **All errata go to the next version** — never patch in place. Doc-only fixes ship as PEP 440 `.postN`; code fixes ship as the next alpha/beta/rc/patch.
+4. **Tag protection on GitHub** for pattern `v*`.
+5. **No `--force` on `main` or release branches, ever.**
+
+Pre-1.0 (`v0.9.0aN` → `v0.9.0bN` → `v1.0.0rcN`): no release branches; tag-and-publish from `main` HEAD. **At v1.0.0 GA: cut `release/v1.x`** and patch releases ship from there. See [the runbook §Release-branch strategy](docs/internal/release-cadence.md#release-branch-strategy) for the full cutover procedure.
+
 ---
 
 ## Credential rotation
 
-External-registry credentials used by CI to publish stigmem artifacts rotate on a **90-day cadence**, owned by the founder through Phase A. The cadence balances rotation hygiene against the operational cost of regenerating + redistributing tokens.
+External-registry credentials used by CI to publish stigmem artifacts rotate on a **90-day cadence**, owned by the founder through the v0.9.0aN alpha series. The cadence balances rotation hygiene against the operational cost of regenerating + redistributing tokens.
 
 ### Active credentials
 
@@ -73,7 +85,7 @@ If a CI token is suspected compromised:
 2. **Audit recent publishes** for that scope — npm registry shows a per-version publisher; PyPI shows uploader email per release.
 3. **Yank or unpublish unauthorized versions** within the registry's allowed window (npm: 72h since publish; PyPI: PEP 592 yank, no time limit).
 4. **Generate replacement** per Rotation procedure §1–3.
-5. **File an incident note** in `docs/internal/incidents/` (per Phase A operator-hardening doc work) describing the incident, the response, and any operator-visible impact.
+5. **File an incident note** in `docs/internal/incidents/` (per v0.9.0aN operator-hardening doc work) describing the incident, the response, and any operator-visible impact.
 
 ---
 

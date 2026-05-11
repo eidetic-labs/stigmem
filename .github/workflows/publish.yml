@@ -1,14 +1,18 @@
 name: Publish
 
 on:
-  # Push to main: GHCR images get sha + latest tags. PyPI / npm / release-
-  # creation jobs are gated by `if: startsWith(github.ref, 'refs/tags/v')`
-  # and skip on plain main pushes.
+  # Push to main: GHCR images get sha + `:edge` tags (tip-of-trunk preview).
+  # `:latest` does NOT advance on main — it advances only on tag push, so
+  # adopters pulling `:latest` always get the most recently released version.
+  # This matches our npm `latest` dist-tag convention (LIMITATIONS.md):
+  # `latest` walks forward through prereleases until v1.0.0 GA.
+  # PyPI / npm / release-creation jobs are gated by
+  # `if: startsWith(github.ref, 'refs/tags/v')` and skip on plain main pushes.
   push:
     branches: ["main"]
     # Tag push (v0.9.0a1, v0.9.0b1, v1.0.0rc1, v1.0.0): fires the full publish
-    # cascade — GHCR with version tags, npm publish, PyPI publish, GitHub
-    # release auto-creation with CHANGELOG-extracted notes.
+    # cascade — GHCR with version + `:latest` tags, npm publish, PyPI publish,
+    # GitHub release auto-creation with CHANGELOG-extracted notes.
     tags: ["v*"]
   # Release-published trigger kept for manual release creation as a fallback
   # path (e.g., recovering from a failed create-release job).
@@ -59,11 +63,17 @@ jobs:
           DOCKER_METADATA_PR_HEAD_SHA: "true"
         with:
           images: ${{ env.NODE_IMAGE }}
-          # Three release tags on tagged builds: PEP 440 form (matches git tag),
-          # semver form (matches npm spelling), and `latest`-on-main otherwise.
+          # Tag-push:  `:latest` + PEP 440 form (`:0.9.0a1`) + semver form
+          #            (`:0.9.0-alpha.1`). `:latest` advances on every release
+          #            tag, matching npm `latest` dist-tag convention.
+          # Main-push: `:edge` (Docker convention for tip-of-trunk) + `:<sha>`.
+          #            Does NOT touch `:latest`, so adopters pulling `:latest`
+          #            always get the most recently released version, never a
+          #            post-tag docs/CI commit.
           tags: |
             type=sha,prefix=
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=edge,branch=main
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
             type=raw,value=${{ steps.ver.outputs.pep440 }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
             type=raw,value=${{ steps.ver.outputs.semver }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
 
@@ -192,12 +202,45 @@ jobs:
           echo "OK: $PUBLISHED_VER is valid semver"
 
       - name: Publish to npm (with provenance)
-        # --tag is required for prereleases; npm rejects publish without it.
-        # alpha/beta/rc go to their own dist-tags so `npm install <pkg>`
-        # (no --tag) waits for a stable release on `latest`.
+        # --tag advances the per-line dist-tag (alpha/beta/rc/latest) computed
+        # from the version via scripts/translate_version.py. npm requires
+        # `latest` to exist on every package, so on first publish it is
+        # auto-set to the just-published version regardless of --tag. Our
+        # convention (per LIMITATIONS.md §npm install behavior): `latest`
+        # tracks the most recent published version — stable when v1.0.0
+        # ships, prerelease until then. The post-publish step below moves
+        # `latest` forward explicitly on every prerelease so adopters running
+        # bare `npm install` get the most recent build, not the very first.
         run: |
           cd sdks/stigmem-ts
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VER=$(node -p "require('./package.json').version")
+          # Idempotency: skip publish if this exact version is already on the
+          # registry (re-run after partial-success workflow, retag, etc.).
+          # Without this guard `npm publish` returns EPUBLISHCONFLICT (409)
+          # which fails the job and blocks the downstream create-release step.
+          if npm view "${PKG_NAME}@${PKG_VER}" version 2>/dev/null | grep -qx "$PKG_VER"; then
+            echo "::notice::${PKG_NAME}@${PKG_VER} already on the registry; skipping npm publish."
+            exit 0
+          fi
           npm publish --provenance --access public --tag "${{ steps.ver.outputs.npm_tag }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Advance latest dist-tag to this version
+        # Project convention: `latest` tracks the most recent published version
+        # regardless of stability tier. Stability is communicated by the
+        # version string itself (`-alpha.N`, `-beta.N`, `-rc.N` suffixes are
+        # unmistakable) — not by the `latest` tag. This makes bare
+        # `npm install` always return the most recent build.
+        #
+        # Idempotent: `npm dist-tag add` with an already-set value is a no-op.
+        run: |
+          cd sdks/stigmem-ts
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VER=$(node -p "require('./package.json').version")
+          npm dist-tag add "${PKG_NAME}@${PKG_VER}" latest
+          echo "::notice::Set latest → ${PKG_NAME}@${PKG_VER}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -216,15 +259,29 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          # Protocol package (root pyproject.toml)
+          # All four PyPI projects use OIDC (Trusted Publisher) per the
+          # path-of-least-privilege intent. Each project has its Trusted
+          # Publisher configured at pypi.org/manage/project/<name>/settings/publishing/
+          # for repository=Eidetic-Labs/stigmem, workflow=publish.yml.
+          #
+          # The `stigmem` meta-package was first published via OIDC against
+          # a pending Trusted Publisher (configured pre-first-publish to
+          # bypass the per-uploader rate-limit hit by the API-token bridge).
+          # The other three were first published via the API-token bridge
+          # (PYPI_API_TOKEN secret); their post-create Trusted Publishers
+          # were configured post-publish (2026-05-10), at which point the
+          # `use_oidc: false` entries flipped to `true`.
+          #
+          # The PYPI_API_TOKEN secret can now be revoked.
           - name: stigmem
             dir: .
-          # Python SDK
+            use_oidc: true
           - name: stigmem-py
             dir: sdks/stigmem-py
-          # FastAPI reference node service
+            use_oidc: true
           - name: stigmem-node
             dir: node
+            use_oidc: true
           # OpenClaw adapter — reset from 1.0.5 to 0.9.0a1 to align with the
           # canonical version line. v1.0.3 and v1.0.5 are yanked from PyPI
           # (declared a never-published stigmem-py>=1.0.0rc1 dep, were
@@ -232,6 +289,7 @@ jobs:
           # release.
           - name: stigmem-openclaw
             dir: adapters/openclaw
+            use_oidc: true
 
     steps:
       - uses: actions/checkout@v6
@@ -254,27 +312,37 @@ jobs:
           python -m pip install --upgrade twine
           twine check "${{ matrix.package.dir }}/dist/"*
 
-      # Auth path: hybrid. Primary is PyPI Trusted Publishers via OIDC (no
-      # long-lived secret). Bridge fallback is a personal API token via the
-      # PYPI_API_TOKEN repo secret — used when pypi/warehouse#20006 (broken
-      # pending-publisher flow) blocks pre-publish trusted-publisher config
-      # for new projects. The action treats `password:` as authoritative when
-      # set; falls through to OIDC when the secret is empty.
+      # Auth path: OIDC (Trusted Publishers) for all four packages. The
+      # `id-token: write` permission granted at the job level above is what
+      # the action exchanges with PyPI for a short-lived OIDC token. No
+      # long-lived secret in the repo.
       #
-      # Path-of-least-privilege: once first publish creates the projects on
-      # PyPI, configure Trusted Publishers for each via the (now-working)
-      # post-create flow. Then revoke the API token and remove the secret;
-      # the workflow auto-falls-back to OIDC on the next release.
-      - name: Publish ${{ matrix.package.name }} to PyPI
+      # The `use_oidc` matrix field is retained (rather than dropped) so a
+      # future package whose Trusted Publisher is not yet configured can
+      # set `use_oidc: false` to use the API-token bridge below as a
+      # one-release fallback, then flip to `true` post-first-publish.
+      - name: Publish ${{ matrix.package.name }} to PyPI (OIDC)
+        if: matrix.package.use_oidc
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: ${{ matrix.package.dir }}/dist
-          # If PYPI_API_TOKEN secret is set, use it; else action falls back
-          # to OIDC trusted-publisher (requires `id-token: write` permission).
-          password: ${{ secrets.PYPI_API_TOKEN }}
           # skip-existing prevents failure if a re-run hits an already-published
           # version (e.g., re-tagging the same v0.9.0a1 by accident); useful safety
           # net for the matrix (one pkg succeeded, others retried).
+          skip-existing: true
+
+      # API-token bridge: kept as a fallback for new packages whose post-create
+      # Trusted Publisher hasn't been configured yet. Currently unused by all
+      # four entries above (use_oidc: true). When `PYPI_API_TOKEN` is revoked
+      # this branch will hard-fail any publish that tries to use it — which
+      # is the right failure mode (forces TP configuration before publishing
+      # a new package).
+      - name: Publish ${{ matrix.package.name }} to PyPI (API token bridge)
+        if: ${{ !matrix.package.use_oidc }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: ${{ matrix.package.dir }}/dist
+          password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
 
   create-release:
@@ -338,7 +406,12 @@ jobs:
       - name: Determine release type (final vs prerelease)
         id: kind
         run: |
-          # final releases use the `latest` npm dist-tag; everything else is prerelease
+          # Source-of-truth for stability is the version-string suffix (alpha/
+          # beta/rc), not the dist-tag — the `latest` dist-tag is set on every
+          # publish per the project convention in LIMITATIONS.md §npm
+          # `latest` dist-tag. translate_version.py derives `npm_tag` from the
+          # version suffix: `latest` only when there is no suffix (final
+          # release), otherwise alpha/beta/rc.
           if [ "${{ steps.ver.outputs.npm_tag }}" = "latest" ]; then
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
             echo "title=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"

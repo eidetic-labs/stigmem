@@ -30,7 +30,6 @@ from fastapi.testclient import TestClient
 
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_mod
-import stigmem_node.subscription_delivery as sub_mod
 from stigmem_node.subscription_delivery import deliver_pending, sweep_loop
 
 
@@ -212,7 +211,3 @@ def test_claim_clears_after_failure_and_retry_is_pending(client: TestClient) -> 
     assert row["delivery_attempts"] == 1
     assert row["next_retry_at"] is not None
     assert row["claimed_at"] is None
-
-
-# Touch module-level sub_mod to keep the import alive (used in patch targets above).
-_ = sub_mod

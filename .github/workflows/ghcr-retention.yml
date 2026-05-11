@@ -1,0 +1,72 @@
+name: GHCR retention
+
+# Prunes short-SHA-tagged versions of ghcr.io/eidetic-labs/stigmem-node
+# that are older than the configured retention window (default 90 days).
+#
+# Protected tags (never pruned):
+# - :latest, :edge — rolling pointers
+# - any immutable version tag: :0.9.0aN, :0.9.0bN, :1.0.0rcN, :1.0.0,
+#   plus the semver-strict spellings :0.9.0-alpha.N etc.
+#
+# What gets pruned:
+# - Short-SHA-tagged versions (:<7-char-sha>) older than the window.
+# - Orphan Sigstore signature manifests (sha256-….sig tags) whose
+#   target image is being pruned in the same run.
+#
+# Defaults to DRY RUN.  Flip STIGMEM_RETENTION_DRY_RUN=false on a
+# workflow_dispatch run to actually delete.
+#
+# Documented in docs/internal/release-cadence.md § Rule 7.
+# Tracked in issue #119.
+
+on:
+  schedule:
+    # Sundays at 03:00 UTC — well outside US/EU business hours
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (log only, no deletions)"
+        type: boolean
+        default: true
+      min_age_days:
+        description: "Minimum age in days before a short-SHA version is eligible for deletion"
+        type: number
+        default: 90
+      package:
+        description: "Package name (under Eidetic-Labs)"
+        type: string
+        default: "stigmem-node"
+
+permissions:
+  # `packages: write` is required to delete versions via the GitHub Packages API.
+  # contents: read is the floor for actions/checkout.
+  contents: read
+  packages: write
+
+jobs:
+  retain:
+    name: Prune short-SHA versions older than the retention window
+    runs-on: ubuntu-latest
+    env:
+      ORG: "Eidetic-Labs"
+      PACKAGE: ${{ inputs.package || 'stigmem-node' }}
+      DRY_RUN: ${{ inputs.dry_run == false && 'false' || 'true' }}
+      MIN_AGE_DAYS: ${{ inputs.min_age_days || 90 }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Prune
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 scripts/ghcr_retention.py \
+            --org "${ORG}" \
+            --package "${PACKAGE}" \
+            --min-age-days "${MIN_AGE_DAYS}" \
+            $([ "${DRY_RUN}" = "true" ] && echo "--dry-run")

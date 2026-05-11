@@ -117,7 +117,7 @@ cd stigmem
 docker compose up -d
 ```
 
-`docker compose up` pulls pre-built multi-arch images from GHCR (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a1`, signed via Sigstore cosign with attached SBOMs). If you're a contributor working on changes, use `docker compose up --build -d` to force a local rebuild.
+`docker compose up` pulls pre-built multi-arch images from GHCR (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a1`, signed via Sigstore cosign with attached SBOMs). The recipe pins to the version tag for reproducibility — see [the tag-selection guide](https://docs.stigmem.dev/operators/deployment/install#image-tags) for when to use `:latest`, `:edge`, or a `@sha256:<digest>` pin instead. If you're a contributor working on changes, use `docker compose up --build -d` to force a local rebuild.
 
 Two federated nodes start immediately:
 

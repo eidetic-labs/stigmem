@@ -369,7 +369,9 @@ Full usage docs and the security model are in the
 ### Test node for integration validation
 
 To validate the integration before pointing at a production node, run a local test instance
-using Docker:
+using Docker. The snippet below pulls `:latest` for quick experimentation; for production
+federation use a pinned version tag (`:0.9.0a1`) or a digest pin — see the
+[tag-selection guide](../../operators/deployment/install#image-tags).
 
 ```bash
 docker run --rm -p 8765:8765 \

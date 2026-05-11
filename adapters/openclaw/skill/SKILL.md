@@ -145,6 +145,8 @@ docker run --rm -p 8765:8765 \
   ghcr.io/eidetic-labs/stigmem-node:latest
 ```
 
+`:latest` is fine for trying things out; for production swap to a pinned version tag (`:0.9.0a1`) or a `@sha256:<digest>` pin — see the [tag-selection guide](https://docs.stigmem.dev/operators/deployment/install#image-tags).
+
 Full setup guide and federation docs: [docs.stigmem.dev/en/latest/docs/guides/federation](https://docs.stigmem.dev/en/latest/docs/guides/federation)
 
 ## Federation

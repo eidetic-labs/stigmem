@@ -148,6 +148,8 @@ docker run --rm -p 8765:8765 \
   ghcr.io/eidetic-labs/stigmem-node:latest
 ```
 
+`:latest` is fine for trying things out; for production swap to a pinned
+version tag or a digest pin — see the [tag-selection guide](../../operators/deployment/install#image-tags).
 For a production setup with auth, a persistent volume, and TLS, see the
 [installation guide](../../get-started/installation).
 

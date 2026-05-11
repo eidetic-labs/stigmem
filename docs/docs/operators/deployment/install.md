@@ -24,6 +24,44 @@ The [`deploy/compose/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy
 
 ---
 
+## Container image tags — which one should I pull? {#image-tags}
+
+The reference node image is published to GHCR at [`ghcr.io/eidetic-labs/stigmem-node`](https://github.com/Eidetic-Labs/stigmem/pkgs/container/stigmem-node). Several tag flavours are published in parallel — choose the one that matches your stability needs:
+
+| Tag | Stability | Use when… | Example |
+|---|---|---|---|
+| `:0.9.0aN` (or `:0.9.0bN`, `:1.0.0rcN`, `:1.0.0`) | **Immutable** — never reassigned after publish ([release rule 2](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/internal/release-cadence.md#rule-2--tags-are-immutable-after-publish)) | **Production.** Reproducible builds, audit-traceable deployments, change-control gates. | `ghcr.io/eidetic-labs/stigmem-node:0.9.0a1` |
+| `:0.9.0-alpha.N` / `:0.9.0-beta.N` / `:1.0.0-rc.N` / `:1.0.0` | Immutable | Same artefact as the row above, in semver-strict spelling. Use whichever your tooling prefers. | `ghcr.io/eidetic-labs/stigmem-node:0.9.0-alpha.1` |
+| `:latest` | Rolling — advances on every release tag push, never on a plain `main` push | Quickstart, eval, demos. You accept that the image will silently advance when a new release ships. | `ghcr.io/eidetic-labs/stigmem-node:latest` |
+| `:edge` | Rolling — advances on every `main` push | Tracking tip-of-trunk between releases. CI-tested but not release-gated. | `ghcr.io/eidetic-labs/stigmem-node:edge` |
+| `:<short-sha>` (7-char git short SHA) | Immutable for the lifetime of the tag ([retention](#image-retention) prunes after 90 days) | Forensics, rollback to a specific commit, reproducing a CI failure. | `ghcr.io/eidetic-labs/stigmem-node:b1147a6` |
+| `@sha256:<digest>` | Immutable, tamper-evident — fixes the **content**, not the **label** | **Hardened production / supply-chain-conscious deployments.** A retagged or republished image cannot affect a digest pin. | `ghcr.io/eidetic-labs/stigmem-node@sha256:c0038b06…` |
+
+**Quick rule of thumb:**
+
+- Trying things out → `:latest`.
+- Running a real workload → `:0.9.0aN` (your current release).
+- Auditable production → `@sha256:<digest>` of the version tag you intend to ship.
+
+:::tip Verifying what `:latest` resolves to today
+```bash
+docker pull ghcr.io/eidetic-labs/stigmem-node:latest
+docker inspect --format '{{.RepoDigests}}' ghcr.io/eidetic-labs/stigmem-node:latest
+```
+The printed digest is what's actually running. Pin to that digest in your Compose / Helm chart for a tamper-evident production deployment.
+:::
+
+### Image retention {#image-retention}
+
+The publish workflow tags every release with `:latest` + the version pair (`:0.9.0aN` and `:0.9.0-alpha.N`), and every `main` commit with `:edge` + `:<short-sha>`. To keep the GHCR tag inventory manageable without losing supply-chain auditability:
+
+- **Retained forever:** `:latest`; all version tags (`:0.9.0aN`, `:0.9.0bN`, `:1.0.0rcN`, `:1.0.0`); `:edge`.
+- **Retained for 90 days:** short-SHA tags (`:<7-char-sha>`) and their orphan Sigstore signature artefacts (`sha256-…sig`).
+
+Operationally enforced by [`.github/workflows/ghcr-retention.yml`](https://github.com/Eidetic-Labs/stigmem/blob/main/.github/workflows/ghcr-retention.yml), which runs weekly. The retention policy itself is documented as [release rule 7](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/internal/release-cadence.md#rule-7--ghcr-image-retention) in `docs/internal/release-cadence.md`.
+
+---
+
 ## Prerequisites
 
 | Tool | Minimum version |

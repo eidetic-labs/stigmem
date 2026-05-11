@@ -51,6 +51,39 @@ GHCR packages default to **private** when first published. Adopters following th
 
 **Mechanically enforced by** the `GHCR visibility check` workflow at `.github/workflows/ghcr-visibility-check.yml`, which runs on every push to main + daily at 14:00 UTC. The workflow probes the GHCR token endpoint anonymously; failure means the image is private. Add new images to the check by extending `scripts/check_ghcr_public.py` with their reference.
 
+### Rule 7 — GHCR image retention
+
+Added 2026-05-11 after the founder observation that the GHCR package page shows ~40+ short-SHA tags accumulated since first publish, with no automatic cleanup.
+
+The publish workflow (`.github/workflows/publish.yml`) publishes several tag flavours per push:
+
+| Trigger | Tags pushed |
+|---|---|
+| Release tag (`refs/tags/v*`) | `:latest`, `:0.9.0aN` (PEP 440), `:0.9.0-alpha.N` (semver), `:<short-sha>` |
+| Plain `main` push | `:edge`, `:<short-sha>` |
+
+This is the right layout — `:latest` is release-gated and immutable version tags exist for reproducibility. But the short-SHA tags accumulate forever unless we prune them.
+
+**Retention rules:**
+
+| Tag class | Retention | Rationale |
+|---|---|---|
+| Immutable version tags (`:0.9.0aN`, `:0.9.0bN`, `:1.0.0rcN`, `:1.0.0`, plus semver-strict spellings) | **Forever** | Supply-chain auditability (Rule 2 corollary). An immutable artefact whose name disappears is operationally indistinguishable from a deleted artefact. |
+| Rolling pointers (`:latest`, `:edge`) | **Forever** | They are pointers; the underlying digests are kept via the version-tag retention above. |
+| Short-SHA tags (`:<7-char-sha>`) | **90 days** | Forensics window: long enough to debug a regression that landed 1–2 release cycles back; short enough to keep the tag inventory readable. |
+| Orphan Sigstore signatures (`sha256-…sig` whose target image was pruned) | Pruned with their target | Without a target image, the signature is unverifiable noise. |
+
+**Mechanically enforced by** the `GHCR retention` workflow at `.github/workflows/ghcr-retention.yml`, which runs weekly (Sundays 03:00 UTC). The workflow:
+
+1. Lists all versions of `ghcr.io/eidetic-labs/stigmem-node` via `gh api`.
+2. For each version, extracts its tag list.
+3. **Skips** any version whose tag list contains a protected tag — `:latest`, `:edge`, or any tag matching the immutable-version regex `^[0-9]+\.[0-9]+\.[0-9]+(a[0-9]+|b[0-9]+|-?(alpha|beta)\.[0-9]+|rc[0-9]+|-rc\.[0-9]+)?$`.
+4. **Deletes** any remaining version whose `created_at` is older than 90 days. This catches short-SHA-tagged versions and orphan Sigstore signatures.
+
+The workflow runs in `dry-run` mode by default (logs what would be deleted) and respects a `STIGMEM_RETENTION_DRY_RUN=false` workflow input to actually delete. First production run after this rule lands: review the dry-run output, confirm scope, then flip to live mode.
+
+**Operator audit:** the workflow's run log is the audit trail. The action posts a markdown summary to the workflow run page listing every deletion (version id, age, tags). To extend retention beyond 90 days for a specific period (e.g. a regression-hunt window), set `STIGMEM_RETENTION_MIN_AGE_DAYS=180` on the workflow run.
+
 ---
 
 ## Release-branch strategy

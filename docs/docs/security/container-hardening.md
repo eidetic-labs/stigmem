@@ -30,6 +30,10 @@ ghcr.io/eidetic-labs/stigmem-node:<tag>
 
 The hardened image is published for `linux/amd64` and `linux/arm64`.
 
+:::tip For hardened production, pin to a digest
+The `<tag>` placeholder above stands in for the tag you choose. For supply-chain-conscious deployments use `@sha256:<digest>` instead — a digest pin is tamper-evident and immune to tag reassignment. See the [tag-selection guide](../operators/deployment/install#image-tags) for the full breakdown of when each tag flavour is appropriate.
+:::
+
 ## Verifying the image signature
 
 ```bash
@@ -78,8 +82,10 @@ docker run -d \
   -v stigmem-data:/data \
   -e STIGMEM_DB_PATH=/data/stigmem.db \
   -p 8765:8765 \
-  ghcr.io/eidetic-labs/stigmem-node:latest
+  ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
 ```
+
+For audit-traceable production, replace `:0.9.0a1` with `@sha256:<digest>` — see the [tag-selection guide](../operators/deployment/install#image-tags).
 
 :::note Kubernetes / Helm and Fly.io
 Helm chart hardening defaults and Fly.io micro-VM guidance lived alongside the v1.0 deploy recipes. Those recipes are deferred to [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) and [`experimental/deploy-fly/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-fly) in v0.9.0a1 and are unsupported until they pass the [ADR-008 reintroduction gates](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). The Docker and Docker Compose hardening guidance above is the supported v0.9.0a1 surface.

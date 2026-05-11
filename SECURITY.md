@@ -178,7 +178,8 @@ The stigmem reference node (`stigmem/node/`) is implemented in Python with FastA
 - **Federation:** Peer handshake uses Ed25519 signing; replay attack resistance via HLC timestamps (§6).
 - **Input validation:** Pydantic models on all HTTP endpoints; malformed payloads return 422 before reaching business logic.
 - **Secrets:** No credentials are committed to the repository. Docker Compose uses environment variable injection.
-- **CI:** Dependabot alerts are monitored; `pip-audit`, `pnpm audit`, and `bandit` run as blocking CI steps on every PR (see Audit Tooling below).
+- **Container image retention:** Every released container image (`:0.9.0aN`, `:0.9.0bN`, `:1.0.0rcN`, `:1.0.0`, plus the semver-strict spellings) is **retained on GHCR indefinitely**, so an audit trail back to any historical release remains verifiable. Rolling pointers (`:latest`, `:edge`) are retained forever; short-SHA forensics tags are pruned after 90 days. Sigstore signatures are retained alongside their target image. See [`docs/internal/release-cadence.md`](docs/internal/release-cadence.md#rule-7--ghcr-image-retention) Rule 7 for the operational details, and the [tag-selection guide](https://docs.stigmem.dev/operators/deployment/install#image-tags) for choosing the right pin for your deployment.
+- **CI:** Dependabot alerts are monitored; `pip-audit`, `pnpm audit`, `bandit`, and CodeQL run as blocking CI steps on every PR (see Audit Tooling below).
 
 ---
 

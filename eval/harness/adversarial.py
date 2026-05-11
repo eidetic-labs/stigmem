@@ -291,79 +291,75 @@ def _build_oversized_token(length: int = 20000) -> str:
     return "Bearer " + ("A" * length)
 
 
-def _build_forged_auth(shape: str, s: dict[str, Any]) -> str:
-    """Build a forged Authorization header value for a given forgery shape."""
-    if shape == "unsigned_json":
-        token = s.get("token", '{"capabilities":["write"]}')
-        header = base64.urlsafe_b64encode(b'{"alg":"none"}').decode().rstrip("=")
-        payload = base64.urlsafe_b64encode(token.encode()).decode().rstrip("=")
-        return f"Bearer {header}.{payload}."
-    if shape == "unknown_key_signed":
-        header = base64.urlsafe_b64encode(b'{"alg":"EdDSA","kid":"unknown-ephemeral"}').decode().rstrip("=")
-        payload_dict = {
+def _b64u(data: bytes) -> str:
+    """URL-safe base64 encode without padding."""
+    return base64.urlsafe_b64encode(data).decode().rstrip("=")
+
+
+def _jwt_like(header_bytes: bytes, payload_bytes: bytes, sig_bytes: bytes = b"") -> str:
+    """Format a (possibly forged) JWT-shaped Bearer header."""
+    return f"Bearer {_b64u(header_bytes)}.{_b64u(payload_bytes)}.{_b64u(sig_bytes)}"
+
+
+# Dispatch table: forgery_shape → builder(s) → Authorization header value.
+# Each builder consumes the scenario dict; most ignore it. Keeping the table
+# flat (one entry per shape) keeps cyclomatic complexity at 1 instead of N.
+_FORGERY_BUILDERS: dict[str, Any] = {
+    "unsigned_json": lambda s: _jwt_like(
+        b'{"alg":"none"}',
+        s.get("token", '{"capabilities":["write"]}').encode(),
+    ),
+    "unknown_key_signed": lambda s: _jwt_like(
+        b'{"alg":"EdDSA","kid":"unknown-ephemeral"}',
+        json.dumps({
             "entity_uri": "https://unknown.example.org",
             "capabilities": ["write"],
             "exp": int(time.time()) + 3600,
-        }
-        payload_b64 = base64.urlsafe_b64encode(
-            json.dumps(payload_dict).encode()
-        ).decode().rstrip("=")
-        sig_b64 = base64.urlsafe_b64encode(os.urandom(64)).decode().rstrip("=")
-        return f"Bearer {header}.{payload_b64}.{sig_b64}"
-    if shape == "bit_corrupted_signature":
-        header = base64.urlsafe_b64encode(b'{"alg":"EdDSA"}').decode().rstrip("=")
-        payload_b64 = base64.urlsafe_b64encode(b'{"capabilities":["write"]}').decode().rstrip("=")
-        sig_b64 = base64.urlsafe_b64encode(b"\xff" * 64).decode().rstrip("=")
-        return f"Bearer {header}.{payload_b64}.{sig_b64}"
-    if shape == "expired_token":
-        header = base64.urlsafe_b64encode(b'{"alg":"none"}').decode().rstrip("=")
-        payload_b64 = base64.urlsafe_b64encode(
-            json.dumps({"capabilities": ["write"], "exp": 0}).encode()
-        ).decode().rstrip("=")
-        return f"Bearer {header}.{payload_b64}."
-    if shape == "nbf_in_future":
-        header = base64.urlsafe_b64encode(b'{"alg":"none"}').decode().rstrip("=")
-        payload_b64 = base64.urlsafe_b64encode(
-            json.dumps({"capabilities": ["write"], "nbf": 9999999999, "exp": 9999999999}).encode()
-        ).decode().rstrip("=")
-        return f"Bearer {header}.{payload_b64}."
-    if shape == "capability_escalation":
-        header = base64.urlsafe_b64encode(b'{"alg":"none"}').decode().rstrip("=")
-        payload_b64 = base64.urlsafe_b64encode(
-            json.dumps({"capabilities": ["read", "write", "admin"], "exp": 9999999999}).encode()
-        ).decode().rstrip("=")
-        return f"Bearer {header}.{payload_b64}."
-    if shape == "empty_capabilities":
-        header = base64.urlsafe_b64encode(b'{"alg":"none"}').decode().rstrip("=")
-        payload_b64 = base64.urlsafe_b64encode(
-            json.dumps({"capabilities": [], "exp": 9999999999}).encode()
-        ).decode().rstrip("=")
-        return f"Bearer {header}.{payload_b64}."
-    if shape == "nonce_replay":
-        return "Bearer invalid-replay-token"
-    if shape == "alg_none":
-        header = base64.urlsafe_b64encode(b'{"alg":"none"}').decode().rstrip("=")
-        payload_b64 = base64.urlsafe_b64encode(
-            b'{"capabilities":["write"],"exp":9999999999}'
-        ).decode().rstrip("=")
-        return f"Bearer {header}.{payload_b64}."
-    if shape == "entity_uri_mismatch":
-        header = base64.urlsafe_b64encode(b'{"alg":"none"}').decode().rstrip("=")
-        payload_b64 = base64.urlsafe_b64encode(
-            b'{"entity_uri":"https://org-a.example.org","capabilities":["write"]}'
-        ).decode().rstrip("=")
-        return f"Bearer {header}.{payload_b64}."
-    if shape == "malformed_jwt_no_header":
-        return f"Bearer {s.get('token', 'bad.token')}"
-    if shape == "malformed_jwt_bad_base64":
-        return f"Bearer {s.get('token', 'bad.!!!.bad')}"
-    if shape == "empty_auth_header":
-        return ""
-    if shape == "wrong_auth_scheme":
-        return s.get("token", "Basic dXNlcjpwYXNz")
-    if shape == "oversized_token":
-        return _build_oversized_token(16385)
-    return "Bearer unknown-shape"
+        }).encode(),
+        os.urandom(64),
+    ),
+    "bit_corrupted_signature": lambda s: _jwt_like(
+        b'{"alg":"EdDSA"}',
+        b'{"capabilities":["write"]}',
+        b"\xff" * 64,
+    ),
+    "expired_token": lambda s: _jwt_like(
+        b'{"alg":"none"}',
+        json.dumps({"capabilities": ["write"], "exp": 0}).encode(),
+    ),
+    "nbf_in_future": lambda s: _jwt_like(
+        b'{"alg":"none"}',
+        json.dumps({"capabilities": ["write"], "nbf": 9999999999, "exp": 9999999999}).encode(),
+    ),
+    "capability_escalation": lambda s: _jwt_like(
+        b'{"alg":"none"}',
+        json.dumps({"capabilities": ["read", "write", "admin"], "exp": 9999999999}).encode(),
+    ),
+    "empty_capabilities": lambda s: _jwt_like(
+        b'{"alg":"none"}',
+        json.dumps({"capabilities": [], "exp": 9999999999}).encode(),
+    ),
+    "nonce_replay": lambda s: "Bearer invalid-replay-token",
+    "alg_none": lambda s: _jwt_like(
+        b'{"alg":"none"}',
+        b'{"capabilities":["write"],"exp":9999999999}',
+    ),
+    "entity_uri_mismatch": lambda s: _jwt_like(
+        b'{"alg":"none"}',
+        b'{"entity_uri":"https://org-a.example.org","capabilities":["write"]}',
+    ),
+    "malformed_jwt_no_header": lambda s: f"Bearer {s.get('token', 'bad.token')}",
+    "malformed_jwt_bad_base64": lambda s: f"Bearer {s.get('token', 'bad.!!!.bad')}",
+    "empty_auth_header": lambda s: "",
+    "wrong_auth_scheme": lambda s: s.get("token", "Basic dXNlcjpwYXNz"),
+    "oversized_token": lambda s: _build_oversized_token(16385),
+}
+
+
+def _build_forged_auth(shape: str, s: dict[str, Any]) -> str:
+    """Build a forged Authorization header value for a given forgery shape."""
+    builder = _FORGERY_BUILDERS.get(shape)
+    return builder(s) if builder is not None else "Bearer unknown-shape"
 
 
 def run_capability_token(client: httpx.Client, scenarios: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -457,6 +453,56 @@ def _build_null_byte_payload(s: dict[str, Any]) -> str:
     return null_byte_map.get(s["id"], s.get("payload", ""))
 
 
+def _sanitizer_payload(s: dict[str, Any], subclass: str, payload_field: str) -> str:
+    """Resolve the raw injection payload for a sanitizer-bypass scenario."""
+    if subclass == "null_bytes":
+        return _build_null_byte_payload(s)
+    if payload_field in ("entity", "relation", "source", "value") and s.get("payload_length"):
+        return s.get("payload_prefix", "") + s.get("payload_fill", "X") * s["payload_length"]
+    return s.get("payload", "")
+
+
+def _sanitizer_fact_body(payload_field: str, raw_payload: str) -> dict[str, Any]:
+    """Assemble a fact body with the raw payload injected into the requested field."""
+    fact_body: dict[str, Any] = {
+        "entity": "user:sanitize-test",
+        "relation": "memory:role",
+        "value": {"type": "string", "v": "safe"},
+        "source": "eval:harness",
+        "confidence": 1.0,
+        "scope": "local",
+    }
+    if payload_field == "body":
+        nested: Any = "leaf"
+        for _ in range(200):
+            nested = {"x": nested}
+        fact_body["extra"] = nested
+    elif payload_field == "value":
+        fact_body["value"] = {"type": "string", "v": raw_payload}
+        fact_body["relation"] = "memory:data"
+    elif payload_field in ("entity", "relation", "source"):
+        fact_body[payload_field] = raw_payload
+    return fact_body
+
+
+def _sanitizer_passed(
+    status: int, resp_body: dict[str, Any], s: dict[str, Any], subclass: str,
+) -> bool:
+    """Evaluate the pass criterion for a sanitizer-bypass scenario response."""
+    if status in (400, 422):
+        return True
+    if status in (200, 201):
+        if s.get("payload_length", 0) > 1000:
+            return True  # server accepted but likely truncated/rejected at a different layer
+        if subclass == "prompt_injection":
+            return True  # raw text OK to store (no execution)
+        if subclass in ("sql_injection", "null_bytes"):
+            stored_raw = json.dumps(resp_body)
+            return "\x00" not in stored_raw and "DROP TABLE" not in stored_raw
+        return True
+    return status not in (500, 503)
+
+
 def run_sanitizer_bypass(client: httpx.Client, scenarios: list[dict[str, Any]]) -> list[dict[str, Any]]:
     results = []
 
@@ -464,71 +510,17 @@ def run_sanitizer_bypass(client: httpx.Client, scenarios: list[dict[str, Any]]) 
         subclass = s["subclass"]
         payload_field = s["payload_field"]
 
-        # Build payload — null_byte scenarios are constructed at runtime
-        if subclass == "null_bytes":
-            raw_payload = _build_null_byte_payload(s)
-        elif payload_field in ("entity", "relation", "source", "value"):
-            raw_payload = s.get("payload", "")
-            if s.get("payload_length"):
-                raw_payload = s.get("payload_prefix", "") + s.get("payload_fill", "X") * s["payload_length"]
-        else:
-            raw_payload = s.get("payload", "")
-
-        # Build fact body with injected payload
-        fact_body: dict[str, Any] = {
-            "entity": "user:sanitize-test",
-            "relation": "memory:role",
-            "value": {"type": "string", "v": "safe"},
-            "source": "eval:harness",
-            "confidence": 1.0,
-            "scope": "local",
-        }
-
-        if payload_field == "body":
-            nested: Any = "leaf"
-            for _ in range(200):
-                nested = {"x": nested}
-            fact_body["extra"] = nested
-        elif payload_field == "value":
-            fact_body["value"] = {"type": "string", "v": raw_payload}
-            fact_body["relation"] = "memory:data"
-        elif payload_field == "entity":
-            fact_body["entity"] = raw_payload
-        elif payload_field == "relation":
-            fact_body["relation"] = raw_payload
-        elif payload_field == "source":
-            fact_body["source"] = raw_payload
+        raw_payload = _sanitizer_payload(s, subclass, payload_field)
+        fact_body = _sanitizer_fact_body(payload_field, raw_payload)
 
         r = client.post("/v1/facts", json=fact_body)
-
         status = r.status_code
         try:
             resp_body = r.json()
         except Exception:
             resp_body = {}
 
-        # Pass criterion: 400 (rejected) OR stored but sanitised (no raw injection in response)
-        if status in (400, 422):
-            passed = True
-        elif status in (200, 201):
-            # Stored — check that payload is not verbatim in the stored value
-            stored_raw = json.dumps(resp_body)
-            raw = s.get("payload", "")
-            # For oversized payloads we just check it was stored with some form of truncation
-            if s.get("payload_length", 0) > 1000:
-                passed = True  # server accepted but likely truncated/rejected at a different layer
-            else:
-                # Prompt injections: raw text OK to store (no execution), pass
-                if subclass == "prompt_injection":
-                    passed = True
-                elif subclass in ("sql_injection", "null_bytes"):
-                    # SQL injection or null bytes must never be raw in retrievable form
-                    # Check that null bytes are not present in stored value
-                    passed = "\x00" not in stored_raw and "DROP TABLE" not in stored_raw
-                else:
-                    passed = True
-        else:
-            passed = status not in (500, 503)
+        passed = _sanitizer_passed(status, resp_body, s, subclass)
 
         results.append({
             "id": s["id"],

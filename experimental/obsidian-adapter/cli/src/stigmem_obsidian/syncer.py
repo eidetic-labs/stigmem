@@ -182,33 +182,64 @@ class VaultSyncer:
     # Internal: stigmem → vault
     # ------------------------------------------------------------------
 
-    def _pull_entity(self, note: ParsedNote, *, dry_run: bool) -> int:
-        """Fetch facts for note's entity from stigmem; write new ones to vault.
-
-        Returns number of facts written back.
-        """
-        entity = note.entity_uri
-        scope = self._config.scope_for_path(note.rel_path)
-        vault_source = f"{_SOURCE_VAULT_PREFIX}/{note.rel_path}"
-
-        # Get all facts for this entity from stigmem
-        stigmem_facts: list[dict[str, Any]] = []
+    def _fetch_remote_facts(
+        self, entity: str, scope: str, vault_source: str,
+    ) -> list[dict[str, Any]]:
+        """Page through stigmem and collect facts that didn't originate from this note."""
+        result: list[dict[str, Any]] = []
         cursor: str | None = None
         while True:
             page = self._client.query(entity=entity, scope=scope, cursor=cursor, limit=100)
             for fact in page.facts:
-                # Only include facts NOT sourced from this vault file
                 if fact.source != vault_source and not fact.contradicted:
-                    stigmem_facts.append({
+                    result.append({
                         "relation": fact.relation,
                         "value": _fact_value_str(fact.value),
                         "source": fact.source,
                         "id": fact.id,
                     })
             if page.cursor is None:
-                break
+                return result
             cursor = page.cursor
 
+    def _apply_conflict_policy(
+        self,
+        conflicts: list[dict[str, Any]],
+        stigmem_facts: list[dict[str, Any]],
+        rel_path: str,
+    ) -> tuple[list[dict[str, Any]], list[str]]:
+        """Filter stigmem_facts and collect conflict comments per the configured policy.
+
+        Returns (filtered_facts, conflict_messages_to_append).
+        """
+        policy = self._config.conflict_policy
+        comments: list[str] = []
+        for conflict in conflicts:
+            msg = (
+                f"relation={conflict['relation']} "
+                f"vault={conflict['vault_value']} "
+                f"stigmem={conflict['stigmem_value']}"
+            )
+            logger.info("conflict (%s): %s in %s", policy, msg, rel_path)
+            if policy == "stigmem_wins":
+                continue  # keep the stigmem-side fact in the write set
+            # vault_wins or comment: drop the stigmem fact for this relation
+            stigmem_facts = [
+                f for f in stigmem_facts if f["relation"] != conflict["relation"]
+            ]
+            if policy == "comment":
+                comments.append(msg)
+        return stigmem_facts, comments
+
+    def _pull_entity(self, note: ParsedNote, *, dry_run: bool) -> int:
+        """Fetch facts for note's entity from stigmem; write new ones to vault.
+
+        Returns number of facts written back.
+        """
+        scope = self._config.scope_for_path(note.rel_path)
+        vault_source = f"{_SOURCE_VAULT_PREFIX}/{note.rel_path}"
+
+        stigmem_facts = self._fetch_remote_facts(note.entity_uri, scope, vault_source)
         if not stigmem_facts:
             return 0
 
@@ -219,30 +250,10 @@ class VaultSyncer:
         existing_section = extract_stigmem_section(existing_content)
         existing_facts = parse_stigmem_section_body(existing_section) if existing_section else []
 
-        # Detect conflicts: same relation, different value, both sides changed
         conflicts = _detect_conflicts(existing_facts, stigmem_facts)
-        conflict_messages: list[str] = []
-        for conflict in conflicts:
-            conflict_msg = (
-                f"relation={conflict['relation']} "
-                f"vault={conflict['vault_value']} "
-                f"stigmem={conflict['stigmem_value']}"
-            )
-            policy = self._config.conflict_policy
-            if policy == "vault_wins":
-                logger.info("conflict (vault_wins): %s in %s", conflict_msg, note.rel_path)
-                stigmem_facts = [
-                    f for f in stigmem_facts if f["relation"] != conflict["relation"]
-                ]
-            elif policy == "stigmem_wins":
-                logger.info("conflict (stigmem_wins): %s in %s", conflict_msg, note.rel_path)
-            else:
-                # "comment" policy: surface conflict but don't overwrite vault value
-                logger.info("conflict (comment): %s in %s", conflict_msg, note.rel_path)
-                conflict_messages.append(conflict_msg)
-                stigmem_facts = [
-                    f for f in stigmem_facts if f["relation"] != conflict["relation"]
-                ]
+        stigmem_facts, conflict_messages = self._apply_conflict_policy(
+            conflicts, stigmem_facts, note.rel_path,
+        )
 
         modified = write_facts_to_note(
             self._vault_root, note.rel_path, stigmem_facts, self._config, dry_run=dry_run

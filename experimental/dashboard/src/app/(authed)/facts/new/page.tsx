@@ -35,6 +35,39 @@ const DEFAULTS: FormState = {
 
 const VALUE_TYPES = ["string", "text", "number", "boolean", "null"] as const;
 
+interface ValueInputProps {
+  valueType: string;
+  value: string;
+  onChange: (v: string) => void;
+}
+
+function ValueInput({ valueType, value, onChange }: ValueInputProps) {
+  if (valueType === "boolean") {
+    return (
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger>
+          <SelectValue placeholder="Select…" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="true">true</SelectItem>
+          <SelectItem value="false">false</SelectItem>
+        </SelectContent>
+      </Select>
+    );
+  }
+  if (valueType === "null") {
+    return <Input id="value-v" disabled placeholder="null" />;
+  }
+  return (
+    <Input
+      id="value-v"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={valueType === "number" ? "0.0" : "value"}
+    />
+  );
+}
+
 async function assertFact(form: FormState) {
   let v: string | number | boolean | null;
   if (form.value_type === "null") v = null;
@@ -170,26 +203,11 @@ export default function AssertPage() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="value-v">Value</Label>
-              {form.value_type === "boolean" ? (
-                <Select value={form.value_v} onValueChange={(v) => set("value_v", v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">true</SelectItem>
-                    <SelectItem value="false">false</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : form.value_type === "null" ? (
-                <Input id="value-v" disabled placeholder="null" />
-              ) : (
-                <Input
-                  id="value-v"
-                  value={form.value_v}
-                  onChange={(e) => set("value_v", e.target.value)}
-                  placeholder={form.value_type === "number" ? "0.0" : "value"}
-                />
-              )}
+              <ValueInput
+                valueType={form.value_type}
+                value={form.value_v}
+                onChange={(v) => set("value_v", v)}
+              />
             </div>
           </div>
 

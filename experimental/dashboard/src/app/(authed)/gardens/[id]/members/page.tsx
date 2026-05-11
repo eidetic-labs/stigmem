@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -27,21 +27,73 @@ const ROLE_BADGE: Record<string, "green" | "default" | "gray"> = {
   reader: "gray",
 };
 
-async function fetchGarden(slug: string): Promise<GardenRecord> {
+const fetchGarden = async (slug: string): Promise<GardenRecord> => {
   const res = await fetch(`/api/stigmem/v1/gardens/${slug}`);
   if (!res.ok) throw new Error(res.statusText);
   return res.json();
-}
+};
 
-async function fetchMembers(slug: string): Promise<GardenMemberRecord[]> {
+const fetchMembers = async (slug: string): Promise<GardenMemberRecord[]> => {
   const res = await fetch(`/api/stigmem/v1/gardens/${slug}/members`);
   if (!res.ok) throw new Error(res.statusText);
   return res.json();
-}
+};
 
-async function fetchMe(): Promise<{ entityUri: string; permissions: string[] }> {
+type MeResponse = { entityUri: string; permissions: string[] };
+
+const fetchMe = async (): Promise<MeResponse> => {
   const res = await fetch("/api/auth/me");
   return res.json();
+};
+
+interface MemberRowProps {
+  member: { entity_uri: string; role: string; added_at: string };
+  isAdmin: boolean;
+  isSelf: boolean;
+  onChangeRole: (role: string) => void;
+  onRemove: () => void;
+}
+
+function MemberRow({ member, isAdmin, isSelf, onChangeRole, onRemove }: MemberRowProps) {
+  const canEditRole = isAdmin && !isSelf;
+  return (
+    <tr className="hover:bg-muted/30">
+      <td className="px-4 py-2 font-mono text-xs break-all max-w-[220px] truncate" title={member.entity_uri}>
+        {member.entity_uri}
+        {isSelf && <span className="ml-1 text-muted-foreground">(you)</span>}
+      </td>
+      <td className="px-4 py-2">
+        {canEditRole ? (
+          <Select value={member.role} onValueChange={onChangeRole}>
+            <SelectTrigger className="h-7 w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Badge variant={ROLE_BADGE[member.role] ?? "gray"}>{member.role}</Badge>
+        )}
+      </td>
+      <td className="px-4 py-2 text-xs text-muted-foreground">{fmtDate(member.added_at)}</td>
+      {isAdmin && (
+        <td className="px-4 py-2">
+          {!isSelf && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              title="Remove member"
+              onClick={onRemove}
+            >
+              <Trash2 size={12} />
+            </Button>
+          )}
+        </td>
+      )}
+    </tr>
+  );
 }
 
 export default function GardenMembersPage() {
@@ -150,47 +202,14 @@ export default function GardenMembersPage() {
             </thead>
             <tbody className="divide-y">
               {members.map((m) => (
-                <tr key={m.entity_uri} className="hover:bg-muted/30">
-                  <td className="px-4 py-2 font-mono text-xs break-all max-w-[220px] truncate" title={m.entity_uri}>
-                    {m.entity_uri}
-                    {m.entity_uri === me?.entityUri && (
-                      <span className="ml-1 text-muted-foreground">(you)</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2">
-                    {isAdmin && m.entity_uri !== me?.entityUri ? (
-                      <Select
-                        value={m.role}
-                        onValueChange={(r) => changeRole.mutate({ entity_uri: m.entity_uri, role: r })}
-                      >
-                        <SelectTrigger className="h-7 w-28">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Badge variant={ROLE_BADGE[m.role] ?? "gray"}>{m.role}</Badge>
-                    )}
-                  </td>
-                  <td className="px-4 py-2 text-xs text-muted-foreground">{fmtDate(m.added_at)}</td>
-                  {isAdmin && (
-                    <td className="px-4 py-2">
-                      {m.entity_uri !== me?.entityUri && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          title="Remove member"
-                          onClick={() => removeMember.mutate(m.entity_uri)}
-                        >
-                          <Trash2 size={12} />
-                        </Button>
-                      )}
-                    </td>
-                  )}
-                </tr>
+                <MemberRow
+                  key={m.entity_uri}
+                  member={m}
+                  isAdmin={isAdmin}
+                  isSelf={m.entity_uri === me?.entityUri}
+                  onChangeRole={(role) => changeRole.mutate({ entity_uri: m.entity_uri, role })}
+                  onRemove={() => removeMember.mutate(m.entity_uri)}
+                />
               ))}
               {members.length === 0 && (
                 <tr>
@@ -204,52 +223,75 @@ export default function GardenMembersPage() {
         </div>
       )}
 
-      {/* Invite dialog */}
-      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add member</DialogTitle>
-            <DialogDescription>
-              Add an entity URI as a member of <strong>{garden?.name ?? slug}</strong>.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="invite-uri">Entity URI</Label>
-              <Input
-                id="invite-uri"
-                placeholder="oidc:sub | stigmem://authority/agent/id"
-                value={inviteForm.entity_uri}
-                onChange={(e) => setInviteForm((f) => ({ ...f, entity_uri: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Role</Label>
-              <Select value={inviteForm.role} onValueChange={(v) => setInviteForm((f) => ({ ...f, role: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          {addMember.isError && (
-            <p className="text-sm text-destructive">{String(addMember.error)}</p>
-          )}
-          <div className="flex justify-end gap-2 mt-2">
-            <DialogClose asChild>
-              <Button variant="outline" size="sm">Cancel</Button>
-            </DialogClose>
-            <Button
-              size="sm"
-              disabled={!inviteForm.entity_uri || addMember.isPending}
-              onClick={() => addMember.mutate()}
-            >
-              {addMember.isPending ? "Adding…" : "Add member"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <InviteDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        gardenName={garden?.name ?? slug}
+        form={inviteForm}
+        setForm={setInviteForm}
+        mutation={addMember}
+      />
     </div>
+  );
+}
+
+interface InviteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  gardenName: string;
+  form: { entity_uri: string; role: string };
+  setForm: Dispatch<SetStateAction<{ entity_uri: string; role: string }>>;
+  mutation: { isError: boolean; error: unknown; isPending: boolean; mutate: () => void };
+}
+
+function InviteDialog({
+  open, onOpenChange, gardenName, form, setForm, mutation,
+}: InviteDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add member</DialogTitle>
+          <DialogDescription>
+            Add an entity URI as a member of <strong>{gardenName}</strong>.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <Label htmlFor="invite-uri">Entity URI</Label>
+            <Input
+              id="invite-uri"
+              placeholder="oidc:sub | stigmem://authority/agent/id"
+              value={form.entity_uri}
+              onChange={(e) => setForm((f) => ({ ...f, entity_uri: e.target.value }))}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>Role</Label>
+            <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {mutation.isError && (
+          <p className="text-sm text-destructive">{String(mutation.error)}</p>
+        )}
+        <div className="flex justify-end gap-2 mt-2">
+          <DialogClose asChild>
+            <Button variant="outline" size="sm">Cancel</Button>
+          </DialogClose>
+          <Button
+            size="sm"
+            disabled={!form.entity_uri || mutation.isPending}
+            onClick={() => mutation.mutate()}
+          >
+            {mutation.isPending ? "Adding…" : "Add member"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -33,7 +33,9 @@ async function fetchAudit(factId: string): Promise<AuditLogEntry[]> {
   return res.json();
 }
 
-async function fetchMe(): Promise<{ entityUri: string; permissions: string[] }> {
+type MeResponse = { entityUri: string; permissions: string[] };
+
+async function fetchMe(): Promise<MeResponse> {
   const res = await fetch("/api/auth/me");
   return res.json();
 }
@@ -125,71 +127,8 @@ export default function FactDetailPage() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/facts"><ArrowLeft size={14} /> Facts</Link>
-        </Button>
-        <h1 className="text-xl font-semibold">Fact detail</h1>
-        {isRetracted && <Badge variant="red">retracted</Badge>}
-        {fact.contradicted && !isRetracted && <Badge variant="yellow">contradicted</Badge>}
-        {fact.attested_key_id && <Badge variant="green">attested</Badge>}
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-mono text-muted-foreground">{fact.id}</CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              title="Copy ID"
-              onClick={() => navigator.clipboard.writeText(fact.id)}
-            >
-              <Copy size={14} />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-2 gap-4">
-            <Field label="Entity">
-              <code className="font-mono text-xs break-all">{fact.entity}</code>
-            </Field>
-            <Field label="Relation">
-              <code className="font-mono text-xs">{fact.relation}</code>
-            </Field>
-            <Field label="Value">
-              <span>
-                <Badge variant="gray" className="mr-1">{fact.value.type}</Badge>
-                {fmtValue(fact.value.type, fact.value.v)}
-              </span>
-            </Field>
-            <Field label="Source">
-              <code className="font-mono text-xs break-all">{fact.source}</code>
-            </Field>
-            <Field label="Confidence">{fmtConfidence(fact.confidence)}</Field>
-            <Field label="Scope"><Badge variant="gray">{fact.scope}</Badge></Field>
-            <Field label="Asserted">{fmtDate(fact.timestamp)}</Field>
-            {fact.valid_until && (
-              <Field label="Valid until">{fmtDate(fact.valid_until)}</Field>
-            )}
-            {fact.received_from && (
-              <Field label="Received from"><code className="font-mono text-xs">{fact.received_from}</code></Field>
-            )}
-            {fact.attested_key_id && (
-              <Field label="Attested by"><code className="font-mono text-xs">{fact.attested_key_id}</code></Field>
-            )}
-          </dl>
-
-          {fact.warnings.length > 0 && (
-            <div className="mt-4 flex items-start gap-2 rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
-              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-              <ul className="list-disc ml-4 space-y-1">
-                {fact.warnings.map((w, i) => <li key={i}>{w}</li>)}
-              </ul>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <FactHeader isRetracted={isRetracted} fact={fact} />
+      <FactDetailCard fact={fact} />
 
       {canWrite && !isRetracted && (
         <Button
@@ -202,79 +141,179 @@ export default function FactDetailPage() {
         </Button>
       )}
 
-      {/* Retract dialog */}
-      <Dialog open={retractOpen} onOpenChange={setRetractOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Retract fact?</DialogTitle>
-            <DialogDescription>
-              Sets confidence to 0.0 for entity <strong>{fact.entity}</strong> /
-              relation <strong>{fact.relation}</strong> / scope <strong>{fact.scope}</strong>.
-              This cannot be undone without re-asserting.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="retract-reason">Reason (optional)</Label>
-            <Input
-              id="retract-reason"
-              placeholder="Why is this being retracted?"
-              value={retractReason}
-              onChange={(e) => setRetractReason(e.target.value)}
-            />
-          </div>
-          {retract.isError && (
-            <p className="text-sm text-destructive">{String(retract.error)}</p>
-          )}
-          <div className="flex justify-end gap-2 mt-2">
-            <DialogClose asChild>
-              <Button variant="outline" size="sm">Cancel</Button>
-            </DialogClose>
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={retract.isPending}
-              onClick={() => retract.mutate()}
-            >
-              {retract.isPending ? "Retracting…" : "Confirm retract"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <RetractDialog
+        open={retractOpen}
+        onOpenChange={setRetractOpen}
+        fact={fact}
+        reason={retractReason}
+        setReason={setRetractReason}
+        mutation={retract}
+      />
 
-      {/* Audit trail */}
-      {audit && audit.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Audit trail</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <table className="w-full text-xs">
-              <thead className="text-muted-foreground">
-                <tr>
-                  <th className="text-left pb-2">Event</th>
-                  <th className="text-left pb-2">Principal</th>
-                  <th className="text-left pb-2">Attested key</th>
-                  <th className="text-left pb-2">Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {audit.map((e) => (
-                  <tr key={e.id} className="align-top">
-                    <td className="py-1.5 pr-4"><Badge variant="gray">{e.event_type}</Badge></td>
-                    <td className="py-1.5 pr-4 font-mono max-w-[160px] truncate" title={e.entity_uri}>
-                      {e.entity_uri}
-                    </td>
-                    <td className="py-1.5 pr-4 font-mono max-w-[140px] truncate" title={e.attested_key_id ?? ""}>
-                      {e.attested_key_id ?? "—"}
-                    </td>
-                    <td className="py-1.5 text-muted-foreground">{fmtDate(e.ts)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
-      )}
+      {audit && audit.length > 0 && <AuditTrailCard audit={audit} />}
     </div>
+  );
+}
+
+function FactHeader({ isRetracted, fact }: { isRetracted: boolean; fact: FactRecord }) {
+  return (
+    <div className="flex items-center gap-3">
+      <Button variant="ghost" size="sm" asChild>
+        <Link href="/facts"><ArrowLeft size={14} /> Facts</Link>
+      </Button>
+      <h1 className="text-xl font-semibold">Fact detail</h1>
+      {isRetracted && <Badge variant="red">retracted</Badge>}
+      {fact.contradicted && !isRetracted && <Badge variant="yellow">contradicted</Badge>}
+      {fact.attested_key_id && <Badge variant="green">attested</Badge>}
+    </div>
+  );
+}
+
+function FactDetailCard({ fact }: { fact: FactRecord }) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-mono text-muted-foreground">{fact.id}</CardTitle>
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Copy ID"
+            onClick={() => navigator.clipboard.writeText(fact.id)}
+          >
+            <Copy size={14} />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <dl className="grid grid-cols-2 gap-4">
+          <Field label="Entity">
+            <code className="font-mono text-xs break-all">{fact.entity}</code>
+          </Field>
+          <Field label="Relation">
+            <code className="font-mono text-xs">{fact.relation}</code>
+          </Field>
+          <Field label="Value">
+            <span>
+              <Badge variant="gray" className="mr-1">{fact.value.type}</Badge>
+              {fmtValue(fact.value.type, fact.value.v)}
+            </span>
+          </Field>
+          <Field label="Source">
+            <code className="font-mono text-xs break-all">{fact.source}</code>
+          </Field>
+          <Field label="Confidence">{fmtConfidence(fact.confidence)}</Field>
+          <Field label="Scope"><Badge variant="gray">{fact.scope}</Badge></Field>
+          <Field label="Asserted">{fmtDate(fact.timestamp)}</Field>
+          {fact.valid_until && (
+            <Field label="Valid until">{fmtDate(fact.valid_until)}</Field>
+          )}
+          {fact.received_from && (
+            <Field label="Received from"><code className="font-mono text-xs">{fact.received_from}</code></Field>
+          )}
+          {fact.attested_key_id && (
+            <Field label="Attested by"><code className="font-mono text-xs">{fact.attested_key_id}</code></Field>
+          )}
+        </dl>
+
+        {fact.warnings.length > 0 && (
+          <div className="mt-4 flex items-start gap-2 rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+            <ul className="list-disc ml-4 space-y-1">
+              {fact.warnings.map((w, i) => <li key={i}>{w}</li>)}
+            </ul>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+interface RetractDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  fact: FactRecord;
+  reason: string;
+  setReason: (s: string) => void;
+  mutation: { isError: boolean; error: unknown; isPending: boolean; mutate: () => void };
+}
+
+function RetractDialog({
+  open, onOpenChange, fact, reason, setReason, mutation,
+}: RetractDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Retract fact?</DialogTitle>
+          <DialogDescription>
+            Sets confidence to 0.0 for entity <strong>{fact.entity}</strong> /
+            relation <strong>{fact.relation}</strong> / scope <strong>{fact.scope}</strong>.
+            This cannot be undone without re-asserting.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="retract-reason">Reason (optional)</Label>
+          <Input
+            id="retract-reason"
+            placeholder="Why is this being retracted?"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+        </div>
+        {mutation.isError && (
+          <p className="text-sm text-destructive">{String(mutation.error)}</p>
+        )}
+        <div className="flex justify-end gap-2 mt-2">
+          <DialogClose asChild>
+            <Button variant="outline" size="sm">Cancel</Button>
+          </DialogClose>
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={mutation.isPending}
+            onClick={() => mutation.mutate()}
+          >
+            {mutation.isPending ? "Retracting…" : "Confirm retract"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AuditTrailCard({ audit }: { audit: AuditLogEntry[] }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm">Audit trail</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <table className="w-full text-xs">
+          <thead className="text-muted-foreground">
+            <tr>
+              <th className="text-left pb-2">Event</th>
+              <th className="text-left pb-2">Principal</th>
+              <th className="text-left pb-2">Attested key</th>
+              <th className="text-left pb-2">Time</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {audit.map((e) => (
+              <tr key={e.id} className="align-top">
+                <td className="py-1.5 pr-4"><Badge variant="gray">{e.event_type}</Badge></td>
+                <td className="py-1.5 pr-4 font-mono max-w-[160px] truncate" title={e.entity_uri}>
+                  {e.entity_uri}
+                </td>
+                <td className="py-1.5 pr-4 font-mono max-w-[140px] truncate" title={e.attested_key_id ?? ""}>
+                  {e.attested_key_id ?? "—"}
+                </td>
+                <td className="py-1.5 text-muted-foreground">{fmtDate(e.ts)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </CardContent>
+    </Card>
   );
 }

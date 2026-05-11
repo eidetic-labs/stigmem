@@ -174,83 +174,71 @@ def fail(msg: str) -> None:
     sys.stderr.write(f"version-consistency: {msg}\n")
 
 
+def _load_manifest_surfaces() -> tuple[list[Any] | None, str | None]:
+    """Load the surfaces list from the manifest. Returns (surfaces, error_msg)."""
+    if not MANIFEST.exists():
+        return None, f"manifest not found at {MANIFEST.relative_to(REPO_ROOT)}"
+    try:
+        manifest = yaml.safe_load(MANIFEST.read_text())
+    except yaml.YAMLError as e:
+        return None, f"YAML parse error in manifest: {e}"
+    surfaces = manifest.get("surfaces", []) if isinstance(manifest, dict) else []
+    if not surfaces:
+        return None, "no surfaces in manifest"
+    return surfaces, None
+
+
+def _load_canonical_version() -> tuple[str | None, str | None, str | None]:
+    """Read the canonical version + key from the anchor pyproject.toml.
+
+    Returns (canonical_str, canonical_key, error_msg) — error_msg is None on success.
+    """
+    canonical = extract_toml(ANCHOR, "project.version")
+    if not canonical:
+        return None, None, f"could not read project.version from {ANCHOR.relative_to(REPO_ROOT)}"
+    canonical_key = normalize(canonical)
+    if not canonical_key:
+        return None, None, f"anchor version {canonical!r} is not a parseable PEP 440 / semver string"
+    return canonical, canonical_key, None
+
+
+def _entry_skip_reason(entry: dict[str, Any]) -> str | None:
+    """Return a skip reason for entries that should not be version-checked, or None."""
+    sid = entry["id"]
+    if entry.get("retired"):
+        return f"{sid} (retired {entry['retired']})"
+    file_rel = entry.get("file")
+    field = entry.get("field")
+    if not file_rel or not field:
+        return f"{sid} (no file/field; protocol-only)"
+    suffix = Path(file_rel).suffix.lower()
+    kind = entry.get("kind")
+    if kind == "documentation" and suffix == ".md":
+        return f"{sid} (markdown prose; not yet checked)"
+    if kind == "internal-protocol" and suffix == ".py":
+        return f"{sid} (Python source; spec-defined, not yet checked)"
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
-    if not MANIFEST.exists():
-        fail(f"manifest not found at {MANIFEST.relative_to(REPO_ROOT)}")
+    surfaces, manifest_err = _load_manifest_surfaces()
+    if surfaces is None:
+        fail(manifest_err or "unknown manifest error")
         return 2
 
-    try:
-        manifest = yaml.safe_load(MANIFEST.read_text())
-    except yaml.YAMLError as e:
-        fail(f"YAML parse error in manifest: {e}")
-        return 2
-
-    surfaces = manifest.get("surfaces", []) if isinstance(manifest, dict) else []
-    if not surfaces:
-        fail("no surfaces in manifest")
-        return 2
-
-    # Anchor: read root pyproject.toml as the canonical release source
-    canonical = extract_toml(ANCHOR, "project.version")
-    if not canonical:
-        fail(f"could not read project.version from {ANCHOR.relative_to(REPO_ROOT)}")
-        return 2
-    canonical_key = normalize(canonical)
-    if not canonical_key:
-        fail(f"anchor version {canonical!r} is not a parseable PEP 440 / semver string")
+    canonical, canonical_key, anchor_err = _load_canonical_version()
+    if canonical is None:
+        fail(anchor_err or "unknown anchor error")
         return 2
 
     if args.verbose:
         print(f"Canonical (anchor): {canonical} → key {canonical_key}")
 
-    mismatches: list[tuple[str, str, str | None, str | None]] = []
-    skipped: list[str] = []
-    checked = 0
-
-    for entry in surfaces:
-        sid = entry["id"]
-
-        # Skip retired (tombstoned) entries
-        if entry.get("retired"):
-            skipped.append(f"{sid} (retired {entry['retired']})")
-            continue
-
-        # File-backed surfaces only — protocol-only surfaces (no file) are documented
-        # but not version-checked here; they're enforced at runtime by their spec.
-        file_rel = entry.get("file")
-        field = entry.get("field")
-        if not file_rel or not field:
-            skipped.append(f"{sid} (no file/field; protocol-only)")
-            continue
-
-        # Documentation surfaces with `spelling: shorthand` and free-form prose
-        # files (README, CHANGELOG, LIMITATIONS, SECURITY) need a different
-        # extractor — defer to a future enhancement (regex match against
-        # the canonical release inside a known anchor line). Skip for now
-        # with a clear message rather than a false pass.
-        kind = entry.get("kind")
-        suffix = Path(file_rel).suffix.lower()
-        if kind == "documentation" and suffix == ".md":
-            skipped.append(f"{sid} (markdown prose; not yet checked)")
-            continue
-        if kind == "internal-protocol" and suffix == ".py":
-            skipped.append(f"{sid} (Python source; spec-defined, not yet checked)")
-            continue
-
-        file_path = REPO_ROOT / file_rel
-        actual = extract_version_from_file(file_path, field)
-        actual_key = normalize(actual) if actual else None
-
-        checked += 1
-        if args.verbose:
-            print(f"  {sid:<32}  {file_rel}::{field}  =  {actual!r}  → {actual_key}")
-
-        if actual_key != canonical_key:
-            mismatches.append((sid, file_rel, actual, actual_key))
+    mismatches, skipped, checked = _check_all_surfaces(surfaces, canonical_key, args.verbose)
 
     if mismatches:
         fail(f"\n{len(mismatches)} mismatch(es) against canonical {canonical} (key={canonical_key}):")
@@ -266,6 +254,39 @@ def main() -> int:
         for s in skipped:
             print(f"  skipped: {s}")
     return 0
+
+
+def _check_all_surfaces(
+    surfaces: list[Any],
+    canonical_key: str,
+    verbose: bool,
+) -> tuple[list[tuple[str, str, str | None, str | None]], list[str], int]:
+    """Compare every surface entry against the canonical version key.
+
+    Returns (mismatches, skipped, checked_count).
+    """
+    mismatches: list[tuple[str, str, str | None, str | None]] = []
+    skipped: list[str] = []
+    checked = 0
+    for entry in surfaces:
+        skip = _entry_skip_reason(entry)
+        if skip is not None:
+            skipped.append(skip)
+            continue
+
+        sid = entry["id"]
+        file_rel = entry["file"]
+        field = entry["field"]
+        actual = extract_version_from_file(REPO_ROOT / file_rel, field)
+        actual_key = normalize(actual) if actual else None
+
+        checked += 1
+        if verbose:
+            print(f"  {sid:<32}  {file_rel}::{field}  =  {actual!r}  → {actual_key}")
+
+        if actual_key != canonical_key:
+            mismatches.append((sid, file_rel, actual, actual_key))
+    return mismatches, skipped, checked
 
 
 if __name__ == "__main__":

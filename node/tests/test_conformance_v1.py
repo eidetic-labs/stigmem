@@ -23,6 +23,8 @@ and ensure the test runner handles any new assertion types.
 """
 from __future__ import annotations
 
+import contextlib
+import importlib as _importlib
 import json
 from pathlib import Path
 from typing import Any
@@ -138,36 +140,7 @@ for _fname, _vecs in _GROUPS:
     _ALL_PARAMS.extend([(f"{_fname}::{v['id']}", v) for v in _vecs])
 
 
-@pytest.mark.parametrize(
-    "vector",
-    [p[1] for p in _ALL_PARAMS],
-    ids=[p[0] for p in _ALL_PARAMS],
-)
-def test_conformance_vector(client: TestClient, vector: dict[str, Any]) -> None:
-    vec_id = vector["id"]
-    ctx = f"[{vec_id}] {vector.get('description', '')}"
-
-    # Skip auth-requiring vectors (auth tests are covered by test_oidc.py etc.)
-    if vector.get("requires_auth"):
-        pytest.skip(f"{ctx}: skipped (requires_auth — covered by dedicated auth tests)")
-
-    # Set up any garden prerequisite
-    garden_slug = vector.get("requires_garden")
-    if garden_slug:
-        _setup_garden(client, garden_slug)
-
-    # Run dependency chain setup
-    _run_setup_chain(client, vector)
-
-    # Execute the vector
-    resp = _do_request(client, vector)
-    body: dict[str, Any] = {}
-    try:
-        body = resp.json()
-    except Exception:
-        pass
-
-    # Status assertion
+def _assert_status(resp: Any, vector: dict[str, Any], ctx: str) -> None:
     expected_status = vector.get("expected_status")
     status_in = vector.get("expected_status_in")
     if expected_status is not None:
@@ -179,23 +152,11 @@ def test_conformance_vector(client: TestClient, vector: dict[str, Any]) -> None:
             f"{ctx}: expected HTTP in {status_in}, got {resp.status_code}. Body: {resp.text}"
         )
 
-    # Short-circuit on error responses
-    if resp.status_code >= 400:
-        return
 
-    # Required keys
-    for key in vector.get("expected_body_has_keys", []):
-        assert key in body, f"{ctx}: response missing required key '{key}'"
-
-    # Body contains subset
-    if "expected_body_contains" in vector:
-        _assert_contains(body, vector["expected_body_contains"], path=ctx)
-
-    # Nested assertion — dotted-path dict: {"value.type": "number", "value.v": 42.5}
-    for dotted_path, expected_val in vector.get("expected_nested", {}).items():
-        parts = dotted_path.split(".")
+def _assert_nested(body: dict[str, Any], expectations: dict[str, Any], ctx: str) -> None:
+    for dotted_path, expected_val in expectations.items():
         current: Any = body
-        for part in parts:
+        for part in dotted_path.split("."):
             assert isinstance(current, dict) and part in current, (
                 f"{ctx}: path '{dotted_path}' — missing key '{part}'"
             )
@@ -204,8 +165,11 @@ def test_conformance_vector(client: TestClient, vector: dict[str, Any]) -> None:
             f"{ctx}: {dotted_path} = {current!r}, expected {expected_val!r}"
         )
 
-    # List contains — dict where value is item to find in body[key] (primitive or dict)
-    for list_key, expected_item in vector.get("expected_body_list_contains", {}).items():
+
+def _assert_list_contains(
+    body: dict[str, Any], list_expectations: dict[str, Any], ctx: str
+) -> None:
+    for list_key, expected_item in list_expectations.items():
         assert list_key in body, f"{ctx}: missing list key '{list_key}'"
         actual_list = body[list_key]
         assert isinstance(actual_list, list), f"{ctx}: '{list_key}' is not a list"
@@ -219,7 +183,18 @@ def test_conformance_vector(client: TestClient, vector: dict[str, Any]) -> None:
                 f"{ctx}: '{expected_item}' not in {list_key}: {actual_list!r}"
             )
 
-    # Value in set
+
+def _assert_body_expectations(body: dict[str, Any], vector: dict[str, Any], ctx: str) -> None:
+    """Apply every body-shape expectation for a happy-path response."""
+    for key in vector.get("expected_body_has_keys", []):
+        assert key in body, f"{ctx}: response missing required key '{key}'"
+
+    if "expected_body_contains" in vector:
+        _assert_contains(body, vector["expected_body_contains"], path=ctx)
+
+    _assert_nested(body, vector.get("expected_nested", {}), ctx)
+    _assert_list_contains(body, vector.get("expected_body_list_contains", {}), ctx)
+
     if "expected_body_value_in" in vector:
         for field, allowed in vector["expected_body_value_in"].items():
             assert field in body, f"{ctx}: missing field '{field}'"
@@ -227,11 +202,9 @@ def test_conformance_vector(client: TestClient, vector: dict[str, Any]) -> None:
                 f"{ctx}: {field} = {body[field]!r}, expected one of {allowed!r}"
             )
 
-    # Response is list
     if vector.get("expected_response_is_list"):
         assert isinstance(body, list), f"{ctx}: expected list response, got {type(body)}"
 
-    # Members contain role (garden-specific)
     if "expected_members_contain_role" in vector:
         expected_role = vector["expected_members_contain_role"]
         members = body.get("members", [])
@@ -240,11 +213,42 @@ def test_conformance_vector(client: TestClient, vector: dict[str, Any]) -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "vector",
+    [p[1] for p in _ALL_PARAMS],
+    ids=[p[0] for p in _ALL_PARAMS],
+)
+def test_conformance_vector(client: TestClient, vector: dict[str, Any]) -> None:
+    vec_id = vector["id"]
+    ctx = f"[{vec_id}] {vector.get('description', '')}"
+
+    # Skip auth-requiring vectors (auth tests are covered by test_oidc.py etc.)
+    if vector.get("requires_auth"):
+        pytest.skip(f"{ctx}: skipped (requires_auth — covered by dedicated auth tests)")
+
+    garden_slug = vector.get("requires_garden")
+    if garden_slug:
+        _setup_garden(client, garden_slug)
+
+    _run_setup_chain(client, vector)
+
+    resp = _do_request(client, vector)
+    body: dict[str, Any] = {}
+    with contextlib.suppress(Exception):
+        body = resp.json()
+
+    _assert_status(resp, vector, ctx)
+
+    # Short-circuit on error responses
+    if resp.status_code >= 400:
+        return
+
+    _assert_body_expectations(body, vector, ctx)
+
+
 # ---------------------------------------------------------------------------
 # §5.19–§5.20, §17.3 — Garden ACL with distinct identities (auth required)
 # ---------------------------------------------------------------------------
-
-import importlib as _importlib
 
 _PATCHABLE_MODULES = [
     "stigmem_node.routes.facts",
@@ -265,20 +269,19 @@ def _make_authed_node(
     tmp_path: object,
     suffix: str = "",
     attestation_mode: str = "warn",
-) -> "tuple[TestClient, Any, list, str]":
-    import stigmem_node.settings as sm
+) -> tuple[TestClient, Any, list, str]:
     import stigmem_node.auth as am
     import stigmem_node.db as dm
     import stigmem_node.routes.wellknown as wk
+    import stigmem_node.settings as sm
     from stigmem_node.auth import create_api_key
     from stigmem_node.db import apply_migrations
     from stigmem_node.main import create_app
-    from stigmem_node.settings import Settings
 
     db_file = str(tmp_path) + f"/acl{suffix}.db"
     apply_migrations(db_path=db_file)
     original = sm.settings
-    ts = Settings(
+    ts = sm.Settings(
         db_path=db_file,
         auth_required=True,
         node_url="http://testnode",
@@ -294,7 +297,7 @@ def _make_authed_node(
         try:
             mod = _importlib.import_module(name)
             if hasattr(mod, "settings"):
-                setattr(mod, "settings", ts)
+                mod.settings = ts
                 patched.append((mod, "settings", original))
         except ImportError:
             pass
@@ -314,10 +317,10 @@ def _make_authed_node(
 
 
 def _restore_authed(original: Any, patched: list) -> None:
-    import stigmem_node.settings as sm
     import stigmem_node.auth as am
     import stigmem_node.db as dm
     import stigmem_node.routes.wellknown as wk
+    import stigmem_node.settings as sm
     sm.settings = original
     am.settings = original
     dm.settings = original
@@ -529,19 +532,18 @@ class TestSourceAttestationConformance:
 
     def test_auth_disabled_attested_null(self, tmp_path) -> None:
         """§18.2, §2.7 — auth disabled → attestation cannot run; attested=null."""
-        import stigmem_node.settings as sm
         import stigmem_node.auth as am
         import stigmem_node.db as dm
         import stigmem_node.routes.wellknown as wk
+        import stigmem_node.settings as sm
         from stigmem_node.db import apply_migrations
         from stigmem_node.main import create_app
-        from stigmem_node.settings import Settings
 
         db_file = str(tmp_path) + "/noauth.db"
         apply_migrations(db_path=db_file)
         original = sm.settings
-        ts = Settings(db_path=db_file, auth_required=False, node_url="http://testnode",
-                      source_attestation_mode="warn")
+        ts = sm.Settings(db_path=db_file, auth_required=False, node_url="http://testnode",
+                         source_attestation_mode="warn")
         sm.settings = ts
         am.settings = ts
         dm.settings = ts

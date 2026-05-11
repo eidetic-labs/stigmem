@@ -129,6 +129,32 @@ def parse_skill(path: Path) -> tuple[dict[str, Any], str]:
 # Schema checks
 # ---------------------------------------------------------------------------
 
+def _check_env_vars(env_vars: Any, r: Report) -> None:
+    if not isinstance(env_vars, list):
+        r.err("frontmatter.metadata.openclaw.envVars: must be a list")
+        return
+    for i, ev in enumerate(env_vars):
+        if not isinstance(ev, dict):
+            r.err(f"envVars[{i}]: must be a mapping")
+            continue
+        for k in ("name", "required", "description"):
+            if k not in ev:
+                r.err(f"envVars[{i}]: missing key '{k}'")
+
+
+def _check_install_specs(install: Any, r: Report) -> None:
+    if not isinstance(install, list) or not install:
+        r.err("frontmatter.metadata.openclaw.install: must be a non-empty list")
+        return
+    for i, item in enumerate(install):
+        if not isinstance(item, dict):
+            r.err(f"install[{i}]: must be a mapping")
+            continue
+        for k in ("kind", "package"):
+            if k not in item:
+                r.err(f"install[{i}]: missing key '{k}'")
+
+
 def check_schema(fm: dict[str, Any], r: Report) -> None:
     for key in ("name", "title", "description", "version", "metadata"):
         if key not in fm:
@@ -147,34 +173,59 @@ def check_schema(fm: dict[str, Any], r: Report) -> None:
         if key not in oc:
             r.err(f"frontmatter.metadata.openclaw: missing required key '{key}'")
 
-    env_vars = oc.get("envVars") or []
-    if not isinstance(env_vars, list):
-        r.err("frontmatter.metadata.openclaw.envVars: must be a list")
-    else:
-        for i, ev in enumerate(env_vars):
-            if not isinstance(ev, dict):
-                r.err(f"envVars[{i}]: must be a mapping")
-                continue
-            for k in ("name", "required", "description"):
-                if k not in ev:
-                    r.err(f"envVars[{i}]: missing key '{k}'")
-
-    install = oc.get("install") or []
-    if not isinstance(install, list) or not install:
-        r.err("frontmatter.metadata.openclaw.install: must be a non-empty list")
-    else:
-        for i, item in enumerate(install):
-            if not isinstance(item, dict):
-                r.err(f"install[{i}]: must be a mapping")
-                continue
-            for k in ("kind", "package"):
-                if k not in item:
-                    r.err(f"install[{i}]: missing key '{k}'")
+    _check_env_vars(oc.get("envVars") or [], r)
+    _check_install_specs(oc.get("install") or [], r)
 
 
 # ---------------------------------------------------------------------------
 # Convention checks (the regression history)
 # ---------------------------------------------------------------------------
+
+def _check_homepage_conventions(homepage: str, r: Report) -> None:
+    """v1.0.2 + v1.0.4 + v1.0.5: docs URL host/path requirements."""
+    if not homepage or "stigmem.dev" not in homepage:
+        return
+    if DOCS_HOST_REQUIRED not in homepage:
+        r.err(
+            f"frontmatter.metadata.openclaw.homepage: '{homepage}' must use "
+            f"'{DOCS_HOST_REQUIRED}' (v1.0.4 regression — docs subdomain dropped)"
+        )
+    if DOCS_PATH_PREFIX_REQUIRED not in homepage:
+        r.err(
+            f"frontmatter.metadata.openclaw.homepage: '{homepage}' missing "
+            f"'{DOCS_PATH_PREFIX_REQUIRED}' (v1.0.5 regression — RTD path prefix)"
+        )
+
+
+def _check_clawhub_slug(clawhub: str, name: str, r: Report) -> None:
+    """ClawHub slug must match the skill `name` (adopters install by name)."""
+    if not (clawhub and name):
+        return
+    m = re.match(r"https?://clawhub\.ai/skills/([^/?#]+)", clawhub)
+    if not m:
+        r.err(
+            f"frontmatter.metadata.openclaw.clawhub: '{clawhub}' is not a "
+            "clawhub.ai/skills/<slug> URL"
+        )
+        return
+    if m.group(1) != name:
+        r.err(
+            f"name/clawhub mismatch: name='{name}' but clawhub URL slug='{m.group(1)}'. "
+            f"These must match — adopters install by name."
+        )
+
+
+def _check_install_packages_known(install: list[Any], r: Report) -> None:
+    """Each install spec's package must be in KNOWN_STIGMEM_PACKAGES."""
+    for i, item in enumerate(install):
+        pkg_spec = str(item.get("package", ""))
+        bare = re.split(r"[<>=!~ ]", pkg_spec, maxsplit=1)[0].strip()
+        if bare and bare not in KNOWN_STIGMEM_PACKAGES:
+            r.err(
+                f"install[{i}].package: '{bare}' not in known stigmem packages "
+                f"({sorted(KNOWN_STIGMEM_PACKAGES)}). Typo or drift?"
+            )
+
 
 def check_conventions(fm: dict[str, Any], r: Report) -> None:
     # v1.0.3: display title regression
@@ -189,43 +240,9 @@ def check_conventions(fm: dict[str, Any], r: Report) -> None:
     if not isinstance(oc, dict):
         return
 
-    # v1.0.2 + v1.0.4 + v1.0.5: docs URL conventions
-    homepage = str(oc.get("homepage", ""))
-    if homepage and "stigmem.dev" in homepage:
-        if DOCS_HOST_REQUIRED not in homepage:
-            r.err(
-                f"frontmatter.metadata.openclaw.homepage: '{homepage}' must use "
-                f"'{DOCS_HOST_REQUIRED}' (v1.0.4 regression — docs subdomain dropped)"
-            )
-        if DOCS_PATH_PREFIX_REQUIRED not in homepage:
-            r.err(
-                f"frontmatter.metadata.openclaw.homepage: '{homepage}' missing "
-                f"'{DOCS_PATH_PREFIX_REQUIRED}' (v1.0.5 regression — RTD path prefix)"
-            )
-
-    # ClawHub slug ↔ skill name consistency
-    clawhub = str(oc.get("clawhub", ""))
-    name = str(fm.get("name", ""))
-    if clawhub and name:
-        m = re.match(r"https?://clawhub\.ai/skills/([^/?#]+)", clawhub)
-        if not m:
-            r.err(f"frontmatter.metadata.openclaw.clawhub: '{clawhub}' is not a clawhub.ai/skills/<slug> URL")
-        elif m.group(1) != name:
-            r.err(
-                f"name/clawhub mismatch: name='{name}' but clawhub URL slug='{m.group(1)}'. "
-                f"These must match — adopters install by name."
-            )
-
-    # Install spec package names must be known
-    for i, item in enumerate(oc.get("install") or []):
-        pkg_spec = str(item.get("package", ""))
-        # extract bare package name from `name>=x.y,<a.b` style spec
-        bare = re.split(r"[<>=!~ ]", pkg_spec, maxsplit=1)[0].strip()
-        if bare and bare not in KNOWN_STIGMEM_PACKAGES:
-            r.err(
-                f"install[{i}].package: '{bare}' not in known stigmem packages "
-                f"({sorted(KNOWN_STIGMEM_PACKAGES)}). Typo or drift?"
-            )
+    _check_homepage_conventions(str(oc.get("homepage", "")), r)
+    _check_clawhub_slug(str(oc.get("clawhub", "")), str(fm.get("name", "")), r)
+    _check_install_packages_known(oc.get("install") or [], r)
 
 
 # ---------------------------------------------------------------------------

@@ -126,6 +126,119 @@ for _fname, _vecs in _GROUPS:
     _ALL_PARAMS.extend([(f"{_fname}::{v['id']}", v) for v in _vecs])
 
 
+def _v2_assert_status(resp: Any, vector: dict[str, Any], ctx: str) -> None:
+    expected_status = vector.get("expected_status")
+    status_in = vector.get("expected_status_in")
+    if expected_status is not None:
+        assert resp.status_code == expected_status, (
+            f"{ctx}: expected HTTP {expected_status}, got {resp.status_code}. Body: {resp.text}"
+        )
+    elif status_in is not None:
+        assert resp.status_code in status_in, (
+            f"{ctx}: expected HTTP in {status_in}, got {resp.status_code}. Body: {resp.text}"
+        )
+
+
+def _v2_validate_error_nested(body: Any, vector: dict[str, Any], ctx: str) -> None:
+    """Best-effort nested checks on an error response — bail early on missing keys."""
+    for dotted_path, expected_val in vector.get("expected_nested", {}).items():
+        current: Any = body
+        for part in dotted_path.split("."):
+            if not (isinstance(current, dict) and part in current):
+                return
+            current = current[part]
+        assert current == expected_val, (
+            f"{ctx}: {dotted_path} = {current!r}, expected {expected_val!r}"
+        )
+
+
+def _v2_assert_nested(body: dict[str, Any], expectations: dict[str, Any], ctx: str) -> None:
+    for dotted_path, expected_val in expectations.items():
+        current: Any = body
+        for part in dotted_path.split("."):
+            assert isinstance(current, dict) and part in current, (
+                f"{ctx}: path '{dotted_path}' — missing key '{part}'"
+            )
+            current = current[part]
+        assert current == expected_val, (
+            f"{ctx}: {dotted_path} = {current!r}, expected {expected_val!r}"
+        )
+
+
+def _v2_assert_list_contains(
+    body: dict[str, Any], list_expectations: dict[str, Any], ctx: str
+) -> None:
+    for list_key, expected_item in list_expectations.items():
+        assert list_key in body, f"{ctx}: missing list key '{list_key}'"
+        actual_list = body[list_key]
+        assert isinstance(actual_list, list), f"{ctx}: '{list_key}' is not a list"
+        if isinstance(expected_item, dict):
+            assert any(
+                all(a.get(k) == v for k, v in expected_item.items())
+                for a in actual_list
+            ), f"{ctx}: list '{list_key}' missing item matching {expected_item!r}"
+        else:
+            assert expected_item in actual_list, (
+                f"{ctx}: '{expected_item}' not in {list_key}: {actual_list!r}"
+            )
+
+
+def _v2_assert_field_constraints(body: dict[str, Any], vector: dict[str, Any], ctx: str) -> None:
+    """value-in / starts-with / length checks (v2.0 additions)."""
+    if "expected_body_value_in" in vector:
+        for field, allowed in vector["expected_body_value_in"].items():
+            assert field in body, f"{ctx}: missing field '{field}'"
+            assert body[field] in allowed, (
+                f"{ctx}: {field} = {body[field]!r}, expected one of {allowed!r}"
+            )
+    for field, prefix in vector.get("expected_field_starts_with", {}).items():
+        assert field in body, f"{ctx}: missing field '{field}' for starts-with check"
+        assert isinstance(body[field], str) and body[field].startswith(prefix), (
+            f"{ctx}: {field} = {body[field]!r}, expected to start with {prefix!r}"
+        )
+    for field, expected_len in vector.get("expected_field_length", {}).items():
+        assert field in body, f"{ctx}: missing field '{field}' for length check"
+        assert len(body[field]) == expected_len, (
+            f"{ctx}: len({field}) = {len(body[field])}, expected {expected_len}"
+        )
+
+
+def _v2_assert_first_fact_shape(body: dict[str, Any], vector: dict[str, Any], ctx: str) -> None:
+    """recall-response first-fact key + score_breakdown contract checks."""
+    first_fact_keys = vector.get("expected_first_fact_has_keys", [])
+    if first_fact_keys:
+        facts = body.get("facts", [])
+        if facts:
+            for key in first_fact_keys:
+                assert key in facts[0], f"{ctx}: facts[0] missing key '{key}'"
+
+    bd_keys = vector.get("expected_first_fact_score_breakdown_keys", [])
+    if bd_keys:
+        facts = body.get("facts", [])
+        if facts and "score_breakdown" in facts[0]:
+            for key in bd_keys:
+                assert key in facts[0]["score_breakdown"], (
+                    f"{ctx}: facts[0].score_breakdown missing key '{key}'"
+                )
+
+
+def _v2_assert_body_expectations(body: dict[str, Any], vector: dict[str, Any], ctx: str) -> None:
+    """Apply every body-shape expectation for a happy-path v2 response."""
+    for key in vector.get("expected_body_has_keys", []):
+        assert key in body, f"{ctx}: response missing required key '{key}'"
+
+    if "expected_body_contains" in vector:
+        _assert_contains(body, vector["expected_body_contains"], path=ctx)
+
+    _v2_assert_nested(body, vector.get("expected_nested", {}), ctx)
+    _v2_assert_list_contains(body, vector.get("expected_body_list_contains", {}), ctx)
+    _v2_assert_field_constraints(body, vector, ctx)
+    _v2_assert_first_fact_shape(body, vector, ctx)
+
+    if vector.get("expected_response_is_list"):
+        assert isinstance(body, list), f"{ctx}: expected list response, got {type(body)}"
+
+
 @pytest.mark.parametrize(
     "vector",
     [p[1] for p in _ALL_PARAMS],
@@ -145,110 +258,10 @@ def test_conformance_vector_v2(client: TestClient, vector: dict[str, Any]) -> No
     with contextlib.suppress(Exception):
         body = resp.json()
 
-    # Status assertion
-    expected_status = vector.get("expected_status")
-    status_in = vector.get("expected_status_in")
-    if expected_status is not None:
-        assert resp.status_code == expected_status, (
-            f"{ctx}: expected HTTP {expected_status}, got {resp.status_code}. Body: {resp.text}"
-        )
-    elif status_in is not None:
-        assert resp.status_code in status_in, (
-            f"{ctx}: expected HTTP in {status_in}, got {resp.status_code}. Body: {resp.text}"
-        )
+    _v2_assert_status(resp, vector, ctx)
 
     if resp.status_code >= 400:
-        # Validate nested error codes even on error responses
-        for dotted_path, expected_val in vector.get("expected_nested", {}).items():
-            parts = dotted_path.split(".")
-            current: Any = body
-            for part in parts:
-                if not (isinstance(current, dict) and part in current):
-                    return  # field absent — may be optional on this error shape
-                current = current[part]
-            assert current == expected_val, (
-                f"{ctx}: {dotted_path} = {current!r}, expected {expected_val!r}"
-            )
+        _v2_validate_error_nested(body, vector, ctx)
         return
 
-    # Required keys
-    for key in vector.get("expected_body_has_keys", []):
-        assert key in body, f"{ctx}: response missing required key '{key}'"
-
-    # Body contains subset
-    if "expected_body_contains" in vector:
-        _assert_contains(body, vector["expected_body_contains"], path=ctx)
-
-    # Nested assertion — dotted-path dict
-    for dotted_path, expected_val in vector.get("expected_nested", {}).items():
-        parts = dotted_path.split(".")
-        current: Any = body
-        for part in parts:
-            assert isinstance(current, dict) and part in current, (
-                f"{ctx}: path '{dotted_path}' — missing key '{part}'"
-            )
-            current = current[part]
-        assert current == expected_val, (
-            f"{ctx}: {dotted_path} = {current!r}, expected {expected_val!r}"
-        )
-
-    # List contains
-    for list_key, expected_item in vector.get("expected_body_list_contains", {}).items():
-        assert list_key in body, f"{ctx}: missing list key '{list_key}'"
-        actual_list = body[list_key]
-        assert isinstance(actual_list, list), f"{ctx}: '{list_key}' is not a list"
-        if isinstance(expected_item, dict):
-            assert any(
-                all(a.get(k) == v for k, v in expected_item.items())
-                for a in actual_list
-            ), f"{ctx}: list '{list_key}' missing item matching {expected_item!r}"
-        else:
-            assert expected_item in actual_list, (
-                f"{ctx}: '{expected_item}' not in {list_key}: {actual_list!r}"
-            )
-
-    # Value in set
-    if "expected_body_value_in" in vector:
-        for field, allowed in vector["expected_body_value_in"].items():
-            assert field in body, f"{ctx}: missing field '{field}'"
-            assert body[field] in allowed, (
-                f"{ctx}: {field} = {body[field]!r}, expected one of {allowed!r}"
-            )
-
-    # Field starts with (v2.0 addition — e.g. CID prefix check)
-    for field, prefix in vector.get("expected_field_starts_with", {}).items():
-        assert field in body, f"{ctx}: missing field '{field}' for starts-with check"
-        assert isinstance(body[field], str) and body[field].startswith(prefix), (
-            f"{ctx}: {field} = {body[field]!r}, expected to start with {prefix!r}"
-        )
-
-    # Field length (v2.0 addition — e.g. UUID/hex length check)
-    for field, expected_len in vector.get("expected_field_length", {}).items():
-        assert field in body, f"{ctx}: missing field '{field}' for length check"
-        assert len(body[field]) == expected_len, (
-            f"{ctx}: len({field}) = {len(body[field])}, expected {expected_len}"
-        )
-
-    # First fact has keys (v2.0 addition — validates recall response fact entries)
-    first_fact_keys = vector.get("expected_first_fact_has_keys", [])
-    if first_fact_keys:
-        facts = body.get("facts", [])
-        if facts:
-            for key in first_fact_keys:
-                assert key in facts[0], (
-                    f"{ctx}: facts[0] missing key '{key}'"
-                )
-
-    # First fact score_breakdown keys (v2.0 addition — validates §20 scoring contract)
-    bd_keys = vector.get("expected_first_fact_score_breakdown_keys", [])
-    if bd_keys:
-        facts = body.get("facts", [])
-        if facts and "score_breakdown" in facts[0]:
-            for key in bd_keys:
-                assert key in facts[0]["score_breakdown"], (
-                    f"{ctx}: facts[0].score_breakdown missing key '{key}'"
-                )
-
-    # Response is list
-    if vector.get("expected_response_is_list"):
-        assert isinstance(body, list), f"{ctx}: expected list response, got {type(body)}"
+    _v2_assert_body_expectations(body, vector, ctx)

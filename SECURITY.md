@@ -60,7 +60,7 @@ This section documents the current security posture of the stigmem `v0.9.0a1` re
 
 | Category | Source | Count |
 | -------- | ------ | ----- |
-| Dependabot — alerts addressed by the pre-reset v1.0-rc snapshot dep upgrade sweep (pending GitHub rescan) | Dependency advisories | 20 |
+| Dependabot — alerts addressed by the pre-reset v1.0-rc snapshot dep upgrade sweep + follow-up patch sweep | Dependency advisories | 22 |
 | Dependabot — alerts in docs build toolchain (non-exploitable, suppressed) | Dependency advisories | 7 |
 | CodeQL — conditional SQL-fragment assembly (false positives, closed by structural refactor in [PR #117](https://github.com/Eidetic-Labs/stigmem/pull/117)) | Static dataflow analysis | 8 |
 | Unaddressed / escalated blockers | — | 0 |
@@ -73,12 +73,13 @@ This section documents the current security posture of the stigmem `v0.9.0a1` re
 
 The `chore(deps): TypeScript dep upgrade sweep + Node CVE remediation` commit upgraded the following packages to patched versions. Dependabot alerts will auto-close on the next GitHub rescan after the branch merges.
 
-#### Next.js (`experimental/dashboard/`, deferred per ADR-002) — 16 alerts
+#### Next.js (`experimental/dashboard/`, deferred per ADR-002) — 17 alerts
 
-The Next.js curator dashboard (`experimental/dashboard/`) was pinned at Next.js 14 and accumulated CVEs from three major Next.js disclosure cycles. The dep sweep upgraded it to `next@15.5.15`, which is the patched release for all outstanding CVEs.
+The Next.js curator dashboard (`experimental/dashboard/`) was pinned at Next.js 14 and accumulated CVEs from three major Next.js disclosure cycles. The pre-v0.9.0a1 dep sweep upgraded it to `next@15.5.15`. A follow-up upgrade to `next@15.5.16` lands the patch for [GHSA-8h8q-6873-q5fj](https://github.com/advisories/GHSA-8h8q-6873-q5fj) (alerts #38 and #39, which Dependabot tracked separately for `experimental/dashboard/package.json` and `pnpm-lock.yaml`).
 
-| Alert | Severity | CVE | Summary | Resolution |
+| Alert | Severity | CVE / GHSA | Summary | Resolution |
 | ----- | -------- | --- | ------- | ---------- |
+| #38, #39 | HIGH | GHSA-8h8q-6873-q5fj | (See advisory) | `next@15.5.16` ≥ patched `15.5.16` |
 | #17 | HIGH | — | DoS with Server Components | `next@15.5.15` ≥ patched `15.5.15` |
 | #16 | MEDIUM | CVE-2026-27980 | Unbounded next/image disk cache growth | `next@15.5.15` ≥ patched `15.5.14` |
 | #15 | MEDIUM | CVE-2026-29057 | HTTP request smuggling in rewrites | `next@15.5.15` ≥ patched `15.5.13` |

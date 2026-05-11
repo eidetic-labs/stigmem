@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import sys
-import threading
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
@@ -14,19 +13,16 @@ from pydantic import BaseModel
 
 from .. import settings as _settings_pkg  # access via module so test patches propagate
 from ..auth import Identity, resolve_identity
-from ..billing import BillingEvent, get_hook_bus
-from ..cid import compute_cid, compute_cid_from_row, is_cid, is_valid_cid
+from ..cid import compute_cid_from_row, is_cid, is_valid_cid
 from ..db import db
-from ..entity_normalizer import NormalizationError, is_informal, normalize_entity_uri
-from ..fuzzy_resolver import resolve_entity
+from ..entity_normalizer import NormalizationError, normalize_entity_uri
 from ..garden_acl import (
     caller_can_see_garden,
     get_garden_by_garden_uri,
     require_garden_read,
-    require_garden_write,
 )
 from ..hlc import node_hlc
-from ..metrics import CONTRADICTION, FACT_READ, FACT_WRITE
+from ..metrics import FACT_READ
 from ..models import (
     VALID_SCOPES,
     AssertRequest,

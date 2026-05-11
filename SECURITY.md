@@ -58,13 +58,14 @@ This section documents the current security posture of the stigmem `v0.9.0a1` re
 
 ### Summary
 
-| Category | Count |
-| -------- | ----- |
-| Alerts addressed by the pre-reset v1.0-rc snapshot dep upgrade sweep — pending GitHub rescan | 20 |
-| Alerts in docs build toolchain (non-exploitable, suppressed) | 7 |
-| Unaddressed / escalated blockers | 0 |
+| Category | Source | Count |
+| -------- | ------ | ----- |
+| Dependabot — alerts addressed by the pre-reset v1.0-rc snapshot dep upgrade sweep (pending GitHub rescan) | Dependency advisories | 20 |
+| Dependabot — alerts in docs build toolchain (non-exploitable, suppressed) | Dependency advisories | 7 |
+| CodeQL — conditional SQL-fragment assembly (false positives, closed by structural refactor in [PR #117](https://github.com/Eidetic-Labs/stigmem/pull/117)) | Static dataflow analysis | 8 |
+| Unaddressed / escalated blockers | — | 0 |
 
-**Net result: zero unaddressed Dependabot alerts at v0.9.0a1** (same dependency-fix posture carried forward from the pre-reset v1.0-rc snapshot 2026-05-03 snapshot). Note that Dependabot alerts are a *dependency* concern — separately from the threat-model risks named in the posture-reset banner above.
+**Net result: zero unaddressed security alerts at v0.9.0a1.** Dependabot alerts are a *dependency* concern and CodeQL alerts are a *static-analysis* concern — both are separate from the threat-model risks named in the posture-reset banner above.
 
 ---
 
@@ -138,6 +139,31 @@ The vulnerable code paths all require **attacker-controlled input** to be proces
 
 ---
 
+### Group C — CodeQL static-analysis alerts (8 alerts, closed by structural refactor)
+
+GitHub code-scanning (CodeQL) raised 8 open high-severity alerts against `node/src/stigmem_node/routes/` and `node/src/stigmem_node/storage/`. All 8 were **false positives** caused by a single root cause: CodeQL's taint analyzer cannot reason about Python's conditional-string-fragment assembly pattern (`if entity: conditions.append("AND f.entity = ?")`) — it treats any f-string concatenation reachable from a FastAPI `Query` param as a SQL sink, even though the user values themselves are parameter-bound and only literal SQL fragments are interpolated.
+
+The existing `# nosec B608` suppression comments satisfied bandit but **CodeQL does not honor `# nosec` or `# noqa`** — confirmed in PR #106 (`py/clear-text-logging-sensitive-data`) and again in the post-PR #112 triage that produced this section. The durable remediation is structural: refactor the SQL builders so the SQL text is a module-level constant and optional filters are gated by bound parameters using the `(? IS NULL OR col = ?)` pattern (or a `? = 1` sentinel for boolean flags). The constant-SQL form makes safety obvious to the analyzer and removes the need for any suppression comment.
+
+[PR #117](https://github.com/Eidetic-Labs/stigmem/pull/117) lands the refactor; CodeQL re-scan on merge closes all 8 alerts at the source.
+
+| Alert | Rule | Location | Rationale | Resolution |
+| ----- | ---- | -------- | --------- | ---------- |
+| #18 | `py/sql-injection` | `routes/lint.py:124` (was) | Stale-fact check builder; conditional-fragment assembly. Safe at runtime — only literal SQL fragments interpolated; user values parameter-bound. | Constant-SQL refactor (PR #117 — `_STALE_SQL` module constant). |
+| #19 | `py/sql-injection` | `routes/lint.py:185` (was) | Broken-ref check builder; same pattern as #18. | Constant-SQL refactor (PR #117 — `_REF_SQL` module constant). |
+| #21 | `py/polynomial-redos` | `storage/postgres_backend.py:146` | Transitive taint: CodeQL traced f-string-built SQL from routes into `_pg_translate`'s `_STRFTIME_EPOCH_RE.sub()` call. In practice the regex only sees migration-file SQL (developer-authored, trusted), but the analyzer cannot prove that. | Closes via the broken taint chain in PR #117. Belt-and-suspenders: bounded quantifiers on the regex (`\s{0,16}`, `[^)]{1,256}?`) to satisfy the polynomial-ReDoS heuristic permanently. |
+| #22 | `py/sql-injection` | `routes/facts.py:246` (was) | `as_of` facts query builder; conditional-fragment assembly. | Constant-SQL refactor (PR #117 — `_AS_OF_SELECT_SQL` module constant; `_build_as_of_query()` returns `(sql, params)` directly with no caller-side f-string). |
+| #23 | `py/sql-injection` | `routes/lint.py:94` (was) | Contradiction check builder; same pattern as #18. | Constant-SQL refactor (PR #117 — `_CONFLICT_SQL` module constant). |
+| #24 | `py/sql-injection` | `routes/lint.py:220` (was) | Namespacing check builder; same pattern. | Constant-SQL refactor (PR #117 — `_NS_SQL` module constant). |
+| #25 | `py/sql-injection` | `routes/lint.py:254` (was) | Fact-count query; same pattern. | Constant-SQL refactor (PR #117 — `_COUNT_SQL` module constant). |
+| #26 | `py/sql-injection` | `routes/synthesize.py:105` (was) | Scope synthesize query; boolean `include_expired` toggled a fragment. | Constant-SQL refactor (PR #117 — `_SYNTHESIZE_SQL` module constant; `? = 1` sentinel for the boolean toggle). |
+
+**No new R-XX risk entries** in the threat model: the conditions for exploitation do not exist (every user value parameter-bound; every interpolated fragment a string literal). The alerts were precision-gap artifacts, not vulnerabilities. See [`spec/security/threat-model.md`](spec/security/threat-model.md) § 10 Rev 2.2 and [`spec/security/audit-triage.md`](spec/security/audit-triage.md) for the permanent rationale.
+
+**Tracking:** Future CodeQL alerts on Python source paths will be triaged under this Group C pattern. Path-level CodeQL config exclusions are deliberately avoided so that real future bugs remain visible.
+
+---
+
 ### Core Node (Python/FastAPI)
 
 The stigmem reference node (`stigmem/node/`) is implemented in Python with FastAPI and SQLite. It has no JavaScript dependency tree. No Python Dependabot alerts are open as of 2026-05-03. Python dependencies are managed via `uv` and `pyproject.toml`; `uv.lock` is checked in.
@@ -158,13 +184,14 @@ The stigmem reference node (`stigmem/node/`) is implemented in Python with FastA
 
 ### Audit Tooling
 
-All three tools run as blocking steps in `.github/workflows/ci.yml` on every push and pull request.
+All four tools run as blocking steps in `.github/workflows/ci.yml` on every push and pull request.
 
 | Tool | Scope | What it checks | CI step |
 | ---- | ----- | -------------- | ------- |
 | `pip-audit` | Python dependencies (`uv.lock`) | Known CVEs in installed packages via PyPI advisory database | `python-tests` job — exits non-zero on any moderate+ finding |
 | `pnpm audit` | Node.js dependencies (`pnpm-lock.yaml`) | Known CVEs via npm advisory database | `node-tests` job — `--audit-level=moderate` |
 | `bandit` | Python source (`node/src/`, `sdks/stigmem-py/src/`) | Common Python security anti-patterns (injection, weak crypto, unsafe deserialization) | `python-tests` job — configured via `[tool.bandit]` in `pyproject.toml`; `B101` (assert usage) suppressed for test code |
+| `CodeQL` | Python + JavaScript/TypeScript + Go + GitHub Actions sources | Semantic dataflow / taint analysis: SQL injection, ReDoS, hardcoded secrets, prototype pollution, … (via GitHub Advanced Security) | `analyze (python / javascript-typescript / go / actions)` jobs — alerts surfaced in [Security → Code scanning](https://github.com/Eidetic-Labs/stigmem/security/code-scanning); triage rationale recorded in Group C above and in [`spec/security/audit-triage.md`](spec/security/audit-triage.md) |
 
 **Running locally:**
 

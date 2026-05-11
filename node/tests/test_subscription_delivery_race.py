@@ -20,7 +20,6 @@ These tests assert the new atomic claim eliminates the race:
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import threading
 from collections import Counter
 from datetime import UTC, datetime, timedelta
@@ -133,8 +132,11 @@ def test_sweep_loop_and_deliver_pending_no_duplicate(client: TestClient) -> None
                 asyncio.sleep(0.05),
             )
             task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
+            # gather(return_exceptions=True) absorbs the CancelledError
+            # without re-raising; keeps the static analyzers happy and
+            # avoids a bare `await task` that some linters flag as a
+            # no-effect statement.
+            await asyncio.gather(task, return_exceptions=True)
         finally:
             settings_mod.settings.subscription_delivery_sweep_s = original_interval
 

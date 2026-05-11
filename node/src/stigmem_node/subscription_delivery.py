@@ -81,24 +81,84 @@ def fan_out(
 
 
 def deliver_pending() -> None:
-    """Attempt delivery for all pending events that are due."""
+    """Attempt delivery for all pending events that are due.
+
+    Uses an atomic claim (``pending → delivering``) so that the background
+    ``sweep_loop`` and any concurrent caller (admin replay endpoints,
+    tests, future per-tenant workers) cannot deliver the same event twice.
+    See issue #47 and migration 028 for the rationale.
+
+    Concurrency model
+    -----------------
+    1. Recover stale claims: any row in ``delivering`` with
+       ``claimed_at`` older than ``subscription_claim_timeout_s`` is reset
+       to ``pending`` so a crashed worker cannot strand events.
+    2. Atomically claim up to 100 due rows via
+       ``UPDATE … WHERE id IN (SELECT … LIMIT 100) RETURNING …`` — SQLite
+       serializes writes, so concurrent claimers see disjoint row sets.
+    3. For each claimed row, attempt delivery and transition to
+       ``delivered`` (success) or back to ``pending`` with a fresh
+       ``next_retry_at`` (failure).
+    """
     now = datetime.now(UTC).isoformat()
+    claim_timeout_s = _settings_pkg.settings.subscription_claim_timeout_s
+    stale_cutoff = datetime.fromtimestamp(
+        time.time() - claim_timeout_s, UTC
+    ).isoformat()
 
     with db() as conn:
-        events = conn.execute(
-            """SELECT e.id, e.subscription_id, e.event_type, e.entity_uri, e.fact_id,
-                      e.payload, e.created_at, e.delivery_attempts,
-                      s.on_change, s.delivery_address, s.subscriber_identity, s.tenant_id,
-                      s.circuit_open
-               FROM subscription_events e
-               JOIN subscriptions s ON e.subscription_id = s.id
-               WHERE e.delivery_status = 'pending'
-                 AND s.circuit_open = 0
-                 AND (e.next_retry_at IS NULL OR e.next_retry_at <= ?)
-               ORDER BY e.created_at ASC
-               LIMIT 100""",
-            (now,),
+        # 1. Recover stale claims left behind by a crashed worker.  We do NOT
+        #    reset delivery_attempts — the next attempt counts as a retry.
+        conn.execute(
+            """UPDATE subscription_events
+                  SET delivery_status='pending', claimed_at=NULL
+                WHERE delivery_status='delivering'
+                  AND claimed_at IS NOT NULL
+                  AND claimed_at < ?""",
+            (stale_cutoff,),
+        )
+
+        # 2. Atomic claim.  The inner SELECT is the same predicate the old
+        #    non-atomic path used, joined to subscriptions for circuit-open
+        #    filtering.  The outer UPDATE … RETURNING gives us the claimed
+        #    rows in a single round-trip; no other caller can claim them
+        #    until we release them.
+        claimed = conn.execute(
+            """UPDATE subscription_events
+                  SET delivery_status='delivering', claimed_at=?
+                WHERE id IN (
+                    SELECT e.id
+                      FROM subscription_events e
+                      JOIN subscriptions s ON e.subscription_id = s.id
+                     WHERE e.delivery_status = 'pending'
+                       AND s.circuit_open = 0
+                       AND (e.next_retry_at IS NULL OR e.next_retry_at <= ?)
+                     ORDER BY e.created_at ASC
+                     LIMIT 100
+                )
+                RETURNING id""",
+            (now, now),
         ).fetchall()
+
+        if not claimed:
+            return
+
+        claimed_ids = [row["id"] for row in claimed]
+        # ``placeholders`` is a fixed "?,?,?…" string whose length comes from
+        # ``claimed_ids`` (UUIDs we just emitted into our own table) — no user
+        # input flows into the SQL text, so the f-string interpolation is safe.
+        placeholders = ",".join("?" * len(claimed_ids))
+        _base = (
+            "SELECT e.id, e.subscription_id, e.event_type, e.entity_uri, e.fact_id,"
+            " e.payload, e.created_at, e.delivery_attempts,"
+            " s.on_change, s.delivery_address, s.subscriber_identity, s.tenant_id,"
+            " s.circuit_open"
+            " FROM subscription_events e"
+            " JOIN subscriptions s ON e.subscription_id = s.id"
+            " WHERE e.id IN ("
+        )
+        select_sql = _base + placeholders + ")"  # noqa: S608 — fixed "?,…" string
+        events = conn.execute(select_sql, claimed_ids).fetchall()
 
     for event in events:
         try:
@@ -280,7 +340,8 @@ def _record_result(event: Any, success: bool) -> None:
         with db() as conn:
             conn.execute(
                 """UPDATE subscription_events
-                   SET delivered_at=?, delivery_status='delivered', delivery_attempts=?
+                   SET delivered_at=?, delivery_status='delivered',
+                       delivery_attempts=?, claimed_at=NULL
                    WHERE id=?""",
                 (now, new_attempts, event["id"]),
             )
@@ -294,8 +355,13 @@ def _record_result(event: Any, success: bool) -> None:
     next_retry = datetime.fromtimestamp(time.time() + backoff_s, UTC).isoformat()
 
     with db() as conn:
+        # Release the claim back to 'pending' so the next sweep can retry it.
+        # Circuit-breaker logic below may override to 'failed'.
         conn.execute(
-            "UPDATE subscription_events SET delivery_attempts=?, next_retry_at=? WHERE id=?",
+            """UPDATE subscription_events
+                  SET delivery_status='pending', claimed_at=NULL,
+                      delivery_attempts=?, next_retry_at=?
+                WHERE id=?""",
             (new_attempts, next_retry, event["id"]),
         )
         conn.execute(
@@ -326,7 +392,8 @@ def _mark_delivered(event_id: str, subscription_id: str) -> None:
             """UPDATE subscription_events
                SET delivered_at=?,
                    delivery_status='delivered',
-                   delivery_attempts=delivery_attempts+1
+                   delivery_attempts=delivery_attempts+1,
+                   claimed_at=NULL
                WHERE id=?""",
             (now, event_id),
         )

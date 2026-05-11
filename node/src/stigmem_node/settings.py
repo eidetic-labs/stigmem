@@ -214,6 +214,11 @@ class Settings(BaseSettings):
     subscription_delivery_sweep_s: int = 30
     # Consecutive delivery failures before the circuit breaker opens on a subscription.
     subscription_circuit_threshold: int = 10
+    # How long (seconds) an event may remain in 'delivering' state before the next
+    # ``deliver_pending`` invocation reverts it to 'pending' for redelivery.
+    # Guards against crashed workers stranding events.  Must be larger than the
+    # worst-case webhook timeout (10 s) by a comfortable margin.
+    subscription_claim_timeout_s: int = 300
 
     # -------------------------------------------------------------------------
     # mTLS Federation Transport — Phase 12 (spec §22.1)

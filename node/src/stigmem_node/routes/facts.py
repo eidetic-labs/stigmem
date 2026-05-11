@@ -459,79 +459,21 @@ def query_facts(
     FACT_READ.labels(principal=identity.entity_uri, tenant=identity.tenant_id).inc()
 
     # Garden ACL: resolve and enforce membership before querying (spec §5.20, §17.3)
-    garden = None
-    if garden_id is not None:
-        garden = get_garden_by_garden_uri(garden_id, tenant_id=identity.tenant_id)
-        if garden is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
-        require_garden_read(garden, identity)
+    garden = _resolve_garden_or_404(garden_id, identity)
 
-    conditions: list[str] = ["confidence >= ?", "tenant_id = ?"]
-    params: list[Any] = [min_confidence, identity.tenant_id]
-
-    # Garden filter: explicit garden_id, or hide garden facts from callers who can't see them
-    if garden is not None:
-        conditions.append("garden_id = ?")
-        params.append(garden["id"])
-    else:
-        # Hide garden-tagged facts from callers who aren't members (spec §17.3)
-        with db() as _g_conn:
-            visible_garden_ids = [
-                row["id"] for row in _g_conn.execute(
-                    "SELECT id FROM gardens WHERE tenant_id = ?", (identity.tenant_id,)
-                ).fetchall()
-                if caller_can_see_garden(row["id"], identity)
-            ]
-        if visible_garden_ids:
-            placeholders = ",".join("?" * len(visible_garden_ids))
-            conditions.append(f"(garden_id IS NULL OR garden_id IN ({placeholders}))")
-            params.extend(visible_garden_ids)
-        else:
-            conditions.append("garden_id IS NULL")
-
-    if attested is not None:
-        conditions.append("attested = ?")
-        params.append(1 if attested else 0)
-
-    if entity:
-        try:  # noqa: SIM105
-            entity = normalize_entity_uri(entity)
-        except NormalizationError:
-            pass  # malformed query — fall through to exact-match with raw value
-        conditions.append(
-            "(entity = ? OR entity IN"
-            " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
-        )
-        params.extend([entity, entity])
-    if relation:
-        conditions.append("relation = ?")
-        params.append(relation)
-    if source:
-        try:  # noqa: SIM105
-            source = normalize_entity_uri(source)
-        except NormalizationError:
-            pass  # malformed query — fall through to exact-match with raw value
-        conditions.append(
-            "(source = ? OR source IN"
-            " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
-        )
-        params.extend([source, source])
-    if scope:
-        if scope not in VALID_SCOPES:
-            raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
-        conditions.append("scope = ?")
-        params.append(scope)
-    if after:
-        conditions.append("timestamp > ?")
-        params.append(after)
-    if cursor:
-        conditions.append("id > ?")
-        params.append(cursor)
-
-    if not include_expired:
-        now = datetime.now(UTC).isoformat()
-        conditions.append("(valid_until IS NULL OR valid_until > ?)")
-        params.append(now)
+    conditions, params = _build_query_conditions(
+        identity=identity,
+        garden=garden,
+        entity=entity,
+        relation=relation,
+        source=source,
+        scope=scope,
+        min_confidence=min_confidence,
+        attested=attested,
+        after=after,
+        cursor=cursor,
+        include_expired=include_expired,
+    )
 
     where = " AND ".join(conditions)
     sql = f"SELECT * FROM facts WHERE {where} ORDER BY timestamp DESC, id DESC LIMIT ?"  # nosec B608 — where is built from literal SQL fragments; all user values in params
@@ -543,16 +485,7 @@ def query_facts(
     has_more = len(rows) > limit
     rows = rows[:limit]
 
-    seen: dict[tuple[str, str, str], int] = {}
-    for r in rows:
-        key = (r["entity"], r["relation"], r["scope"])
-        seen[key] = seen.get(key, 0) + 1
-
-    records = [
-        row_to_record(r, contradicted=seen[(r["entity"], r["relation"], r["scope"])] > 1)
-        for r in rows
-    ]
-
+    records = _rows_to_records(rows)
     if not include_contradicted:
         records = [r for r in records if not r.contradicted]
 
@@ -560,16 +493,7 @@ def query_facts(
     records = apply_recall_pipeline(records, identity=identity, include_low_trust=include_low_trust)
 
     # §23.3: tombstone filter — must be applied after scope filtering, before packing
-    tombstone_filtered = False
-    if records:
-        entity_uris_in_result = list({r.entity for r in records})
-        with db() as _tc_conn:
-            excluded, _notices = _get_tombstone_filter(
-                _tc_conn, entity_uris_in_result, scope or "local", "admin" in identity.permissions
-            )
-        if excluded:
-            records = [r for r in records if r.entity not in excluded]
-            tombstone_filtered = True
+    records, tombstone_filtered = _apply_tombstone_filter(records, scope, identity)
 
     next_cursor = rows[-1]["id"] if has_more and rows else None
     # §23.3.3 r.3: suppress total when tombstone filtering was applied to prevent oracle leakage
@@ -578,6 +502,131 @@ def query_facts(
     if result.total is not None:
         response.headers["X-Total-Count"] = str(result.total)
     return result
+
+
+def _resolve_garden_or_404(garden_id: str | None, identity: Identity) -> Any:
+    """Return the garden row when ``garden_id`` is set; 404 if missing; enforce read ACL."""
+    if garden_id is None:
+        return None
+    garden = get_garden_by_garden_uri(garden_id, tenant_id=identity.tenant_id)
+    if garden is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
+    require_garden_read(garden, identity)
+    return garden
+
+
+def _append_garden_visibility_filter(
+    conditions: list[str], params: list[Any], garden: Any, identity: Identity,
+) -> None:
+    """Either restrict to garden_id OR mask non-visible garden-tagged facts (§17.3)."""
+    if garden is not None:
+        conditions.append("garden_id = ?")
+        params.append(garden["id"])
+        return
+    with db() as _g_conn:
+        visible_garden_ids = [
+            row["id"] for row in _g_conn.execute(
+                "SELECT id FROM gardens WHERE tenant_id = ?", (identity.tenant_id,)
+            ).fetchall()
+            if caller_can_see_garden(row["id"], identity)
+        ]
+    if visible_garden_ids:
+        placeholders = ",".join("?" * len(visible_garden_ids))
+        conditions.append(f"(garden_id IS NULL OR garden_id IN ({placeholders}))")
+        params.extend(visible_garden_ids)
+    else:
+        conditions.append("garden_id IS NULL")
+
+
+def _append_normalised_uri_filter(
+    conditions: list[str], params: list[Any], column: str, raw_value: str,
+) -> None:
+    """Append a ``column = ? OR column IN aliases`` filter, normalising the URI when possible."""
+    try:  # noqa: SIM105
+        normalised = normalize_entity_uri(raw_value)
+    except NormalizationError:
+        normalised = raw_value  # malformed — fall through to exact match
+    conditions.append(
+        f"({column} = ? OR {column} IN"
+        " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+    )
+    params.extend([normalised, normalised])
+
+
+def _build_query_conditions(  # noqa: PLR0913 — narrow internal helper, keeps query_facts signature flat
+    *,
+    identity: Identity,
+    garden: Any,
+    entity: str | None,
+    relation: str | None,
+    source: str | None,
+    scope: str | None,
+    min_confidence: float,
+    attested: bool | None,
+    after: str | None,
+    cursor: str | None,
+    include_expired: bool,
+) -> tuple[list[str], list[Any]]:
+    """Build the WHERE clause + bound parameters list for the facts query."""
+    conditions: list[str] = ["confidence >= ?", "tenant_id = ?"]
+    params: list[Any] = [min_confidence, identity.tenant_id]
+
+    _append_garden_visibility_filter(conditions, params, garden, identity)
+
+    if attested is not None:
+        conditions.append("attested = ?")
+        params.append(1 if attested else 0)
+    if entity:
+        _append_normalised_uri_filter(conditions, params, "entity", entity)
+    if relation:
+        conditions.append("relation = ?")
+        params.append(relation)
+    if source:
+        _append_normalised_uri_filter(conditions, params, "source", source)
+    if scope:
+        if scope not in VALID_SCOPES:
+            raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
+        conditions.append("scope = ?")
+        params.append(scope)
+    if after:
+        conditions.append("timestamp > ?")
+        params.append(after)
+    if cursor:
+        conditions.append("id > ?")
+        params.append(cursor)
+    if not include_expired:
+        conditions.append("(valid_until IS NULL OR valid_until > ?)")
+        params.append(datetime.now(UTC).isoformat())
+
+    return conditions, params
+
+
+def _rows_to_records(rows: list[Any]) -> list[FactRecord]:
+    """Convert raw rows into FactRecords; mark within-key duplicates contradicted."""
+    seen: dict[tuple[str, str, str], int] = {}
+    for r in rows:
+        key = (r["entity"], r["relation"], r["scope"])
+        seen[key] = seen.get(key, 0) + 1
+    return [
+        row_to_record(r, contradicted=seen[(r["entity"], r["relation"], r["scope"])] > 1)
+        for r in rows
+    ]
+
+
+def _apply_tombstone_filter(
+    records: list[FactRecord], scope: str | None, identity: Identity,
+) -> tuple[list[FactRecord], bool]:
+    """Return (filtered, tombstone_filtered_flag). Empty input → no work."""
+    if not records:
+        return records, False
+    entity_uris_in_result = list({r.entity for r in records})
+    with db() as _tc_conn:
+        excluded, _notices = _get_tombstone_filter(
+            _tc_conn, entity_uris_in_result, scope or "local", "admin" in identity.permissions
+        )
+    if not excluded:
+        return records, False
+    return [r for r in records if r.entity not in excluded], True
 
 
 @router.get("/{fact_id}", response_model=FactRecord)

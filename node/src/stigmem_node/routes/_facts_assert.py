@@ -49,48 +49,32 @@ def _live_settings() -> Any:
 logger = logging.getLogger("stigmem.facts")
 
 
-def assert_fact_impl(
-    req: AssertRequest,
-    identity: Identity,
-    _span: object,
-) -> FactRecord:
-    # Lazy imports of sibling helpers to avoid circular import with .facts
-    from .facts import (
-        _SYSTEM_RELATION_PREFIX,
-        _check_source_attestation,
-        _embed_fact_background,
-        _encode_v,
-        _is_valid_entity_uri,
-        _record_contradictions,
-        _validate_relation,
-    )
+def _verify_or_require_attestation(req: AssertRequest, identity: Identity) -> str | None:
+    """C1: verify the attestation token (when supplied) or fail-closed if required."""
+    from .facts import _encode_v
 
-    if not identity.can_write():
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="write permission required",
-        )
-
-    # C1: attestation enforcement — verify or require attestation token
-    attested_key_id: str | None = None
     if req.attestation is not None:
         from .agent_keys import verify_attestation
         value_v_for_sig = _encode_v(req.value.type, req.value.v)
         canonical = (
             f"{req.entity}\n{req.relation}\n{req.value.type}\n{value_v_for_sig}\n{req.source}"
         ).encode()
-        attested_key_id = verify_attestation(
+        return verify_attestation(
             key_id=req.attestation.key_id,
             signature_b64=req.attestation.signature,
             canonical_message=canonical,
             caller_entity_uri=identity.entity_uri,
         )
-    elif _live_settings().attestation_required:
+    if _live_settings().attestation_required:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="attestation required; register an agent key at POST /v1/auth/agent-keys",
         )
+    return None
 
+
+def _normalise_and_alias_uris(req: AssertRequest) -> tuple[str, str]:
+    """Layer-1 strict normalisation + Layer-2 alias lookup. Emits deprecation warnings."""
     try:
         entity = normalize_entity_uri(req.entity)
         source = normalize_entity_uri(req.source)
@@ -114,30 +98,171 @@ def assert_fact_impl(
             file=sys.stderr,
         )
 
-    # Layer 2: resolve user-defined semantic aliases (spec §2.6.6).
-    # Runs after strict normalization (Layer 1) so the alias table is keyed on canonical forms.
+    # Layer 2: resolve user-defined semantic aliases (spec §2.6.6) on canonical forms.
     with db() as _alias_conn:
-        entity = resolve_entity(_alias_conn, entity)
-        source = resolve_entity(_alias_conn, source)
+        return resolve_entity(_alias_conn, entity), resolve_entity(_alias_conn, source)
 
-    # --- Source attestation (spec §18) ---
+
+def _resolve_garden_for_assert(req: AssertRequest, identity: Identity) -> Any:
+    """Spec §17.3: resolve garden_id, enforce scope match + write ACL. Returns row or None."""
+    if req.garden_id is None:
+        return None
+    garden = get_garden_by_garden_uri(req.garden_id, tenant_id=identity.tenant_id)
+    if garden is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
+    if garden["scope"] != req.scope:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"scope mismatch: garden scope is '{garden['scope']}' "
+                f"but fact scope is '{req.scope}'"
+            ),
+        )
+    require_garden_write(garden, identity)
+    return garden
+
+
+def _existing_record_for_cid(
+    conn: Any, fact_cid: str, tenant_id: str,
+) -> FactRecord | None:
+    """Return the existing record for ``fact_cid``, or None when no alias exists yet."""
+    existing_alias = conn.execute(
+        "SELECT fact_id FROM fact_cid_aliases WHERE cid = ?", (fact_cid,)
+    ).fetchone()
+    if existing_alias is None:
+        return None
+    existing_row = conn.execute(
+        "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
+        (existing_alias["fact_id"], tenant_id),
+    ).fetchone()
+    return row_to_record(existing_row, contradicted=False) if existing_row is not None else None
+
+
+def _detect_and_record_contradictions(
+    conn: Any, fact_id: str, entity: str, req: AssertRequest, identity: Identity,
+) -> bool:
+    """Spec §9.1: skip system facts; else find siblings sharing (entity, relation, scope)."""
+    from .facts import _SYSTEM_RELATION_PREFIX, _record_contradictions
+
+    is_system = (
+        entity.startswith(_SYSTEM_RELATION_PREFIX) and not entity.startswith("stigmem://")
+    ) or (
+        req.relation.startswith(_SYSTEM_RELATION_PREFIX)
+        and not req.relation.startswith("stigmem://")
+    )
+    if is_system:
+        return False
+    siblings = conn.execute(
+        """SELECT id FROM facts
+           WHERE entity=? AND relation=? AND scope=? AND id!=? AND confidence>0.0
+             AND tenant_id=?""",
+        (entity, req.relation, req.scope, fact_id, identity.tenant_id),
+    ).fetchall()
+    if not siblings:
+        return False
+    _record_contradictions(
+        conn, fact_id, entity, req.relation, req.scope, siblings, identity.tenant_id,
+    )
+    print(
+        f"[stigmem] WARN: collision — entity={entity!r} relation={req.relation!r} "
+        f"scope={req.scope!r}: fact {fact_id!r} contradicts {len(siblings)} existing "
+        f"fact(s); verify relation namespacing (see relation-convention.md)",
+        file=sys.stderr,
+    )
+    return True
+
+
+def _emit_post_write_hooks(
+    *, fact_id: str, entity: str, source: str, req: AssertRequest, identity: Identity,
+    value_v: str | None, garden_uuid: str | None, now: str, contradicted: bool, _span: object,
+) -> None:
+    """Card-stale + background embed + billing + subscription fan-out + metrics + span attrs."""
+    from .facts import _embed_fact_background
+
+    # Phase 9: mark entity's memory card stale on every write (ACM-214)
+    try:
+        from ..card_materializer import mark_entity_stale as _mark_stale
+        _mark_stale(entity, req.scope, identity.tenant_id)
+    except Exception as _card_exc:
+        logger.warning("card mark_stale failed for %r: %s", entity, _card_exc)
+
+    # Phase 9 §2: write-time embedding (background thread, graceful fallback)
+    if _live_settings().embed_enabled:
+        threading.Thread(
+            target=_embed_fact_background,
+            args=(fact_id, entity, req.relation, req.value.type, value_v or ""),
+            daemon=True,
+        ).start()
+
+    get_hook_bus().emit(BillingEvent(
+        event_type="fact_written",
+        tenant_id=identity.tenant_id,
+        entity_uri=identity.entity_uri,
+        fact_id=fact_id,
+    ))
+
+    # §20: fan out to subscribers (fast DB insert only; delivery happens in sweep loop)
+    try:
+        import json as _json
+
+        from ..subscription_delivery import fan_out as _subscription_fan_out
+        _subscription_fan_out(
+            fact_id=fact_id,
+            entity=entity,
+            scope=req.scope,
+            garden_id=garden_uuid,
+            tenant_id=identity.tenant_id,
+            fact_payload_json=_json.dumps({
+                "id": fact_id,
+                "entity": entity,
+                "relation": req.relation,
+                "value_type": req.value.type,
+                "value_v": value_v,
+                "source": source,
+                "timestamp": now,
+                "scope": req.scope,
+                "confidence": req.confidence,
+                "garden_id": garden_uuid,
+            }),
+        )
+    except Exception as _sub_exc:
+        print(f"[stigmem] WARN: subscription fan_out failed: {_sub_exc}", file=sys.stderr)
+
+    FACT_WRITE.labels(principal=identity.entity_uri, tenant=identity.tenant_id).inc()
+    if contradicted:
+        CONTRADICTION.labels(tenant=identity.tenant_id).inc()
+    try:
+        _span.set_attribute("stigmem.fact_id", fact_id)  # type: ignore[attr-defined]
+        _span.set_attribute("stigmem.contradicted", contradicted)  # type: ignore[attr-defined]
+    except AttributeError as _span_exc:
+        logger.debug("span attribute set skipped: %s", _span_exc)
+
+
+def assert_fact_impl(
+    req: AssertRequest,
+    identity: Identity,
+    _span: object,
+) -> FactRecord:
+    # Lazy imports of sibling helpers to avoid circular import with .facts
+    from .facts import (
+        _check_source_attestation,
+        _encode_v,
+        _is_valid_entity_uri,
+        _validate_relation,
+    )
+
+    if not identity.can_write():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="write permission required",
+        )
+
+    attested_key_id = _verify_or_require_attestation(req, identity)
+    entity, source = _normalise_and_alias_uris(req)
+
+    # --- Source attestation (spec §18) + Garden ACL (spec §17.3) ---
     attested = _check_source_attestation(source, identity)
-
-    # --- Garden ACL (spec §17.3) ---
-    garden = None
-    if req.garden_id is not None:
-        garden = get_garden_by_garden_uri(req.garden_id, tenant_id=identity.tenant_id)
-        if garden is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
-        if garden["scope"] != req.scope:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"scope mismatch: garden scope is '{garden['scope']}' "
-                    f"but fact scope is '{req.scope}'"
-                ),
-            )
-        require_garden_write(garden, identity)
+    garden = _resolve_garden_for_assert(req, identity)
 
     garden_uuid = garden["id"] if garden is not None else None
     attested_int = None if attested is None else (1 if attested else 0)
@@ -168,16 +293,9 @@ def assert_fact_impl(
 
     # F-10 §25.7.3: idempotent CID pre-check — if CID already exists, return existing record
     with db() as _precheck_conn:
-        existing_alias = _precheck_conn.execute(
-            "SELECT fact_id FROM fact_cid_aliases WHERE cid = ?", (fact_cid,)
-        ).fetchone()
-        if existing_alias is not None:
-            existing_row = _precheck_conn.execute(
-                "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
-                (existing_alias["fact_id"], identity.tenant_id),
-            ).fetchone()
-            if existing_row is not None:
-                return row_to_record(existing_row, contradicted=False)
+        existing_record = _existing_record_for_cid(_precheck_conn, fact_cid, identity.tenant_id)
+    if existing_record is not None:
+        return existing_record
 
     with db() as conn:
         conn.execute(
@@ -256,98 +374,12 @@ def assert_fact_impl(
             )
 
         row = conn.execute("SELECT * FROM facts WHERE id=?", (fact_id,)).fetchone()
+        contradicted = _detect_and_record_contradictions(conn, fact_id, entity, req, identity)
 
-        # Contradiction detection: skip bare stigmem: system facts — they are state
-        # transitions, not semantic content, and are never in conflict (§9.1).
-        # stigmem:// URI entities are user content and ARE subject to detection.
-        _is_system = (
-            entity.startswith(_SYSTEM_RELATION_PREFIX) and not entity.startswith("stigmem://")
-        ) or (
-            req.relation.startswith(_SYSTEM_RELATION_PREFIX) and not req.relation.startswith("stigmem://")
-        )
-        siblings: list[Any] = []
-        if not _is_system:
-            siblings = conn.execute(
-                """SELECT id FROM facts
-                   WHERE entity=? AND relation=? AND scope=? AND id!=? AND confidence>0.0
-                     AND tenant_id=?""",
-                (entity, req.relation, req.scope, fact_id, identity.tenant_id),
-            ).fetchall()
-        contradicted = len(siblings) > 0
-
-        if contradicted:
-            _record_contradictions(
-                conn,
-                fact_id,
-                entity,
-                req.relation,
-                req.scope,
-                siblings,
-                identity.tenant_id,
-            )
-            print(
-                f"[stigmem] WARN: collision — entity={entity!r} relation={req.relation!r} "
-                f"scope={req.scope!r}: fact {fact_id!r} contradicts {len(siblings)} existing "
-                f"fact(s); verify relation namespacing (see relation-convention.md)",
-                file=sys.stderr,
-            )
-
-    # Phase 9: mark entity's memory card stale on every write (ACM-214)
-    try:
-        from ..card_materializer import mark_entity_stale as _mark_stale
-        _mark_stale(entity, req.scope, identity.tenant_id)
-    except Exception as _card_exc:
-        logger.warning("card mark_stale failed for %r: %s", entity, _card_exc)
-
-    # Phase 9 §2: write-time embedding (background thread, graceful fallback)
-    if _embed_enabled:
-        threading.Thread(
-            target=_embed_fact_background,
-            args=(fact_id, entity, req.relation, req.value.type, value_v or ""),
-            daemon=True,
-        ).start()
-
-    get_hook_bus().emit(BillingEvent(
-        event_type="fact_written",
-        tenant_id=identity.tenant_id,
-        entity_uri=identity.entity_uri,
-        fact_id=fact_id,
-    ))
-
-    # §20: fan out to subscribers (fast DB insert only; delivery happens in sweep loop)
-    try:
-        import json as _json
-
-        from ..subscription_delivery import fan_out as _subscription_fan_out
-        _subscription_fan_out(
-            fact_id=fact_id,
-            entity=entity,
-            scope=req.scope,
-            garden_id=garden_uuid,
-            tenant_id=identity.tenant_id,
-            fact_payload_json=_json.dumps({
-                "id": fact_id,
-                "entity": entity,
-                "relation": req.relation,
-                "value_type": req.value.type,
-                "value_v": value_v,
-                "source": source,
-                "timestamp": now,
-                "scope": req.scope,
-                "confidence": req.confidence,
-                "garden_id": garden_uuid,
-            }),
-        )
-    except Exception as _sub_exc:
-        print(f"[stigmem] WARN: subscription fan_out failed: {_sub_exc}", file=sys.stderr)
-
-    FACT_WRITE.labels(principal=identity.entity_uri, tenant=identity.tenant_id).inc()
-    if contradicted:
-        CONTRADICTION.labels(tenant=identity.tenant_id).inc()
-    try:
-        _span.set_attribute("stigmem.fact_id", fact_id)  # type: ignore[attr-defined]
-        _span.set_attribute("stigmem.contradicted", contradicted)  # type: ignore[attr-defined]
-    except AttributeError as _span_exc:
-        logger.debug("span attribute set skipped: %s", _span_exc)
+    _emit_post_write_hooks(
+        fact_id=fact_id, entity=entity, source=source, req=req, identity=identity,
+        value_v=value_v, garden_uuid=garden_uuid, now=now,
+        contradicted=contradicted, _span=_span,
+    )
 
     return row_to_record(row, contradicted=contradicted, warnings=relation_warnings)

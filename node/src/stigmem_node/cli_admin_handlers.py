@@ -14,6 +14,120 @@ import sys
 logger = logging.getLogger("stigmem.cli")
 
 
+def _resolve_scope_prefix_and_label(
+    args: argparse.Namespace, deployment: str, agent_id: str,
+) -> tuple[str, str]:
+    """Pick the role/skill scope-prefix builder and produce a human-readable label."""
+    from .instruction_migrate import scope_prefix_for_role, scope_prefix_for_skill
+
+    if args.role:
+        return scope_prefix_for_role(deployment, agent_id), f"role:{args.role}  agent:{agent_id}"
+    return scope_prefix_for_skill(deployment, args.skill), f"skill:{args.skill}  agent:{agent_id}"
+
+
+def _load_existing_state_from_db(
+    db_path: str, stub_diff_uris: set[str], agent_id: str,
+) -> tuple[dict[str, str], set[str]]:
+    """Best-effort: read existing fact values + prior manifest entry names from local SQLite."""
+    import json as _json
+    import sqlite3
+
+    existing_content: dict[str, str] = {}
+    prev_names: set[str] = set()
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        for uri in stub_diff_uris:
+            row = conn.execute(
+                "SELECT value_v FROM facts WHERE entity = ? ORDER BY timestamp DESC LIMIT 1",
+                (uri,),
+            ).fetchone()
+            if row:
+                existing_content[uri] = str(row["value_v"])
+        row = conn.execute(
+            "SELECT body FROM instruction_manifests"
+            " WHERE agent_id = ? AND superseded_at IS NULL"
+            " ORDER BY created_at DESC LIMIT 1",
+            (agent_id,),
+        ).fetchone()
+        if row:
+            prev_names = {e["name"] for e in _json.loads(row["body"])}
+        conn.close()
+    except Exception as exc:
+        print(f"warning: db query failed: {exc}", file=sys.stderr)
+    return existing_content, prev_names
+
+
+def _load_existing_state_from_api(
+    node_url: str, api_key: str, stub_diff_uris: set[str], agent_id: str,
+) -> tuple[dict[str, str], set[str]]:
+    """Best-effort: fetch existing facts + manifest entries via HTTP."""
+    try:
+        import httpx
+    except ImportError:
+        print("warning: httpx not installed — skipping idempotency checks", file=sys.stderr)
+        return {}, set()
+
+    existing_content: dict[str, str] = {}
+    prev_names: set[str] = set()
+    headers = {"Authorization": f"Bearer {api_key}"}
+    base = node_url.rstrip("/")
+
+    for uri in stub_diff_uris:
+        try:
+            r = httpx.get(
+                f"{base}/v1/facts",
+                params={"entity": uri, "limit": 1},
+                headers=headers,
+                timeout=10.0,
+            )
+            if r.status_code == 200:
+                facts = r.json().get("facts", [])
+                if facts:
+                    existing_content[uri] = str(facts[0]["value"]["v"])
+        except Exception as exc:  # nosec B110 — best-effort pre-flight
+            logger.debug("instruction migrate pre-flight fact fetch failed: %s", exc)
+    try:
+        r = httpx.get(
+            f"{base}/v1/agents/{agent_id}/instruction-manifest",
+            headers=headers,
+            timeout=10.0,
+        )
+        if r.status_code == 200:
+            prev_names = {e["name"] for e in r.json().get("entries", [])}
+    except Exception as exc:  # nosec B110 — best-effort pre-flight
+        logger.debug("instruction migrate pre-flight manifest fetch failed: %s", exc)
+    return existing_content, prev_names
+
+
+def _load_existing_state(
+    args: argparse.Namespace,
+    node_url: str,
+    api_key: str,
+    stub_diff_uris: set[str],
+    agent_id: str,
+) -> tuple[dict[str, str], set[str]]:
+    """Dispatch to the DB-backed or HTTP-backed pre-flight loader, or return empty."""
+    if args.db:
+        return _load_existing_state_from_db(args.db, stub_diff_uris, agent_id)
+    if api_key:
+        return _load_existing_state_from_api(node_url, api_key, stub_diff_uris, agent_id)
+    return {}, set()
+
+
+def _confirm_proceed() -> bool:
+    """Interactive [y/N] confirmation. Returns False on abort or non-y answer."""
+    try:
+        answer = input("Proceed? [y/N] ")
+    except (EOFError, KeyboardInterrupt):
+        print("\nAborted.")
+        return False
+    if answer.lower() not in ("y", "yes"):
+        print("Aborted.")
+        return False
+    return True
+
+
 def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
     """Migrate markdown instruction files to stigmem facts and publish manifest."""
     import os
@@ -21,12 +135,11 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
     from pathlib import Path
 
     from .instruction_migrate import (
+        build_fact_uri,
         compute_diff,
         format_preview,
         parse_instruction_chunks,
         publish_manifest,
-        scope_prefix_for_role,
-        scope_prefix_for_skill,
         write_facts,
     )
 
@@ -41,15 +154,8 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
     version = args.version
     agent_id = args.agent_id
 
-    # Build scope prefix and label
-    if args.role:
-        scope_prefix = scope_prefix_for_role(deployment, agent_id)
-        scope_label = f"role:{args.role}  agent:{agent_id}"
-    else:
-        scope_prefix = scope_prefix_for_skill(deployment, args.skill)
-        scope_label = f"skill:{args.skill}  agent:{agent_id}"
+    scope_prefix, scope_label = _resolve_scope_prefix_and_label(args, deployment, agent_id)
 
-    # Parse
     chunks = parse_instruction_chunks(path)
     if not chunks:
         print(
@@ -58,99 +164,26 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
         )
         return 0
 
-    # Load existing state for idempotency checks
-    # Initial diff pass to know which URIs to query
-    from .instruction_migrate import build_fact_uri
+    # Idempotency pre-flight: load existing fact content + prior manifest entry names.
     stub_diff_uris = {build_fact_uri(scope_prefix, c.slug, version) for c in chunks}
-    existing_content: dict[str, str] = {}
-    prev_names: set[str] = set()
+    existing_content, prev_names = _load_existing_state(
+        args, node_url, api_key, stub_diff_uris, agent_id,
+    )
 
-    if args.db:
-        # We need DiffEntry stubs for the DB loader — use dict approach
-        import sqlite3
-        try:
-            conn = sqlite3.connect(args.db)
-            conn.row_factory = sqlite3.Row
-            for uri in stub_diff_uris:
-                row = conn.execute(
-                    "SELECT value_v FROM facts WHERE entity = ? ORDER BY timestamp DESC LIMIT 1",
-                    (uri,),
-                ).fetchone()
-                if row:
-                    existing_content[uri] = str(row["value_v"])
-            # Previous manifest names
-            row = conn.execute(
-                "SELECT body FROM instruction_manifests"
-                " WHERE agent_id = ? AND superseded_at IS NULL"
-                " ORDER BY created_at DESC LIMIT 1",
-                (agent_id,),
-            ).fetchone()
-            if row:
-                import json as _json
-                prev_names = {e["name"] for e in _json.loads(row["body"])}
-            conn.close()
-        except Exception as exc:
-            print(f"warning: db query failed: {exc}", file=sys.stderr)
-    elif api_key:
-        try:
-            import httpx
-            import httpx as _httpx  # noqa: F401
-            headers = {"Authorization": f"Bearer {api_key}"}
-            base = node_url.rstrip("/")
-            for uri in stub_diff_uris:
-                try:
-                    r = httpx.get(
-                        f"{base}/v1/facts",
-                        params={"entity": uri, "limit": 1},
-                        headers=headers,
-                        timeout=10.0,
-                    )
-                    if r.status_code == 200:
-                        facts = r.json().get("facts", [])
-                        if facts:
-                            existing_content[uri] = str(facts[0]["value"]["v"])
-                except Exception as exc:  # nosec B110 — best-effort pre-flight
-                    logger.debug("instruction migrate pre-flight fact fetch failed: %s", exc)
-            try:
-                r = httpx.get(
-                    f"{base}/v1/agents/{agent_id}/instruction-manifest",
-                    headers=headers,
-                    timeout=10.0,
-                )
-                if r.status_code == 200:
-                    prev_names = {e["name"] for e in r.json().get("entries", [])}
-            except Exception as exc:  # nosec B110 — best-effort pre-flight
-                logger.debug("instruction migrate pre-flight manifest fetch failed: %s", exc)
-        except ImportError:
-            print("warning: httpx not installed — skipping idempotency checks", file=sys.stderr)
-
-    # Compute diff
     diff = compute_diff(chunks, scope_prefix, version, existing_content, prev_names)
-
-    # Show preview
     print(format_preview(diff, scope_label, path, version))
 
     if args.dry_run:
         print("Dry-run mode — no changes written.")
         return 0
 
-    creates = [d for d in diff if d.action == "CREATE"]
-    updates = [d for d in diff if d.action == "UPDATE"]
-    tombstones = [d for d in diff if d.action == "TOMBSTONE"]
-
-    if not creates and not updates and not tombstones:
+    work = [d for d in diff if d.action in ("CREATE", "UPDATE", "TOMBSTONE")]
+    if not work:
         print("Nothing to do.")
         return 0
 
-    if not args.yes:
-        try:
-            answer = input("Proceed? [y/N] ")
-        except (EOFError, KeyboardInterrupt):
-            print("\nAborted.")
-            return 1
-        if answer.lower() not in ("y", "yes"):
-            print("Aborted.")
-            return 1
+    if not args.yes and not _confirm_proceed():
+        return 1
 
     if not api_key:
         print(
@@ -159,7 +192,6 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
         )
         return 1
 
-    # Write facts
     written, failed = write_facts(diff, node_url, api_key)
     if failed > 0:
         print(
@@ -168,10 +200,9 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
         )
         return 1
 
-    # Publish manifest with a unique version per run (timestamp suffix)
+    # Unique manifest version per run (timestamp suffix)
     manifest_version = f"{version}-{int(time.time())}"
-    ok = publish_manifest(agent_id, diff, manifest_version, node_url, api_key)
-    if not ok:
+    if not publish_manifest(agent_id, diff, manifest_version, node_url, api_key):
         return 1
 
     print(f"\nDone. {written} fact(s) written, manifest published as version '{manifest_version}'.")

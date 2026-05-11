@@ -572,30 +572,20 @@ def publish_instruction_manifest(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/v1/agents/{agent_id}/recall-instruction")
-def recall_instruction(
-    agent_id: str,
-    req: RecallInstructionRequest,
-    identity: Annotated[Identity, Depends(resolve_identity)],
-) -> dict[str, Any]:
-    _check_agent_access(identity, agent_id)
+def _resolve_hint_chunks(
+    entries: list[ManifestEntry],
+    hints: list[str],
+    token_budget: int,
+) -> tuple[list[dict[str, Any]], set[str], list[str], int]:
+    """Step 1: resolve manifest_hint entries.
 
-    with db() as conn:
-        manifest_row = _get_current_manifest(conn, agent_id)
-
-    if manifest_row is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="manifest_not_found")
-
-    entries_raw: list[dict[str, Any]] = json.loads(manifest_row["body"])
-    entries: list[ManifestEntry] = [ManifestEntry(**e) for e in entries_raw]
-
-    # --- Step 1: resolve manifest_hint entries (highest priority) ---
+    Returns (chunks, used_names, missed_hints, tokens_used).
+    """
     chunks: list[dict[str, Any]] = []
-    missed_hints: list[str] = []
     used_names: set[str] = set()
+    missed_hints: list[str] = []
     tokens_used = 0
-
-    for hint_name in req.manifest_hint:
+    for hint_name in hints:
         entry = next((e for e in entries if e.name == hint_name), None)
         if entry is None:
             missed_hints.append(hint_name)
@@ -606,42 +596,57 @@ def recall_instruction(
             missed_hints.append(hint_name)
             continue
         tokens = _approx_tokens(content)
-        if tokens_used + tokens <= req.token_budget:
+        if tokens_used + tokens <= token_budget:
             chunks.append(_make_chunk(entry, content, tokens, source, score=1.0))
             used_names.add(entry.name)
             tokens_used += tokens
+    return chunks, used_names, missed_hints, tokens_used
 
-    # --- Step 2: ranked retrieval for remaining slots ---
-    remaining_slots = req.max_chunks - len(chunks)
-    if remaining_slots > 0:
-        scored = []
-        for entry in entries:
-            if entry.name in used_names:
-                continue
-            if entry.guarantee_load:
-                continue  # handled in step 3
-            score = _score_intent_against_entry(req.intent, entry)
-            scored.append((score, entry))
-        scored.sort(key=lambda x: -x[0])
 
-        for score, entry in scored[:remaining_slots]:
-            try:
-                content, source = _fetch_instruction_content(entry)
-            except LookupError:
-                continue
-            tokens = _approx_tokens(content)
-            if tokens_used + tokens <= req.token_budget:
-                chunks.append(_make_chunk(entry, content, tokens, source, score=score))
-                used_names.add(entry.name)
-                tokens_used += tokens
+def _resolve_ranked_chunks(
+    entries: list[ManifestEntry],
+    intent: str,
+    used_names: set[str],
+    remaining_slots: int,
+    token_budget: int,
+    tokens_used: int,
+) -> tuple[list[dict[str, Any]], int]:
+    """Step 2: ranked retrieval for remaining slots. Returns (new_chunks, updated_tokens_used)."""
+    if remaining_slots <= 0:
+        return [], tokens_used
+    scored: list[tuple[float, ManifestEntry]] = []
+    for entry in entries:
+        if entry.name in used_names or entry.guarantee_load:
+            continue  # guaranteed entries handled in step 3
+        scored.append((_score_intent_against_entry(intent, entry), entry))
+    scored.sort(key=lambda x: -x[0])
 
-    # --- Step 3: append guaranteed units (never silently dropped) ---
+    new_chunks: list[dict[str, Any]] = []
+    for score, entry in scored[:remaining_slots]:
+        try:
+            content, source = _fetch_instruction_content(entry)
+        except LookupError:
+            continue
+        tokens = _approx_tokens(content)
+        if tokens_used + tokens <= token_budget:
+            new_chunks.append(_make_chunk(entry, content, tokens, source, score=score))
+            used_names.add(entry.name)
+            tokens_used += tokens
+    return new_chunks, tokens_used
+
+
+def _append_guaranteed_chunks(
+    entries: list[ManifestEntry],
+    used_names: set[str],
+    chunks: list[dict[str, Any]],
+    tokens_used: int,
+    token_budget: int,
+) -> tuple[int, bool]:
+    """Step 3: insert/append guaranteed entries. Returns (tokens_used, truncated_flag)."""
     truncated = False
     guaranteed = [e for e in entries if e.guarantee_load and e.name not in used_names]
-    prepend_guaranteed = [e for e in guaranteed if e.force_position == "prepend"]
-    append_guaranteed = [e for e in guaranteed if e.force_position != "prepend"]
 
-    for entry in prepend_guaranteed:
+    for entry in [e for e in guaranteed if e.force_position == "prepend"]:
         try:
             content, source = _fetch_instruction_content(entry)
         except LookupError:
@@ -650,10 +655,10 @@ def recall_instruction(
         chunks.insert(0, _make_chunk(entry, content, tokens, source, score=1.0))
         used_names.add(entry.name)
         tokens_used += tokens
-        if tokens_used > req.token_budget:
+        if tokens_used > token_budget:
             truncated = True
 
-    for entry in append_guaranteed:
+    for entry in [e for e in guaranteed if e.force_position != "prepend"]:
         try:
             content, source = _fetch_instruction_content(entry)
         except LookupError:
@@ -662,15 +667,17 @@ def recall_instruction(
         chunks.append(_make_chunk(entry, content, tokens, source, score=1.0))
         used_names.add(entry.name)
         tokens_used += tokens
-        if tokens_used > req.token_budget:
+        if tokens_used > token_budget:
             truncated = True
 
-    # --- Audit record write (best-effort) ---
-    audit_token = _AUDIT_TOKEN_PREFIX + secrets.token_urlsafe(16)
-    now_ms = _now_ms()
-    audit_id = _AUDEVENT_PREFIX + str(uuid.uuid4())
-    loaded_chunk_names = [c["name"] for c in chunks]
+    return tokens_used, truncated
 
+
+def _write_recall_audit(
+    audit_id: str, agent_id: str, identity: Identity, intent: str,
+    loaded_chunk_names: list[str], audit_token: str, now_ms: int,
+) -> None:
+    """Best-effort INSERT into instruction_audit; failures are logged not raised."""
     try:
         with db() as conn:
             conn.execute(
@@ -679,21 +686,52 @@ def recall_instruction(
                     used_chunks, missed_chunks, audit_token, audit_closed, created_at)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    audit_id,
-                    agent_id,
-                    identity.entity_uri,
-                    now_ms,
-                    req.intent,
-                    json.dumps(loaded_chunk_names),
-                    "[]",
-                    "[]",
-                    audit_token,
-                    None,
-                    now_ms,
+                    audit_id, agent_id, identity.entity_uri, now_ms, intent,
+                    json.dumps(loaded_chunk_names), "[]", "[]", audit_token, None, now_ms,
                 ),
             )
     except Exception as exc:
         logger.warning("audit_write_failed: %s", exc)
+
+
+@router.post("/v1/agents/{agent_id}/recall-instruction")
+def recall_instruction(
+    agent_id: str,
+    req: RecallInstructionRequest,
+    identity: Annotated[Identity, Depends(resolve_identity)],
+) -> dict[str, Any]:
+    _check_agent_access(identity, agent_id)
+
+    with db() as conn:
+        manifest_row = _get_current_manifest(conn, agent_id)
+    if manifest_row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="manifest_not_found")
+
+    entries: list[ManifestEntry] = [
+        ManifestEntry(**e) for e in json.loads(manifest_row["body"])
+    ]
+
+    chunks, used_names, missed_hints, tokens_used = _resolve_hint_chunks(
+        entries, req.manifest_hint, req.token_budget,
+    )
+
+    ranked_chunks, tokens_used = _resolve_ranked_chunks(
+        entries, req.intent, used_names,
+        req.max_chunks - len(chunks), req.token_budget, tokens_used,
+    )
+    chunks.extend(ranked_chunks)
+
+    tokens_used, truncated = _append_guaranteed_chunks(
+        entries, used_names, chunks, tokens_used, req.token_budget,
+    )
+
+    audit_token = _AUDIT_TOKEN_PREFIX + secrets.token_urlsafe(16)
+    now_ms = _now_ms()
+    _write_recall_audit(
+        _AUDEVENT_PREFIX + str(uuid.uuid4()),
+        agent_id, identity, req.intent,
+        [c["name"] for c in chunks], audit_token, now_ms,
+    )
 
     return {
         "chunks": chunks,

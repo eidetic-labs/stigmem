@@ -218,6 +218,146 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
             )
 
 
+def _authenticate_tombstone_caller(
+    request: Request,
+    authorization: str | None,
+    x_stigmem_capability: str | None,
+    try_peer_token_auth: Any,
+    get_mtls_peer_cert: Any,
+    fed_settings: Any,
+) -> None:
+    """F-1 fix: caller must present a valid peer-JWT OR a tombstone-write capability token.
+
+    Raises HTTPException on any auth failure. Returns None on success.
+    """
+    peer_auth = try_peer_token_auth(authorization)
+    if peer_auth is not None:
+        if fed_settings.mtls_enabled and request is not None:
+            peer_cert = get_mtls_peer_cert(request)
+            if not check_peer_san(peer_cert, peer_auth[0]["node_id"]):
+                raise HTTPException(
+                    status_code=401,
+                    detail="peer certificate URI SAN does not match node_id",
+                )
+        return
+
+    if x_stigmem_capability is None:
+        raise HTTPException(status_code=401, detail="peer token or capability token required")
+
+    try:
+        verify_token(
+            x_stigmem_capability,
+            lambda uri: get_peer_manifest(
+                uri, refresh_if_expired=True, trust_mode=fed_settings.trust_mode
+            ),
+            trust_mode=fed_settings.trust_mode,
+        )
+    except CapabilityTokenError as exc:
+        raise HTTPException(
+            status_code=401, detail=f"capability token invalid: {exc}"
+        ) from exc
+    try:
+        cap_token = json.loads(x_stigmem_capability)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=400, detail=f"malformed capability token JSON: {exc}"
+        ) from exc
+    if cap_token.get("verb", "") not in ("tombstone:write", "write"):
+        raise HTTPException(
+            status_code=403, detail="capability token missing tombstone:write verb"
+        )
+
+
+def _verify_signed_artifact_or_400(
+    *,
+    record: Any,
+    key_id: str,
+    artifact_label: str,  # "tombstone" or "revocation"
+    missing_manifest_detail: str,  # exact wire-error string for the unknown-signer 401
+    signer_uri: str,
+    verifier: Any,  # verify_tombstone_signature or verify_revocation_signature
+    on_failure: Any | None = None,  # callable(record, reason) emitted on bad signature
+) -> None:
+    """Look up the signer manifest, resolve the signing key, and verify the signature.
+
+    Raises HTTPException on any verification failure (no-key-id / unknown-signer /
+    key-id-not-in-manifest / signature-mismatch). ``missing_manifest_detail`` is
+    parameterised because the existing wire contract uses different wording for
+    tombstones vs revocations.
+    """
+    if not key_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{artifact_label} missing key_id",
+        )
+    manifest = get_peer_manifest(signer_uri)
+    if manifest is None:
+        raise HTTPException(status_code=401, detail=missing_manifest_detail)
+    pubkey_b64 = _resolve_pubkey_for_key_id(manifest, key_id)
+    if pubkey_b64 is None:
+        raise HTTPException(status_code=401, detail="key_id not in signer manifest")
+    try:
+        verifier(record, pubkey_b64)
+    except ValueError as exc:
+        if on_failure is not None:
+            on_failure(record, str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{artifact_label}_verification_failed: {exc}",
+        ) from exc
+
+
+def _ingest_revocation(payload: dict[str, Any], fed_settings: Any) -> dict[str, Any]:
+    """Parse + verify + apply an inbound revocation. Returns the success response dict."""
+    from ..tombstone_signing import verify_revocation_signature
+    from ..tombstones import apply_inbound_revocation
+
+    try:
+        rev = TombstoneRevocationRecord(**payload)
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    if fed_settings.trust_mode != "off":
+        # F-2 fix: verify revocation signature before applying.
+        _verify_signed_artifact_or_400(
+            record=rev,
+            key_id=rev.key_id or "",
+            artifact_label="revocation",
+            missing_manifest_detail="no manifest for revocation signer",
+            signer_uri=rev.signed_by,
+            verifier=verify_revocation_signature,
+        )
+
+    apply_inbound_revocation(rev)
+    return {"status": "ok", "type": "revocation"}
+
+
+def _ingest_tombstone(payload: dict[str, Any], fed_settings: Any) -> dict[str, Any]:
+    """Parse + verify + apply an inbound tombstone. Returns the success response dict."""
+    from ..tombstone_signing import verify_tombstone_signature
+    from ..tombstones import apply_inbound_tombstone
+
+    try:
+        record = TombstoneRecord(**payload)
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    if fed_settings.trust_mode != "off":
+        # §23.4.2.1 — fail-closed signature verification.
+        _verify_signed_artifact_or_400(
+            record=record,
+            key_id=record.key_id or "",
+            artifact_label="tombstone",
+            missing_manifest_detail="no manifest for signer",
+            signer_uri=record.signed_by,
+            verifier=verify_tombstone_signature,
+            on_failure=_emit_tombstone_verification_failed,
+        )
+
+    written = apply_inbound_tombstone(record)
+    return {"status": "ok", "written": written}
+
+
 def federation_ingest_tombstone_impl(
     request: Request,
     payload: dict[str, Any],
@@ -235,111 +375,16 @@ def federation_ingest_tombstone_impl(
     from typing import cast as _cast
 
     from . import federation as _fed_mod
-    _fed = _cast(Any, _fed_mod)
-    from ..tombstone_signing import verify_revocation_signature, verify_tombstone_signature
-    from ..tombstones import apply_inbound_revocation, apply_inbound_tombstone
+    fed_settings = _cast(Any, _fed_mod).settings
 
-    # --- Caller authentication (F-1 fix) ---
-    peer_auth = try_peer_token_auth(authorization)
-    if peer_auth is not None:
-        if _fed.settings.mtls_enabled and request is not None:
-            peer_cert = get_mtls_peer_cert(request)
-            if not check_peer_san(peer_cert, peer_auth[0]["node_id"]):
-                raise HTTPException(
-                status_code=401,
-                detail="peer certificate URI SAN does not match node_id",
-            )
-    elif x_stigmem_capability is not None:
-        try:
-            verify_token(
-                x_stigmem_capability,
-                lambda uri: get_peer_manifest(
-                    uri, refresh_if_expired=True, trust_mode=_fed.settings.trust_mode
-                ),
-                trust_mode=_fed.settings.trust_mode,
-            )
-        except CapabilityTokenError as exc:
-            raise HTTPException(
-                status_code=401, detail=f"capability token invalid: {exc}"
-            ) from exc
-        try:
-            cap_token = json.loads(x_stigmem_capability)
-        except json.JSONDecodeError as exc:
-            raise HTTPException(
-                status_code=400, detail=f"malformed capability token JSON: {exc}"
-            ) from exc
-        verb = cap_token.get("verb", "")
-        if verb not in ("tombstone:write", "write"):
-            raise HTTPException(
-                status_code=403, detail="capability token missing tombstone:write verb"
-            )
-    else:
-        raise HTTPException(status_code=401, detail="peer token or capability token required")
+    _authenticate_tombstone_caller(
+        request, authorization, x_stigmem_capability,
+        try_peer_token_auth, get_mtls_peer_cert, fed_settings,
+    )
 
-    # --- Revocation branch ---
     if "tombstone_id" in payload:
-        try:
-            rev = TombstoneRevocationRecord(**payload)
-        except Exception as exc:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-
-        # F-2 fix: verify revocation signature before applying (skip when trust_mode=off)
-        if _fed.settings.trust_mode != "off":
-            if not rev.key_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="revocation missing key_id",
-                )
-            manifest = get_peer_manifest(rev.signed_by)
-            if manifest is None:
-                raise HTTPException(status_code=401, detail="no manifest for revocation signer")
-            pubkey_b64 = _resolve_pubkey_for_key_id(manifest, rev.key_id)
-            if pubkey_b64 is None:
-                raise HTTPException(status_code=401, detail="key_id not in signer manifest")
-            try:
-                verify_revocation_signature(rev, pubkey_b64)
-            except ValueError as exc:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"revocation_verification_failed: {exc}",
-                ) from exc
-
-        apply_inbound_revocation(rev)
-        return {"status": "ok", "type": "revocation"}
-
-    # --- Tombstone branch ---
-    try:
-        record = TombstoneRecord(**payload)
-    except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-
-    # §23.4.2.1 — fail-closed signature verification (skip when trust_mode=off)
-    if _fed.settings.trust_mode != "off":
-        if not record.key_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="tombstone missing key_id",
-            )
-
-        manifest = get_peer_manifest(record.signed_by)
-        if manifest is None:
-            raise HTTPException(status_code=401, detail="no manifest for signer")
-
-        pubkey_b64 = _resolve_pubkey_for_key_id(manifest, record.key_id)
-        if pubkey_b64 is None:
-            raise HTTPException(status_code=401, detail="key_id not in signer manifest")
-
-        try:
-            verify_tombstone_signature(record, pubkey_b64)
-        except ValueError as exc:
-            _emit_tombstone_verification_failed(record, str(exc))
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"tombstone_verification_failed: {exc}",
-            ) from exc
-
-    written = apply_inbound_tombstone(record)
-    return {"status": "ok", "written": written}
+        return _ingest_revocation(payload, fed_settings)
+    return _ingest_tombstone(payload, fed_settings)
 
 
 def _resolve_pubkey_for_key_id(manifest: Any, key_id: str) -> str | None:

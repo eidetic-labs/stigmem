@@ -166,7 +166,27 @@ def _legal_hold_blocks_query(conn: Any, entity: str) -> bool:
     return legal_hold_row is not None
 
 
-def _build_as_of_where_clause(
+_AS_OF_SELECT_SQL = (
+    "SELECT f.* FROM facts f"
+    " WHERE f.tenant_id = ?"
+    " AND f.timestamp <= ?"
+    " AND (f.valid_until IS NULL OR f.valid_until > ?)"
+    " AND NOT EXISTS ("
+    "    SELECT 1 FROM fact_retractions fr"
+    "     WHERE fr.fact_id = f.id AND fr.retracted_at <= ?"
+    " )"
+    " AND (? IS NULL"
+    "      OR f.entity = ?"
+    "      OR f.entity IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+    " AND (? IS NULL OR f.relation = ?)"
+    " AND (? IS NULL OR f.scope = ?)"
+    " AND (? IS NULL OR f.id > ?)"
+    " ORDER BY f.timestamp DESC, f.id DESC"
+    " LIMIT ?"
+)
+
+
+def _build_as_of_query(
     *,
     entity: str | None,
     scope: str | None,
@@ -174,36 +194,37 @@ def _build_as_of_where_clause(
     as_of: str,
     tenant_id: str,
     cursor: str | None,
+    limit: int,
 ) -> tuple[str, list[Any]]:
-    """Build the WHERE clause + params for the as_of facts query."""
-    conditions = [
-        "f.tenant_id = ?",
-        "f.timestamp <= ?",
-        "(f.valid_until IS NULL OR f.valid_until > ?)",
-        "NOT EXISTS (SELECT 1 FROM fact_retractions fr "
-        "WHERE fr.fact_id = f.id AND fr.retracted_at <= ?)",
+    """Return ``(sql, params)`` for the as_of facts query.
+
+    The SQL text is the ``_AS_OF_SELECT_SQL`` module-level constant; all
+    filtering is via bound parameters with ``(? IS NULL OR …)`` gating.
+    No user input flows into the query text — closes the ``py/sql-injection``
+    taint the conditional-fragment version triggered (issue #115).
+    """
+    if scope is not None and scope not in VALID_SCOPES:
+        raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
+
+    # Normalize empty strings to None so the IS NULL gate matches the
+    # previous ``if entity:`` truthiness behaviour.
+    entity_p = entity or None
+    relation_p = relation or None
+    scope_p = scope or None
+    cursor_p = cursor or None
+
+    params: list[Any] = [
+        tenant_id,
+        as_of,
+        as_of,
+        as_of,
+        entity_p, entity_p, entity_p,
+        relation_p, relation_p,
+        scope_p, scope_p,
+        cursor_p, cursor_p,
+        limit + 1,
     ]
-    params: list[Any] = [tenant_id, as_of, as_of, as_of]
-
-    if entity:
-        conditions.append(
-            "(f.entity = ? OR f.entity IN"
-            " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
-        )
-        params.extend([entity, entity])
-    if relation:
-        conditions.append("f.relation = ?")
-        params.append(relation)
-    if scope:
-        if scope not in VALID_SCOPES:
-            raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
-        conditions.append("f.scope = ?")
-        params.append(scope)
-    if cursor:
-        conditions.append("f.id > ?")
-        params.append(cursor)
-
-    return " AND ".join(conditions), params
+    return _AS_OF_SELECT_SQL, params
 
 
 def _query_facts_as_of_impl(
@@ -229,19 +250,15 @@ def _query_facts_as_of_impl(
     if entity and not is_admin_caller and _legal_hold_blocks_query(conn, entity):
         return QueryResponse(facts=[], total=0, cursor=None)
 
-    where, params = _build_as_of_where_clause(
+    sql, params = _build_as_of_query(
         entity=entity,
         scope=scope,
         relation=relation,
         as_of=as_of,
         tenant_id=tenant_id,
         cursor=cursor,
+        limit=limit,
     )
-    sql = (
-        f"SELECT f.* FROM facts f WHERE {where} "  # nosec B608
-        "ORDER BY f.timestamp DESC, f.id DESC LIMIT ?"
-    )
-    params.append(limit + 1)
 
     rows = conn.execute(sql, params).fetchall()
     has_more = len(rows) > limit

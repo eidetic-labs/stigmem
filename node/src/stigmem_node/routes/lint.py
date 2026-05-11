@@ -56,42 +56,51 @@ class LintResult(BaseModel):
     fact_count: int
 
 
-def _build_lint_filters(
+# Constant WHERE-fragment tails for the lint queries.  Optional filters are
+# gated via ``(? IS NULL OR …)`` so the SQL strings are module-level constants
+# — no user input ever flows into the query text.  Closes the
+# ``py/sql-injection`` taint that the previous conditional-fragment builder
+# triggered (issue #115).
+_COUNT_SQL = (
+    "SELECT COUNT(*) FROM facts f"
+    " WHERE 1=1"
+    " AND f.scope = ?"
+    " AND (? IS NULL OR f.entity = ?)"
+    " AND (? IS NULL OR f.relation = ?)"
+)
+
+
+def _lint_filter_params(
     scope: str, entity: str | None, relation: str | None
-) -> tuple[str, list[Any], str, list[Any]]:
-    """Build the (f.*) and (fa.*) WHERE-fragment + params for the lint queries."""
-    f_scope = "AND f.scope = ?"
-    f_entity = ("AND f.entity = ?" if entity else "")
-    f_relation = ("AND f.relation = ?" if relation else "")
-    f_filter = f_scope + f_entity + f_relation
-    f_params: list[Any] = (
-        [scope] + ([entity] if entity else []) + ([relation] if relation else [])
-    )
+) -> list[Any]:
+    """Return the bind values for ``_F_FILTER_TAIL`` / ``_FA_FILTER_TAIL``.
 
-    fa_scope = "AND fa.scope = ?"
-    fa_entity = ("AND fa.entity = ?" if entity else "")
-    fa_relation = ("AND fa.relation = ?" if relation else "")
-    fa_filter = fa_scope + fa_entity + fa_relation
-    fa_params: list[Any] = (
-        [scope] + ([entity] if entity else []) + ([relation] if relation else [])
-    )
+    Empty-string entity/relation are normalized to None so the IS-NULL gate
+    preserves the previous ``if entity:`` truthiness behaviour.
+    """
+    entity_p = entity or None
+    relation_p = relation or None
+    return [scope, entity_p, entity_p, relation_p, relation_p]
 
-    return f_filter, f_params, fa_filter, fa_params
+
+_CONFLICT_SQL = (
+    "SELECT c.id AS conflict_id, c.fact_a_id, c.fact_b_id, fa.entity, fa.relation"
+    " FROM conflicts c"
+    " JOIN facts fa ON fa.id = c.fact_a_id"
+    " JOIN facts fb ON fb.id = c.fact_b_id"
+    " WHERE c.status = 'unresolved'"
+    " AND fa.scope = ?"
+    " AND (? IS NULL OR fa.entity = ?)"
+    " AND (? IS NULL OR fa.relation = ?)"
+)
 
 
 def _check_contradictions(
-    conn: Any, fa_filter: str, fa_params: list[Any]
+    conn: Any, fa_params: list[Any]
 ) -> list[dict[str, Any]]:
     """Return contradiction findings for unresolved conflicts in the filtered scope."""
     findings: list[dict[str, Any]] = []
-    conflict_sql = (
-        "SELECT c.id AS conflict_id, c.fact_a_id, c.fact_b_id, fa.entity, fa.relation"
-        " FROM conflicts c"
-        " JOIN facts fa ON fa.id = c.fact_a_id"
-        " JOIN facts fb ON fb.id = c.fact_b_id"
-        f" WHERE c.status = 'unresolved' {fa_filter}"  # nosec B608 — fa_filter built from literal SQL fragments; values in params
-    )
-    for row in conn.execute(conflict_sql, fa_params).fetchall():
+    for row in conn.execute(_CONFLICT_SQL, fa_params).fetchall():
         findings.append({
             "check": "contradiction",
             "severity": "error",
@@ -103,9 +112,20 @@ def _check_contradictions(
     return findings
 
 
+_STALE_SQL = (
+    "SELECT f.id, f.entity, f.relation, f.valid_until"
+    " FROM facts f"
+    " WHERE f.valid_until IS NOT NULL"
+    " AND f.confidence > 0.0"
+    " AND f.valid_until <= ?"
+    " AND f.scope = ?"
+    " AND (? IS NULL OR f.entity = ?)"
+    " AND (? IS NULL OR f.relation = ?)"
+)
+
+
 def _check_stale(
     conn: Any,
-    f_filter: str,
     f_params: list[Any],
     now: str,
     lookahead: str,
@@ -113,15 +133,7 @@ def _check_stale(
 ) -> list[dict[str, Any]]:
     """Return stale (already-expired or expiring-soon) findings."""
     findings: list[dict[str, Any]] = []
-    stale_sql = (
-        "SELECT f.id, f.entity, f.relation, f.valid_until"
-        " FROM facts f"
-        " WHERE f.valid_until IS NOT NULL"
-        " AND f.confidence > 0.0"
-        " AND f.valid_until <= ?"
-        f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
-    )
-    for row in conn.execute(stale_sql, [lookahead] + f_params).fetchall():
+    for row in conn.execute(_STALE_SQL, [lookahead] + f_params).fetchall():
         expired = row["valid_until"] <= now
         findings.append({
             "check": "stale",
@@ -138,26 +150,24 @@ def _check_stale(
     return findings
 
 
+_ORPHAN_SQL = (
+    "SELECT entity FROM facts"
+    " WHERE scope = ?"
+    "   AND (? IS NULL OR entity = ?)"
+    " GROUP BY entity"
+    " HAVING COUNT(*) > 0"
+    " AND SUM(CASE WHEN confidence > 0.0"
+    " AND (valid_until IS NULL OR valid_until > ?) THEN 1 ELSE 0 END) = 0"
+)
+
+
 def _check_orphans(
     conn: Any, scope: str, entity: str | None, now: str
 ) -> list[dict[str, Any]]:
     """Return orphan-entity findings (entities with no live facts in scope)."""
     findings: list[dict[str, Any]] = []
-    orphan_clauses = "AND scope = ?"
-    orphan_params: list[Any] = [scope]
-    if entity:
-        orphan_clauses += " AND entity = ?"
-        orphan_params.append(entity)
-
-    orphan_sql = (
-        "SELECT entity FROM facts"
-        f" WHERE 1=1 {orphan_clauses}"  # nosec B608 — orphan_clauses built from literal SQL fragments; values in params
-        " GROUP BY entity"
-        " HAVING COUNT(*) > 0"
-        " AND SUM(CASE WHEN confidence > 0.0"
-        " AND (valid_until IS NULL OR valid_until > ?) THEN 1 ELSE 0 END) = 0"
-    )
-    for row in conn.execute(orphan_sql, orphan_params + [now]).fetchall():
+    entity_p = entity or None
+    for row in conn.execute(_ORPHAN_SQL, [scope, entity_p, entity_p, now]).fetchall():
         findings.append({
             "check": "orphan",
             "severity": "info",
@@ -169,20 +179,24 @@ def _check_orphans(
     return findings
 
 
+_REF_SQL = (
+    "SELECT f.id, f.entity, f.relation, f.value_v"
+    " FROM facts f"
+    " WHERE f.value_type = 'ref'"
+    " AND f.confidence > 0.0"
+    " AND (f.valid_until IS NULL OR f.valid_until > ?)"
+    " AND f.scope = ?"
+    " AND (? IS NULL OR f.entity = ?)"
+    " AND (? IS NULL OR f.relation = ?)"
+)
+
+
 def _check_broken_refs(
-    conn: Any, f_filter: str, f_params: list[Any], now: str
+    conn: Any, f_params: list[Any], now: str
 ) -> list[dict[str, Any]]:
     """Return broken-ref findings for value-type=ref facts whose target has no live facts."""
     findings: list[dict[str, Any]] = []
-    ref_sql = (
-        "SELECT f.id, f.entity, f.relation, f.value_v"
-        " FROM facts f"
-        " WHERE f.value_type = 'ref'"
-        " AND f.confidence > 0.0"
-        " AND (f.valid_until IS NULL OR f.valid_until > ?)"
-        f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
-    )
-    for row in conn.execute(ref_sql, [now] + f_params).fetchall():
+    for row in conn.execute(_REF_SQL, [now] + f_params).fetchall():
         target_entity = row["value_v"]
         live_count = conn.execute(
             "SELECT COUNT(*) FROM facts"
@@ -203,21 +217,25 @@ def _check_broken_refs(
     return findings
 
 
+_NS_SQL = (
+    "SELECT f.entity, f.relation, GROUP_CONCAT(f.id) AS ids"
+    " FROM facts f"
+    " WHERE f.confidence > 0.0"
+    " AND (f.valid_until IS NULL OR f.valid_until > ?)"
+    " AND instr(f.relation, ':') = 0"
+    " AND f.scope = ?"
+    " AND (? IS NULL OR f.entity = ?)"
+    " AND (? IS NULL OR f.relation = ?)"
+    " GROUP BY f.entity, f.relation"
+)
+
+
 def _check_namespacing(
-    conn: Any, f_filter: str, f_params: list[Any], now: str
+    conn: Any, f_params: list[Any], now: str
 ) -> list[dict[str, Any]]:
     """Return namespacing findings for live facts whose relation lacks a 'prefix:' namespace."""
     findings: list[dict[str, Any]] = []
-    ns_sql = (
-        "SELECT f.entity, f.relation, GROUP_CONCAT(f.id) AS ids"
-        " FROM facts f"
-        " WHERE f.confidence > 0.0"
-        " AND (f.valid_until IS NULL OR f.valid_until > ?)"
-        " AND instr(f.relation, ':') = 0"
-        f" {f_filter}"  # nosec B608 — f_filter built from literal SQL fragments; values in params
-        " GROUP BY f.entity, f.relation"
-    )
-    for row in conn.execute(ns_sql, [now] + f_params).fetchall():
+    for row in conn.execute(_NS_SQL, [now] + f_params).fetchall():
         findings.append({
             "check": "namespacing",
             "severity": "warning",
@@ -244,31 +262,31 @@ def _run_lint_sweep(
     now = now_dt.isoformat()
     lookahead = (now_dt + timedelta(seconds=stale_lookahead_s)).isoformat()
 
-    f_filter, f_params, fa_filter, fa_params = _build_lint_filters(scope, entity, relation)
+    f_params = _lint_filter_params(scope, entity, relation)
+    fa_params = _lint_filter_params(scope, entity, relation)
 
     findings: list[dict[str, Any]] = []
     fact_count = 0
 
     with db() as conn:
-        count_sql = f"SELECT COUNT(*) FROM facts f WHERE 1=1 {f_filter}"  # nosec B608 — f_filter is built from literal SQL fragments; values in params
-        fact_count = conn.execute(count_sql, f_params).fetchone()[0]
+        fact_count = conn.execute(_COUNT_SQL, f_params).fetchone()[0]
 
         if "contradiction" in checks:
-            findings.extend(_check_contradictions(conn, fa_filter, fa_params))
+            findings.extend(_check_contradictions(conn, fa_params))
 
         if "stale" in checks:
             findings.extend(
-                _check_stale(conn, f_filter, f_params, now, lookahead, stale_lookahead_s)
+                _check_stale(conn, f_params, now, lookahead, stale_lookahead_s)
             )
 
         if "orphan" in checks:
             findings.extend(_check_orphans(conn, scope, entity, now))
 
         if "broken_ref" in checks:
-            findings.extend(_check_broken_refs(conn, f_filter, f_params, now))
+            findings.extend(_check_broken_refs(conn, f_params, now))
 
         if "namespacing" in checks:
-            findings.extend(_check_namespacing(conn, f_filter, f_params, now))
+            findings.extend(_check_namespacing(conn, f_params, now))
 
     return {
         "findings": findings,

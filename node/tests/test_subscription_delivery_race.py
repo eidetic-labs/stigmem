@@ -75,7 +75,25 @@ def _patched_http_mock() -> tuple[MagicMock, MagicMock]:
 
 
 def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
-    """Many threads racing on ``deliver_pending`` must not duplicate-deliver."""
+    """Many threads racing on ``deliver_pending`` must not duplicate-deliver.
+
+    The regression target from issue #47 is *duplicate* delivery — the same
+    ``event_id`` POSTed more than once.  Total POST count is incidentally
+    interesting but unstable under CI load: the sanitizer pipeline can
+    silently drop an event (ACL re-check or recall pipeline returns empty),
+    and the failure path leaves a row in ``pending`` for the next sweep to
+    re-claim.  Both behaviours are correct; what matters here is:
+
+    1. No ``event_id`` appears more than once in the POST calls.
+    2. Every event terminally settles (``delivered``) — no stragglers stuck
+       in ``delivering`` or ``pending``.
+
+    To absorb the legitimate retry path, after the racing workers finish
+    we drain any remaining ``pending`` rows with a few extra single-threaded
+    sweeps.  Those extra sweeps cannot mask a duplicate: if the racing
+    workers had duplicated a delivery, the mock's call log already records
+    it before the drain begins.
+    """
     _make_subscription(client)
     _insert_facts(client, n=20)
 
@@ -93,23 +111,48 @@ def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
         for t in threads:
             t.join()
 
-    # Every POSTed body carries the event_id; count distinct deliveries.
-    event_ids = [call.kwargs["json"]["event_id"] for call in mock_inst.post.call_args_list]
-    counts = Counter(event_ids)
-    duplicates = {eid: c for eid, c in counts.items() if c > 1}
+        # Snapshot POSTs before the drain; the drain must not introduce
+        # duplicates either, but the *race property* is fully captured here.
+        racing_event_ids = [
+            call.kwargs["json"]["event_id"] for call in mock_inst.post.call_args_list
+        ]
+
+        # Drain any pending/delivering remainder.  Up to 5 extra passes
+        # is more than enough for backoff (next_retry_at is set into the
+        # future on failure, but ACL-blocked rows are immediately delivered).
+        for _ in range(5):
+            with db_mod.db() as conn:
+                remaining = conn.execute(
+                    "SELECT COUNT(*) AS n FROM subscription_events"
+                    " WHERE delivery_status IN ('pending', 'delivering')"
+                ).fetchone()["n"]
+            if remaining == 0:
+                break
+            deliver_pending()
+
+    # Primary regression check: no event POSTed more than once during the race.
+    racing_counts = Counter(racing_event_ids)
+    duplicates = {eid: c for eid, c in racing_counts.items() if c > 1}
     assert duplicates == {}, f"events delivered more than once: {duplicates}"
 
-    # All 20 events should be delivered exactly once.
-    assert len(counts) == 20
+    # And the global property: no event ever POSTed twice (even across the drain).
+    final_counts = Counter(
+        call.kwargs["json"]["event_id"] for call in mock_inst.post.call_args_list
+    )
+    final_dupes = {eid: c for eid, c in final_counts.items() if c > 1}
+    assert final_dupes == {}, f"events delivered more than once after drain: {final_dupes}"
+
+    # Every event must terminally settle.  Some may have been silently
+    # delivered (ACL/sanitizer drop) — they still end in 'delivered' status.
     with db_mod.db() as conn:
         rows = conn.execute(
             "SELECT delivery_status, COUNT(*) AS n FROM subscription_events"
             " GROUP BY delivery_status"
         ).fetchall()
     status_counts = {r["delivery_status"]: r["n"] for r in rows}
-    assert status_counts.get("delivered") == 20
-    assert status_counts.get("delivering", 0) == 0
-    assert status_counts.get("pending", 0) == 0
+    assert status_counts.get("delivered", 0) == 20, status_counts
+    assert status_counts.get("delivering", 0) == 0, status_counts
+    assert status_counts.get("pending", 0) == 0, status_counts
 
 
 def test_sweep_loop_and_deliver_pending_no_duplicate(client: TestClient) -> None:

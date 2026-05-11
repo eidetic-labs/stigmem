@@ -277,12 +277,11 @@ def _make_authed_node(
     from stigmem_node.auth import create_api_key
     from stigmem_node.db import apply_migrations
     from stigmem_node.main import create_app
-    from stigmem_node.settings import Settings
 
     db_file = str(tmp_path) + f"/acl{suffix}.db"
     apply_migrations(db_path=db_file)
     original = sm.settings
-    ts = Settings(
+    ts = sm.Settings(
         db_path=db_file,
         auth_required=True,
         node_url="http://testnode",
@@ -539,13 +538,12 @@ class TestSourceAttestationConformance:
         import stigmem_node.settings as sm
         from stigmem_node.db import apply_migrations
         from stigmem_node.main import create_app
-        from stigmem_node.settings import Settings
 
         db_file = str(tmp_path) + "/noauth.db"
         apply_migrations(db_path=db_file)
         original = sm.settings
-        ts = Settings(db_path=db_file, auth_required=False, node_url="http://testnode",
-                      source_attestation_mode="warn")
+        ts = sm.Settings(db_path=db_file, auth_required=False, node_url="http://testnode",
+                         source_attestation_mode="warn")
         sm.settings = ts
         am.settings = ts
         dm.settings = ts

@@ -32,19 +32,20 @@ _SYNTHESIZE_SQL = (
 )
 
 
-def _build_synthesize_sql(
+def _build_synthesize_params(
     scope: str, include_expired: bool, limit: int, now: str
-) -> tuple[str, list[Any]]:
-    """Build the SQL + params for the synthesize-scope query.
+) -> list[Any]:
+    """Return the bind values for ``_SYNTHESIZE_SQL``.
 
-    The SQL text is a module-level constant — branching on ``include_expired``
-    happens at bind time via the ``? = 1`` sentinel, so no user-controlled
-    value ever flows into the SQL string.  This eliminates the
-    ``py/sql-injection`` taint that the previous f-string assembly tripped
-    (issue #115).
+    The SQL text is a module-level constant; this helper only computes
+    bind values.  Keeping the SQL string out of any function that
+    accepts user input prevents CodeQL from interprocedurally tainting
+    it — see issue #121 for why a function that takes user inputs and
+    returns ``(sql, params)`` still trips ``py/sql-injection`` even
+    when the returned SQL value is invariant.
     """
     expired_flag = 1 if include_expired else 0
-    return _SYNTHESIZE_SQL, [scope, expired_flag, now, limit]
+    return [scope, expired_flag, now, limit]
 
 
 def _count_pair_occurrences(rows: list[Any]) -> dict[tuple[str, str], int]:
@@ -104,10 +105,10 @@ def synthesize_scope(
 
     now = datetime.now(UTC).isoformat()
 
-    sql, params = _build_synthesize_sql(scope, include_expired, limit, now)
+    params = _build_synthesize_params(scope, include_expired, limit, now)
 
     with db() as conn:
-        rows = conn.execute(sql, params).fetchall()
+        rows = conn.execute(_SYNTHESIZE_SQL, params).fetchall()
 
     # Count occurrences per (entity, relation) among non-system facts to detect contradictions
     seen = _count_pair_occurrences(rows)

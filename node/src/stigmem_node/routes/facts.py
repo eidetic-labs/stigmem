@@ -186,7 +186,7 @@ _AS_OF_SELECT_SQL = (
 )
 
 
-def _build_as_of_query(
+def _build_as_of_params(
     *,
     entity: str | None,
     scope: str | None,
@@ -195,13 +195,15 @@ def _build_as_of_query(
     tenant_id: str,
     cursor: str | None,
     limit: int,
-) -> tuple[str, list[Any]]:
-    """Return ``(sql, params)`` for the as_of facts query.
+) -> list[Any]:
+    """Return the bind values for ``_AS_OF_SELECT_SQL``.
 
-    The SQL text is the ``_AS_OF_SELECT_SQL`` module-level constant; all
-    filtering is via bound parameters with ``(? IS NULL OR …)`` gating.
-    No user input flows into the query text — closes the ``py/sql-injection``
-    taint the conditional-fragment version triggered (issue #115).
+    The SQL text is the ``_AS_OF_SELECT_SQL`` module-level constant; this
+    helper only computes bind values.  Keeping the SQL string out of any
+    function that takes user input prevents CodeQL from interprocedurally
+    tainting it — see issue #121 for why a function that takes user
+    inputs and returns ``(sql, params)`` still trips ``py/sql-injection``
+    even when the returned SQL value is invariant.
     """
     if scope is not None and scope not in VALID_SCOPES:
         raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
@@ -213,7 +215,7 @@ def _build_as_of_query(
     scope_p = scope or None
     cursor_p = cursor or None
 
-    params: list[Any] = [
+    return [
         tenant_id,
         as_of,
         as_of,
@@ -224,7 +226,6 @@ def _build_as_of_query(
         cursor_p, cursor_p,
         limit + 1,
     ]
-    return _AS_OF_SELECT_SQL, params
 
 
 def _query_facts_as_of_impl(
@@ -250,7 +251,7 @@ def _query_facts_as_of_impl(
     if entity and not is_admin_caller and _legal_hold_blocks_query(conn, entity):
         return QueryResponse(facts=[], total=0, cursor=None)
 
-    sql, params = _build_as_of_query(
+    params = _build_as_of_params(
         entity=entity,
         scope=scope,
         relation=relation,
@@ -260,7 +261,7 @@ def _query_facts_as_of_impl(
         limit=limit,
     )
 
-    rows = conn.execute(sql, params).fetchall()
+    rows = conn.execute(_AS_OF_SELECT_SQL, params).fetchall()
     has_more = len(rows) > limit
     rows = rows[:limit]
 

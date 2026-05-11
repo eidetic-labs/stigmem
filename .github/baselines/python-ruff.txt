@@ -201,10 +201,6 @@ node/tests/test_cards.py:149:9:F841:Local variable `card_hits` is assigned to bu
 node/tests/test_cards.py:17:8:F401:`time` imported but unused
 node/tests/test_cards.py:19:8:F401:`pytest` imported but unused
 node/tests/test_cards.py:27:101:E501:Line too long (101 > 100)
-node/tests/test_conformance_v1.py:273:5:I001:Import block is un-sorted or un-formatted
-node/tests/test_conformance_v1.py:301:17:B010:Do not call `setattr` with a constant attribute value. It is not any safer than normal property access.
-node/tests/test_conformance_v1.py:321:5:I001:Import block is un-sorted or un-formatted
-node/tests/test_conformance_v1.py:536:9:I001:Import block is un-sorted or un-formatted
 node/tests/test_embeddings.py:26:41:F401:`stigmem_node.embedding.base.EmbeddingModel` imported but unused
 node/tests/test_embeddings.py:303:9:F841:Local variable `alive_id` is assigned to but never used
 node/tests/test_embeddings.py:343:101:E501:Line too long (104 > 100)

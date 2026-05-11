@@ -270,10 +270,10 @@ def _make_authed_node(
     suffix: str = "",
     attestation_mode: str = "warn",
 ) -> tuple[TestClient, Any, list, str]:
-    import stigmem_node.settings as sm
     import stigmem_node.auth as am
     import stigmem_node.db as dm
     import stigmem_node.routes.wellknown as wk
+    import stigmem_node.settings as sm
     from stigmem_node.auth import create_api_key
     from stigmem_node.db import apply_migrations
     from stigmem_node.main import create_app
@@ -298,7 +298,7 @@ def _make_authed_node(
         try:
             mod = _importlib.import_module(name)
             if hasattr(mod, "settings"):
-                setattr(mod, "settings", ts)
+                mod.settings = ts
                 patched.append((mod, "settings", original))
         except ImportError:
             pass
@@ -318,10 +318,10 @@ def _make_authed_node(
 
 
 def _restore_authed(original: Any, patched: list) -> None:
-    import stigmem_node.settings as sm
     import stigmem_node.auth as am
     import stigmem_node.db as dm
     import stigmem_node.routes.wellknown as wk
+    import stigmem_node.settings as sm
     sm.settings = original
     am.settings = original
     dm.settings = original
@@ -533,10 +533,10 @@ class TestSourceAttestationConformance:
 
     def test_auth_disabled_attested_null(self, tmp_path) -> None:
         """§18.2, §2.7 — auth disabled → attestation cannot run; attested=null."""
-        import stigmem_node.settings as sm
         import stigmem_node.auth as am
         import stigmem_node.db as dm
         import stigmem_node.routes.wellknown as wk
+        import stigmem_node.settings as sm
         from stigmem_node.db import apply_migrations
         from stigmem_node.main import create_app
         from stigmem_node.settings import Settings

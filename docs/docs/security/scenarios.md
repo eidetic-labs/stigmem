@@ -659,7 +659,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 
 **What can't they do?** Compromise operators who have not yet upgraded to the malicious version, and operators running pinned older versions remain unaffected until they upgrade.
 
-**How would you know?** Today, **detection is out-of-band**: community reports, dependency-scanner alerts, anomalous behavior reports from operators, or a security advisory from Eidetic Labs after upstream detects the compromise. Stigmem v0.9.0a1 does not publish Sigstore signatures or reproducible-build attestations, so operators cannot cryptographically verify that an installed binary corresponds to a specific source commit.
+**How would you know?** Today, detection is mixed. Community reports, dependency-scanner alerts, anomalous behavior reports from operators, or a security advisory from Eidetic Labs remain important. The v0.9.0a1 GHCR node image is also cosign-signed with an attached SBOM, so container-image consumers can verify image provenance. Full artifact signing and reproducible-build attestations across every release surface remain future work, so operators still cannot cryptographically verify every installed artifact against a specific source commit.
 
 **How do you reduce the risk today?**
 - Pin to specific stigmem versions in your deployment configs; do not auto-upgrade.

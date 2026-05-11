@@ -14,10 +14,10 @@ Human users can authenticate via their organisation's IdP instead of a static ke
 
 ## API key auth (client requests)
 
-All endpoints except `/.well-known/stigmem` and `/healthz` require an `X-API-Key` header:
+All endpoints except `/.well-known/stigmem` and `/healthz` require a Bearer token:
 
 ```bash
-curl -H 'X-API-Key: <your-key>' http://localhost:8000/v1/facts
+curl -H 'Authorization: Bearer <your-key>' http://localhost:8000/v1/facts
 ```
 
 Auth is **enabled by default**. To disable for local development, set `STIGMEM_AUTH_REQUIRED=false`.

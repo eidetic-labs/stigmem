@@ -315,7 +315,7 @@ def _cmd_federation_register_peer(args: argparse.Namespace) -> int:
 
     headers = {"Content-Type": "application/json"}
     if args.api_key:
-        headers["X-API-Key"] = args.api_key
+        headers["Authorization"] = f"Bearer {args.api_key}"
 
     try:
         resp = httpx.post(

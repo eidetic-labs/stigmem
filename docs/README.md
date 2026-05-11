@@ -141,12 +141,12 @@ When the current docs are ready for a stable release:
 npm run build
 
 # 2. Snapshot current docs/ as the new version
-npx docusaurus docs:version v2.0
+npx docusaurus docs:version v1.0.0
 
 # 3. Update docusaurus.config.js:
 #    - Set lastVersion to the new version label
 #    - Add the new version entry under versions
-#    - Relabel current as the next draft (e.g. v2.1-draft)
+#    - Relabel current as the next draft after the stable release
 
 # 4. Verify
 npm run build
@@ -175,7 +175,7 @@ stigmem/docs/
 ├── plugins/
 │   ├── remark-glossary-link.js # Auto-links glossary terms
 │   └── validate-audience.js    # Build-time audience frontmatter validation
-├── docs/                       # Current docs (v2.0-draft)
+├── docs/                       # Current docs (v0.9.0aN alpha series)
 │   ├── learn/                  # Concepts, quickstart, how-it-works
 │   ├── build/                  # Guides, tutorials, connectors, SDKs
 │   ├── operate/                # Deployment, backends, security, observability

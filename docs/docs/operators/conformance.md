@@ -16,14 +16,14 @@ Stigmem ships two complementary conformance layers:
 
 | Layer | What it tests | Who uses it |
 |-------|---------------|-------------|
-| **Wire conformance (v1 vectors)** | HTTP wire format and response shape against machine-readable JSON vectors | Spec contributors; anyone checking API compatibility |
+| **Wire conformance (current vectors)** | HTTP wire format and response shape against machine-readable JSON vectors | Spec contributors; anyone checking API compatibility |
 | **Multi-backend behavioral suite** | Full behavioral contract (facts, recall, graph, decay, federation, contradictions, embeddings, provenance) across SQLite, libSQL, and Postgres | Backend implementers; fork operators; CI |
 
 ---
 
-## Wire conformance (v1 vectors)
+## Wire conformance
 
-The Stigmem v1.0 conformance suite is the normative test contract for the wire format. Any node implementation that passes every vector in `data/conformance/v1.0/` is a conforming Stigmem node.
+The current wire-vector suite is the executable test contract for the v0.9.0a1 wire format while the project is in the alpha reset. The files still live under `data/conformance/v1.0/` for compatibility with the pre-reset harness naming; treat that directory name as historical, not as a claim that v1.0 has shipped.
 
 ### Running the suite
 

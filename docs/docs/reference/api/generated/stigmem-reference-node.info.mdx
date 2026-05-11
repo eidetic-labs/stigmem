@@ -52,39 +52,12 @@ See the [Stigmem specification](https://github.com/stigmem/stigmem/blob/main/spe
     className={"openapi-tabs__security-schemes"}
   >
     <TabItem
-      label={"API Key: ApiKeyAuth"}
-      value={"ApiKeyAuth"}
-    >
-      
-      
-      API key for authenticating client requests. Set `STIGMEM_AUTH_REQUIRED=false` to disable auth in development.
-      
-      <div>
-        <table>
-          <tbody>
-            <tr>
-              <th>
-                Security Scheme Type:
-              </th><td>
-                apiKey
-              </td>
-            </tr><tr>
-              <th>
-                Header parameter name:
-              </th><td>
-                X-API-Key
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </TabItem><TabItem
       label={"HTTP: Bearer Auth"}
-      value={"PeerTokenAuth"}
+      value={"HTTPBearer"}
     >
       
       
-      Short-lived Ed25519-signed JWT for peer-to-peer federation. Fields: `iss` (issuer node_id), `sub` (target node_id), `iat`/`exp` (epoch_ms, max 3600s), `nonce` (UUID), `scopes` (FactScope[]). See spec §6.3.
+      Bearer token for API-key client requests and short-lived peer tokens for federation.
       
       <div>
         <table>

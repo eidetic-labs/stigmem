@@ -179,6 +179,106 @@ def _decompose(
     return ids
 
 
+def _index_root_rows(root: list[Any]) -> tuple[dict[str, list[str]], str | None, str | None]:
+    """Group root rows by relation; surface earliest timestamp + last valid_until."""
+    by_rel: dict[str, list[str]] = {}
+    created_at: str | None = None
+    expires_at: str | None = None
+    for row in root:
+        by_rel.setdefault(row["relation"], []).append(row["value_v"])
+        if created_at is None or row["timestamp"] < created_at:
+            created_at = row["timestamp"]
+        if row["valid_until"] is not None:
+            expires_at = row["valid_until"]
+    return by_rel, created_at, expires_at
+
+
+def _build_escalation(by_rel: dict[str, list[str]]) -> EscalationPolicy | None:
+    if "intent:escalation" not in by_rel:
+        return None
+    return EscalationPolicy(
+        escalate_to=(by_rel.get("intent:escalate_to") or [""])[0],
+        channel=(by_rel.get("intent:escalation:channel") or ["stigmem"])[0],
+        priority=by_rel["intent:escalation"][0],
+        include_context=(by_rel.get("intent:escalation:context") or ["true"])[0] == "true",
+    )
+
+
+def _build_handoff(
+    by_rel: dict[str, list[str]], rows_by_entity: dict[str, list[Any]],
+) -> HandoffPayload | None:
+    if "intent:handoff_summary" not in by_rel:
+        return None
+    artifacts: list[HandoffArtifact] = []
+    for art_id in by_rel.get("intent:artifact", []):
+        art_by_rel = {r["relation"]: r["value_v"] for r in rows_by_entity.get(art_id, [])}
+        artifacts.append(HandoffArtifact(
+            name=art_by_rel.get("intent:artifact:name", ""),
+            ref=art_by_rel.get("intent:artifact:ref", ""),
+        ))
+    cont = by_rel.get("intent:continuation")
+    return HandoffPayload(
+        summary=by_rel["intent:handoff_summary"][0],
+        fact_refs=by_rel.get("intent:context_ref", []),
+        continuation=cont[0] if cont else None,
+        artifacts=artifacts,
+    )
+
+
+def _build_constraints(
+    by_rel: dict[str, list[str]], rows_by_entity: dict[str, list[Any]],
+) -> list[Constraint]:
+    out: list[Constraint] = []
+    for sub_id in by_rel.get("intent:constraint", []):
+        sub_rel = {r["relation"]: r for r in rows_by_entity.get(sub_id, [])}
+        kind_row = sub_rel.get("intent:constraint:kind")
+        limit_row = sub_rel.get("intent:constraint:limit")
+        if kind_row and limit_row:
+            unit_row = sub_rel.get("intent:constraint:unit")
+            out.append(Constraint(
+                kind=kind_row["value_v"],
+                limit=FactValue(type=limit_row["value_type"], v=limit_row["value_v"]),
+                unit=unit_row["value_v"] if unit_row else None,
+            ))
+    return out
+
+
+def _build_preferences(
+    by_rel: dict[str, list[str]], rows_by_entity: dict[str, list[Any]],
+) -> list[Preference]:
+    out: list[Preference] = []
+    for sub_id in by_rel.get("intent:preference", []):
+        sub_rel = {r["relation"]: r for r in rows_by_entity.get(sub_id, [])}
+        kind_row = sub_rel.get("intent:preference:kind")
+        val_row = sub_rel.get("intent:preference:value")
+        if kind_row and val_row:
+            wt_row = sub_rel.get("intent:preference:weight")
+            out.append(Preference(
+                kind=kind_row["value_v"],
+                value=FactValue(type=val_row["value_type"], v=val_row["value_v"]),
+                weight=float(wt_row["value_v"]) if wt_row else 1.0,
+            ))
+    return out
+
+
+def _build_deferences(
+    by_rel: dict[str, list[str]], rows_by_entity: dict[str, list[Any]],
+) -> list[DeferenceRule]:
+    out: list[DeferenceRule] = []
+    for sub_id in by_rel.get("intent:deference", []):
+        sub_rel = {r["relation"]: r for r in rows_by_entity.get(sub_id, [])}
+        cond_row = sub_rel.get("intent:deference:condition")
+        defer_row = sub_rel.get("intent:deference:defer_to")
+        if cond_row and defer_row:
+            timeout_row = sub_rel.get("intent:deference:timeout_s")
+            out.append(DeferenceRule(
+                condition=cond_row["value_v"],
+                defer_to=defer_row["value_v"],
+                timeout_s=int(float(timeout_row["value_v"])) if timeout_row else None,
+            ))
+    return out
+
+
 def _reconstruct(
     intent_id: str, rows_by_entity: dict[str, list[Any]]
 ) -> IntentEnvelopeRecord | None:
@@ -187,115 +287,23 @@ def _reconstruct(
     if not root:
         return None
 
-    by_rel: dict[str, list[str]] = {}
-    created_at: str | None = None
-    expires_at: str | None = None
-
-    for row in root:
-        rel = row["relation"]
-        val = row["value_v"]
-        by_rel.setdefault(rel, []).append(val)
-        if created_at is None or row["timestamp"] < created_at:
-            created_at = row["timestamp"]
-        if row["valid_until"] is not None:
-            expires_at = row["valid_until"]
-
+    by_rel, created_at, expires_at = _index_root_rows(root)
     if _ROOT_RELATION not in by_rel:
         return None
 
-    goal = by_rel[_ROOT_RELATION][0]
-    from_uri = (by_rel.get("intent:from") or [""])[0]
-    to = by_rel.get("intent:to", [])
-    scope = rows_by_entity[intent_id][0]["scope"]
-
-    # Escalation
-    escalation: EscalationPolicy | None = None
-    if "intent:escalation" in by_rel:
-        escalation = EscalationPolicy(
-            escalate_to=(by_rel.get("intent:escalate_to") or [""])[0],
-            channel=(by_rel.get("intent:escalation:channel") or ["stigmem"])[0],
-            priority=by_rel["intent:escalation"][0],
-            include_context=(by_rel.get("intent:escalation:context") or ["true"])[0] == "true",
-        )
-
-    # Handoff
-    handoff: HandoffPayload | None = None
-    if "intent:handoff_summary" in by_rel:
-        artifact_refs = by_rel.get("intent:artifact", [])
-        artifacts: list[HandoffArtifact] = []
-        for art_id in artifact_refs:
-            art_rows = rows_by_entity.get(art_id, [])
-            art_by_rel = {r["relation"]: r["value_v"] for r in art_rows}
-            artifacts.append(HandoffArtifact(
-                name=art_by_rel.get("intent:artifact:name", ""),
-                ref=art_by_rel.get("intent:artifact:ref", ""),
-            ))
-        _cont = by_rel.get("intent:continuation")
-        handoff = HandoffPayload(
-            summary=by_rel["intent:handoff_summary"][0],
-            fact_refs=by_rel.get("intent:context_ref", []),
-            continuation=_cont[0] if _cont else None,
-            artifacts=artifacts,
-        )
-
-    # Constraints
-    constraints: list[Constraint] = []
-    for sub_id in by_rel.get("intent:constraint", []):
-        sub_rows = rows_by_entity.get(sub_id, [])
-        sub_rel = {r["relation"]: r for r in sub_rows}
-        kind_row = sub_rel.get("intent:constraint:kind")
-        limit_row = sub_rel.get("intent:constraint:limit")
-        unit_row = sub_rel.get("intent:constraint:unit")
-        if kind_row and limit_row:
-            constraints.append(Constraint(
-                kind=kind_row["value_v"],
-                limit=FactValue(type=limit_row["value_type"], v=limit_row["value_v"]),
-                unit=unit_row["value_v"] if unit_row else None,
-            ))
-
-    # Preferences
-    preferences: list[Preference] = []
-    for sub_id in by_rel.get("intent:preference", []):
-        sub_rows = rows_by_entity.get(sub_id, [])
-        sub_rel = {r["relation"]: r for r in sub_rows}
-        kind_row = sub_rel.get("intent:preference:kind")
-        val_row = sub_rel.get("intent:preference:value")
-        wt_row = sub_rel.get("intent:preference:weight")
-        if kind_row and val_row:
-            preferences.append(Preference(
-                kind=kind_row["value_v"],
-                value=FactValue(type=val_row["value_type"], v=val_row["value_v"]),
-                weight=float(wt_row["value_v"]) if wt_row else 1.0,
-            ))
-
-    # Deferences
-    deferences: list[DeferenceRule] = []
-    for sub_id in by_rel.get("intent:deference", []):
-        sub_rows = rows_by_entity.get(sub_id, [])
-        sub_rel = {r["relation"]: r for r in sub_rows}
-        cond_row = sub_rel.get("intent:deference:condition")
-        defer_row = sub_rel.get("intent:deference:defer_to")
-        timeout_row = sub_rel.get("intent:deference:timeout_s")
-        if cond_row and defer_row:
-            deferences.append(DeferenceRule(
-                condition=cond_row["value_v"],
-                defer_to=defer_row["value_v"],
-                timeout_s=int(float(timeout_row["value_v"])) if timeout_row else None,
-            ))
-
     return IntentEnvelopeRecord(
         id=intent_id,
-        **{"from": from_uri},
-        to=to,
-        goal=goal,
-        scope=scope,
+        **{"from": (by_rel.get("intent:from") or [""])[0]},
+        to=by_rel.get("intent:to", []),
+        goal=by_rel[_ROOT_RELATION][0],
+        scope=root[0]["scope"],
         created_at=created_at or datetime.now(UTC).isoformat(),
         expires_at=expires_at,
-        constraint=constraints,
-        preference=preferences,
-        deference=deferences,
-        escalation=escalation,
-        handoff=handoff,
+        constraint=_build_constraints(by_rel, rows_by_entity),
+        preference=_build_preferences(by_rel, rows_by_entity),
+        deference=_build_deferences(by_rel, rows_by_entity),
+        escalation=_build_escalation(by_rel),
+        handoff=_build_handoff(by_rel, rows_by_entity),
         fact_ids=[],  # not returned on GET; fact_ids are a POST-only receipt
     )
 

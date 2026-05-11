@@ -538,19 +538,28 @@ def _append_garden_visibility_filter(
         conditions.append("garden_id IS NULL")
 
 
-def _append_normalised_uri_filter(
-    conditions: list[str], params: list[Any], column: str, raw_value: str,
-) -> None:
-    """Append a ``column = ? OR column IN aliases`` filter, normalising the URI when possible."""
+def _normalise_uri_or_raw(raw_value: str) -> str:
+    """Best-effort URI normalisation; falls back to the raw value on failure."""
     try:  # noqa: SIM105
-        normalised = normalize_entity_uri(raw_value)
+        return normalize_entity_uri(raw_value)
     except NormalizationError:
-        normalised = raw_value  # malformed — fall through to exact match
-    conditions.append(
-        f"({column} = ? OR {column} IN"
+        return raw_value  # malformed — fall through to exact match
+
+
+def _entity_filter_clause() -> str:
+    """Hardcoded entity-or-alias WHERE fragment. Pulled out so CodeQL sees a literal."""
+    return (
+        "(entity = ? OR entity IN"
         " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
     )
-    params.extend([normalised, normalised])
+
+
+def _source_filter_clause() -> str:
+    """Hardcoded source-or-alias WHERE fragment. Pulled out so CodeQL sees a literal."""
+    return (
+        "(source = ? OR source IN"
+        " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+    )
 
 
 def _build_query_conditions(  # noqa: PLR0913 — narrow internal helper, keeps query_facts signature flat
@@ -577,12 +586,16 @@ def _build_query_conditions(  # noqa: PLR0913 — narrow internal helper, keeps 
         conditions.append("attested = ?")
         params.append(1 if attested else 0)
     if entity:
-        _append_normalised_uri_filter(conditions, params, "entity", entity)
+        normalised_entity = _normalise_uri_or_raw(entity)
+        conditions.append(_entity_filter_clause())
+        params.extend([normalised_entity, normalised_entity])
     if relation:
         conditions.append("relation = ?")
         params.append(relation)
     if source:
-        _append_normalised_uri_filter(conditions, params, "source", source)
+        normalised_source = _normalise_uri_or_raw(source)
+        conditions.append(_source_filter_clause())
+        params.extend([normalised_source, normalised_source])
     if scope:
         if scope not in VALID_SCOPES:
             raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")

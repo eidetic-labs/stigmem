@@ -35,7 +35,7 @@ The hardened image is published for `linux/amd64` and `linux/arm64`.
 ```bash
 # Requires cosign ≥ 2.x
 cosign verify \
-  --certificate-identity-regexp "https://github.com/eidetic-labs/stigmem/.github/workflows/publish.yml" \
+  --certificate-identity-regexp "https://github.com/Eidetic-Labs/stigmem/.github/workflows/publish.yml" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   ghcr.io/eidetic-labs/stigmem-node:<tag>
 ```

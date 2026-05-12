@@ -154,14 +154,23 @@ class TestTransactions:
     def test_rollback_on_exception(self, pg_backend) -> None:
         """Exception inside connection() must rollback; changes must not persist."""
         fact_id = f"txn-rollback-{uuid.uuid4()}"
-        with pytest.raises(RuntimeError), pg_backend.connection() as conn:
-            conn.execute(
-                "INSERT INTO facts "
-                "(id, entity, relation, value_type, value_v, source, timestamp, confidence, scope) "
-                "VALUES (?, 'e', 'r', 'string', 'v', 's', '2026-01-01T00:00:00Z', 1.0, 'local')",
-                (fact_id,),
-            )
-            raise RuntimeError("deliberate rollback trigger")
+        caught: RuntimeError | None = None
+        try:
+            with pg_backend.connection() as conn:
+                conn.execute(
+                    "INSERT INTO facts "
+                    "(id, entity, relation, value_type, value_v, source, "
+                    "timestamp, confidence, scope) "
+                    "VALUES (?, 'e', 'r', 'string', 'v', 's', "
+                    "'2026-01-01T00:00:00Z', 1.0, 'local')",
+                    (fact_id,),
+                )
+                raise RuntimeError("deliberate rollback trigger")
+        except RuntimeError as exc:
+            caught = exc
+
+        assert caught is not None
+        assert str(caught) == "deliberate rollback trigger"
 
         with pg_backend.connection() as conn:
             row = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_id,)).fetchone()

@@ -42,9 +42,7 @@ def eval_node():
         import stigmem_node.routes.wellknown as wk_mod
         import stigmem_node.settings as settings_module
         from fastapi.testclient import TestClient
-        from stigmem_node.db import apply_migrations
         from stigmem_node.main import create_app
-        from stigmem_node.settings import Settings
     except ImportError as exc:
         pytest.skip(f"stigmem_node not importable: {exc}")
 
@@ -58,7 +56,7 @@ def eval_node():
                 extra.append(mod)
         return extra
 
-    test_settings = Settings(
+    test_settings = settings_module.Settings(
         db_path=tmp,
         storage_backend="sqlite",
         auth_required=False,
@@ -72,7 +70,7 @@ def eval_node():
     for mod in extra:
         setattr(mod, "settings", test_settings)
 
-    apply_migrations(db_path=tmp)
+    db_mod.apply_migrations(db_path=tmp)
     app = create_app()
 
     with TestClient(app, raise_server_exceptions=False) as tc:

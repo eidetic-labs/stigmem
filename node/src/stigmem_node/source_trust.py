@@ -180,7 +180,7 @@ def _peer_history(source_uri: str) -> float:
 
     if total < 10:
         return 0.5  # new source
-    failure_rate = failures / total if total > 0 else 0.0
+    failure_rate = failures / total
     if total >= 100 and failure_rate == 0.0:
         return 1.0
     if failure_rate >= 0.05:

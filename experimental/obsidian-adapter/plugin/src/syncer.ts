@@ -9,7 +9,7 @@
  * Entity URI convention: obsidian://vault/<rel-path-without-.md>
  */
 
-import { App, Notice, TFile, Vault } from "obsidian";
+import { TFile, Vault } from "obsidian";
 import type { PluginSettings } from "./settings";
 import { isIgnored, scopeForPath } from "./settings";
 import { StigmemClient, stringValue, numberValue, booleanValue, refValue, type FactRecord } from "./StigmemClient";

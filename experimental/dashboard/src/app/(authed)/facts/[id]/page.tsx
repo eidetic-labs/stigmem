@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowLeft, AlertTriangle, Trash2, Copy } from "lucide-react";
@@ -91,7 +91,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function FactDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [retractOpen, setRetractOpen] = useState(false);
   const [retractReason, setRetractReason] = useState("");

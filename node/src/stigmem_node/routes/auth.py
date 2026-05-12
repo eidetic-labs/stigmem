@@ -1,11 +1,18 @@
 """Track B / B3 + C2 — OIDC → scoped API-key exchange bridge.
 
 POST /v1/auth/oidc/exchange   validate id_token, mint/refresh a scoped key
+POST /v1/auth/keys            register a caller-provided static API key (admin)
 GET  /v1/auth/keys            list caller's own keys
 DELETE /v1/auth/keys/{key_id} revoke a specific key
 
 C2 addition: permissions are capped by the caller's garden membership role.
 admin/writer in any garden → up to ["read","write"]; reader/no membership → ["read"].
+
+``POST /v1/auth/keys`` is the supported post-bootstrap path for minting
+additional static (non-OIDC) keys.  It mirrors the bootstrap CLI's
+caller-generated-key posture: the caller supplies the raw key material;
+the node hashes and stores it.  The endpoint requires the caller to
+hold the ``admin`` capability.  Spec §3.5.  Closes issue #135.
 """
 
 from __future__ import annotations
@@ -21,7 +28,8 @@ import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
-from ..auth import Identity, create_api_key, resolve_identity
+from ..audit_event import emit as audit_emit
+from ..auth import Identity, _hash_key, create_api_key, register_api_key, resolve_identity
 from ..db import db
 from ..settings import settings
 
@@ -73,15 +81,18 @@ def _verify_id_token(id_token: str) -> dict[str, Any]:
         )
     except jwt.ExpiredSignatureError as exc:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="id_token expired"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="id_token expired",
         ) from exc
     except jwt.InvalidAudienceError as exc:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="id_token audience mismatch"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="id_token audience mismatch",
         ) from exc
     except jwt.PyJWTError as exc:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"id_token invalid: {exc}"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"id_token invalid: {exc}",
         ) from exc
     return claims
 
@@ -149,6 +160,53 @@ class KeyInfo(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Static key registration (POST /v1/auth/keys) — issue #135
+#
+# Permission vocabulary kept narrow to the §3.5 set the auth module already
+# defines.  Source-attestation-specific fields (``allowed_source_entities``,
+# attestation-mode binding) are deferred to §18 per ADR-002 and are NOT
+# accepted here.  See spec/EVOLUTION.md § §18 for the deferred surface.
+# ---------------------------------------------------------------------------
+
+_STATIC_KEY_ALLOWED_PERMISSIONS: frozenset[str] = frozenset(
+    {"read", "write", "federate", "admin", "audit.read"}
+)
+_STATIC_KEY_MIN_RAW_LENGTH = 32  # matches bootstrap's `openssl rand -hex 32`
+
+
+class RegisterKeyRequest(BaseModel):
+    raw_key: str = Field(
+        ...,
+        min_length=_STATIC_KEY_MIN_RAW_LENGTH,
+        description=(
+            "Caller-generated raw key material (e.g. `openssl rand -hex 32`). "
+            "The node hashes it and never stores or echoes the raw value."
+        ),
+    )
+    entity_uri: str = Field(..., min_length=1)
+    permissions: list[str] = Field(default_factory=lambda: ["read", "write"])
+    description: str | None = None
+    expires_at: str | None = Field(
+        default=None,
+        description="ISO-8601 timestamp; omit for no expiry.",
+    )
+    tenant_id: str | None = Field(
+        default=None,
+        description="Target tenant; defaults to the caller's tenant.",
+    )
+
+
+class RegisterKeyResponse(BaseModel):
+    id: str
+    entity_uri: str
+    permissions: list[str]
+    description: str | None
+    created_at: str
+    expires_at: str | None
+    tenant_id: str
+
+
+# ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
 
@@ -196,7 +254,124 @@ def oidc_exchange(body: ExchangeRequest) -> ExchangeResponse:
 
     logger.info("OIDC exchange: sub=%s entity_uri=%s perms=%s", sub, entity_uri, permissions)
     return ExchangeResponse(
-        api_key=raw_key, entity_uri=entity_uri, permissions=permissions, expires_at=expires_at
+        api_key=raw_key,
+        entity_uri=entity_uri,
+        permissions=permissions,
+        expires_at=expires_at,
+    )
+
+
+@router.post(
+    "/keys",
+    response_model=RegisterKeyResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a caller-provided static API key (admin only).",
+)
+def register_static_key(
+    body: RegisterKeyRequest,
+    identity: Annotated[Identity, Depends(resolve_identity)],
+) -> RegisterKeyResponse:
+    """Register a caller-provided raw API key.
+
+    Mirrors the bootstrap CLI's posture: the caller supplies the raw key
+    material; the node hashes and stores it.  The endpoint requires the
+    caller to hold the ``admin`` capability — typically the bootstrap
+    key, or a previously-minted admin-scoped key.
+
+    The response NEVER echoes the raw key; the caller already has it.
+    """
+    if not identity.is_admin():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="admin permission required to mint API keys",
+        )
+
+    # Validate the permission set.  Reject unknown vocabulary up front so a
+    # typo (`"writes"`) doesn't silently create an unintentionally-scoped key.
+    requested_perms = set(body.permissions)
+    invalid = requested_perms - _STATIC_KEY_ALLOWED_PERMISSIONS
+    if invalid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"unknown permissions: {sorted(invalid)}; "
+                f"allowed: {sorted(_STATIC_KEY_ALLOWED_PERMISSIONS)}"
+            ),
+        )
+    if not requested_perms:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="permissions list must be non-empty",
+        )
+
+    # Collision check on the raw_key's hash.  The bootstrap raw_key is hashed
+    # to the same column; refusing the registration here prevents the new key
+    # from accidentally shadowing an existing one.
+    key_hash = _hash_key(body.raw_key)
+    with db() as conn:
+        existing = conn.execute(
+            "SELECT id FROM api_keys WHERE key_hash = ?", (key_hash,)
+        ).fetchone()
+    if existing is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="raw_key hash collides with an existing key; generate a new key value",
+        )
+
+    target_tenant = body.tenant_id or identity.tenant_id
+
+    # Persist via the existing helper.  Caller-provided raw_key, never
+    # auto-generated.
+    permissions_sorted = sorted(requested_perms)
+    key_id = register_api_key(
+        raw_key=body.raw_key,
+        entity_uri=body.entity_uri,
+        permissions=permissions_sorted,
+        description=body.description,
+        expires_at=body.expires_at,
+        tenant_id=target_tenant,
+    )
+
+    # Audit: spec §22.3.1 maps lifecycle ops on admin surfaces to
+    # ``admin_action``.  Detail captures the new key's identity and the
+    # caller's identity for accountability.
+    audit_emit(
+        "admin_action",
+        entity_uri=identity.entity_uri,
+        tenant_id=target_tenant,
+        detail={
+            "action": "api_key_register",
+            "new_key_id": key_id,
+            "target_entity_uri": body.entity_uri,
+            "permissions": permissions_sorted,
+            "has_expiry": body.expires_at is not None,
+        },
+    )
+
+    # Read back created_at so the response carries the canonical timestamp.
+    with db() as conn:
+        row = conn.execute(
+            "SELECT created_at, expires_at FROM api_keys WHERE id = ?",
+            (key_id,),
+        ).fetchone()
+
+    logger.info(
+        "API key registered: id=%s entity=%s perms=%s tenant=%s by=%s",
+        key_id,
+        body.entity_uri,
+        permissions_sorted,
+        target_tenant,
+        identity.entity_uri,
+    )
+
+    return RegisterKeyResponse(
+        id=key_id,
+        entity_uri=body.entity_uri,
+        permissions=permissions_sorted,
+        description=body.description,
+        created_at=row["created_at"],
+        expires_at=row["expires_at"],
+        tenant_id=target_tenant,
     )
 
 
@@ -233,12 +408,15 @@ def revoke_key(
 ) -> None:
     """Revoke a specific API key. Callers may only revoke their own keys."""
     with db() as conn:
-        row = conn.execute("SELECT entity_uri FROM api_keys WHERE id = ?", (key_id,)).fetchone()
+        row = conn.execute(
+            "SELECT entity_uri FROM api_keys WHERE id = ?", (key_id,)
+        ).fetchone()
         if row is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Key not found")
         if row["entity_uri"] != identity.entity_uri:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Cannot revoke another entity's key"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot revoke another entity's key",
             )
         conn.execute("DELETE FROM api_keys WHERE id = ?", (key_id,))
     logger.info("Key revoked: id=%s by entity=%s", key_id, identity.entity_uri)

@@ -57,13 +57,44 @@ curl -s -X DELETE \
   http://localhost:8000/v1/auth/keys/<key-id>
 ```
 
+## Registering an additional static key (admin only)
+
+After the one-shot bootstrap (`stigmem auth bootstrap-key`), additional static (non-OIDC) keys are minted via `POST /v1/auth/keys` authenticated with an admin-scoped key — typically the bootstrap key.
+
+The node never generates key material: the caller supplies the raw value, the node hashes and stores it. The response carries the new key's metadata but **never the raw value** — only the caller knows it.
+
+```bash
+# Caller generates the key material (do this once, store the value securely)
+NEW_KEY=$(openssl rand -hex 32)
+
+# Register it (replace <admin-key> with your admin Bearer token)
+curl -s -X POST \
+  -H 'Authorization: Bearer <admin-key>' \
+  -H 'Content-Type: application/json' \
+  http://localhost:8000/v1/auth/keys \
+  -d '{
+    "raw_key":     "'"$NEW_KEY"'",
+    "entity_uri":  "agent:ci-bot",
+    "permissions": ["read", "write"],
+    "description": "CI deployment bot"
+  }' | jq .
+
+# Then use $NEW_KEY as the Bearer token for the new identity.
+```
+
+Required `permissions` on the caller: `admin`. Allowed permission values for the new key: `read`, `write`, `federate`, `admin`, `audit.read`. The raw key must be at least 32 characters (matching `openssl rand -hex 32`). A 409 response means the proposed raw key's hash collides with an existing key — generate a new value.
+
+Every successful registration writes an `admin_action` audit row capturing the actor (caller's `entity_uri`), the new key's id, and its permissions.
+
 ## Permissions
 
-Keys carry a `permissions` array. Current values: `read`, `write`, `federate`.
+Keys carry a `permissions` array. Current values: `read`, `write`, `federate`, `admin`, `audit.read`.
 
 - `read` — query facts, list gardens, list members
 - `write` — assert/retract facts, create gardens, manage membership
 - `federate` — federation endpoints; only grantable to static keys (not OIDC-issued)
+- `admin` — administrative operations, including minting additional API keys via `POST /v1/auth/keys`
+- `audit.read` — read audit log endpoints (spec §22.3)
 
 ## Multi-tenant key provisioning
 

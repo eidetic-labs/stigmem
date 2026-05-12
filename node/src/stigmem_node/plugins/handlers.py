@@ -78,21 +78,25 @@ class AuditEvent:
 
 
 class VotingHandler(Protocol):
-    def __call__(self, ctx: object, **kwargs: Any) -> VotingDecision: ...
+    def __call__(self, ctx: object, **kwargs: Any) -> VotingDecision:
+        pass
 
 
 class FilterChainHandler(Protocol[T]):
-    def __call__(self, ctx: object, value: T, **kwargs: Any) -> T: ...
+    def __call__(self, ctx: object, value: T, **kwargs: Any) -> T:
+        pass
 
 
 class ScoreDeltaHandler(Protocol):
     def __call__(
         self, ctx: object, scored_results: list[Any], **kwargs: Any
-    ) -> dict[str, float]: ...
+    ) -> dict[str, float]:
+        pass
 
 
 class FireAndForgetHandler(Protocol):
-    def __call__(self, ctx: object, **kwargs: Any) -> None: ...
+    def __call__(self, ctx: object, **kwargs: Any) -> None:
+        pass
 
 
 def handler_timeout(seconds: float) -> Callable[[T], T]:

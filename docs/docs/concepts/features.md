@@ -122,12 +122,12 @@ The following features are in the codebase under [`experimental/<feature>/`](htt
 
 | Feature                             | Spec § | the v0.9.0aN alpha series target |
 |-------------------------------------|--------|----------------|
-| Lazy instruction discovery          | §21    | v0.9.0a2 (PR 4a) |
-| Time-travel `as_of` queries         | §24    | v0.9.0a4 (PR 4c) |
-| RTBF tombstones                     | §23    | v0.9.0a5 (PR 4d) |
-| Memory garden — advanced ACL        | §17 advanced | v0.9.0a6 (PR 4e) |
-| Source attestation                  | §18    | v0.9.0a7 (PR 4f) |
-| Multi-tenant isolation              | (cross-cutting) | v0.9.0a8 (PR 4g) |
+| Lazy instruction discovery          | §21    | v0.9.0a2 |
+| Time-travel `as_of` queries         | §24    | v0.9.0a4 |
+| RTBF tombstones                     | §23    | v0.9.0a5 |
+| Memory garden — advanced ACL        | §17 advanced | v0.9.0a6 |
+| Source attestation                  | §18    | v0.9.0a7 |
+| Multi-tenant isolation              | (cross-cutting) | v0.9.0a8 |
 | §20 Recall & Graph (vector embeddings, MMR, memory cards, subscriptions) | §20 | the v0.9.0aN alpha series |
 | Decay sweep                         | §15    | Deferred (commercial path) |
 | Synthesis                           | §16    | Deferred (commercial path) |
@@ -143,6 +143,8 @@ See the full deferred-features list at [Experimental & Deferred Features](../ref
 ## v0.9.0a1 architecture in flight (Option A acknowledgment)
 
 The v0.9.0a1 default install ships with feature-specific code in `node/src/stigmem_node/` for several deferred features (`tombstones.py`, `instruction_migrate.py`, `card_materializer.py`, `source_trust.py`, etc.). The routes are mounted but the features are dormant unless explicitly configured. Per [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per ADR-011's C1 plugin architecture; after v0.9.0a8, default install will be true to ADR-011's commitment.
+
+Main now includes the hook-registry foundation and stable 22-hook surface. External plugins are not yet installable from package entry points, and the deferred features listed below have not yet been extracted into plugin packages.
 
 See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md) for the full architectural-gap acknowledgment.
 
@@ -169,4 +171,4 @@ The phase progression is in [ROADMAP.md](https://github.com/Eidetic-Labs/stigmem
 
 ---
 
-*This page is regenerated each release to reflect actual ship-state. The previous "Spec v2.0 — in flight" framing was retired during the v0.9.0a1 reset (master-checklist §4.3a). For the development history, see [`spec/EVOLUTION.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/EVOLUTION.md).*
+*This page is regenerated each release to reflect actual ship-state. The previous "Spec v2.0 — in flight" framing was retired during the v0.9.0a1 reset. For the development history, see [`spec/EVOLUTION.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/EVOLUTION.md).*

@@ -3,7 +3,7 @@
 > Public roadmap for stigmem. Milestone-gated, not time-gated — version lines complete when their exit criteria are met.
 >
 > **Current build:** v0.9.0a1 (first build; per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
-> **Last updated:** 2026-05-10.
+> **Last updated:** 2026-05-12.
 
 ---
 
@@ -29,20 +29,14 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [x] [ADR-001](docs/adr/001-versioning.md), [ADR-002](docs/adr/002-v1-scope.md), [ADR-008](docs/adr/008-experimental-gates.md), [ADR-011](docs/adr/011-cross-cutting-extraction.md) accepted
 
 ### Work
-- [x] **PR 0** — Reset to v0.9.0a1 (technical work; published 2026-05-09)
-- [x] **PR 2** — Honesty pass on docs and ADRs (#54, merged 2026-05-10)
-- [x] **PR 2.5** — Docs site restructure (per [ADR-005](docs/adr/005-docs-ia.md): four-tab IA — Learn / Build / Operate / Secure) (#56 + #59 cross-link sweep, merged 2026-05-10)
-- [x] **PR 3** — Cuts to `experimental/` (per [ADR-009](docs/adr/009-repo-structure.md)) (#60, merged 2026-05-10; spec-naming follow-ups in #61, #63)
-- [x] **PR 0.5** — Public retraction announcement ([live on dev.to](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0), 2026-05-10)
-- [ ] **PR 4 series** — Plugin infrastructure + six cross-cutting plugins per ADR-011 as amended by [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md):
-  - **PR 4-INF.1–4** — Hook registry + lifecycle + signing + testing infrastructure + plugin author docs
-  - **v0.9.0a2** — `Spec-X1-Lazy-Instruction-Discovery` graduates → `stigmem-plugin-lazy-instruction-discovery` ([§21 legacy]). Also includes the deferred-from-v0.9.0a1 work and post-publish-verification follow-ups: lint-baseline tightening (reduce the `check_ruff_baseline.py` known-issues count from 578 through targeted cleanup), retraction-post URL backfill in `README.md` and `LIMITATIONS.md` (refreshes the bundled README on PyPI project pages), an npm SDK README at `sdks/stigmem-ts/README.md` (the npm project page is currently bare because no README was in the published tarball), and the bundled-README pickup of the npm `latest` dist-tag convention clarification ([PR #75](https://github.com/Eidetic-Labs/stigmem/pull/75)). The god-file split is no longer a v0.9.0a2 blocker; it merged on main in PR #109 and closed #91.
-  - **v0.9.0a3** — `Spec-X4-Content-Addressed-IDs` formally renamed `Spec-NN-CIDs` in the modular spec set. CIDs are already core in v0.9.0a1 per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md); the v0.9.0a3 step is the spec-naming/file-decomposition cleanup, not a code graduation. [§25 legacy]
-  - **v0.9.0a4** — `Spec-X3-Time-Travel` graduates → `stigmem-plugin-time-travel` ([§24 legacy])
-  - **v0.9.0a5** — `Spec-X2-RTBF-Tombstones` graduates → `stigmem-plugin-tombstones` ([§23 legacy])
-  - **v0.9.0a6** — `Spec-X5-Memory-Garden` graduates → `stigmem-plugin-memory-garden-acl` ([§17 advanced legacy])
-  - **v0.9.0a7** — `Spec-X6-Source-Attestation` graduates → `stigmem-plugin-source-attestation` ([§18 legacy])
-  - **v0.9.0a8** — Multi-tenant graduates → `stigmem-plugin-multi-tenant` (cross-cutting; no §N legacy)
+- [x] **Version reset and first public artifacts** — v0.9.0a1 published as the first build; earlier version markers reclassified as internal development checkpoints.
+- [x] **Public retraction and posture calibration** — retraction post is live; README, SECURITY, LIMITATIONS, roadmap, and docs site now describe the alpha posture instead of the withdrawn v1.0 claim.
+- [x] **Docs information architecture** — docs site follows ADR-005's Learn / Build / Operate / Secure structure.
+- [x] **Deferred-feature layout** — out-of-scope features live under `experimental/` per ADR-009; CIDs remain core per ADR-017.
+- [x] **Hook registry foundation** — main now includes the stable 22-hook registry surface, typed hook semantics, deterministic manual/core registration, minimum `PluginManifest` / `PluginContext` / capability APIs, hook-site wiring, audit/migration plumbing, test registry helpers, and the hook-firing benchmark gate.
+- [ ] **Remaining plugin infrastructure** — package discovery, plugin dependency lifecycle, health polling, operator CLI, production signing/trust, plugin author/operator documentation, and full plugin migration lifecycle/checksum tracking.
+- [ ] **Per-feature plugin extraction** — lazy instruction discovery, time-travel, tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation graduate into opt-in plugin packages across the alpha series. CIDs remain core.
+- [ ] **Next-alpha artifact refresh** — pick up the live retraction URL in packaged READMEs, TypeScript SDK README, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literal, wheel migration packaging fix, and ongoing lint/coverage/complexity ratchets.
 
 ### Exit criteria
 - Public retraction visible.

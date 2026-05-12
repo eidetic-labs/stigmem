@@ -41,7 +41,7 @@ def _raise_for_status(resp: httpx.Response) -> None:
         return
     try:
         detail = resp.json().get("detail", resp.text)
-    except Exception:
+    except ValueError:
         detail = resp.text
     if resp.status_code in (401, 403):
         raise StigmemAuthError(resp.status_code, detail)

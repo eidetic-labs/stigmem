@@ -132,7 +132,7 @@ def _cmd_capability_verify(args: argparse.Namespace) -> int:
     if resp.status_code in (422, 400):
         try:
             detail = resp.json().get("detail", resp.text)
-        except Exception:
+        except ValueError:
             detail = resp.text
         print(f"invalid: {detail}", file=sys.stderr)
         return 1

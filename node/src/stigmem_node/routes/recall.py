@@ -9,7 +9,6 @@ POST /v1/recall  Hybrid ranker combining:
 
 from __future__ import annotations
 
-import contextlib
 import hashlib
 import logging
 import re
@@ -221,8 +220,10 @@ def _lexical_search(
         conn.execute("RELEASE SAVEPOINT _fts_search")
     except Exception as exc:
         logger.warning("FTS5 lexical search failed: %s", exc)
-        with contextlib.suppress(Exception):  # nosec B110 — best-effort rollback
+        try:
             conn.execute("ROLLBACK TO SAVEPOINT _fts_search")
+        except Exception as rollback_exc:
+            logger.warning("FTS5 lexical search rollback failed: %s", rollback_exc)
         return _like_search(conn, query, scope, tenant_id, k, min_confidence, now)
 
     if not rows:

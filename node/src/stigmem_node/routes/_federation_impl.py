@@ -169,9 +169,14 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
             try:
                 manifest_obj = manifest_from_dict(resp.json())
                 verify_manifest(manifest_obj, trust_mode=trust_mode)
-            except (ManifestError, Exception):
+            except ManifestError as exc:
+                logger.warning("peer manifest from %s failed verification: %s", node_url, exc)
                 manifest_obj = None
-    except Exception:
+            except ValueError as exc:
+                logger.warning("peer manifest from %s was not valid JSON: %s", node_url, exc)
+                manifest_obj = None
+    except Exception as exc:
+        logger.warning("failed to fetch peer manifest from %s: %s", node_url, exc)
         manifest_obj = None
 
     has_tl_proof = False

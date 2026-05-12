@@ -25,6 +25,7 @@ Run against a live Postgres instance::
 
 from __future__ import annotations
 
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -32,6 +33,7 @@ from pathlib import Path
 import pytest
 
 _MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Skip guard
@@ -76,8 +78,8 @@ def pg_backend():
         with conn.cursor() as cur:
             cur.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")  # noqa: S608
         conn.close()
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("failed to drop postgres test schema %s: %s", schema, exc)
 
 
 # ---------------------------------------------------------------------------
@@ -358,8 +360,8 @@ class TestVectorIndex:
                 with conn2.cursor() as cur:
                     cur.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")  # noqa: S608
                 conn2.close()
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("failed to drop postgres test schema %s: %s", schema, exc)
 
 
 # ---------------------------------------------------------------------------

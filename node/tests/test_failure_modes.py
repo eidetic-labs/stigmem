@@ -11,11 +11,11 @@ and deterministic.
 
 from __future__ import annotations
 
-import contextlib
 import sqlite3
 import time
 import uuid
 
+import pytest
 from conftest import FedNode, generate_keypair, make_peer_token
 
 # ---------------------------------------------------------------------------
@@ -204,7 +204,7 @@ class TestPartialFailure:
         # Simulate a failed pull (exception in ingest — bad fact format)
         from stigmem_node.federation_ingest import ingest_fact
 
-        with contextlib.suppress(Exception):
+        with pytest.raises(KeyError):
             ingest_fact({"id": "bad"}, "stigmem://broken")  # missing required fields
 
         # Local read still works

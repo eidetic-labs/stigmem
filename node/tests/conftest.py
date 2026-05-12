@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import contextlib
 import json
+import logging
 import sqlite3
 import time
 import uuid
@@ -27,6 +28,8 @@ import stigmem_node.db as db_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.main import create_app
+
+logger = logging.getLogger(__name__)
 
 create_api_key = auth_mod.create_api_key
 apply_migrations = db_mod.apply_migrations
@@ -256,8 +259,8 @@ def tmp_db(tmp_path: object, backend: str, encrypt: str) -> Generator[str, None,
             with conn.cursor() as cur:
                 cur.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")  # noqa: S608
             conn.close()
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("failed to drop postgres test schema %s: %s", schema, exc)
         return
     if encrypt == "on" or backend == "libsql":
         if backend == "libsql":

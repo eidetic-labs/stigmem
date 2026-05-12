@@ -278,7 +278,12 @@ class RekorLog(TransparencyLog):
                 stored_hash = (
                     decoded.get("spec", {}).get("data", {}).get("hash", {}).get("value", "")
                 )
-            except Exception:
+            except (ValueError, TypeError) as exc:
+                logger.warning(
+                    "stored Rekor body for UUID %s could not be decoded: %s",
+                    uuid_key,
+                    exc,
+                )
                 stored_hash = ""
 
             if stored_hash and stored_hash != log_entry.leaf_hash:

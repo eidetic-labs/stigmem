@@ -64,11 +64,12 @@ def _get_tombstone_filter(
     # On postgres this is a syntax error; rollback clears the failed txn state.
     try:
         conn.execute("BEGIN IMMEDIATE")
-    except Exception:  # nosec B110
+    except Exception as exc:  # nosec B110
+        logger.debug("BEGIN IMMEDIATE unavailable for tombstone filter transaction: %s", exc)
         try:  # noqa: SIM105
             conn.rollback()
-        except Exception:  # nosec B110  # noqa: S110
-            pass
+        except Exception as rollback_exc:  # nosec B110
+            logger.debug("rollback after BEGIN IMMEDIATE failure also failed: %s", rollback_exc)
     rows = conn.execute(
         f"""SELECT t.id, t.entity_uri, t.scope, t.created_at, t.legal_hold
             FROM tombstones t
@@ -80,8 +81,8 @@ def _get_tombstone_filter(
     ).fetchall()
     try:  # noqa: SIM105
         conn.execute("COMMIT")
-    except Exception:  # nosec B110  # noqa: S110
-        pass
+    except Exception as exc:  # nosec B110
+        logger.debug("tombstone filter transaction commit skipped or failed: %s", exc)
 
     excluded: set[str] = set()
     notices: list[TombstoneNotice] = []
@@ -151,8 +152,8 @@ def _validate_as_of(as_of: str) -> datetime:
                 )
         except HTTPException:
             raise
-        except Exception:  # nosec B110  # noqa: S110
-            pass
+        except Exception as exc:  # nosec B110
+            logger.warning("could not read retention floor while validating as_of: %s", exc)
     return ts
 
 
@@ -1070,7 +1071,8 @@ def get_provenance(
 
     try:
         entries_raw: list[Any] = _prov_json.loads(derived_from_raw)
-    except Exception:
+    except Exception as exc:
+        logger.warning("ignoring malformed provenance for fact %s: %s", fact_id, exc)
         entries_raw = []
 
     # Resolve each derived_from entry to its referenced fact row

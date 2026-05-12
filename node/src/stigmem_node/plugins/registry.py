@@ -435,23 +435,29 @@ class HookRegistry:
     def _metric_inc(self, metric: Any, **labels: str) -> None:
         if not self._emit_metrics:
             return
-        with contextlib.suppress(Exception):
+        try:
             metric.labels(**labels).inc()
+        except Exception as exc:
+            logger.debug("failed to increment plugin metric %s: %s", metric, exc)
 
     def _metric_observe(self, metric: Any, value: float, **labels: str) -> None:
         if not self._emit_metrics:
             return
-        with contextlib.suppress(Exception):
+        try:
             metric.labels(**labels).observe(value)
+        except Exception as exc:
+            logger.debug("failed to observe plugin metric %s: %s", metric, exc)
 
     def _metric_set(self, metric: Any, value: int, **labels: str) -> None:
         if not self._emit_metrics:
             return
-        with contextlib.suppress(Exception):
+        try:
             if labels:
                 metric.labels(**labels).set(value)
             else:
                 metric.set(value)
+        except Exception as exc:
+            logger.debug("failed to set plugin metric %s: %s", metric, exc)
 
     def _emit_handler_denied(self, entry: HandlerEntry, *, reason: str) -> None:
         self._emit_registry_audit(

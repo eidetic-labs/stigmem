@@ -24,9 +24,9 @@ and ensure the test runner handles any new assertion types.
 
 from __future__ import annotations
 
-import contextlib
 import importlib as _importlib
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +36,8 @@ from fastapi.testclient import TestClient
 import stigmem_node.auth as auth_mod
 
 create_api_key = auth_mod.create_api_key
+
+logger = logging.getLogger(__name__)
 
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -239,9 +241,11 @@ def test_conformance_vector(client: TestClient, vector: dict[str, Any]) -> None:
     _run_setup_chain(client, vector)
 
     resp = _do_request(client, vector)
-    body: dict[str, Any] = {}
-    with contextlib.suppress(Exception):
+    try:
         body = resp.json()
+    except ValueError as exc:
+        logger.debug("%s: response body is not JSON: %s", ctx, exc)
+        body = {}
 
     _assert_status(resp, vector, ctx)
 
@@ -307,7 +311,8 @@ def _make_authed_node(
             if hasattr(mod, "settings"):
                 mod.settings = ts
                 patched.append((mod, "settings", original))
-        except ImportError:
+        except ImportError as exc:
+            logger.debug("patchable module %s is unavailable in this test process: %s", name, exc)
             continue
 
     # facts.py also holds a direct module-level binding `_settings` that bypasses

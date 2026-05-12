@@ -978,6 +978,8 @@ def run_workload(
     return {
         "cc_results": cc_results,
         "audit_completeness": audit_completeness,
+        "audit_facts_sent": _audit_facts_sent,
+        "audit_facts_received": _audit_facts_received,
         "tracked_probe_count": len(tracked_probe_ids),
     }
 

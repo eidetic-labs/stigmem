@@ -17,6 +17,7 @@ from __future__ import annotations
 import logging
 import time
 import uuid
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
@@ -35,11 +36,14 @@ logger = logging.getLogger("stigmem.tombstones")
 
 _TOMBSTONE_CACHE_TTL = 60.0
 
-# Maps entity_uri → (set_of_active_scope_patterns, timestamp_loaded)
-_tombstone_cache: dict[str, tuple[set[str], float]] = {}
-_tombstone_cache_full_ts: float = 0.0
-# Full set of active (entity_uri, scope) pairs from DB — refreshed every 60s
-_tombstone_active_set: set[tuple[str, str]] = set()
+@dataclass
+class _TombstoneScopeCacheState:
+    # Full set of active (entity_uri, scope) pairs from DB — refreshed every 60s.
+    active_set: set[tuple[str, str]] = field(default_factory=set)
+    refreshed_at: float = 0.0
+
+
+_tombstone_scope_cache = _TombstoneScopeCacheState()
 
 
 def _scope_matches(pattern: str, fact_scope: str) -> bool:
@@ -48,9 +52,8 @@ def _scope_matches(pattern: str, fact_scope: str) -> bool:
 
 
 def _refresh_tombstone_cache() -> None:
-    global _tombstone_active_set, _tombstone_cache_full_ts
     now = time.monotonic()
-    if now - _tombstone_cache_full_ts < _TOMBSTONE_CACHE_TTL:
+    if now - _tombstone_scope_cache.refreshed_at < _TOMBSTONE_CACHE_TTL:
         return
     try:
         with db() as conn:
@@ -64,8 +67,8 @@ def _refresh_tombstone_cache() -> None:
                    )"""
             ).fetchall()
             conn.execute("COMMIT")
-        _tombstone_active_set = {(r["entity_uri"], r["scope"]) for r in rows}
-        _tombstone_cache_full_ts = now
+        _tombstone_scope_cache.active_set = {(r["entity_uri"], r["scope"]) for r in rows}
+        _tombstone_scope_cache.refreshed_at = now
     except Exception:
         logger.exception("Failed to refresh tombstone cache")
 
@@ -73,7 +76,7 @@ def _refresh_tombstone_cache() -> None:
 def is_tombstoned(entity_uri: str, fact_scope: str) -> bool:
     """Return True if entity_uri has an active tombstone covering fact_scope."""
     _refresh_tombstone_cache()
-    for uri, pattern in _tombstone_active_set:
+    for uri, pattern in _tombstone_scope_cache.active_set:
         if uri == entity_uri and _scope_matches(pattern, fact_scope):
             return True
     return False
@@ -81,8 +84,7 @@ def is_tombstoned(entity_uri: str, fact_scope: str) -> bool:
 
 def invalidate_tombstone_cache() -> None:
     """Force cache refresh on next call (used after local tombstone write)."""
-    global _tombstone_cache_full_ts
-    _tombstone_cache_full_ts = 0.0
+    _tombstone_scope_cache.refreshed_at = 0.0
     try:
         from .tombstone_cache import invalidate as _cache_invalidate
 
@@ -347,7 +349,7 @@ def filter_tombstoned_records(records: list[Any]) -> list[Any]:
     Also strips tombstoned entries from derived_from and related_entities per spec.
     """
     _refresh_tombstone_cache()
-    if not _tombstone_active_set:
+    if not _tombstone_scope_cache.active_set:
         return records
 
     result = []

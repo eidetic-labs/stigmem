@@ -9,13 +9,21 @@ from __future__ import annotations
 
 import threading
 import time
+from dataclasses import dataclass, field
 
 # §23.3.3 r.4: refresh interval ceiling
 _CACHE_TTL_SECONDS: float = 60.0
 
 _lock = threading.Lock()
-_tombstoned: frozenset[tuple[str, str]] = frozenset()  # (entity_uri, tenant_id)
-_last_refresh: float = 0.0
+
+
+@dataclass
+class _TombstoneCacheState:
+    tombstoned: frozenset[tuple[str, str]] = field(default_factory=frozenset)
+    last_refresh: float = 0.0
+
+
+_state = _TombstoneCacheState()
 
 
 def _load_from_db() -> frozenset[tuple[str, str]]:
@@ -36,15 +44,14 @@ def _load_from_db() -> frozenset[tuple[str, str]]:
 
 
 def _ensure_fresh() -> None:
-    global _tombstoned, _last_refresh
-    if time.monotonic() - _last_refresh < _CACHE_TTL_SECONDS:
+    if time.monotonic() - _state.last_refresh < _CACHE_TTL_SECONDS:
         return
     with _lock:
         # Double-check under lock — another thread may have refreshed already.
-        if time.monotonic() - _last_refresh < _CACHE_TTL_SECONDS:
+        if time.monotonic() - _state.last_refresh < _CACHE_TTL_SECONDS:
             return
-        _tombstoned = _load_from_db()
-        _last_refresh = time.monotonic()
+        _state.tombstoned = _load_from_db()
+        _state.last_refresh = time.monotonic()
 
 
 def invalidate() -> None:
@@ -52,9 +59,8 @@ def invalidate() -> None:
 
     Call after writing a new tombstone or revocation row.
     """
-    global _last_refresh
     with _lock:
-        _last_refresh = 0.0
+        _state.last_refresh = 0.0
 
 
 def is_tombstoned(entity_uri: str, tenant_id: str = "default") -> bool:
@@ -63,4 +69,4 @@ def is_tombstoned(entity_uri: str, tenant_id: str = "default") -> bool:
     Uses a thread-safe in-process cache refreshed at most every 60 s (§23.3.3 r.4).
     """
     _ensure_fresh()
-    return (entity_uri, tenant_id) in _tombstoned
+    return (entity_uri, tenant_id) in _state.tombstoned

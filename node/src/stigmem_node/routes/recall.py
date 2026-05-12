@@ -54,11 +54,11 @@ _MAX_CANDIDATES = 500
 
 
 class RecallWeights(BaseModel):
-    lexical: float = Field(0.35, ge=0.0, le=1.0)
-    semantic: float = Field(0.35, ge=0.0, le=1.0)
-    graph: float = Field(0.15, ge=0.0, le=1.0)
-    source_trust: float = Field(0.10, ge=0.0, le=1.0)
-    recency: float = Field(0.05, ge=0.0, le=1.0)
+    lexical: float = Field(_DEFAULT_WEIGHTS["lexical"], ge=0.0, le=1.0)
+    semantic: float = Field(_DEFAULT_WEIGHTS["semantic"], ge=0.0, le=1.0)
+    graph: float = Field(_DEFAULT_WEIGHTS["graph"], ge=0.0, le=1.0)
+    source_trust: float = Field(_DEFAULT_WEIGHTS["source_trust"], ge=0.0, le=1.0)
+    recency: float = Field(_DEFAULT_WEIGHTS["recency"], ge=0.0, le=1.0)
 
 
 class RecallRequest(BaseModel):

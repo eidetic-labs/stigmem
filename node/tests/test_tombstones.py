@@ -50,6 +50,11 @@ is_tombstoned = tombstones_mod.is_tombstoned
 revoke_tombstone = tombstones_mod.revoke_tombstone
 
 
+def _reset_tombstone_cache() -> None:
+    tombstones_mod._tombstone_scope_cache.active_set = set()
+    tombstones_mod._tombstone_scope_cache.refreshed_at = 0.0
+
+
 def _gen_key_b64() -> tuple[Ed25519PrivateKey, str, str]:
     """Generate Ed25519 keypair, return (priv_obj, pub_b64url, priv_b64url)."""
     priv = Ed25519PrivateKey.generate()
@@ -147,8 +152,7 @@ def node(tmp_path):
     _register_peer(db_file, peer_node_id, peer_pub_b64)
 
     # Reset module-level tombstone cache for clean test isolation
-    tombstones_mod._tombstone_cache_full_ts = 0.0
-    tombstones_mod._tombstone_active_set = set()
+    _reset_tombstone_cache()
 
     admin_key = create_api_key("stigmem://tombnode/agent/admin", ["read", "write", "federate"])
     reader_key = create_api_key("stigmem://tombnode/agent/reader", ["read"])
@@ -380,7 +384,7 @@ class TestTombstoneRecallFilter:
             headers=_ah(admin_key),
         )
         # Force cache invalidation
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
 
         # Facts for tombstoned entity must be excluded
         resp = client.get("/v1/facts?entity=user:alice&scope=local", headers=_ah(reader_key))
@@ -400,7 +404,7 @@ class TestTombstoneRecallFilter:
             json={"entity_uri": "user:mallory", "scope": "*"},
             headers=_ah(admin_key),
         )
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
 
         resp = client.get("/v1/facts?entity=user:mallory&scope=local", headers=_ah(reader_key))
         assert resp.status_code == 200
@@ -420,7 +424,7 @@ class TestTombstoneRecallFilter:
             json={"entity_uri": "user:alice", "scope": "*"},
             headers=_ah(admin_key),
         )
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
 
         # Grace's facts must not be affected
         resp = client.get("/v1/facts?entity=user:grace&scope=local", headers=_ah(reader_key))
@@ -435,7 +439,7 @@ class TestTombstoneRecallFilter:
 class TestTombstoneStorageLayer:
     def test_is_tombstoned_returns_true_after_create(self, node):
         _, _, _, ts, db_file, *_ = node
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
         create_tombstone(
             "user:henry",
             "*",
@@ -448,7 +452,7 @@ class TestTombstoneStorageLayer:
 
     def test_is_tombstoned_returns_false_after_revoke(self, node):
         _, _, _, ts, db_file, *_ = node
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
         record = create_tombstone(
             "user:ida",
             "*",
@@ -458,12 +462,12 @@ class TestTombstoneStorageLayer:
             "test-sig",
         )
         revoke_tombstone(record.id, "reinstated", "admin:node", "test-key-id", "test-sig")
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
         assert is_tombstoned("user:ida", "local") is False
 
     def test_scope_wildcard_covers_all_scopes(self, node):
         _, _, _, ts, db_file, *_ = node
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
         create_tombstone(
             "user:jack",
             "*",
@@ -472,13 +476,13 @@ class TestTombstoneStorageLayer:
             "test-key-id",
             "test-sig",
         )
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
         for scope in ("local", "team", "company", "public"):
             assert is_tombstoned("user:jack", scope) is True
 
     def test_specific_scope_does_not_cover_other_scopes(self, node):
         _, _, _, ts, db_file, *_ = node
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
         create_tombstone(
             "user:kate",
             "local",
@@ -487,7 +491,7 @@ class TestTombstoneStorageLayer:
             "test-key-id",
             "test-sig",
         )
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
         assert is_tombstoned("user:kate", "local") is True
         assert is_tombstoned("user:kate", "team") is False
 
@@ -584,7 +588,7 @@ class TestFederationTombstoneRoutes:
         client.post(
             "/v1/federation/tombstones/ingest", json=payload, headers=_ah(mint_peer_token())
         )
-        tombstones_mod._tombstone_cache_full_ts = 0.0
+        _reset_tombstone_cache()
 
         # Oscar's facts must now be excluded
         resp = client.get("/v1/facts?entity=user:oscar&scope=local", headers=_ah(reader_key))
@@ -682,8 +686,7 @@ class TestTwoNodeFederationPropagation:
             wk_mod.settings = ts_a
             fed_mod.settings = ts_a
             tomb_routes_mod.settings = ts_a
-            tombstones_mod._tombstone_cache_full_ts = 0.0
-            tombstones_mod._tombstone_active_set = set()
+            _reset_tombstone_cache()
             app_a = create_app()
             client_a = TestClient(app_a)
             client_a.__enter__()
@@ -713,8 +716,7 @@ class TestTwoNodeFederationPropagation:
             wk_mod.settings = ts_b
             fed_mod.settings = ts_b
             tomb_routes_mod.settings = ts_b
-            tombstones_mod._tombstone_cache_full_ts = 0.0
-            tombstones_mod._tombstone_active_set = set()
+            _reset_tombstone_cache()
             app_b = create_app()
             client_b = TestClient(app_b)
             client_b.__enter__()
@@ -743,7 +745,7 @@ class TestTwoNodeFederationPropagation:
             assert ingest_resp.json()["written"] is True
 
             # Force cache refresh on node B
-            tombstones_mod._tombstone_cache_full_ts = 0.0
+            _reset_tombstone_cache()
 
             # User:quinn's facts must now be suppressed on node B
             facts_resp = client_b.get(
@@ -761,7 +763,7 @@ class TestTwoNodeFederationPropagation:
             auth_mod.settings = original
             db_mod.settings = original
             wk_mod.settings = original
-            tombstones_mod._tombstone_cache_full_ts = 0.0
+            _reset_tombstone_cache()
 
 
 # ---------------------------------------------------------------------------
@@ -853,8 +855,7 @@ class TestIngestSignatureEnforcement:
         wk_mod.settings = ts
         fed_mod.settings = ts
         tomb_routes_mod.settings = ts
-        tombstones_mod._tombstone_cache_full_ts = 0.0
-        tombstones_mod._tombstone_active_set = set()
+        _reset_tombstone_cache()
 
         _register_peer(db_file, peer_node_id, peer_pub_b64)
         create_api_key("stigmem://strictnode/agent/admin", ["read", "write", "federate"])

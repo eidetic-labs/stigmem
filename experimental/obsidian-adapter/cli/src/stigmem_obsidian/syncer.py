@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 # Source URIs
 _SOURCE_VAULT_PREFIX = "obsidian://vault"
-_SOURCE_STIGMEM_PREFIX = "stigmem://"
 
 
 @dataclass

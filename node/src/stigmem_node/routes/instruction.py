@@ -183,7 +183,7 @@ def _build_boot_stub(
             "properties": {
                 "intent": {"type": "string", "description": "What you are about to do"},
                 "max_chunks": {"type": "integer", "default": 3},
-                "token_budget": {"type": "integer", "default": 2000},
+                "token_budget": {"type": "integer", "default": _BOOT_STUB_TOKEN_LIMIT},
                 "manifest_hint": {
                     "type": "array",
                     "items": {"type": "string"},
@@ -362,6 +362,14 @@ def get_boot_stub(
                 adapter_profile=profile,
             )
             token_count = _approx_tokens(stub_body)
+            if token_count > _BOOT_STUB_TOKEN_LIMIT:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=(
+                        f"boot_stub_too_large: {token_count} tokens exceeds "
+                        f"{_BOOT_STUB_TOKEN_LIMIT}"
+                    ),
+                )
             now_ms = _now_ms()
             conn.execute(
                 """INSERT OR REPLACE INTO boot_stubs

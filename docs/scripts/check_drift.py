@@ -14,7 +14,6 @@ DOCS_ROOT = Path(__file__).resolve().parent.parent
 RULES_PATH = Path(__file__).resolve().parent / "drift-rules.json"
 
 SKIP_DIRS = {"node_modules", ".docusaurus", "__pycache__"}
-SKIP_PATHS: set[str] = set()
 SCAN_EXTENSIONS = {".md", ".mdx", ".tsx", ".jsx", ".ts", ".js", ".css"}
 
 

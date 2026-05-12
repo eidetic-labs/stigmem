@@ -22,6 +22,7 @@ import hmac
 import json
 import logging
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -41,9 +42,15 @@ _TOKEN_VERSION = 1
 # Must be ≥ max token TTL (90 days per §19.3.2 / §22.2.2).
 _DUAL_TRUST_DAYS = 90
 
-# Seed-keyed singleton: cache is invalidated automatically when settings change.
-_node_private_key: Ed25519PrivateKey | None = None
-_node_private_key_seed: str = ""
+@dataclass
+class _NodePrivateKeyCache:
+    """Seed-keyed singleton invalidated automatically when settings change."""
+
+    key: Ed25519PrivateKey | None = None
+    seed: str = ""
+
+
+_node_private_key_cache = _NodePrivateKeyCache()
 
 
 class CapabilityTokenError(ValueError):
@@ -87,25 +94,23 @@ def load_node_private_key() -> Ed25519PrivateKey | None:
     Returns None when STIGMEM_NODE_PRIVATE_KEY is not configured (dev/test mode).
     Raises ValueError if the configured value cannot be decoded.
     """
-    global _node_private_key, _node_private_key_seed
-
     from ..settings import settings  # lazy — reflects test patches
 
     current_seed = settings.node_private_key
 
-    if hmac.compare_digest(current_seed, _node_private_key_seed):  # nosec CT001 — cache invalidation; neither operand is attacker-controlled
-        return _node_private_key  # cache hit
+    if hmac.compare_digest(current_seed, _node_private_key_cache.seed):  # nosec CT001 — cache invalidation; neither operand is attacker-controlled
+        return _node_private_key_cache.key  # cache hit
 
     if not current_seed:
-        _node_private_key = None
-        _node_private_key_seed = current_seed
+        _node_private_key_cache.key = None
+        _node_private_key_cache.seed = current_seed
         return None
 
     raw = base64.urlsafe_b64decode(_pad(current_seed))
-    _node_private_key = Ed25519PrivateKey.from_private_bytes(raw)
-    _node_private_key_seed = current_seed
+    _node_private_key_cache.key = Ed25519PrivateKey.from_private_bytes(raw)
+    _node_private_key_cache.seed = current_seed
     logger.debug("node private key loaded (seed changed)")
-    return _node_private_key
+    return _node_private_key_cache.key
 
 
 # ---------------------------------------------------------------------------

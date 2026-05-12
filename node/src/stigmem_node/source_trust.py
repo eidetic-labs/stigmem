@@ -16,11 +16,14 @@ process maintains its own cache (acceptable for single-process deployments).
 
 from __future__ import annotations
 
+import logging
 import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .auth import Identity
+
+logger = logging.getLogger("stigmem.source_trust")
 
 # Cache: { source_uri: (score: float, expires_at: float) }
 _TRUST_CACHE: dict[str, tuple[float, float]] = {}
@@ -49,7 +52,7 @@ def bust_trust_cache(source_uri: str) -> None:
 def compute_source_trust(
     source_uri: str,
     scope: str,
-    identity: "Identity | None" = None,
+    identity: Identity | None = None,
     *,
     identity_strength_override: float | None = None,
 ) -> float:
@@ -64,7 +67,9 @@ def compute_source_trust(
         if cached is not None:
             return cached
 
-    score = _compute_fresh(source_uri, scope, identity, identity_strength_override=identity_strength_override)
+    score = _compute_fresh(
+        source_uri, scope, identity, identity_strength_override=identity_strength_override
+    )
     if identity_strength_override is None:
         _set_cache(source_uri, score)
     return score
@@ -73,7 +78,7 @@ def compute_source_trust(
 def _compute_fresh(
     source_uri: str,
     scope: str,
-    identity: "Identity | None",
+    identity: Identity | None,
     *,
     identity_strength_override: float | None = None,
 ) -> float:
@@ -89,6 +94,7 @@ def _compute_fresh(
 
     # Check auto-rules (operator always_trust / never_trust)
     from .trust_rules import evaluate_auto_rules
+
     override = evaluate_auto_rules(source_uri, scope)
     if override is not None:
         return override
@@ -98,7 +104,11 @@ def _compute_fresh(
     w_s = settings.trust_weight_scope_authority
     w_a = settings.trust_weight_attestation_mode
 
-    i_s = identity_strength_override if identity_strength_override is not None else _identity_strength(source_uri)
+    i_s = (
+        identity_strength_override
+        if identity_strength_override is not None
+        else _identity_strength(source_uri)
+    )
     p_h = _peer_history(source_uri)
     s_a = _scope_authority(source_uri, scope, identity)
     a_m = _attestation_mode_factor()
@@ -110,6 +120,7 @@ def _compute_fresh(
 # ---------------------------------------------------------------------------
 # Component functions (§19.4.2)
 # ---------------------------------------------------------------------------
+
 
 def _identity_strength(source_uri: str) -> float:
     """Score [0,1] measuring how strongly the source is identified."""
@@ -146,6 +157,7 @@ def _identity_strength(source_uri: str) -> float:
 def _peer_history(source_uri: str) -> float:
     """Score [0,1] derived from interaction history over the past 30 days."""
     from datetime import UTC, datetime, timedelta
+
     from .db import db
 
     cutoff = (datetime.now(UTC) - timedelta(days=30)).isoformat()
@@ -176,7 +188,7 @@ def _peer_history(source_uri: str) -> float:
     return 0.7  # ≥ 10 facts, < 5% failures
 
 
-def _scope_authority(source_uri: str, scope: str, identity: "Identity | None") -> float:
+def _scope_authority(source_uri: str, scope: str, identity: Identity | None) -> float:
     """Score [0,1] measuring whether source has authority to write at this scope."""
     if identity is not None and identity.entity_uri == source_uri and identity.can_write():
         return 0.9
@@ -186,12 +198,13 @@ def _scope_authority(source_uri: str, scope: str, identity: "Identity | None") -
     # Source entity prefix matches node authority
     try:
         from urllib.parse import urlparse
+
         parsed = urlparse(settings.node_url)
         authority = parsed.netloc or parsed.path
         if source_uri.startswith(f"stigmem://{authority}"):
             return 0.7
-    except Exception:  # nosec B110 — node_url parse failure falls through to default score
-        pass
+    except Exception:
+        logger.exception("Failed to parse node_url while scoring source authority")
 
     # External entity without explicit scope authority
     if scope in ("public", "team"):

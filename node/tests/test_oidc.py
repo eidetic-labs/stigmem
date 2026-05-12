@@ -8,6 +8,7 @@ id_tokens with the private key and exercise every code path.
 from __future__ import annotations
 
 import json
+import sqlite3 as _sqlite3
 import time
 import uuid
 from collections.abc import Generator
@@ -16,7 +17,6 @@ from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 
@@ -25,7 +25,6 @@ import stigmem_node.db as db_mod
 import stigmem_node.routes.auth as auth_route_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.auth import create_api_key
 from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
@@ -49,10 +48,13 @@ def rsa_keypair():
 @pytest.fixture(scope="module")
 def jwks_document(rsa_keypair):
     _, public_key = rsa_keypair
-    public_numbers = public_key.public_key().public_numbers() if hasattr(public_key, "public_key") else public_key.public_numbers()
+    public_numbers = (
+        public_key.public_key().public_numbers()
+        if hasattr(public_key, "public_key")
+        else public_key.public_numbers()
+    )
 
     import base64
-    import struct
 
     def _int_to_base64url(n: int) -> str:
         length = (n.bit_length() + 7) // 8
@@ -192,7 +194,9 @@ def test_exchange_valid_token_returns_key(oidc_client: TestClient, rsa_keypair) 
     assert body["entity_uri"] == "oidc:user-123"
     assert "expires_at" in body
     # The returned key should be usable
-    facts_resp = oidc_client.get("/v1/facts", headers={"Authorization": f"Bearer {body['api_key']}"})
+    facts_resp = oidc_client.get(
+        "/v1/facts", headers={"Authorization": f"Bearer {body['api_key']}"}
+    )
     assert facts_resp.status_code == 200
 
 
@@ -213,7 +217,9 @@ def test_exchange_wrong_audience_returns_401(oidc_client: TestClient, rsa_keypai
     assert resp.status_code == 401
 
 
-def test_exchange_domain_restriction_blocks_wrong_domain(tmp_path: object, rsa_keypair, jwks_document) -> None:
+def test_exchange_domain_restriction_blocks_wrong_domain(
+    tmp_path: object, rsa_keypair, jwks_document
+) -> None:
     """When oidc_allowed_domains is set, out-of-domain emails must be rejected."""
     db_file = str(tmp_path) + "/domain_test.db"  # type: ignore[operator]
     apply_migrations(db_path=db_file)
@@ -254,13 +260,15 @@ def test_exchange_domain_restriction_blocks_wrong_domain(tmp_path: object, rsa_k
         return disco_response
 
     try:
-        with patch("stigmem_node.routes.auth.httpx.get", side_effect=_fake_get):
-            with patch("stigmem_node.routes.auth.jwt.PyJWKClient", _FakeJWKSClient):
-                app = create_app()
-                with TestClient(app, raise_server_exceptions=True) as c:
-                    resp = c.post("/v1/auth/oidc/exchange", json={"id_token": token})
-                    assert resp.status_code == 403
-                    assert resp.json()["detail"] == "Email domain 'example.com' is not permitted"
+        with (
+            patch("stigmem_node.routes.auth.httpx.get", side_effect=_fake_get),
+            patch("stigmem_node.routes.auth.jwt.PyJWKClient", _FakeJWKSClient),
+        ):
+            app = create_app()
+            with TestClient(app, raise_server_exceptions=True) as c:
+                resp = c.post("/v1/auth/oidc/exchange", json={"id_token": token})
+                assert resp.status_code == 403
+                assert resp.json()["detail"] == "Email domain 'example.com' is not permitted"
     finally:
         settings_module.settings = original  # type: ignore[assignment]
         auth_mod.settings = original  # type: ignore[assignment]
@@ -327,7 +335,9 @@ def test_cannot_revoke_another_entitys_key(oidc_client: TestClient, rsa_keypair)
     bob_key = bob_resp.json()["api_key"]
 
     # Get Alice's key id
-    alice_keys = oidc_client.get("/v1/auth/keys", headers={"Authorization": f"Bearer {alice_key}"}).json()
+    alice_keys = oidc_client.get(
+        "/v1/auth/keys", headers={"Authorization": f"Bearer {alice_key}"}
+    ).json()
     alice_key_id = alice_keys[0]["id"]
 
     # Bob tries to revoke Alice's key — should 403
@@ -348,7 +358,9 @@ def test_exchange_rotates_previous_key(oidc_client: TestClient, rsa_keypair) -> 
     key1 = resp1.json()["api_key"]
 
     # Key1 is usable immediately after first exchange
-    assert oidc_client.get("/v1/facts", headers={"Authorization": f"Bearer {key1}"}).status_code == 200
+    assert (
+        oidc_client.get("/v1/facts", headers={"Authorization": f"Bearer {key1}"}).status_code == 200
+    )
 
     # Second exchange — same sub, new token
     token2 = _sign_token(private_key, sub="rotate-sub")
@@ -358,13 +370,19 @@ def test_exchange_rotates_previous_key(oidc_client: TestClient, rsa_keypair) -> 
     assert key1 != key2
 
     # key2 works
-    assert oidc_client.get("/v1/facts", headers={"Authorization": f"Bearer {key2}"}).status_code == 200
+    assert (
+        oidc_client.get("/v1/facts", headers={"Authorization": f"Bearer {key2}"}).status_code == 200
+    )
 
     # key1 is revoked
-    assert oidc_client.get("/v1/facts", headers={"Authorization": f"Bearer {key1}"}).status_code == 401
+    assert (
+        oidc_client.get("/v1/facts", headers={"Authorization": f"Bearer {key1}"}).status_code == 401
+    )
 
 
-def test_exchange_rotation_does_not_affect_other_users(oidc_client: TestClient, rsa_keypair) -> None:
+def test_exchange_rotation_does_not_affect_other_users(
+    oidc_client: TestClient, rsa_keypair
+) -> None:
     """Rotation must only revoke the sub's own keys, not other users' keys."""
     private_key, _ = rsa_keypair
 
@@ -377,15 +395,15 @@ def test_exchange_rotation_does_not_affect_other_users(oidc_client: TestClient, 
     oidc_client.post("/v1/auth/oidc/exchange", json={"id_token": dave_token})
 
     # Carol's key still works
-    assert oidc_client.get("/v1/facts", headers={"Authorization": f"Bearer {carol_key}"}).status_code == 200
+    assert (
+        oidc_client.get("/v1/facts", headers={"Authorization": f"Bearer {carol_key}"}).status_code
+        == 200
+    )
 
 
 # ---------------------------------------------------------------------------
 # C2 — garden-membership-scoped permission tests
 # ---------------------------------------------------------------------------
-
-
-import sqlite3 as _sqlite3
 
 
 def _seed_garden_member(db_path: str, entity_uri: str, role: str) -> None:
@@ -398,7 +416,9 @@ def _seed_garden_member(db_path: str, entity_uri: str, role: str) -> None:
         (garden_id, f"test-garden-{garden_id[:8]}", "Test Garden", "company", entity_uri, now),
     )
     conn.execute(
-        "INSERT INTO garden_members (garden_id, entity_uri, role, added_by, added_at) VALUES (?,?,?,?,?)",
+        """INSERT INTO garden_members
+           (garden_id, entity_uri, role, added_by, added_at)
+           VALUES (?,?,?,?,?)""",
         (garden_id, entity_uri, role, entity_uri, now),
     )
     conn.commit()
@@ -447,11 +467,13 @@ def oidc_env(
     def _fake_get(url: str, **kwargs: Any) -> MagicMock:
         return disco_response
 
-    with patch("stigmem_node.routes.auth.httpx.get", side_effect=_fake_get):
-        with patch("stigmem_node.routes.auth.jwt.PyJWKClient", _FakeJWKSClient):
-            app = create_app()
-            with TestClient(app, raise_server_exceptions=True) as c:
-                yield c, db_file
+    with (
+        patch("stigmem_node.routes.auth.httpx.get", side_effect=_fake_get),
+        patch("stigmem_node.routes.auth.jwt.PyJWKClient", _FakeJWKSClient),
+    ):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            yield c, db_file
 
     settings_module.settings = original  # type: ignore[assignment]
     auth_mod.settings = original  # type: ignore[assignment]

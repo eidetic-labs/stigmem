@@ -30,6 +30,7 @@ try:
     from opentelemetry import trace as _otel_trace  # noqa: F401  (probe for OTel availability)
     from opentelemetry.sdk.resources import Resource  # noqa: F401
     from opentelemetry.sdk.trace import TracerProvider  # noqa: F401
+
     _OTEL_SDK_AVAILABLE = True
 except ImportError:
     _OTEL_SDK_AVAILABLE = False
@@ -57,6 +58,7 @@ def init_tracing(service_name: str, otlp_endpoint: str) -> None:
         _exporter_added = False
         try:
             from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+
             exporter = OTLPSpanExporter(endpoint=f"{otlp_endpoint.rstrip('/')}/v1/traces")
             provider.add_span_processor(BatchSpanProcessor(exporter))
             _exporter_added = True
@@ -68,18 +70,22 @@ def init_tracing(service_name: str, otlp_endpoint: str) -> None:
                 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
                     OTLPSpanExporter as GrpcOTLPSpanExporter,
                 )
+
                 grpc_exporter = GrpcOTLPSpanExporter(endpoint=otlp_endpoint)
                 provider.add_span_processor(BatchSpanProcessor(grpc_exporter))
             except ImportError:
                 pass  # neither OTLP exporter installed; traces collected locally only
 
     _otel_trace.set_tracer_provider(provider)
-    _tracer = _otel_trace.get_tracer("stigmem.node", schema_url="https://opentelemetry.io/schemas/1.21.0")
+    _tracer = _otel_trace.get_tracer(
+        "stigmem.node", schema_url="https://opentelemetry.io/schemas/1.21.0"
+    )
     _OTEL_ENABLED = True
 
 
 class _NoopSpan:
     """Minimal no-op span used when OTel is disabled."""
+
     def set_attribute(self, key: str, value: Any) -> None:  # noqa: ARG002
         pass
 
@@ -112,6 +118,7 @@ def start_span(name: str, **initial_attributes: Any) -> Generator[_NoopSpan | An
         except Exception as exc:
             try:
                 from opentelemetry.trace import StatusCode
+
                 span.record_exception(exc)
                 span.set_status(StatusCode.ERROR, str(exc))
             except Exception as inner_exc:  # noqa: BLE001  # nosec B110 — best-effort

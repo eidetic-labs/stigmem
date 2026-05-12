@@ -151,46 +151,55 @@ class TestResponseHeaders:
 class TestWeightEdges:
     def test_all_zero_weights_does_not_crash(self, client: TestClient) -> None:
         client.post("/v1/facts", json=_fact(_ALICE, "weights zero test"))
-        r = client.post("/v1/recall", json=_recall(
-            "weights zero test",
-            weights={
-                "lexical": 0.0,
-                "semantic": 0.0,
-                "graph": 0.0,
-                "source_trust": 0.0,
-                "recency": 0.0,
-            },
-        ))
+        r = client.post(
+            "/v1/recall",
+            json=_recall(
+                "weights zero test",
+                weights={
+                    "lexical": 0.0,
+                    "semantic": 0.0,
+                    "graph": 0.0,
+                    "source_trust": 0.0,
+                    "recency": 0.0,
+                },
+            ),
+        )
         assert r.status_code == 200
 
     def test_zero_lexical_weight_skips_lexical_search(self, client: TestClient) -> None:
         client.post("/v1/facts", json=_fact(_ALICE, "skip lexical test"))
-        r = client.post("/v1/recall", json=_recall(
-            "skip lexical test",
-            weights={
-                "lexical": 0.0,
-                "semantic": 0.0,  # also off so we don't need vector backend
-                "graph": 0.5,
-                "source_trust": 0.3,
-                "recency": 0.2,
-            },
-        ))
+        r = client.post(
+            "/v1/recall",
+            json=_recall(
+                "skip lexical test",
+                weights={
+                    "lexical": 0.0,
+                    "semantic": 0.0,  # also off so we don't need vector backend
+                    "graph": 0.5,
+                    "source_trust": 0.3,
+                    "recency": 0.2,
+                },
+            ),
+        )
         assert r.status_code == 200
         # No direct matches with lexical+semantic both off → no graph seeds either
         assert r.json()["facts"] == []
 
     def test_zero_semantic_weight_skips_semantic_search(self, client: TestClient) -> None:
         client.post("/v1/facts", json=_fact(_ALICE, "skip semantic test"))
-        r = client.post("/v1/recall", json=_recall(
-            "skip semantic test",
-            weights={
-                "lexical": 0.5,
-                "semantic": 0.0,
-                "graph": 0.2,
-                "source_trust": 0.2,
-                "recency": 0.1,
-            },
-        ))
+        r = client.post(
+            "/v1/recall",
+            json=_recall(
+                "skip semantic test",
+                weights={
+                    "lexical": 0.5,
+                    "semantic": 0.0,
+                    "graph": 0.2,
+                    "source_trust": 0.2,
+                    "recency": 0.1,
+                },
+            ),
+        )
         assert r.status_code == 200
 
 
@@ -203,11 +212,14 @@ class TestRawScoringPath:
     def test_low_confidence_facts_skip_card_fast_path(self, client: TestClient) -> None:
         # CARD_MIN_CONFIDENCE=0.5; assert below that so cards never qualify.
         for i in range(3):
-            client.post("/v1/facts", json=_fact(
-                f"stigmem://testnode/low/{i}",
-                f"low confidence raw scoring fact {i}",
-                confidence=0.4,
-            ))
+            client.post(
+                "/v1/facts",
+                json=_fact(
+                    f"stigmem://testnode/low/{i}",
+                    f"low confidence raw scoring fact {i}",
+                    confidence=0.4,
+                ),
+            )
         r = client.post("/v1/recall", json=_recall("low confidence raw scoring fact"))
         assert r.status_code == 200
         body = r.json()
@@ -221,12 +233,21 @@ class TestRawScoringPath:
 
     def test_low_confidence_below_min_confidence_filtered(self, client: TestClient) -> None:
         # Even if we ASK for low-confidence, min_confidence=0.5 filters them out
-        client.post("/v1/facts", json=_fact(
-            _ALICE, "min confidence filter test", confidence=0.4,
-        ))
-        r = client.post("/v1/recall", json=_recall(
-            "min confidence filter test", min_confidence=0.5,
-        ))
+        client.post(
+            "/v1/facts",
+            json=_fact(
+                _ALICE,
+                "min confidence filter test",
+                confidence=0.4,
+            ),
+        )
+        r = client.post(
+            "/v1/recall",
+            json=_recall(
+                "min confidence filter test",
+                min_confidence=0.5,
+            ),
+        )
         assert r.status_code == 200
         ids = [sf["fact"]["id"] for sf in r.json()["facts"]]
         # confidence=0.4 fact must not appear when min_confidence=0.5

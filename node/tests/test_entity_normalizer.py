@@ -15,16 +15,28 @@ from stigmem_node.entity_normalizer import (
 class TestNormalizeEntityUri:
     # Formal URIs — canonical already
     def test_formal_lowercase_passthrough(self) -> None:
-        assert normalize_entity_uri("stigmem://company.example/user/alice") == "stigmem://company.example/user/alice"
+        assert (
+            normalize_entity_uri("stigmem://company.example/user/alice")
+            == "stigmem://company.example/user/alice"
+        )
 
     def test_formal_uppercase_id(self) -> None:
-        assert normalize_entity_uri("stigmem://company.example/issue/EG-18") == "stigmem://company.example/issue/eg-18"
+        assert (
+            normalize_entity_uri("stigmem://company.example/issue/EG-18")
+            == "stigmem://company.example/issue/eg-18"
+        )
 
     def test_formal_uppercase_authority(self) -> None:
-        assert normalize_entity_uri("stigmem://Company.EXAMPLE/user/alice") == "stigmem://company.example/user/alice"
+        assert (
+            normalize_entity_uri("stigmem://Company.EXAMPLE/user/alice")
+            == "stigmem://company.example/user/alice"
+        )
 
     def test_formal_uppercase_type(self) -> None:
-        assert normalize_entity_uri("stigmem://company.example/User/alice") == "stigmem://company.example/user/alice"
+        assert (
+            normalize_entity_uri("stigmem://company.example/User/alice")
+            == "stigmem://company.example/user/alice"
+        )
 
     def test_formal_all_uppercase(self) -> None:
         assert (
@@ -154,7 +166,11 @@ class TestNormalizationOnIngest:
         r1 = client.post("/v1/facts", json=fact)
         assert r1.status_code == 201
 
-        fact2 = {**fact, "entity": "stigmem://company.example/issue/eg-99", "value": {"type": "string", "v": "done"}}
+        fact2 = {
+            **fact,
+            "entity": "stigmem://company.example/issue/eg-99",
+            "value": {"type": "string", "v": "done"},
+        }
         r2 = client.post("/v1/facts", json=fact2)
         assert r2.status_code == 201
         assert r2.json()["contradicted"] is True

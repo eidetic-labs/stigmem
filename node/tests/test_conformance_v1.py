@@ -21,6 +21,7 @@ Vector fields:
 Adding a new spec feature? Add at least one vector to data/conformance/v1.0/
 and ensure the test runner handles any new assertion types.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -39,6 +40,7 @@ _VECTOR_DIR = _REPO_ROOT / "data" / "conformance" / "v1.0"
 # ---------------------------------------------------------------------------
 # Load vectors — only from the numbered 0*.json files (canonical set)
 # ---------------------------------------------------------------------------
+
 
 def _load_file_groups() -> list[tuple[str, list[dict[str, Any]]]]:
     """Return [(filename, [vector, ...]), ...] for each numbered vector file."""
@@ -63,6 +65,7 @@ for _fname, _vecs in _GROUPS:
 # Assertion helpers
 # ---------------------------------------------------------------------------
 
+
 def _assert_contains(actual: Any, expected: Any, *, path: str) -> None:
     """Recursively assert that actual contains the structure in expected."""
     if isinstance(expected, dict):
@@ -74,10 +77,7 @@ def _assert_contains(actual: Any, expected: Any, *, path: str) -> None:
         assert isinstance(actual, list), f"{path}: expected list, got {type(actual)}"
         for item in expected:
             if isinstance(item, dict):
-                match = any(
-                    all(a.get(k) == v for k, v in item.items())
-                    for a in actual
-                )
+                match = any(all(a.get(k) == v for k, v in item.items()) for a in actual)
                 assert match, f"{path}: list missing item matching {item!r}"
     else:
         assert actual == expected, f"{path}: got {actual!r}, expected {expected!r}"
@@ -86,6 +86,7 @@ def _assert_contains(actual: Any, expected: Any, *, path: str) -> None:
 # ---------------------------------------------------------------------------
 # Request execution
 # ---------------------------------------------------------------------------
+
 
 def _do_request(client: TestClient, vector: dict[str, Any]) -> Any:
     method = vector["method"].lower()
@@ -131,6 +132,7 @@ def _setup_garden(client: TestClient, slug: str) -> None:
 # Parametrised tests — one per file group to allow shared setup within a file
 # ---------------------------------------------------------------------------
 
+
 def _make_vectors_for_file(fname: str, vectors: list[dict[str, Any]]) -> list[Any]:
     return [(fname, v) for v in vectors]
 
@@ -174,10 +176,9 @@ def _assert_list_contains(
         actual_list = body[list_key]
         assert isinstance(actual_list, list), f"{ctx}: '{list_key}' is not a list"
         if isinstance(expected_item, dict):
-            assert any(
-                all(a.get(k) == v for k, v in expected_item.items())
-                for a in actual_list
-            ), f"{ctx}: list '{list_key}' missing item matching {expected_item!r}"
+            assert any(all(a.get(k) == v for k, v in expected_item.items()) for a in actual_list), (
+                f"{ctx}: list '{list_key}' missing item matching {expected_item!r}"
+            )
         else:
             assert expected_item in actual_list, (
                 f"{ctx}: '{expected_item}' not in {list_key}: {actual_list!r}"
@@ -305,6 +306,7 @@ def _make_authed_node(
     # facts.py also holds a direct module-level binding `_settings` that bypasses
     # the module-attribute patch above; we must replace it explicitly.
     import stigmem_node.routes.facts as _facts_mod
+
     _facts_orig = _facts_mod._settings
     _facts_mod._settings = ts
     patched.append((_facts_mod, "_settings", _facts_orig))
@@ -321,6 +323,7 @@ def _restore_authed(original: Any, patched: list) -> None:
     import stigmem_node.db as dm
     import stigmem_node.routes.wellknown as wk
     import stigmem_node.settings as sm
+
     sm.settings = original
     am.settings = original
     dm.settings = original
@@ -341,6 +344,7 @@ class TestGardenFactACLConformance:
     @pytest.fixture(autouse=True)
     def _setup(self, tmp_path):
         from stigmem_node.auth import create_api_key
+
         self._client, self._orig, self._patched, self._admin_key = _make_authed_node(tmp_path)
         self._outsider_key = create_api_key(self._OUTSIDER_ENTITY, ["read", "write"])
         r = self._client.post(
@@ -435,6 +439,7 @@ class TestGardenFactACLConformance:
 # ---------------------------------------------------------------------------
 # §3.5 / §18 — Source Attestation mode behaviour (auth required)
 # ---------------------------------------------------------------------------
+
 
 class TestSourceAttestationConformance:
     """§18 — enforce/warn/off mode + attested field values verified end-to-end."""
@@ -542,8 +547,12 @@ class TestSourceAttestationConformance:
         db_file = str(tmp_path) + "/noauth.db"
         apply_migrations(db_path=db_file)
         original = sm.settings
-        ts = sm.Settings(db_path=db_file, auth_required=False, node_url="http://testnode",
-                         source_attestation_mode="warn")
+        ts = sm.Settings(
+            db_path=db_file,
+            auth_required=False,
+            node_url="http://testnode",
+            source_attestation_mode="warn",
+        )
         sm.settings = ts
         am.settings = ts
         dm.settings = ts

@@ -85,9 +85,7 @@ class TestSynthesizeScope:
         assert r.status_code == 200
         data = r.json()
 
-        alice_facts = [
-            f for f in data["facts"] if f["entity"] == "stigmem://test/user/alice"
-        ]
+        alice_facts = [f for f in data["facts"] if f["entity"] == "stigmem://test/user/alice"]
         assert len(alice_facts) == 2, "both alice facts must appear in synthesis"
         for f in alice_facts:
             assert f["contradicted"] is True, f"expected contradicted=True on {f}"
@@ -145,19 +143,24 @@ class TestSynthesizeScope:
         r = client.get("/v1/scopes/local/synthesize")
         data = r.json()
         system_facts = [
-            f for f in data["facts"]
+            f
+            for f in data["facts"]
             if f["entity"].startswith("stigmem:") and not f["entity"].startswith("stigmem://")
         ]
         for sf in system_facts:
-            assert sf["contradicted"] is False, f"system fact {sf['entity']} must not be contradicted"
+            assert sf["contradicted"] is False, (
+                f"system fact {sf['entity']} must not be contradicted"
+            )
 
     def test_scope_isolation(self, client: TestClient) -> None:
         team_fact = {**FACT_A, "scope": "team"}
-        client.post("/v1/facts", json=FACT_A)       # local
-        client.post("/v1/facts", json=team_fact)    # team
+        client.post("/v1/facts", json=FACT_A)  # local
+        client.post("/v1/facts", json=team_fact)  # team
         r_local = client.get("/v1/scopes/local/synthesize")
         r_team = client.get("/v1/scopes/team/synthesize")
-        local_user = [f for f in r_local.json()["facts"] if f["entity"].startswith("stigmem://test/")]
+        local_user = [
+            f for f in r_local.json()["facts"] if f["entity"].startswith("stigmem://test/")
+        ]
         team_user = [f for f in r_team.json()["facts"] if f["entity"].startswith("stigmem://test/")]
         assert len(local_user) == 1
         assert len(team_user) == 1
@@ -216,7 +219,7 @@ class TestDecaySweeper:
 
     def test_scope_filter_restricts_sweep(self, client: TestClient) -> None:
         team_fact = {**FACT_A, "scope": "team"}
-        client.post("/v1/facts", json=FACT_A)   # local
+        client.post("/v1/facts", json=FACT_A)  # local
         client.post("/v1/facts", json=team_fact)  # team
 
         r = client.post("/v1/decay/sweep?ttl_seconds=0&scope=local")
@@ -224,7 +227,9 @@ class TestDecaySweeper:
 
         q_local = client.get("/v1/facts?scope=local")
         q_team = client.get("/v1/facts?scope=team")
-        local_user = [f for f in q_local.json()["facts"] if f["entity"].startswith("stigmem://test/")]
+        local_user = [
+            f for f in q_local.json()["facts"] if f["entity"].startswith("stigmem://test/")
+        ]
         team_user = [f for f in q_team.json()["facts"] if f["entity"].startswith("stigmem://test/")]
         assert len(local_user) == 0, "local fact should be expired"
         assert len(team_user) == 1, "team fact should be untouched"
@@ -241,7 +246,8 @@ class TestDecaySweeper:
         q = client.get("/v1/facts?include_expired=true&include_contradicted=true")
         all_facts = q.json()["facts"]
         system_facts = [
-            f for f in all_facts
+            f
+            for f in all_facts
             if f["entity"].startswith("stigmem:") and not f["entity"].startswith("stigmem://")
         ]
         assert len(system_facts) > 0, "expect conflict meta-facts to exist"
@@ -282,7 +288,7 @@ class TestDecaySweeper:
 
     def test_all_scopes_no_scope_filter(self, client: TestClient) -> None:
         team_fact = {**FACT_B, "scope": "team"}
-        client.post("/v1/facts", json=FACT_A)   # local
+        client.post("/v1/facts", json=FACT_A)  # local
         client.post("/v1/facts", json=team_fact)  # team
 
         r = client.post("/v1/decay/sweep?ttl_seconds=0")

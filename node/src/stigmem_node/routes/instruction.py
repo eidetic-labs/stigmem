@@ -45,16 +45,18 @@ _AUDIT_TOKEN_TTL_S = 86_400  # 24 hours
 
 # Registered wake-reason enum values used for task_type validation.
 # Extend this set when new wake reasons are added to the platform.
-_KNOWN_WAKE_REASONS: frozenset[str] = frozenset({
-    "issue_assigned",
-    "issue_commented",
-    "issue_blockers_resolved",
-    "issue_children_completed",
-    "issue_comment_mentioned",
-    "routine_fired",
-    "approval_resolved",
-    "manual",
-})
+_KNOWN_WAKE_REASONS: frozenset[str] = frozenset(
+    {
+        "issue_assigned",
+        "issue_commented",
+        "issue_blockers_resolved",
+        "issue_children_completed",
+        "issue_comment_mentioned",
+        "routine_fired",
+        "approval_resolved",
+        "manual",
+    }
+)
 
 _ADAPTER_PROFILES = {"paperclip-claude-code", "openai-assistants", "generic"}
 
@@ -116,6 +118,7 @@ def _approx_tokens(text: str) -> int:
     """Approximate cl100k token count (4 chars ≈ 1 token)."""
     try:
         import tiktoken
+
         enc = tiktoken.get_encoding("cl100k_base")
         return len(enc.encode(text))
     except Exception:
@@ -219,18 +222,12 @@ def _validate_manifest_entries(entries: list[ManifestEntry]) -> None:
         if not has_fact and not has_path:
             raise HTTPException(
                 400,
-                detail=(
-                    f"manifest_entry_invalid: '{entry.name}' has neither "
-                    "fact_uri nor path"
-                ),
+                detail=(f"manifest_entry_invalid: '{entry.name}' has neither fact_uri nor path"),
             )
         if has_fact and has_path:
             raise HTTPException(
                 400,
-                detail=(
-                    f"manifest_entry_invalid: '{entry.name}' has both "
-                    "fact_uri and path"
-                ),
+                detail=(f"manifest_entry_invalid: '{entry.name}' has both fact_uri and path"),
             )
 
         # Unique names
@@ -458,10 +455,7 @@ def publish_instruction_manifest(
     if token_count > _MANIFEST_TOKEN_LIMIT:
         raise HTTPException(
             400,
-            detail=(
-                f"manifest_too_large: {token_count} tokens "
-                f"exceeds {_MANIFEST_TOKEN_LIMIT}"
-            ),
+            detail=(f"manifest_too_large: {token_count} tokens exceeds {_MANIFEST_TOKEN_LIMIT}"),
         )
 
     # Build the instruction: URI for this manifest
@@ -497,11 +491,13 @@ def publish_instruction_manifest(
                     # path-only entries pass coverage (read from filesystem, not stigmem)
                     coverage_pct = 1.0
                     passed = True
-            coverage_report.append({
-                "unit": entry.name,
-                "coverage_pct": coverage_pct,
-                "passed": passed,
-            })
+            coverage_report.append(
+                {
+                    "unit": entry.name,
+                    "coverage_pct": coverage_pct,
+                    "passed": passed,
+                }
+            )
 
         failing = [r["unit"] for r in coverage_report if not r["passed"]]
         if failing and not req.skip_coverage_gate:
@@ -674,8 +670,13 @@ def _append_guaranteed_chunks(
 
 
 def _write_recall_audit(
-    audit_id: str, agent_id: str, identity: Identity, intent: str,
-    loaded_chunk_names: list[str], audit_token: str, now_ms: int,
+    audit_id: str,
+    agent_id: str,
+    identity: Identity,
+    intent: str,
+    loaded_chunk_names: list[str],
+    audit_token: str,
+    now_ms: int,
 ) -> None:
     """Best-effort INSERT into instruction_audit; failures are logged not raised."""
     try:
@@ -686,8 +687,17 @@ def _write_recall_audit(
                     used_chunks, missed_chunks, audit_token, audit_closed, created_at)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    audit_id, agent_id, identity.entity_uri, now_ms, intent,
-                    json.dumps(loaded_chunk_names), "[]", "[]", audit_token, None, now_ms,
+                    audit_id,
+                    agent_id,
+                    identity.entity_uri,
+                    now_ms,
+                    intent,
+                    json.dumps(loaded_chunk_names),
+                    "[]",
+                    "[]",
+                    audit_token,
+                    None,
+                    now_ms,
                 ),
             )
     except Exception as exc:
@@ -707,30 +717,42 @@ def recall_instruction(
     if manifest_row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="manifest_not_found")
 
-    entries: list[ManifestEntry] = [
-        ManifestEntry(**e) for e in json.loads(manifest_row["body"])
-    ]
+    entries: list[ManifestEntry] = [ManifestEntry(**e) for e in json.loads(manifest_row["body"])]
 
     chunks, used_names, missed_hints, tokens_used = _resolve_hint_chunks(
-        entries, req.manifest_hint, req.token_budget,
+        entries,
+        req.manifest_hint,
+        req.token_budget,
     )
 
     ranked_chunks, tokens_used = _resolve_ranked_chunks(
-        entries, req.intent, used_names,
-        req.max_chunks - len(chunks), req.token_budget, tokens_used,
+        entries,
+        req.intent,
+        used_names,
+        req.max_chunks - len(chunks),
+        req.token_budget,
+        tokens_used,
     )
     chunks.extend(ranked_chunks)
 
     tokens_used, truncated = _append_guaranteed_chunks(
-        entries, used_names, chunks, tokens_used, req.token_budget,
+        entries,
+        used_names,
+        chunks,
+        tokens_used,
+        req.token_budget,
     )
 
     audit_token = _AUDIT_TOKEN_PREFIX + secrets.token_urlsafe(16)
     now_ms = _now_ms()
     _write_recall_audit(
         _AUDEVENT_PREFIX + str(uuid.uuid4()),
-        agent_id, identity, req.intent,
-        [c["name"] for c in chunks], audit_token, now_ms,
+        agent_id,
+        identity,
+        req.intent,
+        [c["name"] for c in chunks],
+        audit_token,
+        now_ms,
     )
 
     return {
@@ -880,6 +902,7 @@ def get_manifest_coverage(
 
     # Best-effort embedding model version
     from ..settings import settings as _settings_for_model
+
     emb_model: str = getattr(_settings_for_model, "embed_model_id", "unknown")
 
     return {

@@ -17,9 +17,9 @@ from fastapi.testclient import TestClient
 # ---------------------------------------------------------------------------
 
 _ALICE = "stigmem://testnode/agent/alice"
-_BOB   = "stigmem://testnode/agent/bob"
+_BOB = "stigmem://testnode/agent/bob"
 _CAROL = "stigmem://testnode/agent/carol"
-_DAVE  = "stigmem://testnode/agent/dave"
+_DAVE = "stigmem://testnode/agent/dave"
 
 
 def _ref_fact(
@@ -111,14 +111,17 @@ class TestGraphNeighbors:
         assert r.json()["neighbors"] == []
 
     def test_non_ref_fact_not_indexed(self, client: TestClient) -> None:
-        client.post("/v1/facts", json={
-            "entity": _ALICE,
-            "relation": "memory:name",
-            "value": {"type": "string", "v": "Alice"},
-            "source": _ALICE,
-            "confidence": 1.0,
-            "scope": "local",
-        })
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": _ALICE,
+                "relation": "memory:name",
+                "value": {"type": "string", "v": "Alice"},
+                "source": _ALICE,
+                "confidence": 1.0,
+                "scope": "local",
+            },
+        )
         r = client.get(f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local")
         assert r.status_code == 200
         assert r.json()["neighbors"] == []
@@ -227,9 +230,7 @@ class TestGraphPagination:
         for t in targets:
             client.post("/v1/facts", json=_ref_fact(_ALICE, "memory:relates", t))
 
-        r = client.get(
-            f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local&page_size=10"
-        )
+        r = client.get(f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local&page_size=10")
         assert r.status_code == 200
         body = r.json()
         assert len(body["neighbors"]) == 10
@@ -240,9 +241,7 @@ class TestGraphPagination:
         for t in targets:
             client.post("/v1/facts", json=_ref_fact(_ALICE, "memory:relates", t))
 
-        r1 = client.get(
-            f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local&page_size=10"
-        )
+        r1 = client.get(f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local&page_size=10")
         cursor = r1.json()["next_cursor"]
 
         r2 = client.get(
@@ -258,9 +257,7 @@ class TestGraphPagination:
     def test_last_page_has_no_cursor(self, client: TestClient) -> None:
         client.post("/v1/facts", json=_ref_fact(_ALICE, "memory:knows", _BOB))
 
-        r = client.get(
-            f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local&page_size=100"
-        )
+        r = client.get(f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local&page_size=100")
         assert r.status_code == 200
         assert r.json()["next_cursor"] is None
 
@@ -321,11 +318,9 @@ class TestGraphFederationFilter:
         if backend == "libsql":
             pytest.skip("direct SQLite injection not available on libsql")
 
-        import stigmem_node.auth as auth_mod
-        import stigmem_node.db as db_mod
-        import stigmem_node.routes.wellknown as wk_mod
-        import stigmem_node.settings as settings_module
         from conftest import _make_enc_settings, _patch_settings, _restore_settings
+
+        import stigmem_node.settings as settings_module
         from stigmem_node.auth import create_api_key
         from stigmem_node.main import create_app
 
@@ -406,11 +401,11 @@ class TestGraphGardenACL:
         conn.commit()
         conn.close()
 
-        import stigmem_node.auth as auth_mod
+        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+
         import stigmem_node.settings as settings_module
         from stigmem_node.auth import create_api_key
         from stigmem_node.main import create_app
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
 
         original = settings_module.settings
         test_settings = _make_enc_settings(
@@ -441,9 +436,7 @@ class TestGraphExpiry:
     def test_expired_edge_hidden(self, client: TestClient) -> None:
         # Insert a fact that expires immediately
         past = "2000-01-01T00:00:00+00:00"
-        client.post("/v1/facts", json=_ref_fact(
-            _ALICE, "memory:knows", _BOB, valid_until=past
-        ))
+        client.post("/v1/facts", json=_ref_fact(_ALICE, "memory:knows", _BOB, valid_until=past))
 
         r = client.get(f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local")
         assert r.status_code == 200
@@ -453,9 +446,7 @@ class TestGraphExpiry:
     def test_active_edge_visible(self, client: TestClient) -> None:
         # Future expiry — should be visible
         future = "2099-01-01T00:00:00+00:00"
-        client.post("/v1/facts", json=_ref_fact(
-            _ALICE, "memory:knows", _BOB, valid_until=future
-        ))
+        client.post("/v1/facts", json=_ref_fact(_ALICE, "memory:knows", _BOB, valid_until=future))
 
         r = client.get(f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local")
         assert r.status_code == 200

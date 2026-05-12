@@ -52,9 +52,9 @@ class RotationEvent:
 
     previous_key_id: str
     new_key_id: str
-    new_public_key: str       # base64url Ed25519 public key for new_key_id
-    rotated_at: str           # ISO-8601 UTC
-    signature: str            # base64url Ed25519 sig over canonical body (by previous key)
+    new_public_key: str  # base64url Ed25519 public key for new_key_id
+    rotated_at: str  # ISO-8601 UTC
+    signature: str  # base64url Ed25519 sig over canonical body (by previous key)
     previous_public_key: str = ""  # base64url retiring key pubkey (§22.2 dual-trust)
 
 
@@ -72,12 +72,12 @@ class OrgManifest:
 
     entity_uri: str
     key_id: str
-    public_key: str          # base64url Ed25519 current signing key
-    issued_at: str           # ISO-8601 UTC
-    expires_at: str          # ISO-8601 UTC
+    public_key: str  # base64url Ed25519 current signing key
+    issued_at: str  # ISO-8601 UTC
+    expires_at: str  # ISO-8601 UTC
     entities: list[str] = field(default_factory=list)
     rotation_events: list[RotationEvent] = field(default_factory=list)
-    signature: str = ""      # base64url self-signature; empty before signing
+    signature: str = ""  # base64url self-signature; empty before signing
 
 
 # ---------------------------------------------------------------------------
@@ -249,12 +249,14 @@ def verify_rotation_chain(
             )
 
         # Verify rotation-event signature with the current (previous) key
-        rotation_body = canonicaljson.encode_canonical_json({
-            "new_key_id": evt.new_key_id,
-            "new_public_key": evt.new_public_key,
-            "previous_key_id": evt.previous_key_id,
-            "rotated_at": evt.rotated_at,
-        })
+        rotation_body = canonicaljson.encode_canonical_json(
+            {
+                "new_key_id": evt.new_key_id,
+                "new_public_key": evt.new_public_key,
+                "previous_key_id": evt.previous_key_id,
+                "rotated_at": evt.rotated_at,
+            }
+        )
         try:
             pub = _pubkey_from_b64(current_pubkey_b64)
             sig_bytes = base64.urlsafe_b64decode(_pad(evt.signature))
@@ -277,9 +279,7 @@ def verify_rotation_chain(
             f"but manifest.key_id is {manifest.key_id!r}"
         )
     if current_pubkey_b64 != manifest.public_key:
-        raise ManifestError(
-            "rotation chain terminal public_key does not match manifest.public_key"
-        )
+        raise ManifestError("rotation chain terminal public_key does not match manifest.public_key")
 
     return True
 
@@ -292,12 +292,14 @@ def sign_rotation_event(
     private_key: Ed25519PrivateKey,
 ) -> str:
     """Sign a rotation event with the *previous* private key. Returns base64url signature."""
-    body = canonicaljson.encode_canonical_json({
-        "new_key_id": new_key_id,
-        "new_public_key": new_public_key_b64,
-        "previous_key_id": previous_key_id,
-        "rotated_at": rotated_at,
-    })
+    body = canonicaljson.encode_canonical_json(
+        {
+            "new_key_id": new_key_id,
+            "new_public_key": new_public_key_b64,
+            "previous_key_id": previous_key_id,
+            "rotated_at": rotated_at,
+        }
+    )
     sig_bytes = private_key.sign(body)
     return base64.urlsafe_b64encode(sig_bytes).decode().rstrip("=")
 

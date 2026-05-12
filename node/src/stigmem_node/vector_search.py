@@ -35,6 +35,7 @@ class EmbeddingModelMismatch(RuntimeError):
 # vec_facts virtual table management
 # ---------------------------------------------------------------------------
 
+
 def ensure_vec_table(conn: Any, dimension: int) -> None:
     """Create the ``vec_facts`` virtual table if it does not exist.
 
@@ -57,6 +58,7 @@ def ensure_vec_table(conn: Any, dimension: int) -> None:
 # ---------------------------------------------------------------------------
 # Mixed-model safety
 # ---------------------------------------------------------------------------
+
 
 def check_or_register_model(conn: Any, model_id: str, dimension: int) -> None:
     """Assert that the stored embedding_meta matches *model_id* / *dimension*.
@@ -88,6 +90,7 @@ def check_or_register_model(conn: Any, model_id: str, dimension: int) -> None:
 # Encode / decode vectors for sqlite-vec BLOB storage
 # ---------------------------------------------------------------------------
 
+
 def _encode_vector(vec: Vector) -> bytes:
     """Encode a float list as a little-endian IEEE 754 BLOB for sqlite-vec."""
     return struct.pack(f"<{len(vec)}f", *vec)
@@ -96,6 +99,7 @@ def _encode_vector(vec: Vector) -> bytes:
 # ---------------------------------------------------------------------------
 # Write-path: store a single embedding
 # ---------------------------------------------------------------------------
+
 
 def store_embedding(conn: Any, fact_id: str, vec: Vector) -> None:
     """Upsert a vector into ``vec_facts`` and mark the fact as embedded."""
@@ -130,6 +134,7 @@ def embed_and_store_fact(
 # ---------------------------------------------------------------------------
 # Backfill job
 # ---------------------------------------------------------------------------
+
 
 def backfill_missing_embeddings(
     conn: Any,
@@ -169,6 +174,7 @@ def backfill_missing_embeddings(
 # ---------------------------------------------------------------------------
 # Query-path: vector_search
 # ---------------------------------------------------------------------------
+
 
 def vector_search(
     query_embedding: Vector,

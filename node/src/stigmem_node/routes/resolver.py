@@ -54,9 +54,12 @@ def resolve_entity_uri(
         "canonical": result.canonical,
         "best": result.best,
         "resolution_layer": (
-            1 if result.layer1_match
-            else 2 if result.layer2_match
-            else 3 if result.layer3_candidates
+            1
+            if result.layer1_match
+            else 2
+            if result.layer2_match
+            else 3
+            if result.layer3_candidates
             else None
         ),
         "layer1_match": result.layer1_match,

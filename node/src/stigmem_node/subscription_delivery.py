@@ -102,9 +102,7 @@ def deliver_pending() -> None:
     """
     now = datetime.now(UTC).isoformat()
     claim_timeout_s = _settings_pkg.settings.subscription_claim_timeout_s
-    stale_cutoff = datetime.fromtimestamp(
-        time.time() - claim_timeout_s, UTC
-    ).isoformat()
+    stale_cutoff = datetime.fromtimestamp(time.time() - claim_timeout_s, UTC).isoformat()
 
     with db() as conn:
         # 1. Recover stale claims left behind by a crashed worker.  We do NOT
@@ -197,6 +195,7 @@ def _subscriber_has_active_key(entity_uri: str, tenant_id: str) -> bool:
     (auth-disabled) nodes are not affected.
     """
     from . import settings as _sp
+
     if not _sp.settings.auth_required:
         return True
     now = datetime.now(UTC).isoformat()
@@ -316,17 +315,19 @@ def _deliver_wake(event: Any, payload: dict[str, Any]) -> bool:
     # trusted with the content of every wake-delivered fact.  Operators that
     # need per-subscriber isolation should run one node per subscriber.
     print(
-        json.dumps({
-            "stigmem_wake": {
-                "event_id": event["id"],
-                "subscription_id": event["subscription_id"],
-                "subscriber_identity": event["subscriber_identity"],
-                "delivery_address": event["delivery_address"],
-                "event_type": event["event_type"],
-                "fact": sanitized,
-                "ts": datetime.now(UTC).isoformat(),
+        json.dumps(
+            {
+                "stigmem_wake": {
+                    "event_id": event["id"],
+                    "subscription_id": event["subscription_id"],
+                    "subscriber_identity": event["subscriber_identity"],
+                    "delivery_address": event["delivery_address"],
+                    "event_type": event["event_type"],
+                    "fact": sanitized,
+                    "ts": datetime.now(UTC).isoformat(),
+                }
             }
-        }),
+        ),
         file=sys.stderr,
     )
     return True
@@ -351,7 +352,7 @@ def _record_result(event: Any, success: bool) -> None:
             )
         return
 
-    backoff_s = min(2 ** new_attempts, 300)
+    backoff_s = min(2**new_attempts, 300)
     next_retry = datetime.fromtimestamp(time.time() + backoff_s, UTC).isoformat()
 
     with db() as conn:

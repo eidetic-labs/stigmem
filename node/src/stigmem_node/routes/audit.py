@@ -49,11 +49,20 @@ _JOIN_SELECT = """
 """
 
 _CSV_HEADERS = [
-    "id", "fact_id", "event_type",
-    "principal_entity_uri", "principal_oidc_sub",
+    "id",
+    "fact_id",
+    "event_type",
+    "principal_entity_uri",
+    "principal_oidc_sub",
     "source",
-    "attested_key_id", "attested_key_entity_uri", "attested_key_description",
-    "fact_entity", "fact_relation", "fact_value_type", "fact_value_v", "fact_scope",
+    "attested_key_id",
+    "attested_key_entity_uri",
+    "attested_key_description",
+    "fact_entity",
+    "fact_relation",
+    "fact_value_type",
+    "fact_value_v",
+    "fact_scope",
     "ts",
 ]
 
@@ -125,12 +134,21 @@ def _filter_params(
             cur_ts, cur_id = decoded
     return [
         tenant_id,
-        entity_uri, entity_uri,
-        oidc_sub, oidc_sub,
-        source, source,
-        fact_id, fact_id,
-        attested_val, attested_val, attested_val,
-        cur_ts, cur_ts, cur_ts, cur_id,
+        entity_uri,
+        entity_uri,
+        oidc_sub,
+        oidc_sub,
+        source,
+        source,
+        fact_id,
+        fact_id,
+        attested_val,
+        attested_val,
+        attested_val,
+        cur_ts,
+        cur_ts,
+        cur_ts,
+        cur_id,
     ]
 
 
@@ -141,7 +159,9 @@ def get_fact_audit(
 ) -> list[AuditLogEntry]:
     """Return the complete enriched audit trail for a specific fact."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     with db() as conn:
         rows = conn.execute(
@@ -168,14 +188,20 @@ def export_audit_csv(
     oidc_sub: str | None = Query(None, description="Filter by OIDC subject"),
     source: str | None = Query(None, description="Filter by fact source"),
     fact_id: str | None = Query(None, description="Filter by fact ID"),
-    attested: bool | None = Query(None, description="true = attested only; false = unattested only"),
+    attested: bool | None = Query(
+        None, description="true = attested only; false = unattested only"
+    ),
     limit: int = Query(5000, ge=1, le=50000),
 ) -> StreamingResponse:
     """Export the enriched audit log as CSV for compliance (principal → key → fact)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
-    params = _filter_params(identity.tenant_id, entity_uri, oidc_sub, source, fact_id, attested, None)
+    params = _filter_params(
+        identity.tenant_id, entity_uri, oidc_sub, source, fact_id, attested, None
+    )
     params.append(limit)
     sql = _JOIN_SELECT + _STATIC_WHERE + " ORDER BY al.ts ASC LIMIT ?"
 
@@ -186,20 +212,25 @@ def export_audit_csv(
     writer = csv.writer(buf)
     writer.writerow(_CSV_HEADERS)
     for r in rows:
-        writer.writerow([
-            r["id"], r["fact_id"], r["event_type"],
-            r["entity_uri"] or "", r["oidc_sub"] or "",
-            r["source"],
-            r["attested_key_id"] or "",
-            r["attested_key_entity_uri"] or "",
-            r["attested_key_description"] or "",
-            r["fact_entity"] or "",
-            r["fact_relation"] or "",
-            r["fact_value_type"] or "",
-            r["fact_value_v"] or "",
-            r["fact_scope"] or "",
-            r["ts"],
-        ])
+        writer.writerow(
+            [
+                r["id"],
+                r["fact_id"],
+                r["event_type"],
+                r["entity_uri"] or "",
+                r["oidc_sub"] or "",
+                r["source"],
+                r["attested_key_id"] or "",
+                r["attested_key_entity_uri"] or "",
+                r["attested_key_description"] or "",
+                r["fact_entity"] or "",
+                r["fact_relation"] or "",
+                r["fact_value_type"] or "",
+                r["fact_value_v"] or "",
+                r["fact_scope"] or "",
+                r["ts"],
+            ]
+        )
 
     buf.seek(0)
     return StreamingResponse(
@@ -216,15 +247,21 @@ def query_audit(
     oidc_sub: str | None = Query(None, description="Filter by OIDC subject"),
     source: str | None = Query(None, description="Filter by fact source"),
     fact_id: str | None = Query(None, description="Filter by fact ID"),
-    attested: bool | None = Query(None, description="true = attested only; false = unattested only"),
+    attested: bool | None = Query(
+        None, description="true = attested only; false = unattested only"
+    ),
     cursor: str | None = Query(None, description="Opaque pagination cursor (audit entry id)"),
     limit: int = Query(50, ge=1, le=500),
 ) -> AuditLogResponse:
-    """Query the enriched fact audit log (principal → attested-source → fact) with optional filters."""
+    """Query enriched audit logs with optional principal and source filters."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
-    params = _filter_params(identity.tenant_id, entity_uri, oidc_sub, source, fact_id, attested, cursor)
+    params = _filter_params(
+        identity.tenant_id, entity_uri, oidc_sub, source, fact_id, attested, cursor
+    )
     params.append(limit + 1)
     sql = _JOIN_SELECT + _STATIC_WHERE + " ORDER BY al.ts DESC, al.id DESC LIMIT ?"
 

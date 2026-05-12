@@ -58,10 +58,16 @@ class HookSpec:
 
 HOOK_SPECS: dict[str, HookSpec] = {
     HookName.PRE_ASSERT_AUTHORIZE.value: HookSpec(
-        HookName.PRE_ASSERT_AUTHORIZE, Band.AUTHZ, HookSemantic.VOTING, HookOrdering.CORE_FIRST,
+        HookName.PRE_ASSERT_AUTHORIZE,
+        Band.AUTHZ,
+        HookSemantic.VOTING,
+        HookOrdering.CORE_FIRST,
     ),
     HookName.PRE_ASSERT_VALIDATE.value: HookSpec(
-        HookName.PRE_ASSERT_VALIDATE, Band.VALIDATE, HookSemantic.VOTING, HookOrdering.CORE_FIRST,
+        HookName.PRE_ASSERT_VALIDATE,
+        Band.VALIDATE,
+        HookSemantic.VOTING,
+        HookOrdering.CORE_FIRST,
     ),
     HookName.PRE_ASSERT_TRANSFORM.value: HookSpec(
         HookName.PRE_ASSERT_TRANSFORM,
@@ -89,7 +95,10 @@ HOOK_SPECS: dict[str, HookSpec] = {
         strict_audit=True,
     ),
     HookName.PRE_RECALL_AUTHORIZE.value: HookSpec(
-        HookName.PRE_RECALL_AUTHORIZE, Band.AUTHZ, HookSemantic.VOTING, HookOrdering.CORE_FIRST,
+        HookName.PRE_RECALL_AUTHORIZE,
+        Band.AUTHZ,
+        HookSemantic.VOTING,
+        HookOrdering.CORE_FIRST,
     ),
     HookName.PRE_RECALL_REWRITE.value: HookSpec(
         HookName.PRE_RECALL_REWRITE,
@@ -98,10 +107,16 @@ HOOK_SPECS: dict[str, HookSpec] = {
         HookOrdering.PLUGINS_FIRST,
     ),
     HookName.RECALL_FILTER.value: HookSpec(
-        HookName.RECALL_FILTER, Band.FILTER, HookSemantic.FILTER_CHAIN, HookOrdering.PLUGINS_FIRST,
+        HookName.RECALL_FILTER,
+        Band.FILTER,
+        HookSemantic.FILTER_CHAIN,
+        HookOrdering.PLUGINS_FIRST,
     ),
     HookName.RECALL_RANK.value: HookSpec(
-        HookName.RECALL_RANK, Band.RANK, HookSemantic.SCORE_DELTA, HookOrdering.PLUGINS_FIRST,
+        HookName.RECALL_RANK,
+        Band.RANK,
+        HookSemantic.SCORE_DELTA,
+        HookOrdering.PLUGINS_FIRST,
     ),
     HookName.POST_RECALL_AUDIT.value: HookSpec(
         HookName.POST_RECALL_AUDIT,
@@ -141,13 +156,22 @@ HOOK_SPECS: dict[str, HookSpec] = {
         HookOrdering.PLUGINS_FIRST,
     ),
     HookName.IDENTITY_RESOLVE.value: HookSpec(
-        HookName.IDENTITY_RESOLVE, Band.AUTHN, HookSemantic.FILTER_CHAIN, HookOrdering.CORE_FIRST,
+        HookName.IDENTITY_RESOLVE,
+        Band.AUTHN,
+        HookSemantic.FILTER_CHAIN,
+        HookOrdering.CORE_FIRST,
     ),
     HookName.TENANT_RESOLVE.value: HookSpec(
-        HookName.TENANT_RESOLVE, Band.AUTHN, HookSemantic.FILTER_CHAIN, HookOrdering.CORE_FIRST,
+        HookName.TENANT_RESOLVE,
+        Band.AUTHN,
+        HookSemantic.FILTER_CHAIN,
+        HookOrdering.CORE_FIRST,
     ),
     HookName.CAPABILITY_CHECK.value: HookSpec(
-        HookName.CAPABILITY_CHECK, Band.AUTHZ, HookSemantic.VOTING, HookOrdering.CORE_FIRST,
+        HookName.CAPABILITY_CHECK,
+        Band.AUTHZ,
+        HookSemantic.VOTING,
+        HookOrdering.CORE_FIRST,
     ),
     HookName.MIGRATION_REGISTER.value: HookSpec(
         HookName.MIGRATION_REGISTER,
@@ -163,7 +187,10 @@ HOOK_SPECS: dict[str, HookSpec] = {
         strict_audit=True,
     ),
     HookName.CONFIG_VALIDATE.value: HookSpec(
-        HookName.CONFIG_VALIDATE, Band.VALIDATE, HookSemantic.VOTING, HookOrdering.CORE_FIRST,
+        HookName.CONFIG_VALIDATE,
+        Band.VALIDATE,
+        HookSemantic.VOTING,
+        HookOrdering.CORE_FIRST,
     ),
 }
 

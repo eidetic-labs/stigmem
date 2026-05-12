@@ -20,19 +20,16 @@ the cluster boots once, runs all tests, then tears down.
 from __future__ import annotations
 
 import base64
+import contextlib
 import json
 import os
-import signal
 import socket
-import sqlite3
 import subprocess
 import sys
-import tempfile
 import time
 import uuid
+from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
-from typing import Any, Generator
 
 import httpx
 import pytest
@@ -57,7 +54,9 @@ def _free_port() -> int:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
-REPLICATION_TIMEOUT_S = 30   # must replicate within this many seconds
+
+
+REPLICATION_TIMEOUT_S = 30  # must replicate within this many seconds
 STARTUP_TIMEOUT_S = 30
 NODE_NAMES = ["node-a", "node-b", "node-c", "node-d"]
 ALLOWED_SCOPES = ["public", "company"]
@@ -76,7 +75,9 @@ def _generate_keypair() -> tuple[str, str]:
     priv = Ed25519PrivateKey.generate()
     pub = priv.public_key()
     priv_b64 = (
-        base64.urlsafe_b64encode(priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption()))
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
         .decode()
         .rstrip("=")
     )
@@ -111,8 +112,14 @@ apply_migrations()
 conn = sqlite3.connect({db_path!r})
 conn.row_factory = sqlite3.Row
 conn.execute("INSERT OR REPLACE INTO node_meta (key, value) VALUES ('node_id', ?)", [{node_id!r}])
-conn.execute("INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_pubkey', ?)", [{pub_b64!r}])
-conn.execute("INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_privkey', ?)", [{priv_b64!r}])
+conn.execute(
+    "INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_pubkey', ?)",
+    [{pub_b64!r}],
+)
+conn.execute(
+    "INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_privkey', ?)",
+    [{priv_b64!r}],
+)
 conn.commit()
 conn.close()
 key = create_api_key('test:admin', ['read', 'write', 'federate'], description='integration-test')
@@ -128,7 +135,9 @@ print(key, end='')
     return result.stdout.strip()
 
 
-def _start_node(db_path: str, port: int, node_url: str, pub_b64: str, priv_b64: str) -> subprocess.Popen:
+def _start_node(
+    db_path: str, port: int, node_url: str, pub_b64: str, priv_b64: str
+) -> subprocess.Popen:
     env = {
         **os.environ,
         "STIGMEM_DB_PATH": db_path,
@@ -142,8 +151,18 @@ def _start_node(db_path: str, port: int, node_url: str, pub_b64: str, priv_b64: 
         "STIGMEM_LOG_LEVEL": "error",
     }
     return subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "stigmem_node.main:app",
-         "--host", "127.0.0.1", "--port", str(port), "--log-level", "error"],
+        [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "stigmem_node.main:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+            "--log-level",
+            "error",
+        ],
         env=env,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -300,15 +319,17 @@ def cluster(tmp_path_factory) -> Generator[list[NodeInfo], None, None]:
             federate_key = _seed_db(db_path, node_id, pub_b64, priv_b64)
             proc = _start_node(db_path, port, host_url, pub_b64, priv_b64)
             procs.append(proc)
-            nodes.append(NodeInfo(
-                name=name,
-                host_url=host_url,
-                node_id=node_id,
-                pub_b64=pub_b64,
-                priv_b64=priv_b64,
-                federate_key=federate_key,
-                proc=proc,
-            ))
+            nodes.append(
+                NodeInfo(
+                    name=name,
+                    host_url=host_url,
+                    node_id=node_id,
+                    pub_b64=pub_b64,
+                    priv_b64=priv_b64,
+                    federate_key=federate_key,
+                    proc=proc,
+                )
+            )
 
         # Phase 2: Wait for all nodes healthy
         for node in nodes:
@@ -329,7 +350,7 @@ def cluster(tmp_path_factory) -> Generator[list[NodeInfo], None, None]:
                 )
 
         # Stash db_paths so cursor-resume test can access them
-        for node, name in zip(nodes, NODE_NAMES):
+        for node, name in zip(nodes, NODE_NAMES, strict=False):
             node._db_path = db_paths[name]  # type: ignore[attr-defined]
 
         # Let the first pull cycle run so peers are warm
@@ -343,10 +364,8 @@ def cluster(tmp_path_factory) -> Generator[list[NodeInfo], None, None]:
                 proc.terminate()
                 proc.wait(timeout=5)
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     proc.kill()
-                except Exception:
-                    pass
         # Brief sleep to allow OS to fully release ports before next test run
         time.sleep(1)
 
@@ -366,8 +385,9 @@ def wait_for_fact(node: NodeInfo, fact_id: str, timeout: float = REPLICATION_TIM
     return False
 
 
-def wait_for_conflict(node: NodeInfo, fact_a_id: str, fact_b_id: str,
-                      timeout: float = REPLICATION_TIMEOUT_S) -> bool:
+def wait_for_conflict(
+    node: NodeInfo, fact_a_id: str, fact_b_id: str, timeout: float = REPLICATION_TIMEOUT_S
+) -> bool:
     """Poll node conflicts until a record for (fact_a_id, fact_b_id) appears.
 
     The /v1/conflicts response embeds full fact objects under 'fact_a' / 'fact_b',
@@ -441,7 +461,7 @@ class TestScopeIsolation:
     """local-scope facts must NEVER appear on other nodes (partition-tolerance invariant)."""
 
     def test_local_fact_does_not_replicate(self, cluster):
-        """Assert local fact on node-a, wait one full replication window, confirm absent on others."""
+        """Local fact stays absent on other nodes after one replication window."""
         node_a = cluster[0]
         entity = f"test://local/{uuid.uuid4()}"
         fact_id = node_a.assert_fact(entity, "test:local:marker", "secret", scope="local")

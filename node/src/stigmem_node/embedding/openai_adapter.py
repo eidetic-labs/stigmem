@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 import os
 
-from .base import EmbeddingModel, EmbeddingError, Vector, l2_normalize
+from .base import EmbeddingError, EmbeddingModel, Vector, l2_normalize
 
 logger = logging.getLogger("stigmem.embed.openai")
 

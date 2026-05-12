@@ -122,13 +122,19 @@ class TestWriteRateLimit:
             # Exhaust key_a's quota
             for _ in range(2):
                 client.post("/v1/facts", json=FACT, headers={"Authorization": f"Bearer {key_a}"})
-            assert client.post(
-                "/v1/facts", json=FACT, headers={"Authorization": f"Bearer {key_a}"}
-            ).status_code == 429
+            assert (
+                client.post(
+                    "/v1/facts", json=FACT, headers={"Authorization": f"Bearer {key_a}"}
+                ).status_code
+                == 429
+            )
             # key_b is unaffected
-            assert client.post(
-                "/v1/facts", json=FACT, headers={"Authorization": f"Bearer {key_b}"}
-            ).status_code == 201
+            assert (
+                client.post(
+                    "/v1/facts", json=FACT, headers={"Authorization": f"Bearer {key_b}"}
+                ).status_code
+                == 201
+            )
         _restore(original)
 
 

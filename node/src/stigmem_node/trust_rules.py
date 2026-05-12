@@ -93,6 +93,7 @@ def _evaluate_db_rules(source_uri: str, scope: str) -> float | None:
     """Check quarantine_rules table for matching always/never rules."""
     try:
         from .db import db
+
         with db() as conn:
             rows = conn.execute(
                 "SELECT rule_type, scope FROM quarantine_rules WHERE org_uri = ?",

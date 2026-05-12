@@ -6,7 +6,6 @@ import base64
 import json
 import sqlite3
 import tarfile
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -14,13 +13,12 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat
 
 from stigmem_node.snapshot import (
-    SnapshotVerificationError,
     _CURSOR_ARTIFACT,
     _DB_ARTIFACT,
+    SnapshotVerificationError,
     snapshot_create,
     snapshot_restore,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -252,9 +250,7 @@ def test_restore_rejects_wrong_trusted_key(db_file: str, tmp_path: Path) -> None
     _make_db(fresh_db)
 
     with pytest.raises(SnapshotVerificationError, match="signature is invalid"):
-        snapshot_restore(
-            tarball_path=out, db_path=fresh_db, trusted_keys_path=trusted
-        )
+        snapshot_restore(tarball_path=out, db_path=fresh_db, trusted_keys_path=trusted)
 
 
 def test_force_unverified_restores_despite_tamper(
@@ -286,7 +282,9 @@ def test_cli_snapshot_create_parses(db_file: str, tmp_path: Path) -> None:
     from unittest.mock import patch
 
     out = str(tmp_path / "via_cli.tar.gz")
-    with patch.object(sys, "argv", ["stigmem", "snapshot", "create", "--out", out, "--db", db_file]):
+    with patch.object(
+        sys, "argv", ["stigmem", "snapshot", "create", "--out", out, "--db", db_file]
+    ):
         from stigmem_node.cli import _build_parser
 
         parser = _build_parser()

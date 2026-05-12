@@ -32,9 +32,7 @@ _SYNTHESIZE_SQL = (
 )
 
 
-def _build_synthesize_params(
-    scope: str, include_expired: bool, limit: int, now: str
-) -> list[Any]:
+def _build_synthesize_params(scope: str, include_expired: bool, limit: int, now: str) -> list[Any]:
     """Return the bind values for ``_SYNTHESIZE_SQL``.
 
     The SQL text is a module-level constant; this helper only computes
@@ -130,9 +128,7 @@ def synthesize_scope(
 
         age_seconds = _row_age_seconds(r["timestamp"])
 
-        facts_out.append(
-            _build_synthesized_fact(r, is_expired, age_seconds, contradicted)
-        )
+        facts_out.append(_build_synthesized_fact(r, is_expired, age_seconds, contradicted))
 
     confidences = [f["confidence"] for f in facts_out]
     mean_confidence = sum(confidences) / len(confidences) if confidences else 0.0

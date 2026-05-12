@@ -56,6 +56,7 @@ def mark_entity_stale(entity_uri: str, scope: str, tenant_id: str) -> None:
     """
     try:
         from .db import db
+
         with db() as conn:
             conn.execute(
                 "UPDATE memory_cards SET is_stale = 1"

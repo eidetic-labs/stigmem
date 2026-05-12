@@ -146,9 +146,7 @@ def sign_revocation_event(event: dict[str, Any]) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _verify_token_signature(
-    token: dict[str, Any], manifest: OrgManifest, sig_b64: str
-) -> None:
+def _verify_token_signature(token: dict[str, Any], manifest: OrgManifest, sig_b64: str) -> None:
     """Verify token signature against the current key or a dual-trust window key.
 
     Tries manifest.public_key first.  On failure, walks manifest.rotation_events
@@ -242,9 +240,7 @@ def verify_token(
     # Step 1: resolve issuer manifest (includes expiry check and refresh in get_peer_manifest)
     manifest = get_manifest(issuer)
     if manifest is None:
-        raise CapabilityTokenError(
-            f"issuer manifest not found or expired: {issuer!r}"
-        )
+        raise CapabilityTokenError(f"issuer manifest not found or expired: {issuer!r}")
 
     # Step 2: verify manifest self-signature
     try:

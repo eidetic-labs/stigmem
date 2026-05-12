@@ -8,9 +8,7 @@ from stigmem_node.plugins.testing import stigmem_plugins
 
 
 def test_migration_register_hook_collects_typed_migrations() -> None:
-    def register(
-        _ctx: PluginContext, value: list[Migration], **_: object
-    ) -> list[Migration]:
+    def register(_ctx: PluginContext, value: list[Migration], **_: object) -> list[Migration]:
         return [
             *value,
             Migration(
@@ -45,9 +43,7 @@ def test_apply_migrations_fires_migration_register_without_changing_default(
 ) -> None:
     calls: list[str] = []
 
-    def register(
-        _ctx: PluginContext, value: list[Migration], **_: object
-    ) -> list[Migration]:
+    def register(_ctx: PluginContext, value: list[Migration], **_: object) -> list[Migration]:
         calls.append("migration_register")
         return value
 

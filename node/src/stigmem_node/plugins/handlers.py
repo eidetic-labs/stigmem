@@ -88,9 +88,7 @@ class FilterChainHandler(Protocol[T]):
 
 
 class ScoreDeltaHandler(Protocol):
-    def __call__(
-        self, ctx: object, scored_results: list[Any], **kwargs: Any
-    ) -> dict[str, float]:
+    def __call__(self, ctx: object, scored_results: list[Any], **kwargs: Any) -> dict[str, float]:
         pass
 
 

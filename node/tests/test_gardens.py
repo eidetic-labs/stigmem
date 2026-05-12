@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-import pytest
 from fastapi.testclient import TestClient
 
-from stigmem_node.auth import create_api_key
-from stigmem_node.db import apply_migrations
-from stigmem_node.main import create_app
-from stigmem_node.settings import Settings
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
-
+from stigmem_node.auth import create_api_key
+from stigmem_node.db import apply_migrations
+from stigmem_node.main import create_app
+from stigmem_node.settings import Settings
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -53,9 +51,12 @@ def _make_authed_client(tmp_path: object, node_url: str = "http://testnode"):
 # Garden CRUD
 # ---------------------------------------------------------------------------
 
+
 class TestGardenCRUD:
     def test_create_returns_201(self, client: TestClient) -> None:
-        r = client.post("/v1/gardens", json={"slug": "my-garden", "name": "My Garden", "scope": "team"})
+        r = client.post(
+            "/v1/gardens", json={"slug": "my-garden", "name": "My Garden", "scope": "team"}
+        )
         assert r.status_code == 201
         body = r.json()
         assert body["slug"] == "my-garden"
@@ -66,19 +67,25 @@ class TestGardenCRUD:
         assert body["garden_id"].endswith("/garden/my-garden")
 
     def test_create_auto_adds_creator_as_admin(self, client: TestClient) -> None:
-        r = client.post("/v1/gardens", json={"slug": "auto-admin", "name": "Auto Admin", "scope": "local"})
+        r = client.post(
+            "/v1/gardens", json={"slug": "auto-admin", "name": "Auto Admin", "scope": "local"}
+        )
         assert r.status_code == 201
         body = r.json()
         assert len(body["members"]) == 1
         assert body["members"][0]["role"] == "admin"
 
     def test_create_invalid_slug_rejected(self, client: TestClient) -> None:
-        r = client.post("/v1/gardens", json={"slug": "UPPER_CASE", "name": "bad slug", "scope": "local"})
+        r = client.post(
+            "/v1/gardens", json={"slug": "UPPER_CASE", "name": "bad slug", "scope": "local"}
+        )
         assert r.status_code == 422
 
     def test_create_duplicate_slug_409(self, client: TestClient) -> None:
         client.post("/v1/gardens", json={"slug": "dup-test", "name": "First", "scope": "local"})
-        r = client.post("/v1/gardens", json={"slug": "dup-test", "name": "Second", "scope": "local"})
+        r = client.post(
+            "/v1/gardens", json={"slug": "dup-test", "name": "Second", "scope": "local"}
+        )
         assert r.status_code == 409
 
     def test_create_invalid_scope_rejected(self, client: TestClient) -> None:
@@ -93,13 +100,17 @@ class TestGardenCRUD:
         assert "list-test" in slugs
 
     def test_get_by_slug(self, client: TestClient) -> None:
-        client.post("/v1/gardens", json={"slug": "get-test", "name": "Get Test", "scope": "company"})
+        client.post(
+            "/v1/gardens", json={"slug": "get-test", "name": "Get Test", "scope": "company"}
+        )
         r = client.get("/v1/gardens/get-test")
         assert r.status_code == 200
         assert r.json()["slug"] == "get-test"
 
     def test_get_by_uuid(self, client: TestClient) -> None:
-        create_r = client.post("/v1/gardens", json={"slug": "uuid-get", "name": "UUID Get", "scope": "local"})
+        create_r = client.post(
+            "/v1/gardens", json={"slug": "uuid-get", "name": "UUID Get", "scope": "local"}
+        )
         garden_uuid = create_r.json()["id"]
         r = client.get(f"/v1/gardens/{garden_uuid}")
         assert r.status_code == 200
@@ -110,7 +121,9 @@ class TestGardenCRUD:
         assert r.status_code == 404
 
     def test_delete_garden(self, client: TestClient) -> None:
-        client.post("/v1/gardens", json={"slug": "to-delete", "name": "Delete Me", "scope": "local"})
+        client.post(
+            "/v1/gardens", json={"slug": "to-delete", "name": "Delete Me", "scope": "local"}
+        )
         r = client.delete("/v1/gardens/to-delete")
         assert r.status_code == 204
         assert client.get("/v1/gardens/to-delete").status_code == 404
@@ -118,7 +131,12 @@ class TestGardenCRUD:
     def test_description_optional(self, client: TestClient) -> None:
         r = client.post(
             "/v1/gardens",
-            json={"slug": "with-desc", "name": "Described", "scope": "local", "description": "A note"},
+            json={
+                "slug": "with-desc",
+                "name": "Described",
+                "scope": "local",
+                "description": "A note",
+            },
         )
         assert r.status_code == 201
         assert r.json()["description"] == "A note"
@@ -127,6 +145,7 @@ class TestGardenCRUD:
 # ---------------------------------------------------------------------------
 # Membership API
 # ---------------------------------------------------------------------------
+
 
 class TestMembershipAPI:
     def test_list_members(self, client: TestClient) -> None:
@@ -166,7 +185,9 @@ class TestMembershipAPI:
         assert r.status_code == 409
 
     def test_update_member_role(self, client: TestClient) -> None:
-        client.post("/v1/gardens", json={"slug": "role-update", "name": "Role Update", "scope": "local"})
+        client.post(
+            "/v1/gardens", json={"slug": "role-update", "name": "Role Update", "scope": "local"}
+        )
         client.post(
             "/v1/gardens/role-update/members",
             json={"entity_uri": "stigmem://testnode/agent/bob", "role": "reader"},
@@ -190,14 +211,18 @@ class TestMembershipAPI:
         assert all(m["entity_uri"] != "stigmem://testnode/agent/bob" for m in members)
 
     def test_cannot_remove_last_admin(self, client: TestClient) -> None:
-        client.post("/v1/gardens", json={"slug": "last-admin", "name": "Last Admin", "scope": "local"})
+        client.post(
+            "/v1/gardens", json={"slug": "last-admin", "name": "Last Admin", "scope": "local"}
+        )
         # Only admin is creator — removing should fail
         creator_uri = client.get("/v1/gardens/last-admin").json()["created_by"]
         r = client.delete(f"/v1/gardens/last-admin/members/{creator_uri}")
         assert r.status_code == 403
 
     def test_cannot_demote_last_admin(self, client: TestClient) -> None:
-        client.post("/v1/gardens", json={"slug": "demote-admin", "name": "Demote Admin", "scope": "local"})
+        client.post(
+            "/v1/gardens", json={"slug": "demote-admin", "name": "Demote Admin", "scope": "local"}
+        )
         creator_uri = client.get("/v1/gardens/demote-admin").json()["created_by"]
         r = client.patch(
             f"/v1/gardens/demote-admin/members/{creator_uri}",
@@ -209,6 +234,7 @@ class TestMembershipAPI:
 # ---------------------------------------------------------------------------
 # ACL enforcement — auth-gated garden operations
 # ---------------------------------------------------------------------------
+
 
 class TestGardenACL:
     def test_non_member_cannot_read_garden(self, tmp_path: object) -> None:
@@ -285,6 +311,7 @@ class TestGardenACL:
 # ACL enforcement on facts
 # ---------------------------------------------------------------------------
 
+
 class TestGardenFactACL:
     def _create_garden_and_add_reader(
         self, client: TestClient, admin_key: str, reader_key: str, slug: str
@@ -307,7 +334,9 @@ class TestGardenFactACL:
     def test_assert_fact_into_garden(self, tmp_path: object) -> None:
         client, admin_key, reader_key, outsider_key, original = _make_authed_client(tmp_path)
         try:
-            garden_uri = self._create_garden_and_add_reader(client, admin_key, reader_key, "fact-garden")
+            garden_uri = self._create_garden_and_add_reader(
+                client, admin_key, reader_key, "fact-garden"
+            )
             r = client.post(
                 "/v1/facts",
                 json={**FACT_PAYLOAD, "garden_id": garden_uri},
@@ -325,7 +354,9 @@ class TestGardenFactACL:
     def test_non_member_cannot_assert_into_garden(self, tmp_path: object) -> None:
         client, admin_key, reader_key, outsider_key, original = _make_authed_client(tmp_path)
         try:
-            garden_uri = self._create_garden_and_add_reader(client, admin_key, reader_key, "write-guard")
+            garden_uri = self._create_garden_and_add_reader(
+                client, admin_key, reader_key, "write-guard"
+            )
             r = client.post(
                 "/v1/facts",
                 json={**FACT_PAYLOAD, "garden_id": garden_uri},
@@ -341,7 +372,9 @@ class TestGardenFactACL:
     def test_reader_cannot_write_to_garden(self, tmp_path: object) -> None:
         client, admin_key, reader_key, _, original = _make_authed_client(tmp_path)
         try:
-            garden_uri = self._create_garden_and_add_reader(client, admin_key, reader_key, "reader-write")
+            garden_uri = self._create_garden_and_add_reader(
+                client, admin_key, reader_key, "reader-write"
+            )
             r = client.post(
                 "/v1/facts",
                 json={**FACT_PAYLOAD, "garden_id": garden_uri},
@@ -357,7 +390,9 @@ class TestGardenFactACL:
     def test_member_can_query_garden_facts(self, tmp_path: object) -> None:
         client, admin_key, reader_key, outsider_key, original = _make_authed_client(tmp_path)
         try:
-            garden_uri = self._create_garden_and_add_reader(client, admin_key, reader_key, "query-garden")
+            garden_uri = self._create_garden_and_add_reader(
+                client, admin_key, reader_key, "query-garden"
+            )
             client.post(
                 "/v1/facts",
                 json={**FACT_PAYLOAD, "garden_id": garden_uri},
@@ -379,7 +414,9 @@ class TestGardenFactACL:
     def test_non_member_cannot_query_garden_facts(self, tmp_path: object) -> None:
         client, admin_key, reader_key, outsider_key, original = _make_authed_client(tmp_path)
         try:
-            garden_uri = self._create_garden_and_add_reader(client, admin_key, reader_key, "query-guard")
+            garden_uri = self._create_garden_and_add_reader(
+                client, admin_key, reader_key, "query-guard"
+            )
             r = client.get(
                 "/v1/facts",
                 params={"garden_id": garden_uri},
@@ -396,7 +433,9 @@ class TestGardenFactACL:
         """Non-member's global query must not surface garden-tagged facts (spec §17.3)."""
         client, admin_key, reader_key, outsider_key, original = _make_authed_client(tmp_path)
         try:
-            garden_uri = self._create_garden_and_add_reader(client, admin_key, reader_key, "hidden-garden")
+            garden_uri = self._create_garden_and_add_reader(
+                client, admin_key, reader_key, "hidden-garden"
+            )
             client.post(
                 "/v1/facts",
                 json={**FACT_PAYLOAD, "garden_id": garden_uri},
@@ -419,7 +458,9 @@ class TestGardenFactACL:
         """GET /v1/facts/:id on a garden fact must 403 for non-members (spec §17.3)."""
         client, admin_key, reader_key, outsider_key, original = _make_authed_client(tmp_path)
         try:
-            garden_uri = self._create_garden_and_add_reader(client, admin_key, reader_key, "getfact-guard")
+            garden_uri = self._create_garden_and_add_reader(
+                client, admin_key, reader_key, "getfact-guard"
+            )
             fact_r = client.post(
                 "/v1/facts",
                 json={**FACT_PAYLOAD, "garden_id": garden_uri},

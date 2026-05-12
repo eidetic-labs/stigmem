@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 from typing import Any
 
-from .entity_normalizer import NormalizationError, normalize_entity_uri, is_informal
+from .entity_normalizer import NormalizationError, normalize_entity_uri
 
 _TOKEN_SPLIT_RE = re.compile(r"[.\-_/\s]+")
 _FORMAL_PREFIX = "stigmem://"
@@ -40,7 +40,7 @@ FUZZY_SCORE_THRESHOLD = 0.5
 class ResolveCandidate:
     uri: str
     score: float
-    layer: int        # 1=canonical, 2=alias, 3=fuzzy
+    layer: int  # 1=canonical, 2=alias, 3=fuzzy
     match_note: str = ""
 
 
@@ -49,7 +49,7 @@ class ResolveResult:
     query: str
     canonical: str | None = None  # None if normalisation failed
     layer1_match: bool = False
-    layer2_match: str | None = None   # alias target if found
+    layer2_match: str | None = None  # alias target if found
     layer3_candidates: list[ResolveCandidate] = field(default_factory=list)
 
     @property
@@ -111,9 +111,7 @@ def _token_score(a_tokens: list[str], b_tokens: list[str]) -> float:
                 prefix_bonus = max(prefix_bonus, 0.5)
 
     # SequenceMatcher on concatenated id strings
-    seq_score = SequenceMatcher(
-        None, "".join(a_tokens), "".join(b_tokens)
-    ).ratio()
+    seq_score = SequenceMatcher(None, "".join(a_tokens), "".join(b_tokens)).ratio()
 
     return min(1.0, max(jaccard, prefix_bonus, seq_score))
 

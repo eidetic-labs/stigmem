@@ -18,9 +18,7 @@ import sqlite3
 import pytest
 from fastapi.testclient import TestClient
 
-from stigmem_node.db import apply_migrations
 from stigmem_node.fuzzy_resolver import register_alias, resolve_entity
-
 
 # ---------------------------------------------------------------------------
 # Unit tests — fuzzy_resolver module
@@ -117,8 +115,9 @@ class TestResolveEntity:
         conn.commit()
 
         from stigmem_node.entity_normalizer import normalize_entity_uri
+
         normalised = normalize_entity_uri("user:Alice")  # Layer 1
-        result = resolve_entity(conn, normalised)         # Layer 2
+        result = resolve_entity(conn, normalised)  # Layer 2
         conn.close()
         assert result == "user:a.smith"
 
@@ -159,7 +158,9 @@ class TestPostAlias:
 
     def test_idempotent_on_repeat(self, client: TestClient) -> None:
         client.post("/v1/aliases", json={"raw_uri": "user:alice", "canonical_uri": "user:a.smith"})
-        r2 = client.post("/v1/aliases", json={"raw_uri": "user:alice", "canonical_uri": "user:a.smith"})
+        r2 = client.post(
+            "/v1/aliases", json={"raw_uri": "user:alice", "canonical_uri": "user:a.smith"}
+        )
         assert r2.status_code == 201
 
 
@@ -261,7 +262,9 @@ class TestIngestAliasResolution:
 
     def test_alias_resolution_on_source_field(self, client: TestClient) -> None:
         """Alias resolution applies to source as well as entity on ingest."""
-        client.post("/v1/aliases", json={"raw_uri": "agent:assistant", "canonical_uri": "agent:bot"})
+        client.post(
+            "/v1/aliases", json={"raw_uri": "agent:assistant", "canonical_uri": "agent:bot"}
+        )
         r = client.post("/v1/facts", json=_FACT_BASE)
         assert r.status_code == 201
         assert r.json()["source"] == "agent:bot"

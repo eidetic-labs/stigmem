@@ -68,7 +68,9 @@ def admin_audit_export(
     until: str | None = Query(None, description="RFC3339 upper bound on ts (inclusive)"),
     principal: str | None = Query(None, description="Filter by entity_uri"),
     event_type: str | None = Query(None, description="Filter by event_type"),
-    cursor: int | None = Query(None, description="Seq-based forward pagination cursor (exclusive lower bound)"),
+    cursor: int | None = Query(
+        None, description="Seq-based forward pagination cursor (exclusive lower bound)"
+    ),
     limit: int = Query(200, ge=1, le=1000),
 ) -> AdminAuditResponse:
     """Export the full audit log.  Requires ``audit.read`` capability."""

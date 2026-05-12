@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -63,12 +62,14 @@ class TestSubmitIntentMinimal:
 
 class TestSubmitIntentWithEscalation:
     def test_escalation_round_trips(self, client: TestClient):
-        payload = _minimal_envelope(escalation={
-            "escalate_to": "stigmem://company.example/agent/cto",
-            "channel": "stigmem",
-            "priority": "high",
-            "include_context": True,
-        })
+        payload = _minimal_envelope(
+            escalation={
+                "escalate_to": "stigmem://company.example/agent/cto",
+                "channel": "stigmem",
+                "priority": "high",
+                "include_context": True,
+            }
+        )
         r = client.post("/v1/intents", json=payload)
         assert r.status_code == 201
         esc = r.json()["escalation"]
@@ -76,12 +77,14 @@ class TestSubmitIntentWithEscalation:
         assert esc["priority"] == "high"
 
     def test_escalation_facts_written(self, client: TestClient):
-        payload = _minimal_envelope(escalation={
-            "escalate_to": "stigmem://company.example/agent/cto",
-            "channel": "stigmem",
-            "priority": "critical",
-            "include_context": False,
-        })
+        payload = _minimal_envelope(
+            escalation={
+                "escalate_to": "stigmem://company.example/agent/cto",
+                "channel": "stigmem",
+                "priority": "critical",
+                "include_context": False,
+            }
+        )
         r = client.post("/v1/intents", json=payload)
         assert r.status_code == 201
         # 4 escalation facts + 3 base facts = at least 7
@@ -91,21 +94,26 @@ class TestSubmitIntentWithEscalation:
 class TestSubmitIntentWithHandoff:
     def test_handoff_round_trips(self, client: TestClient):
         # First assert a fact to use as fact_ref
-        fr = client.post("/v1/facts", json={
-            "entity": "stigmem://company.example/doc/draft-v1",
-            "relation": "memory:status",
-            "value": {"type": "string", "v": "reviewed"},
-            "source": _FROM,
-            "scope": "company",
-        })
+        fr = client.post(
+            "/v1/facts",
+            json={
+                "entity": "stigmem://company.example/doc/draft-v1",
+                "relation": "memory:status",
+                "value": {"type": "string", "v": "reviewed"},
+                "source": _FROM,
+                "scope": "company",
+            },
+        )
         fact_id = fr.json()["id"]
 
-        payload = _minimal_envelope(handoff={
-            "summary": "Draft reviewed through section 3.",
-            "fact_refs": [fact_id],
-            "continuation": "Continue from section 4.",
-            "artifacts": [{"name": "draft.md", "ref": fact_id}],
-        })
+        payload = _minimal_envelope(
+            handoff={
+                "summary": "Draft reviewed through section 3.",
+                "fact_refs": [fact_id],
+                "continuation": "Continue from section 4.",
+                "artifacts": [{"name": "draft.md", "ref": fact_id}],
+            }
+        )
         r = client.post("/v1/intents", json=payload)
         assert r.status_code == 201
         h = r.json()["handoff"]
@@ -118,7 +126,9 @@ class TestSubmitIntentWithConstraintsAndPreferences:
     def test_constraint_round_trips(self, client: TestClient):
         payload = _minimal_envelope(
             constraint=[{"kind": "budget", "limit": {"type": "number", "v": 500}, "unit": "USD"}],
-            preference=[{"kind": "format", "value": {"type": "string", "v": "markdown"}, "weight": 0.8}],
+            preference=[
+                {"kind": "format", "value": {"type": "string", "v": "markdown"}, "weight": 0.8}
+            ],
         )
         r = client.post("/v1/intents", json=payload)
         assert r.status_code == 201
@@ -129,11 +139,13 @@ class TestSubmitIntentWithConstraintsAndPreferences:
 
     def test_deference_round_trips(self, client: TestClient):
         payload = _minimal_envelope(
-            deference=[{
-                "condition": "cost > $100",
-                "defer_to": "stigmem://company.example/agent/cfo",
-                "timeout_s": 300,
-            }],
+            deference=[
+                {
+                    "condition": "cost > $100",
+                    "defer_to": "stigmem://company.example/agent/cfo",
+                    "timeout_s": 300,
+                }
+            ],
         )
         r = client.post("/v1/intents", json=payload)
         assert r.status_code == 201
@@ -170,25 +182,31 @@ class TestSubmitIntentValidation:
         assert r.status_code == 422
 
     def test_invalid_escalation_priority_returns_422(self, client: TestClient):
-        r = client.post("/v1/intents", json=_minimal_envelope(
-            escalation={
-                "escalate_to": "stigmem://company.example/agent/cto",
-                "channel": "stigmem",
-                "priority": "URGENT",  # not a valid priority
-                "include_context": True,
-            }
-        ))
+        r = client.post(
+            "/v1/intents",
+            json=_minimal_envelope(
+                escalation={
+                    "escalate_to": "stigmem://company.example/agent/cto",
+                    "channel": "stigmem",
+                    "priority": "URGENT",  # not a valid priority
+                    "include_context": True,
+                }
+            ),
+        )
         assert r.status_code == 422
 
     def test_invalid_escalation_channel_returns_422(self, client: TestClient):
-        r = client.post("/v1/intents", json=_minimal_envelope(
-            escalation={
-                "escalate_to": "stigmem://company.example/agent/cto",
-                "channel": "carrier-pigeon",  # not valid
-                "priority": "high",
-                "include_context": True,
-            }
-        ))
+        r = client.post(
+            "/v1/intents",
+            json=_minimal_envelope(
+                escalation={
+                    "escalate_to": "stigmem://company.example/agent/cto",
+                    "channel": "carrier-pigeon",  # not valid
+                    "priority": "high",
+                    "include_context": True,
+                }
+            ),
+        )
         assert r.status_code == 422
 
     def test_duplicate_id_returns_409(self, client: TestClient):
@@ -216,12 +234,14 @@ class TestGetIntent:
         assert body["goal"] == _GOAL
 
     def test_get_reconstructs_escalation(self, client: TestClient):
-        payload = _minimal_envelope(escalation={
-            "escalate_to": "stigmem://company.example/agent/cto",
-            "channel": "stigmem",
-            "priority": "high",
-            "include_context": True,
-        })
+        payload = _minimal_envelope(
+            escalation={
+                "escalate_to": "stigmem://company.example/agent/cto",
+                "channel": "stigmem",
+                "priority": "high",
+                "include_context": True,
+            }
+        )
         r = client.post("/v1/intents", json=payload)
         intent_id = r.json()["id"]
 
@@ -256,14 +276,16 @@ class TestIntentAuth:
         assert r.status_code == 401
 
     def test_read_only_key_forbidden_on_post(self, tmp_db: str):
+        import stigmem_node.settings as sm
         from stigmem_node.auth import create_api_key
         from stigmem_node.main import create_app
-        import stigmem_node.settings as sm
+
         original = sm.settings
         test_settings = sm.Settings(db_path=tmp_db, auth_required=True, node_url="http://t")
         sm.settings = test_settings  # type: ignore
         import stigmem_node.auth as am
         import stigmem_node.db as dm
+
         am.settings = test_settings  # type: ignore
         dm.settings = test_settings  # type: ignore
         read_key = create_api_key("agent:readonly", ["read"])
@@ -291,19 +313,24 @@ class TestAdapterCompat:
 
     def test_direct_fact_and_envelope_coexist(self, client: TestClient):
         # Old adapter-style write
-        client.post("/v1/facts", json={
-            "entity": "handoff:legacy-1",
-            "relation": "intent:handoff_to",
-            "value": {"type": "ref", "v": _TO},
-            "source": _FROM,
-            "scope": "company",
-        })
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": "handoff:legacy-1",
+                "relation": "intent:handoff_to",
+                "value": {"type": "ref", "v": _TO},
+                "source": _FROM,
+                "scope": "company",
+            },
+        )
         # New envelope write
         r = client.post("/v1/intents", json=_minimal_envelope())
         assert r.status_code == 201
 
         # Both accessible via facts query
-        facts_r = client.get("/v1/facts", params={"relation": "intent:handoff_to", "scope": "company"})
+        facts_r = client.get(
+            "/v1/facts", params={"relation": "intent:handoff_to", "scope": "company"}
+        )
         assert facts_r.status_code == 200
         # The envelope also wrote an intent:handoff_to fact (since handoff=None but to is set
         # with the handoff field; in this minimal case no handoff_to fact is written — that's OK)

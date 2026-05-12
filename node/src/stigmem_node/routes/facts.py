@@ -94,18 +94,21 @@ def _get_tombstone_filter(
 
         if row["legal_hold"]:
             if is_admin_caller:
-                notices.append(TombstoneNotice(
-                    entity_uri=uri,
-                    tombstone_id=row["id"],
-                    legal_hold=True,
-                    tombstone_created_at=row["created_at"],
-                ))
+                notices.append(
+                    TombstoneNotice(
+                        entity_uri=uri,
+                        tombstone_id=row["id"],
+                        legal_hold=True,
+                        tombstone_created_at=row["created_at"],
+                    )
+                )
             else:
                 excluded.add(uri)
         else:
             excluded.add(uri)
 
     return excluded, notices
+
 
 router = APIRouter(prefix="/v1/facts", tags=["facts"])
 
@@ -115,6 +118,7 @@ _SYSTEM_RELATION_PREFIX = "stigmem:"
 def _validate_as_of(as_of: str) -> datetime:
     """Parse and validate an as_of timestamp per §24.2.2."""
     import re
+
     # URL query strings decode + as space; restore the + in timezone offsets like "+00:00".
     normalized = re.sub(r" (\d{2}:\d{2})$", r"+\1", as_of).replace("Z", "+00:00")
     try:
@@ -221,10 +225,15 @@ def _build_as_of_params(
         as_of,
         as_of,
         as_of,
-        entity_p, entity_p, entity_p,
-        relation_p, relation_p,
-        scope_p, scope_p,
-        cursor_p, cursor_p,
+        entity_p,
+        entity_p,
+        entity_p,
+        relation_p,
+        relation_p,
+        scope_p,
+        scope_p,
+        cursor_p,
+        cursor_p,
         limit + 1,
     ]
 
@@ -321,7 +330,7 @@ def _check_source_attestation(source: str, identity: Identity) -> bool | None:
     if mode == "off" or not _settings_pkg.settings.auth_required:
         return None
 
-    attested = (source == identity.entity_uri)
+    attested = source == identity.entity_uri
     if not attested:
         if mode == "enforce":
             raise HTTPException(
@@ -431,6 +440,7 @@ def assert_fact(
             )
             raise
 
+
 def _is_valid_entity_uri(uri: str) -> bool:
     """Minimal check: URI must contain '://' or start with 'urn:'."""
     return "://" in uri or uri.startswith("urn:")
@@ -488,9 +498,19 @@ def _record_contradictions(
                 valid_until, confidence, scope, hlc, received_from, tenant_id)
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
-                str(uuid.uuid4()), conflict_id, "stigmem:conflict:between",
-                "text", f"{new_fact_id} {sibling_id}",
-                "system:stigmem", now, None, 1.0, scope, h_between, None, tenant_id,
+                str(uuid.uuid4()),
+                conflict_id,
+                "stigmem:conflict:between",
+                "text",
+                f"{new_fact_id} {sibling_id}",
+                "system:stigmem",
+                now,
+                None,
+                1.0,
+                scope,
+                h_between,
+                None,
+                tenant_id,
             ),
         )
         h_status = node_hlc.tick()
@@ -500,9 +520,19 @@ def _record_contradictions(
                 valid_until, confidence, scope, hlc, received_from, tenant_id)
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
-                str(uuid.uuid4()), conflict_id, "stigmem:conflict:status",
-                "string", "unresolved",
-                "system:stigmem", now, None, 1.0, scope, h_status, None, tenant_id,
+                str(uuid.uuid4()),
+                conflict_id,
+                "stigmem:conflict:status",
+                "string",
+                "unresolved",
+                "system:stigmem",
+                now,
+                None,
+                1.0,
+                scope,
+                h_status,
+                None,
+                tenant_id,
             ),
         )
         conn.execute(
@@ -523,17 +553,29 @@ def query_facts(
     min_confidence: float = Query(0.0, ge=0.0, le=1.0),
     include_contradicted: bool = Query(False),
     include_expired: bool = Query(False),
-    after: str | None = Query(None, description="Return facts with timestamp > this ISO 8601 value"),  # noqa: E501
+    after: str | None = Query(
+        None, description="Return facts with timestamp > this ISO 8601 value"
+    ),  # noqa: E501
     cursor: str | None = Query(None, description="Opaque pagination cursor (fact id)"),
     limit: int = Query(50, ge=1, le=500),
-    garden_id: str | None = Query(None, description="v0.9: filter to facts in this garden (spec §5.20)"),  # noqa: E501
-    attested: bool | None = Query(None, description="v0.9: filter by attestation status (spec §18.6)"),  # noqa: E501
-    include_low_trust: bool = Query(False, description="v1.1: include facts with effective_confidence < 0.3 (§19.4.4)"),  # noqa: E501
-    as_of: str | None = Query(None, description="§24: time-travel — return facts visible at this ISO 8601 timestamp"),  # noqa: E501
+    garden_id: str | None = Query(
+        None, description="v0.9: filter to facts in this garden (spec §5.20)"
+    ),  # noqa: E501
+    attested: bool | None = Query(
+        None, description="v0.9: filter by attestation status (spec §18.6)"
+    ),  # noqa: E501
+    include_low_trust: bool = Query(
+        False, description="v1.1: include facts with effective_confidence < 0.3 (§19.4.4)"
+    ),  # noqa: E501
+    as_of: str | None = Query(
+        None, description="§24: time-travel — return facts visible at this ISO 8601 timestamp"
+    ),  # noqa: E501
 ) -> QueryResponse:
     """Query facts by pattern (spec §5.2, §5.20). Omitted fields are wildcards. Entity/source are normalized (§2.6)."""  # noqa: E501
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )  # noqa: E501
 
     request_id = str(uuid.uuid4())
     tenant = TenantContext(tenant_id=identity.tenant_id)
@@ -705,7 +747,10 @@ def _resolve_garden_or_404(garden_id: str | None, identity: Identity) -> Any:
 
 
 def _append_garden_visibility_filter(
-    conditions: list[str], params: list[Any], garden: Any, identity: Identity,
+    conditions: list[str],
+    params: list[Any],
+    garden: Any,
+    identity: Identity,
 ) -> None:
     """Either restrict to garden_id OR mask non-visible garden-tagged facts (§17.3)."""
     if garden is not None:
@@ -714,7 +759,8 @@ def _append_garden_visibility_filter(
         return
     with db() as _g_conn:
         visible_garden_ids = [
-            row["id"] for row in _g_conn.execute(
+            row["id"]
+            for row in _g_conn.execute(
                 "SELECT id FROM gardens WHERE tenant_id = ?", (identity.tenant_id,)
             ).fetchall()
             if caller_can_see_garden(row["id"], identity)
@@ -737,18 +783,12 @@ def _normalise_uri_or_raw(raw_value: str) -> str:
 
 def _entity_filter_clause() -> str:
     """Hardcoded entity-or-alias WHERE fragment. Pulled out so CodeQL sees a literal."""
-    return (
-        "(entity = ? OR entity IN"
-        " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
-    )
+    return "(entity = ? OR entity IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
 
 
 def _source_filter_clause() -> str:
     """Hardcoded source-or-alias WHERE fragment. Pulled out so CodeQL sees a literal."""
-    return (
-        "(source = ? OR source IN"
-        " (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
-    )
+    return "(source = ? OR source IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
 
 
 def _build_query_conditions(  # noqa: PLR0913 — narrow internal helper, keeps query_facts signature flat
@@ -816,7 +856,9 @@ def _rows_to_records(rows: list[Any]) -> list[FactRecord]:
 
 
 def _apply_tombstone_filter(
-    records: list[FactRecord], scope: str | None, identity: Identity,
+    records: list[FactRecord],
+    scope: str | None,
+    identity: Identity,
 ) -> tuple[list[FactRecord], bool]:
     """Return (filtered, tombstone_filtered_flag). Empty input → no work."""
     if not records:
@@ -838,7 +880,9 @@ def get_fact(
 ) -> FactRecord:
     """Retrieve a single fact by UUID or sha256: CID (spec v0.4 §5.5, §17.3, §25.5)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )  # noqa: E501
 
     # §25.5: dual addressing — resolve CID to UUID via alias table
     resolved_fact_id = fact_id
@@ -846,7 +890,10 @@ def get_fact(
         if not is_valid_cid(fact_id):
             raise HTTPException(
                 status_code=400,
-                detail={"code": "cid_malformed", "message": "CID must be 'sha256:' followed by 64 hex chars"},  # noqa: E501
+                detail={
+                    "code": "cid_malformed",
+                    "message": "CID must be 'sha256:' followed by 64 hex chars",
+                },  # noqa: E501
             )
         with db() as conn:
             alias = conn.execute(
@@ -866,6 +913,7 @@ def get_fact(
 
     # F-11 §25.6.1/§23.3.3: tombstone indistinguishability — tombstoned facts return 404
     from ..tombstone_cache import is_tombstoned as _is_tombstoned_check
+
     if _is_tombstoned_check(row["entity"], identity.tenant_id):
         raise HTTPException(status_code=404, detail="fact not found")
 
@@ -907,7 +955,9 @@ def verify_cid(
 ) -> _CidVerifyResponse:
     """Verify a fact's stored CID against a freshly computed one (spec §25.6.2)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )  # noqa: E501
     with db() as conn:
         row = conn.execute(
             "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
@@ -943,9 +993,7 @@ def _encode_v(vtype: str, v: Any) -> str:
     return str(v)
 
 
-def _resolve_provenance_entry(
-    entry: Any, tenant_id: str
-) -> tuple[str, Any] | None:
+def _resolve_provenance_entry(entry: Any, tenant_id: str) -> tuple[str, Any] | None:
     """Resolve a derived_from entry to (hash_val, ref_row | None); skip non-dict entries."""
     if not isinstance(entry, dict):
         return None
@@ -972,9 +1020,7 @@ def _resolve_provenance_entry(
     return hash_val, ref_row
 
 
-def _format_provenance_entry(
-    hash_val: str, ref_row: Any, excluded: set[str]
-) -> ProvenanceEntry:
+def _format_provenance_entry(hash_val: str, ref_row: Any, excluded: set[str]) -> ProvenanceEntry:
     """Render a resolved entry into a ProvenanceEntry, redacting tombstoned/missing rows."""
     if ref_row is None:
         return ProvenanceEntry(hash=hash_val, exists=False)
@@ -1040,14 +1086,11 @@ def get_provenance(
     if accessible_entities:
         with db() as _tc_conn:
             is_admin = identity.can_write() and identity.can_federate()
-            excluded, _ = _get_tombstone_filter(
-                _tc_conn, accessible_entities, root_scope, is_admin
-            )
+            excluded, _ = _get_tombstone_filter(_tc_conn, accessible_entities, root_scope, is_admin)
 
     # Build response — §23.3.2 r.4 tombstone and §20.6.2 unauthorized share identical shape
     result: list[ProvenanceEntry] = [
-        _format_provenance_entry(hash_val, ref_row, excluded)
-        for hash_val, ref_row in resolved
+        _format_provenance_entry(hash_val, ref_row, excluded) for hash_val, ref_row in resolved
     ]
 
     return ProvenanceResponse(fact_id=fact_id, cid=cid_val, derived_from=result)

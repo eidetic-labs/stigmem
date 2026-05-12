@@ -94,7 +94,9 @@ def graph_neighbors(
     entity: str = Query(..., description="Seed entity URI"),
     depth: int = Query(1, ge=1, description="Traversal depth (1–3)"),
     scope: str = Query(..., description="Scope filter; required"),
-    relation_filter: str | None = Query(None, description="Prefix-glob relation filter (e.g. 'memory:*')"),
+    relation_filter: str | None = Query(
+        None, description="Prefix-glob relation filter (e.g. 'memory:*')"
+    ),
     min_confidence: float = Query(0.1, ge=0.0, le=1.0),
     min_trust: float = Query(0.0, ge=0.0, le=1.0),
     page_size: int = Query(20, ge=1, le=200),
@@ -113,9 +115,7 @@ def graph_neighbors(
     try:
         seed = normalize_entity_uri(entity)
     except NormalizationError as exc:
-        raise HTTPException(
-            status_code=400, detail=f"invalid_entity_uri: {exc}"
-        ) from exc
+        raise HTTPException(status_code=400, detail=f"invalid_entity_uri: {exc}") from exc
 
     offset = _decode_cursor(cursor) if cursor else 0
 

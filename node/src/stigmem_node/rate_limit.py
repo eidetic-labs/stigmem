@@ -24,7 +24,6 @@ Backward-compat settings bridges:
 
 from __future__ import annotations
 
-import hashlib
 import math
 import time
 from typing import Any
@@ -42,13 +41,13 @@ from .settings import settings
 
 _SPEC_DEFAULTS: dict[str, tuple[float, float]] = {
     # dimension: (capacity, rate_per_second)
-    "fact_write":         (100.0,   10.0),
-    "fact_read":          (500.0,   50.0),
-    "token_issue":        (20.0,    1 / 3),
-    "federation_pull":    (30.0,    0.5),
-    "admin_action":       (10.0,    1 / 6),
-    "subscription_event": (200.0,   20.0),
-    "audit_export":       (10_000.0, 167.0),
+    "fact_write": (100.0, 10.0),
+    "fact_read": (500.0, 50.0),
+    "token_issue": (20.0, 1 / 3),
+    "federation_pull": (30.0, 0.5),
+    "admin_action": (10.0, 1 / 6),
+    "subscription_event": (200.0, 20.0),
+    "audit_export": (10_000.0, 167.0),
 }
 
 
@@ -80,6 +79,7 @@ def _rate_for(dimension: str) -> float:
 # Endpoint → dimension routing
 # ---------------------------------------------------------------------------
 
+
 def _dimension(path: str, method: str) -> str | None:
     """Return the quota dimension for this request, or None to skip quota."""
     m = method.upper()
@@ -99,6 +99,7 @@ def _dimension(path: str, method: str) -> str | None:
 # ---------------------------------------------------------------------------
 # Token-bucket check (SQLite upsert for atomic read-modify-write)
 # ---------------------------------------------------------------------------
+
 
 def _check_and_consume(
     entity_uri: str,
@@ -154,15 +155,17 @@ def _check_and_consume(
 # Identity lookup (lightweight — only entity_uri + tenant_id needed)
 # ---------------------------------------------------------------------------
 
-_HASH_CACHE: dict[str, tuple[tuple[str, str, str | None], float]] = {}  # key_hash → (result, cached_at)
+_HASH_CACHE: dict[
+    str, tuple[tuple[str, str, str | None], float]
+] = {}  # key_hash → (result, cached_at)
 _CACHE_TTL = 60.0
 
 
 def _lookup_principal(raw_key: str) -> tuple[str, str, str | None] | None:
     """Return (entity_uri, tenant_id, oidc_sub) for the raw Bearer token, or None."""
     import hashlib as _hl
-    import json as _json
-    from datetime import UTC as _UTC, datetime as _dt
+    from datetime import UTC as _UTC
+    from datetime import datetime as _dt
 
     key_hash = _hl.sha256(raw_key.encode()).hexdigest()
     if key_hash in _HASH_CACHE:
@@ -189,6 +192,7 @@ def _lookup_principal(raw_key: str) -> tuple[str, str, str | None] | None:
 # ---------------------------------------------------------------------------
 # Middleware
 # ---------------------------------------------------------------------------
+
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Per-principal token-bucket rate limiting (spec §22.4).
@@ -226,6 +230,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if not allowed:
             # Write-ahead: emit quota_breach audit event before returning 429.
             from .audit_event import emit_nofail
+
             emit_nofail(
                 "quota_breach",
                 entity_uri=entity_uri,

@@ -85,14 +85,16 @@ def invalidate_tombstone_cache() -> None:
     _tombstone_cache_full_ts = 0.0
     try:
         from .tombstone_cache import invalidate as _cache_invalidate
+
         _cache_invalidate()
-    except Exception:  # nosec B110
-        pass
+    except Exception:
+        logger.exception("Failed to invalidate tombstone cache")
 
 
 # ---------------------------------------------------------------------------
 # Storage operations
 # ---------------------------------------------------------------------------
+
 
 def _row_to_tombstone(row: Any) -> TombstoneRecord:
     return TombstoneRecord(
@@ -142,15 +144,29 @@ def create_tombstone(
             (entity_uri, scope, tenant_id),
         ).fetchone()
         if existing:
-            row = conn.execute("SELECT * FROM tombstones WHERE id = ?", (existing["id"],)).fetchone()
+            row = conn.execute(
+                "SELECT * FROM tombstones WHERE id = ?", (existing["id"],)
+            ).fetchone()
             return _row_to_tombstone(row)
 
         tomb_id = "tomb_" + str(uuid.uuid4())
         conn.execute(
             """INSERT INTO tombstones
-               (id, entity_uri, scope, reason, signed_by, key_id, signature, created_at, legal_hold, tenant_id)
+               (id, entity_uri, scope, reason, signed_by, key_id, signature,
+                created_at, legal_hold, tenant_id)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (tomb_id, entity_uri, scope, reason, signed_by, key_id or None, signature, now, int(legal_hold), tenant_id),
+            (
+                tomb_id,
+                entity_uri,
+                scope,
+                reason,
+                signed_by,
+                key_id or None,
+                signature,
+                now,
+                int(legal_hold),
+                tenant_id,
+            ),
         )
         row = conn.execute("SELECT * FROM tombstones WHERE id = ?", (tomb_id,)).fetchone()
 
@@ -180,7 +196,8 @@ def revoke_tombstone(
 
         rev_id = "tombrevoke_" + str(uuid.uuid4())
         conn.execute(
-            """INSERT INTO tombstone_revocations (id, tombstone_id, reason, signed_by, key_id, signature, created_at)
+            """INSERT INTO tombstone_revocations
+               (id, tombstone_id, reason, signed_by, key_id, signature, created_at)
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (rev_id, tombstone_id, reason, signed_by, key_id, signature, now),
         )
@@ -203,12 +220,16 @@ def get_tombstone_status(entity_uri: str) -> TombstoneStatusResponse:
         if not tombstone_list:
             return TombstoneStatusResponse(tombstoned=False, tombstones=[], revocations=[])
 
-        ids = [t.id for t in tombstone_list]
-        placeholders = ",".join("?" * len(ids))
-        rev_rows = conn.execute(
-            f"SELECT * FROM tombstone_revocations WHERE tombstone_id IN ({placeholders}) ORDER BY created_at",  # noqa: S608  # nosec B608
-            ids,
-        ).fetchall()
+        rev_rows = []
+        for tombstone in tombstone_list:
+            rev_rows.extend(
+                conn.execute(
+                    """SELECT * FROM tombstone_revocations
+                       WHERE tombstone_id = ?
+                       ORDER BY created_at""",
+                    (tombstone.id,),
+                ).fetchall()
+            )
         revocation_list = [_row_to_revocation(r) for r in rev_rows]
 
     revoked_ids = {r.tombstone_id for r in revocation_list}
@@ -255,14 +276,14 @@ def apply_inbound_tombstone(record: TombstoneRecord) -> bool:
     Returns True if written, False if already existed.
     Caller MUST verify signature before calling this.
     """
-    now = datetime.now(UTC).isoformat()
     with db() as conn:
         existing = conn.execute("SELECT id FROM tombstones WHERE id = ?", (record.id,)).fetchone()
         if existing:
             return False
         conn.execute(
             """INSERT INTO tombstones
-               (id, entity_uri, scope, reason, signed_by, key_id, signature, created_at, legal_hold, tenant_id)
+               (id, entity_uri, scope, reason, signed_by, key_id, signature,
+                created_at, legal_hold, tenant_id)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 record.id,
@@ -289,14 +310,17 @@ def apply_inbound_revocation(record: TombstoneRevocationRecord) -> bool:
             "SELECT id FROM tombstones WHERE id = ?", (record.tombstone_id,)
         ).fetchone()
         if tomb is None:
-            logger.warning("Inbound revocation for unknown tombstone %s; storing anyway", record.tombstone_id)
+            logger.warning(
+                "Inbound revocation for unknown tombstone %s; storing anyway", record.tombstone_id
+            )
         existing = conn.execute(
             "SELECT id FROM tombstone_revocations WHERE id = ?", (record.id,)
         ).fetchone()
         if existing:
             return False
         conn.execute(
-            """INSERT INTO tombstone_revocations (id, tombstone_id, reason, signed_by, key_id, signature, created_at)
+            """INSERT INTO tombstone_revocations
+               (id, tombstone_id, reason, signed_by, key_id, signature, created_at)
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (
                 record.id,
@@ -315,6 +339,7 @@ def apply_inbound_revocation(record: TombstoneRevocationRecord) -> bool:
 # ---------------------------------------------------------------------------
 # Recall-time filter (§23.3)
 # ---------------------------------------------------------------------------
+
 
 def filter_tombstoned_records(records: list[Any]) -> list[Any]:
     """Remove facts whose entity or ref-value is tombstoned (§23.3.1, §23.3.2).

@@ -67,9 +67,7 @@ def _select_confidence_candidates(
     return [r["id"] for r in conn.execute(sql, params).fetchall()]
 
 
-def _apply_decay(
-    conn: Any, candidates: list[str], conf_ids: list[str], now: str
-) -> None:
+def _apply_decay(conn: Any, candidates: list[str], conf_ids: list[str], now: str) -> None:
     """Persist decay: mark candidates expired, log confidence retractions, sync graph."""
     placeholders = ",".join("?" * len(candidates))
     conn.execute(
@@ -85,6 +83,7 @@ def _apply_decay(
         )
     # Graph adjacency index (§20.1.2): propagate expiry to entity_edges
     from .graph_index import sync_edge_expiry
+
     sync_edge_expiry(conn, candidates, now)
 
 

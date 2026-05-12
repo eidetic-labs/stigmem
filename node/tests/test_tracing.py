@@ -172,9 +172,7 @@ def test_start_span_enabled_records_exception_when_otel_trace_present() -> None:
     with pytest.raises(ValueError, match="explode"), tracing_mod.start_span("op"):
         raise ValueError("explode")
 
-    assert any(
-        isinstance(e, ValueError) for e in tracer.last_span.recorded_exceptions
-    )
+    assert any(isinstance(e, ValueError) for e in tracer.last_span.recorded_exceptions)
     assert tracer.last_span.status is not None
 
 
@@ -194,9 +192,7 @@ def test_init_tracing_warns_and_returns_when_sdk_absent(
         tracing_mod.init_tracing("svc.test", "http://collector.example/")
     assert tracing_mod._OTEL_ENABLED is False
     assert tracing_mod._tracer is None
-    assert any(
-        "opentelemetry-sdk is not installed" in rec.getMessage() for rec in caplog.records
-    )
+    assert any("opentelemetry-sdk is not installed" in rec.getMessage() for rec in caplog.records)
 
 
 # ---------------------------------------------------------------------------

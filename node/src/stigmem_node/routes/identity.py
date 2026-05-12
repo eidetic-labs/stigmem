@@ -29,7 +29,7 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 from urllib.parse import unquote
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db
@@ -119,7 +119,7 @@ async def put_manifest(
     try:
         verify_manifest(manifest, trust_mode=settings.trust_mode)
     except ManifestError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     # Attempt transparency-log submission
     tl = make_transparency_log()
@@ -134,15 +134,13 @@ async def put_manifest(
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=f"transparency log unavailable (strict mode rejects): {exc}",
-            )
+            ) from exc
         logger.warning("TL unavailable during manifest PUT (warn mode): %s", exc)
 
     try:
-        store_peer_manifest(
-            entity_uri, manifest, log_entry, trust_mode=settings.trust_mode
-        )
+        store_peer_manifest(entity_uri, manifest, log_entry, trust_mode=settings.trust_mode)
     except ManifestError as exc:
-        raise HTTPException(status_code=409, detail=str(exc))
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     result: dict[str, Any] = {
         "entity_uri": entity_uri,
@@ -251,7 +249,7 @@ def issue_capability_token(
         raise HTTPException(
             status_code=422,
             detail=f"issuer manifest not found or expired for {issuer!r} "
-                   "(H1: cannot issue tokens from expired manifests)",
+            "(H1: cannot issue tokens from expired manifests)",
         )
 
     # C1: subject must be in issuer's entities list
@@ -259,7 +257,7 @@ def issue_capability_token(
         raise HTTPException(
             status_code=403,
             detail=f"subject {subject!r} is not in issuer {issuer!r} entities list "
-                   "(C1: external-entity delegation not permitted)",
+            "(C1: external-entity delegation not permitted)",
         )
 
     now = datetime.now(UTC)
@@ -290,6 +288,7 @@ def issue_capability_token(
         )
 
     import canonicaljson
+
     token_json = canonicaljson.encode_canonical_json(token_body).decode()
 
     created_at = now.isoformat()
@@ -300,12 +299,22 @@ def issue_capability_token(
                    (id, token_json, issuer, subject, verb, object,
                     issued_at, expiry, nonce, created_at)
                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (token_id, token_json, issuer, subject, verb, obj,
-                 issued_at, expiry, nonce, created_at),
+                (
+                    token_id,
+                    token_json,
+                    issuer,
+                    subject,
+                    verb,
+                    obj,
+                    issued_at,
+                    expiry,
+                    nonce,
+                    created_at,
+                ),
             )
         except Exception as exc:
             if "UNIQUE constraint" in str(exc):
-                raise HTTPException(status_code=409, detail="nonce collision; retry")
+                raise HTTPException(status_code=409, detail="nonce collision; retry") from exc
             raise
 
         # M-SEC-4: audit log entry for token issuance (spec §19.3.2)
@@ -315,19 +324,21 @@ def issue_capability_token(
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
                 str(uuid.uuid4()),
-                token_id,               # token_id as surrogate fact_id
+                token_id,  # token_id as surrogate fact_id
                 "capability_issued",
                 issuer,
                 None,
                 "system:capability",
                 None,
-                json.dumps({
-                    "issuer": issuer,
-                    "subject": subject,
-                    "verb": verb,
-                    "object": obj,
-                    "expiry": expiry,
-                }),
+                json.dumps(
+                    {
+                        "issuer": issuer,
+                        "subject": subject,
+                        "verb": verb,
+                        "object": obj,
+                        "expiry": expiry,
+                    }
+                ),
                 created_at,
             ),
         )
@@ -336,7 +347,7 @@ def issue_capability_token(
     try:
         cleanup_expired_tokens()
     except Exception:
-        pass  # nosec B110 — cleanup is best-effort
+        logger.exception("Best-effort expired capability token cleanup failed")
 
     return {
         "token_id": token_id,
@@ -356,6 +367,7 @@ def issue_capability_token(
 # ---------------------------------------------------------------------------
 # NOTE: this static path MUST be registered before /{token_id}/revoke so that
 # FastAPI does not swallow "verify" as a {token_id} capture.
+
 
 @router.post(
     "/v1/federation/capability-tokens/verify",
@@ -460,17 +472,25 @@ async def revoke_capability_token(
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=f"transparency log unavailable during revocation (strict mode): {exc}",
-            )
+            ) from exc
         logger.warning("TL unavailable during token revocation (warn mode): %s", exc)
 
-    revoke_log_json = json.dumps({
-        **revoke_event,
-        **({"tl_entry": {
-            "log_id": tl_entry.log_id,
-            "log_index": tl_entry.log_index,
-            "leaf_hash": tl_entry.leaf_hash,
-        }} if tl_entry else {}),
-    })
+    revoke_log_json = json.dumps(
+        {
+            **revoke_event,
+            **(
+                {
+                    "tl_entry": {
+                        "log_id": tl_entry.log_id,
+                        "log_index": tl_entry.log_index,
+                        "leaf_hash": tl_entry.leaf_hash,
+                    }
+                }
+                if tl_entry
+                else {}
+            ),
+        }
+    )
 
     with db() as conn:
         conn.execute(
@@ -484,7 +504,7 @@ async def revoke_capability_token(
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
                 str(uuid.uuid4()),
-                token_id,               # token_id as surrogate fact_id
+                token_id,  # token_id as surrogate fact_id
                 "capability_revoked",
                 identity.entity_uri,
                 None,

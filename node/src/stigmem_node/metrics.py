@@ -235,6 +235,7 @@ def make_metrics_response() -> Response | None:
     if not _ENABLED:
         return None
     from starlette.responses import Response
+
     return Response(
         content=_prom.generate_latest(),
         media_type=_prom.CONTENT_TYPE_LATEST,

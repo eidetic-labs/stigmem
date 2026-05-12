@@ -1,23 +1,24 @@
 """Multi-tenant isolation tests — Tenant A cannot read/write Tenant B data."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
 
 import pytest
+from fastapi.testclient import TestClient
 
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_module
-from fastapi.testclient import TestClient
 from stigmem_node.auth import create_api_key
 from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
 
-
 # ---------------------------------------------------------------------------
 # Fixture: two authenticated tenants sharing one DB
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture()
 def two_tenants(tmp_path: object) -> Generator[tuple[TestClient, str, str], None, None]:
@@ -47,24 +48,35 @@ def two_tenants(tmp_path: object) -> Generator[tuple[TestClient, str, str], None
 # Fact isolation
 # ---------------------------------------------------------------------------
 
+
 def test_tenant_a_fact_invisible_to_tenant_b(two_tenants: tuple) -> None:
     """GET /v1/facts/{id} returns 404 for a cross-tenant fact."""
     client, key_a, key_b = two_tenants
 
     resp = client.post(
         "/v1/facts",
-        json={"entity": "stigmem://test/agent/alice", "relation": "test:color",
-              "value": {"type": "string", "v": "red"}, "source": "agent:alice"},
+        json={
+            "entity": "stigmem://test/agent/alice",
+            "relation": "test:color",
+            "value": {"type": "string", "v": "red"},
+            "source": "agent:alice",
+        },
         headers={"Authorization": f"Bearer {key_a}"},
     )
     assert resp.status_code == 201
     fact_id = resp.json()["id"]
 
     # Tenant A can read its own fact
-    assert client.get(f"/v1/facts/{fact_id}", headers={"Authorization": f"Bearer {key_a}"}).status_code == 200
+    assert (
+        client.get(f"/v1/facts/{fact_id}", headers={"Authorization": f"Bearer {key_a}"}).status_code
+        == 200
+    )
 
     # Tenant B gets 404
-    assert client.get(f"/v1/facts/{fact_id}", headers={"Authorization": f"Bearer {key_b}"}).status_code == 404
+    assert (
+        client.get(f"/v1/facts/{fact_id}", headers={"Authorization": f"Bearer {key_b}"}).status_code
+        == 404
+    )
 
 
 def test_tenant_b_query_returns_empty(two_tenants: tuple) -> None:
@@ -74,8 +86,12 @@ def test_tenant_b_query_returns_empty(two_tenants: tuple) -> None:
     # Tenant A writes a fact
     client.post(
         "/v1/facts",
-        json={"entity": "stigmem://test/agent/alice", "relation": "test:size",
-              "value": {"type": "number", "v": 42}, "source": "agent:alice"},
+        json={
+            "entity": "stigmem://test/agent/alice",
+            "relation": "test:size",
+            "value": {"type": "number", "v": 42},
+            "source": "agent:alice",
+        },
         headers={"Authorization": f"Bearer {key_a}"},
     )
 
@@ -90,14 +106,22 @@ def test_tenants_see_only_their_own_facts(two_tenants: tuple) -> None:
 
     client.post(
         "/v1/facts",
-        json={"entity": "stigmem://test/x", "relation": "test:owner",
-              "value": {"type": "string", "v": "alice"}, "source": "agent:alice"},
+        json={
+            "entity": "stigmem://test/x",
+            "relation": "test:owner",
+            "value": {"type": "string", "v": "alice"},
+            "source": "agent:alice",
+        },
         headers={"Authorization": f"Bearer {key_a}"},
     )
     client.post(
         "/v1/facts",
-        json={"entity": "stigmem://test/x", "relation": "test:owner",
-              "value": {"type": "string", "v": "bob"}, "source": "agent:bob"},
+        json={
+            "entity": "stigmem://test/x",
+            "relation": "test:owner",
+            "value": {"type": "string", "v": "bob"},
+            "source": "agent:bob",
+        },
         headers={"Authorization": f"Bearer {key_b}"},
     )
 
@@ -114,6 +138,7 @@ def test_tenants_see_only_their_own_facts(two_tenants: tuple) -> None:
 # ---------------------------------------------------------------------------
 # Garden isolation
 # ---------------------------------------------------------------------------
+
 
 def test_garden_invisible_cross_tenant(two_tenants: tuple) -> None:
     """Tenant B cannot see Tenant A's garden by slug or in listing."""
@@ -176,9 +201,14 @@ def test_tenant_a_cannot_write_to_tenant_b_garden(two_tenants: tuple) -> None:
     # Tenant A tries to write into it — should 404 (garden not visible across tenants)
     resp = client.post(
         "/v1/facts",
-        json={"entity": "stigmem://test/e", "relation": "test:x",
-              "value": {"type": "string", "v": "v"}, "source": "agent:alice",
-              "scope": "company", "garden_id": garden_id},
+        json={
+            "entity": "stigmem://test/e",
+            "relation": "test:x",
+            "value": {"type": "string", "v": "v"},
+            "source": "agent:alice",
+            "scope": "company",
+            "garden_id": garden_id,
+        },
         headers={"Authorization": f"Bearer {key_a}"},
     )
     assert resp.status_code == 404
@@ -188,6 +218,7 @@ def test_tenant_a_cannot_write_to_tenant_b_garden(two_tenants: tuple) -> None:
 # Audit isolation
 # ---------------------------------------------------------------------------
 
+
 def test_audit_scoped_by_tenant(two_tenants: tuple) -> None:
     """Audit log only returns entries for the caller's tenant."""
     client, key_a, key_b = two_tenants
@@ -195,8 +226,12 @@ def test_audit_scoped_by_tenant(two_tenants: tuple) -> None:
     # Tenant A writes a fact
     client.post(
         "/v1/facts",
-        json={"entity": "stigmem://test/audit-entity", "relation": "test:q",
-              "value": {"type": "string", "v": "1"}, "source": "agent:alice"},
+        json={
+            "entity": "stigmem://test/audit-entity",
+            "relation": "test:q",
+            "value": {"type": "string", "v": "1"},
+            "source": "agent:alice",
+        },
         headers={"Authorization": f"Bearer {key_a}"},
     )
 

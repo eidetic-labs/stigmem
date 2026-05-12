@@ -39,9 +39,9 @@ class TransparencyLogUnavailable(RuntimeError):
 class LogEntry:
     """A transparency-log inclusion record."""
 
-    log_id: str          # opaque backend identifier (file path hash or Rekor tree ID)
-    leaf_hash: str       # hex SHA-256 of the canonical leaf data
-    log_index: int       # sequential index in the log
+    log_id: str  # opaque backend identifier (file path hash or Rekor tree ID)
+    leaf_hash: str  # hex SHA-256 of the canonical leaf data
+    log_index: int  # sequential index in the log
     integrated_time: int  # Unix epoch seconds
     inclusion_proof: dict[str, Any] = field(default_factory=dict)
     raw: dict[str, Any] = field(default_factory=dict)  # full backend response
@@ -272,6 +272,7 @@ class RekorLog(TransparencyLog):
             # Verify leaf hash matches what we stored
             stored_body = stored.get("body", "")
             import base64
+
             try:
                 decoded = json.loads(base64.b64decode(stored_body + "=="))
                 stored_hash = (
@@ -282,8 +283,7 @@ class RekorLog(TransparencyLog):
 
             if stored_hash and stored_hash != log_entry.leaf_hash:
                 raise ValueError(
-                    f"leaf_hash mismatch: stored={stored_hash!r}, "
-                    f"expected={log_entry.leaf_hash!r}"
+                    f"leaf_hash mismatch: stored={stored_hash!r}, expected={log_entry.leaf_hash!r}"
                 )
 
             # Delegate checkpoint/STH verification to sigstore.transparency.
@@ -291,6 +291,7 @@ class RekorLog(TransparencyLog):
             # means the log checkpoint cannot be trusted and is a hard error.
             try:
                 from sigstore.transparency import LogEntry as SigstoreLogEntry
+
                 _ = SigstoreLogEntry.from_response(data)
             except ImportError as exc:
                 logger.warning(

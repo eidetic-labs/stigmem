@@ -28,7 +28,10 @@ def _args(**kwargs: object) -> argparse.Namespace:
 
 class _FakeResponse:
     def __init__(
-        self, status_code: int, json_body: Any = None, text: str = "",
+        self,
+        status_code: int,
+        json_body: Any = None,
+        text: str = "",
     ) -> None:
         self.status_code = status_code
         self._json = json_body if json_body is not None else {}
@@ -62,9 +65,7 @@ def _write_md(path: Path, name: str, body: str) -> Path:
 
 
 class TestInstructionManifestGenerate:
-    def test_not_a_directory_returns_1(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_not_a_directory_returns_1(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
         from stigmem_node.cli import _cmd_instruction_manifest_generate
 
         args = _args(
@@ -82,7 +83,10 @@ class TestInstructionManifestGenerate:
     ) -> None:
         from stigmem_node.cli import _cmd_instruction_manifest_generate
 
-        _write_md(tmp_path, "guide", textwrap.dedent("""\
+        _write_md(
+            tmp_path,
+            "guide",
+            textwrap.dedent("""\
             # Top heading (ignored — H1)
 
             ## Section One
@@ -96,7 +100,8 @@ class TestInstructionManifestGenerate:
             ### Subsection
 
             Nested H3 content with keywords for testing.
-        """))
+        """),
+        )
 
         args = _args(
             path=str(tmp_path),
@@ -139,9 +144,7 @@ class TestInstructionManifestGenerate:
         manifest = json.loads(out_path.read_text())
         assert manifest["entries"]
 
-    def test_handles_md_file_with_no_headings(
-        self, tmp_path: Path
-    ) -> None:
+    def test_handles_md_file_with_no_headings(self, tmp_path: Path) -> None:
         from stigmem_node.cli import _cmd_instruction_manifest_generate
 
         # File with no H2/H3 → falls back to one chunk derived from filename
@@ -156,9 +159,7 @@ class TestInstructionManifestGenerate:
         )
         assert _cmd_instruction_manifest_generate(args) == 0
 
-    def test_skips_empty_directory(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_skips_empty_directory(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
         from stigmem_node.cli import _cmd_instruction_manifest_generate
 
         # Empty directory → empty manifest
@@ -174,7 +175,9 @@ class TestInstructionManifestGenerate:
         assert manifest["entries"] == []
 
     def test_skips_unreadable_md_file(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from pathlib import Path as _Path
@@ -211,7 +214,11 @@ class TestInstructionManifestGenerate:
 
 
 def _seed_fact_without_cid(
-    db_path: str, *, fact_id: str, entity: str, value: str = "v",
+    db_path: str,
+    *,
+    fact_id: str,
+    entity: str,
+    value: str = "v",
 ) -> None:
     """Insert a fact row with cid=NULL so backfill-cids picks it up."""
     conn = sqlite3.connect(db_path)
@@ -221,9 +228,17 @@ def _seed_fact_without_cid(
             confidence, timestamp, hlc, tenant_id, cid)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)""",
         (
-            fact_id, entity, "memory:knows", "string", value,
-            "stigmem://test/source", "local", 1.0,
-            "2026-01-01T00:00:00Z", "0:0:0", "default",
+            fact_id,
+            entity,
+            "memory:knows",
+            "string",
+            value,
+            "stigmem://test/source",
+            "local",
+            1.0,
+            "2026-01-01T00:00:00Z",
+            "0:0:0",
+            "default",
         ),
     )
     conn.commit()
@@ -232,7 +247,9 @@ def _seed_fact_without_cid(
 
 class TestBackfillCids:
     def test_no_facts_to_backfill(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_backfill_cids
 
@@ -242,7 +259,9 @@ class TestBackfillCids:
         assert "0 facts updated" in capsys.readouterr().err
 
     def test_quiet_mode_suppresses_output(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_backfill_cids
 
@@ -253,7 +272,9 @@ class TestBackfillCids:
         assert capsys.readouterr().err == ""
 
     def test_backfills_facts_missing_cid(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_backfill_cids
 
@@ -274,7 +295,9 @@ class TestBackfillCids:
         assert all(cid for _, cid in rows)
 
     def test_db_path_falls_back_to_env(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_backfill_cids
@@ -295,7 +318,9 @@ class TestBackfillCids:
 
 class TestAuthBootstrapKey:
     def test_no_key_returns_2_with_helpful_error(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_auth_bootstrap_key
@@ -311,7 +336,8 @@ class TestAuthBootstrapKey:
         assert "no key value provided" in err
 
     def test_short_key_returns_2(
-        self, capsys: pytest.CaptureFixture,
+        self,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_auth_bootstrap_key
 
@@ -324,7 +350,9 @@ class TestAuthBootstrapKey:
         assert "at least 16 characters" in capsys.readouterr().err
 
     def test_first_run_registers_key(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node import db as db_mod
@@ -334,6 +362,7 @@ class TestAuthBootstrapKey:
         monkeypatch.setattr(db_mod.settings, "db_path", db)
         # auth.register_api_key also reads settings.db_path indirectly
         from stigmem_node import auth as auth_mod
+
         monkeypatch.setattr(auth_mod.settings, "db_path", db)
 
         args = _args(
@@ -349,7 +378,9 @@ class TestAuthBootstrapKey:
         assert "stigmem://test/admin" in combined
 
     def test_second_run_refuses_when_keys_exist(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node import auth as auth_mod
@@ -362,6 +393,7 @@ class TestAuthBootstrapKey:
 
         # Seed an existing key so bootstrap refuses
         from stigmem_node.auth import create_api_key
+
         create_api_key("stigmem://test/preexisting", ["admin"])
 
         args = _args(
@@ -373,7 +405,9 @@ class TestAuthBootstrapKey:
         assert "not empty" in capsys.readouterr().err
 
     def test_key_via_environment_variable(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node import auth as auth_mod
@@ -429,6 +463,7 @@ def _patch_httpx(
         raise AssertionError(f"unexpected POST {url}")
 
     import httpx
+
     monkeypatch.setattr(httpx, "get", fake_get)
     monkeypatch.setattr(httpx, "post", fake_post)
     return captured
@@ -446,7 +481,9 @@ class TestFederationRegisterPeer:
         return _args(**base)
 
     def test_local_node_unreachable(
-        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
         tmp_path: Path,
     ) -> None:
         from stigmem_node import db as db_mod
@@ -461,7 +498,9 @@ class TestFederationRegisterPeer:
         assert "cannot reach local node" in capsys.readouterr().err
 
     def test_local_node_missing_federation_pubkey(
-        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
         tmp_path: Path,
     ) -> None:
         from stigmem_node import db as db_mod
@@ -474,7 +513,8 @@ class TestFederationRegisterPeer:
             monkeypatch,
             get_responses={
                 ".well-known/stigmem": _FakeResponse(
-                    200, {"node_id": "stigmem://local", "federation_pubkey": ""},
+                    200,
+                    {"node_id": "stigmem://local", "federation_pubkey": ""},
                 ),
             },
         )
@@ -483,7 +523,9 @@ class TestFederationRegisterPeer:
         assert "no federation_pubkey" in capsys.readouterr().err
 
     def test_remote_returns_409_already_registered(
-        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
         tmp_path: Path,
     ) -> None:
         from stigmem_node import db as db_mod
@@ -510,7 +552,9 @@ class TestFederationRegisterPeer:
         assert "already registered" in capsys.readouterr().out
 
     def test_remote_returns_active(
-        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
         tmp_path: Path,
     ) -> None:
         from stigmem_node import db as db_mod
@@ -529,7 +573,8 @@ class TestFederationRegisterPeer:
             },
             post_responses={
                 "/v1/federation/peers": _FakeResponse(
-                    201, {"status": "active", "peer_id": "p-99"},
+                    201,
+                    {"status": "active", "peer_id": "p-99"},
                 ),
             },
         )
@@ -538,7 +583,9 @@ class TestFederationRegisterPeer:
         assert "peer registered and verified" in capsys.readouterr().out
 
     def test_remote_returns_pending_status(
-        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
         tmp_path: Path,
     ) -> None:
         from stigmem_node import db as db_mod
@@ -567,7 +614,9 @@ class TestFederationRegisterPeer:
         assert "not yet active" in capsys.readouterr().err
 
     def test_remote_returns_500(
-        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
         tmp_path: Path,
     ) -> None:
         from stigmem_node import db as db_mod
@@ -593,7 +642,9 @@ class TestFederationRegisterPeer:
         assert "remote node returned 500" in capsys.readouterr().err
 
     def test_remote_unreachable_after_local_check(
-        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
         tmp_path: Path,
     ) -> None:
         from stigmem_node import db as db_mod
@@ -624,7 +675,9 @@ class TestFederationRegisterPeer:
 
 class TestIdentityRotateKeyEarlyBail:
     def test_no_node_private_key_returns_1(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_identity_rotate_key
@@ -634,13 +687,18 @@ class TestIdentityRotateKeyEarlyBail:
         monkeypatch.setattr(cap_mod, "load_node_private_key", lambda: None)
 
         args = _args(
-            db=db, dual_trust_days=90, dry_run=True, kind="node",
+            db=db,
+            dual_trust_days=90,
+            dry_run=True,
+            kind="node",
         )
         assert _cmd_identity_rotate_key(args) == 1
         assert "STIGMEM_NODE_PRIVATE_KEY is not configured" in capsys.readouterr().err
 
     def test_no_manifest_in_db_returns_1(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -653,11 +711,13 @@ class TestIdentityRotateKeyEarlyBail:
         # CLI patches settings_module.settings via args.db, but db() reads
         # db_mod.settings — patch that too so migrations land in our test DB.
         monkeypatch.setattr(db_mod.settings, "db_path", db)
-        monkeypatch.setattr(cap_mod, "load_node_private_key",
-                            lambda: Ed25519PrivateKey.generate())
+        monkeypatch.setattr(cap_mod, "load_node_private_key", lambda: Ed25519PrivateKey.generate())
 
         args = _args(
-            db=db, dual_trust_days=90, dry_run=True, kind="node",
+            db=db,
+            dual_trust_days=90,
+            dry_run=True,
+            kind="node",
         )
         assert _cmd_identity_rotate_key(args) == 1
         assert "no manifest found" in capsys.readouterr().err
@@ -665,7 +725,9 @@ class TestIdentityRotateKeyEarlyBail:
 
 class TestAuditDiscoveryDbOpenFailure:
     def test_open_failure_returns_1(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_audit_discovery
 
@@ -713,7 +775,9 @@ class TestInstructionMigrate:
         return _args(**base)
 
     def test_path_does_not_exist_returns_1(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_instruction_migrate
 
@@ -722,7 +786,9 @@ class TestInstructionMigrate:
         assert "does not exist" in capsys.readouterr().err
 
     def test_no_chunks_found_returns_0(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_instruction_migrate
 
@@ -734,7 +800,9 @@ class TestInstructionMigrate:
         assert "No instruction chunks found" in capsys.readouterr().err
 
     def test_dry_run_returns_0(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_instruction_migrate
 
@@ -746,19 +814,26 @@ class TestInstructionMigrate:
         assert "Migration Preview" in out
 
     def test_skill_branch_when_no_role(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_instruction_migrate
 
         path = self._write_md_dir(tmp_path)
         args = self._common_args(
-            path=str(path), role=None, skill="writing", dry_run=True,
+            path=str(path),
+            role=None,
+            skill="writing",
+            dry_run=True,
         )
         assert _cmd_instruction_migrate(args) == 0
         assert "skill:writing" in capsys.readouterr().out
 
     def test_no_api_key_returns_1(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_instruction_migrate
@@ -770,7 +845,9 @@ class TestInstructionMigrate:
         assert "STIGMEM_API_KEY" in capsys.readouterr().err
 
     def test_write_facts_failure_returns_1(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node import instruction_migrate as im
@@ -785,7 +862,9 @@ class TestInstructionMigrate:
         assert "failed to write" in capsys.readouterr().err
 
     def test_publish_manifest_failure_returns_1(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from stigmem_node import instruction_migrate as im
         from stigmem_node.cli import _cmd_instruction_migrate
@@ -799,7 +878,9 @@ class TestInstructionMigrate:
         assert _cmd_instruction_migrate(args) == 1
 
     def test_full_success_path(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node import instruction_migrate as im
@@ -816,7 +897,9 @@ class TestInstructionMigrate:
         assert "manifest published" in out
 
     def test_db_loader_path_with_seeded_facts(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Exercise the args.db branch (1150-1175) by passing a real DB."""
         from stigmem_node.cli import _cmd_instruction_migrate
@@ -825,12 +908,17 @@ class TestInstructionMigrate:
         path = self._write_md_dir(tmp_path)
 
         args = self._common_args(
-            path=str(path), api_key=None, db=db, dry_run=True,
+            path=str(path),
+            api_key=None,
+            db=db,
+            dry_run=True,
         )
         assert _cmd_instruction_migrate(args) == 0
 
     def test_api_loader_path_with_mocked_httpx(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Exercise the elif api_key branch (1176-1207) — pre-flight HTTP fetches."""
         import httpx
@@ -846,6 +934,8 @@ class TestInstructionMigrate:
 
         path = self._write_md_dir(tmp_path)
         args = self._common_args(
-            path=str(path), api_key="kkkkkkkkkkkkkkkk", dry_run=True,
+            path=str(path),
+            api_key="kkkkkkkkkkkkkkkk",
+            dry_run=True,
         )
         assert _cmd_instruction_migrate(args) == 0

@@ -33,14 +33,13 @@ from cryptography.hazmat.primitives.serialization import (
 )
 
 from stigmem_node.identity.capability import (
-    CapabilityTokenError,
     _DUAL_TRUST_DAYS,
+    CapabilityTokenError,
     _token_signing_body,
     _verify_token_signature,
 )
 from stigmem_node.identity.key_rotation import (
     KeyRotationLogEntry,
-    RotationResult,
     generate_key_id,
     rotate_key,
     sign_key_rotation_entry,
@@ -54,8 +53,6 @@ from stigmem_node.identity.manifest import (
     verify_manifest,
     verify_rotation_chain,
 )
-from stigmem_node.identity.transparency_log import LocalAppendOnlyLog
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -158,6 +155,7 @@ def _make_token_body(
 def _setup_db(tmp_path: Path) -> tuple[sqlite3.Connection, str]:
     """Create a minimal DB with the capability_tokens table. Returns (conn, db_path)."""
     from stigmem_node.db import apply_migrations
+
     db_path = str(tmp_path / "test.db")
     apply_migrations(db_path=db_path)
     conn = sqlite3.connect(db_path)
@@ -317,7 +315,7 @@ class TestRotateKeyWithLocalTL:
         finally:
             settings_module.settings = orig  # type: ignore[assignment]
 
-        import base64 as _b64
+
         entry = result.rotation_log_entry
         # Re-sign with old key and compare — proves rotation_sig is by old key
         expected_sig = sign_key_rotation_entry(
@@ -376,7 +374,8 @@ class TestPath1SingleRotation:
             previous_public_key=pub_a,  # dual-trust key stored here
         )
         manifest_b = _make_manifest(
-            priv_b, pub_b,
+            priv_b,
+            pub_b,
             entity_uri=entity_uri,
             rotation_events=[rotation_evt],
         )
@@ -391,6 +390,7 @@ class TestPath1SingleRotation:
 
         try:
             from stigmem_node.identity.capability import verify_token
+
             result = verify_token(token_json, lambda _uri: manifest_b)
             assert result is True
         finally:
@@ -424,7 +424,8 @@ class TestPath1SingleRotation:
             previous_public_key=pub_a,
         )
         manifest_b = _make_manifest(
-            priv_b, pub_b,
+            priv_b,
+            pub_b,
             entity_uri=entity_uri,
             rotation_events=[rotation_evt],
         )
@@ -442,9 +443,7 @@ class TestPath1SingleRotation:
             "nonce": uuid.uuid4().hex + uuid.uuid4().hex,
         }
         signing_body = _token_signing_body(token_body)
-        sig_b64 = (
-            base64.urlsafe_b64encode(priv_a.sign(signing_body)).decode().rstrip("=")
-        )
+        sig_b64 = base64.urlsafe_b64encode(priv_a.sign(signing_body)).decode().rstrip("=")
         token_body["signature"] = sig_b64
 
         with pytest.raises(CapabilityTokenError, match="signature verification failed"):
@@ -496,7 +495,8 @@ class TestPath2DoubleRollover:
             previous_public_key=pub_b,
         )
         manifest_c = _make_manifest(
-            priv_c, pub_c,
+            priv_c,
+            pub_c,
             entity_uri=entity_uri,
             key_id=key_c_id,
             rotation_events=[evt_ab, evt_bc],
@@ -601,8 +601,10 @@ class TestPath3ExpiredPriorKey:
         key_b_id = generate_key_id(priv_b.public_key())
 
         # Rotation exactly _DUAL_TRUST_DAYS ago
-        rotated_at = (datetime.now(UTC) - timedelta(days=_DUAL_TRUST_DAYS)).isoformat().replace(
-            "+00:00", "Z"
+        rotated_at = (
+            (datetime.now(UTC) - timedelta(days=_DUAL_TRUST_DAYS))
+            .isoformat()
+            .replace("+00:00", "Z")
         )
         evt = RotationEvent(
             previous_key_id=key_a_id,
@@ -647,9 +649,7 @@ class TestPath4MidFlightFederationHandshake:
     dual-trust window.
     """
 
-    def test_in_flight_token_accepted_after_peer_gets_new_manifest(
-        self, tmp_path: Path
-    ) -> None:
+    def test_in_flight_token_accepted_after_peer_gets_new_manifest(self, tmp_path: Path) -> None:
         conn, db_path = _setup_db(tmp_path)
 
         entity_uri = "https://issuer.example.org"
@@ -664,9 +664,7 @@ class TestPath4MidFlightFederationHandshake:
         priv_b, pub_b, _ = _gen_keypair()
         key_b_id = generate_key_id(priv_b.public_key())
         rotated_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
-        rot_sig = sign_rotation_event(
-            manifest_a.key_id, key_b_id, pub_b, rotated_at, priv_a
-        )
+        rot_sig = sign_rotation_event(manifest_a.key_id, key_b_id, pub_b, rotated_at, priv_a)
         evt = RotationEvent(
             previous_key_id=manifest_a.key_id,
             new_key_id=key_b_id,
@@ -676,9 +674,7 @@ class TestPath4MidFlightFederationHandshake:
             previous_public_key=pub_a,
         )
         # Peer receives the new manifest from issuer
-        manifest_b = _make_manifest(
-            priv_b, pub_b, entity_uri=entity_uri, rotation_events=[evt]
-        )
+        manifest_b = _make_manifest(priv_b, pub_b, entity_uri=entity_uri, rotation_events=[evt])
 
         import stigmem_node.db as db_mod
         import stigmem_node.settings as settings_module
@@ -690,6 +686,7 @@ class TestPath4MidFlightFederationHandshake:
 
         try:
             from stigmem_node.identity.capability import verify_token
+
             # Peer verifies old token against new manifest → must succeed (dual-trust)
             result = verify_token(token_json, lambda _uri: manifest_b)
             assert result is True
@@ -714,9 +711,7 @@ class TestPath4MidFlightFederationHandshake:
         priv_b, pub_b, _ = _gen_keypair()
         key_b_id = generate_key_id(priv_b.public_key())
         rotated_at = (datetime.now(UTC) - timedelta(days=91)).isoformat().replace("+00:00", "Z")
-        rot_sig = sign_rotation_event(
-            manifest_a.key_id, key_b_id, pub_b, rotated_at, priv_a
-        )
+        rot_sig = sign_rotation_event(manifest_a.key_id, key_b_id, pub_b, rotated_at, priv_a)
         evt = RotationEvent(
             previous_key_id=manifest_a.key_id,
             new_key_id=key_b_id,
@@ -725,9 +720,7 @@ class TestPath4MidFlightFederationHandshake:
             signature=rot_sig,
             previous_public_key=pub_a,
         )
-        manifest_b = _make_manifest(
-            priv_b, pub_b, entity_uri=entity_uri, rotation_events=[evt]
-        )
+        manifest_b = _make_manifest(priv_b, pub_b, entity_uri=entity_uri, rotation_events=[evt])
 
         import stigmem_node.db as db_mod
         import stigmem_node.settings as settings_module
@@ -739,6 +732,7 @@ class TestPath4MidFlightFederationHandshake:
 
         try:
             from stigmem_node.identity.capability import verify_token
+
             with pytest.raises(CapabilityTokenError, match="signature verification failed"):
                 verify_token(token_json, lambda _uri: manifest_b)
         finally:
@@ -772,6 +766,7 @@ class TestRotationEventSerialization:
         manifest = _make_manifest(priv_b, pub_b, rotation_events=[evt])
 
         from stigmem_node.identity.manifest import manifest_from_dict
+
         d = manifest_to_dict(manifest)
         restored = manifest_from_dict(d)
 

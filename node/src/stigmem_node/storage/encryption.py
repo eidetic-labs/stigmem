@@ -66,7 +66,7 @@ def _load_from_kms_uri(uri: str) -> bytes:
     - ``env://VAR`` — read a 64-char hex-encoded 32-byte key from env var VAR.
     """
     if uri.startswith("env://"):
-        var_name = uri[len("env://"):]
+        var_name = uri[len("env://") :]
         raw = os.environ.get(var_name, "")
         if not raw:
             raise RuntimeError(
@@ -88,8 +88,7 @@ def _load_from_kms_uri(uri: str) -> bytes:
         return key
 
     raise RuntimeError(
-        f"Unsupported KMS URI scheme — only 'env://' is supported in this release. "
-        f"Got: {uri!r}"
+        f"Unsupported KMS URI scheme — only 'env://' is supported in this release. Got: {uri!r}"
     )
 
 

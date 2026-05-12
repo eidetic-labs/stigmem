@@ -96,7 +96,9 @@ def create_subscription(
 ) -> SubscriptionRecord:
     """Create a subscription (spec §20.3.1). subscriber_identity is always the caller (BOLA)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     # §17 garden ACL: if target is a garden URI, caller must be a member
     if req.target.startswith("stigmem://") and "/garden/" in req.target:
@@ -106,11 +108,12 @@ def create_subscription(
         require_garden_read(garden, identity)
 
     # Idempotency key: return existing subscription if key matches THIS caller.
-    # Scoped to (subscriber_identity, tenant_id) to prevent cross-entity metadata leakage (R2).
+    # Scoped to subscriber and tenant to prevent cross-entity metadata leakage (R2).
     if req.idempotency_key:
         with db() as conn:
             existing = conn.execute(
-                "SELECT * FROM subscriptions WHERE idempotency_key=? AND tenant_id=? AND subscriber_identity=?",
+                """SELECT * FROM subscriptions
+                   WHERE idempotency_key=? AND tenant_id=? AND subscriber_identity=?""",
                 (req.idempotency_key, identity.tenant_id, identity.entity_uri),
             ).fetchone()
         if existing is not None:
@@ -122,7 +125,13 @@ def create_subscription(
             """SELECT * FROM subscriptions
                WHERE subscriber_identity=? AND target=? AND on_change=?
                  AND delivery_address=? AND tenant_id=?""",
-            (identity.entity_uri, req.target, req.on_change, req.delivery_address, identity.tenant_id),
+            (
+                identity.entity_uri,
+                req.target,
+                req.on_change,
+                req.delivery_address,
+                identity.tenant_id,
+            ),
         ).fetchone()
         if dupe is not None:
             return _row_to_record(dupe)
@@ -138,8 +147,15 @@ def create_subscription(
                 delivery_address, idempotency_key, created_at, tenant_id)
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
-                sub_id, identity.entity_uri, req.target, target_kind, req.on_change,
-                req.delivery_address, req.idempotency_key, now, identity.tenant_id,
+                sub_id,
+                identity.entity_uri,
+                req.target,
+                target_kind,
+                req.on_change,
+                req.delivery_address,
+                req.idempotency_key,
+                now,
+                identity.tenant_id,
             ),
         )
         row = conn.execute("SELECT * FROM subscriptions WHERE id=?", (sub_id,)).fetchone()
@@ -153,7 +169,9 @@ def list_subscriptions(
 ) -> SubscriptionListResponse:
     """List the authenticated caller's subscriptions (BOLA: own only)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     with db() as conn:
         rows = conn.execute(
@@ -176,7 +194,9 @@ def get_subscription(
 ) -> SubscriptionRecord:
     """Get a subscription by ID (BOLA: returns 404 if caller does not own it)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     with db() as conn:
         row = conn.execute(
@@ -197,7 +217,9 @@ def delete_subscription(
 ) -> None:
     """Cancel a subscription (BOLA: only the owner may delete)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     with db() as conn:
         row = conn.execute(
@@ -222,7 +244,8 @@ def list_subscription_events(
     subscription_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
     since: str | None = Query(
-        None, description="ISO 8601 timestamp; return events created at or after this time",
+        None,
+        description="ISO 8601 timestamp; return events created at or after this time",
     ),
     cursor: str | None = Query(None, description="Opaque pagination cursor (event id)"),
     limit: int = Query(50, ge=1, le=500),
@@ -232,7 +255,9 @@ def list_subscription_events(
     Results are bounded to the configured replay window (default 24 h).
     """
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     with db() as conn:
         sub_row = conn.execute(
@@ -247,15 +272,20 @@ def list_subscription_events(
     window_cutoff = (datetime.now(UTC) - timedelta(seconds=replay_s)).isoformat()
     effective_since = max(since, window_cutoff) if since is not None else window_cutoff
 
-    conditions: list[str] = ["subscription_id = ?", "created_at >= ?"]
-    params: list[Any] = [subscription_id, effective_since]
-
     if cursor:
-        conditions.append("rowid > ?")
-        params.append(int(cursor))
-
-    where = " AND ".join(conditions)
-    sql = f"SELECT rowid, * FROM subscription_events WHERE {where} ORDER BY rowid ASC LIMIT ?"  # nosec B608
+        sql = (
+            "SELECT rowid, * FROM subscription_events "
+            "WHERE subscription_id = ? AND created_at >= ? AND rowid > ? "
+            "ORDER BY rowid ASC LIMIT ?"
+        )
+        params: list[Any] = [subscription_id, effective_since, int(cursor)]
+    else:
+        sql = (
+            "SELECT rowid, * FROM subscription_events "
+            "WHERE subscription_id = ? AND created_at >= ? "
+            "ORDER BY rowid ASC LIMIT ?"
+        )
+        params = [subscription_id, effective_since]
     params.append(limit + 1)
 
     with db() as conn:
@@ -269,7 +299,10 @@ def list_subscription_events(
     # subscription_events.payload stores the raw pre-delivery payload; without this
     # re-check a subscriber could retrieve garden-scoped facts they've since been
     # removed from, or sanitizer-redacted content, via the replay window.
-    event_ctx = {"subscriber_identity": sub_row["subscriber_identity"], "tenant_id": identity.tenant_id}
+    event_ctx = {
+        "subscriber_identity": sub_row["subscriber_identity"],
+        "tenant_id": identity.tenant_id,
+    }
     safe_events: list[SubscriptionEventRecord] = []
     for r in rows:
         raw_payload = json.loads(r["payload"])

@@ -1,24 +1,25 @@
 """Billing hook emission tests — fact_written and garden_created events."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
 
 import pytest
+from fastapi.testclient import TestClient
 
 import stigmem_node.auth as auth_mod
+import stigmem_node.billing as billing_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_module
-import stigmem_node.billing as billing_mod
-from fastapi.testclient import TestClient
-from stigmem_node.billing import BillingEvent, CaptureBus, set_hook_bus
+from stigmem_node.billing import CaptureBus, set_hook_bus
 from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
 
-
 # ---------------------------------------------------------------------------
 # Fixture: client with CaptureBus injected
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture()
 def hooked_client(tmp_db: str) -> Generator[tuple[TestClient, CaptureBus], None, None]:
@@ -47,14 +48,19 @@ def hooked_client(tmp_db: str) -> Generator[tuple[TestClient, CaptureBus], None,
 # fact_written
 # ---------------------------------------------------------------------------
 
+
 def test_fact_written_event_emitted(hooked_client: tuple) -> None:
     """Asserting a fact emits exactly one fact_written billing event."""
     client, bus = hooked_client
 
     resp = client.post(
         "/v1/facts",
-        json={"entity": "stigmem://test/e1", "relation": "test:x",
-              "value": {"type": "string", "v": "hello"}, "source": "agent:test"},
+        json={
+            "entity": "stigmem://test/e1",
+            "relation": "test:x",
+            "value": {"type": "string", "v": "hello"},
+            "source": "agent:test",
+        },
     )
     assert resp.status_code == 201
     fact_id = resp.json()["id"]
@@ -90,8 +96,12 @@ def test_fact_written_captures_tenant_id(tmp_path: object) -> None:
     with TestClient(app, raise_server_exceptions=True) as c:
         resp = c.post(
             "/v1/facts",
-            json={"entity": "stigmem://test/e2", "relation": "test:y",
-                  "value": {"type": "number", "v": 7}, "source": "agent:tester"},
+            json={
+                "entity": "stigmem://test/e2",
+                "relation": "test:y",
+                "value": {"type": "number", "v": 7},
+                "source": "agent:tester",
+            },
             headers={"Authorization": f"Bearer {key}"},
         )
         assert resp.status_code == 201
@@ -112,8 +122,12 @@ def test_multiple_facts_emit_multiple_events(hooked_client: tuple) -> None:
     for i in range(3):
         client.post(
             "/v1/facts",
-            json={"entity": f"stigmem://test/e{i}", "relation": "test:seq",
-                  "value": {"type": "number", "v": i}, "source": "agent:test"},
+            json={
+                "entity": f"stigmem://test/e{i}",
+                "relation": "test:seq",
+                "value": {"type": "number", "v": i},
+                "source": "agent:test",
+            },
         )
 
     assert len(bus.events) == 3
@@ -125,6 +139,7 @@ def test_multiple_facts_emit_multiple_events(hooked_client: tuple) -> None:
 # ---------------------------------------------------------------------------
 # garden_created
 # ---------------------------------------------------------------------------
+
 
 def test_garden_created_event_emitted(hooked_client: tuple) -> None:
     """Creating a garden emits exactly one garden_created billing event."""
@@ -153,8 +168,12 @@ def test_fact_and_garden_events_independent(hooked_client: tuple) -> None:
     )
     client.post(
         "/v1/facts",
-        json={"entity": "stigmem://test/g", "relation": "test:z",
-              "value": {"type": "string", "v": "x"}, "source": "agent:test"},
+        json={
+            "entity": "stigmem://test/g",
+            "relation": "test:z",
+            "value": {"type": "string", "v": "x"},
+            "source": "agent:test",
+        },
     )
 
     event_types = [e.event_type for e in bus.events]

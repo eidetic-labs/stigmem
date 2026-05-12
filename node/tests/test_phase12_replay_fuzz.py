@@ -23,6 +23,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import canonicaljson
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import (
@@ -34,7 +35,6 @@ from cryptography.hazmat.primitives.serialization import (
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-import canonicaljson
 from stigmem_node.identity.capability import CapabilityTokenError, verify_token
 from stigmem_node.identity.manifest import OrgManifest, sign_manifest
 
@@ -45,9 +45,7 @@ from stigmem_node.identity.manifest import OrgManifest, sign_manifest
 
 _FUZZ_PRIV: Ed25519PrivateKey = Ed25519PrivateKey.generate()
 _FUZZ_PUB_B64: str = (
-    base64.urlsafe_b64encode(
-        _FUZZ_PRIV.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-    )
+    base64.urlsafe_b64encode(_FUZZ_PRIV.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw))
     .decode()
     .rstrip("=")
 )
@@ -214,7 +212,7 @@ def test_fuzz_expired_token_always_rejected(seconds_past: int) -> None:
         values=st.one_of(
             st.none(),
             st.booleans(),
-            st.integers(min_value=-10**9, max_value=10**9),
+            st.integers(min_value=-(10**9), max_value=10**9),
             st.text(max_size=200),
             st.lists(st.text(max_size=20), max_size=5),
         ),
@@ -237,8 +235,7 @@ def test_fuzz_arbitrary_json_never_crashes(payload: dict) -> None:
         pass  # expected
     except Exception as exc:
         raise AssertionError(
-            f"verify_token raised unexpected {type(exc).__name__}: {exc}\n"
-            f"Input: {token_json[:300]}"
+            f"verify_token raised unexpected {type(exc).__name__}: {exc}\nInput: {token_json[:300]}"
         ) from exc
 
 
@@ -276,9 +273,7 @@ def test_fuzz_mutated_signed_field_rejected(field_name: str, new_value: str) -> 
         verify_token(token_json, _manifest_lookup, trust_mode="relaxed")
         # If we reach here without exception, the verifier accepted a mutated token.
         # This is a security regression.
-        pytest.fail(
-            f"verify_token accepted a token with mutated {field_name!r}={new_value!r}"
-        )
+        pytest.fail(f"verify_token accepted a token with mutated {field_name!r}={new_value!r}")
     except CapabilityTokenError:
         pass  # expected
     except Exception as exc:
@@ -302,9 +297,10 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
     consuming nonces inside the loop.
     """
     import jwt
+    from fastapi import HTTPException
+
     import stigmem_node.db as db_mod
     import stigmem_node.settings as settings_module
-    from fastapi import HTTPException
     from stigmem_node.db import apply_migrations
     from stigmem_node.peer_auth import verify_peer_token
     from stigmem_node.settings import Settings
@@ -330,7 +326,8 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
         conn = sqlite3.connect(db_file)
         conn.execute(
             "INSERT INTO peers "
-            "(id, node_id, node_url, federation_pubkey, status, allowed_scopes, created_at, declaration_sig, signed_at) "
+            "(id, node_id, node_url, federation_pubkey, status, allowed_scopes, "
+            "created_at, declaration_sig, signed_at) "
             "VALUES (?, ?, ?, ?, 'active', '[]', ?, 'test-sig', ?)",
             (peer_db_id, peer_node_id, "http://fuzz-peer", peer_pub_b64, now_iso, now_iso),
         )
@@ -338,9 +335,7 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
         conn.close()
 
         original_settings = settings_module.settings
-        test_settings = Settings(
-            db_path=db_file, auth_required=False, node_url=local_node_id
-        )
+        test_settings = Settings(db_path=db_file, auth_required=False, node_url=local_node_id)
         settings_module.settings = test_settings  # type: ignore[assignment]
         db_mod.settings = test_settings  # type: ignore[assignment]
 

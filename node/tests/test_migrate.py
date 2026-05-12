@@ -33,7 +33,9 @@ def _insert_fact(
 
 def _alias_rows(db_path: str) -> list[tuple[str, str]]:
     conn = sqlite3.connect(db_path)
-    rows = conn.execute("SELECT raw_uri, canonical_uri FROM entity_aliases ORDER BY raw_uri").fetchall()
+    rows = conn.execute(
+        "SELECT raw_uri, canonical_uri FROM entity_aliases ORDER BY raw_uri"
+    ).fetchall()
     conn.close()
     return [(r[0], r[1]) for r in rows]
 
@@ -41,7 +43,8 @@ def _alias_rows(db_path: str) -> list[tuple[str, str]]:
 class TestNormalizeEntitiesSweep:
     def test_non_canonical_entity_inserted(self, tmp_db: str) -> None:
         _insert_fact(
-            tmp_db, "f1",
+            tmp_db,
+            "f1",
             entity="stigmem://Company.EXAMPLE/Issue/EG-18",
             source="stigmem://company.example/agent/cto",
         )
@@ -55,7 +58,8 @@ class TestNormalizeEntitiesSweep:
 
     def test_non_canonical_source_inserted(self, tmp_db: str) -> None:
         _insert_fact(
-            tmp_db, "f1",
+            tmp_db,
+            "f1",
             entity="stigmem://company.example/issue/eg-18",
             source="stigmem://Agent.ACME/Bot/ASSISTANT",
         )
@@ -68,7 +72,8 @@ class TestNormalizeEntitiesSweep:
 
     def test_canonical_uris_skipped(self, tmp_db: str) -> None:
         _insert_fact(
-            tmp_db, "f1",
+            tmp_db,
+            "f1",
             entity="stigmem://company.example/issue/eg-18",
             source="stigmem://company.example/agent/cto",
         )
@@ -79,7 +84,8 @@ class TestNormalizeEntitiesSweep:
 
     def test_idempotent_second_run(self, tmp_db: str) -> None:
         _insert_fact(
-            tmp_db, "f1",
+            tmp_db,
+            "f1",
             entity="stigmem://Company.EXAMPLE/Issue/EG-18",
             source="stigmem://company.example/agent/cto",
         )
@@ -91,9 +97,12 @@ class TestNormalizeEntitiesSweep:
         assert already == 1
         assert len(_alias_rows(tmp_db)) == 1  # no duplicate
 
-    def test_dry_run_prints_but_does_not_insert(self, tmp_db: str, capsys: pytest.CaptureFixture) -> None:
+    def test_dry_run_prints_but_does_not_insert(
+        self, tmp_db: str, capsys: pytest.CaptureFixture
+    ) -> None:
         _insert_fact(
-            tmp_db, "f1",
+            tmp_db,
+            "f1",
             entity="stigmem://Company.EXAMPLE/Issue/EG-18",
             source="stigmem://company.example/agent/cto",
         )
@@ -107,9 +116,16 @@ class TestNormalizeEntitiesSweep:
         assert _alias_rows(tmp_db) == []  # nothing inserted
 
     def test_multiple_facts_same_non_canonical_deduped(self, tmp_db: str) -> None:
-        _insert_fact(tmp_db, "f1", entity="stigmem://Company.EXAMPLE/Issue/EG-18", source="agent:cto")
-        _insert_fact(tmp_db, "f2", entity="stigmem://Company.EXAMPLE/Issue/EG-18", source="agent:bot",
-                     relation="roadmap:owner")
+        _insert_fact(
+            tmp_db, "f1", entity="stigmem://Company.EXAMPLE/Issue/EG-18", source="agent:cto"
+        )
+        _insert_fact(
+            tmp_db,
+            "f2",
+            entity="stigmem://Company.EXAMPLE/Issue/EG-18",
+            source="agent:bot",
+            relation="roadmap:owner",
+        )
         registered, _ = normalize_entities_sweep(tmp_db)
         assert registered == 1  # same raw_uri only inserted once
         assert len(_alias_rows(tmp_db)) == 1
@@ -121,7 +137,8 @@ class TestNormalizeEntitiesSweep:
 
     def test_informal_uri_alias_registered(self, tmp_db: str) -> None:
         _insert_fact(
-            tmp_db, "f1",
+            tmp_db,
+            "f1",
             entity="issue:EG-42",
             source="agent:assistant",
         )

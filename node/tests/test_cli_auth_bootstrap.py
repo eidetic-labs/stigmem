@@ -42,6 +42,7 @@ def fresh_db(tmp_path: object, monkeypatch: pytest.MonkeyPatch) -> str:
     path = str(tmp_path) + "/cli-test.db"  # type: ignore[operator]
     db_mod.apply_migrations(db_path=path)
     import stigmem_node.settings as settings_mod
+
     monkeypatch.setattr(settings_mod.settings, "db_path", path)
     monkeypatch.setattr(db_mod, "settings", settings_mod.settings)
     yield path
@@ -71,6 +72,7 @@ def _row_for_key(db_path: str, raw_key: str) -> tuple[str, list[str]] | None:
 
 
 # ── Happy path ────────────────────────────────────────────────────────────
+
 
 def test_bootstrap_key_registers_provided_key(fresh_db: str) -> None:
     raw = "a" * 32  # 32 chars; clears the min-length check
@@ -106,6 +108,7 @@ def test_bootstrap_key_reads_env_var_fallback(
 
 # ── Refusal paths ─────────────────────────────────────────────────────────
 
+
 def test_bootstrap_key_refuses_with_no_key_provided(
     fresh_db: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -140,11 +143,10 @@ def test_bootstrap_key_refuses_on_non_empty_table(fresh_db: str) -> None:
 
 # ── Override flags ────────────────────────────────────────────────────────
 
+
 def test_bootstrap_key_honors_entity_uri_override(fresh_db: str) -> None:
     raw = "d" * 32
-    rc, _, stderr = _run(
-        ["auth", "bootstrap-key", "--key", raw, "--entity-uri", "agent:custom"]
-    )
+    rc, _, stderr = _run(["auth", "bootstrap-key", "--key", raw, "--entity-uri", "agent:custom"])
     assert rc == 0
     assert "agent:custom" in stderr
     row = _row_for_key(fresh_db, raw)
@@ -154,9 +156,7 @@ def test_bootstrap_key_honors_entity_uri_override(fresh_db: str) -> None:
 
 def test_bootstrap_key_honors_permissions_override(fresh_db: str) -> None:
     raw = "e" * 32
-    rc, _, _ = _run(
-        ["auth", "bootstrap-key", "--key", raw, "--permissions", "read"]
-    )
+    rc, _, _ = _run(["auth", "bootstrap-key", "--key", raw, "--permissions", "read"])
     assert rc == 0
     row = _row_for_key(fresh_db, raw)
     assert row is not None

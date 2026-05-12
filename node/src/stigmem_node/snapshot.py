@@ -79,6 +79,7 @@ _CURSOR_ARTIFACT = "artifacts/schema_migration_cursor.json"
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _b64url_encode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
@@ -166,9 +167,7 @@ def _trusted_pubkeys(
 def _collect_schema_cursor(db_path: str) -> list[str]:
     try:
         conn = sqlite3.connect(db_path)
-        rows = conn.execute(
-            "SELECT version FROM schema_migrations ORDER BY version ASC"
-        ).fetchall()
+        rows = conn.execute("SELECT version FROM schema_migrations ORDER BY version ASC").fetchall()
         conn.close()
         return [r[0] for r in rows]
     except Exception:
@@ -178,6 +177,7 @@ def _collect_schema_cursor(db_path: str) -> list[str]:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def snapshot_create(
     db_path: str,
@@ -217,9 +217,7 @@ def snapshot_create(
         # -- 2. Schema migration cursor --------------------------------------
         cursor_path = artifacts_dir / "schema_migration_cursor.json"
         applied_migrations = _collect_schema_cursor(db_path)
-        cursor_path.write_text(
-            json.dumps({"applied_migrations": applied_migrations}, indent=2)
-        )
+        cursor_path.write_text(json.dumps({"applied_migrations": applied_migrations}, indent=2))
 
         # -- 3. Hashes -------------------------------------------------------
         artifacts = {
@@ -230,11 +228,10 @@ def snapshot_create(
         # -- 4. Signing key --------------------------------------------------
         if sign_with_key_path is not None:
             priv_key = _load_secondary_key(sign_with_key_path)
-            signer_pubkey = _b64url_encode(
-                priv_key.public_key().public_bytes_raw()
-            )
+            signer_pubkey = _b64url_encode(priv_key.public_key().public_bytes_raw())
         else:
             from .db import get_or_create_federation_keypair, get_or_create_node_id
+
             pub_b64, priv_b64 = get_or_create_federation_keypair(db_path=db_path)
             priv_raw = _b64url_decode(priv_b64)
             priv_key = Ed25519PrivateKey.from_private_bytes(priv_raw)
@@ -243,6 +240,7 @@ def snapshot_create(
         # -- 5. Node identity -----------------------------------------------
         try:
             from .db import get_or_create_node_id
+
             node_id = get_or_create_node_id(db_path=db_path)
         except Exception:
             node_id = ""
@@ -293,9 +291,7 @@ def _load_manifest(manifest_path: Path) -> dict[str, Any]:
         raise SnapshotVerificationError(f"manifest.json is not valid JSON: {exc}") from exc
 
     if manifest.get("version") != _MANIFEST_VERSION:
-        raise SnapshotVerificationError(
-            f"unsupported manifest version {manifest.get('version')!r}"
-        )
+        raise SnapshotVerificationError(f"unsupported manifest version {manifest.get('version')!r}")
     return manifest
 
 
@@ -309,8 +305,7 @@ def _verify_artifact_hashes(manifest: dict[str, Any], tmp: Path) -> None:
         actual_hash = _sha256_file(artifact_path)
         if actual_hash != expected_hash:
             raise SnapshotVerificationError(
-                f"hash mismatch for {arc_name!r}: "
-                f"expected {expected_hash!r}, got {actual_hash!r}"
+                f"hash mismatch for {arc_name!r}: expected {expected_hash!r}, got {actual_hash!r}"
             )
 
 

@@ -41,6 +41,7 @@ def _require_write(identity: Identity) -> None:
 # List quarantined facts
 # ---------------------------------------------------------------------------
 
+
 @router.get("", response_model=QuarantineListResponse)
 def list_quarantined_facts(
     identity: Annotated[Identity, Depends(resolve_identity)],
@@ -133,6 +134,7 @@ def list_quarantined_facts(
 # Admit (promote) a fact from quarantine to the main fabric
 # ---------------------------------------------------------------------------
 
+
 @router.post("/{fact_id}/admit", status_code=status.HTTP_200_OK)
 def admit_fact(
     fact_id: str,
@@ -185,6 +187,7 @@ def admit_fact(
 # Reject a quarantined fact
 # ---------------------------------------------------------------------------
 
+
 @router.post("/{fact_id}/reject", status_code=status.HTTP_200_OK)
 def reject_fact(
     fact_id: str,
@@ -231,6 +234,7 @@ def reject_fact(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _get_quarantined_fact(
     fact_id: str, identity: Identity

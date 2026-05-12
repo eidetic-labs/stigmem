@@ -20,16 +20,14 @@ import time
 import uuid
 from typing import Any
 
-import pytest
-
-from stigmem_node.federation_ingest import ingest_fact
-
 from conftest import FedNode, generate_keypair, make_peer_token
 
+from stigmem_node.federation_ingest import ingest_fact
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_fact(
     entity: str | None = None,
@@ -57,9 +55,7 @@ def _db_fetch_fact(db_path: str, fact_id: str) -> sqlite3.Row | None:
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     try:
-        return conn.execute(
-            "SELECT * FROM facts WHERE id = ?", (fact_id,)
-        ).fetchone()
+        return conn.execute("SELECT * FROM facts WHERE id = ?", (fact_id,)).fetchone()
     finally:
         conn.close()
 
@@ -67,6 +63,7 @@ def _db_fetch_fact(db_path: str, fact_id: str) -> sqlite3.Row | None:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestScopePropagationColumnsUnit:
     """Unit-level validation of Migration 004 columns via direct ingest_fact().
@@ -194,9 +191,15 @@ class TestScopePropagationColumnsUnit:
                     status, established_at, declaration_sig, signed_at)
                    VALUES (?,?,?,?,?,?,?,?,?)""",
                 (
-                    str(uuid.uuid4()), third_id, "http://third-node", pub_b64_third,
+                    str(uuid.uuid4()),
+                    third_id,
+                    "http://third-node",
+                    pub_b64_third,
                     json.dumps(["public", "company"]),
-                    "active", "2026-05-02T00:00:00Z", "dummy_sig", "2026-05-02T00:00:00Z",
+                    "active",
+                    "2026-05-02T00:00:00Z",
+                    "dummy_sig",
+                    "2026-05-02T00:00:00Z",
                 ),
             )
             conn.commit()

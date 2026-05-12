@@ -88,9 +88,7 @@ def _patched_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> str:
 
 
 class TestStorePeerManifest:
-    def test_first_store_inserts_row(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_first_store_inserts_row(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         import sqlite3
 
         from stigmem_node.identity.trust_store import store_peer_manifest
@@ -161,9 +159,7 @@ class TestGetPeerManifest:
         _patched_db(tmp_path, monkeypatch)
         assert get_peer_manifest("https://unknown.example") is None
 
-    def test_returns_stored_manifest(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_returns_stored_manifest(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         from stigmem_node.identity.trust_store import (
             get_peer_manifest,
             store_peer_manifest,
@@ -252,9 +248,7 @@ class TestTryFetchManifest:
         # stigmem:// URIs can't be HTTP-fetched
         assert _try_fetch_manifest("stigmem://node-a") is None
 
-    def test_http_404_returns_none(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_http_404_returns_none(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import httpx
 
         from stigmem_node.identity import trust_store as ts_mod
@@ -308,9 +302,7 @@ class TestRefreshPeerManifests:
 
 
 class TestCleanupExpiredTokens:
-    def test_runs_on_empty_db(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_runs_on_empty_db(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         from stigmem_node.identity.trust_store import cleanup_expired_tokens
 
         _patched_db(tmp_path, monkeypatch)

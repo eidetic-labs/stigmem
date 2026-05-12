@@ -20,6 +20,7 @@ Vector fields (inherits all v1 types, plus v2.0 additions):
   requires_setup?,   # id of another vector that must run first (same DB)
   requires_auth?     # bool: requires auth-enabled client (skipped for now)
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -37,6 +38,7 @@ _VECTOR_DIR = _REPO_ROOT / "data" / "conformance" / "v2.0"
 # ---------------------------------------------------------------------------
 # Load vectors — all *.json files in v2.0/
 # ---------------------------------------------------------------------------
+
 
 def _load_file_groups() -> list[tuple[str, list[dict[str, Any]]]]:
     """Return [(filename, [vector, ...]), ...] for each vector file."""
@@ -60,6 +62,7 @@ for _fname, _vecs in _GROUPS:
 # Assertion helpers
 # ---------------------------------------------------------------------------
 
+
 def _assert_contains(actual: Any, expected: Any, *, path: str) -> None:
     """Recursively assert that actual contains the structure in expected."""
     if isinstance(expected, dict):
@@ -71,10 +74,7 @@ def _assert_contains(actual: Any, expected: Any, *, path: str) -> None:
         assert isinstance(actual, list), f"{path}: expected list, got {type(actual)}"
         for item in expected:
             if isinstance(item, dict):
-                match = any(
-                    all(a.get(k) == v for k, v in item.items())
-                    for a in actual
-                )
+                match = any(all(a.get(k) == v for k, v in item.items()) for a in actual)
                 assert match, f"{path}: list missing item matching {item!r}"
     else:
         assert actual == expected, f"{path}: got {actual!r}, expected {expected!r}"
@@ -83,6 +83,7 @@ def _assert_contains(actual: Any, expected: Any, *, path: str) -> None:
 # ---------------------------------------------------------------------------
 # Request execution
 # ---------------------------------------------------------------------------
+
 
 def _do_request(client: TestClient, vector: dict[str, Any]) -> Any:
     method = vector["method"].lower()
@@ -173,10 +174,9 @@ def _v2_assert_list_contains(
         actual_list = body[list_key]
         assert isinstance(actual_list, list), f"{ctx}: '{list_key}' is not a list"
         if isinstance(expected_item, dict):
-            assert any(
-                all(a.get(k) == v for k, v in expected_item.items())
-                for a in actual_list
-            ), f"{ctx}: list '{list_key}' missing item matching {expected_item!r}"
+            assert any(all(a.get(k) == v for k, v in expected_item.items()) for a in actual_list), (
+                f"{ctx}: list '{list_key}' missing item matching {expected_item!r}"
+            )
         else:
             assert expected_item in actual_list, (
                 f"{ctx}: '{expected_item}' not in {list_key}: {actual_list!r}"

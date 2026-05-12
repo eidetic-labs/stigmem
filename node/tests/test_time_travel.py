@@ -6,9 +6,7 @@ import sqlite3
 import uuid
 from datetime import UTC, datetime, timedelta
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -75,7 +73,7 @@ def _insert_tombstone(
         (
             tomb_id,
             entity_uri,
-            scope,              # plain ScopePattern: "*" | "local" | '["local","team"]'
+            scope,  # plain ScopePattern: "*" | "local" | '["local","team"]'
             "test reason",
             "agent:admin",
             "fake-signature",
@@ -91,6 +89,7 @@ def _insert_tombstone(
 # ---------------------------------------------------------------------------
 # §24.4 — query_facts_as_of
 # ---------------------------------------------------------------------------
+
 
 class TestQueryFactsAsOf:
     def test_fact_visible_at_creation_time(self, client: TestClient, tmp_db: str) -> None:
@@ -196,8 +195,9 @@ class TestQueryFactsAsOf:
         self, tmp_db: str, backend: str, encrypt: str
     ) -> None:
         """legal_hold=true tombstone: admin caller sees facts with tombstone_notices (§24.3.3)."""
-        import stigmem_node.settings as settings_module
         from conftest import _make_enc_settings, _patch_settings, _restore_settings
+
+        import stigmem_node.settings as settings_module
         from stigmem_node.auth import create_api_key
         from stigmem_node.main import create_app
 
@@ -261,6 +261,7 @@ class TestQueryFactsAsOf:
 # §24.4 — recall_as_of
 # ---------------------------------------------------------------------------
 
+
 class TestRecallAsOf:
     def test_recall_as_of_returns_facts_visible_at_T(self, client: TestClient) -> None:
         """recall_as_of returns facts that existed at as_of."""
@@ -276,9 +277,7 @@ class TestRecallAsOf:
         assert "facts" in body
         assert "tombstone_notices" in body
 
-    def test_recall_as_of_excludes_retracted_fact(
-        self, client: TestClient, tmp_db: str
-    ) -> None:
+    def test_recall_as_of_excludes_retracted_fact(self, client: TestClient, tmp_db: str) -> None:
         """Recall at as_of does not return facts retracted before as_of."""
         r = client.post("/v1/facts", json=FACT)
         assert r.status_code == 201
@@ -330,8 +329,9 @@ class TestRecallAsOf:
         self, tmp_db: str, backend: str, encrypt: str
     ) -> None:
         """Admin caller gets tombstone_notices for legal_hold entities in recall_as_of."""
-        import stigmem_node.settings as settings_module
         from conftest import _make_enc_settings, _patch_settings, _restore_settings
+
+        import stigmem_node.settings as settings_module
         from stigmem_node.auth import create_api_key
         from stigmem_node.main import create_app
 

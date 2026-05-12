@@ -48,9 +48,7 @@ class TestCardsRoute:
 
 
 class TestMarkEntityStale:
-    def test_db_error_does_not_propagate(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_db_error_does_not_propagate(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from contextlib import contextmanager
 
         from stigmem_node import card_materializer as cm

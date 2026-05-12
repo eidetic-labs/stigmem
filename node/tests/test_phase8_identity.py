@@ -19,9 +19,11 @@ import uuid
 from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 import pytest
+
+# Reuse conftest helpers
+from conftest import _patch_settings, _restore_settings
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
@@ -35,6 +37,7 @@ import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.db import apply_migrations
+from stigmem_node.identity.capability import CapabilityTokenError, verify_token
 from stigmem_node.identity.manifest import (
     ManifestError,
     OrgManifest,
@@ -45,7 +48,6 @@ from stigmem_node.identity.manifest import (
     verify_manifest,
     verify_rotation_chain,
 )
-from stigmem_node.identity.capability import CapabilityTokenError, verify_token
 from stigmem_node.identity.transparency_log import (
     LocalAppendOnlyLog,
     TransparencyLogUnavailable,
@@ -53,10 +55,6 @@ from stigmem_node.identity.transparency_log import (
 )
 from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
-
-# Reuse conftest helpers
-from conftest import _patch_settings, _restore_settings, _make_enc_settings
-
 
 # ---------------------------------------------------------------------------
 # Key helpers
@@ -205,7 +203,7 @@ def test_manifest_rotation_events_limit():
     m = _make_manifest(priv, pub_b64)
     # Inject 101 dummy rotation events (content doesn't matter for length check)
     m.rotation_events = [
-        RotationEvent(f"k{i}", f"k{i+1}", pub_b64, datetime.now(UTC).isoformat(), "sig")
+        RotationEvent(f"k{i}", f"k{i + 1}", pub_b64, datetime.now(UTC).isoformat(), "sig")
         for i in range(101)
     ]
     # Re-sign so self-signature is valid
@@ -294,7 +292,9 @@ def test_rotation_chain_bad_event_signature_rejected():
     now = datetime.now(UTC).isoformat()
 
     # Use wrong private key to sign the rotation event (cross-entity replay F1)
-    wrong_sig = sign_rotation_event("key-1", "key-2", pub2_b64, now, priv2)  # signed with priv2 not priv1
+    wrong_sig = sign_rotation_event(
+        "key-1", "key-2", pub2_b64, now, priv2
+    )  # signed with priv2 not priv1
     evt = RotationEvent("key-1", "key-2", pub2_b64, now, wrong_sig)
 
     m = OrgManifest(
@@ -323,6 +323,7 @@ def test_tl_off_log_always_raises():
         off.submit({"test": "data"})
     with pytest.raises(TransparencyLogUnavailable):
         from stigmem_node.identity.transparency_log import LogEntry
+
         off.verify_inclusion(LogEntry("", "", 0, 0))
 
 
@@ -389,10 +390,20 @@ def test_expired_manifest_rejects_token_issuance(tmp_path: Path):
             mj = json.dumps(manifest_to_dict(m))
             conn.execute(
                 "INSERT INTO federation_manifests "
-                "(id,entity_uri,manifest_json,signature,key_id,issued_at,expires_at,log_entry_json,created_at,updated_at) "
+                "(id,entity_uri,manifest_json,signature,key_id,issued_at,expires_at,"
+                "log_entry_json,created_at,updated_at) "
                 "VALUES (?,?,?,?,?,?,?,NULL,?,?)",
-                (mid, issuer, mj, m.signature, m.key_id,
-                 m.issued_at, m.expires_at, now.isoformat(), now.isoformat()),
+                (
+                    mid,
+                    issuer,
+                    mj,
+                    m.signature,
+                    m.key_id,
+                    m.issued_at,
+                    m.expires_at,
+                    now.isoformat(),
+                    now.isoformat(),
+                ),
             )
             conn.commit()
             conn.close()
@@ -400,12 +411,16 @@ def test_expired_manifest_rejects_token_issuance(tmp_path: Path):
             # Mint an API key so the caller authenticates as the issuer (H-SEC-1 BOLA guard)
             issuer_key = auth_mod.create_api_key(issuer, ["read", "write"])
 
-            resp = client.post("/v1/federation/capability-tokens", json={
-                "issuer": issuer,
-                "subject": issuer,
-                "verb": "read",
-                "object": "stigmem://test/facts",
-            }, headers={"Authorization": f"Bearer {issuer_key}"})
+            resp = client.post(
+                "/v1/federation/capability-tokens",
+                json={
+                    "issuer": issuer,
+                    "subject": issuer,
+                    "verb": "read",
+                    "object": "stigmem://test/facts",
+                },
+                headers={"Authorization": f"Bearer {issuer_key}"},
+            )
             # H1: expired manifest → 422 (manifest not found or expired)
             assert resp.status_code == 422, resp.text
             assert "expired" in resp.json().get("detail", "").lower()
@@ -433,12 +448,16 @@ def test_external_entity_subject_rejected(identity_client: TestClient):
     api_key = auth_mod.create_api_key(issuer, ["read", "write"])
 
     # Attempt to issue a token with an external subject
-    resp = identity_client.post("/v1/federation/capability-tokens", json={
-        "issuer": issuer,
-        "subject": "https://attacker.org",  # NOT in entities list
-        "verb": "read",
-        "object": "stigmem://facts",
-    }, headers={"Authorization": f"Bearer {api_key}"})
+    resp = identity_client.post(
+        "/v1/federation/capability-tokens",
+        json={
+            "issuer": issuer,
+            "subject": "https://attacker.org",  # NOT in entities list
+            "verb": "read",
+            "object": "stigmem://facts",
+        },
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
     assert resp.status_code == 403, resp.text
     assert "C1" in resp.json().get("detail", "") or "entities list" in resp.json().get("detail", "")
 
@@ -456,12 +475,16 @@ def test_subject_in_entities_succeeds(identity_client: TestClient):
     # Mint an API key so the caller authenticates as the issuer (H-SEC-1 BOLA guard)
     api_key = auth_mod.create_api_key(issuer, ["read", "write"])
 
-    resp = identity_client.post("/v1/federation/capability-tokens", json={
-        "issuer": issuer,
-        "subject": subject,
-        "verb": "read",
-        "object": "stigmem://facts",
-    }, headers={"Authorization": f"Bearer {api_key}"})
+    resp = identity_client.post(
+        "/v1/federation/capability-tokens",
+        json={
+            "issuer": issuer,
+            "subject": subject,
+            "verb": "read",
+            "object": "stigmem://facts",
+        },
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
     assert resp.status_code == 201, resp.text
     data = resp.json()
     assert data["subject"] == subject
@@ -512,9 +535,9 @@ def test_nonce_check_constraint_rejects_wrong_format(tmp_path: Path):
     now = datetime.now(UTC).isoformat()
 
     bad_nonces = [
-        "ABCD" + "a" * 60,          # uppercase → should fail
-        "a" * 63,                     # too short
-        "a" * 65,                     # too long
+        "ABCD" + "a" * 60,  # uppercase → should fail
+        "a" * 63,  # too short
+        "a" * 65,  # too long
     ]
 
     for bad_nonce in bad_nonces:
@@ -564,8 +587,19 @@ def test_quarantine_list_hides_fact_value(tmp_path: Path):
             "INSERT INTO facts (id,entity,relation,value_type,value_v,source,timestamp,"
             "confidence,scope,quarantine_status,quarantine_garden_id) "
             "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            (fact_id, "ent:1", "rel:secret", "string", "TOP_SECRET_VALUE",
-             "src:1", now, 1.0, "company", "pending", garden_id),
+            (
+                fact_id,
+                "ent:1",
+                "rel:secret",
+                "string",
+                "TOP_SECRET_VALUE",
+                "src:1",
+                now,
+                1.0,
+                "company",
+                "pending",
+                garden_id,
+            ),
         )
         conn.commit()
         conn.close()
@@ -577,9 +611,7 @@ def test_quarantine_list_hides_fact_value(tmp_path: Path):
             data = resp.json()
 
             assert data["total"] >= 1
-            fact_record = next(
-                (r for r in data["items"] if r["fact_id"] == fact_id), None
-            )
+            fact_record = next((r for r in data["items"] if r["fact_id"] == fact_id), None)
             assert fact_record is not None
             # M3: value must not appear in the quarantine list response
             assert "TOP_SECRET_VALUE" not in json.dumps(fact_record)
@@ -608,12 +640,16 @@ def test_revoke_token_by_issuer_succeeds(identity_client: TestClient):
     # Mint API key for the issuer so the H-SEC-1 BOLA guard on issuance passes
     issuer_key = auth_mod.create_api_key(issuer, ["read", "write"])
 
-    resp = identity_client.post("/v1/federation/capability-tokens", json={
-        "issuer": issuer,
-        "subject": subject,
-        "verb": "read",
-        "object": "stigmem://facts",
-    }, headers={"Authorization": f"Bearer {issuer_key}"})
+    resp = identity_client.post(
+        "/v1/federation/capability-tokens",
+        json={
+            "issuer": issuer,
+            "subject": subject,
+            "verb": "read",
+            "object": "stigmem://facts",
+        },
+        headers={"Authorization": f"Bearer {issuer_key}"},
+    )
     assert resp.status_code == 201
     token_id = resp.json()["token_id"]
 
@@ -625,9 +661,7 @@ def test_revoke_token_by_issuer_succeeds(identity_client: TestClient):
 
 def test_revoke_token_unknown_returns_404(identity_client: TestClient):
     """Revoking a non-existent token returns 404, not 403."""
-    resp = identity_client.post(
-        "/v1/federation/capability-tokens/non-existent-id/revoke", json={}
-    )
+    resp = identity_client.post("/v1/federation/capability-tokens/non-existent-id/revoke", json={})
     assert resp.status_code == 404
 
 
@@ -643,12 +677,16 @@ def test_revoke_token_unauthorized_third_party_blocked(identity_client: TestClie
     # Mint API key for the issuer so the H-SEC-1 BOLA guard on issuance passes
     issuer_key = auth_mod.create_api_key(issuer, ["read", "write"])
 
-    resp = identity_client.post("/v1/federation/capability-tokens", json={
-        "issuer": issuer,
-        "subject": subject,
-        "verb": "read",
-        "object": "stigmem://facts",
-    }, headers={"Authorization": f"Bearer {issuer_key}"})
+    resp = identity_client.post(
+        "/v1/federation/capability-tokens",
+        json={
+            "issuer": issuer,
+            "subject": subject,
+            "verb": "read",
+            "object": "stigmem://facts",
+        },
+        headers={"Authorization": f"Bearer {issuer_key}"},
+    )
     assert resp.status_code == 201
     token_id = resp.json()["token_id"]
 
@@ -707,6 +745,7 @@ def test_local_tl_tampered_entry_fails(tmp_path: Path):
     log_path.write_text(json.dumps(rec) + "\n")
 
     from stigmem_node.identity.transparency_log import LogEntry
+
     bad_entry = LogEntry(
         log_id=entry.log_id,
         leaf_hash=entry.leaf_hash,  # original hash
@@ -731,6 +770,7 @@ def test_manifest_resolve_roundtrip(identity_client: TestClient):
     assert resp.status_code == 200
 
     from urllib.parse import quote
+
     encoded = quote(entity_uri, safe="")
     resp = identity_client.get(f"/v1/federation/manifest/{encoded}")
     assert resp.status_code == 200
@@ -741,6 +781,7 @@ def test_manifest_resolve_roundtrip(identity_client: TestClient):
 
 def test_manifest_resolve_unknown_returns_404(identity_client: TestClient):
     from urllib.parse import quote
+
     encoded = quote("https://unknown-entity.org", safe="")
     resp = identity_client.get(f"/v1/federation/manifest/{encoded}")
     assert resp.status_code == 404
@@ -786,7 +827,6 @@ def test_quarantine_ingest_writes_audit_log_entry(tmp_path: Path):
     import sqlite3 as _sqlite3
 
     import stigmem_node.auth as auth_mod
-    import stigmem_node.db as db_mod
     from stigmem_node.source_trust import bust_trust_cache
 
     db_file = str(tmp_path / "qaudit_test.db")
@@ -893,12 +933,15 @@ def test_issuer_must_match_caller_entity_uri(identity_client: TestClient):
     Requesting a token with issuer="https://bob.org" must be rejected with 403
     before any manifest lookup occurs.
     """
-    resp = identity_client.post("/v1/federation/capability-tokens", json={
-        "issuer": "https://bob.org",
-        "subject": "https://bob.org",
-        "verb": "read",
-        "object": "stigmem://facts",
-    })
+    resp = identity_client.post(
+        "/v1/federation/capability-tokens",
+        json={
+            "issuer": "https://bob.org",
+            "subject": "https://bob.org",
+            "verb": "read",
+            "object": "stigmem://facts",
+        },
+    )
     assert resp.status_code == 403, resp.text
     assert "issuer" in resp.json().get("detail", "").lower()
 
@@ -952,12 +995,15 @@ def test_signed_token_has_token_version_and_signature(
     """Issued tokens must include token_version=1 and a signature field (C-SEC-1 / M-SEC-2)."""
     client, issuer, _ = signed_identity_client
 
-    resp = client.post("/v1/federation/capability-tokens", json={
-        "issuer": issuer,
-        "subject": issuer,
-        "verb": "read",
-        "object": "stigmem://facts",
-    })
+    resp = client.post(
+        "/v1/federation/capability-tokens",
+        json={
+            "issuer": issuer,
+            "subject": issuer,
+            "verb": "read",
+            "object": "stigmem://facts",
+        },
+    )
     assert resp.status_code == 201, resp.text
     token_json_str = resp.json()["token_json"]
     token = json.loads(token_json_str)
@@ -973,12 +1019,15 @@ def test_verify_token_rejects_mutated_token(
     """Mutating any token field after signing must cause verify_token to raise (C-SEC-1)."""
     client, issuer, _ = signed_identity_client
 
-    resp = client.post("/v1/federation/capability-tokens", json={
-        "issuer": issuer,
-        "subject": issuer,
-        "verb": "read",
-        "object": "stigmem://facts",
-    })
+    resp = client.post(
+        "/v1/federation/capability-tokens",
+        json={
+            "issuer": issuer,
+            "subject": issuer,
+            "verb": "read",
+            "object": "stigmem://facts",
+        },
+    )
     assert resp.status_code == 201, resp.text
     original_token_json = resp.json()["token_json"]
 
@@ -997,18 +1046,20 @@ def test_verify_token_rejects_mutated_token(
 
 def test_verify_token_rejects_missing_token_version() -> None:
     """verify_token must reject a token that has no token_version field (M-SEC-2)."""
-    token_without_version = json.dumps({
-        "token_id": str(uuid.uuid4()),
-        "issuer": "https://example.org",
-        "subject": "https://example.org",
-        "verb": "read",
-        "object": "stigmem://facts",
-        "issued_at": datetime.now(UTC).isoformat(),
-        "expiry": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
-        "nonce": "a" * 64,
-        "signature": "fakesig",
-        # token_version intentionally absent
-    })
+    token_without_version = json.dumps(
+        {
+            "token_id": str(uuid.uuid4()),
+            "issuer": "https://example.org",
+            "subject": "https://example.org",
+            "verb": "read",
+            "object": "stigmem://facts",
+            "issued_at": datetime.now(UTC).isoformat(),
+            "expiry": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+            "nonce": "a" * 64,
+            "signature": "fakesig",
+            # token_version intentionally absent
+        }
+    )
 
     with pytest.raises(CapabilityTokenError, match="token_version"):
         verify_token(token_without_version, lambda _uri: None)
@@ -1016,18 +1067,20 @@ def test_verify_token_rejects_missing_token_version() -> None:
 
 def test_verify_token_rejects_wrong_token_version() -> None:
     """verify_token must reject token_version != 1 (M-SEC-2)."""
-    token_wrong_version = json.dumps({
-        "token_id": str(uuid.uuid4()),
-        "token_version": 2,
-        "issuer": "https://example.org",
-        "subject": "https://example.org",
-        "verb": "read",
-        "object": "stigmem://facts",
-        "issued_at": datetime.now(UTC).isoformat(),
-        "expiry": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
-        "nonce": "a" * 64,
-        "signature": "fakesig",
-    })
+    token_wrong_version = json.dumps(
+        {
+            "token_id": str(uuid.uuid4()),
+            "token_version": 2,
+            "issuer": "https://example.org",
+            "subject": "https://example.org",
+            "verb": "read",
+            "object": "stigmem://facts",
+            "issued_at": datetime.now(UTC).isoformat(),
+            "expiry": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+            "nonce": "a" * 64,
+            "signature": "fakesig",
+        }
+    )
 
     with pytest.raises(CapabilityTokenError, match="token_version"):
         verify_token(token_wrong_version, lambda _uri: None)
@@ -1059,7 +1112,10 @@ def test_ttl_over_90_days_rejected(identity_client: TestClient) -> None:
         headers={"Authorization": f"Bearer {api_key}"},
     )
     assert resp.status_code == 422, resp.text
-    assert "90-day" in resp.json().get("detail", "").lower() or "maximum" in resp.json().get("detail", "").lower()
+    assert (
+        "90-day" in resp.json().get("detail", "").lower()
+        or "maximum" in resp.json().get("detail", "").lower()
+    )
 
 
 def test_ttl_exactly_90_days_accepted(identity_client: TestClient) -> None:
@@ -1118,7 +1174,12 @@ def test_capability_issuance_writes_audit_log(tmp_path: Path) -> None:
 
             resp = client.post(
                 "/v1/federation/capability-tokens",
-                json={"issuer": issuer, "subject": issuer, "verb": "write", "object": "stigmem://facts"},
+                json={
+                    "issuer": issuer,
+                    "subject": issuer,
+                    "verb": "write",
+                    "object": "stigmem://facts",
+                },
                 headers={"Authorization": f"Bearer {api_key}"},
             )
             assert resp.status_code == 201, resp.text
@@ -1169,7 +1230,12 @@ def test_capability_revocation_writes_audit_log(tmp_path: Path) -> None:
 
             resp = client.post(
                 "/v1/federation/capability-tokens",
-                json={"issuer": issuer, "subject": issuer, "verb": "write", "object": "stigmem://facts"},
+                json={
+                    "issuer": issuer,
+                    "subject": issuer,
+                    "verb": "write",
+                    "object": "stigmem://facts",
+                },
                 headers={"Authorization": f"Bearer {api_key}"},
             )
             assert resp.status_code == 201, resp.text
@@ -1203,7 +1269,7 @@ def test_capability_revocation_writes_audit_log(tmp_path: Path) -> None:
 
 
 @pytest.fixture()
-def push_client(tmp_path: Path) -> "Generator[tuple[TestClient, str, str], None, None]":
+def push_client(tmp_path: Path) -> Generator[tuple[TestClient, str, str], None, None]:
     """TestClient with federation_push_enabled + node_private_key set.
 
     Yields (client, issuer_uri, token_json) where token_json is a valid
@@ -1253,7 +1319,7 @@ def push_client(tmp_path: Path) -> "Generator[tuple[TestClient, str, str], None,
 
 
 def test_push_facts_capability_token_accepted(
-    push_client: "tuple[TestClient, str, str]",
+    push_client: tuple[TestClient, str, str],
 ) -> None:
     """Push facts with a valid write capability token must be accepted (H-SEC-2)."""
     client, issuer, token_json = push_client
@@ -1264,18 +1330,20 @@ def test_push_facts_capability_token_accepted(
     resp = client.post(
         "/v1/federation/facts/push",
         json={
-            "facts": [{
-                "id": fact_id,
-                "entity": "test:push-cap",
-                "relation": "test:value",
-                "value": {"type": "string", "v": "hello"},
-                "source": issuer,
-                "timestamp": now,
-                "hlc": None,
-                "confidence": 1.0,
-                "scope": "public",
-                "valid_until": None,
-            }]
+            "facts": [
+                {
+                    "id": fact_id,
+                    "entity": "test:push-cap",
+                    "relation": "test:value",
+                    "value": {"type": "string", "v": "hello"},
+                    "source": issuer,
+                    "timestamp": now,
+                    "hlc": None,
+                    "confidence": 1.0,
+                    "scope": "public",
+                    "valid_until": None,
+                }
+            ]
         },
         headers={"X-Stigmem-Capability": token_json},
     )
@@ -1286,7 +1354,7 @@ def test_push_facts_capability_token_accepted(
 
 
 def test_push_facts_capability_token_read_verb_rejected(
-    push_client: "tuple[TestClient, str, str]",
+    push_client: tuple[TestClient, str, str],
 ) -> None:
     """A capability token with verb=read must be rejected for push (H-SEC-2)."""
     client, issuer, _ = push_client
@@ -1310,18 +1378,20 @@ def test_push_facts_capability_token_read_verb_rejected(
     resp2 = client.post(
         "/v1/federation/facts/push",
         json={
-            "facts": [{
-                "id": fact_id,
-                "entity": "test:push-read-cap",
-                "relation": "test:value",
-                "value": {"type": "string", "v": "rejected"},
-                "source": issuer,
-                "timestamp": now,
-                "hlc": None,
-                "confidence": 1.0,
-                "scope": "public",
-                "valid_until": None,
-            }]
+            "facts": [
+                {
+                    "id": fact_id,
+                    "entity": "test:push-read-cap",
+                    "relation": "test:value",
+                    "value": {"type": "string", "v": "rejected"},
+                    "source": issuer,
+                    "timestamp": now,
+                    "hlc": None,
+                    "confidence": 1.0,
+                    "scope": "public",
+                    "valid_until": None,
+                }
+            ]
         },
         headers={"X-Stigmem-Capability": read_token_json},
     )
@@ -1329,7 +1399,7 @@ def test_push_facts_capability_token_read_verb_rejected(
     assert "insufficient_capability" in resp2.json().get("detail", "")
 
 
-def test_push_facts_no_auth_rejected(push_client: "tuple[TestClient, str, str]") -> None:
+def test_push_facts_no_auth_rejected(push_client: tuple[TestClient, str, str]) -> None:
     """Push without any auth header must return 401 (H-SEC-2)."""
     client, issuer, _ = push_client
 
@@ -1339,18 +1409,20 @@ def test_push_facts_no_auth_rejected(push_client: "tuple[TestClient, str, str]")
     resp = client.post(
         "/v1/federation/facts/push",
         json={
-            "facts": [{
-                "id": fact_id,
-                "entity": "test:no-auth",
-                "relation": "test:value",
-                "value": {"type": "string", "v": "nope"},
-                "source": issuer,
-                "timestamp": now,
-                "hlc": None,
-                "confidence": 1.0,
-                "scope": "public",
-                "valid_until": None,
-            }]
+            "facts": [
+                {
+                    "id": fact_id,
+                    "entity": "test:no-auth",
+                    "relation": "test:value",
+                    "value": {"type": "string", "v": "nope"},
+                    "source": issuer,
+                    "timestamp": now,
+                    "hlc": None,
+                    "confidence": 1.0,
+                    "scope": "public",
+                    "valid_until": None,
+                }
+            ]
         },
     )
     assert resp.status_code == 401, resp.text
@@ -1364,15 +1436,23 @@ def test_push_facts_no_auth_rejected(push_client: "tuple[TestClient, str, str]")
 def test_cli_capability_issue_parser() -> None:
     """stigmem capability issue must parse args correctly (M-SEC-3)."""
     from stigmem_node.cli import _build_parser
+
     parser = _build_parser()
 
-    args = parser.parse_args([
-        "capability", "issue",
-        "--issuer", "https://example.org",
-        "--subject", "https://example.org",
-        "--verb", "write",
-        "--object", "stigmem://facts",
-    ])
+    args = parser.parse_args(
+        [
+            "capability",
+            "issue",
+            "--issuer",
+            "https://example.org",
+            "--subject",
+            "https://example.org",
+            "--verb",
+            "write",
+            "--object",
+            "stigmem://facts",
+        ]
+    )
     assert args.issuer == "https://example.org"
     assert args.verb == "write"
     assert callable(args.func)
@@ -1381,6 +1461,7 @@ def test_cli_capability_issue_parser() -> None:
 def test_cli_capability_verify_parser() -> None:
     """stigmem capability verify TOKEN must parse without error (M-SEC-3)."""
     from stigmem_node.cli import _build_parser
+
     parser = _build_parser()
 
     args = parser.parse_args(["capability", "verify", '{"token_version":1}'])
@@ -1391,6 +1472,7 @@ def test_cli_capability_verify_parser() -> None:
 def test_cli_capability_revoke_parser() -> None:
     """stigmem capability revoke TOKEN_ID must parse without error (M-SEC-3)."""
     from stigmem_node.cli import _build_parser
+
     parser = _build_parser()
 
     args = parser.parse_args(["capability", "revoke", "some-token-id", "--reason", "expired"])
@@ -1407,16 +1489,28 @@ def test_cli_capability_revoke_parser() -> None:
 def test_verify_endpoint_valid_signed_token(tmp_path: Path) -> None:
     """POST /verify returns {valid: true} for a properly signed token."""
     import base64
+
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-    from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat, PublicFormat
+    from cryptography.hazmat.primitives.serialization import (
+        Encoding,
+        NoEncryption,
+        PrivateFormat,
+        PublicFormat,
+    )
 
     priv = Ed25519PrivateKey.generate()
-    priv_b64 = base64.urlsafe_b64encode(
-        priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
-    ).decode().rstrip("=")
-    pub_b64 = base64.urlsafe_b64encode(
-        priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-    ).decode().rstrip("=")
+    priv_b64 = (
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
+        .decode()
+        .rstrip("=")
+    )
+    pub_b64 = (
+        base64.urlsafe_b64encode(priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw))
+        .decode()
+        .rstrip("=")
+    )
 
     db_file = str(tmp_path / "verify_ep_test.db")
     apply_migrations(db_path=db_file)
@@ -1446,18 +1540,22 @@ def test_verify_endpoint_valid_signed_token(tmp_path: Path) -> None:
             assert resp.status_code == 200, resp.text
 
             # Issue a token
-            resp = client.post("/v1/federation/capability-tokens", json={
-                "issuer": issuer,
-                "subject": subject,
-                "verb": "write",
-                "object": "stigmem://facts",
-            })
+            resp = client.post(
+                "/v1/federation/capability-tokens",
+                json={
+                    "issuer": issuer,
+                    "subject": subject,
+                    "verb": "write",
+                    "object": "stigmem://facts",
+                },
+            )
             assert resp.status_code == 201, resp.text
             token_json = resp.json()["token_json"]
 
             # Verify the token via the endpoint
-            resp = client.post("/v1/federation/capability-tokens/verify",
-                               json={"token_json": token_json})
+            resp = client.post(
+                "/v1/federation/capability-tokens/verify", json={"token_json": token_json}
+            )
             assert resp.status_code == 200, resp.text
             data = resp.json()
             assert data["valid"] is True, data
@@ -1468,16 +1566,28 @@ def test_verify_endpoint_valid_signed_token(tmp_path: Path) -> None:
 def test_verify_endpoint_revoked_token_invalid(tmp_path: Path) -> None:
     """POST /verify returns {valid: false} for a revoked token."""
     import base64
+
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-    from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat, PublicFormat
+    from cryptography.hazmat.primitives.serialization import (
+        Encoding,
+        NoEncryption,
+        PrivateFormat,
+        PublicFormat,
+    )
 
     priv = Ed25519PrivateKey.generate()
-    priv_b64 = base64.urlsafe_b64encode(
-        priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
-    ).decode().rstrip("=")
-    pub_b64 = base64.urlsafe_b64encode(
-        priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-    ).decode().rstrip("=")
+    priv_b64 = (
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
+        .decode()
+        .rstrip("=")
+    )
+    pub_b64 = (
+        base64.urlsafe_b64encode(priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw))
+        .decode()
+        .rstrip("=")
+    )
 
     db_file = str(tmp_path / "verify_rev_test.db")
     apply_migrations(db_path=db_file)
@@ -1503,10 +1613,15 @@ def test_verify_endpoint_revoked_token_invalid(tmp_path: Path) -> None:
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as client:
             client.put("/v1/federation/manifest", json=manifest_to_dict(m))
-            resp = client.post("/v1/federation/capability-tokens", json={
-                "issuer": issuer, "subject": subject,
-                "verb": "write", "object": "stigmem://facts",
-            })
+            resp = client.post(
+                "/v1/federation/capability-tokens",
+                json={
+                    "issuer": issuer,
+                    "subject": subject,
+                    "verb": "write",
+                    "object": "stigmem://facts",
+                },
+            )
             assert resp.status_code == 201
             token_id = resp.json()["token_id"]
             token_json = resp.json()["token_json"]
@@ -1514,16 +1629,20 @@ def test_verify_endpoint_revoked_token_invalid(tmp_path: Path) -> None:
             # Directly mark revoked in DB for test isolation
             # (revoke endpoint also has a BOLA guard; direct DB write is cleaner here)
             import sqlite3 as _sqlite3
+
             conn = _sqlite3.connect(db_file)
             conn.execute(
-                "UPDATE capability_tokens SET revoked_at = '2026-01-01T00:00:00+00:00' WHERE id = ?",
+                """UPDATE capability_tokens
+                   SET revoked_at = '2026-01-01T00:00:00+00:00'
+                   WHERE id = ?""",
                 (token_id,),
             )
             conn.commit()
             conn.close()
 
-            resp = client.post("/v1/federation/capability-tokens/verify",
-                               json={"token_json": token_json})
+            resp = client.post(
+                "/v1/federation/capability-tokens/verify", json={"token_json": token_json}
+            )
             assert resp.status_code == 200, resp.text
             data = resp.json()
             assert data["valid"] is False
@@ -1539,8 +1658,11 @@ def test_verify_endpoint_missing_body_returns_422(tmp_path: Path) -> None:
 
     original = settings_module.settings
     test_settings = Settings(
-        db_path=db_file, auth_required=False, node_url="http://testnode",
-        trust_mode="relaxed", tl_backend="off",
+        db_path=db_file,
+        auth_required=False,
+        node_url="http://testnode",
+        trust_mode="relaxed",
+        tl_backend="off",
     )
     extra = _patch_settings(test_settings)
 

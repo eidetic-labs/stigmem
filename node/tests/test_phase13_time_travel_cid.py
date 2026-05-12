@@ -37,17 +37,15 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
+import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.auth import Identity, create_api_key
+from stigmem_node.auth import create_api_key
 from stigmem_node.cid import compute_cid, is_valid_cid
 from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
-
-import stigmem_node.auth as auth_mod
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -73,6 +71,7 @@ _PATCHABLE = [
 
 def _patch_settings(test_settings: Settings) -> list:
     import importlib
+
     mods = []
     for name in _PATCHABLE:
         try:
@@ -86,18 +85,24 @@ def _patch_settings(test_settings: Settings) -> list:
     wk_mod.settings = test_settings  # type: ignore[assignment]
     for mod in mods:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", test_settings)
+            mod.settings = test_settings
     return mods
 
 
 def _gen_test_private_key() -> str:
     import base64
+
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
     from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat
+
     priv = Ed25519PrivateKey.generate()
-    return base64.urlsafe_b64encode(
-        priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
-    ).decode().rstrip("=")
+    return (
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
+        .decode()
+        .rstrip("=")
+    )
 
 
 def _restore_settings(original: Settings, mods: list) -> None:
@@ -107,7 +112,7 @@ def _restore_settings(original: Settings, mods: list) -> None:
     wk_mod.settings = original  # type: ignore[assignment]
     for mod in mods:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", original)
+            mod.settings = original
 
 
 @pytest.fixture()
@@ -128,6 +133,7 @@ def p13_client(tmp_path) -> Generator[TestClient, None, None]:
 def p13_authed(tmp_path) -> Generator[tuple[TestClient, str, str], None, None]:
     """Auth-enabled TestClient; yields (client, agent_key, admin_key)."""
     import base64
+
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
     from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat
 
@@ -135,11 +141,17 @@ def p13_authed(tmp_path) -> Generator[tuple[TestClient, str, str], None, None]:
     apply_migrations(db_path=db_file)
     original = settings_module.settings
     priv = Ed25519PrivateKey.generate()
-    priv_b64 = base64.urlsafe_b64encode(
-        priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
-    ).decode().rstrip("=")
+    priv_b64 = (
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
+        .decode()
+        .rstrip("=")
+    )
     ts = Settings(
-        db_path=db_file, auth_required=True, node_url="http://testnode",
+        db_path=db_file,
+        auth_required=True,
+        node_url="http://testnode",
         node_private_key=priv_b64,
     )
     mods = _patch_settings(ts)
@@ -179,6 +191,7 @@ def _assert(
 # CID computation unit tests
 # ---------------------------------------------------------------------------
 
+
 def test_cid_format():
     cid = compute_cid("ent:a", "rel:b", "string", "hello", "agent:s", "local")
     assert cid.startswith("sha256:")
@@ -194,10 +207,10 @@ def test_cid_determinism():
 
 def test_cid_field_sensitivity():
     base = compute_cid("ent:x", "rel:y", "string", "val", "src:z", "team")
-    assert compute_cid("ent:X", "rel:y", "string", "val", "src:z", "team") != base   # entity
-    assert compute_cid("ent:x", "rel:Y", "string", "val", "src:z", "team") != base   # relation
-    assert compute_cid("ent:x", "rel:y", "text", "val", "src:z", "team") != base     # value_type
-    assert compute_cid("ent:x", "rel:y", "string", "VAL", "src:z", "team") != base   # value_v
+    assert compute_cid("ent:X", "rel:y", "string", "val", "src:z", "team") != base  # entity
+    assert compute_cid("ent:x", "rel:Y", "string", "val", "src:z", "team") != base  # relation
+    assert compute_cid("ent:x", "rel:y", "text", "val", "src:z", "team") != base  # value_type
+    assert compute_cid("ent:x", "rel:y", "string", "VAL", "src:z", "team") != base  # value_v
     assert compute_cid("ent:x", "rel:y", "string", "val", "src:other", "team") != base  # source
     assert compute_cid("ent:x", "rel:y", "string", "val", "src:z", "local") != base  # scope
 
@@ -214,7 +227,9 @@ def test_cid_canonical_key_order():
         "value_v": "hello",
     }
     # Independent: sort_keys + compact separators + utf-8, no ASCII escaping
-    canonical = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    canonical = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode(
+        "utf-8"
+    )
     expected = "sha256:" + hashlib.sha256(canonical).hexdigest()
     actual = compute_cid(
         entity=body["entity"],
@@ -231,6 +246,7 @@ def test_cid_canonical_key_order():
 # ---------------------------------------------------------------------------
 # Write path: facts.cid column + fact_cid_aliases populated
 # ---------------------------------------------------------------------------
+
 
 def test_assert_fact_stores_cid(p13_client: TestClient):
     f = _assert(p13_client, "stigmem://e/1", "rel:x", "alpha")
@@ -262,9 +278,7 @@ def test_assert_fact_creates_alias_row(tmp_path):
 
     conn = sqlite3.connect(db_file)
     conn.row_factory = sqlite3.Row
-    row = conn.execute(
-        "SELECT * FROM fact_cid_aliases WHERE fact_id = ?", (f["id"],)
-    ).fetchone()
+    row = conn.execute("SELECT * FROM fact_cid_aliases WHERE fact_id = ?", (f["id"],)).fetchone()
     assert row is not None
     assert row["cid"] == f["cid"]
     conn.close()
@@ -273,6 +287,7 @@ def test_assert_fact_creates_alias_row(tmp_path):
 # ---------------------------------------------------------------------------
 # CID-based lookup  GET /v1/facts/{sha256:...}
 # ---------------------------------------------------------------------------
+
 
 def test_get_fact_by_cid(p13_client: TestClient):
     f = _assert(p13_client, "stigmem://e/2", "rel:lookup", "data")
@@ -302,6 +317,7 @@ def test_get_fact_by_cid_malformed(p13_client: TestClient):
 # ---------------------------------------------------------------------------
 # POST /v1/facts/{id}/verify-cid
 # ---------------------------------------------------------------------------
+
 
 def test_verify_cid_valid(p13_client: TestClient):
     f = _assert(p13_client, "stigmem://e/3", "rel:verify", "check")
@@ -337,7 +353,9 @@ def test_verify_cid_null_stored(tmp_path):
     body = r.json()
     assert body["cid_valid"] is False
     assert body["stored_cid"] is None
-    assert "null" in body["mismatch_reason"].lower() or "backfill" in body["mismatch_reason"].lower()
+    assert (
+        "null" in body["mismatch_reason"].lower() or "backfill" in body["mismatch_reason"].lower()
+    )
 
 
 def test_verify_cid_not_found(p13_client: TestClient):
@@ -348,6 +366,7 @@ def test_verify_cid_not_found(p13_client: TestClient):
 # ---------------------------------------------------------------------------
 # GET /v1/admin/cid-backfill/status
 # ---------------------------------------------------------------------------
+
 
 def test_backfill_status_all_backfilled(p13_client: TestClient):
     _assert(p13_client, "stigmem://e/bs1", "rel:a", "v1")
@@ -388,6 +407,7 @@ def test_backfill_status_pending(tmp_path):
 # Time-travel: GET /v1/facts?as_of=T
 # ---------------------------------------------------------------------------
 
+
 def _ts(offset_seconds: int = 0) -> str:
     return (datetime.now(UTC) + timedelta(seconds=offset_seconds)).isoformat()
 
@@ -423,8 +443,8 @@ def test_as_of_retracted_fact_excluded(tmp_path):
 
         # Back-date the fact so it was "written" 10 seconds ago
         fact_ts = _ts(-10)
-        retract_at = _ts(-5)   # retracted 5 seconds ago
-        before = _ts(-7)       # 7 seconds ago: fact existed, no retraction yet
+        retract_at = _ts(-5)  # retracted 5 seconds ago
+        before = _ts(-7)  # 7 seconds ago: fact existed, no retraction yet
         after_retract = _ts(-3)  # 3 seconds ago: retraction already applied
 
         conn = sqlite3.connect(db_file)
@@ -483,13 +503,18 @@ def test_as_of_invalid_ts_rejected(p13_client: TestClient):
 # Time-travel with tombstones
 # ---------------------------------------------------------------------------
 
+
 def test_as_of_tombstone_retroactive_suppression(tmp_path):
     """Tombstoned entity must be excluded even for as_of before tombstone.created_at."""
     db_file = str(tmp_path / "tomb_asof.db")
     apply_migrations(db_path=db_file)
     original = settings_module.settings
-    ts_settings = Settings(db_path=db_file, auth_required=True, node_url="http://testnode",
-                           node_private_key=_gen_test_private_key())
+    ts_settings = Settings(
+        db_path=db_file,
+        auth_required=True,
+        node_url="http://testnode",
+        node_private_key=_gen_test_private_key(),
+    )
     mods = _patch_settings(ts_settings)
     admin_key = create_api_key("agent:admin", ["read", "write", "federate", "admin"])
     agent_key = create_api_key("agent:user", ["read", "write"])
@@ -497,8 +522,9 @@ def test_as_of_tombstone_retroactive_suppression(tmp_path):
 
     with TestClient(app, raise_server_exceptions=True) as c:
         pre_fact = (datetime.now(UTC) - timedelta(seconds=5)).isoformat()
-        f = _assert(c, "stigmem://rtbf/user1", "rel:name", "Alice",
-                    scope="local", api_key=agent_key)
+        f = _assert(
+            c, "stigmem://rtbf/user1", "rel:name", "Alice", scope="local", api_key=agent_key
+        )
         # Override: direct DB insert to set timestamp in the past
         conn = sqlite3.connect(db_file)
         conn.execute("UPDATE facts SET timestamp = ? WHERE id = ?", (pre_fact, f["id"]))
@@ -531,15 +557,20 @@ def test_as_of_legal_hold_admin_sees_notice(tmp_path):
     db_file = str(tmp_path / "lh_asof.db")
     apply_migrations(db_path=db_file)
     original = settings_module.settings
-    ts_settings = Settings(db_path=db_file, auth_required=True, node_url="http://testnode",
-                           node_private_key=_gen_test_private_key())
+    ts_settings = Settings(
+        db_path=db_file,
+        auth_required=True,
+        node_url="http://testnode",
+        node_private_key=_gen_test_private_key(),
+    )
     mods = _patch_settings(ts_settings)
     admin_key = create_api_key("agent:admin", ["read", "write", "federate", "admin"])
     app = create_app()
 
     with TestClient(app, raise_server_exceptions=True) as c:
-        f = _assert(c, "stigmem://rtbf/legal1", "rel:value", "sensitive",
-                    scope="local", api_key=admin_key)
+        f = _assert(
+            c, "stigmem://rtbf/legal1", "rel:value", "sensitive", scope="local", api_key=admin_key
+        )
         r_tomb = c.post(
             "/v1/tombstones",
             json={
@@ -574,15 +605,21 @@ def test_as_of_legal_hold_non_admin_excluded(tmp_path):
     db_file = str(tmp_path / "lh_excl.db")
     apply_migrations(db_path=db_file)
     original = settings_module.settings
-    ts_settings = Settings(db_path=db_file, auth_required=True, node_url="http://testnode",
-                           node_private_key=_gen_test_private_key())
+    ts_settings = Settings(
+        db_path=db_file,
+        auth_required=True,
+        node_url="http://testnode",
+        node_private_key=_gen_test_private_key(),
+    )
     mods = _patch_settings(ts_settings)
     admin_key = create_api_key("agent:admin", ["read", "write", "federate", "admin"])
     agent_key = create_api_key("agent:user", ["read", "write"])
     app = create_app()
 
     with TestClient(app, raise_server_exceptions=True) as c:
-        _assert(c, "stigmem://rtbf/legal2", "rel:val", "sensitive", scope="local", api_key=admin_key)
+        _assert(
+            c, "stigmem://rtbf/legal2", "rel:val", "sensitive", scope="local", api_key=admin_key
+        )
         c.post(
             "/v1/tombstones",
             json={
@@ -611,6 +648,7 @@ def test_as_of_legal_hold_non_admin_excluded(tmp_path):
 # POST /v1/recall with as_of
 # ---------------------------------------------------------------------------
 
+
 def test_recall_as_of(p13_client: TestClient):
     before = _ts(-2)
     _assert(p13_client, "stigmem://recall/e1", "rel:bio", "snapshot content")
@@ -632,15 +670,16 @@ def test_recall_as_of(p13_client: TestClient):
     results_before = r_before.json().get("facts", [])
     ids_before = [x["id"] for x in results_before]
     # The fact was asserted AFTER `before`, so must not appear
-    for f_check in p13_client.get(
-        "/v1/facts", params={"entity": "stigmem://recall/e1"}
-    ).json()["facts"]:
+    for f_check in p13_client.get("/v1/facts", params={"entity": "stigmem://recall/e1"}).json()[
+        "facts"
+    ]:
         assert f_check["id"] not in ids_before
 
 
 # ---------------------------------------------------------------------------
 # Backfill CLI idempotency (direct function test)
 # ---------------------------------------------------------------------------
+
 
 def test_backfill_cids_idempotent(tmp_path):
     """_cmd_backfill_cids must be callable twice with the same outcome."""
@@ -677,7 +716,7 @@ def test_backfill_cids_idempotent(tmp_path):
     conn.row_factory = sqlite3.Row
     null_count = conn.execute("SELECT COUNT(*) FROM facts WHERE cid IS NULL").fetchone()[0]
     alias_count = conn.execute("SELECT COUNT(*) FROM fact_cid_aliases").fetchone()[0]
-    fact_count = conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0]
+    conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0]
     conn.close()
     assert null_count == 0
     assert alias_count >= 2  # at least one per user fact (conflict/meta facts may lack aliases)

@@ -42,7 +42,7 @@ def bfs_neighbors(
     relation_filter: str | None = None,
     min_confidence: float = 0.1,
     min_trust: float = 0.0,
-    identity: "Identity | None" = None,
+    identity: Identity | None = None,
 ) -> list[NeighborEntry]:
     """BFS over entity_edges, returning all neighbors within max_depth hops.
 
@@ -81,9 +81,7 @@ def bfs_neighbors(
             )
 
             for edge in edges:
-                neighbor = (
-                    edge["object"] if edge["subject"] == current_entity else edge["subject"]
-                )
+                neighbor = edge["object"] if edge["subject"] == current_entity else edge["subject"]
                 if neighbor in visited:
                     continue
 
@@ -120,7 +118,7 @@ def _fetch_incident_edges(
     min_confidence: float,
     min_trust: float,
     relation_filter: str | None,
-    identity: "Identity | None",
+    identity: Identity | None,
 ) -> list[Any]:
     """Fetch and filter edges incident on entity from both traversal directions.
 
@@ -158,9 +156,8 @@ def _fetch_incident_edges(
 
         # Federation filter (§19.5.2): edges from remote nodes require federate perm
         received_from = row["received_from"]
-        if received_from is not None:
-            if identity is None or not identity.can_federate():
-                continue
+        if received_from is not None and (identity is None or not identity.can_federate()):
+            continue
 
         # Relation prefix-glob filter
         if relation_filter is not None and not _match_relation(row["relation"], relation_filter):

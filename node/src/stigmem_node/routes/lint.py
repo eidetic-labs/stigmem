@@ -70,9 +70,7 @@ _COUNT_SQL = (
 )
 
 
-def _lint_filter_params(
-    scope: str, entity: str | None, relation: str | None
-) -> list[Any]:
+def _lint_filter_params(scope: str, entity: str | None, relation: str | None) -> list[Any]:
     """Return the bind values for ``_F_FILTER_TAIL`` / ``_FA_FILTER_TAIL``.
 
     Empty-string entity/relation are normalized to None so the IS-NULL gate
@@ -95,20 +93,20 @@ _CONFLICT_SQL = (
 )
 
 
-def _check_contradictions(
-    conn: Any, fa_params: list[Any]
-) -> list[dict[str, Any]]:
+def _check_contradictions(conn: Any, fa_params: list[Any]) -> list[dict[str, Any]]:
     """Return contradiction findings for unresolved conflicts in the filtered scope."""
     findings: list[dict[str, Any]] = []
     for row in conn.execute(_CONFLICT_SQL, fa_params).fetchall():
-        findings.append({
-            "check": "contradiction",
-            "severity": "error",
-            "entity": row["entity"],
-            "relation": row["relation"],
-            "fact_ids": [row["fact_a_id"], row["fact_b_id"]],
-            "detail": f"unresolved conflict {row['conflict_id']}",
-        })
+        findings.append(
+            {
+                "check": "contradiction",
+                "severity": "error",
+                "entity": row["entity"],
+                "relation": row["relation"],
+                "fact_ids": [row["fact_a_id"], row["fact_b_id"]],
+                "detail": f"unresolved conflict {row['conflict_id']}",
+            }
+        )
     return findings
 
 
@@ -135,18 +133,20 @@ def _check_stale(
     findings: list[dict[str, Any]] = []
     for row in conn.execute(_STALE_SQL, [lookahead] + f_params).fetchall():
         expired = row["valid_until"] <= now
-        findings.append({
-            "check": "stale",
-            "severity": "warning" if expired else "info",
-            "entity": row["entity"],
-            "relation": row["relation"],
-            "fact_ids": [row["id"]],
-            "detail": (
-                f"expired at {row['valid_until']}"
-                if expired
-                else f"expires at {row['valid_until']} (within {stale_lookahead_s}s)"
-            ),
-        })
+        findings.append(
+            {
+                "check": "stale",
+                "severity": "warning" if expired else "info",
+                "entity": row["entity"],
+                "relation": row["relation"],
+                "fact_ids": [row["id"]],
+                "detail": (
+                    f"expired at {row['valid_until']}"
+                    if expired
+                    else f"expires at {row['valid_until']} (within {stale_lookahead_s}s)"
+                ),
+            }
+        )
     return findings
 
 
@@ -161,21 +161,21 @@ _ORPHAN_SQL = (
 )
 
 
-def _check_orphans(
-    conn: Any, scope: str, entity: str | None, now: str
-) -> list[dict[str, Any]]:
+def _check_orphans(conn: Any, scope: str, entity: str | None, now: str) -> list[dict[str, Any]]:
     """Return orphan-entity findings (entities with no live facts in scope)."""
     findings: list[dict[str, Any]] = []
     entity_p = entity or None
     for row in conn.execute(_ORPHAN_SQL, [scope, entity_p, entity_p, now]).fetchall():
-        findings.append({
-            "check": "orphan",
-            "severity": "info",
-            "entity": row["entity"],
-            "relation": None,
-            "fact_ids": [],
-            "detail": f"entity {row['entity']!r} has no live facts in scope={scope}",
-        })
+        findings.append(
+            {
+                "check": "orphan",
+                "severity": "info",
+                "entity": row["entity"],
+                "relation": None,
+                "fact_ids": [],
+                "detail": f"entity {row['entity']!r} has no live facts in scope={scope}",
+            }
+        )
     return findings
 
 
@@ -191,9 +191,7 @@ _REF_SQL = (
 )
 
 
-def _check_broken_refs(
-    conn: Any, f_params: list[Any], now: str
-) -> list[dict[str, Any]]:
+def _check_broken_refs(conn: Any, f_params: list[Any], now: str) -> list[dict[str, Any]]:
     """Return broken-ref findings for value-type=ref facts whose target has no live facts."""
     findings: list[dict[str, Any]] = []
     for row in conn.execute(_REF_SQL, [now] + f_params).fetchall():
@@ -206,14 +204,16 @@ def _check_broken_refs(
         ).fetchone()[0]
         if live_count == 0:
             is_intent = row["relation"] in INTENT_ROUTING_RELATIONS
-            findings.append({
-                "check": "broken_ref",
-                "severity": "error" if is_intent else "warning",
-                "entity": row["entity"],
-                "relation": row["relation"],
-                "fact_ids": [row["id"]],
-                "detail": f"ref target entity {target_entity!r} has no live facts",
-            })
+            findings.append(
+                {
+                    "check": "broken_ref",
+                    "severity": "error" if is_intent else "warning",
+                    "entity": row["entity"],
+                    "relation": row["relation"],
+                    "fact_ids": [row["id"]],
+                    "detail": f"ref target entity {target_entity!r} has no live facts",
+                }
+            )
     return findings
 
 
@@ -230,23 +230,23 @@ _NS_SQL = (
 )
 
 
-def _check_namespacing(
-    conn: Any, f_params: list[Any], now: str
-) -> list[dict[str, Any]]:
+def _check_namespacing(conn: Any, f_params: list[Any], now: str) -> list[dict[str, Any]]:
     """Return namespacing findings for live facts whose relation lacks a 'prefix:' namespace."""
     findings: list[dict[str, Any]] = []
     for row in conn.execute(_NS_SQL, [now] + f_params).fetchall():
-        findings.append({
-            "check": "namespacing",
-            "severity": "warning",
-            "entity": row["entity"],
-            "relation": row["relation"],
-            "fact_ids": row["ids"].split(",") if row["ids"] else [],
-            "detail": (
-                f"bare relation {row['relation']!r} has no namespace prefix — "
-                f"rename to 'your-prefix:{row['relation']}' to avoid silent collisions"
-            ),
-        })
+        findings.append(
+            {
+                "check": "namespacing",
+                "severity": "warning",
+                "entity": row["entity"],
+                "relation": row["relation"],
+                "fact_ids": row["ids"].split(",") if row["ids"] else [],
+                "detail": (
+                    f"bare relation {row['relation']!r} has no namespace prefix — "
+                    f"rename to 'your-prefix:{row['relation']}' to avoid silent collisions"
+                ),
+            }
+        )
     return findings
 
 
@@ -275,9 +275,7 @@ def _run_lint_sweep(
             findings.extend(_check_contradictions(conn, fa_params))
 
         if "stale" in checks:
-            findings.extend(
-                _check_stale(conn, f_params, now, lookahead, stale_lookahead_s)
-            )
+            findings.extend(_check_stale(conn, f_params, now, lookahead, stale_lookahead_s))
 
         if "orphan" in checks:
             findings.extend(_check_orphans(conn, scope, entity, now))

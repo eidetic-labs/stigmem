@@ -40,7 +40,7 @@ class Chunk:
 
 @dataclass
 class DiffEntry:
-    action: str          # CREATE | UPDATE | NOOP | TOMBSTONE
+    action: str  # CREATE | UPDATE | NOOP | TOMBSTONE
     unit_name: str
     fact_uri: str
     content: str
@@ -62,7 +62,7 @@ _FRONTMATTER_RE = re.compile(r"^---\r?\n.*?\r?\n---\r?\n", re.DOTALL)
 
 def _strip_frontmatter(text: str) -> str:
     m = _FRONTMATTER_RE.match(text)
-    return text[m.end():].lstrip("\n") if m else text
+    return text[m.end() :].lstrip("\n") if m else text
 
 
 def _to_slug(text: str, fallback: str) -> str:
@@ -124,9 +124,7 @@ def _split_into_section_pairs(text: str, md_file: Path) -> list[tuple[str, str]]
     return file_pairs
 
 
-def _disambiguate_slug(
-    base_slug: str, md_file: Path, seen_slugs: dict[str, int]
-) -> str:
+def _disambiguate_slug(base_slug: str, md_file: Path, seen_slugs: dict[str, int]) -> str:
     """Return a unique slug, prefixing with the file stem and a counter on collision."""
     if base_slug not in seen_slugs:
         return base_slug
@@ -138,9 +136,7 @@ def _disambiguate_slug(
     return slug
 
 
-def _build_chunk(
-    heading: str, body: str, slug: str, md_file: Path
-) -> Chunk:
+def _build_chunk(heading: str, body: str, slug: str, md_file: Path) -> Chunk:
     """Assemble a Chunk from a parsed (heading, body) pair."""
     heading_text = _HEADING_PREFIX_RE.sub("", heading).strip()
     content = f"{heading}\n\n{body}".strip() if body else heading.strip()
@@ -234,28 +230,32 @@ def compute_diff(
         else:
             action = "UPDATE"
 
-        diff.append(DiffEntry(
-            action=action,
-            unit_name=unit_name,
-            fact_uri=fact_uri,
-            content=chunk.content,
-            heading_text=chunk.heading_text,
-            keywords=chunk.keywords,
-            token_estimate=chunk.token_estimate,
-            existing_content=existing,
-        ))
+        diff.append(
+            DiffEntry(
+                action=action,
+                unit_name=unit_name,
+                fact_uri=fact_uri,
+                content=chunk.content,
+                heading_text=chunk.heading_text,
+                keywords=chunk.keywords,
+                token_estimate=chunk.token_estimate,
+                existing_content=existing,
+            )
+        )
 
     # Tombstone: manifest names present before but not in new set
     for name in sorted(prev_manifest_names - new_names):
-        diff.append(DiffEntry(
-            action="TOMBSTONE",
-            unit_name=name,
-            fact_uri="",
-            content="",
-            heading_text=name,
-            keywords=[],
-            token_estimate=0,
-        ))
+        diff.append(
+            DiffEntry(
+                action="TOMBSTONE",
+                unit_name=name,
+                fact_uri="",
+                content="",
+                heading_text=name,
+                keywords=[],
+                token_estimate=0,
+            )
+        )
 
     return diff
 
@@ -457,8 +457,7 @@ def write_facts(
                 print(f"  [{d.action}] {d.unit_name} ✓")
             else:
                 print(
-                    f"  [{d.action}] {d.unit_name} FAILED: "
-                    f"{r.status_code} {r.text[:120]}",
+                    f"  [{d.action}] {d.unit_name} FAILED: {r.status_code} {r.text[:120]}",
                     file=sys.stderr,
                 )
                 failed += 1
@@ -486,17 +485,19 @@ def publish_manifest(
     for d in diff:
         if d.action == "TOMBSTONE":
             continue
-        entries.append({
-            "name": d.unit_name,
-            "description": d.heading_text[:120],
-            "fact_uri": d.fact_uri,
-            "load_triggers": {
-                "intents": [d.heading_text.lower()],
-                "keywords": d.keywords,
-                "task_types": [],
-            },
-            "token_estimate": d.token_estimate,
-        })
+        entries.append(
+            {
+                "name": d.unit_name,
+                "description": d.heading_text[:120],
+                "fact_uri": d.fact_uri,
+                "load_triggers": {
+                    "intents": [d.heading_text.lower()],
+                    "keywords": d.keywords,
+                    "task_types": [],
+                },
+                "token_estimate": d.token_estimate,
+            }
+        )
 
     payload = {
         "version": manifest_version,

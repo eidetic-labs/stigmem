@@ -15,7 +15,9 @@ logger = logging.getLogger("stigmem.cli")
 
 
 def _resolve_scope_prefix_and_label(
-    args: argparse.Namespace, deployment: str, agent_id: str,
+    args: argparse.Namespace,
+    deployment: str,
+    agent_id: str,
 ) -> tuple[str, str]:
     """Pick the role/skill scope-prefix builder and produce a human-readable label."""
     from .instruction_migrate import scope_prefix_for_role, scope_prefix_for_skill
@@ -26,7 +28,9 @@ def _resolve_scope_prefix_and_label(
 
 
 def _load_existing_state_from_db(
-    db_path: str, stub_diff_uris: set[str], agent_id: str,
+    db_path: str,
+    stub_diff_uris: set[str],
+    agent_id: str,
 ) -> tuple[dict[str, str], set[str]]:
     """Best-effort: read existing fact values + prior manifest entry names from local SQLite."""
     import json as _json
@@ -59,7 +63,10 @@ def _load_existing_state_from_db(
 
 
 def _load_existing_state_from_api(
-    node_url: str, api_key: str, stub_diff_uris: set[str], agent_id: str,
+    node_url: str,
+    api_key: str,
+    stub_diff_uris: set[str],
+    agent_id: str,
 ) -> tuple[dict[str, str], set[str]]:
     """Best-effort: fetch existing facts + manifest entries via HTTP."""
     try:
@@ -167,7 +174,11 @@ def _cmd_instruction_migrate(args: argparse.Namespace) -> int:
     # Idempotency pre-flight: load existing fact content + prior manifest entry names.
     stub_diff_uris = {build_fact_uri(scope_prefix, c.slug, version) for c in chunks}
     existing_content, prev_names = _load_existing_state(
-        args, node_url, api_key, stub_diff_uris, agent_id,
+        args,
+        node_url,
+        api_key,
+        stub_diff_uris,
+        agent_id,
     )
 
     diff = compute_diff(chunks, scope_prefix, version, existing_content, prev_names)
@@ -263,31 +274,30 @@ def _cmd_instruction_manifest_generate(args: argparse.Namespace) -> int:
             keywords = list(
                 {
                     w.lower()
-                    for w in re.findall(
-                        r"\b[a-zA-Z]{4,}\b", heading_text + " " + body[:200]
-                    )
+                    for w in re.findall(r"\b[a-zA-Z]{4,}\b", heading_text + " " + body[:200])
                 }
             )[:8]
             token_est = max(1, len(body) // 4)
             fact_uri = (
-                f"instruction:{args.deployment}/agent/{args.agent_id}"
-                f"/{unit_name}/{args.version}"
+                f"instruction:{args.deployment}/agent/{args.agent_id}/{unit_name}/{args.version}"
             )
 
-            entries.append({
-                "name": unit_name,
-                "description": heading_text[:120],
-                "required_by_task_types": [],
-                "guarantee_load": False,
-                "load_triggers": {
-                    "intents": [heading_text.lower()],
-                    "keywords": keywords,
-                    "task_types": [],
-                },
-                "fact_uri": fact_uri,
-                "path": str(md_file),
-                "token_estimate": token_est,
-            })
+            entries.append(
+                {
+                    "name": unit_name,
+                    "description": heading_text[:120],
+                    "required_by_task_types": [],
+                    "guarantee_load": False,
+                    "load_triggers": {
+                        "intents": [heading_text.lower()],
+                        "keywords": keywords,
+                        "task_types": [],
+                    },
+                    "fact_uri": fact_uri,
+                    "path": str(md_file),
+                    "token_estimate": token_est,
+                }
+            )
 
     result = {
         "version": args.version,
@@ -418,6 +428,7 @@ def _cmd_identity_rotate_key(args: argparse.Namespace) -> int:
         import stigmem_node.settings as settings_module
 
         from .settings import Settings
+
         patched = Settings(db_path=args.db)
         settings_module.settings = patched
 
@@ -436,6 +447,7 @@ def _cmd_identity_rotate_key(args: argparse.Namespace) -> int:
     entity_uri = settings.node_url
 
     from .db import db as _db_ctx
+
     with _db_ctx() as conn:
         row = conn.execute(
             "SELECT manifest_json FROM federation_manifests WHERE entity_uri = ?",
@@ -475,6 +487,7 @@ def _cmd_identity_rotate_key(args: argparse.Namespace) -> int:
         print(f"  rotation TL index  : {result.rotation_tl_entry.log_index}")
 
         from .identity.trust_store import store_peer_manifest
+
         store_peer_manifest(entity_uri, result.new_manifest, result.manifest_log_entry)
         print("  manifest stored in federation_manifests")
 
@@ -494,6 +507,7 @@ def _cmd_backfill_cids(args: argparse.Namespace) -> int:
     db_path: str | None = getattr(args, "db", None)
     if db_path is None:
         import os as _os
+
         db_path = _os.environ.get("STIGMEM_DB_PATH", "stigmem.db")
 
     batch_size: int = getattr(args, "batch_size", 500)
@@ -578,7 +592,7 @@ def _cmd_auth_bootstrap_key(args: argparse.Namespace) -> int:
             "  --key VALUE   or   STIGMEM_BOOTSTRAP_KEY=VALUE\n\n"
             "Example:\n"
             "  KEY=$(openssl rand -hex 32)\n"
-            "  stigmem auth bootstrap-key --key \"$KEY\"\n"
+            '  stigmem auth bootstrap-key --key "$KEY"\n'
             "  # then use $KEY as `Authorization: Bearer $KEY` for API calls",
             file=sys.stderr,
         )
@@ -634,5 +648,3 @@ def _cmd_auth_bootstrap_key(args: argparse.Namespace) -> int:
         file=sys.stderr,
     )
     return 0
-
-

@@ -78,7 +78,7 @@ def _patch_settings(test_settings: Settings) -> list:
             mod = importlib.import_module(name)
             mods.append(mod)
         except ImportError:
-            pass
+            continue
     settings_module.settings = test_settings  # type: ignore[assignment]
     auth_mod.settings = test_settings  # type: ignore[assignment]
     db_mod.settings = test_settings  # type: ignore[assignment]

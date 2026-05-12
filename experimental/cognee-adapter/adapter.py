@@ -120,7 +120,7 @@ def _parse_fact_text(text: str, scope: str) -> dict[str, Any]:
             try:
                 record["confidence"] = float(val)
             except ValueError:
-                pass
+                logger.debug("ignoring non-numeric confidence value from search result: %r", val)
         elif key == "valid_until":
             record["valid_until"] = val
         elif key == "stigmem_id":

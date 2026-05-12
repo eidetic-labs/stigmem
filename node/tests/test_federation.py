@@ -864,7 +864,7 @@ class TestMaliciousPeer:
                 if hasattr(mod, "settings"):
                     monkeypatch.setattr(mod, "settings", new_settings)
             except ImportError:
-                pass
+                continue
 
         pub, priv = _generate_ed25519_b64()
         node_b_id = f"stigmem://malicious-peer-{uuid.uuid4()}"

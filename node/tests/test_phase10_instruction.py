@@ -964,8 +964,6 @@ class TestMigrationRoundTrip:
 
     def test_idempotent_migration(self, admin_client: TestClient, tmp_path: Path) -> None:
         """Running migration twice on same content produces NOOP on second run."""
-        import sqlite3
-
         from stigmem_node.instruction_migrate import (
             compute_diff,
             parse_instruction_chunks,
@@ -1069,8 +1067,8 @@ class TestMigrationRoundTrip:
 def admin_client(tmp_db: str, backend: str) -> TestClient:
     """A test client with full admin permissions (read+write+federate)."""
     import stigmem_node.auth as auth_mod
-    import stigmem_node.db as db_mod
     import stigmem_node.settings as settings_mod
+    from stigmem_node import db as db_mod
     from stigmem_node.main import create_app
     from stigmem_node.settings import Settings
 

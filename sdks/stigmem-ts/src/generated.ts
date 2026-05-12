@@ -203,7 +203,7 @@ export interface paths {
         };
         /**
          * Query Audit
-         * @description Query the enriched fact audit log (principal → attested-source → fact) with optional filters.
+         * @description Query enriched audit logs with optional principal and source filters.
          */
         get: operations["query_audit_v1_audit_get"];
         put?: never;

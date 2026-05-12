@@ -23,11 +23,8 @@ import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.auth import create_api_key
-from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.models import QUARANTINE_PENDING
-from stigmem_node.settings import Settings
 from stigmem_node.source_trust import bust_trust_cache, compute_source_trust
 
 # ---------------------------------------------------------------------------
@@ -39,9 +36,9 @@ from stigmem_node.source_trust import bust_trust_cache, compute_source_trust
 def node(tmp_path):
     """Authenticated node with admin + moderator + reader keys."""
     db_file = str(tmp_path / "q_test.db")
-    apply_migrations(db_path=db_file)
+    db_mod.apply_migrations(db_path=db_file)
     original = settings_module.settings
-    ts = Settings(
+    ts = settings_module.Settings(
         db_path=db_file,
         auth_required=True,
         node_url="http://qnode",
@@ -53,9 +50,11 @@ def node(tmp_path):
     db_mod.settings = ts
     wk_mod.settings = ts
 
-    admin_key = create_api_key("stigmem://qnode/agent/admin", ["read", "write"])
-    moderator_key = create_api_key("stigmem://qnode/agent/moderator", ["read", "write"])
-    reader_key = create_api_key("stigmem://qnode/agent/reader", ["read"])
+    admin_key = auth_mod.create_api_key("stigmem://qnode/agent/admin", ["read", "write"])
+    moderator_key = auth_mod.create_api_key(
+        "stigmem://qnode/agent/moderator", ["read", "write"]
+    )
+    reader_key = auth_mod.create_api_key("stigmem://qnode/agent/reader", ["read"])
 
     app = create_app()
     client = TestClient(app, raise_server_exceptions=True)

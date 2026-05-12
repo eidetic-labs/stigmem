@@ -164,7 +164,9 @@ def test_start_span_enabled_records_exception_when_otel_trace_present() -> None:
     exception and sets an error status before re-raising.  Skipped when
     the SDK is not installed (record_exception is never called because
     the StatusCode import inside the try-block fails first)."""
-    pytest.importorskip("opentelemetry.trace", reason="opentelemetry not installed")
+    otel_trace = pytest.importorskip("opentelemetry.trace", reason="opentelemetry not installed")
+    if not hasattr(otel_trace, "StatusCode"):
+        pytest.skip("opentelemetry.trace.StatusCode not available")
     tracer = _FakeTracer()
     tracing_mod._OTEL_ENABLED = True
     tracing_mod._tracer = tracer

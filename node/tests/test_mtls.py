@@ -325,7 +325,7 @@ def test_mtls_plaintext_guard_returns_421(tmp_path: Path, monkeypatch: pytest.Mo
     from fastapi.testclient import TestClient
 
     import stigmem_node.main as main_mod
-    import stigmem_node.settings as settings_module
+    from stigmem_node import settings as settings_module
 
     # Write placeholder files so mtls_enabled property returns True
     (tmp_path / "node.crt").write_text("placeholder")
@@ -356,7 +356,7 @@ def test_non_federation_routes_bypass_mtls_guard(
     from fastapi.testclient import TestClient
 
     import stigmem_node.main as main_mod
-    import stigmem_node.settings as settings_module
+    from stigmem_node import settings as settings_module
 
     (tmp_path / "node.crt").write_text("placeholder")
     (tmp_path / "node.key").write_text("placeholder")

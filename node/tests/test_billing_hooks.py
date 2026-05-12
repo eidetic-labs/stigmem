@@ -11,7 +11,6 @@ import stigmem_node.auth as auth_mod
 import stigmem_node.billing as billing_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.billing import CaptureBus, set_hook_bus
 from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
@@ -22,7 +21,7 @@ from stigmem_node.settings import Settings
 
 
 @pytest.fixture()
-def hooked_client(tmp_db: str) -> Generator[tuple[TestClient, CaptureBus], None, None]:
+def hooked_client(tmp_db: str) -> Generator[tuple[TestClient, billing_mod.CaptureBus], None, None]:
     """TestClient with auth disabled and a CaptureBus wired for assertions."""
     original_settings = settings_module.settings
     test_settings = Settings(db_path=tmp_db, auth_required=False, node_url="http://testnode")
@@ -31,14 +30,14 @@ def hooked_client(tmp_db: str) -> Generator[tuple[TestClient, CaptureBus], None,
     db_mod.settings = test_settings
 
     original_bus = billing_mod._bus
-    bus = CaptureBus()
-    set_hook_bus(bus)
+    bus = billing_mod.CaptureBus()
+    billing_mod.set_hook_bus(bus)
 
     app = create_app()
     with TestClient(app, raise_server_exceptions=True) as c:
         yield c, bus
 
-    set_hook_bus(original_bus)
+    billing_mod.set_hook_bus(original_bus)
     settings_module.settings = original_settings
     auth_mod.settings = original_settings
     db_mod.settings = original_settings
@@ -87,8 +86,8 @@ def test_fact_written_captures_tenant_id(tmp_path: object) -> None:
     db_mod.settings = test_settings
 
     original_bus = billing_mod._bus
-    bus = CaptureBus()
-    set_hook_bus(bus)
+    bus = billing_mod.CaptureBus()
+    billing_mod.set_hook_bus(bus)
 
     key = create_api_key("agent:tester", ["read", "write"], tenant_id="acme-corp")
 
@@ -109,7 +108,7 @@ def test_fact_written_captures_tenant_id(tmp_path: object) -> None:
     assert len(bus.events) == 1
     assert bus.events[0].tenant_id == "acme-corp"
 
-    set_hook_bus(original_bus)
+    billing_mod.set_hook_bus(original_bus)
     settings_module.settings = original
     auth_mod.settings = original
     db_mod.settings = original

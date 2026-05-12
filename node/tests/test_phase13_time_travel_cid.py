@@ -41,7 +41,6 @@ import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.auth import create_api_key
 from stigmem_node.cid import compute_cid, is_valid_cid
 from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
@@ -155,8 +154,8 @@ def p13_authed(tmp_path) -> Generator[tuple[TestClient, str, str], None, None]:
         node_private_key=priv_b64,
     )
     mods = _patch_settings(ts)
-    agent_key = create_api_key("agent:test", ["read", "write"])
-    admin_key = create_api_key("agent:admin", ["read", "write", "federate", "admin"])
+    agent_key = auth_mod.create_api_key("agent:test", ["read", "write"])
+    admin_key = auth_mod.create_api_key("agent:admin", ["read", "write", "federate", "admin"])
     app = create_app()
     with TestClient(app, raise_server_exceptions=True) as c:
         yield c, agent_key, admin_key
@@ -516,8 +515,8 @@ def test_as_of_tombstone_retroactive_suppression(tmp_path):
         node_private_key=_gen_test_private_key(),
     )
     mods = _patch_settings(ts_settings)
-    admin_key = create_api_key("agent:admin", ["read", "write", "federate", "admin"])
-    agent_key = create_api_key("agent:user", ["read", "write"])
+    admin_key = auth_mod.create_api_key("agent:admin", ["read", "write", "federate", "admin"])
+    agent_key = auth_mod.create_api_key("agent:user", ["read", "write"])
     app = create_app()
 
     with TestClient(app, raise_server_exceptions=True) as c:
@@ -564,7 +563,7 @@ def test_as_of_legal_hold_admin_sees_notice(tmp_path):
         node_private_key=_gen_test_private_key(),
     )
     mods = _patch_settings(ts_settings)
-    admin_key = create_api_key("agent:admin", ["read", "write", "federate", "admin"])
+    admin_key = auth_mod.create_api_key("agent:admin", ["read", "write", "federate", "admin"])
     app = create_app()
 
     with TestClient(app, raise_server_exceptions=True) as c:
@@ -612,8 +611,8 @@ def test_as_of_legal_hold_non_admin_excluded(tmp_path):
         node_private_key=_gen_test_private_key(),
     )
     mods = _patch_settings(ts_settings)
-    admin_key = create_api_key("agent:admin", ["read", "write", "federate", "admin"])
-    agent_key = create_api_key("agent:user", ["read", "write"])
+    admin_key = auth_mod.create_api_key("agent:admin", ["read", "write", "federate", "admin"])
+    agent_key = auth_mod.create_api_key("agent:user", ["read", "write"])
     app = create_app()
 
     with TestClient(app, raise_server_exceptions=True) as c:

@@ -3851,7 +3851,7 @@
     },
     "/v1/audit": {
       "get": {
-        "description": "Query the enriched fact audit log (principal \u2192 attested-source \u2192 fact) with optional filters.",
+        "description": "Query enriched audit logs with optional principal and source filters.",
         "operationId": "query_audit_v1_audit_get",
         "parameters": [
           {

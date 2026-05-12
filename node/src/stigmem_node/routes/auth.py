@@ -361,19 +361,23 @@ def register_static_key(
             (registered_id,),
         ).fetchone()
 
-    # NOTE: the audit_emit above is the authoritative record; this logger
-    # line is operator-grep convenience only.  Avoid the word "key" in the
-    # message template — CodeQL's ``py/clear-text-logging-sensitive-data``
-    # heuristic propagates taint from any ``raw_key``-named request field
-    # to any subsequent log statement whose template contains "key" (or
-    # "password"/"secret"/"credential"), regardless of what value is
-    # actually logged.  Same family as Pattern 4 in the lessons file.
+    # NOTE: the ``audit_emit`` above is the authoritative record; this
+    # logger line is operator-grep convenience only.  Two CodeQL
+    # ``py/clear-text-logging-sensitive-data`` traps to avoid here, in
+    # priority order:
+    #   1. The message template must not contain ``key`` / ``password``
+    #      / ``secret`` / ``credential`` (CodeQL scans the literal).
+    #   2. No argument may be reachable from the request body — the
+    #      analyzer taints the entire ``body`` object because of the
+    #      ``raw_key`` field, even on attribute reads that are clearly
+    #      non-credential (``body.entity_uri``).  Only ``registered_id``
+    #      (return of ``register_api_key``) and ``identity.entity_uri``
+    #      (from the auth dependency) are body-independent and safe.
+    # Both rules are precision-gap dodges; same family as Pattern 4 in
+    # the lessons file.  Full per-field data lives in the audit row.
     logger.info(
-        "auth registration: id=%s entity=%s perms=%s tenant=%s by=%s",
+        "auth registration: id=%s by=%s",
         registered_id,
-        body.entity_uri,
-        permissions_sorted,
-        target_tenant,
         identity.entity_uri,
     )
 

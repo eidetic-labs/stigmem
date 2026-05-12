@@ -21,8 +21,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 import stigmem_node.auth as auth_mod
+import stigmem_node.db as db_mod
+import stigmem_node.main as main_mod
+import stigmem_node.settings as settings_mod
 
 create_api_key = auth_mod.create_api_key
+Settings = settings_mod.Settings
 
 
 # ---------------------------------------------------------------------------
@@ -634,10 +638,8 @@ class TestCLIAuditDiscovery:
         import subprocess
         import sys
 
-        from stigmem_node.db import apply_migrations
-
         db_file = str(tmp_path / "test.db")
-        apply_migrations(db_path=db_file)
+        db_mod.apply_migrations(db_path=db_file)
 
         result = subprocess.run(
             [
@@ -661,10 +663,8 @@ class TestCLIAuditDiscovery:
         import subprocess
         import sys
 
-        from stigmem_node.db import apply_migrations
-
         db_file = str(tmp_path / "test.db")
-        apply_migrations(db_path=db_file)
+        db_mod.apply_migrations(db_path=db_file)
 
         result = subprocess.run(
             [
@@ -999,8 +999,6 @@ class TestMigrationRoundTrip:
 
         # Second run: same content → NOOP
         # Re-query existing facts directly from DB
-        import stigmem_node.settings as settings_mod
-
         db_path = settings_mod.settings.db_path
         existing = {}
         conn = sqlite3.connect(db_path)
@@ -1068,13 +1066,6 @@ class TestMigrationRoundTrip:
 @pytest.fixture()
 def admin_client(tmp_db: str, backend: str) -> TestClient:
     """A test client with full admin permissions (read+write+federate)."""
-    import stigmem_node.auth as auth_mod
-    import stigmem_node.settings as settings_mod
-
-    Settings = settings_mod.Settings
-    from stigmem_node import db as db_mod
-    from stigmem_node.main import create_app
-
     original = settings_mod.settings
     s = Settings(db_path=tmp_db, auth_required=False)
     settings_mod.settings = s
@@ -1084,7 +1075,7 @@ def admin_client(tmp_db: str, backend: str) -> TestClient:
     # create_api_key uses module-level db(), which now points to tmp_db via settings
     raw_key = create_api_key("admin:test", ["read", "write", "federate"])
 
-    app = create_app()
+    app = main_mod.create_app()
     with TestClient(app, headers={"Authorization": f"Bearer {raw_key}"}) as c:
         yield c
 

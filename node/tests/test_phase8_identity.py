@@ -827,7 +827,6 @@ def test_quarantine_ingest_writes_audit_log_entry(tmp_path: Path):
     routes a low-trust fact to the quarantine garden at ingest time."""
     import sqlite3 as _sqlite3
 
-    import stigmem_node.auth as auth_mod
     from stigmem_node.source_trust import bust_trust_cache
 
     db_file = str(tmp_path / "qaudit_test.db")

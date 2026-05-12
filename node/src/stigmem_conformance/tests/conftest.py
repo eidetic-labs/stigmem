@@ -27,9 +27,15 @@ from typing import NamedTuple
 import pytest
 from fastapi.testclient import TestClient
 
+import stigmem_node.auth as auth_mod
+import stigmem_node.db as db_mod
+import stigmem_node.main as main_mod
+import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
+import stigmem_node.storage as storage_mod
 
 Settings = settings_module.Settings
+make_backend = storage_mod.make_backend
 
 
 _MIGRATIONS_DIR = (
@@ -87,11 +93,6 @@ def _get_extra_modules() -> list[object]:
 
 
 def _patch_settings(test_settings: Settings) -> list[object]:
-    import stigmem_node.auth as auth_mod
-    import stigmem_node.db as db_mod
-    import stigmem_node.routes.wellknown as wk_mod
-    import stigmem_node.settings as settings_module
-
     extra = _get_extra_modules()
     settings_module.settings = test_settings
     auth_mod.settings = test_settings
@@ -104,11 +105,6 @@ def _patch_settings(test_settings: Settings) -> list[object]:
 
 
 def _restore_settings(original: Settings, extra: list[object]) -> None:
-    import stigmem_node.auth as auth_mod
-    import stigmem_node.db as db_mod
-    import stigmem_node.routes.wellknown as wk_mod
-    import stigmem_node.settings as settings_module
-
     settings_module.settings = original
     auth_mod.settings = original
     db_mod.settings = original
@@ -156,10 +152,6 @@ def _build_client(
     pg_dsn: str = "",
     pg_schema: str = "",
 ) -> Generator[ConformanceClient, None, None]:
-    import stigmem_node.settings as settings_module
-    from stigmem_node.main import create_app
-    from stigmem_node.storage import make_backend
-
     original = settings_module.settings
 
     if backend_name == "postgres":
@@ -185,7 +177,7 @@ def _build_client(
     b.apply_migrations(_MIGRATIONS_DIR)
 
     extra = _patch_settings(settings_obj)
-    app = create_app()
+    app = main_mod.create_app()
     with TestClient(app, raise_server_exceptions=True) as c:
         yield ConformanceClient(client=c, backend=backend_name)
     _restore_settings(original, extra)

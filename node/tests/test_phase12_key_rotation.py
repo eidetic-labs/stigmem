@@ -33,6 +33,7 @@ from cryptography.hazmat.primitives.serialization import (
 )
 
 import stigmem_node.db as db_mod
+import stigmem_node.settings as settings_module
 from stigmem_node.identity.capability import (
     _DUAL_TRUST_DAYS,
     CapabilityTokenError,
@@ -56,6 +57,7 @@ from stigmem_node.identity.manifest import (
 )
 
 apply_migrations = db_mod.apply_migrations
+Settings = settings_module.Settings
 
 
 # ---------------------------------------------------------------------------
@@ -279,10 +281,6 @@ class TestRotateKeyWithLocalTL:
         priv_a, pub_a, _ = _gen_keypair()
         manifest_a = _make_manifest(priv_a, pub_a)
 
-        import stigmem_node.settings as settings_module
-
-        Settings = settings_module.Settings
-
         orig = settings_module.settings
         settings_module.settings = Settings(tl_backend="local", tl_local_path=str(tl_path))  # type: ignore[assignment]
         try:
@@ -303,10 +301,6 @@ class TestRotateKeyWithLocalTL:
         tl_path = tmp_path / "tl.jsonl"
         priv_a, pub_a, _ = _gen_keypair()
         manifest_a = _make_manifest(priv_a, pub_a)
-
-        import stigmem_node.settings as settings_module
-
-        Settings = settings_module.Settings
 
         orig = settings_module.settings
         settings_module.settings = Settings(tl_backend="local", tl_local_path=str(tl_path))  # type: ignore[assignment]
@@ -382,11 +376,6 @@ class TestPath1SingleRotation:
             entity_uri=entity_uri,
             rotation_events=[rotation_evt],
         )
-
-        import stigmem_node.db as db_mod
-        import stigmem_node.settings as settings_module
-
-        Settings = settings_module.Settings
 
         orig = settings_module.settings
         settings_module.settings = Settings(db_path=db_path)  # type: ignore[assignment]
@@ -680,11 +669,6 @@ class TestPath4MidFlightFederationHandshake:
         # Peer receives the new manifest from issuer
         manifest_b = _make_manifest(priv_b, pub_b, entity_uri=entity_uri, rotation_events=[evt])
 
-        import stigmem_node.db as db_mod
-        import stigmem_node.settings as settings_module
-
-        Settings = settings_module.Settings
-
         orig = settings_module.settings
         settings_module.settings = Settings(db_path=db_path)  # type: ignore[assignment]
         db_mod.settings = settings_module.settings  # type: ignore[assignment]
@@ -726,11 +710,6 @@ class TestPath4MidFlightFederationHandshake:
             previous_public_key=pub_a,
         )
         manifest_b = _make_manifest(priv_b, pub_b, entity_uri=entity_uri, rotation_events=[evt])
-
-        import stigmem_node.db as db_mod
-        import stigmem_node.settings as settings_module
-
-        Settings = settings_module.Settings
 
         orig = settings_module.settings
         settings_module.settings = Settings(db_path=db_path)  # type: ignore[assignment]

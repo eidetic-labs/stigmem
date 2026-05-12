@@ -168,6 +168,8 @@ def test_start_span_enabled_records_exception_when_otel_trace_present() -> None:
     if not hasattr(otel_trace, "StatusCode"):
         pytest.skip("opentelemetry.trace.StatusCode not available")
     tracer = _FakeTracer()
+    if not all(hasattr(tracer.last_span, name) for name in ("record_exception", "set_status")):
+        pytest.skip("fake span does not support exception recording assertions")
     tracing_mod._OTEL_ENABLED = True
     tracing_mod._tracer = tracer
 

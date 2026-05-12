@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install clawhub CLI
         # The CLI is published as the unscoped `clawhub` package on npm

@@ -30,6 +30,7 @@ from ..garden_acl import (
 from ..hlc import node_hlc
 from ..metrics import CONTRADICTION, FACT_WRITE
 from ..models import AssertRequest, FactRecord, row_to_record
+from ..plugins import TenantContext, get_registry
 from ..settings import settings as _settings  # noqa: F401  — kept for parity
 
 
@@ -112,7 +113,7 @@ def _resolve_garden_for_assert(req: AssertRequest, identity: Identity) -> Any:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
     if garden["scope"] != req.scope:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"scope mismatch: garden scope is '{garden['scope']}' "
                 f"but fact scope is '{req.scope}'"
@@ -242,6 +243,9 @@ def assert_fact_impl(
     req: AssertRequest,
     identity: Identity,
     _span: object,
+    *,
+    request_id: str,
+    tenant: TenantContext,
 ) -> FactRecord:
     # Lazy imports of sibling helpers to avoid circular import with .facts
     from .facts import (
@@ -374,6 +378,14 @@ def assert_fact_impl(
             )
 
         row = conn.execute("SELECT * FROM facts WHERE id=?", (fact_id,)).fetchone()
+        persisted_record = row_to_record(row, contradicted=False)
+        get_registry().fire_fire_and_forget(
+            "post_assert_persist",
+            fact=persisted_record,
+            identity=identity,
+            tenant=tenant,
+            request_id=request_id,
+        )
         contradicted = _detect_and_record_contradictions(conn, fact_id, entity, req, identity)
 
     _emit_post_write_hooks(

@@ -93,12 +93,12 @@ def create_garden(
     slug = req.slug.lower().strip()
     if not _SLUG_RE.match(slug):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="slug must match ^[a-z0-9][a-z0-9\\-]{0,62}$",
         )
     if req.scope not in VALID_SCOPES:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"scope must be one of {VALID_SCOPES}",
         )
 
@@ -400,7 +400,7 @@ def promote_fact(
 
     if not garden.get("quarantine"):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="this endpoint is only valid for quarantine gardens",
         )
 
@@ -500,7 +500,7 @@ def reject_fact(
 
     if not garden.get("quarantine"):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="this endpoint is only valid for quarantine gardens",
         )
 

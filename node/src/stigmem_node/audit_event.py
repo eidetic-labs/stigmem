@@ -21,6 +21,7 @@ from typing import Any
 
 from .db import db
 from .metrics import AUDIT_EVENT
+from .plugins import AuditEvent, Success, get_registry
 
 
 def _emit_with_conn(
@@ -98,6 +99,25 @@ def emit(
 
     # §22.3: increment Prometheus counter for every successfully written audit event.
     AUDIT_EVENT.labels(event_type=event_type, tenant=tenant_id).inc()
+    get_registry().fire_fire_and_forget(
+        "audit_emit",
+        event=AuditEvent(
+            event_type=event_type,
+            actor_uri=entity_uri,
+            target_uri=fact_id,
+            tenant_id=tenant_id,
+            timestamp=datetime.fromisoformat(now),
+            outcome=Success(),
+            metadata={
+                "oidc_sub": oidc_sub,
+                "source": source,
+                "attested_key_id": attested_key_id,
+                "scope": scope,
+                "detail": detail or {},
+                "audit_entry_id": entry_id,
+            },
+        ),
+    )
 
 
 def emit_nofail(

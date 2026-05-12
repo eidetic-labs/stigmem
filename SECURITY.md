@@ -48,19 +48,19 @@ We follow coordinated disclosure. We ask reporters to give us 90 days before pub
 
 ---
 
-## Security Posture — v0.9.0a1 (2026-05-08)
+## Security Posture — v0.9.0a1 (2026-05-08; updated 2026-05-12)
 
-> **Posture-reset note.** Stigmem's `v1.0` announcement was withdrawn on 2026-05-08; the canonical version line was reset to `v0.9.0a1` per [ADR-001](docs/adr/001-versioning.md) and [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). The dependency-alert triage in this section was originally compiled for `the pre-reset v1.0-rc snapshot` on 2026-05-03 and is **carried forward to v0.9.0a1** because the underlying dependency upgrades remain in effect — the same fixed package versions that resolved the alerts at the pre-reset v1.0-rc snapshot are still installed at v0.9.0a1. The supported-version posture changed (see "Supported Versions" above); the dependency-fix evidence did not.
+> **Posture-reset note.** Stigmem's `v1.0` announcement was withdrawn on 2026-05-08; the canonical version line was reset to `v0.9.0a1` per [ADR-001](docs/adr/001-versioning.md) and [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). The dependency-alert triage in this section was originally compiled for `the pre-reset v1.0-rc snapshot` on 2026-05-03 and is **carried forward to v0.9.0a1** because the underlying dependency upgrades remain in effect — the same or newer fixed package versions that resolved the alerts at the pre-reset v1.0-rc snapshot are installed at v0.9.0a1. The supported-version posture changed (see "Supported Versions" above); the dependency-fix evidence did not.
 >
 > **Open security gaps named explicitly:** several controls our threat model identifies as required for stable production — mTLS-default federation, persistent audit log, per-principal rate limits, capability-level validation for cross-org instructions, bounded HLC skew enforcement, the storage-immutability stack ([ADR-016](docs/adr/016-storage-immutability-enforcement.md)) — are scheduled for the v0.9.0bN beta series and are **not yet in effect at v0.9.0a1**. Adopters running federation across organizational boundaries should wait for the v0.9.0bN beta series per [LIMITATIONS.md](LIMITATIONS.md).
 
-This section documents the current security posture of the stigmem `v0.9.0a1` release, including a triage of all open Dependabot alerts against Eidetic-Labs/stigmem as of the 2026-05-03 pre-reset v1.0-rc snapshot (carried forward; see note above).
+This section documents the current security posture of the stigmem `v0.9.0a1` release, including Dependabot and CodeQL triage carried forward from the 2026-05-03 pre-reset v1.0-rc snapshot plus follow-up dependency patches through 2026-05-12.
 
 ### Summary
 
 | Category | Source | Count |
 | -------- | ------ | ----- |
-| Dependabot — alerts addressed by the pre-reset v1.0-rc snapshot dep upgrade sweep + follow-up patch sweep | Dependency advisories | 22 |
+| Dependabot — alerts addressed by the pre-reset v1.0-rc snapshot dep upgrade sweep + follow-up patch sweeps | Dependency advisories | 27 |
 | Dependabot — alerts in docs build toolchain (non-exploitable, suppressed) | Dependency advisories | 7 |
 | CodeQL — conditional SQL-fragment assembly (false positives, closed by structural constant-SQL refactor) | Static dataflow analysis | 8 |
 | Unaddressed / escalated blockers | — | 0 |
@@ -69,16 +69,17 @@ This section documents the current security posture of the stigmem `v0.9.0a1` re
 
 ---
 
-### Group A — Resolved by the dep upgrade sweep that landed pre-v0.9.0a1 (20 alerts)
+### Group A — Resolved by dependency upgrade sweeps (27 alerts)
 
-The `chore(deps): TypeScript dep upgrade sweep + Node CVE remediation` commit upgraded the following packages to patched versions. Dependabot alerts will auto-close on the next GitHub rescan after the branch merges.
+The dependency upgrade sweeps upgraded the following packages to patched versions. Dependabot alerts will auto-close on the next GitHub rescan after the relevant branch merges.
 
-#### Next.js (`experimental/dashboard/`, deferred per ADR-002) — 17 alerts
+#### Next.js (`experimental/dashboard/`, deferred per ADR-002) — 18 alerts
 
-The Next.js curator dashboard (`experimental/dashboard/`) was pinned at Next.js 14 and accumulated CVEs from three major Next.js disclosure cycles. The pre-v0.9.0a1 dep sweep upgraded it to `next@15.5.15`. A follow-up upgrade to `next@15.5.16` lands the patch for [GHSA-8h8q-6873-q5fj](https://github.com/advisories/GHSA-8h8q-6873-q5fj) (alerts #38 and #39, which Dependabot tracked separately for `experimental/dashboard/package.json` and `pnpm-lock.yaml`).
+The Next.js curator dashboard (`experimental/dashboard/`) was pinned at Next.js 14 and accumulated CVEs from three major Next.js disclosure cycles. The pre-v0.9.0a1 dep sweep upgraded it to `next@15.5.15`. Follow-up upgrades to `next@15.5.16` and then `next@16.2.6` landed the patches for [GHSA-8h8q-6873-q5fj](https://github.com/advisories/GHSA-8h8q-6873-q5fj) and [GHSA-26hh-7cqf-hhc6](https://github.com/advisories/GHSA-26hh-7cqf-hhc6).
 
 | Alert | Severity | CVE / GHSA | Summary | Resolution |
 | ----- | -------- | --- | ------- | ---------- |
+| #44 | HIGH | GHSA-26hh-7cqf-hhc6 / CVE-2026-45109 | Middleware / Proxy bypass in App Router applications via segment-prefetch routes | `next@16.2.6` ≥ patched `16.2.6` |
 | #38, #39 | HIGH | GHSA-8h8q-6873-q5fj | (See advisory) | `next@15.5.16` ≥ patched `15.5.16` |
 | #17 | HIGH | — | DoS with Server Components | `next@15.5.15` ≥ patched `15.5.15` |
 | #16 | MEDIUM | CVE-2026-27980 | Unbounded next/image disk cache growth | `next@15.5.15` ≥ patched `15.5.14` |
@@ -115,6 +116,19 @@ This vulnerability requires the Vite dev server to be explicitly exposed to the 
 | #26 | MEDIUM | — | esbuild dev server allows cross-origin requests | `esbuild@0.25.12` and `0.27.7` in `pnpm-lock.yaml` ≥ patched `0.25.0` |
 
 esbuild's dev server is never exposed in production builds. This is exclusively a local development tooling concern.
+
+#### Mermaid (`docs/package-lock.json`) — 4 alerts
+
+The documentation site uses Mermaid through Docusaurus to render diagrams from repository-controlled Markdown/MDX sources. A 2026-05-12 follow-up lockfile refresh resolves Mermaid to `11.15.0`, which contains the upstream fixes for the following advisories.
+
+| Alert | Severity | CVE / GHSA | Summary | Resolution |
+| ----- | -------- | ---------- | ------- | ---------- |
+| #43 | MEDIUM | GHSA-6m6c-36f7-fhxh / CVE-2026-41150 | Gantt chart infinite loop denial of service | `mermaid@11.15.0` ≥ patched `11.15.0` |
+| #42 | MEDIUM | GHSA-ghcm-xqfw-q4vr / CVE-2026-41149 | State diagram `classDef` HTML injection | `mermaid@11.15.0` ≥ patched `11.15.0` |
+| #41 | MEDIUM | GHSA-xcj9-5m2h-648r / CVE-2026-41148 | Diagram `classDef` CSS injection | `mermaid@11.15.0` ≥ patched `11.15.0` |
+| #40 | MEDIUM | GHSA-87f9-hvmw-gh4p / CVE-2026-41159 | Mermaid configuration CSS injection | `mermaid@11.15.0` ≥ patched `11.15.0` |
+
+**No new R-XX risk entries** in the threat model: these were dependency advisories that have been patched in the installed dependency tree. The docs build still renders trusted, repository-controlled sources; there is no new residual architectural risk to track in `spec/security/threat-model.md`.
 
 ---
 
@@ -179,7 +193,7 @@ The stigmem reference node (`stigmem/node/`) is implemented in Python with FastA
 - **Federation:** Peer handshake uses Ed25519 signing; replay attack resistance via HLC timestamps (§6).
 - **Input validation:** Pydantic models on all HTTP endpoints; malformed payloads return 422 before reaching business logic.
 - **Secrets:** No credentials are committed to the repository. Docker Compose uses environment variable injection.
-- **Container image retention:** Every released container image (`:0.9.0aN`, `:0.9.0bN`, `:1.0.0rcN`, `:1.0.0`, plus the semver-strict spellings) is **retained on GHCR indefinitely**, so an audit trail back to any historical release remains verifiable. Rolling pointers (`:latest`, `:edge`) are retained forever; short-SHA forensics tags are pruned after 90 days. Sigstore signatures are retained alongside their target image. See [`docs/internal/release-cadence.md`](docs/internal/release-cadence.md#rule-7--ghcr-image-retention) Rule 7 for the operational details, and the [tag-selection guide](https://docs.stigmem.dev/operators/deployment/install#image-tags) for choosing the right pin for your deployment.
+- **Container image retention:** Every released container image (`:0.9.0aN`, `:0.9.0bN`, `:1.0.0rcN`, `:1.0.0`, plus the semver-strict spellings) is **retained on GHCR indefinitely**, so an audit trail back to any historical release remains verifiable. Rolling pointers (`:latest`, `:edge`) are retained forever; short-SHA forensics tags are pruned after 90 days. Sigstore signatures are retained alongside their target image. See the [tag-selection guide](https://docs.stigmem.dev/operators/deployment/install#image-tags) for choosing the right pin for your deployment.
 - **CI:** Dependabot alerts are monitored; `pip-audit`, `pnpm audit`, `bandit`, and CodeQL run as blocking CI steps on every PR (see Audit Tooling below).
 
 ---

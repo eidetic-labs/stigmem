@@ -424,13 +424,12 @@ class TestAdminQuarantineAPI:
 
 class TestSourceTrustScore:
     def test_unknown_source_returns_default(self, node):
-        *_, ts, db_file = node
         bust_trust_cache("unknown://source")
         t = compute_source_trust("unknown://source", "local")
         assert 0.0 <= t <= 1.0
 
     def test_trust_mode_off_returns_neutral(self, node):
-        *_, ts, db_file = node
+        *_, ts, _unused_db_file = node
         original_mode = ts.trust_mode
         ts.trust_mode = "off"
         bust_trust_cache("any://source")
@@ -441,7 +440,6 @@ class TestSourceTrustScore:
             ts.trust_mode = original_mode
 
     def test_blocklisted_source_returns_zero(self, node):
-        *_, ts, db_file = node
         import stigmem_node.db as _db_mod
 
         source = "stigmem://evil.example.com/agent/bad"
@@ -473,7 +471,6 @@ class TestSourceTrustScore:
                 conn.execute("DELETE FROM quarantine_rules WHERE org_uri = ?", (source,))
 
     def test_always_trust_db_rule_returns_one(self, node):
-        *_, ts, db_file = node
         import stigmem_node.db as _db_mod
 
         source = "stigmem://trusted.example.com/agent/good"
@@ -505,13 +502,11 @@ class TestSourceTrustScore:
                 conn.execute("DELETE FROM quarantine_rules WHERE org_uri = ?", (source,))
 
     def test_trust_score_is_clamped(self, node):
-        *_, ts, db_file = node
         bust_trust_cache("stigmem://qnode/agent/admin")
         t = compute_source_trust("stigmem://qnode/agent/admin", "local")
         assert 0.0 <= t <= 1.0
 
     def test_cache_returns_same_value(self, node):
-        *_, ts, db_file = node
         source = "stigmem://cache.example.com/agent/x"
         bust_trust_cache(source)
         t1 = compute_source_trust(source, "local")
@@ -658,7 +653,7 @@ class TestRecallPipeline:
         """
         import stigmem_node.db as _db_mod
 
-        client, admin_key, *_, ts, db_file = node
+        client, admin_key, *_, ts, _unused_db_file = node
 
         # Create quarantine garden and wire it up in settings.
         r = client.post(

@@ -80,7 +80,7 @@ def passphrase_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 class TestDeriveKey:
     def test_returns_32_bytes(self) -> None:
-        argon2 = pytest.importorskip("argon2", reason="argon2-cffi not installed")  # noqa: F841
+        pytest.importorskip("argon2", reason="argon2-cffi not installed")
         key = derive_key(b"test-passphrase")
         assert len(key) == 32
 

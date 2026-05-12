@@ -48,15 +48,6 @@ async def register_peer_impl(
     identity: Identity,
 ) -> PeerRegisterResponse:
     """Register a peer. Fetches its well-known doc and verifies declaration_sig (§5.6)."""
-    # Lazy module reference so tests that patch ``federation.settings`` continue
-    # to take effect. Cast to ``Any`` because ``settings`` is not in the
-    # stub-friendly ``__all__``.
-    from typing import cast as _cast
-
-    from . import federation as _fed_mod
-
-    _fed = _cast(Any, _fed_mod)
-
     if not identity.can_federate():
         raise HTTPException(status_code=403, detail="federate permission required")
     decision = get_registry().fire_voting(

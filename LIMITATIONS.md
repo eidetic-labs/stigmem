@@ -147,7 +147,7 @@ The v0.9.0bN beta series brings: Argon2id migration with backward-compatible ver
 
 **Status:** The current scope model (`local` / `team` / `company` / `public`) is sufficient for single-organization deployments and trusted bilateral peering. It does not express several federation patterns that operators with multi-org or coalition deployments may need. Richer expressivity is planned for v1.x via memory gardens (currently experimental, see `Spec-X5`).
 
-**What this means:** the following federation patterns are **not** supported in v0.9.0a1 and require either custom integration on top of stigmem or waiting for the basic memory-garden primitive to graduate from experimental:
+**What this means:** the following federation patterns are **not** supported in v0.9.0a1 and require either custom integration on top of stigmem or waiting for a future ADR-008 promotion of the basic memory-garden primitive:
 
 - **Selective sharing with specific peers.** No way to express "shared with Partner Org B but not Partner Org C." Workaround: use `public` (over-shares to every peer) or run separate stigmem deployments per peering relationship.
 - **Coalition or consortium membership.** No way to express a multi-org shared scope (e.g., a three-university research consortium). Workaround: separate stigmem deployment for the coalition.
@@ -158,7 +158,7 @@ The v0.9.0bN beta series brings: Argon2id migration with backward-compatible ver
 - **Time-bounded shared scopes.** Per-fact `valid_until` covers fact-level expiry; the four-scope model does not express "this scope's contents are visible to peer X for time T."
 - **Read-vs-write asymmetry per peer at the scope level.** Capability tokens distinguish read from write at the verb level, but combining scope + token to express "Peer B can read scope X, but not write to it" is awkward and requires careful operator configuration.
 
-**What to do today:** if your federation use case is single-organization or trusted bilateral peering, the four-scope model is sufficient. For coalition, multi-peer, or project-bounded patterns, evaluate whether stigmem v0.9.0a1 meets your needs before deploying. The basic memory-garden primitive that addresses these patterns is targeted for v1.x once `Spec-X5` graduates from experimental via the ADR-008 gate process. Operators with these requirements who want to influence prioritization should [open an issue](https://github.com/eidetic-labs/stigmem/issues) tagged `area/federation-expressivity`.
+**What to do today:** if your federation use case is single-organization or trusted bilateral peering, the four-scope model is sufficient. For coalition, multi-peer, or project-bounded patterns, evaluate whether stigmem v0.9.0a1 meets your needs before deploying. The basic memory-garden primitive that addresses these patterns is targeted for v1.x after `Spec-X5` passes the ADR-008 gate process and is promoted from experimental into the supported surface. Operators with these requirements who want to influence prioritization should [open an issue](https://github.com/eidetic-labs/stigmem/issues) tagged `area/federation-expressivity`.
 
 **Why we chose this for v0.9.0a1:** expanding the scope model in v1.0.0 would be exactly the kind of scope churn ADR-002 is designed to prevent. The decision is to ship the smaller defensible thing (four scopes, simple federation) and grow expressivity through gardens once they pass the ADR-008 gates. The full analysis is in `stigmem-scope-model-analysis.md`.
 

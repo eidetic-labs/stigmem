@@ -45,7 +45,7 @@ The spec is divided into core sections (kept in this canonical file) and deferre
 | `Spec-09-Audit-Log` + `Spec-10-Hardening` + `Spec-11-Replay-Protection` | Security hardening | §22 | Stable | This file |
 | `Spec-X2-RTBF-Tombstones` | RTBF tombstones | §23 | **Deferred** | `experimental/tombstones/spec.md` |
 | `Spec-X3-Time-Travel` | Time-travel queries | §24 | **Deferred** | `experimental/time-travel/spec.md` |
-| `Spec-X4-Content-Addressed-IDs` | Content-addressed fact IDs (CIDs) | §25 | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md)). Will graduate at v0.9.0a3 (per ROADMAP) into a core spec ID once modular migration lands. | This file |
+| `Spec-X4-Content-Addressed-IDs` | Content-addressed fact IDs (CIDs) | §25 | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md)). Will be assigned a core `Spec-NN` ID during the modular spec migration; this is a naming/migration step, not ADR-008 graduation. | This file |
 | `Spec-12-HLC-Bounded-Skew` | HLC bounded skew (R-19) | (new in v0.9.0bN beta series) | Targeted v0.9.0bN beta series | (the v0.9.0bN beta series) |
 | `Spec-13-Capability-Based-Instructions` | Capability-based instructions per ADR-003 | (new in v0.9.0bN beta series) | Targeted v0.9.0bN beta series | (the v0.9.0bN beta series) |
 | `Spec-14-Batch-Assert` | Batch assert API per ADR-006 | (new in v0.9.0bN beta series) | Targeted v0.9.0bN beta series | (the v0.9.0bN beta series) |

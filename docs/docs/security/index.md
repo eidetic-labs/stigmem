@@ -79,7 +79,7 @@ The protocol specification is the contract security depends on. It lives under S
 
 ## Experimental & deferred features
 
-Many features documented in earlier checkpoints are deferred from v0.9.0a1's default install. They live in [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) and graduate per [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). See **[Experimental & Deferred Features](../reference/experimental-features.md)** for the canonical list.
+Many features documented in earlier checkpoints are deferred from v0.9.0a1's default install. They live in [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental). Alpha-series extraction may package some of them as opt-in experimental plugins; promotion into the supported surface requires the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) gate process. See **[Experimental & Deferred Features](../reference/experimental-features.md)** for the canonical list.
 
 ---
 

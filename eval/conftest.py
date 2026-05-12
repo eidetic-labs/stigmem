@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 from pathlib import Path
@@ -103,11 +104,9 @@ def eval_node():
         if hasattr(mod, "settings"):
             setattr(mod, "settings", original)
 
-    # Clean up temp DB
-    try:
+    # Clean up temp DB. The file may already be gone if the fixture failed during setup.
+    with contextlib.suppress(FileNotFoundError):
         os.unlink(tmp)
-    except OSError:
-        pass
 
 
 # ---------------------------------------------------------------------------
@@ -175,10 +174,9 @@ def auth_eval_node():
         if name in sys.modules:
             setattr(sys.modules[name], "settings", saved_val)
 
-    try:
+    # Clean up temp DB. The file may already be gone if the fixture failed during setup.
+    with contextlib.suppress(FileNotFoundError):
         os.unlink(tmp)
-    except OSError:
-        pass
 
 
 # ---------------------------------------------------------------------------

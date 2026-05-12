@@ -118,7 +118,7 @@ def _start_echo_server(ssl_ctx: ssl.SSLContext) -> tuple[int, threading.Event]:
                 tls_conn.sendall(data)
                 tls_conn.close()
             except ssl.SSLError:
-                pass
+                continue
             finally:
                 conn.close()
         srv.close()

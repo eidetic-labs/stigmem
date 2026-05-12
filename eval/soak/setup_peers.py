@@ -120,16 +120,19 @@ def create_federate_key(container: str) -> str:
 
 
 def wait_healthy(host_url: str, name: str, retries: int = 30, delay: float = 2.0) -> None:
+    last_error: requests.RequestException | None = None
     for i in range(retries):
         try:
             r = requests.get(f"{host_url}/healthz", timeout=5)
             if r.status_code == 200:
                 print(f"  {name} healthy")
                 return
-        except Exception:
-            pass
+        except requests.RequestException as exc:
+            last_error = exc
         print(f"  {name} not ready, retry {i + 1}/{retries}...")
         time.sleep(delay)
+    if last_error is not None:
+        print(f"  {name} last health check error: {last_error}", file=sys.stderr)
     raise RuntimeError(f"{name} did not become healthy after {retries} retries")
 
 

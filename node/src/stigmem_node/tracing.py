@@ -70,8 +70,8 @@ def init_tracing(service_name: str, otlp_endpoint: str) -> None:
             exporter = OTLPSpanExporter(endpoint=f"{otlp_endpoint.rstrip('/')}/v1/traces")
             provider.add_span_processor(BatchSpanProcessor(exporter))
             _exporter_added = True
-        except ImportError:
-            pass
+        except ImportError as exc:
+            logger.debug("HTTP OTLP exporter unavailable: %s", exc)
 
         if not _exporter_added:
             try:
@@ -81,8 +81,11 @@ def init_tracing(service_name: str, otlp_endpoint: str) -> None:
 
                 grpc_exporter = GrpcOTLPSpanExporter(endpoint=otlp_endpoint)
                 provider.add_span_processor(BatchSpanProcessor(grpc_exporter))
-            except ImportError:
-                pass  # neither OTLP exporter installed; traces collected locally only
+            except ImportError as exc:
+                logger.debug(
+                    "gRPC OTLP exporter unavailable; traces collected locally only: %s",
+                    exc,
+                )
 
     _otel_trace.set_tracer_provider(provider)
     _tracer = _otel_trace.get_tracer(

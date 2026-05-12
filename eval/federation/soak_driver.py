@@ -202,16 +202,19 @@ def wait_healthy(timeout_s: float = 120.0) -> None:
     print("→ Waiting for all 3 nodes to be healthy…")
     deadline = time.monotonic() + timeout_s
     for node in NODES:
+        last_error: Exception | None = None
         while time.monotonic() < deadline:
             try:
                 r = httpx.get(f"{node['host_url']}/healthz", timeout=5.0)
                 if r.status_code == 200:
                     print(f"  {node['name']}: healthy")
                     break
-            except Exception:
-                pass
+            except httpx.HTTPError as exc:
+                last_error = exc
             time.sleep(2.0)
         else:
+            if last_error is not None:
+                print(f"  {node['name']}: last health check error: {last_error}", file=sys.stderr)
             raise RuntimeError(f"{node['name']} did not become healthy within {timeout_s:.0f} s")
 
 
@@ -409,14 +412,20 @@ def _assert_fact(
 def _poll_fact(client: httpx.Client, fact_id: str, timeout_s: float = 30.0) -> float | None:
     """Poll GET /v1/facts/{fact_id} until visible; return lag_ms or None on timeout."""
     deadline = time.monotonic() + timeout_s
+    last_error: httpx.HTTPError | None = None
     while time.monotonic() < deadline:
         try:
             r = client.get(f"/v1/facts/{fact_id}")
             if r.status_code == 200:
                 return (time.monotonic() - (deadline - timeout_s)) * 1000  # approximate
-        except Exception:
-            pass
+        except httpx.HTTPError as exc:
+            last_error = exc
         time.sleep(0.5)
+    if last_error is not None:
+        print(
+            f"  fact {fact_id} did not become visible; last poll error: {last_error}",
+            file=sys.stderr,
+        )
     return None
 
 
@@ -443,6 +452,7 @@ def _probe_replication(
     # Measure propagation to each peer in a thread
     def measure(target_name: str, target_client: httpx.Client) -> None:
         deadline = time.monotonic() + 30.0
+        last_error: httpx.HTTPError | None = None
         while time.monotonic() < deadline:
             try:
                 r = target_client.get(f"/v1/facts/{fact_id}")
@@ -454,10 +464,16 @@ def _probe_replication(
                             global _audit_facts_received
                             _audit_facts_received += 1
                     return
-            except Exception:
-                pass
+            except httpx.HTTPError as exc:
+                last_error = exc
             time.sleep(0.5)
         # Timeout — fact never appeared; log as max-timeout sample
+        if last_error is not None:
+            print(
+                "  replication probe "
+                f"{fact_id} to {target_name} timed out; last poll error: {last_error}",
+                file=sys.stderr,
+            )
         _record_lag(target_name, 30_000.0)
 
     threads = []
@@ -498,8 +514,10 @@ def _verify_cap_token(client: httpx.Client, fact_id: str, valid_key: str) -> Non
                 # Correct — access was properly denied
                 _cap_token_verified += 1
             # 200 here = security regression (bypass)
-    except Exception:
-        pass
+    except httpx.HTTPError as exc:
+        with _lock:
+            _cap_token_total += 1
+        print(f"  forged-token probe failed before authorization decision: {exc}", file=sys.stderr)
 
     # Attempt with valid key — must succeed
     try:
@@ -512,8 +530,10 @@ def _verify_cap_token(client: httpx.Client, fact_id: str, valid_key: str) -> Non
             _cap_token_total += 1
             if r.status_code == 200:
                 _cap_token_verified += 1
-    except Exception:
-        pass
+    except httpx.HTTPError as exc:
+        with _lock:
+            _cap_token_total += 1
+        print(f"  valid-token probe failed before authorization decision: {exc}", file=sys.stderr)
 
 
 # ---------------------------------------------------------------------------
@@ -802,8 +822,11 @@ def run_cc5(clients: dict[str, httpx.Client], admin_keys: dict[str, str]) -> dic
             timeout=10.0,
         )
         valid_ok = r_ok.status_code == 200
-    except Exception:
-        pass
+    except httpx.HTTPError as exc:
+        print(
+            f"  CC-5 valid-token probe failed before authorization decision: {exc}",
+            file=sys.stderr,
+        )
 
     passed = (not bypass_detected) and valid_ok and clean_failure
     return {
@@ -837,8 +860,8 @@ def check_audit_completeness(
             r = clients["node-b"].get(f"/v1/facts/{fid}")
             if r.status_code == 200:
                 found += 1
-        except Exception:
-            pass
+        except httpx.HTTPError as exc:
+            print(f"  audit completeness probe for {fid} failed: {exc}", file=sys.stderr)
     return found / len(sent_fact_ids)
 
 

@@ -171,14 +171,17 @@ def _start_node(
 
 def _wait_healthy(base_url: str, name: str, timeout: float = STARTUP_TIMEOUT_S) -> None:
     deadline = time.monotonic() + timeout
+    last_error: httpx.HTTPError | None = None
     while time.monotonic() < deadline:
         try:
             r = httpx.get(f"{base_url}/healthz", timeout=2.0)
             if r.status_code == 200:
                 return
-        except Exception:
-            pass
+        except httpx.HTTPError as exc:
+            last_error = exc
         time.sleep(0.5)
+    if last_error is not None:
+        print(f"{name} last health check error: {last_error}", file=sys.stderr)
     raise RuntimeError(f"{name} did not become healthy within {timeout}s")
 
 

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import csv
 import json
+import logging
 import signal
 import subprocess
 import sys
@@ -33,6 +34,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 SOAK_DIR = Path(__file__).parent
 METRICS_DIR = SOAK_DIR / "metrics"
@@ -156,8 +159,8 @@ class ProbeTracker:
                         with self._lock:
                             if fact_id in self._probes:
                                 self._probes[fact_id]["pending_nodes"].discard(node_name)
-                except Exception:
-                    pass
+                except requests.RequestException as exc:
+                    logger.debug("probe poll failed for %s on %s: %s", fact_id, node_name, exc)
 
             with self._lock:
                 if fact_id in self._probes and not self._probes[fact_id]["pending_nodes"]:
@@ -221,7 +224,8 @@ def check_local_isolation(iso_writer) -> None:
             if r.status_code != 200:
                 continue
             local_facts = r.json().get("facts", [])
-        except Exception:
+        except requests.RequestException as exc:
+            logger.debug("local isolation source poll failed for %s: %s", source_node["name"], exc)
             continue
 
         for fact in local_facts:
@@ -250,8 +254,14 @@ def check_local_isolation(iso_writer) -> None:
                             f"found on {target_node['name']}",
                             file=sys.stderr,
                         )
-                except Exception:
-                    pass
+                except requests.RequestException as exc:
+                    logger.debug(
+                        "local isolation poll failed for %s from %s to %s: %s",
+                        fid,
+                        source_node["name"],
+                        target_node["name"],
+                        exc,
+                    )
 
 
 # ---------------------------------------------------------------------------

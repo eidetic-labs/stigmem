@@ -308,7 +308,7 @@ def _make_authed_node(
                 mod.settings = ts
                 patched.append((mod, "settings", original))
         except ImportError:
-            pass
+            continue
 
     # facts.py also holds a direct module-level binding `_settings` that bypasses
     # the module-attribute patch above; we must replace it explicitly.

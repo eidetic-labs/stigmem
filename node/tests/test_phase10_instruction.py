@@ -30,7 +30,6 @@ create_api_key = auth_mod.create_api_key
 # ---------------------------------------------------------------------------
 
 _AGENT_ID = str(uuid.uuid4())
-_OTHER_AGENT_ID = str(uuid.uuid4())
 _DEPLOYMENT = "test"
 
 _ENTRY_MINIMAL = {

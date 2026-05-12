@@ -37,13 +37,6 @@ from stigmem_node.vector_search import (
 apply_migrations = db_mod.apply_migrations
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-_MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
-
-
 def _open_plain(db_path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row

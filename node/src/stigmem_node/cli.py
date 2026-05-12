@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import logging
 import sys
 
 from .cli_admin_handlers import (
@@ -18,8 +17,6 @@ from .cli_federation_handlers import (
     _cmd_federation_cursor_export,
     _cmd_federation_cursor_import,
 )
-
-logger = logging.getLogger("stigmem.cli")
 
 # Re-export for backward compatibility (tests / docs gen import these names).
 __all__ = [

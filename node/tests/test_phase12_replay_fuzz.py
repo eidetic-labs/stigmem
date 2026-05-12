@@ -28,8 +28,6 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
-    NoEncryption,
-    PrivateFormat,
     PublicFormat,
 )
 from hypothesis import HealthCheck, given, settings
@@ -49,14 +47,6 @@ _FUZZ_PUB_B64: str = (
     .decode()
     .rstrip("=")
 )
-_FUZZ_PRIV_B64: str = (
-    base64.urlsafe_b64encode(
-        _FUZZ_PRIV.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
-    )
-    .decode()
-    .rstrip("=")
-)
-
 _FUZZ_ISSUER = "https://fuzz.example.org"
 
 

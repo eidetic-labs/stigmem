@@ -311,7 +311,18 @@ export interface paths {
          */
         get: operations["list_keys_v1_auth_keys_get"];
         put?: never;
-        post?: never;
+        /**
+         * Register a caller-provided static API key (admin only).
+         * @description Register a caller-provided raw API key.
+         *
+         *     Mirrors the bootstrap CLI's posture: the caller supplies the raw key
+         *     material; the node hashes and stores it.  The endpoint requires the
+         *     caller to hold the ``admin`` capability — typically the bootstrap
+         *     key, or a previously-minted admin-scoped key.
+         *
+         *     The response NEVER echoes the raw key; the caller already has it.
+         */
+        post: operations["register_static_key_v1_auth_keys_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2270,6 +2281,47 @@ export interface components {
              */
             source_trust: number;
         };
+        /** RegisterKeyRequest */
+        RegisterKeyRequest: {
+            /** Description */
+            description?: string | null;
+            /** Entity Uri */
+            entity_uri: string;
+            /**
+             * Expires At
+             * @description ISO-8601 timestamp; omit for no expiry.
+             */
+            expires_at?: string | null;
+            /** Permissions */
+            permissions?: string[];
+            /**
+             * Raw Key
+             * @description Caller-generated raw key material (e.g. `openssl rand -hex 32`). The node hashes it and never stores or echoes the raw value.
+             */
+            raw_key: string;
+            /**
+             * Tenant Id
+             * @description Target tenant; defaults to the caller's tenant.
+             */
+            tenant_id?: string | null;
+        };
+        /** RegisterKeyResponse */
+        RegisterKeyResponse: {
+            /** Created At */
+            created_at: string;
+            /** Description */
+            description: string | null;
+            /** Entity Uri */
+            entity_uri: string;
+            /** Expires At */
+            expires_at: string | null;
+            /** Id */
+            id: string;
+            /** Permissions */
+            permissions: string[];
+            /** Tenant Id */
+            tenant_id: string;
+        };
         /** ScoreBreakdown */
         ScoreBreakdown: {
             /**
@@ -2594,6 +2646,8 @@ export type SchemaRecallInstructionRequest = components['schemas']['RecallInstru
 export type SchemaRecallRequest = components['schemas']['RecallRequest'];
 export type SchemaRecallResponse = components['schemas']['RecallResponse'];
 export type SchemaRecallWeights = components['schemas']['RecallWeights'];
+export type SchemaRegisterKeyRequest = components['schemas']['RegisterKeyRequest'];
+export type SchemaRegisterKeyResponse = components['schemas']['RegisterKeyResponse'];
 export type SchemaScoreBreakdown = components['schemas']['ScoreBreakdown'];
 export type SchemaScoredFact = components['schemas']['ScoredFact'];
 export type SchemaSubscriptionCreateRequest = components['schemas']['SubscriptionCreateRequest'];
@@ -3198,6 +3252,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KeyInfo"][];
+                };
+            };
+        };
+    };
+    register_static_key_v1_auth_keys_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterKeyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisterKeyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

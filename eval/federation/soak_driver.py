@@ -35,7 +35,6 @@ import argparse
 import base64
 import json
 import math
-import os
 import signal
 import subprocess
 import sys
@@ -90,7 +89,7 @@ NODES = [
     },
 ]
 NETWORK_NAME = "eval_fed_net"
-LAG_WARN_MS = 2_000   # P99 > 2 s → warning
+LAG_WARN_MS = 2_000  # P99 > 2 s → warning
 LAG_FAIL_MS = 10_000  # P99 > 10 s → failure
 CONVERGENCE_WINDOW_S = 30.0
 
@@ -99,13 +98,13 @@ CONVERGENCE_WINDOW_S = 30.0
 # ---------------------------------------------------------------------------
 
 _lock = threading.Lock()
-_lag_samples_ab: list[float] = []   # node-A → B replication lag in ms
-_lag_samples_ac: list[float] = []   # node-A → C replication lag in ms
+_lag_samples_ab: list[float] = []  # node-A → B replication lag in ms
+_lag_samples_ac: list[float] = []  # node-A → C replication lag in ms
 _probe_count = 0
-_cap_token_total = 0        # total cross-node reads attempted with a token
-_cap_token_verified = 0     # of those, how many had their token correctly validated
-_audit_facts_sent = 0       # public facts asserted on node-A (driver-tracked)
-_audit_facts_received = 0   # of those, visible on node-B via GET /v1/facts/{id}
+_cap_token_total = 0  # total cross-node reads attempted with a token
+_cap_token_verified = 0  # of those, how many had their token correctly validated
+_audit_facts_sent = 0  # public facts asserted on node-A (driver-tracked)
+_audit_facts_received = 0  # of those, visible on node-B via GET /v1/facts/{id}
 
 
 # ---------------------------------------------------------------------------
@@ -165,9 +164,12 @@ def ensure_keypairs() -> dict[str, str]:
 
 def _docker_compose(*args: str, check: bool = True) -> subprocess.CompletedProcess:
     cmd = [
-        "docker", "compose",
-        "-f", str(COMPOSE_FILE),
-        "--env-file", str(ENV_FILE),
+        "docker",
+        "compose",
+        "-f",
+        str(COMPOSE_FILE),
+        "--env-file",
+        str(ENV_FILE),
         *args,
     ]
     return subprocess.run(cmd, capture_output=False, check=check, cwd=str(REPO_ROOT))
@@ -175,9 +177,12 @@ def _docker_compose(*args: str, check: bool = True) -> subprocess.CompletedProce
 
 def _docker_compose_quiet(*args: str, check: bool = True) -> subprocess.CompletedProcess:
     cmd = [
-        "docker", "compose",
-        "-f", str(COMPOSE_FILE),
-        "--env-file", str(ENV_FILE),
+        "docker",
+        "compose",
+        "-f",
+        str(COMPOSE_FILE),
+        "--env-file",
+        str(ENV_FILE),
         *args,
     ]
     return subprocess.run(cmd, capture_output=True, text=True, check=check, cwd=str(REPO_ROOT))
@@ -207,17 +212,18 @@ def wait_healthy(timeout_s: float = 120.0) -> None:
                 pass
             time.sleep(2.0)
         else:
-            raise RuntimeError(
-                f"{node['name']} did not become healthy within {timeout_s:.0f} s"
-            )
+            raise RuntimeError(f"{node['name']} did not become healthy within {timeout_s:.0f} s")
 
 
 def create_admin_key(container: str) -> str:
     """Create an admin API key (read+write+federate) via docker exec."""
     result = subprocess.run(
         [
-            "docker", "exec", container,
-            "python", "-c",
+            "docker",
+            "exec",
+            container,
+            "python",
+            "-c",
             (
                 "from stigmem_node.auth import create_api_key; "
                 "print(create_api_key('eval:admin', ['read','write','federate']))"
@@ -266,13 +272,13 @@ def register_full_mesh(env: dict[str, str], admin_keys: dict[str, str]) -> None:
 
             # Fetch peer's node_id from well-known
             try:
-                wk_resp = httpx.get(
-                    f"{peer['host_url']}/.well-known/stigmem", timeout=10.0
-                )
+                wk_resp = httpx.get(f"{peer['host_url']}/.well-known/stigmem", timeout=10.0)
                 wk_resp.raise_for_status()
                 node_id = wk_resp.json()["node_id"]
             except Exception as exc:
-                print(f"  {r_name} ← {peer['name']}: well-known fetch failed: {exc}", file=sys.stderr)
+                print(
+                    f"  {r_name} ← {peer['name']}: well-known fetch failed: {exc}", file=sys.stderr
+                )
                 failed += 1
                 continue
 
@@ -559,14 +565,16 @@ def _wait_convergence(
 def _docker_network_disconnect(container: str) -> None:
     subprocess.run(
         ["docker", "network", "disconnect", NETWORK_NAME, container],
-        check=True, capture_output=True,
+        check=True,
+        capture_output=True,
     )
 
 
 def _docker_network_connect(container: str) -> None:
     subprocess.run(
         ["docker", "network", "connect", NETWORK_NAME, container],
-        check=True, capture_output=True,
+        check=True,
+        capture_output=True,
     )
 
 
@@ -699,12 +707,17 @@ def run_cc4(clients: dict[str, httpx.Client]) -> dict:
 
     def _tombstone() -> None:
         results["tombstone"] = _issue_tombstone(
-            clients["node-a"], entity, scope="public",
+            clients["node-a"],
+            entity,
+            scope="public",
         )
 
     def _reassert() -> None:
         results["reassert"] = _assert_fact(
-            clients["node-b"], entity, relation, "reasserted-on-b",
+            clients["node-b"],
+            entity,
+            relation,
+            "reasserted-on-b",
             confidence=0.8,
         )
 
@@ -861,7 +874,12 @@ def run_workload(
         if fid:
             warmup_probes.append(fid)
         # Also assert on B and C to populate both directions
-        _assert_fact(clients["node-b"], f"stigmem://eval/warmup-b/{uuid.uuid4()}", "eval:warmup", str(uuid.uuid4()))
+        _assert_fact(
+            clients["node-b"],
+            f"stigmem://eval/warmup-b/{uuid.uuid4()}",
+            "eval:warmup",
+            str(uuid.uuid4()),
+        )
         time.sleep(2.0)
 
     print(f"→ Steady-state workload ({duration_s:.0f} s)…")
@@ -890,8 +908,10 @@ def run_workload(
             print(f"  [{elapsed:.0f} s] Running {fn.__name__}…")
             result = fn(clients)
             cc_results.append(result)
-            print(f"  {fn.__name__}: {'PASS' if result['passed'] else 'FAIL'} "
-                  f"(conv={result['convergence_s']:.1f} s)")
+            print(
+                f"  {fn.__name__}: {'PASS' if result['passed'] else 'FAIL'} "
+                f"(conv={result['convergence_s']:.1f} s)"
+            )
             scenario_idx += 1
 
         if not cc5_done and elapsed >= cc5_at:
@@ -911,8 +931,12 @@ def run_workload(
             _verify_cap_token(clients["node-a"], probe_id, admin_keys["node-a"])
 
         # Mixed steady-state: also assert on B and C
-        _assert_fact(clients["node-b"], f"stigmem://eval/b/{uuid.uuid4()}", "eval:steady", str(uuid.uuid4()))
-        _assert_fact(clients["node-c"], f"stigmem://eval/c/{uuid.uuid4()}", "eval:steady", str(uuid.uuid4()))
+        _assert_fact(
+            clients["node-b"], f"stigmem://eval/b/{uuid.uuid4()}", "eval:steady", str(uuid.uuid4())
+        )
+        _assert_fact(
+            clients["node-c"], f"stigmem://eval/c/{uuid.uuid4()}", "eval:steady", str(uuid.uuid4())
+        )
 
         time.sleep(3.0)
 
@@ -948,8 +972,6 @@ def build_artifact(
         ac = list(_lag_samples_ac)
         cap_total = _cap_token_total
         cap_verified = _cap_token_verified
-        audit_sent = _audit_facts_sent
-        audit_rcvd = _audit_facts_received
 
     token_rate = cap_verified / cap_total if cap_total else 1.0
     audit_completeness = workload["audit_completeness"]
@@ -1016,16 +1038,16 @@ def write_artifacts(artifact: dict, date_str: str) -> tuple[Path, Path]:
     md_path.write_text(f"""\
 # Federation Soak Report
 
-**Run date:** {artifact['run_date']}
-**Duration:** {artifact['duration_s']} s (smoke={artifact['smoke']})
+**Run date:** {artifact["run_date"]}
+**Duration:** {artifact["duration_s"]} s (smoke={artifact["smoke"]})
 **Overall:** {status}
 
 ## Replication Lag
 
 | Node pair | P50 ms | P95 ms | P99 ms | Samples |
 |-----------|--------|--------|--------|---------|
-| A → B | {lag_ab['p50_ms']} | {lag_ab['p95_ms']} | {lag_ab['p99_ms']} | {lag_ab['sample_count']} |
-| A → C | {lag_ac['p50_ms']} | {lag_ac['p95_ms']} | {lag_ac['p99_ms']} | {lag_ac['sample_count']} |
+| A → B | {lag_ab["p50_ms"]} | {lag_ab["p95_ms"]} | {lag_ab["p99_ms"]} | {lag_ab["sample_count"]} |
+| A → C | {lag_ac["p50_ms"]} | {lag_ac["p95_ms"]} | {lag_ac["p99_ms"]} | {lag_ac["sample_count"]} |
 
 Thresholds: P99 > {LAG_WARN_MS} ms = warning; P99 > {LAG_FAIL_MS} ms = failure.
 
@@ -1033,8 +1055,8 @@ Thresholds: P99 > {LAG_WARN_MS} ms = warning; P99 > {LAG_FAIL_MS} ms = failure.
 
 | Metric | Value | Threshold |
 |--------|-------|-----------|
-| Token verification rate | {artifact['token_verification_rate']:.4f} | 1.0 |
-| Audit completeness | {artifact['audit_completeness']:.4f} | 1.0 |
+| Token verification rate | {artifact["token_verification_rate"]:.4f} | 1.0 |
+| Audit completeness | {artifact["audit_completeness"]:.4f} | 1.0 |
 
 ## Conflict Convergence
 
@@ -1055,7 +1077,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Federation soak workload driver")
     parser.add_argument("--duration", type=int, default=3600, help="Soak duration in seconds")
     parser.add_argument("--smoke", action="store_true", help="5-minute abbreviated run")
-    parser.add_argument("--no-teardown", action="store_true", help="Leave cluster running after soak")
+    parser.add_argument(
+        "--no-teardown", action="store_true", help="Leave cluster running after soak"
+    )
     args = parser.parse_args()
 
     duration_s = 300.0 if args.smoke else float(args.duration)

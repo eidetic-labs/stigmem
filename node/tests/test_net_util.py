@@ -224,7 +224,7 @@ def test_check_tl_inclusion_blocks_imds_url(monkeypatch: pytest.MonkeyPatch) -> 
     """_check_tl_inclusion_for_peer must not open an HTTP connection to IMDS."""
     import asyncio
 
-    import stigmem_node.routes.federation as fed
+    import stigmem_node.routes._federation_impl as fed_impl
 
     client_entered: list[str] = []
 
@@ -239,7 +239,7 @@ def test_check_tl_inclusion_blocks_imds_url(monkeypatch: pytest.MonkeyPatch) -> 
         async def __aexit__(self, *args):
             pass
 
-    monkeypatch.setattr("stigmem_node.routes.federation.httpx.AsyncClient", _ShouldNotEnter)
+    monkeypatch.setattr("stigmem_node.routes._federation_impl.httpx.AsyncClient", _ShouldNotEnter)
     monkeypatch.setattr(
         "socket.getaddrinfo",
         _fake_getaddrinfo("169.254.169.254"),
@@ -248,7 +248,7 @@ def test_check_tl_inclusion_blocks_imds_url(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr("stigmem_node.routes.federation.write_audit_log", lambda *a, **kw: None)
 
     asyncio.run(
-        fed._check_tl_inclusion_for_peer(
+        fed_impl._check_tl_inclusion_for_peer(
             "stigmem://attacker",
             "http://169.254.169.254/latest/meta-data/",
             "fake-peer-id",

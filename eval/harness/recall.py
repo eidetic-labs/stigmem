@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -58,9 +58,15 @@ def seed_corpus(client: httpx.Client, ttl_facts: list[dict[str, Any]]) -> dict[s
     """Assert all seed facts; return entity+relation → fact_id mapping."""
     fact_id_map: dict[str, str] = {}
     for entity, relation, value in _SEED_FACTS:
-        resp = assert_fact(client, entity=entity, relation=relation,
-                           value={"type": "string", "v": value},
-                           source="eval:recall-harness", confidence=1.0, scope="local")
+        resp = assert_fact(
+            client,
+            entity=entity,
+            relation=relation,
+            value={"type": "string", "v": value},
+            source="eval:recall-harness",
+            confidence=1.0,
+            scope="local",
+        )
         fact_id_map[f"{entity}#{relation}"] = resp.get("id", "")
 
     # Seed TTL-expiring facts (for probes with subclass=ttl_expiring)
@@ -70,10 +76,16 @@ def seed_corpus(client: httpx.Client, ttl_facts: list[dict[str, Any]]) -> dict[s
         value = probe.get("gold_value", "test")
         ttl = probe.get("ttl_seconds", 5)
         if entity and relation:
-            resp = assert_fact(client, entity=entity, relation=relation,
-                               value={"type": "string", "v": value},
-                               source="eval:recall-harness", confidence=1.0,
-                               scope="local", ttl_seconds=ttl)
+            resp = assert_fact(
+                client,
+                entity=entity,
+                relation=relation,
+                value={"type": "string", "v": value},
+                source="eval:recall-harness",
+                confidence=1.0,
+                scope="local",
+                ttl_seconds=ttl,
+            )
             fact_id_map[f"{entity}#{relation}"] = resp.get("id", "")
 
     return fact_id_map
@@ -204,6 +216,7 @@ def run(
 
     if save_baseline:
         import pathlib
+
         baseline_doc = {
             "nDCG@10": round(mean_ndcg, 6),
             "Recall@5": round(mean_rec5, 6),
@@ -211,7 +224,9 @@ def run(
             "server_version": _SERVER_VERSION,
             "recorded_at": datetime.now(UTC).isoformat(),
         }
-        bl_path = pathlib.Path(__file__).resolve().parent.parent / "corpus" / "recall" / "baseline.json"
+        bl_path = (
+            pathlib.Path(__file__).resolve().parent.parent / "corpus" / "recall" / "baseline.json"
+        )
         bl_path.write_text(json.dumps(baseline_doc, indent=2))
 
     return report
@@ -219,6 +234,7 @@ def run(
 
 if __name__ == "__main__":
     import sys
+
     save = "--save-baseline" in sys.argv
     report = run(save_baseline=save)
     print(json.dumps(report, indent=2))

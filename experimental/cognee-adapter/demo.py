@@ -28,7 +28,6 @@ Run::
 from __future__ import annotations
 
 import asyncio
-import json
 import os
 import sys
 
@@ -44,8 +43,7 @@ sys.path.insert(0, str(_HERE))
 sys.path.insert(0, str(_REPO_ROOT / "sdks" / "stigmem-py" / "src"))
 
 from adapter import StigmemCogneeAdapter  # noqa: E402
-
-from stigmem import StigmemClient, string_value, number_value, ref_value  # noqa: E402
+from stigmem import StigmemClient  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Demo facts — a small knowledge graph about the Loom project
@@ -160,7 +158,9 @@ async def run_demo() -> None:
         results = await bridge.query_from_cognee_async(scope=scope, query=query)
         if results:
             for rec in results:
-                print(f"    entity={rec['entity']!r}  relation={rec['relation']!r}  value={rec['value']}")
+                print(
+                    f"    entity={rec['entity']!r}  relation={rec['relation']!r}  value={rec['value']}"
+                )
         else:
             print("    (no results)")
 

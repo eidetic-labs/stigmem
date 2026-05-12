@@ -11,9 +11,6 @@ Requires the stigmem package to be installed (e.g. `uv pip install -e node/`).
 from __future__ import annotations
 
 import argparse
-import importlib
-import sys
-import textwrap
 from io import StringIO
 from pathlib import Path
 
@@ -48,7 +45,9 @@ def _capture_help(parser: argparse.ArgumentParser) -> str:
     return buf.getvalue()
 
 
-def _collect_subcommands(parser: argparse.ArgumentParser, prefix: str = "") -> list[tuple[str, str]]:
+def _collect_subcommands(
+    parser: argparse.ArgumentParser, prefix: str = ""
+) -> list[tuple[str, str]]:
     """Walk the parser tree and collect (full_command, help_text) pairs."""
     results: list[tuple[str, str]] = []
     results.append((prefix or parser.prog, _capture_help(parser)))
@@ -70,6 +69,7 @@ def _help_to_markdown(command: str, help_text: str, level: int = 2) -> str:
 
 def generate_stigmem_docs() -> str:
     from stigmem_node.cli import _build_parser
+
     parser = _build_parser()
     entries = _collect_subcommands(parser)
 
@@ -88,7 +88,9 @@ def generate_stigmem_docs() -> str:
 def generate_node_docs() -> str:
     parts = [FRONTMATTER_NODE]
     parts.append("# stigmem-node CLI\n\n")
-    parts.append("Auto-generated from `stigmem-node --help`. Regenerate with `make gen-cli-docs`.\n\n")
+    parts.append(
+        "Auto-generated from `stigmem-node --help`. Regenerate with `make gen-cli-docs`.\n\n"
+    )
     parts.append("The `stigmem-node` command starts the Stigmem reference node HTTP server.\n\n")
 
     parts.append("## Usage\n\n")
@@ -103,10 +105,18 @@ def generate_node_docs() -> str:
     parts.append("| `STIGMEM_PORT` | `8765` | Listen port |\n")
     parts.append("| `STIGMEM_DB_PATH` | `stigmem.db` | SQLite database path |\n")
     parts.append("| `STIGMEM_AUTH_REQUIRED` | `false` | Require API key authentication |\n")
-    parts.append("| `STIGMEM_SOURCE_ATTESTATION_MODE` | `warn` | Source attestation: `enforce`, `warn`, or `off` |\n")
-    parts.append("| `STIGMEM_FEDERATION_PULL_INTERVAL` | `30` | Seconds between federation pull cycles |\n")
-    parts.append("| `STIGMEM_EMBED_DIMENSIONS` | `768` | Embedding dimensions (Matryoshka truncation) |\n")
-    parts.append("| `STIGMEM_CARD_MAX_AGE_S` | `86400` | Memory card staleness threshold (seconds) |\n")
+    parts.append(
+        "| `STIGMEM_SOURCE_ATTESTATION_MODE` | `warn` | Source attestation: `enforce`, `warn`, or `off` |\n"
+    )
+    parts.append(
+        "| `STIGMEM_FEDERATION_PULL_INTERVAL` | `30` | Seconds between federation pull cycles |\n"
+    )
+    parts.append(
+        "| `STIGMEM_EMBED_DIMENSIONS` | `768` | Embedding dimensions (Matryoshka truncation) |\n"
+    )
+    parts.append(
+        "| `STIGMEM_CARD_MAX_AGE_S` | `86400` | Memory card staleness threshold (seconds) |\n"
+    )
 
     return "\n".join(parts)
 

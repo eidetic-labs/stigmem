@@ -597,7 +597,8 @@ class TestPeerRegistration:
                 return _httpx.Response(200, json={"federation_pubkey": peer_pub})
 
         monkeypatch.setattr(
-            "stigmem_node.routes.federation.httpx.AsyncClient", lambda **_: _MockAsyncClient()
+            "stigmem_node.routes._federation_impl.httpx.AsyncClient",
+            lambda **_: _MockAsyncClient(),
         )
 
         r = fed_node.client.post(
@@ -636,7 +637,8 @@ class TestPeerRegistration:
                 return _httpx.Response(200, json={"federation_pubkey": peer_pub})
 
         monkeypatch.setattr(
-            "stigmem_node.routes.federation.httpx.AsyncClient", lambda **_: _MockAsyncClient()
+            "stigmem_node.routes._federation_impl.httpx.AsyncClient",
+            lambda **_: _MockAsyncClient(),
         )
 
         r = fed_node.client.post(

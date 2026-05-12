@@ -22,11 +22,9 @@ Usage:
 """
 
 import os
-import sys
 import uuid
 
 import httpx
-
 from adapter import StigmemZepAdapter
 
 

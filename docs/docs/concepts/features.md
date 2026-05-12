@@ -144,6 +144,8 @@ See the full deferred-features list at [Experimental & Deferred Features](../ref
 
 The v0.9.0a1 default install ships with feature-specific code in `node/src/stigmem_node/` for several deferred features (`tombstones.py`, `instruction_migrate.py`, `card_materializer.py`, `source_trust.py`, etc.). The routes are mounted but the features are dormant unless explicitly configured. Per [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per ADR-011's C1 plugin architecture; after v0.9.0a8, default install will be true to ADR-011's commitment.
 
+The current PR 4-INF.1 implementation work merged in [PR #137](https://github.com/Eidetic-Labs/stigmem/pull/137). That PR establishes the hook-registry foundation and stable 22-hook surface. It does not yet make external plugins installable from package entry points, and it does not extract the deferred features listed below into plugin packages.
+
 See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md) for the full architectural-gap acknowledgment.
 
 ---

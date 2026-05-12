@@ -7,6 +7,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **PR 4-INF.1 plugin registry foundation** (merged in [PR #137](https://github.com/Eidetic-Labs/stigmem/pull/137)): stable 22-hook surface, typed voting/filter-chain/score-delta/fire-and-forget semantics, deterministic `HookRegistry` dispatch, manual/core handler registration, minimum `PluginManifest` and capability-restricted `PluginContext`, hook-site wiring across assertion/recall/federation/auth/migration/audit paths, registry audit/metrics plumbing, `TestPluginRegistry`, focused plugin tests, and a hook-firing benchmark gate.
+
+### Changed
+
+- PR 4-INF.1 scope is now explicit: package discovery, dependency lifecycle, health polling, operator CLI, production signing/trust, plugin author/operator docs, and full plugin migration lifecycle/checksum tracking remain deferred to PR 4-INF.2 through PR 4-INF.4.
+
+---
+
 ## Pre-1.0 history note (2026-05-08)
 
 The version markers below (`v0.2` through `v2.0`, plus `1.0.0-rc`) labeled internal development checkpoints, not tagged releases anyone deployed in production. The canonical version line of stigmem is being reset to `v0.9.0a1` as the *first build* per [ADR-001](docs/adr/001-versioning.md) and [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). The historical entries below are preserved as the development record; they do not represent prior public releases.

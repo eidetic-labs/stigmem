@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
@@ -79,6 +78,7 @@ def eval_node():
         # Wrap TestClient in an httpx.Client-compatible shim
         class _TestClientAdapter(httpx.Client):
             """Thin wrapper so harness code works with either TestClient or real httpx."""
+
             def __init__(self, tc_inner: TestClient) -> None:
                 self._tc = tc_inner
 
@@ -135,8 +135,6 @@ def auth_eval_node():
     except ImportError as exc:
         pytest.skip(f"stigmem_node not importable: {exc}")
 
-    import stigmem_node.settings as _sm_settings
-
     saved_map: dict[str, object] = {}
     for name, mod in list(sys.modules.items()):
         if name.startswith("stigmem_node") and hasattr(mod, "settings"):
@@ -156,6 +154,7 @@ def auth_eval_node():
     app = create_app()
 
     with TestClient(app, raise_server_exceptions=False) as tc:
+
         class _AuthAdapter(httpx.Client):
             def __init__(self, tc_inner: TestClient) -> None:
                 self._tc = tc_inner
@@ -190,10 +189,12 @@ def auth_eval_node():
 @pytest.fixture(scope="session")
 def adversarial_corpus():
     from eval.harness.utils import load_all_adversarial
+
     return load_all_adversarial()
 
 
 @pytest.fixture(scope="session")
 def recall_probes():
     from eval.harness.utils import load_probes
+
     return load_probes()

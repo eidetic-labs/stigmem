@@ -11,10 +11,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
 
 import httpx
-import pytest
 import respx
 
 from stigmem_obsidian.config import SyncConfig
@@ -26,6 +24,7 @@ BASE = "http://test-stigmem"
 # ---------------------------------------------------------------------------
 # Fixtures / helpers
 # ---------------------------------------------------------------------------
+
 
 def _cfg(vault_root: Path, **kwargs: Any) -> SyncConfig:
     return SyncConfig(node_url=BASE, vault_name="test-vault", **kwargs)
@@ -69,6 +68,7 @@ def _make_vault(tmp_path: Path, notes: dict[str, str]) -> Path:
 # Round-trip: vault → stigmem
 # ---------------------------------------------------------------------------
 
+
 @respx.mock
 def test_round_trip_vault_to_stigmem(tmp_path: Path) -> None:
     """Writing a note with frontmatter should assert facts to stigmem."""
@@ -82,11 +82,14 @@ def test_round_trip_vault_to_stigmem(tmp_path: Path) -> None:
     def capture_post(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
         asserted.append(body)
-        return httpx.Response(201, json=_fact_resp(
-            entity=body["entity"],
-            relation=body["relation"],
-            value=str(body["value"].get("v", "")),
-        ))
+        return httpx.Response(
+            201,
+            json=_fact_resp(
+                entity=body["entity"],
+                relation=body["relation"],
+                value=str(body["value"].get("v", "")),
+            ),
+        )
 
     def empty_query(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=_page([]))
@@ -124,13 +127,11 @@ def test_round_trip_stigmem_to_vault(tmp_path: Path) -> None:
             return httpx.Response(200, json=_page([stigmem_fact]))
         return httpx.Response(200, json=_page([]))
 
-    respx.post(f"{BASE}/v1/facts").mock(
-        return_value=httpx.Response(201, json=stigmem_fact)
-    )
+    respx.post(f"{BASE}/v1/facts").mock(return_value=httpx.Response(201, json=stigmem_fact))
     respx.get(f"{BASE}/v1/facts").mock(side_effect=multi_query)
 
     syncer = VaultSyncer(vault, _cfg(vault))
-    result = syncer.sync(dry_run=False)
+    syncer.sync(dry_run=False)
 
     content = (vault / "Bob.md").read_text()
     assert "## Stigmem" in content
@@ -167,12 +168,15 @@ def test_round_trip_dry_run_does_not_modify_files(tmp_path: Path) -> None:
 # Conflict resolution
 # ---------------------------------------------------------------------------
 
+
 @respx.mock
 def test_conflict_comment_policy(tmp_path: Path) -> None:
     """When conflict_policy=comment, conflicting facts surface as %% comments."""
     from stigmem_obsidian.parser import STIGMEM_SECTION_HEADER, build_stigmem_section_body
 
-    existing_facts = [{"relation": "note:role", "value": "CEO", "source": "obsidian://vault/Dave.md"}]
+    existing_facts = [
+        {"relation": "note:role", "value": "CEO", "source": "obsidian://vault/Dave.md"}
+    ]
     existing_section = f"{STIGMEM_SECTION_HEADER}\n{build_stigmem_section_body(existing_facts)}\n"
     vault = _make_vault(tmp_path, {"Dave.md": f"# Dave\n\n{existing_section}"})
 
@@ -205,7 +209,9 @@ def test_conflict_stigmem_wins(tmp_path: Path) -> None:
     """When conflict_policy=stigmem_wins, stigmem value overwrites vault section."""
     from stigmem_obsidian.parser import STIGMEM_SECTION_HEADER, build_stigmem_section_body
 
-    existing_facts = [{"relation": "note:role", "value": "CEO", "source": "obsidian://vault/Eve.md"}]
+    existing_facts = [
+        {"relation": "note:role", "value": "CEO", "source": "obsidian://vault/Eve.md"}
+    ]
     existing_section = f"{STIGMEM_SECTION_HEADER}\n{build_stigmem_section_body(existing_facts)}\n"
     vault = _make_vault(tmp_path, {"Eve.md": f"# Eve\n\n{existing_section}"})
 
@@ -239,7 +245,9 @@ def test_conflict_vault_wins(tmp_path: Path) -> None:
     """When conflict_policy=vault_wins, conflicting stigmem facts are dropped."""
     from stigmem_obsidian.parser import STIGMEM_SECTION_HEADER, build_stigmem_section_body
 
-    existing_facts = [{"relation": "note:role", "value": "CEO", "source": "obsidian://vault/Frank.md"}]
+    existing_facts = [
+        {"relation": "note:role", "value": "CEO", "source": "obsidian://vault/Frank.md"}
+    ]
     existing_section = f"{STIGMEM_SECTION_HEADER}\n{build_stigmem_section_body(existing_facts)}\n"
     vault = _make_vault(tmp_path, {"Frank.md": f"# Frank\n\n{existing_section}"})
 
@@ -272,6 +280,7 @@ def test_conflict_vault_wins(tmp_path: Path) -> None:
 # Vault type smoke tests (config-only differences)
 # ---------------------------------------------------------------------------
 
+
 @respx.mock
 def test_logseq_journals_vault_smoke(tmp_path: Path) -> None:
     """Logseq-style journals/ vault: daily notes should parse and push without error."""
@@ -288,9 +297,9 @@ def test_logseq_journals_vault_smoke(tmp_path: Path) -> None:
     def capture(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
         asserted.append(body)
-        return httpx.Response(201, json=_fact_resp(
-            entity=body["entity"], relation=body["relation"], value=""
-        ))
+        return httpx.Response(
+            201, json=_fact_resp(entity=body["entity"], relation=body["relation"], value="")
+        )
 
     respx.post(f"{BASE}/v1/facts").mock(side_effect=capture)
     respx.get(f"{BASE}/v1/facts").mock(return_value=httpx.Response(200, json=_page([])))
@@ -345,7 +354,9 @@ def test_ignored_paths_not_synced(tmp_path: Path) -> None:
     def capture(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
         asserted.append(body)
-        return httpx.Response(201, json=_fact_resp(entity=body["entity"], relation=body["relation"], value=""))
+        return httpx.Response(
+            201, json=_fact_resp(entity=body["entity"], relation=body["relation"], value="")
+        )
 
     respx.post(f"{BASE}/v1/facts").mock(side_effect=capture)
     respx.get(f"{BASE}/v1/facts").mock(return_value=httpx.Response(200, json=_page([])))
@@ -367,7 +378,9 @@ def test_sync_note_single_file(tmp_path: Path) -> None:
     note_path = vault / "Grace.md"
 
     respx.post(f"{BASE}/v1/facts").mock(
-        return_value=httpx.Response(201, json=_fact_resp("obsidian://vault/Grace", "note:title", "Grace"))
+        return_value=httpx.Response(
+            201, json=_fact_resp("obsidian://vault/Grace", "note:title", "Grace")
+        )
     )
     respx.get(f"{BASE}/v1/facts").mock(return_value=httpx.Response(200, json=_page([])))
 

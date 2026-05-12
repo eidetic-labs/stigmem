@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import csv
 import json
-import os
 import signal
 import subprocess
 import sys
@@ -117,15 +116,17 @@ class ProbeTracker:
         for fact_id, probe in probes_snapshot.items():
             if now_mono - probe["started_at"] > PROBE_TIMEOUT_S:
                 for node_name in list(probe["pending_nodes"]):
-                    lat_writer.writerow({
-                        "ts": _now_iso(),
-                        "fact_id": fact_id,
-                        "source_node": probe["source_node"],
-                        "target_node": node_name,
-                        "assert_ts": probe["assert_ts"],
-                        "appear_ts": "",
-                        "latency_s": "TIMEOUT",
-                    })
+                    lat_writer.writerow(
+                        {
+                            "ts": _now_iso(),
+                            "fact_id": fact_id,
+                            "source_node": probe["source_node"],
+                            "target_node": node_name,
+                            "assert_ts": probe["assert_ts"],
+                            "appear_ts": "",
+                            "latency_s": "TIMEOUT",
+                        }
+                    )
                 completed.append(fact_id)
                 continue
 
@@ -141,15 +142,17 @@ class ProbeTracker:
                         assert_dt = datetime.fromisoformat(probe["assert_ts"])
                         appear_dt = datetime.fromisoformat(appear_ts)
                         latency_s = (appear_dt - assert_dt).total_seconds()
-                        lat_writer.writerow({
-                            "ts": _now_iso(),
-                            "fact_id": fact_id,
-                            "source_node": probe["source_node"],
-                            "target_node": node_name,
-                            "assert_ts": probe["assert_ts"],
-                            "appear_ts": appear_ts,
-                            "latency_s": round(latency_s, 3),
-                        })
+                        lat_writer.writerow(
+                            {
+                                "ts": _now_iso(),
+                                "fact_id": fact_id,
+                                "source_node": probe["source_node"],
+                                "target_node": node_name,
+                                "assert_ts": probe["assert_ts"],
+                                "appear_ts": appear_ts,
+                                "latency_s": round(latency_s, 3),
+                            }
+                        )
                         with self._lock:
                             if fact_id in self._probes:
                                 self._probes[fact_id]["pending_nodes"].discard(node_name)
@@ -187,13 +190,15 @@ def collect_conflicts(nodes: list[dict], conv_writer, count_writer) -> None:
             total = len(conflicts)
             unresolved = sum(1 for c in conflicts if c.get("status") == "unresolved")
             resolved = total - unresolved
-            count_writer.writerow({
-                "ts": ts,
-                "node": node["name"],
-                "total_conflicts": total,
-                "unresolved": unresolved,
-                "resolved": resolved,
-            })
+            count_writer.writerow(
+                {
+                    "ts": ts,
+                    "node": node["name"],
+                    "total_conflicts": total,
+                    "unresolved": unresolved,
+                    "resolved": resolved,
+                }
+            )
         except Exception as exc:
             print(f"[metrics] conflict poll error {node['name']}: {exc}", file=sys.stderr)
 
@@ -230,14 +235,16 @@ def check_local_isolation(iso_writer) -> None:
                         timeout=5,
                     )
                     if r2.status_code == 200:
-                        iso_writer.writerow({
-                            "ts": _now_iso(),
-                            "fact_id": fid,
-                            "source_node": source_node["name"],
-                            "target_node": target_node["name"],
-                            "entity": fact.get("entity", ""),
-                            "violation": "local_scope_leaked",
-                        })
+                        iso_writer.writerow(
+                            {
+                                "ts": _now_iso(),
+                                "fact_id": fid,
+                                "source_node": source_node["name"],
+                                "target_node": target_node["name"],
+                                "entity": fact.get("entity", ""),
+                                "violation": "local_scope_leaked",
+                            }
+                        )
                         print(
                             f"[metrics] VIOLATION: local fact {fid} from {source_node['name']} "
                             f"found on {target_node['name']}",
@@ -256,7 +263,10 @@ def collect_resources(res_writer) -> None:
     try:
         result = subprocess.run(
             [
-                "docker", "stats", "--no-stream", "--format",
+                "docker",
+                "stats",
+                "--no-stream",
+                "--format",
                 "{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}",
                 *(n["container"] for n in NODES),
             ],
@@ -276,14 +286,16 @@ def collect_resources(res_writer) -> None:
             net_parts = net_io.split("/")
             net_rx = net_parts[0].strip() if net_parts else ""
             net_tx = net_parts[1].strip() if len(net_parts) > 1 else ""
-            res_writer.writerow({
-                "ts": ts,
-                "container": name,
-                "cpu_pct": cpu_pct.replace("%", ""),
-                "mem_used": mem_used,
-                "net_rx": net_rx,
-                "net_tx": net_tx,
-            })
+            res_writer.writerow(
+                {
+                    "ts": ts,
+                    "container": name,
+                    "cpu_pct": cpu_pct.replace("%", ""),
+                    "mem_used": mem_used,
+                    "net_rx": net_rx,
+                    "net_tx": net_tx,
+                }
+            )
     except Exception as exc:
         print(f"[metrics] docker stats error: {exc}", file=sys.stderr)
 

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from stigmem import StigmemClient, ref_value, string_value, text_value
+from stigmem import StigmemClient, ref_value, string_value
 from stigmem.exceptions import StigmemError
 
 from .config import SyncConfig
@@ -154,9 +154,11 @@ class VaultSyncer:
                     _safe_assert(relation, string_value(str(item)))
             elif isinstance(val, bool):
                 from stigmem import boolean_value
+
                 _safe_assert(relation, boolean_value(val))
             elif isinstance(val, (int, float)):
                 from stigmem import number_value
+
                 _safe_assert(relation, number_value(float(val)))
             else:
                 _safe_assert(relation, string_value(str(val)))
@@ -183,7 +185,10 @@ class VaultSyncer:
     # ------------------------------------------------------------------
 
     def _fetch_remote_facts(
-        self, entity: str, scope: str, vault_source: str,
+        self,
+        entity: str,
+        scope: str,
+        vault_source: str,
     ) -> list[dict[str, Any]]:
         """Page through stigmem and collect facts that didn't originate from this note."""
         result: list[dict[str, Any]] = []
@@ -192,12 +197,14 @@ class VaultSyncer:
             page = self._client.query(entity=entity, scope=scope, cursor=cursor, limit=100)
             for fact in page.facts:
                 if fact.source != vault_source and not fact.contradicted:
-                    result.append({
-                        "relation": fact.relation,
-                        "value": _fact_value_str(fact.value),
-                        "source": fact.source,
-                        "id": fact.id,
-                    })
+                    result.append(
+                        {
+                            "relation": fact.relation,
+                            "value": _fact_value_str(fact.value),
+                            "source": fact.source,
+                            "id": fact.id,
+                        }
+                    )
             if page.cursor is None:
                 return result
             cursor = page.cursor
@@ -224,9 +231,7 @@ class VaultSyncer:
             if policy == "stigmem_wins":
                 continue  # keep the stigmem-side fact in the write set
             # vault_wins or comment: drop the stigmem fact for this relation
-            stigmem_facts = [
-                f for f in stigmem_facts if f["relation"] != conflict["relation"]
-            ]
+            stigmem_facts = [f for f in stigmem_facts if f["relation"] != conflict["relation"]]
             if policy == "comment":
                 comments.append(msg)
         return stigmem_facts, comments
@@ -247,12 +252,15 @@ class VaultSyncer:
         note_path = self._vault_root / note.rel_path
         existing_content = note_path.read_text(encoding="utf-8") if note_path.exists() else ""
         from .parser import extract_stigmem_section
+
         existing_section = extract_stigmem_section(existing_content)
         existing_facts = parse_stigmem_section_body(existing_section) if existing_section else []
 
         conflicts = _detect_conflicts(existing_facts, stigmem_facts)
         stigmem_facts, conflict_messages = self._apply_conflict_policy(
-            conflicts, stigmem_facts, note.rel_path,
+            conflicts,
+            stigmem_facts,
+            note.rel_path,
         )
 
         modified = write_facts_to_note(
@@ -268,6 +276,7 @@ class VaultSyncer:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _fact_value_str(value: Any) -> str:
     """Extract a string representation from a FactValue model."""
@@ -288,9 +297,11 @@ def _detect_conflicts(
         rel = fact["relation"]
         new_val = str(fact.get("value", ""))
         if rel in existing_map and existing_map[rel] != new_val:
-            conflicts.append({
-                "relation": rel,
-                "vault_value": existing_map[rel],
-                "stigmem_value": new_val,
-            })
+            conflicts.append(
+                {
+                    "relation": rel,
+                    "vault_value": existing_map[rel],
+                    "stigmem_value": new_val,
+                }
+            )
     return conflicts

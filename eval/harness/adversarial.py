@@ -6,7 +6,6 @@ import base64
 import json
 import os
 import time
-import uuid
 from typing import Any
 
 import httpx
@@ -18,7 +17,9 @@ from .utils import assert_fact, fact_id_from_item, load_all_adversarial, make_cl
 # ---------------------------------------------------------------------------
 
 
-def run_typo_squatted(client: httpx.Client, scenarios: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def run_typo_squatted(
+    client: httpx.Client, scenarios: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     results = []
     for s in scenarios:
         # Setup: assert canonical fact
@@ -50,21 +51,25 @@ def run_typo_squatted(client: httpx.Client, scenarios: list[dict[str, Any]]) -> 
 
         spoofed = s["spoofed_entity"]
         passed = spoofed not in top5_entities
-        results.append({
-            "id": s["id"],
-            "class": s["class"],
-            "description": s["description"],
-            "passed": passed,
-            "detail": {
-                "spoofed_entity": spoofed,
-                "top5_entities": top5_entities,
-                "canonical_id": canonical_id,
-            },
-        })
+        results.append(
+            {
+                "id": s["id"],
+                "class": s["class"],
+                "description": s["description"],
+                "passed": passed,
+                "detail": {
+                    "spoofed_entity": spoofed,
+                    "top5_entities": top5_entities,
+                    "canonical_id": canonical_id,
+                },
+            }
+        )
     return results
 
 
-def run_contradiction_floods(client: httpx.Client, scenarios: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def run_contradiction_floods(
+    client: httpx.Client, scenarios: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     results = []
     for s in scenarios:
         entity = s["target_entity"]
@@ -123,23 +128,24 @@ def run_contradiction_floods(client: httpx.Client, scenarios: list[dict[str, Any
         max_flood_salience = max(flood_saliences) if flood_saliences else 0.0
 
         criteria = s["pass_criteria"]
-        passed = (
-            canonical_in_top3 == criteria.get("canonical_in_top3", True)
-            and max_flood_salience <= criteria.get("max_flood_salience", 0.75)
-        )
+        passed = canonical_in_top3 == criteria.get(
+            "canonical_in_top3", True
+        ) and max_flood_salience <= criteria.get("max_flood_salience", 0.75)
 
-        results.append({
-            "id": s["id"],
-            "class": s["class"],
-            "description": s["description"],
-            "passed": passed,
-            "detail": {
-                "canonical_in_top3": canonical_in_top3,
-                "max_flood_salience": max_flood_salience,
-                "flood_count": len(flood_ids),
-                "canonical_id": canonical_id,
-            },
-        })
+        results.append(
+            {
+                "id": s["id"],
+                "class": s["class"],
+                "description": s["description"],
+                "passed": passed,
+                "detail": {
+                    "canonical_in_top3": canonical_in_top3,
+                    "max_flood_salience": max_flood_salience,
+                    "flood_count": len(flood_ids),
+                    "canonical_id": canonical_id,
+                },
+            }
+        )
     return results
 
 
@@ -159,7 +165,9 @@ def _recall_ids(client: httpx.Client, entity: str, relation: str) -> set[str]:
     return {fact_id_from_item(item) for item in items}
 
 
-def run_tombstone_bypass(client: httpx.Client, scenarios: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def run_tombstone_bypass(
+    client: httpx.Client, scenarios: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     results = []
     for s in scenarios:
         entity = s["entity"]
@@ -216,20 +224,22 @@ def run_tombstone_bypass(client: httpx.Client, scenarios: list[dict[str, Any]]) 
                 and distinct_ids == criteria.get("distinct_fact_ids", True)
             )
 
-            results.append({
-                "id": s["id"],
-                "class": s["class"],
-                "description": s["description"],
-                "passed": passed,
-                "detail": {
-                    "fact_a_id": fact_a_id,
-                    "retraction_id": retraction_id,
-                    "fact_b_id": fact_b_id,
-                    "retraction_absent": retraction_absent,
-                    "fact_b_present": fact_b_present,
-                    "distinct_ids": distinct_ids,
-                },
-            })
+            results.append(
+                {
+                    "id": s["id"],
+                    "class": s["class"],
+                    "description": s["description"],
+                    "passed": passed,
+                    "detail": {
+                        "fact_a_id": fact_a_id,
+                        "retraction_id": retraction_id,
+                        "fact_b_id": fact_b_id,
+                        "retraction_absent": retraction_absent,
+                        "fact_b_present": fact_b_present,
+                        "distinct_ids": distinct_ids,
+                    },
+                }
+            )
         else:
             # Different-source: adversary tries to tombstone canonical
             tombstone_id = ""
@@ -269,21 +279,23 @@ def run_tombstone_bypass(client: httpx.Client, scenarios: list[dict[str, Any]]) 
                 and distinct_ids == criteria.get("distinct_fact_ids", True)
             )
 
-            results.append({
-                "id": s["id"],
-                "class": s["class"],
-                "description": s["description"],
-                "passed": passed,
-                "detail": {
-                    "fact_a_id": fact_a_id,
-                    "tombstone_id": tombstone_id,
-                    "fact_b_id": fact_b_id,
-                    "fact_a_present": fact_a_present,
-                    "tombstone_absent": tombstone_absent,
-                    "fact_b_present": fact_b_present,
-                    "distinct_ids": distinct_ids,
-                },
-            })
+            results.append(
+                {
+                    "id": s["id"],
+                    "class": s["class"],
+                    "description": s["description"],
+                    "passed": passed,
+                    "detail": {
+                        "fact_a_id": fact_a_id,
+                        "tombstone_id": tombstone_id,
+                        "fact_b_id": fact_b_id,
+                        "fact_a_present": fact_a_present,
+                        "tombstone_absent": tombstone_absent,
+                        "fact_b_present": fact_b_present,
+                        "distinct_ids": distinct_ids,
+                    },
+                }
+            )
     return results
 
 
@@ -311,11 +323,13 @@ _FORGERY_BUILDERS: dict[str, Any] = {
     ),
     "unknown_key_signed": lambda s: _jwt_like(
         b'{"alg":"EdDSA","kid":"unknown-ephemeral"}',
-        json.dumps({
-            "entity_uri": "https://unknown.example.org",
-            "capabilities": ["write"],
-            "exp": int(time.time()) + 3600,
-        }).encode(),
+        json.dumps(
+            {
+                "entity_uri": "https://unknown.example.org",
+                "capabilities": ["write"],
+                "exp": int(time.time()) + 3600,
+            }
+        ).encode(),
         os.urandom(64),
     ),
     "bit_corrupted_signature": lambda s: _jwt_like(
@@ -362,7 +376,9 @@ def _build_forged_auth(shape: str, s: dict[str, Any]) -> str:
     return builder(s) if builder is not None else "Bearer unknown-shape"
 
 
-def run_capability_token(client: httpx.Client, scenarios: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def run_capability_token(
+    client: httpx.Client, scenarios: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     results = []
 
     for s in scenarios:
@@ -390,21 +406,23 @@ def run_capability_token(client: httpx.Client, scenarios: list[dict[str, Any]]) 
             if method == "post":
                 resp = client.post(
                     endpoint,
-                    json=body if endpoint == "/v1/facts" else {
-                        "query": "role", "scope": "local", "token_budget": 100
-                    },
+                    json=body
+                    if endpoint == "/v1/facts"
+                    else {"query": "role", "scope": "local", "token_budget": 100},
                     headers=headers,
                 )
             else:
                 resp = client.get(endpoint, headers=headers)
         except Exception as exc:
-            results.append({
-                "id": s["id"],
-                "class": s["class"],
-                "description": s["description"],
-                "passed": False,
-                "detail": {"error": str(exc)},
-            })
+            results.append(
+                {
+                    "id": s["id"],
+                    "class": s["class"],
+                    "description": s["description"],
+                    "passed": False,
+                    "detail": {"error": str(exc)},
+                }
+            )
             continue
 
         status = resp.status_code
@@ -414,29 +432,28 @@ def run_capability_token(client: httpx.Client, scenarios: list[dict[str, Any]]) 
             body_json = {}
 
         # Zero leakage check: response must not contain any fact data
-        has_fact_data = (
-            isinstance(body_json, dict)
-            and (
-                "facts" in body_json
-                or ("entity" in body_json and "relation" in body_json)
-                or ("id" in body_json and "entity" in body_json)
-            )
+        has_fact_data = isinstance(body_json, dict) and (
+            "facts" in body_json
+            or ("entity" in body_json and "relation" in body_json)
+            or ("id" in body_json and "entity" in body_json)
         )
 
         passed = status in expected_statuses and not has_fact_data
 
-        results.append({
-            "id": s["id"],
-            "class": s["class"],
-            "description": s["description"],
-            "passed": passed,
-            "detail": {
-                "status": status,
-                "expected_statuses": expected_statuses,
-                "has_fact_data": has_fact_data,
-                "shape": shape,
-            },
-        })
+        results.append(
+            {
+                "id": s["id"],
+                "class": s["class"],
+                "description": s["description"],
+                "passed": passed,
+                "detail": {
+                    "status": status,
+                    "expected_statuses": expected_statuses,
+                    "has_fact_data": has_fact_data,
+                    "shape": shape,
+                },
+            }
+        )
 
     return results
 
@@ -486,7 +503,10 @@ def _sanitizer_fact_body(payload_field: str, raw_payload: str) -> dict[str, Any]
 
 
 def _sanitizer_passed(
-    status: int, resp_body: dict[str, Any], s: dict[str, Any], subclass: str,
+    status: int,
+    resp_body: dict[str, Any],
+    s: dict[str, Any],
+    subclass: str,
 ) -> bool:
     """Evaluate the pass criterion for a sanitizer-bypass scenario response."""
     if status in (400, 422):
@@ -503,7 +523,9 @@ def _sanitizer_passed(
     return status not in (500, 503)
 
 
-def run_sanitizer_bypass(client: httpx.Client, scenarios: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def run_sanitizer_bypass(
+    client: httpx.Client, scenarios: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     results = []
 
     for s in scenarios:
@@ -522,16 +544,18 @@ def run_sanitizer_bypass(client: httpx.Client, scenarios: list[dict[str, Any]]) 
 
         passed = _sanitizer_passed(status, resp_body, s, subclass)
 
-        results.append({
-            "id": s["id"],
-            "class": s["class"],
-            "description": s["description"],
-            "passed": passed,
-            "detail": {
-                "status": status,
-                "subclass": subclass,
-            },
-        })
+        results.append(
+            {
+                "id": s["id"],
+                "class": s["class"],
+                "description": s["description"],
+                "passed": passed,
+                "detail": {
+                    "status": status,
+                    "subclass": subclass,
+                },
+            }
+        )
 
     return results
 
@@ -576,6 +600,7 @@ def run_all(
 
 if __name__ == "__main__":
     import sys
+
     report = run_all()
     print(json.dumps(report, indent=2))
     sys.exit(0 if report["failed"] == 0 else 1)

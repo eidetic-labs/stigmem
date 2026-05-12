@@ -22,7 +22,6 @@ import json
 import subprocess
 import sys
 import time
-import uuid
 from datetime import UTC, datetime
 
 import requests
@@ -102,8 +101,11 @@ def create_federate_key(container: str) -> str:
     """Create a federate API key on a node via docker exec."""
     result = subprocess.run(
         [
-            "docker", "exec", container,
-            "python", "-c",
+            "docker",
+            "exec",
+            container,
+            "python",
+            "-c",
             (
                 "from stigmem_node.auth import create_api_key; "
                 "print(create_api_key('soak:admin', ['read','write','federate']))"
@@ -137,7 +139,9 @@ def wait_healthy(host_url: str, name: str, retries: int = 30, delay: float = 2.0
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Register full-mesh federation peers for soak test")
+    parser = argparse.ArgumentParser(
+        description="Register full-mesh federation peers for soak test"
+    )
     parser.add_argument("--env", default="soak/.env", help="Path to soak/.env file with keypairs")
     args = parser.parse_args()
 
@@ -217,7 +221,10 @@ def main() -> None:
                         print(f"  {r_name} ← {p_name}: active (peer_id={data['peer_id'][:8]}...)")
                         success += 1
                     else:
-                        print(f"  {r_name} ← {p_name}: WARNING status={data['status']}", file=sys.stderr)
+                        print(
+                            f"  {r_name} ← {p_name}: WARNING status={data['status']}",
+                            file=sys.stderr,
+                        )
                         failed += 1
                 elif resp.status_code == 409:
                     print(f"  {r_name} ← {p_name}: already registered (skip)")
@@ -234,7 +241,10 @@ def main() -> None:
 
     print(f"\nRegistration complete: {success} active, {skipped} skipped, {failed} failed")
     if failed:
-        print("Some registrations failed — check container logs and verify well-known endpoints", file=sys.stderr)
+        print(
+            "Some registrations failed — check container logs and verify well-known endpoints",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     print("\nFull-mesh federation ready. Pull replication will begin on the next 10s interval.")

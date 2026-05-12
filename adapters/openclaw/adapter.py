@@ -1,8 +1,15 @@
 """Compatibility shim — import from stigmem_openclaw instead."""
 
-from stigmem_openclaw.adapter import (  # noqa: F401
-    BootContext,
-    OpenClawStigmemAdapter,
-    _facts_to_summary,
-    _safe_assert,
-)
+import stigmem_openclaw.adapter as _adapter
+
+BootContext = _adapter.BootContext
+OpenClawStigmemAdapter = _adapter.OpenClawStigmemAdapter
+_facts_to_summary = _adapter._facts_to_summary
+_safe_assert = _adapter._safe_assert
+
+__all__ = [
+    "BootContext",
+    "OpenClawStigmemAdapter",
+    "_facts_to_summary",
+    "_safe_assert",
+]

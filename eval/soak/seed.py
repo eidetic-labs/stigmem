@@ -18,7 +18,6 @@ first-class observable events, not error cases (conflict-first-class design).
 from __future__ import annotations
 
 import json
-import os
 import random
 import signal
 import sys
@@ -43,7 +42,7 @@ NODES = [
 
 # Expiry windows used in rotation
 _EXPIRY_WINDOWS = [
-    None,                # no expiry
+    None,  # no expiry
     timedelta(seconds=90),
     timedelta(minutes=30),
     timedelta(hours=24),
@@ -271,8 +270,8 @@ def main() -> None:
     print(f"[seed] probes → {PROBES_PATH}")
 
     cycle = 0
-    probe_interval = 30       # seconds between probe rounds
-    steady_interval = 10      # seconds between steady-state asserts
+    probe_interval = 30  # seconds between probe rounds
+    steady_interval = 10  # seconds between steady-state asserts
     contradiction_interval = 60  # seconds between deliberate contradictions
     local_interval = 60
     expiry_interval = 120

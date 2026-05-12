@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from stigmem_obsidian.parser import (
     STIGMEM_SECTION_HEADER,
     _extract_dataview,
@@ -19,10 +17,10 @@ from stigmem_obsidian.parser import (
     replace_stigmem_section,
 )
 
-
 # ---------------------------------------------------------------------------
 # Wikilink extraction
 # ---------------------------------------------------------------------------
+
 
 def test_extract_wikilinks_simple() -> None:
     text = "See [[Alice]] and [[Bob]]."
@@ -52,6 +50,7 @@ def test_extract_wikilinks_empty() -> None:
 # Dataview field extraction
 # ---------------------------------------------------------------------------
 
+
 def test_extract_dataview_basic() -> None:
     text = "status:: in-progress\nowner:: Alice"
     fields = _extract_dataview(text)
@@ -74,6 +73,7 @@ def test_extract_dataview_empty() -> None:
 # ---------------------------------------------------------------------------
 # parse_note integration
 # ---------------------------------------------------------------------------
+
 
 def test_parse_note_frontmatter(tmp_path: Path) -> None:
     note = tmp_path / "Alice.md"
@@ -139,6 +139,7 @@ def test_parse_note_content_hash_changes(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 # Stigmem section round-trip
 # ---------------------------------------------------------------------------
+
 
 def test_build_and_parse_stigmem_section_body() -> None:
     facts = [

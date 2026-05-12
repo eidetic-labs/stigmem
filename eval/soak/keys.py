@@ -9,7 +9,6 @@ The .env file is consumed by docker-compose.soak.yml and by setup_peers.py.
 """
 
 import base64
-import sys
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import (
@@ -24,7 +23,9 @@ def generate_keypair() -> tuple[str, str]:
     priv = Ed25519PrivateKey.generate()
     pub = priv.public_key()
     priv_b64 = (
-        base64.urlsafe_b64encode(priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption()))
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
         .decode()
         .rstrip("=")
     )

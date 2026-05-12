@@ -16,6 +16,7 @@ Usage from routes::
 from __future__ import annotations
 
 import contextlib
+import importlib.util
 import logging
 from collections.abc import Generator
 from typing import Any
@@ -26,14 +27,21 @@ _OTEL_ENABLED = False
 _tracer: Any = None
 
 
-try:
-    from opentelemetry import trace as _otel_trace  # noqa: F401  (probe for OTel availability)
-    from opentelemetry.sdk.resources import Resource  # noqa: F401
-    from opentelemetry.sdk.trace import TracerProvider  # noqa: F401
+def _is_module_available(module_name: str) -> bool:
+    try:
+        return importlib.util.find_spec(module_name) is not None
+    except ModuleNotFoundError:
+        return False
 
-    _OTEL_SDK_AVAILABLE = True
-except ImportError:
-    _OTEL_SDK_AVAILABLE = False
+
+_OTEL_SDK_AVAILABLE = all(
+    _is_module_available(module_name)
+    for module_name in (
+        "opentelemetry.trace",
+        "opentelemetry.sdk.resources",
+        "opentelemetry.sdk.trace",
+    )
+)
 
 
 def init_tracing(service_name: str, otlp_endpoint: str) -> None:

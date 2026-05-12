@@ -24,6 +24,7 @@ SOURCE = "agent:openclaw"
 # Shared fixtures / helpers
 # ---------------------------------------------------------------------------
 
+
 def _fact(
     id: str = "fact-001",
     entity: str = "user:alice",
@@ -58,6 +59,7 @@ def _adapter() -> OpenClawStigmemAdapter:
 # Boot handshake — happy path
 # ---------------------------------------------------------------------------
 
+
 @respx.mock
 def test_boot_collects_user_prefs() -> None:
     pref_fact = _fact(relation="preference:theme")
@@ -67,8 +69,8 @@ def test_boot_collects_user_prefs() -> None:
     call_count = {"n": 0}
     responses = [
         httpx.Response(200, json=_page([pref_fact, non_pref])),  # user entity
-        httpx.Response(200, json=_page([])),                     # intent:handoff_to
-        httpx.Response(200, json=_page([])),                     # intent:escalation
+        httpx.Response(200, json=_page([])),  # intent:handoff_to
+        httpx.Response(200, json=_page([])),  # intent:escalation
     ]
 
     def side_effect(request: httpx.Request) -> httpx.Response:
@@ -101,10 +103,10 @@ def test_boot_collects_project_constraints() -> None:
     #   user entity, project:acme constraint, intent:handoff_to, intent:escalation
     call_count = {"n": 0}
     responses = [
-        httpx.Response(200, json=_page([])),            # user entity (no prefs)
-        httpx.Response(200, json=_page([constraint])),   # project:acme constraint
-        httpx.Response(200, json=_page([])),             # intent:handoff_to
-        httpx.Response(200, json=_page([])),             # intent:escalation
+        httpx.Response(200, json=_page([])),  # user entity (no prefs)
+        httpx.Response(200, json=_page([constraint])),  # project:acme constraint
+        httpx.Response(200, json=_page([])),  # intent:handoff_to
+        httpx.Response(200, json=_page([])),  # intent:escalation
     ]
 
     def side_effect(request: httpx.Request) -> httpx.Response:
@@ -138,12 +140,12 @@ def test_boot_collects_handoffs() -> None:
 
     call_count = {"n": 0}
     responses = [
-        httpx.Response(200, json=_page([])),              # user prefs
-        httpx.Response(200, json=_page([handoff_fact])),   # intent:handoff_to
-        httpx.Response(200, json=_page([ctx_ref_fact])),   # intent:context_ref for handoff:abc
-        httpx.Response(200, json=_page([])),               # intent:handoff_summary
-        httpx.Response(200, json=_page([])),               # intent:continuation
-        httpx.Response(200, json=_page([])),               # intent:escalation
+        httpx.Response(200, json=_page([])),  # user prefs
+        httpx.Response(200, json=_page([handoff_fact])),  # intent:handoff_to
+        httpx.Response(200, json=_page([ctx_ref_fact])),  # intent:context_ref for handoff:abc
+        httpx.Response(200, json=_page([])),  # intent:handoff_summary
+        httpx.Response(200, json=_page([])),  # intent:continuation
+        httpx.Response(200, json=_page([])),  # intent:escalation
     ]
 
     def side_effect(request: httpx.Request) -> httpx.Response:
@@ -169,7 +171,7 @@ def test_boot_pagination() -> None:
     # First call: returns page1 with a cursor; second call: page2 with no cursor
     responses = [
         httpx.Response(200, json=_page([pref1], cursor="page-cursor-1")),
-        httpx.Response(200, json=_page([pref2])),        # cursor=None — terminates
+        httpx.Response(200, json=_page([pref2])),  # cursor=None — terminates
         # remaining namespace queries return empty
         httpx.Response(200, json=_page([])),  # intent:handoff_to
         httpx.Response(200, json=_page([])),  # intent:escalation
@@ -217,6 +219,7 @@ def test_boot_http_error_returns_empty() -> None:
 # ---------------------------------------------------------------------------
 # emit_handoff
 # ---------------------------------------------------------------------------
+
 
 @respx.mock
 def test_emit_handoff_validates_refs_and_asserts() -> None:
@@ -273,9 +276,9 @@ def test_emit_handoff_partial_assert_failure_does_not_raise() -> None:
 
     call_count = {"n": 0}
     assert_responses = [
-        httpx.Response(201, json=_fact()),               # intent:handoff_to succeeds
-        httpx.Response(500, json={"detail": "oops"}),    # intent:handoff_summary fails
-        httpx.Response(201, json=_fact()),               # intent:context_ref succeeds
+        httpx.Response(201, json=_fact()),  # intent:handoff_to succeeds
+        httpx.Response(500, json={"detail": "oops"}),  # intent:handoff_summary fails
+        httpx.Response(201, json=_fact()),  # intent:context_ref succeeds
     ]
 
     def assert_side_effect(request: httpx.Request) -> httpx.Response:
@@ -299,12 +302,11 @@ def test_emit_handoff_partial_assert_failure_does_not_raise() -> None:
 # emit_decision
 # ---------------------------------------------------------------------------
 
+
 @respx.mock
 def test_emit_decision_asserts_when_no_existing() -> None:
     # query returns empty — no existing decision
-    respx.get(f"{BASE}/v1/facts").mock(
-        return_value=httpx.Response(200, json=_page([]))
-    )
+    respx.get(f"{BASE}/v1/facts").mock(return_value=httpx.Response(200, json=_page([])))
     assert_route = respx.post(f"{BASE}/v1/facts").mock(
         return_value=httpx.Response(201, json=_fact(relation="roadmap:decision"))
     )
@@ -318,9 +320,7 @@ def test_emit_decision_asserts_when_no_existing() -> None:
 @respx.mock
 def test_emit_decision_skips_when_existing() -> None:
     existing = _fact(id="d-001", relation="roadmap:decision")
-    respx.get(f"{BASE}/v1/facts").mock(
-        return_value=httpx.Response(200, json=_page([existing]))
-    )
+    respx.get(f"{BASE}/v1/facts").mock(return_value=httpx.Response(200, json=_page([existing])))
     assert_route = respx.post(f"{BASE}/v1/facts").mock(
         return_value=httpx.Response(201, json=_fact())
     )
@@ -335,12 +335,14 @@ def test_emit_decision_skips_when_existing() -> None:
 # emit_escalation
 # ---------------------------------------------------------------------------
 
+
 @respx.mock
 def test_emit_escalation_includes_valid_until() -> None:
     captured: list[dict] = []
 
     def capture(request: httpx.Request) -> httpx.Response:
         import json
+
         captured.append(json.loads(request.content))
         return httpx.Response(201, json=_fact())
 
@@ -375,6 +377,7 @@ def test_emit_escalation_default_priority_is_medium() -> None:
 
     def capture(request: httpx.Request) -> httpx.Response:
         import json
+
         captured.append(json.loads(request.content))
         return httpx.Response(201, json=_fact())
 
@@ -389,6 +392,7 @@ def test_emit_escalation_default_priority_is_medium() -> None:
 # ---------------------------------------------------------------------------
 # Summary formatting
 # ---------------------------------------------------------------------------
+
 
 @respx.mock
 def test_boot_summary_groups_by_namespace() -> None:
@@ -446,6 +450,7 @@ def test_boot_summary_shows_confidence_for_low_confidence_facts() -> None:
 # from_env constructor
 # ---------------------------------------------------------------------------
 
+
 def test_from_env() -> None:
     env = {
         "STIGMEM_URL": "http://my-node",
@@ -471,18 +476,14 @@ def test_from_env_defaults() -> None:
 # Conformance vector smoke tests (mocked, no live node)
 # ---------------------------------------------------------------------------
 
-_CONFORMANCE_DIR = (
-    Path(__file__).parent  # tests/
-    .parent                 # openclaw/
-    .parent                 # adapters/
-    .parent                 # stigmem/
-    .parent                 # repo root
-    / "sdks" / "stigmem-py" / "tests"
-)
+_CONFORMANCE_DIR = Path(__file__).resolve()
+for _ in range(5):
+    _CONFORMANCE_DIR = _CONFORMANCE_DIR.parent
+_CONFORMANCE_DIR = _CONFORMANCE_DIR / "sdks" / "stigmem-py" / "tests"
 sys.path.insert(0, str(_CONFORMANCE_DIR))
 
 try:
-    from conformance_vectors import ASSERT_VECTORS, NODE_INFO_VECTOR, QUERY_VECTORS  # noqa: F401
+    from conformance_vectors import ASSERT_VECTORS, NODE_INFO_VECTOR
 
     _CONFORMANCE_AVAILABLE = True
 except ImportError:

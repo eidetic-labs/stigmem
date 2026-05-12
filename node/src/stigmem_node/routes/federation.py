@@ -22,7 +22,6 @@ import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
-import httpx  # noqa: F401  — re-exported for tests that patch federation.httpx.AsyncClient
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -54,7 +53,6 @@ from ..plugins import Deny, TenantContext, get_registry
 from ..settings import settings
 from ..tls import check_peer_san
 from ._federation_impl import (
-    _check_tl_inclusion_for_peer,  # noqa: F401  — re-exported for tests
     federation_ingest_tombstone_impl,
     register_peer_impl,
 )

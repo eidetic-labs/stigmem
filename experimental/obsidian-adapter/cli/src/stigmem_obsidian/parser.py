@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
 
 # ---------------------------------------------------------------------------
 # Data shapes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ParsedNote:
@@ -53,14 +53,16 @@ STIGMEM_SECTION_RE = re.compile(
 # Parser
 # ---------------------------------------------------------------------------
 
+
 def parse_note(path: Path, vault_root: Path) -> ParsedNote:
     """Parse a single markdown note file into a ParsedNote.
 
     Handles YAML frontmatter (via python-frontmatter), wikilinks, and
     Dataview inline fields. Skips code-block content for Dataview extraction.
     """
-    import frontmatter as fm
     import hashlib
+
+    import frontmatter as fm
 
     raw_text = path.read_text(encoding="utf-8", errors="replace")
     post = fm.loads(raw_text)
@@ -116,6 +118,7 @@ def _strip_code_blocks(text: str) -> str:
 # Stigmem-section helpers
 # ---------------------------------------------------------------------------
 
+
 def extract_stigmem_section(content: str) -> str | None:
     """Return the body of the `## Stigmem` section, or None if absent."""
     m = STIGMEM_SECTION_RE.search(content)
@@ -160,11 +163,11 @@ def parse_stigmem_section_body(body: str) -> list[dict[str, str]]:
         if stripped.startswith("- relation:"):
             if current:
                 facts.append(current)
-            current = {"relation": stripped[len("- relation:"):].strip()}
+            current = {"relation": stripped[len("- relation:") :].strip()}
         elif stripped.startswith("value:") and current:
-            current["value"] = stripped[len("value:"):].strip()
+            current["value"] = stripped[len("value:") :].strip()
         elif stripped.startswith("source:") and current:
-            current["source"] = stripped[len("source:"):].strip()
+            current["source"] = stripped[len("source:") :].strip()
     if current:
         facts.append(current)
     return facts

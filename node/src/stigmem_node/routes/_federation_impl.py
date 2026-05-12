@@ -5,9 +5,9 @@ into ``routes.federation`` and invoked from thin ``@router``-decorated wrappers.
 No behavioural changes — code was moved verbatim from federation.py.
 
 Tests monkey-patch attributes on the ``routes.federation`` module
-(``settings``, ``httpx``, ``write_audit_log``).  To honour those patches,
-this module looks those names up via ``routes.federation`` lazily inside the
-function bodies rather than binding them at import time.
+(``settings``, ``write_audit_log``).  To honour those patches, this module
+looks those names up via ``routes.federation`` lazily inside the function
+bodies rather than binding them at import time.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+import httpx
 from fastapi import BackgroundTasks, HTTPException, Request, status
 
 from ..auth import Identity
@@ -47,9 +48,9 @@ async def register_peer_impl(
     identity: Identity,
 ) -> PeerRegisterResponse:
     """Register a peer. Fetches its well-known doc and verifies declaration_sig (§5.6)."""
-    # Lazy module reference so tests that patch ``federation.httpx`` /
-    # ``federation.settings`` continue to take effect.  Cast to ``Any`` because
-    # ``httpx`` and ``settings`` are not in the stub-friendly ``__all__``.
+    # Lazy module reference so tests that patch ``federation.settings`` continue
+    # to take effect. Cast to ``Any`` because ``settings`` is not in the
+    # stub-friendly ``__all__``.
     from typing import cast as _cast
 
     from . import federation as _fed_mod
@@ -100,7 +101,7 @@ async def register_peer_impl(
     # Fetch peer's /.well-known/stigmem to retrieve their published pubkey (§5.6 step 1–3)
     fetched_pubkey: str | None = None
     try:
-        async with _fed.httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             wk_resp = await client.get(f"{req.node_url}/.well-known/stigmem")
         if wk_resp.status_code == 200:
             fetched_pubkey = wk_resp.json().get("federation_pubkey")
@@ -143,9 +144,8 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
     trust_mode=relaxed (warn):    no proof → accept + audit warning
     trust_mode=off:               skip entirely
     """
-    # Lazy lookup: tests monkey-patch ``federation.httpx`` and
-    # ``federation.write_audit_log`` — accessing via the module preserves
-    # those patches.
+    # Lazy lookup: tests monkey-patch ``federation.write_audit_log`` —
+    # accessing via the module preserves those patches.
     from typing import cast as _cast
 
     from . import federation as _fed_mod
@@ -160,7 +160,7 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
     manifest_obj = None
     try:
         assert_safe_url(node_url, allow_schemes=frozenset({"https", "http"}))
-        async with _fed.httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(
                 f"{node_url}/.well-known/stigmem-manifest.json",
                 follow_redirects=False,

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { ArrowLeft, AlertTriangle, Trash2, Copy } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Trash2, Copy, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -161,9 +161,24 @@ function FactHeader({ isRetracted, fact }: { isRetracted: boolean; fact: FactRec
         <Link href="/facts"><ArrowLeft size={14} /> Facts</Link>
       </Button>
       <h1 className="text-xl font-semibold">Fact detail</h1>
-      {isRetracted && <Badge variant="red">retracted</Badge>}
-      {fact.contradicted && !isRetracted && <Badge variant="yellow">contradicted</Badge>}
-      {fact.attested_key_id && <Badge variant="green">attested</Badge>}
+      {isRetracted && (
+        <Badge variant="red" className="inline-flex items-center gap-1">
+          <AlertTriangle size={12} aria-hidden="true" />
+          retracted
+        </Badge>
+      )}
+      {fact.contradicted && !isRetracted && (
+        <Badge variant="yellow" className="inline-flex items-center gap-1">
+          <AlertTriangle size={12} aria-hidden="true" />
+          contradicted
+        </Badge>
+      )}
+      {fact.attested_key_id && (
+        <Badge variant="green" className="inline-flex items-center gap-1">
+          <CheckCircle2 size={12} aria-hidden="true" />
+          attested
+        </Badge>
+      )}
     </div>
   );
 }

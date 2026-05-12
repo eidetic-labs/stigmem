@@ -1,0 +1,3 @@
+-- Postgres capability_tokens.nonce already uses a strict regex CHECK in
+-- 014_federation_trust.sql: length(nonce) = 64 AND nonce ~ '^[0-9a-f]+$'.
+-- This override records parity with SQLite migration 029.

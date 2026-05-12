@@ -72,11 +72,14 @@ def pg_backend():
     # Teardown: drop the test schema.
     try:
         import psycopg2  # type: ignore[import]
+        from psycopg2 import sql  # type: ignore[import]
 
         conn = psycopg2.connect(dsn)
         conn.autocommit = True
         with conn.cursor() as cur:
-            cur.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")  # noqa: S608
+            cur.execute(
+                sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(sql.Identifier(schema))
+            )
         conn.close()
     except Exception as exc:  # noqa: BLE001
         logger.warning("failed to drop postgres test schema %s: %s", schema, exc)
@@ -363,11 +366,14 @@ class TestVectorIndex:
         finally:
             try:
                 import psycopg2  # type: ignore[import]
+                from psycopg2 import sql  # type: ignore[import]
 
                 conn2 = psycopg2.connect(dsn)
                 conn2.autocommit = True
                 with conn2.cursor() as cur:
-                    cur.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")  # noqa: S608
+                    cur.execute(
+                        sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(sql.Identifier(schema))
+                    )
                 conn2.close()
             except Exception as exc:  # noqa: BLE001
                 logger.warning("failed to drop postgres test schema %s: %s", schema, exc)

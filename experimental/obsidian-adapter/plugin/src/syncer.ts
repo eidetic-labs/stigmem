@@ -12,7 +12,15 @@
 import { TFile, Vault } from "obsidian";
 import type { PluginSettings } from "./settings";
 import { isIgnored, scopeForPath } from "./settings";
-import { StigmemClient, stringValue, numberValue, booleanValue, refValue, type FactRecord } from "./StigmemClient";
+import {
+	StigmemClient,
+	stringValue,
+	numberValue,
+	booleanValue,
+	refValue,
+	type FactRecord,
+	type FactValue,
+} from "./StigmemClient";
 import {
 	parseNote,
 	extractStigmemSection,
@@ -123,7 +131,7 @@ export class VaultSyncer {
 		const SKIP_FM_KEYS = new Set(["position", "cssclass", "publish"]);
 		let count = 0;
 
-		const assert = async (relation: string, value: ReturnType<typeof stringValue>) => {
+		const assert = async (relation: string, value: FactValue) => {
 			try {
 				await this.client.assertFact({ entity: note.entityUri, relation, value, source, scope });
 				count++;
@@ -142,9 +150,9 @@ export class VaultSyncer {
 			if (Array.isArray(val)) {
 				for (const item of val) await assert(relation, stringValue(String(item)));
 			} else if (typeof val === "boolean") {
-				await assert(relation, booleanValue(val) as ReturnType<typeof stringValue>);
+				await assert(relation, booleanValue(val));
 			} else if (typeof val === "number") {
-				await assert(relation, numberValue(val) as ReturnType<typeof stringValue>);
+				await assert(relation, numberValue(val));
 			} else if (val !== null && val !== undefined) {
 				await assert(relation, stringValue(String(val)));
 			}
@@ -153,7 +161,7 @@ export class VaultSyncer {
 		// Wikilinks
 		for (const target of note.wikilinks) {
 			const targetUri = `obsidian://vault/${target}`;
-			await assert(this.settings.wikilinkRelation, refValue(targetUri) as ReturnType<typeof stringValue>);
+			await assert(this.settings.wikilinkRelation, refValue(targetUri));
 		}
 
 		// Dataview inline fields

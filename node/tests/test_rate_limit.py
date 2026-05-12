@@ -16,9 +16,10 @@ import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.rate_limit as rl_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.auth import create_api_key
 from stigmem_node.main import create_app
-from stigmem_node.settings import Settings
+
+create_api_key = auth_mod.create_api_key
+Settings = settings_module.Settings
 
 FACT = {
     "entity": "user:alice",

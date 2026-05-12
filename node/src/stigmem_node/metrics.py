@@ -39,8 +39,9 @@ import contextlib
 import logging
 import time
 from collections.abc import Generator
-from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
+
+contextmanager = contextlib.contextmanager
 
 logger = logging.getLogger("stigmem.metrics")
 
@@ -49,7 +50,11 @@ if TYPE_CHECKING:
 
 try:
     import prometheus_client as _prom
-    from prometheus_client import REGISTRY, Counter, Gauge, Histogram  # noqa: F401
+
+    REGISTRY = _prom.REGISTRY
+    Counter = _prom.Counter
+    Gauge = _prom.Gauge
+    Histogram = _prom.Histogram
 
     _ENABLED = True
 

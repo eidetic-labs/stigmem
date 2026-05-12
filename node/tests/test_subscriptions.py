@@ -24,11 +24,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+import stigmem_node.auth as auth_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.auth import create_api_key
 from stigmem_node.main import create_app
-from stigmem_node.settings import Settings
 from stigmem_node.subscription_delivery import deliver_pending
+
+Settings = settings_module.Settings
+create_api_key = auth_mod.create_api_key
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -159,7 +161,6 @@ def two_authed_clients(tmp_db: str, backend: str, encrypt: str) -> Generator:
     """Two authed clients with different entity URIs."""
     import importlib
 
-    import stigmem_node.auth as auth_mod
     import stigmem_node.db as db_mod
     import stigmem_node.routes.wellknown as wk_mod
 

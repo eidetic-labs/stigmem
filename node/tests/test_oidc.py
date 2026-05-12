@@ -25,9 +25,10 @@ import stigmem_node.db as db_mod
 import stigmem_node.routes.auth as auth_route_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
-from stigmem_node.settings import Settings
+
+apply_migrations = db_mod.apply_migrations
+Settings = settings_module.Settings
 
 ISSUER = "https://oidc.example.com"
 AUDIENCE = "stigmem-test-client"

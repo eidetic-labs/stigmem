@@ -33,6 +33,11 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+import stigmem_node.auth as auth_mod
+
+create_api_key = auth_mod.create_api_key
+
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _VECTOR_DIR = _REPO_ROOT / "data" / "conformance" / "v1.0"
 
@@ -272,11 +277,13 @@ def _make_authed_node(
     attestation_mode: str = "warn",
 ) -> tuple[TestClient, Any, list, str]:
     import stigmem_node.auth as am
+
+    create_api_key = am.create_api_key
     import stigmem_node.db as dm
+
+    apply_migrations = dm.apply_migrations
     import stigmem_node.routes.wellknown as wk
     import stigmem_node.settings as sm
-    from stigmem_node.auth import create_api_key
-    from stigmem_node.db import apply_migrations
     from stigmem_node.main import create_app
 
     db_file = str(tmp_path) + f"/acl{suffix}.db"
@@ -343,8 +350,6 @@ class TestGardenFactACLConformance:
 
     @pytest.fixture(autouse=True)
     def _setup(self, tmp_path):
-        from stigmem_node.auth import create_api_key
-
         self._client, self._orig, self._patched, self._admin_key = _make_authed_node(tmp_path)
         self._outsider_key = create_api_key(self._OUTSIDER_ENTITY, ["read", "write"])
         r = self._client.post(
@@ -539,9 +544,10 @@ class TestSourceAttestationConformance:
         """§18.2, §2.7 — auth disabled → attestation cannot run; attested=null."""
         import stigmem_node.auth as am
         import stigmem_node.db as dm
+
+        apply_migrations = dm.apply_migrations
         import stigmem_node.routes.wellknown as wk
         import stigmem_node.settings as sm
-        from stigmem_node.db import apply_migrations
         from stigmem_node.main import create_app
 
         db_file = str(tmp_path) + "/noauth.db"

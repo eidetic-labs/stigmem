@@ -8,8 +8,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from fastapi.testclient import TestClient
-
 from .conftest import ConformanceClient
 
 _FACT = {
@@ -49,9 +47,7 @@ class TestFactAssert:
 
     def test_assert_with_valid_until(self, conformance_client: ConformanceClient) -> None:
         future = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
-        r = conformance_client.client.post(
-            "/v1/facts", json={**_FACT, "valid_until": future}
-        )
+        r = conformance_client.client.post("/v1/facts", json={**_FACT, "valid_until": future})
         assert r.status_code == 201
         assert r.json()["valid_until"] is not None
 
@@ -65,15 +61,13 @@ class TestFactAssert:
         assert r1.json()["entity"] == r2.json()["entity"]
 
     def test_assert_rejects_invalid_scope(self, conformance_client: ConformanceClient) -> None:
-        r = conformance_client.client.post(
-            "/v1/facts", json={**_FACT, "scope": "invalid_scope"}
-        )
+        r = conformance_client.client.post("/v1/facts", json={**_FACT, "scope": "invalid_scope"})
         assert r.status_code in (400, 422)
 
-    def test_assert_rejects_confidence_out_of_range(self, conformance_client: ConformanceClient) -> None:
-        r = conformance_client.client.post(
-            "/v1/facts", json={**_FACT, "confidence": 1.5}
-        )
+    def test_assert_rejects_confidence_out_of_range(
+        self, conformance_client: ConformanceClient
+    ) -> None:
+        r = conformance_client.client.post("/v1/facts", json={**_FACT, "confidence": 1.5})
         assert r.status_code in (400, 422)
 
 
@@ -87,7 +81,9 @@ class TestFactQuery:
         assert len(body["facts"]) >= 1
         assert all(f["entity"] == _FACT["entity"] for f in body["facts"])
 
-    def test_query_returns_empty_for_unknown_entity(self, conformance_client: ConformanceClient) -> None:
+    def test_query_returns_empty_for_unknown_entity(
+        self, conformance_client: ConformanceClient
+    ) -> None:
         r = conformance_client.client.get("/v1/facts?entity=stigmem://conformance/nobody")
         assert r.status_code == 200
         assert r.json()["facts"] == []
@@ -95,9 +91,7 @@ class TestFactQuery:
     def test_query_filters_by_relation(self, conformance_client: ConformanceClient) -> None:
         c = conformance_client.client
         c.post("/v1/facts", json=_FACT)
-        r = c.get(
-            f"/v1/facts?entity={_FACT['entity']}&relation={_FACT['relation']}"
-        )
+        r = c.get(f"/v1/facts?entity={_FACT['entity']}&relation={_FACT['relation']}")
         assert r.status_code == 200
         facts = r.json()["facts"]
         assert all(f["relation"] == _FACT["relation"] for f in facts)
@@ -131,12 +125,18 @@ class TestFactQuery:
         assert r2.status_code == 201
         assert r2.json()["confidence"] == 0.0
 
-    def test_expired_fact_not_returned_in_query(self, conformance_client: ConformanceClient) -> None:
+    def test_expired_fact_not_returned_in_query(
+        self, conformance_client: ConformanceClient
+    ) -> None:
         c = conformance_client.client
         past = (datetime.now(UTC) - timedelta(seconds=1)).isoformat()
         c.post("/v1/facts", json={**_FACT, "valid_until": past})
         r = c.get(f"/v1/facts?entity={_FACT['entity']}&relation=memory:role")
         assert r.status_code == 200
         # Expired facts should not appear in default query results
-        live = [f for f in r.json()["facts"] if f.get("valid_until", "") and f["valid_until"] < datetime.now(UTC).isoformat()]
+        live = [
+            f
+            for f in r.json()["facts"]
+            if f.get("valid_until", "") and f["valid_until"] < datetime.now(UTC).isoformat()
+        ]
         assert live == []

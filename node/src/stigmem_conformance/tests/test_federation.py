@@ -57,7 +57,9 @@ class TestFederationConflictAPI:
         r = conformance_client.client.get("/v1/conflicts")
         assert r.status_code in (200, 403)
 
-    def test_empty_conflicts_returns_empty_list(self, conformance_client: ConformanceClient) -> None:
+    def test_empty_conflicts_returns_empty_list(
+        self, conformance_client: ConformanceClient
+    ) -> None:
         r = conformance_client.client.get("/v1/conflicts")
         if r.status_code == 200:
             body = r.json()

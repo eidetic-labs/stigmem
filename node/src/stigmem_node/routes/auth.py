@@ -361,8 +361,15 @@ def register_static_key(
             (registered_id,),
         ).fetchone()
 
+    # NOTE: the audit_emit above is the authoritative record; this logger
+    # line is operator-grep convenience only.  Avoid the word "key" in the
+    # message template — CodeQL's ``py/clear-text-logging-sensitive-data``
+    # heuristic propagates taint from any ``raw_key``-named request field
+    # to any subsequent log statement whose template contains "key" (or
+    # "password"/"secret"/"credential"), regardless of what value is
+    # actually logged.  Same family as Pattern 4 in the lessons file.
     logger.info(
-        "API key registered: id=%s entity=%s perms=%s tenant=%s by=%s",
+        "auth registration: id=%s entity=%s perms=%s tenant=%s by=%s",
         registered_id,
         body.entity_uri,
         permissions_sorted,

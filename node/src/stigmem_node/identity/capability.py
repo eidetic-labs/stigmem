@@ -161,8 +161,8 @@ def _verify_token_signature(token: dict[str, Any], manifest: OrgManifest, sig_b6
     try:
         _pubkey_from_b64(manifest.public_key).verify(sig_bytes, signing_body)
         return
-    except InvalidSignature:
-        pass
+    except InvalidSignature as exc:
+        current_key_error = exc
     except Exception as exc:
         raise CapabilityTokenError(f"token signature error: {exc}") from exc
 
@@ -173,7 +173,12 @@ def _verify_token_signature(token: dict[str, Any], manifest: OrgManifest, sig_b6
             continue  # pre-§22.2 event — no stored retiring pubkey
         try:
             rotated_at = datetime.fromisoformat(evt.rotated_at.replace("Z", "+00:00"))
-        except ValueError:
+        except ValueError as exc:
+            logger.debug(
+                "skipping rotation event with invalid timestamp %r: %s",
+                evt.rotated_at,
+                exc,
+            )
             continue
         if now >= rotated_at + timedelta(days=_DUAL_TRUST_DAYS):
             continue  # dual-trust window closed
@@ -185,12 +190,17 @@ def _verify_token_signature(token: dict[str, Any], manifest: OrgManifest, sig_b6
                 (rotated_at + timedelta(days=_DUAL_TRUST_DAYS)).isoformat(),
             )
             return
-        except InvalidSignature:
+        except InvalidSignature as exc:
+            logger.debug(
+                "dual-trust key %s did not verify token signature: %s",
+                evt.previous_key_id,
+                exc,
+            )
             continue
         except Exception as exc:
             raise CapabilityTokenError(f"dual-trust signature error: {exc}") from exc
 
-    raise CapabilityTokenError("token signature verification failed")
+    raise CapabilityTokenError("token signature verification failed") from current_key_error
 
 
 # ---------------------------------------------------------------------------

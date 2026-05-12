@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 from datetime import UTC, datetime
 
 from .entity_normalizer import NormalizationError, normalize_entity_uri
+
+logger = logging.getLogger(__name__)
 
 
 def normalize_entities_sweep(
@@ -39,7 +42,8 @@ def normalize_entities_sweep(
         for raw in sorted(raw_uris):
             try:
                 canonical = normalize_entity_uri(raw)
-            except NormalizationError:
+            except NormalizationError as exc:
+                logger.warning("skipping non-normalizable entity/source URI %r: %s", raw, exc)
                 continue
             if raw != canonical:
                 pairs.append((raw, canonical))

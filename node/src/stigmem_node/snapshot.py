@@ -242,7 +242,8 @@ def snapshot_create(
             from .db import get_or_create_node_id
 
             node_id = get_or_create_node_id(db_path=db_path)
-        except Exception:
+        except Exception as exc:
+            logger.warning("could not resolve node id for snapshot manifest: %s", exc)
             node_id = ""
 
         # -- 6. Build manifest and sign -------------------------------------
@@ -335,7 +336,8 @@ def _verify_manifest_signature(
             pub_key.verify(sig_bytes, body)
             verified = True
             break
-        except InvalidSignature:
+        except InvalidSignature as exc:
+            logger.debug("snapshot manifest signature did not match a trusted key: %s", exc)
             continue
 
     if not verified:

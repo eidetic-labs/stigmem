@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import sqlite3
 import uuid
 from collections.abc import Generator
@@ -46,6 +47,7 @@ from stigmem_node.main import create_app
 
 apply_migrations = db_mod.apply_migrations
 Settings = settings_module.Settings
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -77,7 +79,8 @@ def _patch_settings(test_settings: Settings) -> list:
         try:
             mod = importlib.import_module(name)
             mods.append(mod)
-        except ImportError:
+        except ImportError as exc:
+            logger.debug("patchable module %s is unavailable in this test process: %s", name, exc)
             continue
     settings_module.settings = test_settings  # type: ignore[assignment]
     auth_mod.settings = test_settings  # type: ignore[assignment]

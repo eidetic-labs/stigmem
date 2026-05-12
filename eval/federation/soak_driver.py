@@ -140,7 +140,7 @@ def ensure_keypairs() -> dict[str, str]:
                 continue
             k, _, v = line.partition("=")
             env[k.strip()] = v.strip()
-        if all(f"NODE_{l}_PUBKEY" in env for l in ("A", "B", "C")):
+        if all(f"NODE_{letter}_PUBKEY" in env for letter in ("A", "B", "C")):
             print(f"  keypairs: loaded from {ENV_FILE}")
             return env
 
@@ -649,9 +649,10 @@ def run_cc2(clients: dict[str, httpx.Client]) -> dict:
 
     # Verify C does not have the fact yet
     try:
-        r_c = clients["node-c"].get(f"/v1/facts", params={"entity": entity, "relation": relation})
+        r_c = clients["node-c"].get("/v1/facts", params={"entity": entity, "relation": relation})
         c_before = r_c.json().get("facts", []) if r_c.status_code == 200 else []
-    except Exception:
+    except (httpx.HTTPError, ValueError) as exc:
+        print(f"  CC-2 partition visibility check failed: {exc}", file=sys.stderr)
         c_before = []
 
     # Heal partition
@@ -766,7 +767,8 @@ def run_cc4(clients: dict[str, httpx.Client]) -> dict:
                         tombstone_wins = False
                 else:
                     tombstone_wins = False
-            except Exception:
+            except (httpx.HTTPError, ValueError) as exc:
+                print(f"  CC-4 tombstone verification failed: {exc}", file=sys.stderr)
                 tombstone_wins = False
 
     return {
@@ -810,7 +812,8 @@ def run_cc5(clients: dict[str, httpx.Client], admin_keys: dict[str, str]) -> dic
         if r_bad.status_code == 200:
             bypass_detected = True  # security regression
         clean_failure = r_bad.status_code in (401, 403) and not r_bad.json().get("facts")
-    except Exception:
+    except (httpx.HTTPError, ValueError) as exc:
+        print(f"  CC-5 forged-token probe failed as a clean denial path: {exc}", file=sys.stderr)
         clean_failure = True
 
     # Attempt with valid key — must return 200

@@ -10,6 +10,7 @@ Covers:
 from __future__ import annotations
 
 import datetime
+import logging
 import socket
 import ssl
 import threading
@@ -29,6 +30,8 @@ from stigmem_node.tls import (
     check_peer_san,
     reload_tls_cert,
 )
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Cert generation helpers
@@ -110,14 +113,16 @@ def _start_echo_server(ssl_ctx: ssl.SSLContext) -> tuple[int, threading.Event]:
         while not stop_event.is_set():
             try:
                 conn, _ = srv.accept()
-            except TimeoutError:
+            except TimeoutError as exc:
+                logger.debug("mTLS echo server accept timed out while waiting for clients: %s", exc)
                 continue
             try:
                 tls_conn = ssl_ctx.wrap_socket(conn, server_side=True)
                 data = tls_conn.recv(256)
                 tls_conn.sendall(data)
                 tls_conn.close()
-            except ssl.SSLError:
+            except ssl.SSLError as exc:
+                logger.debug("mTLS echo server rejected TLS connection: %s", exc)
                 continue
             finally:
                 conn.close()

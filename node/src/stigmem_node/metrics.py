@@ -255,5 +255,7 @@ def observe_duration(histogram: Any, labels: dict[str, str]) -> Generator[None, 
         yield
     finally:
         elapsed = time.perf_counter() - start
-        with contextlib.suppress(Exception):  # nosec B110 — metrics best-effort
+        try:
             histogram.labels(**labels).observe(elapsed)
+        except Exception as exc:
+            logger.debug("failed to observe duration metric: %s", exc)

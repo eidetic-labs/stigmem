@@ -302,8 +302,10 @@ def _fetch_instruction_content(entry: ManifestEntry) -> tuple[str, str]:
         try:
             with open(entry.path) as f:
                 return f.read(), "fallback_path"
-        except OSError:
-            pass
+        except OSError as exc:
+            raise LookupError(
+                f"instruction fallback path '{entry.path}' could not be read"
+            ) from exc
     raise LookupError(f"instruction content not found for entry '{entry.name}'")
 
 
@@ -621,7 +623,8 @@ def _resolve_ranked_chunks(
     for score, entry in scored[:remaining_slots]:
         try:
             content, source = _fetch_instruction_content(entry)
-        except LookupError:
+        except LookupError as exc:
+            logger.debug("skipping recall candidate %s: %s", entry.name, exc)
             continue
         tokens = _approx_tokens(content)
         if tokens_used + tokens <= token_budget:
@@ -645,7 +648,8 @@ def _append_guaranteed_chunks(
     for entry in [e for e in guaranteed if e.force_position == "prepend"]:
         try:
             content, source = _fetch_instruction_content(entry)
-        except LookupError:
+        except LookupError as exc:
+            logger.warning("guaranteed prepend instruction %s unavailable: %s", entry.name, exc)
             continue
         tokens = _approx_tokens(content)
         chunks.insert(0, _make_chunk(entry, content, tokens, source, score=1.0))
@@ -657,7 +661,8 @@ def _append_guaranteed_chunks(
     for entry in [e for e in guaranteed if e.force_position != "prepend"]:
         try:
             content, source = _fetch_instruction_content(entry)
-        except LookupError:
+        except LookupError as exc:
+            logger.warning("guaranteed append instruction %s unavailable: %s", entry.name, exc)
             continue
         tokens = _approx_tokens(content)
         chunks.append(_make_chunk(entry, content, tokens, source, score=1.0))

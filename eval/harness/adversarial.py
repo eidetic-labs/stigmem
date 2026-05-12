@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import sys
 import time
 from typing import Any
 
@@ -414,6 +415,7 @@ def run_capability_token(
             else:
                 resp = client.get(endpoint, headers=headers)
         except Exception as exc:
+            print(f"[adversarial] scenario {s['id']} request failed: {exc}", file=sys.stderr)
             results.append(
                 {
                     "id": s["id"],
@@ -428,7 +430,8 @@ def run_capability_token(
         status = resp.status_code
         try:
             body_json = resp.json()
-        except Exception:
+        except ValueError as exc:
+            print(f"[adversarial] non-JSON response for {s['id']}: {exc}", file=sys.stderr)
             body_json = {}
 
         # Zero leakage check: response must not contain any fact data
@@ -539,7 +542,11 @@ def run_sanitizer_bypass(
         status = r.status_code
         try:
             resp_body = r.json()
-        except Exception:
+        except ValueError as exc:
+            print(
+                f"[adversarial] non-JSON sanitizer response for {s['id']}: {exc}",
+                file=sys.stderr,
+            )
             resp_body = {}
 
         passed = _sanitizer_passed(status, resp_body, s, subclass)

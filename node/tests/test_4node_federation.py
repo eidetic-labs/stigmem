@@ -20,7 +20,6 @@ the cluster boots once, runs all tests, then tears down.
 from __future__ import annotations
 
 import base64
-import contextlib
 import json
 import os
 import socket
@@ -366,9 +365,15 @@ def cluster(tmp_path_factory) -> Generator[list[NodeInfo], None, None]:
             try:
                 proc.terminate()
                 proc.wait(timeout=5)
-            except Exception:
-                with contextlib.suppress(Exception):
+            except (subprocess.TimeoutExpired, OSError) as exc:
+                print(
+                    f"cluster process did not terminate cleanly; killing it: {exc}",
+                    file=sys.stderr,
+                )
+                try:
                     proc.kill()
+                except OSError as kill_exc:
+                    print(f"cluster process kill failed: {kill_exc}", file=sys.stderr)
         # Brief sleep to allow OS to fully release ports before next test run
         time.sleep(1)
 

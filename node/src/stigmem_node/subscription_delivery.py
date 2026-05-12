@@ -15,6 +15,7 @@ Garden ACL (§17) and content sanitizer (§19) are applied at delivery time.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import sys
@@ -411,10 +412,9 @@ def _mark_delivered(event_id: str, subscription_id: str) -> None:
 
 async def sweep_loop() -> None:
     """Long-running asyncio task: runs deliver_pending() every N seconds."""
-    import asyncio
-    from contextlib import suppress
-
     while True:
         await asyncio.sleep(_settings_pkg.settings.subscription_delivery_sweep_s)
-        with suppress(Exception):
+        try:
             await asyncio.to_thread(deliver_pending)
+        except Exception as exc:
+            logger.exception("subscription delivery sweep failed: %s", exc)

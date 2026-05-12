@@ -123,7 +123,11 @@ def main() -> int:
     for filepath in files:
         try:
             lines = filepath.read_text(encoding="utf-8").splitlines()
-        except (UnicodeDecodeError, OSError):
+        except UnicodeDecodeError as exc:
+            all_violations.append(f"{filepath}: could not decode as UTF-8: {exc}")
+            continue
+        except OSError as exc:
+            all_violations.append(f"{filepath}: could not read file: {exc}")
             continue
 
         all_violations.extend(

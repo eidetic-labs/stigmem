@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import sqlite3
 import time
 import uuid
@@ -25,6 +26,8 @@ from cryptography.hazmat.primitives.serialization import (
 from stigmem_node.db import db as _db_ctx
 from stigmem_node.federation_ingest import ingest_fact
 from stigmem_node.federation_pull import load_cursor, save_cursor
+
+logger = logging.getLogger(__name__)
 
 
 def _generate_ed25519_b64() -> tuple[str, str]:
@@ -863,7 +866,8 @@ class TestMaliciousPeer:
                 mod = importlib.import_module(mod_name)
                 if hasattr(mod, "settings"):
                     monkeypatch.setattr(mod, "settings", new_settings)
-            except ImportError:
+            except ImportError as exc:
+                logger.debug("patchable federation module %s unavailable: %s", mod_name, exc)
                 continue
 
         pub, priv = _generate_ed25519_b64()

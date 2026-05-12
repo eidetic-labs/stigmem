@@ -94,7 +94,8 @@ class ProbeTracker:
                     continue
                 try:
                     p = json.loads(line)
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as exc:
+                    logger.warning("skipping malformed probe record in %s: %s", PROBES_PATH, exc)
                     continue
                 key = p["fact_id"]
                 with self._lock:

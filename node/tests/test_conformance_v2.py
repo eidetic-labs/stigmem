@@ -23,8 +23,8 @@ Vector fields (inherits all v1 types, plus v2.0 additions):
 
 from __future__ import annotations
 
-import contextlib
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +33,7 @@ from fastapi.testclient import TestClient
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _VECTOR_DIR = _REPO_ROOT / "data" / "conformance" / "v2.0"
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -254,9 +255,11 @@ def test_conformance_vector_v2(client: TestClient, vector: dict[str, Any]) -> No
     _run_setup_chain(client, vector)
 
     resp = _do_request(client, vector)
-    body: Any = {}
-    with contextlib.suppress(Exception):
+    try:
         body = resp.json()
+    except ValueError as exc:
+        logger.debug("%s: response body is not JSON: %s", ctx, exc)
+        body = {}
 
     _v2_assert_status(resp, vector, ctx)
 

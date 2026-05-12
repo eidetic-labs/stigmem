@@ -231,12 +231,16 @@ def test_fuzz_arbitrary_json_never_crashes(payload: dict) -> None:
 
     try:
         verify_token(token_json, lambda _: None, trust_mode="relaxed")
-    except CapabilityTokenError:
-        pass  # expected
+    except CapabilityTokenError as exc:
+        expected_error = exc
     except Exception as exc:
         raise AssertionError(
             f"verify_token raised unexpected {type(exc).__name__}: {exc}\nInput: {token_json[:300]}"
         ) from exc
+    else:
+        expected_error = None
+
+    assert expected_error is None or isinstance(expected_error, CapabilityTokenError)
 
 
 # ---------------------------------------------------------------------------
@@ -271,16 +275,19 @@ def test_fuzz_mutated_signed_field_rejected(field_name: str, new_value: str) -> 
 
     try:
         verify_token(token_json, _manifest_lookup, trust_mode="relaxed")
-        # If we reach here without exception, the verifier accepted a mutated token.
-        # This is a security regression.
-        pytest.fail(f"verify_token accepted a token with mutated {field_name!r}={new_value!r}")
-    except CapabilityTokenError:
-        pass  # expected
+    except CapabilityTokenError as exc:
+        expected_error = exc
     except Exception as exc:
         raise AssertionError(
             f"unexpected exception {type(exc).__name__}: {exc} "
             f"when mutating {field_name!r}={new_value!r}"
         ) from exc
+    else:
+        expected_error = None
+
+    assert expected_error is not None, (
+        f"verify_token accepted a token with mutated {field_name!r}={new_value!r}"
+    )
 
 
 # ---------------------------------------------------------------------------

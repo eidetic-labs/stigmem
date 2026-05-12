@@ -9,7 +9,7 @@ import ssl
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import uvicorn
 from fastapi import Depends, FastAPI, Request, Response
@@ -91,12 +91,12 @@ def create_app() -> FastAPI:
 
         sweep_task.cancel()
         with suppress(asyncio.CancelledError):
-            await sweep_task
+            _unused_result = await cast("asyncio.Task[object]", sweep_task)
 
         if pull_task is not None:
             pull_task.cancel()
             with suppress(asyncio.CancelledError):
-                await pull_task
+                _unused_result = await cast("asyncio.Task[object]", pull_task)
 
     app = FastAPI(
         title="Stigmem Reference Node",
@@ -240,7 +240,7 @@ def run() -> None:
             if watcher_task is not None:
                 watcher_task.cancel()
                 with suppress(asyncio.CancelledError):
-                    await watcher_task
+                    _unused_result = await cast("asyncio.Task[object]", watcher_task)
 
     config.setup_event_loop()
     asyncio.run(_serve_with_cert_watcher())

@@ -26,7 +26,7 @@ class StorageBackend(ABC):
     @abstractmethod
     def backend_name(self) -> str:
         """Short identifier returned in ``/.well-known/stigmem`` and logs, e.g. ``'sqlite'``."""
-        ...
+        raise NotImplementedError
 
     @abstractmethod
     @contextmanager
@@ -39,7 +39,7 @@ class StorageBackend(ABC):
           * Always closes the underlying connection.
           * Rows must support column access by name (``row["column"]``).
         """
-        ...
+        raise NotImplementedError
 
     @abstractmethod
     def apply_migrations(self, migrations_dir: Path) -> None:
@@ -48,7 +48,7 @@ class StorageBackend(ABC):
         Implementations must be idempotent — already-applied versions (tracked in
         ``schema_migrations``) must be silently skipped.
         """
-        ...
+        raise NotImplementedError
 
     def export_snapshot(self, dest: Path) -> None:
         """Export a point-in-time snapshot to *dest*.

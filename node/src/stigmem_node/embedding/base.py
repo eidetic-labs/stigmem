@@ -18,13 +18,13 @@ class EmbeddingModel(ABC):
     @abstractmethod
     def model_id(self) -> str:
         """Stable identifier for this model, e.g. ``'nomic-embed-text-v1.5'``."""
-        ...
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def dimension(self) -> int:
         """Output vector dimensionality."""
-        ...
+        raise NotImplementedError
 
     @abstractmethod
     def embed(self, texts: list[str]) -> list[Vector]:
@@ -33,7 +33,7 @@ class EmbeddingModel(ABC):
         Returns one vector per input text, in the same order.
         Raises ``EmbeddingError`` on unrecoverable failures.
         """
-        ...
+        raise NotImplementedError
 
 
 class EmbeddingError(RuntimeError):

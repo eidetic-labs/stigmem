@@ -31,7 +31,8 @@ class BillingEvent:
 
 @runtime_checkable
 class HookBus(Protocol):
-    def emit(self, event: BillingEvent) -> None: ...
+    def emit(self, event: BillingEvent) -> None:
+        raise NotImplementedError
 
 
 class LogHookBus:

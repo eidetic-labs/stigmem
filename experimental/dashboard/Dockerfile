@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 # Pin pnpm to the major version that produced pnpm-lock.yaml (matches
 # `packageManager` field in root package.json). Without this pin,
 # `npm install -g pnpm` installs the latest (10.x) and fails against
@@ -34,7 +34,7 @@ COPY . .
 RUN pnpm --filter dashboard build
 
 # ── runner ────────────────────────────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 

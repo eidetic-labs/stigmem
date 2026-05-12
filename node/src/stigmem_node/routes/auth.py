@@ -361,25 +361,23 @@ def register_static_key(
             (registered_id,),
         ).fetchone()
 
-    # NOTE: the ``audit_emit`` above is the authoritative record; this
-    # logger line is operator-grep convenience only.  Two CodeQL
-    # ``py/clear-text-logging-sensitive-data`` traps to avoid here, in
-    # priority order:
-    #   1. The message template must not contain ``key`` / ``password``
-    #      / ``secret`` / ``credential`` (CodeQL scans the literal).
-    #   2. No argument may be reachable from the request body — the
-    #      analyzer taints the entire ``body`` object because of the
-    #      ``raw_key`` field, even on attribute reads that are clearly
-    #      non-credential (``body.entity_uri``).  Only ``registered_id``
-    #      (return of ``register_api_key``) and ``identity.entity_uri``
-    #      (from the auth dependency) are body-independent and safe.
-    # Both rules are precision-gap dodges; same family as Pattern 4 in
-    # the lessons file.  Full per-field data lives in the audit row.
-    logger.info(
-        "auth registration: id=%s by=%s",
-        registered_id,
-        identity.entity_uri,
-    )
+    # Deliberately no ``logger.info`` here.  The ``audit_emit`` above is
+    # the authoritative record (event_type=admin_action), and a structured
+    # log line is operator-grep convenience at best.  CodeQL's
+    # ``py/clear-text-logging-sensitive-data`` taints any value that
+    # transitively flows from the request body's ``raw_key`` field —
+    # including the UUID returned by ``register_api_key`` (which takes
+    # ``raw_key`` as an argument).  No combination of message wording
+    # or local-variable substitution clears the taint while still
+    # logging something useful.  Operators query the audit log instead:
+    #
+    #     SELECT * FROM fact_audit_log
+    #      WHERE event_type='admin_action'
+    #        AND detail LIKE '%api_key_register%'
+    #      ORDER BY ts DESC;
+    #
+    # Same family as Pattern 4 / Pattern 12 in the lessons file —
+    # design-pivot away from the heuristic rather than fight it.
 
     return RegisterKeyResponse(
         id=registered_id,

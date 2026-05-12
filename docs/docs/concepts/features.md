@@ -118,9 +118,9 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 ## Experimental & deferred features
 
-The following features are in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) but are **not in v0.9.0a1's default install**. They graduate into the supported surface via the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) five-gate process and ship as opt-in plugins per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md) in the v0.9.0a2..a8 series:
+The following features are in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) but are **not in v0.9.0a1's default install**. Across the v0.9.0a2..a8 alpha series, cross-cutting features are extracted into opt-in experimental plugin packages per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md). That alpha extraction is not ADR-008 graduation; graduation into the supported surface happens later, after the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) five-gate process.
 
-| Feature                             | Spec § | the v0.9.0aN alpha series target |
+| Feature                             | Spec § | alpha extraction target |
 |-------------------------------------|--------|----------------|
 | Lazy instruction discovery          | §21    | v0.9.0a2 |
 | Time-travel `as_of` queries         | §24    | v0.9.0a4 |
@@ -136,7 +136,7 @@ The following features are in the codebase under [`experimental/<feature>/`](htt
 | Cloud embedding                     | —      | Deferred (R-20 accepted) |
 | Curator dashboard                   | —      | Deferred |
 | Billing hooks                       | —      | Deferred (commercial path) |
-| Async lint/decay job APIs           | —      | Blocked on lint/decay graduation |
+| Async lint/decay job APIs           | —      | Blocked on lint/decay extraction |
 
 See the full deferred-features list at [Experimental & Deferred Features](../reference/experimental-features.md).
 

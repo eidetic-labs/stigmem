@@ -289,7 +289,7 @@ Nodes MUST synchronise their system clocks via NTP (or equivalent). Operators SH
 This section specifies the normative security posture for reference operator container images published by Eidetic-Labs. Third-party operators running Stigmem from source SHOULD adopt the same baseline.
 
 :::note v0.9.0a1 status
-The Docker / Docker Compose requirements in this section apply to the supported v0.9.0a1 deployment surface. Requirements that reference reference **Helm charts** or **Kubernetes manifests** apply conditionally: in v0.9.0a1 those deployment surfaces are deferred to [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) and unsupported until they pass the [ADR-008 reintroduction gates](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). The normative requirements take effect for any reference chart at the moment of graduation.
+The Docker / Docker Compose requirements in this section apply to the supported v0.9.0a1 deployment surface. Requirements that reference reference **Helm charts** or **Kubernetes manifests** apply conditionally: in v0.9.0a1 those deployment surfaces are deferred to [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) and unsupported until they pass the [ADR-008 reintroduction gates](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). The normative requirements take effect for any reference chart at the moment of ADR-008 promotion into the supported surface.
 :::
 
 #### §22.6.2 Distroless Image {#section-22-6-2}
@@ -403,4 +403,3 @@ The Sigstore/Rekor root signing key is subject to rotation (a root key rotation 
 ### §22.1.3.4 {#section-22-1-3-4}
 
 ### §22.1.3.5 {#section-22-1-3-5}
-

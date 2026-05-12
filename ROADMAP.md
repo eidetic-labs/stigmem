@@ -35,7 +35,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [x] **Deferred-feature layout** — out-of-scope features live under `experimental/` per ADR-009; CIDs remain core per ADR-017.
 - [x] **Hook registry foundation** — main now includes the stable 22-hook registry surface, typed hook semantics, deterministic manual/core registration, minimum `PluginManifest` / `PluginContext` / capability APIs, hook-site wiring, audit/migration plumbing, test registry helpers, and the hook-firing benchmark gate.
 - [ ] **Remaining plugin infrastructure** — package discovery, plugin dependency lifecycle, health polling, operator CLI, production signing/trust, plugin author/operator documentation, and full plugin migration lifecycle/checksum tracking.
-- [ ] **Per-feature plugin extraction** — lazy instruction discovery, time-travel, tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation graduate into opt-in plugin packages across the alpha series. CIDs remain core.
+- [ ] **Per-feature plugin extraction** — lazy instruction discovery, time-travel, tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation are extracted into opt-in experimental plugin packages across the alpha series. CIDs remain core.
 - [ ] **Next-alpha artifact refresh** — pick up the live retraction URL in packaged READMEs, TypeScript SDK README, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literal, wheel migration packaging fix, and ongoing lint/coverage/complexity ratchets.
 
 ### Exit criteria
@@ -166,11 +166,34 @@ The pre-reset stigmem spec was a single monolithic document with sections number
 
 ---
 
-## Spec graduation process
+## Experimental extraction vs. graduation
 
-When does a spec move from `Spec-X*` (experimental) to `Spec-NN` (core)?
+The alpha series and ADR-008 describe two different moves:
 
-Per [ADR-008](docs/adr/008-experimental-gates.md): **all five gates pass.** Each gate produces a concrete artifact; only after the founder (or two contributors per ADR-001 §Contributor approval rule) signs off on all five does the feature graduate.
+- **Alpha extraction (`v0.9.0aN`)** moves feature-specific code and spec text out of core and into opt-in experimental plugin packages. This preserves the v1.0.0 default-install scope while making the experimental feature easier to test. It does **not** make the feature supported, stable, or default-on.
+- **ADR-008 graduation (`v1.x.y`, post-GA)** promotes an experimental feature into the supported surface after the five reintroduction gates pass. For cross-cutting features, the plugin remains a plugin; graduation changes its support/trust tier, not its architectural home.
+
+### Alpha extraction process
+
+During the alpha series, a feature can be extracted into an opt-in experimental plugin when the extraction preserves default-install behavior and the package is clearly marked as experimental.
+
+Required extraction artifacts:
+
+| Artifact | Purpose |
+|---|---|
+| Plugin package | `stigmem-plugin-<feature>` package with manifest, hook registrations, and tests |
+| Spec placement | `experimental/<feature>/spec.md` remains the authoritative experimental spec text |
+| Status file | `experimental/<feature>/STATUS.md` records extraction status, known gaps, and ADR-008 gate status |
+| Compatibility note | Docs state that the plugin is opt-in, experimental, and not part of the stable/default surface |
+| Changelog entry | Records the extraction and any migration instructions for existing alpha users |
+
+Extraction should include targeted tests for the plugin boundary and default-install no-op behavior. It does not require the ADR-008 30-day soak.
+
+### ADR-008 graduation process
+
+When does a spec move from `Spec-X*` (experimental) toward `Spec-NN` (supported/core spec)?
+
+Per [ADR-008](docs/adr/008-experimental-gates.md): **all five gates pass.** Each gate produces a concrete artifact; only after the founder (or two contributors per ADR-001 §Contributor approval rule) signs off on all five does the feature graduate into the supported surface.
 
 ### The five gates
 
@@ -184,36 +207,38 @@ Per [ADR-008](docs/adr/008-experimental-gates.md): **all five gates pass.** Each
 
 Order matters per ADR-008: 1 before 2, 3 before 4, 5 last. Skipping requires explicit two-contributor sign-off recorded in the feature's ADR.
 
-### What changes when a spec graduates (worked example)
+### What changes during alpha extraction (worked example)
 
-Using `Spec-X1-Lazy-Instruction-Discovery` graduating at v0.9.0a2 as the worked case:
+Using `Spec-X1-Lazy-Instruction-Discovery` being extracted at v0.9.0a2 as the worked case:
 
-| Surface | Before graduation (v0.9.0a1) | After graduation (v0.9.0a2) |
+| Surface | Before extraction (v0.9.0a1) | After extraction (v0.9.0a2) |
 |---|---|---|
-| Spec content | `experimental/lazy-instruction-discovery/spec.md` (Spec-X1) | Migrated into core spec under a new `Spec-NN-Lazy-Instruction-Discovery` ID once the modular spec migration lands; until then, content moves into the canonical `spec/stigmem-spec-v0.9.0aN.md` |
+| Spec content | `experimental/lazy-instruction-discovery/spec.md` (Spec-X1) | Remains experimental under `experimental/lazy-instruction-discovery/spec.md` until a future ADR-008 graduation |
 | Plugin package | Not published | `stigmem-plugin-lazy-instruction-discovery` published to PyPI |
 | Default install behavior | Routes mounted but feature dormant unless configured (per LIMITATIONS §11) | Plugin is opt-in; default install is unchanged in user-visible behavior. Operators who want the feature install the plugin |
-| `experimental/<feature>/STATUS.md` | `Status: Dormant`, all 5 gates Open | `Status: Graduated`, all 5 gates Done with dates |
+| `experimental/<feature>/STATUS.md` | `Status: Dormant`, ADR-008 gates Open | `Status: Extracted / opt-in experimental`, ADR-008 gates still Open unless separately completed |
 | `ROADMAP.md` v0.9.0aN work table | This row | ✅ Done; deleted from the in-flight table; called out in the changelog |
-| `concepts/features.md` | `stability: experimental` | `stability: stable` (or `beta` if the feature ships behind a flag) |
-| `docs/compatibility-matrix.yaml` | `stability: experimental` for the feature | Updated stability tier + concrete version requirements |
-| `CHANGELOG.md` | — | Entry under `### Added` for v0.9.0a2 noting the graduation, the gate evidence, and the migration notes for adopters |
-| `spec/EVOLUTION.md` | — | Entry recording the protocol-release-level spec change (Spec-X1 → graduated; new spec-set composition for v0.9.0a2) |
-| `data/conformance/lazy-instruction-discovery/` | empty | Adversarial + behavioral vectors required by Gate 3 |
+| `concepts/features.md` | Experimental; embedded/dormant implementation acknowledged | Experimental; opt-in plugin package available |
+| `docs/compatibility-matrix.yaml` | `stability: experimental` for the feature | Still `stability: experimental`; version requirements point at the plugin package |
+| `CHANGELOG.md` | — | Entry under `### Added` for v0.9.0a2 noting the extraction and migration notes for alpha users |
+| `spec/EVOLUTION.md` | — | Entry recording the alpha extraction while preserving `Spec-X1` status |
+| `data/conformance/lazy-instruction-discovery/` | optional/empty | Targeted plugin-boundary tests; full ADR-008 conformance vectors arrive before graduation |
 
-### What does NOT happen automatically
+### What does NOT happen during alpha extraction
 
-- The feature does **not** become default-on. Plugin architecture per [ADR-011](docs/adr/011-cross-cutting-extraction.md) means graduated cross-cutting features are shipped as opt-in plugins. "Graduated" means the feature passed quality bars, not that every adopter gets it.
-- The legacy `§N` reference is **not** silently removed from older docs. Cross-references in archived snapshots at `spec/archive/evolution/` continue to use the original numbering for historical accuracy.
-- Older releases are **not** retroactively updated. v0.9.0a1 remains a published, immutable release; the graduation lands in v0.9.0a2's release artifacts.
+- The feature does **not** become default-on. Plugin architecture per [ADR-011](docs/adr/011-cross-cutting-extraction.md) means extracted cross-cutting features are shipped as opt-in plugins.
+- The feature does **not** become supported or stable. Stability remains experimental until ADR-008 gates pass.
+- The feature does **not** move from `Spec-X*` to `Spec-NN`. That is a later graduation step.
+- The ADR-008 five-gate process is **not** bypassed; it is simply not the alpha extraction gate.
+- Older releases are **not** retroactively updated. v0.9.0a1 remains a published, immutable release; the extraction lands in v0.9.0a2's release artifacts.
 
-### What the founder reviews at graduation
+### What the founder reviews at ADR-008 graduation
 
 A graduation PR should include:
 1. The five gate artifacts above
-2. The ROADMAP.md row update (this row → ✅ Done)
+2. The ROADMAP.md supported-surface update
 3. The CHANGELOG entry under `### Added` for the graduating release
-4. The `experimental/<feature>/STATUS.md` flip from Dormant → Graduated with all five gate dates
+4. The `experimental/<feature>/STATUS.md` flip from Experimental → Graduated with all five gate dates
 5. The `concepts/features.md` row update
 6. The `compatibility-matrix.yaml` update
 

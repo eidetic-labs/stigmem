@@ -12,7 +12,7 @@ audience: Operator
 **Source recipes:** [`deploy/compose/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/compose) in the repo.
 
 :::caution Scope in v0.9.0a1
-The only **Stable** deployment surface in v0.9.0a1 is the Docker Compose reference deployment. Fly.io, Helm/Kubernetes, systemd, Grafana dashboards, and PaaS templates have been moved to `experimental/deploy-*/` per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) and are gated by the [ADR-008 reintroduction process](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). Recipes still exist as starting points but are unsupported until they graduate. See **[Features → Deployment](../../concepts/features#operations-v090a1-critical-path)** for the full disposition.
+The only **Stable** deployment surface in v0.9.0a1 is the Docker Compose reference deployment. Fly.io, Helm/Kubernetes, systemd, Grafana dashboards, and PaaS templates have been moved to `experimental/deploy-*/` per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) and are gated by the [ADR-008 reintroduction process](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). Recipes still exist as starting points but are unsupported until they pass ADR-008 promotion. See **[Features → Deployment](../../concepts/features#operations-v090a1-critical-path)** for the full disposition.
 :::
 
 ---

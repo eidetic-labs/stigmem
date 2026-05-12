@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import os
 import statistics
 import time
 
 import pytest
 
 from stigmem_node.plugins import Allow, HookRegistry, PluginContext, PluginManifest
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("STIGMEM_RUN_PLUGIN_BENCHMARKS") != "1",
+    reason="plugin hook microbenchmarks run only in the dedicated benchmark gate",
+)
 
 _BUDGET_NS = 10_000
 _ITERATIONS = 5_000

@@ -34,4 +34,6 @@ jobs:
 
       - name: Run hook-firing budget tests
         working-directory: node
+        env:
+          STIGMEM_RUN_PLUGIN_BENCHMARKS: "1"
         run: uv run pytest tests/plugins/benchmarks/test_hook_firing_budget.py -q

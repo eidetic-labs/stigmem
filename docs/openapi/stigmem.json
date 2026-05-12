@@ -2561,6 +2561,129 @@
         "title": "RecallWeights",
         "type": "object"
       },
+      "RegisterKeyRequest": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "entity_uri": {
+            "minLength": 1,
+            "title": "Entity Uri",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ISO-8601 timestamp; omit for no expiry.",
+            "title": "Expires At"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "raw_key": {
+            "description": "Caller-generated raw key material (e.g. `openssl rand -hex 32`). The node hashes it and never stores or echoes the raw value.",
+            "minLength": 32,
+            "title": "Raw Key",
+            "type": "string"
+          },
+          "tenant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Target tenant; defaults to the caller's tenant.",
+            "title": "Tenant Id"
+          }
+        },
+        "required": [
+          "raw_key",
+          "entity_uri"
+        ],
+        "title": "RegisterKeyRequest",
+        "type": "object"
+      },
+      "RegisterKeyResponse": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "entity_uri": {
+            "title": "Entity Uri",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "entity_uri",
+          "permissions",
+          "description",
+          "created_at",
+          "expires_at",
+          "tenant_id"
+        ],
+        "title": "RegisterKeyResponse",
+        "type": "object"
+      },
       "ScoreBreakdown": {
         "properties": {
           "graph": {
@@ -4342,6 +4465,51 @@
           }
         ],
         "summary": "List Keys",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "Register a caller-provided raw API key.\n\nMirrors the bootstrap CLI's posture: the caller supplies the raw key\nmaterial; the node hashes and stores it.  The endpoint requires the\ncaller to hold the ``admin`` capability \u2014 typically the bootstrap\nkey, or a previously-minted admin-scoped key.\n\nThe response NEVER echoes the raw key; the caller already has it.",
+        "operationId": "register_static_key_v1_auth_keys_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterKeyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Register a caller-provided static API key (admin only).",
         "tags": [
           "auth"
         ]

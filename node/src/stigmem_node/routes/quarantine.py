@@ -148,7 +148,7 @@ def admit_fact(
     """
     _require_write(identity)
 
-    fact_row, garden = _get_quarantined_fact(fact_id, identity)
+    _get_quarantined_fact(fact_id, identity)
     now = datetime.now(UTC).isoformat()
 
     # Resolve target garden
@@ -201,7 +201,7 @@ def reject_fact(
     """
     _require_write(identity)
 
-    fact_row, garden = _get_quarantined_fact(fact_id, identity)
+    _get_quarantined_fact(fact_id, identity)
     now = datetime.now(UTC).isoformat()
 
     with db() as conn:

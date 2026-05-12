@@ -103,9 +103,9 @@ Use CVSS v3.1 as the primary severity signal. For Stigmem-specific surfaces:
 
 ## Security posture — v0.9.0a1
 
-> **Posture-reset note.** The 2026-05-08 reset to `v0.9.0a1` carried forward the dependency-fix posture from the original `the pre-reset v1.0-rc snapshot` 2026-05-03 snapshot — the same patched package versions are still in effect. Several **threat-model** controls (mTLS-default federation, persistent audit log, per-principal rate limits, capability-level cross-org instruction validation, bounded HLC skew, the ADR-016 storage-immutability stack) are scheduled for the v0.9.0bN beta series and are **not yet in effect** at v0.9.0a1. Adopters running federation across organizational boundaries should wait for the v0.9.0bN beta series per `LIMITATIONS.md` at the repo root: [github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md). The canonical security posture lives in repo-root `SECURITY.md`; this page mirrors the dependency-alert summary.
+> **Posture-reset note.** The 2026-05-08 reset to `v0.9.0a1` carried forward the dependency-fix posture from the withdrawn v1.0 release-candidate snapshot — the same patched package versions are still in effect. Several **threat-model** controls (mTLS-default federation, persistent audit log, per-principal rate limits, capability-level cross-org instruction validation, bounded HLC skew, the ADR-016 storage-immutability stack) are scheduled for the v0.9.0bN beta series and are **not yet in effect** at v0.9.0a1. Adopters running federation across organizational boundaries should wait for the v0.9.0bN beta series per `LIMITATIONS.md` at the repo root: [github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md). The canonical security posture lives in repo-root `SECURITY.md`; this page mirrors the dependency-alert summary.
 
-The dependency-alert posture (carried forward from the 2026-05-03 the pre-reset v1.0-rc snapshot snapshot to v0.9.0a1) has **zero unaddressed Dependabot alerts**:
+The dependency-alert posture carried forward to v0.9.0a1 has **zero unaddressed Dependabot alerts**:
 
 | Category | Count |
 | -------- | ----- |

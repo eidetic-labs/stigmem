@@ -16,7 +16,7 @@ sidebar_position: 1
 
 | Status | Count | Description |
 |---|---|---|
-| **Mitigated** | 11 | mTLS, quotas, key max-age, audit log, replay fuzz, capability tokens, container hardening — see [threat model §8.1](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md#81-phase-12--shipped-and-verified-v20-baseline) |
+| **Mitigated** | 11 | mTLS, quotas, key max-age, audit log, replay fuzz, capability tokens, container hardening — see the [threat model risk register](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md) |
 | **Residual** | 5 | Prompt injection (R-05), at-rest encryption opt-in (R-04), Obsidian plugin key storage (R-07), cloud embedding residency (R-13), HLC cursor manipulation (T2-T2) |
 | **Open** | 11 | R-15 instruction-scope injection, R-16 RTBF DoS, R-17 legal-hold exposure, R-18 CID field-exclusion, R-19 HLC manipulation, R-21 agent feedback-loop worm, R-22 release supply-chain, R-23 admin-level storage tampering, plus three older R-XX requiring follow-up |
 | **Accepted** | 1 | R-20 cloud embedding poisoning (operator opt-in only) |
@@ -37,7 +37,7 @@ For the trust boundary against prompt injection (L1–L6): see [ADR-003](https:/
 
 Per [LIMITATIONS.md §11](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md): the default install of v0.9.0a1 ships with feature-specific code in `node/src/stigmem_node/` for features deferred from v1.0 critical-path scope per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md). The routes are mounted but the features are dormant unless explicitly configured (capability tokens, migrations, manifests). Per [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md).
 
-PR 4-INF.1 merged in [PR #137](https://github.com/Eidetic-Labs/stigmem/pull/137). It introduces the 22-hook registry foundation and plugin test harness needed for extraction work, but production plugin loading, signing enforcement, operator CLI, and per-feature plugin packages remain future PR 4 work.
+Main now includes the 22-hook registry foundation and plugin test harness needed for extraction work, but production plugin loading, signing enforcement, operator CLI, and per-feature plugin packages remain future alpha-series work.
 
 **For v0.9.0a1 evaluators:** the user-visible default behavior matches v1.0 critical-path scope (single-tenant, no tombstones, no time-travel, no advanced ACL). Architecturally, the cross-cutting code is still in core; that's a known gap with a documented v0.9.0a2..a8 extraction roadmap.
 
@@ -75,7 +75,7 @@ PR 4-INF.1 merged in [PR #137](https://github.com/Eidetic-Labs/stigmem/pull/137)
 The protocol specification is the contract security depends on. It lives under Secure per ADR-005:
 
 - **[Specification index](../spec/index.md)** — section navigator with disposition table (which sections are stable in v0.9.0a1, which are deferred to `experimental/<feature>/`).
-- **[Canonical spec source](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)** — `spec/stigmem-spec-v0.9.0a1.md`. Section-by-section content review against `node/` implementation in flight per master-checklist §4.3a.
+- **[Canonical spec source](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)** — `spec/stigmem-spec-v0.9.0a1.md`. Section-by-section content review against the `node/` implementation is ongoing.
 
 ## Experimental & deferred features
 

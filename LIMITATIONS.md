@@ -129,7 +129,7 @@ The capability-based redesign (where facts carry an `interpret_as` field that de
 
 The v0.9.0bN beta series brings: Argon2id migration with backward-compatible verification (per ADR-007), enforced max-age, automated rotation runbooks, and an "expiring soon" admin surface.
 
-**Why this wasn't caught earlier:** an earlier draft of this section said "Argon2id-hashed at rest (good)" — that was wrong; the code uses raw SHA-256. Caught and corrected during pre-publish gate review for v0.9.0a1.
+**Why this wasn't caught earlier:** an earlier draft of this section said "Argon2id-hashed at rest (good)" — that was wrong; the code uses raw SHA-256. Caught and corrected during release-readiness review for v0.9.0a1.
 
 ---
 
@@ -317,7 +317,7 @@ This is by design as the alpha-line iteration semantics ([ADR-019](docs/adr/019-
 
 **What changes between now and v1.0.0.** v0.9.0a2 through v0.9.0a8 each extract one cross-cutting feature into a separate plugin package (`stigmem-plugin-<feature>`). After v0.9.0a8, the default install will be true to ADR-011's commitment: core has no feature-specific code; cross-cutting concerns are expressed exclusively through the hook registry; plugins are opt-in.
 
-**Current implementation status.** The first plugin-infrastructure slice, PR 4-INF.1, merged in [PR #137](https://github.com/Eidetic-Labs/stigmem/pull/137). It adds the registry foundation and stable 22-hook call surface needed to test extension points against the default install. It does not yet load installed third-party plugins from entry points, enforce production signing, provide `stigmem plugins` operator commands, or extract any cross-cutting feature into an `experimental/<feature>/` plugin package.
+**Current implementation status.** Main now includes the registry foundation and stable 22-hook call surface needed to test extension points against the default install. It does not yet load installed third-party plugins from entry points, enforce production signing, provide `stigmem plugins` operator commands, or extract any cross-cutting feature into an `experimental/<feature>/` plugin package.
 
 [The retraction post](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) calls this gap out explicitly. We chose to ship the honest reset before completing the architectural cleanup so adopters read against the actual shipped artifacts rather than future-state claims.
 

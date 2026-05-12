@@ -9,7 +9,7 @@ sidebar_position: 6
 # Stigmem Protocol Specification
 
 :::note Authoritative source
-Canonical spec is [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md). Each section below renders the canonical source text inline (review-and-migrate in flight per master-checklist §4.3a). Earlier evolutionary snapshots (`pre-reset` through `v2.0`) are at [`spec/archive/evolution/`](https://github.com/Eidetic-Labs/stigmem/tree/main/spec/archive/evolution).
+Canonical spec is [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md). Each section below renders the canonical source text inline while section-by-section review against the reference implementation continues. Earlier evolutionary snapshots (`pre-reset` through `v2.0`) are at [`spec/archive/evolution/`](https://github.com/Eidetic-Labs/stigmem/tree/main/spec/archive/evolution).
 :::
 
 :::info Security disclosure

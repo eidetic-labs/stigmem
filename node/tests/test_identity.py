@@ -8,7 +8,6 @@ C3: end-to-end audit log joining principal, attested-source, fact-id
 from __future__ import annotations
 
 import base64
-import json
 from collections.abc import Generator
 from typing import Any
 
@@ -24,14 +23,13 @@ from fastapi.testclient import TestClient
 
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
-import stigmem_node.routes.facts as facts_mod
 import stigmem_node.routes.agent_keys as agent_keys_mod
+import stigmem_node.routes.facts as facts_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.auth import create_api_key
 from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -43,7 +41,9 @@ def _gen_keypair() -> tuple[Ed25519PrivateKey, str, str]:
     priv = Ed25519PrivateKey.generate()
     pub = priv.public_key()
     priv_b64 = (
-        base64.urlsafe_b64encode(priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption()))
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
         .decode()
         .rstrip("=")
     )
@@ -73,7 +73,7 @@ def _sign_assertion(
 ) -> str:
     """Produce a base64url Ed25519 signature over the canonical assertion message."""
     encoded_v = _encode_v(value_type, value_v)
-    msg = f"{entity}\n{relation}\n{value_type}\n{encoded_v}\n{source}".encode("utf-8")
+    msg = f"{entity}\n{relation}\n{value_type}\n{encoded_v}\n{source}".encode()
     return base64.urlsafe_b64encode(priv.sign(msg)).decode().rstrip("=")
 
 
@@ -227,7 +227,9 @@ def test_c1_revoke_other_entity_key_forbidden(attest_client: tuple[TestClient, s
     key_id = reg.json()["id"]
 
     tester_key = create_api_key("agent:tester", ["read", "write"])
-    r = client.delete(f"/v1/auth/agent-keys/{key_id}", headers={"Authorization": f"Bearer {tester_key}"})
+    r = client.delete(
+        f"/v1/auth/agent-keys/{key_id}", headers={"Authorization": f"Bearer {tester_key}"}
+    )
     assert r.status_code == 403
 
 
@@ -411,7 +413,12 @@ def test_c3_assert_creates_audit_entry(attest_client: tuple[TestClient, str]) ->
 
     r = client.post(
         "/v1/facts",
-        json={"entity": "agent:tester", "relation": "x:y", "value": {"type": "string", "v": "z"}, "source": "agent:tester"},
+        json={
+            "entity": "agent:tester",
+            "relation": "x:y",
+            "value": {"type": "string", "v": "z"},
+            "source": "agent:tester",
+        },
         headers={"Authorization": f"Bearer {key}"},
     )
     fact_id = r.json()["id"]
@@ -434,12 +441,19 @@ def test_c3_audit_records_oidc_sub(attest_client: tuple[TestClient, str]) -> Non
 
     r = client.post(
         "/v1/facts",
-        json={"entity": "oidc:human-42", "relation": "x:y", "value": {"type": "string", "v": "z"}, "source": "oidc:human-42"},
+        json={
+            "entity": "oidc:human-42",
+            "relation": "x:y",
+            "value": {"type": "string", "v": "z"},
+            "source": "oidc:human-42",
+        },
         headers={"Authorization": f"Bearer {oidc_key}"},
     )
     fact_id = r.json()["id"]
 
-    audit = client.get(f"/v1/audit/facts/{fact_id}", headers={"Authorization": f"Bearer {oidc_key}"})
+    audit = client.get(
+        f"/v1/audit/facts/{fact_id}", headers={"Authorization": f"Bearer {oidc_key}"}
+    )
     e = audit.json()[0]
     assert e["entity_uri"] == "oidc:human-42"
     assert e["oidc_sub"] == "human-42"
@@ -465,7 +479,10 @@ def test_c3_audit_records_attested_key_id(attest_client: tuple[TestClient, str])
     r = client.post(
         "/v1/facts",
         json={
-            "entity": entity, "relation": relation, "value": value, "source": source,
+            "entity": entity,
+            "relation": relation,
+            "value": value,
+            "source": source,
             "attestation": {"key_id": agent_key_id, "signature": sig},
         },
         headers={"Authorization": f"Bearer {key}"},
@@ -484,13 +501,23 @@ def test_c3_audit_query_by_entity(attest_client: tuple[TestClient, str]) -> None
     # Assert two facts from different entities
     client.post(
         "/v1/facts",
-        json={"entity": "agent:tester", "relation": "x:a", "value": {"type": "string", "v": "1"}, "source": "agent:tester"},
+        json={
+            "entity": "agent:tester",
+            "relation": "x:a",
+            "value": {"type": "string", "v": "1"},
+            "source": "agent:tester",
+        },
         headers={"Authorization": f"Bearer {key}"},
     )
     other_key = create_api_key("agent:other", ["read", "write"])
     client.post(
         "/v1/facts",
-        json={"entity": "agent:other", "relation": "x:b", "value": {"type": "string", "v": "2"}, "source": "agent:other"},
+        json={
+            "entity": "agent:other",
+            "relation": "x:b",
+            "value": {"type": "string", "v": "2"},
+            "source": "agent:other",
+        },
         headers={"Authorization": f"Bearer {other_key}"},
     )
 
@@ -508,36 +535,61 @@ def test_c3_audit_query_attested_filter(attest_client: tuple[TestClient, str]) -
     client, key = attest_client
     priv, pub_b64, _ = _gen_keypair()
 
-    reg = client.post("/v1/auth/agent-keys", json={"public_key": pub_b64}, headers={"Authorization": f"Bearer {key}"})
+    reg = client.post(
+        "/v1/auth/agent-keys",
+        json={"public_key": pub_b64},
+        headers={"Authorization": f"Bearer {key}"},
+    )
     agent_key_id = reg.json()["id"]
 
     # Unattested fact
     client.post(
         "/v1/facts",
-        json={"entity": "agent:tester", "relation": "x:unattested", "value": {"type": "string", "v": "u"}, "source": "agent:tester"},
+        json={
+            "entity": "agent:tester",
+            "relation": "x:unattested",
+            "value": {"type": "string", "v": "u"},
+            "source": "agent:tester",
+        },
         headers={"Authorization": f"Bearer {key}"},
     )
 
     # Attested fact
-    entity, relation, value, source = "agent:tester", "x:attested", {"type": "string", "v": "a"}, "agent:tester"
+    entity, relation, value, source = (
+        "agent:tester",
+        "x:attested",
+        {"type": "string", "v": "a"},
+        "agent:tester",
+    )
     sig = _sign_assertion(priv, entity, relation, value["type"], value["v"], source)
     client.post(
         "/v1/facts",
-        json={"entity": entity, "relation": relation, "value": value, "source": source,
-              "attestation": {"key_id": agent_key_id, "signature": sig}},
+        json={
+            "entity": entity,
+            "relation": relation,
+            "value": value,
+            "source": source,
+            "attestation": {"key_id": agent_key_id, "signature": sig},
+        },
         headers={"Authorization": f"Bearer {key}"},
     )
 
-    r = client.get("/v1/audit", params={"attested": "true"}, headers={"Authorization": f"Bearer {key}"})
+    r = client.get(
+        "/v1/audit", params={"attested": "true"}, headers={"Authorization": f"Bearer {key}"}
+    )
     attested_entries = r.json()["entries"]
     assert all(e["attested_key_id"] is not None for e in attested_entries)
 
-    r2 = client.get("/v1/audit", params={"attested": "false"}, headers={"Authorization": f"Bearer {key}"})
+    r2 = client.get(
+        "/v1/audit", params={"attested": "false"}, headers={"Authorization": f"Bearer {key}"}
+    )
     unattested_entries = r2.json()["entries"]
     assert all(e["attested_key_id"] is None for e in unattested_entries)
 
 
 def test_c3_audit_unknown_fact_returns_404(attest_client: tuple[TestClient, str]) -> None:
     client, key = attest_client
-    r = client.get("/v1/audit/facts/nonexistent-fact-id", headers={"Authorization": f"Bearer {key}"})
+    r = client.get(
+        "/v1/audit/facts/nonexistent-fact-id", headers={"Authorization": f"Bearer {key}"}
+    )
     assert r.status_code == 404

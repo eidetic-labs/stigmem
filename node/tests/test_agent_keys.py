@@ -15,16 +15,15 @@ from cryptography.hazmat.primitives.serialization import (
 )
 from fastapi.testclient import TestClient
 
-from stigmem_node.auth import create_api_key
-from stigmem_node.db import apply_migrations
-from stigmem_node.main import create_app
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.routes.facts as facts_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
+from stigmem_node.auth import create_api_key
+from stigmem_node.db import apply_migrations
+from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -35,7 +34,9 @@ def _gen_keypair() -> tuple[str, str]:
     priv = Ed25519PrivateKey.generate()
     pub = priv.public_key()
     priv_b64 = (
-        base64.urlsafe_b64encode(priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption()))
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
         .decode()
         .rstrip("=")
     )
@@ -47,10 +48,12 @@ def _gen_keypair() -> tuple[str, str]:
     return pub_b64, priv_b64
 
 
-def _sign_fact(priv_b64: str, entity: str, relation: str, value_type: str, value_v: str, source: str) -> str:
+def _sign_fact(
+    priv_b64: str, entity: str, relation: str, value_type: str, value_v: str, source: str
+) -> str:
     raw = base64.urlsafe_b64decode(priv_b64 + "=" * (-len(priv_b64) % 4))
     privkey = Ed25519PrivateKey.from_private_bytes(raw)
-    msg = f"{entity}\n{relation}\n{value_type}\n{value_v}\n{source}".encode("utf-8")
+    msg = f"{entity}\n{relation}\n{value_type}\n{value_v}\n{source}".encode()
     return base64.urlsafe_b64encode(privkey.sign(msg)).decode().rstrip("=")
 
 
@@ -208,8 +211,12 @@ class TestAgentKeyRevocation:
             headers={"Authorization": f"Bearer {raw_key}"},
         )
         key_id = reg.json()["id"]
-        client.delete(f"/v1/auth/agent-keys/{key_id}", headers={"Authorization": f"Bearer {raw_key}"})
-        r = client.delete(f"/v1/auth/agent-keys/{key_id}", headers={"Authorization": f"Bearer {raw_key}"})
+        client.delete(
+            f"/v1/auth/agent-keys/{key_id}", headers={"Authorization": f"Bearer {raw_key}"}
+        )
+        r = client.delete(
+            f"/v1/auth/agent-keys/{key_id}", headers={"Authorization": f"Bearer {raw_key}"}
+        )
         assert r.status_code == 409
 
     def test_revoke_other_entity_key_returns_403(self, authed_db) -> None:
@@ -345,9 +352,18 @@ class TestAttestationOnAssert:
         )
         agent_key_id = reg.json()["id"]
         # Revoke it
-        client.delete(f"/v1/auth/agent-keys/{agent_key_id}", headers={"Authorization": f"Bearer {raw_key}"})
+        client.delete(
+            f"/v1/auth/agent-keys/{agent_key_id}", headers={"Authorization": f"Bearer {raw_key}"}
+        )
 
-        sig = _sign_fact(priv, _FACT["entity"], _FACT["relation"], _FACT["value"]["type"], _FACT["value"]["v"], _FACT["source"])
+        sig = _sign_fact(
+            priv,
+            _FACT["entity"],
+            _FACT["relation"],
+            _FACT["value"]["type"],
+            _FACT["value"]["v"],
+            _FACT["source"],
+        )
         fact_with_attest = {**_FACT, "attestation": {"key_id": agent_key_id, "signature": sig}}
         r = client.post(
             "/v1/facts",
@@ -370,13 +386,29 @@ class TestAttestationOnAssert:
         with TestClient(app, raise_server_exceptions=True) as c:
             pub, priv = _gen_keypair()
             # Alice registers the key
-            reg = c.post("/v1/auth/agent-keys", json={"public_key": pub}, headers={"Authorization": f"Bearer {key_a}"})
+            reg = c.post(
+                "/v1/auth/agent-keys",
+                json={"public_key": pub},
+                headers={"Authorization": f"Bearer {key_a}"},
+            )
             alice_agent_key_id = reg.json()["id"]
 
             # Bob tries to use Alice's key_id for attestation on his fact write
-            sig = _sign_fact(priv, _FACT["entity"], _FACT["relation"], _FACT["value"]["type"], _FACT["value"]["v"], _FACT["source"])
-            fact_with_attest = {**_FACT, "attestation": {"key_id": alice_agent_key_id, "signature": sig}}
-            r = c.post("/v1/facts", json=fact_with_attest, headers={"Authorization": f"Bearer {key_b}"})
+            sig = _sign_fact(
+                priv,
+                _FACT["entity"],
+                _FACT["relation"],
+                _FACT["value"]["type"],
+                _FACT["value"]["v"],
+                _FACT["source"],
+            )
+            fact_with_attest = {
+                **_FACT,
+                "attestation": {"key_id": alice_agent_key_id, "signature": sig},
+            }
+            r = c.post(
+                "/v1/facts", json=fact_with_attest, headers={"Authorization": f"Bearer {key_b}"}
+            )
             assert r.status_code == 403
 
         _patch(original)
@@ -384,9 +416,18 @@ class TestAttestationOnAssert:
     def test_assert_with_unknown_key_id_returns_400(self, authed_client_entity) -> None:
         client, _entity, raw_key = authed_client_entity
         _, priv = _gen_keypair()
-        sig = _sign_fact(priv, _FACT["entity"], _FACT["relation"], _FACT["value"]["type"], _FACT["value"]["v"], _FACT["source"])
+        sig = _sign_fact(
+            priv,
+            _FACT["entity"],
+            _FACT["relation"],
+            _FACT["value"]["type"],
+            _FACT["value"]["v"],
+            _FACT["source"],
+        )
         fact_with_attest = {**_FACT, "attestation": {"key_id": str(uuid.uuid4()), "signature": sig}}
-        r = client.post("/v1/facts", json=fact_with_attest, headers={"Authorization": f"Bearer {raw_key}"})
+        r = client.post(
+            "/v1/facts", json=fact_with_attest, headers={"Authorization": f"Bearer {raw_key}"}
+        )
         assert r.status_code == 400
         assert "not found" in r.json()["detail"].lower()
 
@@ -412,7 +453,14 @@ class TestAttestationRequired:
         )
         agent_key_id = reg.json()["id"]
 
-        sig = _sign_fact(priv, _FACT["entity"], _FACT["relation"], _FACT["value"]["type"], _FACT["value"]["v"], _FACT["source"])
+        sig = _sign_fact(
+            priv,
+            _FACT["entity"],
+            _FACT["relation"],
+            _FACT["value"]["type"],
+            _FACT["value"]["v"],
+            _FACT["source"],
+        )
         fact_with_attest = {**_FACT, "attestation": {"key_id": agent_key_id, "signature": sig}}
         r = client.post(
             "/v1/facts",
@@ -439,7 +487,14 @@ class TestAuditLog:
         )
         agent_key_id = reg.json()["id"]
 
-        sig = _sign_fact(priv, _FACT["entity"], _FACT["relation"], _FACT["value"]["type"], _FACT["value"]["v"], _FACT["source"])
+        sig = _sign_fact(
+            priv,
+            _FACT["entity"],
+            _FACT["relation"],
+            _FACT["value"]["type"],
+            _FACT["value"]["v"],
+            _FACT["source"],
+        )
         fact = client.post(
             "/v1/facts",
             json={**_FACT, "attestation": {"key_id": agent_key_id, "signature": sig}},
@@ -473,16 +528,39 @@ class TestAuditLog:
     def test_audit_query_filter_attested(self, authed_client_entity) -> None:
         client, _entity, raw_key = authed_client_entity
         pub, priv = _gen_keypair()
-        reg = client.post("/v1/auth/agent-keys", json={"public_key": pub}, headers={"Authorization": f"Bearer {raw_key}"})
+        reg = client.post(
+            "/v1/auth/agent-keys",
+            json={"public_key": pub},
+            headers={"Authorization": f"Bearer {raw_key}"},
+        )
         agent_key_id = reg.json()["id"]
 
         # Write one attested + one unattested fact
-        sig = _sign_fact(priv, _FACT["entity"], _FACT["relation"], _FACT["value"]["type"], _FACT["value"]["v"], _FACT["source"])
-        client.post("/v1/facts", json={**_FACT, "attestation": {"key_id": agent_key_id, "signature": sig}}, headers={"Authorization": f"Bearer {raw_key}"})
-        client.post("/v1/facts", json={**_FACT, "relation": "memory:other-role"}, headers={"Authorization": f"Bearer {raw_key}"})
+        sig = _sign_fact(
+            priv,
+            _FACT["entity"],
+            _FACT["relation"],
+            _FACT["value"]["type"],
+            _FACT["value"]["v"],
+            _FACT["source"],
+        )
+        client.post(
+            "/v1/facts",
+            json={**_FACT, "attestation": {"key_id": agent_key_id, "signature": sig}},
+            headers={"Authorization": f"Bearer {raw_key}"},
+        )
+        client.post(
+            "/v1/facts",
+            json={**_FACT, "relation": "memory:other-role"},
+            headers={"Authorization": f"Bearer {raw_key}"},
+        )
 
-        attested_r = client.get("/v1/audit?attested=true", headers={"Authorization": f"Bearer {raw_key}"})
-        unattested_r = client.get("/v1/audit?attested=false", headers={"Authorization": f"Bearer {raw_key}"})
+        attested_r = client.get(
+            "/v1/audit?attested=true", headers={"Authorization": f"Bearer {raw_key}"}
+        )
+        unattested_r = client.get(
+            "/v1/audit?attested=false", headers={"Authorization": f"Bearer {raw_key}"}
+        )
 
         assert all(e["attested_key_id"] is not None for e in attested_r.json()["entries"])
         assert all(e["attested_key_id"] is None for e in unattested_r.json()["entries"])

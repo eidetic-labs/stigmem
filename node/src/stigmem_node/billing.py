@@ -9,6 +9,7 @@ implementation by calling set_hook_bus() at startup (or in tests via a
 CaptureBus).  The interface is intentionally narrow so it can be wired to any
 message queue without changing call sites.
 """
+
 from __future__ import annotations
 
 import json
@@ -20,9 +21,9 @@ from typing import Protocol, runtime_checkable
 
 @dataclass
 class BillingEvent:
-    event_type: str          # "fact_written" | "garden_created"
+    event_type: str  # "fact_written" | "garden_created"
     tenant_id: str
-    entity_uri: str          # caller's entity_uri
+    entity_uri: str  # caller's entity_uri
     fact_id: str | None = None
     garden_id: str | None = None
     ts: str = field(default_factory=lambda: datetime.now(UTC).isoformat())

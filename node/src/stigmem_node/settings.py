@@ -138,7 +138,7 @@ class Settings(BaseSettings):
 
     # Source-trust score weights (§19.4.2).  Must sum to 1.0; deviations are not
     # validated at startup — set incorrectly and t will be out of [0,1] range.
-    trust_weight_identity:    float = 0.35
+    trust_weight_identity: float = 0.35
     trust_weight_peer_history: float = 0.30
     trust_weight_scope_authority: float = 0.25
     trust_weight_attestation_mode: float = 0.10
@@ -169,15 +169,14 @@ class Settings(BaseSettings):
         if not v:
             return v
         import base64
+
         padded = v + "=" * (-len(v) % 4)
         try:
             raw = base64.urlsafe_b64decode(padded)
         except Exception as exc:
             raise ValueError(f"node_private_key is not valid base64url: {exc}") from exc
         if len(raw) != 32:
-            raise ValueError(
-                f"node_private_key must decode to exactly 32 bytes; got {len(raw)}"
-            )
+            raise ValueError(f"node_private_key must decode to exactly 32 bytes; got {len(raw)}")
         return v
 
     # -------------------------------------------------------------------------

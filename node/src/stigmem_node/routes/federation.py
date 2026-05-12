@@ -295,7 +295,8 @@ def pull_facts(
     if scope is not None:
         if scope not in permitted:
             write_audit_log(
-                peer["id"], "scope_violation",
+                peer["id"],
+                "scope_violation",
                 {"requested_scope": scope, "permitted": list(permitted)},
             )
             raise HTTPException(status_code=403, detail="scope not permitted for this peer")
@@ -307,11 +308,11 @@ def pull_facts(
     params: list[Any] = list(query_scopes)
     conditions: list[str] = [
         f"scope IN ({scope_placeholders})",
-        "hlc IS NOT NULL",             # only facts with an HLC are replication-eligible
-        "received_from IS NULL",       # do not re-federate inbound facts (§3.1)
+        "hlc IS NOT NULL",  # only facts with an HLC are replication-eligible
+        "received_from IS NULL",  # do not re-federate inbound facts (§3.1)
         "entity NOT LIKE 'stigmem:conflict:%'",  # conflict entities are local (§6.5)
-        "relation NOT LIKE 'stigmem:%'",         # meta-facts (received_from, ttl) are local
-        "re_federation_blocked = 0",   # exclude company-scope relay-blocked facts (§6.8.2)
+        "relation NOT LIKE 'stigmem:%'",  # meta-facts (received_from, ttl) are local
+        "re_federation_blocked = 0",  # exclude company-scope relay-blocked facts (§6.8.2)
     ]
     if cursor:
         conditions.append("hlc > ?")
@@ -384,9 +385,11 @@ def _verify_push_cap_token(x_stigmem_capability: str) -> dict[str, Any]:
         import uuid as _uuid
         from datetime import UTC as _UTC
         from datetime import datetime as _datetime
+
         _now = _datetime.now(_UTC).isoformat()
         try:
             import json as _json
+
             with db() as conn:
                 conn.execute(
                     """INSERT INTO fact_audit_log
@@ -407,9 +410,7 @@ def _verify_push_cap_token(x_stigmem_capability: str) -> dict[str, Any]:
                 )
         except Exception as audit_exc:  # nosec B110 — audit log best-effort
             logger.debug("capability_rejected audit log failed: %s", audit_exc)
-        raise HTTPException(
-            status_code=401, detail=f"capability token invalid: {exc}"
-        ) from exc
+        raise HTTPException(status_code=401, detail=f"capability token invalid: {exc}") from exc
 
     try:
         cap_token: dict[str, Any] = json.loads(x_stigmem_capability)
@@ -428,6 +429,7 @@ def _verify_push_cap_token(x_stigmem_capability: str) -> dict[str, Any]:
     import uuid as _uuid2
     from datetime import UTC as _UTC2
     from datetime import datetime as _datetime2
+
     _now2 = _datetime2.now(_UTC2).isoformat()
     try:
         with db() as conn:
@@ -444,12 +446,14 @@ def _verify_push_cap_token(x_stigmem_capability: str) -> dict[str, Any]:
                     None,
                     "system:capability",
                     None,
-                    json.dumps({
-                        "token_id": cap_token.get("token_id"),
-                        "issuer": cap_token.get("issuer"),
-                        "verb": cap_token.get("verb"),
-                        "object": cap_token.get("object"),
-                    }),
+                    json.dumps(
+                        {
+                            "token_id": cap_token.get("token_id"),
+                            "issuer": cap_token.get("issuer"),
+                            "verb": cap_token.get("verb"),
+                            "object": cap_token.get("object"),
+                        }
+                    ),
                     _now2,
                 ),
             )
@@ -491,9 +495,9 @@ def push_facts(
             if not check_peer_san(peer_cert, peer["node_id"]):
                 write_audit_log(peer["id"], "san_mismatch", {"node_id": peer["node_id"]})
                 raise HTTPException(
-                status_code=401,
-                detail="peer certificate URI SAN does not match node_id",
-            )
+                    status_code=401,
+                    detail="peer certificate URI SAN does not match node_id",
+                )
     elif x_stigmem_capability is not None:
         cap_token = _verify_push_cap_token(x_stigmem_capability)
         using_cap_token = True
@@ -595,7 +599,8 @@ def _push_fact_with_peer_token(
 
     if fact_scope not in permitted:
         write_audit_log(
-            peer["id"], "scope_violation",
+            peer["id"],
+            "scope_violation",
             {"fact_id": fact.get("id"), "scope": fact_scope},
         )
         return False, {"fact_id": fact.get("id"), "error": "scope_not_permitted"}
@@ -604,7 +609,8 @@ def _push_fact_with_peer_token(
     fact_source = fact.get("source", "")
     if fact_source != peer["node_id"]:
         write_audit_log(
-            peer["id"], "rejected_fact",
+            peer["id"],
+            "rejected_fact",
             {
                 "fact_id": fact.get("id"),
                 "reason": "source_not_owned",
@@ -779,9 +785,7 @@ def resolve_conflict(
         )
 
     with db() as conn:
-        conflict = conn.execute(
-            "SELECT * FROM conflicts WHERE id = ?", (conflict_id,)
-        ).fetchone()
+        conflict = conn.execute("SELECT * FROM conflicts WHERE id = ?", (conflict_id,)).fetchone()
 
         if conflict is None:
             raise HTTPException(status_code=404, detail="conflict not found")
@@ -815,9 +819,7 @@ def resolve_conflict(
             res_type = winner["value_type"]
             res_v = winner["value_v"]
         else:
-            raise HTTPException(
-                status_code=422, detail="provide winning_fact_id or new_value"
-            )
+            raise HTTPException(status_code=422, detail="provide winning_fact_id or new_value")
 
         resolution_fact_id = str(uuid.uuid4())
         now = datetime.now(UTC).isoformat()
@@ -909,6 +911,7 @@ def resolve_conflict(
 # Tombstone federation routes (spec §23.4)
 # ---------------------------------------------------------------------------
 
+
 @router.get("/v1/federation/tombstones", response_model=FederationTombstonesResponse)
 def federation_list_tombstones(
     request: Request,
@@ -933,6 +936,7 @@ def federation_list_tombstones(
     if settings.trust_mode != "off":
         try:
             import json as _json
+
             token_data = _json.loads(raw_token) if raw_token.startswith("{") else {}
             verbs = token_data.get("verbs", token_data.get("verb", ""))
             if isinstance(verbs, str):
@@ -953,6 +957,7 @@ def federation_list_tombstones(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
     else:
         import logging as _logging
+
         _logging.getLogger("stigmem.federation").warning(
             "tombstone poll: trust_mode=off — token signature verification skipped"
         )

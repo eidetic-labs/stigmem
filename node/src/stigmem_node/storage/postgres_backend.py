@@ -422,9 +422,7 @@ class PostgresBackend(StorageBackend):
         try:
             # Ensure the target schema exists (for per-test schema isolation).
             with conn.cursor() as cur:
-                cur.execute(
-                    f"CREATE SCHEMA IF NOT EXISTS {self._schema}"
-                )
+                cur.execute(f"CREATE SCHEMA IF NOT EXISTS {self._schema}")
             conn.commit()
 
             # Bootstrap schema_migrations table.

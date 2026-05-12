@@ -114,7 +114,9 @@ class TestTokenBucketWrite:
         assert r.status_code == 429
         assert int(r.headers["Retry-After"]) >= 1
 
-    def test_reads_unaffected_by_write_quota(self, quota_write_client: tuple[TestClient, str]) -> None:
+    def test_reads_unaffected_by_write_quota(
+        self, quota_write_client: tuple[TestClient, str]
+    ) -> None:
         """Exhausting write quota must not block reads."""
         client, key = quota_write_client
         h = {"Authorization": f"Bearer {key}"}
@@ -139,12 +141,18 @@ class TestTokenBucketWrite:
         with TestClient(create_app(), raise_server_exceptions=True) as client:
             for _ in range(2):
                 client.post("/v1/facts", json=FACT, headers={"Authorization": f"Bearer {key_a}"})
-            assert client.post(
-                "/v1/facts", json=FACT, headers={"Authorization": f"Bearer {key_a}"}
-            ).status_code == 429
-            assert client.post(
-                "/v1/facts", json=FACT, headers={"Authorization": f"Bearer {key_b}"}
-            ).status_code == 201
+            assert (
+                client.post(
+                    "/v1/facts", json=FACT, headers={"Authorization": f"Bearer {key_a}"}
+                ).status_code
+                == 429
+            )
+            assert (
+                client.post(
+                    "/v1/facts", json=FACT, headers={"Authorization": f"Bearer {key_b}"}
+                ).status_code
+                == 201
+            )
         _restore(original)
 
 
@@ -159,7 +167,9 @@ class TestTokenBucketRead:
         assert r.status_code == 429
         assert r.json()["dimension"] == "fact_read"
 
-    def test_writes_unaffected_by_read_quota(self, quota_read_client: tuple[TestClient, str]) -> None:
+    def test_writes_unaffected_by_read_quota(
+        self, quota_read_client: tuple[TestClient, str]
+    ) -> None:
         """Exhausting read quota must not block writes."""
         client, key = quota_read_client
         h = {"Authorization": f"Bearer {key}"}

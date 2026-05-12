@@ -78,8 +78,11 @@ class TestManifestPublish:
     def test_publish_requires_admin(self, authed_client: tuple) -> None:
         """Non-admin (read+write but no federate) should get 403."""
         c, _key = authed_client
-        r = c.put(f"/v1/agents/{_AGENT_ID}/instruction-manifest", json=_manifest_body(),
-                  headers={"Authorization": f"Bearer {_key}"})
+        r = c.put(
+            f"/v1/agents/{_AGENT_ID}/instruction-manifest",
+            json=_manifest_body(),
+            headers={"Authorization": f"Bearer {_key}"},
+        )
         assert r.status_code == 403
 
     def test_publish_succeeds_as_admin(self, admin_client: TestClient) -> None:
@@ -92,8 +95,12 @@ class TestManifestPublish:
         assert body["coverage_report"][0]["unit"] == "heartbeat-procedure"
 
     def test_version_conflict(self, admin_client: TestClient) -> None:
-        admin_client.put(f"/v1/agents/{_AGENT_ID}/instruction-manifest", json=_manifest_body(version="vdup"))
-        r = admin_client.put(f"/v1/agents/{_AGENT_ID}/instruction-manifest", json=_manifest_body(version="vdup"))
+        admin_client.put(
+            f"/v1/agents/{_AGENT_ID}/instruction-manifest", json=_manifest_body(version="vdup")
+        )
+        r = admin_client.put(
+            f"/v1/agents/{_AGENT_ID}/instruction-manifest", json=_manifest_body(version="vdup")
+        )
         assert r.status_code == 409
         assert "manifest_version_conflict" in r.text
 
@@ -116,13 +123,15 @@ class TestManifestPublish:
     def test_guarantee_cap_exceeded(self, admin_client: TestClient) -> None:
         entries = []
         for i in range(6):
-            entries.append({
-                "name": f"unit-{i}",
-                "description": f"Unit {i}",
-                "path": "/dev/null",
-                "guarantee_load": True,
-                "load_triggers": {},
-            })
+            entries.append(
+                {
+                    "name": f"unit-{i}",
+                    "description": f"Unit {i}",
+                    "path": "/dev/null",
+                    "guarantee_load": True,
+                    "load_triggers": {},
+                }
+            )
         r = admin_client.put(
             f"/v1/agents/{_AGENT_ID}/instruction-manifest",
             json=_manifest_body(entries=entries, version="vcap"),
@@ -131,7 +140,11 @@ class TestManifestPublish:
         assert "guarantee_cap_exceeded" in r.text
 
     def test_unknown_task_type_rejected(self, admin_client: TestClient) -> None:
-        entry = {**_ENTRY_MINIMAL, "name": "bad-tt", "required_by_task_types": ["not_a_real_wake_reason"]}
+        entry = {
+            **_ENTRY_MINIMAL,
+            "name": "bad-tt",
+            "required_by_task_types": ["not_a_real_wake_reason"],
+        }
         r = admin_client.put(
             f"/v1/agents/{_AGENT_ID}/instruction-manifest",
             json=_manifest_body(entries=[entry], version="vtt"),
@@ -140,9 +153,11 @@ class TestManifestPublish:
         assert "task_type_unknown" in r.text
 
     def test_more_than_2_task_types_rejected(self, admin_client: TestClient) -> None:
-        entry = {**_ENTRY_MINIMAL, "name": "many-tt", "required_by_task_types": [
-            "issue_assigned", "issue_commented", "routine_fired"
-        ]}
+        entry = {
+            **_ENTRY_MINIMAL,
+            "name": "many-tt",
+            "required_by_task_types": ["issue_assigned", "issue_commented", "routine_fired"],
+        }
         r = admin_client.put(
             f"/v1/agents/{_AGENT_ID}/instruction-manifest",
             json=_manifest_body(entries=[entry], version="vmanytt"),
@@ -261,13 +276,19 @@ class TestRecallInstruction:
         """Publish a manifest for agent_id, seeding a fact for the first entry."""
         # Write the instruction fact so it can be fetched
         fact_uri = f"instruction:{_DEPLOYMENT}/agent/{agent_id}/heartbeat-procedure/v1"
-        admin_client.post("/v1/facts", json={
-            "entity": fact_uri,
-            "relation": "instruction:content",
-            "value": {"type": "text", "v": "## Heartbeat Procedure\n\nCheckout the issue first."},
-            "source": "admin",
-            "scope": "local",
-        })
+        admin_client.post(
+            "/v1/facts",
+            json={
+                "entity": fact_uri,
+                "relation": "instruction:content",
+                "value": {
+                    "type": "text",
+                    "v": "## Heartbeat Procedure\n\nCheckout the issue first.",
+                },
+                "source": "admin",
+                "scope": "local",
+            },
+        )
         entry = {
             "name": "heartbeat-procedure",
             "description": "The Paperclip heartbeat procedure.",
@@ -292,9 +313,12 @@ class TestRecallInstruction:
     def test_returns_chunks(self, admin_client: TestClient) -> None:
         agent_id = str(uuid.uuid4())
         self._setup_agent_with_facts(admin_client, agent_id)
-        r = admin_client.post(f"/v1/agents/{agent_id}/recall-instruction", json={
-            "intent": "I am starting a heartbeat and need to check out an issue",
-        })
+        r = admin_client.post(
+            f"/v1/agents/{agent_id}/recall-instruction",
+            json={
+                "intent": "I am starting a heartbeat and need to check out an issue",
+            },
+        )
         assert r.status_code == 200
         body = r.json()
         assert "chunks" in body
@@ -306,9 +330,12 @@ class TestRecallInstruction:
     def test_chunk_has_required_fields(self, admin_client: TestClient) -> None:
         agent_id = str(uuid.uuid4())
         self._setup_agent_with_facts(admin_client, agent_id)
-        r = admin_client.post(f"/v1/agents/{agent_id}/recall-instruction", json={
-            "intent": "heartbeat checkout",
-        })
+        r = admin_client.post(
+            f"/v1/agents/{agent_id}/recall-instruction",
+            json={
+                "intent": "heartbeat checkout",
+            },
+        )
         assert r.status_code == 200
         chunks = r.json()["chunks"]
         if chunks:
@@ -322,13 +349,16 @@ class TestRecallInstruction:
         uri1 = f"instruction:{_DEPLOYMENT}/agent/{agent_id}/unit-a/v1"
         uri2 = f"instruction:{_DEPLOYMENT}/agent/{agent_id}/unit-b/v1"
         for uri, content in [(uri1, "Unit A content"), (uri2, "Unit B content")]:
-            admin_client.post("/v1/facts", json={
-                "entity": uri,
-                "relation": "instruction:content",
-                "value": {"type": "text", "v": content},
-                "source": "admin",
-                "scope": "local",
-            })
+            admin_client.post(
+                "/v1/facts",
+                json={
+                    "entity": uri,
+                    "relation": "instruction:content",
+                    "value": {"type": "text", "v": content},
+                    "source": "admin",
+                    "scope": "local",
+                },
+            )
         entries = [
             {"name": "unit-a", "description": "Unit A", "fact_uri": uri1, "load_triggers": {}},
             {"name": "unit-b", "description": "Unit B", "fact_uri": uri2, "load_triggers": {}},
@@ -337,10 +367,13 @@ class TestRecallInstruction:
             f"/v1/agents/{agent_id}/instruction-manifest",
             json={"version": "v1", "entries": entries, "skip_coverage_gate": True},
         )
-        r = admin_client.post(f"/v1/agents/{agent_id}/recall-instruction", json={
-            "intent": "something unrelated",
-            "manifest_hint": ["unit-b"],
-        })
+        r = admin_client.post(
+            f"/v1/agents/{agent_id}/recall-instruction",
+            json={
+                "intent": "something unrelated",
+                "manifest_hint": ["unit-b"],
+            },
+        )
         assert r.status_code == 200
         chunks = r.json()["chunks"]
         names = [c["name"] for c in chunks]
@@ -351,18 +384,24 @@ class TestRecallInstruction:
     def test_missed_hints_returned(self, admin_client: TestClient) -> None:
         agent_id = str(uuid.uuid4())
         self._setup_agent_with_facts(admin_client, agent_id)
-        r = admin_client.post(f"/v1/agents/{agent_id}/recall-instruction", json={
-            "intent": "something",
-            "manifest_hint": ["unit-does-not-exist"],
-        })
+        r = admin_client.post(
+            f"/v1/agents/{agent_id}/recall-instruction",
+            json={
+                "intent": "something",
+                "manifest_hint": ["unit-does-not-exist"],
+            },
+        )
         assert r.status_code == 200
         assert "unit-does-not-exist" in r.json()["missed_hints"]
 
     def test_404_when_no_manifest(self, admin_client: TestClient) -> None:
         fresh_id = str(uuid.uuid4())
-        r = admin_client.post(f"/v1/agents/{fresh_id}/recall-instruction", json={
-            "intent": "test",
-        })
+        r = admin_client.post(
+            f"/v1/agents/{fresh_id}/recall-instruction",
+            json={
+                "intent": "test",
+            },
+        )
         assert r.status_code == 404
 
     def test_scope_denied_cross_agent(self, client: TestClient, admin_client: TestClient) -> None:
@@ -383,14 +422,19 @@ class TestRecallInstruction:
     def test_audit_token_written(self, admin_client: TestClient, tmp_db: str) -> None:
         agent_id = str(uuid.uuid4())
         self._setup_agent_with_facts(admin_client, agent_id)
-        r = admin_client.post(f"/v1/agents/{agent_id}/recall-instruction", json={
-            "intent": "heartbeat",
-        })
+        r = admin_client.post(
+            f"/v1/agents/{agent_id}/recall-instruction",
+            json={
+                "intent": "heartbeat",
+            },
+        )
         assert r.status_code == 200
         token = r.json()["audit_token"]
         conn = sqlite3.connect(tmp_db)
         conn.row_factory = sqlite3.Row
-        row = conn.execute("SELECT id FROM instruction_audit WHERE audit_token = ?", (token,)).fetchone()
+        row = conn.execute(
+            "SELECT id FROM instruction_audit WHERE audit_token = ?", (token,)
+        ).fetchone()
         conn.close()
         assert row is not None, "audit record should be written to DB"
 
@@ -404,11 +448,22 @@ class TestAuditSubmission:
     def _get_token(self, admin_client: TestClient) -> str:
         agent_id = str(uuid.uuid4())
         uri = f"instruction:{_DEPLOYMENT}/agent/{agent_id}/heartbeat-procedure/v1"
-        admin_client.post("/v1/facts", json={
-            "entity": uri, "relation": "instruction:content",
-            "value": {"type": "text", "v": "content"}, "source": "admin", "scope": "local",
-        })
-        entry = {"name": "heartbeat-procedure", "description": "desc", "fact_uri": uri, "load_triggers": {}}
+        admin_client.post(
+            "/v1/facts",
+            json={
+                "entity": uri,
+                "relation": "instruction:content",
+                "value": {"type": "text", "v": "content"},
+                "source": "admin",
+                "scope": "local",
+            },
+        )
+        entry = {
+            "name": "heartbeat-procedure",
+            "description": "desc",
+            "fact_uri": uri,
+            "load_triggers": {},
+        }
         admin_client.put(
             f"/v1/agents/{agent_id}/instruction-manifest",
             json={"version": "v1", "entries": [entry], "skip_coverage_gate": True},
@@ -418,11 +473,14 @@ class TestAuditSubmission:
 
     def test_submit_returns_204(self, admin_client: TestClient) -> None:
         token = self._get_token(admin_client)
-        r = admin_client.post("/v1/instruction/audit", json={
-            "audit_token": token,
-            "used_chunks": ["heartbeat-procedure"],
-            "missed_chunks": [],
-        })
+        r = admin_client.post(
+            "/v1/instruction/audit",
+            json={
+                "audit_token": token,
+                "used_chunks": ["heartbeat-procedure"],
+                "missed_chunks": [],
+            },
+        )
         assert r.status_code == 204
 
     def test_submit_idempotent(self, admin_client: TestClient) -> None:
@@ -434,24 +492,32 @@ class TestAuditSubmission:
         assert r2.status_code == 204
 
     def test_invalid_token_returns_400(self, admin_client: TestClient) -> None:
-        r = admin_client.post("/v1/instruction/audit", json={
-            "audit_token": "audi_notreal",
-            "used_chunks": [],
-            "missed_chunks": [],
-        })
+        r = admin_client.post(
+            "/v1/instruction/audit",
+            json={
+                "audit_token": "audi_notreal",
+                "used_chunks": [],
+                "missed_chunks": [],
+            },
+        )
         assert r.status_code == 400
         assert "audit_token_invalid" in r.text
 
     def test_used_chunks_written_to_db(self, admin_client: TestClient, tmp_db: str) -> None:
         token = self._get_token(admin_client)
-        admin_client.post("/v1/instruction/audit", json={
-            "audit_token": token,
-            "used_chunks": ["heartbeat-procedure"],
-            "missed_chunks": [],
-        })
+        admin_client.post(
+            "/v1/instruction/audit",
+            json={
+                "audit_token": token,
+                "used_chunks": ["heartbeat-procedure"],
+                "missed_chunks": [],
+            },
+        )
         conn = sqlite3.connect(tmp_db)
         conn.row_factory = sqlite3.Row
-        row = conn.execute("SELECT used_chunks FROM instruction_audit WHERE audit_token = ?", (token,)).fetchone()
+        row = conn.execute(
+            "SELECT used_chunks FROM instruction_audit WHERE audit_token = ?", (token,)
+        ).fetchone()
         conn.close()
         assert row is not None
         used = json.loads(row["used_chunks"])
@@ -488,7 +554,9 @@ class TestCoverageReport:
         # Admin key should include coverage_status (S11)
         assert "coverage_status" in body["units"][0]
 
-    def test_agent_key_omits_coverage_status(self, client: TestClient, admin_client: TestClient) -> None:
+    def test_agent_key_omits_coverage_status(
+        self, client: TestClient, admin_client: TestClient
+    ) -> None:
         agent_id = str(uuid.uuid4())
         entry = {
             "name": "heartbeat-procedure",
@@ -506,7 +574,8 @@ class TestCoverageReport:
             f"/v1/agents/{agent_id}/instruction-manifest/coverage",
             headers={"Authorization": f"Bearer {agent_key}"},
         )
-        # With auth disabled, admin check may pass. With auth enabled, coverage_status should be absent.
+        # With auth disabled, admin check may pass. With auth enabled,
+        # coverage_status should be absent.
         if r.status_code == 200:
             unit = r.json()["units"][0]
             assert "coverage_pct" in unit
@@ -520,15 +589,33 @@ class TestCoverageReport:
 
 class TestCLIManifestGenerate:
     def test_generate_from_directory(self, tmp_path: Path) -> None:
-        import subprocess, sys
+        import subprocess
+        import sys
 
         md = tmp_path / "heartbeat.md"
-        md.write_text("## Heartbeat Procedure\n\nCheckout the issue.\n\n## Update Status\n\nPatch the issue.\n")
+        md.write_text(
+            "## Heartbeat Procedure\n\n"
+            "Checkout the issue.\n\n"
+            "## Update Status\n\n"
+            "Patch the issue.\n"
+        )
 
         result = subprocess.run(
-            [sys.executable, "-m", "stigmem_node.cli", "instruction", "manifest", "generate",
-             str(tmp_path), "--agent-id", _AGENT_ID, "--deployment", "acme"],
-            capture_output=True, text=True,
+            [
+                sys.executable,
+                "-m",
+                "stigmem_node.cli",
+                "instruction",
+                "manifest",
+                "generate",
+                str(tmp_path),
+                "--agent-id",
+                _AGENT_ID,
+                "--deployment",
+                "acme",
+            ],
+            capture_output=True,
+            text=True,
         )
         assert result.returncode == 0, result.stderr
         data = json.loads(result.stdout)
@@ -542,31 +629,56 @@ class TestCLIManifestGenerate:
 
 class TestCLIAuditDiscovery:
     def test_audit_discovery_no_data(self, tmp_path: Path) -> None:
-        import subprocess, sys
+        import subprocess
+        import sys
+
         from stigmem_node.db import apply_migrations
 
         db_file = str(tmp_path / "test.db")
         apply_migrations(db_path=db_file)
 
         result = subprocess.run(
-            [sys.executable, "-m", "stigmem_node.cli", "audit", "discovery",
-             "--agent", "test-agent", "--db", db_file],
-            capture_output=True, text=True,
+            [
+                sys.executable,
+                "-m",
+                "stigmem_node.cli",
+                "audit",
+                "discovery",
+                "--agent",
+                "test-agent",
+                "--db",
+                db_file,
+            ],
+            capture_output=True,
+            text=True,
         )
         assert result.returncode == 0
         assert "test-agent" in result.stdout or "No audit records" in result.stdout
 
     def test_audit_discovery_json_flag(self, tmp_path: Path) -> None:
-        import subprocess, sys
+        import subprocess
+        import sys
+
         from stigmem_node.db import apply_migrations
 
         db_file = str(tmp_path / "test.db")
         apply_migrations(db_path=db_file)
 
         result = subprocess.run(
-            [sys.executable, "-m", "stigmem_node.cli", "audit", "discovery",
-             "--agent", "test-agent", "--db", db_file, "--json"],
-            capture_output=True, text=True,
+            [
+                sys.executable,
+                "-m",
+                "stigmem_node.cli",
+                "audit",
+                "discovery",
+                "--agent",
+                "test-agent",
+                "--db",
+                db_file,
+                "--json",
+            ],
+            capture_output=True,
+            text=True,
         )
         assert result.returncode == 0
 
@@ -647,7 +759,9 @@ class TestComputeDiff:
     def test_create_when_no_existing(self) -> None:
         from stigmem_node.instruction_migrate import Chunk, compute_diff
 
-        chunks = [Chunk("f", "Heartbeat", "heartbeat", "# Heartbeat\n\nDo things.", ["heartbeat"], 5)]
+        chunks = [
+            Chunk("f", "Heartbeat", "heartbeat", "# Heartbeat\n\nDo things.", ["heartbeat"], 5)
+        ]
         diff = compute_diff(chunks, "instruction:test/agent/xyz", "v1", {}, set())
         assert len(diff) == 1
         assert diff[0].action == "CREATE"
@@ -698,7 +812,7 @@ class TestComputeDiff:
 
 class TestFormatPreview:
     def test_preview_contains_counts(self, tmp_path: Path) -> None:
-        from stigmem_node.instruction_migrate import Chunk, DiffEntry, compute_diff, format_preview
+        from stigmem_node.instruction_migrate import Chunk, compute_diff, format_preview
 
         chunks = [
             Chunk("f", "Section A", "section-a", "# Section A", [], 1),
@@ -716,17 +830,27 @@ class TestFormatPreview:
         import sys
 
         md = tmp_path / "heartbeat.md"
-        md.write_text("## Heartbeat Procedure\n\nCheckout the issue.\n\n## Update Status\n\nPatch.\n")
+        md.write_text(
+            "## Heartbeat Procedure\n\nCheckout the issue.\n\n## Update Status\n\nPatch.\n"
+        )
         result = subprocess.run(
             [
-                sys.executable, "-m", "stigmem_node.cli",
-                "instruction", "migrate", str(tmp_path),
-                "--role", "cto",
-                "--agent-id", str(uuid.uuid4()),
-                "--deployment", "test",
+                sys.executable,
+                "-m",
+                "stigmem_node.cli",
+                "instruction",
+                "migrate",
+                str(tmp_path),
+                "--role",
+                "cto",
+                "--agent-id",
+                str(uuid.uuid4()),
+                "--deployment",
+                "test",
                 "--dry-run",
             ],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         assert result.returncode == 0, result.stderr
         assert "Migration Preview" in result.stdout
@@ -740,13 +864,20 @@ class TestFormatPreview:
         md.write_text("## Tools\n\nUse the bash tool.\n")
         result = subprocess.run(
             [
-                sys.executable, "-m", "stigmem_node.cli",
-                "instruction", "migrate", str(tmp_path),
-                "--skill", "paperclip",
-                "--agent-id", str(uuid.uuid4()),
+                sys.executable,
+                "-m",
+                "stigmem_node.cli",
+                "instruction",
+                "migrate",
+                str(tmp_path),
+                "--skill",
+                "paperclip",
+                "--agent-id",
+                str(uuid.uuid4()),
                 "--dry-run",
             ],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         assert result.returncode == 0, result.stderr
         assert "[+]" in result.stdout  # CREATE symbol
@@ -777,13 +908,16 @@ class TestMigrationRoundTrip:
         # Write facts
         for d in diff:
             if d.action in ("CREATE", "UPDATE"):
-                admin_client.post("/v1/facts", json={
-                    "entity": d.fact_uri,
-                    "relation": "instruction:content",
-                    "value": {"type": "text", "v": d.content},
-                    "source": "instruction-migration",
-                    "scope": "local",
-                })
+                admin_client.post(
+                    "/v1/facts",
+                    json={
+                        "entity": d.fact_uri,
+                        "relation": "instruction:content",
+                        "value": {"type": "text", "v": d.content},
+                        "source": "instruction-migration",
+                        "scope": "local",
+                    },
+                )
 
         # Publish manifest
         entries = [
@@ -798,14 +932,17 @@ class TestMigrationRoundTrip:
                 },
                 "token_estimate": d.token_estimate,
             }
-            for d in diff if d.action != "TOMBSTONE"
+            for d in diff
+            if d.action != "TOMBSTONE"
         ]
         admin_client.put(
             f"/v1/agents/{agent_id}/instruction-manifest",
             json={"version": version, "entries": entries, "skip_coverage_gate": True},
         )
 
-    def test_recall_retrieves_migrated_content(self, admin_client: TestClient, tmp_path: Path) -> None:
+    def test_recall_retrieves_migrated_content(
+        self, admin_client: TestClient, tmp_path: Path
+    ) -> None:
         agent_id = str(uuid.uuid4())
         md = tmp_path / "heartbeat.md"
         md.write_text(
@@ -829,11 +966,9 @@ class TestMigrationRoundTrip:
         """Running migration twice on same content produces NOOP on second run."""
         from stigmem_node.instruction_migrate import (
             compute_diff,
-            load_existing_facts_from_db,
             parse_instruction_chunks,
             scope_prefix_for_role,
         )
-        import sqlite3
 
         agent_id = str(uuid.uuid4())
         deployment = "test"
@@ -849,17 +984,21 @@ class TestMigrationRoundTrip:
         assert all(d.action == "CREATE" for d in diff1 if d.action != "TOMBSTONE")
         for d in diff1:
             if d.action == "CREATE":
-                admin_client.post("/v1/facts", json={
-                    "entity": d.fact_uri,
-                    "relation": "instruction:content",
-                    "value": {"type": "text", "v": d.content},
-                    "source": "instruction-migration",
-                    "scope": "local",
-                })
+                admin_client.post(
+                    "/v1/facts",
+                    json={
+                        "entity": d.fact_uri,
+                        "relation": "instruction:content",
+                        "value": {"type": "text", "v": d.content},
+                        "source": "instruction-migration",
+                        "scope": "local",
+                    },
+                )
 
         # Second run: same content → NOOP
         # Re-query existing facts directly from DB
         import stigmem_node.settings as settings_mod
+
         db_path = settings_mod.settings.db_path
         existing = {}
         conn = sqlite3.connect(db_path)
@@ -875,10 +1014,13 @@ class TestMigrationRoundTrip:
 
         diff2 = compute_diff(chunks, scope_prefix, version, existing, set())
         non_tombstone = [d for d in diff2 if d.action != "TOMBSTONE"]
-        assert all(d.action == "NOOP" for d in non_tombstone), \
+        assert all(d.action == "NOOP" for d in non_tombstone), (
             f"Second run should be all NOOP, got: {[d.action for d in non_tombstone]}"
+        )
 
-    def test_boot_stub_migration_reference_dataset(self, admin_client: TestClient, tmp_path: Path) -> None:
+    def test_boot_stub_migration_reference_dataset(
+        self, admin_client: TestClient, tmp_path: Path
+    ) -> None:
         """Migrates the boot-stub reference dataset and verifies recall works."""
         agent_id = str(uuid.uuid4())
         # Reference dataset: minimal boot stub content from the impl issue
@@ -924,9 +1066,9 @@ class TestMigrationRoundTrip:
 @pytest.fixture()
 def admin_client(tmp_db: str, backend: str) -> TestClient:
     """A test client with full admin permissions (read+write+federate)."""
-    import stigmem_node.db as db_mod
     import stigmem_node.auth as auth_mod
     import stigmem_node.settings as settings_mod
+    from stigmem_node import db as db_mod
     from stigmem_node.main import create_app
     from stigmem_node.settings import Settings
 

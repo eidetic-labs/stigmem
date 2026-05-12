@@ -129,7 +129,8 @@ class TestParseChunks:
 
     def test_strips_yaml_frontmatter(self, tmp_path: Path) -> None:
         f = tmp_path / "fm.md"
-        f.write_text(textwrap.dedent("""\
+        f.write_text(
+            textwrap.dedent("""\
             ---
             title: Test
             tags: [a, b]
@@ -138,7 +139,8 @@ class TestParseChunks:
             ## Real heading
 
             body
-        """))
+        """)
+        )
         chunks = parse_instruction_chunks(f)
         # Frontmatter stripped — heading from MD becomes the chunk
         assert any("real-heading" in c.slug for c in chunks)
@@ -169,8 +171,7 @@ class TestFormatPreview:
     def test_mixed_diff_summary_counts(self, tmp_path: Path) -> None:
         diff = [
             _diff_entry(action="CREATE", unit_name="c1"),
-            _diff_entry(action="UPDATE", unit_name="u1",
-                        existing_content="x"),
+            _diff_entry(action="UPDATE", unit_name="u1", existing_content="x"),
             _diff_entry(action="NOOP", unit_name="n1"),
             _diff_entry(action="TOMBSTONE", unit_name="t1"),
         ]
@@ -203,9 +204,18 @@ class TestLoadExistingFactsFromDb:
                 confidence, timestamp, hlc, tenant_id, cid)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                "f1", uri, "instruction:content", "text", "previous content",
-                "test", "local", 1.0,
-                "2026-01-01T00:00:00Z", "0:0:0", "default", "cid:abc",
+                "f1",
+                uri,
+                "instruction:content",
+                "text",
+                "previous content",
+                "test",
+                "local",
+                1.0,
+                "2026-01-01T00:00:00Z",
+                "0:0:0",
+                "default",
+                "cid:abc",
             ),
         )
         conn.commit()
@@ -234,9 +244,7 @@ class TestLoadExistingFactsFromDb:
 
 
 class TestLoadExistingFactsFromApi:
-    def test_returns_facts_when_api_responds_200(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_returns_facts_when_api_responds_200(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import httpx
 
         def fake_get(url: str, **kw: Any) -> _FakeResp:
@@ -248,9 +256,7 @@ class TestLoadExistingFactsFromApi:
         result = load_existing_facts_from_api(diff, "http://node", "k")
         assert result["instruction:x/v1"] == "api content"
 
-    def test_skips_entries_without_fact_uri(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_skips_entries_without_fact_uri(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import httpx
 
         called = []
@@ -264,9 +270,7 @@ class TestLoadExistingFactsFromApi:
         assert load_existing_facts_from_api(diff, "http://node", "k") == {}
         assert called == []  # no HTTP call when fact_uri is empty
 
-    def test_swallows_http_errors(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_swallows_http_errors(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import httpx
 
         def fake_get(*a: Any, **kw: Any) -> _FakeResp:
@@ -277,10 +281,9 @@ class TestLoadExistingFactsFromApi:
         # Best-effort — returns empty dict on failure (silently)
         assert load_existing_facts_from_api(diff, "http://node", "k") == {}
 
-    def test_non_200_returns_no_entry(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_non_200_returns_no_entry(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import httpx
+
         monkeypatch.setattr(httpx, "get", lambda *a, **kw: _FakeResp(404))
         diff = [_diff_entry(fact_uri="instruction:x/v1")]
         assert load_existing_facts_from_api(diff, "http://node", "k") == {}
@@ -292,15 +295,15 @@ class TestLoadExistingFactsFromApi:
 
 
 class TestLoadPrevManifestNamesFromDb:
-    def test_returns_unit_names_from_active_manifest(
-        self, tmp_path: Path
-    ) -> None:
+    def test_returns_unit_names_from_active_manifest(self, tmp_path: Path) -> None:
         db = _migrated_db(tmp_path)
         conn = sqlite3.connect(db)
-        body_json = json.dumps([
-            {"name": "alpha", "fact_uri": "x"},
-            {"name": "beta", "fact_uri": "y"},
-        ])
+        body_json = json.dumps(
+            [
+                {"name": "alpha", "fact_uri": "x"},
+                {"name": "beta", "fact_uri": "y"},
+            ]
+        )
         conn.execute(
             """INSERT INTO instruction_manifests
                (id, agent_id, version, fact_uri, token_count, body, created_at)
@@ -329,9 +332,7 @@ class TestLoadPrevManifestNamesFromDb:
 
 
 class TestLoadPrevManifestNamesFromApi:
-    def test_returns_names_from_api(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_returns_names_from_api(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import httpx
 
         def fake_get(*a: Any, **kw: Any) -> _FakeResp:
@@ -343,12 +344,11 @@ class TestLoadPrevManifestNamesFromApi:
 
     def test_404_returns_empty(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import httpx
+
         monkeypatch.setattr(httpx, "get", lambda *a, **kw: _FakeResp(404))
         assert load_prev_manifest_names_from_api("a", "http://n", "k") == set()
 
-    def test_network_failure_returns_empty(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_network_failure_returns_empty(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import httpx
 
         def boom(*a: Any, **kw: Any) -> _FakeResp:
@@ -365,9 +365,11 @@ class TestLoadPrevManifestNamesFromApi:
 
 class TestWriteFacts:
     def test_skips_noop_and_tombstone(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         import httpx
+
         called = []
 
         def fake_post(*a: Any, **kw: Any) -> _FakeResp:
@@ -385,7 +387,8 @@ class TestWriteFacts:
         assert called == []  # no posts for NOOP/TOMBSTONE
 
     def test_create_and_update_post_to_facts_endpoint(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         import httpx
@@ -406,12 +409,13 @@ class TestWriteFacts:
         assert "u1 ✓" in out
 
     def test_non_201_response_increments_failed(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         import httpx
-        monkeypatch.setattr(httpx, "post",
-                            lambda *a, **kw: _FakeResp(500, text="boom"))
+
+        monkeypatch.setattr(httpx, "post", lambda *a, **kw: _FakeResp(500, text="boom"))
 
         diff = [_diff_entry(action="CREATE", unit_name="c1")]
         written, failed = write_facts(diff, "http://n", "k")
@@ -420,7 +424,8 @@ class TestWriteFacts:
         assert "FAILED: 500" in capsys.readouterr().err
 
     def test_network_exception_increments_failed(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         import httpx
@@ -443,9 +448,11 @@ class TestWriteFacts:
 
 class TestPublishManifest:
     def test_success_returns_true(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         import httpx
+
         captured: dict = {}
 
         def fake_put(url: str, **kw: Any) -> _FakeResp:
@@ -467,18 +474,20 @@ class TestPublishManifest:
         assert "instruction-manifest" in captured["url"]
 
     def test_non_200_returns_false_with_error(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         import httpx
-        monkeypatch.setattr(httpx, "put",
-                            lambda *a, **kw: _FakeResp(500, text="server err"))
+
+        monkeypatch.setattr(httpx, "put", lambda *a, **kw: _FakeResp(500, text="server err"))
         ok = publish_manifest("a", [_diff_entry()], "v1", "http://n", "k")
         assert ok is False
         assert "Manifest publish FAILED" in capsys.readouterr().err
 
     def test_network_failure_returns_false(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         import httpx
@@ -511,8 +520,11 @@ class TestComputeDiff:
     def test_create_when_no_existing(self) -> None:
         chunks = [self._chunk(slug="new-unit", content="body")]
         diff = compute_diff(
-            chunks, "dev/agent/a", "v1",
-            existing_content={}, prev_manifest_names=set(),
+            chunks,
+            "dev/agent/a",
+            "v1",
+            existing_content={},
+            prev_manifest_names=set(),
         )
         assert len(diff) >= 1
         assert any(d.action == "CREATE" for d in diff)
@@ -521,7 +533,9 @@ class TestComputeDiff:
         c = self._chunk(slug="u-1", content="new body")
         uri = build_fact_uri("dev/agent/a", "u-1", "v1")
         diff = compute_diff(
-            [c], "dev/agent/a", "v1",
+            [c],
+            "dev/agent/a",
+            "v1",
             existing_content={uri: "old body"},
             prev_manifest_names={"u-1"},
         )
@@ -532,7 +546,9 @@ class TestComputeDiff:
         c = self._chunk(slug="u-1", content="same body")
         uri = build_fact_uri("dev/agent/a", "u-1", "v1")
         diff = compute_diff(
-            [c], "dev/agent/a", "v1",
+            [c],
+            "dev/agent/a",
+            "v1",
             existing_content={uri: "same body"},
             prev_manifest_names={"u-1"},
         )
@@ -541,7 +557,9 @@ class TestComputeDiff:
     def test_tombstone_when_prev_unit_removed(self) -> None:
         # Current chunks empty; prev manifest had "removed-unit"
         diff = compute_diff(
-            [], "dev/agent/a", "v1",
+            [],
+            "dev/agent/a",
+            "v1",
             existing_content={},
             prev_manifest_names={"removed-unit"},
         )

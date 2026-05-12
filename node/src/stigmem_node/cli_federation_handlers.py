@@ -138,12 +138,10 @@ def _cmd_federation_cursor_import(args: argparse.Namespace) -> int:
                 )
                 continue
 
-            peer_row = conn.execute(
-                "SELECT id FROM peers WHERE id = ?", (peer_id,)
-            ).fetchone()
+            peer_row = conn.execute("SELECT id FROM peers WHERE id = ?", (peer_id,)).fetchone()
             if peer_row is None:
                 print(
-                    f"warning: peer {peer_id!r} ({entry.get('peer_node_id','?')}) "
+                    f"warning: peer {peer_id!r} ({entry.get('peer_node_id', '?')}) "
                     "not found in peers table — skipping (re-register the peer first)",
                     file=sys.stderr,
                 )
@@ -157,7 +155,7 @@ def _cmd_federation_cursor_import(args: argparse.Namespace) -> int:
                 ).fetchone()
                 if existing is not None and existing["cursor"] is not None:
                     print(
-                        f"info: cursor for peer {entry.get('peer_node_id','?')} "
+                        f"info: cursor for peer {entry.get('peer_node_id', '?')} "
                         f"({direction}) already set — skipping (use --force to overwrite)",
                         file=sys.stderr,
                     )

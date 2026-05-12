@@ -16,16 +16,15 @@ from cryptography.hazmat.primitives.serialization import (
 )
 from fastapi.testclient import TestClient
 
-from stigmem_node.auth import create_api_key
-from stigmem_node.db import apply_migrations
-from stigmem_node.main import create_app
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.routes.facts as facts_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
+from stigmem_node.auth import create_api_key
+from stigmem_node.db import apply_migrations
+from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -36,7 +35,9 @@ def _gen_keypair() -> tuple[str, str]:
     priv = Ed25519PrivateKey.generate()
     pub = priv.public_key()
     priv_b64 = (
-        base64.urlsafe_b64encode(priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption()))
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
         .decode()
         .rstrip("=")
     )
@@ -48,10 +49,12 @@ def _gen_keypair() -> tuple[str, str]:
     return pub_b64, priv_b64
 
 
-def _sign_fact(priv_b64: str, entity: str, relation: str, value_type: str, value_v: str, source: str) -> str:
+def _sign_fact(
+    priv_b64: str, entity: str, relation: str, value_type: str, value_v: str, source: str
+) -> str:
     raw = base64.urlsafe_b64decode(priv_b64 + "=" * (-len(priv_b64) % 4))
     privkey = Ed25519PrivateKey.from_private_bytes(raw)
-    msg = f"{entity}\n{relation}\n{value_type}\n{value_v}\n{source}".encode("utf-8")
+    msg = f"{entity}\n{relation}\n{value_type}\n{value_v}\n{source}".encode()
     return base64.urlsafe_b64encode(privkey.sign(msg)).decode().rstrip("=")
 
 
@@ -141,7 +144,14 @@ class TestEnrichedSingleFactAudit:
         )
         key_id = reg.json()["id"]
 
-        sig = _sign_fact(priv, _FACT["entity"], _FACT["relation"], _FACT["value"]["type"], _FACT["value"]["v"], _FACT["source"])
+        sig = _sign_fact(
+            priv,
+            _FACT["entity"],
+            _FACT["relation"],
+            _FACT["value"]["type"],
+            _FACT["value"]["v"],
+            _FACT["source"],
+        )
         fact_r = client.post(
             "/v1/facts",
             json={**_FACT, "attestation": {"key_id": key_id, "signature": sig}},
@@ -166,7 +176,9 @@ class TestEnrichedSingleFactAudit:
 
     def test_404_for_unknown_fact(self, client_entity) -> None:
         client, _entity, raw_key = client_entity
-        r = client.get("/v1/audit/facts/no-such-fact", headers={"Authorization": f"Bearer {raw_key}"})
+        r = client.get(
+            "/v1/audit/facts/no-such-fact", headers={"Authorization": f"Bearer {raw_key}"}
+        )
         assert r.status_code == 404
 
 
@@ -205,10 +217,21 @@ class TestEnrichedAuditQuery:
         app = create_app()
 
         with TestClient(app, raise_server_exceptions=True) as c:
-            c.post("/v1/facts", json={**_FACT, "relation": "a:rel"}, headers={"Authorization": f"Bearer {key_a}"})
-            c.post("/v1/facts", json={**_FACT, "relation": "b:rel"}, headers={"Authorization": f"Bearer {key_b}"})
+            c.post(
+                "/v1/facts",
+                json={**_FACT, "relation": "a:rel"},
+                headers={"Authorization": f"Bearer {key_a}"},
+            )
+            c.post(
+                "/v1/facts",
+                json={**_FACT, "relation": "b:rel"},
+                headers={"Authorization": f"Bearer {key_b}"},
+            )
 
-            r = c.get("/v1/audit?entity_uri=stigmem://test/agent/alice", headers={"Authorization": f"Bearer {key_a}"})
+            r = c.get(
+                "/v1/audit?entity_uri=stigmem://test/agent/alice",
+                headers={"Authorization": f"Bearer {key_a}"},
+            )
             assert r.status_code == 200
             entries = r.json()["entries"]
             assert all(e["entity_uri"] == "stigmem://test/agent/alice" for e in entries)
@@ -224,8 +247,19 @@ class TestEnrichedAuditQuery:
         reg = client.post("/v1/auth/agent-keys", json={"public_key": pub}, headers=hdr)
         key_id = reg.json()["id"]
 
-        sig = _sign_fact(priv, _FACT["entity"], _FACT["relation"], _FACT["value"]["type"], _FACT["value"]["v"], _FACT["source"])
-        client.post("/v1/facts", json={**_FACT, "attestation": {"key_id": key_id, "signature": sig}}, headers=hdr)
+        sig = _sign_fact(
+            priv,
+            _FACT["entity"],
+            _FACT["relation"],
+            _FACT["value"]["type"],
+            _FACT["value"]["v"],
+            _FACT["source"],
+        )
+        client.post(
+            "/v1/facts",
+            json={**_FACT, "attestation": {"key_id": key_id, "signature": sig}},
+            headers=hdr,
+        )
         client.post("/v1/facts", json={**_FACT, "relation": "unattested:rel"}, headers=hdr)
 
         attested = client.get("/v1/audit?attested=true", headers=hdr).json()["entries"]
@@ -274,11 +308,20 @@ class TestAuditCsvExport:
 
         reader = csv.DictReader(io.StringIO(r.text))
         expected = {
-            "id", "fact_id", "event_type",
-            "principal_entity_uri", "principal_oidc_sub",
+            "id",
+            "fact_id",
+            "event_type",
+            "principal_entity_uri",
+            "principal_oidc_sub",
             "source",
-            "attested_key_id", "attested_key_entity_uri", "attested_key_description",
-            "fact_entity", "fact_relation", "fact_value_type", "fact_value_v", "fact_scope",
+            "attested_key_id",
+            "attested_key_entity_uri",
+            "attested_key_description",
+            "fact_entity",
+            "fact_relation",
+            "fact_value_type",
+            "fact_value_v",
+            "fact_scope",
             "ts",
         }
         assert set(reader.fieldnames or []) == expected  # type: ignore[arg-type]
@@ -312,7 +355,14 @@ class TestAuditCsvExport:
         )
         key_id = reg.json()["id"]
 
-        sig = _sign_fact(priv, _FACT["entity"], _FACT["relation"], _FACT["value"]["type"], _FACT["value"]["v"], _FACT["source"])
+        sig = _sign_fact(
+            priv,
+            _FACT["entity"],
+            _FACT["relation"],
+            _FACT["value"]["type"],
+            _FACT["value"]["v"],
+            _FACT["source"],
+        )
         fact_r = client.post(
             "/v1/facts",
             json={**_FACT, "attestation": {"key_id": key_id, "signature": sig}},
@@ -345,7 +395,9 @@ class TestAuditCsvExport:
         hdr = {"Authorization": f"Bearer {raw_key}"}
 
         client.post("/v1/facts", json={**_FACT, "source": "src://a"}, headers=hdr)
-        client.post("/v1/facts", json={**_FACT, "relation": "other:rel", "source": "src://b"}, headers=hdr)
+        client.post(
+            "/v1/facts", json={**_FACT, "relation": "other:rel", "source": "src://b"}, headers=hdr
+        )
 
         r = client.get("/v1/audit/export?source=src://a", headers=hdr)
         rows = list(csv.DictReader(io.StringIO(r.text)))

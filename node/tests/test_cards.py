@@ -14,17 +14,17 @@ Tests cover:
 from __future__ import annotations
 
 import sqlite3
-import time
 
-import pytest
 from fastapi.testclient import TestClient
 
 _ALICE = "stigmem://testnode/agent/alice"
-_BOB   = "stigmem://testnode/agent/bob"
+_BOB = "stigmem://testnode/agent/bob"
 _CAROL = "stigmem://testnode/agent/carol"
 
 
-def _fact(entity: str, relation: str, v: str, scope: str = "local", confidence: float = 1.0) -> dict:
+def _fact(
+    entity: str, relation: str, v: str, scope: str = "local", confidence: float = 1.0
+) -> dict:
     return {
         "entity": entity,
         "relation": relation,
@@ -36,8 +36,13 @@ def _fact(entity: str, relation: str, v: str, scope: str = "local", confidence: 
 
 
 def _recall(client: TestClient, query: str, **kwargs) -> dict:
-    body = {"query": query, "scope": "local", "token_budget": 4000, "depth": 1,
-            "include_neighbors": False}
+    body = {
+        "query": query,
+        "scope": "local",
+        "token_budget": 4000,
+        "depth": 1,
+        "include_neighbors": False,
+    }
     body.update(kwargs)
     r = client.post("/v1/recall", json=body)
     assert r.status_code == 200, r.text
@@ -99,8 +104,16 @@ class TestCardLifecycle:
         r = client.get(f"/v1/cards/{_ALICE}", params={"scope": "local"})
         assert r.status_code == 200
         card = r.json()
-        for field in ("entity_uri", "scope", "summary", "fact_hashes",
-                      "avg_confidence", "refreshed_at", "is_stale", "has_contradictions"):
+        for field in (
+            "entity_uri",
+            "scope",
+            "summary",
+            "fact_hashes",
+            "avg_confidence",
+            "refreshed_at",
+            "is_stale",
+            "has_contradictions",
+        ):
             assert field in card, f"missing field {field!r}"
 
     def test_card_has_contradictions_flag(self, client: TestClient) -> None:
@@ -139,14 +152,12 @@ class TestRecallCardIntegration:
         # Pre-materialise, then mark stale manually
         client.get(f"/v1/cards/{_ALICE}", params={"scope": "local"})
         conn = sqlite3.connect(tmp_db)
-        conn.execute(
-            "UPDATE memory_cards SET is_stale = 1 WHERE entity_uri = ?", (_ALICE,)
-        )
+        conn.execute("UPDATE memory_cards SET is_stale = 1 WHERE entity_uri = ?", (_ALICE,))
         conn.commit()
         conn.close()
 
         body = _recall(client, "alice fallthrough test")
-        card_hits = [sf for sf in body["facts"] if sf.get("from_card")]
+        [sf for sf in body["facts"] if sf.get("from_card")]
         # Stale card should have been refreshed, so a card hit OR raw facts appear
         # Key invariant: at least one result about alice is present
         all_entities = {sf["fact"]["entity"] for sf in body["facts"]}
@@ -161,8 +172,9 @@ class TestRecallCardIntegration:
 
         # Recall should NOT produce a from_card hit for this entity
         body = _recall(client, "engineer manager")
-        card_hits = [sf for sf in body["facts"]
-                     if sf.get("from_card") and sf["fact"]["entity"] == _BOB]
+        card_hits = [
+            sf for sf in body["facts"] if sf.get("from_card") and sf["fact"]["entity"] == _BOB
+        ]
         assert len(card_hits) == 0
 
     def test_recall_response_preserves_from_card_false_for_raw_facts(
@@ -183,20 +195,20 @@ class TestRecallCardIntegration:
 class TestMultiEntityConsistency:
     def test_separate_cards_per_entity(self, client: TestClient) -> None:
         client.post("/v1/facts", json=_fact(_ALICE, "memory:role", "alice role"))
-        client.post("/v1/facts", json=_fact(_BOB,   "memory:role", "bob role"))
+        client.post("/v1/facts", json=_fact(_BOB, "memory:role", "bob role"))
 
         r_alice = client.get(f"/v1/cards/{_ALICE}", params={"scope": "local"})
-        r_bob   = client.get(f"/v1/cards/{_BOB}",   params={"scope": "local"})
+        r_bob = client.get(f"/v1/cards/{_BOB}", params={"scope": "local"})
 
         assert r_alice.status_code == 200
         assert r_bob.status_code == 200
         alice_card = r_alice.json()
-        bob_card   = r_bob.json()
+        bob_card = r_bob.json()
 
         assert alice_card["entity_uri"] == _ALICE
-        assert bob_card["entity_uri"]   == _BOB
+        assert bob_card["entity_uri"] == _BOB
         assert "alice role" in alice_card["summary"]
-        assert "bob role"   in bob_card["summary"]
+        assert "bob role" in bob_card["summary"]
         # Hashes must be distinct
         assert set(alice_card["fact_hashes"]) != set(bob_card["fact_hashes"])
 
@@ -204,11 +216,11 @@ class TestMultiEntityConsistency:
         self, client: TestClient, tmp_db: str
     ) -> None:
         client.post("/v1/facts", json=_fact(_ALICE, "memory:role", "alice"))
-        client.post("/v1/facts", json=_fact(_BOB,   "memory:role", "bob"))
+        client.post("/v1/facts", json=_fact(_BOB, "memory:role", "bob"))
 
         # Materialise both cards
         client.get(f"/v1/cards/{_ALICE}", params={"scope": "local"})
-        client.get(f"/v1/cards/{_BOB}",   params={"scope": "local"})
+        client.get(f"/v1/cards/{_BOB}", params={"scope": "local"})
 
         # Write to alice only
         client.post("/v1/facts", json=_fact(_ALICE, "memory:note", "new note"))

@@ -47,8 +47,10 @@ _DEFAULT_PATTERNS: list[str] = [
 
 # Invisible / bidi control characters to strip (§19.7.2)
 _BIDI_CONTROLS = frozenset(
-    chr(c) for c in [
-        0x200F, 0x200E,
+    chr(c)
+    for c in [
+        0x200F,
+        0x200E,
         *range(0x202A, 0x202F),
         *range(0x2066, 0x206A),
         *range(0x200B, 0x200E),
@@ -101,11 +103,12 @@ def reset_pattern_cache() -> None:
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def apply_recall_pipeline(
-    records: list["FactRecord"],
-    identity: "Identity | None" = None,
+    records: list[FactRecord],
+    identity: Identity | None = None,
     include_low_trust: bool = False,
-) -> list["FactRecord"]:
+) -> list[FactRecord]:
     """Apply trust multiplier and content sanitizer to a list of FactRecords.
 
     Returns a filtered/annotated list.  Records that should be fully excluded
@@ -119,7 +122,7 @@ def apply_recall_pipeline(
     if trust_mode == "off":
         sanitizer_mode = "off"
 
-    result: list["FactRecord"] = []
+    result: list[FactRecord] = []
 
     for record in records:
         # Skip quarantined facts from normal recall results (§19.5.2)
@@ -131,6 +134,7 @@ def apply_recall_pipeline(
         eff_conf = record.confidence
         if trust_mode != "off":
             from .source_trust import compute_source_trust
+
             t = compute_source_trust(record.source, record.scope, identity)
             eff_conf = record.confidence * t
             record = record.model_copy(update={"effective_confidence": eff_conf, "source_trust": t})
@@ -150,9 +154,9 @@ def apply_recall_pipeline(
     return result
 
 
-def _run_sanitizer(record: "FactRecord", mode: str, effective_confidence: float) -> "FactRecord":
+def _run_sanitizer(record: FactRecord, mode: str, effective_confidence: float) -> FactRecord:
     """Run content sanitizer on one fact record.  Returns possibly-modified record."""
-    from .models import FactRecord, FactValue
+    from .models import FactValue
 
     value = record.value
     if value.type not in ("string", "text"):
@@ -175,15 +179,16 @@ def _run_sanitizer(record: "FactRecord", mode: str, effective_confidence: float)
     if not matched_patterns:
         # No sentinel match; apply cleaned value if content was modified
         if cleaned != raw_v:
-            return record.model_copy(
-                update={"value": FactValue(type=value.type, v=cleaned)}
-            )
+            return record.model_copy(update={"value": FactValue(type=value.type, v=cleaned)})
         return record
 
     # Sentinel matched — apply enforcement mode
     if mode == "warn":
         return record.model_copy(
-            update={"sanitizer_warnings": matched_patterns, "value": FactValue(type=value.type, v=cleaned)}
+            update={
+                "sanitizer_warnings": matched_patterns,
+                "value": FactValue(type=value.type, v=cleaned),
+            }
         )
 
     if mode == "block":
@@ -211,19 +216,20 @@ def _run_sanitizer(record: "FactRecord", mode: str, effective_confidence: float)
     return record
 
 
-def _enforce_schema_types(record: "FactRecord") -> "FactRecord":
+def _enforce_schema_types(record: FactRecord) -> FactRecord:
     """Enforce schema correctness for non-string FactValue types (§19.7.3)."""
-    from .models import FactValue
     import math
 
-    v = record.value
-    redacted = False
+    from .models import FactValue
 
-    if v.type == "number":
-        if v.v is None or (isinstance(v.v, float) and (math.isnan(v.v) or math.isinf(v.v))):
-            return record.model_copy(
-                update={"value": FactValue(type="number", v=None), "sanitizer_redacted": True}
-            )
+    v = record.value
+
+    if v.type == "number" and (
+        v.v is None or (isinstance(v.v, float) and (math.isnan(v.v) or math.isinf(v.v)))
+    ):
+        return record.model_copy(
+            update={"value": FactValue(type="number", v=None), "sanitizer_redacted": True}
+        )
 
     if v.type == "ref":
         raw = str(v.v) if v.v is not None else ""
@@ -237,15 +243,17 @@ def _enforce_schema_types(record: "FactRecord") -> "FactRecord":
 
 def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
     """Move a fact to the node's quarantine garden (sanitizer quarantine mode)."""
-    from .settings import settings
-    from .db import db
     from datetime import UTC, datetime
+
+    from .db import db
+    from .settings import settings
 
     qg_id = settings.quarantine_garden_id
     if not qg_id:
         logger.warning(
             "Sanitizer quarantine mode set but quarantine_garden_id not configured; "
-            "fact %s will not be quarantined", fact_id
+            "fact %s will not be quarantined",
+            fact_id,
         )
         return
 
@@ -259,7 +267,9 @@ def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
                 (qg_id, qg_id),
             ).fetchone()
             if qg_row is None:
-                logger.warning("Quarantine garden %s not found; skipping sanitizer quarantine", qg_id)
+                logger.warning(
+                    "Quarantine garden %s not found; skipping sanitizer quarantine", qg_id
+                )
                 return
 
             conn.execute(
@@ -273,11 +283,22 @@ def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
 
             # Audit (§19.7.6)
             import uuid
+
             audit_id = str(uuid.uuid4())
             conn.execute(
-                """INSERT INTO fact_audit_log (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts)
+                """INSERT INTO fact_audit_log
+                   (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, ts)
                    VALUES (?,?,?,?,?,?,?,?)""",
-                (audit_id, fact_id, "sanitizer_quarantine", "system:stigmem", None, "system:stigmem", None, now),
+                (
+                    audit_id,
+                    fact_id,
+                    "sanitizer_quarantine",
+                    "system:stigmem",
+                    None,
+                    "system:stigmem",
+                    None,
+                    now,
+                ),
             )
     except Exception as exc:
         logger.error("Failed to quarantine fact %s via sanitizer: %s", fact_id, exc)

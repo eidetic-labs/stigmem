@@ -14,7 +14,6 @@ import sqlite3
 import uuid
 from datetime import UTC, datetime, timedelta
 
-import pytest
 from fastapi.testclient import TestClient
 
 from stigmem_node.auth import create_api_key
@@ -52,7 +51,17 @@ def _insert_tombstone(
         """INSERT INTO tombstones
            (id, entity_uri, scope, reason, signed_by, signature, created_at, legal_hold, tenant_id)
            VALUES (?,?,?,?,?,?,?,?,?)""",
-        (tid, entity_uri, scope, "test", "agent:admin", "sig", datetime.now(UTC).isoformat(), 1 if legal_hold else 0, tenant_id),
+        (
+            tid,
+            entity_uri,
+            scope,
+            "test",
+            "agent:admin",
+            "sig",
+            datetime.now(UTC).isoformat(),
+            1 if legal_hold else 0,
+            tenant_id,
+        ),
     )
     conn.commit()
     conn.close()
@@ -83,9 +92,10 @@ class TestFactsAsOfValidation:
         assert "total" in body
 
     def test_retention_floor_enforced(self, tmp_db: str, backend: str, encrypt: str) -> None:
+        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+
         import stigmem_node.settings as settings_module
         from stigmem_node.main import create_app
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
 
         original = settings_module.settings
         floor = (datetime.now(UTC) - timedelta(days=30)).isoformat()
@@ -114,7 +124,7 @@ class TestFactsAsOfValidation:
 
 class TestFactsAsOfTimeTravel:
     def test_fact_visible_at_assertion_time(self, client: TestClient) -> None:
-        before = datetime.now(UTC)
+        datetime.now(UTC)
         fact = _assert(client)
         after = datetime.now(UTC).isoformat()
 
@@ -141,7 +151,9 @@ class TestFactsAsOfTimeTravel:
         retracted_at = datetime.now(UTC).isoformat()
         conn = sqlite3.connect(tmp_db)
         conn.execute(
-            "INSERT INTO fact_retractions (id, fact_id, retracted_at, retracted_by) VALUES (?,?,?,?)",
+            """INSERT INTO fact_retractions
+               (id, fact_id, retracted_at, retracted_by)
+               VALUES (?,?,?,?)""",
             (str(uuid.uuid4()), fact["id"], retracted_at, "agent:test"),
         )
         conn.commit()
@@ -153,7 +165,9 @@ class TestFactsAsOfTimeTravel:
         ids = {f["id"] for f in r.json()["facts"]}
         assert fact["id"] not in ids
 
-    def test_retracted_fact_visible_before_retraction(self, client: TestClient, tmp_db: str) -> None:
+    def test_retracted_fact_visible_before_retraction(
+        self, client: TestClient, tmp_db: str
+    ) -> None:
         fact = _assert(client)
         before_retract = datetime.now(UTC) - timedelta(seconds=1)
 
@@ -161,7 +175,9 @@ class TestFactsAsOfTimeTravel:
         retracted_at = datetime.now(UTC).isoformat()
         conn = sqlite3.connect(tmp_db)
         conn.execute(
-            "INSERT INTO fact_retractions (id, fact_id, retracted_at, retracted_by) VALUES (?,?,?,?)",
+            """INSERT INTO fact_retractions
+               (id, fact_id, retracted_at, retracted_by)
+               VALUES (?,?,?,?)""",
             (str(uuid.uuid4()), fact["id"], retracted_at, "agent:test"),
         )
         conn.commit()
@@ -195,10 +211,11 @@ class TestFactsAsOfTombstoneGating:
     def test_legal_hold_entity_silently_filtered_for_agent(
         self, tmp_db: str, backend: str, encrypt: str
     ) -> None:
-        """Agent keys MUST NOT receive legal_hold facts — silent filter, no 403 (§24.3.2 rev 14 F-4)."""
+        """Agent keys silently filter legal-hold facts instead of returning 403."""
+        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+
         import stigmem_node.settings as settings_module
         from stigmem_node.main import create_app
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
 
         original = settings_module.settings
         test_settings = _make_enc_settings(tmp_db, backend, encrypt, auth_required=True)
@@ -232,7 +249,7 @@ class TestFactsAsOfTombstoneGating:
             )
             assert r.status_code == 200
             body = r.json()
-            ids = {f["id"] for f in body["facts"]}
+            {f["id"] for f in body["facts"]}
             # Fact silently absent; no tombstone_notices for agent callers
             assert "stigmem://test/user/bob" not in {f["entity"] for f in body["facts"]}
             assert body.get("tombstone_notices", []) == []
@@ -243,9 +260,10 @@ class TestFactsAsOfTombstoneGating:
         self, tmp_db: str, backend: str, encrypt: str
     ) -> None:
         """Admin keys with 'admin' permission receive legal_hold facts + tombstone_notices."""
+        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+
         import stigmem_node.settings as settings_module
         from stigmem_node.main import create_app
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
 
         original = settings_module.settings
         test_settings = _make_enc_settings(tmp_db, backend, encrypt, auth_required=True)
@@ -302,7 +320,9 @@ class TestFactsAsOfTombstoneGating:
         assert "x-total-count" in r.headers
         assert int(r.headers["x-total-count"]) == r.json()["total"]
 
-    def test_x_total_count_suppressed_after_tombstone(self, client: TestClient, tmp_db: str) -> None:
+    def test_x_total_count_suppressed_after_tombstone(
+        self, client: TestClient, tmp_db: str
+    ) -> None:
         """§23.3.3 r.3: total and X-Total-Count suppressed when tombstone filter applied."""
         _assert(client, entity="stigmem://test/user/dave")
         _assert(client, entity="stigmem://test/user/eve")
@@ -387,9 +407,10 @@ class TestRecallAsOf:
         self, tmp_db: str, backend: str, encrypt: str
     ) -> None:
         """Agent key: legal_hold fact silently absent from recall results (§24.3.2)."""
+        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+
         import stigmem_node.settings as settings_module
         from stigmem_node.main import create_app
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
 
         original = settings_module.settings
         test_settings = _make_enc_settings(tmp_db, backend, encrypt, auth_required=True)

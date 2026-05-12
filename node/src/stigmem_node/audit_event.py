@@ -90,12 +90,34 @@ def emit(
     detail_json = json.dumps(detail) if detail else None
 
     if conn is not None:
-        _emit_with_conn(event_type, entity_uri, tenant_id, oidc_sub, fact_id,
-                        source, attested_key_id, detail_json, now, entry_id, conn)
+        _emit_with_conn(
+            event_type,
+            entity_uri,
+            tenant_id,
+            oidc_sub,
+            fact_id,
+            source,
+            attested_key_id,
+            detail_json,
+            now,
+            entry_id,
+            conn,
+        )
     else:
         with db() as _conn:
-            _emit_with_conn(event_type, entity_uri, tenant_id, oidc_sub, fact_id,
-                            source, attested_key_id, detail_json, now, entry_id, _conn)
+            _emit_with_conn(
+                event_type,
+                entity_uri,
+                tenant_id,
+                oidc_sub,
+                fact_id,
+                source,
+                attested_key_id,
+                detail_json,
+                now,
+                entry_id,
+                _conn,
+            )
 
     # §22.3: increment Prometheus counter for every successfully written audit event.
     AUDIT_EVENT.labels(event_type=event_type, tenant=tenant_id).inc()
@@ -134,6 +156,7 @@ def emit_nofail(
 ) -> None:
     """Like ``emit()`` but swallows exceptions — use in middleware/best-effort paths."""
     import logging
+
     try:
         emit(
             event_type,
@@ -149,5 +172,7 @@ def emit_nofail(
     except Exception:
         logging.getLogger("stigmem.audit").exception(
             "Failed to emit audit event type=%s principal=%s tenant=%s",
-            event_type, entity_uri, tenant_id,
+            event_type,
+            entity_uri,
+            tenant_id,
         )

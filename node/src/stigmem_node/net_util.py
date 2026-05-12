@@ -51,6 +51,4 @@ def assert_safe_url(
         ip = ipaddress.ip_address(info[4][0])
         for net in _BLOCKED_NETS:
             if ip in net:
-                raise ValueError(
-                    f"Blocked private/loopback address for {hostname!r}: {ip}"
-                )
+                raise ValueError(f"Blocked private/loopback address for {hostname!r}: {ip}")

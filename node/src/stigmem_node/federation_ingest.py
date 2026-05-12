@@ -70,7 +70,9 @@ def ingest_fact(
     trust_mode = settings.trust_mode
     if trust_mode != "off":
         trust_score = compute_source_trust(
-            source, scope, identity=None,
+            source,
+            scope,
+            identity=None,
             identity_strength_override=identity_strength_boost,
         )
 
@@ -80,6 +82,7 @@ def ingest_fact(
             if not qg_id:
                 # No quarantine garden configured — reject the fact
                 from fastapi import HTTPException
+
                 raise HTTPException(
                     status_code=403,
                     detail="trust_below_threshold",
@@ -92,6 +95,7 @@ def ingest_fact(
                 ).fetchone()
             if qg_row is None:
                 from fastapi import HTTPException
+
                 raise HTTPException(
                     status_code=403,
                     detail="trust_below_threshold",
@@ -155,7 +159,8 @@ def ingest_fact(
             audit_now = datetime.now(UTC).isoformat()
             conn.execute(
                 """INSERT INTO fact_audit_log
-                   (id, fact_id, event_type, entity_uri, oidc_sub, source, attested_key_id, detail, ts)
+                   (id, fact_id, event_type, entity_uri, oidc_sub, source,
+                    attested_key_id, detail, ts)
                    VALUES (?,?,?,?,?,?,?,?,?)""",
                 (
                     audit_id,
@@ -181,7 +186,7 @@ def ingest_fact(
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 meta_id,
-                fact_id,           # entity = the ingested fact's ID
+                fact_id,  # entity = the ingested fact's ID
                 "stigmem:received_from",
                 "ref",
                 sender_node_id,
@@ -189,7 +194,7 @@ def ingest_fact(
                 meta_now,
                 None,
                 1.0,
-                "local",           # meta-facts are local; MUST NOT be re-replicated (spec §3.1)
+                "local",  # meta-facts are local; MUST NOT be re-replicated (spec §3.1)
                 meta_hlc,
                 None,
             ),

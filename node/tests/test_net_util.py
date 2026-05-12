@@ -14,7 +14,6 @@ import pytest
 
 from stigmem_node.net_util import assert_safe_url
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -53,9 +52,11 @@ def test_no_scheme_rejected():
 
 def test_http_rejected_by_default():
     """HTTP is not in the default allow_schemes — only HTTPS."""
-    with patch("socket.getaddrinfo", _fake_getaddrinfo("93.184.216.34")):
-        with pytest.raises(ValueError, match="Disallowed URL scheme"):
-            assert_safe_url("http://example.com/path")
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo("93.184.216.34")),
+        pytest.raises(ValueError, match="Disallowed URL scheme"),
+    ):
+        assert_safe_url("http://example.com/path")
 
 
 def test_https_allowed_for_public_ip():
@@ -74,21 +75,27 @@ def test_http_allowed_when_explicitly_permitted():
 
 
 def test_loopback_127_blocked():
-    with patch("socket.getaddrinfo", _fake_getaddrinfo("127.0.0.1")):
-        with pytest.raises(ValueError, match="Blocked private/loopback"):
-            assert_safe_url("https://localhost/", allow_schemes=frozenset({"https", "http"}))
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo("127.0.0.1")),
+        pytest.raises(ValueError, match="Blocked private/loopback"),
+    ):
+        assert_safe_url("https://localhost/", allow_schemes=frozenset({"https", "http"}))
 
 
 def test_loopback_127_0_0_2_blocked():
-    with patch("socket.getaddrinfo", _fake_getaddrinfo("127.0.0.2")):
-        with pytest.raises(ValueError, match="Blocked private/loopback"):
-            assert_safe_url("https://internalhost/", allow_schemes=frozenset({"https", "http"}))
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo("127.0.0.2")),
+        pytest.raises(ValueError, match="Blocked private/loopback"),
+    ):
+        assert_safe_url("https://internalhost/", allow_schemes=frozenset({"https", "http"}))
 
 
 def test_ipv6_loopback_blocked():
-    with patch("socket.getaddrinfo", _fake_getaddrinfo("::1")):
-        with pytest.raises(ValueError, match="Blocked private/loopback"):
-            assert_safe_url("https://ip6-loopback/", allow_schemes=frozenset({"https", "http"}))
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo("::1")),
+        pytest.raises(ValueError, match="Blocked private/loopback"),
+    ):
+        assert_safe_url("https://ip6-loopback/", allow_schemes=frozenset({"https", "http"}))
 
 
 # ---------------------------------------------------------------------------
@@ -98,18 +105,22 @@ def test_ipv6_loopback_blocked():
 
 def test_aws_imds_blocked():
     """169.254.169.254 must be unreachable regardless of hostname used."""
-    with patch("socket.getaddrinfo", _fake_getaddrinfo("169.254.169.254")):
-        with pytest.raises(ValueError, match="Blocked private/loopback"):
-            assert_safe_url(
-                "http://169.254.169.254/latest/meta-data/",
-                allow_schemes=frozenset({"https", "http"}),
-            )
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo("169.254.169.254")),
+        pytest.raises(ValueError, match="Blocked private/loopback"),
+    ):
+        assert_safe_url(
+            "http://169.254.169.254/latest/meta-data/",
+            allow_schemes=frozenset({"https", "http"}),
+        )
 
 
 def test_link_local_any_host_blocked():
-    with patch("socket.getaddrinfo", _fake_getaddrinfo("169.254.1.100")):
-        with pytest.raises(ValueError, match="Blocked private/loopback"):
-            assert_safe_url("https://internal-svc/", allow_schemes=frozenset({"https", "http"}))
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo("169.254.1.100")),
+        pytest.raises(ValueError, match="Blocked private/loopback"),
+    ):
+        assert_safe_url("https://internal-svc/", allow_schemes=frozenset({"https", "http"}))
 
 
 # ---------------------------------------------------------------------------
@@ -119,23 +130,29 @@ def test_link_local_any_host_blocked():
 
 @pytest.mark.parametrize("ip", ["10.0.0.1", "10.255.255.255"])
 def test_rfc1918_10_blocked(ip: str):
-    with patch("socket.getaddrinfo", _fake_getaddrinfo(ip)):
-        with pytest.raises(ValueError, match="Blocked private/loopback"):
-            assert_safe_url("https://corp-internal/", allow_schemes=frozenset({"https", "http"}))
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo(ip)),
+        pytest.raises(ValueError, match="Blocked private/loopback"),
+    ):
+        assert_safe_url("https://corp-internal/", allow_schemes=frozenset({"https", "http"}))
 
 
 @pytest.mark.parametrize("ip", ["172.16.0.1", "172.31.255.255"])
 def test_rfc1918_172_blocked(ip: str):
-    with patch("socket.getaddrinfo", _fake_getaddrinfo(ip)):
-        with pytest.raises(ValueError, match="Blocked private/loopback"):
-            assert_safe_url("https://corp-internal/", allow_schemes=frozenset({"https", "http"}))
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo(ip)),
+        pytest.raises(ValueError, match="Blocked private/loopback"),
+    ):
+        assert_safe_url("https://corp-internal/", allow_schemes=frozenset({"https", "http"}))
 
 
 @pytest.mark.parametrize("ip", ["192.168.0.1", "192.168.255.255"])
 def test_rfc1918_192_blocked(ip: str):
-    with patch("socket.getaddrinfo", _fake_getaddrinfo(ip)):
-        with pytest.raises(ValueError, match="Blocked private/loopback"):
-            assert_safe_url("https://home-router/", allow_schemes=frozenset({"https", "http"}))
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo(ip)),
+        pytest.raises(ValueError, match="Blocked private/loopback"),
+    ):
+        assert_safe_url("https://home-router/", allow_schemes=frozenset({"https", "http"}))
 
 
 # ---------------------------------------------------------------------------
@@ -144,15 +161,19 @@ def test_rfc1918_192_blocked(ip: str):
 
 
 def test_ipv6_ula_blocked():
-    with patch("socket.getaddrinfo", _fake_getaddrinfo("fd00::1")):
-        with pytest.raises(ValueError, match="Blocked private/loopback"):
-            assert_safe_url("https://ula-host/", allow_schemes=frozenset({"https", "http"}))
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo("fd00::1")),
+        pytest.raises(ValueError, match="Blocked private/loopback"),
+    ):
+        assert_safe_url("https://ula-host/", allow_schemes=frozenset({"https", "http"}))
 
 
 def test_ipv6_link_local_blocked():
-    with patch("socket.getaddrinfo", _fake_getaddrinfo("fe80::1")):
-        with pytest.raises(ValueError, match="Blocked private/loopback"):
-            assert_safe_url("https://ll-host/", allow_schemes=frozenset({"https", "http"}))
+    with (
+        patch("socket.getaddrinfo", _fake_getaddrinfo("fe80::1")),
+        pytest.raises(ValueError, match="Blocked private/loopback"),
+    ):
+        assert_safe_url("https://ll-host/", allow_schemes=frozenset({"https", "http"}))
 
 
 # ---------------------------------------------------------------------------

@@ -57,15 +57,19 @@ def store_peer_manifest(
     verify_manifest(manifest, trust_mode=trust_mode)
 
     now = datetime.now(UTC).isoformat()
-    log_entry_json = json.dumps(
-        {
-            "log_id": log_entry.log_id,
-            "leaf_hash": log_entry.leaf_hash,
-            "log_index": log_entry.log_index,
-            "integrated_time": log_entry.integrated_time,
-            "inclusion_proof": log_entry.inclusion_proof,
-        }
-    ) if log_entry is not None else None
+    log_entry_json = (
+        json.dumps(
+            {
+                "log_id": log_entry.log_id,
+                "leaf_hash": log_entry.leaf_hash,
+                "log_index": log_entry.log_index,
+                "integrated_time": log_entry.integrated_time,
+                "inclusion_proof": log_entry.inclusion_proof,
+            }
+        )
+        if log_entry is not None
+        else None
+    )
 
     manifest_json = json.dumps(manifest_to_dict(manifest), separators=(",", ":"))
 
@@ -87,9 +91,7 @@ def store_peer_manifest(
                         previous_pubkey_b64=prev_manifest.public_key,
                     )
                 except ManifestError as exc:
-                    raise ManifestError(
-                        f"manifest update rejected: {exc}"
-                    ) from exc
+                    raise ManifestError(f"manifest update rejected: {exc}") from exc
 
             conn.execute(
                 """UPDATE federation_manifests
@@ -193,9 +195,7 @@ def refresh_peer_manifests() -> None:
     from ..db import db
 
     with db() as conn:
-        rows = conn.execute(
-            "SELECT entity_uri, manifest_json FROM federation_manifests"
-        ).fetchall()
+        rows = conn.execute("SELECT entity_uri, manifest_json FROM federation_manifests").fetchall()
 
     for row in rows:
         entity_uri: str = row["entity_uri"]
@@ -224,6 +224,7 @@ def _try_fetch_manifest(entity_uri: str) -> OrgManifest | None:
     # entity_uri is expected to be an https:// URI or stigmem:// URI
     if entity_uri.startswith("https://") or entity_uri.startswith("http://"):
         from urllib.parse import urlparse
+
         parsed = urlparse(entity_uri)
         base_url = f"{parsed.scheme}://{parsed.netloc}"
     else:
@@ -249,8 +250,9 @@ def _try_fetch_manifest(entity_uri: str) -> OrgManifest | None:
 
 def cleanup_expired_tokens() -> int:
     """Delete capability tokens expired more than 24 hours ago. Returns count deleted."""
-    from ..db import db
     from datetime import timedelta
+
+    from ..db import db
 
     cutoff = (datetime.now(UTC) - timedelta(hours=24)).isoformat()
     with db() as conn:

@@ -12,9 +12,9 @@ VALID_SCOPES = {"local", "team", "company", "public"}
 VALID_GARDEN_ROLES = {"admin", "writer", "reader", "quarantine:moderator"}
 
 # Quarantine statuses written to facts.quarantine_status
-QUARANTINE_PENDING   = "pending"
-QUARANTINE_PROMOTED  = "promoted"
-QUARANTINE_REJECTED  = "rejected"
+QUARANTINE_PENDING = "pending"
+QUARANTINE_PROMOTED = "promoted"
+QUARANTINE_REJECTED = "rejected"
 
 
 class FactValue(BaseModel):
@@ -70,16 +70,16 @@ class FactRecord(BaseModel):
     value: FactValue
     source: str
     timestamp: str
-    hlc: str | None = None          # v0.5: HLC timestamp; null for pre-migration facts
+    hlc: str | None = None  # v0.5: HLC timestamp; null for pre-migration facts
     received_from: str | None = None  # v0.5: originating node_id if federated
     valid_until: str | None = None
     confidence: float
     scope: str
     attested_key_id: str | None = None  # v1.0: agent key that attested this assertion
-    origin_node_id: str | None = None         # v0.8: original assertor node_id (§6.8.1)
+    origin_node_id: str | None = None  # v0.8: original assertor node_id (§6.8.1)
     origin_allowed_scopes: list[str] | None = None  # v0.8: scopes permitted at origin (§6.8.1)
-    garden_id: str | None = None    # v0.9: garden URI; null = no garden
-    attested: bool | None = None    # v0.9: source attestation result; null = not applicable
+    garden_id: str | None = None  # v0.9: garden URI; null = no garden
+    attested: bool | None = None  # v0.9: source attestation result; null = not applicable
     contradicted: bool = False
     # write-time convention warnings (assert only)
     warnings: list[str] = Field(default_factory=list)
@@ -106,6 +106,7 @@ class QueryResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Federation models (v0.5)
 # ---------------------------------------------------------------------------
+
 
 class PeerRegisterRequest(BaseModel):
     node_url: str = Field(..., min_length=1)
@@ -164,6 +165,7 @@ class ConflictResolveRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # Memory Garden models (spec §17 — v0.9)
 # ---------------------------------------------------------------------------
+
 
 class GardenMemberRecord(BaseModel):
     entity_uri: str
@@ -227,8 +229,10 @@ class GardenMemberUpdateRequest(BaseModel):
 # Quarantine garden action models (spec §19.5.5, §5.25)
 # ---------------------------------------------------------------------------
 
+
 class QuarantinePromoteRequest(BaseModel):
     """POST /v1/gardens/:id/promote — move a quarantined fact to a target garden."""
+
     fact_id: str = Field(..., min_length=1)
     target_garden_id: str | None = Field(
         None,
@@ -239,12 +243,14 @@ class QuarantinePromoteRequest(BaseModel):
 
 class QuarantineRejectRequest(BaseModel):
     """POST /v1/gardens/:id/reject — permanently reject a quarantined fact."""
+
     fact_id: str = Field(..., min_length=1)
     reason: str = Field("", description="Human-readable reason for rejection.")
 
 
 class QuarantineRecord(BaseModel):
     """Quarantined fact as returned by GET /v1/quarantine."""
+
     fact_id: str
     entity: str
     relation: str
@@ -278,13 +284,12 @@ def row_to_record(
     sanitizer_redacted: bool = False,
 ) -> FactRecord:
     import json as _json
+
     keys = row.keys()
     attested_raw = _optional_col(row, "attested", keys)
     attested: bool | None = None if attested_raw is None else bool(attested_raw)
     raw_scopes = _optional_col(row, "origin_allowed_scopes", keys)
-    origin_allowed_scopes: list[str] | None = (
-        _json.loads(raw_scopes) if raw_scopes else None
-    )
+    origin_allowed_scopes: list[str] | None = _json.loads(raw_scopes) if raw_scopes else None
     source_trust_raw = _optional_col(row, "source_trust", keys)
     source_trust: float | None = float(source_trust_raw) if source_trust_raw is not None else None
     return FactRecord(
@@ -330,6 +335,7 @@ def _parse_v(vtype: str, raw: str) -> Any:
 # Agent key models (spec §C1 — per-agent keypair registration)
 # ---------------------------------------------------------------------------
 
+
 class AgentKeyRegisterRequest(BaseModel):
     public_key: str = Field(
         ..., min_length=1, description="base64url-encoded Ed25519 raw public key"
@@ -349,6 +355,7 @@ class AgentKeyRecord(BaseModel):
 # ---------------------------------------------------------------------------
 # Fact audit models (spec §C3 — end-to-end audit log)
 # ---------------------------------------------------------------------------
+
 
 class AuditLogEntry(BaseModel):
     id: str
@@ -373,6 +380,7 @@ class AuditLogResponse(BaseModel):
     entries: list[AuditLogEntry]
     total: int
     cursor: str | None
+
 
 # ---------------------------------------------------------------------------
 # Intent Envelope models (spec §4, §5.14 — v0.8)
@@ -522,12 +530,14 @@ VALID_ON_CHANGE = {"webhook", "wake"}
 
 class SubscriptionCreateRequest(BaseModel):
     target: str = Field(
-        ..., min_length=1,
+        ...,
+        min_length=1,
         description="Scope name (e.g. 'local') or entity URI to watch",
     )
     on_change: str = Field(..., description="'webhook' or 'wake'")
     delivery_address: str = Field(
-        ..., min_length=1,
+        ...,
+        min_length=1,
         description="Webhook URL (on_change=webhook) or identity URI (on_change=wake)",
     )
     idempotency_key: str | None = Field(None, description="Optional client idempotency key")
@@ -591,8 +601,10 @@ class TombstoneNotice(BaseModel):
 # RTBF Tombstones (spec §23)
 # ---------------------------------------------------------------------------
 
+
 class TombstoneRecord(BaseModel):
     """Durable record directing every node to suppress facts about entity_uri (§23.2)."""
+
     id: str
     entity_uri: str
     scope: str
@@ -606,6 +618,7 @@ class TombstoneRecord(BaseModel):
 
 class TombstoneRevocationRecord(BaseModel):
     """Record reinstating a tombstoned entity (§23.2.5)."""
+
     id: str
     tombstone_id: str
     reason: str
@@ -642,6 +655,7 @@ class FederationTombstonesResponse(BaseModel):
 # Provenance walk models (spec §23.3.2 r.4, §20.6.2)
 # ---------------------------------------------------------------------------
 
+
 class ProvenanceEntry(BaseModel):
     """One entry in a fact's derived_from chain.
 
@@ -649,6 +663,7 @@ class ProvenanceEntry(BaseModel):
     inaccessible (§23.3.2 r.4 + §20.6.2). Shape is identical in both cases so
     callers cannot distinguish tombstone from unauthorized.
     """
+
     hash: str
     fact_id: str | None = None
     entity: str | None = None
@@ -657,6 +672,7 @@ class ProvenanceEntry(BaseModel):
 
 class ProvenanceResponse(BaseModel):
     """Response for GET /v1/facts/:id/provenance."""
+
     fact_id: str
     cid: str | None = None
     derived_from: list[ProvenanceEntry]

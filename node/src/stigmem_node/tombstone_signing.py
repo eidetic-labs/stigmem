@@ -74,9 +74,7 @@ def sign_tombstone(record: TombstoneRecord) -> TombstoneRecord:
 
     priv = load_node_private_key()
     if priv is None:
-        raise RuntimeError(
-            "STIGMEM_NODE_PRIVATE_KEY not configured; cannot sign tombstones"
-        )
+        raise RuntimeError("STIGMEM_NODE_PRIVATE_KEY not configured; cannot sign tombstones")
 
     pub = priv.public_key()
     key_id = generate_key_id(pub)
@@ -123,9 +121,7 @@ def sign_revocation(record: TombstoneRevocationRecord) -> TombstoneRevocationRec
 
     priv = load_node_private_key()
     if priv is None:
-        raise RuntimeError(
-            "STIGMEM_NODE_PRIVATE_KEY not configured; cannot sign revocations"
-        )
+        raise RuntimeError("STIGMEM_NODE_PRIVATE_KEY not configured; cannot sign revocations")
 
     pub = priv.public_key()
     key_id = generate_key_id(pub)

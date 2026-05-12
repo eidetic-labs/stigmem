@@ -58,9 +58,7 @@ def register_alias(
         raise ValueError(str(exc)) from exc
 
     if norm_raw == norm_canonical:
-        raise ValueError(
-            f"raw_uri and canonical_uri must differ after normalization: {norm_raw!r}"
-        )
+        raise ValueError(f"raw_uri and canonical_uri must differ after normalization: {norm_raw!r}")
 
     now = datetime.now(UTC).isoformat()
     conn.execute(

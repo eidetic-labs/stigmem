@@ -43,7 +43,9 @@ def compute_cid(
         "value_type": value_type,
         "value_v": value_v,
     }
-    canonical = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    canonical = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode(
+        "utf-8"
+    )
     digest = hashlib.sha256(canonical).hexdigest()
     return f"{_CID_PREFIX}{digest}"
 

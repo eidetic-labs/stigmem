@@ -29,7 +29,9 @@ def cid_backfill_status(
 ) -> CidBackfillStatus:
     """Return CID backfill progress for this node (spec §25.6.3)."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
     with db() as conn:
         total = conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0]
         backfilled = conn.execute("SELECT COUNT(*) FROM facts WHERE cid IS NOT NULL").fetchone()[0]

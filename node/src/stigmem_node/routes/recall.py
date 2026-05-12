@@ -184,6 +184,7 @@ def _recency_score(timestamp_str: str) -> float:
 # Lexical search (FTS5 / BM25)
 # ---------------------------------------------------------------------------
 
+
 def _lexical_search(
     conn: Any,
     query: str,
@@ -239,6 +240,7 @@ def _lexical_search(
 # Semantic (dense vector) search
 # ---------------------------------------------------------------------------
 
+
 def _semantic_search(
     conn: Any,
     query: str,
@@ -257,9 +259,7 @@ def _semantic_search(
         vecs = model.embed([query])
         if not vecs:
             return {}
-        results = vector_search(
-            vecs[0], k=k, scope_filter=scope, tenant_id=tenant_id, conn=conn
-        )
+        results = vector_search(vecs[0], k=k, scope_filter=scope, tenant_id=tenant_id, conn=conn)
         return {record.id: float(sim) for record, sim in results}
     except Exception as exc:
         logger.warning("Semantic search failed: %s", exc)
@@ -269,6 +269,7 @@ def _semantic_search(
 # ---------------------------------------------------------------------------
 # Graph expansion
 # ---------------------------------------------------------------------------
+
 
 def _graph_expand(
     conn: Any,
@@ -291,7 +292,7 @@ def _graph_expand(
         seed_fact_ids,
     ).fetchall()
 
-    seed_entities = [row["entity"] for row in seed_rows][: _MAX_SEED_ENTITIES]
+    seed_entities = [row["entity"] for row in seed_rows][:_MAX_SEED_ENTITIES]
     if not seed_entities:
         return {}
 
@@ -313,7 +314,7 @@ def _graph_expand(
     if not entity_min_hops:
         return {}
 
-    entities = list(entity_min_hops.keys())[: _MAX_GRAPH_ENTITIES]
+    entities = list(entity_min_hops.keys())[:_MAX_GRAPH_ENTITIES]
     placeholders = ",".join("?" * len(entities))
     fact_rows = conn.execute(
         f"""
@@ -329,15 +330,13 @@ def _graph_expand(
         [*entities, scope, tenant_id, min_confidence, now, k],
     ).fetchall()
 
-    return {
-        row["id"]: entity_min_hops.get(row["entity"], depth)
-        for row in fact_rows
-    }
+    return {row["id"]: entity_min_hops.get(row["entity"], depth) for row in fact_rows}
 
 
 # ---------------------------------------------------------------------------
 # Fact fetch helpers
 # ---------------------------------------------------------------------------
+
 
 def _fetch_facts_by_ids(
     conn: Any,
@@ -357,6 +356,7 @@ def _fetch_facts_by_ids(
 # ---------------------------------------------------------------------------
 # Scoring
 # ---------------------------------------------------------------------------
+
 
 def _score_candidates(
     all_facts: dict[str, FactRecord],
@@ -453,6 +453,7 @@ def _score_candidates(
 # Token-budget greedy packing
 # ---------------------------------------------------------------------------
 
+
 def _greedy_pack(
     candidates: list[ScoredFact],
     token_budget: int,
@@ -481,6 +482,7 @@ def _greedy_pack(
 # ---------------------------------------------------------------------------
 # Audit
 # ---------------------------------------------------------------------------
+
 
 def _write_recall_audit(
     conn: Any,
@@ -522,6 +524,7 @@ def _write_recall_audit(
 # ---------------------------------------------------------------------------
 # §24 Time-travel recall implementation
 # ---------------------------------------------------------------------------
+
 
 def _recall_as_of_impl(
     conn: Any,
@@ -577,6 +580,7 @@ def _recall_as_of_impl(
     def _recency_as_of(ts_str: str, as_of_ts: str) -> float:
         try:
             from datetime import UTC, datetime
+
             ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
             aof = datetime.fromisoformat(as_of_ts.replace("Z", "+00:00"))
             if ts.tzinfo is None:
@@ -604,23 +608,23 @@ def _recall_as_of_impl(
         if settings.trust_mode != "off":
             trust_s = compute_source_trust(record.source, record.scope, identity)
         raw = (
-            weights.lexical * lex
-            + weights.recency * rec_s
-            + weights.source_trust * trust_s
+            weights.lexical * lex + weights.recency * rec_s + weights.source_trust * trust_s
         ) / total_weight
         final_score = raw * max(0.0, record.confidence)
-        scored.append(ScoredFact(
-            fact=record,
-            score=round(final_score, 6),
-            score_breakdown=ScoreBreakdown(
-                lexical=round(lex, 4),
-                recency=round(rec_s, 4),
-                source_trust=round(trust_s, 4),
-                weighted_total=round(final_score, 6),
-            ),
-            hop_distance=0,
-            token_estimate=_estimate_tokens(record),
-        ))
+        scored.append(
+            ScoredFact(
+                fact=record,
+                score=round(final_score, 6),
+                score_breakdown=ScoreBreakdown(
+                    lexical=round(lex, 4),
+                    recency=round(rec_s, 4),
+                    source_trust=round(trust_s, 4),
+                    weighted_total=round(final_score, 6),
+                ),
+                hop_distance=0,
+                token_estimate=_estimate_tokens(record),
+            )
+        )
 
     scored.sort(key=lambda c: c.score, reverse=True)
 
@@ -639,6 +643,7 @@ def _recall_as_of_impl(
 # ---------------------------------------------------------------------------
 # Route
 # ---------------------------------------------------------------------------
+
 
 @router.post("", response_model=RecallResponse)
 def recall(
@@ -687,6 +692,7 @@ def _validate_recall_request(req: RecallRequest, identity: Identity) -> None:
 def _handle_as_of_recall(req: RecallRequest, identity: Identity) -> RecallResponse:
     """§24 time-travel path. Validates as_of, runs the as_of impl, returns the response."""
     from .facts import _validate_as_of
+
     _validate_as_of(req.as_of)  # type: ignore[arg-type]  # caller guarantees as_of is not None
     recall_id = str(uuid.uuid4())
     query_hash = hashlib.sha256(req.query.encode()).hexdigest()
@@ -719,13 +725,21 @@ def _handle_as_of_recall(req: RecallRequest, identity: Identity) -> RecallRespon
 
 
 def _gather_direct_matches(
-    conn: Any, req: RecallRequest, identity: Identity, now: str,
+    conn: Any,
+    req: RecallRequest,
+    identity: Identity,
+    now: str,
 ) -> tuple[dict[str, float], dict[str, float]]:
     """Run the lexical + semantic searches that produce direct-match scores."""
     lex_scores = (
         _lexical_search(
-            conn, req.query, req.scope, identity.tenant_id,
-            req.limit, req.min_confidence, now,
+            conn,
+            req.query,
+            req.scope,
+            identity.tenant_id,
+            req.limit,
+            req.min_confidence,
+            now,
         )
         if req.weights.lexical > 0
         else {}
@@ -754,16 +768,27 @@ def _expand_graph_neighbours(
         direct_ids,
         key=lambda fid: lex_scores.get(fid, 0) + sem_scores.get(fid, 0),
         reverse=True,
-    )[: _MAX_SEED_ENTITIES]
+    )[:_MAX_SEED_ENTITIES]
     return _graph_expand(
-        conn, top_seeds, req.depth, req.scope, identity.tenant_id,
-        identity, req.limit, req.min_confidence, now,
+        conn,
+        top_seeds,
+        req.depth,
+        req.scope,
+        identity.tenant_id,
+        identity,
+        req.limit,
+        req.min_confidence,
+        now,
     )
 
 
 def _build_card_for_entity(
-    entity_uri: str, entity_fact_ids: list[str], req: RecallRequest,
-    identity: Identity, conn: Any, now: str,
+    entity_uri: str,
+    entity_fact_ids: list[str],
+    req: RecallRequest,
+    identity: Identity,
+    conn: Any,
+    now: str,
 ) -> tuple[ScoredFact, list[str]] | None:
     """Try to build a synthetic ScoredFact from a fresh, high-confidence card.
 
@@ -805,8 +830,11 @@ def _build_card_for_entity(
 
 
 def _try_card_fast_path(
-    all_facts_raw: dict[str, FactRecord], req: RecallRequest, identity: Identity,
-    conn: Any, now: str,
+    all_facts_raw: dict[str, FactRecord],
+    req: RecallRequest,
+    identity: Identity,
+    conn: Any,
+    now: str,
 ) -> tuple[list[ScoredFact], set[str]]:
     """Build card-derived ScoredFacts for any candidate entity that has a fresh card.
 
@@ -853,7 +881,11 @@ def _exclude_card_owned(
 
 
 def _set_recall_span_attrs(
-    span: object, recall_id: str, total_scored: int, tokens_used: int, truncated: bool,
+    span: object,
+    recall_id: str,
+    total_scored: int,
+    tokens_used: int,
+    truncated: bool,
 ) -> None:
     """Best-effort: attach recall outcome attributes to the OTel span."""
     try:
@@ -881,7 +913,11 @@ def _recall_impl(
 
     logger.info(
         "recall id=%s entity=%s query_hash=%s scope=%s budget=%d",
-        recall_id, identity.entity_uri, query_hash[:12], req.scope, req.token_budget,
+        recall_id,
+        identity.entity_uri,
+        query_hash[:12],
+        req.scope,
+        req.token_budget,
     )
 
     with db() as conn:
@@ -889,7 +925,13 @@ def _recall_impl(
         direct_ids = set(lex_scores) | set(sem_scores)
 
         graph_hops = _expand_graph_neighbours(
-            conn, req, identity, direct_ids, lex_scores, sem_scores, now,
+            conn,
+            req,
+            identity,
+            direct_ids,
+            lex_scores,
+            sem_scores,
+            now,
         )
         # Direct matches have hop_distance=0 (mark in graph_hops)
         for fid in direct_ids:
@@ -904,17 +946,26 @@ def _recall_impl(
         # Uses in-process cache (§23.3.3 r.4) — no per-fact DB read required.
         pre_tombstone_count = len(all_facts_raw)
         all_facts_raw = {
-            k: v for k, v in all_facts_raw.items()
+            k: v
+            for k, v in all_facts_raw.items()
             if not _is_tombstoned(v.entity, identity.tenant_id)
         }
         tombstone_filtered = len(all_facts_raw) < pre_tombstone_count
 
         # --- Card fast-path (§20) ---
         card_facts, card_entity_ids = _try_card_fast_path(
-            all_facts_raw, req, identity, conn, now,
+            all_facts_raw,
+            req,
+            identity,
+            conn,
+            now,
         )
         all_facts_raw, lex_scores, sem_scores, graph_hops = _exclude_card_owned(
-            card_entity_ids, all_facts_raw, lex_scores, sem_scores, graph_hops,
+            card_entity_ids,
+            all_facts_raw,
+            lex_scores,
+            sem_scores,
+            graph_hops,
         )
 
         # Apply §19 recall pipeline (source-trust multiplier + content sanitiser)
@@ -923,8 +974,13 @@ def _recall_impl(
         # --- Score (timed for ranker histogram) ---
         with observe_duration(RECALL_RANKER_DURATION, {"tenant": identity.tenant_id}):
             candidates = _score_candidates(
-                all_facts, lex_scores, sem_scores, graph_hops,
-                req.weights, identity, req.depth,
+                all_facts,
+                lex_scores,
+                sem_scores,
+                graph_hops,
+                req.weights,
+                identity,
+                req.depth,
             )
         candidates.extend(card_facts)
         total_scored = len(candidates)
@@ -934,13 +990,24 @@ def _recall_impl(
 
         # --- Audit ---
         _write_recall_audit(
-            conn, recall_id, identity, query_hash, req.scope,
-            req.token_budget, len(packed), tokens_used, truncated,
+            conn,
+            recall_id,
+            identity,
+            query_hash,
+            req.scope,
+            req.token_budget,
+            len(packed),
+            tokens_used,
+            truncated,
         )
 
     logger.info(
         "recall id=%s scored=%d packed=%d tokens=%d truncated=%s",
-        recall_id, total_scored, len(packed), tokens_used, truncated,
+        recall_id,
+        total_scored,
+        len(packed),
+        tokens_used,
+        truncated,
     )
 
     _set_recall_span_attrs(_span, recall_id, total_scored, tokens_used, truncated)

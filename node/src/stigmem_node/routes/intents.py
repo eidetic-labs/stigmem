@@ -64,6 +64,7 @@ _ROOT_RELATION = "intent:goal"
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _encode_v(vtype: str, v: Any) -> str:
     if vtype == "null":
         return "null"
@@ -91,9 +92,18 @@ def _insert(
             valid_until, confidence, scope, hlc, received_from)
            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
-            fact_id, entity, relation,
-            vtype, _encode_v(vtype, vraw),
-            source, now, valid_until, 1.0, scope, hlc, None,
+            fact_id,
+            entity,
+            relation,
+            vtype,
+            _encode_v(vtype, vraw),
+            source,
+            now,
+            valid_until,
+            1.0,
+            scope,
+            hlc,
+            None,
         ),
     )
     return fact_id
@@ -115,17 +125,17 @@ def _decompose(
         ids.append(_insert(conn, entity, relation, vtype, vraw, src, scope, exp, now))
 
     # Core facts on intent_id
-    ins(intent_id, "intent:from",  "ref",  req.from_uri)
-    ins(intent_id, "intent:goal",  "text", req.goal)
+    ins(intent_id, "intent:from", "ref", req.from_uri)
+    ins(intent_id, "intent:goal", "text", req.goal)
     for to_uri in req.to:
         ins(intent_id, "intent:to", "ref", to_uri)
 
     # Escalation
     if req.escalation:
         esc = req.escalation
-        ins(intent_id, "intent:escalation",          "string", esc.priority)
-        ins(intent_id, "intent:escalate_to",         "ref",    esc.escalate_to)
-        ins(intent_id, "intent:escalation:channel",  "string", esc.channel)
+        ins(intent_id, "intent:escalation", "string", esc.priority)
+        ins(intent_id, "intent:escalate_to", "ref", esc.escalate_to)
+        ins(intent_id, "intent:escalation:channel", "string", esc.channel)
         ins(
             intent_id,
             "intent:escalation:context",
@@ -147,13 +157,13 @@ def _decompose(
         for i, artifact in enumerate(h.artifacts):
             art_id = f"{intent_id}:artifact:{i}"
             ins(art_id, "intent:artifact:name", "string", artifact.name)
-            ins(art_id, "intent:artifact:ref",  "ref",    artifact.ref)
-            ins(intent_id, "intent:artifact",   "ref",    art_id)
+            ins(art_id, "intent:artifact:ref", "ref", artifact.ref)
+            ins(intent_id, "intent:artifact", "ref", art_id)
 
     # Constraints
     for i, c in enumerate(req.constraint):
         sub = f"{intent_id}:constraint:{i}"
-        ins(sub, "intent:constraint:kind",  "string", c.kind)
+        ins(sub, "intent:constraint:kind", "string", c.kind)
         ins(sub, "intent:constraint:limit", c.limit.type, c.limit.v)
         if c.unit is not None:
             ins(sub, "intent:constraint:unit", "string", c.unit)
@@ -162,16 +172,16 @@ def _decompose(
     # Preferences
     for i, p in enumerate(req.preference):
         sub = f"{intent_id}:preference:{i}"
-        ins(sub, "intent:preference:kind",   "string", p.kind)
-        ins(sub, "intent:preference:value",  p.value.type, p.value.v)
+        ins(sub, "intent:preference:kind", "string", p.kind)
+        ins(sub, "intent:preference:value", p.value.type, p.value.v)
         ins(sub, "intent:preference:weight", "number", p.weight)
-        ins(intent_id, "intent:preference",  "ref", sub)
+        ins(intent_id, "intent:preference", "ref", sub)
 
     # Deferences
     for i, d in enumerate(req.deference):
         sub = f"{intent_id}:deference:{i}"
-        ins(sub, "intent:deference:condition", "text",   d.condition)
-        ins(sub, "intent:deference:defer_to",  "ref",    d.defer_to)
+        ins(sub, "intent:deference:condition", "text", d.condition)
+        ins(sub, "intent:deference:defer_to", "ref", d.defer_to)
         if d.timeout_s is not None:
             ins(sub, "intent:deference:timeout_s", "number", d.timeout_s)
         ins(intent_id, "intent:deference", "ref", sub)
@@ -205,17 +215,20 @@ def _build_escalation(by_rel: dict[str, list[str]]) -> EscalationPolicy | None:
 
 
 def _build_handoff(
-    by_rel: dict[str, list[str]], rows_by_entity: dict[str, list[Any]],
+    by_rel: dict[str, list[str]],
+    rows_by_entity: dict[str, list[Any]],
 ) -> HandoffPayload | None:
     if "intent:handoff_summary" not in by_rel:
         return None
     artifacts: list[HandoffArtifact] = []
     for art_id in by_rel.get("intent:artifact", []):
         art_by_rel = {r["relation"]: r["value_v"] for r in rows_by_entity.get(art_id, [])}
-        artifacts.append(HandoffArtifact(
-            name=art_by_rel.get("intent:artifact:name", ""),
-            ref=art_by_rel.get("intent:artifact:ref", ""),
-        ))
+        artifacts.append(
+            HandoffArtifact(
+                name=art_by_rel.get("intent:artifact:name", ""),
+                ref=art_by_rel.get("intent:artifact:ref", ""),
+            )
+        )
     cont = by_rel.get("intent:continuation")
     return HandoffPayload(
         summary=by_rel["intent:handoff_summary"][0],
@@ -226,7 +239,8 @@ def _build_handoff(
 
 
 def _build_constraints(
-    by_rel: dict[str, list[str]], rows_by_entity: dict[str, list[Any]],
+    by_rel: dict[str, list[str]],
+    rows_by_entity: dict[str, list[Any]],
 ) -> list[Constraint]:
     out: list[Constraint] = []
     for sub_id in by_rel.get("intent:constraint", []):
@@ -235,16 +249,19 @@ def _build_constraints(
         limit_row = sub_rel.get("intent:constraint:limit")
         if kind_row and limit_row:
             unit_row = sub_rel.get("intent:constraint:unit")
-            out.append(Constraint(
-                kind=kind_row["value_v"],
-                limit=FactValue(type=limit_row["value_type"], v=limit_row["value_v"]),
-                unit=unit_row["value_v"] if unit_row else None,
-            ))
+            out.append(
+                Constraint(
+                    kind=kind_row["value_v"],
+                    limit=FactValue(type=limit_row["value_type"], v=limit_row["value_v"]),
+                    unit=unit_row["value_v"] if unit_row else None,
+                )
+            )
     return out
 
 
 def _build_preferences(
-    by_rel: dict[str, list[str]], rows_by_entity: dict[str, list[Any]],
+    by_rel: dict[str, list[str]],
+    rows_by_entity: dict[str, list[Any]],
 ) -> list[Preference]:
     out: list[Preference] = []
     for sub_id in by_rel.get("intent:preference", []):
@@ -253,16 +270,19 @@ def _build_preferences(
         val_row = sub_rel.get("intent:preference:value")
         if kind_row and val_row:
             wt_row = sub_rel.get("intent:preference:weight")
-            out.append(Preference(
-                kind=kind_row["value_v"],
-                value=FactValue(type=val_row["value_type"], v=val_row["value_v"]),
-                weight=float(wt_row["value_v"]) if wt_row else 1.0,
-            ))
+            out.append(
+                Preference(
+                    kind=kind_row["value_v"],
+                    value=FactValue(type=val_row["value_type"], v=val_row["value_v"]),
+                    weight=float(wt_row["value_v"]) if wt_row else 1.0,
+                )
+            )
     return out
 
 
 def _build_deferences(
-    by_rel: dict[str, list[str]], rows_by_entity: dict[str, list[Any]],
+    by_rel: dict[str, list[str]],
+    rows_by_entity: dict[str, list[Any]],
 ) -> list[DeferenceRule]:
     out: list[DeferenceRule] = []
     for sub_id in by_rel.get("intent:deference", []):
@@ -271,11 +291,13 @@ def _build_deferences(
         defer_row = sub_rel.get("intent:deference:defer_to")
         if cond_row and defer_row:
             timeout_row = sub_rel.get("intent:deference:timeout_s")
-            out.append(DeferenceRule(
-                condition=cond_row["value_v"],
-                defer_to=defer_row["value_v"],
-                timeout_s=int(float(timeout_row["value_v"])) if timeout_row else None,
-            ))
+            out.append(
+                DeferenceRule(
+                    condition=cond_row["value_v"],
+                    defer_to=defer_row["value_v"],
+                    timeout_s=int(float(timeout_row["value_v"])) if timeout_row else None,
+                )
+            )
     return out
 
 
@@ -311,6 +333,7 @@ def _reconstruct(
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "",

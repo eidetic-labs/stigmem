@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .base import EmbeddingModel, EmbeddingError, Vector, compose_triple_text, l2_normalize
+from .base import EmbeddingError, EmbeddingModel, Vector, compose_triple_text, l2_normalize
 
 if TYPE_CHECKING:
     pass

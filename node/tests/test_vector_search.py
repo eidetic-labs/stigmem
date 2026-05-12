@@ -59,10 +59,7 @@ def _create_vec_facts_stub(conn: sqlite3.Connection) -> None:
     closely enough for unit testing the write path.
     """
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS vec_facts ("
-        "  fact_id TEXT PRIMARY KEY,"
-        "  embedding BLOB"
-        ")"
+        "CREATE TABLE IF NOT EXISTS vec_facts (  fact_id TEXT PRIMARY KEY,  embedding BLOB)"
     )
 
 
@@ -204,14 +201,10 @@ def test_store_embedding_persists_vector_and_clears_flag(tmp_path: Path) -> None
     store_embedding(conn, fact_id, vec)
     conn.commit()
 
-    flag = conn.execute(
-        "SELECT embedding_missing FROM facts WHERE id=?", (fact_id,)
-    ).fetchone()
+    flag = conn.execute("SELECT embedding_missing FROM facts WHERE id=?", (fact_id,)).fetchone()
     assert flag["embedding_missing"] == 0
 
-    blob = conn.execute(
-        "SELECT embedding FROM vec_facts WHERE fact_id=?", (fact_id,)
-    ).fetchone()
+    blob = conn.execute("SELECT embedding FROM vec_facts WHERE fact_id=?", (fact_id,)).fetchone()
     assert blob is not None
     assert blob["embedding"] == _encode_vector(vec)
     conn.close()
@@ -259,13 +252,9 @@ def test_embed_and_store_fact_calls_model_and_persists(tmp_path: Path) -> None:
     assert "alice" in text and "memory:role" in text and "CEO" in text
 
     # Vector landed in vec_facts and the fact's flag is cleared.
-    blob = conn.execute(
-        "SELECT embedding FROM vec_facts WHERE fact_id=?", (fact_id,)
-    ).fetchone()
+    blob = conn.execute("SELECT embedding FROM vec_facts WHERE fact_id=?", (fact_id,)).fetchone()
     assert blob["embedding"] == _encode_vector([0.5, 0.5, 0.5, 0.5])
-    flag = conn.execute(
-        "SELECT embedding_missing FROM facts WHERE id=?", (fact_id,)
-    ).fetchone()
+    flag = conn.execute("SELECT embedding_missing FROM facts WHERE id=?", (fact_id,)).fetchone()
     assert flag["embedding_missing"] == 0
     conn.close()
 
@@ -288,9 +277,7 @@ def test_backfill_embeds_all_missing(tmp_path: Path) -> None:
 
     assert count == 3
     for fid in ids:
-        flag = conn.execute(
-            "SELECT embedding_missing FROM facts WHERE id=?", (fid,)
-        ).fetchone()
+        flag = conn.execute("SELECT embedding_missing FROM facts WHERE id=?", (fid,)).fetchone()
         assert flag["embedding_missing"] == 0
     conn.close()
 

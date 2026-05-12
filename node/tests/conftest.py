@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import contextlib
 import json
 import sqlite3
 import time
@@ -92,7 +93,9 @@ def generate_keypair() -> tuple[str, str]:
     priv = Ed25519PrivateKey.generate()
     pub = priv.public_key()
     priv_b64 = (
-        base64.urlsafe_b64encode(priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption()))
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
         .decode()
         .rstrip("=")
     )
@@ -162,12 +165,11 @@ _PATCHABLE_MODULES = [
 
 def _get_extra_modules():
     import importlib
+
     mods = []
     for name in _PATCHABLE_MODULES:
-        try:
+        with contextlib.suppress(ImportError):
             mods.append(importlib.import_module(name))
-        except ImportError:
-            pass
     return mods
 
 
@@ -179,7 +181,7 @@ def _patch_settings(test_settings: Settings) -> list:
     wk_mod.settings = test_settings  # type: ignore[assignment]
     for mod in extra:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", test_settings)
+            mod.settings = test_settings
     return extra
 
 
@@ -190,7 +192,7 @@ def _restore_settings(original: Settings, extra: list) -> None:
     wk_mod.settings = original  # type: ignore[assignment]
     for mod in extra:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", original)
+            mod.settings = original
 
 
 # ---------------------------------------------------------------------------
@@ -230,21 +232,24 @@ def tmp_db(tmp_path: object, backend: str, encrypt: str) -> Generator[str, None,
     if backend == "postgres":
         import os
         import uuid
+
         pytest.importorskip("psycopg2", reason="psycopg2 not installed")
         pg_dsn = os.environ.get("STIGMEM_TEST_PG_DSN", "")
         if not pg_dsn:
             pytest.skip("STIGMEM_TEST_PG_DSN not set")
         from stigmem_node.storage import make_backend as _make_backend
+
         schema = f"node_test_{uuid.uuid4().hex[:12]}"
-        b = _make_backend(_settings=_make_enc_settings(
-            db_file, backend, "off", pg_dsn=pg_dsn, pg_schema=schema
-        ))
+        b = _make_backend(
+            _settings=_make_enc_settings(db_file, backend, "off", pg_dsn=pg_dsn, pg_schema=schema)
+        )
         b.apply_migrations(_MIGRATIONS_DIR)
         sentinel = f"pg:{pg_dsn}:{schema}"
         yield sentinel
         # Drop the per-test schema to avoid accumulating stale schemas.
         try:
             import psycopg2  # type: ignore[import]
+
             conn = psycopg2.connect(pg_dsn)
             conn.autocommit = True
             with conn.cursor() as cur:
@@ -280,12 +285,18 @@ def client(tmp_db: str, backend: str, encrypt: str) -> Generator[TestClient, Non
 
 
 @pytest.fixture()
-def client_async_threshold(tmp_db: str, backend: str, encrypt: str) -> Generator[TestClient, None, None]:
+def client_async_threshold(
+    tmp_db: str, backend: str, encrypt: str
+) -> Generator[TestClient, None, None]:
     """TestClient with async_job_threshold=0 to force the async 202 path in tests."""
     original = settings_module.settings
     test_settings = _make_enc_settings(
-        tmp_db, backend, encrypt,
-        auth_required=False, node_url="http://testnode", async_job_threshold=0,
+        tmp_db,
+        backend,
+        encrypt,
+        auth_required=False,
+        node_url="http://testnode",
+        async_job_threshold=0,
     )
     extra = _patch_settings(test_settings)
     app = create_app()
@@ -295,7 +306,9 @@ def client_async_threshold(tmp_db: str, backend: str, encrypt: str) -> Generator
 
 
 @pytest.fixture()
-def authed_client(tmp_db: str, backend: str, encrypt: str) -> Generator[tuple[TestClient, str], None, None]:
+def authed_client(
+    tmp_db: str, backend: str, encrypt: str
+) -> Generator[tuple[TestClient, str], None, None]:
     """TestClient with auth enabled; yields (client, raw_key)."""
     original = settings_module.settings
     test_settings = _make_enc_settings(
@@ -339,8 +352,13 @@ def fed_node(tmp_path: object) -> Generator[FedNode, None, None]:
     # Store keys and node_id in node_meta
     conn = sqlite3.connect(db_file)
     conn.execute("INSERT OR REPLACE INTO node_meta (key, value) VALUES ('node_id', ?)", (node_id,))
-    conn.execute("INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_pubkey', ?)", (pub_b64,))
-    conn.execute("INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_privkey', ?)", (priv_b64,))
+    conn.execute(
+        "INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_pubkey', ?)", (pub_b64,)
+    )
+    conn.execute(
+        "INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_privkey', ?)",
+        (priv_b64,),
+    )
     conn.commit()
     conn.close()
 
@@ -391,8 +409,13 @@ def fed_node_a(tmp_path: object) -> Generator[FedNode, None, None]:
 
     conn = sqlite3.connect(db_file)
     conn.execute("INSERT OR REPLACE INTO node_meta (key, value) VALUES ('node_id', ?)", (node_id,))
-    conn.execute("INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_pubkey', ?)", (pub_b64,))
-    conn.execute("INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_privkey', ?)", (priv_b64,))
+    conn.execute(
+        "INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_pubkey', ?)", (pub_b64,)
+    )
+    conn.execute(
+        "INSERT OR REPLACE INTO node_meta (key, value) VALUES ('federation_privkey', ?)",
+        (priv_b64,),
+    )
     conn.commit()
     conn.close()
 

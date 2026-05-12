@@ -14,13 +14,11 @@ import uuid
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 import stigmem_node.db as db_mod
 import stigmem_node.tombstone_cache as tc_mod
-from stigmem_node.subscription_delivery import deliver_pending, fan_out
-
+from stigmem_node.subscription_delivery import deliver_pending
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -36,9 +34,20 @@ def _insert_tombstone(entity_uri: str, tenant_id: str = _TENANT) -> str:
     now = datetime.now(UTC).isoformat()
     with db_mod.db() as conn:
         conn.execute(
-            """INSERT INTO tombstones (id, entity_uri, scope, reason, signed_by, signature, created_at, legal_hold, tenant_id)
+            """INSERT INTO tombstones
+               (id, entity_uri, scope, reason, signed_by, signature,
+                created_at, legal_hold, tenant_id)
                VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)""",
-            (tomb_id, entity_uri, "*", "test-rtbf", "test-admin", "sig-placeholder", now, tenant_id),
+            (
+                tomb_id,
+                entity_uri,
+                "*",
+                "test-rtbf",
+                "test-admin",
+                "sig-placeholder",
+                now,
+                tenant_id,
+            ),
         )
     return tomb_id
 
@@ -61,7 +70,11 @@ def _insert_fact(client: TestClient, entity: str = _ENTITY, value: str = "Alice"
 def _create_subscription(client: TestClient, target: str = "local") -> dict:
     resp = client.post(
         "/v1/subscriptions",
-        json={"target": target, "on_change": "webhook", "delivery_address": "https://example.com/hook"},
+        json={
+            "target": target,
+            "on_change": "webhook",
+            "delivery_address": "https://example.com/hook",
+        },
     )
     assert resp.status_code == 201, resp.text
     return resp.json()
@@ -160,12 +173,14 @@ class TestTombstoneSubscriptionDelivery:
 
             # Exactly one call — Bob's event; Alice's is suppressed
             assert mock_inst.post.call_count == 1
-            call_body = mock_inst.post.call_args.kwargs.get("json") or mock_inst.post.call_args[1].get("json", {})
+            call_body = mock_inst.post.call_args.kwargs.get("json") or mock_inst.post.call_args[
+                1
+            ].get("json", {})
             assert call_body.get("fact", {}).get("entity") == _BOB
 
     def test_tombstone_cache_invalidate_forces_recheck(self, client: TestClient) -> None:
         """After revocation (cache invalidation), delivery resumes for that entity."""
-        sub = _create_subscription(client)
+        _create_subscription(client)
         _insert_fact(client)
 
         tomb_id = _insert_tombstone(_ENTITY)
@@ -176,7 +191,9 @@ class TestTombstoneSubscriptionDelivery:
         now = datetime.now(UTC).isoformat()
         with db_mod.db() as conn:
             conn.execute(
-                "INSERT INTO tombstone_revocations (id, tombstone_id, reason, signed_by, signature, created_at) VALUES (?,?,?,?,?,?)",
+                """INSERT INTO tombstone_revocations
+                   (id, tombstone_id, reason, signed_by, signature, created_at)
+                   VALUES (?,?,?,?,?,?)""",
                 (rev_id, tomb_id, "reinstated", "test-admin", "rev-sig", now),
             )
 
@@ -246,8 +263,7 @@ class TestTombstoneRecallSuppression:
 
         # Confirm suppressed
         assert not any(
-            f["fact"]["entity"] == _ENTITY
-            for f in _recall(client, query="alice revoked")
+            f["fact"]["entity"] == _ENTITY for f in _recall(client, query="alice revoked")
         )
 
         # Revoke tombstone
@@ -255,7 +271,9 @@ class TestTombstoneRecallSuppression:
         now = datetime.now(UTC).isoformat()
         with db_mod.db() as conn:
             conn.execute(
-                "INSERT INTO tombstone_revocations (id, tombstone_id, reason, signed_by, signature, created_at) VALUES (?,?,?,?,?,?)",
+                """INSERT INTO tombstone_revocations
+                   (id, tombstone_id, reason, signed_by, signature, created_at)
+                   VALUES (?,?,?,?,?,?)""",
                 (rev_id, tomb_id, "reinstated", "test-admin", "rev-sig", now),
             )
 
@@ -271,7 +289,12 @@ class TestTombstoneRecallSuppression:
         tc_mod.invalidate()
         resp_before = client.post(
             "/v1/recall",
-            json={"query": "oracle leak test", "scope": "local", "token_budget": 4000, "include_neighbors": False},
+            json={
+                "query": "oracle leak test",
+                "scope": "local",
+                "token_budget": 4000,
+                "include_neighbors": False,
+            },
         )
         assert resp_before.status_code == 200
         assert "X-Total-Count" in resp_before.headers
@@ -282,7 +305,12 @@ class TestTombstoneRecallSuppression:
 
         resp_after = client.post(
             "/v1/recall",
-            json={"query": "oracle leak test", "scope": "local", "token_budget": 4000, "include_neighbors": False},
+            json={
+                "query": "oracle leak test",
+                "scope": "local",
+                "token_budget": 4000,
+                "include_neighbors": False,
+            },
         )
         assert resp_after.status_code == 200
         assert "X-Total-Count" not in resp_after.headers

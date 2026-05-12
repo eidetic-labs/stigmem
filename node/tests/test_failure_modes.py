@@ -11,14 +11,12 @@ and deterministic.
 
 from __future__ import annotations
 
+import contextlib
 import sqlite3
 import time
 import uuid
 
-import pytest
-
 from conftest import FedNode, generate_keypair, make_peer_token
-
 
 # ---------------------------------------------------------------------------
 # §11.3 — Partial Failure: cursor persistence + idempotent ingestion
@@ -76,15 +74,13 @@ class TestPartialFailure:
         r3 = ingest_fact(fact, "stigmem://remote")  # triple replay
 
         assert r1 is True
-        assert r2 is False   # already exists — no-op
+        assert r2 is False  # already exists — no-op
         assert r3 is False
 
         conn = sqlite3.connect(fed_node.db_path)
-        count = conn.execute(
-            "SELECT COUNT(*) FROM facts WHERE id = ?", (fact["id"],)
-        ).fetchone()[0]
+        count = conn.execute("SELECT COUNT(*) FROM facts WHERE id = ?", (fact["id"],)).fetchone()[0]
         conn.close()
-        assert count == 1    # exactly one row, not three
+        assert count == 1  # exactly one row, not three
 
     def test_cursor_saved_after_batch(self, fed_node: FedNode) -> None:
         """save_cursor stores the new cursor; load_cursor returns it."""
@@ -99,8 +95,15 @@ class TestPartialFailure:
                 status, established_at, declaration_sig, signed_at)
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
-                peer_id, "stigmem://pub", "http://pub", "pubkey_placeholder",
-                '["public"]', "active", "2026-05-02T00:00:00Z", "sig", "2026-05-02T00:00:00Z",
+                peer_id,
+                "stigmem://pub",
+                "http://pub",
+                "pubkey_placeholder",
+                '["public"]',
+                "active",
+                "2026-05-02T00:00:00Z",
+                "sig",
+                "2026-05-02T00:00:00Z",
             ),
         )
         conn.commit()
@@ -138,8 +141,17 @@ class TestPartialFailure:
             """INSERT INTO peers (id, node_id, node_url, federation_pubkey, allowed_scopes,
                status, established_at, declaration_sig, signed_at)
                VALUES (?,?,?,?,?,?,?,?,?)""",
-            (peer_id, sender, "http://pub", "pk", '["public"]', "active",
-             "2026-05-02T00:00:00Z", "sig", "2026-05-02T00:00:00Z"),
+            (
+                peer_id,
+                sender,
+                "http://pub",
+                "pk",
+                '["public"]',
+                "active",
+                "2026-05-02T00:00:00Z",
+                "sig",
+                "2026-05-02T00:00:00Z",
+            ),
         )
         conn.commit()
         conn.close()
@@ -163,8 +175,10 @@ class TestPartialFailure:
         # Verify final state: exactly 20 unique user facts (+ meta-facts)
         conn = sqlite3.connect(fed_node.db_path)
         user_fact_ids = set(
-            r[0] for r in conn.execute(
-                "SELECT id FROM facts WHERE received_from IS NOT NULL AND relation != 'stigmem:received_from'"
+            r[0]
+            for r in conn.execute(
+                """SELECT id FROM facts
+                   WHERE received_from IS NOT NULL AND relation != 'stigmem:received_from'"""
             ).fetchall()
         )
         conn.close()
@@ -190,10 +204,8 @@ class TestPartialFailure:
         # Simulate a failed pull (exception in ingest — bad fact format)
         from stigmem_node.federation_ingest import ingest_fact
 
-        try:
+        with contextlib.suppress(Exception):
             ingest_fact({"id": "bad"}, "stigmem://broken")  # missing required fields
-        except Exception:
-            pass  # expected; pull loop catches this
 
         # Local read still works
         r2 = fed_node.client.get("/v1/facts?entity=test:local")
@@ -218,8 +230,17 @@ class TestReplayAttack:
             """INSERT INTO peers (id, node_id, node_url, federation_pubkey, allowed_scopes,
                status, established_at, declaration_sig, signed_at)
                VALUES (?,?,?,?,?,?,?,?,?)""",
-            (peer_id, peer_node_id, "http://peer", peer_pub, '["public"]', "active",
-             "2026-05-02T00:00:00Z", "sig", "2026-05-02T00:00:00Z"),
+            (
+                peer_id,
+                peer_node_id,
+                "http://peer",
+                peer_pub,
+                '["public"]',
+                "active",
+                "2026-05-02T00:00:00Z",
+                "sig",
+                "2026-05-02T00:00:00Z",
+            ),
         )
         conn.commit()
         conn.close()
@@ -241,8 +262,17 @@ class TestReplayAttack:
             """INSERT INTO peers (id, node_id, node_url, federation_pubkey, allowed_scopes,
                status, established_at, declaration_sig, signed_at)
                VALUES (?,?,?,?,?,?,?,?,?)""",
-            (peer_id, peer_node_id, "http://peer", peer_pub, '["public"]', "active",
-             "2026-05-02T00:00:00Z", "sig", "2026-05-02T00:00:00Z"),
+            (
+                peer_id,
+                peer_node_id,
+                "http://peer",
+                peer_pub,
+                '["public"]',
+                "active",
+                "2026-05-02T00:00:00Z",
+                "sig",
+                "2026-05-02T00:00:00Z",
+            ),
         )
         conn.commit()
         conn.close()
@@ -271,7 +301,6 @@ class TestReplayAttack:
 
     def test_fact_store_not_corrupted_by_replay(self, fed_node: FedNode) -> None:
         """Replay does not modify any facts in the store."""
-        from stigmem_node.federation_ingest import ingest_fact
 
         peer_pub, peer_priv = generate_keypair()
         peer_node_id = "stigmem://replay-peer-3"
@@ -282,8 +311,17 @@ class TestReplayAttack:
             """INSERT INTO peers (id, node_id, node_url, federation_pubkey, allowed_scopes,
                status, established_at, declaration_sig, signed_at)
                VALUES (?,?,?,?,?,?,?,?,?)""",
-            (peer_id, peer_node_id, "http://peer", peer_pub, '["public"]', "active",
-             "2026-05-02T00:00:00Z", "sig", "2026-05-02T00:00:00Z"),
+            (
+                peer_id,
+                peer_node_id,
+                "http://peer",
+                peer_pub,
+                '["public"]',
+                "active",
+                "2026-05-02T00:00:00Z",
+                "sig",
+                "2026-05-02T00:00:00Z",
+            ),
         )
         conn.commit()
         conn.close()
@@ -324,14 +362,26 @@ class TestReplayAttack:
             """INSERT INTO peers (id, node_id, node_url, federation_pubkey, allowed_scopes,
                status, established_at, declaration_sig, signed_at)
                VALUES (?,?,?,?,?,?,?,?,?)""",
-            (str(uuid.uuid4()), peer_node_id, "http://peer", peer_pub, '["public"]', "active",
-             "2026-05-02T00:00:00Z", "sig", "2026-05-02T00:00:00Z"),
+            (
+                str(uuid.uuid4()),
+                peer_node_id,
+                "http://peer",
+                peer_pub,
+                '["public"]',
+                "active",
+                "2026-05-02T00:00:00Z",
+                "sig",
+                "2026-05-02T00:00:00Z",
+            ),
         )
         conn.commit()
         conn.close()
 
         expired_token = make_peer_token(
-            peer_priv, peer_node_id, fed_node.node_id, ["public"],
+            peer_priv,
+            peer_node_id,
+            fed_node.node_id,
+            ["public"],
             ttl_ms=1,
             offset_ms=-3_600_000,  # issued 1 hour ago, TTL=1ms → long expired
         )

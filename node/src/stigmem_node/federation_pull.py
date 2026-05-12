@@ -24,7 +24,7 @@ from .tls import check_peer_san
 
 logger = logging.getLogger("stigmem.federation.pull")
 
-_MAX_BACKOFF_S = 300.0   # 5 minutes
+_MAX_BACKOFF_S = 300.0  # 5 minutes
 _BASE_BACKOFF_S = 1.0
 
 
@@ -130,6 +130,7 @@ async def pull_from_peer_once(
         try:
             if new_cursor:
                 from datetime import UTC, datetime
+
                 cursor_ts = datetime.fromisoformat(new_cursor.split("_")[0].replace("Z", "+00:00"))
                 if cursor_ts.tzinfo is None:
                     cursor_ts = cursor_ts.replace(tzinfo=UTC)
@@ -145,6 +146,7 @@ def _make_pull_client() -> httpx.AsyncClient:
     """Return an httpx client configured for mTLS when STIGMEM_TLS_* are set."""
     if settings.mtls_enabled:
         from .tls import build_client_ssl_context
+
         ssl_ctx = build_client_ssl_context(
             settings.tls_cert_path,
             settings.tls_key_path,
@@ -190,6 +192,7 @@ async def pull_tombstones_from_peer_once(
     # indicates skipped pages (more results available beyond this batch)
     if tombstones and new_cursor is not None:
         from .audit_event import emit_nofail
+
         emit_nofail(
             "tombstone_sync_gap",
             entity_uri=peer["node_id"],
@@ -205,6 +208,7 @@ async def pull_tombstones_from_peer_once(
     # Ingest tombstones and revocations
     from .models import TombstoneRecord, TombstoneRevocationRecord
     from .tombstones import apply_inbound_revocation, apply_inbound_tombstone
+
     for t in tombstones:
         try:
             record = TombstoneRecord(**t)

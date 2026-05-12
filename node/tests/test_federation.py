@@ -5,16 +5,15 @@ These are the Phase 3 acceptance gates per EG-36.
 
 from __future__ import annotations
 
+import base64
 import json
 import sqlite3
 import time
 import uuid
 from typing import Any
 
-import base64
-
-import jwt
 import pytest
+from conftest import FedNode, generate_keypair, make_peer_token, sign_declaration
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
@@ -27,8 +26,6 @@ from stigmem_node.db import db as _db_ctx
 from stigmem_node.federation_ingest import ingest_fact
 from stigmem_node.federation_pull import load_cursor, save_cursor
 
-from conftest import FedNode, generate_keypair, make_peer_token, sign_declaration
-
 
 def _generate_ed25519_b64() -> tuple[str, str]:
     """Return (pubkey_b64url, privkey_b64url) for a new Ed25519 keypair."""
@@ -37,11 +34,14 @@ def _generate_ed25519_b64() -> tuple[str, str]:
     priv_b64 = (
         base64.urlsafe_b64encode(
             priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
-        ).decode().rstrip("=")
+        )
+        .decode()
+        .rstrip("=")
     )
     pub_b64 = (
         base64.urlsafe_b64encode(pub.public_bytes(Encoding.Raw, PublicFormat.Raw))
-        .decode().rstrip("=")
+        .decode()
+        .rstrip("=")
     )
     return pub_b64, priv_b64
 
@@ -49,6 +49,7 @@ def _generate_ed25519_b64() -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 # Helpers shared across test classes
 # ---------------------------------------------------------------------------
+
 
 def _insert_active_peer(
     db_path: str,
@@ -67,9 +68,15 @@ def _insert_active_peer(
                 status, established_at, declaration_sig, signed_at)
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
-                peer_id, node_id, node_url, pub_b64,
+                peer_id,
+                node_id,
+                node_url,
+                pub_b64,
                 json.dumps(allowed_scopes or ["public"]),
-                "active", "2026-05-02T00:00:00Z", "test_dummy_sig", "2026-05-02T00:00:00Z",
+                "active",
+                "2026-05-02T00:00:00Z",
+                "test_dummy_sig",
+                "2026-05-02T00:00:00Z",
             ),
         )
         conn.commit()
@@ -104,6 +111,7 @@ def _make_federated_fact(
 # Well-known federation fields
 # ---------------------------------------------------------------------------
 
+
 class TestWellKnownFederation:
     def test_disabled_node_omits_federation_fields(self, client: Any) -> None:
         body = client.get("/.well-known/stigmem").json()
@@ -123,6 +131,7 @@ class TestWellKnownFederation:
 # ---------------------------------------------------------------------------
 # Pull endpoint — auth and basic checks
 # ---------------------------------------------------------------------------
+
 
 class TestPullEndpoint:
     def test_no_token_returns_401(self, fed_node: FedNode) -> None:
@@ -151,12 +160,14 @@ class TestPullEndpoint:
         node_b_id = f"stigmem://test-b-scope-{uuid.uuid4()}"
         # Peer registered with only ["public"] in allowed_scopes
         _insert_active_peer(
-            fed_node.db_path, node_b_id, "http://testnode-b-scope", node_b_pub,
+            fed_node.db_path,
+            node_b_id,
+            "http://testnode-b-scope",
+            node_b_pub,
             allowed_scopes=["public"],
         )
         # Token claims company scope (intersection with ["public"] excludes company)
-        token = make_peer_token(node_b_priv, node_b_id, fed_node.node_id,
-                                ["company", "public"])
+        token = make_peer_token(node_b_priv, node_b_id, fed_node.node_id, ["company", "public"])
         r = fed_node.client.get(
             "/v1/federation/facts?scope=company",
             headers={"Authorization": f"Bearer {token}"},
@@ -196,6 +207,7 @@ class TestPullEndpoint:
 # ---------------------------------------------------------------------------
 # §11.4 — Replay Attack acceptance scenario
 # ---------------------------------------------------------------------------
+
 
 class TestReplayProtection:
     """Full acceptance gate for spec §11.4."""
@@ -242,10 +254,8 @@ class TestReplayProtection:
         node_b_id, _, priv = self._register_peer_b(fed_node)
         shared_nonce = str(uuid.uuid4())
 
-        token1 = make_peer_token(priv, node_b_id, fed_node.node_id, ["public"],
-                                 nonce=shared_nonce)
-        token2 = make_peer_token(priv, node_b_id, fed_node.node_id, ["public"],
-                                 nonce=shared_nonce)
+        token1 = make_peer_token(priv, node_b_id, fed_node.node_id, ["public"], nonce=shared_nonce)
+        token2 = make_peer_token(priv, node_b_id, fed_node.node_id, ["public"], nonce=shared_nonce)
 
         r1 = fed_node.client.get(
             "/v1/federation/facts",
@@ -266,8 +276,12 @@ class TestReplayProtection:
         node_b_id, _, priv = self._register_peer_b(fed_node)
         # iat = 2 hours ago, ttl = 1ms → exp ≈ 2 hours ago
         token = make_peer_token(
-            priv, node_b_id, fed_node.node_id, ["public"],
-            ttl_ms=1, offset_ms=-7_200_000,
+            priv,
+            node_b_id,
+            fed_node.node_id,
+            ["public"],
+            ttl_ms=1,
+            offset_ms=-7_200_000,
         )
         r = fed_node.client.get(
             "/v1/federation/facts",
@@ -281,10 +295,8 @@ class TestReplayProtection:
         node_b_id, _, priv = self._register_peer_b(fed_node)
         token = make_peer_token(priv, node_b_id, fed_node.node_id, ["public"])
 
-        fed_node.client.get("/v1/federation/facts",
-                              headers={"Authorization": f"Bearer {token}"})
-        fed_node.client.get("/v1/federation/facts",
-                              headers={"Authorization": f"Bearer {token}"})
+        fed_node.client.get("/v1/federation/facts", headers={"Authorization": f"Bearer {token}"})
+        fed_node.client.get("/v1/federation/facts", headers={"Authorization": f"Bearer {token}"})
 
         with _db_ctx() as conn:
             entry = conn.execute(
@@ -296,6 +308,7 @@ class TestReplayProtection:
 # ---------------------------------------------------------------------------
 # §11.3 — Partial Failure acceptance scenario
 # ---------------------------------------------------------------------------
+
 
 class TestPartialFailure:
     """Full acceptance gate for spec §11.3: cursor resumption + idempotent ingest."""
@@ -414,9 +427,7 @@ class TestPartialFailure:
         assert r_write.status_code == 201
 
         # Read it back — local reads must work
-        r_read = fed_node.client.get(
-            "/v1/facts?entity=local:during-partition"
-        )
+        r_read = fed_node.client.get("/v1/facts?entity=local:during-partition")
         assert r_read.status_code == 200
         assert r_read.json()["total"] == 1
 
@@ -424,6 +435,7 @@ class TestPartialFailure:
 # ---------------------------------------------------------------------------
 # Conflict detection
 # ---------------------------------------------------------------------------
+
 
 class TestConflictDetection:
     def test_federated_conflict_creates_conflict_record(self, fed_node: FedNode) -> None:
@@ -473,6 +485,7 @@ class TestConflictDetection:
 # ---------------------------------------------------------------------------
 # Cursor-based pull pagination on the federation/facts endpoint
 # ---------------------------------------------------------------------------
+
 
 class TestFederationFactsPagination:
     def test_cursor_pagination(self, fed_node: FedNode) -> None:
@@ -574,14 +587,18 @@ class TestPeerRegistration:
 
         # Mock the well-known fetch that register_peer performs
         class _MockAsyncClient:
-            async def __aenter__(self) -> "_MockAsyncClient":
+            async def __aenter__(self) -> _MockAsyncClient:
                 return self
+
             async def __aexit__(self, *args: object) -> None:
                 pass
+
             async def get(self, url: str) -> _httpx.Response:
                 return _httpx.Response(200, json={"federation_pubkey": peer_pub})
 
-        monkeypatch.setattr("stigmem_node.routes.federation.httpx.AsyncClient", lambda **_: _MockAsyncClient())
+        monkeypatch.setattr(
+            "stigmem_node.routes.federation.httpx.AsyncClient", lambda **_: _MockAsyncClient()
+        )
 
         r = fed_node.client.post(
             "/v1/federation/peers",
@@ -609,14 +626,18 @@ class TestPeerRegistration:
         body["allowed_scopes"] = ["company", "public"]
 
         class _MockAsyncClient:
-            async def __aenter__(self) -> "_MockAsyncClient":
+            async def __aenter__(self) -> _MockAsyncClient:
                 return self
+
             async def __aexit__(self, *args: object) -> None:
                 pass
+
             async def get(self, url: str) -> _httpx.Response:
                 return _httpx.Response(200, json={"federation_pubkey": peer_pub})
 
-        monkeypatch.setattr("stigmem_node.routes.federation.httpx.AsyncClient", lambda **_: _MockAsyncClient())
+        monkeypatch.setattr(
+            "stigmem_node.routes.federation.httpx.AsyncClient", lambda **_: _MockAsyncClient()
+        )
 
         r = fed_node.client.post(
             "/v1/federation/peers",
@@ -715,7 +736,8 @@ class TestSplitBrain:
         assert r.status_code == 200
         body = r.json()
         our_conflicts = [
-            c for c in body["conflicts"]
+            c
+            for c in body["conflicts"]
             if (c["fact_a"] and c["fact_a"]["entity"] == entity)
             or (c["fact_b"] and c["fact_b"]["entity"] == entity)
         ]
@@ -759,7 +781,9 @@ class TestSplitBrain:
             "stigmem://node-b",
         )
 
-        r = fed_node.client.get(f"/v1/facts?entity={entity}&relation=split:val&include_contradicted=true")
+        r = fed_node.client.get(
+            f"/v1/facts?entity={entity}&relation=split:val&include_contradicted=true"
+        )
         assert r.status_code == 200
         facts = r.json()["facts"]
         assert len(facts) == 2, f"Expected 2 contradicting facts, got {len(facts)}"
@@ -806,7 +830,9 @@ class TestSplitBrain:
 class TestMaliciousPeer:
     """Full acceptance gate for spec §11.2: scope violation + source forgery via push."""
 
-    def _push_node(self, fed_node: FedNode, monkeypatch: pytest.MonkeyPatch) -> tuple[str, str, str]:
+    def _push_node(
+        self, fed_node: FedNode, monkeypatch: pytest.MonkeyPatch
+    ) -> tuple[str, str, str]:
         """Register an active peer with push enabled. Returns (node_b_id, pub, priv)."""
         import stigmem_node.settings as _settings_mod
         from stigmem_node.settings import Settings
@@ -829,6 +855,7 @@ class TestMaliciousPeer:
             "stigmem_node.peer_token",
         ]:
             import importlib
+
             try:
                 mod = importlib.import_module(mod_name)
                 if hasattr(mod, "settings"):
@@ -839,7 +866,10 @@ class TestMaliciousPeer:
         pub, priv = _generate_ed25519_b64()
         node_b_id = f"stigmem://malicious-peer-{uuid.uuid4()}"
         _insert_active_peer(
-            fed_node.db_path, node_b_id, "http://malicious-peer", pub,
+            fed_node.db_path,
+            node_b_id,
+            "http://malicious-peer",
+            pub,
             allowed_scopes=["public"],
         )
         return node_b_id, pub, priv
@@ -864,7 +894,7 @@ class TestMaliciousPeer:
                         "timestamp": "2026-05-02T00:00:00Z",
                         "hlc": f"{int(time.time() * 1000)}.000",
                         "confidence": 1.0,
-                        "scope": "company",    # peer only allows "public"
+                        "scope": "company",  # peer only allows "public"
                         "valid_until": None,
                     }
                 ]
@@ -899,7 +929,7 @@ class TestMaliciousPeer:
                         "entity": "user:alice",
                         "relation": "test:val",
                         "value": {"type": "string", "v": "injected"},
-                        "source": "user:alice",   # not the peer's node_id → forgery
+                        "source": "user:alice",  # not the peer's node_id → forgery
                         "timestamp": "2026-05-02T00:00:00Z",
                         "hlc": f"{int(time.time() * 1000)}.000",
                         "confidence": 1.0,
@@ -1005,7 +1035,9 @@ class TestConflictResolution:
         r = fed_node.client.get("/v1/conflicts?status=unresolved")
         assert r.status_code == 200
         unresolved_ids = [c["conflict_id"] for c in r.json()["conflicts"]]
-        assert conflict_id not in unresolved_ids, "resolved conflict must not appear in unresolved list"
+        assert conflict_id not in unresolved_ids, (
+            "resolved conflict must not appear in unresolved list"
+        )
 
     def test_resolve_creates_resolution_fact_with_provenance(self, fed_node: FedNode) -> None:
         """Resolution fact uses namespaced entity; stigmem:resolves meta-fact points to conflict."""
@@ -1026,7 +1058,9 @@ class TestConflictResolution:
         assert fact["entity"] == f"stigmem:resolution:{conflict_id}", (
             "resolution fact MUST use namespaced entity, not the conflicting entity"
         )
-        assert fact["entity"] != entity, "resolution fact must NOT share entity with conflicting facts"
+        assert fact["entity"] != entity, (
+            "resolution fact must NOT share entity with conflicting facts"
+        )
         assert fact["relation"] == "resolve:val"
         assert fact["confidence"] == 1.0
 

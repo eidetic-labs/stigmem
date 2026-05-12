@@ -105,6 +105,7 @@ def push_setup(
     # parallel push fixtures in test_phase8_identity.py can each publish a
     # manifest for "anon:trusted" without sharing the 10-per-hour bucket.
     from stigmem_node.routes import identity as identity_routes
+
     identity_routes._manifest_submit_log.clear()
 
     original = settings_module.settings
@@ -231,7 +232,7 @@ class TestPushFactsBranches:
         r = client.post(
             "/v1/federation/facts/push",
             json={"facts": []},
-            headers={"X-Stigmem-Capability": "{\"verb\":\"write\",\"sig\":\"bad\"}"},
+            headers={"X-Stigmem-Capability": '{"verb":"write","sig":"bad"}'},
         )
         assert r.status_code == 401
 
@@ -246,9 +247,7 @@ class TestPushFactsBranches:
 
 
 class TestCapTokenFactBranches:
-    def test_cap_token_source_not_owned(
-        self, push_setup: tuple[TestClient, str, str, str]
-    ) -> None:
+    def test_cap_token_source_not_owned(self, push_setup: tuple[TestClient, str, str, str]) -> None:
         """Fact source != cap-token subject → rejected with source_not_owned (line 688)."""
         client, issuer, token, _db = push_setup
         # Source is a different node — should be rejected
@@ -289,7 +288,8 @@ class TestCapTokenFactBranches:
         # accepted OR rejected — both paths exercise scoring code
 
     def test_cap_token_ingest_exception_handled(
-        self, push_setup: tuple[TestClient, str, str, str],
+        self,
+        push_setup: tuple[TestClient, str, str, str],
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """ingest_fact raising → ingest_error (lines 697-698)."""

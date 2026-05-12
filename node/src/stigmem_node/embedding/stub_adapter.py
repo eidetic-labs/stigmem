@@ -1,14 +1,12 @@
 """Deterministic stub EmbeddingModel — for tests and offline development.
 
-Produces random-but-reproducible L2-normalised vectors seeded from text hash.
+Produces reproducible L2-normalised vectors derived from text hashes.
 Never requires external dependencies.
 """
 
 from __future__ import annotations
 
 import hashlib
-import math
-import random
 
 from .base import EmbeddingModel, Vector, l2_normalize
 
@@ -33,9 +31,18 @@ class StubEmbeddingModel(EmbeddingModel):
     def embed(self, texts: list[str]) -> list[Vector]:
         result: list[Vector] = []
         for text in texts:
-            digest = hashlib.sha256(text.encode()).digest()
-            seed = int.from_bytes(digest[:8], "big")
-            rng = random.Random(seed)  # nosec B311 — deterministic test stub; seed is a SHA-256 digest, not a secret
-            raw = [rng.gauss(0, 1) for _ in range(self._dim)]
+            raw: list[float] = []
+            counter = 0
+            while len(raw) < self._dim:
+                digest = hashlib.sha256(f"{text}:{counter}".encode()).digest()
+                counter += 1
+                for offset in range(0, len(digest), 4):
+                    chunk = digest[offset : offset + 4]
+                    if len(chunk) < 4:
+                        continue
+                    unit = int.from_bytes(chunk, "big") / 0xFFFFFFFF
+                    raw.append((unit * 2.0) - 1.0)
+                    if len(raw) == self._dim:
+                        break
             result.append(l2_normalize(raw))
         return result

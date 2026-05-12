@@ -14,9 +14,7 @@ Tests cover:
 from __future__ import annotations
 
 import sqlite3
-import uuid
 
-import pytest
 from fastapi.testclient import TestClient
 
 # ---------------------------------------------------------------------------
@@ -24,11 +22,13 @@ from fastapi.testclient import TestClient
 # ---------------------------------------------------------------------------
 
 _ALICE = "stigmem://testnode/agent/alice"
-_BOB   = "stigmem://testnode/agent/bob"
+_BOB = "stigmem://testnode/agent/bob"
 _CAROL = "stigmem://testnode/agent/carol"
 
 
-def _fact(entity: str, relation: str, v: str, scope: str = "local", confidence: float = 1.0) -> dict:
+def _fact(
+    entity: str, relation: str, v: str, scope: str = "local", confidence: float = 1.0
+) -> dict:
     return {
         "entity": entity,
         "relation": "memory:knows",
@@ -80,26 +80,32 @@ class TestRecallBasic:
         assert body["truncated"] is False
 
     def test_recall_returns_matching_facts(self, client: TestClient) -> None:
-        client.post("/v1/facts", json={
-            "entity": _ALICE,
-            "relation": "memory:note",
-            "value": {"type": "string", "v": "alice is the project lead"},
-            "source": _ALICE,
-            "scope": "local",
-        })
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": _ALICE,
+                "relation": "memory:note",
+                "value": {"type": "string", "v": "alice is the project lead"},
+                "source": _ALICE,
+                "scope": "local",
+            },
+        )
         r = client.post("/v1/recall", json=_recall_body(query="alice project lead"))
         assert r.status_code == 200
         body = r.json()
         assert len(body["facts"]) >= 1
 
     def test_score_breakdown_present(self, client: TestClient) -> None:
-        client.post("/v1/facts", json={
-            "entity": _ALICE,
-            "relation": "memory:role",
-            "value": {"type": "string", "v": "engineer"},
-            "source": _ALICE,
-            "scope": "local",
-        })
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": _ALICE,
+                "relation": "memory:role",
+                "value": {"type": "string", "v": "engineer"},
+                "source": _ALICE,
+                "scope": "local",
+            },
+        )
         r = client.post("/v1/recall", json=_recall_body(query="engineer"))
         assert r.status_code == 200
         body = r.json()
@@ -108,7 +114,14 @@ class TestRecallBasic:
             assert "score" in sf
             assert "score_breakdown" in sf
             bd = sf["score_breakdown"]
-            for key in ("lexical", "semantic", "graph", "source_trust", "recency", "weighted_total"):
+            for key in (
+                "lexical",
+                "semantic",
+                "graph",
+                "source_trust",
+                "recency",
+                "weighted_total",
+            ):
                 assert key in bd
             assert "token_estimate" in sf
             assert "hop_distance" in sf
@@ -117,19 +130,29 @@ class TestRecallBasic:
         r = client.post("/v1/recall", json=_recall_body())
         assert r.status_code == 200
         body = r.json()
-        for field in ("recall_id", "query_hash", "facts", "total_scored",
-                      "token_budget", "tokens_used", "truncated"):
+        for field in (
+            "recall_id",
+            "query_hash",
+            "facts",
+            "total_scored",
+            "token_budget",
+            "tokens_used",
+            "truncated",
+        ):
             assert field in body
 
     def test_facts_ordered_by_score_desc(self, client: TestClient) -> None:
         for i in range(5):
-            client.post("/v1/facts", json={
-                "entity": f"stigmem://testnode/item/{i}",
-                "relation": "memory:desc",
-                "value": {"type": "string", "v": f"alice bob carol item {i}"},
-                "source": _ALICE,
-                "scope": "local",
-            })
+            client.post(
+                "/v1/facts",
+                json={
+                    "entity": f"stigmem://testnode/item/{i}",
+                    "relation": "memory:desc",
+                    "value": {"type": "string", "v": f"alice bob carol item {i}"},
+                    "source": _ALICE,
+                    "scope": "local",
+                },
+            )
         r = client.post("/v1/recall", json=_recall_body(query="alice bob carol"))
         assert r.status_code == 200
         scores = [sf["score"] for sf in r.json()["facts"]]
@@ -144,27 +167,38 @@ class TestRecallBasic:
 class TestTokenBudget:
     def test_budget_very_large_includes_all_matching(self, client: TestClient) -> None:
         for i in range(5):
-            client.post("/v1/facts", json={
-                "entity": f"stigmem://testnode/b/{i}",
-                "relation": "memory:info",
-                "value": {"type": "string", "v": f"budget test fact number {i}"},
-                "source": _ALICE,
-                "scope": "local",
-            })
-        r = client.post("/v1/recall", json=_recall_body(query="budget test fact", token_budget=200_000))
+            client.post(
+                "/v1/facts",
+                json={
+                    "entity": f"stigmem://testnode/b/{i}",
+                    "relation": "memory:info",
+                    "value": {"type": "string", "v": f"budget test fact number {i}"},
+                    "source": _ALICE,
+                    "scope": "local",
+                },
+            )
+        r = client.post(
+            "/v1/recall", json=_recall_body(query="budget test fact", token_budget=200_000)
+        )
         assert r.status_code == 200
         body = r.json()
         assert body["truncated"] is False
         assert body["tokens_used"] <= 200_000
 
     def test_budget_too_small_returns_empty(self, client: TestClient) -> None:
-        client.post("/v1/facts", json={
-            "entity": _ALICE,
-            "relation": "memory:long",
-            "value": {"type": "string", "v": "this is a long enough fact to exceed tiny budgets"},
-            "source": _ALICE,
-            "scope": "local",
-        })
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": _ALICE,
+                "relation": "memory:long",
+                "value": {
+                    "type": "string",
+                    "v": "this is a long enough fact to exceed tiny budgets",
+                },
+                "source": _ALICE,
+                "scope": "local",
+            },
+        )
         # token_budget=1 means no fact can fit (minimum token_estimate > 1)
         r = client.post("/v1/recall", json=_recall_body(query="long enough", token_budget=1))
         assert r.status_code == 200
@@ -174,14 +208,19 @@ class TestTokenBudget:
 
     def test_tokens_used_matches_packed_estimates(self, client: TestClient) -> None:
         for i in range(3):
-            client.post("/v1/facts", json={
-                "entity": f"stigmem://testnode/t/{i}",
-                "relation": "memory:x",
-                "value": {"type": "string", "v": f"tokens used test {i}"},
-                "source": _ALICE,
-                "scope": "local",
-            })
-        r = client.post("/v1/recall", json=_recall_body(query="tokens used test", token_budget=4000))
+            client.post(
+                "/v1/facts",
+                json={
+                    "entity": f"stigmem://testnode/t/{i}",
+                    "relation": "memory:x",
+                    "value": {"type": "string", "v": f"tokens used test {i}"},
+                    "source": _ALICE,
+                    "scope": "local",
+                },
+            )
+        r = client.post(
+            "/v1/recall", json=_recall_body(query="tokens used test", token_budget=4000)
+        )
         assert r.status_code == 200
         body = r.json()
         computed = sum(sf["token_estimate"] for sf in body["facts"])
@@ -189,14 +228,22 @@ class TestTokenBudget:
 
     def test_truncated_flag_set_when_budget_exceeded(self, client: TestClient) -> None:
         for i in range(20):
-            client.post("/v1/facts", json={
-                "entity": f"stigmem://testnode/tr/{i}",
-                "relation": "memory:data",
-                "value": {"type": "string", "v": f"truncation test fact with lots of words item {i} filler filler"},
-                "source": _ALICE,
-                "scope": "local",
-            })
-        r = client.post("/v1/recall", json=_recall_body(query="truncation test fact", token_budget=50))
+            client.post(
+                "/v1/facts",
+                json={
+                    "entity": f"stigmem://testnode/tr/{i}",
+                    "relation": "memory:data",
+                    "value": {
+                        "type": "string",
+                        "v": f"truncation test fact with lots of words item {i} filler filler",
+                    },
+                    "source": _ALICE,
+                    "scope": "local",
+                },
+            )
+        r = client.post(
+            "/v1/recall", json=_recall_body(query="truncation test fact", token_budget=50)
+        )
         assert r.status_code == 200
         body = r.json()
         # Either all fit or some were cut; check internal consistency
@@ -213,23 +260,35 @@ class TestTokenBudget:
 class TestGraphExpansion:
     def test_neighbors_included_when_enabled(self, client: TestClient) -> None:
         # alice --ref--> bob; then search for "alice"
-        client.post("/v1/facts", json={
-            "entity": _ALICE,
-            "relation": "memory:knows",
-            "value": {"type": "ref", "v": _BOB},
-            "source": _ALICE,
-            "scope": "local",
-        })
-        client.post("/v1/facts", json={
-            "entity": _BOB,
-            "relation": "memory:role",
-            "value": {"type": "string", "v": "bob is the designer"},
-            "source": _BOB,
-            "scope": "local",
-        })
-        r = client.post("/v1/recall", json=_recall_body(
-            query="alice", depth=1, include_neighbors=True, token_budget=4000,
-        ))
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": _ALICE,
+                "relation": "memory:knows",
+                "value": {"type": "ref", "v": _BOB},
+                "source": _ALICE,
+                "scope": "local",
+            },
+        )
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": _BOB,
+                "relation": "memory:role",
+                "value": {"type": "string", "v": "bob is the designer"},
+                "source": _BOB,
+                "scope": "local",
+            },
+        )
+        r = client.post(
+            "/v1/recall",
+            json=_recall_body(
+                query="alice",
+                depth=1,
+                include_neighbors=True,
+                token_budget=4000,
+            ),
+        )
         assert r.status_code == 200
         body = r.json()
         # Should include alice's own facts (direct match) + possibly bob's via graph
@@ -238,20 +297,26 @@ class TestGraphExpansion:
         assert any(_ALICE in e or _BOB in e for e in fact_entities) or body["total_scored"] >= 0
 
     def test_no_neighbors_when_disabled(self, client: TestClient) -> None:
-        client.post("/v1/facts", json={
-            "entity": _ALICE,
-            "relation": "memory:ref",
-            "value": {"type": "ref", "v": _CAROL},
-            "source": _ALICE,
-            "scope": "local",
-        })
-        client.post("/v1/facts", json={
-            "entity": _CAROL,
-            "relation": "memory:note",
-            "value": {"type": "string", "v": "carol only via graph"},
-            "source": _CAROL,
-            "scope": "local",
-        })
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": _ALICE,
+                "relation": "memory:ref",
+                "value": {"type": "ref", "v": _CAROL},
+                "source": _ALICE,
+                "scope": "local",
+            },
+        )
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": _CAROL,
+                "relation": "memory:note",
+                "value": {"type": "string", "v": "carol only via graph"},
+                "source": _CAROL,
+                "scope": "local",
+            },
+        )
         r = client.post(
             "/v1/recall",
             json=_recall_body(query="carol only via graph", include_neighbors=False),
@@ -270,21 +335,29 @@ class TestGraphExpansion:
 
 class TestScopeIsolation:
     def test_different_scope_excluded(self, client: TestClient) -> None:
-        client.post("/v1/facts", json={
-            "entity": _ALICE,
-            "relation": "memory:secret",
-            "value": {"type": "string", "v": "supersecret company only"},
-            "source": _ALICE,
-            "scope": "company",
-        })
-        r = client.post("/v1/recall", json=_recall_body(query="supersecret company only", scope="local"))
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": _ALICE,
+                "relation": "memory:secret",
+                "value": {"type": "string", "v": "supersecret company only"},
+                "source": _ALICE,
+                "scope": "company",
+            },
+        )
+        r = client.post(
+            "/v1/recall", json=_recall_body(query="supersecret company only", scope="local")
+        )
         assert r.status_code == 200
         ids = [sf["fact"]["id"] for sf in r.json()["facts"]]
         company_fact_ids = [
-            f["id"] for f in client.get(
+            f["id"]
+            for f in client.get(
                 "/v1/facts",
                 params={"entity": _ALICE, "scope": "company"},
-            ).json().get("facts", [])
+            )
+            .json()
+            .get("facts", [])
         ]
         for cid in company_fact_ids:
             assert cid not in ids
@@ -322,7 +395,7 @@ class TestAuth:
     def test_recall_requires_read_permission(self, authed_client) -> None:
         client, raw_key = authed_client
         # No Authorization header — should get 401/403
-        r = client.post("/v1/recall", json=_recall_body())
+        client.post("/v1/recall", json=_recall_body())
         # authed_client has auth enabled; no key given → must fail
         r_no_auth = client.post(
             "/v1/recall",

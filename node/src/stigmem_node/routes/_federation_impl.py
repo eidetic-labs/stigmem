@@ -53,6 +53,7 @@ async def register_peer_impl(
     from typing import cast as _cast
 
     from . import federation as _fed_mod
+
     _fed = _cast(Any, _fed_mod)
 
     if not identity.can_federate():
@@ -148,6 +149,7 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
     from typing import cast as _cast
 
     from . import federation as _fed_mod
+
     _fed = _cast(Any, _fed_mod)
 
     trust_mode = _fed.settings.trust_mode
@@ -184,6 +186,7 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
         try:
             tl = make_transparency_log()
             from ..db import db as _db
+
             with _db() as conn:
                 row = conn.execute(
                     "SELECT log_entry_json FROM federation_manifests WHERE entity_uri = ?",
@@ -191,6 +194,7 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
                 ).fetchone()
             if row and row["log_entry_json"]:
                 import json as _json
+
                 le_data = _json.loads(row["log_entry_json"])
                 le = LogEntry(
                     log_id=le_data.get("log_id", ""),
@@ -214,6 +218,7 @@ async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str
                 {"node_id": node_id, "action": "downgraded_to_pending_tl_proof"},
             )
             from ..db import db as _db
+
             with _db() as conn:
                 conn.execute(
                     "UPDATE peers SET status = 'pending_tl_proof' WHERE id = ?",
@@ -262,9 +267,7 @@ def _authenticate_tombstone_caller(
             trust_mode=fed_settings.trust_mode,
         )
     except CapabilityTokenError as exc:
-        raise HTTPException(
-            status_code=401, detail=f"capability token invalid: {exc}"
-        ) from exc
+        raise HTTPException(status_code=401, detail=f"capability token invalid: {exc}") from exc
     try:
         cap_token = json.loads(x_stigmem_capability)
     except json.JSONDecodeError as exc:
@@ -272,9 +275,7 @@ def _authenticate_tombstone_caller(
             status_code=400, detail=f"malformed capability token JSON: {exc}"
         ) from exc
     if cap_token.get("verb", "") not in ("tombstone:write", "write"):
-        raise HTTPException(
-            status_code=403, detail="capability token missing tombstone:write verb"
-        )
+        raise HTTPException(status_code=403, detail="capability token missing tombstone:write verb")
 
 
 def _verify_signed_artifact_or_400(
@@ -384,11 +385,16 @@ def federation_ingest_tombstone_impl(
     from typing import cast as _cast
 
     from . import federation as _fed_mod
+
     fed_settings = _cast(Any, _fed_mod).settings
 
     _authenticate_tombstone_caller(
-        request, authorization, x_stigmem_capability,
-        try_peer_token_auth, get_mtls_peer_cert, fed_settings,
+        request,
+        authorization,
+        x_stigmem_capability,
+        try_peer_token_auth,
+        get_mtls_peer_cert,
+        fed_settings,
     )
 
     if "tombstone_id" in payload:
@@ -410,7 +416,10 @@ def _resolve_pubkey_for_key_id(manifest: Any, key_id: str) -> str | None:
 
 def _emit_tombstone_verification_failed(record: TombstoneRecord, reason: str) -> None:
     import logging as _logging
+
     _logging.getLogger("stigmem.tombstones.ingest").error(
         "tombstone_verification_failed: tombstone_id=%s entity=%s reason=%s",
-        record.id, record.entity_uri, reason,
+        record.id,
+        record.entity_uri,
+        reason,
     )

@@ -31,16 +31,16 @@ from cryptography.hazmat.primitives.serialization import (
     NoEncryption,
     PrivateFormat,
     PublicFormat,
+    load_der_private_key,
 )
-from cryptography.hazmat.primitives.serialization import load_der_private_key
 from fastapi import HTTPException, status
 
 from .db import db
 
-
 # ---------------------------------------------------------------------------
 # Base64url helpers
 # ---------------------------------------------------------------------------
+
 
 def b64url_encode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
@@ -55,12 +55,11 @@ def b64url_decode(s: str) -> bytes:
 # Node federation keypair (stored in node_meta)
 # ---------------------------------------------------------------------------
 
+
 def get_or_create_keypair() -> tuple[Ed25519PrivateKey, str]:
     """Return (private_key, base64url_pubkey). Creates and persists on first call."""
     with db() as conn:
-        row = conn.execute(
-            "SELECT value FROM node_meta WHERE key='federation_privkey'"
-        ).fetchone()
+        row = conn.execute("SELECT value FROM node_meta WHERE key='federation_privkey'").fetchone()
         if row:
             der_bytes = b64url_decode(row["value"])
             priv: Ed25519PrivateKey = load_der_private_key(der_bytes, password=None)  # type: ignore[assignment]
@@ -87,6 +86,7 @@ def get_federation_pubkey() -> str:
 # Peer token minting (subscriber → publisher)
 # ---------------------------------------------------------------------------
 
+
 def mint_peer_token(
     local_node_id: str,
     target_node_id: str,
@@ -110,6 +110,7 @@ def mint_peer_token(
 # ---------------------------------------------------------------------------
 # Peer token verification (inbound — called by federation/facts endpoint)
 # ---------------------------------------------------------------------------
+
 
 class PeerTokenClaims:
     def __init__(self, iss: str, sub: str, scopes: list[str], nonce: str) -> None:
@@ -137,8 +138,9 @@ def verify_peer_token(
             algorithms=["EdDSA"],
         )
     except jwt.exceptions.DecodeError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail=f"malformed_token: {e}") from e
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"malformed_token: {e}"
+        ) from e
 
     iss = unverified.get("iss", "")
     nonce = unverified.get("nonce", "")
@@ -148,10 +150,8 @@ def verify_peer_token(
     # Step 2 — expiry check (before touching DB)
     now = int(time.time())
     if exp <= now:
-        _write_audit(audit_writer, iss, "rejected_token",
-                     {"reason": "token_expired", "exp": exp})
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="token_expired")
+        _write_audit(audit_writer, iss, "rejected_token", {"reason": "token_expired", "exp": exp})
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="token_expired")
 
     # Step 3 — look up peer by iss
     with db() as conn:
@@ -161,8 +161,9 @@ def verify_peer_token(
         ).fetchone()
 
     if peer_row is None or peer_row["status"] != "active":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="unknown_or_inactive_peer")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="unknown_or_inactive_peer"
+        )
 
     # Step 4 — verify signature
     try:
@@ -174,16 +175,19 @@ def verify_peer_token(
             algorithms=["EdDSA"],
             options={"verify_exp": False},
         )
-    except (jwt.exceptions.InvalidSignatureError, InvalidSignature,
-            jwt.exceptions.DecodeError) as e:
+    except (
+        jwt.exceptions.InvalidSignatureError,
+        InvalidSignature,
+        jwt.exceptions.DecodeError,
+    ) as e:
         _write_audit(audit_writer, iss, "rejected_token", {"reason": "invalid_signature"})
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="invalid_signature") from e
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_signature"
+        ) from e
 
     # Step 5 — sub must match local node
     if verified.get("sub") != local_node_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="sub_mismatch")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="sub_mismatch")
 
     # Step 6 — replay check (nonce must not be in nonce_cache)
     now_iso = datetime.now(UTC).isoformat()
@@ -195,10 +199,13 @@ def verify_peer_token(
         ).fetchone()
 
     if existing is not None:
-        _write_audit(audit_writer, peer_row["id"], "replay_attempt",
-                     {"nonce": nonce, "reason": "nonce_already_seen"})
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="nonce_already_seen")
+        _write_audit(
+            audit_writer,
+            peer_row["id"],
+            "replay_attempt",
+            {"nonce": nonce, "reason": "nonce_already_seen"},
+        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="nonce_already_seen")
 
     return PeerTokenClaims(
         iss=iss,
@@ -221,6 +228,7 @@ def consume_nonce(peer_id: str, nonce: str, exp: int) -> None:
 # ---------------------------------------------------------------------------
 # Declaration signature helpers (§5.6, §6.1)
 # ---------------------------------------------------------------------------
+
 
 def canonical_declaration_json(
     node_url: str,
@@ -278,6 +286,7 @@ def verify_declaration_sig(
 # ---------------------------------------------------------------------------
 # Audit helper
 # ---------------------------------------------------------------------------
+
 
 def _write_audit(
     audit_writer: Any | None,

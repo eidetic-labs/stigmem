@@ -221,8 +221,7 @@ def test_stale_claim_recovered(client: TestClient) -> None:
     assert mock_inst.post.call_count == 1
     with db_mod.db() as conn:
         row = conn.execute(
-            "SELECT delivery_status, claimed_at FROM subscription_events "
-            "WHERE subscription_id=?",
+            "SELECT delivery_status, claimed_at FROM subscription_events WHERE subscription_id=?",
             (sub_id,),
         ).fetchone()
     assert row["delivery_status"] == "delivered"

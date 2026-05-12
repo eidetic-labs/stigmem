@@ -23,7 +23,7 @@ import pytest
 
 from stigmem_node.db import apply_migrations
 from stigmem_node.embedding import compose_triple_text
-from stigmem_node.embedding.base import EmbeddingModel, l2_normalize
+from stigmem_node.embedding.base import l2_normalize
 from stigmem_node.embedding.stub_adapter import StubEmbeddingModel
 from stigmem_node.vector_search import (
     EmbeddingModelMismatch,
@@ -31,7 +31,6 @@ from stigmem_node.vector_search import (
     check_or_register_model,
     embed_and_store_fact,
     ensure_vec_table,
-    store_embedding,
     vector_search,
 )
 
@@ -156,9 +155,7 @@ class TestComposeTripleText:
         assert "CEO" in text
 
     def test_ref_type_uses_last_segment(self) -> None:
-        text = compose_triple_text(
-            "user:alice", "org:member-of", "ref", "stigmem://company/acme"
-        )
+        text = compose_triple_text("user:alice", "org:member-of", "ref", "stigmem://company/acme")
         assert "acme" in text
         assert "stigmem://company/acme" not in text
 
@@ -300,7 +297,7 @@ class TestEmbedAndStore:
             pytest.skip("sqlite-vec not installed")
 
         dead_id = _insert_fact(conn, confidence=0.05, embedding_missing=1)
-        alive_id = _insert_fact(conn, entity="user:bob", confidence=1.0, embedding_missing=1)
+        _insert_fact(conn, entity="user:bob", confidence=1.0, embedding_missing=1)
 
         model = StubEmbeddingModel(dim=4)
         check_or_register_model(conn, model.model_id, model.dimension)
@@ -340,7 +337,9 @@ class TestVectorSearch:
         ]
         fact_ids: list[str] = []
         for entity, relation, vtype, val in texts:
-            fid = _insert_fact(conn, entity=entity, relation=relation, value_v=val, embedding_missing=1)
+            fid = _insert_fact(
+                conn, entity=entity, relation=relation, value_v=val, embedding_missing=1
+            )
             fact_ids.append(fid)
             embed_and_store_fact(fid, entity, relation, vtype, val, conn, model)
         conn.commit()
@@ -368,7 +367,7 @@ class TestVectorSearch:
 
         local_id = _insert_fact(conn, entity="user:alice", scope="local", embedding_missing=1)
         team_id = _insert_fact(conn, entity="user:bob", scope="team", embedding_missing=1)
-        for fid, entity, scope in [
+        for fid, entity, _scope in [
             (local_id, "user:alice", "local"),
             (team_id, "user:bob", "team"),
         ]:
@@ -410,9 +409,7 @@ class TestEntityEdges:
         import stigmem_node.db as db_mod
 
         with db_mod.db() as conn:
-            edge = conn.execute(
-                "SELECT * FROM entity_edges WHERE id=?", (fact_id,)
-            ).fetchone()
+            edge = conn.execute("SELECT * FROM entity_edges WHERE id=?", (fact_id,)).fetchone()
 
         assert edge is not None
         assert edge["subject"] == "user:alice"
@@ -441,9 +438,7 @@ class TestEntityEdges:
         import stigmem_node.db as db_mod
 
         with db_mod.db() as conn:
-            edge = conn.execute(
-                "SELECT * FROM entity_edges WHERE id=?", (fact_id,)
-            ).fetchone()
+            edge = conn.execute("SELECT * FROM entity_edges WHERE id=?", (fact_id,)).fetchone()
 
         assert edge is None
 
@@ -469,8 +464,6 @@ class TestEntityEdges:
         import stigmem_node.db as db_mod
 
         with db_mod.db() as conn:
-            edge = conn.execute(
-                "SELECT * FROM entity_edges WHERE id=?", (fact_id,)
-            ).fetchone()
+            edge = conn.execute("SELECT * FROM entity_edges WHERE id=?", (fact_id,)).fetchone()
 
         assert edge is None

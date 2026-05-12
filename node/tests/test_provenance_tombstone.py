@@ -16,9 +16,7 @@ import sqlite3
 import uuid
 from datetime import UTC, datetime
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -181,9 +179,7 @@ class TestProvenanceTombstoneSuppression:
         assert entry.get("fact_id") is None
         assert entry.get("entity") is None
 
-    def test_no_derived_from_returns_empty_list(
-        self, client: TestClient, tmp_db: str
-    ) -> None:
+    def test_no_derived_from_returns_empty_list(self, client: TestClient, tmp_db: str) -> None:
         """A fact without derived_from returns derived_from: []."""
         entity = "stigmem://test/entity/standalone"
         f = _insert_fact(client, entity=entity, value="no provenance")

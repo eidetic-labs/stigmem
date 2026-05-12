@@ -54,12 +54,11 @@ def create_app() -> FastAPI:
         apply_migrations()
 
         if settings.trust_mode == "strict" and not settings.node_private_key:
-            raise RuntimeError(
-                "STIGMEM_NODE_PRIVATE_KEY must be set when trust_mode=strict"
-            )
+            raise RuntimeError("STIGMEM_NODE_PRIVATE_KEY must be set when trust_mode=strict")
 
         if settings.otel_enabled:
             from .tracing import init_tracing
+
             init_tracing(
                 service_name=settings.otel_service_name,
                 otlp_endpoint=settings.otel_exporter_otlp_endpoint,
@@ -75,6 +74,7 @@ def create_app() -> FastAPI:
             logger.info("Federation enabled — pull %ds", settings.federation_pull_interval_s)
 
         from .subscription_delivery import sweep_loop as _sub_sweep_loop
+
         sweep_task: asyncio.Task[None] = asyncio.create_task(_sub_sweep_loop())
         logger.info(
             "Stigmem subscription sweep enabled — interval %ds",
@@ -113,6 +113,7 @@ def create_app() -> FastAPI:
     app.add_middleware(RateLimitMiddleware)
 
     if settings.mtls_enabled:
+
         @app.middleware("http")
         async def mtls_plaintext_guard(
             request: Request,
@@ -161,9 +162,11 @@ def create_app() -> FastAPI:
     @app.get("/metrics", include_in_schema=False, tags=["ops"])
     def prometheus_metrics() -> Response:
         from .metrics import make_metrics_response
+
         resp = make_metrics_response()
         if resp is None:
             from fastapi.responses import PlainTextResponse
+
             return PlainTextResponse("# prometheus_client not installed\n", status_code=200)
         return resp
 

@@ -41,6 +41,7 @@ _SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9\-]{0,62}$")
 def _build_garden_id_uri(slug: str) -> str:
     """Construct the canonical garden_id URI from a slug."""
     from urllib.parse import urlparse
+
     parsed = urlparse(settings.node_url)
     authority = parsed.netloc or parsed.path
     return f"stigmem://{authority}/garden/{slug}"
@@ -137,12 +138,14 @@ def create_garden(
         )
         row = conn.execute("SELECT * FROM gardens WHERE id = ?", (garden_uuid,)).fetchone()
 
-    get_hook_bus().emit(BillingEvent(
-        event_type="garden_created",
-        tenant_id=identity.tenant_id,
-        entity_uri=identity.entity_uri,
-        garden_id=_build_garden_id_uri(slug),
-    ))
+    get_hook_bus().emit(
+        BillingEvent(
+            event_type="garden_created",
+            tenant_id=identity.tenant_id,
+            entity_uri=identity.entity_uri,
+            garden_id=_build_garden_id_uri(slug),
+        )
+    )
 
     return _row_to_garden_record(dict(row))
 
@@ -226,6 +229,7 @@ def delete_garden(
 # Membership routes (spec §5.18)
 # ---------------------------------------------------------------------------
 
+
 @router.get("/{garden_slug_or_id}/members", response_model=list[GardenMemberRecord])
 def list_members(
     garden_slug_or_id: str,
@@ -261,8 +265,7 @@ def add_member(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=(
-                f"entity is already a member with role '{existing_role}'; "
-                "use PATCH to change role"
+                f"entity is already a member with role '{existing_role}'; use PATCH to change role"
             ),
         )
 
@@ -384,6 +387,7 @@ def _guard_last_elevated_role(garden_uuid: str, entity_uri: str) -> None:
 # Quarantine promote / reject (spec §5.25, §19.5.5)
 # ---------------------------------------------------------------------------
 
+
 @router.post("/{garden_slug_or_id}/promote", status_code=status.HTTP_200_OK)
 def promote_fact(
     garden_slug_or_id: str,
@@ -432,9 +436,9 @@ def promote_fact(
             tg = get_garden_by_slug_or_id(req.target_garden_id, tenant_id=identity.tenant_id)
             if tg is None:
                 raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="target garden not found",
-            )
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="target garden not found",
+                )
             target_garden_db_id = tg["id"]
 
         conn.execute(
@@ -456,6 +460,7 @@ def promote_fact(
 
         # Audit log (§19.5.6)
         import uuid as _uuid
+
         audit_id = str(_uuid.uuid4())
         conn.execute(
             "INSERT INTO fact_audit_log"
@@ -546,6 +551,7 @@ def reject_fact(
 
         # Audit log (§19.5.6)
         import uuid as _uuid
+
         audit_id = str(_uuid.uuid4())
         conn.execute(
             "INSERT INTO fact_audit_log"

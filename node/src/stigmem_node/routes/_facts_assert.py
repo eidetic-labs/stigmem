@@ -47,6 +47,7 @@ def _live_settings() -> Any:
     """
     return sys.modules["stigmem_node.settings"].settings
 
+
 logger = logging.getLogger("stigmem.facts")
 
 
@@ -56,6 +57,7 @@ def _verify_or_require_attestation(req: AssertRequest, identity: Identity) -> st
 
     if req.attestation is not None:
         from .agent_keys import verify_attestation
+
         value_v_for_sig = _encode_v(req.value.type, req.value.v)
         canonical = (
             f"{req.entity}\n{req.relation}\n{req.value.type}\n{value_v_for_sig}\n{req.source}"
@@ -124,7 +126,9 @@ def _resolve_garden_for_assert(req: AssertRequest, identity: Identity) -> Any:
 
 
 def _existing_record_for_cid(
-    conn: Any, fact_cid: str, tenant_id: str,
+    conn: Any,
+    fact_cid: str,
+    tenant_id: str,
 ) -> FactRecord | None:
     """Return the existing record for ``fact_cid``, or None when no alias exists yet."""
     existing_alias = conn.execute(
@@ -140,7 +144,11 @@ def _existing_record_for_cid(
 
 
 def _detect_and_record_contradictions(
-    conn: Any, fact_id: str, entity: str, req: AssertRequest, identity: Identity,
+    conn: Any,
+    fact_id: str,
+    entity: str,
+    req: AssertRequest,
+    identity: Identity,
 ) -> bool:
     """Spec §9.1: skip system facts; else find siblings sharing (entity, relation, scope)."""
     from .facts import _SYSTEM_RELATION_PREFIX, _record_contradictions
@@ -162,7 +170,13 @@ def _detect_and_record_contradictions(
     if not siblings:
         return False
     _record_contradictions(
-        conn, fact_id, entity, req.relation, req.scope, siblings, identity.tenant_id,
+        conn,
+        fact_id,
+        entity,
+        req.relation,
+        req.scope,
+        siblings,
+        identity.tenant_id,
     )
     print(
         f"[stigmem] WARN: collision — entity={entity!r} relation={req.relation!r} "
@@ -174,8 +188,17 @@ def _detect_and_record_contradictions(
 
 
 def _emit_post_write_hooks(
-    *, fact_id: str, entity: str, source: str, req: AssertRequest, identity: Identity,
-    value_v: str | None, garden_uuid: str | None, now: str, contradicted: bool, _span: object,
+    *,
+    fact_id: str,
+    entity: str,
+    source: str,
+    req: AssertRequest,
+    identity: Identity,
+    value_v: str | None,
+    garden_uuid: str | None,
+    now: str,
+    contradicted: bool,
+    _span: object,
 ) -> None:
     """Card-stale + background embed + billing + subscription fan-out + metrics + span attrs."""
     from .facts import _embed_fact_background
@@ -183,6 +206,7 @@ def _emit_post_write_hooks(
     # Phase 9: mark entity's memory card stale on every write (ACM-214)
     try:
         from ..card_materializer import mark_entity_stale as _mark_stale
+
         _mark_stale(entity, req.scope, identity.tenant_id)
     except Exception as _card_exc:
         logger.warning("card mark_stale failed for %r: %s", entity, _card_exc)
@@ -195,36 +219,41 @@ def _emit_post_write_hooks(
             daemon=True,
         ).start()
 
-    get_hook_bus().emit(BillingEvent(
-        event_type="fact_written",
-        tenant_id=identity.tenant_id,
-        entity_uri=identity.entity_uri,
-        fact_id=fact_id,
-    ))
+    get_hook_bus().emit(
+        BillingEvent(
+            event_type="fact_written",
+            tenant_id=identity.tenant_id,
+            entity_uri=identity.entity_uri,
+            fact_id=fact_id,
+        )
+    )
 
     # §20: fan out to subscribers (fast DB insert only; delivery happens in sweep loop)
     try:
         import json as _json
 
         from ..subscription_delivery import fan_out as _subscription_fan_out
+
         _subscription_fan_out(
             fact_id=fact_id,
             entity=entity,
             scope=req.scope,
             garden_id=garden_uuid,
             tenant_id=identity.tenant_id,
-            fact_payload_json=_json.dumps({
-                "id": fact_id,
-                "entity": entity,
-                "relation": req.relation,
-                "value_type": req.value.type,
-                "value_v": value_v,
-                "source": source,
-                "timestamp": now,
-                "scope": req.scope,
-                "confidence": req.confidence,
-                "garden_id": garden_uuid,
-            }),
+            fact_payload_json=_json.dumps(
+                {
+                    "id": fact_id,
+                    "entity": entity,
+                    "relation": req.relation,
+                    "value_type": req.value.type,
+                    "value_v": value_v,
+                    "source": source,
+                    "timestamp": now,
+                    "scope": req.scope,
+                    "confidence": req.confidence,
+                    "garden_id": garden_uuid,
+                }
+            ),
         )
     except Exception as _sub_exc:
         print(f"[stigmem] WARN: subscription fan_out failed: {_sub_exc}", file=sys.stderr)
@@ -310,11 +339,11 @@ def assert_fact_impl(
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
-                entity,    # normalized (spec §2.6)
+                entity,  # normalized (spec §2.6)
                 req.relation,
                 req.value.type,
                 value_v,
-                source,    # normalized (spec §2.6)
+                source,  # normalized (spec §2.6)
                 now,
                 req.valid_until,
                 req.confidence,
@@ -347,6 +376,7 @@ def assert_fact_impl(
 
         # C3 / §22.3: write-ahead audit entry for fact_write event (same transaction)
         from ..audit_event import emit as _emit_audit
+
         _emit_audit(
             "fact_write",
             entity_uri=identity.entity_uri,
@@ -362,6 +392,7 @@ def assert_fact_impl(
         # Graph adjacency index (§20.1.1): materialize edge for ref-typed facts
         if req.value.type == "ref" and value_v and _is_valid_entity_uri(value_v):
             from ..graph_index import upsert_edge as _upsert_edge
+
             _upsert_edge(
                 conn,
                 fact_id=fact_id,
@@ -389,9 +420,16 @@ def assert_fact_impl(
         contradicted = _detect_and_record_contradictions(conn, fact_id, entity, req, identity)
 
     _emit_post_write_hooks(
-        fact_id=fact_id, entity=entity, source=source, req=req, identity=identity,
-        value_v=value_v, garden_uuid=garden_uuid, now=now,
-        contradicted=contradicted, _span=_span,
+        fact_id=fact_id,
+        entity=entity,
+        source=source,
+        req=req,
+        identity=identity,
+        value_v=value_v,
+        garden_uuid=garden_uuid,
+        now=now,
+        contradicted=contradicted,
+        _span=_span,
     )
 
     return row_to_record(row, contradicted=contradicted, warnings=relation_warnings)

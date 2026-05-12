@@ -6,9 +6,7 @@ import sqlite3
 import uuid
 from datetime import UTC, datetime, timedelta
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 FACT = {
     "entity": "user:alice",
@@ -45,16 +43,12 @@ class TestAssertFact:
         assert r.json()["value"]["v"] is None
 
     def test_assert_boolean(self, client: TestClient) -> None:
-        r = client.post(
-            "/v1/facts", json={**FACT, "value": {"type": "boolean", "v": True}}
-        )
+        r = client.post("/v1/facts", json={**FACT, "value": {"type": "boolean", "v": True}})
         assert r.status_code == 201
         assert r.json()["value"]["v"] is True
 
     def test_assert_number(self, client: TestClient) -> None:
-        r = client.post(
-            "/v1/facts", json={**FACT, "value": {"type": "number", "v": 42.5}}
-        )
+        r = client.post("/v1/facts", json={**FACT, "value": {"type": "number", "v": 42.5}})
         assert r.status_code == 201
         assert r.json()["value"]["v"] == 42.5
 
@@ -135,7 +129,9 @@ class TestQueryFacts:
     def test_contradicted_included_with_flag(self, client: TestClient) -> None:
         client.post("/v1/facts", json=FACT)
         client.post("/v1/facts", json={**FACT, "value": {"type": "string", "v": "CTO"}})
-        r = client.get("/v1/facts?entity=user:alice&relation=memory:role&scope=company&include_contradicted=true")
+        r = client.get(
+            "/v1/facts?entity=user:alice&relation=memory:role&scope=company&include_contradicted=true"
+        )
         facts = r.json()["facts"]
         assert len(facts) == 2
         assert all(f["contradicted"] for f in facts)
@@ -242,9 +238,12 @@ class TestLint:
 
     def test_lint_detects_contradiction(self, client: TestClient) -> None:
         FACT = {
-            "entity": "lint:entity", "relation": "lint:rel",
+            "entity": "lint:entity",
+            "relation": "lint:rel",
             "value": {"type": "string", "v": "A"},
-            "source": "agent:test", "confidence": 1.0, "scope": "company",
+            "source": "agent:test",
+            "confidence": 1.0,
+            "scope": "company",
         }
         client.post("/v1/facts", json=FACT)
         client.post("/v1/facts", json={**FACT, "value": {"type": "string", "v": "B"}})
@@ -262,11 +261,17 @@ class TestLint:
         assert r.status_code == 400
 
     def test_lint_detects_bare_relation(self, client: TestClient) -> None:
-        client.post("/v1/facts", json={
-            "entity": "stigmem://acme/project/test", "relation": "status",
-            "value": {"type": "string", "v": "active"},
-            "source": "agent:test", "confidence": 1.0, "scope": "company",
-        })
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": "stigmem://acme/project/test",
+                "relation": "status",
+                "value": {"type": "string", "v": "active"},
+                "source": "agent:test",
+                "confidence": 1.0,
+                "scope": "company",
+            },
+        )
         r = client.post("/v1/lint", json={"scope": "company", "checks": ["namespacing"]})
         assert r.status_code == 200
         body = r.json()
@@ -276,11 +281,17 @@ class TestLint:
         assert ns_findings[0]["relation"] == "status"
 
     def test_lint_no_namespacing_violation_for_prefixed_relation(self, client: TestClient) -> None:
-        client.post("/v1/facts", json={
-            "entity": "stigmem://acme/project/test", "relation": "pm:status",
-            "value": {"type": "string", "v": "active"},
-            "source": "agent:test", "confidence": 1.0, "scope": "company",
-        })
+        client.post(
+            "/v1/facts",
+            json={
+                "entity": "stigmem://acme/project/test",
+                "relation": "pm:status",
+                "value": {"type": "string", "v": "active"},
+                "source": "agent:test",
+                "confidence": 1.0,
+                "scope": "company",
+            },
+        )
         r = client.post("/v1/lint", json={"scope": "company", "checks": ["namespacing"]})
         body = r.json()
         ns_findings = [f for f in body["findings"] if f["check"] == "namespacing"]
@@ -313,18 +324,28 @@ class TestAliasJoin:
                    (id, entity, relation, value_type, value_v, source, timestamp,
                     valid_until, confidence, scope, hlc, received_from)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
-                (fact_id, entity, "memory:role", "string", "legacy-value",
-                 source, now, None, 1.0, scope, now, None),
+                (
+                    fact_id,
+                    entity,
+                    "memory:role",
+                    "string",
+                    "legacy-value",
+                    source,
+                    now,
+                    None,
+                    1.0,
+                    scope,
+                    now,
+                    None,
+                ),
             )
             conn.commit()
         finally:
             conn.close()
         return fact_id
 
-    def test_entity_alias_join_finds_pre_v07_fact(
-        self, client: TestClient, tmp_db: str
-    ) -> None:
-        """Canonical-form entity query must surface facts stored with non-canonical URIs (§2.6.6)."""
+    def test_entity_alias_join_finds_pre_v07_fact(self, client: TestClient, tmp_db: str) -> None:
+        """Canonical entity query surfaces facts stored with non-canonical URIs."""
         from stigmem_node.migrate import normalize_entities_sweep
 
         raw_entity = "User:Alice"  # non-canonical; canonical is "user:alice"
@@ -341,10 +362,8 @@ class TestAliasJoin:
             f"not found via canonical query entity={canonical_entity!r}"
         )
 
-    def test_source_alias_join_finds_pre_v07_fact(
-        self, client: TestClient, tmp_db: str
-    ) -> None:
-        """Canonical-form source query must surface facts stored with non-canonical source URIs (§2.6.6)."""
+    def test_source_alias_join_finds_pre_v07_fact(self, client: TestClient, tmp_db: str) -> None:
+        """Canonical source query surfaces facts stored with non-canonical source URIs."""
         from stigmem_node.migrate import normalize_entities_sweep
 
         raw_source = "Agent:Assistant"  # non-canonical; canonical is "agent:assistant"
@@ -361,9 +380,7 @@ class TestAliasJoin:
             f"not found via canonical query source={canonical_source!r}"
         )
 
-    def test_canonical_entity_still_matches_without_aliases(
-        self, client: TestClient
-    ) -> None:
+    def test_canonical_entity_still_matches_without_aliases(self, client: TestClient) -> None:
         """Normal canonical-form facts must remain findable (no regression)."""
         r = client.post("/v1/facts", json=FACT)
         assert r.status_code == 201

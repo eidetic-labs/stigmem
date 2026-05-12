@@ -24,8 +24,9 @@ import pytest
 class _FakeReport:
     """Minimal stand-in for pytest.TestReport — only the fields the reporter reads."""
 
-    def __init__(self, nodeid: str, outcome: str, when: str = "call",
-                 longrepr: str | None = None) -> None:
+    def __init__(
+        self, nodeid: str, outcome: str, when: str = "call", longrepr: str | None = None
+    ) -> None:
         self.nodeid = nodeid
         self.outcome = outcome
         self.when = when
@@ -47,10 +48,10 @@ class TestConformanceReporter:
         r.pytest_runtest_logreport(_FakeReport("t::a", "passed", when="setup"))
         # call phase is recorded
         r.pytest_runtest_logreport(_FakeReport("t::a", "passed", when="call"))
-        r.pytest_runtest_logreport(_FakeReport("t::b", "failed", when="call",
-                                                longrepr="boom"))
-        r.pytest_runtest_logreport(_FakeReport("t::c", "skipped", when="call",
-                                                longrepr="Skipped: needs pgvector"))
+        r.pytest_runtest_logreport(_FakeReport("t::b", "failed", when="call", longrepr="boom"))
+        r.pytest_runtest_logreport(
+            _FakeReport("t::c", "skipped", when="call", longrepr="Skipped: needs pgvector")
+        )
         # teardown phase is ignored
         r.pytest_runtest_logreport(_FakeReport("t::a", "passed", when="teardown"))
 
@@ -158,9 +159,7 @@ class TestOllamaEmbeddingModel:
         assert m.dimension == 4
         # Internal: trailing slash stripped (we just verify embed builds the right URL below)
 
-    def test_embed_posts_to_ollama_and_normalises(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_embed_posts_to_ollama_and_normalises(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from stigmem_node.embedding.local_adapter import OllamaEmbeddingModel
 
         captured: dict[str, Any] = {}
@@ -225,9 +224,7 @@ class TestOpenAIEmbeddingModel:
         assert m.model_id == "text-embedding-3-small"
         assert m.dimension == 1536
 
-    def test_embed_raises_when_api_key_env_missing(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_embed_raises_when_api_key_env_missing(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from stigmem_node.embedding.base import EmbeddingError
         from stigmem_node.embedding.openai_adapter import OpenAIEmbeddingModel
 
@@ -240,9 +237,7 @@ class TestOpenAIEmbeddingModel:
         with pytest.raises(EmbeddingError, match="OpenAI API key not found"):
             m.embed(["x"])
 
-    def test_embed_calls_openai_client_with_api_key(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_embed_calls_openai_client_with_api_key(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from stigmem_node.embedding.openai_adapter import OpenAIEmbeddingModel
 
         openai_mod = pytest.importorskip("openai")
@@ -255,9 +250,7 @@ class TestOpenAIEmbeddingModel:
                 captured["model"] = model
                 captured["input"] = input
                 # Build a response with .data[i].embedding
-                return SimpleNamespace(
-                    data=[SimpleNamespace(embedding=[3.0, 4.0]) for _ in input]
-                )
+                return SimpleNamespace(data=[SimpleNamespace(embedding=[3.0, 4.0]) for _ in input])
 
         class _FakeClient:
             def __init__(self, api_key: str) -> None:

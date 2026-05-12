@@ -44,7 +44,9 @@ def register_agent_key(
 ) -> AgentKeyRecord:
     """Register an Ed25519 public key for source-attestation on fact assertions."""
     if not identity.can_write():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="write permission required"
+        )
 
     try:
         _decode_pubkey(req.public_key)
@@ -59,7 +61,8 @@ def register_agent_key(
 
     with db() as conn:
         conn.execute(
-            """INSERT INTO agent_keys (id, entity_uri, public_key, description, registered_at, status)
+            """INSERT INTO agent_keys
+               (id, entity_uri, public_key, description, registered_at, status)
                VALUES (?,?,?,?,?,?)""",
             (key_id, identity.entity_uri, canonical_key, req.description, now, "active"),
         )

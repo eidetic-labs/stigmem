@@ -4,6 +4,7 @@ Active tombstone entity URIs are cached in-process and refreshed at most every
 60 seconds to avoid per-event DB reads during subscription delivery and recall.
 Worst-case 60-second leak window after tombstone creation is acceptable per spec.
 """
+
 from __future__ import annotations
 
 import threading

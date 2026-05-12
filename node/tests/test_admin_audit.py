@@ -139,7 +139,9 @@ class TestAdminAuditContent:
         assert entries  # at least one result
         assert all(e["event_type"] == "fact_write" for e in entries)
 
-    def test_seq_is_monotonically_increasing(self, audit_setup: tuple[TestClient, str, str]) -> None:
+    def test_seq_is_monotonically_increasing(
+        self, audit_setup: tuple[TestClient, str, str]
+    ) -> None:
         """Audit entries returned by the export must have ascending seq values."""
         client, writer_key, audit_key = audit_setup
         for i in range(3):

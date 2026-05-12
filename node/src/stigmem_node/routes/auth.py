@@ -72,11 +72,17 @@ def _verify_id_token(id_token: str) -> dict[str, Any]:
             issuer=settings.oidc_issuer_url,
         )
     except jwt.ExpiredSignatureError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="id_token expired") from exc
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="id_token expired"
+        ) from exc
     except jwt.InvalidAudienceError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="id_token audience mismatch") from exc
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="id_token audience mismatch"
+        ) from exc
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"id_token invalid: {exc}") from exc
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"id_token invalid: {exc}"
+        ) from exc
     return claims
 
 
@@ -189,7 +195,9 @@ def oidc_exchange(body: ExchangeRequest) -> ExchangeResponse:
     )
 
     logger.info("OIDC exchange: sub=%s entity_uri=%s perms=%s", sub, entity_uri, permissions)
-    return ExchangeResponse(api_key=raw_key, entity_uri=entity_uri, permissions=permissions, expires_at=expires_at)
+    return ExchangeResponse(
+        api_key=raw_key, entity_uri=entity_uri, permissions=permissions, expires_at=expires_at
+    )
 
 
 @router.get("/keys", response_model=list[KeyInfo])
@@ -225,12 +233,12 @@ def revoke_key(
 ) -> None:
     """Revoke a specific API key. Callers may only revoke their own keys."""
     with db() as conn:
-        row = conn.execute(
-            "SELECT entity_uri FROM api_keys WHERE id = ?", (key_id,)
-        ).fetchone()
+        row = conn.execute("SELECT entity_uri FROM api_keys WHERE id = ?", (key_id,)).fetchone()
         if row is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Key not found")
         if row["entity_uri"] != identity.entity_uri:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot revoke another entity's key")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Cannot revoke another entity's key"
+            )
         conn.execute("DELETE FROM api_keys WHERE id = ?", (key_id,))
     logger.info("Key revoked: id=%s by entity=%s", key_id, identity.entity_uri)

@@ -31,12 +31,7 @@ from stigmem_node.trust_rules import (
 
 def test_load_yaml_rules_happy_path(tmp_path: Path) -> None:
     p = tmp_path / "rules.yaml"
-    p.write_text(
-        "always_trust:\n"
-        "  - org_uri: stigmem://org-a\n"
-        "    scope: null\n"
-        "never_trust: []\n"
-    )
+    p.write_text("always_trust:\n  - org_uri: stigmem://org-a\n    scope: null\nnever_trust: []\n")
     out = _load_yaml_rules(str(p))
     assert isinstance(out, dict)
     assert "always_trust" in out
@@ -100,9 +95,7 @@ def test_evaluate_auto_rules_no_file_returns_none(
     _isolated_settings: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # No DB rules either — patch _evaluate_db_rules to return None.
-    monkeypatch.setattr(
-        "stigmem_node.trust_rules._evaluate_db_rules", lambda _u, _s: None
-    )
+    monkeypatch.setattr("stigmem_node.trust_rules._evaluate_db_rules", lambda _u, _s: None)
     assert evaluate_auto_rules("stigmem://org-a", "public") is None
 
 
@@ -110,15 +103,9 @@ def test_evaluate_auto_rules_file_always_trust(
     _isolated_settings: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     p = tmp_path / "rules.yaml"
-    p.write_text(
-        "always_trust:\n"
-        "  - org_uri: stigmem://org-a\n"
-        "    scope: null\n"
-    )
+    p.write_text("always_trust:\n  - org_uri: stigmem://org-a\n    scope: null\n")
     monkeypatch.setattr(settings_module.settings, "trust_rules_file", str(p))
-    monkeypatch.setattr(
-        "stigmem_node.trust_rules._evaluate_db_rules", lambda _u, _s: None
-    )
+    monkeypatch.setattr("stigmem_node.trust_rules._evaluate_db_rules", lambda _u, _s: None)
     assert evaluate_auto_rules("stigmem://org-a", "public") == 1.0
 
 
@@ -126,15 +113,9 @@ def test_evaluate_auto_rules_file_never_trust(
     _isolated_settings: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     p = tmp_path / "rules.yaml"
-    p.write_text(
-        "never_trust:\n"
-        "  - org_uri: stigmem://org-bad\n"
-        "    scope: public\n"
-    )
+    p.write_text("never_trust:\n  - org_uri: stigmem://org-bad\n    scope: public\n")
     monkeypatch.setattr(settings_module.settings, "trust_rules_file", str(p))
-    monkeypatch.setattr(
-        "stigmem_node.trust_rules._evaluate_db_rules", lambda _u, _s: None
-    )
+    monkeypatch.setattr("stigmem_node.trust_rules._evaluate_db_rules", lambda _u, _s: None)
     assert evaluate_auto_rules("stigmem://org-bad", "public") == 0.0
 
 
@@ -151,9 +132,7 @@ def test_evaluate_auto_rules_file_no_matching_rule(
         "    scope: secret\n"
     )
     monkeypatch.setattr(settings_module.settings, "trust_rules_file", str(p))
-    monkeypatch.setattr(
-        "stigmem_node.trust_rules._evaluate_db_rules", lambda _u, _s: None
-    )
+    monkeypatch.setattr("stigmem_node.trust_rules._evaluate_db_rules", lambda _u, _s: None)
     # Different org / scope combination — no rule applies.
     assert evaluate_auto_rules("stigmem://org-c", "public") is None
 
@@ -163,15 +142,9 @@ def test_evaluate_auto_rules_db_precedence_over_file(
 ) -> None:
     """When the DB rule says always_trust, the file is never consulted."""
     p = tmp_path / "rules.yaml"
-    p.write_text(
-        "never_trust:\n"
-        "  - org_uri: stigmem://org-a\n"
-        "    scope: null\n"
-    )
+    p.write_text("never_trust:\n  - org_uri: stigmem://org-a\n    scope: null\n")
     monkeypatch.setattr(settings_module.settings, "trust_rules_file", str(p))
-    monkeypatch.setattr(
-        "stigmem_node.trust_rules._evaluate_db_rules", lambda _u, _s: 1.0
-    )
+    monkeypatch.setattr("stigmem_node.trust_rules._evaluate_db_rules", lambda _u, _s: 1.0)
     assert evaluate_auto_rules("stigmem://org-a", "public") == 1.0
 
 
@@ -181,9 +154,7 @@ def test_evaluate_auto_rules_db_precedence_over_file(
 
 
 @pytest.fixture()
-def _patched_db(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> str:
+def _patched_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> str:
     """Apply migrations on a fresh sqlite DB and patch the global db settings to it."""
     import stigmem_node.db as db_mod
     from stigmem_node.db import apply_migrations

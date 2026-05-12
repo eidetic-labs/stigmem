@@ -14,9 +14,7 @@ def test_identity_and_tenant_resolve_hooks_fire_for_dependency(client: TestClien
         calls.append(f"identity:{value.entity_uri}")
         return value
 
-    def tenant_resolve(
-        _ctx: PluginContext, value: TenantContext, **_: object
-    ) -> TenantContext:
+    def tenant_resolve(_ctx: PluginContext, value: TenantContext, **_: object) -> TenantContext:
         calls.append(f"tenant:{value.tenant_id}")
         return value
 
@@ -37,9 +35,7 @@ def test_identity_and_tenant_resolve_hooks_fire_for_dependency(client: TestClien
 
 
 def test_tenant_resolve_can_replace_identity_tenant(client: TestClient) -> None:
-    def tenant_resolve(
-        _ctx: PluginContext, _value: TenantContext, **_: object
-    ) -> TenantContext:
+    def tenant_resolve(_ctx: PluginContext, _value: TenantContext, **_: object) -> TenantContext:
         return TenantContext(tenant_id="plugin-tenant")
 
     manifest = PluginManifest(

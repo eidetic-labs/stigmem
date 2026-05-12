@@ -41,7 +41,9 @@ def create_alias(
 ) -> AliasRecord:
     """Register a user-defined semantic alias (raw_uri ≡ canonical_uri)."""
     if not identity.can_write():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="write permission required"
+        )
 
     with db() as conn:
         try:
@@ -56,11 +58,15 @@ def create_alias(
 def list_aliases(
     identity: Annotated[Identity, Depends(resolve_identity)],
     kind: str | None = Query(None, description="Filter by kind: 'user' or 'migration'"),
-    canonical_uri: str | None = Query(None, description="Return all aliases that resolve to this URI"),
+    canonical_uri: str | None = Query(
+        None, description="Return all aliases that resolve to this URI"
+    ),
 ) -> list[AliasRecord]:
     """List registered entity aliases."""
     if not identity.can_read():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
+        )
 
     if kind and kind not in _VALID_KINDS:
         raise HTTPException(
@@ -96,7 +102,9 @@ def delete_alias(
 ) -> None:
     """Remove a user-defined alias. Migration aliases cannot be deleted via API."""
     if not identity.can_write():
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="write permission required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="write permission required"
+        )
 
     decoded = unquote(raw_uri)
 
@@ -109,6 +117,9 @@ def delete_alias(
         if row["kind"] != "user":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="migration aliases are managed by the migration sweep and cannot be deleted via API",
+                detail=(
+                    "migration aliases are managed by the migration sweep "
+                    "and cannot be deleted via API"
+                ),
             )
         conn.execute("DELETE FROM entity_aliases WHERE raw_uri = ?", (decoded,))

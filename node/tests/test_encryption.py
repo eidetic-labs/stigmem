@@ -249,9 +249,7 @@ class TestSQLiteEncryptedBackend:
         _reset_key_cache()
         backend2 = make_backend(_settings=_enc_settings(db_file))
         with backend2.connection() as conn:
-            row = conn.execute(
-                "SELECT value_v FROM facts WHERE id = ?", (fact_id,)
-            ).fetchone()
+            row = conn.execute("SELECT value_v FROM facts WHERE id = ?", (fact_id,)).fetchone()
         assert row is not None
         assert row["value_v"] == "Alice"
 
@@ -270,7 +268,16 @@ class TestSQLiteEncryptedBackend:
                 "INSERT INTO facts "
                 "(id, entity, relation, value_type, value_v, source, timestamp, confidence, scope) "
                 "VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?)",
-                (str(uuid.uuid4()), "agent:bob", "name", "string", "Bob", "agent:bob", 1.0, "local"),
+                (
+                    str(uuid.uuid4()),
+                    "agent:bob",
+                    "name",
+                    "string",
+                    "Bob",
+                    "agent:bob",
+                    1.0,
+                    "local",
+                ),
             )
 
         # Plain sqlite3 must not be able to read the encrypted file.
@@ -286,9 +293,10 @@ class TestSQLiteEncryptedBackend:
         pytest.importorskip("argon2", reason="argon2-cffi not installed")
         pytest.importorskip("sqlcipher3", reason="sqlcipher3 not installed")
 
+        from fastapi.testclient import TestClient
+
         import stigmem_node.db as db_mod
         import stigmem_node.settings as settings_module
-        from fastapi.testclient import TestClient
         from stigmem_node.main import create_app
 
         db_file = str(tmp_path / "enc_api.db")
@@ -364,8 +372,6 @@ class TestLibSQLEncryptedBackend:
         )
         backend2 = make_backend(_settings=s2)
         with backend2.connection() as conn:
-            row = conn.execute(
-                "SELECT value_v FROM facts WHERE id = ?", (fact_id,)
-            ).fetchone()
+            row = conn.execute("SELECT value_v FROM facts WHERE id = ?", (fact_id,)).fetchone()
         assert row is not None
         assert row["value_v"] == "Python"

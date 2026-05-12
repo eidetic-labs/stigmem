@@ -112,8 +112,7 @@ class TestPeerTokenMintVerify:
             "INSERT INTO peers (id, node_id, node_url, status, federation_pubkey,"
             " allowed_scopes, signed_at, declaration_sig)"
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            ("p-local", local, "http://local", "active", local_pub,
-             '["public"]', "now", "sig"),
+            ("p-local", local, "http://local", "active", local_pub, '["public"]', "now", "sig"),
         )
         conn.commit()
         conn.close()
@@ -158,6 +157,7 @@ class TestPeerTokenMintVerify:
 
         # Track audit calls
         captured: list = []
+
         def audit(*a: Any) -> None:
             captured.append(a)
 
@@ -178,9 +178,7 @@ class TestPeerTokenMintVerify:
 
         _patched_db(tmp_path, monkeypatch)
         # Mint, but don't register issuer as peer → unknown_or_inactive_peer
-        token = peer_auth.mint_peer_token(
-            "stigmem://unregistered", "stigmem://target", ["public"]
-        )
+        token = peer_auth.mint_peer_token("stigmem://unregistered", "stigmem://target", ["public"])
         with pytest.raises(HTTPException) as exc:
             peer_auth.verify_peer_token(token, "stigmem://target")
         assert exc.value.status_code == 401
@@ -204,8 +202,7 @@ class TestPeerTokenMintVerify:
             "INSERT INTO peers (id, node_id, node_url, status, federation_pubkey,"
             " allowed_scopes, signed_at, declaration_sig)"
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            ("p1", local, "http://local", "active", local_pub,
-             '["public"]', "now", "sig"),
+            ("p1", local, "http://local", "active", local_pub, '["public"]', "now", "sig"),
         )
         conn.commit()
         conn.close()
@@ -234,7 +231,8 @@ class TestNonceAndDeclaration:
         # Verify nonce row exists
         conn = sqlite3.connect(db)
         row = conn.execute(
-            "SELECT nonce FROM nonce_cache WHERE nonce = ?", ("nonce-1",),
+            "SELECT nonce FROM nonce_cache WHERE nonce = ?",
+            ("nonce-1",),
         ).fetchone()
         conn.close()
         assert row is not None
@@ -243,8 +241,11 @@ class TestNonceAndDeclaration:
         from stigmem_node.peer_auth import canonical_declaration_json
 
         out = canonical_declaration_json(
-            "http://node", "stigmem://node",
-            "PUB", ["scope1"], "2026-01-01T00:00:00Z",
+            "http://node",
+            "stigmem://node",
+            "PUB",
+            ["scope1"],
+            "2026-01-01T00:00:00Z",
         )
         # Keys must appear in lexicographic order, no whitespace
         assert b'"allowed_scopes":["scope1"]' in out
@@ -269,18 +270,26 @@ class TestNonceAndDeclaration:
         assert verify_declaration_sig(node_url, node_id, pubkey, scopes, signed_at, sig) is True
 
         # Tamper → False
-        assert verify_declaration_sig(
-            "http://different", node_id, pubkey, scopes, signed_at, sig
-        ) is False
+        assert (
+            verify_declaration_sig("http://different", node_id, pubkey, scopes, signed_at, sig)
+            is False
+        )
 
     def test_verify_declaration_with_garbage_pubkey_returns_false(self) -> None:
         from stigmem_node.peer_auth import verify_declaration_sig
 
         # Garbage pubkey → exception → returns False
-        assert verify_declaration_sig(
-            "http://n", "stigmem://n", "not-a-real-key",
-            ["public"], "2026-01-01T00:00:00Z", "AAAAAA",
-        ) is False
+        assert (
+            verify_declaration_sig(
+                "http://n",
+                "stigmem://n",
+                "not-a-real-key",
+                ["public"],
+                "2026-01-01T00:00:00Z",
+                "AAAAAA",
+            )
+            is False
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -339,9 +348,7 @@ class TestResolverHelpers:
 
 
 class TestResolveEntity:
-    def test_malformed_input_returns_empty_result(
-        self, tmp_path: Path
-    ) -> None:
+    def test_malformed_input_returns_empty_result(self, tmp_path: Path) -> None:
         from stigmem_node.entity_resolver import resolve_entity
 
         db = _migrated_db(tmp_path)
@@ -353,9 +360,7 @@ class TestResolveEntity:
         assert result.canonical is None
         assert result.layer1_match is False
 
-    def test_layer1_exact_match_returns_immediately(
-        self, tmp_path: Path
-    ) -> None:
+    def test_layer1_exact_match_returns_immediately(self, tmp_path: Path) -> None:
         from stigmem_node.entity_resolver import resolve_entity
 
         db = _migrated_db(tmp_path)
@@ -368,9 +373,18 @@ class TestResolveEntity:
                 confidence, timestamp, hlc, tenant_id, cid)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                "f1", canonical, "memory:knows", "string", "v",
-                canonical, "local", 1.0,
-                "2026-01-01T00:00:00Z", "0:0:0", "default", "cid:1",
+                "f1",
+                canonical,
+                "memory:knows",
+                "string",
+                "v",
+                canonical,
+                "local",
+                1.0,
+                "2026-01-01T00:00:00Z",
+                "0:0:0",
+                "default",
+                "cid:1",
             ),
         )
         conn.commit()
@@ -394,9 +408,18 @@ class TestResolveEntity:
                     confidence, timestamp, hlc, tenant_id, cid)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    f"f-{name}", f"agent:{name}", "memory:role", "string", "x",
-                    "src", "local", 1.0,
-                    "2026-01-01T00:00:00Z", "0:0:0", "default", f"cid-{name}",
+                    f"f-{name}",
+                    f"agent:{name}",
+                    "memory:role",
+                    "string",
+                    "x",
+                    "src",
+                    "local",
+                    1.0,
+                    "2026-01-01T00:00:00Z",
+                    "0:0:0",
+                    "default",
+                    f"cid-{name}",
                 ),
             )
         conn.commit()
@@ -418,8 +441,7 @@ class TestResolveEntity:
         alias = "stigmem://test/agent/alias-alice"
 
         conn.execute(
-            "INSERT INTO entity_aliases (raw_uri, canonical_uri, created_at)"
-            " VALUES (?, ?, ?)",
+            "INSERT INTO entity_aliases (raw_uri, canonical_uri, created_at) VALUES (?, ?, ?)",
             (alias, canonical, "2026-01-01T00:00:00Z"),
         )
         conn.commit()

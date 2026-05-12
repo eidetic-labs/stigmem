@@ -23,12 +23,14 @@ from ..models import (
     TombstoneRevokeRequest,
     TombstoneStatusResponse,
 )
+from ..tombstone_signing import get_node_key_id, sign_revocation, sign_tombstone
 from ..tombstones import (
     create_tombstone,
     get_tombstone_status,
+)
+from ..tombstones import (
     revoke_tombstone as _revoke_tombstone,
 )
-from ..tombstone_signing import get_node_key_id, sign_tombstone, sign_revocation
 
 router = APIRouter(prefix="/v1/tombstones", tags=["tombstones"])
 
@@ -47,6 +49,7 @@ def _require_admin(identity: Identity) -> None:
 # POST /v1/tombstones — issue a tombstone
 # ---------------------------------------------------------------------------
 
+
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=TombstoneRecord)
 def issue_tombstone(
     req: TombstoneCreateRequest,
@@ -60,7 +63,11 @@ def issue_tombstone(
             detail="tombstone_invalid_scope",
         )
 
-    if "://" not in req.entity_uri and not req.entity_uri.startswith("urn:") and ":" not in req.entity_uri:
+    if (
+        "://" not in req.entity_uri
+        and not req.entity_uri.startswith("urn:")
+        and ":" not in req.entity_uri
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="tombstone_entity_uri_invalid",
@@ -110,6 +117,7 @@ def issue_tombstone(
 # GET /v1/tombstones/{entity_uri_encoded} — check tombstone status
 # ---------------------------------------------------------------------------
 
+
 @router.get("/{entity_uri_encoded}", response_model=TombstoneStatusResponse)
 def check_tombstone_status(
     entity_uri_encoded: str,
@@ -123,6 +131,7 @@ def check_tombstone_status(
 # ---------------------------------------------------------------------------
 # POST /v1/tombstones/{tombstone_id}/revoke — revoke a tombstone
 # ---------------------------------------------------------------------------
+
 
 @router.post("/{tombstone_id}/revoke", response_model=TombstoneRevocationRecord)
 def revoke_tombstone_endpoint(
@@ -147,16 +156,21 @@ def revoke_tombstone_endpoint(
             key_id=key_id,
             signature="pending",
         )
-    except KeyError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="tombstone_not_found")
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="tombstone_not_found"
+        ) from exc
     except ValueError as exc:
         if "already_revoked" in str(exc):
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="tombstone_already_revoked")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="tombstone_already_revoked"
+            ) from exc
         raise
 
     signed_record = sign_revocation(record)
     # Update the stored signature
     from ..db import db
+
     with db() as conn:
         conn.execute(
             "UPDATE tombstone_revocations SET signature = ?, key_id = ? WHERE id = ?",
@@ -169,17 +183,20 @@ def revoke_tombstone_endpoint(
 # Background federation rebroadcast
 # ---------------------------------------------------------------------------
 
+
 def _enqueue_tombstone_rebroadcast(record: TombstoneRecord) -> None:
     """Best-effort outbound push of tombstone to all active federation peers (§23.4.1)."""
     import threading
+
     t = threading.Thread(target=_push_tombstone_to_peers, args=(record,), daemon=True)
     t.start()
 
 
 def _push_tombstone_to_peers(record: TombstoneRecord) -> None:
-    import json
     import logging
+
     import httpx
+
     from ..db import db
     from ..peer_token import create_peer_token
 
@@ -197,6 +214,7 @@ def _push_tombstone_to_peers(record: TombstoneRecord) -> None:
     for peer in peers:
         try:
             import json as _json
+
             allowed_scopes = _json.loads(peer["allowed_scopes"])
             token = create_peer_token(peer["node_id"], allowed_scopes)
             resp = httpx.post(
@@ -206,6 +224,8 @@ def _push_tombstone_to_peers(record: TombstoneRecord) -> None:
                 timeout=10.0,
             )
             if resp.status_code not in (200, 201, 409):
-                log.warning("Peer %s returned %s on tombstone push", peer["node_url"], resp.status_code)
+                log.warning(
+                    "Peer %s returned %s on tombstone push", peer["node_url"], resp.status_code
+                )
         except Exception:
             log.warning("Failed to push tombstone to peer %s", peer["node_url"], exc_info=True)

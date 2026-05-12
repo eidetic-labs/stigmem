@@ -137,9 +137,7 @@ def verify_peer_token(
 
     # Atomically insert nonce (UNIQUE constraint rejects replays)
     window_ms = settings.federation_nonce_window_s * 1000
-    expires_at = datetime.fromtimestamp(
-        min(exp, now_ms + window_ms) / 1000, tz=UTC
-    ).isoformat()
+    expires_at = datetime.fromtimestamp(min(exp, now_ms + window_ms) / 1000, tz=UTC).isoformat()
     try:
         with db() as conn:
             conn.execute(

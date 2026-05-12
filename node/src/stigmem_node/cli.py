@@ -603,8 +603,7 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="PATH",
         default=None,
         help=(
-            "output path for the .tar.gz "
-            "(default: auto-named stigmem-snapshot-<ts>-<hash>.tar.gz)"
+            "output path for the .tar.gz (default: auto-named stigmem-snapshot-<ts>-<hash>.tar.gz)"
         ),
     )
     sc_p.add_argument(
@@ -647,8 +646,7 @@ def _build_parser() -> argparse.ArgumentParser:
         dest="force_unverified",
         action="store_true",
         help=(
-            "restore even if signature or hash verification fails "
-            "(logged loudly; NOT recommended)"
+            "restore even if signature or hash verification fails (logged loudly; NOT recommended)"
         ),
     )
     sr_p.add_argument(
@@ -942,10 +940,7 @@ def _build_parser() -> argparse.ArgumentParser:
         dest="permissions",
         default="admin,write,read",
         metavar="LIST",
-        help=(
-            "comma-separated permissions for the bootstrap key "
-            "(default: admin,write,read)"
-        ),
+        help=("comma-separated permissions for the bootstrap key (default: admin,write,read)"),
     )
     bk_p.set_defaults(func=_cmd_auth_bootstrap_key)
 

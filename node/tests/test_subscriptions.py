@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Generator
 from datetime import UTC, datetime
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -26,18 +26,18 @@ from fastapi.testclient import TestClient
 
 import stigmem_node.settings as settings_module
 from stigmem_node.auth import create_api_key
-from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
-from stigmem_node.subscription_delivery import deliver_pending, fan_out
-
+from stigmem_node.subscription_delivery import deliver_pending
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 
-def _assert_fact(client: TestClient, entity: str = "stigmem://test/agent/alice", scope: str = "local") -> dict:
+def _assert_fact(
+    client: TestClient, entity: str = "stigmem://test/agent/alice", scope: str = "local"
+) -> dict:
     resp = client.post(
         "/v1/facts",
         json={
@@ -164,11 +164,16 @@ def two_authed_clients(tmp_db: str, backend: str, encrypt: str) -> Generator:
     import stigmem_node.routes.wellknown as wk_mod
 
     _PATCHABLE = [
-        "stigmem_node.federation_pull", "stigmem_node.peer_token",
-        "stigmem_node.federation_ingest", "stigmem_node.routes.federation",
-        "stigmem_node.routes.identity", "stigmem_node.identity.trust_store",
-        "stigmem_node.decay", "stigmem_node.routes.decay",
-        "stigmem_node.routes.lint", "stigmem_node.routes.synthesize",
+        "stigmem_node.federation_pull",
+        "stigmem_node.peer_token",
+        "stigmem_node.federation_ingest",
+        "stigmem_node.routes.federation",
+        "stigmem_node.routes.identity",
+        "stigmem_node.identity.trust_store",
+        "stigmem_node.decay",
+        "stigmem_node.routes.decay",
+        "stigmem_node.routes.lint",
+        "stigmem_node.routes.synthesize",
         "stigmem_node.rate_limit",
     ]
     extra = [importlib.import_module(n) for n in _PATCHABLE if importlib.util.find_spec(n)]
@@ -186,7 +191,7 @@ def two_authed_clients(tmp_db: str, backend: str, encrypt: str) -> Generator:
     wk_mod.settings = test_settings  # type: ignore[assignment]
     for mod in extra:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", test_settings)
+            mod.settings = test_settings
 
     key_a = create_api_key("stigmem://test/agent/alice", ["read", "write"])
     key_b = create_api_key("stigmem://test/agent/bob", ["read", "write"])
@@ -205,7 +210,7 @@ def two_authed_clients(tmp_db: str, backend: str, encrypt: str) -> Generator:
     wk_mod.settings = original  # type: ignore[assignment]
     for mod in extra:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", original)
+            mod.settings = original
 
 
 def test_bola_list(two_authed_clients: tuple) -> None:
@@ -253,6 +258,7 @@ def test_fan_out_scope_subscription(client: TestClient, tmp_db: str) -> None:
     sub = _create_subscription(client, target="local")
 
     import stigmem_node.db as db_mod
+
     with db_mod.db() as conn:
         events_before = conn.execute(
             "SELECT * FROM subscription_events WHERE subscription_id=?", (sub["id"],)
@@ -277,6 +283,7 @@ def test_fan_out_entity_subscription(client: TestClient) -> None:
     _assert_fact(client, entity=entity)
 
     import stigmem_node.db as db_mod
+
     with db_mod.db() as conn:
         events = conn.execute(
             "SELECT * FROM subscription_events WHERE subscription_id=?", (sub["id"],)
@@ -289,6 +296,7 @@ def test_fan_out_scope_mismatch(client: TestClient) -> None:
     _assert_fact(client, scope="local")  # local != team
 
     import stigmem_node.db as db_mod
+
     with db_mod.db() as conn:
         events = conn.execute(
             "SELECT * FROM subscription_events WHERE subscription_id=?", (sub["id"],)
@@ -300,6 +308,7 @@ def test_fan_out_circuit_open_skipped(client: TestClient) -> None:
     sub = _create_subscription(client)
 
     import stigmem_node.db as db_mod
+
     with db_mod.db() as conn:
         conn.execute("UPDATE subscriptions SET circuit_open=1 WHERE id=?", (sub["id"],))
 
@@ -334,6 +343,7 @@ def test_deliver_pending_webhook_success(client: TestClient) -> None:
         deliver_pending()
 
     import stigmem_node.db as db_mod
+
     with db_mod.db() as conn:
         event = conn.execute(
             "SELECT * FROM subscription_events WHERE subscription_id=?", (sub["id"],)
@@ -343,7 +353,11 @@ def test_deliver_pending_webhook_success(client: TestClient) -> None:
 
     # Verify request body
     call_kwargs = mock_client_instance.post.call_args
-    body = call_kwargs.kwargs.get("json") or call_kwargs.args[1] if len(call_kwargs.args) > 1 else call_kwargs.kwargs["json"]
+    body = (
+        call_kwargs.kwargs.get("json") or call_kwargs.args[1]
+        if len(call_kwargs.args) > 1
+        else call_kwargs.kwargs["json"]
+    )
     assert "event_id" in body
     assert body["event_type"] == "fact_asserted"
     assert "fact" in body
@@ -366,6 +380,7 @@ def test_deliver_pending_webhook_retry_on_5xx(client: TestClient) -> None:
         deliver_pending()
 
     import stigmem_node.db as db_mod
+
     with db_mod.db() as conn:
         event = conn.execute(
             "SELECT * FROM subscription_events WHERE subscription_id=?", (sub["id"],)
@@ -426,6 +441,7 @@ def test_circuit_breaker_opens_after_threshold(client: TestClient) -> None:
 
                 # Reset next_retry_at so the event stays due
                 import stigmem_node.db as db_mod
+
                 with db_mod.db() as conn:
                     conn.execute(
                         "UPDATE subscription_events SET next_retry_at=NULL WHERE subscription_id=?",
@@ -434,8 +450,11 @@ def test_circuit_breaker_opens_after_threshold(client: TestClient) -> None:
                 deliver_pending()
 
         import stigmem_node.db as db_mod
+
         with db_mod.db() as conn:
-            row = conn.execute("SELECT circuit_open FROM subscriptions WHERE id=?", (sub["id"],)).fetchone()
+            row = conn.execute(
+                "SELECT circuit_open FROM subscriptions WHERE id=?", (sub["id"],)
+            ).fetchone()
         assert row["circuit_open"] == 1
 
     finally:
@@ -448,18 +467,21 @@ def test_circuit_breaker_opens_after_threshold(client: TestClient) -> None:
 
 
 def test_deliver_pending_wake(client: TestClient, capsys: pytest.CaptureFixture) -> None:
-    sub = _create_subscription(client, on_change="wake", delivery_address="stigmem://test/agent/alice")
+    sub = _create_subscription(
+        client, on_change="wake", delivery_address="stigmem://test/agent/alice"
+    )
     _assert_fact(client)
     deliver_pending()
 
     captured = capsys.readouterr()
-    wake_lines = [l for l in captured.err.splitlines() if "stigmem_wake" in l]
+    wake_lines = [line for line in captured.err.splitlines() if "stigmem_wake" in line]
     assert len(wake_lines) == 1
     wake_data = json.loads(wake_lines[0])
     assert wake_data["stigmem_wake"]["subscription_id"] == sub["id"]
     assert wake_data["stigmem_wake"]["subscriber_identity"] == "anon:trusted"
 
     import stigmem_node.db as db_mod
+
     with db_mod.db() as conn:
         event = conn.execute(
             "SELECT delivery_status FROM subscription_events WHERE subscription_id=?", (sub["id"],)
@@ -540,6 +562,7 @@ def test_delivery_skipped_when_not_garden_member(client: TestClient) -> None:
 
     garden_uuid = str(uuid.uuid4())
     import stigmem_node.db as db_mod
+
     payload = {
         "id": str(uuid.uuid4()),
         "entity": "stigmem://test/agent/alice",
@@ -556,18 +579,28 @@ def test_delivery_skipped_when_not_garden_member(client: TestClient) -> None:
     with db_mod.db() as conn:
         conn.execute(
             """INSERT INTO subscription_events
-               (id, subscription_id, event_type, entity_uri, fact_id, payload, created_at, delivery_status)
+               (id, subscription_id, event_type, entity_uri, fact_id, payload,
+                created_at, delivery_status)
                VALUES (?,?,?,?,?,?,?,'pending')""",
-            (event_id, sub["id"], "fact_asserted", payload["entity"],
-             payload["id"], json.dumps(payload), datetime.now(UTC).isoformat()),
+            (
+                event_id,
+                sub["id"],
+                "fact_asserted",
+                payload["entity"],
+                payload["id"],
+                json.dumps(payload),
+                datetime.now(UTC).isoformat(),
+            ),
         )
 
     mock_resp = MagicMock()
     mock_resp.status_code = 200
 
     # Patch get_member_role to return None (subscriber not a member)
-    with patch("stigmem_node.subscription_delivery.get_member_role", return_value=None), \
-         patch("stigmem_node.subscription_delivery.httpx.Client") as mock_client_cls:
+    with (
+        patch("stigmem_node.subscription_delivery.get_member_role", return_value=None),
+        patch("stigmem_node.subscription_delivery.httpx.Client") as mock_client_cls,
+    ):
         mock_client_instance = MagicMock()
         mock_client_instance.__enter__ = MagicMock(return_value=mock_client_instance)
         mock_client_instance.__exit__ = MagicMock(return_value=False)
@@ -595,6 +628,7 @@ def test_delivery_sanitizer_redacted(client: TestClient) -> None:
     sub = _create_subscription(client, target="local", on_change="webhook")
 
     import stigmem_node.db as db_mod
+
     payload = {
         "id": str(uuid.uuid4()),
         "entity": "stigmem://test/agent/alice",
@@ -611,10 +645,18 @@ def test_delivery_sanitizer_redacted(client: TestClient) -> None:
     with db_mod.db() as conn:
         conn.execute(
             """INSERT INTO subscription_events
-               (id, subscription_id, event_type, entity_uri, fact_id, payload, created_at, delivery_status)
+               (id, subscription_id, event_type, entity_uri, fact_id, payload,
+                created_at, delivery_status)
                VALUES (?,?,?,?,?,?,?,'pending')""",
-            (event_id, sub["id"], "fact_asserted", payload["entity"],
-             payload["id"], json.dumps(payload), datetime.now(UTC).isoformat()),
+            (
+                event_id,
+                sub["id"],
+                "fact_asserted",
+                payload["entity"],
+                payload["id"],
+                json.dumps(payload),
+                datetime.now(UTC).isoformat(),
+            ),
         )
 
     delivered_body: dict = {}
@@ -660,6 +702,7 @@ def test_replay_window_suppresses_garden_acl_blocked_events(client: TestClient) 
 
     garden_uuid = str(uuid.uuid4())
     import stigmem_node.db as db_mod
+
     secret_fact_id = str(uuid.uuid4())
     payload = {
         "id": secret_fact_id,
@@ -677,10 +720,18 @@ def test_replay_window_suppresses_garden_acl_blocked_events(client: TestClient) 
     with db_mod.db() as conn:
         conn.execute(
             """INSERT INTO subscription_events
-               (id, subscription_id, event_type, entity_uri, fact_id, payload, created_at, delivery_status)
+               (id, subscription_id, event_type, entity_uri, fact_id, payload,
+                created_at, delivery_status)
                VALUES (?,?,?,?,?,?,?,'delivered')""",
-            (event_id, sub["id"], "fact_asserted", payload["entity"],
-             payload["id"], json.dumps(payload), datetime.now(UTC).isoformat()),
+            (
+                event_id,
+                sub["id"],
+                "fact_asserted",
+                payload["entity"],
+                payload["id"],
+                json.dumps(payload),
+                datetime.now(UTC).isoformat(),
+            ),
         )
 
     # Subscriber is NOT a member of garden_uuid — garden ACL should suppress
@@ -713,9 +764,12 @@ def test_idempotency_key_not_shared_across_entities(two_authed_clients: tuple) -
     # Entity A creates subscription with this idempotency key
     resp_a = client.post(
         "/v1/subscriptions",
-        json={"target": "local", "on_change": "webhook",
-              "delivery_address": "https://a-private.example.com/hook",
-              "idempotency_key": key},
+        json={
+            "target": "local",
+            "on_change": "webhook",
+            "delivery_address": "https://a-private.example.com/hook",
+            "idempotency_key": key,
+        },
         headers=headers_a,
     )
     assert resp_a.status_code == 201
@@ -724,9 +778,12 @@ def test_idempotency_key_not_shared_across_entities(two_authed_clients: tuple) -
     # Entity B sends the same idempotency key — must NOT receive entity A's subscription
     resp_b = client.post(
         "/v1/subscriptions",
-        json={"target": "team", "on_change": "webhook",
-              "delivery_address": "https://b.example.com/hook",
-              "idempotency_key": key},
+        json={
+            "target": "team",
+            "on_change": "webhook",
+            "delivery_address": "https://b.example.com/hook",
+            "idempotency_key": key,
+        },
         headers=headers_b,
     )
     assert resp_b.status_code == 201

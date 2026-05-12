@@ -124,12 +124,24 @@ class TestCapabilityIssue:
 
         _patch_httpx_post(
             monkeypatch,
-            _FakeResponse(201, {"token_id": "t", "issuer": "a", "subject": "b",
-                                "verb": "v", "object": "o", "expiry": "x",
-                                "token_json": "{}"}),
+            _FakeResponse(
+                201,
+                {
+                    "token_id": "t",
+                    "issuer": "a",
+                    "subject": "b",
+                    "verb": "v",
+                    "object": "o",
+                    "expiry": "x",
+                    "token_json": "{}",
+                },
+            ),
         )
         args = _args(
-            issuer="a", subject="b", verb="v", object="o",
+            issuer="a",
+            subject="b",
+            verb="v",
+            object="o",
             ttl_seconds=None,
             node_url="http://localhost:8765",
             api_key=None,
@@ -147,9 +159,14 @@ class TestCapabilityIssue:
 
         _patch_httpx_post_raises(monkeypatch, RuntimeError("connect refused"))
         args = _args(
-            issuer="a", subject="b", verb="v", object="o",
-            ttl_seconds=None, node_url="http://localhost:8765",
-            api_key=None, json=False,
+            issuer="a",
+            subject="b",
+            verb="v",
+            object="o",
+            ttl_seconds=None,
+            node_url="http://localhost:8765",
+            api_key=None,
+            json=False,
         )
         rc = _cmd_capability_issue(args)
         assert rc == 1
@@ -160,9 +177,14 @@ class TestCapabilityIssue:
 
         _patch_httpx_post(monkeypatch, _FakeResponse(500, text="boom"))
         args = _args(
-            issuer="a", subject="b", verb="v", object="o",
-            ttl_seconds=None, node_url="http://localhost:8765",
-            api_key="k", json=False,
+            issuer="a",
+            subject="b",
+            verb="v",
+            object="o",
+            ttl_seconds=None,
+            node_url="http://localhost:8765",
+            api_key="k",
+            json=False,
         )
         assert _cmd_capability_issue(args) == 1
 
@@ -183,9 +205,7 @@ class TestCapabilityVerify:
     ) -> None:
         from stigmem_node.cli import _cmd_capability_verify
 
-        _patch_httpx_post(
-            monkeypatch, _FakeResponse(200, {"valid": False, "reason": "expired"})
-        )
+        _patch_httpx_post(monkeypatch, _FakeResponse(200, {"valid": False, "reason": "expired"}))
         args = _args(token_json="{}", node_url="http://x", api_key="k", json=False)
         assert _cmd_capability_verify(args) == 0
         out = capsys.readouterr().out
@@ -207,16 +227,12 @@ class TestCapabilityVerify:
     ) -> None:
         from stigmem_node.cli import _cmd_capability_verify
 
-        _patch_httpx_post(
-            monkeypatch, _FakeResponse(422, {"detail": "malformed"})
-        )
+        _patch_httpx_post(monkeypatch, _FakeResponse(422, {"detail": "malformed"}))
         args = _args(token_json="{}", node_url="http://x", api_key=None, json=False)
         assert _cmd_capability_verify(args) == 1
         assert "invalid" in capsys.readouterr().err
 
-    def test_400_bad_request_handled(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_400_bad_request_handled(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from stigmem_node.cli import _cmd_capability_verify
 
         # Force the json() fallback by returning a non-JSON-ish 400
@@ -225,7 +241,8 @@ class TestCapabilityVerify:
                 raise ValueError("not json")
 
         monkeypatch.setattr(
-            __import__("httpx"), "post",
+            __import__("httpx"),
+            "post",
             lambda *a, **kw: _BadJSON(400, text="raw error body"),
         )
         args = _args(token_json="{}", node_url="http://x", api_key=None, json=False)
@@ -276,9 +293,7 @@ class TestCapabilityRevoke:
     def test_success_json_output(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from stigmem_node.cli import _cmd_capability_revoke
 
-        _patch_httpx_post(
-            monkeypatch, _FakeResponse(200, {"token_id": "tok-1", "revoked_at": "x"})
-        )
+        _patch_httpx_post(monkeypatch, _FakeResponse(200, {"token_id": "tok-1", "revoked_at": "x"}))
         assert _cmd_capability_revoke(self._args(json=True, api_key="k")) == 0
 
     def test_404_not_found(
@@ -374,9 +389,7 @@ class TestDecaySweep:
 
 
 class TestMigrateNormalizeEntities:
-    def test_dry_run(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_dry_run(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
         from stigmem_node.cli import _cmd_migrate_normalize_entities
 
         db = _migrated_db(tmp_path)
@@ -384,9 +397,7 @@ class TestMigrateNormalizeEntities:
         assert _cmd_migrate_normalize_entities(args) == 0
         assert "[dry-run]" in capsys.readouterr().err
 
-    def test_live_run(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_live_run(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
         from stigmem_node.cli import _cmd_migrate_normalize_entities
 
         db = _migrated_db(tmp_path)
@@ -401,9 +412,7 @@ class TestMigrateNormalizeEntities:
 
 
 class TestFederationCursorExport:
-    def test_export_empty_db_to_stdout(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_export_empty_db_to_stdout(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
         from stigmem_node.cli import _cmd_federation_cursor_export
 
         db = _migrated_db(tmp_path)
@@ -414,9 +423,7 @@ class TestFederationCursorExport:
         assert payload["cursors"] == []
         assert "checkpoint_timestamp" in payload
 
-    def test_export_with_rows_to_file(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_export_with_rows_to_file(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
         from stigmem_node.cli import _cmd_federation_cursor_export
 
         db = _migrated_db(tmp_path)
@@ -446,9 +453,7 @@ class TestFederationCursorExport:
 
 
 class TestFederationCursorImport:
-    def test_import_unreadable_file(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_import_unreadable_file(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
         from stigmem_node.cli import _cmd_federation_cursor_import
 
         db = _migrated_db(tmp_path)
@@ -456,9 +461,7 @@ class TestFederationCursorImport:
         assert _cmd_federation_cursor_import(args) == 1
         assert "cannot read checkpoint" in capsys.readouterr().err
 
-    def test_import_bad_shape(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_import_bad_shape(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
         from stigmem_node.cli import _cmd_federation_cursor_import
 
         db = _migrated_db(tmp_path)
@@ -468,19 +471,25 @@ class TestFederationCursorImport:
         assert _cmd_federation_cursor_import(args) == 1
         assert "checkpoint missing" in capsys.readouterr().err
 
-    def test_import_skips_missing_peer(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_import_skips_missing_peer(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
         from stigmem_node.cli import _cmd_federation_cursor_import
 
         db = _migrated_db(tmp_path)
         cp = tmp_path / "cp.json"
-        cp.write_text(json.dumps({
-            "cursors": [
-                {"peer_id": "ghost", "direction": "pull", "cursor": "x",
-                 "peer_node_id": "stigmem://ghost"},
-            ],
-        }))
+        cp.write_text(
+            json.dumps(
+                {
+                    "cursors": [
+                        {
+                            "peer_id": "ghost",
+                            "direction": "pull",
+                            "cursor": "x",
+                            "peer_node_id": "stigmem://ghost",
+                        },
+                    ],
+                }
+            )
+        )
         args = _args(db=db, checkpoint_file=str(cp), force=False)
         assert _cmd_federation_cursor_import(args) == 0
         err = capsys.readouterr().err
@@ -510,9 +519,13 @@ class TestFederationCursorImport:
         conn.close()
 
         cp = tmp_path / "cp.json"
-        cp.write_text(json.dumps({
-            "cursors": [{"peer_id": "p1", "direction": "inbound", "cursor": "new"}],
-        }))
+        cp.write_text(
+            json.dumps(
+                {
+                    "cursors": [{"peer_id": "p1", "direction": "inbound", "cursor": "new"}],
+                }
+            )
+        )
         # Without --force, the existing cursor is preserved
         args = _args(db=db, checkpoint_file=str(cp), force=False)
         assert _cmd_federation_cursor_import(args) == 0
@@ -535,12 +548,16 @@ class TestFederationCursorImport:
 
         db = _migrated_db(tmp_path)
         cp = tmp_path / "cp.json"
-        cp.write_text(json.dumps({
-            "cursors": [
-                {"peer_id": "", "direction": "pull"},  # missing peer_id
-                {"direction": "pull", "cursor": "x"},   # missing peer_id entirely
-            ],
-        }))
+        cp.write_text(
+            json.dumps(
+                {
+                    "cursors": [
+                        {"peer_id": "", "direction": "pull"},  # missing peer_id
+                        {"direction": "pull", "cursor": "x"},  # missing peer_id entirely
+                    ],
+                }
+            )
+        )
         args = _args(db=db, checkpoint_file=str(cp), force=False)
         assert _cmd_federation_cursor_import(args) == 0
         assert "malformed" in capsys.readouterr().err
@@ -552,8 +569,13 @@ class TestFederationCursorImport:
 
 
 def _seed_audit_event(
-    db_path: str, *, agent: str, loaded: list[str], used: list[str],
-    missed: list[str], session_ms: int,
+    db_path: str,
+    *,
+    agent: str,
+    loaded: list[str],
+    used: list[str],
+    missed: list[str],
+    session_ms: int,
 ) -> None:
     conn = sqlite3.connect(db_path)
     conn.execute(
@@ -580,7 +602,9 @@ def _seed_audit_event(
 
 class TestAuditDiscovery:
     def test_no_records_prints_friendly_message(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_audit_discovery
 
@@ -590,7 +614,9 @@ class TestAuditDiscovery:
         assert "No audit records" in capsys.readouterr().out
 
     def test_invalid_since_returns_1(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_audit_discovery
 
@@ -600,7 +626,9 @@ class TestAuditDiscovery:
         assert "invalid --since" in capsys.readouterr().err
 
     def test_summary_human_output(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         import time as _time
 
@@ -609,10 +637,12 @@ class TestAuditDiscovery:
         db = _migrated_db(tmp_path)
         now_ms = int(_time.time() * 1000)
         # Two events, both partial recall: loaded {a,b}, used {a,c} (missed c)
-        _seed_audit_event(db, agent="agent-1", loaded=["a", "b"],
-                          used=["a", "c"], missed=["c"], session_ms=now_ms)
-        _seed_audit_event(db, agent="agent-1", loaded=["a", "b"],
-                          used=["b"], missed=[], session_ms=now_ms - 1000)
+        _seed_audit_event(
+            db, agent="agent-1", loaded=["a", "b"], used=["a", "c"], missed=["c"], session_ms=now_ms
+        )
+        _seed_audit_event(
+            db, agent="agent-1", loaded=["a", "b"], used=["b"], missed=[], session_ms=now_ms - 1000
+        )
 
         args = _args(db=db, agent="agent-1", since=None, json=False)
         assert _cmd_audit_discovery(args) == 0
@@ -622,7 +652,9 @@ class TestAuditDiscovery:
         assert "Miss rate" in out
 
     def test_high_miss_rate_triggers_alert(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         import time as _time
 
@@ -631,16 +663,23 @@ class TestAuditDiscovery:
         db = _migrated_db(tmp_path)
         now_ms = int(_time.time() * 1000)
         # used=[], missed=many → miss_rate = 1.0
-        _seed_audit_event(db, agent="bad-agent", loaded=["x"],
-                          used=["x"], missed=["m1", "m2", "m3", "m4"],
-                          session_ms=now_ms)
+        _seed_audit_event(
+            db,
+            agent="bad-agent",
+            loaded=["x"],
+            used=["x"],
+            missed=["m1", "m2", "m3", "m4"],
+            session_ms=now_ms,
+        )
 
         args = _args(db=db, agent="bad-agent", since=None, json=False)
         assert _cmd_audit_discovery(args) == 0
         assert "ALERT" in capsys.readouterr().out
 
     def test_json_output(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
     ) -> None:
         import time as _time
 
@@ -648,8 +687,9 @@ class TestAuditDiscovery:
 
         db = _migrated_db(tmp_path)
         now_ms = int(_time.time() * 1000)
-        _seed_audit_event(db, agent="json-agent", loaded=["a"],
-                          used=["a"], missed=[], session_ms=now_ms)
+        _seed_audit_event(
+            db, agent="json-agent", loaded=["a"], used=["a"], missed=[], session_ms=now_ms
+        )
 
         args = _args(db=db, agent="json-agent", since=None, json=True)
         assert _cmd_audit_discovery(args) == 0
@@ -665,7 +705,9 @@ class TestAuditDiscovery:
 
 class TestSnapshotCreate:
     def test_create_default_path(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_snapshot_create
@@ -681,7 +723,9 @@ class TestSnapshotCreate:
 
 class TestSnapshotRestore:
     def test_restore_unverified_succeeds_with_force(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture,
     ) -> None:
         from stigmem_node.cli import _cmd_snapshot_create, _cmd_snapshot_restore
@@ -706,7 +750,9 @@ class TestSnapshotRestore:
         assert "snapshot restored" in capsys.readouterr().err
 
     def test_restore_verification_failure_returns_1(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from stigmem_node import snapshot as snap_mod

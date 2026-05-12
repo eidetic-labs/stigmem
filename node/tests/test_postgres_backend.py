@@ -152,15 +152,14 @@ class TestTransactions:
     def test_rollback_on_exception(self, pg_backend) -> None:
         """Exception inside connection() must rollback; changes must not persist."""
         fact_id = f"txn-rollback-{uuid.uuid4()}"
-        with pytest.raises(RuntimeError):
-            with pg_backend.connection() as conn:
-                conn.execute(
-                    "INSERT INTO facts "
-                    "(id, entity, relation, value_type, value_v, source, timestamp, confidence, scope) "
-                    "VALUES (?, 'e', 'r', 'string', 'v', 's', '2026-01-01T00:00:00Z', 1.0, 'local')",
-                    (fact_id,),
-                )
-                raise RuntimeError("deliberate rollback trigger")
+        with pytest.raises(RuntimeError), pg_backend.connection() as conn:
+            conn.execute(
+                "INSERT INTO facts "
+                "(id, entity, relation, value_type, value_v, source, timestamp, confidence, scope) "
+                "VALUES (?, 'e', 'r', 'string', 'v', 's', '2026-01-01T00:00:00Z', 1.0, 'local')",
+                (fact_id,),
+            )
+            raise RuntimeError("deliberate rollback trigger")
 
         with pg_backend.connection() as conn:
             row = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_id,)).fetchone()
@@ -195,7 +194,17 @@ class TestSQLAdaptation:
                 "INSERT INTO facts "
                 "(id, entity, relation, value_type, value_v, source, timestamp, confidence, scope) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (fact_id, "ent", "rel", "string", "val", "src", "2026-01-01T00:00:00Z", 0.9, "local"),
+                (
+                    fact_id,
+                    "ent",
+                    "rel",
+                    "string",
+                    "val",
+                    "src",
+                    "2026-01-01T00:00:00Z",
+                    0.9,
+                    "local",
+                ),
             )
             row = conn.execute("SELECT value_v FROM facts WHERE id = ?", (fact_id,)).fetchone()
         assert row is not None
@@ -212,7 +221,9 @@ class TestSQLAdaptation:
                 "INSERT OR IGNORE INTO node_meta (key, value) VALUES (?, ?)",
                 ("test_key_ignore", "second"),  # duplicate — must be ignored
             )
-            row = conn.execute("SELECT value FROM node_meta WHERE key = ?", ("test_key_ignore",)).fetchone()
+            row = conn.execute(
+                "SELECT value FROM node_meta WHERE key = ?", ("test_key_ignore",)
+            ).fetchone()
         assert row is not None
         assert row["value"] == "first"  # second insert was ignored
 
@@ -227,7 +238,9 @@ class TestSQLAdaptation:
                 "INSERT OR REPLACE INTO node_meta (key, value) VALUES (?, ?)",
                 ("test_key_replace", "updated"),
             )
-            row = conn.execute("SELECT value FROM node_meta WHERE key = ?", ("test_key_replace",)).fetchone()
+            row = conn.execute(
+                "SELECT value FROM node_meta WHERE key = ?", ("test_key_replace",)
+            ).fetchone()
         assert row is not None
         assert row["value"] == "updated"
 
@@ -239,7 +252,17 @@ class TestSQLAdaptation:
                 "INSERT INTO facts "
                 "(id, entity, relation, value_type, value_v, source, timestamp, confidence, scope) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (fact_id, "stigmem://host/agent/alice", "rel", "string", "v", "src", "2026-01-01T00:00:00Z", 1.0, "local"),
+                (
+                    fact_id,
+                    "stigmem://host/agent/alice",
+                    "rel",
+                    "string",
+                    "v",
+                    "src",
+                    "2026-01-01T00:00:00Z",
+                    1.0,
+                    "local",
+                ),
             )
             rows = conn.execute(
                 "SELECT id FROM facts WHERE entity LIKE 'stigmem://%%'",
@@ -266,8 +289,8 @@ class TestSQLAdaptation:
         assert row.get("confidence") == pytest.approx(0.8, abs=1e-6)
         assert row.get("nonexistent_col", "fallback") == "fallback"
         # .keys()
-        assert "id" in row.keys()
-        assert "entity" in row.keys()
+        assert "id" in row
+        assert "entity" in row
 
 
 # ---------------------------------------------------------------------------
@@ -281,18 +304,21 @@ class TestCompositeKeyUpsert:
         with pg_backend.connection() as conn:
             conn.execute(
                 "INSERT OR REPLACE INTO boot_stubs "
-                "(agent_id, adapter_profile, stub_version, body, token_count, generated_at, manifest_version) "
+                "(agent_id, adapter_profile, stub_version, body, token_count, "
+                "generated_at, manifest_version) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (agent_id, "generic", 1, "# stub v1", 10, 1000, "v1"),
             )
             conn.execute(
                 "INSERT OR REPLACE INTO boot_stubs "
-                "(agent_id, adapter_profile, stub_version, body, token_count, generated_at, manifest_version) "
+                "(agent_id, adapter_profile, stub_version, body, token_count, "
+                "generated_at, manifest_version) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (agent_id, "generic", 2, "# stub v2", 12, 2000, "v2"),
             )
             row = conn.execute(
-                "SELECT stub_version, body FROM boot_stubs WHERE agent_id = ? AND adapter_profile = ?",
+                """SELECT stub_version, body FROM boot_stubs
+                   WHERE agent_id = ? AND adapter_profile = ?""",
                 (agent_id, "generic"),
             ).fetchone()
         assert row is not None
@@ -309,7 +335,7 @@ class TestVectorIndex:
     def test_vec_facts_table_created_when_embed_enabled(self) -> None:
         from stigmem_node.storage.postgres_backend import PostgresBackend
 
-        pgvector = pytest.importorskip("pgvector", reason="pgvector not installed")
+        pytest.importorskip("pgvector", reason="pgvector not installed")
         dsn = _require_pg()
         schema = f"pgvec_{uuid.uuid4().hex[:12]}"
         b = PostgresBackend(dsn=dsn, schema=schema, embed_enabled=True, embed_dimension=4)
@@ -357,8 +383,10 @@ class TestConnectionPool:
             with pg_backend.connection() as conn_b:
                 conn_b.execute(
                     "INSERT INTO facts "
-                    "(id, entity, relation, value_type, value_v, source, timestamp, confidence, scope) "
-                    "VALUES (?, 'e', 'r', 'string', 'b', 's', '2026-01-01T00:00:00Z', 1.0, 'local')",
+                    "(id, entity, relation, value_type, value_v, source, timestamp, "
+                    "confidence, scope) "
+                    "VALUES (?, 'e', 'r', 'string', 'b', 's', "
+                    "'2026-01-01T00:00:00Z', 1.0, 'local')",
                     (fact_b,),
                 )
 

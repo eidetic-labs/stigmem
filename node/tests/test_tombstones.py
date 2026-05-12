@@ -24,7 +24,12 @@ from datetime import UTC, datetime
 import jwt as pyjwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat, PublicFormat
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+    PublicFormat,
+)
 from fastapi.testclient import TestClient
 
 import stigmem_node.auth as auth_mod
@@ -35,14 +40,12 @@ import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 import stigmem_node.tombstones as tombstones_mod
 from stigmem_node.auth import create_api_key
-from stigmem_node.db import apply_migrations, db
+from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
 from stigmem_node.settings import Settings
 from stigmem_node.tombstones import (
     create_tombstone,
-    get_tombstone_status,
     is_tombstoned,
-    invalidate_tombstone_cache,
     revoke_tombstone,
 )
 
@@ -51,12 +54,18 @@ def _gen_key_b64() -> tuple[Ed25519PrivateKey, str, str]:
     """Generate Ed25519 keypair, return (priv_obj, pub_b64url, priv_b64url)."""
     priv = Ed25519PrivateKey.generate()
     pub = priv.public_key()
-    priv_b64 = base64.urlsafe_b64encode(
-        priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
-    ).decode().rstrip("=")
-    pub_b64 = base64.urlsafe_b64encode(
-        pub.public_bytes(Encoding.Raw, PublicFormat.Raw)
-    ).decode().rstrip("=")
+    priv_b64 = (
+        base64.urlsafe_b64encode(
+            priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        )
+        .decode()
+        .rstrip("=")
+    )
+    pub_b64 = (
+        base64.urlsafe_b64encode(pub.public_bytes(Encoding.Raw, PublicFormat.Raw))
+        .decode()
+        .rstrip("=")
+    )
     return priv, pub_b64, priv_b64
 
 
@@ -71,9 +80,15 @@ def _register_peer(db_file: str, node_id: str, pub_b64: str) -> str:
                 status, established_at, declaration_sig, signed_at)
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
-                peer_id, node_id, "http://127.0.0.1:1", pub_b64,
+                peer_id,
+                node_id,
+                "http://127.0.0.1:1",
+                pub_b64,
                 json.dumps(["public", "*"]),
-                "active", "2026-05-01T00:00:00Z", "test_sig", "2026-05-01T00:00:00Z",
+                "active",
+                "2026-05-01T00:00:00Z",
+                "test_sig",
+                "2026-05-01T00:00:00Z",
             ),
         )
         conn.commit()
@@ -101,6 +116,7 @@ def _make_peer_token(priv_b64: str, iss: str, sub: str = "tombnode") -> str:
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture()
 def node(tmp_path):
@@ -134,12 +150,11 @@ def node(tmp_path):
     tombstones_mod._tombstone_cache_full_ts = 0.0
     tombstones_mod._tombstone_active_set = set()
 
-    admin_key = create_api_key(
-        "stigmem://tombnode/agent/admin", ["read", "write", "federate"]
-    )
+    admin_key = create_api_key("stigmem://tombnode/agent/admin", ["read", "write", "federate"])
     reader_key = create_api_key("stigmem://tombnode/agent/reader", ["read"])
     # Peer token factory — each call mints a fresh JWT (unique nonce)
     from stigmem_node.db import get_or_create_node_id
+
     our_node_id = get_or_create_node_id(db_path=db_file)
 
     def _mint_peer_token():
@@ -181,6 +196,7 @@ def _assert_fact(client: TestClient, headers: dict, entity: str = "user:alice") 
 # ---------------------------------------------------------------------------
 # POST /v1/tombstones — create
 # ---------------------------------------------------------------------------
+
 
 class TestTombstoneCreate:
     def test_admin_can_create(self, node):
@@ -248,6 +264,7 @@ class TestTombstoneCreate:
 # GET /v1/tombstones/{entity_uri} — status check
 # ---------------------------------------------------------------------------
 
+
 class TestTombstoneStatus:
     def test_check_returns_tombstoned_true(self, node):
         client, admin_key, reader_key, ts, db_file, *_extra = node
@@ -257,6 +274,7 @@ class TestTombstoneStatus:
             headers=_ah(admin_key),
         )
         import urllib.parse
+
         encoded = urllib.parse.quote("user:dave", safe="")
         resp = client.get(f"/v1/tombstones/{encoded}", headers=_ah(admin_key))
         assert resp.status_code == 200
@@ -267,6 +285,7 @@ class TestTombstoneStatus:
     def test_check_unknown_entity_returns_false(self, node):
         client, admin_key, reader_key, ts, db_file, *_extra = node
         import urllib.parse
+
         encoded = urllib.parse.quote("user:nobody", safe="")
         resp = client.get(f"/v1/tombstones/{encoded}", headers=_ah(admin_key))
         assert resp.status_code == 200
@@ -275,6 +294,7 @@ class TestTombstoneStatus:
     def test_reader_cannot_check(self, node):
         client, admin_key, reader_key, ts, db_file, *_extra = node
         import urllib.parse
+
         encoded = urllib.parse.quote("user:dave", safe="")
         resp = client.get(f"/v1/tombstones/{encoded}", headers=_ah(reader_key))
         assert resp.status_code == 403
@@ -283,6 +303,7 @@ class TestTombstoneStatus:
 # ---------------------------------------------------------------------------
 # POST /v1/tombstones/{id}/revoke
 # ---------------------------------------------------------------------------
+
 
 class TestTombstoneRevoke:
     def test_revoke_tombstone(self, node):
@@ -306,6 +327,7 @@ class TestTombstoneRevoke:
 
         # After revocation, status check should show tombstoned=False
         import urllib.parse
+
         encoded = urllib.parse.quote("user:eve", safe="")
         status_resp = client.get(f"/v1/tombstones/{encoded}", headers=_ah(admin_key))
         assert status_resp.json()["tombstoned"] is False
@@ -327,14 +349,19 @@ class TestTombstoneRevoke:
             headers=_ah(admin_key),
         )
         tomb_id = create_resp.json()["id"]
-        client.post(f"/v1/tombstones/{tomb_id}/revoke", json={"reason": "first"}, headers=_ah(admin_key))
-        resp = client.post(f"/v1/tombstones/{tomb_id}/revoke", json={"reason": "second"}, headers=_ah(admin_key))
+        client.post(
+            f"/v1/tombstones/{tomb_id}/revoke", json={"reason": "first"}, headers=_ah(admin_key)
+        )
+        resp = client.post(
+            f"/v1/tombstones/{tomb_id}/revoke", json={"reason": "second"}, headers=_ah(admin_key)
+        )
         assert resp.status_code == 409
 
 
 # ---------------------------------------------------------------------------
 # Recall-time filter (§23.3)
 # ---------------------------------------------------------------------------
+
 
 class TestTombstoneRecallFilter:
     def test_tombstoned_entity_excluded_from_facts(self, node):
@@ -367,7 +394,7 @@ class TestTombstoneRecallFilter:
         """§23.3.3 r.3 — pagination total must be post-filter count."""
         client, admin_key, reader_key, ts, db_file, *_extra = node
 
-        for i in range(3):
+        for _i in range(3):
             _assert_fact(client, _ah(admin_key), entity="user:mallory")
 
         client.post(
@@ -380,7 +407,9 @@ class TestTombstoneRecallFilter:
         resp = client.get("/v1/facts?entity=user:mallory&scope=local", headers=_ah(reader_key))
         assert resp.status_code == 200
         data = resp.json()
-        assert data["total"] is None, "Total must be null when tombstone filtering applied (§23.3.3 r.3)"
+        assert data["total"] is None, (
+            "Total must be null when tombstone filtering applied (§23.3.3 r.3)"
+        )
 
     def test_non_tombstoned_entity_not_affected(self, node):
         client, admin_key, reader_key, ts, db_file, *_extra = node
@@ -404,12 +433,18 @@ class TestTombstoneRecallFilter:
 # Storage-layer unit tests
 # ---------------------------------------------------------------------------
 
+
 class TestTombstoneStorageLayer:
     def test_is_tombstoned_returns_true_after_create(self, node):
         _, _, _, ts, db_file, *_ = node
         tombstones_mod._tombstone_cache_full_ts = 0.0
         create_tombstone(
-            "user:henry", "*", "test", "admin:node", "test-key-id", "test-sig",
+            "user:henry",
+            "*",
+            "test",
+            "admin:node",
+            "test-key-id",
+            "test-sig",
         )
         assert is_tombstoned("user:henry", "local") is True
 
@@ -417,7 +452,12 @@ class TestTombstoneStorageLayer:
         _, _, _, ts, db_file, *_ = node
         tombstones_mod._tombstone_cache_full_ts = 0.0
         record = create_tombstone(
-            "user:ida", "*", "test", "admin:node", "test-key-id", "test-sig",
+            "user:ida",
+            "*",
+            "test",
+            "admin:node",
+            "test-key-id",
+            "test-sig",
         )
         revoke_tombstone(record.id, "reinstated", "admin:node", "test-key-id", "test-sig")
         tombstones_mod._tombstone_cache_full_ts = 0.0
@@ -427,7 +467,12 @@ class TestTombstoneStorageLayer:
         _, _, _, ts, db_file, *_ = node
         tombstones_mod._tombstone_cache_full_ts = 0.0
         create_tombstone(
-            "user:jack", "*", None, "admin:node", "test-key-id", "test-sig",
+            "user:jack",
+            "*",
+            None,
+            "admin:node",
+            "test-key-id",
+            "test-sig",
         )
         tombstones_mod._tombstone_cache_full_ts = 0.0
         for scope in ("local", "team", "company", "public"):
@@ -437,7 +482,12 @@ class TestTombstoneStorageLayer:
         _, _, _, ts, db_file, *_ = node
         tombstones_mod._tombstone_cache_full_ts = 0.0
         create_tombstone(
-            "user:kate", "local", None, "admin:node", "test-key-id", "test-sig",
+            "user:kate",
+            "local",
+            None,
+            "admin:node",
+            "test-key-id",
+            "test-sig",
         )
         tombstones_mod._tombstone_cache_full_ts = 0.0
         assert is_tombstoned("user:kate", "local") is True
@@ -447,6 +497,7 @@ class TestTombstoneStorageLayer:
 # ---------------------------------------------------------------------------
 # Federation tombstone routes (§23.4)
 # ---------------------------------------------------------------------------
+
 
 class TestFederationTombstoneRoutes:
     def test_federation_tombstones_poll_returns_list(self, node):
@@ -532,7 +583,9 @@ class TestFederationTombstoneRoutes:
             "created_at": datetime.now(UTC).isoformat(),
             "legal_hold": False,
         }
-        client.post("/v1/federation/tombstones/ingest", json=payload, headers=_ah(mint_peer_token()))
+        client.post(
+            "/v1/federation/tombstones/ingest", json=payload, headers=_ah(mint_peer_token())
+        )
         tombstones_mod._tombstone_cache_full_ts = 0.0
 
         # Oscar's facts must now be excluded
@@ -586,6 +639,7 @@ class TestFederationTombstoneRoutes:
 # 2-node federation propagation test
 # ---------------------------------------------------------------------------
 
+
 class TestTwoNodeFederationPropagation:
     """Verify tombstone propagation between two independent node instances."""
 
@@ -611,9 +665,12 @@ class TestTwoNodeFederationPropagation:
             ["read", "write", "federate"],
         )
         from stigmem_node.db import get_or_create_node_id
+
         our_node_id = get_or_create_node_id(db_path=db_file)
+
         def _mint():
             return _make_peer_token(peer_priv_b64, peer_node_id, sub=our_node_id)
+
         return ts, admin_key, db_file, _mint
 
     def test_tombstone_propagates_via_ingest(self, tmp_path):
@@ -715,6 +772,7 @@ class TestTwoNodeFederationPropagation:
 # Regression tests: ingest auth + signature enforcement (ACM-290 F-1/F-2/F-4)
 # ---------------------------------------------------------------------------
 
+
 class TestIngestAuthEnforcement:
     """Verify the ingest endpoint rejects unauthenticated and unsigned payloads."""
 
@@ -806,6 +864,7 @@ class TestIngestSignatureEnforcement:
         create_api_key("stigmem://strictnode/agent/admin", ["read", "write", "federate"])
 
         from stigmem_node.db import get_or_create_node_id
+
         our_node_id = get_or_create_node_id(db_path=db_file)
 
         def _mint():
@@ -917,8 +976,8 @@ class TestSignTombstoneNoFallback:
 
     def test_sign_tombstone_raises_without_key(self, tmp_path):
         """sign_tombstone must raise RuntimeError, not fall back to dev-unsigned."""
-        from stigmem_node.tombstone_signing import sign_tombstone
         from stigmem_node.models import TombstoneRecord
+        from stigmem_node.tombstone_signing import sign_tombstone
 
         original = settings_module.settings
         ts = Settings(
@@ -945,8 +1004,8 @@ class TestSignTombstoneNoFallback:
 
     def test_sign_revocation_raises_without_key(self, tmp_path):
         """sign_revocation must raise RuntimeError when key is missing."""
-        from stigmem_node.tombstone_signing import sign_revocation
         from stigmem_node.models import TombstoneRevocationRecord
+        from stigmem_node.tombstone_signing import sign_revocation
 
         original = settings_module.settings
         ts = Settings(

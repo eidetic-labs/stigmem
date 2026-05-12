@@ -40,7 +40,7 @@ from .manifest import (
     sign_manifest,
     sign_rotation_event,
 )
-from .transparency_log import LogEntry, TransparencyLogUnavailable, make_transparency_log
+from .transparency_log import LogEntry, make_transparency_log
 
 _DUAL_TRUST_DAYS = 90  # §22.2.2: must be ≥ max token TTL
 
@@ -55,14 +55,14 @@ class KeyRotationLogEntry:
     third parties verify the chain without trusting the submitter.
     """
 
-    event_type: str           # always "key_rotation"
+    event_type: str  # always "key_rotation"
     entity_uri: str
     old_key_id: str
     new_key_id: str
-    rotated_at: str           # ISO-8601 UTC
+    rotated_at: str  # ISO-8601 UTC
     dual_trust_expires_at: str  # ISO-8601 UTC; old key tokens accepted until here
-    manifest_log_index: int   # TL index of the updated manifest; -1 on dry-run
-    rotation_sig: str         # base64url Ed25519 sig by retiring key
+    manifest_log_index: int  # TL index of the updated manifest; -1 on dry-run
+    rotation_sig: str  # base64url Ed25519 sig by retiring key
 
 
 @dataclass
@@ -70,11 +70,11 @@ class RotationResult:
     """All artefacts produced by a successful key rotation."""
 
     new_private_key: Ed25519PrivateKey
-    new_private_key_b64: str    # base64url raw seed — store in secrets manager
+    new_private_key_b64: str  # base64url raw seed — store in secrets manager
     new_manifest: OrgManifest
-    manifest_log_entry: LogEntry | None       # None on dry-run
+    manifest_log_entry: LogEntry | None  # None on dry-run
     rotation_log_entry: KeyRotationLogEntry
-    rotation_tl_entry: LogEntry | None        # None on dry-run
+    rotation_tl_entry: LogEntry | None  # None on dry-run
 
 
 def generate_key_id(public_key: Ed25519PublicKey) -> str:
@@ -92,15 +92,17 @@ def sign_key_rotation_entry(
     Signing body is JCS-canonical JSON of all fields except rotation_sig.
     Lexicographic key order is guaranteed by canonicaljson (RFC 8785).
     """
-    body = canonicaljson.encode_canonical_json({
-        "dual_trust_expires_at": entry.dual_trust_expires_at,
-        "entity_uri": entry.entity_uri,
-        "event_type": entry.event_type,
-        "manifest_log_index": entry.manifest_log_index,
-        "new_key_id": entry.new_key_id,
-        "old_key_id": entry.old_key_id,
-        "rotated_at": entry.rotated_at,
-    })
+    body = canonicaljson.encode_canonical_json(
+        {
+            "dual_trust_expires_at": entry.dual_trust_expires_at,
+            "entity_uri": entry.entity_uri,
+            "event_type": entry.event_type,
+            "manifest_log_index": entry.manifest_log_index,
+            "new_key_id": entry.new_key_id,
+            "old_key_id": entry.old_key_id,
+            "rotated_at": entry.rotated_at,
+        }
+    )
     sig_bytes = old_private_key.sign(body)
     return base64.urlsafe_b64encode(sig_bytes).decode().rstrip("=")
 
@@ -151,8 +153,8 @@ def rotate_key(
 
     now = datetime.now(UTC)
     rotated_at = now.isoformat().replace("+00:00", "Z")
-    dual_trust_expires_at = (now + timedelta(days=dual_trust_days)).isoformat().replace(
-        "+00:00", "Z"
+    dual_trust_expires_at = (
+        (now + timedelta(days=dual_trust_days)).isoformat().replace("+00:00", "Z")
     )
 
     # 1. Generate new keypair
@@ -186,8 +188,8 @@ def rotate_key(
 
     # 3–4. Build and sign new manifest
     new_issued_at = rotated_at
-    new_expires_at = (now + timedelta(days=manifest_validity_days)).isoformat().replace(
-        "+00:00", "Z"
+    new_expires_at = (
+        (now + timedelta(days=manifest_validity_days)).isoformat().replace("+00:00", "Z")
     )
     new_manifest = OrgManifest(
         entity_uri=entity_uri,
@@ -235,9 +237,7 @@ def rotate_key(
         manifest_log_index=manifest_log_entry.log_index,
         rotation_sig="",
     )
-    rotation_log_entry.rotation_sig = sign_key_rotation_entry(
-        rotation_log_entry, old_private_key
-    )
+    rotation_log_entry.rotation_sig = sign_key_rotation_entry(rotation_log_entry, old_private_key)
 
     # 7. Submit KeyRotationLogEntry to TL
     rotation_entry_dict = {

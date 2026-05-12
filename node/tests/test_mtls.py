@@ -15,6 +15,7 @@ import ssl
 import threading
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from cryptography import x509
@@ -22,15 +23,12 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.x509.oid import NameOID
 
-from unittest.mock import MagicMock
-
 from stigmem_node.tls import (
     build_client_ssl_context,
     build_server_ssl_context,
     check_peer_san,
     reload_tls_cert,
 )
-
 
 # ---------------------------------------------------------------------------
 # Cert generation helpers
@@ -112,7 +110,7 @@ def _start_echo_server(ssl_ctx: ssl.SSLContext) -> tuple[int, threading.Event]:
         while not stop_event.is_set():
             try:
                 conn, _ = srv.accept()
-            except socket.timeout:
+            except TimeoutError:
                 continue
             try:
                 tls_conn = ssl_ctx.wrap_socket(conn, server_side=True)
@@ -135,16 +133,12 @@ def _start_echo_server(ssl_ctx: ssl.SSLContext) -> tuple[int, threading.Event]:
 
 
 def test_check_peer_san_match() -> None:
-    peer_cert: dict[str, Any] = {
-        "subjectAltName": [("URI", "stigmem://example.com/org/acme")]
-    }
+    peer_cert: dict[str, Any] = {"subjectAltName": [("URI", "stigmem://example.com/org/acme")]}
     assert check_peer_san(peer_cert, "stigmem://example.com/org/acme") is True
 
 
 def test_check_peer_san_no_match() -> None:
-    peer_cert: dict[str, Any] = {
-        "subjectAltName": [("URI", "stigmem://example.com/org/other")]
-    }
+    peer_cert: dict[str, Any] = {"subjectAltName": [("URI", "stigmem://example.com/org/other")]}
     assert check_peer_san(peer_cert, "stigmem://example.com/org/acme") is False
 
 
@@ -154,9 +148,7 @@ def test_check_peer_san_missing() -> None:
 
 def test_check_peer_san_dns_not_uri() -> None:
     # DNS SAN must not satisfy URI SAN check (different SAN type)
-    peer_cert: dict[str, Any] = {
-        "subjectAltName": [("DNS", "stigmem://example.com/org/acme")]
-    }
+    peer_cert: dict[str, Any] = {"subjectAltName": [("DNS", "stigmem://example.com/org/acme")]}
     assert check_peer_san(peer_cert, "stigmem://example.com/org/acme") is False
 
 
@@ -178,9 +170,13 @@ def test_cert_rotation_no_drop(tmp_path: Path) -> None:
     ca_path.write_bytes(ca_cert.public_bytes(serialization.Encoding.PEM))
 
     # Cert A — initial
-    _write_node_cert("stigmem://node-a", ca_key, ca_cert, tmp_path / "a.crt", tmp_path / "a.key", "a")
+    _write_node_cert(
+        "stigmem://node-a", ca_key, ca_cert, tmp_path / "a.crt", tmp_path / "a.key", "a"
+    )
     # Cert B — replacement
-    _write_node_cert("stigmem://node-a", ca_key, ca_cert, tmp_path / "b.crt", tmp_path / "b.key", "b")
+    _write_node_cert(
+        "stigmem://node-a", ca_key, ca_cert, tmp_path / "b.crt", tmp_path / "b.key", "b"
+    )
 
     server_ctx = build_server_ssl_context(
         str(tmp_path / "a.crt"), str(tmp_path / "a.key"), str(ca_path)
@@ -218,7 +214,9 @@ def test_cert_rotation_invalid_cert_raises(tmp_path: Path) -> None:
     ca_key, ca_cert = _generate_ca()
     ca_path = tmp_path / "ca.crt"
     ca_path.write_bytes(ca_cert.public_bytes(serialization.Encoding.PEM))
-    _write_node_cert("stigmem://node", ca_key, ca_cert, tmp_path / "node.crt", tmp_path / "node.key")
+    _write_node_cert(
+        "stigmem://node", ca_key, ca_cert, tmp_path / "node.crt", tmp_path / "node.key"
+    )
 
     server_ctx = build_server_ssl_context(
         str(tmp_path / "node.crt"), str(tmp_path / "node.key"), str(ca_path)
@@ -241,7 +239,9 @@ def test_rejected_handshake_no_client_cert(tmp_path: Path) -> None:
     ca_key, ca_cert = _generate_ca()
     ca_path = tmp_path / "ca.crt"
     ca_path.write_bytes(ca_cert.public_bytes(serialization.Encoding.PEM))
-    _write_node_cert("stigmem://server", ca_key, ca_cert, tmp_path / "srv.crt", tmp_path / "srv.key", "server")
+    _write_node_cert(
+        "stigmem://server", ca_key, ca_cert, tmp_path / "srv.crt", tmp_path / "srv.key", "server"
+    )
 
     server_ctx = build_server_ssl_context(
         str(tmp_path / "srv.crt"), str(tmp_path / "srv.key"), str(ca_path)
@@ -272,7 +272,12 @@ def test_rejected_handshake_wrong_ca(tmp_path: Path) -> None:
     ca_path_s = tmp_path / "ca_s.crt"
     ca_path_s.write_bytes(ca_cert_s.public_bytes(serialization.Encoding.PEM))
     _write_node_cert(
-        "stigmem://server", ca_key_s, ca_cert_s, tmp_path / "srv.crt", tmp_path / "srv.key", "server"
+        "stigmem://server",
+        ca_key_s,
+        ca_cert_s,
+        tmp_path / "srv.crt",
+        tmp_path / "srv.key",
+        "server",
     )
 
     # Rogue CA — not trusted by server
@@ -280,7 +285,12 @@ def test_rejected_handshake_wrong_ca(tmp_path: Path) -> None:
     ca_path_r = tmp_path / "ca_r.crt"
     ca_path_r.write_bytes(ca_cert_r.public_bytes(serialization.Encoding.PEM))
     _write_node_cert(
-        "stigmem://rogue", ca_key_r, ca_cert_r, tmp_path / "rogue.crt", tmp_path / "rogue.key", "rogue"
+        "stigmem://rogue",
+        ca_key_r,
+        ca_cert_r,
+        tmp_path / "rogue.crt",
+        tmp_path / "rogue.key",
+        "rogue",
     )
 
     server_ctx = build_server_ssl_context(
@@ -312,9 +322,10 @@ def test_rejected_handshake_wrong_ca(tmp_path: Path) -> None:
 
 def test_mtls_plaintext_guard_returns_421(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Federation routes return 421 when mTLS is configured and request is http."""
-    import stigmem_node.settings as settings_module
-    import stigmem_node.main as main_mod
     from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
 
     # Write placeholder files so mtls_enabled property returns True
     (tmp_path / "node.crt").write_text("placeholder")
@@ -342,9 +353,10 @@ def test_non_federation_routes_bypass_mtls_guard(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """/healthz and other non-federation routes are not blocked by the guard."""
-    import stigmem_node.settings as settings_module
-    import stigmem_node.main as main_mod
     from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
 
     (tmp_path / "node.crt").write_text("placeholder")
     (tmp_path / "node.key").write_text("placeholder")
@@ -372,6 +384,7 @@ def test_non_federation_routes_bypass_mtls_guard(
 def test_settings_requires_ca_bundle_when_mtls_enabled(tmp_path: Path) -> None:
     """Settings raises ValueError when cert+key are set but ca_bundle is empty."""
     import pydantic
+
     from stigmem_node.settings import Settings
 
     (tmp_path / "node.crt").write_text("placeholder")
@@ -408,19 +421,27 @@ def test_settings_accepts_mtls_with_ca_bundle(tmp_path: Path) -> None:
 
 def test_get_mtls_peer_cert_no_transport() -> None:
     """_get_mtls_peer_cert returns empty dict when no transport in scope."""
-    from stigmem_node.routes.federation import _get_mtls_peer_cert
     from starlette.requests import Request
 
-    scope = {"type": "http", "method": "GET", "path": "/", "query_string": b"",
-             "headers": [], "server": ("localhost", 8765)}
+    from stigmem_node.routes.federation import _get_mtls_peer_cert
+
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "path": "/",
+        "query_string": b"",
+        "headers": [],
+        "server": ("localhost", 8765),
+    }
     req = Request(scope)
     assert _get_mtls_peer_cert(req) == {}
 
 
 def test_get_mtls_peer_cert_ssl_transport() -> None:
     """_get_mtls_peer_cert extracts peer cert dict from mock SSL transport."""
-    from stigmem_node.routes.federation import _get_mtls_peer_cert
     from starlette.requests import Request
+
+    from stigmem_node.routes.federation import _get_mtls_peer_cert
 
     mock_cert = {"subjectAltName": [("URI", "stigmem://example.com/org/peer")]}
     mock_ssl = MagicMock()
@@ -428,8 +449,15 @@ def test_get_mtls_peer_cert_ssl_transport() -> None:
     mock_transport = MagicMock()
     mock_transport.get_extra_info.return_value = mock_ssl
 
-    scope = {"type": "http", "method": "GET", "path": "/", "query_string": b"",
-             "headers": [], "server": ("localhost", 8765), "transport": mock_transport}
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "path": "/",
+        "query_string": b"",
+        "headers": [],
+        "server": ("localhost", 8765),
+        "transport": mock_transport,
+    }
     req = Request(scope)
     assert _get_mtls_peer_cert(req) == mock_cert
 
@@ -445,7 +473,6 @@ async def test_pull_from_peer_san_mismatch_returns_old_cursor(
 ) -> None:
     """pull_from_peer_once returns old cursor (fail-closed) when SAN does not match."""
     import stigmem_node.federation_pull as pull_mod
-    import stigmem_node.settings as settings_mod
 
     # Simulate mtls_enabled = True
     fake_settings = MagicMock()
@@ -460,6 +487,7 @@ async def test_pull_from_peer_san_mismatch_returns_old_cursor(
 
     # Build a fake 200 httpx Response with ssl_object extension
     import httpx
+
     mock_resp = MagicMock(spec=httpx.Response)
     mock_resp.status_code = 200
     mock_resp.extensions = {"ssl_object": mock_ssl}
@@ -469,7 +497,6 @@ async def test_pull_from_peer_san_mismatch_returns_old_cursor(
     mock_client.get = MagicMock(return_value=mock_resp)
 
     # Make client.get awaitable
-    import asyncio
 
     async def _fake_get(*args, **kwargs):
         return mock_resp

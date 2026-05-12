@@ -11,7 +11,6 @@ Key invariants verified:
 
 from __future__ import annotations
 
-import pytest
 from fastapi.testclient import TestClient
 
 FACT = {
@@ -82,7 +81,9 @@ class TestLintAsyncPath:
         assert "estimated_s" in data
         assert isinstance(data["estimated_s"], int)
 
-    def test_job_completes_and_contains_lint_result(self, client_async_threshold: TestClient) -> None:
+    def test_job_completes_and_contains_lint_result(
+        self, client_async_threshold: TestClient
+    ) -> None:
         client_async_threshold.post("/v1/facts", json=FACT)
         r202 = client_async_threshold.post("/v1/lint", json={"scope": "local"})
         assert r202.status_code == 202
@@ -110,7 +111,9 @@ class TestLintAsyncPath:
         assert "checks_run" in job_data
         assert "checked_at" in job_data
 
-    def test_empty_scope_sync_even_at_threshold_one(self, client_async_threshold: TestClient) -> None:
+    def test_empty_scope_sync_even_at_threshold_one(
+        self, client_async_threshold: TestClient
+    ) -> None:
         """Empty scope has 0 facts — stays 200 sync even with threshold=1."""
         r = client_async_threshold.post("/v1/lint", json={"scope": "local"})
         assert r.status_code == 200
@@ -145,7 +148,9 @@ class TestDecayAsyncPath:
         assert data["status"] == "pending"
         assert isinstance(data["estimated_s"], int)
 
-    def test_job_completes_and_contains_decay_result(self, client_async_threshold: TestClient) -> None:
+    def test_job_completes_and_contains_decay_result(
+        self, client_async_threshold: TestClient
+    ) -> None:
         client_async_threshold.post("/v1/facts", json=FACT)
         r202 = client_async_threshold.post("/v1/decay/sweep?ttl_seconds=0")
         assert r202.status_code == 202
@@ -175,12 +180,16 @@ class TestDecayAsyncPath:
         r = client_async_threshold.get(f"/v1/lint/jobs/{job_id}")
         assert r.status_code == 404
 
-    def test_empty_scope_sync_even_at_threshold_one(self, client_async_threshold: TestClient) -> None:
+    def test_empty_scope_sync_even_at_threshold_one(
+        self, client_async_threshold: TestClient
+    ) -> None:
         r = client_async_threshold.post("/v1/decay/sweep?ttl_seconds=0")
         assert r.status_code == 200
 
-    def test_scope_filter_counts_only_target_scope(self, client_async_threshold: TestClient) -> None:
-        """Async threshold applies per-scope: cross-scope fact doesn't trigger async on empty scope."""
+    def test_scope_filter_counts_only_target_scope(
+        self, client_async_threshold: TestClient
+    ) -> None:
+        """Cross-scope fact does not trigger async work on an empty target scope."""
         team_fact = {**FACT, "scope": "team"}
         client_async_threshold.post("/v1/facts", json=team_fact)  # team scope has 1 fact
         # local scope has 0 facts — sync even with threshold=1

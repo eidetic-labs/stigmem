@@ -12,7 +12,6 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -20,13 +19,14 @@ from fastapi.testclient import TestClient
 
 def _metric_lines(metrics_text: str, prefix: str) -> list[str]:
     return [
-        l for l in metrics_text.splitlines()
-        if l.startswith(prefix) and not l.startswith("#")
+        line
+        for line in metrics_text.splitlines()
+        if line.startswith(prefix) and not line.startswith("#")
     ]
 
 
 def _metric_total(metrics_text: str, prefix: str) -> float:
-    return sum(float(l.split()[-1]) for l in _metric_lines(metrics_text, prefix))
+    return sum(float(line.split()[-1]) for line in _metric_lines(metrics_text, prefix))
 
 
 # ---------------------------------------------------------------------------
@@ -100,7 +100,7 @@ def test_metrics_recall_ranker_histogram(
 
     def _count(text: str) -> float:
         lines = _metric_lines(text, "stigmem_recall_ranker_duration_seconds_count")
-        return sum(float(l.split()[-1]) for l in lines)
+        return sum(float(line.split()[-1]) for line in lines)
 
     before = _count(c.get("/metrics").text)
     c.post(
@@ -135,8 +135,9 @@ def test_metrics_audit_event_counter(
     metrics_text = c.get("/metrics").text
     lines = _metric_lines(metrics_text, "stigmem_audit_event_total")
     assert lines, "stigmem_audit_event_total not found in /metrics after a write"
-    assert any(float(l.split()[-1]) > 0 for l in lines), \
+    assert any(float(line.split()[-1]) > 0 for line in lines), (
         f"All stigmem_audit_event_total counters are zero: {lines}"
+    )
 
 
 def test_contradiction_counter(

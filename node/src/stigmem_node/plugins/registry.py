@@ -107,9 +107,7 @@ class HookRegistry:
             )
             decision = self.fire_voting("config_validate", plugin=manifest)
             if isinstance(decision, Deny):
-                self._metric_inc(
-                    PLUGIN_REGISTRATION, outcome="failure", reason="config_validate"
-                )
+                self._metric_inc(PLUGIN_REGISTRATION, outcome="failure", reason="config_validate")
                 self._emit_registry_audit(
                     "plugin.registration_failed",
                     manifest=manifest,
@@ -150,9 +148,7 @@ class HookRegistry:
                         f"plugin {manifest.name!r} failed config validation: {own_decision.reason}"
                     )
                 if not isinstance(own_decision, Allow):
-                    self._metric_inc(
-                        PLUGIN_REGISTRATION, outcome="failure", reason="config_result"
-                    )
+                    self._metric_inc(PLUGIN_REGISTRATION, outcome="failure", reason="config_result")
                     self._emit_registry_audit(
                         "plugin.registration_failed",
                         manifest=manifest,
@@ -233,7 +229,7 @@ class HookRegistry:
                 if result is None:
                     raise PluginExecutionError(
                         f"handler {entry.handler_name!r} returned None; expected VotingDecision"
-                )
+                    )
                 if isinstance(result, Deny):
                     self._metric_inc(PLUGIN_VOTING_DECISION, hook=hook, decision="deny")
                     self._emit_handler_denied(entry, reason=result.reason)
@@ -600,10 +596,15 @@ class HookRegistry:
     def _validate_manifest_handler_signatures(self, manifest: PluginManifest) -> None:
         for hook, handler in manifest.hooks.items():
             semantic = HOOK_SPECS[hook].semantic
-            required_positional = 2 if semantic in (
-                HookSemantic.FILTER_CHAIN,
-                HookSemantic.SCORE_DELTA,
-            ) else 1
+            required_positional = (
+                2
+                if semantic
+                in (
+                    HookSemantic.FILTER_CHAIN,
+                    HookSemantic.SCORE_DELTA,
+                )
+                else 1
+            )
             if not _accepts_positional_args(handler, required_positional):
                 raise ManifestError(
                     f"handler for hook {hook!r} on plugin {manifest.name!r} must accept "

@@ -17,6 +17,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from .plugins import Migration, get_registry
 from .settings import settings as settings
 from .storage import make_backend
 
@@ -42,6 +43,29 @@ def apply_migrations(db_path: str | None = None) -> None:
     for CLI tools and test fixtures).  When omitted, honours ``settings``.
     """
     make_backend(db_path=db_path, _settings=settings).apply_migrations(_MIGRATIONS_DIR)
+    get_registry().fire_filter_chain(
+        "migration_register",
+        [],
+        db_path=db_path,
+        migrations_dir=_MIGRATIONS_DIR,
+        settings=settings,
+    )
+
+
+def collect_registered_plugin_migrations(db_path: str | None = None) -> list[Migration]:
+    """Collect plugin-declared migrations without applying them.
+
+    PR 4-INF.1 wires the typed hook surface only. Package discovery, dependency
+    graph resolution, downgrade checks, and plugin migration application are
+    follow-up lifecycle work.
+    """
+    return get_registry().fire_filter_chain(
+        "migration_register",
+        [],
+        db_path=db_path,
+        migrations_dir=_MIGRATIONS_DIR,
+        settings=settings,
+    )
 
 
 def get_or_create_federation_keypair(db_path: str | None = None) -> tuple[str, str]:

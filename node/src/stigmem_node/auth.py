@@ -37,6 +37,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .db import db
+from .plugins import Deny, TenantContext, get_registry
 from .settings import settings as settings
 
 
@@ -63,21 +64,32 @@ class Identity:
         self.tenant_id = tenant_id
 
     def can_read(self) -> bool:
-        return "read" in self.permissions
+        return self._has_capability("read")
 
     def can_write(self) -> bool:
-        return "write" in self.permissions
+        return self._has_capability("write")
 
     def can_federate(self) -> bool:
-        return "federate" in self.permissions
+        return self._has_capability("federate")
 
     def can_audit(self) -> bool:
         """True when the principal holds the audit.read capability (spec §22.3)."""
-        return "audit.read" in self.permissions
+        return self._has_capability("audit.read")
 
     def is_admin(self) -> bool:
         """True when the principal holds the admin capability (spec §24.3.2)."""
-        return "admin" in self.permissions
+        return self._has_capability("admin")
+
+    def _has_capability(self, capability: str) -> bool:
+        if capability not in self.permissions:
+            return False
+        decision = get_registry().fire_voting(
+            "capability_check",
+            identity=self,
+            capability=capability,
+            tenant=TenantContext(tenant_id=self.tenant_id),
+        )
+        return not isinstance(decision, Deny)
 
 
 _ANON = Identity("anon:trusted", ["read", "write", "federate"], tenant_id="default")
@@ -96,8 +108,8 @@ def resolve_identity(
             # Still try to resolve a real identity even in non-required mode
             identity = _lookup(creds.credentials)
             if identity:
-                return identity
-        return _ANON
+                return _apply_identity_hooks(identity, raw_credentials=creds.credentials)
+        return _apply_identity_hooks(_ANON, raw_credentials=None)
 
     if creds is None:
         raise HTTPException(
@@ -112,7 +124,29 @@ def resolve_identity(
             detail="Invalid or expired API key",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return identity
+    return _apply_identity_hooks(identity, raw_credentials=creds.credentials)
+
+
+def _apply_identity_hooks(identity: Identity, raw_credentials: str | None) -> Identity:
+    registry = get_registry()
+    resolved = registry.fire_filter_chain(
+        "identity_resolve",
+        identity,
+        raw_credentials=raw_credentials,
+    )
+    tenant = registry.fire_filter_chain(
+        "tenant_resolve",
+        TenantContext(tenant_id=resolved.tenant_id),
+        identity=resolved,
+    )
+    if tenant.tenant_id != resolved.tenant_id:
+        return Identity(
+            entity_uri=resolved.entity_uri,
+            permissions=sorted(resolved.permissions),
+            oidc_sub=resolved.oidc_sub,
+            tenant_id=tenant.tenant_id,
+        )
+    return resolved
 
 
 def _lookup(raw_key: str) -> Identity | None:

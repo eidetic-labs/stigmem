@@ -1,0 +1,37 @@
+name: Plugin benchmarks
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/plugin-benchmarks.yml"
+      - "node/src/stigmem_node/plugins/**"
+      - "node/tests/plugins/benchmarks/**"
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/plugin-benchmarks.yml"
+      - "node/src/stigmem_node/plugins/**"
+      - "node/tests/plugins/benchmarks/**"
+
+permissions:
+  contents: read
+
+jobs:
+  hook-firing-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Run hook-firing budget tests
+        working-directory: node
+        run: uv run pytest tests/plugins/benchmarks/test_hook_firing_budget.py -q

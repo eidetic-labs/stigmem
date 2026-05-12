@@ -33,6 +33,7 @@ from ..models import (
     TombstoneNotice,
     row_to_record,
 )
+from ..plugins import Deny, Failure, Success, TenantContext, get_registry
 from ..recall_pipeline import apply_recall_pipeline
 
 # Re-exported binding used by tests that monkey-patch ``routes.facts._settings``.
@@ -345,11 +346,90 @@ def assert_fact(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> FactRecord:
     """Assert a fact into the fabric (spec §5.1, §2.6). Normalizes entity/source URIs on ingest."""
+    request_id = str(uuid.uuid4())
+    tenant = TenantContext(tenant_id=identity.tenant_id)
+    registry = get_registry()
     with start_span(
         "stigmem.assert_fact",
         **{"stigmem.tenant": identity.tenant_id, "stigmem.principal": identity.entity_uri},
     ) as _span:
-        return _assert_fact_impl(req, identity, _span)
+        decision = registry.fire_voting(
+            "pre_assert_authorize",
+            req=req,
+            identity=identity,
+            tenant=tenant,
+            request_id=request_id,
+        )
+        if isinstance(decision, Deny):
+            registry.fire_fire_and_forget(
+                "post_assert_audit",
+                fact=None,
+                req=req,
+                identity=identity,
+                tenant=tenant,
+                request_id=request_id,
+                outcome=Failure(reason=decision.reason),
+            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=decision.reason)
+
+        decision = registry.fire_voting(
+            "pre_assert_validate",
+            req=req,
+            identity=identity,
+            tenant=tenant,
+            request_id=request_id,
+        )
+        if isinstance(decision, Deny):
+            registry.fire_fire_and_forget(
+                "post_assert_audit",
+                fact=None,
+                req=req,
+                identity=identity,
+                tenant=tenant,
+                request_id=request_id,
+                outcome=Failure(reason=decision.reason),
+            )
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=decision.reason
+            )
+
+        req = registry.fire_filter_chain(
+            "pre_assert_transform",
+            req,
+            identity=identity,
+            tenant=tenant,
+            request_id=request_id,
+        )
+        try:
+            fact = _assert_fact_impl(req, identity, _span, request_id=request_id, tenant=tenant)
+            registry.fire_fire_and_forget(
+                "post_assert_propagate",
+                fact=fact,
+                identity=identity,
+                tenant=tenant,
+                request_id=request_id,
+            )
+            registry.fire_fire_and_forget(
+                "post_assert_audit",
+                fact=fact,
+                req=req,
+                identity=identity,
+                tenant=tenant,
+                request_id=request_id,
+                outcome=Success(),
+            )
+            return fact
+        except Exception as exc:
+            registry.fire_fire_and_forget(
+                "post_assert_audit",
+                fact=None,
+                req=req,
+                identity=identity,
+                tenant=tenant,
+                request_id=request_id,
+                outcome=Failure(reason=str(exc), exception_type=type(exc).__name__),
+            )
+            raise
 
 def _is_valid_entity_uri(uri: str) -> bool:
     """Minimal check: URI must contain '://' or start with 'urn:'."""
@@ -455,6 +535,65 @@ def query_facts(
     if not identity.can_read():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="read permission required")  # noqa: E501
 
+    request_id = str(uuid.uuid4())
+    tenant = TenantContext(tenant_id=identity.tenant_id)
+    registry = get_registry()
+    query_payload: dict[str, Any] = {
+        "entity": entity,
+        "relation": relation,
+        "source": source,
+        "scope": scope,
+        "min_confidence": min_confidence,
+        "include_contradicted": include_contradicted,
+        "include_expired": include_expired,
+        "after": after,
+        "cursor": cursor,
+        "limit": limit,
+        "garden_id": garden_id,
+        "attested": attested,
+        "include_low_trust": include_low_trust,
+        "as_of": as_of,
+    }
+    decision = registry.fire_voting(
+        "pre_recall_authorize",
+        identity=identity,
+        tenant=tenant,
+        request_id=request_id,
+        query=query_payload,
+    )
+    if isinstance(decision, Deny):
+        registry.fire_fire_and_forget(
+            "post_recall_audit",
+            result=None,
+            identity=identity,
+            tenant=tenant,
+            request_id=request_id,
+            outcome=Failure(reason=decision.reason),
+        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=decision.reason)
+
+    rewritten_query = registry.fire_filter_chain(
+        "pre_recall_rewrite",
+        query_payload,
+        identity=identity,
+        tenant=tenant,
+        request_id=request_id,
+    )
+    entity = rewritten_query["entity"]
+    relation = rewritten_query["relation"]
+    source = rewritten_query["source"]
+    scope = rewritten_query["scope"]
+    min_confidence = rewritten_query["min_confidence"]
+    include_contradicted = rewritten_query["include_contradicted"]
+    include_expired = rewritten_query["include_expired"]
+    after = rewritten_query["after"]
+    cursor = rewritten_query["cursor"]
+    limit = rewritten_query["limit"]
+    garden_id = rewritten_query["garden_id"]
+    attested = rewritten_query["attested"]
+    include_low_trust = rewritten_query["include_low_trust"]
+    as_of = rewritten_query["as_of"]
+
     # §24.4: time-travel query — delegate to as_of implementation
     if as_of is not None:
         _validate_as_of(as_of)
@@ -472,6 +611,14 @@ def query_facts(
             )
         if result.total is not None:
             response.headers["X-Total-Count"] = str(result.total)
+        registry.fire_fire_and_forget(
+            "post_recall_audit",
+            result=result,
+            identity=identity,
+            tenant=tenant,
+            request_id=request_id,
+            outcome=Success(),
+        )
         return result
 
     FACT_READ.labels(principal=identity.entity_uri, tenant=identity.tenant_id).inc()
@@ -512,6 +659,22 @@ def query_facts(
 
     # §23.3: tombstone filter — must be applied after scope filtering, before packing
     records, tombstone_filtered = _apply_tombstone_filter(records, scope, identity)
+    records = registry.fire_filter_chain(
+        "recall_filter",
+        records,
+        identity=identity,
+        tenant=tenant,
+        request_id=request_id,
+    )
+    score_deltas = registry.fire_score_delta(
+        "recall_rank",
+        records,
+        identity=identity,
+        tenant=tenant,
+        request_id=request_id,
+    )
+    if score_deltas:
+        records = sorted(records, key=lambda record: score_deltas.get(record.id, 0.0), reverse=True)
 
     next_cursor = rows[-1]["id"] if has_more and rows else None
     # §23.3.3 r.3: suppress total when tombstone filtering was applied to prevent oracle leakage
@@ -519,6 +682,14 @@ def query_facts(
     result = QueryResponse(facts=records, total=total, cursor=next_cursor)
     if result.total is not None:
         response.headers["X-Total-Count"] = str(result.total)
+    registry.fire_fire_and_forget(
+        "post_recall_audit",
+        result=result,
+        identity=identity,
+        tenant=tenant,
+        request_id=request_id,
+        outcome=Success(),
+    )
     return result
 
 

@@ -50,6 +50,7 @@ from ..models import (
     row_to_record,
 )
 from ..peer_token import TokenError, verify_peer_token
+from ..plugins import Deny, TenantContext, get_registry
 from ..settings import settings
 from ..tls import check_peer_san
 from ._federation_impl import (
@@ -337,6 +338,22 @@ def pull_facts(
         row_to_record(r, contradicted=seen[(r["entity"], r["relation"], r["scope"])] > 1)
         for r in rows
     ]
+    tenant = TenantContext(tenant_id="default")
+    registry = get_registry()
+    records = registry.fire_filter_chain(
+        "federation_outbound_filter",
+        records,
+        peer=peer,
+        token_payload=token_payload,
+        tenant=tenant,
+    )
+    records = registry.fire_filter_chain(
+        "federation_outbound_sign",
+        records,
+        peer=peer,
+        token_payload=token_payload,
+        tenant=tenant,
+    )
 
     new_cursor: str | None = rows[-1]["hlc"] if rows else cursor
     FEDERATION_EGRESS.labels(peer_id=peer["node_id"], status="ok").inc(len(records))
@@ -534,9 +551,28 @@ def _push_fact_with_cap_token(
     if fact_source != sender_node_id:
         return False, {"fact_id": fact.get("id"), "error": "source_not_owned"}
 
+    tenant = TenantContext(tenant_id="default")
+    registry = get_registry()
+    decision = registry.fire_voting(
+        "federation_inbound_validate",
+        fact=fact,
+        fact_scope=fact_scope,
+        cap_token=cap_token,
+        tenant=tenant,
+    )
+    if isinstance(decision, Deny):
+        return False, {"fact_id": fact.get("id"), "error": decision.reason}
+    filtered_fact = registry.fire_filter_chain(
+        "federation_inbound_filter",
+        fact,
+        fact_scope=fact_scope,
+        cap_token=cap_token,
+        tenant=tenant,
+    )
+
     try:
         ingest_fact(
-            fact,
+            filtered_fact,
             sender_node_id,
             identity_strength_boost=0.5,  # §19.4.2 boost for valid capability token
         )
@@ -578,9 +614,30 @@ def _push_fact_with_peer_token(
         )
         return False, {"fact_id": fact.get("id"), "error": "source_not_owned"}
 
+    tenant = TenantContext(tenant_id="default")
+    registry = get_registry()
+    decision = registry.fire_voting(
+        "federation_inbound_validate",
+        fact=fact,
+        fact_scope=fact_scope,
+        peer=peer,
+        token_payload=token_payload,
+        tenant=tenant,
+    )
+    if isinstance(decision, Deny):
+        return False, {"fact_id": fact.get("id"), "error": decision.reason}
+    filtered_fact = registry.fire_filter_chain(
+        "federation_inbound_filter",
+        fact,
+        fact_scope=fact_scope,
+        peer=peer,
+        token_payload=token_payload,
+        tenant=tenant,
+    )
+
     try:
         ingest_fact(
-            fact,
+            filtered_fact,
             peer["node_id"],
             origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
         )

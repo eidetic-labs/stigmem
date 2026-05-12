@@ -173,6 +173,7 @@ def create_app() -> FastAPI:
             "entity_uri": identity.entity_uri,
             "permissions": sorted(identity.permissions),
             "oidc_sub": identity.oidc_sub,
+            "tenant_id": identity.tenant_id,
         }
 
     @app.get("/ui", include_in_schema=False)

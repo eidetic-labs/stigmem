@@ -13,15 +13,24 @@ Counters:
   stigmem_federation_ingress_total{peer_id, status}
   stigmem_federation_egress_total{peer_id, status}
   stigmem_subscription_event_total{delivery_type, status}
+  stigmem_plugin_hook_fire_total{hook}
+  stigmem_plugin_handler_invocation_total{hook, plugin}
+  stigmem_plugin_handler_error_total{hook, plugin, error_type}
+  stigmem_plugin_voting_decision_total{hook, decision}
+  stigmem_plugin_registration_total{outcome, reason}
 
 Histograms:
   stigmem_request_latency_seconds{route, method, status_code}
   stigmem_recall_ranker_duration_seconds{tenant}
   stigmem_capability_verify_duration_seconds{result}
+  stigmem_plugin_hook_duration_seconds{hook}
+  stigmem_plugin_handler_duration_seconds{hook, plugin}
 
 Gauges:
   stigmem_subscription_connections_active{tenant}
   stigmem_replication_lag_seconds{peer_id}
+  stigmem_plugin_registered_count
+  stigmem_plugin_handlers_per_hook{hook}
 """
 
 from __future__ import annotations
@@ -85,6 +94,31 @@ try:
         "Subscription delivery events",
         ["delivery_type", "status"],
     )
+    PLUGIN_HOOK_FIRE = Counter(
+        "stigmem_plugin_hook_fire_total",
+        "Plugin hook dispatches",
+        ["hook"],
+    )
+    PLUGIN_HANDLER_INVOCATION = Counter(
+        "stigmem_plugin_handler_invocation_total",
+        "Plugin handler invocations",
+        ["hook", "plugin"],
+    )
+    PLUGIN_HANDLER_ERROR = Counter(
+        "stigmem_plugin_handler_error_total",
+        "Plugin handler errors",
+        ["hook", "plugin", "error_type"],
+    )
+    PLUGIN_VOTING_DECISION = Counter(
+        "stigmem_plugin_voting_decision_total",
+        "Plugin voting hook decisions",
+        ["hook", "decision"],
+    )
+    PLUGIN_REGISTRATION = Counter(
+        "stigmem_plugin_registration_total",
+        "Plugin registration attempts",
+        ["outcome", "reason"],
+    )
 
     # ----- Histograms -----
     REQUEST_LATENCY = Histogram(
@@ -105,6 +139,18 @@ try:
         ["result"],
         buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1),
     )
+    PLUGIN_HOOK_DURATION = Histogram(
+        "stigmem_plugin_hook_duration_seconds",
+        "Plugin hook dispatch duration",
+        ["hook"],
+        buckets=(0.000005, 0.00001, 0.000025, 0.00005, 0.0001, 0.00025, 0.0005, 0.001),
+    )
+    PLUGIN_HANDLER_DURATION = Histogram(
+        "stigmem_plugin_handler_duration_seconds",
+        "Plugin handler invocation duration",
+        ["hook", "plugin"],
+        buckets=(0.000005, 0.00001, 0.000025, 0.00005, 0.0001, 0.00025, 0.0005, 0.001),
+    )
 
     # ----- Gauges -----
     SUBSCRIPTION_CONNECTIONS = Gauge(
@@ -116,6 +162,15 @@ try:
         "stigmem_replication_lag_seconds",
         "Estimated replication lag to each federation peer (seconds)",
         ["peer_id"],
+    )
+    PLUGIN_REGISTERED_COUNT = Gauge(
+        "stigmem_plugin_registered_count",
+        "Number of registered plugins",
+    )
+    PLUGIN_HANDLERS_PER_HOOK = Gauge(
+        "stigmem_plugin_handlers_per_hook",
+        "Number of registered handlers per plugin hook",
+        ["hook"],
     )
 
 except ImportError:
@@ -151,15 +206,24 @@ except ImportError:
     FEDERATION_INGRESS = _noop
     FEDERATION_EGRESS = _noop
     SUBSCRIPTION_EVENT = _noop
+    PLUGIN_HOOK_FIRE = _noop
+    PLUGIN_HANDLER_INVOCATION = _noop
+    PLUGIN_HANDLER_ERROR = _noop
+    PLUGIN_VOTING_DECISION = _noop
+    PLUGIN_REGISTRATION = _noop
 
     # Histograms
     REQUEST_LATENCY = _noop
     RECALL_RANKER_DURATION = _noop
     CAPABILITY_VERIFY_DURATION = _noop
+    PLUGIN_HOOK_DURATION = _noop
+    PLUGIN_HANDLER_DURATION = _noop
 
     # Gauges
     SUBSCRIPTION_CONNECTIONS = _noop
     REPLICATION_LAG = _noop
+    PLUGIN_REGISTERED_COUNT = _noop
+    PLUGIN_HANDLERS_PER_HOOK = _noop
 
 
 def metrics_enabled() -> bool:

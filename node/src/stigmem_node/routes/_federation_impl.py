@@ -35,6 +35,7 @@ from ..models import (
 )
 from ..net_util import assert_safe_url
 from ..peer_token import verify_declaration_sig
+from ..plugins import Deny, TenantContext, get_registry
 from ..tls import check_peer_san
 
 logger = logging.getLogger("stigmem.federation")
@@ -56,6 +57,14 @@ async def register_peer_impl(
 
     if not identity.can_federate():
         raise HTTPException(status_code=403, detail="federate permission required")
+    decision = get_registry().fire_voting(
+        "federation_peer_authenticate",
+        req=req,
+        identity=identity,
+        tenant=TenantContext(tenant_id=identity.tenant_id),
+    )
+    if isinstance(decision, Deny):
+        raise HTTPException(status_code=403, detail=decision.reason)
 
     peer_id = str(uuid.uuid4())
     allowed_scopes_json = json.dumps(sorted(req.allowed_scopes))

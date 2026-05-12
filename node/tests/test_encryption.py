@@ -27,6 +27,8 @@ from pathlib import Path
 
 import pytest
 
+import stigmem_node.db as db_mod
+import stigmem_node.main as main_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.storage import make_backend
 from stigmem_node.storage.encryption import _reset_key_cache, derive_key, load_key
@@ -298,10 +300,6 @@ class TestSQLiteEncryptedBackend:
 
         from fastapi.testclient import TestClient
 
-        import stigmem_node.db as db_mod
-        import stigmem_node.settings as settings_module
-        from stigmem_node.main import create_app
-
         db_file = str(tmp_path / "enc_api.db")
         s = _enc_settings(db_file)
         backend = make_backend(_settings=s)
@@ -311,7 +309,7 @@ class TestSQLiteEncryptedBackend:
         settings_module.settings = s  # type: ignore[assignment]
         db_mod.settings = s  # type: ignore[assignment]
         try:
-            app = create_app()
+            app = main_mod.create_app()
             with TestClient(app, raise_server_exceptions=True) as c:
                 resp = c.post(
                     "/v1/facts",

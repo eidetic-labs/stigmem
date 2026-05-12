@@ -402,8 +402,6 @@ class TestEntityEdges:
         fact_id = r.json()["id"]
 
         # Verify edge was written to DB
-        import stigmem_node.db as db_mod
-
         with db_mod.db() as conn:
             edge = conn.execute("SELECT * FROM entity_edges WHERE id=?", (fact_id,)).fetchone()
 
@@ -431,8 +429,6 @@ class TestEntityEdges:
         assert r.status_code == 201
         fact_id = r.json()["id"]
 
-        import stigmem_node.db as db_mod
-
         with db_mod.db() as conn:
             edge = conn.execute("SELECT * FROM entity_edges WHERE id=?", (fact_id,)).fetchone()
 
@@ -456,8 +452,6 @@ class TestEntityEdges:
         )
         assert r.status_code == 201
         fact_id = r.json()["id"]
-
-        import stigmem_node.db as db_mod
 
         with db_mod.db() as conn:
             edge = conn.execute("SELECT * FROM entity_edges WHERE id=?", (fact_id,)).fetchone()

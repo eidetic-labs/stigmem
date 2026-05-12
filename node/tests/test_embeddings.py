@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from stigmem_node.db import apply_migrations
+import stigmem_node.db as db_mod
 from stigmem_node.embedding import compose_triple_text
 from stigmem_node.embedding.base import l2_normalize
 from stigmem_node.embedding.stub_adapter import StubEmbeddingModel
@@ -33,6 +33,9 @@ from stigmem_node.vector_search import (
     ensure_vec_table,
     vector_search,
 )
+
+apply_migrations = db_mod.apply_migrations
+
 
 # ---------------------------------------------------------------------------
 # Helpers

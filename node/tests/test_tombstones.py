@@ -39,15 +39,15 @@ import stigmem_node.routes.tombstones as tomb_routes_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 import stigmem_node.tombstones as tombstones_mod
-from stigmem_node.auth import create_api_key
-from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
-from stigmem_node.settings import Settings
-from stigmem_node.tombstones import (
-    create_tombstone,
-    is_tombstoned,
-    revoke_tombstone,
-)
+
+create_api_key = auth_mod.create_api_key
+apply_migrations = db_mod.apply_migrations
+get_or_create_node_id = db_mod.get_or_create_node_id
+Settings = settings_module.Settings
+create_tombstone = tombstones_mod.create_tombstone
+is_tombstoned = tombstones_mod.is_tombstoned
+revoke_tombstone = tombstones_mod.revoke_tombstone
 
 
 def _gen_key_b64() -> tuple[Ed25519PrivateKey, str, str]:
@@ -153,8 +153,6 @@ def node(tmp_path):
     admin_key = create_api_key("stigmem://tombnode/agent/admin", ["read", "write", "federate"])
     reader_key = create_api_key("stigmem://tombnode/agent/reader", ["read"])
     # Peer token factory — each call mints a fresh JWT (unique nonce)
-    from stigmem_node.db import get_or_create_node_id
-
     our_node_id = get_or_create_node_id(db_path=db_file)
 
     def _mint_peer_token():
@@ -664,8 +662,6 @@ class TestTwoNodeFederationPropagation:
             f"stigmem://{name}/agent/admin",
             ["read", "write", "federate"],
         )
-        from stigmem_node.db import get_or_create_node_id
-
         our_node_id = get_or_create_node_id(db_path=db_file)
 
         def _mint():
@@ -862,8 +858,6 @@ class TestIngestSignatureEnforcement:
 
         _register_peer(db_file, peer_node_id, peer_pub_b64)
         create_api_key("stigmem://strictnode/agent/admin", ["read", "write", "federate"])
-
-        from stigmem_node.db import get_or_create_node_id
 
         our_node_id = get_or_create_node_id(db_path=db_file)
 

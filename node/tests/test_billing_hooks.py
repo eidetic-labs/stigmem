@@ -11,9 +11,11 @@ import stigmem_node.auth as auth_mod
 import stigmem_node.billing as billing_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
-from stigmem_node.settings import Settings
+
+create_api_key = auth_mod.create_api_key
+apply_migrations = db_mod.apply_migrations
+Settings = settings_module.Settings
 
 # ---------------------------------------------------------------------------
 # Fixture: client with CaptureBus injected
@@ -76,8 +78,6 @@ def test_fact_written_captures_tenant_id(tmp_path: object) -> None:
     """fact_written event carries the correct tenant_id from the API key."""
     db_file = str(tmp_path) + "/billing_tenant.db"  # type: ignore[operator]
     apply_migrations(db_path=db_file)
-
-    from stigmem_node.auth import create_api_key
 
     original = settings_module.settings
     test_settings = Settings(db_path=db_file, auth_required=True, node_url="http://testnode")

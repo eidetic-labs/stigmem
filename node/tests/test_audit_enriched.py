@@ -21,10 +21,11 @@ import stigmem_node.db as db_mod
 import stigmem_node.routes.facts as facts_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.auth import create_api_key
-from stigmem_node.db import apply_migrations
 from stigmem_node.main import create_app
-from stigmem_node.settings import Settings
+
+create_api_key = auth_mod.create_api_key
+apply_migrations = db_mod.apply_migrations
+Settings = settings_module.Settings
 
 # ---------------------------------------------------------------------------
 # Helpers

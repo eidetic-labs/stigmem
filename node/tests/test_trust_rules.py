@@ -24,6 +24,8 @@ from stigmem_node.trust_rules import (
     evaluate_auto_rules,
 )
 
+Settings = settings_module.Settings
+
 # ---------------------------------------------------------------------------
 # _load_yaml_rules
 # ---------------------------------------------------------------------------
@@ -157,8 +159,8 @@ def test_evaluate_auto_rules_db_precedence_over_file(
 def _patched_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> str:
     """Apply migrations on a fresh sqlite DB and patch the global db settings to it."""
     import stigmem_node.db as db_mod
-    from stigmem_node.db import apply_migrations
-    from stigmem_node.settings import Settings
+
+    apply_migrations = db_mod.apply_migrations
 
     db_file = str(tmp_path / "db.sqlite")
     apply_migrations(db_path=db_file)

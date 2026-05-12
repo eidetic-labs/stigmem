@@ -36,7 +36,6 @@ from fastapi.testclient import TestClient
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.db import apply_migrations
 from stigmem_node.identity.capability import CapabilityTokenError, verify_token
 from stigmem_node.identity.manifest import (
     ManifestError,
@@ -54,7 +53,9 @@ from stigmem_node.identity.transparency_log import (
     _OffLog,
 )
 from stigmem_node.main import create_app
-from stigmem_node.settings import Settings
+
+apply_migrations = db_mod.apply_migrations
+Settings = settings_module.Settings
 
 # ---------------------------------------------------------------------------
 # Key helpers

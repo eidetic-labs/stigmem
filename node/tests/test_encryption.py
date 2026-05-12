@@ -27,9 +27,12 @@ from pathlib import Path
 
 import pytest
 
-from stigmem_node.settings import Settings
+import stigmem_node.settings as settings_module
 from stigmem_node.storage import make_backend
 from stigmem_node.storage.encryption import _reset_key_cache, derive_key, load_key
+
+Settings = settings_module.Settings
+
 
 _MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
 

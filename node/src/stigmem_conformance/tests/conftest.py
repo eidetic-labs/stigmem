@@ -27,11 +27,13 @@ from typing import NamedTuple
 import pytest
 from fastapi.testclient import TestClient
 
-from stigmem_node.settings import Settings
+import stigmem_node.settings as settings_module
+
+Settings = settings_module.Settings
+
 
 _MIGRATIONS_DIR = (
-    Path(__file__).resolve().parent.parent.parent.parent  # node/src
-    .parent  # node
+    Path(__file__).resolve().parent.parent.parent.parent.parent  # node/src  # node
     / "migrations"
 )
 
@@ -76,6 +78,7 @@ _PATCHABLE_MODULES = [
 
 def _get_extra_modules() -> list[object]:
     import contextlib
+
     mods: list[object] = []
     for name in _PATCHABLE_MODULES:
         with contextlib.suppress(ImportError):
@@ -190,6 +193,7 @@ def _build_client(
     # Drop Postgres schema to clean up; best-effort, CI job isolation handles the rest.
     if backend_name == "postgres":
         import logging as _log
+
         try:
             import psycopg2
 

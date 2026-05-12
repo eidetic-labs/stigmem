@@ -20,7 +20,10 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from stigmem_node.auth import create_api_key
+import stigmem_node.auth as auth_mod
+
+create_api_key = auth_mod.create_api_key
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -1068,9 +1071,10 @@ def admin_client(tmp_db: str, backend: str) -> TestClient:
     """A test client with full admin permissions (read+write+federate)."""
     import stigmem_node.auth as auth_mod
     import stigmem_node.settings as settings_mod
+
+    Settings = settings_mod.Settings
     from stigmem_node import db as db_mod
     from stigmem_node.main import create_app
-    from stigmem_node.settings import Settings
 
     original = settings_mod.settings
     s = Settings(db_path=tmp_db, auth_required=False)

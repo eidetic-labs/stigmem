@@ -835,7 +835,8 @@ class TestMaliciousPeer:
     ) -> tuple[str, str, str]:
         """Register an active peer with push enabled. Returns (node_b_id, pub, priv)."""
         import stigmem_node.settings as _settings_mod
-        from stigmem_node.settings import Settings
+
+        Settings = _settings_mod.Settings
 
         # Enable push for this test
         original = _settings_mod.settings

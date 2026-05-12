@@ -300,10 +300,12 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
     from fastapi import HTTPException
 
     import stigmem_node.db as db_mod
+
+    apply_migrations = db_mod.apply_migrations
     import stigmem_node.settings as settings_module
-    from stigmem_node.db import apply_migrations
+
+    Settings = settings_module.Settings
     from stigmem_node.peer_auth import verify_peer_token
-    from stigmem_node.settings import Settings
 
     with tempfile.TemporaryDirectory() as tmpdir:
         db_file = str(Path(tmpdir) / "nonce_fuzz.db")

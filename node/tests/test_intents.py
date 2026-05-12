@@ -277,13 +277,14 @@ class TestIntentAuth:
 
     def test_read_only_key_forbidden_on_post(self, tmp_db: str):
         import stigmem_node.settings as sm
-        from stigmem_node.auth import create_api_key
         from stigmem_node.main import create_app
 
         original = sm.settings
         test_settings = sm.Settings(db_path=tmp_db, auth_required=True, node_url="http://t")
         sm.settings = test_settings  # type: ignore
         import stigmem_node.auth as am
+
+        create_api_key = am.create_api_key
         import stigmem_node.db as dm
 
         am.settings = test_settings  # type: ignore

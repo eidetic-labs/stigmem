@@ -32,6 +32,7 @@ from cryptography.hazmat.primitives.serialization import (
     PublicFormat,
 )
 
+import stigmem_node.db as db_mod
 from stigmem_node.identity.capability import (
     _DUAL_TRUST_DAYS,
     CapabilityTokenError,
@@ -53,6 +54,9 @@ from stigmem_node.identity.manifest import (
     verify_manifest,
     verify_rotation_chain,
 )
+
+apply_migrations = db_mod.apply_migrations
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -154,8 +158,6 @@ def _make_token_body(
 
 def _setup_db(tmp_path: Path) -> tuple[sqlite3.Connection, str]:
     """Create a minimal DB with the capability_tokens table. Returns (conn, db_path)."""
-    from stigmem_node.db import apply_migrations
-
     db_path = str(tmp_path / "test.db")
     apply_migrations(db_path=db_path)
     conn = sqlite3.connect(db_path)
@@ -278,7 +280,8 @@ class TestRotateKeyWithLocalTL:
         manifest_a = _make_manifest(priv_a, pub_a)
 
         import stigmem_node.settings as settings_module
-        from stigmem_node.settings import Settings
+
+        Settings = settings_module.Settings
 
         orig = settings_module.settings
         settings_module.settings = Settings(tl_backend="local", tl_local_path=str(tl_path))  # type: ignore[assignment]
@@ -302,7 +305,8 @@ class TestRotateKeyWithLocalTL:
         manifest_a = _make_manifest(priv_a, pub_a)
 
         import stigmem_node.settings as settings_module
-        from stigmem_node.settings import Settings
+
+        Settings = settings_module.Settings
 
         orig = settings_module.settings
         settings_module.settings = Settings(tl_backend="local", tl_local_path=str(tl_path))  # type: ignore[assignment]
@@ -314,7 +318,6 @@ class TestRotateKeyWithLocalTL:
             )
         finally:
             settings_module.settings = orig  # type: ignore[assignment]
-
 
         entry = result.rotation_log_entry
         # Re-sign with old key and compare — proves rotation_sig is by old key
@@ -382,7 +385,8 @@ class TestPath1SingleRotation:
 
         import stigmem_node.db as db_mod
         import stigmem_node.settings as settings_module
-        from stigmem_node.settings import Settings
+
+        Settings = settings_module.Settings
 
         orig = settings_module.settings
         settings_module.settings = Settings(db_path=db_path)  # type: ignore[assignment]
@@ -678,7 +682,8 @@ class TestPath4MidFlightFederationHandshake:
 
         import stigmem_node.db as db_mod
         import stigmem_node.settings as settings_module
-        from stigmem_node.settings import Settings
+
+        Settings = settings_module.Settings
 
         orig = settings_module.settings
         settings_module.settings = Settings(db_path=db_path)  # type: ignore[assignment]
@@ -724,7 +729,8 @@ class TestPath4MidFlightFederationHandshake:
 
         import stigmem_node.db as db_mod
         import stigmem_node.settings as settings_module
-        from stigmem_node.settings import Settings
+
+        Settings = settings_module.Settings
 
         orig = settings_module.settings
         settings_module.settings = Settings(db_path=db_path)  # type: ignore[assignment]

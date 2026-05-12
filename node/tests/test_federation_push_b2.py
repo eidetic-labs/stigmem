@@ -39,9 +39,10 @@ from stigmem_node.db import apply_migrations
 from stigmem_node.identity.manifest import OrgManifest, manifest_to_dict, sign_manifest
 from stigmem_node.main import create_app
 
+Settings = settings_module.Settings
+
 # Re-export Settings from the module-level import to satisfy the
 # github-code-quality "imported with both styles" check.
-Settings = settings_module.Settings
 
 # ---------------------------------------------------------------------------
 # Helpers (mirror test_phase8_identity helpers)

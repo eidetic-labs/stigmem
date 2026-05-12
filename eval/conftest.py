@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import importlib
 import os
 import sys
 from pathlib import Path
@@ -38,13 +39,13 @@ def eval_node():
     # Import here so missing deps produce a clear skip message.
     try:
         import stigmem_node.auth as auth_mod
-        import stigmem_node.db as db_mod
         import stigmem_node.routes.wellknown as wk_mod
-        import stigmem_node.settings as settings_module
         from fastapi.testclient import TestClient
         from stigmem_node.main import create_app
     except ImportError as exc:
         pytest.skip(f"stigmem_node not importable: {exc}")
+    db_mod = importlib.import_module("stigmem_node.db")
+    settings_module = importlib.import_module("stigmem_node.settings")
 
     tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False).name
     original = settings_module.settings
@@ -126,11 +127,11 @@ def auth_eval_node():
 
     try:
         from fastapi.testclient import TestClient
-        from stigmem_node.db import apply_migrations
         from stigmem_node.main import create_app
-        from stigmem_node.settings import Settings
     except ImportError as exc:
         pytest.skip(f"stigmem_node not importable: {exc}")
+    db_mod = importlib.import_module("stigmem_node.db")
+    settings_module = importlib.import_module("stigmem_node.settings")
 
     saved_map: dict[str, object] = {}
     for name, mod in list(sys.modules.items()):
@@ -138,7 +139,7 @@ def auth_eval_node():
             saved_map[name] = getattr(mod, "settings")
 
     tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False).name
-    auth_settings = Settings(
+    auth_settings = settings_module.Settings(
         db_path=tmp,
         storage_backend="sqlite",
         auth_required=True,
@@ -147,7 +148,7 @@ def auth_eval_node():
     for name in saved_map:
         setattr(sys.modules[name], "settings", auth_settings)
 
-    apply_migrations(db_path=tmp)
+    db_mod.apply_migrations(db_path=tmp)
     app = create_app()
 
     with TestClient(app, raise_server_exceptions=False) as tc:

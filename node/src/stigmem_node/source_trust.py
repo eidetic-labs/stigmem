@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import time
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -28,6 +29,23 @@ logger = logging.getLogger("stigmem.source_trust")
 # Cache: { source_uri: (score: float, expires_at: float) }
 _TRUST_CACHE: dict[str, tuple[float, float]] = {}
 _CACHE_TTL_S: float = 60.0
+
+# Cached cutoff for peer-history lookups. Refreshing this once per cache window
+# keeps the rolling 30-day window accurate enough for source-trust scoring
+# without recalculating the timestamp on every fresh trust computation.
+_PEER_HISTORY_CUTOFF_REFRESH_S: float = 60.0
+
+
+@lru_cache(maxsize=2)
+def _peer_history_cutoff_iso_for_bucket(_bucket: int) -> str:
+    from datetime import UTC, datetime, timedelta
+
+    return (datetime.now(UTC) - timedelta(days=30)).isoformat()
+
+
+def _peer_history_cutoff_iso() -> str:
+    refresh_bucket = int(time.monotonic() // _PEER_HISTORY_CUTOFF_REFRESH_S)
+    return _peer_history_cutoff_iso_for_bucket(refresh_bucket)
 
 
 def get_cached_trust(source_uri: str) -> float | None:
@@ -156,11 +174,9 @@ def _identity_strength(source_uri: str) -> float:
 
 def _peer_history(source_uri: str) -> float:
     """Score [0,1] derived from interaction history over the past 30 days."""
-    from datetime import UTC, datetime, timedelta
-
     from .db import db
 
-    cutoff = (datetime.now(UTC) - timedelta(days=30)).isoformat()
+    cutoff = _peer_history_cutoff_iso()
 
     with db() as conn:
         row = conn.execute(

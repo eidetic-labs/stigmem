@@ -17,6 +17,7 @@ import json
 import sqlite3
 import uuid
 from collections.abc import Generator
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -57,6 +58,16 @@ from stigmem_node.main import create_app
 apply_migrations = db_mod.apply_migrations
 Settings = settings_module.Settings
 
+
+@contextmanager
+def _patched_test_settings(test_settings: Settings) -> Generator[None, None, None]:
+    original = settings_module.settings
+    extra = _patch_settings(test_settings)
+    try:
+        yield
+    finally:
+        _restore_settings(original, extra)
+
 # ---------------------------------------------------------------------------
 # Key helpers
 # ---------------------------------------------------------------------------
@@ -94,8 +105,8 @@ def _make_manifest(
         entity_uri=entity_uri,
         key_id=key_id,
         public_key=pub_b64,
-        issued_at=now.isoformat(),
-        expires_at=(now + timedelta(days=days_valid)).isoformat(),
+        issued_at=now.replace(microsecond=0).isoformat(),
+        expires_at=(now + timedelta(days=days_valid)).replace(microsecond=0).isoformat(),
         entities=entities if entities is not None else [entity_uri],
     )
     sign_manifest(m, priv)
@@ -112,7 +123,6 @@ def identity_client(tmp_path: Path) -> Generator[TestClient, None, None]:
     db_file = str(tmp_path / "identity_test.db")
     apply_migrations(db_path=db_file)
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -120,13 +130,11 @@ def identity_client(tmp_path: Path) -> Generator[TestClient, None, None]:
         trust_mode="relaxed",
         tl_backend="off",
     )
-    extra = _patch_settings(test_settings)
 
-    app = create_app()
-    with TestClient(app, raise_server_exceptions=True) as c:
-        yield c
-
-    _restore_settings(original, extra)
+    with _patched_test_settings(test_settings):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            yield c
 
 
 @pytest.fixture()
@@ -134,7 +142,6 @@ def strict_client(tmp_path: Path) -> Generator[TestClient, None, None]:
     db_file = str(tmp_path / "strict_test.db")
     apply_migrations(db_path=db_file)
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -142,13 +149,11 @@ def strict_client(tmp_path: Path) -> Generator[TestClient, None, None]:
         trust_mode="strict",
         tl_backend="off",  # "off" → raises TransparencyLogUnavailable → 503 in strict
     )
-    extra = _patch_settings(test_settings)
 
-    app = create_app()
-    with TestClient(app, raise_server_exceptions=False) as c:
-        yield c
-
-    _restore_settings(original, extra)
+    with _patched_test_settings(test_settings):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=False) as c:
+            yield c
 
 
 # ===========================================================================
@@ -203,8 +208,9 @@ def test_manifest_rotation_events_limit():
     priv, pub_b64, _ = _gen_keypair()
     m = _make_manifest(priv, pub_b64)
     # Inject 101 dummy rotation events (content doesn't matter for length check)
+    event_time = datetime.now(UTC).isoformat()
     m.rotation_events = [
-        RotationEvent(f"k{i}", f"k{i + 1}", pub_b64, datetime.now(UTC).isoformat(), "sig")
+        RotationEvent(f"k{i}", f"k{i + 1}", pub_b64, event_time, "sig")
         for i in range(101)
     ]
     # Re-sign so self-signature is valid
@@ -358,7 +364,6 @@ def test_expired_manifest_rejects_token_issuance(tmp_path: Path):
     db_file = str(tmp_path / "h1_test.db")
     apply_migrations(db_path=db_file)
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -366,9 +371,7 @@ def test_expired_manifest_rejects_token_issuance(tmp_path: Path):
         trust_mode="relaxed",
         tl_backend="off",
     )
-    extra = _patch_settings(test_settings)
-
-    try:
+    with _patched_test_settings(test_settings):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as client:
             priv, pub_b64, _ = _gen_keypair()
@@ -425,8 +428,6 @@ def test_expired_manifest_rejects_token_issuance(tmp_path: Path):
             # H1: expired manifest → 422 (manifest not found or expired)
             assert resp.status_code == 422, resp.text
             assert "expired" in resp.json().get("detail", "").lower()
-    finally:
-        _restore_settings(original, extra)
 
 
 # ===========================================================================
@@ -506,7 +507,7 @@ def test_nonce_uniqueness_enforced(tmp_path: Path):
 
     conn = sqlite3.connect(db_file)
     now = datetime.now(UTC).isoformat()
-    nonce = "a" * 64  # valid 64-char hex
+    nonce = uuid.uuid4().hex + uuid.uuid4().hex  # valid 64-char hex
 
     conn.execute(
         "INSERT INTO capability_tokens "
@@ -539,6 +540,8 @@ def test_nonce_check_constraint_rejects_wrong_format(tmp_path: Path):
         "ABCD" + "a" * 60,  # uppercase → should fail
         "a" * 63,  # too short
         "a" * 65,  # too long
+        "g" * 64,  # non-hex lowercase character → should fail
+        "a" * 63 + "!",  # special character → should fail
     ]
 
     for bad_nonce in bad_nonces:
@@ -564,16 +567,13 @@ def test_quarantine_list_hides_fact_value(tmp_path: Path):
     db_file = str(tmp_path / "quarantine_m3.db")
     apply_migrations(db_path=db_file)
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
         node_url="http://testnode",
         trust_mode="relaxed",
     )
-    extra = _patch_settings(test_settings)
-
-    try:
+    with _patched_test_settings(test_settings):
         # Insert a quarantine garden and a quarantined fact with a sensitive value
         conn = sqlite3.connect(db_file)
         garden_id = str(uuid.uuid4())
@@ -620,8 +620,6 @@ def test_quarantine_list_hides_fact_value(tmp_path: Path):
             assert fact_record["entity"] == "ent:1"
             assert fact_record["relation"] == "rel:secret"
             assert fact_record["quarantine_status"] == "pending"
-    finally:
-        _restore_settings(original, extra)
 
 
 # ===========================================================================
@@ -851,7 +849,6 @@ def test_quarantine_ingest_writes_audit_log_entry(tmp_path: Path):
     conn.commit()
     conn.close()
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -860,65 +857,61 @@ def test_quarantine_ingest_writes_audit_log_entry(tmp_path: Path):
         quarantine_garden_id=garden_id,
         tl_backend="off",
     )
-    settings_module.settings = test_settings  # type: ignore[assignment]
-    auth_mod.settings = test_settings  # type: ignore[assignment]
-    db_mod.settings = test_settings  # type: ignore[assignment]
 
-    try:
-        bust_trust_cache(sender_node_id)
+    with _patched_test_settings(test_settings):
+        try:
+            bust_trust_cache(sender_node_id)
 
-        from stigmem_node.federation_ingest import ingest_fact
+            from stigmem_node.federation_ingest import ingest_fact
 
-        fact_id = str(uuid.uuid4())
-        fact = {
-            "id": fact_id,
-            "entity": "test:entity",
-            "relation": "test:value",
-            "value": {"type": "string", "v": "quarantined-payload"},
-            "source": sender_node_id,
-            "timestamp": now,
-            "hlc": None,
-            "confidence": 1.0,
-            "scope": "public",
-            "valid_until": None,
-        }
+            fact_id = str(uuid.uuid4())
+            fact = {
+                "id": fact_id,
+                "entity": "test:entity",
+                "relation": "test:value",
+                "value": {"type": "string", "v": "quarantined-payload"},
+                "source": sender_node_id,
+                "timestamp": now,
+                "hlc": None,
+                "confidence": 1.0,
+                "scope": "public",
+                "valid_until": None,
+            }
 
-        result = ingest_fact(fact, sender_node_id=sender_node_id)
-        assert result is True, "ingest_fact should return True for a new fact"
+            result = ingest_fact(fact, sender_node_id=sender_node_id)
+            assert result is True, "ingest_fact should return True for a new fact"
 
-        # Verify quarantine_ingest audit entry was written.
-        conn2 = _sqlite3.connect(db_file)
-        conn2.row_factory = _sqlite3.Row
-        row = conn2.execute(
-            "SELECT * FROM fact_audit_log WHERE fact_id = ? AND event_type = 'quarantine_ingest'",
-            (fact_id,),
-        ).fetchone()
-        conn2.close()
+            # Verify quarantine_ingest audit entry was written.
+            conn2 = _sqlite3.connect(db_file)
+            conn2.row_factory = _sqlite3.Row
+            row = conn2.execute(
+                "SELECT * FROM fact_audit_log "
+                "WHERE fact_id = ? AND event_type = 'quarantine_ingest'",
+                (fact_id,),
+            ).fetchone()
+            conn2.close()
 
-        assert row is not None, "fact_audit_log must have a quarantine_ingest entry"
-        assert row["entity_uri"] == "system:federation"
-        assert row["source"] == sender_node_id
-        assert row["oidc_sub"] is None
-        detail = json.loads(row["detail"])
-        assert "trust_score" in detail
-        assert detail["trust_score"] == 0.0
+            assert row is not None, "fact_audit_log must have a quarantine_ingest entry"
+            assert row["entity_uri"] == "system:federation"
+            assert row["source"] == sender_node_id
+            assert row["oidc_sub"] is None
+            detail = json.loads(row["detail"])
+            assert "trust_score" in detail
+            assert detail["trust_score"] == 0.0
 
-        # Verify the fact itself was routed to quarantine.
-        conn3 = _sqlite3.connect(db_file)
-        conn3.row_factory = _sqlite3.Row
-        fact_row = conn3.execute(
-            "SELECT quarantine_status, quarantine_garden_id FROM facts WHERE id = ?",
-            (fact_id,),
-        ).fetchone()
-        conn3.close()
-        assert fact_row is not None
-        assert fact_row["quarantine_status"] == "pending"
-        assert fact_row["quarantine_garden_id"] == garden_id
-    finally:
-        settings_module.settings = original  # type: ignore[assignment]
-        auth_mod.settings = original  # type: ignore[assignment]
-        db_mod.settings = original  # type: ignore[assignment]
-        bust_trust_cache(sender_node_id)
+            # Verify the fact itself was routed to quarantine.
+            conn3 = _sqlite3.connect(db_file)
+            conn3.row_factory = _sqlite3.Row
+            fact_row = conn3.execute(
+                "SELECT quarantine_status, quarantine_garden_id FROM facts WHERE id = ?",
+                (fact_id,),
+            ).fetchone()
+            conn3.close()
+            assert fact_row is not None
+            assert fact_row["quarantine_status"] == "pending"
+            assert fact_row["quarantine_garden_id"] == garden_id
+        finally:
+            bust_trust_cache(sender_node_id)
 
 
 # ===========================================================================
@@ -967,7 +960,6 @@ def signed_identity_client(tmp_path: Path) -> Generator[tuple[TestClient, str, s
     priv, pub_b64, priv_b64 = _gen_keypair()
     issuer = "anon:trusted"  # matches auth_required=False entity_uri
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -976,17 +968,15 @@ def signed_identity_client(tmp_path: Path) -> Generator[tuple[TestClient, str, s
         tl_backend="off",
         node_private_key=priv_b64,
     )
-    extra = _patch_settings(test_settings)
 
-    app = create_app()
-    with TestClient(app, raise_server_exceptions=True) as client:
-        # Register issuer manifest under 'anon:trusted' so the route's H-SEC-1 guard passes
-        m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
-        resp = client.put("/v1/federation/manifest", json=manifest_to_dict(m))
-        assert resp.status_code == 200, resp.text
-        yield client, issuer, priv_b64
-
-    _restore_settings(original, extra)
+    with _patched_test_settings(test_settings):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as client:
+            # Register issuer manifest under 'anon:trusted' so the route's H-SEC-1 guard passes
+            m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
+            resp = client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+            assert resp.status_code == 200, resp.text
+            yield client, issuer, priv_b64
 
 
 def test_signed_token_has_token_version_and_signature(
@@ -1153,7 +1143,6 @@ def test_capability_issuance_writes_audit_log(tmp_path: Path) -> None:
     db_file = str(tmp_path / "audit_issue.db")
     apply_migrations(db_path=db_file)
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -1161,9 +1150,8 @@ def test_capability_issuance_writes_audit_log(tmp_path: Path) -> None:
         trust_mode="relaxed",
         tl_backend="off",
     )
-    extra = _patch_settings(test_settings)
 
-    try:
+    with _patched_test_settings(test_settings):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as client:
             priv, pub_b64, _ = _gen_keypair()
@@ -1198,8 +1186,6 @@ def test_capability_issuance_writes_audit_log(tmp_path: Path) -> None:
         detail = json.loads(row["detail"])
         assert detail["verb"] == "write"
         assert detail["issuer"] == issuer
-    finally:
-        _restore_settings(original, extra)
 
 
 def test_capability_revocation_writes_audit_log(tmp_path: Path) -> None:
@@ -1209,7 +1195,6 @@ def test_capability_revocation_writes_audit_log(tmp_path: Path) -> None:
     db_file = str(tmp_path / "audit_revoke.db")
     apply_migrations(db_path=db_file)
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -1217,9 +1202,8 @@ def test_capability_revocation_writes_audit_log(tmp_path: Path) -> None:
         trust_mode="relaxed",
         tl_backend="off",
     )
-    extra = _patch_settings(test_settings)
 
-    try:
+    with _patched_test_settings(test_settings):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as client:
             priv, pub_b64, _ = _gen_keypair()
@@ -1259,8 +1243,6 @@ def test_capability_revocation_writes_audit_log(tmp_path: Path) -> None:
         assert row is not None, "capability_revoked audit row must exist"
         detail = json.loads(row["detail"])
         assert detail["reason"] == "audit-log-test"
-    finally:
-        _restore_settings(original, extra)
 
 
 # ===========================================================================
@@ -1281,7 +1263,6 @@ def push_client(tmp_path: Path) -> Generator[tuple[TestClient, str, str], None, 
     priv, pub_b64, priv_b64 = _gen_keypair()
     issuer = "anon:trusted"  # matches auth_required=False entity_uri
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -1291,31 +1272,29 @@ def push_client(tmp_path: Path) -> Generator[tuple[TestClient, str, str], None, 
         node_private_key=priv_b64,
         federation_push_enabled=True,
     )
-    extra = _patch_settings(test_settings)
 
-    app = create_app()
-    with TestClient(app, raise_server_exceptions=True) as client:
-        # Register manifest so verify_token can resolve issuer
-        m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
-        resp = client.put("/v1/federation/manifest", json=manifest_to_dict(m))
-        assert resp.status_code == 200, resp.text
+    with _patched_test_settings(test_settings):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as client:
+            # Register manifest so verify_token can resolve issuer
+            m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
+            resp = client.put("/v1/federation/manifest", json=manifest_to_dict(m))
+            assert resp.status_code == 200, resp.text
 
-        # Issue a write capability token
-        resp2 = client.post(
-            "/v1/federation/capability-tokens",
-            json={
-                "issuer": issuer,
-                "subject": issuer,
-                "verb": "write",
-                "object": "stigmem://facts",
-            },
-        )
-        assert resp2.status_code == 201, resp2.text
-        token_json = resp2.json()["token_json"]
+            # Issue a write capability token
+            resp2 = client.post(
+                "/v1/federation/capability-tokens",
+                json={
+                    "issuer": issuer,
+                    "subject": issuer,
+                    "verb": "write",
+                    "object": "stigmem://facts",
+                },
+            )
+            assert resp2.status_code == 201, resp2.text
+            token_json = resp2.json()["token_json"]
 
-        yield client, issuer, token_json
-
-    _restore_settings(original, extra)
+            yield client, issuer, token_json
 
 
 def test_push_facts_capability_token_accepted(
@@ -1515,7 +1494,6 @@ def test_verify_endpoint_valid_signed_token(tmp_path: Path) -> None:
     db_file = str(tmp_path / "verify_ep_test.db")
     apply_migrations(db_path=db_file)
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -1524,9 +1502,8 @@ def test_verify_endpoint_valid_signed_token(tmp_path: Path) -> None:
         tl_backend="off",
         node_private_key=priv_b64,
     )
-    extra = _patch_settings(test_settings)
 
-    try:
+    with _patched_test_settings(test_settings):
         # auth_required=False → identity.entity_uri = "anon:trusted"; BOLA guard
         # requires issuer == entity_uri so we use that as both issuer and subject.
         issuer = "anon:trusted"
@@ -1559,8 +1536,6 @@ def test_verify_endpoint_valid_signed_token(tmp_path: Path) -> None:
             assert resp.status_code == 200, resp.text
             data = resp.json()
             assert data["valid"] is True, data
-    finally:
-        _restore_settings(original, extra)
 
 
 def test_verify_endpoint_revoked_token_invalid(tmp_path: Path) -> None:
@@ -1592,7 +1567,6 @@ def test_verify_endpoint_revoked_token_invalid(tmp_path: Path) -> None:
     db_file = str(tmp_path / "verify_rev_test.db")
     apply_migrations(db_path=db_file)
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -1601,9 +1575,8 @@ def test_verify_endpoint_revoked_token_invalid(tmp_path: Path) -> None:
         tl_backend="off",
         node_private_key=priv_b64,
     )
-    extra = _patch_settings(test_settings)
 
-    try:
+    with _patched_test_settings(test_settings):
         # auth_required=False → identity.entity_uri = "anon:trusted"; BOLA guard
         # requires issuer == entity_uri so we use that as both issuer and subject.
         issuer = "anon:trusted"
@@ -1647,8 +1620,6 @@ def test_verify_endpoint_revoked_token_invalid(tmp_path: Path) -> None:
             data = resp.json()
             assert data["valid"] is False
             assert "revoked" in data.get("reason", "").lower()
-    finally:
-        _restore_settings(original, extra)
 
 
 def test_verify_endpoint_missing_body_returns_422(tmp_path: Path) -> None:
@@ -1656,7 +1627,6 @@ def test_verify_endpoint_missing_body_returns_422(tmp_path: Path) -> None:
     db_file = str(tmp_path / "verify_422.db")
     apply_migrations(db_path=db_file)
 
-    original = settings_module.settings
     test_settings = Settings(
         db_path=db_file,
         auth_required=False,
@@ -1664,12 +1634,9 @@ def test_verify_endpoint_missing_body_returns_422(tmp_path: Path) -> None:
         trust_mode="relaxed",
         tl_backend="off",
     )
-    extra = _patch_settings(test_settings)
 
-    try:
+    with _patched_test_settings(test_settings):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as client:
             resp = client.post("/v1/federation/capability-tokens/verify", json={})
             assert resp.status_code == 422, resp.text
-    finally:
-        _restore_settings(original, extra)

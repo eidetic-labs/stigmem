@@ -173,9 +173,15 @@ def test_start_span_enabled_records_exception_when_otel_trace_present() -> None:
     tracing_mod._OTEL_ENABLED = True
     tracing_mod._tracer = tracer
 
-    with pytest.raises(ValueError, match="explode"), tracing_mod.start_span("op"):
-        raise ValueError("explode")
+    caught: ValueError | None = None
+    try:
+        with tracing_mod.start_span("op"):
+            raise ValueError("explode")
+    except ValueError as exc:
+        caught = exc
 
+    assert caught is not None
+    assert str(caught) == "explode"
     assert any(isinstance(e, ValueError) for e in tracer.last_span.recorded_exceptions)
     assert tracer.last_span.status is not None
 

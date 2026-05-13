@@ -221,13 +221,13 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **How would you know?** Monitor HLC values in federation-ingested facts. A large spike in the HLC from a single peer is a signal.
 
-**Current protection status:** **Open until v0.9.0bN beta series** (R-19). The HLC implementation in v0.9.0a1 clamps skew but there is no protocol-level normative bound on accepted HLC drift across the federation. Mitigation in v0.9.0bN beta series per [ADR-004](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/004-federation-observability.md):
+**Current protection status:** **Mitigated on main for v0.9.0a2** (R-19). Federation ingest rejects remote HLC wall times outside configured future/past skew bounds before fact insertion. The mitigation follows [ADR-004](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/004-federation-observability.md):
 
-- **Bounded-skew enforcement** — reject inbound HLC values >5 minutes ahead of local. Configurable via `STIGMEM_HLC_MAX_SKEW_SECONDS`.
+- **Bounded-skew enforcement** — reject inbound HLC values >5 minutes ahead of local. Configurable via `STIGMEM_FEDERATION_HLC_MAX_FUTURE_SKEW_S`; past skew defaults to 30 days via `STIGMEM_FEDERATION_HLC_MAX_PAST_SKEW_S`.
 - **`peer_hlc_anomaly` audit event** — emitted when a peer's drift exceeds threshold; per-peer drift tracking surfaces in the audit log.
 - **Concrete operator alert threshold** — alert when a single peer's average HLC advance per replication exceeds 60 seconds, or when `peer_hlc_anomaly` events from a single peer exceed 5/hour. See [ADR-004 § Layer 2 Alerts](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/004-federation-observability.md) for the full alert taxonomy.
 
-Until R-19's mitigation ships, federation operators must monitor HLC drift out-of-band (custom log analysis or Prometheus metrics on per-peer HLC values).
+Operators running archival backfills who temporarily relax the past-skew bound must monitor `peer_hlc_anomaly` events and restore the bound afterward.
 
 ---
 
@@ -691,7 +691,7 @@ Until those ship, operators rely on out-of-band trust signals.
 | 2.1 Peer impersonation | R-01 | Mitigated | Enable mTLS; do not run federation over plain TLS |
 | 2.2 Capability token replay | R-06 | Mitigated | No action needed; persistent nonce cache enforced |
 | 2.3 Trust score / `valid_until` inflation | R-18 | Open (Low) | Monitor for unusual federation ingest patterns |
-| 2.4 HLC clock manipulation | T2-T2 | No normative bound | Monitor HLC drift in federated deployments |
+| 2.4 HLC clock manipulation | R-19 | Mitigated | Monitor `peer_hlc_anomaly` events, especially if archival backfills relax the past-skew bound |
 | 3.1 SQLite file exfiltration | R-04 | Accepted | Enable SQLCipher for regulated data |
 | 3.2 libSQL cloud interception | R-08 | Accepted | Use Turso TLS; review data residency settings |
 | 4.1 Rekor unavailability | T5-D1 | Operational | Monitor Rekor availability; consider self-hosted Rekor for HA |

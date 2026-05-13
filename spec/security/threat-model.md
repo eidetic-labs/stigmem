@@ -1,7 +1,7 @@
 # Stigmem Threat Model
 
-**Revision:** 2.2 — v0.9.0a2 hardening-in-progress (2026-05-13)
-**Status:** Current. Re-versioned from Rev 2.0 to v0.9.0a1 baseline per [ADR-001](../../docs/adr/001-versioning.md) + [ADR-019](../../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). pre-reset hardening evidence carried forward; R-19 through R-23 added; STRIDE residual columns refreshed; ADR-003 / ADR-007 / ADR-016 cross-references added. Rev 2.2 records the Phase B HLC-skew hardening that is queued for v0.9.0a2.
+**Revision:** 2.4 — Phase B risk-register status review (2026-05-13)
+**Status:** Current. Re-versioned from Rev 2.0 to v0.9.0a1 baseline per [ADR-001](../../docs/adr/001-versioning.md) + [ADR-019](../../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). pre-reset hardening evidence carried forward; R-19 through R-23 added; STRIDE residual columns refreshed; ADR-003 / ADR-007 / ADR-016 cross-references added. Rev 2.4 records the upstream-validation F-09 status review for R-19 through R-22.
 **Previous revisions:** 2.0 (2026-05-05, retracted-label posture preserved as historical context); 1.0 — pre-reset hardening (2026-05-04) — archived.
 **Applies to:** Stigmem v0.9.0a1 and reference node implementation.
 **Spec cross-reference:** §19 (Federation Trust), §20 (Recall & Graph), §21 (Lazy Instruction Discovery), §22 (Security Hardening), §23 (RTBF Tombstones), §24 (Time-Travel Queries), §25 (Content-Addressed Fact IDs).
@@ -10,7 +10,7 @@
 
 - **Pre-reset hardening closed:** R-01 (mTLS), R-02 (quotas), R-03 (key max-age), R-06 (replay fuzz), R-09 (audit log), R-10 (key-rotation log), R-11 (container), R-12 (agent quota), R-14 (capability token validation) all **Mitigated** — code shipped in the pre-reset hardening PR and verified in `tls.py`, `rate_limit.py`, `auth.py`, `audit_event.py`, `identity/key_rotation.py`, `identity/capability.py`, `Dockerfile`, and corresponding test suites.
 - **Phase B HLC hardening closed on main for v0.9.0a2:** R-19 is **Mitigated** by bounded inbound remote-HLC skew checks at federation ingest, `peer_hlc_anomaly` audit events, and regression tests for far-future and far-past remote HLC values.
-- **Auth documentation corrected:** §4 assumption 2 and T1-S1 previously stated "Argon2id" but implementation uses SHA-256 (`hashlib.sha256`). Keys are UUID4-derived (128-bit entropy), so offline brute-force is infeasible. Risk remains Low; documentation corrected to match code.
+- **Auth storage hardened:** §4 assumption 2 and T1-S1 now reflect ADR-007 Argon2id hashing for new API keys, with dual-mode legacy SHA-256 verification and opportunistic rehash during the v0.9.x migration window.
 - **New TB-9 added:** Lazy Instruction Discovery (§21) introduces a new trust boundary between agent runtimes and the instruction recall path.
 - **New risks R-15–R-18:** v2.0 sections §21–§25 introduce four new risks: instruction-scope injection (R-15), tombstone-based DoS (R-16), legal-hold historical data exposure (R-17), and CID field-exclusion tampering (R-18).
 
@@ -312,6 +312,24 @@ version-introduced metadata, and a review decision.
 - **Residual** — partially mitigated; residual risk documented and accepted.
 - **Accepted** — risk acknowledged; no planned mitigation for the stated reason.
 
+### Risk ownership and colocation queue
+
+Upstream validation F-09 specifically checked R-19 through R-22. Their current
+ownership is:
+
+| Risk | Current status | Ownership / colocation |
+|---|---|---|
+| R-19 | Mitigated | Protocol-level, cross-cutting federation risk. Evidence is recorded in `spec/security/evidence-registry.json`; no per-feature `security.md` owner. |
+| R-20 | Accepted | Protocol-level operator opt-in risk for cloud embedding. Tracked in the unified register and experimental feature index; no v0.9.x mitigation planned. |
+| R-21 | Open | Protocol-level cross-cutting risk. Per ADR-018, contributor notes are queued for `experimental/lazy-instruction-discovery/security.md` and `experimental/memory-garden-acl/security.md` when those per-feature security files are authored. |
+| R-22 | Open | Protocol-level release-engineering risk. Stays in this register until the v1.0.0rcN signed-release pipeline lands. |
+
+Per-feature owned risks queued for colocation remain R-15
+(`experimental/lazy-instruction-discovery/security.md`) and R-16/R-17
+(`experimental/tombstones/security.md`). R-18 and R-21 are intentionally
+protocol-level per ADR-018 because CIDs are core and the worm vector is
+structurally cross-cutting.
+
 ---
 
 ## 8. Mitigations Summary
@@ -325,14 +343,14 @@ version-introduced metadata, and a review decision.
 | R-03 | Enforced key max-age (`expires_at`); rotation runbook | §22.2 | `auth.py:113`; `key_rotation.py`; `test_phase12_key_rotation.py` (799 lines) |
 | R-05 | Recall-time content sanitizer + fuzz-tested replay protection | §19.7, §22.5 | `test_phase12_replay_fuzz.py` (394 lines) |
 | R-06 | Fuzz tests on federation replay protection; nonce cache survival test | §22.5 | `test_phase12_replay_fuzz.py` |
-| R-09 | 13-event-type audit log with WAL ordering and 90-day retention | §22.3 | `audit_event.py`; `routes/admin_audit.py`; `test_admin_audit.py` (205 lines) |
+| R-09 | 14-event-type audit log with WAL ordering and 90-day retention | §22.3 | `audit_event.py`; `routes/admin_audit.py`; `test_admin_audit.py` (205 lines) |
 | R-10 | `key_rotation` log entry mandatory on every rotation; logged before activation | §22.2.3 | `key_rotation.py` |
 | R-11 | Distroless base image; non-root UID 1000; read-only fs; seccomp | §22.6 | `Dockerfile`; Helm chart |
 | R-12 | Per-agent quota dimension (same as R-02) | §22.4 | Same as R-02 |
 | R-14 | Normative verb/object validation at capability token admission | §19.3.3 | `identity/capability.py` |
 | R-19 | Bounded inbound remote-HLC skew with `peer_hlc_anomaly` audit evidence | §22.5 | `hlc.py`; `federation_ingest.py`; `test_failure_modes.py` |
 
-### 8.2 Open risks — v2.0 (require follow-up)
+### 8.2 Open risks — require follow-up
 
 | Risk | Recommended mitigation | Priority |
 |---|---|---|
@@ -340,6 +358,9 @@ version-introduced metadata, and a review decision.
 | R-16 | Document tombstone-DoS runbook; require second admin approval for tombstone issuance on entity URIs with >N dependent agents | Medium |
 | R-17 | Add integration test asserting that non-admin keys cannot access legal-hold `as_of` facts; add operator runbook for legal-hold management | Medium |
 | R-18 | Add integration test: assert federation ingest rejects `valid_until` extension and local `source_trust` re-computation; link to §25.2.1 | Low |
+| R-21 | Implement ADR-003 structural capability separation plus per-session read/write graph isolation and outbound replication exclusion for transitively recalled facts | High |
+| R-22 | Ship Sigstore-signed releases, reproducible builds, SBOM publication, and Rekor entries for every release artifact | High |
+| R-23 | Implement ADR-016 storage immutability stack and verification on cross-org reads | High |
 
 ---
 
@@ -359,36 +380,33 @@ Pre-reset hardening is complete. The following risks remain in the v0.9.0a1 base
 
 4. **Cloud embedding data residency (R-13)** is accepted for opt-in cloud embedding. Operators must review data classification before enabling.
 
-5. **HLC cursor manipulation (R-19)** is mitigated on main for v0.9.0a2 by bounded inbound remote-HLC skew checks and `peer_hlc_anomaly` audit events. Operators running archival backfills who disable the past-skew bound must monitor anomaly events and restore the bound afterward.
-
 ### 9.2 New residual risks from v2.0 features
 
-6. **Instruction-scope write authority (R-15)** is the highest-priority new risk. Any key with `write` permission to `instruction:` scope can author agent instructions. Until a dedicated `instruction_write` permission tier exists, operators must treat `instruction:` write grants as admin-equivalent and audit them accordingly.
+5. **Instruction-scope write authority (R-15)** is the highest-priority new risk. Any key with `write` permission to `instruction:` scope can author agent instructions. Until a dedicated `instruction_write` permission tier exists, operators must treat `instruction:` write grants as admin-equivalent and audit them accordingly.
 
-7. **Tombstone DoS (R-16)** is irreversible without a `TombstoneRevocation` record. Admin key compromise that leads to tombstone issuance cannot be automatically remediated. Operators must rotate admin keys immediately on suspected compromise.
+6. **Tombstone DoS (R-16)** is irreversible without a `TombstoneRevocation` record. Admin key compromise that leads to tombstone issuance cannot be automatically remediated. Operators must rotate admin keys immediately on suspected compromise.
 
-8. **Legal-hold data exposure (R-17)** means RTBF-tombstoned data with `legal_hold: true` remains accessible via time-travel queries to admin key holders. Data subjects should be informed that legal holds preserve historical data for lawful purposes.
+7. **Legal-hold data exposure (R-17)** means RTBF-tombstoned data with `legal_hold: true` remains accessible via time-travel queries to admin key holders. Data subjects should be informed that legal holds preserve historical data for lawful purposes.
 
-9. **CID field-exclusion tampering (R-18)** is a protocol-level correctness concern: `valid_until` extension and `source_trust` inflation by federation peers must be rejected locally per §25.2.1. Integration test coverage is needed to confirm this invariant holds in the implementation.
+8. **CID field-exclusion tampering (R-18)** is a protocol-level correctness concern: `valid_until` extension and `source_trust` inflation by federation peers must be rejected locally per §25.2.1. Integration test coverage is needed to confirm this invariant holds in the implementation.
 
-10. **HLC manipulation (R-19)** is unmitigated in v0.9.0a1; operators running federated deployments must monitor HLC drift per peer. Bounded-skew enforcement is targeted for v0.9.0bN beta series.
+9. **Embedding poisoning (R-20)** is accepted for cloud-embedding deployments. Local nomic-embed (default) is not affected. Operators enabling cloud embedding accept that adversarial vector manipulation cannot be detected at the node layer in v0.9.0a1.
 
-11. **Embedding poisoning (R-20)** is accepted for cloud-embedding deployments. Local nomic-embed (default) is not affected. Operators enabling cloud embedding accept that adversarial vector manipulation cannot be detected at the node layer in v0.9.0a1.
+10. **Agent feedback-loop worm (R-21)** is the highest-priority new structural risk in v0.9.0a1. The OpenClaw adapter the pre-reset spec ships with a handoff allowlist that defends against one variant. Full structural mitigation (per-session read/write graph isolation; ADR-003) ships in the v0.9.0bN beta series.
 
-12. **Agent feedback-loop worm (R-21)** is the highest-priority new structural risk in v0.9.0a1. The OpenClaw adapter the pre-reset spec ships with a handoff allowlist that defends against one variant. Full structural mitigation (per-session read/write graph isolation; ADR-003) ships in the v0.9.0bN beta series.
+11. **Release supply-chain integrity (R-22)** is unmitigated. v0.9.0a1 releases are unsigned; operators cannot cryptographically verify that an installed binary corresponds to a published commit. Sigstore-signed releases are a v1.0.0rcN release-candidate deliverable.
 
-13. **Release supply-chain integrity (R-22)** is unmitigated. v0.9.0a1 releases are unsigned; operators cannot cryptographically verify that an installed binary corresponds to a published commit. Sigstore-signed releases are a v1.0.0rcN release-candidate deliverable.
-
-14. **Admin-level storage tampering (R-23)** is the most severe new structural risk identified in v0.9.0a1. An attacker with admin privileges on a stigmem node can — without ADR-016's mitigations — overwrite stored facts, bypassing ADR-003's prompt-injection trust boundary by silently changing `interpret_as` from `content` to `instruction` at the storage layer. Mitigation is the ADR-016 stack (L1-L5: architectural append-only journal, SQLite triggers, CIDs, local hash chain, Sigstore Rekor anchor). Targeted: the v0.9.0bN beta series. Until ADR-016 lands, operators MUST treat the stigmem node host as a high-trust environment; admin compromise of the host is a critical-severity incident with no architectural mitigation.
+12. **Admin-level storage tampering (R-23)** is the most severe new structural risk identified in v0.9.0a1. An attacker with admin privileges on a stigmem node can — without ADR-016's mitigations — overwrite stored facts, bypassing ADR-003's prompt-injection trust boundary by silently changing `interpret_as` from `content` to `instruction` at the storage layer. Mitigation is the ADR-016 stack (L1-L5: architectural append-only journal, SQLite triggers, CIDs, local hash chain, Sigstore Rekor anchor). Targeted: the v0.9.0bN beta series. Until ADR-016 lands, operators MUST treat the stigmem node host as a high-trust environment; admin compromise of the host is a critical-severity incident with no architectural mitigation.
 
 ---
 
 ## 10. Review and Maintenance
 
 - This threat model is reviewed on every spec revision that introduces a new trust boundary or modifies an existing one.
+- **Rev 2.4 (2026-05-13):** Upstream-validation F-09 status review. Confirmed R-19, R-20, R-21, and R-22 exist in the unified risk register; updated stale rendered-status surfaces after R-19's mitigation landed; recorded R-20 through R-22 in `spec/security/evidence-registry.json`; added explicit risk ownership / per-feature colocation queue notes per ADR-018.
 - **Rev 2.3 (2026-05-13):** Acknowledged-risk triage for CodeQL [alert #34](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/34) (`py/weak-sensitive-data-hashing`) on `auth.py:67`'s `_legacy_sha256` function. The alert is **not a false positive** — SHA-256 is computationally weak for password hashing — but the function is the legacy verification path of [ADR-007](../../docs/adr/007-argon2id.md)'s dual-mode migration window, deliberately retained so v0.9.0a1-issued API keys remain verifiable while opportunistically re-hashing to Argon2id (`api_key_rehashed` audit event). No new R-XX risk entry: the residual is already captured in §4 Assumption 2 and the T1-S1 / T7-S1 STRIDE rows. Disposition: dismissed in GitHub UI with reason `won't fix`; retirement milestone is v1.0.0 GA (bulk re-hash migration deletes the function). Full rationale in [`audit-triage.md`](audit-triage.md) § "CodeQL — acknowledged risks (ADR-tracked remediation)" and [`SECURITY.md`](../../SECURITY.md) Group C sub-category.
 - **Rev 2.2 (2026-05-11):** CodeQL code-scanning alert triage. 8 open high-severity alerts (7× `py/sql-injection` in conditional SQL-fragment builders within `node/src/stigmem_node/routes/`; 1× `py/polynomial-redos` in `node/src/stigmem_node/storage/postgres_backend.py`) classified as **false positives**. Root cause: taint-analyzer precision gap on Python's conditional-string-fragment assembly and transitive taint into `_pg_translate`'s regex. No new R-XX risk entries — the conditions for exploitation do not exist: every user-supplied value is parameter-bound, every interpolated SQL fragment is a string literal, and the regex inputs are developer-authored migration SQL (not user-flowable). Structural remediation (refactor to constant-SQL pattern; `(? IS NULL OR col = ?)` gating) landed in [PR #117](https://github.com/Eidetic-Labs/stigmem/pull/117); full per-alert rationale persisted in [`SECURITY.md`](../../SECURITY.md#group-c--codeql-static-analysis-alerts-8-alerts-closed-by-structural-refactor) Group C and [`audit-triage.md`](audit-triage.md). The Audit Tooling table in `SECURITY.md` is updated to include CodeQL alongside `pip-audit` / `pnpm audit` / `bandit`.
 - **Rev 2.1 (2026-05-09):** Re-versioned to v0.9.0a1 baseline per ADR-001 + ADR-019; risk register expanded with R-19 (HLC manipulation), R-20 (embedding poisoning), R-21 (agent feedback-loop worm), R-22 (release supply-chain), R-23 (admin-level storage tampering, per ADR-016); §9.2 residual list updated; the pre-reset v1.0-rc snapshot retracted-label posture preserved as historical context. STRIDE residual columns and §1 opening line edits per master-checklist §4.3 P0-3 are staged for follow-up.
 - **Rev 2.0 (2026-05-05) [retracted label]:** pre-reset hardening items closed; spec sections §21–§25 modeled; SHA-256/Argon2id documentation corrected; R-15–R-18 added. Per ADR-001, the v2.0 announcement was withdrawn; the substantive work in this revision (pre-reset hardening closure evidence, R-15–R-18 entries) carries forward to v0.9.0a1.
-- R-15, R-16, R-17, R-18, R-19, R-21, R-22, R-23 are Open and require implementation or documentation follow-up — see §8.2 for recommended mitigations.
+- R-15, R-16, R-17, R-18, R-21, R-22, and R-23 are Open and require implementation or documentation follow-up — see §8.2 for recommended mitigations.
 - Community pen-test findings that fall outside this model's scope should be submitted via the [Community Pen-Test Handbook](../../docs/docs/security/pen-test.md).

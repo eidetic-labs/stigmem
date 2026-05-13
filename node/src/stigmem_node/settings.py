@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     # Nonce window: how long (seconds) a nonce is kept to detect replays
     # (spec §6.6, default 5 min).
     federation_nonce_window_s: int = 300
+    # Maximum accepted remote HLC skew for federated fact ingest. Future skew is
+    # strict by default because it can advance local logical time; past skew is a
+    # wider archival bound and may be set to 0 for one-off historical backfills.
+    federation_hlc_max_future_skew_s: int = 300
+    federation_hlc_max_past_skew_s: int = 2_592_000
     # Allow team-scoped facts to cross federation boundaries
     # (must be explicitly enabled; audit-logged).
     federation_allow_team: bool = False

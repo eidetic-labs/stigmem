@@ -16,7 +16,24 @@ from datetime import UTC, datetime
 from typing import Any
 
 from .db import db
-from .hlc import node_hlc
+from .hlc import HLCRemoteSkewError, node_hlc
+from .metrics import PEER_HLC_ANOMALY
+
+
+class FederationHlcSkewError(ValueError):
+    """Inbound federated fact was rejected because its HLC wall time is implausible."""
+
+    def __init__(self, fact_id: str, sender_node_id: str, cause: HLCRemoteSkewError) -> None:
+        self.fact_id = fact_id
+        self.sender_node_id = sender_node_id
+        self.direction = cause.direction
+        self.skew_ms = cause.skew_ms
+        self.remote_wall_ms = cause.remote_wall_ms
+        self.local_wall_ms = cause.local_wall_ms
+        super().__init__(
+            "remote HLC skew outside configured bound "
+            f"(fact_id={fact_id}, sender={sender_node_id}, direction={self.direction})"
+        )
 
 
 def _encode_v(value: dict[str, Any]) -> str:
@@ -27,6 +44,34 @@ def _encode_v(value: dict[str, Any]) -> str:
     if vtype == "boolean":
         return "true" if v else "false"
     return str(v)
+
+
+def _audit_peer_hlc_anomaly(
+    *,
+    conn: Any,
+    fact_id: str,
+    sender_node_id: str,
+    exc: HLCRemoteSkewError,
+) -> None:
+    from .audit_event import emit
+
+    PEER_HLC_ANOMALY.labels(peer_id=sender_node_id, direction=exc.direction).inc()
+    emit(
+        "peer_hlc_anomaly",
+        entity_uri="system:federation",
+        fact_id=fact_id,
+        source=sender_node_id,
+        detail={
+            "sender_node_id": sender_node_id,
+            "direction": exc.direction,
+            "skew_ms": exc.skew_ms,
+            "remote_wall_ms": exc.remote_wall_ms,
+            "local_wall_ms": exc.local_wall_ms,
+            "max_future_skew_ms": exc.max_future_skew_ms,
+            "max_past_skew_ms": exc.max_past_skew_ms,
+        },
+        conn=conn,
+    )
 
 
 def ingest_fact(
@@ -120,7 +165,28 @@ def ingest_fact(
 
         # Advance HLC (spec §6.3)
         remote_hlc = fact.get("hlc")
-        new_hlc = node_hlc.receive(remote_hlc) if remote_hlc else node_hlc.tick()
+        try:
+            new_hlc = (
+                node_hlc.receive(
+                    remote_hlc,
+                    max_future_skew_ms=settings.federation_hlc_max_future_skew_s * 1000,
+                    max_past_skew_ms=settings.federation_hlc_max_past_skew_s * 1000,
+                )
+                if remote_hlc
+                else node_hlc.tick()
+            )
+        except HLCRemoteSkewError as exc:
+            _audit_peer_hlc_anomaly(
+                conn=conn,
+                fact_id=fact_id,
+                sender_node_id=sender_node_id,
+                exc=exc,
+            )
+            # The fact insert is rejected, but the anomaly audit event is the
+            # security evidence. Commit it before raising so the surrounding
+            # transaction rollback does not erase the rejection trail.
+            conn.commit()
+            raise FederationHlcSkewError(fact_id, sender_node_id, exc) from exc
 
         # Insert the fact with received_from + scope-propagation columns (Migration 004)
         # Phase 8: also store source_trust snapshot + quarantine metadata

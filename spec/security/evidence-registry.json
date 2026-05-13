@@ -150,6 +150,21 @@
       ],
       "review_decision": "accept-as-is",
       "notes": "Evidence records current admission validation; broader capability redesign remains tracked by ADR-003 and Phase B issues."
+    },
+    "R-19": {
+      "title": "Inbound remote-HLC skew bounds",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a2",
+      "implementation_files": [
+        "node/src/stigmem_node/hlc.py",
+        "node/src/stigmem_node/federation_ingest.py",
+        "node/src/stigmem_node/settings.py",
+        "node/src/stigmem_node/metrics.py"
+      ],
+      "test_files": ["node/tests/test_failure_modes.py"],
+      "docs_reference_files": ["spec/security/threat-model.md"],
+      "review_decision": "accept-as-is",
+      "notes": "Federation ingest rejects far-future and far-past remote HLC wall times, writes peer_hlc_anomaly audit evidence, and leaves rejected facts uninserted."
     }
   }
 }

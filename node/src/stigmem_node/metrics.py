@@ -12,6 +12,7 @@ Counters:
   stigmem_contradiction_total{tenant}
   stigmem_federation_ingress_total{peer_id, status}
   stigmem_federation_egress_total{peer_id, status}
+  stigmem_peer_hlc_anomaly_total{peer_id, direction}
   stigmem_subscription_event_total{delivery_type, status}
   stigmem_plugin_hook_fire_total{hook}
   stigmem_plugin_handler_invocation_total{hook, plugin}
@@ -93,6 +94,11 @@ try:
         "stigmem_federation_egress_total",
         "Facts served via federation pull egress",
         ["peer_id", "status"],
+    )
+    PEER_HLC_ANOMALY = Counter(
+        "stigmem_peer_hlc_anomaly_total",
+        "Rejected inbound federation facts with remote HLC skew outside configured bounds",
+        ["peer_id", "direction"],
     )
     SUBSCRIPTION_EVENT = Counter(
         "stigmem_subscription_event_total",
@@ -210,6 +216,7 @@ except ImportError:
     CONTRADICTION = _noop
     FEDERATION_INGRESS = _noop
     FEDERATION_EGRESS = _noop
+    PEER_HLC_ANOMALY = _noop
     SUBSCRIPTION_EVENT = _noop
     PLUGIN_HOOK_FIRE = _noop
     PLUGIN_HANDLER_INVOCATION = _noop

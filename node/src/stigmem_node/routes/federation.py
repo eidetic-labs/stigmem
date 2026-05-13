@@ -35,7 +35,7 @@ from fastapi import (
 
 from ..auth import Identity, resolve_identity
 from ..db import db
-from ..federation_ingest import ingest_fact, write_audit_log
+from ..federation_ingest import FederationHlcSkewError, ingest_fact, write_audit_log
 from ..hlc import node_hlc
 from ..identity.capability import CapabilityTokenError, verify_token
 from ..identity.trust_store import get_peer_manifest
@@ -579,6 +579,8 @@ def _push_fact_with_cap_token(
             identity_strength_boost=0.5,  # §19.4.2 boost for valid capability token
         )
         return True, None
+    except FederationHlcSkewError:
+        return False, {"fact_id": fact.get("id"), "error": "hlc_skew"}
     except Exception:
         return False, {"fact_id": fact.get("id"), "error": "ingest_error"}
 
@@ -646,6 +648,8 @@ def _push_fact_with_peer_token(
             origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
         )
         return True, None
+    except FederationHlcSkewError:
+        return False, {"fact_id": fact.get("id"), "error": "hlc_skew"}
     except Exception:
         return False, {"fact_id": fact.get("id"), "error": "ingest_error"}
 

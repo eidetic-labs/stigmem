@@ -119,7 +119,7 @@ class TestMigrations:
         with pg_backend.connection() as conn:
             rows = conn.execute("SELECT version FROM schema_migrations ORDER BY version").fetchall()
         versions = [r["version"] for r in rows]
-        # All 21 migrations (sorted by stem) should be present.
+        # Sentinel migrations should be present at the current compatibility boundary.
         assert "001_init" in versions
         assert "021_instruction_discovery" in versions
 
@@ -259,7 +259,7 @@ class TestSQLAdaptation:
         assert row["value"] == "updated"
 
     def test_like_pattern_with_percent(self, pg_backend) -> None:
-        """LIKE 'stigmem:%' literals must not be mangled by the % → %% escaping."""
+        """LIKE 'stigmem://%' literals must not be mangled; SQL uses '%%' for escaped percent."""
         fact_id = f"like-test-{uuid.uuid4()}"
         with pg_backend.connection() as conn:
             conn.execute(

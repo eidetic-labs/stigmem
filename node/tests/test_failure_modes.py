@@ -11,6 +11,7 @@ and deterministic.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 import time
 import uuid
@@ -211,6 +212,86 @@ class TestPartialFailure:
         r2 = fed_node.client.get("/v1/facts?entity=test:local")
         assert r2.status_code == 200
         assert r2.json()["total"] == 1
+
+    def test_far_future_hlc_rejected_with_audit(self, fed_node: FedNode) -> None:
+        """Inbound HLC beyond the future skew bound is rejected and audit-logged."""
+        from stigmem_node.federation_ingest import FederationHlcSkewError, ingest_fact
+
+        fact_id = str(uuid.uuid4())
+        future_ms = int(time.time() * 1000) + 301_000
+        fact = {
+            "id": fact_id,
+            "entity": "test:hlc-future",
+            "relation": "test:x",
+            "value": {"type": "string", "v": "future"},
+            "source": "agent:pub",
+            "timestamp": "2026-05-02T00:00:00Z",
+            "hlc": f"{future_ms}.0",
+            "confidence": 1.0,
+            "scope": "public",
+            "valid_until": None,
+        }
+
+        with pytest.raises(FederationHlcSkewError) as caught:
+            ingest_fact(fact, "stigmem://remote-future")
+
+        assert caught.value.direction == "future"
+
+        conn = sqlite3.connect(fed_node.db_path)
+        conn.row_factory = sqlite3.Row
+        try:
+            stored = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_id,)).fetchone()
+            audit = conn.execute(
+                "SELECT * FROM fact_audit_log WHERE event_type = 'peer_hlc_anomaly'"
+            ).fetchone()
+        finally:
+            conn.close()
+
+        assert stored is None
+        assert audit is not None
+        detail = json.loads(audit["detail"])
+        assert detail["direction"] == "future"
+        assert detail["sender_node_id"] == "stigmem://remote-future"
+
+    def test_far_past_hlc_rejected_with_audit(self, fed_node: FedNode) -> None:
+        """Inbound HLC beyond the past skew bound is rejected and audit-logged."""
+        from stigmem_node.federation_ingest import FederationHlcSkewError, ingest_fact
+
+        fact_id = str(uuid.uuid4())
+        past_ms = int(time.time() * 1000) - 2_592_001_000
+        fact = {
+            "id": fact_id,
+            "entity": "test:hlc-past",
+            "relation": "test:x",
+            "value": {"type": "string", "v": "past"},
+            "source": "agent:pub",
+            "timestamp": "2026-05-02T00:00:00Z",
+            "hlc": f"{past_ms}.0",
+            "confidence": 1.0,
+            "scope": "public",
+            "valid_until": None,
+        }
+
+        with pytest.raises(FederationHlcSkewError) as caught:
+            ingest_fact(fact, "stigmem://remote-past")
+
+        assert caught.value.direction == "past"
+
+        conn = sqlite3.connect(fed_node.db_path)
+        conn.row_factory = sqlite3.Row
+        try:
+            stored = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_id,)).fetchone()
+            audit = conn.execute(
+                "SELECT * FROM fact_audit_log WHERE event_type = 'peer_hlc_anomaly'"
+            ).fetchone()
+        finally:
+            conn.close()
+
+        assert stored is None
+        assert audit is not None
+        detail = json.loads(audit["detail"])
+        assert detail["direction"] == "past"
+        assert detail["sender_node_id"] == "stigmem://remote-past"
 
 
 # ---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 # Stigmem Threat Model
 
-**Revision:** 2.1 — v0.9.0a1 baseline (2026-05-09)
-**Status:** Current. Re-versioned from Rev 2.0 to v0.9.0a1 baseline per [ADR-001](../../docs/adr/001-versioning.md) + [ADR-019](../../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). pre-reset hardening evidence carried forward; R-19 through R-23 added; STRIDE residual columns refreshed; ADR-003 / ADR-007 / ADR-016 cross-references added.
+**Revision:** 2.2 — v0.9.0a2 hardening-in-progress (2026-05-13)
+**Status:** Current. Re-versioned from Rev 2.0 to v0.9.0a1 baseline per [ADR-001](../../docs/adr/001-versioning.md) + [ADR-019](../../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). pre-reset hardening evidence carried forward; R-19 through R-23 added; STRIDE residual columns refreshed; ADR-003 / ADR-007 / ADR-016 cross-references added. Rev 2.2 records the Phase B HLC-skew hardening that is queued for v0.9.0a2.
 **Previous revisions:** 2.0 (2026-05-05, retracted-label posture preserved as historical context); 1.0 — pre-reset hardening (2026-05-04) — archived.
 **Applies to:** Stigmem v0.9.0a1 and reference node implementation.
 **Spec cross-reference:** §19 (Federation Trust), §20 (Recall & Graph), §21 (Lazy Instruction Discovery), §22 (Security Hardening), §23 (RTBF Tombstones), §24 (Time-Travel Queries), §25 (Content-Addressed Fact IDs).
@@ -9,6 +9,7 @@
 ### Revision 2.0 change summary
 
 - **Pre-reset hardening closed:** R-01 (mTLS), R-02 (quotas), R-03 (key max-age), R-06 (replay fuzz), R-09 (audit log), R-10 (key-rotation log), R-11 (container), R-12 (agent quota), R-14 (capability token validation) all **Mitigated** — code shipped in the pre-reset hardening PR and verified in `tls.py`, `rate_limit.py`, `auth.py`, `audit_event.py`, `identity/key_rotation.py`, `identity/capability.py`, `Dockerfile`, and corresponding test suites.
+- **Phase B HLC hardening closed on main for v0.9.0a2:** R-19 is **Mitigated** by bounded inbound remote-HLC skew checks at federation ingest, `peer_hlc_anomaly` audit events, and regression tests for far-future and far-past remote HLC values.
 - **Auth documentation corrected:** §4 assumption 2 and T1-S1 previously stated "Argon2id" but implementation uses SHA-256 (`hashlib.sha256`). Keys are UUID4-derived (128-bit entropy), so offline brute-force is infeasible. Risk remains Low; documentation corrected to match code.
 - **New TB-9 added:** Lazy Instruction Discovery (§21) introduces a new trust boundary between agent runtimes and the instruction recall path.
 - **New risks R-15–R-18:** v2.0 sections §21–§25 introduce four new risks: instruction-scope injection (R-15), tombstone-based DoS (R-16), legal-hold historical data exposure (R-17), and CID field-exclusion tampering (R-18).
@@ -173,7 +174,7 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 | T2-S1 | Peer impersonation | Spoofing | Attacker acts as a legitimate peer node, injecting facts | mTLS mutual cert verification (§22.1); SAN ↔ entity_uri binding | Pre-§22.1 deployments lack mTLS (R-01) |
 | T2-S2 | Org manifest spoofing | Spoofing | Attacker publishes a fraudulent manifest under a legitimate entity URI | Ed25519 signature on manifest; Rekor inclusion proof check (§19.2.6) | Rekor check is failure-closed but service may be unavailable |
 | T2-T1 | Replay attack on capability token | Tampering | Attacker replays a previously valid capability token to write facts | Nonce + timestamp window ±5 min (§22.5.2); persistent nonce cache | Nonce cache survives restarts per §22.5.2; fuzz coverage (R-06) |
-| T2-T2 | HLC cursor manipulation | Tampering | Malicious peer sends crafted HLC values to push the local HLC forward | HLC implementation clamps skew | No independent validation of peer HLC claims |
+| T2-T2 | HLC cursor manipulation | Tampering | Malicious peer sends crafted HLC values to push the local HLC forward | Federation ingest rejects remote HLC wall times outside configured future/past skew bounds and emits `peer_hlc_anomaly` audit events | **Mitigated** (R-19). Residual: operators can widen/disable the past-skew bound for archival backfills and must monitor anomaly events. |
 | T2-R1 | Unreported federation events | Repudiation | Federation connect/disconnect events not logged | `federation_connect` audit event (§22.3.1) | **Mitigated** (R-09). `federation_connect` audit event fires on every connect/disconnect. |
 | T2-I1 | Cross-org scope leakage | Info. disclosure | Peer node reads facts beyond its capability token scope | Capability token verb/object validation (§19.3.3) | Partial: §22 amendments strengthen admission checks |
 | T2-D1 | Replication queue flooding | Denial of service | Malicious peer sends a flood of replication requests | `federation_pull` quota (§22.4.2) | **Mitigated** (R-02). Per-peer `federation_pull` quota enforced. |
@@ -298,7 +299,7 @@ version-introduced metadata, and a review decision.
 | R-16 | T7-D2 | Admin key compromise enables tombstone DoS: irreversible entity suppression (§23) | Low | High | Medium | §23.2 | **Open** | Requires admin key. Tombstone requires `TombstoneRevocation` to undo — no self-healing path. Mitigations: admin key rotation (R-03 mitigated); `admin_action` audit event; tombstone audit trail. |
 | R-17 | T7-I1 | Legal-hold tombstone + admin key compromise leaks pre-tombstone historical facts via `as_of` (§24) | Low | High | Medium | §24.3.2 | **Open** | Requires admin key compromise post-tombstone. Legal-hold `as_of` facts are visible only to admin keys; `rtbf_legal_hold_issued` audit event required. Residual: RTBF data subject assumes erasure but erased data exists in time-travel path under legal hold. |
 | R-18 | T7-T3 | Federated peer can extend `valid_until` or supply inflated `source_trust` without changing CID (§25.2.1 exclusion) | Low | Medium | Low | §25.2.1 | **Open** | Spec §25.2.1 mandates local `valid_until` extension rejection and local `source_trust` recomputation. Implementation compliance should be verified in integration tests; no regression test currently covers this path. |
-| R-19 | T2-T2 | Malicious peer manipulates HLC values to push local clock forward; no current normative bound on accepted skew across the federation | Medium | Medium | Medium | §22.5 (proposed) | **Open** | Mitigation pending: bounded-skew enforcement (reject inbound HLC values >5min ahead of local), per-peer drift tracking with `peer_hlc_anomaly` audit event, configurable `STIGMEM_HLC_MAX_SKEW_SECONDS`. Targeted: v0.9.0bN beta series / the v0.9.0bN beta series (federation hardening). |
+| R-19 | T2-T2 | Malicious peer manipulates HLC values to push local clock forward; no current normative bound on accepted skew across the federation | Medium | Medium | Medium | §22.5 | **Mitigated** | Phase B hardening: `HLC.receive()` accepts configured future/past skew bounds; federation ingest rejects out-of-bound remote HLC values before fact insertion, emits `peer_hlc_anomaly`, and increments `stigmem_peer_hlc_anomaly_total`. Default future bound: 300s. Default past bound: 30d; set to 0 only for explicit archival backfill. |
 | R-20 | T8-T1 | Cloud embedding provider returns adversarially-crafted embedding vectors to manipulate recall ranking | Low | Medium | Low | §20.2 | **Accepted** | Operator opt-in only; node layer does not check returned vectors. Operators must classify data and review provider terms before enabling. Periodic local re-embed sampling for divergence detection is a v2.0+ follow-up. |
 | R-21 | T3-S1 (write-side) | Agent feedback-loop worm: an LLM-driven agent compromised via prompt injection (T3-S1) uses its own writer key to assert attacker-chosen facts; those facts replicate across the federation, infecting peer agents and propagating compromise | Medium | High | High | ADR-003, §22 (proposed) | **Open** | Mitigation pending: per-session read/write graph isolation (writer keys cannot write into scopes the agent has read from in the same session); structural channel separation per ADR-003; outbound replication exclusion for transitively-recalled facts. Targeted: v0.9.0bN beta series / the v0.9.0bN beta series (capability redesign). The OpenClaw adapter the pre-reset spec ships with a handoff allowlist that defends against the handoff variant of this attack. |
 | R-22 | T10-S1, T10-T1, T10-R1 | Compromised build pipeline produces a backdoored stigmem release; operators install and run malicious code without an attestation path | Low | Critical | High | §22.7 (proposed) | **Open** | Mitigation pending: Sigstore-signed releases, reproducible builds, SBOM publication, Rekor entries for every release. v1.0.0rcN release-candidate deliverable. |
@@ -329,6 +330,7 @@ version-introduced metadata, and a review decision.
 | R-11 | Distroless base image; non-root UID 1000; read-only fs; seccomp | §22.6 | `Dockerfile`; Helm chart |
 | R-12 | Per-agent quota dimension (same as R-02) | §22.4 | Same as R-02 |
 | R-14 | Normative verb/object validation at capability token admission | §19.3.3 | `identity/capability.py` |
+| R-19 | Bounded inbound remote-HLC skew with `peer_hlc_anomaly` audit evidence | §22.5 | `hlc.py`; `federation_ingest.py`; `test_failure_modes.py` |
 
 ### 8.2 Open risks — v2.0 (require follow-up)
 
@@ -357,7 +359,7 @@ Pre-reset hardening is complete. The following risks remain in the v0.9.0a1 base
 
 4. **Cloud embedding data residency (R-13)** is accepted for opt-in cloud embedding. Operators must review data classification before enabling.
 
-5. **HLC cursor manipulation (T2-T2)** has no current normative bound. Operators running federated deployments should monitor for anomalous HLC drift.
+5. **HLC cursor manipulation (R-19)** is mitigated on main for v0.9.0a2 by bounded inbound remote-HLC skew checks and `peer_hlc_anomaly` audit events. Operators running archival backfills who disable the past-skew bound must monitor anomaly events and restore the bound afterward.
 
 ### 9.2 New residual risks from v2.0 features
 

@@ -102,7 +102,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 | Adapter                             | Status     |
 |-------------------------------------|------------|
-| OpenClaw (`stigmem-openclaw`)       | Preview — published in v0.9.0a1 with the `experimental` flag pending the v0.9.0bN beta series safety hardening + external operator soak per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) |
+| OpenClaw (`stigmem-openclaw`)       | Alpha evaluation only — published in v0.9.0a1, with copy/framing corrections queued for v0.9.0a2 and safety hardening/audit closure pending the v0.9.0aN/beta hardening path per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) |
 | MCP adapter                         | Deferred (`stigmem-mcp` at v0.4.0; not aligned to v0.9.0a1; lives in `adapters/mcp/`) |
 | Obsidian / Obsidian-plugin          | Deferred to `experimental/obsidian-adapter/` |
 | Letta, Zep, Cognee, Gemini, OpenAI-tools, Paperclip | Deferred to `experimental/<adapter>-adapter/` |

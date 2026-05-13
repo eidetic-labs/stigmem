@@ -342,7 +342,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 
 - **`fact_write` patterns from agent keys** — sustained writes outside the agent's normal relation namespace, agent action-rate spikes, recall-loop frequency above baseline. The audit log captures every `fact_write`; a sudden change in pattern from a single agent identity is the signal.
 - **Recall query patterns** — repeated recalls against scopes the agent does not normally read from, or recall queries containing attacker-style strings.
-- **Adapter-level signals (OpenClaw the pre-reset spec):** `low_confidence_anomaly` flag on boot context indicates many recalled facts below the high-confidence floor — a peer may be a write vector for adversarial content.
+- **Adapter-level signals:** OpenClaw remains an alpha connector in v0.9.0a1; watch for boot failures, dropped fact refs, partial handoff writes, and unusual handoff targets. These are warning signals, not complete mitigations.
 - **External system logs** — calls to dangerous tools, network egress to unfamiliar destinations, API errors from operations the agent should not be performing.
 
 **Current protection status:** **Residual** — sanitizer is shipped and fuzz-tested; novel injection patterns remain a residual risk.
@@ -588,7 +588,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 
 **How would you know?**
 - Watch for unusual `fact_write` patterns from agent keys: writes outside the relations the agent normally produces, action-rate spikes, or sustained write loops.
-- The OpenClaw adapter the pre-reset spec logs a `low_confidence_anomaly` flag on boot context when too many recalled facts are below the high-confidence floor — this can be an early signal that a peer is being used as a write vector.
+- Watch OpenClaw adapter logs for boot failures, dropped fact refs, or partial handoff writes. In v0.9.0a1 these are alpha warning signals, not a complete mitigation.
 - Cross-correlate: if multiple agents in your federation simultaneously start writing similar attacker-shaped facts, that is the worm signature.
 
 **How do you recover?**
@@ -599,8 +599,8 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 5. Review your agent-key issuance: any agent that both reads federated content and writes to non-trivial scopes is a worm-propagation candidate. Consider scope splitting.
 
 **Current protection status:** **Open** (R-21, High priority).
-- **OpenClaw the pre-reset spec partial defense:** the new handoff allowlist defends against the handoff variant of this attack — an injected agent cannot delegate to an arbitrary admin entity. This is a structural fix at the adapter layer.
-- **Structural fix at protocol layer:** per-session read/write graph isolation, ADR-003 capability separation, and outbound replication exclusion for transitive recalls are targeted for the v0.9.0bN beta series ( (capability redesign)).
+- **OpenClaw adapter status:** the v0.9.0a1 adapter remains experimental. Handoff allowlisting, fail-closed boot behavior, and partial-write handling are tracked for the v0.9.0a2..aN hardening path before the adapter can be recommended.
+- **Structural fix at protocol layer:** per-session read/write graph isolation, ADR-003 capability separation, and outbound replication exclusion for transitive recalls are targeted for the v0.9.0bN beta series (capability redesign).
 - **Until those land:** issue agent writer keys with the narrowest possible scope, never overlapping the scopes the same agent reads from.
 
 ---
@@ -620,24 +620,21 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 - Without an allowlist, the handoff is accepted; on the admin's next session, the boot pulls `intent:handoff_to`, `intent:handoff_summary`, and `intent:continuation` for the admin entity into the system prompt.
 - The admin's LLM session now operates with attacker-controlled context. Any further actions the admin agent takes can be influenced by the injected handoff.
 
-**What can't they do?** Emit a handoff to a target outside the configured allowlist if the OpenClaw the pre-reset spec+ adapter is used. Calls to `emit_handoff` with non-allowlisted `to_entity` raise `StigmemHandoffError` and never write.
+**What can't they do?** In v0.9.0a1, this adapter does not yet provide a reliable allowlist boundary. The attack is bounded only by the agent key's write permissions and by any operator-side controls outside the adapter.
 
 **How would you know?**
 - The audit log records every `fact_write` for handoff facts. Watch for handoff writes whose `to_entity` is outside your expected delegation graph.
 - The admin agent's session log: handoff content that doesn't correspond to any legitimate prior delegation.
-- The OpenClaw the pre-reset spec adapter logs at WARNING when partial-validation drops fact_refs; sustained partial-validation events from a single source agent is a signal.
+- OpenClaw adapter warnings about dropped fact refs, boot failures, or partial handoff writes are signals that the alpha connector may be operating outside the expected delegation graph.
 
 **How do you recover?**
 1. Identify the injected agent (the one that called `emit_handoff` with the malicious target).
 2. Revoke its writer key.
 3. Retract the handoff facts and any continuation facts it created.
 4. Review the admin's session activity in the window since the malicious handoff was written.
-5. If a pre-reset OpenClaw adapter version is still in use, upgrade to the v0.9.0a1 adapter (the new adapter's allowlist makes this attack structurally impossible).
+5. If OpenClaw is still in use, treat it as an alpha connector and either disable handoff writes or restrict them with operator-side controls until the adapter hardening lands.
 
-**Current protection status:** **Mitigated** in the pre-reset spec OpenClaw adapter via the handoff allowlist (audit finding C4 closed).
-- Configure `allowed_handoff_targets` at adapter construction or via `STIGMEM_OPENCLAW_HANDOFF_ALLOWLIST`.
-- Without an allowlist, all `emit_handoff` calls fail closed — the adapter refuses to operate rather than allowing arbitrary delegation.
-- Operators upgrading from a pre-reset OpenClaw adapter must explicitly configure their allowlist; this is a deliberate breaking change documented in the adapter migration notes.
+**Current protection status:** **Open** for v0.9.0a1. The handoff allowlist and fail-closed behavior are planned for the v0.9.0a2..aN OpenClaw hardening path; until then, do not use OpenClaw handoffs in high-stakes or cross-org agent workflows.
 
 ---
 
@@ -708,8 +705,8 @@ Until those ship, operators rely on out-of-band trust signals.
 | 9.1 Obsidian plugin key exposure | R-07 | Accepted | Issue minimum-scope key; rotate on suspicion |
 | 1.5 Rate limits disabled in production | R-02 (re-opened by misconfig) | Operational | Set non-zero rate limits before production deploy |
 | 4.3 Adversarial cloud embedding vectors | R-20 | Accepted | Stay on offline default; spot-check ranking if cloud-enabled |
-| 5.2 Feedback-loop worm | R-21 | Open (**High**) | Issue narrow-scope writer keys; **upgrade OpenClaw to the pre-reset spec**; await ADR-003 |
-| 5.3 OpenClaw handoff to admin entity | R-21 (handoff variant) | Mitigated in OpenClaw the pre-reset spec | Configure `allowed_handoff_targets` |
+| 5.2 Feedback-loop worm | R-21 | Open (**High**) | Issue narrow-scope writer keys; keep OpenClaw evaluation-only until the a2..aN hardening work lands; await ADR-003 |
+| 5.3 OpenClaw handoff to admin entity | R-21 (handoff variant) | Open in v0.9.0a1 | Disable/restrict handoff writes until adapter allowlisting and fail-closed behavior land |
 | 10.1 Build-pipeline compromise | R-22 | Open (**High**) | Pin versions; verify SHA256; watch advisories until Sigstore ships |
 
 ---

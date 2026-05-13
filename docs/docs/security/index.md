@@ -23,7 +23,10 @@ sidebar_position: 1
 
 **The most-severe new structural risk in v0.9.0a1 is R-23** (admin-level storage tampering): an attacker with admin privileges on a stigmem node can — without [ADR-016](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/016-storage-immutability-enforcement.md)'s mitigations — overwrite stored facts, bypassing [ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)'s prompt-injection trust boundary by silently changing `interpret_as` from `content` to `instruction` at the storage layer. Mitigation is the ADR-016 stack (L1-L5: append-only journal, SQLite triggers, CIDs per [ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md), local hash chain, Sigstore Rekor anchor). Targeted: the v0.9.0bN beta series.
 
-The second-priority new risk is R-21 (agent feedback-loop worm). The OpenClaw the pre-reset spec adapter ships with a handoff allowlist that defends against one variant; the structural fix at the protocol layer (per-session read/write graph isolation) lands in the v0.9.0bN beta series per ADR-003.
+The second-priority new risk is R-21 (agent feedback-loop worm). The OpenClaw
+adapter remains an experimental alpha connector until its audit blockers close;
+handoff-target allowlisting and broader protocol-layer read/write isolation land
+in the v0.9.0aN/beta hardening path.
 
 For the full risk register: see the **[Threat Model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md)** (`spec/security/threat-model.md`).
 

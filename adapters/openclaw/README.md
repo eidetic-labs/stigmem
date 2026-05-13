@@ -4,14 +4,16 @@ Integrates Stigmem with OpenClaw agents. Provides the standard boot handshake
 (pull user prefs + project constraints into context) and write surfaces for
 handoffs, decisions, and escalations.
 
-> **Status:** v1.0.1 — published to ClawHub as
-> [`stigmem-node`](https://clawhub.ai/skills/stigmem-node). Includes
-> security fixes (identity binding, value sanitization) and a bundled
-> `adapter.py` for self-contained skill installs.
+> **Status:** alpha / experimental. The current v0.9.0a1 ClawHub skill is published as
+> [`stigmem-node`](https://clawhub.ai/skills/stigmem-node), but it is an
+> evaluation surface, not a recommended production integration. This source copy
+> is queued for the v0.9.0a2 artifact refresh so future ClawHub docs carry that
+> framing explicitly. The adapter still has open audit findings; see
+> [LIMITATIONS.md §9](../../LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 ## ClawHub skill
 
-The recommended way to use this adapter in an OpenClaw deployment is via the
+For alpha evaluation, install the
 [`stigmem-node` ClawHub skill](https://clawhub.ai/skills/stigmem-node). The skill
 bundles `adapter.py` so no separate package install is required beyond `stigmem-py`,
 and documents the environment variables in a format OpenClaw reads automatically.
@@ -37,15 +39,24 @@ STIGMEM_SOURCE_ENTITY=agent:openclaw      # optional; default: agent:openclaw
 it uniquely identifies the agent deployment, not a shared or generic identifier.
 
 **Untrusted retrieved context** — `boot()` returns facts from an external Stigmem
-node. The adapter sanitizes fact values before formatting them into the system-prompt
-summary, but the summary should be treated as untrusted input in high-stakes
-workflows — an attacker who controls the node can craft fact values to influence
-agent behaviour. Use a private, access-controlled node for sensitive workloads.
+node. The adapter applies presentation-layer escaping before formatting fact values
+into the system-prompt summary, but this is only a partial mitigation, not a prompt
+injection boundary. Treat the summary and `ctx.facts` as untrusted input; do not use
+this adapter in high-stakes or irreversible workflows until the Phase B OpenClaw
+hardening work closes the audit findings.
 
 **API key scope** — Set `STIGMEM_API_KEY` to a least-privilege key scoped only to
 the nodes this agent reads from and writes to. Do not share a key across unrelated
 agent deployments. Rotate keys regularly; revoke via the Stigmem node admin API if
 compromised.
+
+## Known alpha gaps
+
+The OpenClaw audit still has unresolved blocker findings in the v0.9.0a1 adapter:
+fail-open boot behavior, optional API-key handling, unvalidated handoff targets,
+orphan/partial handoff writes, and presentation-layer-only sanitization. These are
+tracked for the v0.9.0a2..aN / beta hardening path. Until then, keep the adapter
+limited to local, private-node evaluation.
 
 ## Changelog
 

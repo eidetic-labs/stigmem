@@ -165,6 +165,33 @@ def extract_version_from_file(file_path: Path, field: str | None) -> str | None:
     return None
 
 
+def extract_pattern(path: Path, pattern: str, group: str = "version") -> str | None:
+    """Extract a version string from text using a regex named capture group."""
+    if not path.exists():
+        return None
+    match = re.search(pattern, path.read_text(), flags=re.MULTILINE)
+    if match is None:
+        return None
+    try:
+        return match.group(group)
+    except IndexError:
+        return None
+
+
+def extract_literal(path: Path) -> Any:
+    """Read a structured file as a literal value for non-version metadata checks."""
+    if not path.exists():
+        return None
+    suffix = path.suffix.lower()
+    if suffix == ".json":
+        return json.loads(path.read_text())
+    if suffix in {".yaml", ".yml"}:
+        return yaml.safe_load(path.read_text())
+    if suffix == ".toml":
+        return tomllib.loads(path.read_text())
+    return path.read_text()
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -198,7 +225,11 @@ def _load_canonical_version() -> tuple[str | None, str | None, str | None]:
         return None, None, f"could not read project.version from {ANCHOR.relative_to(REPO_ROOT)}"
     canonical_key = normalize(canonical)
     if not canonical_key:
-        return None, None, f"anchor version {canonical!r} is not a parseable PEP 440 / semver string"
+        return (
+            None,
+            None,
+            f"anchor version {canonical!r} is not a parseable PEP 440 / semver string",
+        )
     return canonical, canonical_key, None
 
 
@@ -209,6 +240,8 @@ def _entry_skip_reason(entry: dict[str, Any]) -> str | None:
         return f"{sid} (retired {entry['retired']})"
     file_rel = entry.get("file")
     field = entry.get("field")
+    if entry.get("pattern") or "expected" in entry:
+        return None
     if not file_rel or not field:
         return f"{sid} (no file/field; protocol-only)"
     suffix = Path(file_rel).suffix.lower()
@@ -241,7 +274,10 @@ def main() -> int:
     mismatches, skipped, checked = _check_all_surfaces(surfaces, canonical_key, args.verbose)
 
     if mismatches:
-        fail(f"\n{len(mismatches)} mismatch(es) against canonical {canonical} (key={canonical_key}):")
+        fail(
+            f"\n{len(mismatches)} mismatch(es) against canonical "
+            f"{canonical} (key={canonical_key}):"
+        )
         for sid, file_rel, actual, actual_key in mismatches:
             fail(f"  {sid:<32}  {file_rel:<40}  got {actual!r} (key={actual_key})")
         return 1
@@ -276,13 +312,29 @@ def _check_all_surfaces(
 
         sid = entry["id"]
         file_rel = entry["file"]
-        field = entry["field"]
-        actual = extract_version_from_file(REPO_ROOT / file_rel, field)
+        file_path = REPO_ROOT / file_rel
+
+        if "expected" in entry and not entry.get("field") and not entry.get("pattern"):
+            expected = entry["expected"]
+            actual_literal = extract_literal(file_path)
+            checked += 1
+            if verbose:
+                print(f"  {sid:<32}  {file_rel}  =  {actual_literal!r}  expected {expected!r}")
+            if actual_literal != expected:
+                mismatches.append((sid, file_rel, repr(actual_literal), f"expected {expected!r}"))
+            continue
+
+        pattern = entry.get("pattern")
+        if pattern:
+            actual = extract_pattern(file_path, str(pattern), str(entry.get("group", "version")))
+        else:
+            actual = extract_version_from_file(file_path, entry.get("field"))
         actual_key = normalize(actual) if actual else None
 
         checked += 1
         if verbose:
-            print(f"  {sid:<32}  {file_rel}::{field}  =  {actual!r}  → {actual_key}")
+            locator = f"pattern {pattern!r}" if pattern else f"field {entry.get('field')}"
+            print(f"  {sid:<32}  {file_rel}::{locator}  =  {actual!r}  → {actual_key}")
 
         if actual_key != canonical_key:
             mismatches.append((sid, file_rel, actual, actual_key))

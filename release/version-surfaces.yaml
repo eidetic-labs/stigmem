@@ -173,9 +173,10 @@ surfaces:
     kind: internal-protocol
     category: api-metadata
     file: node/src/stigmem_node/main.py
-    field: app_version  # set on FastAPI(version=...) constructor
+    pattern: 'version="(?P<version>[^"]+)"'
     spelling: shorthand
     sort_authority: pep440
+    notes: FastAPI(version=...) constructor argument.
 
   - id: federation-handshake-version
     kind: internal-protocol
@@ -210,6 +211,7 @@ surfaces:
     kind: documentation
     category: prose
     file: README.md
+    pattern: '^> \*\*Status: `(?P<version>v?[^`]+)`'
     spelling: shorthand
     sort_authority: pep440
     notes: Status banner at top of README.
@@ -218,6 +220,7 @@ surfaces:
     kind: documentation
     category: prose
     file: CHANGELOG.md
+    pattern: '^## \[(?P<version>v?0\.\d+\.\d+[abrc]?\d*)\]'
     spelling: shorthand
     sort_authority: pep440
 
@@ -225,6 +228,7 @@ surfaces:
     kind: documentation
     category: prose
     file: LIMITATIONS.md
+    pattern: 'Applies to: (?P<version>v?0\.\d+\.\d+[abrc]?\d*)'
     spelling: shorthand
     sort_authority: pep440
 
@@ -232,6 +236,7 @@ surfaces:
     kind: documentation
     category: prose
     file: SECURITY.md
+    pattern: '^## Security Posture — (?P<version>v?0\.\d+\.\d+[abrc]?\d*)'
     spelling: shorthand
     sort_authority: pep440
 
@@ -239,11 +244,41 @@ surfaces:
     kind: documentation
     category: docs-site
     file: docs/versions.json
+    expected: []
     spelling: shorthand
     sort_authority: pep440
     notes: >-
-      Docusaurus-managed versioned-docs registry. Per-version sidebars under
-      docs/versioned_docs/version-X/ are scope-checked separately.
+      Docusaurus-managed versioned-docs registry. Empty at v0.9.0a1 because
+      the previous versioned-doc snapshots moved under docs/archive/ during
+      the reset; adding a Docusaurus versioned-doc line requires registering
+      that version surface here.
+
+  - id: conformance-package-version
+    kind: internal-protocol
+    category: test-contract
+    file: node/src/stigmem_conformance/__init__.py
+    pattern: '^__version__ = "(?P<version>[^"]+)"'
+    spelling: shorthand
+    sort_authority: pep440
+    notes: Version emitted by the conformance package/reporting surface.
+
+  - id: plugin-registry-fallback-version
+    kind: internal-protocol
+    category: plugin-api
+    file: node/src/stigmem_node/plugins/registry.py
+    pattern: '^_FALLBACK_STIGMEM_VERSION = "(?P<version>[^"]+)"'
+    spelling: shorthand
+    sort_authority: pep440
+    notes: Fallback used when installed package metadata is unavailable.
+
+  - id: plugin-manifest-default-requires
+    kind: internal-protocol
+    category: plugin-api
+    file: node/src/stigmem_node/plugins/manifest.py
+    pattern: '^    requires_stigmem: str = ">=(?P<version>[^"]+)"'
+    spelling: shorthand
+    sort_authority: pep440
+    notes: Minimum Stigmem version accepted by the default plugin manifest contract.
 
   # ──────────────────────────────────────────────────────────────────────────
   # Downstream mirrors (informational — we do NOT push to these)

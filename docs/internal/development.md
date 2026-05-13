@@ -195,6 +195,19 @@ If you add a new release surface (e.g., publishing to a new registry):
 3. Run `python scripts/check_version_consistency.py` locally.
 4. Commit. The CI gate will run the same checks.
 
+### Phase B #160 evidence snapshot
+
+Verified 2026-05-13 as part of the upstream-validation F-01 / F-02 follow-up:
+
+- **Implementation PRs:** Phase A version reset and canonical Apache-2.0 license replacement landed before this snapshot; #160 expands the checker to cover prose/runtime surfaces that were previously manifest-only.
+- **Current release posture:** canonical version anchor is `pyproject.toml` `project.version = "0.9.0a1"`; semver packages use the equivalent `0.9.0-alpha.1`.
+- **Checked version surfaces:** root/node/SDK/OpenClaw Python package metadata, root and TypeScript package metadata, FastAPI app metadata, generated OpenAPI metadata, README banner, CHANGELOG top entry, LIMITATIONS applicability, SECURITY posture header, Docusaurus versions metadata, conformance package version, and plugin registry/manifest fallback strings.
+- **Intentionally independent package metadata:** `adapters/mcp/package.json` remains `0.4.0` and is documented as deferred/not aligned to v0.9.0a1 in the feature matrix; experimental adapter/dashboard package versions remain independent `0.1.0` surfaces until they pass ADR-008 reintroduction gates.
+- **License evidence:** GitHub repository metadata reports `apache-2.0` / "Apache License 2.0"; root `LICENSE` is the canonical Apache-2.0 text; published package metadata uses `Apache-2.0` for in-scope packages.
+- **CI/test evidence:** `.github/workflows/version-consistency.yml` runs `scripts/validate_version_surfaces.py` and `scripts/check_version_consistency.py --verbose`; `node/tests/test_version_consistency_script.py` covers the regex and literal metadata extractors used for prose/runtime surfaces.
+- **Version introduced:** v0.9.0a1 baseline, with #160 coverage added during the v0.9.0aN Phase B upstream-validation correction line.
+- **Follow-up issues:** none opened from this snapshot; no drift was found after expanding checker coverage.
+
 ---
 
 ## Build all four Python wheels (release prep)

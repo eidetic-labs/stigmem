@@ -60,40 +60,19 @@ limited to local, private-node evaluation.
 
 ## Changelog
 
-### v1.0.5
+### Next artifact refresh (v0.9.0a2 line)
 
-- Docs: corrected documentation URLs to include ReadTheDocs path prefix (`/en/latest/`) — all links now resolve correctly.
+- Documentation: remove pre-reset release-history framing from the PyPI long
+  description so the next `stigmem-openclaw` publish presents the adapter as a
+  v0.9.0aN alpha/evaluation surface.
+- Documentation: align the package README with the ClawHub skill warning that
+  OpenClaw is not a recommended production integration while audit findings
+  remain open.
+- Packaging: keep the dependency contract on the active alpha line with
+  `stigmem-py>=0.9.0a1,<1.0.0`.
 
-### v1.0.4
-
-- Docs: corrected documentation domain to `docs.stigmem.dev` (not `stigmem.dev`).
-
-### v1.0.3
-
-- ClawHub: corrected skill display name (was "Clawhub Skill", now "Stigmem").
-
-### v1.0.2
-
-- Docs: fixed incorrect `homepage` and `Documentation` URLs — both now point to
-  `https://docs.stigmem.dev/docs/guides/connectors/openclaw` instead of
-  `federation#external-onboarding`.
-- Docs: expanded SKILL.md security section to cover all five ClawHub security
-  findings (prompt injection, stale facts, identity scope, dependency pinning,
-  federation scope) with concrete mitigations.
-
-### v1.0.1
-
-- Security: `source_entity` is now bound at construction time and cannot be
-  overridden per-call, preventing source spoofing.
-- Security: fact values in `boot()` summary output are sanitized (control
-  characters and embedded newlines stripped) before injection into the system prompt.
-- ClawHub: `adapter.py` bundled in the skill directory so ClawHub installs are
-  self-contained.
-
-### v1.0.0
-
-Initial release — boot handshake, handoff, decision, and escalation surfaces;
-pagination; full respx-mocked test suite.
+Already-published v0.9.0a1 artifacts remain immutable; this source update only
+affects the next artifact refresh.
 
 ## Design
 
@@ -132,7 +111,8 @@ agents import it as a standard Python library.
 ### Requirements
 
 - Python ≥ 3.11
-- `stigmem-py` installed: `pip install stigmem-py`
+- `stigmem-py` installed from the alpha line:
+  `pip install --pre "stigmem-py>=0.9.0a1,<1.0.0"`
 - A running Stigmem node
 
 ### Environment variables

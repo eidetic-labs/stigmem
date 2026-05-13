@@ -23,7 +23,8 @@ v0.9.0a2 artifact refresh; it does not revise the already-published a1 ClawHub
 package in place. The adapter has unresolved audit findings around fail-open boot
 behavior, optional API-key handling, handoff target validation, partial handoff
 writes, and prompt-injection boundaries. Use only private, access-controlled
-Stigmem nodes and least-privilege agent keys until the hardening work lands.
+Stigmem nodes and least-privilege agent keys until the hardening work lands. See
+[LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::
 

@@ -174,11 +174,11 @@ def _lookup_principal(raw_key: str) -> tuple[str, str, str | None] | None:
 
     from .auth import lookup_principal
 
-    result = lookup_principal(raw_key)
-    if result is None:
+    principal = lookup_principal(raw_key)
+    if principal is None:
         return None
-    _HASH_CACHE[fingerprint] = (result, time.time())
-    return result
+    _HASH_CACHE[fingerprint] = (principal, time.time())
+    return principal
 
 
 # ---------------------------------------------------------------------------

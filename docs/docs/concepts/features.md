@@ -57,7 +57,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 | Two-node mTLS federation (TLS 1.3 floor, SAN ↔ entity_uri binding) | Stable | §22.1 |
 | Ed25519 signed manifests at `/.well-known/stigmem-manifest.json` | Stable | §19 |
 | Capability tokens (≤90d, Ed25519, verb+object validated at admission) | Stable | §19 |
-| Bounded HLC skew + per-peer drift tracking | Targeted v0.9.0bN beta series (R-19) | §22.5 |
+| Bounded HLC skew + per-peer drift tracking | Implemented on main for v0.9.0a2 (R-19) | §22.5 |
 | Quarantine garden (federation inbound writes) | Stable | §19   |
 | Pull replication                    | Stable     | §6     |
 

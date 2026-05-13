@@ -170,6 +170,40 @@
       "docs_reference_files": ["spec/security/threat-model.md"],
       "review_decision": "accept-as-is",
       "notes": "Federation ingest rejects far-future and far-past remote HLC wall times, writes peer_hlc_anomaly audit evidence, and leaves rejected facts uninserted."
+    },
+    "R-20": {
+      "title": "Cloud embedding poisoning",
+      "status": "Accepted",
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/scenarios.md",
+        "experimental/README.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Operator opt-in only. The current release keeps cloud embedding out of the default path; no node-layer vector-integrity mitigation is planned for v0.9.x."
+    },
+    "R-21": {
+      "title": "Agent feedback-loop worm",
+      "status": "Open",
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/scenarios.md",
+        "docs/adr/003-prompt-injection.md",
+        "docs/adr/018-security-documentation-colocation.md"
+      ],
+      "review_decision": "patch",
+      "notes": "Cross-cutting risk spanning prompt-injection capability separation, read/write graph isolation, and adapter hardening. ADR-018 keeps the canonical risk at protocol level with contributor notes queued for lazy-instruction-discovery and memory-garden-acl security docs."
+    },
+    "R-22": {
+      "title": "Release supply-chain integrity",
+      "status": "Open",
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/scenarios.md",
+        "SECURITY.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Sigstore-signed releases, reproducible builds, SBOM publication, and Rekor entries remain v1.0.0rcN release-candidate deliverables."
     }
   }
 }

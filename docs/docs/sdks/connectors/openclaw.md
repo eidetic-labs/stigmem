@@ -6,7 +6,7 @@ audience: Integrator
 
 # Stigmem in OpenClaw
 
-Add persistent, federated memory to your OpenClaw agents via the
+Evaluate persistent, federated memory for OpenClaw agents via the
 [`stigmem-node` ClawHub skill](https://clawhub.ai/skills/stigmem-node). The skill
 provides four surfaces: a **boot handshake** that injects prior context into the
 system prompt, and write surfaces for **handoffs**, **decisions**, and
@@ -15,9 +15,21 @@ system prompt, and write surfaces for **handoffs**, **decisions**, and
 **Audience:** OpenClaw skill developers and node operators deploying Stigmem as a
 shared knowledge store across agents.
 
+:::caution Alpha connector
+
+The OpenClaw connector is available in the v0.9.0aN alpha line for evaluation, not
+as a recommended production integration. This wording is queued for the
+v0.9.0a2 artifact refresh; it does not revise the already-published a1 ClawHub
+package in place. The adapter has unresolved audit findings around fail-open boot
+behavior, optional API-key handling, handoff target validation, partial handoff
+writes, and prompt-injection boundaries. Use only private, access-controlled
+Stigmem nodes and least-privilege agent keys until the hardening work lands.
+
+:::
+
 ## Installation
 
-### ClawHub (recommended)
+### ClawHub (alpha evaluation)
 
 ```bash
 skill install stigmem-node
@@ -32,9 +44,9 @@ is needed beyond `stigmem-py` (declared in the install spec).
 For direct package installs outside ClawHub:
 
 ```bash
-uv add "stigmem-py>=1.0.0,<2.0.0"
+uv add "stigmem-py>=0.9.0a1,<1.0.0"
 # or
-pip install "stigmem-py>=1.0.0,<2.0.0"
+pip install --pre "stigmem-py>=0.9.0a1,<1.0.0"
 ```
 
 ## Environment variables
@@ -42,7 +54,7 @@ pip install "stigmem-py>=1.0.0,<2.0.0"
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `STIGMEM_URL` | Yes | Base URL of your Stigmem node (e.g. `https://stigmem.example.com`). |
-| `STIGMEM_API_KEY` | No | API key for the node. Omit if the node runs without auth (default for local dev). |
+| `STIGMEM_API_KEY` | No | API key for the node. Omit only for explicitly unauthenticated local development nodes. Production/evaluation nodes should use least-privilege keys. |
 | `STIGMEM_SOURCE_ENTITY` | No | Entity URI identifying this agent in the fact graph. Default: `agent:openclaw`. |
 
 ## Usage
@@ -70,8 +82,10 @@ ctx = adapter.boot(
 system_prompt = base_prompt + ("\n\n" + ctx.summary if ctx else "")
 ```
 
-`boot()` returns `None` (not a fatal error) when the node is unreachable, so the
-agent degrades gracefully rather than crashing.
+`boot()` returns an empty `BootContext` when the node is unreachable, so the agent
+can continue. Treat this as fail-open alpha behavior: log and monitor it, and do
+not use it for high-stakes workflows until the hardening work narrows failure
+handling.
 
 ### Emit a decision
 
@@ -124,10 +138,11 @@ fetch them directly.
 cannot be overridden per call, so facts are always attributed to the declared agent
 identity. Use a per-deployment entity URI, not a shared or generic identifier.
 
-**Untrusted retrieved context** — `boot()` sanitizes fact values (strips control
-characters and embedded newlines) before injecting them into the system prompt, but
-treat the summary as untrusted input in high-stakes workflows. Use a private,
-access-controlled node for sensitive workloads.
+**Untrusted retrieved context** — `boot()` applies presentation-layer escaping
+before injecting fact values into the system prompt, but that is not a security
+boundary. Treat the summary and raw facts as untrusted input. Use a private,
+access-controlled node for evaluation and avoid high-stakes workflows until the
+OpenClaw audit blockers close.
 
 **API key scope** — Set `STIGMEM_API_KEY` to a least-privilege key scoped only to
 the nodes this agent reads from and writes to. Do not share a key across unrelated

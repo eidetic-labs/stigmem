@@ -29,7 +29,7 @@ Per [ADR-014](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/014-com
 
 | Connector | Stigmem-side requirement | Host-side requirement |
 |---|---|---|
-| OpenClaw | `stigmem-openclaw>=0.9.0a1`, `stigmem-py>=0.9.0a1,<1.0.0` | OpenClaw runtime ≥1.2 |
+| OpenClaw | `stigmem-openclaw>=0.9.0a1`, `stigmem-py>=0.9.0a1,<1.0.0`; experimental alpha connector only. Public copy/framing corrections are queued for the v0.9.0a2 artifact refresh. | OpenClaw runtime ≥1.2 |
 
 ## Feature compatibility (v0.9.0a1)
 
@@ -52,7 +52,7 @@ Per [ADR-014](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/014-com
 
 | Protocol release | Composition |
 |---|---|
-| `v0.9.0a1` | `stigmem-node@0.9.0a1`, `stigmem-py@0.9.0a1`, `stigmem-openclaw@0.9.0a1`, `stigmem@0.9.0a1` (PyPI) + `@eidetic-labs/stigmem-ts@0.9.0-alpha.1` (npm). Default install matches v1.0 critical-path scope per ADR-002 (single-tenant; no tombstones, time-travel, memory cards, source attestation, or lazy instruction discovery in default behavior). See [LIMITATIONS.md §11](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md) for the architectural-gap acknowledgment. |
+| `v0.9.0a1` | `stigmem-node@0.9.0a1`, `stigmem-py@0.9.0a1`, `stigmem-openclaw@0.9.0a1`, `stigmem@0.9.0a1` (PyPI) + `@eidetic-labs/stigmem-ts@0.9.0-alpha.1` (npm). Default install matches v1.0 critical-path scope per ADR-002 (single-tenant; no tombstones, time-travel, memory cards, source attestation, or lazy instruction discovery in default behavior). OpenClaw/ClawHub is available for alpha evaluation only and remains subject to [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is). See [LIMITATIONS.md §11](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md) for the architectural-gap acknowledgment. |
 
 ## Cross-references
 

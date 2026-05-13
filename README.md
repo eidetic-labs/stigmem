@@ -150,7 +150,7 @@ uv run python -m stigmem_node
 ```bash
 pip install --pre stigmem            # SDK only — most common; for apps calling a stigmem node
 pip install --pre stigmem[node]      # SDK + reference node service (self-host the server)
-pip install --pre stigmem[openclaw]  # SDK + OpenClaw adapter
+pip install --pre stigmem[openclaw]  # SDK + OpenClaw adapter (experimental alpha connector)
 pip install --pre stigmem[all]       # everything published from this repo
 ```
 
@@ -208,7 +208,7 @@ uv run pytest tests/ -v
 stigmem/
 ├── spec/           ← canonical specification (under review for v0.9.0a1 first-build canonicalization)
 ├── node/           ← reference node: FastAPI + SQLite
-├── adapters/       ← v0.9.0a1 supported adapters (MCP server, OpenClaw)
+├── adapters/       ← adapter code (OpenClaw is experimental in v0.9.0a1; MCP deferred)
 ├── sdks/           ← Python and TypeScript client SDKs (Go SDK deferred)
 ├── experimental/   ← deferred features per ADR-002 (dashboard, additional adapters, deploy recipes, more)
 └── docs/           ← Docusaurus 3 documentation site

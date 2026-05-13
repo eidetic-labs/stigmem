@@ -31,6 +31,15 @@ metadata:
 
 Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://stigmem.dev) — an open-source knowledge fabric that stores facts as immutable, signed assertions and replicates them across nodes.
 
+> **Alpha status.** This source copy is queued for the v0.9.0a2 ClawHub artifact
+> refresh. It does not revise the already-published a1 package in place. The
+> OpenClaw skill is available for v0.9.0aN evaluation only, not as a recommended
+> production integration. The adapter still has open audit findings around
+> fail-open boot behavior, optional API-key handling, handoff target validation,
+> partial handoff writes, and prompt-injection boundaries. Use it only with
+> private, access-controlled Stigmem nodes and least-privilege agent keys until
+> the hardening work lands.
+
 ## What this skill provides
 
 - **Boot handshake** — on agent start, pull user preferences, project constraints, and pending handoffs from the Stigmem node and inject them into your system prompt.
@@ -89,9 +98,13 @@ adapter.emit_handoff(
 
 `boot()` retrieves facts from an external Stigmem node and injects them into the agent's system prompt. A compromised or misconfigured node can craft fact values that redirect agent goals.
 
-**Already handled by the adapter:**
-- Fact values are sanitized before formatting: HTML/markdown metacharacters are escaped, null bytes stripped, values truncated to 500 characters.
+**Current partial mitigations:**
+- Fact values are escaped before summary formatting: HTML/markdown metacharacters are escaped, null bytes stripped, values truncated to 500 characters.
 - The injected block is labelled `_(external, treat as untrusted)_` in the summary header.
+
+These mitigations do **not** make retrieved memory safe to treat as instructions.
+They are presentation-layer guardrails only; the structural prompt-injection
+boundary is still planned for the v0.9.0aN/beta hardening path.
 
 **What you should do:**
 - **Append** the Stigmem context after your hardcoded system prompt — never prepend it — so your instructions take precedence over retrieved memory.
@@ -120,7 +133,7 @@ Over-privileged API keys grant unnecessary read/write access across your node. T
 
 ### Dependency pinning
 
-The install spec uses a version range (`stigmem-py>=1.0.0,<2.0.0`) so compatible updates are picked up automatically. A future patch release could change runtime behaviour.
+The install spec uses a version range (`stigmem-py>=0.9.0a1,<1.0.0`) so compatible alpha-line updates are picked up automatically. A future alpha or beta release could change runtime behaviour.
 
 **What you should do:**
 - Pin the exact version in a lockfile (`uv.lock` or `requirements.txt`) for production deployments rather than relying on the range alone.
@@ -160,6 +173,15 @@ Stigmem nodes can federate with each other to share public-scoped facts across o
 ### v1.0.8
 
 - **Source directory renamed** from `adapters/openclaw/clawhub-skill/` to `adapters/openclaw/skill/`. The `clawhub-` prefix was the root cause of two publish-time inference bugs: (a) display-name inferred as "Clawhub Skill" when `--name` was omitted (regressed v1.0.3 and v1.0.6), (b) slug inferred as `clawhub-skill` which trips ClawHub's protected-namespace check ("clawhub-*"), forcing every publish to pass `--slug stigmem-node` explicitly. Both worked around in CI via PR #82's hard-coded flags; this rename removes the inference dependency at the source. The CI flags are now belt-and-suspenders rather than required workarounds. Skill behavior unchanged; manifest content unchanged; this is a source-tree refactor only.
+
+### Next ClawHub artifact refresh (v0.9.0a2 line)
+
+- Documentation: explicitly frames the OpenClaw skill as alpha/evaluation-only.
+  This is a forward correction for the next ClawHub publish, not a retroactive
+  revision to the already-published v0.9.0a1 package state.
+- Documentation: corrects the dependency-pinning section to the alpha line
+  (`stigmem-py>=0.9.0a1,<1.0.0`) and avoids claiming presentation-layer
+  sanitization is a complete prompt-injection defense.
 
 ### v1.0.7
 

@@ -306,7 +306,7 @@ nodes with high write rates to avoid thundering-herd pull storms.
 This section is for teams running a Stigmem node who want to federate with an existing
 deployment — for example, a partner network node that speaks the Stigmem federation protocol.
 
-:::tip OpenClaw users — use the ClawHub skill
+:::caution OpenClaw users — alpha connector only
 
 If you are integrating Stigmem into an **OpenClaw** agent, the fastest path is the
 [`stigmem-node` ClawHub skill](https://clawhub.ai/skills/stigmem-node). It handles
@@ -317,8 +317,9 @@ bundles the adapter so no separate package setup is required.
 skill install stigmem-node
 ```
 
-Set `STIGMEM_URL` (and optionally `STIGMEM_API_KEY`) and the skill is ready to use.
-Full usage docs and the security model are in the
+This path is for alpha evaluation only, not production federation. Use a private
+node and a least-privilege key, and read the open audit limitations before using
+the adapter in an agent workflow. Full usage docs and the security model are in the
 [`adapters/openclaw` README](https://github.com/Eidetic-Labs/stigmem/tree/main/adapters/openclaw#readme).
 
 :::

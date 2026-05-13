@@ -3,7 +3,7 @@
 > Public roadmap for stigmem. Milestone-gated, not time-gated — version lines complete when their exit criteria are met.
 >
 > **Current build:** v0.9.0a1 (first build; per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
-> **Last updated:** 2026-05-12.
+> **Last updated:** 2026-05-13.
 
 ---
 
@@ -13,7 +13,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 
 | Version line | Goal |
 |---|---|
-| **`v0.9.0aN` — alpha series** | Public posture matches reality. v0.9.0a1 reset; cross-cutting features extracted to plugins per [ADR-011](docs/adr/011-cross-cutting-extraction.md); docs site restructured. |
+| **`v0.9.0aN` — alpha series** | Public posture matches reality. v0.9.0a1 reset; a2+ artifact refreshes correct ClawHub/OpenClaw alpha framing; cross-cutting features extracted to plugins per [ADR-011](docs/adr/011-cross-cutting-extraction.md); docs site restructured. |
 | **`v0.9.0bN` — beta series (hardened core)** | Every Open risk in the v1.0.0 critical-path threat model closes. Capability redesign, federation hardening, Argon2id migration, OpenClaw safety, modular spec migration, storage immutability stack, 30-day external operator soak. |
 | **`v1.0.0rcN` → `v1.0.0` — release candidates and GA** | Sigstore-signed releases; reproducible builds; SBOM; 3+ external operators in production. Wire format frozen. |
 | **`v1.x.y` — post-GA expansion** | Experimental features graduate into the supported surface via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates; cross-cutting features remain opt-in plugins per ADR-011; modular spec evolution. |
@@ -36,7 +36,9 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [x] **Hook registry foundation** — main now includes the stable 22-hook registry surface, typed voting/filter-chain/score-delta/fire-and-forget semantics, deterministic manual/core registration, minimum `PluginManifest` / `PluginContext` / capability APIs, hook-site wiring across assertion/recall/federation/auth/migration/audit paths, registry audit/metrics plumbing, test registry helpers, and the hook-firing benchmark gate. This work landed after the v0.9.0a1 artifacts and is queued for the next alpha artifact refresh.
 - [ ] **Remaining plugin infrastructure** — package discovery, plugin dependency lifecycle, health polling, operator CLI, production signing/trust, plugin author/operator documentation, and full plugin migration lifecycle/checksum tracking.
 - [ ] **Per-feature plugin extraction** — lazy instruction discovery, time-travel, tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation are extracted into opt-in experimental plugin packages across the alpha series. CIDs remain core.
-- [ ] **Next-alpha artifact refresh** — pick up the live retraction URL in packaged READMEs, TypeScript SDK README, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literal, wheel migration packaging fix, and ongoing lint/coverage/complexity ratchets.
+- [ ] **v0.9.0a2 artifact refresh** — pick up the live retraction URL in packaged READMEs, TypeScript SDK README, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literal, wheel migration packaging fix, and ongoing lint/coverage/complexity ratchets.
+- [ ] **ClawHub/OpenClaw alpha-framing correction** — ship in the v0.9.0a2 refresh, not as a retroactive a1 edit. ClawHub and OpenClaw docs must say the connector is available for alpha evaluation only, remove “recommended production integration” language, correct stale dependency ranges, and link to the open audit limitations.
+- [ ] **OpenClaw audit planning for a2..aN** — keep the audit findings visible in alpha planning. Use a2 for public framing/docs corrections and issue decomposition; schedule adapter hardening work across the remaining alpha/beta path without claiming the a1 ClawHub package closed C1-C4 or H1/H2/H5.
 
 ### Exit criteria
 - Public retraction visible.

@@ -33,6 +33,7 @@ from pathlib import Path
 import pytest
 
 _MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
+FLOAT_COMPARISON_TOLERANCE = 1e-6
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -298,9 +299,15 @@ class TestSQLAdaptation:
             rows = conn.execute(
                 "SELECT id FROM facts WHERE entity LIKE 'stigmem://%%'",
             ).fetchall()
+            sql_template = "SELECT id FROM %(table)s WHERE entity LIKE 'stigmem://%%%%'"
+            sql_with_percent_format = sql_template.__mod__({"table": "facts"})
+            rows_percent_format = conn.execute(sql_with_percent_format).fetchall()
         returned_ids = {r["id"] for r in rows}
+        returned_ids_percent_format = {r["id"] for r in rows_percent_format}
         assert fact_id in returned_ids
         assert nonmatch_id not in returned_ids
+        assert fact_id in returned_ids_percent_format
+        assert nonmatch_id not in returned_ids_percent_format
 
     def test_row_dict_access(self, pg_backend) -> None:
         fact_id = f"row-dict-{uuid.uuid4()}"
@@ -319,7 +326,9 @@ class TestSQLAdaptation:
         # Integer index access
         assert row[0] == fact_id
         # .get() with default
-        assert row.get("confidence") == pytest.approx(0.8, abs=1e-6)
+        assert row.get("confidence") == pytest.approx(
+            0.8, abs=FLOAT_COMPARISON_TOLERANCE
+        )
         assert row.get("nonexistent_col", "fallback") == "fallback"
         # .keys()
         assert "id" in row
@@ -367,6 +376,14 @@ class TestCompositeKeyUpsert:
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (agent_id, "generic", 1, "# stub v1", 10, 1000, "v1"),
             )
+            first_row = conn.execute(
+                """SELECT stub_version, body FROM boot_stubs
+                   WHERE agent_id = ? AND adapter_profile = ?""",
+                (agent_id, "generic"),
+            ).fetchone()
+            assert first_row is not None
+            assert first_row["stub_version"] == 1
+            assert first_row["body"] == "# stub v1"
             conn.execute(
                 "INSERT OR REPLACE INTO boot_stubs "
                 "(agent_id, adapter_profile, stub_version, body, token_count, "

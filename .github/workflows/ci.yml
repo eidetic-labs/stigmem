@@ -26,6 +26,7 @@ jobs:
       quickstart: ${{ steps.filter.outputs.quickstart }}
       helm: ${{ steps.filter.outputs.helm }}
       container: ${{ steps.filter.outputs.container }}
+      security_evidence: ${{ steps.filter.outputs.security_evidence }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -122,6 +123,12 @@ jobs:
               - 'node/Dockerfile'
               - 'deploy/seccomp/**'
               - 'docker-compose.yml'
+            security_evidence:
+              - '.github/workflows/ci.yml'
+              - 'scripts/validate_security_evidence.py'
+              - 'spec/security/evidence-registry.json'
+              - 'spec/security/threat-model.md'
+              - 'CONTRIBUTING.md'
 
   python-tests:
     name: Python checks (lint + type + tests + security)
@@ -488,6 +495,22 @@ jobs:
 
       - name: Run drift check
         run: python docs/scripts/check_drift.py
+
+  security-evidence:
+    name: Security evidence registry
+    needs: detect-changes
+    if: needs.detect-changes.outputs.security_evidence == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Validate security evidence registry
+        run: python scripts/validate_security_evidence.py
 
   container-smoke:
     name: Container hardening smoke test

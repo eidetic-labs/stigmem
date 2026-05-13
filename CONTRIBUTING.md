@@ -37,6 +37,30 @@ The `data/conformance/v1.0/` directory contains machine-readable test vectors th
 uv run pytest node/tests/test_conformance_v1.py -v
 ```
 
+## Security evidence for mitigated risks
+
+A threat-model risk may move to `Mitigated` only when the PR also updates
+[`spec/security/evidence-registry.json`](spec/security/evidence-registry.json).
+The registry entry must include:
+
+- the risk ID and title;
+- status;
+- version introduced;
+- implementation file(s);
+- test file(s);
+- docs or reference file(s);
+- a review decision.
+
+Run the registry validator before opening the PR:
+
+```bash
+python scripts/validate_security_evidence.py
+```
+
+The validator checks that every threat-model `Mitigated` risk is registered, that
+required fields are present, and that listed paths still exist. It does not
+decide whether the evidence is good enough; reviewers still own that judgment.
+
 **Adding a new test vector:**
 
 1. Open (or create) a numbered file in `data/conformance/v1.0/` (e.g., `06_new_feature.json`). The runner loads all files matching `0*.json` in sorted order.

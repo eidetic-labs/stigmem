@@ -273,6 +273,11 @@ Each risk is rated on:
 - **Impact**: Critical / High / Medium / Low
 - **Priority**: product of the two
 
+Machine-readable evidence for risks marked **Mitigated** lives in
+[`evidence-registry.json`](evidence-registry.json). CI validates that each
+mitigated risk has implementation files, test files, docs/reference files,
+version-introduced metadata, and a review decision.
+
 | ID | Threat refs | Finding | Likelihood | Impact | Priority | Spec ref | Status | Closed by |
 |---|---|---|---|---|---|---|---|---|
 | R-01 | T2-S1 | No mTLS: federation peer impersonation possible without client cert verification | Medium | High | High | §22.1 | **Mitigated** | pre-reset hardening: `tls.py` (TLS 1.3 floor, `CERT_REQUIRED`), `test_mtls.py` (491 lines) |

@@ -11,19 +11,25 @@ This file complements:
 
 ## How to use this file
 
-Every triage decision against an open security alert that ends in **dismiss as false positive** or **suppress with rationale** SHOULD add an entry here, including:
+Every triage decision against an open security alert that ends in **dismiss as false positive**, **dismiss as acknowledged risk**, or **suppress with rationale** SHOULD add an entry here, including:
 
 1. The alert number(s) and rule id.
 2. The location at the time of triage.
 3. The root cause (why the tool flagged it).
-4. The reason the flag is not a vulnerability.
-5. The remediation taken (structural fix, regex tightening, accepted suppression, …) and the PR that landed it.
+4. The disposition category (see below) and the reason.
+5. The remediation taken (structural fix, regex tightening, accepted dismissal with ADR-tracked retirement plan, …) and the PR or ADR that landed it.
+
+### Disposition categories
+
+- **False positive (precision-gap).** The tool's analysis is wrong about the exploit conditions; no actual vulnerability exists. Remediation is usually a structural design-pivot so the analyzer can prove safety, not a suppression.
+- **Acknowledged risk (ADR-tracked remediation).** The tool's analysis is technically correct but the code is a deliberate, documented choice (typically a bounded migration window) whose retirement is committed in an ADR. The risk is real but accepted; dismissal points at the ADR and a definite retirement milestone.
+- **Suppression (with documented rationale).** Anything that doesn't fit the above two and can't be structurally fixed. Rare; should be the last resort.
 
 Entries are append-only. If a previously-dismissed alert is later determined to be a real bug, add a new entry under the same date acknowledging the revision and link to the fix; do **not** edit the historical entry.
 
 ---
 
-## CodeQL
+## CodeQL — false positives (precision-gap)
 
 ### 2026-05-11 — conditional SQL-fragment assembly (7 SQL + 1 transitive ReDoS)
 
@@ -77,6 +83,44 @@ Resolution (PR #121): split each builder so the module-level SQL constant is ref
 Lesson: even after the constant-SQL refactor, the SQL string must never appear in the return type of a function that accepts user input. The taint-precision gap is wider than the f-string-only case originally diagnosed.
 
 **No threat-model entries added:** the exploitation conditions do not exist; recording the alerts in `threat-model.md` would mislead future readers into treating them as real residual risks. The Rev 2.2 entry in `threat-model.md` § 10 documents the triage decision without claiming a new residual risk.
+
+---
+
+## CodeQL — acknowledged risks (ADR-tracked remediation)
+
+### 2026-05-13 — SHA-256 in the Argon2id migration verifier ([alert #34](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/34))
+
+**Rule:** `py/weak-sensitive-data-hashing`.
+**Severity:** High.
+**Location at triage:** `node/src/stigmem_node/auth.py:67` — function `_legacy_sha256(raw: str) -> str` and its sibling `_verify_key_hash(...)` which calls it. Introduced in [PR #172](https://github.com/Eidetic-Labs/stigmem/pull/172) (Argon2id API key hashing migration per ADR-007).
+
+**Why this is NOT a false positive.** Unlike the 2026-05-11 SQL-injection cluster above, the analyzer is **technically correct**: SHA-256 is computationally cheap and inappropriate as a password-hashing primitive in isolation. The function genuinely hashes credential material with SHA-256.
+
+**Why we keep it anyway.** [ADR-007](../../docs/adr/007-argon2id.md) commits to a dual-mode verification window:
+
+- All **new** API keys are hashed with Argon2id (via `_hash_key`, which returns the `$argon2id$…` PHC string).
+- **Legacy** v0.9.0a1 rows — issued before PR #172 landed — remain SHA-256-hashed in the database. They verify against `_legacy_sha256` on first use, then are opportunistically re-hashed to Argon2id and the database row is updated.
+- A new audit event type `api_key_rehashed` fires on every opportunistic re-hash. Operators track migration progress with:
+  ```sql
+  SELECT COUNT(*) FROM fact_audit_log WHERE event_type = 'api_key_rehashed';
+  ```
+- At **v1.0.0 GA**, a bulk re-hash migration retires the remaining SHA-256 hashes by issuing forced rotations; `_legacy_sha256` and the legacy verification branch in `_verify_key_hash` are then deleted as part of the same release.
+
+Deleting `_legacy_sha256` today would invalidate every v0.9.0a1-issued API key the moment v0.9.0a2 ships — a far worse failure than the residual risk of having the function in the codebase for the v0.9.x migration window. The risk is real but bounded and accepted per the ADR's explicit decision.
+
+**Threat-model linkage.** The dual-mode design is already captured in `threat-model.md`:
+
+- §4 Assumption 2 — describes Argon2id storage with legacy SHA-256 rows accepted during the v0.9.x window and rehashed opportunistically (`api_key_rehashed` audit event).
+- T1-S1 (TB-1 STRIDE) — names the legacy-row residual as part of the spoofing-mitigation control.
+- T7-S1 (TB-7 STRIDE) — same residual on admin-key storage.
+
+No new `R-XX` entry is required: the residual is already accounted for in the existing controls. The Rev 2.3 entry in `threat-model.md` § 10 logs the alert acknowledgment without re-litigating the design.
+
+**Disposition.** Alert dismissed in GitHub UI with reason `won't fix`. Dismissal comment points at this section.
+
+**Retirement milestone.** v1.0.0 GA — bulk re-hash migration deletes `_legacy_sha256` from `auth.py`; CodeQL re-scan after that release auto-closes any residual reference to the function.
+
+**Tracking.** `Internal-Comms/stigmem/plans/master-checklist.md` § "Argon2id migration (per ADR-007)" carries the v1.0.0 retirement checklist item.
 
 ---
 

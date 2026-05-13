@@ -177,6 +177,22 @@ The structural refactor landed on main; CodeQL re-scan closed all 8 alerts at th
 
 **Tracking:** Future CodeQL alerts on Python source paths will be triaged under this Group C pattern. Path-level CodeQL config exclusions are deliberately avoided so that real future bugs remain visible.
 
+#### Group C, sub-category: acknowledged risks (ADR-tracked remediation)
+
+Some CodeQL alerts are **not** precision-gap false positives — the analyzer is correct, but the flagged code is a deliberate, documented choice whose retirement is committed in an ADR. These are tracked separately because their lifecycle is different: they remain open or dismissed-as-acknowledged until the ADR's retirement milestone, at which point the code disappears and the alert auto-closes on the next scan.
+
+| Alert | Rule | Location | Severity | Rationale | Retirement milestone |
+| ----- | ---- | -------- | -------- | --------- | -------------------- |
+| [#34](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/34) | `py/weak-sensitive-data-hashing` | `auth.py:67` — `_legacy_sha256(raw)` and the legacy branch in `_verify_key_hash` | High | [PR #172](https://github.com/Eidetic-Labs/stigmem/pull/172) implemented the [ADR-007](docs/adr/007-argon2id.md) Argon2id migration with a dual-mode verification window. New keys use Argon2id; legacy v0.9.0a1 SHA-256 rows verify against `_legacy_sha256` on first use, then opportunistically re-hash to Argon2id (`api_key_rehashed` audit event). Deleting the function today would invalidate every v0.9.0a1-issued API key. | **v1.0.0 GA** — bulk re-hash migration deletes `_legacy_sha256`; CodeQL re-scan auto-closes alert. |
+
+**Disposition:** Alert #34 dismissed in GitHub UI with reason `won't fix`; dismissal comment points at [`spec/security/audit-triage.md`](spec/security/audit-triage.md) § "CodeQL — acknowledged risks" for the full rationale.
+
+**Audit-trail visibility for operators:** track Argon2id migration progress with
+```sql
+SELECT COUNT(*) FROM fact_audit_log WHERE event_type = 'api_key_rehashed';
+```
+Every legacy row that gets used at least once during the v0.9.x window contributes one row. At v1.0.0 GA the remaining un-used legacy rows are forced through rotation as part of the retirement migration.
+
 ---
 
 ### Core Node (Python/FastAPI)

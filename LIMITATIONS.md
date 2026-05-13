@@ -117,19 +117,19 @@ The capability-based redesign (where facts carry an `interpret_as` field that de
 
 ### 8. Long-lived API keys with weak hashing and no rotation
 
-**Status (corrected 2026-05-09):** API keys are currently hashed at rest with raw SHA-256 (`node/src/stigmem_node/auth.py:_hash_key`). That's a fast, unsalted, parallelizable hash — fine for fact content addressing (where determinism is the point — see CIDs at §25), wrong for credential storage (where slowness + per-key salt are the point). ADR-007 commits to migrating API key hashing to Argon2id during the v0.9.0bN beta series; the migration itself has not landed. **Separately:** there is no enforced max-age, no automated rotation, no "expiring soon" surface.
+**Status:** Phase B moves new API keys to Argon2id hashing at rest (`node/src/stigmem_node/auth.py:_hash_key`) using the ADR-007 parameters. Legacy v0.9.0a1 SHA-256 rows remain valid during the v0.9.x migration window and are opportunistically rehashed to Argon2id on first successful use. **Separately:** automated rotation and an "expiring soon" admin surface are not yet available.
 
-**What this means:** an attacker who obtains the api_keys table (e.g., via R-23 admin-level storage compromise, or via a separate exfiltration vector) can mount a fast offline brute-force attack against the key hashes. Compounding: keys live forever unless rotated manually, and you have no system reminder when one becomes stale.
+**What this means:** an attacker who obtains the api_keys table (e.g., via R-23 admin-level storage compromise, or via a separate exfiltration vector) faces Argon2id for new keys. Any legacy SHA-256 rows that have not been used or explicitly rotated still retain the older fast-hash posture until migration completes.
 
 **What to do today:**
 
 - **Treat the api_keys table as a high-value secret.** Restrict filesystem access to it. Don't back it up in clear-text. If you're using SQLCipher (`STIGMEM_AT_REST_KEY_PASSPHRASE_ENV` set — see Limitation 5), the table is encrypted at rest with an Argon2id-derived key, which substantially raises the bar — recommended for any deployment with regulated data or sensitive workloads.
-- **Generate API keys at sufficient length** (the default is 256-bit; don't override to anything shorter). At 256 bits of entropy, even a fast SHA-256 attacker is fundamentally bounded; the hash weakness matters more for *short* or *predictable* keys.
+- **Generate API keys at sufficient length** (the default caller-generated recommendation is 256-bit; don't override to anything shorter). Argon2id is defense-in-depth, not permission to use short or predictable keys.
 - **Rotate keys manually on your own schedule** (recommend ≤90 days). Treat any key issued for testing or demo purposes as compromised once you've shared it with anyone outside the issuance context.
 
-The v0.9.0bN beta series brings: Argon2id migration with backward-compatible verification (per ADR-007), enforced max-age, automated rotation runbooks, and an "expiring soon" admin surface.
+The remaining beta hardening work brings: automated rotation runbooks and an "expiring soon" admin surface.
 
-**Why this wasn't caught earlier:** an earlier draft of this section said "Argon2id-hashed at rest (good)" — that was wrong; the code uses raw SHA-256. Caught and corrected during release-readiness review for v0.9.0a1.
+**Why this changed:** release-readiness review for v0.9.0a1 caught that the implementation still used raw SHA-256 despite earlier prose saying Argon2id. Phase B corrects the implementation while retaining dual-mode verification for already-issued keys.
 
 ---
 

@@ -99,7 +99,7 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 
 | ID | Boundary | From | To | Authentication |
 |---|---|---|---|---|
-| **TB-1** | Internet → Node API | Agents, end clients | Node HTTP API | API key (SHA-256 hashed; 128-bit UUID4 entropy) + TLS 1.3 |
+| **TB-1** | Internet → Node API | Agents, end clients | Node HTTP API | API key (Argon2id hashed; legacy SHA-256 rows migrate on use) + TLS 1.3 |
 | **TB-2** | Node ↔ Peer node | Federation replication | HTTP API on peer | mTLS (§22.1) + Ed25519 capability tokens (§19.3) |
 | **TB-3** | Agent tool → Node | MCP / OpenClaw adapter | Node HTTP API | API key; tool call may carry adversarial content |
 | **TB-4** | Node → Storage | Node process | DB file / libSQL / PG | Local filesystem or network (libSQL cloud) |
@@ -130,7 +130,7 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 ## 4. Assumptions
 
 1. **Key confidentiality:** Ed25519 private signing keys are generated and stored on the operator's infrastructure. If a node signing key is compromised, the adversary can issue arbitrary capability tokens and org manifests. Key rotation (§22.2) and transparency log publication are the recovery mechanisms.
-2. **API key storage:** API keys are SHA-256-hashed at rest (`hashlib.sha256` in `auth.py`) in v0.9.0a1. Keys are generated as UUID4 hex strings (122-bit random entropy after version/variant reservation), making offline brute-force infeasible regardless of hash speed. Plaintext API keys are visible only at issuance time. Compromised keys must be revoked and rotated via the admin API. **Migration to Argon2id is committed per [ADR-007](../../docs/adr/007-argon2id.md) and ships in the v0.9.0bN beta series** as defense-in-depth: dual-mode verification with opportunistic re-hash on first use; OWASP-recommended parameters (m_cost=19456, t_cost=2, parallelism=1). The migration removes the structural dependency on the UUID4-only key-format invariant — Argon2id remains correct under future key-format changes. See ADR-007 § Consequences for the threat-model implications.
+2. **API key storage:** API keys are Argon2id-hashed at rest in the Phase B implementation, using the [ADR-007](../../docs/adr/007-argon2id.md) parameters (`m_cost=19456`, `t_cost=2`, `parallelism=1`). Legacy v0.9.0a1 SHA-256 rows remain accepted during the v0.9.x migration window and are opportunistically rehashed to Argon2id on first successful use with an `api_key_rehashed` audit event. Plaintext API keys are visible only at issuance time. Compromised keys must still be revoked and rotated via the admin API.
 3. **mTLS as the federation transport:** TB-2 analysis assumes §22.1 mTLS deployment. Pre-§22.1 deployments (TLS only, no client cert) have a weaker peer-authentication posture; R-01 applies.
 4. **SQLite at-rest encryption is opt-in (SQLCipher).** The default deployment does not encrypt the fact store at rest. Operators in regulated environments must enable SQLCipher explicitly.
 5. **Recall sanitizer is best-effort:** The recall-time content sanitizer (§19.7) strips known prompt-injection sentinels, but cannot exhaustively detect all injection patterns in stored `value` fields.
@@ -158,7 +158,7 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 
 | # | Threat | Class | Description | Existing control | Residual risk |
 |---|---|---|---|---|---|
-| T1-S1 | API key theft | Spoofing | Attacker obtains a leaked API key and impersonates a legitimate agent | SHA-256 hashing at rest in v0.9.0a1 (122-bit UUID4 key entropy; offline brute-force infeasible); keys visible only at issuance; `expires_at` enforced (R-03 mitigated). Argon2id migration ships in the v0.9.0bN beta series per [ADR-007](../../docs/adr/007-argon2id.md). | Key revocation must still be performed manually via admin API on suspected compromise. Until Argon2id ships, storage-layer hash strength depends on the UUID4 key-format invariant. |
+| T1-S1 | API key theft | Spoofing | Attacker obtains a leaked API key and impersonates a legitimate agent | Argon2id hashing at rest for new keys; legacy SHA-256 rows verify during v0.9.x and rehash on successful use; keys visible only at issuance; `expires_at` enforced (R-03 mitigated). | Key revocation must still be performed manually via admin API on suspected compromise. Legacy rows that are never used remain SHA-256-hashed until rotated or migrated explicitly. |
 | T1-S2 | Unauthenticated endpoint access | Spoofing | Attacker reaches write endpoints without a valid key | All write endpoints require `Authorization` header | — |
 | T1-T1 | Tampered fact payload | Tampering | Attacker replays or modifies a fact assertion with a stolen key | Facts are scoped; replay of old payloads creates duplicate, auditable facts | No per-request integrity seal beyond TLS |
 | T1-R1 | Missing read audit trail | Repudiation | Agent reads sensitive-scope facts; no record of what was returned | Audit log (§22.3) — `fact_read` event type | **Mitigated** (R-09). Audit log persists with WAL ordering; 90-day retention. Residual: log retention is a security boundary; operators must monitor for log truncation. |
@@ -225,7 +225,7 @@ It does **not** replace the operational [Security & Pen Testing guide](../../doc
 
 | # | Threat | Class | Description | Existing control | Residual risk |
 |---|---|---|---|---|---|
-| T7-S1 | Admin key compromise | Spoofing | Attacker obtains an admin API key, gaining full node control | Admin key is SHA-256-hashed at rest in v0.9.0a1 (same migration to Argon2id per [ADR-007](../../docs/adr/007-argon2id.md) as agent keys); enforced `expires_at` (R-03 mitigated); admin key max-age 90 days default. | Key rotation not yet automated; admin must rotate manually via admin API. |
+| T7-S1 | Admin key compromise | Spoofing | Attacker obtains an admin API key, gaining full node control | Admin keys use the same Argon2id-at-rest and legacy rehash path as agent keys; enforced `expires_at` (R-03 mitigated); admin key max-age 90 days default. | Key rotation not yet automated; admin must rotate manually via admin API. Legacy admin rows that are never used remain SHA-256-hashed until rotated or migrated explicitly. |
 | T7-T1 | Malicious manifest publish | Tampering | Admin key used to publish a fraudulent org manifest | Manifest signature checked before publish | Compromised admin key can produce a validly-signed fraudulent manifest |
 | T7-R1 | Admin operations not separately logged | Repudiation | Admin API calls not in a separate audit trail | `admin_action` audit event type (§22.3.1) | **Mitigated** (R-09). `admin_action` audit event fires on every admin-API call. |
 | T7-D1 | Quota abuse via admin key | Denial of service | Admin key bypasses principal quotas, enabling self-DoS | Admin quota dimension ceilings apply (§22.4) | Admin may override quota policies by design |
@@ -289,7 +289,7 @@ version-introduced metadata, and a review decision.
 | R-06 | T2-T1 | Federation replay protection fuzz test coverage incomplete | Low | High | Medium | §22.5 | **Mitigated** | pre-reset hardening: `test_phase12_replay_fuzz.py` (394 lines); nonce cache survival test. |
 | R-07 | T6-S1 | Obsidian plugin API key stored in plaintext settings | Low | Medium | Low | — | **Accepted** | Requires local filesystem access; rotate key if another plugin suspected. |
 | R-08 | T4-T2, T4-I2 | libSQL cloud backend: facts in transit to Turso without additional app-layer encryption | Medium | Medium | Medium | §3.2 | **Accepted** | Operator TLS; Turso data residency controls apply. |
-| R-09 | T1-R1, T7-R1 | No general-purpose audit log for sensitive scope reads or admin actions | High | Medium | High | §22.3 | **Mitigated** | pre-reset hardening: `audit_event.py` (13 event types, WAL semantics, `fact_audit_log` table); `routes/admin_audit.py`; `test_admin_audit.py` (205 lines). |
+| R-09 | T1-R1, T7-R1 | No general-purpose audit log for sensitive scope reads or admin actions | High | Medium | High | §22.3 | **Mitigated** | pre-reset hardening: `audit_event.py` (14 event types including `api_key_rehashed`, WAL semantics, `fact_audit_log` table); `routes/admin_audit.py`; `test_admin_audit.py` (205 lines). |
 | R-10 | T5-R1 | Org manifest rotation events not consistently submitted to transparency log | Low | Medium | Low | §19.2.6, §22.2.3 | **Mitigated** | pre-reset hardening: `key_rotation.py` emits `KeyRotationLogEntry` before activation; `key_rotation` audit event (§22.3.1). |
 | R-11 | — | Container not distroless; Linux capabilities not fully dropped | Low | Low | Low | §22.6 | **Mitigated** | pre-reset hardening: `Dockerfile` updated to distroless base, non-root UID 1000, `readOnlyRootFilesystem`, seccomp; Helm chart updated. |
 | R-12 | T3-D1, T3-E1 | Agent tool surface: no per-agent budget or rate limit without §22.4 | High | Medium | High | §22.4 | **Mitigated** | Same as R-02; per-agent quota dimension in §22.4. |

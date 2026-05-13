@@ -26,7 +26,8 @@ CREATE INDEX IF NOT EXISTS idx_scope                 ON facts(scope);
 CREATE INDEX IF NOT EXISTS idx_timestamp             ON facts(timestamp);
 CREATE INDEX IF NOT EXISTS idx_valid_until           ON facts(valid_until) WHERE valid_until IS NOT NULL;
 
--- API keys — credentials are SHA-256 hex of the raw bearer token.
+-- API keys — credentials are hashes of the raw bearer token.
+-- v0.9.0a1 rows may contain legacy SHA-256 hex; Phase B+ rows contain Argon2id.
 CREATE TABLE IF NOT EXISTS api_keys (
     id          TEXT PRIMARY KEY,
     key_hash    TEXT NOT NULL UNIQUE,

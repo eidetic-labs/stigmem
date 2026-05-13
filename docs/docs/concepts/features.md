@@ -65,7 +65,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 | Capability                          | Status     | Spec   |
 |-------------------------------------|------------|--------|
-| API-key authentication (per-scope)  | Stable (SHA-256 in v0.9.0a1; Argon2id migration in v0.9.0bN beta series per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 |
+| API-key authentication (per-scope)  | Stable (Argon2id for new keys; v0.9.0a1 SHA-256 rows rehash on successful use per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 |
 | Enforced API key max-age (default 90d) | Stable | §22.2 |
 | Per-principal token-bucket rate limits (7 dimensions) | Stable | §22.4 |
 | Capability-based instruction handling (`interpret_as`) | Targeted v0.9.0bN beta series ([ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)) | §3 |
@@ -74,7 +74,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 | Capability                          | Status     | Spec   |
 |-------------------------------------|------------|--------|
-| WAL-ordered audit log (13 event types, 90-day retention) | Stable | §22.3 |
+| WAL-ordered audit log (14 event types, 90-day retention) | Stable | §22.3 |
 | Prometheus metrics (node health, request rates, quotas, federation peer status) | Stable | §22.3 |
 
 ## Storage (v0.9.0a1 critical path)
@@ -167,7 +167,7 @@ See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com
 The phase progression is in [ROADMAP.md](https://github.com/Eidetic-Labs/stigmem/blob/main/ROADMAP.md). At a high level:
 
 1. **v0.9.0a2 through v0.9.0a8** — incremental plugin extraction per ADR-011 (lazy-instruction-discovery → CIDs as core → time-travel → tombstones → memory-garden-acl → source-attestation → multi-tenant).
-2. **v0.9.0bN (the v0.9.0bN beta series)** — capability redesign per ADR-003, federation hardening, OpenClaw safety, modular spec migration per ADR-010, storage immutability stack per ADR-016, Argon2id migration per ADR-007, 30-day external operator soak.
+2. **v0.9.0bN (the v0.9.0bN beta series)** — capability redesign per ADR-003, federation hardening, OpenClaw safety, modular spec migration per ADR-010, storage immutability stack per ADR-016, 30-day external operator soak.
 3. **v1.0.0-rcN → v1.0.0 (the v1.0.0rcN release-candidate series)** — Sigstore-signed releases, reproducible builds, SBOM, 3+ external operators in production. Wire format frozen.
 
 ---

@@ -373,7 +373,7 @@ curl -s https://your-node.example.com/healthz | jq .status
 | mTLS federation with SAN validation | §22.1 | Active |
 | Ed25519 identity key rotated with dual-trust window | §22.2 | Active |
 | Capability issuer key rotated | §22.2 | Active |
-| Audit log with 13 event types | §22.3 | Active |
+| Audit log with 14 event types | §22.3 | Active |
 | Per-principal token-bucket quotas | §22.4 | Active |
 | Non-root distroless container, read-only fs, dropped caps | §22.6 | Active |
 

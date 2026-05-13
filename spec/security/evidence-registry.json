@@ -42,16 +42,21 @@
       "version_introduced": "0.9.0a1",
       "implementation_files": [
         "node/src/stigmem_node/auth.py",
-        "node/src/stigmem_node/identity/key_rotation.py"
+        "node/src/stigmem_node/identity/key_rotation.py",
+        "node/src/stigmem_node/rate_limit.py"
       ],
-      "test_files": ["node/tests/test_phase12_key_rotation.py"],
+      "test_files": [
+        "node/tests/test_argon2_auth.py",
+        "node/tests/test_phase12_key_rotation.py",
+        "node/tests/test_rate_limit.py"
+      ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "docs/docs/security/key-rotation.md",
         "docs/adr/007-argon2id.md"
       ],
       "review_decision": "accept-as-is",
-      "notes": "Current mitigation is enforced expiry/max-age; Argon2id hashing remains tracked separately as a Phase B defense-in-depth migration."
+      "notes": "Current mitigation includes enforced expiry/max-age plus Phase B Argon2id API-key hashing. Legacy SHA-256 rows verify during the v0.9.x migration window and opportunistically rehash to Argon2id with an api_key_rehashed audit event."
     },
     "R-06": {
       "title": "Federation replay protection fuzz coverage",

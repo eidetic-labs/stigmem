@@ -123,7 +123,7 @@ done
 
 ### Audit event types (§22.3.1)
 
-Thirteen event types are emitted to `fact_audit_log`.  All are returned by `GET /v1/admin/audit` unless filtered by `event_type`.
+Fourteen event types are emitted to `fact_audit_log`.  All are returned by `GET /v1/admin/audit` unless filtered by `event_type`.
 
 | Event type | Trigger |
 |---|---|
@@ -140,6 +140,7 @@ Thirteen event types are emitted to `fact_audit_log`.  All are returned by `GET 
 | `admin_action` | Admin API call |
 | `replay_rejected` | Token replay nonce collision |
 | `instruction_audit` | Lazy instruction chunk loaded |
+| `api_key_rehashed` | Legacy SHA-256 API key row migrated to Argon2id after successful authentication |
 
 ### Write-ahead ordering (§22.3.2)
 

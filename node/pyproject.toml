@@ -16,6 +16,7 @@ dependencies = [
     "httpx>=0.27",
     "canonicaljson>=2.0",
     "packaging>=24",
+    "argon2-cffi>=23.1",
 ]
 
 [project.optional-dependencies]
@@ -32,8 +33,8 @@ libsql = [
     "libsql-experimental>=0.0.1",
 ]
 encryption = [
-    # Argon2id key derivation for passphrase-based encryption-at-rest (Phase 8).
-    "argon2-cffi>=23.1",
+    # Argon2id is now a core dependency for API-key hashing.
+    # The extra remains for backward-compatible install commands.
 ]
 sqlcipher = [
     # SQLCipher-enabled SQLite driver for at-rest encryption (Phase 8).

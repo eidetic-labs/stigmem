@@ -172,7 +172,7 @@ asserted this?").
 ```
 Identity {
   entity_uri:     URI
-  credential:     string          // API key (SHA-256 stored server-side)
+  credential:     string          // API key (Argon2id stored server-side)
   node_url:       string
   allowed_scopes: FactScope[]     // pre-reset: restricts which scopes this key can read/write
 }
@@ -186,7 +186,8 @@ restrict service-to-service keys to the minimum required scope.
 #### pre-reset API-key model (unchanged)
 
 Credentials are presented as `Authorization: Bearer <raw-key>`. The node stores only
-the SHA-256 hex digest.
+the Argon2id hash. Legacy v0.9.0a1 SHA-256 rows remain readable during the
+v0.9.x migration window and rehash on successful use.
 
 **Auth mode flag:** `/.well-known/stigmem` exposes `"auth": "none" | "required"`.
 

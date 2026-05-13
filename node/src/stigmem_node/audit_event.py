@@ -9,7 +9,7 @@ Supported event_type values (spec §22.3.1):
   fact_write, fact_read, capability_token_issue, capability_token_revoke,
   manifest_publish, key_rotation, federation_connect, quarantine_admit,
   quarantine_release, quota_breach, admin_action, replay_rejected,
-  instruction_audit, peer_hlc_anomaly
+  instruction_audit, peer_hlc_anomaly, api_key_rehashed
 """
 
 from __future__ import annotations

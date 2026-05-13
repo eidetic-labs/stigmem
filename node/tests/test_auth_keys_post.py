@@ -19,7 +19,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi.testclient import TestClient
 
 import stigmem_node.db as db_mod
-from stigmem_node.auth import _hash_key, create_api_key
+from stigmem_node.auth import _verify_key_hash, create_api_key
 
 
 def _mint_admin_key() -> str:
@@ -72,14 +72,15 @@ class TestRegisterStaticKey:
         assert body["tenant_id"] == "default"
         assert body["id"]  # non-empty UUID
 
-        # Persisted as the SHA-256 hash of new_raw.
+        # Persisted as an Argon2id hash of new_raw.
         with db_mod.db() as conn:
             row = conn.execute(
                 "SELECT key_hash, entity_uri, permissions FROM api_keys WHERE id = ?",
                 (body["id"],),
             ).fetchone()
         assert row is not None
-        assert row["key_hash"] == _hash_key(new_raw)
+        assert row["key_hash"].startswith("$argon2id$")
+        assert _verify_key_hash(new_raw, row["key_hash"])
         assert row["entity_uri"] == "agent:service-account"
         assert sorted(json.loads(row["permissions"])) == ["read", "write"]
 

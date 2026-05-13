@@ -267,7 +267,7 @@ Set `STIGMEM_LAZY_INSTRUCTIONS=false` to revert to file-based loading.
 |--------|--------|-----------------|
 | mTLS required for federation | Plaintext federation connections rejected | Provision node certificates |
 | TLS 1.3 floor enforced | TLS 1.2 connections refused | Verify your TLS stack supports 1.3 |
-| Audit log mandatory | 13 event types must be emitted | Ensure audit storage is provisioned |
+| Audit log mandatory | 14 event types must be emitted | Ensure audit storage is provisioned |
 | Per-principal quotas active | Excessive writes receive HTTP 429 | Review default quota ceilings |
 | Replay protection (±5 min window) | Requests with stale nonces rejected | Ensure node clocks are NTP-synced |
 

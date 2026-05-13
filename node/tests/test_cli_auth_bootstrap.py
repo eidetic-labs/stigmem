@@ -22,7 +22,6 @@ Test surface:
 
 from __future__ import annotations
 
-import hashlib
 import io
 import json
 import sqlite3
@@ -32,7 +31,7 @@ import pytest
 
 import stigmem_node.cli as cli_mod
 import stigmem_node.db as db_mod
-from stigmem_node.auth import create_api_key
+from stigmem_node.auth import _verify_key_hash, create_api_key
 
 
 @pytest.fixture()
@@ -60,15 +59,14 @@ def _run(argv: list[str]) -> tuple[int, str, str]:
 
 def _row_for_key(db_path: str, raw_key: str) -> tuple[str, list[str]] | None:
     conn = sqlite3.connect(db_path)
-    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
     row = conn.execute(
-        "SELECT entity_uri, permissions FROM api_keys WHERE key_hash = ?",
-        (key_hash,),
-    ).fetchone()
+        "SELECT key_hash, entity_uri, permissions FROM api_keys",
+    ).fetchall()
     conn.close()
-    if row is None:
-        return None
-    return row[0], json.loads(row[1])
+    for key_hash, entity_uri, permissions in row:
+        if _verify_key_hash(raw_key, key_hash):
+            return entity_uri, json.loads(permissions)
+    return None
 
 
 # ── Happy path ────────────────────────────────────────────────────────────

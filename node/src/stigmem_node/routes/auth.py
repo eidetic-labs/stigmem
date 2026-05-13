@@ -29,7 +29,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ..audit_event import emit as audit_emit
-from ..auth import Identity, _hash_key, create_api_key, register_api_key, resolve_identity
+from ..auth import (
+    Identity,
+    create_api_key,
+    find_api_key_id_by_raw_key,
+    register_api_key,
+    resolve_identity,
+)
 from ..db import db
 from ..settings import settings
 
@@ -304,18 +310,13 @@ def register_static_key(
             detail="permissions list must be non-empty",
         )
 
-    # Collision check on the raw_key's hash.  The bootstrap raw_key is hashed
-    # to the same column; refusing the registration here prevents the new key
-    # from accidentally shadowing an existing one.
-    key_hash = _hash_key(body.raw_key)
-    with db() as conn:
-        existing = conn.execute(
-            "SELECT id FROM api_keys WHERE key_hash = ?", (key_hash,)
-        ).fetchone()
-    if existing is not None:
+    # Refuse duplicate raw credentials before hashing. Argon2id uses a fresh
+    # salt for each hash, so duplicate detection must verify existing rows
+    # rather than relying on the key_hash unique constraint.
+    if find_api_key_id_by_raw_key(body.raw_key) is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="raw_key hash collides with an existing key; generate a new key value",
+            detail="raw_key already exists; generate a new key value",
         )
 
     target_tenant = body.tenant_id or identity.tenant_id
@@ -329,14 +330,20 @@ def register_static_key(
     # here keeps CodeQL's ``py/clear-text-logging-sensitive-data`` name
     # heuristic (which matches any variable containing ``key``) from
     # false-flagging the audit log below.  Same precedent as PR #106.
-    registered_id = register_api_key(
-        raw_key=body.raw_key,
-        entity_uri=body.entity_uri,
-        permissions=permissions_sorted,
-        description=body.description,
-        expires_at=body.expires_at,
-        tenant_id=target_tenant,
-    )
+    try:
+        registered_id = register_api_key(
+            raw_key=body.raw_key,
+            entity_uri=body.entity_uri,
+            permissions=permissions_sorted,
+            description=body.description,
+            expires_at=body.expires_at,
+            tenant_id=target_tenant,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="raw_key already exists; generate a new key value",
+        ) from exc
 
     # Audit: spec §22.3.1 maps lifecycle ops on admin surfaces to
     # ``admin_action``.  Detail captures the new key's identity and the

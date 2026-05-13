@@ -244,13 +244,14 @@ class TestHashCacheTTL:
                 assert client.post("/v1/facts", json=FACT, headers=h).status_code == 201
                 assert client.post("/v1/facts", json=FACT, headers=h).status_code == 429
                 assert len(rl_mod._HASH_CACHE) == 1
-                key_hash = next(iter(rl_mod._HASH_CACHE))
+                registered_id = auth_mod.find_api_key_id_by_raw_key(raw_key)
+                assert registered_id is not None
 
                 # Revoke the key in the DB.
                 conn = sqlite3.connect(tmp_db)
                 conn.execute(
-                    "UPDATE api_keys SET expires_at=? WHERE key_hash=?",
-                    ("2000-01-01T00:00:00+00:00", key_hash),
+                    "UPDATE api_keys SET expires_at=? WHERE id=?",
+                    ("2000-01-01T00:00:00+00:00", registered_id),
                 )
                 conn.commit()
                 conn.close()

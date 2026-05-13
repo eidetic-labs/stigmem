@@ -2,7 +2,9 @@
 
 Auth model (spec §3.5):
   - Callers present `Authorization: Bearer <raw-key>` on every request.
-  - Raw keys are never stored; only their SHA-256 hex digest is persisted.
+  - Raw keys are never stored; only an Argon2id hash is persisted.
+  - Legacy SHA-256 hex digests are accepted during the v0.9.x migration
+    window and are opportunistically rehashed to Argon2id on successful use.
   - Each key maps to an entity_uri and a JSON-array of permissions:
     ["read"], ["read","write"], or ["read","write","federate"].
   - `STIGMEM_AUTH_REQUIRED` defaults to **True** — every request must
@@ -28,11 +30,16 @@ Bootstrapping the first key (single-operator install):
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
+import re
 import uuid
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHash, VerificationError, VerifyMismatchError
+from argon2.low_level import Type
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -40,9 +47,135 @@ from .db import db
 from .plugins import Deny, TenantContext, get_registry
 from .settings import settings as settings
 
+_ARGON2_HASHER = PasswordHasher(
+    time_cost=2,
+    memory_cost=19_456,
+    parallelism=1,
+    hash_len=32,
+    salt_len=16,
+    type=Type.ID,
+)
+_LEGACY_SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
+
 
 def _hash_key(raw: str) -> str:
+    """Return the persisted hash format for newly issued API keys."""
+    return _ARGON2_HASHER.hash(raw)
+
+
+def _legacy_sha256(raw: str) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _is_legacy_sha256_hash(stored_hash: str) -> bool:
+    return bool(_LEGACY_SHA256_HEX.fullmatch(stored_hash))
+
+
+def _verify_key_hash(raw_key: str, stored_hash: str) -> bool:
+    """Verify *raw_key* against either current Argon2id or legacy SHA-256."""
+    if stored_hash.startswith("$argon2id$"):
+        try:
+            return _ARGON2_HASHER.verify(stored_hash, raw_key)
+        except VerifyMismatchError:
+            return False
+        except VerificationError:
+            return False
+        except InvalidHash:
+            return False
+    if _is_legacy_sha256_hash(stored_hash):
+        return hmac.compare_digest(stored_hash, _legacy_sha256(raw_key))
+    return False
+
+
+def _row_expired(row: Any, now: str) -> bool:
+    expires_at = row["expires_at"]
+    return bool(expires_at and expires_at < now)
+
+
+def _rehash_legacy_key(conn: Any, row: Any, raw_key: str) -> None:
+    """Rewrite one verified legacy SHA-256 key row to Argon2id and audit it."""
+    new_hash = _hash_key(raw_key)
+    conn.execute(
+        "UPDATE api_keys SET key_hash = ? WHERE id = ? AND key_hash = ?",
+        (new_hash, row["id"], row["key_hash"]),
+    )
+
+    from .audit_event import emit
+
+    emit(
+        "api_key_rehashed",
+        entity_uri=row["entity_uri"],
+        tenant_id=row["tenant_id"] or "default",
+        oidc_sub=row["oidc_sub"],
+        source="system:auth",
+        detail={
+            "key_id": row["id"],
+            "from": "sha256",
+            "to": "argon2id",
+        },
+        conn=conn,
+    )
+
+
+def _select_key_rows(conn: Any) -> list[Any]:
+    return list(
+        conn.execute(
+            "SELECT id, key_hash, entity_uri, permissions, expires_at, oidc_sub, tenant_id"
+            " FROM api_keys"
+        ).fetchall()
+    )
+
+
+def _find_key_row(
+    raw_key: str,
+    *,
+    include_expired: bool = False,
+    rehash_legacy: bool = False,
+) -> Any | None:
+    now = datetime.now(UTC).isoformat()
+    with db() as conn:
+        legacy_row = conn.execute(
+            "SELECT id, key_hash, entity_uri, permissions, expires_at, oidc_sub, tenant_id"
+            " FROM api_keys WHERE key_hash = ?",
+            (_legacy_sha256(raw_key),),
+        ).fetchone()
+        if legacy_row is not None and (include_expired or not _row_expired(legacy_row, now)):
+            if rehash_legacy:
+                _rehash_legacy_key(conn, legacy_row, raw_key)
+                legacy_row = conn.execute(
+                    "SELECT id, key_hash, entity_uri, permissions, expires_at, oidc_sub, tenant_id"
+                    " FROM api_keys WHERE id = ?",
+                    (legacy_row["id"],),
+                ).fetchone()
+            return legacy_row
+
+        for row in _select_key_rows(conn):
+            if not include_expired and _row_expired(row, now):
+                continue
+            if _verify_key_hash(raw_key, row["key_hash"]):
+                if rehash_legacy and _is_legacy_sha256_hash(row["key_hash"]):
+                    _rehash_legacy_key(conn, row, raw_key)
+                    row = conn.execute(
+                        "SELECT id, key_hash, entity_uri, permissions, expires_at, oidc_sub,"
+                        " tenant_id FROM api_keys WHERE id = ?",
+                        (row["id"],),
+                    ).fetchone()
+                return row
+    return None
+
+
+def find_api_key_id_by_raw_key(raw_key: str) -> str | None:
+    """Return the stored key id for *raw_key*, including expired rows."""
+    row = _find_key_row(raw_key, include_expired=True, rehash_legacy=False)
+    return row["id"] if row is not None else None
+
+
+def lookup_principal(raw_key: str) -> tuple[str, str, str | None] | None:
+    """Return (entity_uri, tenant_id, oidc_sub) for a non-expired raw key."""
+    row = _find_key_row(raw_key, include_expired=False, rehash_legacy=False)
+    if row is None:
+        return None
+    return (row["entity_uri"], row["tenant_id"] or "default", row["oidc_sub"])
 
 
 BEARER = HTTPBearer(auto_error=False)
@@ -150,17 +283,8 @@ def _apply_identity_hooks(identity: Identity, raw_credentials: str | None) -> Id
 
 
 def _lookup(raw_key: str) -> Identity | None:
-    key_hash = _hash_key(raw_key)
-    now = datetime.now(UTC).isoformat()
-    with db() as conn:
-        row = conn.execute(
-            "SELECT entity_uri, permissions, expires_at, oidc_sub, tenant_id"
-            " FROM api_keys WHERE key_hash = ?",
-            (key_hash,),
-        ).fetchone()
+    row = _find_key_row(raw_key, include_expired=False, rehash_legacy=True)
     if row is None:
-        return None
-    if row["expires_at"] and row["expires_at"] < now:
         return None
     perms: list[str] = json.loads(row["permissions"])
     return Identity(
@@ -188,6 +312,8 @@ def register_api_key(
     """
     if permissions is None:
         permissions = ["read", "write"]
+    if find_api_key_id_by_raw_key(raw_key) is not None:
+        raise ValueError("raw API key already exists")
     key_id = str(uuid.uuid4())
     with db() as conn:
         conn.execute(

@@ -241,9 +241,9 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 
 **Who is the attacker?** Anyone with filesystem-level access to the server, a stolen backup, or access to an unprotected storage bucket.
 
-**What can they do?** Open the SQLite file with any SQLite browser and read every fact in every scope — `local`, `team`, `company`, and `public`. All fact content is in plaintext in the default deployment. They also read API key hashes (SHA-256), though these are not reversible for UUID4-derived keys.
+**What can they do?** Open the SQLite file with any SQLite browser and read every fact in every scope — `local`, `team`, `company`, and `public`. All fact content is in plaintext in the default deployment. They also read API key hashes. New keys are Argon2id-hashed; legacy v0.9.0a1 SHA-256 rows remain until first successful use or explicit rotation.
 
-**What can't they do?** Use the API key hashes to impersonate callers (SHA-256 of a 128-bit random key cannot be reversed), or access facts on other nodes in the federation.
+**What can't they do?** Use the API key hashes directly to impersonate callers, or access facts on other nodes in the federation.
 
 **Who is most at risk?** Deployments handling regulated data (GDPR, HIPAA, SOC 2) that do not enable SQLCipher. The default deployment intentionally does not encrypt at rest because SQLCipher adds deployment complexity.
 
@@ -368,7 +368,7 @@ Until R-19's mitigation ships, federation operators must monitor HLC drift out-o
 - Issue RTBF tombstones that permanently suppress facts for any entity.
 - (deferred to a future release) Access time-travel `as_of` queries including legal-hold data.
 
-**What can't they do?** Read the plaintext of other admin keys (they are SHA-256 hashed), or access the private signing keys stored on the filesystem (those require OS-level access).
+**What can't they do?** Read the plaintext of other admin keys (only API-key hashes are stored), or access the private signing keys stored on the filesystem (those require OS-level access).
 
 **How do you recover?**
 1. Immediately revoke the compromised admin key.

@@ -5,7 +5,6 @@ from pathlib import Path
 
 import yaml
 
-
 _OPENCLAW_ROOT = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _OPENCLAW_ROOT.parents[1]
 

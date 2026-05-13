@@ -261,6 +261,7 @@ class TestSQLAdaptation:
     def test_like_pattern_with_percent(self, pg_backend) -> None:
         """LIKE 'stigmem://%' literals must not be mangled; SQL uses '%%' for escaped percent."""
         fact_id = f"like-test-{uuid.uuid4()}"
+        nonmatch_id = f"like-test-nonmatch-{uuid.uuid4()}"
         with pg_backend.connection() as conn:
             conn.execute(
                 "INSERT INTO facts "
@@ -278,10 +279,28 @@ class TestSQLAdaptation:
                     "local",
                 ),
             )
+            conn.execute(
+                "INSERT INTO facts "
+                "(id, entity, relation, value_type, value_v, source, timestamp, confidence, scope) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    nonmatch_id,
+                    "http://example.com/nonmatch",
+                    "rel",
+                    "string",
+                    "v",
+                    "src",
+                    "2026-01-01T00:00:00Z",
+                    1.0,
+                    "local",
+                ),
+            )
             rows = conn.execute(
                 "SELECT id FROM facts WHERE entity LIKE 'stigmem://%%'",
             ).fetchall()
-        assert any(r["id"] == fact_id for r in rows)
+        returned_ids = {r["id"] for r in rows}
+        assert fact_id in returned_ids
+        assert nonmatch_id not in returned_ids
 
     def test_row_dict_access(self, pg_backend) -> None:
         fact_id = f"row-dict-{uuid.uuid4()}"
@@ -305,6 +324,31 @@ class TestSQLAdaptation:
         # .keys()
         assert "id" in row
         assert "entity" in row
+
+        null_fact_id = f"row-dict-null-{uuid.uuid4()}"
+        with pg_backend.connection() as conn:
+            conn.execute(
+                "INSERT INTO facts "
+                "(id, entity, relation, value_type, value_v, source, timestamp, confidence, scope) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    null_fact_id,
+                    "e-null",
+                    "r",
+                    "string",
+                    "hello-null",
+                    "src",
+                    "2026-01-01T00:00:00Z",
+                    None,
+                    "local",
+                ),
+            )
+            null_row = conn.execute(
+                "SELECT * FROM facts WHERE id = ?", (null_fact_id,)
+            ).fetchone()
+        assert null_row is not None
+        assert null_row.get("confidence") is None
+        assert null_row.get("confidence", "fallback") is None
 
 
 # ---------------------------------------------------------------------------

@@ -153,6 +153,8 @@ surfaces:
     notes: >-
       `Stigmem-Version` HTTP header carries the wire-format version negotiated
       between client and node. Value is the shorthand form (`v0.9.0a1`).
+      Inventory-only until the implementation exposes a concrete file/field;
+      skipped by the version-consistency check.
 
   - id: stigmem-beta-header
     kind: internal-protocol
@@ -160,6 +162,10 @@ surfaces:
     spelling: shorthand
     sort_authority: pep440
     spec: ADR-012
+    notes: >-
+      Beta-version HTTP header surface from ADR-012. Inventory-only until the
+      implementation exposes a concrete file/field; skipped by the
+      version-consistency check.
 
   - id: openapi-info-version
     kind: internal-protocol
@@ -187,7 +193,9 @@ surfaces:
     notes: >-
       Version field exchanged during federation peer handshake. Currently
       internal; becomes external when third parties write peer
-      implementations — re-evaluate `kind:` then.
+      implementations — re-evaluate `kind:` then. Inventory-only until the
+      implementation exposes a concrete file/field; skipped by the
+      version-consistency check.
 
   # ──────────────────────────────────────────────────────────────────────────
   # Internal-build-artifact — Sigstore / Rekor / supply-chain
@@ -201,7 +209,9 @@ surfaces:
     spec: ADR-016
     notes: >-
       Version field in the Sigstore Rekor inclusion manifest (per ADR-016 L5).
-      Records which stigmem release the entry belongs to.
+      Records which stigmem release the entry belongs to. Inventory-only until
+      the implementation exposes a concrete file/field; skipped by the
+      version-consistency check.
 
   # ──────────────────────────────────────────────────────────────────────────
   # Documentation surfaces — version strings in prose / frontmatter

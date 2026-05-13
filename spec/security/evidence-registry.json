@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "status_vocabulary": ["Open", "In review", "Mitigated", "Residual", "Accepted"],
+  "review_decision_vocabulary": ["accept-as-is", "patch", "replace"],
+  "risks": {
+    "R-01": {
+      "title": "mTLS federation peer authentication",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a1",
+      "implementation_files": [
+        "node/src/stigmem_node/tls.py",
+        "node/src/stigmem_node/peer_auth.py",
+        "node/src/stigmem_node/routes/federation.py"
+      ],
+      "test_files": ["node/tests/test_mtls.py"],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/mtls.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Threat model marks R-01 mitigated by TLS 1.3 floor, required client certificates, and SAN/entity_uri binding."
+    },
+    "R-02": {
+      "title": "Per-principal rate limits",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a1",
+      "implementation_files": [
+        "node/src/stigmem_node/rate_limit.py",
+        "node/migrations/022_quota_buckets.sql"
+      ],
+      "test_files": ["node/tests/test_quota.py"],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/audit-and-quotas.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Covers fact-write, recall, federation-pull, and related token-bucket quota dimensions."
+    },
+    "R-03": {
+      "title": "API key max-age enforcement",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a1",
+      "implementation_files": [
+        "node/src/stigmem_node/auth.py",
+        "node/src/stigmem_node/identity/key_rotation.py"
+      ],
+      "test_files": ["node/tests/test_phase12_key_rotation.py"],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/key-rotation.md",
+        "docs/adr/007-argon2id.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Current mitigation is enforced expiry/max-age; Argon2id hashing remains tracked separately as a Phase B defense-in-depth migration."
+    },
+    "R-06": {
+      "title": "Federation replay protection fuzz coverage",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a1",
+      "implementation_files": [
+        "node/src/stigmem_node/identity/capability.py",
+        "node/src/stigmem_node/peer_token.py"
+      ],
+      "test_files": ["node/tests/test_phase12_replay_fuzz.py"],
+      "docs_reference_files": ["spec/security/threat-model.md"],
+      "review_decision": "accept-as-is",
+      "notes": "Evidence focuses on fuzz and nonce-cache survival tests named by the threat model."
+    },
+    "R-09": {
+      "title": "General-purpose audit log for reads and admin actions",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a1",
+      "implementation_files": [
+        "node/src/stigmem_node/audit_event.py",
+        "node/src/stigmem_node/routes/admin_audit.py"
+      ],
+      "test_files": [
+        "node/tests/test_admin_audit.py",
+        "node/tests/test_audit_enriched.py"
+      ],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/audit-log.md",
+        "docs/docs/security/audit-and-quotas.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Registry entry captures audit-log presence and tests; operational log monitoring remains a residual operator responsibility."
+    },
+    "R-10": {
+      "title": "Org manifest key-rotation log entries",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a1",
+      "implementation_files": [
+        "node/src/stigmem_node/identity/key_rotation.py",
+        "node/src/stigmem_node/identity/transparency_log.py"
+      ],
+      "test_files": ["node/tests/test_phase12_key_rotation.py"],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/key-rotation.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Evidence records that key-rotation events are emitted before activation and tied into audit/transparency-log paths."
+    },
+    "R-11": {
+      "title": "Container hardening baseline",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a1",
+      "implementation_files": [
+        "node/Dockerfile",
+        "deploy/seccomp/stigmem-node.json",
+        ".github/workflows/ci.yml"
+      ],
+      "test_files": ["node/tests/test_secure_defaults.py"],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/container-hardening.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "CI container-smoke job also verifies non-root runtime, read-only root filesystem, SBOM generation, and seccomp denylist content."
+    },
+    "R-12": {
+      "title": "Per-agent quota dimension",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a1",
+      "implementation_files": [
+        "node/src/stigmem_node/rate_limit.py",
+        "node/migrations/022_quota_buckets.sql"
+      ],
+      "test_files": ["node/tests/test_quota.py"],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/audit-and-quotas.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "R-12 shares the R-02 rate-limit implementation but is tracked separately because the threat model names the agent-tool surface."
+    },
+    "R-14": {
+      "title": "Capability token verb/object validation",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a1",
+      "implementation_files": ["node/src/stigmem_node/identity/capability.py"],
+      "test_files": [
+        "node/tests/test_phase12_key_rotation.py",
+        "node/tests/test_phase8_identity.py"
+      ],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "docs/docs/security/agent-keypairs.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Evidence records current admission validation; broader capability redesign remains tracked by ADR-003 and Phase B issues."
+    }
+  }
+}

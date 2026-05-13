@@ -21,7 +21,7 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 |----------------|----------------------------------------------------------------------------|
 | **Stable**     | Spec section normative in v0.9.0a1; in core; no breaking changes within v0.9.0a series wire-format scope. |
 | **Preview**    | Shipped as part of v0.9.0a1 with no stability guarantee; pin to specific versions. |
-| **Experimental** | Implementation in `experimental/<feature>/`; opt-in plugin per ADR-011 in v0.9.0a2..a8 series; not in default install. |
+| **Experimental** | Feature artifact lives under `experimental/<feature>/`; opt-in plugin extraction happens across the v0.9.0a2..a8 series per ADR-011; not in default install. |
 | **Deferred**   | Code exists but is not part of the v1 critical-path; lives in `experimental/` with `STATUS.md` per [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). |
 
 **No calendar dates.** Stigmem is phase-gated, not time-gated. Phase progression is documented in [ROADMAP.md](https://github.com/Eidetic-Labs/stigmem/blob/main/ROADMAP.md).
@@ -116,6 +116,18 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 | Helm / Kubernetes                   | Deferred to `experimental/deploy-helm/` |
 | Fly.io / systemd / Grafana / PaaS configs | Deferred to `experimental/deploy-*/` |
 
+## Plugin infrastructure (alpha-series foundation)
+
+| Capability                          | Status     |
+|-------------------------------------|------------|
+| Stable 22-hook registry surface     | Landed on main after v0.9.0a1; queued for the next alpha artifact refresh |
+| Typed hook semantics                | Landed — voting, filter-chain, score-delta, fire-and-forget |
+| Manual/core handler registration    | Landed — deterministic ordering with minimum manifest/context/capability APIs |
+| Hook-site wiring                    | Landed across assertion, recall, federation, auth, migration, and audit paths |
+| Registry observability and tests    | Landed — audit/metrics plumbing, test registry helpers, and hook-firing benchmark gate |
+| Entry-point discovery, lifecycle, health polling, operator CLI | Remaining alpha-series infrastructure work |
+| Production signing/trust and author/operator plugin docs | Remaining alpha-series infrastructure work |
+
 ## Experimental & deferred features
 
 The following features are in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) but are **not in v0.9.0a1's default install**. Across the v0.9.0a2..a8 alpha series, cross-cutting features are extracted into opt-in experimental plugin packages per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md). That alpha extraction is not ADR-008 graduation; graduation into the supported surface happens later, after the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) five-gate process.
@@ -144,7 +156,7 @@ See the full deferred-features list at [Experimental & Deferred Features](../ref
 
 The v0.9.0a1 default install ships with feature-specific code in `node/src/stigmem_node/` for several deferred features (`tombstones.py`, `instruction_migrate.py`, `card_materializer.py`, `source_trust.py`, etc.). The routes are mounted but the features are dormant unless explicitly configured. Per [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per ADR-011's C1 plugin architecture; after v0.9.0a8, default install will be true to ADR-011's commitment.
 
-Main now includes the hook-registry foundation and stable 22-hook surface. External plugins are not yet installable from package entry points, and the deferred features listed below have not yet been extracted into plugin packages.
+Main now includes the hook-registry foundation and stable 22-hook surface, with manual/core handler registration, minimum manifest/context/capability APIs, hook-site wiring, registry observability, test helpers, and benchmark coverage. External plugins are not yet installable from package entry points, and the deferred features listed below have not yet been extracted into plugin packages.
 
 See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md) for the full architectural-gap acknowledgment.
 

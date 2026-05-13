@@ -33,7 +33,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [x] **Public retraction and posture calibration** — retraction post is live; README, SECURITY, LIMITATIONS, roadmap, and docs site now describe the alpha posture instead of the withdrawn v1.0 claim.
 - [x] **Docs information architecture** — docs site follows ADR-005's Learn / Build / Operate / Secure structure.
 - [x] **Deferred-feature layout** — out-of-scope features live under `experimental/` per ADR-009; CIDs remain core per ADR-017.
-- [x] **Hook registry foundation** — main now includes the stable 22-hook registry surface, typed hook semantics, deterministic manual/core registration, minimum `PluginManifest` / `PluginContext` / capability APIs, hook-site wiring, audit/migration plumbing, test registry helpers, and the hook-firing benchmark gate.
+- [x] **Hook registry foundation** — main now includes the stable 22-hook registry surface, typed voting/filter-chain/score-delta/fire-and-forget semantics, deterministic manual/core registration, minimum `PluginManifest` / `PluginContext` / capability APIs, hook-site wiring across assertion/recall/federation/auth/migration/audit paths, registry audit/metrics plumbing, test registry helpers, and the hook-firing benchmark gate. This work landed after the v0.9.0a1 artifacts and is queued for the next alpha artifact refresh.
 - [ ] **Remaining plugin infrastructure** — package discovery, plugin dependency lifecycle, health polling, operator CLI, production signing/trust, plugin author/operator documentation, and full plugin migration lifecycle/checksum tracking.
 - [ ] **Per-feature plugin extraction** — lazy instruction discovery, time-travel, tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation are extracted into opt-in experimental plugin packages across the alpha series. CIDs remain core.
 - [ ] **Next-alpha artifact refresh** — pick up the live retraction URL in packaged READMEs, TypeScript SDK README, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literal, wheel migration packaging fix, and ongoing lint/coverage/complexity ratchets.
@@ -41,7 +41,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 ### Exit criteria
 - Public retraction visible.
 - Repo top-level matches ADR-009 shape (~22 entries; `experimental/` is canonical home for deferred features).
-- Plugin infrastructure shipped per ADR-011.
+- Hook registry foundation shipped, and remaining plugin infrastructure operationalized per ADR-011: package discovery/lifecycle, dependency resolution, health polling, operator CLI, production signing/trust, author/operator docs, and plugin migration lifecycle tracking.
 - All six cross-cutting features implemented as plugins under `experimental/<feature>/`; CIDs remain core per ADR-017. Core has no remaining feature-specific code for deferred plugin features.
 - Default install (no plugins registered) produces v1.0.0-critical-path behavior.
 - Multi-tenant adopters opt into `stigmem-plugin-multi-tenant`.

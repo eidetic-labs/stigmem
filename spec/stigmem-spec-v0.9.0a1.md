@@ -45,7 +45,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 | `Spec-09-Audit-Log` + `Spec-10-Hardening` + `Spec-11-Replay-Protection` | Security hardening | §22 | Stable | `Spec-09`, `Spec-10`, and `Spec-11` material extracted |
 | `Spec-X2-RTBF-Tombstones` | RTBF tombstones | §23 | **Deferred** | `experimental/tombstones/spec.md` |
 | `Spec-X3-Time-Travel` | Time-travel queries | §24 | **Deferred** | `experimental/time-travel/spec.md` |
-| `Spec-21-Content-Addressed-IDs` | Content-addressed fact IDs (CIDs) | §25 | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md)). This is a core modular-spec assignment, not ADR-008 graduation. | Planned `spec/specs/21-content-addressed-ids.md` |
+| `Spec-21-Content-Addressed-IDs` | Content-addressed fact IDs (CIDs) | §25 | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md)). This is a core modular-spec assignment, not ADR-008 graduation. | `spec/specs/21-content-addressed-ids.md` |
 | `Spec-12-HLC-Bounded-Skew` | HLC bounded skew (R-19) | (new in v0.9.0a2) | Implemented on main for v0.9.0a2 | `spec/specs/12-hlc-bounded-skew.md` |
 | `Spec-13-Capability-Based-Instructions` | Capability-based instructions per ADR-003 | (new in v0.9.0bN beta series) | Targeted v0.9.0bN beta series | `spec/specs/13-capability-based-instructions.md` |
 | `Spec-14-Batch-Assert` | Batch assert API per ADR-006 | (new in v0.9.0bN beta series) | Targeted v0.9.0bN beta series | `spec/specs/14-batch-assert.md` |

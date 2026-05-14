@@ -23,7 +23,7 @@ The canonical spec is in flight — content arrives section-by-section as the ma
 | §22 Security Hardening | Stable | This file → canonical spec |
 | §23 RTBF Tombstones | Deferred | [`experimental/tombstones/spec.md`](../experimental/tombstones/spec.md) |
 | §24 Time-Travel Queries | Deferred | [`experimental/time-travel/spec.md`](../experimental/time-travel/spec.md) |
-| §25 Content-Addressed Fact IDs (CIDs) | **Stable in core** per [ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md) | This file → canonical spec |
+| §25 Content-Addressed Fact IDs (CIDs) | **Stable in core** per [ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md) | [`specs/21-content-addressed-ids.md`](specs/21-content-addressed-ids.md) |
 
 ## Modular spec migration (ADR-010)
 

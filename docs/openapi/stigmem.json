@@ -297,7 +297,7 @@
                 "type": "null"
               }
             ],
-            "description": "v0.9: URI of the garden this fact belongs to",
+            "description": "URI of the garden this fact belongs to (Spec-02-Scopes-and-ACL)",
             "title": "Garden Id"
           },
           "relation": {
@@ -598,7 +598,7 @@
         "type": "object"
       },
       "ConflictResolveRequest": {
-        "description": "Request body for POST /v1/conflicts/:id/resolve (spec \u00a75.10).",
+        "description": "Request body for POST /v1/conflicts/:id/resolve (Spec-15-Fact-Semantics).",
         "properties": {
           "new_value": {
             "anyOf": [
@@ -631,7 +631,7 @@
         "type": "object"
       },
       "Constraint": {
-        "description": "Hard limit on an intent (spec \u00a74.2).",
+        "description": "Hard limit on an intent (Spec-X8-Intent-Envelope).",
         "properties": {
           "kind": {
             "minLength": 1,
@@ -661,7 +661,7 @@
         "type": "object"
       },
       "DeferenceRule": {
-        "description": "When to defer to another entity before proceeding (spec \u00a74.4).",
+        "description": "When to defer to another entity before proceeding (Spec-X8-Intent-Envelope).",
         "properties": {
           "condition": {
             "minLength": 1,
@@ -694,7 +694,7 @@
         "type": "object"
       },
       "EscalationPolicy": {
-        "description": "Who to notify and how when escalation is required (spec \u00a74.5).",
+        "description": "Who to notify and how when escalation is required (Spec-X8-Intent-Envelope).",
         "properties": {
           "channel": {
             "default": "stigmem",
@@ -1100,7 +1100,7 @@
           },
           "quarantine": {
             "default": false,
-            "description": "v1.1: create as quarantine garden (\u00a719.5)",
+            "description": "Create as a quarantine garden (Spec-08-Quarantine-Garden)",
             "title": "Quarantine",
             "type": "boolean"
           },
@@ -1263,7 +1263,7 @@
         "type": "object"
       },
       "HandoffArtifact": {
-        "description": "Named artifact reference passed along with a handoff (spec \u00a74.6).",
+        "description": "Named artifact reference passed along with a handoff (Spec-X8-Intent-Envelope).",
         "properties": {
           "name": {
             "minLength": 1,
@@ -1285,7 +1285,7 @@
         "type": "object"
       },
       "HandoffPayload": {
-        "description": "Structured context transfer for agent handoffs (spec \u00a74.6).\n\nfact_refs MUST include any facts the receiver needs to reconstitute context.",
+        "description": "Structured context transfer for agent handoffs (Spec-X8-Intent-Envelope).\n\nfact_refs MUST include any facts the receiver needs to reconstitute context.",
         "properties": {
           "artifacts": {
             "items": {
@@ -1325,7 +1325,7 @@
         "type": "object"
       },
       "IntentEnvelopeRecord": {
-        "description": "Response for POST /v1/intents and GET /v1/intents/:id (spec \u00a75.14).",
+        "description": "Response for POST /v1/intents and GET /v1/intents/:id (Spec-X8-Intent-Envelope).",
         "properties": {
           "constraint": {
             "items": {
@@ -1435,7 +1435,7 @@
         "type": "object"
       },
       "IntentEnvelopeRequest": {
-        "description": "POST /v1/intents request body (spec \u00a74, \u00a75.14).\n\nThe ``from`` field is aliased as ``from_uri`` in Python to avoid the keyword clash.\nClients MUST send the JSON key ``\"from\"``.",
+        "description": "POST /v1/intents request body (Spec-X8-Intent-Envelope).\n\nThe ``from`` field is aliased as ``from_uri`` in Python to avoid the keyword clash.\nClients MUST send the JSON key ``\"from\"``.",
         "properties": {
           "constraint": {
             "items": {
@@ -2000,7 +2000,7 @@
         "type": "object"
       },
       "Preference": {
-        "description": "Soft preference on an intent (spec \u00a74.3).",
+        "description": "Soft preference on an intent (Spec-X8-Intent-Envelope).",
         "properties": {
           "kind": {
             "minLength": 1,
@@ -2026,7 +2026,7 @@
         "type": "object"
       },
       "ProvenanceEntry": {
-        "description": "One entry in a fact's derived_from chain.\n\nexists=False means the referenced entity is tombstoned or the fact is otherwise\ninaccessible (\u00a723.3.2 r.4 + \u00a720.6.2). Shape is identical in both cases so\ncallers cannot distinguish tombstone from unauthorized.",
+        "description": "One entry in a fact's derived_from chain.\n\nexists=False means the referenced entity is tombstoned or the fact is otherwise\ninaccessible. Shape is identical in both cases so\ncallers cannot distinguish tombstone from unauthorized.",
         "properties": {
           "entity": {
             "anyOf": [
@@ -2404,7 +2404,7 @@
                 "type": "null"
               }
             ],
-            "description": "\u00a724: time-travel \u2014 return facts visible at this ISO 8601 timestamp",
+            "description": "Time-travel query: return facts visible at this ISO 8601 timestamp (Spec-X3-Time-Travel-Queries)",
             "title": "As Of"
           },
           "depth": {
@@ -3043,7 +3043,7 @@
         "type": "object"
       },
       "TombstoneNotice": {
-        "description": "Tombstone metadata surfaced to admin callers on time-travel queries (spec \u00a724.3.2).",
+        "description": "Tombstone metadata surfaced to admin callers on time-travel queries.\n\nCovered by Spec-X3-Time-Travel-Queries.",
         "properties": {
           "entity_uri": {
             "title": "Entity Uri",
@@ -3072,7 +3072,7 @@
         "type": "object"
       },
       "TombstoneRecord": {
-        "description": "Durable record directing every node to suppress facts about entity_uri (\u00a723.2).",
+        "description": "Durable record directing every node to suppress facts about entity_uri.\n\nCovered by Spec-X2-RTBF-Tombstones.",
         "properties": {
           "created_at": {
             "title": "Created At",
@@ -3132,7 +3132,7 @@
         "type": "object"
       },
       "TombstoneRevocationRecord": {
-        "description": "Record reinstating a tombstoned entity (\u00a723.2.5).",
+        "description": "Record reinstating a tombstoned entity (Spec-X2-RTBF-Tombstones).",
         "properties": {
           "created_at": {
             "title": "Created At",
@@ -3320,7 +3320,7 @@
   "paths": {
     "/.well-known/stigmem": {
       "get": {
-        "description": "Return node identity, auth mode, and federation capability advertisement (spec \u00a75.3).",
+        "description": "Return node identity, auth mode, and federation capability advertisement.\n\nCovered by Spec-03-HTTP-API.",
         "operationId": "node_metadata__well_known_stigmem_get",
         "responses": {
           "200": {
@@ -3510,7 +3510,7 @@
     },
     "/v1/admin/cid-backfill/status": {
       "get": {
-        "description": "Return CID backfill progress for this node (spec \u00a725.6.3).",
+        "description": "Return CID backfill progress for this node (Spec-21-Content-Addressed-IDs).",
         "operationId": "cid_backfill_status_v1_admin_cid_backfill_status_get",
         "responses": {
           "200": {
@@ -4600,7 +4600,7 @@
     },
     "/v1/cards/{entity_uri}": {
       "get": {
-        "description": "Fetch the synthesized memory card for an entity (spec \u00a720).\n\nReturns 404 when the entity has no live facts.",
+        "description": "Fetch the synthesized memory card for an entity (Spec-X11-Recall-Graph).\n\nReturns 404 when the entity has no live facts.",
         "operationId": "get_card_v1_cards__entity_uri__get",
         "parameters": [
           {
@@ -4754,7 +4754,7 @@
     },
     "/v1/conflicts/{conflict_id}/resolve": {
       "post": {
-        "description": "Assert a canonical resolution fact and close the conflict (spec \u00a75.10).",
+        "description": "Assert a canonical resolution fact and close the conflict (Spec-15-Fact-Semantics).",
         "operationId": "resolve_conflict_v1_conflicts__conflict_id__resolve_post",
         "parameters": [
           {
@@ -4814,7 +4814,7 @@
     },
     "/v1/decay/jobs/{job_id}": {
       "get": {
-        "description": "Poll the status of an async decay job (spec \u00a715.4).",
+        "description": "Poll the status of an async decay job (Spec-X9-Decay-Semantics).",
         "operationId": "get_decay_job_v1_decay_jobs__job_id__get",
         "parameters": [
           {
@@ -4862,7 +4862,7 @@
     },
     "/v1/decay/sweep": {
       "post": {
-        "description": "Mark stale facts as expired. Cron-friendly one-shot sweeper (Phase 6).\n\nReturns 200 synchronously for scopes \u2264 threshold facts (spec \u00a715.4).\nReturns 202 with job_id for larger scopes; poll GET /v1/decay/jobs/:job_id.\nNote: dry_run is always synchronous per spec \u00a715.4.",
+        "description": "Mark stale facts as expired. Cron-friendly one-shot sweeper.\n\nReturns 200 synchronously for scopes \u2264 threshold facts (Spec-X9-Decay-Semantics).\nReturns 202 with job_id for larger scopes; poll GET /v1/decay/jobs/:job_id.\nNote: dry_run is always synchronous per Spec-X9-Decay-Semantics.",
         "operationId": "decay_sweep_v1_decay_sweep_post",
         "parameters": [
           {
@@ -4970,7 +4970,7 @@
     },
     "/v1/entities/resolve": {
       "get": {
-        "description": "Resolve a raw entity URI using 3-layer fuzzy resolution (spec \u00a72.6.6).\n\nLayer 1: canonical normalisation (case/whitespace collapse).\nLayer 2: alias table lookup (explicit pre-registered mappings).\nLayer 3: token-fuzzy scoring over entities of the same type prefix in the fact graph.\n\nReturns the best resolved URI and scored candidates with match details.",
+        "description": "Resolve a raw entity URI using 3-layer fuzzy resolution (Spec-01-Fact-Model).\n\nLayer 1: canonical normalisation (case/whitespace collapse).\nLayer 2: alias table lookup (explicit pre-registered mappings).\nLayer 3: token-fuzzy scoring over entities of the same type prefix in the fact graph.\n\nReturns the best resolved URI and scored candidates with match details.",
         "operationId": "resolve_entity_uri_v1_entities_resolve_get",
         "parameters": [
           {
@@ -5050,7 +5050,7 @@
     },
     "/v1/facts": {
       "get": {
-        "description": "Query facts by pattern (spec \u00a75.2, \u00a75.20). Omitted fields are wildcards. Entity/source are normalized (\u00a72.6).",
+        "description": "Query facts by pattern (Spec-03-HTTP-API).\n\nOmitted fields are wildcards. Entity/source are normalized by Spec-01-Fact-Model.",
         "operationId": "query_facts_v1_facts_get",
         "parameters": [
           {
@@ -5198,7 +5198,7 @@
             }
           },
           {
-            "description": "v0.9: filter to facts in this garden (spec \u00a75.20)",
+            "description": "Filter to facts in this garden (Spec-02-Scopes-and-ACL)",
             "in": "query",
             "name": "garden_id",
             "required": false,
@@ -5211,12 +5211,12 @@
                   "type": "null"
                 }
               ],
-              "description": "v0.9: filter to facts in this garden (spec \u00a75.20)",
+              "description": "Filter to facts in this garden (Spec-02-Scopes-and-ACL)",
               "title": "Garden Id"
             }
           },
           {
-            "description": "v0.9: filter by attestation status (spec \u00a718.6)",
+            "description": "Filter by source-attestation status (Spec-X6-Source-Attestation)",
             "in": "query",
             "name": "attested",
             "required": false,
@@ -5229,24 +5229,24 @@
                   "type": "null"
                 }
               ],
-              "description": "v0.9: filter by attestation status (spec \u00a718.6)",
+              "description": "Filter by source-attestation status (Spec-X6-Source-Attestation)",
               "title": "Attested"
             }
           },
           {
-            "description": "v1.1: include facts with effective_confidence < 0.3 (\u00a719.4.4)",
+            "description": "Include facts with effective_confidence < 0.3 (Spec-05-Federation-Trust)",
             "in": "query",
             "name": "include_low_trust",
             "required": false,
             "schema": {
               "default": false,
-              "description": "v1.1: include facts with effective_confidence < 0.3 (\u00a719.4.4)",
+              "description": "Include facts with effective_confidence < 0.3 (Spec-05-Federation-Trust)",
               "title": "Include Low Trust",
               "type": "boolean"
             }
           },
           {
-            "description": "\u00a724: time-travel \u2014 return facts visible at this ISO 8601 timestamp",
+            "description": "Time-travel query: return facts visible at this ISO 8601 timestamp (Spec-X3-Time-Travel-Queries)",
             "in": "query",
             "name": "as_of",
             "required": false,
@@ -5259,7 +5259,7 @@
                   "type": "null"
                 }
               ],
-              "description": "\u00a724: time-travel \u2014 return facts visible at this ISO 8601 timestamp",
+              "description": "Time-travel query: return facts visible at this ISO 8601 timestamp (Spec-X3-Time-Travel-Queries)",
               "title": "As Of"
             }
           }
@@ -5297,7 +5297,7 @@
         ]
       },
       "post": {
-        "description": "Assert a fact into the fabric (spec \u00a75.1, \u00a72.6). Normalizes entity/source URIs on ingest.",
+        "description": "Assert a fact into the fabric.\n\nCovered by Spec-03-HTTP-API and Spec-01-Fact-Model. Normalizes\nentity/source URIs on ingest.",
         "operationId": "assert_fact_v1_facts_post",
         "requestBody": {
           "content": {
@@ -5344,7 +5344,7 @@
     },
     "/v1/facts/{fact_id}": {
       "get": {
-        "description": "Retrieve a single fact by UUID or sha256: CID (spec v0.4 \u00a75.5, \u00a717.3, \u00a725.5).",
+        "description": "Retrieve a single fact by UUID or sha256: CID.\n\nCovered by Spec-03-HTTP-API and Spec-21-Content-Addressed-IDs.",
         "operationId": "get_fact_v1_facts__fact_id__get",
         "parameters": [
           {
@@ -5392,7 +5392,7 @@
     },
     "/v1/facts/{fact_id}/provenance": {
       "get": {
-        "description": "Provenance walk with tombstone suppression (spec \u00a723.3.2 r.4 + \u00a720.6.2).\n\nReturns the derived_from chain for a fact.  Any entry whose referenced entity is\ntombstoned \u2014 or whose fact is otherwise inaccessible \u2014 is redacted to\n{\"hash\": \"...\", \"exists\": false}, indistinguishable from the \u00a720.6.2\nunauthorized cross-scope pattern to prevent existence leakage.",
+        "description": "Provenance walk with tombstone suppression.\n\nReturns the derived_from chain for a fact.  Any entry whose referenced entity is\ntombstoned \u2014 or whose fact is otherwise inaccessible \u2014 is redacted to\n{\"hash\": \"...\", \"exists\": false}, indistinguishable from unauthorized\ncross-scope references to prevent existence leakage. Covered by\nSpec-X2-RTBF-Tombstones and Spec-X11-Recall-Graph.",
         "operationId": "get_provenance_v1_facts__fact_id__provenance_get",
         "parameters": [
           {
@@ -5440,7 +5440,7 @@
     },
     "/v1/facts/{fact_id}/verify-cid": {
       "post": {
-        "description": "Verify a fact's stored CID against a freshly computed one (spec \u00a725.6.2).",
+        "description": "Verify a fact's stored CID against a freshly computed one.\n\nCovered by Spec-21-Content-Addressed-IDs.",
         "operationId": "verify_cid_v1_facts__fact_id__verify_cid_post",
         "parameters": [
           {
@@ -5624,7 +5624,7 @@
     },
     "/v1/federation/capability-tokens/verify": {
       "post": {
-        "description": "Verify a capability token (spec \u00a719.3.3 steps 1\u20136).\n\nReturns {\"valid\": true} on success, or {\"valid\": false, \"reason\": \"...\"}\nwhen the token fails any verification step (expired, bad sig, revoked, etc.).\nHTTP 200 in both cases; 422 only for a missing/malformed request body.",
+        "description": "Verify a capability token (Spec-06-Capability-Tokens).\n\nReturns {\"valid\": true} on success, or {\"valid\": false, \"reason\": \"...\"}\nwhen the token fails any verification step (expired, bad sig, revoked, etc.).\nHTTP 200 in both cases; 422 only for a missing/malformed request body.",
         "operationId": "verify_capability_token_endpoint_v1_federation_capability_tokens_verify_post",
         "requestBody": {
           "content": {
@@ -5737,7 +5737,7 @@
     },
     "/v1/federation/facts": {
       "get": {
-        "description": "Return scope-filtered, HLC-cursor-paged facts to an authenticated peer (\u00a75.8).",
+        "description": "Return scope-filtered, HLC-cursor-paged facts to an authenticated peer.\n\nCovered by Spec-05-Federation-Trust.",
         "operationId": "pull_facts_v1_federation_facts_get",
         "parameters": [
           {
@@ -5831,7 +5831,7 @@
     },
     "/v1/federation/facts/push": {
       "post": {
-        "description": "Receive push-replicated facts from a peer (\u00a75.11). Off by default.\n\nAuth (H-SEC-2): peer JWT first; if that fails and X-Stigmem-Capability is\npresent, fall through to capability-token verification.  Capability tokens\nmust carry verb=write and an object that covers all pushed fact scopes.",
+        "description": "Receive push-replicated facts from a peer. Off by default.\n\nAuth (H-SEC-2): peer JWT first; if that fails and X-Stigmem-Capability is\npresent, fall through to capability-token verification.  Capability tokens\nmust carry verb=write and an object that covers all pushed fact scopes.\nCovered by Spec-05-Federation-Trust.",
         "operationId": "push_facts_v1_federation_facts_push_post",
         "parameters": [
           {
@@ -6038,7 +6038,7 @@
         ]
       },
       "post": {
-        "description": "Register a peer. Fetches its well-known doc and verifies declaration_sig (\u00a75.6).",
+        "description": "Register a peer.\n\nFetches its well-known doc and verifies declaration_sig\n(Spec-05-Federation-Trust).",
         "operationId": "register_peer_v1_federation_peers_post",
         "requestBody": {
           "content": {
@@ -6085,7 +6085,7 @@
     },
     "/v1/federation/tombstones": {
       "get": {
-        "description": "Tombstone poll route (\u00a723.4.3). Requires tombstone:read capability token.",
+        "description": "Tombstone poll route.\n\nRequires tombstone:read capability token. Covered by Spec-X2-RTBF-Tombstones.",
         "operationId": "federation_list_tombstones_v1_federation_tombstones_get",
         "parameters": [
           {
@@ -6161,7 +6161,7 @@
     },
     "/v1/federation/tombstones/ingest": {
       "post": {
-        "description": "Inbound tombstone push from a federation peer (\u00a723.4.2).\n\nAuth: peer JWT or capability token with tombstone:write verb (mirrors push_facts).\nVerifies signature against org manifest, writes to local tombstones table.",
+        "description": "Inbound tombstone push from a federation peer.\n\nAuth: peer JWT or capability token with tombstone:write verb (mirrors push_facts).\nVerifies signature against org manifest, writes to local tombstones table.\nCovered by Spec-X2-RTBF-Tombstones.",
         "operationId": "federation_ingest_tombstone_v1_federation_tombstones_ingest_post",
         "parameters": [
           {
@@ -6241,7 +6241,7 @@
     },
     "/v1/gardens": {
       "get": {
-        "description": "List accessible gardens (spec \u00a75.15). Node admins see all; others see only their gardens.",
+        "description": "List accessible gardens (Spec-02-Scopes-and-ACL).\n\nNode admins see all; others see only their gardens.",
         "operationId": "list_gardens_v1_gardens_get",
         "responses": {
           "200": {
@@ -6270,7 +6270,7 @@
         ]
       },
       "post": {
-        "description": "Create a new garden (spec \u00a75.14). Creator is auto-added as admin.",
+        "description": "Create a new garden (Spec-02-Scopes-and-ACL). Creator is auto-added as admin.",
         "operationId": "create_garden_v1_gardens_post",
         "requestBody": {
           "content": {
@@ -6317,7 +6317,7 @@
     },
     "/v1/gardens/{garden_slug_or_id}": {
       "delete": {
-        "description": "Delete a garden (spec \u00a75.17). Requires garden admin role. Facts are orphaned, not deleted.\n\nQuarantine gardens with pending facts cannot be deleted (\u00a719.5.2 \u2014 HTTP 409).",
+        "description": "Delete a garden (Spec-02-Scopes-and-ACL).\n\nRequires garden admin role. Facts are orphaned, not deleted.\nQuarantine gardens with pending facts cannot be deleted\n(Spec-08-Quarantine-Garden; HTTP 409).",
         "operationId": "delete_garden_v1_gardens__garden_slug_or_id__delete",
         "parameters": [
           {
@@ -6356,7 +6356,7 @@
         ]
       },
       "get": {
-        "description": "Get a garden by slug or UUID (spec \u00a75.16).",
+        "description": "Get a garden by slug or UUID (Spec-02-Scopes-and-ACL).",
         "operationId": "get_garden_v1_gardens__garden_slug_or_id__get",
         "parameters": [
           {
@@ -6404,7 +6404,7 @@
     },
     "/v1/gardens/{garden_slug_or_id}/members": {
       "get": {
-        "description": "List members of a garden (spec \u00a75.18). Requires any member role.",
+        "description": "List members of a garden (Spec-02-Scopes-and-ACL). Requires any member role.",
         "operationId": "list_members_v1_gardens__garden_slug_or_id__members_get",
         "parameters": [
           {
@@ -6454,7 +6454,7 @@
         ]
       },
       "post": {
-        "description": "Add a member to a garden (spec \u00a75.18). Requires admin role.",
+        "description": "Add a member to a garden (Spec-02-Scopes-and-ACL). Requires admin role.",
         "operationId": "add_member_v1_gardens__garden_slug_or_id__members_post",
         "parameters": [
           {
@@ -6512,7 +6512,7 @@
     },
     "/v1/gardens/{garden_slug_or_id}/members/{entity_uri}": {
       "delete": {
-        "description": "Remove a member from a garden (spec \u00a75.18). Cannot remove last admin.",
+        "description": "Remove a member from a garden (Spec-02-Scopes-and-ACL). Cannot remove last admin.",
         "operationId": "remove_member_v1_gardens__garden_slug_or_id__members__entity_uri__delete",
         "parameters": [
           {
@@ -6560,7 +6560,7 @@
         ]
       },
       "patch": {
-        "description": "Change a member's role (spec \u00a75.18). Requires admin. Cannot demote last admin.",
+        "description": "Change a member's role (Spec-02-Scopes-and-ACL). Requires admin.",
         "operationId": "update_member_role_v1_gardens__garden_slug_or_id__members__entity_uri__patch",
         "parameters": [
           {
@@ -6627,7 +6627,7 @@
     },
     "/v1/gardens/{garden_slug_or_id}/promote": {
       "post": {
-        "description": "Promote a quarantined fact to a target garden (spec \u00a75.25, \u00a719.5.5).\n\nRequires quarantine:moderator or admin role.",
+        "description": "Promote a quarantined fact to a target garden (Spec-08-Quarantine-Garden).\n\nRequires quarantine:moderator or admin role.",
         "operationId": "promote_fact_v1_gardens__garden_slug_or_id__promote_post",
         "parameters": [
           {
@@ -6687,7 +6687,7 @@
     },
     "/v1/gardens/{garden_slug_or_id}/reject": {
       "post": {
-        "description": "Reject a quarantined fact (spec \u00a75.25, \u00a719.5.5).\n\nSets confidence = 0.0 and quarantine_status = 'rejected'.\nRequires quarantine:moderator or admin role.",
+        "description": "Reject a quarantined fact (Spec-08-Quarantine-Garden).\n\nSets confidence = 0.0 and quarantine_status = 'rejected'.\nRequires quarantine:moderator or admin role.",
         "operationId": "reject_fact_v1_gardens__garden_slug_or_id__reject_post",
         "parameters": [
           {
@@ -6747,7 +6747,7 @@
     },
     "/v1/graph/neighbors": {
       "get": {
-        "description": "Return graph neighbors of entity within depth hops (spec \u00a720.2).",
+        "description": "Return graph neighbors of entity within depth hops (Spec-X11-Recall-Graph).",
         "operationId": "graph_neighbors_v1_graph_neighbors_get",
         "parameters": [
           {
@@ -6930,7 +6930,7 @@
     },
     "/v1/intents": {
       "post": {
-        "description": "Submit an IntentEnvelope (spec \u00a75.14).\n\nValidates the envelope, normalizes URIs, decomposes it into atomic facts,\nand returns a receipt with the generated intent ID and all written fact IDs.\nIdempotent when the caller supplies a stable ``id``: if that intent_id already\nhas a ``intent:goal`` fact in the fabric, returns 409 Conflict.",
+        "description": "Submit an IntentEnvelope (Spec-X8-Intent-Envelope).\n\nValidates the envelope, normalizes URIs, decomposes it into atomic facts,\nand returns a receipt with the generated intent ID and all written fact IDs.\nIdempotent when the caller supplies a stable ``id``: if that intent_id already\nhas a ``intent:goal`` fact in the fabric, returns 409 Conflict.",
         "operationId": "submit_intent_v1_intents_post",
         "requestBody": {
           "content": {
@@ -6977,7 +6977,7 @@
     },
     "/v1/intents/{intent_id}": {
       "get": {
-        "description": "Retrieve an IntentEnvelope by ID, reconstructed from its reified facts (spec \u00a75.14).",
+        "description": "Retrieve an IntentEnvelope by ID, reconstructed from its reified facts.\n\nCovered by Spec-X8-Intent-Envelope.",
         "operationId": "get_intent_v1_intents__intent_id__get",
         "parameters": [
           {
@@ -7025,7 +7025,7 @@
     },
     "/v1/lint": {
       "post": {
-        "description": "Health-check sweep for a scope (spec \u00a714). Read-only.\n\nReturns 200 with results synchronously for scopes \u2264 threshold facts.\nReturns 202 with job_id for larger scopes; poll GET /v1/lint/jobs/:job_id.",
+        "description": "Health-check sweep for a scope (Spec-20-Lint-Semantics). Read-only.\n\nReturns 200 with results synchronously for scopes \u2264 threshold facts.\nReturns 202 with job_id for larger scopes; poll GET /v1/lint/jobs/:job_id.",
         "operationId": "lint_scope_v1_lint_post",
         "requestBody": {
           "content": {
@@ -7072,7 +7072,7 @@
     },
     "/v1/lint/jobs/{job_id}": {
       "get": {
-        "description": "Poll the status of an async lint job (spec \u00a714.5).",
+        "description": "Poll the status of an async lint job (Spec-20-Lint-Semantics).",
         "operationId": "get_lint_job_v1_lint_jobs__job_id__get",
         "parameters": [
           {
@@ -7148,7 +7148,7 @@
     },
     "/v1/quarantine": {
       "get": {
-        "description": "List facts in the quarantine system (spec \u00a719.5).\n\nNode admins see all quarantined facts across all gardens.\nOther callers see facts only in quarantine gardens where they hold a member role.",
+        "description": "List facts in the quarantine system (Spec-08-Quarantine-Garden).\n\nNode admins see all quarantined facts across all gardens.\nOther callers see facts only in quarantine gardens where they hold a member role.",
         "operationId": "list_quarantined_facts_v1_quarantine_get",
         "parameters": [
           {
@@ -7388,7 +7388,7 @@
     },
     "/v1/recall": {
       "post": {
-        "description": "Hybrid recall \u2014 return the most salient facts for a query, within budget.\n\nCombines lexical (FTS5/BM25), dense-vector, and graph-traversal signals.\nHonors \u00a717 garden ACL and \u00a719 source-trust at every step.",
+        "description": "Hybrid recall \u2014 return the most salient facts for a query, within budget.\n\nCombines lexical (FTS5/BM25), dense-vector, and graph-traversal signals.\nHonors Spec-02-Scopes-and-ACL and Spec-05-Federation-Trust at every step.",
         "operationId": "recall_v1_recall_post",
         "requestBody": {
           "content": {
@@ -7532,7 +7532,7 @@
         ]
       },
       "post": {
-        "description": "Create a subscription (spec \u00a720.3.1). subscriber_identity is always the caller (BOLA).",
+        "description": "Create a subscription (Spec-X7-Subscriptions).\n\nsubscriber_identity is always the caller (BOLA).",
         "operationId": "create_subscription_v1_subscriptions_post",
         "requestBody": {
           "content": {
@@ -7666,7 +7666,7 @@
     },
     "/v1/subscriptions/{subscription_id}/events": {
       "get": {
-        "description": "Replay window: return delivery events for a subscription (spec \u00a720.5).\n\nResults are bounded to the configured replay window (default 24 h).",
+        "description": "Replay window: return delivery events for a subscription (Spec-X7-Subscriptions).\n\nResults are bounded to the configured replay window (default 24 h).",
         "operationId": "list_subscription_events_v1_subscriptions__subscription_id__events_get",
         "parameters": [
           {

@@ -1,0 +1,1 @@
+{"parameters":[{"in":"path","name":"scope","required":true,"schema":{"title":"Scope","type":"string"}},{"in":"query","name":"include_expired","required":false,"schema":{"default":false,"title":"Include Expired","type":"boolean"}},{"in":"query","name":"limit","required":false,"schema":{"default":200,"maximum":1000,"minimum":1,"title":"Limit","type":"integer"}}]}

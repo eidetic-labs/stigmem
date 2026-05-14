@@ -1,0 +1,1 @@
+{"parameters":[{"in":"path","name":"subscription_id","required":true,"schema":{"title":"Subscription Id","type":"string"}}]}

@@ -1,4 +1,4 @@
-"""Stigmem reference node CLI — spec §2.6.6."""
+"""Stigmem reference node CLI — Spec-01-Fact-Model."""
 
 from __future__ import annotations
 
@@ -228,7 +228,7 @@ def _cmd_migrate_normalize_entities(args: argparse.Namespace) -> int:
 
 
 def _cmd_federation_register_peer(args: argparse.Namespace) -> int:
-    """Register this node as a peer with a remote node (spec §6.1).
+    """Register this node as a peer with a remote node (Spec-05-Federation-Trust).
 
     Fetches local /.well-known/stigmem, signs the PeerDeclaration with the
     local Ed25519 private key, and POSTs to the remote node's
@@ -404,7 +404,10 @@ def _build_parser() -> argparse.ArgumentParser:
     sub.required = True
 
     # ------------------------------------------------------------------ capability
-    cap_p = sub.add_parser("capability", help="capability token management (spec §19.3)")
+    cap_p = sub.add_parser(
+        "capability",
+        help="capability token management (Spec-06-Capability-Tokens)",
+    )
     cap_sub = cap_p.add_subparsers(dest="cap_command", metavar="SUBCOMMAND")
     cap_sub.required = True
 
@@ -494,7 +497,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     ne_p = migrate_sub.add_parser(
         "normalize-entities",
-        help="populate entity_aliases from non-canonical entity/source URIs in facts (spec §2.6.6)",
+        help="populate entity_aliases from non-canonical entity/source URIs in facts (Spec-01-Fact-Model)",  # noqa: E501
     )
     ne_p.add_argument(
         "--dry-run",
@@ -510,13 +513,16 @@ def _build_parser() -> argparse.ArgumentParser:
     ne_p.set_defaults(func=_cmd_migrate_normalize_entities)
 
     # ------------------------------------------------------------------ federation
-    fed_p = sub.add_parser("federation", help="federation management (spec §6)")
+    fed_p = sub.add_parser(
+        "federation",
+        help="federation management (Spec-05-Federation-Trust)",
+    )
     fed_sub = fed_p.add_subparsers(dest="fed_command", metavar="SUBCOMMAND")
     fed_sub.required = True
 
     rp_p = fed_sub.add_parser(
         "register-peer",
-        help="register this node as a peer with a remote node (spec §6.1)",
+        help="register this node as a peer with a remote node (Spec-05-Federation-Trust)",
     )
     rp_p.add_argument(
         "--remote-url",
@@ -699,7 +705,10 @@ def _build_parser() -> argparse.ArgumentParser:
     sw_p.set_defaults(func=_cmd_decay_sweep)
 
     # ------------------------------------------------------------------ instruction
-    instr_p = sub.add_parser("instruction", help="instruction manifest tools (Phase 10 §21)")
+    instr_p = sub.add_parser(
+        "instruction",
+        help="instruction manifest tools (Spec-X1-Lazy-Instruction-Discovery)",
+    )
     instr_sub = instr_p.add_subparsers(dest="instr_command", metavar="SUBCOMMAND")
     instr_sub.required = True
 
@@ -808,7 +817,10 @@ def _build_parser() -> argparse.ArgumentParser:
     imig_p.set_defaults(func=_cmd_instruction_migrate)
 
     # ------------------------------------------------------------------ audit
-    audit_p = sub.add_parser("audit", help="discovery audit reports (Phase 10 §21.5)")
+    audit_p = sub.add_parser(
+        "audit",
+        help="discovery audit reports (Spec-X1-Lazy-Instruction-Discovery)",
+    )
     audit_sub = audit_p.add_subparsers(dest="audit_command", metavar="SUBCOMMAND")
     audit_sub.required = True
 
@@ -838,13 +850,16 @@ def _build_parser() -> argparse.ArgumentParser:
     ad_p.set_defaults(func=_cmd_audit_discovery)
 
     # ------------------------------------------------------------------ identity
-    id_p = sub.add_parser("identity", help="node identity management (spec §22.2)")
+    id_p = sub.add_parser(
+        "identity",
+        help="node identity management (Spec-10-Hardening)",
+    )
     id_sub = id_p.add_subparsers(dest="identity_command", metavar="SUBCOMMAND")
     id_sub.required = True
 
     rk_p = id_sub.add_parser(
         "rotate-key",
-        help="rotate the node or issuer Ed25519 key with a dual-trust window (§22.2)",
+        help="rotate the node or issuer Ed25519 key with a dual-trust window (Spec-10-Hardening)",  # noqa: E501
     )
     rk_p.add_argument(
         "--kind",
@@ -878,7 +893,7 @@ def _build_parser() -> argparse.ArgumentParser:
     # ------------------------------------------------------------------ backfill-cids
     bc_p = sub.add_parser(
         "backfill-cids",
-        help="compute and persist CIDs for facts that pre-date Phase 13 (spec §25.6.3)",
+        help="compute and persist CIDs for facts that pre-date CID backfill (Spec-21-Content-Addressed-IDs)",  # noqa: E501
     )
     bc_p.add_argument(
         "--db",
@@ -903,7 +918,10 @@ def _build_parser() -> argparse.ArgumentParser:
     bc_p.set_defaults(func=_cmd_backfill_cids)
 
     # ------------------------------------------------------------------ auth
-    auth_p = sub.add_parser("auth", help="API key management (spec §3.5)")
+    auth_p = sub.add_parser(
+        "auth",
+        help="API key management (Spec-06-Capability-Tokens)",
+    )
     auth_sub = auth_p.add_subparsers(dest="auth_command", metavar="SUBCOMMAND")
     auth_sub.required = True
 

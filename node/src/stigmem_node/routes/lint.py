@@ -317,7 +317,7 @@ def lint_scope(
     background_tasks: BackgroundTasks,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> Any:
-    """Health-check sweep for a scope (spec §14). Read-only.
+    """Health-check sweep for a scope (Spec-20-Lint-Semantics). Read-only.
 
     Returns 200 with results synchronously for scopes ≤ threshold facts.
     Returns 202 with job_id for larger scopes; poll GET /v1/lint/jobs/:job_id.
@@ -365,7 +365,7 @@ def get_lint_job(
     job_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> Any:
-    """Poll the status of an async lint job (spec §14.5)."""
+    """Poll the status of an async lint job (Spec-20-Lint-Semantics)."""
     if not identity.can_read():
         raise HTTPException(status_code=403, detail="read permission required")
     job = get_job(job_id, job_type="lint")

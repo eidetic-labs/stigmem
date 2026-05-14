@@ -27,7 +27,7 @@ class CidBackfillStatus(BaseModel):
 def cid_backfill_status(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> CidBackfillStatus:
-    """Return CID backfill progress for this node (spec §25.6.3)."""
+    """Return CID backfill progress for this node (Spec-21-Content-Addressed-IDs)."""
     if not identity.can_read():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"

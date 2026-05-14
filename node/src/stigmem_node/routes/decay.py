@@ -58,11 +58,11 @@ def decay_sweep(
         None, ge=0.0, le=1.0, description="Expire active facts below this confidence"
     ),
 ) -> Any:
-    """Mark stale facts as expired. Cron-friendly one-shot sweeper (Phase 6).
+    """Mark stale facts as expired. Cron-friendly one-shot sweeper.
 
-    Returns 200 synchronously for scopes ≤ threshold facts (spec §15.4).
+    Returns 200 synchronously for scopes ≤ threshold facts (Spec-X9-Decay-Semantics).
     Returns 202 with job_id for larger scopes; poll GET /v1/decay/jobs/:job_id.
-    Note: dry_run is always synchronous per spec §15.4.
+    Note: dry_run is always synchronous per Spec-X9-Decay-Semantics.
     """
     if not identity.can_write():
         raise HTTPException(status_code=403, detail="write permission required")
@@ -103,7 +103,7 @@ def get_decay_job(
     job_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> Any:
-    """Poll the status of an async decay job (spec §15.4)."""
+    """Poll the status of an async decay job (Spec-X9-Decay-Semantics)."""
     if not identity.can_read():
         raise HTTPException(status_code=403, detail="read permission required")
     job = get_job(job_id, job_type="decay")

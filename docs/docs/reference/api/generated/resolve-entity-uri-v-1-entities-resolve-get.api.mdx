@@ -1,0 +1,72 @@
+---
+id: resolve-entity-uri-v-1-entities-resolve-get
+title: "Resolve Entity Uri"
+description: "Resolve a raw entity URI using 3-layer fuzzy resolution (Spec-01-Fact-Model)."
+sidebar_label: "Resolve Entity Uri"
+hide_title: true
+hide_table_of_contents: true
+api: eJztVs1y2zYQfpUdnpwZ/Trtobq5iZt6Gqce28nF8XggcikiBgEEAGUpGs3kIfqEfZLugqTISE6a+NBTTxKA/fn24/5tkgx96qQN0uhkllyiN2qJIMCJB0AdZFjD28szqLzUC3g+VGKNDvLq06c1OBauWBOOriymw8l0+JtIw/DcZKiejd7r9/p1lJ/OIBXaaJkKBdq4UijpRa2ZCo/jh0IG9FakCKlRSliPrF9rH8+A5IWHIOYKQRlzX1k4wpVVMpUBrMOhw4X0AR1mUAprCazvDDyfQTD3qIc1bp8ax9GYJb3FGCV6MDmEAsGLEiGsLbLZXK5A6nifU2CwcMIWMa5LDJXTPj7N0YeajCW5Z7aEzqIXOlLcmcwERQcPMhSELqQFZBiEVH6UDBJj0UUqzjL6AI2Zu5r6u8rJu+X0rgV51z4vMJCqFY7QUtQ+md1s9j/llx8wmBYiKUoW+FihW9NBkw06kis6OPxYScKdzIKrcJD4tMBSJLMfsU63ii2+jRaZSzr4wJwn2+1g39S5WEHznZrE6nEWDTPVX0EdjL27/wJ3LpTfA56LSoVk9vPgqZ5LsZJlVSaz4wkdpK4P0y7Ua2Phjy5YqQMu0D0aba0NXSpSuhVEXmFUBrlxO0Qdlq/F3qp9Z/yT0SEDT0Oz42Pao2PSo6OHrKFEV+U8MnLLYL012pMpgnc8mfBPaogzHfgv1S8VdqyJ8QfPODe9cESWSX4S6sJx7XBdtNna+r9sHEDbz06bVHUS3k3rE9d8+/wqllOD1Mw/YBoI6XafrasqTdH7vFLQekhI6Kfj4x+KwPZw8+fhVsD/qAWW/lAgDSv+aWN7wW5Wj+DlJLFV6MuexQt6USb9woPQ6z/z2DT2ynOwOcjh221H7GtTR9V5F86JNbso/aLv+pyIEgs8bADtRSd66hwl2jXfPtIueql9E+OoXTWStx22dzQksoguGnyMoFb0Zc35fhA9id+vry/+1eBhhnQqUOuwiMeUmmtYR77Z8K8oHDE7u7nlaghiwf07aZs8x0RdvTA8D9pGHwo6jJfTcSs17vpta/+KM6zOmb6XJvUY+Ly+2gVShGAjRKlz80iTx5wmqqahrGmigyytIjsEgIYnD76rIBcllrCcjH4ZTcQU2C2cXJzB35//ihPTDyDHrBlwA1gIl6GmS4e0CagB+Gq+c0jXoqLaHoDM6tEygKamhlT0FK+neRrn8NlLP4IXzng/TKsQ8eQoqFlTTR8FU859MBrJYJAlDoMTSyRnJXVBOSR7QodnQEyAsWFI892qaiF1nMZUtshlTVw0XfaEtpICh8ejCT1XTjW0+dl4/PDwMBLxeWTcYtzo+vHrsxenb65Oo04vp1q6OlrfEK1klfYQXzPeEMla1vhQCt1DctjMkr386zWh/1e5/36Va6qK2/PYKkEze9ukzKYp4ZtkOSXBXakP2oWPi76gL84im82ciHzr1HbL1/XUjwseMU20dUP+qx//6LJpms/gm5vaY4Dvcb1bB5dCVSwRB8P3u//uxeobANrN7qkQnrbZfAtQb6npQN3ywUlGFRs6fUYUWezum0bxhLYGG3paB+vBtt/yX51ek6yoOF9203jXueft7Ng90Szv2abkiRLXXCWUQB2ddOZhvt3+Axbo2hw=
+sidebar_class_name: "get api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Resolve Entity Uri"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/entities/resolve"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Resolve a raw entity URI using 3-layer fuzzy resolution (Spec-01-Fact-Model).
+
+Layer 1: canonical normalisation (case/whitespace collapse).
+Layer 2: alias table lookup (explicit pre-registered mappings).
+Layer 3: token-fuzzy scoring over entities of the same type prefix in the fact graph.
+
+Returns the best resolved URI and scored candidates with match details.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./resolve-entity-uri-v-1-entities-resolve-get.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./resolve-entity-uri-v-1-entities-resolve-get.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./resolve-entity-uri-v-1-entities-resolve-get.StatusCodes.json")}
+>
+
+</StatusCodes>

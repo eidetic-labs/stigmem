@@ -53,7 +53,10 @@ class AssertRequest(BaseModel):
         None,
         description="Optional Ed25519 attestation; required when STIGMEM_ATTESTATION_REQUIRED=true",
     )
-    garden_id: str | None = Field(None, description="v0.9: URI of the garden this fact belongs to")
+    garden_id: str | None = Field(
+        None,
+        description="URI of the garden this fact belongs to (Spec-02-Scopes-and-ACL)",
+    )
 
     @field_validator("scope")
     @classmethod
@@ -155,7 +158,7 @@ class AuditEntry(BaseModel):
 
 
 class ConflictResolveRequest(BaseModel):
-    """Request body for POST /v1/conflicts/:id/resolve (spec §5.10)."""
+    """Request body for POST /v1/conflicts/:id/resolve (Spec-15-Fact-Semantics)."""
 
     winning_fact_id: str | None = None
     resolution_note: str = ""
@@ -192,7 +195,10 @@ class GardenCreateRequest(BaseModel):
     name: str = Field(..., min_length=1)
     scope: str = Field("company")
     description: str | None = None
-    quarantine: bool = Field(False, description="v1.1: create as quarantine garden (§19.5)")
+    quarantine: bool = Field(
+        False,
+        description="Create as a quarantine garden (Spec-08-Quarantine-Garden)",
+    )
 
     @field_validator("scope")
     @classmethod
@@ -383,7 +389,7 @@ class AuditLogResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Intent Envelope models (spec §4, §5.14 — v0.8)
+# Intent Envelope models (Spec-X8-Intent-Envelope)
 # ---------------------------------------------------------------------------
 
 VALID_ESCALATION_PRIORITIES = {"low", "medium", "high", "critical"}
@@ -391,7 +397,7 @@ VALID_ESCALATION_CHANNELS = {"stigmem", "email", "slack"}
 
 
 class Constraint(BaseModel):
-    """Hard limit on an intent (spec §4.2)."""
+    """Hard limit on an intent (Spec-X8-Intent-Envelope)."""
 
     kind: str = Field(..., min_length=1)
     limit: FactValue
@@ -399,7 +405,7 @@ class Constraint(BaseModel):
 
 
 class Preference(BaseModel):
-    """Soft preference on an intent (spec §4.3)."""
+    """Soft preference on an intent (Spec-X8-Intent-Envelope)."""
 
     kind: str = Field(..., min_length=1)
     value: FactValue
@@ -407,7 +413,7 @@ class Preference(BaseModel):
 
 
 class DeferenceRule(BaseModel):
-    """When to defer to another entity before proceeding (spec §4.4)."""
+    """When to defer to another entity before proceeding (Spec-X8-Intent-Envelope)."""
 
     condition: str = Field(..., min_length=1)
     defer_to: str = Field(..., min_length=1)
@@ -415,7 +421,7 @@ class DeferenceRule(BaseModel):
 
 
 class EscalationPolicy(BaseModel):
-    """Who to notify and how when escalation is required (spec §4.5)."""
+    """Who to notify and how when escalation is required (Spec-X8-Intent-Envelope)."""
 
     escalate_to: str = Field(..., min_length=1)
     channel: str = Field("stigmem")
@@ -438,14 +444,14 @@ class EscalationPolicy(BaseModel):
 
 
 class HandoffArtifact(BaseModel):
-    """Named artifact reference passed along with a handoff (spec §4.6)."""
+    """Named artifact reference passed along with a handoff (Spec-X8-Intent-Envelope)."""
 
     name: str = Field(..., min_length=1)
     ref: str = Field(..., min_length=1, description="URI of the artifact fact")
 
 
 class HandoffPayload(BaseModel):
-    """Structured context transfer for agent handoffs (spec §4.6).
+    """Structured context transfer for agent handoffs (Spec-X8-Intent-Envelope).
 
     fact_refs MUST include any facts the receiver needs to reconstitute context.
     """
@@ -457,7 +463,7 @@ class HandoffPayload(BaseModel):
 
 
 class IntentEnvelopeRequest(BaseModel):
-    """POST /v1/intents request body (spec §4, §5.14).
+    """POST /v1/intents request body (Spec-X8-Intent-Envelope).
 
     The ``from`` field is aliased as ``from_uri`` in Python to avoid the keyword clash.
     Clients MUST send the JSON key ``"from"``.
@@ -500,7 +506,7 @@ class IntentEnvelopeRequest(BaseModel):
 
 
 class IntentEnvelopeRecord(BaseModel):
-    """Response for POST /v1/intents and GET /v1/intents/:id (spec §5.14)."""
+    """Response for POST /v1/intents and GET /v1/intents/:id (Spec-X8-Intent-Envelope)."""
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -589,7 +595,10 @@ class SubscriptionEventsResponse(BaseModel):
 
 
 class TombstoneNotice(BaseModel):
-    """Tombstone metadata surfaced to admin callers on time-travel queries (spec §24.3.2)."""
+    """Tombstone metadata surfaced to admin callers on time-travel queries.
+
+    Covered by Spec-X3-Time-Travel-Queries.
+    """
 
     entity_uri: str
     tombstone_id: str
@@ -598,12 +607,15 @@ class TombstoneNotice(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# RTBF Tombstones (spec §23)
+# RTBF Tombstones (Spec-X2-RTBF-Tombstones)
 # ---------------------------------------------------------------------------
 
 
 class TombstoneRecord(BaseModel):
-    """Durable record directing every node to suppress facts about entity_uri (§23.2)."""
+    """Durable record directing every node to suppress facts about entity_uri.
+
+    Covered by Spec-X2-RTBF-Tombstones.
+    """
 
     id: str
     entity_uri: str
@@ -617,7 +629,7 @@ class TombstoneRecord(BaseModel):
 
 
 class TombstoneRevocationRecord(BaseModel):
-    """Record reinstating a tombstoned entity (§23.2.5)."""
+    """Record reinstating a tombstoned entity (Spec-X2-RTBF-Tombstones)."""
 
     id: str
     tombstone_id: str
@@ -652,7 +664,7 @@ class FederationTombstonesResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Provenance walk models (spec §23.3.2 r.4, §20.6.2)
+# Provenance walk models (Spec-X2-RTBF-Tombstones, Spec-X11-Recall-Graph)
 # ---------------------------------------------------------------------------
 
 
@@ -660,7 +672,7 @@ class ProvenanceEntry(BaseModel):
     """One entry in a fact's derived_from chain.
 
     exists=False means the referenced entity is tombstoned or the fact is otherwise
-    inaccessible (§23.3.2 r.4 + §20.6.2). Shape is identical in both cases so
+    inaccessible. Shape is identical in both cases so
     callers cannot distinguish tombstone from unauthorized.
     """
 

@@ -1,0 +1,1 @@
+{"parameters":[{"in":"query","name":"since","required":false,"schema":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Since"}},{"in":"query","name":"limit","required":false,"schema":{"default":200,"title":"Limit","type":"integer"}},{"in":"header","name":"Authorization","required":false,"schema":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Authorization"}}]}

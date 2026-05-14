@@ -1,0 +1,1 @@
+{"responses":{"200":{"content":{"application/json":{"schema":{"additionalProperties":true,"title":"Response Whoami V1 Me Get","type":"object"}}},"description":"Successful Response"}}}

@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"reason":{"minLength":1,"title":"Reason","type":"string"}},"required":["reason"],"title":"TombstoneRevokeRequest","type":"object"}}},"required":true}}

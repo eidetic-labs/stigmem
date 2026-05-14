@@ -94,7 +94,10 @@ def create_subscription(
     req: SubscriptionCreateRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> SubscriptionRecord:
-    """Create a subscription (spec §20.3.1). subscriber_identity is always the caller (BOLA)."""
+    """Create a subscription (Spec-X7-Subscriptions).
+
+    subscriber_identity is always the caller (BOLA).
+    """
     if not identity.can_read():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
@@ -250,7 +253,7 @@ def list_subscription_events(
     cursor: str | None = Query(None, description="Opaque pagination cursor (event id)"),
     limit: int = Query(50, ge=1, le=500),
 ) -> SubscriptionEventsResponse:
-    """Replay window: return delivery events for a subscription (spec §20.5).
+    """Replay window: return delivery events for a subscription (Spec-X7-Subscriptions).
 
     Results are bounded to the configured replay window (default 24 h).
     """

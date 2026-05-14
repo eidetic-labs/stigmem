@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"canonical_uri":{"title":"Canonical Uri","type":"string"},"raw_uri":{"title":"Raw Uri","type":"string"}},"required":["raw_uri","canonical_uri"],"title":"AliasRequest","type":"object"}}},"required":true}}

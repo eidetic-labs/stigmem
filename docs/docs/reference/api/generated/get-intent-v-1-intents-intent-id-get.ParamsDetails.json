@@ -1,0 +1,1 @@
+{"parameters":[{"in":"path","name":"intent_id","required":true,"schema":{"title":"Intent Id","type":"string"}}]}

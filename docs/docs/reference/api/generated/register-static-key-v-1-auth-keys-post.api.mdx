@@ -1,0 +1,71 @@
+---
+id: register-static-key-v-1-auth-keys-post
+title: "Register a caller-provided static API key (admin only)."
+description: "Register a caller-provided raw API key."
+sidebar_label: "Register a caller-provided static API key (admin only)."
+hide_title: true
+hide_table_of_contents: true
+api: eJztV19v2zYQ/yoHvqwBZDtOh2FzntI0wIylbZC4fUkKh5ZoiS1FaiTlxDAM7EPsE+6T7I6UbSn22g1Z97Q36XQ83v3ud3+0YplwqZWVl0azEbsWuXReWOCQcqWE7VXWLGQmMrD8Ac6uxvBZLPt3+k6/kdYa68AXAmbGeOctr+D8cvydg8o4X1sxCh+jIXB1VSkp4gEyhobudMnxNsnVaRBrkwkouCtQjesMnDcWH6XvA0zwu9BZZaT2YMWvtbTR2J1ubvAGCqOyYOn+nmel1Pf3eH3FZ1JJv4Q/fvsd/LKSpL/sOn6n0Z0EDEVeWbGQpnZq2UMTHmMPtnouNRW+bAAgh9CFymgn4O3Fh4trEGlhuhGetiHgygqeLSlCioklDA1aTtiPM0TfNuhPnUdhOsXz08Vwymtf0LObEq54iqIXzr8y2ZKNViw16KT29MgJ4zRYHHxylNIVc2khSk5PmEu8z2MS6K2TeTyql+/mbHS7YgiRQG8QF6lztk62El0rxdYfE+alVyR43TKxThg6gTBPayvJIEJ2KXTuCzYa7o5cBB14jzrJ3k1MPFaU1in3/9SlLo/HN+96P/5wPAQvS0SKl9UpmFJ6mGOGtYFwz5IysPUr3gxnnvxAmErpHBoLUEkvyvCw5/Dm+FXrwDYubi1fkhaSgRK4hzo7j0WWC008aKoMNWFTF/BC9PM+3GPitHMKv2NZ9ArxCC9P7o/6oSraVYMhkoYWCyq5WD4Y8hNiLriqBUXfytHLk10016jzC/p7IEPINK79VGbPS9CE21x4iNZOIRNzXivvqIZ3BYOdJCq0EzUJEsCCWa9jKWDe0JvbLcodIrbYumluGNl1rKBdgGb2SaSY+q5Nb2sRBLHKAwVOjofPKLoUOwDmuSH4xrPzKCXyHYD8Wxfqty7NwyUWGbT5huk8cOe/XIYd7u7zac+BJ/ySWZdaXf+6eUrame6A13bjr8gZ6XaYnd06uqnTVDg3rxVsj6HS9ycnz5oMnkvVQfwJi/1jh750zeOBasIs66ruUH0cBPhFmbRzw99gFA3jXFgkVSvllyZGdSDfpcvbV79BoHguDna1IGiVAu02MCHp11hBccSrGs1WUj9wJbPgXTB4CKBdhQbMnwbR0vh5Mrn6qsF9huyOQDxDKk6kyGC/DHiT4VeCW0R2dPsxVCzPHcVGmwfFUwpfGNpQmgWk4jQx2GAxHJDKgJYTtrN6Q7yKTGnbbghH7s6iaOt+4X0VHCNqXu/Wm4tHHN1K7A/OJhndVtaStprVTtppJ7cb+cfWfN7ptnpFiydSz82+M9diLqzQaTOKJblckmM6D9Psxsu8FCUsjvs/9Y/5EAiVsEzTRjrnqXcJzEXW7IIJ5NxmOO8T3C9pEia4PM+2F6KY15n0CeBeHqJPoCn0Hs8yDNvhKCGrMH7t+nBujXO9tPbBnzl2pZq68AtvyhluCFqgQVqTergHLwReVuIklr0IwBFgosBUvic1VKrOpXY0jbGXCOo1iIXmIaVnFcfs9k76x/i5tqrJqhsNBg8PD30ePveNzQfNWTe4HJ9fvL25CGdaRN/AtYP1LcKKVnGncRHxBsgwI5CSJdctT77wExMX681/DLwIiz0YrZZHfbY3abft8///ov/4v6hpCzRVBpXiMmwtgVSrpvncssUQFUOHSlhoQFjIBfUn/LZazbgT761ar0mM/cRSr8PHBUdYZ8SzW5oiBV4c+t6KxQZw3lRS0/vDpkzt+On4pLEUT5zhBK78F3XbLfTq3c0ElWfNz1tJ1B5RB2KhD+Fz+C/0m6UnyFZMcZ3XNL1GLNqkbhmi3+1D264623Tz7Secri0PEZ6gMTGfhUaIkiYUT+80XtfrPwGvAJvH
+sidebar_class_name: "post api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Register a caller-provided static API key (admin only)."}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/auth/keys"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Register a caller-provided raw API key.
+
+Mirrors the bootstrap CLI's posture: the caller supplies the raw key
+material; the node hashes and stores it.  The endpoint requires the
+caller to hold the ``admin`` capability — typically the bootstrap
+key, or a previously-minted admin-scoped key.
+
+The response NEVER echoes the raw key; the caller already has it.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./register-static-key-v-1-auth-keys-post.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./register-static-key-v-1-auth-keys-post.StatusCodes.json")}
+>
+
+</StatusCodes>

@@ -345,7 +345,7 @@ def submit_intent(
     req: IntentEnvelopeRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> IntentEnvelopeRecord:
-    """Submit an IntentEnvelope (spec §5.14).
+    """Submit an IntentEnvelope (Spec-X8-Intent-Envelope).
 
     Validates the envelope, normalizes URIs, decomposes it into atomic facts,
     and returns a receipt with the generated intent ID and all written fact IDs.
@@ -426,7 +426,10 @@ def get_intent(
     intent_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> IntentEnvelopeRecord:
-    """Retrieve an IntentEnvelope by ID, reconstructed from its reified facts (spec §5.14)."""
+    """Retrieve an IntentEnvelope by ID, reconstructed from its reified facts.
+
+    Covered by Spec-X8-Intent-Envelope.
+    """
     if not identity.can_read():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"

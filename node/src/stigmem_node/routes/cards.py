@@ -38,7 +38,7 @@ def get_card(
     scope: str = Query("local"),
     refresh: bool = Query(False, description="Force refresh even if card is fresh"),
 ) -> MemoryCardResponse:
-    """Fetch the synthesized memory card for an entity (spec §20).
+    """Fetch the synthesized memory card for an entity (Spec-X11-Recall-Graph).
 
     Returns 404 when the entity has no live facts.
     """

@@ -1,0 +1,1 @@
+{"parameters":[{"in":"path","name":"job_id","required":true,"schema":{"title":"Job Id","type":"string"}}]}

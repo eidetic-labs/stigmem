@@ -1,0 +1,68 @@
+---
+id: promote-fact-v-1-gardens-garden-slug-or-id-promote-post
+title: "Promote Fact"
+description: "Promote a quarantined fact to a target garden (Spec-08-Quarantine-Garden)."
+sidebar_label: "Promote Fact"
+hide_title: true
+hide_table_of_contents: true
+api: eJzFVs1u4zYQfhVCpwSw/BP00BroIZukXQNpktrOXrKBQUsjmbsSqSUpJ4ZhoA/RJ+yTdIakLDn2bndPBYJAJud/vvmG2ygFk2hRWaFkNI4etCqVBcbZl5prLq2QkLKMJ5ZZhaeW6xwsy7lOQbKzWQVJPPw5/nMvHP/urs77H+VHOYUvtdBgOsbGpUpBc6s0wz+elkIyrQroR71IVXSDgUxSDKXyoSzI+WI9WnifZhE+Fqao84XSC5EuFo1spYxFQxV6K8GCNtH4aRsJyqzidoVXEi/w15ENvNI+WvRtdQ29yCQrKHk03kZW2IK0fG5shlrsXrMJadlNRVfGaiHzaLd79obA2Hcq3ZB2oqQFaemTV1UhEpfj4JOhim87bt604n42Z4P1aBASH4xFOgiJsn/++puVav2djaLioiaW1wow5MoVFbPGT+zALcgcqzMe9fap/kaWTiVI6fEQegoZrwvMLEK5w+jf1yWXMYqmfFkA8zosw577FFCKomrcTb3NE958Ik3Tfchcbu4z19q34vsTWRdFRM04DGt+gN/Hx8k1wZBg0Gd3qMJ+ZU2JsYxSxQ3SS45AzfhSi+S8G3gwGJCBBdvtukh62lf6udVppyWM29QDpk1fLT9BYtHW7i0s3YGplDS+kRfD4Q9hjKepoCtePHQA4QHfNsM7YA0bODB8GIUsDWNHg8D2sg/qa4kcdmJWJwkYk9UFa/xRu3+6uPihfA5hnYLloqAvYaE0xwKJfe0O9BW5eT0Rbw9Jo6ptV3biDvCmUMmBh+9Ao0A3OWgE5K4t863yWbXeudZ8Qy5Kk3dd/4GF4jmcHA930IreaI2AntPpMTcdIpPy8K6CZAeiH3ghUhedM3iqQI3ota/52yQ6Eu/n84f/NHiMkFaFeR0SMZDUWtiNqzcZfgdcY2XHT8807ZbnxPmB3w2lhItgpdxCaZYDUV3UZdbt0TrYNUwbtS5nBDoPo67jgEbKZemP9rmtrK1c1ITbabsVbl55WRVwQMRNl1p+JVI9Zr9O74XM1PHemEIGGmQCSF8pMEGeSiC6yZldAZtZkZdQsvWw/0t/yEeMkmGXDxO3VCge02MZpGEX9wJZ4qGGhBdFj5l6uXeIx7xGSukxkZITu+mxMLwxcg1ylWn20uTa9NmVVsbESW1dPBlwW9MD4cyqcmmskoAGrSghtpqvAZ2VuGBEjPaQMc8Z1pepysZIxhU2S0hDZIz8AMQfWIuw3y8rjk2JL/pDvK51EZphxoPBy8tLn7vrvtL5IOiawe3k6uZuduN0OuBtytWW9Q7LilbX+LzwFQ+FJC3CGC6+TiRdDn27JTs89/++vAJeiQsHVYGrjnJxZduGeXmK1iMUbOaqF41PPaGaocGxW9G0odp2u+QGHnWx29ExzoCm4cXPNdeCHgdulFNh6BsBnvHCwDcKdRZyS8/Z1yJvmEhuqE+8qMFP02fYnHz7OVpe4VvFEck2yF0FGAcybewc7SPiea9xiSutst+U7RISvfBQeBneidQfPNX8hUgA/7uYlR8zEnBn26jgMq9pHYwjb5MYhtfUpf3C2TPRsqHH7emqYHucxFx9Boktaopk6TcVZrf7F9b4NAs=
+sidebar_class_name: "post api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Promote Fact"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/gardens/{garden_slug_or_id}/promote"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Promote a quarantined fact to a target garden (Spec-08-Quarantine-Garden).
+
+Requires quarantine:moderator or admin role.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./promote-fact-v-1-gardens-garden-slug-or-id-promote-post.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./promote-fact-v-1-gardens-garden-slug-or-id-promote-post.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./promote-fact-v-1-gardens-garden-slug-or-id-promote-post.StatusCodes.json")}
+>
+
+</StatusCodes>

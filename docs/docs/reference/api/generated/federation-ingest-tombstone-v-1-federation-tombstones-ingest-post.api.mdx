@@ -1,0 +1,70 @@
+---
+id: federation-ingest-tombstone-v-1-federation-tombstones-ingest-post
+title: "Federation Ingest Tombstone"
+description: "Inbound tombstone push from a federation peer."
+sidebar_label: "Federation Ingest Tombstone"
+hide_title: true
+hide_table_of_contents: true
+api: eJzlVl9v2zYQ/yoHPrWAZDvGXua3xE0xD11rxF5WIC0CSqJkthSpkZQdVzCwD7FPuE+yO0q2lDrpNqBvy0MSHX93v7vj/WHDMuFSKysvjWYzttCJqXUG3pSJ80YLqGq3gdyaEjjkIhOWExQqIezog/6gL2u/mYVP+Pm3NRgLKa94IpX0ezTzWWjYSb/pLc52VnoBW2ETeFFKa411geU+56l3L9HqrbAyl8KBk4XmvrYCeMGldh7tF1ByLXPhfATBlEPboEzKVU+CMp4ogbbmBplEBskeVpVI4/fT+GZ99Tpen6AjFjFTdYEtMsxCH+e91AUy3Z8M328v7gfHPeERWRnn0WDFLS+FF9ax2V3DJCV3Izgq4qHGI/ym1BkrvwRTKLbi91qir2yWc+VExFy6ESVns4ZxvX+XB0t+X5Gu8xYJ2SE6SXStFDt8jJiXXp2bPxD0STceYudlUYoy7m/u+3vzPl51LPOe5UAIIsLMXZlsT8ZTo73QPvBUlZJp8H/8yVGBNkMvskzSEVdLS/fnsWLYzNta9KxLvleGZxhO55dJPonUI/FhGCEpBYGrjHZkpmHTyeS7u3PTEcDrvpMWoW7gVI9wezE87uv0iFy2FfZEQI97eVWnqXAurxUcefGG2A/T6X+KqxpE0yCF51LRf9h5pTsHpP6B/hwjnhPNwxP+RliMVe2H2EUQ4Ak28yOGf1FvEmkKrOrDx0Of7jcmPfZWB+PW8j1RlK4YUv+CieKF6IEnhk7QQ69pYsGapGfoR0V1F+JoqTrkoB9uuZJZ8C4YfCpBR+irNudfBzFA/LReL//R4HmF9CrQ6gSbvKCZNRiC5DbOso2h2Xiab36DX+PtxbgHjvtxOG7HISKdSGsc0/sVVVRbI+TuleAW7+tYauRo0opOjm+8r4JLVJQ3/ZS4fuBlRXE3oYpy0xbmMLIbkePU16kAbTIBkvAlljt6BX4joJtFsJ2MfhxN+AWQS3C5XMBff/wJYRFFg3UXQcFtJjQKrcBFoyJwdXIiRDGvsfsjkBmR+H0EXX/FOBZwrDjcQGQVFq/cCObWOBentQ/+5CKsOAcv+vRF4GUpYm/5ViBZWSsvY7THtX8JmCUwlY8lrmFVF7gXaYVhCwtqcczFcb9UHFMbT0cTPK6t6lLqZuPxbrcb8XA8wo067nTd+M1ifv12dR10BvV1TFef1reYVrSKu9W1Ge8SSVpUIrijB558Y9yxr4pyMJn+t6+Rrv5pcI4rhVSU1XCBTdd4d2x7gcBBj6LWyQajtgjth527oYZFhaZJuBO/WnU4kBi7yeK+vcN/t9xK8o++kKh7H9C4zaSjg/4N8OxVPef1Z7F//omx5aomlTDIW+S8a5tuvh4RZyuq17jELVf5b2KH82v5brVGcNK9Nkqq4xmzfEdPHvwdQjFtWxMgyBqmuC5q2hAz1tqkn78B05rxsQ==
+sidebar_class_name: "post api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Federation Ingest Tombstone"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/federation/tombstones/ingest"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Inbound tombstone push from a federation peer.
+
+Auth: peer JWT or capability token with tombstone:write verb (mirrors push_facts).
+Verifies signature against org manifest, writes to local tombstones table.
+Covered by Spec-X2-RTBF-Tombstones.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./federation-ingest-tombstone-v-1-federation-tombstones-ingest-post.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./federation-ingest-tombstone-v-1-federation-tombstones-ingest-post.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./federation-ingest-tombstone-v-1-federation-tombstones-ingest-post.StatusCodes.json")}
+>
+
+</StatusCodes>

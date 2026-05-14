@@ -1,0 +1,1 @@
+{"responses":{"200":{"content":{"application/json":{"schema":{"additionalProperties":true,"title":"Response Node Metadata  Well Known Stigmem Get","type":"object"}}},"description":"Successful Response"}}}

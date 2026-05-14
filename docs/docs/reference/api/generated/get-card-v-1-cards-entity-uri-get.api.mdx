@@ -1,0 +1,68 @@
+---
+id: get-card-v-1-cards-entity-uri-get
+title: "Get Card"
+description: "Fetch the synthesized memory card for an entity (Spec-X11-Recall-Graph)."
+sidebar_label: "Get Card"
+hide_title: true
+hide_table_of_contents: true
+api: eJzFVs1u4zYQfhVCpwSQ/4Jc6luazWYD7G4XcbYokA0MWhpJ3JVILUk5qxoC+hB9wj5JZyjapm0FDdpDT7LJ+flm5psZbqIUTKJFbYWS0Tx6CzYpmC2AmVbix4jfIWUVVEq3LOE6ZZnSjEsG0grbsrNFDcnot9lsdA8JL8vRreZ1cT7+Ir/Ie7CNloZdTi/ZcwHSmfV6BTdMKlaKNbCMJ9aMozhSNWhOQO5ShJKDXZLH5Xrmvma57JWXjRbLJV6jSs01r8CCNtH8cRMJiqHmtsAriRf4b6+DZxq+N0IDmre6gTgySQEVj+abCIVKEr/p8X124rat6cxYLWQedV3sPXxvQLd7FyZB5AfWM16aA/MpZLwpLQqXCvNEtr3DhVce8HVUGqUTYBoyDaZgsMaEiqyviTDMnaKZIXxe55UI/c2/cb6N6X7n0Ee1UqoELjGsJwJhaiUNGHJ7MZ3SJ1HSYqXoJ6/rUiSOB5OvhrxvApi1JpZY0Wvzdb5E1UykIBMI63i1ztn1/maHRDbVCnTUxSExXln/OCKqLpG7Re9eWKjcjxPBrbm3qMDe9Qo7e1xr3pIUWiL4VvNUJBSwCaGgGoUQ3p4mFCtulsby8iD6O8MW7mxIwVcR0iXvEy7bXzLXPsdhbPZZK8uIandUYZwNV5Zs9i0QIHiB1ijZVBVHdoay/migCQLGPh628rbpzE45LE58TI2jsIO0DZYhCPWDG37XSPV7T9w9ULX6CgkmgJAeNsyiSRIwJmtKtlNDocuLi/9A9xQsF+UB8w4FEvsjTCyxB37YU7w0J+rGHlDGHeANDqgDD6+gh0A3OXXVU0D996qPaoD3lclD1x8wUTwfZEt/ELSn1rh/HtrhkXnAFoqjd+Ulg5r+ykuROnTO4FCCtqJv+pwfBxFIvHt4+PSPBk8ZsldhvQ6JGEiQ3rZ1+SbDPwPXmNn545NrP57ToovcPqSAcPcVym9Ltw5x9c2jyXo2cSKTzb5numhvfkEE6ykTOvHMc/OiP9rFUVhbO4RCZqrnYhgMzgPQ1Gi41VNgoqpLtIO+Ze7W/sKKHF8RbD0d/zSe8hkjt+zq0x37648/+xdAzDJI/QMgZjnCB4mH2r0rYmaa1c4hHvMmFTZm1N0UYMx8S414mmKbG5xMZJXdvTFjdq2VMaOksQ5PBhwfJmDYmVXVylglAQ1aUcEIR8Aa0FmFm1CM0B6X9pxhJpiq7UhIVpdNLqR7rWDXAnU15sLv2auaY/pGF+MpXje69Gkz88nk+fl5zN31WOl84nXN5P3d9c3HxY3TCSi1Tdc+rR8xrWh1jS+dPuM+kaRVK2MrLgMkt2AZTazoiHTB5Pl/n3qeVTSdJnXJhVtMLmUbT+LHaD1DwZ7pcTQPhj/yvsCQSWazWXEDn3XZdXTcP3yod1Jh+KoMXjrfoA2eamteNgTATbET2Zdz9rpn0FBwvf/9U2yP4In+aEEQhqG/COfs3s+7c/aS2+3Ukm3ocwsnSKqb3QXw1E2bjRe4wi1W20D1ZF114RS6vXmg1dtQAXfbYTdKVttZthmGhcV0Eg/qG8iu26G09J8Adt3fpcNaKg==
+sidebar_class_name: "get api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get Card"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/cards/{entity_uri}"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Fetch the synthesized memory card for an entity (Spec-X11-Recall-Graph).
+
+Returns 404 when the entity has no live facts.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-card-v-1-cards-entity-uri-get.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-card-v-1-cards-entity-uri-get.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-card-v-1-cards-entity-uri-get.StatusCodes.json")}
+>
+
+</StatusCodes>

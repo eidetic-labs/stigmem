@@ -1,0 +1,68 @@
+---
+id: put-manifest-v-1-federation-manifest-put
+title: "Put Manifest"
+description: "Publish or update an org manifest."
+sidebar_label: "Put Manifest"
+hide_title: true
+hide_table_of_contents: true
+api: eJzdVs1u4zYQfhWCpy7g37Q91AUWyGZT1EB2ayTevWQDg5bGMnclUiWHTgxBQE99gKJPuE/SGUqylB+0KNBTL4k4//Nx5qMrmYJPnC5RWyMXchW2ufZ7YZ0IZaoQhDJ0yEShjN6Bx8kn88lck2Kc60IjpAKtmM+ED9tCe09RvCjBCTCo8bgJTsfj3gZHrs6i4kwbOJCBF8o5dfTiXuNevKYwM/ZzGlgDwsFnSCgFOa6vBhmEJj0iFCUpfxTaCE9OCYrCpiDIdKd0HijA19//EN/Pvp3IkbRURUy9TKnNMuCm62hzmG92kLbqXkw25Ofg10CnNzY9ykUlE2uQSuRPVZa5TqLT9LNn9Crpkz0UKmrTVLNK5SvHuZGakgt0AUaSkMmBqohB6Xgs+WS33K2s67rJqh2kjUcU+JKg5RiVPJvN/vNartsEYhVQvGsxEB/n4qcTNL14FaF5oe7Hw3QTkgS834VcdOElGX13dvavyi8HRVeUAul2+Yumr/DPDRJ84H9dYxec5uGFekdSG77jge0yCkiT2+RRBmWOv+zk4rbqgvDAmYxMTxJNaTJwsr6re1SvbNNVnz1OPKcofDZM/Y6AUhn0hqcMraA3vXSO1nPN0mfWj2bnNvbRpGot7/raPqpcp7G6GPAlgDrTtw3mT5sYWPy8Xq/+MeDzCeldROPDJh4Sog08Rrw58BsgNnB0vKu5fpV57k2nDcdwTwXg3raLTXlLhXs6TA/zab/Z026zZZ/ihoesGZthonb6uPZtIzr1skcsY5U8p9c9OVw+qKJkKKo4WDvbzOqw2WvYgQOTgDDMU5rtC+7BZAL3IG5QZwUU4jCb/DCZqbngksT5aim+/vYncVqCfiT6fkYiU44wIKGDROX5iCnylJDEKtDej0QH1Ei0KzcmQiBC8UTeHFUs3/qJuHDW+3ESMNazA4XEoF58g7bYerQGKCDqAsbo1AEoWRFy1GOKpwy+inxtSxwTGZd5yLTxzLq01cBbT1gYFfE8LxVBOz6bzEgdXN5C6hfT6f39/URF9YRenGnr66dXy4vL9zeX0Wcwch1cPazvCVaKegDnG8RbINmrtB5pAAaVDIlOPhnMATv9f5/EdqKZHadlrrRhnOKVVO0G3crDnAz7mWMy6SCjtdsTqGxVVVvl4YPL65rFtBSOt5c+D8ppteX7umVe3INK4yZX8gscO3amiWzZ7KDyEAnm6YPARNt4nNObUuLf2g4JYfVhTbbb9vlmNEjo1D0/7fR3IeNvg7gwbBBllcyVyQLT8UI2IXnjVWBMToR/YoZtR08nFT0XgwIJnWixtl/AEEKjthPkM78Xdf0X1rFSUQ==
+sidebar_class_name: "put api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Put Manifest"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"put"}
+  path={"/v1/federation/manifest"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Publish or update an org manifest.
+
+Rate-limited to 10 submissions per entity_uri per hour.
+rotation_events arrays with > 100 entries are rejected.
+TL submission is attempted; in strict mode TL failure → 503.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./put-manifest-v-1-federation-manifest-put.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./put-manifest-v-1-federation-manifest-put.StatusCodes.json")}
+>
+
+</StatusCodes>

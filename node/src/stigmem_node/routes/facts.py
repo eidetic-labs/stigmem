@@ -1,4 +1,4 @@
-"""Fact assertion and query routes — spec §5.1, §5.2, §5.4, §5.5, §2.6."""
+"""Fact assertion and query routes — Spec-03-HTTP-API and Spec-01-Fact-Model."""
 
 from __future__ import annotations
 
@@ -338,7 +338,7 @@ def _check_source_attestation(source: str, identity: Identity) -> bool | None:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=(
                     f"source_attestation_failed: declared source {source!r} does not match "
-                    f"authenticated principal {identity.entity_uri!r} (spec §18)"
+                    f"authenticated principal {identity.entity_uri!r} (Spec-X6-Source-Attestation)"
                 ),
             )
         # warn mode
@@ -355,7 +355,11 @@ def assert_fact(
     req: AssertRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> FactRecord:
-    """Assert a fact into the fabric (spec §5.1, §2.6). Normalizes entity/source URIs on ingest."""
+    """Assert a fact into the fabric.
+
+    Covered by Spec-03-HTTP-API and Spec-01-Fact-Model. Normalizes
+    entity/source URIs on ingest.
+    """
     request_id = str(uuid.uuid4())
     tenant = TenantContext(tenant_id=identity.tenant_id)
     registry = get_registry()
@@ -560,19 +564,24 @@ def query_facts(
     cursor: str | None = Query(None, description="Opaque pagination cursor (fact id)"),
     limit: int = Query(50, ge=1, le=500),
     garden_id: str | None = Query(
-        None, description="v0.9: filter to facts in this garden (spec §5.20)"
+        None, description="Filter to facts in this garden (Spec-02-Scopes-and-ACL)"
     ),  # noqa: E501
     attested: bool | None = Query(
-        None, description="v0.9: filter by attestation status (spec §18.6)"
+        None, description="Filter by source-attestation status (Spec-X6-Source-Attestation)"
     ),  # noqa: E501
     include_low_trust: bool = Query(
-        False, description="v1.1: include facts with effective_confidence < 0.3 (§19.4.4)"
+        False,
+        description="Include facts with effective_confidence < 0.3 (Spec-05-Federation-Trust)",
     ),  # noqa: E501
     as_of: str | None = Query(
-        None, description="§24: time-travel — return facts visible at this ISO 8601 timestamp"
+        None,
+        description="Time-travel query: return facts visible at this ISO 8601 timestamp (Spec-X3-Time-Travel-Queries)",  # noqa: E501
     ),  # noqa: E501
 ) -> QueryResponse:
-    """Query facts by pattern (spec §5.2, §5.20). Omitted fields are wildcards. Entity/source are normalized (§2.6)."""  # noqa: E501
+    """Query facts by pattern (Spec-03-HTTP-API).
+
+    Omitted fields are wildcards. Entity/source are normalized by Spec-01-Fact-Model.
+    """
     if not identity.can_read():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
@@ -879,7 +888,10 @@ def get_fact(
     fact_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> FactRecord:
-    """Retrieve a single fact by UUID or sha256: CID (spec v0.4 §5.5, §17.3, §25.5)."""
+    """Retrieve a single fact by UUID or sha256: CID.
+
+    Covered by Spec-03-HTTP-API and Spec-21-Content-Addressed-IDs.
+    """
     if not identity.can_read():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
@@ -954,7 +966,10 @@ def verify_cid(
     fact_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> _CidVerifyResponse:
-    """Verify a fact's stored CID against a freshly computed one (spec §25.6.2)."""
+    """Verify a fact's stored CID against a freshly computed one.
+
+    Covered by Spec-21-Content-Addressed-IDs.
+    """
     if not identity.can_read():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
@@ -1040,12 +1055,13 @@ def get_provenance(
     fact_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> ProvenanceResponse:
-    """Provenance walk with tombstone suppression (spec §23.3.2 r.4 + §20.6.2).
+    """Provenance walk with tombstone suppression.
 
     Returns the derived_from chain for a fact.  Any entry whose referenced entity is
     tombstoned — or whose fact is otherwise inaccessible — is redacted to
-    {"hash": "...", "exists": false}, indistinguishable from the §20.6.2
-    unauthorized cross-scope pattern to prevent existence leakage.
+    {"hash": "...", "exists": false}, indistinguishable from unauthorized
+    cross-scope references to prevent existence leakage. Covered by
+    Spec-X2-RTBF-Tombstones and Spec-X11-Recall-Graph.
     """
     import json as _prov_json
 

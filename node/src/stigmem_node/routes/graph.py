@@ -102,7 +102,7 @@ def graph_neighbors(
     page_size: int = Query(20, ge=1, le=200),
     cursor: str | None = Query(None),
 ) -> Any:
-    """Return graph neighbors of entity within depth hops (spec §20.2)."""
+    """Return graph neighbors of entity within depth hops (Spec-X11-Recall-Graph)."""
     if not identity.can_read():
         raise HTTPException(status_code=403, detail="read permission required")
 

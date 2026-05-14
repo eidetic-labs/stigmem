@@ -1,0 +1,69 @@
+---
+id: synthesize-scope-v-1-scopes-scope-synthesize-get
+title: "Synthesize Scope"
+description: "Confidence-weighted summary of all facts in a scope (Phase 6)."
+sidebar_label: "Synthesize Scope"
+hide_title: true
+hide_table_of_contents: true
+api: eJzdVdtu4zYQ/RVCTwkg34KiQP2WZoOtge02iLP7khjBWBpJ3JUoLUk5UQ0B/Yh+Yb+kMxRlcxMHbV/7JIoczhnO5Zx9lKJJtGysrFW0jK5qlckUVYKTJ5R5YTEVpq0q0J2oMwFlKTJIrBFSCRAmqRsUZzcFGBQ/nk8f1IO6RdtqZbyZqTW72HYiOXgWDIkqlSqPxZO0BZ9ZDalMOAqRlZAbASp9UJlGUyg0RlRoIQULIqu1QEgKBxCLpmzJNs815mBRGAtWGisTM43iiKLTwD5XKb3NdMoWaOTv+OgCf9wthoV59BuPgUmOljw0oIGgUZtoeb+PJOeoAVvQkaID9so36Vfjt1ZqJCCrW4xpv8AKouU+stKWbLn2lrZr3EWrKQNR38fe77cWdXd0LFVStik+4nPj/IYQGZTmO4wUM2hLezgZMVeDE3F9cOLRt3VdIqi34UtZSfsvQS/m8ziq4FlWbRUtF3P3K5X/PUbzwfv0MUhlMUdNMWwYxzS1MmjYMznkD/cFKstLaJpSJq6Ysy+Ge3UfRAJpKvkIyhvNRbeS/QyFGMFvPYBYH4osXEnE58WwMMJvhCbvMYi43n7BxFLAffxicNZtklCfZm0pRqCIjH64uPhPD2mC8DnBFmTJK2mxMq8NEvscdtgVwzyfiDemXDetDW1XboNOyjr5DgFU91vmuv1Fo8b7V4Xb9EFx6+FVR3TQGjqGqEweQv9KiYL8xCiMG0fTa61p3u+604MTNOe9e8cA5S03x9g+QylTF51zeCpBo+m7IecvHxFY/HJ3d/OPDl93yPGKGO6wicGk1dJ2Lt/s+GcETZld3m94KCwxIb9t5CXDjyI+KmomtJGiiI6W0Wy3mA1sNtu7bz87sll0RFpzrw3dE+L5JnTUMGwdnlRY27hgpcrqoS3Dd91ihtrxuqqJaWTVlORHWaqRIHixtjKvsBK7+fSn6RwWgmHF5c1K/PXHn4NMxCLD1FN1LHLQpBO0qTEhwYlJgLYHQNqGloY9FiwmVJIuFn66JsQCxCKG9Ia9itU7MxVXujZmkrTWxZMhkDrRoJ/ZutoaW5O2xMLKCickQDsksIoYTU7IHyh7LigTom7shOSOlCaXyukKDTDygFMuPFteNiRJOLmYzum41aVPm1nOZk9PT1Nwx9Na5zN/18w+rK6uP66v3Z2gu8Z0HdP6kdJKXnckQkPGfSL5VlMbW4EKInnJbtGLPgzI6H+m9r5dmQFnTQkkar2vxd4PyX20W/AouDGhxXIU72BSaMAKSiob7/dbeuonXfY9bw8CyYOaSgPbMtDEr9idVOwdlC3H5MjzjVuj0B5tN/yjJRufhnuzoGe3nhDPxVsJGWlNdSHmGMyQEMfrBULqmGjvzy5J4Zow0ldS1ofs9P76jmyh5cQflOPALduR5/anI6LcO4u7+isqyv8YoOV/DrDv/wbWELah
+sidebar_class_name: "get api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Synthesize Scope"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/scopes/{scope}/synthesize"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Confidence-weighted summary of all facts in a scope (Phase 6).
+
+Returns facts sorted by confidence descending, with contradiction flags and
+freshness metadata for each fact, plus aggregate statistics.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./synthesize-scope-v-1-scopes-scope-synthesize-get.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./synthesize-scope-v-1-scopes-scope-synthesize-get.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./synthesize-scope-v-1-scopes-scope-synthesize-get.StatusCodes.json")}
+>
+
+</StatusCodes>

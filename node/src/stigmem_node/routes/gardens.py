@@ -85,7 +85,7 @@ def create_garden(
     req: GardenCreateRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> GardenRecord:
-    """Create a new garden (spec §5.14). Creator is auto-added as admin."""
+    """Create a new garden (Spec-02-Scopes-and-ACL). Creator is auto-added as admin."""
     if not identity.can_write():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="write permission required"
@@ -154,7 +154,10 @@ def create_garden(
 def list_gardens(
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> list[GardenRecord]:
-    """List accessible gardens (spec §5.15). Node admins see all; others see only their gardens."""
+    """List accessible gardens (Spec-02-Scopes-and-ACL).
+
+    Node admins see all; others see only their gardens.
+    """
     if not identity.can_read():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
@@ -183,7 +186,7 @@ def get_garden(
     garden_slug_or_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> GardenRecord:
-    """Get a garden by slug or UUID (spec §5.16)."""
+    """Get a garden by slug or UUID (Spec-02-Scopes-and-ACL)."""
     if not identity.can_read():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
@@ -204,9 +207,11 @@ def delete_garden(
     garden_slug_or_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> None:
-    """Delete a garden (spec §5.17). Requires garden admin role. Facts are orphaned, not deleted.
+    """Delete a garden (Spec-02-Scopes-and-ACL).
 
-    Quarantine gardens with pending facts cannot be deleted (§19.5.2 — HTTP 409).
+    Requires garden admin role. Facts are orphaned, not deleted.
+    Quarantine gardens with pending facts cannot be deleted
+    (Spec-08-Quarantine-Garden; HTTP 409).
     """
     garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
@@ -235,7 +240,7 @@ def list_members(
     garden_slug_or_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> list[GardenMemberRecord]:
-    """List members of a garden (spec §5.18). Requires any member role."""
+    """List members of a garden (Spec-02-Scopes-and-ACL). Requires any member role."""
     garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
@@ -253,7 +258,7 @@ def add_member(
     req: GardenMemberRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> GardenMemberRecord:
-    """Add a member to a garden (spec §5.18). Requires admin role."""
+    """Add a member to a garden (Spec-02-Scopes-and-ACL). Requires admin role."""
     garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
@@ -292,7 +297,7 @@ def update_member_role(
     req: GardenMemberUpdateRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> GardenMemberRecord:
-    """Change a member's role (spec §5.18). Requires admin. Cannot demote last admin."""
+    """Change a member's role (Spec-02-Scopes-and-ACL). Requires admin."""
     garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
@@ -333,7 +338,7 @@ def remove_member(
     entity_uri: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> None:
-    """Remove a member from a garden (spec §5.18). Cannot remove last admin."""
+    """Remove a member from a garden (Spec-02-Scopes-and-ACL). Cannot remove last admin."""
     garden = get_garden_by_slug_or_id(garden_slug_or_id, tenant_id=identity.tenant_id)
     if garden is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
@@ -394,7 +399,7 @@ def promote_fact(
     req: QuarantinePromoteRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> dict[str, Any]:
-    """Promote a quarantined fact to a target garden (spec §5.25, §19.5.5).
+    """Promote a quarantined fact to a target garden (Spec-08-Quarantine-Garden).
 
     Requires quarantine:moderator or admin role.
     """
@@ -494,7 +499,7 @@ def reject_fact(
     req: QuarantineRejectRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> dict[str, Any]:
-    """Reject a quarantined fact (spec §5.25, §19.5.5).
+    """Reject a quarantined fact (Spec-08-Quarantine-Garden).
 
     Sets confidence = 0.0 and quarantine_status = 'rejected'.
     Requires quarantine:moderator or admin role.

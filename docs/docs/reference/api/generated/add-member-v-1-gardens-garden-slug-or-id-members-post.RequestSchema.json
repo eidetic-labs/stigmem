@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"entity_uri":{"minLength":1,"title":"Entity Uri","type":"string"},"role":{"default":"reader","title":"Role","type":"string"}},"required":["entity_uri"],"title":"GardenMemberRequest","type":"object"}}},"required":true}}

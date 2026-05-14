@@ -1,0 +1,69 @@
+---
+id: list-quarantined-facts-v-1-quarantine-get
+title: "List Quarantined Facts"
+description: "List facts in the quarantine system (Spec-08-Quarantine-Garden)."
+sidebar_label: "List Quarantined Facts"
+hide_title: true
+hide_table_of_contents: true
+api: eJzdV81u2zgQfhVCpxaQfxLsYde3ND9dA9mmjZ1e0sCgJdpmS5EKSTkxDAN9iH3CfZLOkJJM2XKaJruXPdkczXwznD/OrKOUmUTz3HIlo0F0yY0lM5pYQ7gkdsHIfUE1lZZLRszKWJaRN6OcJZ3+751P9afOe6pTJt92v8gv8oNKGaFpxqUhhsFfIQKUtISniVbGuI9zJ2xA+Ao0apIAkWkv7JmVFCs0KDCmFCIPIMHQ0hVZKJESSjKWTQFFK8G6URypnGmK1xumcEEBF5wE1kycgsnyKCBO5syCYA7njFmwJBrcrnccdcEFfCHT1b5N5OZmeEaUJkYUc8DhyH9fML2CgwRIOHrOCU+BpNl9wTUD62ZUGBZHJlmwjEaDdUTl6mrmtNtVjnLGai7n0SauKbIQItrcxS+3z3IrEMnHkICbNoh/CM9YagszIDmTKdgSk1yrTFmWxkSzryyBfwcuHXjYg/z3l3+esZUHtglNRt5A54m2uwiecfu0/Smb0ULYaHDU78dRRh95VmTuhEcuy+NW/WWJWV6OS8vmTB+2Qc1mhj3XiFBnf6vzqsLYU3qHuCZX0jCDSMf9Pv4kCjikdQHKc8ETV1u9rwY9vw40g6eh8iz30hw6R/NPM2SfdhoEoQYiZAuNBAjk+/Mx6S2Petscwtpu6gCzuF3hv+p2554S72VQhDqw/ALmC1Q7TNu4g8ylmDMTan81Q1ty7AShyIlt1TBd/Wsa3q12NGy7z+tVBF2joUMzWqbEKxVce6Ametk/gujt125LHDVLGF9i14c28FLbrksQcoEgDlVQn8brgKmktVhhVKETFnKPPOUg78TqwrSnnCzwtXvSYI9Oxg5jg/SMgQOzPDRhXBP3rNiEHea2Lp24KrjAA/Xl2qJ1IAfb0qa9INoLccdJu1EO79uaYRBPpYOyV1N8GLyjPO/Q9ayagWpNXUlZZaloONER2jp4w4O8wnPsrUbhIHZdtt990xCw2T9HRZIwY2aFILUYMP12fPyKpp0yS7lodO0mQ2Ifw+ufoppH2+ZKLvPChrxDR4AvQiUNDc8oydqvd0GQLlWyU3F1nDIzD1X/BY6i89Zy84TgAdEaBqUxUn9WFngPr6rkDOL6mQqeOusc4FO5duZ9vnuJgOPP8fjjTwH3M2QrQrwMshiWFNo9muBvBH7HqAbPDm7vXAehcxx+g7LDW8FQvFA4TFdzsl3Aofk6R1vsEWaXz5dQQ5l2aPTUk+pLLKzNnXlcztT+rHDNZjDzS2hpElcNnuUCcFDt3K0sI8vnsASQZb/7R7dPjwiqJScfh+Sf73/7jSImM5aWe0Fc7RI4E+LuERNTTGuFQKZFym1MeOobXkzKeurQNIUZyVQzy/DMdMkp7jWdpLDOnhmD1gc85I1V2dRYJRkAYkfqWE2XDJRlMJ/xDuCB594S8ARRue3AtpPDfA5LFA46ULIMSxp8UQ5/JzkF93WOu334XGhRus0Mer2Hh4cudZ+7Ss97pazpXQ5Pzz+Mzp1MkE+Vu7ZuxQ0OUJew+niPl45EqVwZm1EZWOJ2xnB+w0EK21sjakET+j9umWXmYvvr5YJyN7C4sKzLArmNlkeNFwxLaaHwWb+N1uspNexGi80GyX7Qd1snN3QqgtH+oFN/ZeNrM/YbW+0spksqCuRzrfclhjxz+zpsTdsM8bRVXq7azp7DW29RW+Y7PGiO3K4TQpwYTV1bXJdSJ/Dc5qHU3ru6CTslrC/ASwtMhPoZq9vetGq69Sd4BANsyA7HMVbfmIQMqUy3eMZXcLP5Aev/Kkg=
+sidebar_class_name: "get api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List Quarantined Facts"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/quarantine"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+List facts in the quarantine system (Spec-08-Quarantine-Garden).
+
+Node admins see all quarantined facts across all gardens.
+Other callers see facts only in quarantine gardens where they hold a member role.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./list-quarantined-facts-v-1-quarantine-get.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./list-quarantined-facts-v-1-quarantine-get.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./list-quarantined-facts-v-1-quarantine-get.StatusCodes.json")}
+>
+
+</StatusCodes>

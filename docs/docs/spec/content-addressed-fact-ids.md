@@ -20,3 +20,8 @@ metadata, storage and alias persistence, dual UUID/CID addressing, verification,
 backfill status, and federation validation handoff boundaries.
 
 This page is retained as the rendered docs entry point for legacy §25 links.
+
+## Legacy alias-table reference {#section-25-3-1}
+
+Links to the former §25.3.1 alias-table subsection now map to
+`Spec-21-Content-Addressed-IDs` storage and alias persistence.

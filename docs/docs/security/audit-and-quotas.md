@@ -154,7 +154,7 @@ Audit events are persisted **before** the HTTP response is sent.  If the node cr
 
 ---
 
-## Per-principal quotas (Spec-10-Hardening rate limits)
+## Per-principal quotas (Spec-10-Hardening rate limits) {#per-principal-quotas}
 
 ### Model
 

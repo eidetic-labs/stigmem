@@ -236,7 +236,7 @@ A 429 confirms the token-bucket quota is active.  The response body includes `re
 }
 ```
 
-For the full quota model and Prometheus metrics, see [Audit Log & Per-Principal Quotas](../security/audit-and-quotas.md#per-principal-quotas-224).
+For the full quota model and Prometheus metrics, see [Audit Log & Per-Principal Quotas](../security/audit-and-quotas.md#per-principal-quotas).
 
 ---
 

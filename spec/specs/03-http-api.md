@@ -166,10 +166,11 @@ POST /v1/lint
 POST /v1/synthesis
 ```
 
-The lint route is part of the supported HTTP surface, but lint semantics still
-need a dedicated component assignment. Synthesis remains deferred/experimental
-per the experimental synthesis spec and SHOULD NOT be treated as stable solely
-because the route appeared in archived source material.
+The lint route is part of the supported HTTP surface; lint behavior, checks,
+filters, findings, and async job semantics are owned by
+`Spec-20-Lint-Semantics`. Synthesis remains deferred/experimental per the
+experimental synthesis spec and SHOULD NOT be treated as stable solely because
+the route appeared in archived source material.
 
 ## Route Ownership
 
@@ -183,7 +184,7 @@ because the route appeared in archived source material.
 | Capability tokens | `Spec-03-HTTP-API` | `Spec-06-Capability-Tokens` |
 | Gardens | `Spec-03-HTTP-API` | `Spec-02-Scopes-and-ACL` |
 | Quarantine moderation | `Spec-03-HTTP-API` | `Spec-08-Quarantine-Garden` |
-| Lint | `Spec-03-HTTP-API` | Lint/conformance component assignment TBD |
+| Lint | `Spec-03-HTTP-API` | `Spec-20-Lint-Semantics` |
 
 ## Out Of Scope
 

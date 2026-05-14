@@ -34,7 +34,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 | `Spec-18-Conformance-and-Failure-Modes` | Failure-mode scenarios | §11 | Stable | `spec/specs/18-conformance-and-failure-modes.md` |
 | `Spec-19-Adapter-ABI` | Adapter ABI | §12 | Stable | `spec/specs/19-adapter-abi.md` |
 | (placeholder) | (reserved) | §13 | Placeholder | `docs/archive/placeholder-pages/spec/section-13.md` |
-| `Spec-20-Lint-Semantics` | Lint semantics | §14 | Stable | Planned `spec/specs/20-lint-semantics.md` |
+| `Spec-20-Lint-Semantics` | Lint semantics | §14 | Stable | `spec/specs/20-lint-semantics.md` |
 | (deferred) | Decay semantics | §15 | **Deferred** ([ADR-002](../docs/adr/002-v1-scope.md)) | `experimental/decay/spec.md` |
 | (deferred) | Synthesis | §16 | **Deferred** | `experimental/synthesis/spec.md` |
 | `Spec-02-Scopes-and-ACL` (basic) + `Spec-08-Quarantine-Garden` + `Spec-X5-Memory-Garden` (advanced) | Memory garden | §17 | Basic Stable; quarantine Stable; advanced ACL deferred | `spec/specs/02-scopes-and-acl.md` (basic); `spec/specs/08-quarantine-garden.md` (quarantine); `experimental/memory-garden-acl/spec.md` (advanced ACL per [ADR-011](../docs/adr/011-cross-cutting-extraction.md)) |

@@ -1,13 +1,13 @@
 ---
-title: §12. Adapter ABI
-sidebar_label: §12 Adapter ABI
+title: Spec-19 Adapter ABI
+sidebar_label: Spec-19 Adapter ABI
 audience: Spec
-description: "Stigmem spec section 12 — Minimum contract for platform adapters: env vars, assert/query, source binding."
+description: "Spec-19-Adapter-ABI rendered entry point — minimum adapter contract and conformance expectations."
 ---
 
-# §12. Adapter ABI {#section-12}
+# Spec-19-Adapter-ABI {#section-12}
 
-**Status:** Stable
+**Status:** Rendered compatibility entry point for [`Spec-19-Adapter-ABI`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/19-adapter-abi.md).
 
 Minimum contract for platform adapters: env vars, assert/query, source binding.
 

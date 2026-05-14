@@ -1,13 +1,13 @@
 ---
-title: §25. Content-Addressed Fact IDs
-sidebar_label: §25 Content-Addressed Fact IDs
+title: Spec-21 Content-Addressed IDs
+sidebar_label: Spec-21 Content IDs
 audience: Spec
-description: "Stigmem spec section 25 — core SHA-256 content-addressed IDs for facts."
+description: "Spec-21-Content-Addressed-IDs rendered entry point — core SHA-256 content-addressed IDs for facts."
 ---
 
-# §25. Content-Addressed Fact IDs {#section-25}
+# Spec-21-Content-Addressed-IDs {#section-25}
 
-**Status:** Stable in core per ADR-017.
+**Status:** Rendered compatibility entry point for [`Spec-21-Content-Addressed-IDs`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/21-content-addressed-ids.md), which is core behavior per ADR-017.
 
 Content-addressed fact IDs (CIDs) are now maintained in the modular protocol
 spec:

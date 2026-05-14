@@ -1,13 +1,13 @@
 ---
-title: §11. Failure Mode Scenarios
-sidebar_label: §11 Failure Mode Scenarios
+title: Spec-18 Conformance and Failure Modes
+sidebar_label: Spec-18 Failure Modes
 audience: Spec
-description: "Stigmem spec section 11 — Acceptance test scenarios — split-brain, malicious peer, partial failure, replay attack."
+description: "Spec-18-Conformance-and-Failure-Modes rendered entry point — split-brain, malicious peer, partial failure, and replay scenarios."
 ---
 
-# §11. Failure Mode Scenarios {#section-11}
+# Spec-18-Conformance-and-Failure-Modes {#section-11}
 
-**Status:** Stable
+**Status:** Rendered compatibility entry point for [`Spec-18-Conformance-and-Failure-Modes`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/18-conformance-and-failure-modes.md).
 
 Acceptance test scenarios — split-brain, malicious peer, partial failure, replay attack.
 

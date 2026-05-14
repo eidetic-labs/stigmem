@@ -1,13 +1,13 @@
 ---
-title: §8. Open Questions
-sidebar_label: §8 Open Questions
+title: Protocol Open Questions
+sidebar_label: Open Questions
 audience: Spec
-description: "Stigmem spec section 8 — Currently-unresolved questions tracked in the spec for community feedback."
+description: "Open protocol questions retained for issue and planning follow-up."
 ---
 
-# §8. Open Questions {#section-8}
+# Protocol Open Questions {#section-8}
 
-**Status:** Living
+**Status:** Planning and issue-tracking material; not an independent component spec.
 
 Currently-unresolved questions tracked in the spec for community feedback.
 
@@ -97,4 +97,3 @@ Each subsection below shows the most recent normative text from the spec source.
 *Anchors below are provided so docs links to specific subsections always resolve, even when the subsection text lives only in earlier spec drafts.*
 
 ### §8.5 {#section-8-5}
-

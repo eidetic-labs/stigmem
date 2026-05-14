@@ -1,13 +1,13 @@
 ---
-title: §2. Atomic Fact Shape
-sidebar_label: §2 Atomic Fact Shape
+title: Spec-01 Fact Model
+sidebar_label: Spec-01 Fact Model
 audience: Spec
-description: "Stigmem spec section 2 — The fact tuple, value types, scopes, HLC, identity, federation-trust fields."
+description: "Spec-01-Fact-Model rendered entry point — fact tuple, value types, HLC, and fact-model boundaries."
 ---
 
-# §2. Atomic Fact Shape {#section-2}
+# Spec-01-Fact-Model {#section-2}
 
-**Status:** Stable in v0.9.0a1
+**Status:** Rendered compatibility entry point for [`Spec-01-Fact-Model`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/01-fact-model.md).
 
 The fact tuple, value types, scopes, HLC, identity, federation-trust fields.
 
@@ -17,7 +17,7 @@ The fact tuple, value types, scopes, HLC, identity, federation-trust fields.
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-*Stable sections §2.1–§2.7 unchanged from v1.0. The following fields are added to the fact record.*
+The maintained component spec is `Spec-01-Fact-Model`; legacy §2 anchors are retained for existing links.
 
 <details>
 <summary>Revisions before pre-reset draft: the pre-reset spec-draft, pre-reset draft, v1.0</summary>

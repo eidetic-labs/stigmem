@@ -1,13 +1,13 @@
 ---
-title: §3. Fact Semantics
-sidebar_label: §3 Fact Semantics
+title: Spec-15 Fact Semantics
+sidebar_label: Spec-15 Fact Semantics
 audience: Spec
-description: "Stigmem spec section 3 — Read/write semantics, retraction, contradiction, identity binding."
+description: "Spec-15-Fact-Semantics rendered entry point — provenance, expiry, retraction, contradiction, and conflict entities."
 ---
 
-# §3. Fact Semantics {#section-3}
+# Spec-15-Fact-Semantics {#section-3}
 
-**Status:** Stable (v1.0)
+**Status:** Rendered compatibility entry point for [`Spec-15-Fact-Semantics`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/15-fact-semantics.md).
 
 Read/write semantics, retraction, contradiction, identity binding.
 
@@ -17,7 +17,7 @@ Read/write semantics, retraction, contradiction, identity binding.
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-*§3.1–§3.4 unchanged. §3.5 is extended below.*
+Legacy §3 anchors are retained for existing links while the maintained prose lives in `Spec-15-Fact-Semantics`.
 
 ### §3.1 Provenance {#section-3-1}
 

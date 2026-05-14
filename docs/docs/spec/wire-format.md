@@ -1,13 +1,13 @@
 ---
-title: §5. Wire Format
-sidebar_label: §5 Wire Format
+title: Spec-03 HTTP API
+sidebar_label: Spec-03 HTTP API
 audience: Spec
-description: "Stigmem spec section 5 — JSON/HTTP wire format for facts, peers, gardens, trust manifests, and capability tokens."
+description: "Spec-03-HTTP-API rendered entry point — JSON/HTTP API surface and route contracts."
 ---
 
-# §5. Wire Format {#section-5}
+# Spec-03-HTTP-API {#section-5}
 
-**Status:** Stable (v1.0; v1.1 §5.21–5.25)
+**Status:** Rendered compatibility entry point for [`Spec-03-HTTP-API`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/03-http-api.md).
 
 JSON/HTTP wire format for facts, peers, gardens, trust manifests, and capability tokens.
 
@@ -17,7 +17,7 @@ JSON/HTTP wire format for facts, peers, gardens, trust manifests, and capability
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-*§5.1–§5.20 unchanged from v1.0. The following routes are added.*
+Legacy §5 anchors are retained for existing links while the maintained route contract lives in `Spec-03-HTTP-API`.
 
 <details>
 <summary>Revisions before pre-reset draft: the pre-reset spec-draft, pre-reset draft, v1.0</summary>

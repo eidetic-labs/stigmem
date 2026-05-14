@@ -1,13 +1,13 @@
 ---
-title: §19. Federation Trust
-sidebar_label: §19 Federation Trust
+title: Federation Trust Components
+sidebar_label: Federation Trust
 audience: Spec
-description: "Stigmem spec section 19 — Org manifests, capability tokens, source-trust score, quarantine garden, recall-time sanitizer."
+description: "Rendered entry point for federation trust component specs: manifests, capability tokens, federation trust, and quarantine."
 ---
 
-# §19. Federation Trust {#section-19}
+# Federation Trust Components {#section-19}
 
-**Status:** Normative (v1.1)
+**Status:** Rendered compatibility entry point for [`Spec-04-Manifests`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/04-manifests.md), [`Spec-05-Federation-Trust`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/05-federation-trust.md), [`Spec-06-Capability-Tokens`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/06-capability-tokens.md), and [`Spec-08-Quarantine-Garden`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/08-quarantine-garden.md).
 
 Org manifests, capability tokens, source-trust score, quarantine garden, recall-time sanitizer.
 

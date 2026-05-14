@@ -1,13 +1,13 @@
 ---
-title: §1. Motivation
-sidebar_label: §1 Motivation
+title: Protocol Motivation
+sidebar_label: Motivation
 audience: Spec
-description: "Stigmem spec section 1 — Why immutable typed facts beat per-agent mutable stores."
+description: "Stigmem protocol motivation — why immutable typed facts beat per-agent mutable stores."
 ---
 
-# §1. Motivation {#section-1}
+# Protocol Motivation {#section-1}
 
-**Status:** Stable (v1.0)
+**Status:** Protocol overview prose retained from the v0.9.0a1 specification lineage.
 
 Why immutable typed facts beat per-agent mutable stores.
 

@@ -23,7 +23,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 |---|---|---|---|---|
 | (protocol overview) | Motivation | §1 | Stable | This file |
 | `Spec-01-Fact-Model` | Atomic fact shape | §2 | Stable | `spec/specs/01-fact-model.md` during modular extraction |
-| `Spec-01-Fact-Model` + `Spec-02-Scopes-and-ACL` | Fact semantics | §3 | Stable | This file until remaining component prose extraction |
+| `Spec-01-Fact-Model` + `Spec-02-Scopes-and-ACL` | Fact semantics | §3 | Stable | `Spec-02` scope-enforcement material is in `spec/specs/02-scopes-and-acl.md`; remaining fact-semantics material stays here until extraction |
 | (deferred indefinitely) | Intent envelope | §4 | **Deferred indefinitely** ([ADR-001](../docs/adr/001-versioning.md)) | `experimental/intent-envelope/spec.md` (placeholder for future reintroduction per ADR-008) |
 | `Spec-03-HTTP-API` | Wire format | §5 | Stable | This file until component prose extraction |
 | `Spec-05-Federation-Trust` (basic parts) + `Spec-07-Recall-Pipeline` (basic) | Federation (basic) | §6 | Stable | This file |
@@ -37,7 +37,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 | (lint/conformance component, ID TBD) | Lint semantics | §14 | Stable | This file until component spec assignment |
 | (deferred) | Decay semantics | §15 | **Deferred** ([ADR-002](../docs/adr/002-v1-scope.md)) | `experimental/decay/spec.md` |
 | (deferred) | Synthesis | §16 | **Deferred** | `experimental/synthesis/spec.md` |
-| `Spec-02-Scopes-and-ACL` (basic) + `Spec-X5-Memory-Garden` (advanced) | Memory garden | §17 | Basic Stable; advanced ACL deferred | This file (basic); `experimental/memory-garden-acl/spec.md` (advanced ACL per [ADR-011](../docs/adr/011-cross-cutting-extraction.md)) |
+| `Spec-02-Scopes-and-ACL` (basic) + `Spec-X5-Memory-Garden` (advanced) | Memory garden | §17 | Basic Stable; advanced ACL deferred | `spec/specs/02-scopes-and-acl.md` (basic); `experimental/memory-garden-acl/spec.md` (advanced ACL per [ADR-011](../docs/adr/011-cross-cutting-extraction.md)) |
 | `Spec-X6-Source-Attestation` | Source attestation | §18 | **Deferred** | `experimental/source-attestation/spec.md` |
 | `Spec-04-Manifests` + `Spec-05-Federation-Trust` + `Spec-06-Capability-Tokens` | Federation trust | §19 | Basic Stable; advanced trust scoring deferred | This file (basic); `experimental/federation-trust-extensions/spec.md` (advanced) |
 | `Spec-X11-Recall-Graph` | Recall and graph (advanced) | §20 | **Deferred** | `experimental/recall-graph/spec.md` |

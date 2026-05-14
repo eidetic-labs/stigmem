@@ -218,7 +218,7 @@ def render_protocol(
     latest_update = max(spec.last_updated for spec in all_specs)
     intro = (
         "This file records the ADR-010 modular specification composition for the "
-        + "Stigmem protocol. It is generated from YAML frontmatter in core "
+        + "Stigmem protocol. It is generated from YAML frontmatter in component "
         + "[`spec/specs/`](specs/) files and colocated experimental specs under "
         + "`experimental/<feature>/spec.md`."
     )

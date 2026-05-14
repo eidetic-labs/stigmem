@@ -64,7 +64,7 @@ Stigmem is built by two contributors with heavy AI-coding assistance. We disclos
 - Test suites
 - Documentation pages outside the spec and ADRs
 
-This disclosure is also in [`CONTRIBUTING.md`](CONTRIBUTING.md). It is not a defect notice — it's a calibration aid for anyone evaluating whether to trust stigmem with their workload. Treat the lighter-reviewed paths as you would any AI-written code: verify behavior against the spec, run the conformance suite, and audit before adopting.
+This disclosure is also in [`CONTRIBUTING.md`](CONTRIBUTING.md) and the docs-site [AI authorship disclosure](docs/docs/community/ai-authorship.md). It is not a defect notice — it's a calibration aid for anyone evaluating whether to trust stigmem with their workload. Treat the lighter-reviewed paths as you would any AI-written code: verify behavior against the spec, run the conformance suite, and audit before adopting.
 
 ---
 

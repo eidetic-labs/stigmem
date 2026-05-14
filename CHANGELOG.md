@@ -12,6 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 ### Added
 
 - **Plugin registry foundation.** Main now includes the stable 22-hook surface, typed voting/filter-chain/score-delta/fire-and-forget semantics, deterministic `HookRegistry` dispatch, manual/core handler registration, minimum `PluginManifest` and capability-restricted `PluginContext`, hook-site wiring across assertion/recall/federation/auth/migration/audit paths, registry audit/metrics plumbing, `TestPluginRegistry`, focused plugin tests, and a hook-firing benchmark gate.
+- **Docs-site AI authorship disclosure.** The README and CONTRIBUTING AI-assisted authorship disclosure is now mirrored in the docs site under Community / Disclosure & policy so adopters and reviewers can find the review-calibration guidance outside the repository root.
 
 ### Changed
 

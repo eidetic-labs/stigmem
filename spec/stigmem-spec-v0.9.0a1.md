@@ -22,7 +22,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 | Spec ID (target) | Topic | Legacy § | Status in v0.9.0a1 | Canonical destination |
 |---|---|---|---|---|
 | (protocol overview) | Motivation | §1 | Stable | This file |
-| `Spec-01-Fact-Model` | Atomic fact shape | §2 | Stable | `spec/specs/01-fact-model.md` during modular extraction |
+| `Spec-01-Fact-Model` | Atomic fact shape | §2 | Stable | `spec/specs/01-fact-model.md` |
 | `Spec-01-Fact-Model` + `Spec-02-Scopes-and-ACL` + `Spec-15-Fact-Semantics` | Fact semantics | §3 | Stable | `Spec-02` scope-enforcement material is in `spec/specs/02-scopes-and-acl.md`; remaining fact-semantics material is in `spec/specs/15-fact-semantics.md` |
 | (deferred indefinitely) | Intent envelope | §4 | **Deferred indefinitely** ([ADR-001](../docs/adr/001-versioning.md)) | `experimental/intent-envelope/spec.md` (placeholder for future reintroduction per ADR-008) |
 | `Spec-03-HTTP-API` | Wire format | §5 | Stable | `spec/specs/03-http-api.md` |

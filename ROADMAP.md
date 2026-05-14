@@ -119,23 +119,22 @@ Per [ADR-010](docs/adr/010-modular-specs.md): the canonical spec naming is **`Sp
 
 | Prefix | Meaning | Example |
 |---|---|---|
-| `Spec-NN-` | Supported protocol component spec; in-tree at `spec/specs/NN-topic-name.md` once the modular migration lands | `Spec-01-Fact-Model`, `Spec-09-Audit-Log` |
+| `Spec-NN-` | Supported protocol component spec; in-tree at `spec/specs/NN-topic-name.md` | `Spec-01-Fact-Model`, `Spec-09-Audit-Log` |
 | `Spec-XN-` | Experimental spec; lives at `experimental/<feature>/spec.md` per [ADR-009](docs/adr/009-repo-structure.md) §2 | `Spec-X1-Lazy-Instruction-Discovery` |
 
 **The number is stable across renames.** If a spec's topic name changes, the number stays. New specs get the next available number; numbers are never reused.
 
 ### Why the legacy `§N` numbering is still visible
 
-The pre-reset stigmem spec was a single monolithic document with sections numbered §1 through §25. ADR-010 supersedes that model — but the **full per-spec decomposition is beta-series work** per ADR-010's own implementation plan. Until that lands:
-
-- The canonical spec stays as a single file at `spec/stigmem-spec-v0.9.0a1.md`.
-- Cross-references in this ROADMAP use `Spec-XN-Name` as the **primary** identifier with `[§N legacy]` as a transitional aid for readers familiar with the pre-reset numbering.
-- Each `experimental/<feature>/STATUS.md` declares its `spec_id: Spec-XN-Topic-Name` in frontmatter.
-- Per-component file decomposition (`spec/specs/01-fact-model.md` through `spec/specs/14-batch-assert.md`, plus the `spec/PROTOCOL.md` meta-document) lands in the beta series.
+The pre-reset stigmem spec was a single monolithic document with sections
+numbered §1 through §25. ADR-010 supersedes that model. The supported component
+specs now live under `spec/specs/`, experimental specs live under
+`experimental/<feature>/spec.md`, and `spec/PROTOCOL.md` is generated from
+their frontmatter.
 
 ### Spec ID inventory
 
-**Supported protocol component specs (beta-series target — 14 files):**
+**Supported protocol component specs:**
 
 | Spec ID | Topic | Maps from legacy §§ |
 |---|---|---|
@@ -153,6 +152,13 @@ The pre-reset stigmem spec was a single monolithic document with sections number
 | `Spec-12-HLC-Bounded-Skew` | HLC bounded skew | (new; per R-19) |
 | `Spec-13-Capability-Based-Instructions` | `interpret_as` capability model | (new; per ADR-003) |
 | `Spec-14-Batch-Assert` | Batch fact assert | (new; per ADR-006) |
+| `Spec-15-Fact-Semantics` | Fact semantics | §3 |
+| `Spec-16-Namespace-Registry` | Namespace registry | §9 |
+| `Spec-17-Schema-and-Migration` | Schema and migrations | §10 |
+| `Spec-18-Conformance-and-Failure-Modes` | Conformance and failure modes | §11 |
+| `Spec-19-Adapter-ABI` | Adapter ABI | §12 |
+| `Spec-20-Lint-Semantics` | Lint semantics | §14 |
+| `Spec-21-Content-Addressed-IDs` | Content-addressed IDs | §25 |
 
 **Experimental specs (currently at `experimental/<feature>/spec.md`):**
 
@@ -160,11 +166,14 @@ The pre-reset stigmem spec was a single monolithic document with sections number
 |---|---|---|---|
 | `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | `experimental/lazy-instruction-discovery/spec.md` | §21 |
 | `Spec-X2-RTBF-Tombstones` | RTBF tombstones | `experimental/tombstones/spec.md` | §23 |
-| `Spec-X3-Time-Travel` | `as_of` time-travel queries | `experimental/time-travel/spec.md` | §24 |
-| `Spec-X4-Content-Addressed-IDs` | CIDs (already **core in v0.9.0a1** per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md); the v0.9.0a3 step is a formal rename to `Spec-NN-CIDs` during the modular spec migration, not a code graduation) | n/a (in core); will move to `spec/specs/NN-cids.md` during the modular spec migration | §25 |
-| `Spec-X5-Memory-Garden` | Memory garden advanced ACL | `experimental/memory-garden-acl/spec.md` | §17 advanced |
+| `Spec-X3-Time-Travel-Queries` | `as_of` time-travel queries | `experimental/time-travel/spec.md` | §24 |
+| `Spec-X5-Memory-Garden-Advanced-ACL` | Memory garden advanced ACL | `experimental/memory-garden-acl/spec.md` | §17 advanced |
 | `Spec-X6-Source-Attestation` | Source attestation | `experimental/source-attestation/spec.md` | §18 |
 | `Spec-X7-Subscriptions` | Subscriptions / push federation | `experimental/subscriptions/spec.md` | (new) |
+| `Spec-X8-Intent-Envelope` | Intent envelope | `experimental/intent-envelope/spec.md` | §4 |
+| `Spec-X9-Decay-Semantics` | Decay semantics | `experimental/decay/spec.md` | §15 |
+| `Spec-X10-Synthesis` | Synthesis | `experimental/synthesis/spec.md` | §16 |
+| `Spec-X11-Recall-Graph` | Advanced recall graph | `experimental/recall-graph/spec.md` | §20 advanced |
 
 ---
 

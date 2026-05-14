@@ -320,7 +320,9 @@ skill install stigmem-node
 This path is for alpha evaluation only, not production federation. Use a private
 node and a least-privilege key, and read the open audit limitations before using
 the adapter in an agent workflow. Full usage docs and the security model are in the
-[`adapters/openclaw` README](https://github.com/Eidetic-Labs/stigmem/tree/main/adapters/openclaw#readme).
+[`adapters/openclaw` README](https://github.com/Eidetic-Labs/stigmem/tree/main/adapters/openclaw#readme);
+the current adopter warning is in
+[LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::
 

@@ -38,7 +38,8 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 > fail-open boot behavior, optional API-key handling, handoff target validation,
 > partial handoff writes, and prompt-injection boundaries. Use it only with
 > private, access-controlled Stigmem nodes and least-privilege agent keys until
-> the hardening work lands.
+> the hardening work lands. See
+> [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 ## What this skill provides
 
@@ -109,7 +110,8 @@ boundary is still planned for the v0.9.0aN/beta hardening path.
 **What you should do:**
 - **Append** the Stigmem context after your hardcoded system prompt — never prepend it — so your instructions take precedence over retrieved memory.
 - In high-stakes or irreversible workflows, skip `boot()` or use `ctx.facts` for programmatic inspection instead of injecting the full summary.
-- Use a private, access-controlled Stigmem node for production. Do not point production agents at a shared or publicly writable node.
+- Use a private, access-controlled Stigmem node for evaluation. Do not point
+  high-stakes agents at a shared or publicly writable node.
 
 ### Stale and poisoned facts
 
@@ -118,7 +120,8 @@ Facts written by this adapter persist durably and propagate to every agent on th
 **What you should do:**
 - Use `scope="local"` for agent scratch facts that should not leave the local node.
 - Use `scope="company"` only for facts that should legitimately be shared across agents.
-- Run experimental workloads against a separate Stigmem node or a dedicated scope namespace, not your production node.
+- Run experimental workloads against a separate Stigmem node or a dedicated scope
+  namespace, not your primary operational node.
 - Retract incorrect facts explicitly (`DELETE /v1/facts/{id}`) rather than waiting for expiry. The 24-hour expiry on escalations is a safety net, not a correction mechanism.
 - Treat `emit_decision()` as a write to a shared audit log: only call it for confirmed, significant choices. The dedup guard prevents writing the same `(entity, source)` pair twice, but does not stop you from writing an incorrect decision in the first place.
 
@@ -129,14 +132,18 @@ Over-privileged API keys grant unnecessary read/write access across your node. T
 **What you should do:**
 - Issue a dedicated API key per agent deployment. Never share a key across agents or environments.
 - Rotate keys regularly; revoke via the node admin API (`DELETE /v1/auth/keys/{id}`) if a key is compromised.
-- Set `STIGMEM_SOURCE_ENTITY` to a unique per-deployment URI (e.g., `agent:openclaw-prod-alice`). The generic default `agent:openclaw` should not be used in production — facts from different deployments become indistinguishable in the fact graph.
+- Set `STIGMEM_SOURCE_ENTITY` to a unique per-deployment URI (e.g.,
+  `agent:openclaw-eval-alice`). The generic default `agent:openclaw` should not
+  be shared across deployments because facts from different deployments become
+  indistinguishable in the fact graph.
 
 ### Dependency pinning
 
 The install spec uses a version range (`stigmem-py>=0.9.0a1,<1.0.0`) so compatible alpha-line updates are picked up automatically. A future alpha or beta release could change runtime behaviour.
 
 **What you should do:**
-- Pin the exact version in a lockfile (`uv.lock` or `requirements.txt`) for production deployments rather than relying on the range alone.
+- Pin the exact version in a lockfile (`uv.lock` or `requirements.txt`) for any
+  repeatable evaluation environment rather than relying on the range alone.
 - Review `stigmem-py` release notes before upgrading and run your integration tests against the new version before rollout.
 
 ### Federation scope
@@ -158,7 +165,9 @@ docker run --rm -p 8765:8765 \
   ghcr.io/eidetic-labs/stigmem-node:latest
 ```
 
-`:latest` is fine for trying things out; for production swap to a pinned version tag (`:0.9.0a1`) or a `@sha256:<digest>` pin — the install guide on docs.stigmem.dev has the full tag-selection table.
+`:latest` is fine for trying things out; for repeatable evaluation swap to a
+pinned version tag (`:0.9.0a1`) or a `@sha256:<digest>` pin — the install guide
+on docs.stigmem.dev has the full tag-selection table.
 
 Full setup guide and federation docs: [docs.stigmem.dev/en/latest/docs/guides/federation](https://docs.stigmem.dev/en/latest/docs/guides/federation)
 

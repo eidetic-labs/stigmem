@@ -37,7 +37,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 | (lint/conformance component, ID TBD) | Lint semantics | §14 | Stable | This file until component spec assignment |
 | (deferred) | Decay semantics | §15 | **Deferred** ([ADR-002](../docs/adr/002-v1-scope.md)) | `experimental/decay/spec.md` |
 | (deferred) | Synthesis | §16 | **Deferred** | `experimental/synthesis/spec.md` |
-| `Spec-02-Scopes-and-ACL` (basic) + `Spec-X5-Memory-Garden` (advanced) | Memory garden | §17 | Basic Stable; advanced ACL deferred | `spec/specs/02-scopes-and-acl.md` (basic); `experimental/memory-garden-acl/spec.md` (advanced ACL per [ADR-011](../docs/adr/011-cross-cutting-extraction.md)) |
+| `Spec-02-Scopes-and-ACL` (basic) + `Spec-08-Quarantine-Garden` + `Spec-X5-Memory-Garden` (advanced) | Memory garden | §17 | Basic Stable; quarantine Stable; advanced ACL deferred | `spec/specs/02-scopes-and-acl.md` (basic); `spec/specs/08-quarantine-garden.md` (quarantine); `experimental/memory-garden-acl/spec.md` (advanced ACL per [ADR-011](../docs/adr/011-cross-cutting-extraction.md)) |
 | `Spec-X6-Source-Attestation` | Source attestation | §18 | **Deferred** | `experimental/source-attestation/spec.md` |
 | `Spec-04-Manifests` + `Spec-05-Federation-Trust` + `Spec-06-Capability-Tokens` | Federation trust | §19 | Basic Stable; advanced trust scoring deferred | `Spec-04`, `Spec-05`, and `Spec-06` material extracted; `experimental/federation-trust-extensions/spec.md` (advanced) |
 | `Spec-07-Recall-Pipeline` (basic) + `Spec-X11-Recall-Graph` (advanced) | Recall and graph | §20 | Basic Stable; advanced deferred | `spec/specs/07-recall-pipeline.md` (basic); `experimental/recall-graph/spec.md` (advanced) |

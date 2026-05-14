@@ -24,9 +24,11 @@ The canonical spec is in flight — content arrives section-by-section as the ma
 | §24 Time-Travel Queries | Deferred | [`experimental/time-travel/spec.md`](../experimental/time-travel/spec.md) |
 | §25 Content-Addressed Fact IDs (CIDs) | **Stable in core** per [ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md) | This file → canonical spec |
 
-## Modular spec migration (v0.9.0bN beta-series work per ADR-010)
+## Modular spec migration (ADR-010)
 
-Per [ADR-010](../docs/adr/010-modular-specs.md), the spec decomposes into ~14 core specs (`spec/specs/01-core.md` through `Spec-14`) with independent versioning during the v0.9.0bN beta series. Until that lands, this single canonical file is the spec.
+Per [ADR-010](../docs/adr/010-modular-specs.md), the spec decomposes into 14 core specs under [`spec/specs/`](specs/) with independent versioning. [`PROTOCOL.md`](PROTOCOL.md) is generated from those files' YAML frontmatter and records the current protocol composition.
+
+The modular files currently establish spec identifiers, dependency metadata, and extraction targets. Until prose is migrated section-by-section, [`stigmem-spec-v0.9.0a1.md`](stigmem-spec-v0.9.0a1.md) remains the normative source for canonical protocol text.
 
 ## Evolution
 
@@ -39,6 +41,8 @@ Conformance vectors at `data/conformance/<spec-version>/` — see `data/conforma
 ## Cross-references
 
 - [`spec/stigmem-spec-v0.9.0a1.md`](stigmem-spec-v0.9.0a1.md) — canonical spec
+- [`spec/PROTOCOL.md`](PROTOCOL.md) — generated modular-spec protocol composition
+- [`spec/specs/`](specs/) — ADR-010 core spec files and frontmatter
 - [`spec/EVOLUTION.md`](EVOLUTION.md) — development-checkpoint history
 - [`spec/archive/evolution/`](archive/evolution/) — superseded evolutionary snapshots
 - [`spec/security/threat-model.md`](security/threat-model.md) — threat model

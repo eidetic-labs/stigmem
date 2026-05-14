@@ -62,6 +62,7 @@ jobs:
               - '.github/workflows/ci.yml'
               - 'scripts/check.sh'
               - 'scripts/export_openapi.py'
+              - 'scripts/generate_protocol_md.py'
               - 'docs/openapi/**'
               - 'node/**'
               - 'spec/**'

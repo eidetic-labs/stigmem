@@ -1,0 +1,68 @@
+---
+id: get-fact-v-1-facts-fact-id-get
+title: "Get Fact"
+description: "Retrieve a single fact by UUID or sha256: CID."
+sidebar_label: "Get Fact"
+hide_title: true
+hide_table_of_contents: true
+api: eJzFV9tu20YQ/ZUFnxKAuti9ANWbKjuO0DRJLdt9cAxhRQ6lTchdencpRxUI9CP6hf2SzuySFCXRSWoX6JOo4eyZC89cdhvEYCItciuUDEbBJVgtYA2MMyPkMgWW8MiyxYZdX0/PmNLMrPjpDz+O2GR61v8gP8iJWoOGmFRmOUS94Xe911dX73vj91PGZeyFpye9iZIWpO2N41iDMRD3pmemH4SBykFzMj+N0YEl2DmZnK9P3K+Z+78ins/xHernXPMMLGgTjG63gSC3c25X+EriC/xXHUCBhvtCoHfByOoCwsBEK8h4MNoGVtiUdF9ReFPStZucBAYTIJdBWd7RcZMracDQidPhkH4iHwc98jxPReR8H3w0lL9ty0KuKTIr/GluLRhLnuCz3LxLnPOVzYVSKXAZlGEjkkWaBuRD7ei4BijDBmz+CTYUaBdmHcc3QLJfYEM5QOTo6WgT4RGUTEQMMoJ2mic7abhDyBagqzNW81hEVYJiSHiRYo4TnhoI2yg7vfA4ewEkCURWrGG+78ZRPI3tx+M5r7FYy3myIVFj0w7u3EuOKBQGS67x3DM+0YUDqD7OKo2eivMajyKCd6QWdtEe61GLpZBznqbqASlmIqSx2bcrLGROdHS4EnCt+eaLDr1zVtjYW2Ezb2VnXqoYnpG3Cv4tolTJuy+wb+CHkjB/9lf5rcFiex+oZcNYbgvzHxiYeaCSulEESMd4nmiVPRX5sgJhrwjEoabcN/9tS6mSddDDcCms+AP0HPsq/1rFzmptdllrd9XtDvSBa4mWXOa+QLMj+N/rc0ccDByD2+E5snXGpgq937dmXvKo7hznirFPbTEenV05DBdWhg2ZZ3nbhatG2OHFmqc4GQukSvpURtwQBLt2EB6xgOP55U+3vNp0p3DdVrrBMdoewrdev2Wcxu+Ns9hgqcVH7LuE9e+48CgDDlxwiwHULVvvqL6u/DDNN29lPmoPMM+ogzCwspSOj+Mg+/tL1qyIIlyBkiLFqvAbBgXy/enpMxaMGCz3JGhSta8Q2c8HE9nCZ9uVdyHzwu4NCifAN6mK9ix8A98EmllSHdy1vtUbFR00mKZaM7Nsm/4VE8WXnVQ7pOS51rifdhPzgAMUhzcVHlHS1YPzzgF2JahWPfM57yBcM3dxFf4q4DFDdkeYP0MqBqJCu9UD803APwPXmNnR7Z2rZ06Vcuu2X0MB4ZK8UtVO7fZm3JFHwWB9MnAqg221J5fBDntG7PJ8aVuoaOe6thc1QayszZ17QibKE3H/QpHg9QDLhtFEZyLLU8Sh0bZkdkXjTSwzyNh62P+pP+QnjMwyujz8/edf7vJhQpZAXN0RQuaHNwpxHOKOEjJTLBqDKOZFLGzIqFapxENW1VOP1xcPf6Wh2webaGVMLyqs8ycBHLWow15YlS2MVRIQkLpAD9fONaCxDIec6CEeTueXDDPBVG57uGnkaYELh7vQYMkClTTmorqQjHOO6eud9of4utBplTYzGgweHh763L3uK70cVGfN4M10cv52du7OtAdela5dWmnFoeaF9yGf8SqRdCpXxmZctjy5AMuoWQUHjGu1nf/jDlhxiRrSIE+5cEuBS9S24u1tsD5BRU/ukPYMf8dDnq8UTeDbYLtdcAPXOi1LEt8XoKlW7qiza8EXlECsnFgYeo6bXeXRRLy4rFrGS/aYj3Xhy00zQEYBPuLFrHURdb1vBTx21bqt3o5xCuS2de6o3ZftKr44v0JdXlA2djfHuhoXdS/YdvuEyXEaV+oTyLJsXLT0nxwsy38AI9t3LA==
+sidebar_class_name: "get api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get Fact"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/facts/{fact_id}"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Retrieve a single fact by UUID or sha256: CID.
+
+Covered by Spec-03-HTTP-API and Spec-21-Content-Addressed-IDs.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-fact-v-1-facts-fact-id-get.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-fact-v-1-facts-fact-id-get.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-fact-v-1-facts-fact-id-get.StatusCodes.json")}
+>
+
+</StatusCodes>

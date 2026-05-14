@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"id_token":{"title":"Id Token","type":"string"},"permissions":{"default":["read","write"],"items":{"type":"string"},"title":"Permissions","type":"array"}},"required":["id_token"],"title":"ExchangeRequest","type":"object"}}},"required":true}}

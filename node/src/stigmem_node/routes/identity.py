@@ -377,7 +377,7 @@ def verify_capability_token_endpoint(
     body: dict[str, Any],
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> dict[str, Any]:
-    """Verify a capability token (spec §19.3.3 steps 1–6).
+    """Verify a capability token (Spec-06-Capability-Tokens).
 
     Returns {"valid": true} on success, or {"valid": false, "reason": "..."}
     when the token fails any verification step (expired, bad sig, revoked, etc.).

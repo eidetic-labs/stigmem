@@ -1,4 +1,4 @@
-"""Hybrid recall endpoint — spec §20 (Phase 9).
+"""Hybrid recall endpoint — Spec-07-Recall-Pipeline and Spec-X11-Recall-Graph.
 
 POST /v1/recall  Hybrid ranker combining:
     - lexical (FTS5 / BM25)
@@ -72,7 +72,7 @@ class RecallRequest(BaseModel):
     limit: int = Field(100, ge=1, le=500, description="Max candidates before token-budget packing")
     as_of: str | None = Field(
         None,
-        description="§24: time-travel — return facts visible at this ISO 8601 timestamp",
+        description="Time-travel query: return facts visible at this ISO 8601 timestamp (Spec-X3-Time-Travel-Queries)",  # noqa: E501
     )
 
 
@@ -655,7 +655,7 @@ def recall(
     """Hybrid recall — return the most salient facts for a query, within budget.
 
     Combines lexical (FTS5/BM25), dense-vector, and graph-traversal signals.
-    Honors §17 garden ACL and §19 source-trust at every step.
+    Honors Spec-02-Scopes-and-ACL and Spec-05-Federation-Trust at every step.
     """
     with start_span(
         "stigmem.recall",

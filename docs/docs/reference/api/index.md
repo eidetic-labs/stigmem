@@ -7,36 +7,36 @@ audience: Integrator
 
 # API Reference
 
-The Stigmem reference node exposes a REST API implementing spec §5. The interactive API reference below is auto-generated from the OpenAPI schema served at `http://localhost:8000/openapi.json`.
+The Stigmem reference node exposes a REST API owned by `Spec-03-HTTP-API`, with endpoint semantics split across the component specs listed below. The interactive API reference below is auto-generated from the OpenAPI schema served at `http://localhost:8000/openapi.json`.
 
 ## Endpoint groups
 
 | Group | Base path | Auth | Spec |
 |-------|-----------|------|------|
-| **Facts** | `/v1/facts` | API key | §5.1–§5.5 |
-| **Federation** | `/v1/federation/*` | API key + peer token | §5.6–§5.11, §6 |
-| **Conflicts** | `/v1/conflicts` | API key | §5.9–§5.10 |
-| **Gardens** | `/v1/gardens/*` | API key (role-gated) | §5.14–§5.20, §17 |
-| **Lint** | `/v1/lint` | API key | §14 |
-| **Decay** | `/v1/decay/sweep` | API key | §15 |
-| **Synthesis** | `/v1/synthesis` | API key | §16 |
-| **Auth / Keys** | `/v1/auth/keys/*` | Admin API key | §3.5 |
-| **Auth / Audit** | `/v1/auth/audit` | Admin API key | §18 |
+| **Facts** | `/v1/facts` | API key | `Spec-01-Fact-Model`, `Spec-03-HTTP-API`, `Spec-15-Fact-Semantics` |
+| **Federation** | `/v1/federation/*` | API key + peer token | `Spec-03-HTTP-API`, `Spec-05-Federation-Trust` |
+| **Conflicts** | `/v1/conflicts` | API key | `Spec-03-HTTP-API`, `Spec-15-Fact-Semantics` |
+| **Gardens** | `/v1/gardens/*` | API key (role-gated) | `Spec-02-Scopes-and-ACL`, `Spec-08-Quarantine-Garden` |
+| **Lint** | `/v1/lint` | API key | `Spec-20-Lint-Semantics` |
+| **Decay** | `/v1/decay/sweep` | API key | `Spec-X9-Decay-Semantics` |
+| **Synthesis** | `/v1/synthesis` | API key | `Spec-X10-Synthesis` |
+| **Auth / Keys** | `/v1/auth/keys/*` | Admin API key | `Spec-06-Capability-Tokens` |
+| **Auth / Audit** | `/v1/auth/audit` | Admin API key | `Spec-X6-Source-Attestation` |
 | **Admin / Billing** | `/v1/admin/billing/events` | Admin API key | — |
-| **Async Jobs** | `/v1/jobs/:id` | API key | §14.5, §15.4 |
+| **Async Jobs** | `/v1/jobs/:id` | API key | `Spec-20-Lint-Semantics`, `Spec-X9-Decay-Semantics` |
 | **Identity** | `/v1/me` | API key | — |
-| **Node Metadata** | `/.well-known/stigmem` | None | §5.3 |
+| **Node Metadata** | `/.well-known/stigmem` | None | `Spec-03-HTTP-API`, `Spec-04-Manifests` |
 | **Health** | `/healthz` | None | — |
-| **Recall** | `/v1/recall` | API key | §20.3 |
-| **Cards** | `/v1/cards/*` | API key | §20.4 |
-| **Graph** | `/v1/graph/*` | API key | §20.1 |
-| **Subscriptions** | `/v1/subscriptions` | API key + capability token | §20.5 |
-| **Provenance** | `/v1/facts/:id/provenance` | API key | §20.6 |
-| **Instructions** | `/v1/agents/:id/instruction-manifest` · `/v1/agents/:id/recall-instruction` | API key | §21 |
+| **Recall** | `/v1/recall` | API key | `Spec-07-Recall-Pipeline`, `Spec-X11-Recall-Graph` |
+| **Cards** | `/v1/cards/*` | API key | `Spec-X11-Recall-Graph` |
+| **Graph** | `/v1/graph/*` | API key | `Spec-X11-Recall-Graph` |
+| **Subscriptions** | `/v1/subscriptions` | API key + capability token | `Spec-X7-Subscriptions` |
+| **Provenance** | `/v1/facts/:id/provenance` | API key | `Spec-X11-Recall-Graph` |
+| **Instructions** | `/v1/agents/:id/instruction-manifest` · `/v1/agents/:id/recall-instruction` | API key | `Spec-X1-Lazy-Instruction-Discovery` |
 
 ---
 
-## pre-reset graph & recall design endpoints (§20 — normative)
+## Graph And Recall Design Endpoints (`Spec-07-Recall-Pipeline`, `Spec-X11-Recall-Graph`)
 
 ### `GET /v1/recall` · `POST /v1/recall`
 
@@ -112,7 +112,7 @@ curl -s "http://localhost:8000/v1/recall?entity=stigmem%3A%2F%2Fcompany.example%
 
 ### `GET /v1/cards/{entity_uri}` {#get-v1cardsentity_uri}
 
-Fetch (and optionally force-refresh) the synthesized memory card for a specific entity (spec §20.4). Returns `404` when the entity has no live facts.
+Fetch (and optionally force-refresh) the synthesized memory card for a specific entity (`Spec-X11-Recall-Graph`). Returns `404` when the entity has no live facts.
 
 Memory cards are pre-aggregated summaries stored in the `memory_cards` table. They are marked stale on every `assert_fact` call and refreshed on the next read. When a fresh card is available during `POST /v1/recall`, the recall pipeline uses it as a single synthetic fact instead of re-ranking all raw facts for that entity.
 
@@ -193,7 +193,7 @@ curl -s "http://localhost:8000/v1/graph/neighbors?entity=stigmem%3A%2F%2Fcompany
 
 ### `POST /v1/subscriptions`
 
-Register a push subscription to receive events when facts matching a scope or entity change. Requires a capability token (§19.3, validated per §19.3.3) covering the `subscribe` verb on the target (verb enum defined in §19.3.2).
+Register a push subscription to receive events when facts matching a scope or entity change. Requires a capability token (`Spec-06-Capability-Tokens`) covering the `subscribe` verb on the target.
 
 ```bash
 curl -s -X POST http://localhost:8000/v1/subscriptions \
@@ -210,7 +210,7 @@ curl -s -X POST http://localhost:8000/v1/subscriptions \
 
 Events are delivered with `subscription_id`, `event_type` (`fact_asserted` | `fact_retracted` | `conflict_opened` | `conflict_resolved`), `fact_id`, and `hlc`.
 
-**Delivery security:** the node re-evaluates the caller's garden ACL **and** capability token revocation status (§19.3.4) on every event delivery. Event content is not populated until the ACL check passes — preventing cross-garden fact leakage via standing event streams. If access has been revoked since subscription creation, delivery is silently dropped and the subscription is cancelled with event type `subscription_cancelled_access_revoked`.
+**Delivery security:** the node re-evaluates the caller's garden ACL **and** capability token revocation status on every event delivery. Event content is not populated until the ACL check passes — preventing cross-garden fact leakage via standing event streams. If access has been revoked since subscription creation, delivery is silently dropped and the subscription is cancelled with event type `subscription_cancelled_access_revoked`.
 
 ---
 
@@ -229,7 +229,7 @@ curl -s http://localhost:8000/v1/facts/abc123/provenance \
 
 ---
 
-## Lazy instruction discovery endpoints (§21 — DRAFT)
+## Lazy Instruction Discovery Endpoints (`Spec-X1-Lazy-Instruction-Discovery`)
 
 ### `PUT /v1/agents/{agent_id}/instruction-manifest`
 
@@ -399,7 +399,7 @@ Federation endpoints (`/v1/federation/facts`, `/v1/federation/facts/push`) addit
 Authorization: Bearer <peer-token>
 ```
 
-Peer tokens are Ed25519-signed JWTs exchanged during the federation handshake (spec §6.3).
+Peer tokens are Ed25519-signed JWTs exchanged during the federation handshake (`Spec-05-Federation-Trust`).
 
 ## Generating interactive docs
 

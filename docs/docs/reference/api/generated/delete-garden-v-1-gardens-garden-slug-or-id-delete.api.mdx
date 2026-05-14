@@ -1,0 +1,70 @@
+---
+id: delete-garden-v-1-gardens-garden-slug-or-id-delete
+title: "Delete Garden"
+description: "Delete a garden (Spec-02-Scopes-and-ACL)."
+sidebar_label: "Delete Garden"
+hide_title: true
+hide_table_of_contents: true
+api: eJzdVc1u4zYQfhVCpwSQbCfIoeue0sRtDaS729jbSxIYtDiWuSuRXHLkrCEI6EP0CfskO6MfW4nT9t6TKHK++fk487GKFITUa4fammga3UIOCEKKTHoFRpwtHKTJ5DJZpNZBSKRRyfXN3fno0Tyae/haag+hN5aq0EZ4m8NI/CxTDEJ6ENa7rTSgYmEsCtUEUIT/vZReGtQGOnwQzxq3woFR2mRi03hIpWHYGnrko+ly+iE5ekh+aTz8KH5dLj+Kq8m781EUR5Sxl1zYXFFpLX7VxlrtLrpVWPVbIS+zlfUrrVar1ph8OApR0NKHaPpQRZpJchK3dGTogP5O0HTkW2YoLPoS4iikWyhkNK0i1Jgzqk1YLAglPngxZxTuHR8F9FR/VNdP7Cg4awIExl5Orvjz8sYWZZpCCJsyF/edcVTH0dXlJdum1iAY5KV0Ltdpw8f4c2BsNcjLeWYLdRtJAUqd80ojFOHUIMVvw2puOMw3PNZg158hRU5EG1fi0HbebNBJbtMXEaTZf9g0LL8iIj7saAqTgY/qJ8L3Du9sW9UxuvRe7jlEEbJh6N+IKJnBKdX9xtF05r31Ysm7pxczvOCHpo42VGf5dMztD5lr1WTXOHyLoN70tuX8dREDC27u/3TIgJcdcoSIFsMmAdLSa9w3fLPjn4CG1dPvE/cdyowbvmvuwCXRFGztcZCa2aA5mEbj3cW4sxtXJ9NQR8dgC263toGGIbs+5CrW7dahqi2ia/LVZmNPm/8eNuDBpEDaokDowuXkhyUhE7gFsUCdFVCI3WT0bjSRF60+XH+ci7///KtVmFhsQHU6EfdKFAsPqczzWIRyfQhI27JUGmOhFQfBfSy6AUukUjSrAVTjVcxvw0jceBtCkpbY5LMBiSWr5RnaYh3QGiCHqAtI0MsdULCizFEn5I9U7bwVT4cJaaojOrUJLGo0w8AzTlx0AnTtJNGXXI4mdFz6vKMtTMfj5+fnkWyOR9Zn4w4bxnfzm9n7xazBDBqsp+tI63uilbzuSP9axjsiGeVswEKaQSbd69FqW/SqDwdi9P96ZrpWZQEcu1zSE1F391B1I/IQ7S7IsB+mOJqePho0YVsilI2rai0DfPJ5XfP21xI8zyktd9Jruea7oqlVOvCaRnIj8wD/QvdZR6E6F/+Uby86Zs/XLfOS/2j5BfZvvnGNAm9BqkYzqs7umt4ihwMPJ49OPVSS29ndbDkjc1kyTQeZP6jAuhel6u0EianGYmm/gKnrQ77I/5xjXX8HK40M8g==
+sidebar_class_name: "delete api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Delete Garden"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/v1/gardens/{garden_slug_or_id}"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Delete a garden (Spec-02-Scopes-and-ACL).
+
+Requires garden admin role. Facts are orphaned, not deleted.
+Quarantine gardens with pending facts cannot be deleted
+(Spec-08-Quarantine-Garden; HTTP 409).
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./delete-garden-v-1-gardens-garden-slug-or-id-delete.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./delete-garden-v-1-gardens-garden-slug-or-id-delete.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./delete-garden-v-1-gardens-garden-slug-or-id-delete.StatusCodes.json")}
+>
+
+</StatusCodes>

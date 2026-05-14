@@ -1,0 +1,1 @@
+{"parameters":[{"in":"path","name":"conflict_id","required":true,"schema":{"title":"Conflict Id","type":"string"}}]}

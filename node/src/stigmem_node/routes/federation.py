@@ -236,7 +236,11 @@ async def register_peer(
     background_tasks: BackgroundTasks,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> PeerRegisterResponse:
-    """Register a peer. Fetches its well-known doc and verifies declaration_sig (§5.6)."""
+    """Register a peer.
+
+    Fetches its well-known doc and verifies declaration_sig
+    (Spec-05-Federation-Trust).
+    """
     # Implementation lives in _federation_impl.register_peer_impl.
     return await register_peer_impl(req, background_tasks, identity)
 
@@ -283,7 +287,10 @@ def pull_facts(
     cursor: str | None = Query(None),
     limit: int = Query(100, ge=1, le=500),
 ) -> FederationFactsResponse:
-    """Return scope-filtered, HLC-cursor-paged facts to an authenticated peer (§5.8)."""
+    """Return scope-filtered, HLC-cursor-paged facts to an authenticated peer.
+
+    Covered by Spec-05-Federation-Trust.
+    """
     peer, token_payload = peer_and_token
 
     permitted = _allowed_output_scopes(peer, token_payload)
@@ -468,11 +475,12 @@ def push_facts(
     authorization: Annotated[str | None, Header(alias="authorization")] = None,
     x_stigmem_capability: Annotated[str | None, Header(alias="x-stigmem-capability")] = None,
 ) -> dict[str, Any]:
-    """Receive push-replicated facts from a peer (§5.11). Off by default.
+    """Receive push-replicated facts from a peer. Off by default.
 
     Auth (H-SEC-2): peer JWT first; if that fails and X-Stigmem-Capability is
     present, fall through to capability-token verification.  Capability tokens
     must carry verb=write and an object that covers all pushed fact scopes.
+    Covered by Spec-05-Federation-Trust.
     """
     if not settings.federation_push_enabled:
         raise HTTPException(status_code=405, detail="push replication not enabled on this node")
@@ -780,7 +788,7 @@ def resolve_conflict(
     req: ConflictResolveRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
 ) -> dict[str, Any]:
-    """Assert a canonical resolution fact and close the conflict (spec §5.10)."""
+    """Assert a canonical resolution fact and close the conflict (Spec-15-Fact-Semantics)."""
     if not identity.can_write():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="write permission required"
@@ -921,7 +929,10 @@ def federation_list_tombstones(
     limit: int = 200,
     token_header: Annotated[str | None, Header(alias="Authorization")] = None,
 ) -> FederationTombstonesResponse:
-    """Tombstone poll route (§23.4.3). Requires tombstone:read capability token."""
+    """Tombstone poll route.
+
+    Requires tombstone:read capability token. Covered by Spec-X2-RTBF-Tombstones.
+    """
     from ..identity.capability import CapabilityTokenError, verify_token
     from ..tombstones import list_revocations, list_tombstones
 
@@ -981,10 +992,11 @@ def federation_ingest_tombstone(
     authorization: Annotated[str | None, Header(alias="Authorization")] = None,
     x_stigmem_capability: Annotated[str | None, Header(alias="x-stigmem-capability")] = None,
 ) -> dict[str, Any]:
-    """Inbound tombstone push from a federation peer (§23.4.2).
+    """Inbound tombstone push from a federation peer.
 
     Auth: peer JWT or capability token with tombstone:write verb (mirrors push_facts).
     Verifies signature against org manifest, writes to local tombstones table.
+    Covered by Spec-X2-RTBF-Tombstones.
     """
     # Implementation lives in _federation_impl.federation_ingest_tombstone_impl.
     return federation_ingest_tombstone_impl(

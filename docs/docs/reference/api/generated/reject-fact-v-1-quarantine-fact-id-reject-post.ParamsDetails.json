@@ -1,0 +1,1 @@
+{"parameters":[{"in":"path","name":"fact_id","required":true,"schema":{"title":"Fact Id","type":"string"}},{"description":"Reason for rejection","in":"query","name":"reason","required":false,"schema":{"default":"","description":"Reason for rejection","title":"Reason","type":"string"}}]}

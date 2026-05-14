@@ -22,17 +22,19 @@ Stigmem reference node CLI
 
 positional arguments:
   COMMAND
-    capability   capability token management (spec §19.3)
+    capability   capability token management (Spec-06-Capability-Tokens)
     migrate      database migration utilities
-    federation   federation management (spec §6)
-    snapshot     backup/restore with signed manifests (the pre-reset attestation-chain work)
-    decay        decay sweeper — expire stale facts (pre-reset)
-    instruction  instruction manifest tools (§21)
-    audit        discovery audit reports (§21.5)
-    identity     node identity management (spec §22.2)
+    federation   federation management (Spec-05-Federation-Trust)
+    snapshot     backup/restore with signed manifests (Phase 8)
+    decay        decay sweeper — expire stale facts (Phase 6)
+    instruction  instruction manifest tools (Spec-X1-Lazy-Instruction-
+                 Discovery)
+    audit        discovery audit reports (Spec-X1-Lazy-Instruction-Discovery)
+    identity     node identity management (Spec-10-Hardening)
     backfill-cids
-                 compute and persist CIDs for facts that pre-date the pre-reset design window
-                 (spec §25.6.3)
+                 compute and persist CIDs for facts that pre-date CID backfill
+                 (Spec-21-Content-Addressed-IDs)
+    auth         API key management (Spec-06-Capability-Tokens)
 
 options:
   -h, --help     show this help message and exit
@@ -118,7 +120,7 @@ positional arguments:
   SUBCOMMAND
     normalize-entities
                       populate entity_aliases from non-canonical entity/source
-                      URIs in facts (spec §2.6.6)
+                      URIs in facts (Spec-01-Fact-Model)
 
 options:
   -h, --help          show this help message and exit
@@ -144,7 +146,8 @@ usage: stigmem federation [-h] SUBCOMMAND ...
 positional arguments:
   SUBCOMMAND
     register-peer
-                 register this node as a peer with a remote node (spec §6.1)
+                 register this node as a peer with a remote node
+                 (Spec-05-Federation-Trust)
     cursor-export
                  export replication cursor positions to a JSON checkpoint file
     cursor-import
@@ -401,7 +404,7 @@ positional arguments:
   SUBCOMMAND
     rotate-key
               rotate the node or issuer Ed25519 key with a dual-trust window
-              (§22.2)
+              (Spec-10-Hardening)
 
 options:
   -h, --help  show this help message and exit
@@ -437,4 +440,37 @@ options:
                   default)
   --batch-size N  facts to process per transaction (default: 500)
   --quiet         suppress progress output
+```
+
+### `stigmem auth`
+
+```
+usage: stigmem auth [-h] SUBCOMMAND ...
+
+positional arguments:
+  SUBCOMMAND
+    bootstrap-key
+                 register a caller-provided admin API key on a fresh install
+                 (refuses if api_keys is non-empty; system never generates the
+                 key)
+
+options:
+  -h, --help     show this help message and exit
+```
+
+#### `stigmem auth bootstrap-key`
+
+```
+usage: stigmem auth bootstrap-key [-h] [--key VALUE] [--entity-uri URI]
+                                  [--permissions LIST]
+
+options:
+  -h, --help          show this help message and exit
+  --key VALUE         raw API key value to register. Generate externally;
+                      e.g., `openssl rand -hex 32`. Alternative:
+                      STIGMEM_BOOTSTRAP_KEY env var.
+  --entity-uri URI    entity URI to associate with the bootstrap key (default:
+                      agent:admin)
+  --permissions LIST  comma-separated permissions for the bootstrap key
+                      (default: admin,write,read)
 ```

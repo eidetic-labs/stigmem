@@ -1,0 +1,68 @@
+---
+id: list-subscription-events-v-1-subscriptions-subscription-id-events-get
+title: "List Subscription Events"
+description: "Replay window: return delivery events for a subscription (Spec-X7-Subscriptions)."
+sidebar_label: "List Subscription Events"
+hide_title: true
+hide_table_of_contents: true
+api: eJzNV9tu4zYQ/RVCTwkg34Jtu3Wf0iRtDaSbIPYuCmQDg5YombsUpSUpJ4YhoB/RL+yX7PAimZKVNEm3QJ8MU8OZM4czh8NdEBMZCVoomvNgGtyQguEtuqc8zu+nSBBVCo5iwuiGiC0iG8KVREkuEEayXDVb0dG8INHgjx8Gc29VHg8/8o/8hsiSwTYsCFrlJY9JjFSO1JqgKOcJTUsBK8IPjY5ikmDYhU7eoPXxMAiDvCACa6+zGIAyKtXSR7C02JabSWtZLttWNF7WlilR4LbAAmdEESGD6e0uoJqFAqs1fOLwAf519sMHQb6UFDAHUyVKEgYyWpMMB9NdoKhieo/PAprpPWpbGGdKUJ4GVRXuOtTP5lfo7ffjCVI0I1LhrPip5t/RHgmCFTCFFdIHkABoIJFKswNCGOxfSjgoDzzlEWlBTjCTLcyYb68Sk3wHY9is8JKxoLoLvznkhi8Ds4eVqwJDRqjAKeXm9FFUCgm+jkwEROPjRzK3dv9V6s/DVad3ZrGY/PqwMppR9TRU1w/B9LtxGGT4gWZlpv/of5Tbf5N9xEvn0WVBuSIp0QjudBRZQGcQqf2ejMf6BxpRAW5DSlEwGpmkRp+kznbn4SiEbkRF7W5H8gup7NISBrZctB+qSCZ7AtlCWmLlt9mZK69Tddhh+sSMbDW7XgPxvPahY+x9bsElAC0s5o7xFmzdx8MD8FxAx6iy38HcfupJCniiarssBX1tShfGA3oPHmrml9Z2D+TCFPFCr/ZgSHCktBK+EsAvsF2LIniyTuoPfUKpFXrLcmyjxTHVdYnZtVcdVoRrJ9fOvPGUrz6RyBxeV8lfJthed94G5h44vBk8NltHtedsn0/oF3WnWg+rpK/0PE59/ObwbkiUi14WWmfs1RgWAm+NQa4w88lZmIUeMWlzQhqHzt6pw1Mw5Y0To0OkVdUV3XkZRUTKpGSo2QZGb05O/oWExURhyp6SHvXQ0hwd5kH1MUt5Ubb0aWYW4AvLo1aEZ7RNw/Kdd2aXuc2q59QymfqhfweicNrbvgfNLgRcXP3N3jlinYcN5Sy9s/2AGY0NOuPwqdI7t5x3k/Asflssrv/R4WGF7Lcgu0ebSAKFCJ1o+NaOfyYwisKtdXtnZAmnevZrdbPpLRgL17keNutJEabCaTDaTEYt09GuowPVqOmEOvRcF58tJx+Aq0qd08ouNTmulSoMesqT3NZpe1BPQCtgaEI8jwmiWcHADwgOT81gPVc0zUiGNuPhj8MxniAdFp1ez9Dff/6FtBjJECUkdjN1iFIsYsJhUZAIMxa2xntYxiVIbwhzjVW1ELl2G4Amw0Ah4YZMjK6fyyE6E7mUg6hUBk8CKgcjvkRHKs9WUuWcgEM9AQ6UwBsCwTIYbegA/GGujs1DIS/UgHJUsBImLKkfANDRRHc8cOHGptMCA32Dk+EYPpeCOdrkdDS6v78fYvN5mIt05PbK0eXs7OLd/MLs8cqtpmtP6zugFbyC4ErLuCPS3Ei5VBnmHpJLeI6g1h3SqGvr3DyV+j+/tVwNap0bgSWMrJUjeOfa4DbYTDo3oE52+siVaPppDbTpnbvdCkvyXrCq0st2Fta9GVOJV8wbfx/l7hu8PPpS/Ey23ptpg1mpbYwqPx/bM58Gj8dvXi5PA7DG9dNhb3un/wiqjV/I6tGNk/pj9BjCWrD51o/ZMNc5fXN3rQmOjdrunNUp3OKFj/nguq589f31YgG2uNRl19yOjVyuai3f9WODYjMWi/wz4VBwNVSl/2uAVfUVI7bliQ==
+sidebar_class_name: "get api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List Subscription Events"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/subscriptions/{subscription_id}/events"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Replay window: return delivery events for a subscription (Spec-X7-Subscriptions).
+
+Results are bounded to the configured replay window (default 24 h).
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./list-subscription-events-v-1-subscriptions-subscription-id-events-get.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./list-subscription-events-v-1-subscriptions-subscription-id-events-get.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./list-subscription-events-v-1-subscriptions-subscription-id-events-get.StatusCodes.json")}
+>
+
+</StatusCodes>

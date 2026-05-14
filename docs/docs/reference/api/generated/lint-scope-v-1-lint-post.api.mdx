@@ -1,0 +1,67 @@
+---
+id: lint-scope-v-1-lint-post
+title: "Lint Scope"
+description: "Health-check sweep for a scope (Spec-20-Lint-Semantics). Read-only."
+sidebar_label: "Lint Scope"
+hide_title: true
+hide_table_of_contents: true
+api: eJzdVs1uGzcQfpUBTwmgPxu9VDk5jtsYcBNDcnJxDIHaHWlpc8ktyZUtCAJy7b2P0CfLk3SGXGlXstG0KHrpRViOZr4Zzs833IgcfeZUFZQ1Yizeo9Sh6GcFZg/gHxErWFgHEnxmK4RX0wqz/umof6VM6E+xlCaozL8ewARl3rdGrwdfzBczwVA74+F0NIJHFQpw6GsdPPi1yQpnja29XkfoCOzh229/QChIrbA6h4XMgh90cU4Tzr2dz1QeDbV0S9zZv4HKag0/X9zAcHUy1BTekHT9cJwsBqInSM9JvudlTjdllVk0nq1OZvFUWR9Iz+GvNfrw1uZrMd6IzJqAJvCnrCqtsogxvPecsI3wlKtS8lfl2ENQ6KMZpzB+SbP+uBDj241QAcsoQlOXJInYTuYqi+nvCR+kRg7VVYVkwdzZBzQzhws6GFmir2SmzFLc9URYV0gX8cGxYLsXSOfkms6bncDUWostWRzW+jxGCMGCq80bsKUKqdikTWAqaNxrMTwlQYX14Y2OY/iezwmyahbYKzUVdZNaqAwSNHyaXHY8XyR/W66IlgngP/C9B289T3Yi8h1bhB0fgv1EHdoMBcHFSekATKPRCyWKBZ5pax9kQRMz8wl5IWk6xHh0HPKZ9hYWWi7TRAA+VYqh4jAoAx/AI/VQ7slXqYwqua1GnTjYHVzt3MG0jYkaHml+xHabOl45zLkl033vWgwe9Ukaidbazu8xC2R8YB1cjVHgK2t8mgOigH80RW0NEgiwf4gJhc8n6XTNgxp9H6ZrWmcZer+oNezMOek/nJ7+i0HOMUil+Ws/vkeTHp66gZ+zm6cXctWjnFd16OpeRgH9o2124OFvdPm+gHfbTrFstm/mQzYQpV92Xf9CiZLLF5s0CVrVC+eIFm7WL7X0UffwPZKrRrPTSJ+lVnmMLgK+lKCd6ruU8+NLdDTe39xcfxfweYe0JpBsWIVmqHaR2ijfDPwWpaPMjm/vmEWCXPp4N8o436fEUFheIc2+qGQo6LTbO6IFnHJLpSbpwja9xpHOk2gfeRFCFWPirpy0i+jiSZaVxu5iOd4edy1D76rTZc5W1jBaR/CclEaxWxf2OfFNcIEOTYZgbI6gOKySHRMrhQJhGtSyxBJWo8GPg5E8Ab45nF1fwrevvyca68EC82YX92ApXY6GhA4zWj098PV875DEss5V6IHK0+160MxxX+Y5MY3H9FyAy3d+AOfOet/P6hDjWaCk9wO9Ll4FW859sAYJMKgS+5S4FZKzkohX9QmPXjKvgYoBtgp9otZK10tlPD8ciCqQqYRywSuYeZm2cIH908GI/q6dbirnx8Ph4+PjQMa/B9Yth42tH15dnl98mF5Em22XoVO62rR+oLQS6gqdTxlvEslW3HH05upE0rKjOOr1DuH9r591zeQw5w4rLVXc2rEmm2Y0b8XqJJYxzW/BY0vCzWYuPX5yertlMc2aYwqgz5V0Ss65PrdMrjwUkQ424gHXO4qnTDWUuJK6jix1vFWYrZPFGS2mKvylbpdZrj9Ob/j11zxBS26JsXDykUeafscivmfjhLBClG2ElmZZM6mPRcJkJpE152C/NvaMM9+R3P4vWjqdCCk9UeOGX6CUol5zlcBn3jrb7Z/X+Tqc
+sidebar_class_name: "post api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Lint Scope"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/lint"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Health-check sweep for a scope (Spec-20-Lint-Semantics). Read-only.
+
+Returns 200 with results synchronously for scopes ≤ threshold facts.
+Returns 202 with job_id for larger scopes; poll GET /v1/lint/jobs/:job_id.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./lint-scope-v-1-lint-post.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./lint-scope-v-1-lint-post.StatusCodes.json")}
+>
+
+</StatusCodes>

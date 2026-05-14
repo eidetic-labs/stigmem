@@ -1,4 +1,4 @@
-"""Node metadata endpoint — spec §5.3 /.well-known/stigmem (v0.5)."""
+"""Node metadata endpoint — Spec-03-HTTP-API /.well-known/stigmem."""
 
 from __future__ import annotations
 
@@ -22,7 +22,10 @@ _NAMESPACES = [
 
 @router.get("/.well-known/stigmem")
 def node_metadata() -> dict[str, object]:
-    """Return node identity, auth mode, and federation capability advertisement (spec §5.3)."""
+    """Return node identity, auth mode, and federation capability advertisement.
+
+    Covered by Spec-03-HTTP-API.
+    """
     node_id = get_or_create_node_id()
     result: dict[str, object] = {
         "version": "1.0",

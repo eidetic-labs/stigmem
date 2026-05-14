@@ -1,0 +1,69 @@
+---
+id: reject-fact-v-1-quarantine-fact-id-reject-post
+title: "Reject Fact"
+description: "Permanently reject a quarantined fact."
+sidebar_label: "Reject Fact"
+hide_title: true
+hide_table_of_contents: true
+api: eJzVVcFu4zYQ/RVCl+wCsuUEvdRAD2k2RQ1sd93Y3Us2MGhpJHNXIhWSctYQBPQj+oX9ks5QlMU4Dto9FjBgezjke3ycedNGGZhUi9oKJaN5tARdcQnSlgem4QuklnH22HDNpRUSMpbz1E4/y89yBdawVMlcZCBTYD+x2XTGuMyC9I2x3DYG1y76wyC7wM138NgIDSbInFcqA82t0gw/PKuEZFqVwPDb7sDBXoQbWME1Ak+jOFI17UT+iwxv0ANtaMNmf7kJyPQxkW02PqdWxuL+GjMqsKBNNL9vI0E61NzucEniAv7zGzGge+oIZHUDcWTSHVQ8mreRFbak3F8wly0o1x5qChirhSyirovbE7HvgBslWY437hlROO4JPDagDyMD7VKfEch5aZ4xyCDnTWkxG/P+E9LA+W44/ZTyAwGaWkkDhiCuZjP6wme3WCP0k9d1KVInf/KFDsHYSIlnmaAlXi41PZMVdE4v3QjeA7C7vt6cgJ8u2e/jWzMvKhtylv3LebpqS0Gk253ee9WkKRiTNyUbYCJM+uHq6ruuUQfkSWfLRUm/hIXKvExI7bewIm4I5tsZvvTUdWPD3IUL4Eqp0mcIXB4+5q4+T94oPkYEwhSgo+6hG9V9r/pbjehca34giMoUIfRvKBQv4GUVDIEx9VZrrKQ1Rc+UeVCj9+4ePZTPfBi5feKlyBw7d+A5gYbUd73mp5cIMn5dr5f/euDLChm3sH4PpRhIGy3swelNB/8MXKOy8/sHagnLC7KKaPQWuhVayE6RAx1tBS1kHiX7y2RMTFrvJV3SN2I0oq2o3voKCjF9IdI1tn3oeK2dtbUjLGSu+tJ83vU5aGfOEt2Viaou8RziUThTXVlRVFCx/Wz643TGLxnBsuvlgv3951/Ock3Mcsi8vcbeczGoIeVlGTPTbI+AGOYNtnvMaCLgsxxi5jtsgj6APmL8/GCLd2bKbrQyZpI21vHJAScFzYQ3VlVbY5UEPNCKCiZW8z0gWIXmJiZ4Hkr5lqESTNV2ggOiLptCSEOzAJsYqMlRC++c1zVH+SZX0xkuN7r0spl5kjw9PU25W54qXSR+r0neL25uP6xu3Z6gwga5Rlk/oKx46h5HR6+4F5J2URXgKA2YBP52atCBF/0vR7CvR7K5pC45TrDOi936PriP9peYGLRMTCNsnKuuGbCNdtQ9mN62W27gD112HYX7eUj9mAnDt2UwAV9V8rWpd47sVziEY3bPy4aSIur3PdeCIL8T/o0XOXvLXkMd3EweQsyBzSCPM/Qd8MxZUOtXr3G01TbY92KGdaErLT+u1pjMG3qN48w4Osp2cLj2PCl8DpexVl9B4pMMHC39J4Zd9w8y247A
+sidebar_class_name: "post api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Reject Fact"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/quarantine/{fact_id}/reject"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Permanently reject a quarantined fact.
+
+Sets confidence = 0.0 and quarantine_status = 'rejected'.
+Requires quarantine:moderator or admin role in the fact's quarantine garden.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./reject-fact-v-1-quarantine-fact-id-reject-post.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./reject-fact-v-1-quarantine-fact-id-reject-post.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./reject-fact-v-1-quarantine-fact-id-reject-post.StatusCodes.json")}
+>
+
+</StatusCodes>

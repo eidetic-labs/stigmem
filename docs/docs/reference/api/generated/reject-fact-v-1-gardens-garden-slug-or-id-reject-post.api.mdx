@@ -1,0 +1,69 @@
+---
+id: reject-fact-v-1-gardens-garden-slug-or-id-reject-post
+title: "Reject Fact"
+description: "Reject a quarantined fact (Spec-08-Quarantine-Garden)."
+sidebar_label: "Reject Fact"
+hide_title: true
+hide_table_of_contents: true
+api: eJzVVs1u4zYQfhVCl00A/wY9tAZ6yGbTroF0k9rpXrKBQUsjmbsSqSUpJ4YgoA/RJ+yTdIakLDl2drHHAkEgk/P7zcw3rKMETKxFaYWS0SxawGeILePsa8U1l1ZISFjK8ehsWUI8nPw8/HN/M/yd6wTk+eiT/CSXYA2LlUwFHsXAfmWT0YRxmfRMrYzltjJ490Y7R5C8QeUFfK2EBtOTnBUqAc2t0gz/eFIIybTKYRQNIlXSDcY7TzBib2hFMa6201XmQjKr8LEyeZWtlF6JZLUKoqUyFs2U6KsAC9pEs4c6EpR+ye0GryRe4K8jE3ilfazo2eoKBpGJN1DwaFZHVtictDwobIla7FazOWnZXUlXxmohs6hpHr0hMPatSnakjchZkJY+eVnmInYZjj8bKkvdc3NYr7vb5T0bb6fjkPd4JpKxz5P9+/c/DKEquETD+Y7p12pLoJaaYLUCDDlxaGK++InI34DMEJfZdLBP8jdqiVOpUWI8BJ1Ayqscc4pQ7jDu9xWGNUTRhK9zYF6HpVhrHyVKUVStu4W3eQxkvyAP+7AfO82uW31rLzzsnSm1pmM01bwsrjswpZLGg3IxmfxQpXiSCLri+V0PXN82XWLeAQuD53D9OGW+iQxjR93EWtE79Voah1AvqzgGY9IqZ603KtNPFxc/lM1hgyRgucjpS1gozLFAbJ/7Q3FFbp5PxDvAwSsr25eduwO8yVV84IHL3W3qhvVl0+1PBLrJQEfNY9OBfKN8Vp13rjXfkYvCZH3XfyBQPINTbe0POtFrrbFb7+n0e21JeXhXQbLXnx95LhIXnTN4CqBW9J3H/GUSPYn39/d33zV43CGdCvM6JGIgrrSwO4c3GX4LXCOys4dHoi/LM+LNwJGGUkIy3Sii5D3BEmlEfXaqjyi1CWwVdR6X1HO+i/p+QzNSKmt/tE9tY23pgqa2XXTEev3MizKHA0Zri9QRVeS7MFXH9LqAFLRbZxL3ERNkrQCik4zZDbClFVkBBdtORr+MJnzKKGB2eTd35Es+zYClkISFNWABiAHSXMzzfMBMtd47xGNeIWcMGO1QLOpuwMJ8DpFMkIxMu43n78yIXWllzDCurIsnBdyttEXPrCrWxioJaNCKAoZW8y2gswLZWAzRHjLiOUMMmSrtEFdrifUQ0hDlIgUAUQRiEdbgZckR+OHFaILXlc4D4GY2Hj89PY24ux4pnY2DrhnfzK+uPyyvnU6vP1u4Olg/IKxodYtb2CMegCQtaiPcEr1IeiT5cqP0mOx/8YgJnUukOC5zjq+PJoBbh8F5iLZTFGwHbBDNTr9H3PTg+G1o6lCrrtfcwF86bxo6xmHQNMT4ueVa0Lp1I50IQ984ESnPDXwDzrOQWnLOXgu8ZSS5o2LyvAK/9L/A7uQ7ytHzBre/I5Q6yF2FXg+k2to52kvE917jEldbab8p2ycmei2h8Dq8uag89ILkTwQk/ncxKz+LJODO6ijnMqtoLcwib5OohldUpP3i2VPSuqXJ+jQqWB4nca++gMQStSBZ+k3ANM1/+8kBZg==
+sidebar_class_name: "post api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Reject Fact"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/gardens/{garden_slug_or_id}/reject"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Reject a quarantined fact (Spec-08-Quarantine-Garden).
+
+Sets confidence = 0.0 and quarantine_status = 'rejected'.
+Requires quarantine:moderator or admin role.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./reject-fact-v-1-gardens-garden-slug-or-id-reject-post.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./reject-fact-v-1-gardens-garden-slug-or-id-reject-post.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./reject-fact-v-1-gardens-garden-slug-or-id-reject-post.StatusCodes.json")}
+>
+
+</StatusCodes>

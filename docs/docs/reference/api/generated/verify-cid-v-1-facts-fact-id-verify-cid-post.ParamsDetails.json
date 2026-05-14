@@ -1,0 +1,1 @@
+{"parameters":[{"in":"path","name":"fact_id","required":true,"schema":{"title":"Fact Id","type":"string"}}]}

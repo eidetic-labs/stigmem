@@ -35,7 +35,7 @@ def resolve_entity_uri(
         description="Minimum fuzzy score threshold for Layer 3 candidates",
     ),
 ) -> dict[str, Any]:
-    """Resolve a raw entity URI using 3-layer fuzzy resolution (spec §2.6.6).
+    """Resolve a raw entity URI using 3-layer fuzzy resolution (Spec-01-Fact-Model).
 
     Layer 1: canonical normalisation (case/whitespace collapse).
     Layer 2: alias table lookup (explicit pre-registered mappings).

@@ -1,0 +1,71 @@
+---
+id: push-facts-v-1-federation-facts-push-post
+title: "Push Facts"
+description: "Receive push-replicated facts from a peer. Off by default."
+sidebar_label: "Push Facts"
+hide_title: true
+hide_table_of_contents: true
+api: eJztVs1uGzcQfpUBTwmwK9lGe6iCHhzFQVyksWCpSQHbMKhd7orJLsmSXMnqQkAfok/YJ8kMl9KuY7s/gI/1QZaGH2c+Dr+ZYcty4TIrjZdasQm7FJmQawGmcavUClPJjHuRQ8Ez76CwugYORgg7gouigOUWclHwpvKja3WtThu/ghfv0vnZND15OQlA+OnTAgppnX8FsgC/4h69ycoBVzn8ms69LGtRp1Nu+FJW0m9BumtlrHBC+QSxVYW7rG7KFXgN2QGXev1FKFgLKwuiiScYAQz8hHX0VTfO4z5rtwRe/rix0osQnivQy88i8x2vTOM6EsOIlIB4bnCZNsLhCae0jlY89tyILD36Pn0rcmFD7HRhMc6IJQzRnek8x5SSp9uQv9v18W1xwEdbWDbaedxouOW18MiBTa5aJulGVoLjDlxUuIS/OeZYW/l78IFmK35rJJJiE8yUEwlz2UrUnE1axtX2ogie/NbQXuetVCXbJQeLaqqK7W4S5qWvyHB6z/2OoI/SuEtdvLj+Qp6fzWPyQFI3XSDh/Gudb8l5ppVHuYQ4plMt8h9/dqTqdsgizyUt8Wpm6Z68FJhsbxvRRw1Okz2pTiAYdTc8Hu0IBme0cuSjZSdHJ8/O5TIGgBnqBN6GMvx4DL3soi0szzoZPUL8fpXPmywTzhVNBXv/eA3su5P/xt8MWLcYwmNZ0zesrto9BGT+jv7tTzalMHeP8E1QcabxQ+x5MOBKpbN7Ef6FqCSGKVG6u5tdn9b3OtsXUIRhe+BbClG7chj6Z0wUL0UPPESIhh56Zq22sCDrA/Q98VyFc3ShInIg+o+8knlgFxw+lqA99E2X828PMUC8Wyxm/+jwoUL6LdDtCT55SY2J9T2MaGPDWunQ6PZNzK/w13h9PO6B49DsxtTsEOJE1mAP3s5JSp04iOdrwS1e1F5jxHDZmQ6MV96bwIXUeNn3gLM7Xhs6cBvkU+hOkfdHW4HNW2UClM4FSMLXqHO8Huz+AmKngfXR6IfRET8GogSns3P4648/uwGI0+hwogRKbnOcLwlYkeHISMA1y0NANPMGyzsBmVMQv00gFlaKdY99w+3Hy/kbN4Kp1c6lWeMDn0Jw3yAGXnhdL53XSqBDL2uResvXAoPVOHRliv648i8BswTa+FQqMFVTSuVoEGHtCqptzEVs26eGY2rTk9ERLje2iil1k/F4s9mMeFgeaVuO4143fn8+PfswPwt7BsLap6tP6wdMK3qlEdplPCaSdpE2aq4GTPp+xr4R36AD/f8eeY73SKwd6rZjU3Gc57t4+W2s1iu2PkbgoLDxR7ybULNY5ysqb0S27ZI78YutdjsyYwlaHMFX+HXNreRLUscV9dr4ZKDmnEtHC/2z4MkLf4ruF7F9+tWx5lVDW0Lb75DTWGuxG+8RDwZav+MUZ6Lxf4sddrvZxXyB4GV8gNQk/gmzfEOvIPwMR9FdLyBAsLWs4qpsaJ5MWOeT/r4CQSMCdg==
+sidebar_class_name: "post api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Push Facts"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/federation/facts/push"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Receive push-replicated facts from a peer. Off by default.
+
+Auth (H-SEC-2): peer JWT first; if that fails and X-Stigmem-Capability is
+present, fall through to capability-token verification.  Capability tokens
+must carry verb=write and an object that covers all pushed fact scopes.
+Covered by Spec-05-Federation-Trust.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./push-facts-v-1-federation-facts-push-post.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./push-facts-v-1-federation-facts-push-post.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./push-facts-v-1-federation-facts-push-post.StatusCodes.json")}
+>
+
+</StatusCodes>

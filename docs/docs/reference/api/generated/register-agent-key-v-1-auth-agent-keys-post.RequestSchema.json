@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"description":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Description"},"public_key":{"description":"base64url-encoded Ed25519 raw public key","minLength":1,"title":"Public Key","type":"string"}},"required":["public_key"],"title":"AgentKeyRegisterRequest","type":"object"}}},"required":true}}

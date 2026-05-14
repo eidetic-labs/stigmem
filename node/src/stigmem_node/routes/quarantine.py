@@ -52,7 +52,7 @@ def list_quarantined_facts(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
 ) -> QuarantineListResponse:
-    """List facts in the quarantine system (spec §19.5).
+    """List facts in the quarantine system (Spec-08-Quarantine-Garden).
 
     Node admins see all quarantined facts across all gardens.
     Other callers see facts only in quarantine gardens where they hold a member role.

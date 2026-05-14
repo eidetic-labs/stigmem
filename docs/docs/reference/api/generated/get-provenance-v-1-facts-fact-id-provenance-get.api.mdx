@@ -1,0 +1,72 @@
+---
+id: get-provenance-v-1-facts-fact-id-provenance-get
+title: "Get Provenance"
+description: "Provenance walk with tombstone suppression."
+sidebar_label: "Get Provenance"
+hide_title: true
+hide_table_of_contents: true
+api: eJztVs1u20YQfpUBL00AirKMXiqgB8exHQFpYthqUcAKhBU5Ejcmd5ndpWRVENCH6BP2STqzJKWVpcZtTj30JGp2dn6++WZmN1GGNjWyclKraBjdGr1EJVSKsBLFI6yky8HpcmadVgi2riqD1pJyMlETdYeuNsqCyxEyNHKJ2XRudAlpLqSCuTYgYC5SlwBcqDWgcmYNq1xbBINzNEieMhZLtwZpJ2rnK4M/f/8DyECjzUZIATS5MitJEqlEmnIsswK9Lp0azEiP7jo9UZtJlAubT6IhTKIkSSZRTB/4JK2zLJyLwuI2JkMZiaRa1NLmgq35FGolapdrI3/DbKJSo63t2VRXQeSUuAYChCBz4A2zFAoUj2KBCVwSmBQSzNYTdV9h2vv1vHc3fnPdG3dZWhAqg+ZsMOjdYSqKondjRJUnURyRNyO4NKOMirNAN612BZouB1NGxU79z1Rm0/CUlMlAJYwo0aGx0fBhE0mucSVcTkeKDuhfe5cEBr/UksKNhs7UGEc2zbEU0XATUXUK1r3mIoxY160rFlhnCLdou/3E122llUXLN87Pzvgn1YogcfwpqqqQqU+m/9ky2TaBh0MW3rWmPIFursbQXw76Ptf+UGb9fZaMEf0jlJxsHKeUCntT649zn/KzSOOdRNVFEXHgXXaXdHUbRyGP2ZR0WNrjGD9SOzR0JqI3JP/OnmgC3ycN6X68ZsZBiaJtmVMtAEEHUPasdsT9iQrJn8B9LoiWpCEztkMc4qBmpA+poIqApXZgZhEPSKKUdhBwPmjwI+YfI9xE+q0gXzW3CecGk5BeV41kx66Z1tRKipU7ln6j1464ZIlHQuj0Hf8/JnTYDg/NpV3IgeH9vLxiLuwN6dlnTB077FTfNtSAa+bVTk8YI9bPMny53Q6j27fwAXdPhtm11nGkW8/9kOL3tefYvC5gd42Uvj8//1e9fUifDJ2QxUFjPetg9xSCcMluntwpZKWqahfqjryATgqdHnj4B5yR5GaBhmgT1Oy9brI6Ua/SLkLXPxFQNPOPa9UJApobQ409ZulLleU8GletZlDTX0QhMx+dN/h16nnMnycRaLwbj29fNHjMkP0VaO6wisW0Nn5EEN5s+A0KQ8gOHz75nhQL27HW9xLtp1y3+82vLFpPw2g/8jctv7fB4I/2bu6ZaA11QmctA/0caUS7fHLnKh+pVHN9avu0UxmUzmisllVBdhRPSz+O751clFjC8iz5ITkTA2C3cHE78q8QH3MMc8za1R3DQhiayyQ0fr3H9Iya7RySWNSZdHE7vN06hra1eiLL+LVFQ8OvgNFbS28K/xBJa+fjmaOgFxhN+Fe7GU4GnSyx54xYIjkr68LJnmPc3GsgJEBXrkf7oSrqhVSWJzx1L3J3Exbts+CiEgRf7zw5o+PaFC1sdtjvr1arRPjjRJtFv71r++9Hl1cf7q/8nYBaHVx7WD8QrGSV3ka2QbwFkm9V2rpSqCCSG3RwGxb+oFrBHPr/8frfery23cbTu18VBCnX11Np0zb5Q7QcRHE7CeJouF9kQafThCAQHWtvNjN6zvxsiu2WxV9qNDxl6HMpjOTs/cwhRPg7Y4OE0lcY8+quHbav4e8C7kam4uW+FEXN/+jzEdfB69lvjRxF5ufcpj29oBpXLrh3tCi34fyjly7pcuH8umgfQd3wmnVTdHM6JgLHa4z1IyoCqAvR8X8OcLv9CxCC3jY=
+sidebar_class_name: "get api-method"
+info_path: docs/reference/api/generated/stigmem-reference-node
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get Provenance"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/facts/{fact_id}/provenance"}
+  context={"endpoint"}
+>
+
+</MethodEndpoint>
+
+
+
+Provenance walk with tombstone suppression.
+
+Returns the derived_from chain for a fact.  Any entry whose referenced entity is
+tombstoned — or whose fact is otherwise inaccessible — is redacted to
+\{"hash": "...", "exists": false\}, indistinguishable from unauthorized
+cross-scope references to prevent existence leakage. Covered by
+Spec-X2-RTBF-Tombstones and Spec-X11-Recall-Graph.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-provenance-v-1-facts-fact-id-provenance-get.ParamsDetails.json")}
+>
+
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-provenance-v-1-facts-fact-id-provenance-get.RequestSchema.json")}
+>
+
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-provenance-v-1-facts-fact-id-provenance-get.StatusCodes.json")}
+>
+
+</StatusCodes>

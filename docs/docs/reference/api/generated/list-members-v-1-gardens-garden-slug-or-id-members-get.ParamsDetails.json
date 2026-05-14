@@ -1,0 +1,1 @@
+{"parameters":[{"in":"path","name":"garden_slug_or_id","required":true,"schema":{"title":"Garden Slug Or Id","type":"string"}}]}

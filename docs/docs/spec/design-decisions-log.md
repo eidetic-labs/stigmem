@@ -1,13 +1,13 @@
 ---
-title: §7. Design Decisions Log
-sidebar_label: §7 Design Decisions Log
+title: Protocol Design Decisions
+sidebar_label: Design Decisions
 audience: Spec
-description: "Stigmem spec section 7 — Why the spec made the calls it did — federation, contradictions, entity-vs-agent scoping."
+description: "Protocol design decisions retained as overview prose."
 ---
 
-# §7. Design Decisions Log {#section-7}
+# Protocol Design Decisions {#section-7}
 
-**Status:** Stable
+**Status:** Overview prose retained from the v0.9.0a1 specification lineage; design decisions are not an independent component spec.
 
 Why the spec made the calls it did — federation, contradictions, entity-vs-agent scoping.
 

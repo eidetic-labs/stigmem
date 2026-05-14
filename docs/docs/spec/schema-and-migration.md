@@ -1,13 +1,13 @@
 ---
-title: §10. Schema and Migration
-sidebar_label: §10 Schema and Migration
+title: Spec-17 Schema and Migration
+sidebar_label: Spec-17 Schema and Migration
 audience: Spec
-description: "Stigmem spec section 10 — SQL schema migrations 001-013 covering facts, federation, gardens, attestation, tombstones."
+description: "Spec-17-Schema-and-Migration rendered entry point — schema, migrations, indexes, and backend contract."
 ---
 
-# §10. Schema and Migration {#section-10}
+# Spec-17-Schema-and-Migration {#section-10}
 
-**Status:** Stable
+**Status:** Rendered compatibility entry point for [`Spec-17-Schema-and-Migration`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/17-schema-and-migration.md).
 
 SQL schema migrations 001-013 covering facts, federation, gardens, attestation, tombstones.
 
@@ -17,7 +17,7 @@ SQL schema migrations 001-013 covering facts, federation, gardens, attestation, 
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-*§10 content from the pre-reset spec unchanged. Migration 004 is additive.*
+Legacy §10 anchors are retained for existing links while the maintained schema contract lives in `Spec-17-Schema-and-Migration`.
 
 ### Migration 004 — gardens and source attestation
 

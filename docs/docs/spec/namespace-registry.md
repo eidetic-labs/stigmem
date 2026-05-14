@@ -1,13 +1,13 @@
 ---
-title: §9. Namespace Registry
-sidebar_label: §9 Namespace Registry
+title: Spec-16 Namespace Registry
+sidebar_label: Spec-16 Namespace Registry
 audience: Spec
-description: "Stigmem spec section 9 — Reserved relation prefixes (memory, system, stigmem, garden) and community registry process."
+description: "Spec-16-Namespace-Registry rendered entry point — reserved relation prefixes and registry rules."
 ---
 
-# §9. Namespace Registry {#section-9}
+# Spec-16-Namespace-Registry {#section-9}
 
-**Status:** Stable
+**Status:** Rendered compatibility entry point for [`Spec-16-Namespace-Registry`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/16-namespace-registry.md).
 
 Reserved relation prefixes (memory, system, stigmem, garden) and community registry process.
 

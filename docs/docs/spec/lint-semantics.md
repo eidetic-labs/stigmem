@@ -1,13 +1,13 @@
 ---
-title: §14. Lint Semantics
-sidebar_label: §14 Lint Semantics
+title: Spec-20 Lint Semantics
+sidebar_label: Spec-20 Lint Semantics
 audience: Spec
-description: "Stigmem spec section 14 — POST /v1/lint — orphan relations, scope-escalation violations, contradiction surfacing."
+description: "Spec-20-Lint-Semantics rendered entry point — read-only lint checks and finding semantics."
 ---
 
-# §14. Lint Semantics {#section-14}
+# Spec-20-Lint-Semantics {#section-14}
 
-**Status:** Stable
+**Status:** Rendered compatibility entry point for [`Spec-20-Lint-Semantics`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/20-lint-semantics.md).
 
 POST /v1/lint — orphan relations, scope-escalation violations, contradiction surfacing.
 

@@ -1,13 +1,13 @@
 ---
-title: §6. Federation
-sidebar_label: §6 Federation
+title: Spec-05 Federation Trust
+sidebar_label: Spec-05 Federation Trust
 audience: Spec
-description: "Stigmem spec section 6 — Peer handshake, pull replication, scope enforcement, conflict semantics, backpressure."
+description: "Spec-05-Federation-Trust rendered entry point — peer declaration, negotiation, replication, and federation scope rules."
 ---
 
-# §6. Federation {#section-6}
+# Spec-05-Federation-Trust {#section-6}
 
-**Status:** Stable (the pre-reset spec N-node)
+**Status:** Rendered compatibility entry point for [`Spec-05-Federation-Trust`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/05-federation-trust.md).
 
 Peer handshake, pull replication, scope enforcement, conflict semantics, backpressure.
 
@@ -19,7 +19,7 @@ Each subsection below shows the most recent normative text from the spec source.
 
 **Garden isolation invariant:** Facts with `garden_id` set MUST NOT appear in federation pull or push payloads. Nodes MUST filter them before sending. This invariant is enforced independently of scope — a garden-tagged `public` fact is still garden-isolated from the federation perspective.
 
-*All other §6 content unchanged from the pre-reset spec.*
+Legacy §6 anchors are retained for existing links while the maintained federation-trust prose lives in `Spec-05-Federation-Trust`.
 
 ---
 

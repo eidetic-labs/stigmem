@@ -1,13 +1,13 @@
 ---
-title: §22. Security Hardening
-sidebar_label: §22 Security Hardening
+title: Security Hardening Components
+sidebar_label: Security Hardening
 audience: Spec
-description: "Stigmem spec section 22 — mTLS federation, key rotation, audit log, per-principal quotas, container baseline."
+description: "Rendered entry point for hardening component specs: audit log, transport hardening, replay protection, and HLC skew bounds."
 ---
 
-# §22. Security Hardening {#section-22}
+# Security Hardening Components {#section-22}
 
-**Status:** DRAFT normative (pre-reset draft, pre-reset hardening)
+**Status:** Rendered compatibility entry point for [`Spec-09-Audit-Log`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/09-audit-log.md), [`Spec-10-Hardening`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/10-hardening.md), [`Spec-11-Replay-Protection`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/11-replay-protection.md), and [`Spec-12-HLC-Bounded-Skew`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/12-hlc-bounded-skew.md).
 
 mTLS federation, key rotation, audit log, per-principal quotas, container baseline.
 
@@ -17,7 +17,7 @@ mTLS federation, key rotation, audit log, per-principal quotas, container baseli
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-**Status:** DRAFT normative (pre-reset hardening). §22.1–§22.7 carry MUST/SHOULD/MAY normative language.
+Legacy §22 anchors are retained for existing links while the maintained hardening prose lives in the modular component specs listed above.
 
 ### §22.1 mTLS Federation Transport {#section-22-1}
 

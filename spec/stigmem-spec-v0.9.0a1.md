@@ -42,7 +42,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 | `Spec-04-Manifests` + `Spec-05-Federation-Trust` + `Spec-06-Capability-Tokens` | Federation trust | §19 | Basic Stable; advanced trust scoring deferred | `Spec-04`, `Spec-05`, and `Spec-06` material extracted; `experimental/federation-trust-extensions/spec.md` (advanced) |
 | `Spec-07-Recall-Pipeline` (basic) + `Spec-X11-Recall-Graph` (advanced) | Recall and graph | §20 | Basic Stable; advanced deferred | `spec/specs/07-recall-pipeline.md` (basic); `experimental/recall-graph/spec.md` (advanced) |
 | `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | §21 | **Deferred** | `experimental/lazy-instruction-discovery/spec.md` |
-| `Spec-09-Audit-Log` + `Spec-10-Hardening` + `Spec-11-Replay-Protection` | Security hardening | §22 | Stable | `Spec-09` audit-log and `Spec-10` hardening material extracted; replay material remains here until extraction |
+| `Spec-09-Audit-Log` + `Spec-10-Hardening` + `Spec-11-Replay-Protection` | Security hardening | §22 | Stable | `Spec-09`, `Spec-10`, and `Spec-11` material extracted |
 | `Spec-X2-RTBF-Tombstones` | RTBF tombstones | §23 | **Deferred** | `experimental/tombstones/spec.md` |
 | `Spec-X3-Time-Travel` | Time-travel queries | §24 | **Deferred** | `experimental/time-travel/spec.md` |
 | `Spec-X4-Content-Addressed-IDs` | Content-addressed fact IDs (CIDs) | §25 | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md)). Will be assigned a core `Spec-NN` ID during the modular spec migration; this is a naming/migration step, not ADR-008 graduation. | This file |

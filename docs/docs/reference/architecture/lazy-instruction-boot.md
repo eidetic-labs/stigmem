@@ -8,7 +8,7 @@ audience: Spec
 
 # Lazy Instruction Boot
 
-*Audience: engineers building agent runtimes or adapters that use Stigmem's lazy instruction discovery (spec §21).*
+*Audience: engineers building agent runtimes or adapters that use Stigmem's lazy instruction discovery (`Spec-X1-Lazy-Instruction-Discovery`).*
 
 Instead of preloading every instruction document at startup, agents discover and load instructions on demand. The system has three runtime components — a **boot stub**, an **instruction manifest**, and the **`recall_instruction` tool** — plus an off-path **discovery audit** for retrieval-quality evaluation.
 
@@ -33,7 +33,7 @@ sequenceDiagram
 
     alt Task matches required_by_task_types
         Agent->>Node: recall_instruction(intent)<br/>with manifest_hint, task_type
-        Node->>Node: Recall from instruction: scope<br/>(§20 pipeline restricted to<br/>instruction facts)
+        Node->>Node: Recall from instruction: scope<br/>(Spec-X11 pipeline restricted to<br/>instruction facts)
         Node-->>Agent: Ranked instruction chunks<br/>≤ token_budget
     else Agent decides it needs instructions
         Agent->>Node: recall_instruction(intent)<br/>with natural-language intent
@@ -47,7 +47,7 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph BootStub["Boot Stub (§21.1)"]
+    subgraph BootStub["Boot Stub (Spec-X1)"]
         BS_ID["agent_id"]
         BS_Role["agent_role"]
         BS_HC["heartbeat_contract URI"]
@@ -55,11 +55,11 @@ graph TB
         BS_Schema["recall_tool_schema"]
     end
 
-    subgraph Manifest["Instruction Manifest (§21.2)"]
+    subgraph Manifest["Instruction Manifest (Spec-X1)"]
         M_Units["Instruction units\nid, summary,\nrequired_by_task_types,\nguarantee_load"]
     end
 
-    subgraph RecallTool["recall_instruction (§21.3)"]
+    subgraph RecallTool["recall_instruction (Spec-X1)"]
         RT_Intent["intent (natural language)"]
         RT_Hint["manifest_hint (unit ids)"]
         RT_Budget["token_budget"]
@@ -73,7 +73,7 @@ graph TB
     BootStub -- "manifest_uri\npoints to" --> Manifest
     BootStub -- "recall_tool_schema\nenables" --> RecallTool
     Manifest -- "describes available\nunits for" --> RecallTool
-    RecallTool -- "§20 recall pipeline\nrestricted to instruction: scope" --> Facts
+    RecallTool -- "Spec-X11 recall pipeline\nrestricted to instruction: scope" --> Facts
     RecallTool -- "audit record\n(best-effort)" --> Audit
 ```
 

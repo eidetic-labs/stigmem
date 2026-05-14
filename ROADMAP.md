@@ -120,14 +120,14 @@ Per [ADR-010](docs/adr/010-modular-specs.md): the canonical spec naming is **`Sp
 | Prefix | Meaning | Example |
 |---|---|---|
 | `Spec-NN-` | Supported protocol component spec; in-tree at `spec/specs/NN-topic-name.md` | `Spec-01-Fact-Model`, `Spec-09-Audit-Log` |
-| `Spec-XN-` | Experimental spec; lives at `experimental/<feature>/spec.md` per [ADR-009](docs/adr/009-repo-structure.md) §2 | `Spec-X1-Lazy-Instruction-Discovery` |
+| `Spec-XN-` | Experimental spec; lives at `experimental/<feature>/spec.md` per ADR-009's experimental-feature layout | `Spec-X1-Lazy-Instruction-Discovery` |
 
 **The number is stable across renames.** If a spec's topic name changes, the number stays. New specs get the next available number; numbers are never reused.
 
-### Why the legacy `§N` numbering is still visible
+### Why Legacy Section Numbering Is Still Visible
 
 The pre-reset stigmem spec was a single monolithic document with sections
-numbered §1 through §25. ADR-010 supersedes that model. The supported component
+numbered 1 through 25. ADR-010 supersedes that model. The supported component
 specs now live under `spec/specs/`, experimental specs live under
 `experimental/<feature>/spec.md`, and `spec/PROTOCOL.md` is generated from
 their frontmatter.
@@ -136,44 +136,44 @@ their frontmatter.
 
 **Supported protocol component specs:**
 
-| Spec ID | Topic | Maps from legacy §§ |
+| Spec ID | Topic | Legacy source material |
 |---|---|---|
-| `Spec-01-Fact-Model` | Atomic fact model | §2 |
-| `Spec-02-Scopes-and-ACL` | Scopes + basic ACL | §3.5, §17 (basic ACL only) |
-| `Spec-03-HTTP-API` | HTTP API contract | API surface across §§ |
-| `Spec-04-Manifests` | Manifests + Rekor | §19.1–§19.2 |
-| `Spec-05-Federation-Trust` | Federation trust (peer auth, replication) | §19 |
-| `Spec-06-Capability-Tokens` | Capability tokens | §19.3 |
-| `Spec-07-Recall-Pipeline` | Recall pipeline (basic) | §6, §20 (basic) |
-| `Spec-08-Quarantine-Garden` | Quarantine semantics | §19.5 |
-| `Spec-09-Audit-Log` | Audit log | §22.3 |
-| `Spec-10-Hardening` | Security hardening | §22.1, §22.2, §22.4, §22.6 |
-| `Spec-11-Replay-Protection` | Replay protection | §22.5 |
+| `Spec-01-Fact-Model` | Atomic fact model | Legacy section 2 |
+| `Spec-02-Scopes-and-ACL` | Scopes + basic ACL | Legacy sections 3.5 and 17 basic ACL material |
+| `Spec-03-HTTP-API` | HTTP API contract | Legacy API-surface material |
+| `Spec-04-Manifests` | Manifests + Rekor | Legacy sections 19.1 and 19.2 |
+| `Spec-05-Federation-Trust` | Federation trust (peer auth, replication) | Legacy section 19 |
+| `Spec-06-Capability-Tokens` | Capability tokens | Legacy section 19.3 |
+| `Spec-07-Recall-Pipeline` | Recall pipeline (basic) | Legacy sections 6 and 20 basic recall material |
+| `Spec-08-Quarantine-Garden` | Quarantine semantics | Legacy section 19.5 |
+| `Spec-09-Audit-Log` | Audit log | Legacy section 22.3 |
+| `Spec-10-Hardening` | Security hardening | Legacy sections 22.1, 22.2, 22.4, and 22.6 |
+| `Spec-11-Replay-Protection` | Replay protection | Legacy section 22.5 |
 | `Spec-12-HLC-Bounded-Skew` | HLC bounded skew | (new; per R-19) |
 | `Spec-13-Capability-Based-Instructions` | `interpret_as` capability model | (new; per ADR-003) |
 | `Spec-14-Batch-Assert` | Batch fact assert | (new; per ADR-006) |
-| `Spec-15-Fact-Semantics` | Fact semantics | §3 |
-| `Spec-16-Namespace-Registry` | Namespace registry | §9 |
-| `Spec-17-Schema-and-Migration` | Schema and migrations | §10 |
-| `Spec-18-Conformance-and-Failure-Modes` | Conformance and failure modes | §11 |
-| `Spec-19-Adapter-ABI` | Adapter ABI | §12 |
-| `Spec-20-Lint-Semantics` | Lint semantics | §14 |
-| `Spec-21-Content-Addressed-IDs` | Content-addressed IDs | §25 |
+| `Spec-15-Fact-Semantics` | Fact semantics | Legacy section 3 |
+| `Spec-16-Namespace-Registry` | Namespace registry | Legacy section 9 |
+| `Spec-17-Schema-and-Migration` | Schema and migrations | Legacy section 10 |
+| `Spec-18-Conformance-and-Failure-Modes` | Conformance and failure modes | Legacy section 11 |
+| `Spec-19-Adapter-ABI` | Adapter ABI | Legacy section 12 |
+| `Spec-20-Lint-Semantics` | Lint semantics | Legacy section 14 |
+| `Spec-21-Content-Addressed-IDs` | Content-addressed IDs | Legacy section 25 |
 
 **Experimental specs (currently at `experimental/<feature>/spec.md`):**
 
-| Spec ID | Topic | Located at | Maps from legacy § |
+| Spec ID | Topic | Located at | Legacy source material |
 |---|---|---|---|
-| `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | `experimental/lazy-instruction-discovery/spec.md` | §21 |
-| `Spec-X2-RTBF-Tombstones` | RTBF tombstones | `experimental/tombstones/spec.md` | §23 |
-| `Spec-X3-Time-Travel-Queries` | `as_of` time-travel queries | `experimental/time-travel/spec.md` | §24 |
-| `Spec-X5-Memory-Garden-Advanced-ACL` | Memory garden advanced ACL | `experimental/memory-garden-acl/spec.md` | §17 advanced |
-| `Spec-X6-Source-Attestation` | Source attestation | `experimental/source-attestation/spec.md` | §18 |
+| `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | `experimental/lazy-instruction-discovery/spec.md` | Legacy section 21 |
+| `Spec-X2-RTBF-Tombstones` | RTBF tombstones | `experimental/tombstones/spec.md` | Legacy section 23 |
+| `Spec-X3-Time-Travel-Queries` | `as_of` time-travel queries | `experimental/time-travel/spec.md` | Legacy section 24 |
+| `Spec-X5-Memory-Garden-Advanced-ACL` | Memory garden advanced ACL | `experimental/memory-garden-acl/spec.md` | Legacy section 17 advanced material |
+| `Spec-X6-Source-Attestation` | Source attestation | `experimental/source-attestation/spec.md` | Legacy section 18 |
 | `Spec-X7-Subscriptions` | Subscriptions / push federation | `experimental/subscriptions/spec.md` | (new) |
-| `Spec-X8-Intent-Envelope` | Intent envelope | `experimental/intent-envelope/spec.md` | §4 |
-| `Spec-X9-Decay-Semantics` | Decay semantics | `experimental/decay/spec.md` | §15 |
-| `Spec-X10-Synthesis` | Synthesis | `experimental/synthesis/spec.md` | §16 |
-| `Spec-X11-Recall-Graph` | Advanced recall graph | `experimental/recall-graph/spec.md` | §20 advanced |
+| `Spec-X8-Intent-Envelope` | Intent envelope | `experimental/intent-envelope/spec.md` | Legacy section 4 |
+| `Spec-X9-Decay-Semantics` | Decay semantics | `experimental/decay/spec.md` | Legacy section 15 |
+| `Spec-X10-Synthesis` | Synthesis | `experimental/synthesis/spec.md` | Legacy section 16 |
+| `Spec-X11-Recall-Graph` | Advanced recall graph | `experimental/recall-graph/spec.md` | Legacy section 20 advanced material |
 
 ---
 

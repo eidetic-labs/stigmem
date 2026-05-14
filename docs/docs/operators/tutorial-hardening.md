@@ -115,7 +115,7 @@ For full configuration reference and troubleshooting, see [mTLS Federation Trans
 
 ## Step 3 — Rotate the Ed25519 identity key
 
-The node identity key signs federation manifests and peer tokens.  Spec §22.2 requires rotation at least every 365 days; shorter is better.
+The node identity key signs federation manifests and peer tokens. `Spec-10-Hardening` requires rotation at least every 365 days; shorter is better.
 
 ```bash
 # Dry run first — confirms TL connectivity and shows new key_id without committing
@@ -165,14 +165,14 @@ Record the `dual-trust` expiry date in your key rotation log.  The retiring key 
 
 ## Step 4 — Rotate the capability issuer key
 
-Capability tokens are signed by a separate issuer key (§22.2).  Rotate it at least every 90 days.
+Capability tokens are signed by a separate issuer key (`Spec-10-Hardening`). Rotate it at least every 90 days.
 
 ```bash
 docker compose exec stigmem-node \
   stigmem identity rotate-key --kind issuer
 ```
 
-The dual-trust window for the issuer key must be ≥ 90 days (the maximum capability token TTL per §19.3.2).  The CLI enforces this minimum.
+The dual-trust window for the issuer key must be >= 90 days (the maximum capability token TTL per `Spec-06-Capability-Tokens`). The CLI enforces this minimum.
 
 Update the `STIGMEM_ISSUER_PRIVATE_KEY` secret and restart the node the same way as Step 3.
 
@@ -370,12 +370,12 @@ curl -s https://your-node.example.com/healthz | jq .status
 
 | Control | Spec | Status |
 |---|---|---|
-| mTLS federation with SAN validation | §22.1 | Active |
-| Ed25519 identity key rotated with dual-trust window | §22.2 | Active |
-| Capability issuer key rotated | §22.2 | Active |
-| Audit log with 14 event types | §22.3 | Active |
-| Per-principal token-bucket quotas | §22.4 | Active |
-| Non-root distroless container, read-only fs, dropped caps | §22.6 | Active |
+| mTLS federation with SAN validation | `Spec-10-Hardening` | Active |
+| Ed25519 identity key rotated with dual-trust window | `Spec-10-Hardening` | Active |
+| Capability issuer key rotated | `Spec-10-Hardening` | Active |
+| Audit log with 14 event types | `Spec-09-Audit-Log` | Active |
+| Per-principal token-bucket quotas | `Spec-10-Hardening` | Active |
+| Non-root distroless container, read-only fs, dropped caps | `Spec-10-Hardening` | Active |
 
 Your deployment is now at the pre-reset hardening hardened posture.  Run the [Community Pen-Test Handbook](../security/pen-test.md) test matrix against it to verify from the attacker's perspective.
 

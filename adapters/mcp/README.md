@@ -12,7 +12,7 @@ without installing any SDK.
 | `query_facts` | Query facts by entity / relation / scope |
 | `resolve_contradiction` | Resolve a contradiction between two conflicting facts |
 | `subscribe_scope` | Poll for recent facts in a scope (single-shot, cursor-based) |
-| `lint_scope` | Health-check sweep — detect contradictions, stale facts, orphans, broken refs (read-only; spec §14) |
+| `lint_scope` | Health-check sweep — detect contradictions, stale facts, orphans, broken refs (read-only; `Spec-20-Lint-Semantics`) |
 
 ## Setup
 
@@ -88,7 +88,7 @@ resolve_contradiction(
 - Facts are **immutable** once written. To update, assert a new fact for the same
   `(entity, relation, scope)`. To retract, call `assert_fact` with `confidence=0.0`.
 - Scope filtering: `local` facts never leave the node. `public` facts are federatable.
-  See spec §2.2 for the full scope semantics.
+  See `Spec-02-Scopes-and-ACL` for the full scope semantics.
 
 ## Architecture
 

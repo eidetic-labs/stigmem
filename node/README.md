@@ -1,6 +1,8 @@
 # Stigmem Reference Node
 
-Single-host Stigmem node implementing [spec the pre-reset spec-draft](../spec/stigmem-spec-the pre-reset spec-draft.md). Reference implementation.
+Single-host reference implementation of the Stigmem protocol. The modular protocol
+specs live under [`../spec/specs/`](../spec/specs/), with the generated protocol
+composition at [`../spec/PROTOCOL.md`](../spec/PROTOCOL.md).
 
 ## Quick start
 
@@ -34,9 +36,9 @@ All settings via environment variables (prefix `STIGMEM_`):
 
 | Route | Description |
 |-------|-------------|
-| `POST /v1/facts` | Assert a fact (spec §5.1) |
-| `GET /v1/facts` | Query facts (spec §5.2) |
-| `GET /.well-known/stigmem` | Node metadata (spec §5.3) |
+| `POST /v1/facts` | Assert a fact (`Spec-03-HTTP-API`) |
+| `GET /v1/facts` | Query facts (`Spec-03-HTTP-API`) |
+| `GET /.well-known/stigmem` | Node metadata (`Spec-03-HTTP-API`) |
 | `GET /healthz` | Health check |
 | `GET /docs` | OpenAPI UI |
 

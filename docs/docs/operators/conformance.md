@@ -50,11 +50,11 @@ The **Conformance** workflow ([`conformance.yml`](https://github.com/Eidetic-Lab
 
 | File | Spec sections covered |
 |------|-----------------------|
-| `01_fact_assert.json` | §2.7, §5.1 — fact assert wire format, all FactValue types |
-| `02_fact_query.json` | §5.2–§5.5 — query, single-fact GET, retraction |
-| `03_wellknown.json` | §5.21 — `/.well-known/stigmem` discovery endpoint |
-| `04_gardens.json` | §17 — Memory Garden CRUD, role management |
-| `05_garden_facts.json` | §17.3, §2.7 — garden-tagged fact writes and ACL enforcement |
+| `01_fact_assert.json` | `Spec-01-Fact-Model`, `Spec-03-HTTP-API` — fact assert wire format, all FactValue types |
+| `02_fact_query.json` | `Spec-03-HTTP-API`, `Spec-15-Fact-Semantics` — query, single-fact GET, retraction |
+| `03_wellknown.json` | `Spec-03-HTTP-API` — `/.well-known/stigmem` discovery endpoint |
+| `04_gardens.json` | `Spec-02-Scopes-and-ACL` — Memory Garden CRUD, role management |
+| `05_garden_facts.json` | `Spec-02-Scopes-and-ACL`, `Spec-01-Fact-Model` — garden-tagged fact writes and ACL enforcement |
 
 ### Adding a new vector
 
@@ -220,4 +220,4 @@ All three backends are required to be green. The Postgres backend is feature-fla
 
 ## Spec citations
 
-Every vector group file declares the `spec_section` it covers. Keep these citations up to date with the canonical spec ([§2–§21 in `spec/stigmem-spec-v1.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md)). When the spec and a vector disagree, the spec is authoritative — update the vector and open a bug report for the reference node.
+Every vector group file declares the modular spec it covers. Keep these citations up to date with the canonical spec composition in [`spec/PROTOCOL.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/PROTOCOL.md). When the spec and a vector disagree, the spec is authoritative — update the vector and open a bug report for the reference node.

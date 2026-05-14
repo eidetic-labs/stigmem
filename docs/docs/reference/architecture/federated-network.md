@@ -8,7 +8,7 @@ audience: Spec
 
 # Federated Network
 
-*Audience: engineers implementing federation, deploying multi-node clusters, or reviewing the spec §6.*
+*Audience: engineers implementing federation, deploying multi-node clusters, or reviewing `Spec-05-Federation-Trust`.*
 
 Stigmem federation is pull-based: each node periodically fetches new facts from registered peers using an HLC cursor. Peering is established via mutual PeerDeclaration exchange, and replication respects scope boundaries.
 
@@ -42,7 +42,7 @@ sequenceDiagram
     participant A as Node A
     participant B as Node B
 
-    Note over A,B: §6.1 — Mutual PeerDeclaration exchange
+    Note over A,B: Spec-05 — Mutual PeerDeclaration exchange
 
     A->>A: Generate PeerDeclaration<br/>target=B, scopes=[public],<br/>direction=bidirectional
     A->>A: Sign with Ed25519 federation key
@@ -81,4 +81,4 @@ Nodes enforce scope on both sides:
 
 ## Conflict on reunion
 
-When two nodes write divergent values for the same `(entity, relation, scope)` during a network partition, both facts survive. On reunion the receiving node detects the contradiction and creates a conflict record (§3.3). Resolution is explicit via `POST /v1/conflicts/:id/resolve`.
+When two nodes write divergent values for the same `(entity, relation, scope)` during a network partition, both facts survive. On reunion the receiving node detects the contradiction and creates a conflict record (`Spec-15-Fact-Semantics`). Resolution is explicit via `POST /v1/conflicts/:id/resolve`.

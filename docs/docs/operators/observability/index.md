@@ -63,7 +63,7 @@ pip install "stigmem-node[observability]"
 | `stigmem_fact_write_total` | `principal`, `tenant` | Successful fact assertions |
 | `stigmem_fact_read_total` | `principal`, `tenant` | Fact queries and recall requests |
 | `stigmem_contradiction_total` | `tenant` | Facts that triggered a contradiction on write |
-| `stigmem_audit_event_total` | `event_type`, `tenant` | Audit events written (§22.3) |
+| `stigmem_audit_event_total` | `event_type`, `tenant` | Audit events written (`Spec-09-Audit-Log`) |
 | `stigmem_quota_breach_total` | `principal`, `tenant`, `dimension` | Rate-limit 429 responses |
 | `stigmem_federation_ingress_total` | `peer_id`, `status` | Facts received via federation pull |
 | `stigmem_federation_egress_total` | `peer_id`, `status` | Facts served via federation pull endpoint |

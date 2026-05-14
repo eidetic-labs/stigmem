@@ -8,7 +8,7 @@ audience: Operator
 # Federation Peer Setup
 
 **Audience:** operators setting up cross-node federation for the first time; operators adding or removing peers.  
-**Spec reference:** §5 (peer declaration wire format), §6 (federation pull protocol), §19 (federation trust).  
+**Spec reference:** `Spec-03-HTTP-API` for route shape, `Spec-05-Federation-Trust` for peer registration and pull replication, and `Spec-04-Manifests` for signed peer declarations.  
 **See also:** [Federation guide](../../concepts/federation/), [Federation trust](../../concepts/federation/federation-trust).
 
 ---
@@ -20,7 +20,7 @@ audience: Operator
 2. Present a valid Ed25519 public key in its `PeerDeclaration`.
 3. Be registered (pinned) by the receiving node before replication starts.
 
-Source-trust scoring (§19.4) lets you weight incoming facts by source. Untrusted sources land in the quarantine garden until you promote them.
+Source-trust scoring (`Spec-05-Federation-Trust`) lets you weight incoming facts by source. Untrusted sources land in the quarantine garden until you promote them.
 
 ---
 
@@ -66,7 +66,7 @@ Once the node is running, confirm it announces its identity correctly:
 curl -s https://your-node.example.com/.well-known/stigmem | jq .
 ```
 
-Expected response (§5.3 `PeerDeclaration`):
+Expected `PeerDeclaration` response (`Spec-05-Federation-Trust`):
 
 ```json
 {
@@ -139,7 +139,7 @@ curl -X PATCH https://your-node.example.com/v1/federation/peers/<peer-id> \
 
 ---
 
-## Step 6 — Tune source-trust scores (§19.4)
+## Step 6 — Tune source-trust scores
 
 Each source gets a scalar trust score `t ∈ [0, 1]`. At recall time, effective confidence is weighted by the trust score. Facts from sources below the quarantine threshold land in the quarantine garden.
 
@@ -203,7 +203,7 @@ Removing a peer stops the pull loop immediately. Facts already replicated are re
 | `STIGMEM_FEDERATION_PUBKEY` | `""` | Base64url Ed25519 public key. Persist across restarts |
 | `STIGMEM_FEDERATION_PRIVKEY` | `""` | Base64url Ed25519 private key. Persist across restarts |
 | `STIGMEM_FEDERATION_PULL_INTERVAL_S` | `30` | Seconds between pull cycles |
-| `STIGMEM_FEDERATION_NONCE_WINDOW_S` | `300` | Nonce replay-protection window (§6.6) |
+| `STIGMEM_FEDERATION_NONCE_WINDOW_S` | `300` | Nonce replay-protection window (`Spec-11-Replay-Protection`) |
 | `STIGMEM_FEDERATION_ALLOW_TEAM` | `false` | Allow `team`-scoped facts across federation boundaries |
 | `STIGMEM_TRUST_QUARANTINE_THRESHOLD` | `0.3` | Trust score below which facts land in quarantine garden |
 

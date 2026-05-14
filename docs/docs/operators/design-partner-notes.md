@@ -52,16 +52,16 @@ Letta is an agent framework with first-class persistent memory blocks. The adapt
 Cognee builds knowledge graphs from unstructured text. The adapter bridges stigmem's (entity, relation, value) triple model with Cognee's graph representation.
 
 **Key integration pattern:**
-- Cognee-extracted relationships are expressed as stigmem facts with `relation` URIs from the namespace registry (§9).
+- Cognee-extracted relationships are expressed as stigmem facts with `relation` URIs from `Spec-16-Namespace-Registry`.
 - The adapter maps Cognee graph edges → stigmem `(entity, relation, entity-ref)` triples.
 - Scope is set based on the source document's confidentiality level.
 
 **Feedback themes:**
-- Namespace discipline mattered most here: Cognee extracts arbitrary relation labels; without normalization against the stigmem namespace registry (§9), facts from different Cognee runs used inconsistent relation URIs for the same semantic concept. The adapter now includes a relation normalization step.
+- Namespace discipline mattered most here: Cognee extracts arbitrary relation labels; without normalization against `Spec-16-Namespace-Registry`, facts from different Cognee runs used inconsistent relation URIs for the same semantic concept. The adapter now includes a relation normalization step.
 - The `source` field (provenance) was well-received for audit purposes: Cognee users needed to know which document a fact came from. The adapter populates `source=cognee:doc:<hash>`.
 - Fuzzy entity resolution  was flagged as important: Cognee often extracts the same entity with slightly different text forms (`"alice"` vs `"Alice Smith"`). The fuzzy entity resolver was accelerated by this feedback.
 
-**See also:** Fuzzy entity resolver guide ; [Namespace registry spec §9](../spec/)
+**See also:** Fuzzy entity resolver guide; [Namespace Registry spec](../spec/specs/namespace-registry)
 
 ## Cross-pilot patterns
 
@@ -69,11 +69,11 @@ These themes emerged across all three pilots:
 
 | Theme | Impact on the pre-reset spec |
 |-------|----------------|
-| **Synthesis at boot** is the primary query pattern | `POST /v1/synthesis` and `synthesize_scope` MCP tool (§16) |
+| **Synthesis at boot** is the primary query pattern | `POST /v1/synthesis` and `synthesize_scope` MCP tool (`Spec-X10-Synthesis`) |
 | **Contradiction visibility** — callers need the losing value, not just a flag | `alt_value` / `alt_confidence` in `SynthesisEntry` |
-| **Decay for memory hygiene** — stale facts accumulate without eviction | `DecayPolicy` and `POST /v1/decay/sweep` (§15) |
-| **Scope as authorization, not label** — local/company scoping needs to be strict | §6.8 scope propagation invariants |
-| **Namespace discipline** — inconsistent relation URIs degrade query quality | Namespace registry §9; fuzzy entity resolver |
+| **Decay for memory hygiene** — stale facts accumulate without eviction | `DecayPolicy` and `POST /v1/decay/sweep` (`Spec-X9-Decay-Semantics`) |
+| **Scope as authorization, not label** — local/company scoping needs to be strict | `Spec-02-Scopes-and-ACL` plus `Spec-05-Federation-Trust` scope propagation invariants |
+| **Namespace discipline** — inconsistent relation URIs degrade query quality | `Spec-16-Namespace-Registry`; fuzzy entity resolver |
 
 ## Connector guides
 

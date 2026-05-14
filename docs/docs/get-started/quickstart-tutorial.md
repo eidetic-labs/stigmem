@@ -69,7 +69,7 @@ federation-init-1  |     status=active
 federation-init-1  | federation-init: done
 ```
 
-`status=active` confirms the receiving node fetched the sender's `/.well-known/stigmem`, verified the Ed25519 public key, and accepted the signed `PeerDeclaration` (spec §6.1).
+`status=active` confirms the receiving node fetched the sender's `/.well-known/stigmem`, verified the Ed25519 public key, and accepted the signed `PeerDeclaration` (`Spec-05-Federation-Trust`).
 
 Confirm directly:
 
@@ -168,7 +168,7 @@ Generate Ed25519 keypairs with `python3 infra/soak/keys.py`. Keys must be base64
 
 1. **Wait for node DBs** — polls each node's SQLite DB (`/data/node-a/stigmem.db`, `/data/node-b/stigmem.db`) every 2 s until `federation_pubkey`, `federation_privkey`, and `node_id` rows are present in `node_meta` (up to 30 retries = 60 s). The DBs are mounted read-only via named volumes.
 
-2. **Sign PeerDeclarations** — for each direction (A→B, B→A), constructs a `PeerDeclaration` with `node_id`, `node_url`, `federation_pubkey`, `allowed_scopes`, and `signed_at` (UTC). Produces canonical JSON (sorted keys, no whitespace) and signs with Ed25519 (spec §6.1).
+2. **Sign PeerDeclarations** — for each direction (A→B, B→A), constructs a `PeerDeclaration` with `node_id`, `node_url`, `federation_pubkey`, `allowed_scopes`, and `signed_at` (UTC). Produces canonical JSON (sorted keys, no whitespace) and signs with Ed25519 (`Spec-05-Federation-Trust`).
 
 3. **Register peers** — POSTs the signed payload to `POST /v1/federation/peers` on the remote node. HTTP 409 means already registered and is silently skipped.
 
@@ -196,7 +196,7 @@ Re-running `federation-init` (e.g., after `make down && make up`) is safe — HT
 - [Federation guide](../concepts/federation/) — scope enforcement, conflict resolution, production keys
 - [4-node topology](../concepts/federation/federation-4node.md) — full-mesh setup, failure injection, soak metrics
 - [API reference](../reference/api/index.md) — full endpoint reference
-- [Architecture](../reference/architecture/index.md) — HLC, PeerDeclaration internals, spec §6
+- [Architecture](../reference/architecture/index.md) — HLC and PeerDeclaration internals
 
 ## Teardown
 

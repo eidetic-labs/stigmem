@@ -6,7 +6,7 @@ applies_to: stigmem v0.9.0bN
 last_updated: 2026-05-14
 supersedes: pre-reset §23 right-to-be-forgotten tombstone material
 depends_on:
-  - Spec-01-Core >= 0.1.0-alpha.0
+  - Spec-01-Fact-Model >= 0.1.0-alpha.0
   - Spec-05-Federation-Trust >= 0.1.0-alpha.0
   - Spec-09-Audit-Log >= 0.1.0-alpha.0
 title: §23. Right-to-be-Forgotten Tombstones

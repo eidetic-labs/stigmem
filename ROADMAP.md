@@ -61,7 +61,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 ### Work (sub-work ordering matters)
 
 1. **OpenClaw safety hardening (entry PR)** — closes Critical/High audit findings (C1–C4, H1–H5). See `adapters/openclaw/AUDIT.md`.
-2. **Modular spec migration** per [ADR-010](docs/adr/010-modular-specs.md) — decompose `spec/stigmem-spec-v0.9.0a1.md` into 14 core specs with independent versioning.
+2. **Modular spec migration** per [ADR-010](docs/adr/010-modular-specs.md) — decompose `spec/stigmem-spec-v0.9.0a1.md` into component specs with independent versioning.
 3. **Capability redesign** per [ADR-003](docs/adr/003-prompt-injection.md) — `interpret_as` field on `FactValue`; default-deny on instruction interpretation; cross-org instruction quarantine; channel-separated `recall()` response.
 4. **Adversarial conformance corpus** per [ADR-015](docs/adr/015-adversarial-conformance-and-model-certification.md) — 80+ patterns across 10 categories; multi-provider model certification framework.
 5. **Storage immutability stack** per [ADR-016](docs/adr/016-storage-immutability-enforcement.md) — L1 architectural append-only journal + projection tables, L2 SQLite triggers, L3 CIDs (per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)), L4 local hash chain, L5 Sigstore Rekor anchor, plus client/peer verification.
@@ -119,7 +119,7 @@ Per [ADR-010](docs/adr/010-modular-specs.md): the canonical spec naming is **`Sp
 
 | Prefix | Meaning | Example |
 |---|---|---|
-| `Spec-NN-` | Core spec; in-tree at `spec/specs/NN-topic-name.md` once the modular migration lands | `Spec-01-Core`, `Spec-09-Audit-Log` |
+| `Spec-NN-` | Supported protocol component spec; in-tree at `spec/specs/NN-topic-name.md` once the modular migration lands | `Spec-01-Fact-Model`, `Spec-09-Audit-Log` |
 | `Spec-XN-` | Experimental spec; lives at `experimental/<feature>/spec.md` per [ADR-009](docs/adr/009-repo-structure.md) §2 | `Spec-X1-Lazy-Instruction-Discovery` |
 
 **The number is stable across renames.** If a spec's topic name changes, the number stays. New specs get the next available number; numbers are never reused.
@@ -131,17 +131,17 @@ The pre-reset stigmem spec was a single monolithic document with sections number
 - The canonical spec stays as a single file at `spec/stigmem-spec-v0.9.0a1.md`.
 - Cross-references in this ROADMAP use `Spec-XN-Name` as the **primary** identifier with `[§N legacy]` as a transitional aid for readers familiar with the pre-reset numbering.
 - Each `experimental/<feature>/STATUS.md` declares its `spec_id: Spec-XN-Topic-Name` in frontmatter.
-- Per-section file decomposition (`spec/specs/01-core.md` through `spec/specs/14-batch-assert.md`, plus the `spec/PROTOCOL.md` meta-document) lands in the beta series.
+- Per-component file decomposition (`spec/specs/01-fact-model.md` through `spec/specs/14-batch-assert.md`, plus the `spec/PROTOCOL.md` meta-document) lands in the beta series.
 
 ### Spec ID inventory
 
-**Core specs (beta-series target — 14 files):**
+**Supported protocol component specs (beta-series target — 14 files):**
 
 | Spec ID | Topic | Maps from legacy §§ |
 |---|---|---|
-| `Spec-01-Core` | Core data model | §1–§5 |
+| `Spec-01-Fact-Model` | Atomic fact model | §2 |
 | `Spec-02-Scopes-and-ACL` | Scopes + basic ACL | §3.5, §17 (basic ACL only) |
-| `Spec-03-API` | HTTP API contract | API surface across §§ |
+| `Spec-03-HTTP-API` | HTTP API contract | API surface across §§ |
 | `Spec-04-Manifests` | Manifests + Rekor | §19.1–§19.2 |
 | `Spec-05-Federation-Trust` | Federation trust (peer auth, replication) | §19 |
 | `Spec-06-Capability-Tokens` | Capability tokens | §19.3 |

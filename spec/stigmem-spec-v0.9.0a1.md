@@ -39,7 +39,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 | (deferred) | Synthesis | §16 | **Deferred** | `experimental/synthesis/spec.md` |
 | `Spec-02-Scopes-and-ACL` (basic) + `Spec-X5-Memory-Garden` (advanced) | Memory garden | §17 | Basic Stable; advanced ACL deferred | `spec/specs/02-scopes-and-acl.md` (basic); `experimental/memory-garden-acl/spec.md` (advanced ACL per [ADR-011](../docs/adr/011-cross-cutting-extraction.md)) |
 | `Spec-X6-Source-Attestation` | Source attestation | §18 | **Deferred** | `experimental/source-attestation/spec.md` |
-| `Spec-04-Manifests` + `Spec-05-Federation-Trust` + `Spec-06-Capability-Tokens` | Federation trust | §19 | Basic Stable; advanced trust scoring deferred | This file (basic); `experimental/federation-trust-extensions/spec.md` (advanced) |
+| `Spec-04-Manifests` + `Spec-05-Federation-Trust` + `Spec-06-Capability-Tokens` | Federation trust | §19 | Basic Stable; advanced trust scoring deferred | `Spec-04` manifest material is in `spec/specs/04-manifests.md`; remaining basic federation-trust material stays here until extraction; `experimental/federation-trust-extensions/spec.md` (advanced) |
 | `Spec-X11-Recall-Graph` | Recall and graph (advanced) | §20 | **Deferred** | `experimental/recall-graph/spec.md` |
 | `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | §21 | **Deferred** | `experimental/lazy-instruction-discovery/spec.md` |
 | `Spec-09-Audit-Log` + `Spec-10-Hardening` + `Spec-11-Replay-Protection` | Security hardening | §22 | Stable | This file |

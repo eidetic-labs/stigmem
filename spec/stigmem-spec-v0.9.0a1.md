@@ -11,30 +11,30 @@
 > - `Experimental in v0.9.0a1` — implementation exists but the section's contract is not committed; reintroduction per [ADR-008](../docs/adr/008-experimental-gates.md) for any section that moves to `experimental/<feature>/spec.md`.
 > - `Deferred from v0.9.0a1` — section's content moves to `experimental/<feature>/spec.md` per [ADR-002](../docs/adr/002-v1-scope.md) v1 critical-path scope decision.
 >
-> **Modular spec migration ([ADR-010](../docs/adr/010-modular-specs.md)) is v0.9.0bN beta-series work.** This document remains a single canonical file through v0.9.0a series; the decomposition into 14 core specs (`spec/specs/01-core.md` through `Spec-14`) lands in the v0.9.0bN beta series.1.
+> **Modular spec migration ([ADR-010](../docs/adr/010-modular-specs.md)) is v0.9.0bN beta-series work.** This document remains a single canonical file through v0.9.0a series; the decomposition into component specs (`spec/specs/01-fact-model.md` through `Spec-14`) lands in the v0.9.0bN beta series.1.
 
 ## How to read this document
 
-Per [ADR-010](../docs/adr/010-modular-specs.md), the canonical spec naming convention is `Spec-NN-Topic-Name` for core specs and `Spec-XN-Topic-Name` for experimental specs. Until the v0.9.0bN beta series's full per-spec file decomposition lands (master-checklist §5.1), this monolithic file remains canonical and the section-disposition table below uses **`Spec-XN-Name` as the primary identifier** with `[§N legacy]` as a transitional aid for readers familiar with the pre-reset numbering.
+Per [ADR-010](../docs/adr/010-modular-specs.md), the canonical spec naming convention is `Spec-NN-Topic-Name` for supported protocol component specs and `Spec-XN-Topic-Name` for experimental specs. Until the v0.9.0bN beta series's full per-spec file decomposition lands (master-checklist §5.1), this monolithic file remains canonical and the section-disposition table below uses **`Spec-XN-Name` as the primary identifier** with `[§N legacy]` as a transitional aid for readers familiar with the pre-reset numbering.
 
-The spec is divided into core sections (kept in this canonical file) and deferred sections (migrated to per-feature `experimental/<feature>/spec.md`).
+The spec is divided into supported protocol components (kept in this canonical file until extraction) and deferred sections (migrated to per-feature `experimental/<feature>/spec.md`).
 
 | Spec ID (target) | Topic | Legacy § | Status in v0.9.0a1 | Canonical destination |
 |---|---|---|---|---|
-| `Spec-01-Core` (part) | Motivation | §1 | Stable | This file |
-| `Spec-01-Core` (part) | Atomic fact shape | §2 | Stable | This file |
-| `Spec-01-Core` (part) | Fact semantics | §3 | Stable | This file |
+| (protocol overview) | Motivation | §1 | Stable | This file |
+| `Spec-01-Fact-Model` | Atomic fact shape | §2 | Stable | `spec/specs/01-fact-model.md` during modular extraction |
+| `Spec-01-Fact-Model` + `Spec-02-Scopes-and-ACL` | Fact semantics | §3 | Stable | This file until remaining component prose extraction |
 | (deferred indefinitely) | Intent envelope | §4 | **Deferred indefinitely** ([ADR-001](../docs/adr/001-versioning.md)) | `experimental/intent-envelope/spec.md` (placeholder for future reintroduction per ADR-008) |
-| `Spec-01-Core` (part) | Wire format | §5 | Stable | This file |
+| `Spec-03-HTTP-API` | Wire format | §5 | Stable | This file until component prose extraction |
 | `Spec-05-Federation-Trust` (basic parts) + `Spec-07-Recall-Pipeline` (basic) | Federation (basic) | §6 | Stable | This file |
-| `Spec-01-Core` (part) | Design decisions log | §7 | Stable | This file |
-| `Spec-01-Core` (part) | Open questions | §8 | Stable | This file |
-| `Spec-01-Core` (part) | Namespace registry | §9 | Stable | This file |
-| `Spec-01-Core` (part) | Schema and migration | §10 | Stable | This file |
-| `Spec-01-Core` (part) | Failure-mode scenarios | §11 | Stable | This file |
-| `Spec-01-Core` (part) | Adapter ABI | §12 | Stable | This file |
+| (protocol governance) | Design decisions log | §7 | Stable | This file |
+| (protocol governance) | Open questions | §8 | Stable | This file |
+| `Spec-01-Fact-Model` + component-specific registries | Namespace registry | §9 | Stable | This file until component prose extraction |
+| (storage/migration component, ID TBD) | Schema and migration | §10 | Stable | This file until component spec assignment |
+| (conformance/failure-mode component, ID TBD) | Failure-mode scenarios | §11 | Stable | This file until component spec assignment |
+| (adapter ABI component, ID TBD) | Adapter ABI | §12 | Stable | This file until component spec assignment |
 | (placeholder) | (reserved) | §13 | Placeholder | `docs/archive/placeholder-pages/spec/section-13.md` |
-| `Spec-01-Core` (part) | Lint semantics | §14 | Stable | This file |
+| (lint/conformance component, ID TBD) | Lint semantics | §14 | Stable | This file until component spec assignment |
 | (deferred) | Decay semantics | §15 | **Deferred** ([ADR-002](../docs/adr/002-v1-scope.md)) | `experimental/decay/spec.md` |
 | (deferred) | Synthesis | §16 | **Deferred** | `experimental/synthesis/spec.md` |
 | `Spec-02-Scopes-and-ACL` (basic) + `Spec-X5-Memory-Garden` (advanced) | Memory garden | §17 | Basic Stable; advanced ACL deferred | This file (basic); `experimental/memory-garden-acl/spec.md` (advanced ACL per [ADR-011](../docs/adr/011-cross-cutting-extraction.md)) |

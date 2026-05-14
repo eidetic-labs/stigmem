@@ -4,6 +4,8 @@
 >
 > The current canonical spec is at [`spec/stigmem-spec-v0.9.0a1.md`](../../stigmem-spec-v0.9.0a1.md). Content from this snapshot was reviewed section-by-section against actual implementation in `node/` and migrated forward into the canonical spec where applicable; deferred sections moved to `experimental/<feature>/spec.md` per [ADR-002](../../../docs/adr/002-v1-scope.md) + [ADR-011](../../../docs/adr/011-cross-cutting-extraction.md).
 >
+> ADR-010 modular spec navigation starts at [`spec/PROTOCOL.md`](../../PROTOCOL.md), with core specs under [`spec/specs/`](../../specs/) and experimental specs under [`experimental/<feature>/spec.md`](../../../experimental/).
+>
 > This snapshot is preserved as historical reference; it is not normative.
 
 ---

@@ -1,4 +1,14 @@
 ---
+spec_id: Spec-X2-RTBF-Tombstones
+version: 0.1.0-alpha.0
+status: Experimental
+applies_to: stigmem v0.9.0bN
+last_updated: 2026-05-14
+supersedes: pre-reset §23 right-to-be-forgotten tombstone material
+depends_on:
+  - Spec-01-Core >= 0.1.0-alpha.0
+  - Spec-05-Federation-Trust >= 0.1.0-alpha.0
+  - Spec-09-Audit-Log >= 0.1.0-alpha.0
 title: §23. Right-to-be-Forgotten Tombstones
 sidebar_label: §23 Right-to-be-Forgotten Tombstones
 audience: Spec
@@ -373,4 +383,3 @@ Content-Type: application/json
 *Anchors below are provided so docs links to specific subsections always resolve, even when the subsection text lives only in earlier spec drafts.*
 
 ### §23.4.1.3 {#section-23-4-1-3}
-

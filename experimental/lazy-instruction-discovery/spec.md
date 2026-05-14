@@ -1,4 +1,14 @@
 ---
+spec_id: Spec-X1-Lazy-Instruction-Discovery
+version: 0.1.0-alpha.0
+status: Experimental
+applies_to: stigmem v0.9.0bN
+last_updated: 2026-05-14
+supersedes: pre-reset §21 lazy instruction discovery material
+depends_on:
+  - Spec-01-Core >= 0.1.0-alpha.0
+  - Spec-06-Capability-Tokens >= 0.1.0-alpha.0
+  - Spec-07-Recall-Pipeline >= 0.1.0-alpha.0
 title: §21. Lazy Instruction Discovery
 sidebar_label: §21 Lazy Instruction Discovery
 audience: Spec
@@ -810,4 +820,3 @@ Admin-key response: same as above, plus "coverage_status" field per unit.
 *Anchors below are provided so docs links to specific subsections always resolve, even when the subsection text lives only in earlier spec drafts.*
 
 ### §21.5.4 {#section-21-5-4}
-

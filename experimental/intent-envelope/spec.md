@@ -1,4 +1,12 @@
 ---
+spec_id: Spec-X8-Intent-Envelope
+version: 0.1.0-alpha.0
+status: Experimental
+applies_to: stigmem v0.9.0bN
+last_updated: 2026-05-14
+supersedes: spec/stigmem-spec-v0.9.0a1.md section 4 intent envelope material
+depends_on:
+  - Spec-01-Core >= 0.1.0-alpha.0
 title: §4. Intent Envelope
 sidebar_label: §4 Intent Envelope
 audience: Spec

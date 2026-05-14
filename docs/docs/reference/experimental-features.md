@@ -3,102 +3,109 @@ title: Experimental Features
 sidebar_label: Experimental Features
 sidebar_position: 5
 audience: Operator
-description: "Canonical list of Stigmem features outside the v0.9.0a1 default surface, their risks, constraints, alpha extraction state, and ADR-008 promotion criteria."
+description: "Canonical public index of Stigmem features outside the v0.9.0a1 default surface, including Spec-X protocol features, adapters, SDKs, deployment recipes, and tooling."
 ---
 
 # Experimental Features
 
-This page is the canonical list of features that exist outside the v0.9.0a1 default surface. Each entry describes the risk, the constraint operators must accept, alpha extraction state where applicable, and the criteria that will promote the feature through the ADR-008 gates.
+This page lists features that exist outside the v0.9.0a1 default surface. Experimental
+does not mean "almost stable": it means the feature is opt-in, unsupported for
+production reliance, and must pass the ADR-008 reintroduction gates before it can
+graduate into the supported surface.
 
-An EXPERIMENTAL feature may have draft spec text, prototype code, dormant in-core implementation from the pre-reset work, or an opt-in alpha-series plugin package, but it is **not part of the supported default install**. The spec section, wire format, or operational guarantees may change before ADR-008 promotion.
+Start with the [feature matrix](../concepts/features.md) for the supported v0.9.0a1
+surface. Use this page when you need to inspect what was deferred, where it lives,
+and whether it has a protocol spec.
 
----
+## Status Model
 
-## §21 — Lazy Instruction Discovery
+| Status | Meaning |
+|---|---|
+| `Spec-XN` experimental protocol feature | Has real protocol/design substance and a colocated `experimental/<feature>/spec.md` source. Rendered spec pages live under the Specification section. |
+| Experimental implementation surface | Has code, docs, deployment recipes, adapter code, SDK code, or operational tooling under `experimental/<feature>/`, but no protocol spec yet. The feature's `STATUS.md` is the tracking source. |
+| Dormant | Preserved for future work, but no active ADR-008 gate progress. |
+| Blocked | Cannot progress until another roadmap item lands first. |
 
-**Status:** EXPERIMENTAL  
-**Spec page:** [§21 Lazy Instruction Discovery](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/lazy-instruction-discovery/spec.md)
+Every experimental directory should carry a `STATUS.md`. A `Spec-XN` assignment is
+reserved for protocol-bearing features; adapters, SDKs, dashboards, deployment
+recipes, and tooling do not get fake specs unless they later define protocol
+behavior.
 
-**Risk:** The boot-stub schema and instruction-manifest format are not yet finalized. A mutable or externally-resolvable instruction manifest is a prompt-injection attack surface: if an attacker can influence the manifest URI or cache, they can substitute agent instructions.
+## Protocol Features
 
-**Constraint:** Do not deploy lazy-discovered instructions in production agents handling sensitive data or irreversible tool use until this section reaches GA. Always pin `instructions_manifest_uri` to a trusted, integrity-verified source.
+These features have a `Spec-XN-*` experimental spec. They are not part of the
+supported default install.
 
-**GA criteria:**
-- Boot-stub schema and manifest versioning format stabilized across all spec drafts.
-- Manifest signing guarantees cover the URI and cache poisoning attack surface.
-- Conformance tests for instruction manifest integrity added to the test suite.
+| Feature | Spec | Source | Status | Notes |
+|---|---|---|---|---|
+| Lazy instruction discovery | [`Spec-X1-Lazy-Instruction-Discovery`](../spec/experimental/lazy-instruction-discovery.md) | [`experimental/lazy-instruction-discovery/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery) | Blocked | Requires ADR-003 capability redesign before reintroduction. |
+| RTBF tombstones | [`Spec-X2-RTBF-Tombstones`](../spec/experimental/rtbf-tombstones.md) | [`experimental/tombstones/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/tombstones) | Dormant | Regulatory-impact feature; needs operator runbooks and adversarial federation coverage. |
+| Time-travel queries | [`Spec-X3-Time-Travel-Queries`](../spec/experimental/time-travel-queries.md) | [`experimental/time-travel/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/time-travel) | Dormant | Coupled to tombstone/legal-hold semantics. |
+| Memory Garden advanced ACL | [`Spec-X5-Memory-Garden-Advanced-ACL`](../spec/experimental/memory-garden-advanced-acl.md) | [`experimental/memory-garden-acl/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/memory-garden-acl) | Dormant | Basic scopes/gardens are stable; advanced ACL remains experimental. |
+| Source attestation | [`Spec-X6-Source-Attestation`](../spec/experimental/source-attestation.md) | [`experimental/source-attestation/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation) | Dormant | Extends provenance; reintroduction depends on hardened identity/key lifecycle. |
+| Subscriptions | [`Spec-X7-Subscriptions`](../spec/experimental/subscriptions.md) | [`experimental/subscriptions/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/subscriptions) | Dormant | Push delivery waits for pull federation validation. |
+| Intent envelope | [`Spec-X8-Intent-Envelope`](../spec/experimental/intent-envelope.md) | [`experimental/intent-envelope/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/intent-envelope) | Deferred indefinitely | Preserved design intent; no active reintroduction path. |
+| Decay semantics | [`Spec-X9-Decay-Semantics`](../spec/experimental/decay-semantics.md) | [`experimental/decay/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/decay) | Dormant | Deferred memory-hygiene feature. |
+| Synthesis | [`Spec-X10-Synthesis`](../spec/experimental/synthesis.md) | [`experimental/synthesis/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/synthesis) | Dormant | Deferred snapshot/commercial-path feature. |
+| Recall graph | [`Spec-X11-Recall-Graph`](../spec/experimental/recall-graph.md) | [`experimental/recall-graph/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/recall-graph) | Dormant | Advanced recall, graph traversal, embeddings, MMR packing, and memory cards. |
 
----
+## Cross-Cutting Features Without Spec-X
 
-## §23 — RTBF Tombstones
+These are deferred implementation surfaces that may later receive a `Spec-XN`
+only if reintroduction work defines protocol behavior.
 
-**Status:** EXPERIMENTAL  
-**Spec page:** [§23 Right-to-be-Forgotten Tombstones](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/tombstones/spec.md)
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| Multi-tenant isolation | [`experimental/multi-tenant/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) | Dormant | Adds a tenant boundary above scopes; no `Spec-X` assigned yet. |
+| Async jobs | [`experimental/async-jobs/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/async-jobs) | Dormant | Deferred async execution surface for long-running jobs. |
+| Fuzzy resolver | [`experimental/fuzzy-resolver/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/fuzzy-resolver) | Dormant | Convenience resolver, not critical-path protocol behavior. |
+| OIDC SSO | [`experimental/oidc-sso/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) | Dormant | Adds an external identity-provider trust boundary. |
+| Billing hooks | [`experimental/billing/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing) | Dormant | Commercial/operational concern; not part of the OSS default surface. |
 
-**Risk:** The tombstone signing format and federation propagation rules are under active security review. The field-exclusion signing pattern may allow federated re-broadcast to produce tombstones that pass local validation but fail downstream signature checks, silently leaving personal data un-erased on remote nodes. This is a compliance risk (GDPR Art. 17, CCPA §1798.105) masked as a cryptography issue.
+## Storage And Embedding Surfaces
 
-**Constraint:**
-- Do **not** rely on tombstone federation for compliance workflows in multi-node deployments.
-- Tombstone `DELETE` operations are locally reliable; cross-node propagation is best-effort.
-- Operators with GDPR/CCPA obligations should implement manual deletion coordination across nodes until federation is confirmed correct.
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| Storage backend family | [`experimental/storage-backends/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/storage-backends) | Dormant | Backend abstractions beyond the v0.9.0a1 supported SQLite path. |
+| libSQL/Turso storage | [`experimental/storage-libsql/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/storage-libsql) | Dormant | Adds third-party service trust and backend-specific behavior. |
+| Cloud embedding providers | Recall graph / storage-backend material | Accepted risk | R-20 is accepted with operator warnings; local embeddings remain the supported default. |
 
-**GA criteria:**
-- All spec amendment issues (F1–F11 series) resolved.
-- Federation propagation conformance tests passing across 2-node and 4-node topologies.
-- Field-exclusion signing pattern validated against adversarial federation scenarios.
+## Adapters And SDKs
 
----
+| Surface | Source | Status | Notes |
+|---|---|---|---|
+| MCP adapter package | [`experimental/mcp-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/mcp-adapter) | Deferred | Package metadata remains independent from v0.9.0a1. |
+| Go SDK | [`experimental/sdk-go/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/sdk-go) | Dormant | Deferred until the Python SDK and protocol surface settle further. |
+| Obsidian adapter | [`experimental/obsidian-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/obsidian-adapter) | Dormant | Requires adapter-specific threat modeling before promotion. |
+| Cognee adapter | [`experimental/cognee-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/cognee-adapter) | Dormant | Preserved design-partner adapter. |
+| Letta adapter | [`experimental/letta-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/letta-adapter) | Dormant | Preserved design-partner adapter. |
+| Zep adapter | [`experimental/zep-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/zep-adapter) | Dormant | Preserved design-partner adapter. |
+| Gemini adapter | [`experimental/gemini-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/gemini-adapter) | Dormant | Deferred model/tooling adapter. |
+| Ollama/LiteLLM adapter | [`experimental/ollama-litellm-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/ollama-litellm-adapter) | Dormant | Deferred model/tooling adapter. |
+| OpenAI tools adapter | [`experimental/openai-tools-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/openai-tools-adapter) | Dormant | Deferred model/tooling adapter. |
+| Paperclip adapter | [`experimental/paperclip-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/paperclip-adapter) | Dormant | Deferred lifecycle/event adapter. |
 
-## §24 — Time-Travel Queries
+## Deployment, UI, And Evaluation
 
-**Status:** EXPERIMENTAL  
-**Spec page:** [§24 Time-Travel / As-Of Queries](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/time-travel/spec.md)
+| Surface | Source | Status | Notes |
+|---|---|---|---|
+| Curator dashboard | [`experimental/dashboard/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/dashboard) | Dormant | UI surface outside v0.9.0a1 default support. |
+| Eval harness | [`experimental/eval-harness/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/eval-harness) | Dormant | Evaluation tooling, not a protocol feature. |
+| Helm deployment | [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) | Dormant | Docker Compose is the supported v0.9.0a1 deployment path. |
+| Fly.io deployment | [`experimental/deploy-fly/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-fly) | Dormant | Deferred deployment recipe. |
+| Grafana dashboards | [`experimental/deploy-grafana/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-grafana) | Dormant | Deferred observability recipe. |
+| PaaS deployment | [`experimental/deploy-paas/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-paas) | Dormant | Deferred deployment recipe. |
+| systemd deployment | [`experimental/deploy-systemd/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-systemd) | Dormant | Deferred deployment recipe. |
 
-**Risk:** `as_of` queries combined with retroactive tombstone suppression can return data that a tombstone was meant to erase. Isolation semantics differ between SQLite (`BEGIN IMMEDIATE`) and PostgreSQL (`READ COMMITTED`), meaning behavior may silently differ between development and production environments. The `legal_hold` key management path is not yet documented.
+## Promotion Path
 
-**Constraint:**
-- Queries at time `T` before a tombstone's `issued_at` may return erased data on some backends. Review your deletion workflow before relying on this for compliance.
-- Test your workload on the production backend (not just SQLite in dev).
-- `legal_hold` fact handling requires the admin key; do not use this path until key management is documented.
+ADR-008 defines the five gates for any experimental feature:
 
-**GA criteria:**
-- Tombstone interaction semantics fully specified and conformance-tested across both backends.
-- `legal_hold` key management path documented and tested.
-- Integration tests for concurrent retraction + `as_of` workloads on both SQLite and PostgreSQL.
+1. Threat-model delta.
+2. Accepted ADR or amendment.
+3. Positive, negative, and adversarial conformance vectors wired into CI.
+4. External operator soak with public bug reporting.
+5. Documentation parity across Learn, Build, Operate, and Secure.
 
----
-
-## §25 — Content-Addressed Fact IDs
-
-**Status:** EXPERIMENTAL  
-**Spec page:** [§25 Content-Addressed Fact IDs](../spec/content-addressed-fact-ids.md)
-
-**Risk:** CID-based federation tamper detection is not enforced by default. The 12-month dual-format migration window means CID-less facts from upgraded peers are currently accepted. A MITM attacker on a federated connection can strip CIDs to evade tamper detection.
-
-**Constraint:**
-- Do not rely on CID verification as a security control in untrusted federation topologies.
-- Set `STIGMEM_REQUIRE_CID=true` in isolated test environments to validate your fact pipeline before enforcement is on by default.
-
-**GA criteria:**
-- `STIGMEM_REQUIRE_CID=true` made the default for CID-capable peer connections.
-- Full conformance vector suite for on-wire CID presence logic.
-- Dual-path migration window formally ended in spec.
-
----
-
-## Operator warnings (GA features with non-obvious risks)
-
-These features are **GA** but have operational risks that are non-obvious. Each section page carries a callout; the summary is reproduced here for reference.
-
-| Feature | Section | Risk | Required action |
-|---------|---------|------|-----------------|
-| mTLS (reverse-proxy) | §22.1 | Silent plaintext fallback when TLS terminates at proxy | Set `STIGMEM_MTLS_REQUIRED=true` |
-| Source-trust cache | §19.4 | Per-worker incoherence in multi-worker deployments | `STIGMEM_TRUST_CACHE_BACKEND=redis` for production |
-| N-node backpressure/scope | §6.7–§6.8 | Draft spec; relay topologies not conformance-tested | Test topology in staging before production |
-| Quarantine garden pre-flight | §19.5 | `trust_mode=strict` without quarantine garden permanently drops low-trust facts | Pre-create quarantine garden before enabling strict mode |
-
----
-
-## Requesting GA promotion
-
-If you are running an experimental feature in production and want to accelerate GA promotion, open an issue in the [stigmem repository](https://github.com/Eidetic-Labs/stigmem) with your topology, workload characteristics, and any anomalies observed. Production data helps prioritize the remaining conformance work.
+Gate progress lives in each feature's `STATUS.md`. Public pages summarize status;
+they do not promote a feature by themselves.

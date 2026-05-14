@@ -130,28 +130,24 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 ## Experimental & deferred features
 
-The following features are in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) but are **not in v0.9.0a1's default install**. Across the v0.9.0a2..a8 alpha series, cross-cutting features are extracted into opt-in experimental plugin packages per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md). That alpha extraction is not ADR-008 graduation; graduation into the supported surface happens later, after the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) five-gate process.
+The following features are in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) but are **not in v0.9.0a1's default install**. Protocol-bearing deferred features have one colocated `Spec-XN-*` spec each; adapters, SDKs, deployments, dashboards, and tooling carry `STATUS.md` tracking without fake protocol specs. Across the v0.9.0a2..a8 alpha series, cross-cutting features are extracted into opt-in experimental plugin packages per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md). That alpha extraction is not ADR-008 graduation; graduation into the supported surface happens later, after the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) five-gate process.
 
-| Feature                             | Spec | alpha extraction target |
-|-------------------------------------|--------|----------------|
-| Lazy instruction discovery          | Spec-X1-Lazy-Instruction-Discovery    | v0.9.0a2 |
-| Time-travel `as_of` queries         | Spec-X3-Time-Travel-Queries    | v0.9.0a4 |
-| RTBF tombstones                     | Spec-X2-RTBF-Tombstones    | v0.9.0a5 |
-| Memory garden — advanced ACL        | Spec-X5-Memory-Garden-Advanced-ACL | v0.9.0a6 |
-| Source attestation                  | Spec-X6-Source-Attestation    | v0.9.0a7 |
-| Multi-tenant isolation              | (cross-cutting) | v0.9.0a8 |
-| Recall & Graph (vector embeddings, MMR, memory cards) | Spec-X11-Recall-Graph | the v0.9.0aN alpha series |
-| Subscriptions                       | Spec-X7-Subscriptions | the v0.9.0aN alpha series |
-| Decay sweep                         | Spec-X9-Decay-Semantics    | Deferred (commercial path) |
-| Synthesis                           | Spec-X10-Synthesis    | Deferred (commercial path) |
-| OIDC SSO                            | —      | the v0.9.0aN alpha series |
-| PostgreSQL backend, libSQL/Turso    | —      | Deferred (operator-validated demand) |
-| Cloud embedding                     | —      | Deferred (R-20 accepted) |
-| Curator dashboard                   | —      | Deferred |
-| Billing hooks                       | —      | Deferred (commercial path) |
-| Async lint/decay job APIs           | —      | Blocked on lint/decay extraction |
+| Feature | Status | Spec or tracker |
+|---|---|---|
+| Lazy instruction discovery | Experimental, blocked on ADR-003 | Spec-X1-Lazy-Instruction-Discovery |
+| RTBF tombstones | Experimental, dormant | Spec-X2-RTBF-Tombstones |
+| Time-travel `as_of` queries | Experimental, dormant | Spec-X3-Time-Travel-Queries |
+| Memory Garden advanced ACL | Experimental, dormant | Spec-X5-Memory-Garden-Advanced-ACL |
+| Source attestation | Experimental, dormant | Spec-X6-Source-Attestation |
+| Subscriptions | Experimental, dormant | Spec-X7-Subscriptions |
+| Intent envelope | Deferred indefinitely | Spec-X8-Intent-Envelope |
+| Decay semantics | Experimental, dormant | Spec-X9-Decay-Semantics |
+| Synthesis | Experimental, dormant | Spec-X10-Synthesis |
+| Recall graph, vector embeddings, MMR, memory cards | Experimental, dormant | Spec-X11-Recall-Graph |
+| Multi-tenant isolation, OIDC SSO, async jobs, fuzzy resolver, billing hooks | Experimental, no Spec-X assigned | `experimental/<feature>/STATUS.md` |
+| Adapters, SDKs, deployment recipes, dashboard, eval harness | Experimental, no Spec-X assigned | `experimental/<surface>/STATUS.md` |
 
-See the full deferred-features list at [Experimental & Deferred Features](../reference/experimental-features.md).
+See the full deferred-features list and source locations at [Experimental Features](../reference/experimental-features.md).
 
 ## v0.9.0a1 architecture in flight (Option A acknowledgment)
 

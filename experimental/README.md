@@ -40,13 +40,13 @@ Status notation: `1✓ 2✓ 3· 4· 5·` means gates 1 and 2 passed, gates 3–5
 
 | Feature | STATUS | Gates | Notes |
 |---|---|---|---|
-| §17 Memory garden (ACL primitives) | [STATUS](17-memory-garden/STATUS.md) | `1· 2· 3· 4· 5·` | Dormant. Defer until base scope model is operator-validated. |
-| §18 Source attestation | [STATUS](18-source-attestation/STATUS.md) | `1· 2· 3· 4· 5·` | Dormant. Extension of provenance; defer until base provenance is stable. |
-| §21 Lazy instruction discovery | [STATUS](21-lazy-instruction-discovery/STATUS.md) | `1· 2· 3· 4· 5·` | **Blocked.** Needs ADR-003 capability foundation; redesign before reintroduction (R-15). |
-| §23 RTBF tombstones | [STATUS](23-rtbf-tombstones/STATUS.md) | `1· 2· 3· 4· 5·` | Operationally complex (R-16, R-17); needs full operator runbook. |
-| §24 Time-travel `as_of` queries | [STATUS](24-time-travel/STATUS.md) | `1· 2· 3· 4· 5·` | Coupled to §23; same operator-soak prerequisite. |
-| §25 Content-Addressed Fact IDs (CIDs) | [STATUS](25-cids/STATUS.md) | `1· 2· 3· 4· 5·` | Field-exclusion semantics (R-18) need integration tests. |
-| Subscriptions (push-based federation) | [STATUS](subscriptions/STATUS.md) | `1· 2· 3· 4· 5·` | Defer until pull-based replication is operator-validated. |
+| §17 Memory garden (advanced ACL) | [STATUS](memory-garden-acl/STATUS.md) | `1· 2· 3· 4· 5·` | Dormant. Defer until base scope model is operator-validated. |
+| §18 Source attestation | [STATUS](source-attestation/STATUS.md) | `1· 2· 3· 4· 5·` | Dormant. Extension of provenance; defer until base provenance is stable. |
+| §20 Recall and graph | [STATUS](recall-graph/STATUS.md) | `1· 2· 3· 4· 5·` | Deferred advanced recall surface; depends on base recall validation. |
+| §21 Lazy instruction discovery | [STATUS](lazy-instruction-discovery/STATUS.md) | `1· 2· 3· 4· 5·` | **Blocked.** Needs ADR-003 capability foundation; redesign before reintroduction (R-15). |
+| §23 RTBF tombstones | [STATUS](tombstones/STATUS.md) | `1· 2· 3· 4· 5·` | Operationally complex (R-16, R-17); needs full operator runbook. |
+| §24 Time-travel `as_of` queries | [STATUS](time-travel/STATUS.md) | `1· 2· 3· 4· 5·` | Coupled to §23; same operator-soak prerequisite. |
+| Subscriptions (push-based federation) | [STATUS](subscriptions/STATUS.md), [spec](subscriptions/spec.md) | `1· 2· 3· 4· 5·` | Defer until pull-based replication is operator-validated. |
 
 ### Authentication & integration
 

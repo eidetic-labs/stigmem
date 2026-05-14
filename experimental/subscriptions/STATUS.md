@@ -7,7 +7,7 @@
 
 **Status:** Dormant
 **Active version:** v0.9.0a1 (last tested against)
-**Last updated:** 2026-05-09
+**Last updated:** 2026-05-14
 **Owner:** unowned
 **Buildable:** unknown — pending PR 3 verification sweep
 
@@ -37,6 +37,7 @@ Per ADR-002, v0.9.0a1's default install matches the v1 critical-path scope. This
 
 ## Cross-references
 
+- [`spec.md`](spec.md) — colocated experimental spec per ADR-010.
 - [`experimental/README.md`](../README.md) — canonical experimental index.
 - [`docs/docs/reference/experimental-features.md`](../../docs/docs/reference/experimental-features.md) — public-facing experimental index.
 - [ADR-008](../../docs/adr/008-experimental-gates.md) — re-introduction gates.

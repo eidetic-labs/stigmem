@@ -1,4 +1,15 @@
 ---
+spec_id: Spec-X7-Recall-Graph
+version: 0.1.0-alpha.0
+status: Experimental
+applies_to: stigmem v0.9.0bN
+last_updated: 2026-05-14
+supersedes: pre-reset §20 advanced recall and graph material
+depends_on:
+  - Spec-01-Core >= 0.1.0-alpha.0
+  - Spec-07-Recall-Pipeline >= 0.1.0-alpha.0
+  - Spec-X5-Memory-Garden-Advanced-ACL >= 0.1.0-alpha.0
+  - Spec-X6-Source-Attestation >= 0.1.0-alpha.0
 title: §20. Recall & Graph
 sidebar_label: §20 Recall & Graph
 audience: Spec

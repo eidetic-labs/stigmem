@@ -4,7 +4,7 @@ This directory holds evolutionary snapshots of the stigmem protocol specificatio
 
 The spec *content* under each marker is real protocol specification — it was reviewed section-by-section against the actual implementation in `node/` during master-checklist §4.3a "Spec review and canonicalization to v0.9.0a1" and migrated forward into `spec/stigmem-spec-v0.9.0a1.md` (the canonical spec). These snapshots are preserved as the development record showing how the spec grew over time.
 
-Each snapshot retains a header note pointing at the canonical v0.9.0a1 equivalent for cross-reference.
+Each snapshot retains a header note pointing at the canonical v0.9.0a1 equivalent and the ADR-010 modular navigation entry point for cross-reference.
 
 ## Snapshots
 
@@ -25,7 +25,7 @@ Each snapshot retains a header note pointing at the canonical v0.9.0a1 equivalen
 
 - **They are read-only historical artifacts.** Do not edit them; do not cite them as normative.
 - The canonical spec is at `spec/stigmem-spec-v0.9.0a1.md`.
-- Each snapshot has a banner at the top noting it is superseded.
+- Each snapshot has a banner at the top noting it is superseded and pointing to `spec/PROTOCOL.md`.
 - For per-section provenance ("what did §17 say in v0.5 vs v1.0?"), this directory is the source.
 
 ## Why "evolution" and not "drafts" or "design history"

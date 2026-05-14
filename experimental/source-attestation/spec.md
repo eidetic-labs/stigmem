@@ -1,4 +1,13 @@
 ---
+spec_id: Spec-X6-Source-Attestation
+version: 0.1.0-alpha.0
+status: Experimental
+applies_to: stigmem v0.9.0bN
+last_updated: 2026-05-14
+supersedes: pre-reset §18 source attestation material
+depends_on:
+  - Spec-01-Core >= 0.1.0-alpha.0
+  - Spec-09-Audit-Log >= 0.1.0-alpha.0
 title: §18. Source Attestation
 sidebar_label: §18 Source Attestation
 audience: Spec

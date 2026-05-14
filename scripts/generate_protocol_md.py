@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECS_DIR = ROOT / "spec" / "specs"
+EXPERIMENTAL_DIR = ROOT / "experimental"
 PROTOCOL_PATH = ROOT / "spec" / "PROTOCOL.md"
 
 REQUIRED_FIELDS = (
@@ -29,6 +30,7 @@ VALID_STATUSES = {"Draft", "Experimental", "Stable", "Superseded", "Deprecated"}
 @dataclass(frozen=True)
 class SpecMetadata:
     path: Path
+    kind: str
     spec_id: str
     version: str
     status: str
@@ -106,7 +108,7 @@ def _require_string(
     return value
 
 
-def _load_spec(path: Path) -> SpecMetadata:
+def _load_spec(path: Path, kind: str) -> SpecMetadata:
     metadata = _parse_frontmatter(path)
     missing = [field for field in REQUIRED_FIELDS if field not in metadata]
     if missing:
@@ -125,19 +127,29 @@ def _load_spec(path: Path) -> SpecMetadata:
     ):
         _fail(f"{path}: depends_on must be a list of strings")
 
-    spec_match = re.fullmatch(r"Spec-(\d{2})-[A-Za-z0-9-]+", spec_id)
-    if spec_match is None:
-        _fail(f"{path}: spec_id must look like Spec-01-Core")
-
-    file_number = path.stem.split("-", 1)[0]
-    if file_number != spec_match.group(1):
-        _fail(f"{path}: filename number does not match {spec_id}")
+    core_match = re.fullmatch(r"Spec-(\d{2})-[A-Za-z0-9-]+", spec_id)
+    experimental_match = re.fullmatch(r"Spec-X(\d+)-[A-Za-z0-9-]+", spec_id)
+    if kind == "core":
+        if core_match is None:
+            _fail(f"{path}: core spec_id must look like Spec-01-Core")
+        file_number = path.stem.split("-", 1)[0]
+        if file_number != core_match.group(1):
+            _fail(f"{path}: filename number does not match {spec_id}")
+    elif kind == "experimental":
+        if experimental_match is None:
+            _fail(
+                f"{path}: experimental spec_id must look like "
+                + "Spec-X1-Lazy-Instruction-Discovery"
+            )
+    else:
+        _fail(f"{path}: unknown spec kind {kind}")
 
     if status not in VALID_STATUSES:
         _fail(f"{path}: status must be one of {', '.join(sorted(VALID_STATUSES))}")
 
     return SpecMetadata(
         path=path,
+        kind=kind,
         spec_id=spec_id,
         version=version,
         status=status,
@@ -148,14 +160,21 @@ def _load_spec(path: Path) -> SpecMetadata:
     )
 
 
-def load_specs() -> list[SpecMetadata]:
-    paths = sorted(SPECS_DIR.glob("*.md"))
+def load_specs(specs_dir: Path, kind: str) -> list[SpecMetadata]:
+    glob_pattern = "*.md" if kind == "core" else "*/spec.md"
+    paths = sorted(specs_dir.glob(glob_pattern))
     if not paths:
-        _fail(f"{SPECS_DIR}: no modular spec files found")
+        _fail(f"{specs_dir}: no {kind} spec files found")
 
-    specs = [_load_spec(path) for path in paths]
-    ids = {spec.spec_id for spec in specs}
-    for spec in specs:
+    return [_load_spec(path, kind) for path in paths]
+
+
+def load_all_specs() -> tuple[list[SpecMetadata], list[SpecMetadata]]:
+    core_specs = load_specs(SPECS_DIR, "core")
+    experimental_specs = load_specs(EXPERIMENTAL_DIR, "experimental")
+    all_specs = [*core_specs, *experimental_specs]
+    ids = {spec.spec_id for spec in all_specs}
+    for spec in all_specs:
         unknown = [
             dependency
             for dependency in spec.depends_on
@@ -164,13 +183,17 @@ def load_specs() -> list[SpecMetadata]:
         if unknown:
             _fail(
                 f"{spec.path}: depends_on references unknown spec(s): "
-                f"{', '.join(unknown)}"
+                + f"{', '.join(unknown)}"
             )
-    return specs
+    return core_specs, experimental_specs
 
 
 def _markdown_link(spec: SpecMetadata) -> str:
-    return f"[`{spec.spec_id}`](specs/{spec.path.name})"
+    if spec.kind == "core":
+        link_target = spec.path.relative_to(ROOT / "spec")
+    else:
+        link_target = Path("..") / spec.path.relative_to(ROOT)
+    return f"[`{spec.spec_id}`]({link_target.as_posix()})"
 
 
 def _dependency_text(spec: SpecMetadata) -> str:
@@ -179,12 +202,25 @@ def _dependency_text(spec: SpecMetadata) -> str:
     return "<br>".join(f"`{dependency}`" for dependency in spec.depends_on)
 
 
-def render_protocol(specs: list[SpecMetadata]) -> str:
-    latest_update = max(spec.last_updated for spec in specs)
+def _spec_sort_key(spec: SpecMetadata) -> tuple[int, int]:
+    pattern = r"Spec-(\d{2})-" if spec.kind == "core" else r"Spec-X(\d+)-"
+    match = re.match(pattern, spec.spec_id)
+    if match is None:
+        return (1, 999)
+    return (0 if spec.kind == "core" else 1, int(match.group(1)))
+
+
+def render_protocol(
+    core_specs: list[SpecMetadata],
+    experimental_specs: list[SpecMetadata],
+) -> str:
+    all_specs = [*core_specs, *experimental_specs]
+    latest_update = max(spec.last_updated for spec in all_specs)
     intro = (
         "This file records the ADR-010 modular specification composition for the "
-        + "Stigmem protocol. It is generated from YAML frontmatter in "
-        + "[`spec/specs/`](specs/)."
+        + "Stigmem protocol. It is generated from YAML frontmatter in core "
+        + "[`spec/specs/`](specs/) files and colocated experimental specs under "
+        + "`experimental/<feature>/spec.md`."
     )
     extraction_status = (
         "The files in `spec/specs/` are ADR-010 frontmatter-bearing core-spec "
@@ -196,8 +232,8 @@ def render_protocol(specs: list[SpecMetadata]) -> str:
     )
     experimental_status = (
         "Experimental and deferred material remains colocated under "
-        + "`experimental/<feature>/spec.md`; ADR-010 frontmatter migration for "
-        + "those documents is tracked as follow-up work."
+        + "`experimental/<feature>/spec.md`; those files now carry ADR-010 "
+        + "frontmatter and appear in this generated protocol index."
     )
     lines = [
         "# Stigmem Protocol Composition",
@@ -214,10 +250,26 @@ def render_protocol(specs: list[SpecMetadata]) -> str:
         "|---|---|---|---|---|",
     ]
 
-    for spec in specs:
+    for spec in sorted(core_specs, key=_spec_sort_key):
         lines.append(
             f"| {_markdown_link(spec)} | `{spec.version}` | {spec.status} | "
             + f"{spec.applies_to} | {spec.last_updated} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Experimental Specs",
+            "",
+            "| Spec | Version | Status | Applies to | Location |",
+            "|---|---|---|---|---|",
+        ]
+    )
+
+    for spec in sorted(experimental_specs, key=_spec_sort_key):
+        lines.append(
+            f"| {_markdown_link(spec)} | `{spec.version}` | {spec.status} | "
+            + f"{spec.applies_to} | `{spec.path.relative_to(ROOT).as_posix()}` |"
         )
 
     lines.extend(
@@ -230,7 +282,7 @@ def render_protocol(specs: list[SpecMetadata]) -> str:
         ]
     )
 
-    for spec in specs:
+    for spec in sorted(all_specs, key=_spec_sort_key):
         lines.append(
             f"| `{spec.spec_id}` | {_dependency_text(spec)} | {spec.supersedes} |"
         )
@@ -280,7 +332,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        rendered = render_protocol(load_specs())
+        rendered = render_protocol(*load_all_specs())
     except ValueError as exc:
         print(exc, file=sys.stderr)
         return 1

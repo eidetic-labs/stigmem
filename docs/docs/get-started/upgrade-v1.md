@@ -25,9 +25,9 @@ See [Multi-Tenancy](https://github.com/Eidetic-Labs/stigmem/tree/main/experiment
 
 A new `stigmem_node.billing` module emits a `BillingEvent` after every fact write and garden creation. The default implementation logs structured JSON to stderr — no configuration needed unless you want a custom backend. See [Billing Hooks](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing).
 
-### Source attestation (v1.0 normative)
+### Source attestation
 
-Source attestation was experimental in pre-reset draft. In v1.0 it is normative (§18). The default mode is unchanged (`warn`), so existing deployments are unaffected. To harden a production node, set `STIGMEM_SOURCE_ATTESTATION_MODE=enforce`. See [Source Attestation](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation).
+Source attestation remains experimental in the v0.9.0aN line (`Spec-X6-Source-Attestation`). The default mode is unchanged (`warn`), so existing deployments are unaffected. To harden an evaluation node, set `STIGMEM_SOURCE_ATTESTATION_MODE=enforce`. See [Source Attestation](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation).
 
 ### Conformance test suite
 

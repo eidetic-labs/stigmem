@@ -7,7 +7,7 @@ audience: Operator
 # Cursor-Reset-on-DB-Loss Recovery
 
 **Audience:** Node operators managing Stigmem federation in production.  
-**Spec reference:** §6 (federation pull loop, cursor semantics)  
+**Spec reference:** `Spec-05-Federation-Trust` (federation pull loop, cursor semantics)  
 **Track:** F2 — pre-GA hardening
 
 ## Problem

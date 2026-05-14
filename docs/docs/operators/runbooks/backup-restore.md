@@ -8,7 +8,7 @@ audience: Operator
 # Backup & Restore
 
 **Audience:** node operators running Stigmem in production.  
-**Spec reference:** snapshot signing uses the node's Ed25519 federation key (§6).
+**Spec reference:** snapshot signing uses the node's Ed25519 federation key (`Spec-05-Federation-Trust`).
 
 ---
 

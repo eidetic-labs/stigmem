@@ -35,17 +35,17 @@ Per [ADR-014](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/014-com
 
 | Feature | Status | Spec | Required versions |
 |---|---|---|---|
-| Immutable typed facts | Stable | §2, §3 | `node>=0.9.0a1`, `stigmem-py>=0.9.0a1` |
-| Scope enforcement | Stable | §3.5 | `node>=0.9.0a1` |
-| Two-node mTLS federation | Stable | §22.1, §19 (basic) | `node>=0.9.0a1` |
-| Content-addressed fact IDs (CIDs) | Stable in core ([ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | §25 | `node>=0.9.0a1` |
-| `Stigmem-Version` header | Documented (implementation in the v0.9.0bN beta series) | §3 | `node>=0.9.0bN` (planned) |
-| Argon2id API key hashing | Planned (the v0.9.0bN beta series per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 | `node>=0.9.0bN` (planned) |
-| Lazy instruction discovery (§21) | Experimental | §21 | [`experimental/lazy-instruction-discovery/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery) — targeted v0.9.0a2 |
-| RTBF tombstones (§23) | Experimental | §23 | [`experimental/tombstones/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/tombstones) — targeted v0.9.0a5 |
-| Time-travel queries (§24) | Experimental | §24 | [`experimental/time-travel/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/time-travel) — targeted v0.9.0a4 |
-| Memory garden advanced ACL (§17 advanced) | Experimental | §17 | [`experimental/memory-garden-acl/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/memory-garden-acl) — targeted v0.9.0a6 |
-| Source attestation (§18) | Experimental | §18 | [`experimental/source-attestation/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation) — targeted v0.9.0a7 |
+| Immutable typed facts | Stable | `Spec-01-Fact-Model`, `Spec-15-Fact-Semantics` | `node>=0.9.0a1`, `stigmem-py>=0.9.0a1` |
+| Scope enforcement | Stable | `Spec-02-Scopes-and-ACL` | `node>=0.9.0a1` |
+| Two-node mTLS federation | Stable | `Spec-10-Hardening`, `Spec-05-Federation-Trust` | `node>=0.9.0a1` |
+| Content-addressed fact IDs (CIDs) | Stable in core ([ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | `Spec-21-Content-Addressed-IDs` | `node>=0.9.0a1` |
+| `Stigmem-Version` header | Documented (implementation in the v0.9.0bN beta series) | `Spec-03-HTTP-API` | `node>=0.9.0bN` (planned) |
+| Argon2id API key hashing | Planned (the v0.9.0bN beta series per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | `Spec-03-HTTP-API` | `node>=0.9.0bN` (planned) |
+| Lazy instruction discovery | Experimental | `Spec-X1-Lazy-Instruction-Discovery` | [`experimental/lazy-instruction-discovery/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery) — targeted v0.9.0a2 |
+| RTBF tombstones | Experimental | `Spec-X2-RTBF-Tombstones` | [`experimental/tombstones/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/tombstones) — targeted v0.9.0a5 |
+| Time-travel queries | Experimental | `Spec-X3-Time-Travel-Queries` | [`experimental/time-travel/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/time-travel) — targeted v0.9.0a4 |
+| Memory garden advanced ACL | Experimental | `Spec-X5-Memory-Garden-Advanced-ACL` | [`experimental/memory-garden-acl/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/memory-garden-acl) — targeted v0.9.0a6 |
+| Source attestation | Experimental | `Spec-X6-Source-Attestation` | [`experimental/source-attestation/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation) — targeted v0.9.0a7 |
 | Multi-tenant isolation | Experimental | (cross-cutting) | [`experimental/multi-tenant/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) — targeted v0.9.0a8 |
 
 ## Protocol release composition

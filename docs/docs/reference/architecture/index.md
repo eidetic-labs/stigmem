@@ -28,12 +28,12 @@ graph TB
     Agent -- "direct HTTP" --> Node
 
     subgraph internals["Node internals"]
-        Auth["Auth layer\n(API key + scope, §3.5)"]
-        HLC["Hybrid Logical Clock\n(§2.4)"]
+        Auth["Auth layer\n(API key + scope,\nSpec-02)"]
+        HLC["Hybrid Logical Clock\n(Spec-12)"]
         DB[("SQLite\nfacts + conflicts + peers")]
-        Conflict["Conflict detector\n(§3.3)"]
+        Conflict["Conflict detector\n(Spec-15)"]
         FedLoop["Federation pull loop\n(background, HLC cursor)"]
-        Ingest["Idempotent ingest\n(§6.3)"]
+        Ingest["Idempotent ingest\n(Spec-05)"]
     end
 
     Node --> Auth --> HLC --> DB --> Conflict
@@ -47,7 +47,7 @@ graph TB
 
 ## The fact model
 
-Every piece of knowledge is an **atomic, immutable fact** (spec §2):
+Every piece of knowledge is an **atomic, immutable fact** (`Spec-01-Fact-Model`):
 
 ```
 (entity, relation, value, source, timestamp, hlc, confidence, scope)
@@ -56,11 +56,11 @@ Every piece of knowledge is an **atomic, immutable fact** (spec §2):
 | Field | Type | Why it exists |
 |-------|------|---------------|
 | `entity` | URI (`stigmem://…` formal; informal deprecated in pre-reset) | *What* the fact is about. Entity-scoped, not agent-scoped — the same entity URI is shared across all agents and nodes. |
-| `relation` | namespaced string (`memory:role`, `roadmap:status`, …) | *What kind* of statement this is. Namespaced to prevent collisions (spec §9 namespace registry). |
-| `value` | `FactValue` union | The asserted value. See §2.1 for the full type lattice: `string`, `text`, `number`, `boolean`, `datetime`, `ref`, `null`. |
+| `relation` | namespaced string (`memory:role`, `roadmap:status`, ...) | *What kind* of statement this is. Namespaced to prevent collisions (`Spec-16-Namespace-Registry`). |
+| `value` | `FactValue` union | The asserted value. See `Spec-01-Fact-Model` for the full type lattice: `string`, `text`, `number`, `boolean`, `datetime`, `ref`, `null`. |
 | `source` | URI | *Who* asserted the fact. Stored immutably; relayed facts carry the *originating* source, not the relay chain. |
 | `timestamp` | ISO 8601 UTC | Wall-clock write time, set by the node (clients may suggest). |
-| `hlc` | HLC string (`{wall_ms}.{counter}`) | Hybrid logical clock tick — causality-preserving across nodes. Required for federation ordering (§2.4). |
+| `hlc` | HLC string (`{wall_ms}.{counter}`) | Hybrid logical clock tick — causality-preserving across nodes. Required for federation ordering (`Spec-12-HLC-Bounded-Skew`). |
 | `confidence` | float `[0.0, 1.0]` | Asserting party's certainty. `1.0` = certain, `0.0` = retracted. Used in contradiction resolution. |
 | `scope` | `local \| team \| company \| public` | Visibility and federation boundary. Enforced at read and write time. |
 
@@ -70,7 +70,7 @@ Facts are **append-only**: there is no `PUT` or `DELETE`. Updating a value means
 
 ## Provenance and decay
 
-### Provenance (§3.1)
+### Provenance (`Spec-15-Fact-Semantics`)
 
 Every fact carries `source` and `timestamp`, stored without modification. Queries return the original `source`, never an intermediate relay. Federated facts additionally carry a `stigmem:received_from` meta-fact (generated automatically by the receiving node):
 
@@ -85,7 +85,7 @@ Every fact carries `source` and `timestamp`, stored without modification. Querie
 
 This meta-fact is stored locally and never re-replicated.
 
-### Decay (`valid_until`, §3.2)
+### Decay (`valid_until`, `Spec-15-Fact-Semantics`)
 
 Facts have an optional expiry: `valid_until: ISO 8601 | null`. Expired facts:
 - Are **hidden** from normal queries (as if they don't exist).
@@ -96,7 +96,7 @@ Facts have an optional expiry: `valid_until: ISO 8601 | null`. Expired facts:
 
 ---
 
-## Scope hierarchy and enforcement (§2.2, §3.4)
+## Scope Hierarchy And Enforcement (`Spec-02-Scopes-and-ACL`)
 
 ```
 local   ─── node-only, never leaves this instance
@@ -113,7 +113,7 @@ public  ─── federatable to any registered peer by default
 
 ---
 
-## Contradiction semantics (§3.3)
+## Contradiction Semantics (`Spec-15-Fact-Semantics`)
 
 A contradiction exists when two facts share `(entity, relation, scope)` but have different values and both have `confidence > 0.0`. **Both facts are retained.** The node auto-generates:
 
@@ -132,14 +132,14 @@ Plus a `stigmem:conflict:status = "unresolved"` companion fact.
 
 **Resolution order at query time:**
 1. Higher `confidence` wins.
-2. Equal confidence → higher `hlc` wins (causal ordering via §2.4).
+2. Equal confidence -> higher `hlc` wins (causal ordering via `Spec-12-HLC-Bounded-Skew`).
 3. Tie → both returned with `contradicted: true`; caller decides.
 
 Resolution is explicit and traceable: `POST /v1/conflicts/:id/resolve` writes a new fact with the resolved value, updating conflict status to `"resolved"` with full provenance.
 
 ---
 
-## Hybrid Logical Clock (§2.4)
+## Hybrid Logical Clock (`Spec-12-HLC-Bounded-Skew`)
 
 Every node maintains a single HLC:
 
@@ -200,7 +200,7 @@ All four failure scenarios are automated in `node/tests/test_failure_modes.py`:
 
 ## Auth Model (`Spec-02-Scopes-and-ACL`, `Spec-06-Capability-Tokens`)
 
-the pre-reset design work implemented API-key auth; the pre-reset design work extended it with peer tokens for federation.
+The v0.9.0a1 reference node implements API-key auth for clients and peer tokens for federation.
 
 **API keys (clients):**
 - Presented as `Authorization: Bearer <raw-key>`.
@@ -243,9 +243,9 @@ stigmem/
 │   └── tests/                      ← 74 passing tests
 │       ├── test_facts.py           ← fact CRUD, contradiction, scope enforcement
 │       ├── test_federation.py      ← handshake, pull replication, scope leak attempts
-│       └── test_failure_modes.py   ← §11 acceptance tests: split-brain, malicious peer, partial failure, replay
+│       └── test_failure_modes.py   ← Spec-18 acceptance tests: split-brain, malicious peer, partial failure, replay
 │
-├── adapters/                       ← platform adapters (the pre-reset design work, in flight)
+├── adapters/                       ← platform adapters
 │   ├── mcp/                        ← MCP server (TypeScript): stigmem_assert + stigmem_query tools
 │   ├── openclaw/                   ← Claude Code / OpenClaw adapter (Python): PARA→fact mapping
 │   └── paperclip/                  ← Paperclip hook adapter (JS): emits lifecycle events as facts
@@ -267,13 +267,13 @@ stigmem/
 
 ## Key implementation notes
 
-**SQLite as the pre-reset design work–4 storage.** The schema (spec §10) is migration-friendly by design: column additions do not require table rewrites. A PostgreSQL backend is feasible for the pre-reset design work+ but not required before v1.0.
+**SQLite as the v0.9.0a1 reference storage.** The schema (`Spec-17-Schema-and-Migration`) is migration-friendly by design: column additions do not require table rewrites. A PostgreSQL backend is feasible after the alpha line but is not required for the v0.9.0a1 default install.
 
-**HLC requires a threading lock.** The in-process HLC state is shared between the HTTP request path and the background federation pull task. Without `threading.Lock`, concurrent writes race and may produce out-of-order HLC values. Fixed in `hlc.py`; noted in the pre-reset design work exit memo.
+**HLC requires a threading lock.** The in-process HLC state is shared between the HTTP request path and the background federation pull task. Without `threading.Lock`, concurrent writes race and may produce out-of-order HLC values. Fixed in `hlc.py`; covered by `Spec-12-HLC-Bounded-Skew`.
 
-**Idempotency + conflict edge case.** If fact F arrives from peer A and creates a conflict with local fact G, then F arrives again via replication, the second ingestion is a no-op — it must not create a second conflict record. `federation_ingest.py` handles this; the spec §6.3 needs a normative sentence covering this case before pre-reset.1 is finalized.
+**Idempotency + conflict edge case.** If fact F arrives from peer A and creates a conflict with local fact G, then F arrives again via replication, the second ingestion is a no-op — it must not create a second conflict record. `federation_ingest.py` handles this; `Spec-05-Federation-Trust` owns the federation idempotency rule.
 
-**`declaration_sig` excluded from its own preimage.** The Ed25519 signature over a PeerDeclaration covers all fields *except* `declaration_sig` itself (which obviously does not exist at signing time). The spec §6.1 now enumerates excluded fields explicitly; `peer_auth.py` implements accordingly.
+**`declaration_sig` excluded from its own preimage.** The Ed25519 signature over a PeerDeclaration covers all fields *except* `declaration_sig` itself (which obviously does not exist at signing time). `Spec-04-Manifests` and `Spec-05-Federation-Trust` own the signed declaration shape; `peer_auth.py` implements accordingly.
 
 :::info Sequence diagrams coming
 Federation handshake, conflict detection flow, and HLC tick protocol sequence diagrams are planned. Contributions welcome — see `CONTRIBUTING.md` at the repo root for the RFC process.
@@ -281,13 +281,13 @@ Federation handshake, conflict detection flow, and HLC tick protocol sequence di
 
 ---
 
-## Graph index and recall pipeline (§20 — draft)
+## Graph Index And Recall Pipeline (`Spec-X11-Recall-Graph`)
 
 :::note pre-reset graph & recall design — draft
-This section describes spec §20, which is currently a draft. The architecture is normative in `spec/stigmem-spec-pre-reset draft.md`; security review of subscription auth and cross-garden recall scoping is in progress. The diagram and formulas below reflect the draft spec and may change before §20 is promoted to normative.
+This section describes `Spec-X11-Recall-Graph`, which remains experimental. Security review of subscription auth and cross-garden recall scoping is in progress. The diagram and formulas below reflect the experimental spec and may change before the feature passes ADR-008 gates.
 :::
 
-*Audience: engineers building recall-capable agents, implementing the reference node, or contributing to §20.*
+*Audience: engineers building recall-capable agents, implementing the reference node, or contributing to `Spec-X11-Recall-Graph`.*
 
 pre-reset graph & recall design adds three interconnected subsystems to the reference node: a **graph adjacency index**, a **vector embedding store**, and a **hybrid recall pipeline**. Together they let agents retrieve semantically relevant facts by query rather than exact predicate, within a caller-specified token budget.
 
@@ -305,7 +305,7 @@ CREATE TABLE entity_edges (
     object       TEXT NOT NULL,     -- "to" entity URI
     scope        TEXT NOT NULL,
     confidence   REAL NOT NULL,
-    source_trust REAL,              -- cached per §19.4.4
+    source_trust REAL,              -- cached per Spec-05-Federation-Trust
     created_at   INTEGER NOT NULL
 );
 
@@ -412,7 +412,7 @@ During refresh the stale card remains readable with `card_stale: true`. Pass `fo
 
 `POST /v1/subscriptions` registers a push subscription on a scope, entity, or garden. The node delivers events when matching facts change — eliminating polling loops for agents that watch shared entities.
 
-Subscription creation requires a capability token (§19.3, validated per §19.3.3) covering the `subscribe` verb on the target (§19.3.2). The node re-evaluates the caller's garden ACL **and** capability token revocation status (§19.3.4) on every event delivery. Event content is not populated until the ACL check passes — the event record may be queued internally, but the content must not be populated before authorization. If access has been revoked since subscription creation, delivery is silently dropped and the subscription is cancelled with event type `subscription_cancelled_access_revoked`.
+Subscription creation requires a capability token (`Spec-06-Capability-Tokens`) covering the `subscribe` verb on the target. The node re-evaluates the caller's garden ACL **and** capability token revocation status on every event delivery. Event content is not populated until the ACL check passes — the event record may be queued internally, but the content must not be populated before authorization. If access has been revoked since subscription creation, delivery is silently dropped and the subscription is cancelled with event type `subscription_cancelled_access_revoked`.
 
 Events are buffered for `STIGMEM_SUBSCRIPTION_REPLAY_S` seconds (default 3600s). Subscribers may request replay via `GET /v1/subscriptions/:id/events?after={event_id}` within this window.
 

@@ -8,7 +8,7 @@ audience: Spec
 
 # Recall Pipeline
 
-*Audience: engineers building recall-capable agents or contributing to the recall subsystem (spec §20).*
+*Audience: engineers building recall-capable agents or contributing to the recall subsystem (`Spec-X11-Recall-Graph`).*
 
 The recall pipeline retrieves semantically relevant facts for agent queries. It runs three independent retrieval stages, fuses their results with salience signals, and packs the output within a caller-specified token budget using Maximal Marginal Relevance (MMR).
 

@@ -155,35 +155,35 @@ All variables use the `STIGMEM_` prefix and can be set in the `environment:` blo
 | `STIGMEM_DB_PATH` | `stigmem.db` | Path to the SQLite database file |
 | `STIGMEM_HOST` | `0.0.0.0` | Bind address |
 | `STIGMEM_PORT` | `8765` | Port the HTTP server listens on |
-| `STIGMEM_NODE_URL` | `http://localhost:8765` | Public URL of this node — included in `PeerDeclaration` payloads (§5.3) |
+| `STIGMEM_NODE_URL` | `http://localhost:8765` | Public URL of this node — included in `PeerDeclaration` payloads (`Spec-05-Federation-Trust`) |
 | `STIGMEM_LOG_LEVEL` | `info` | Log verbosity: `debug` · `info` · `warning` · `error` |
 | `STIGMEM_AUTH_REQUIRED` | `true` | When `true` (default), every request must carry a valid Bearer token. Set `false` only for single-operator / local-only installs |
 
-### Federation (§6)
+### Federation (`Spec-05-Federation-Trust`)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `STIGMEM_FEDERATION_ENABLED` | `false` | Enable the pull-replication loop |
 | `STIGMEM_FEDERATION_PUBKEY` | `""` | Base64url-encoded Ed25519 public key. Auto-generated on first start if empty; **persist this** |
 | `STIGMEM_FEDERATION_PRIVKEY` | `""` | Base64url-encoded Ed25519 private key. Auto-generated on first start if empty; **persist this** |
-| `STIGMEM_FEDERATION_PULL_INTERVAL_S` | `30` | Seconds between pull cycles. Peer-advertised `pull_interval_s` takes precedence (§6.3) |
+| `STIGMEM_FEDERATION_PULL_INTERVAL_S` | `30` | Seconds between pull cycles. Peer-advertised `pull_interval_s` takes precedence (`Spec-05-Federation-Trust`) |
 | `STIGMEM_FEDERATION_PUSH_ENABLED` | `false` | Enable push replication (experimental; off by default) |
-| `STIGMEM_FEDERATION_NONCE_WINDOW_S` | `300` | How long a nonce is retained to block replays (§6.6, default = 5 min) |
+| `STIGMEM_FEDERATION_NONCE_WINDOW_S` | `300` | How long a nonce is retained to block replays (`Spec-11-Replay-Protection`, default = 5 min) |
 | `STIGMEM_FEDERATION_ALLOW_TEAM` | `false` | Allow `team`-scoped facts to cross federation boundaries. Requires explicit opt-in; all crossings are audit-logged |
 
-### Decay (§15)
+### Decay (`Spec-X9-Decay-Semantics`)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `STIGMEM_DECAY_TTL_SECONDS` | `0` | When a sweep runs without an explicit `ttl_seconds`, decay facts older than this. `0` = disabled |
 | `STIGMEM_DECAY_MIN_CONFIDENCE` | `0.0` | When a sweep runs without an explicit `min_confidence`, decay facts below this confidence. `0.0` = disabled |
 
-### Attestation & security (§18)
+### Attestation & security (`Spec-X6-Source-Attestation`)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `STIGMEM_ATTESTATION_REQUIRED` | `false` | Require a valid Ed25519 attestation token on every `POST /v1/facts`. Enable for multi-tenant or public nodes |
-| `STIGMEM_SOURCE_ATTESTATION_MODE` | `warn` | How the node enforces §18 source-attestation. `off` = no check · `warn` = accept with `attested=false`, log warning · `enforce` = reject with HTTP 403 |
+| `STIGMEM_SOURCE_ATTESTATION_MODE` | `warn` | How the node enforces source attestation. `off` = no check · `warn` = accept with `attested=false`, log warning · `enforce` = reject with HTTP 403 |
 
 ### OIDC bridge (§B3)
 

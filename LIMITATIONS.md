@@ -160,7 +160,7 @@ The remaining beta hardening work brings: automated rotation runbooks and an "ex
 
 **What to do today:** if your federation use case is single-organization or trusted bilateral peering, the four-scope model is sufficient. For coalition, multi-peer, or project-bounded patterns, evaluate whether stigmem v0.9.0a1 meets your needs before deploying. The basic memory-garden primitive that addresses these patterns is targeted for v1.x after `Spec-X5` passes the ADR-008 gate process and is promoted from experimental into the supported surface. Operators with these requirements who want to influence prioritization should [open an issue](https://github.com/eidetic-labs/stigmem/issues) tagged `area/federation-expressivity`.
 
-**Why we chose this for v0.9.0a1:** expanding the scope model in v1.0.0 would be exactly the kind of scope churn ADR-002 is designed to prevent. The decision is to ship the smaller defensible thing (four scopes, simple federation) and grow expressivity through gardens once they pass the ADR-008 gates. The full analysis is in `stigmem-scope-model-analysis.md`.
+**Why we chose this for v0.9.0a1:** expanding the scope model in v1.0.0 would be exactly the kind of scope churn [ADR-002](docs/adr/002-v1-scope.md) is designed to prevent. The decision is to ship the smaller defensible thing (four scopes, simple federation) and grow expressivity through gardens once they pass the ADR-008 gates.
 
 ---
 

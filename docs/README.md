@@ -169,7 +169,7 @@ This copies `docs/` to `versioned_docs/version-<label>/` and updates `versions.j
 stigmem/docs/
 ├── docusaurus.config.js        # Site config, plugins, navbar
 ├── sidebars.js                 # Sidebar definitions (learn/build/operate/reference/community)
-├── versions.json               # Published versions list [v1.1, pre-reset]
+├── versions.json               # Docusaurus version metadata (alpha docs publish from docs/)
 ├── openapi/
 │   └── stigmem.json            # Local OpenAPI spec (committed)
 ├── plugins/
@@ -181,12 +181,8 @@ stigmem/docs/
 │   ├── operate/                # Deployment, backends, security, observability
 │   ├── reference/              # API (generated), spec, architecture, CLI, glossary
 │   └── community/              # Security disclosure, project resources
-├── versioned_docs/
-│   ├── version-v1.1/           # Stable v1.1 snapshot
-│   └── version-pre-reset/           # Legacy pre-reset snapshot
-├── versioned_sidebars/
-│   ├── version-v1.1-sidebars.json
-│   └── version-pre-reset-sidebars.json
+├── versioned_docs/             # Empty until v1.0.0 GA snapshot
+├── versioned_sidebars/         # Empty until v1.0.0 GA snapshot
 └── src/
     ├── components/
     │   ├── AudienceBadge/      # Audience pill badge (from frontmatter)

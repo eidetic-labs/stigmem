@@ -200,6 +200,7 @@ run_contract() {
   fi
 
   uv run python scripts/export_openapi.py --check
+  uv run python scripts/generate_protocol_md.py --check
 
   if [[ "${CHECK_SKIP_NODE_INSTALL:-0}" != "1" ]]; then
     pnpm_cmd install --frozen-lockfile

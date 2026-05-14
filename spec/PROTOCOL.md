@@ -24,6 +24,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | [`Spec-12-HLC-Bounded-Skew`](specs/12-hlc-bounded-skew.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-13-Capability-Based-Instructions`](specs/13-capability-based-instructions.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0bN | 2026-05-14 |
 | [`Spec-14-Batch-Assert`](specs/14-batch-assert.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0bN | 2026-05-14 |
+| [`Spec-15-Fact-Semantics`](specs/15-fact-semantics.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 
 ## Experimental Specs
 
@@ -58,6 +59,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | `Spec-12-HLC-Bounded-Skew` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0` | R-19 HLC bounded-skew follow-up material |
 | `Spec-13-Capability-Based-Instructions` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | ADR-003 capability-based prompt-injection redesign material |
 | `Spec-14-Batch-Assert` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | ADR-006 batch assert material |
+| `Spec-15-Fact-Semantics` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 3 fact-semantics material |
 | `Spec-X1-Lazy-Instruction-Discovery` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | pre-reset §21 lazy instruction discovery material |
 | `Spec-X2-RTBF-Tombstones` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset §23 right-to-be-forgotten tombstone material |
 | `Spec-X3-Time-Travel-Queries` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-X2-RTBF-Tombstones >= 0.1.0-alpha.0` | pre-reset §24 time-travel/as-of query material |

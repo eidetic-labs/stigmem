@@ -6,7 +6,7 @@ applies_to: stigmem v0.9.0aN
 last_updated: 2026-05-14
 supersedes: R-19 HLC bounded-skew follow-up material
 depends_on:
-  - Spec-01-Core >= 0.1.0-alpha.0
+  - Spec-01-Fact-Model >= 0.1.0-alpha.0
   - Spec-05-Federation-Trust >= 0.1.0-alpha.0
 ---
 

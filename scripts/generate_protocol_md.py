@@ -131,7 +131,7 @@ def _load_spec(path: Path, kind: str) -> SpecMetadata:
     experimental_match = re.fullmatch(r"Spec-X(\d+)-[A-Za-z0-9-]+", spec_id)
     if kind == "core":
         if core_match is None:
-            _fail(f"{path}: core spec_id must look like Spec-01-Core")
+            _fail(f"{path}: spec_id must look like Spec-01-Fact-Model")
         file_number = path.stem.split("-", 1)[0]
         if file_number != core_match.group(1):
             _fail(f"{path}: filename number does not match {spec_id}")
@@ -223,12 +223,10 @@ def render_protocol(
         + "`experimental/<feature>/spec.md`."
     )
     extraction_status = (
-        "The files in `spec/specs/` are ADR-010 frontmatter-bearing core-spec "
-        + "stubs. They establish stable spec identifiers, dependencies, and "
-        + "version metadata for the migration. Normative prose remains in "
-        + "[`spec/stigmem-spec-v0.9.0a1.md`](stigmem-spec-v0.9.0a1.md) until "
-        + "section-by-section extraction PRs move that text into the modular "
-        + "spec files."
+        "The files in `spec/specs/` are being populated incrementally as "
+        + "ADR-010 extraction PRs migrate prose from the canonical and archived "
+        + "source material into modular component specs. Files that still include an "
+        + "`Extraction Status` stub are pending prose extraction."
     )
     experimental_status = (
         "Experimental and deferred material remains colocated under "
@@ -244,7 +242,7 @@ def render_protocol(
         "",
         f"**Metadata last updated:** {latest_update}",
         "",
-        "## Core Specs",
+        "## Protocol Component Specs",
         "",
         "| Spec | Version | Status | Applies to | Last updated |",
         "|---|---|---|---|---|",

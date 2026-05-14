@@ -6,11 +6,11 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 
 **Metadata last updated:** 2026-05-14
 
-## Core Specs
+## Protocol Component Specs
 
 | Spec | Version | Status | Applies to | Last updated |
 |---|---|---|---|---|
-| [`Spec-01-Core`](specs/01-core.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
+| [`Spec-01-Fact-Model`](specs/01-fact-model.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-02-Scopes-and-ACL`](specs/02-scopes-and-acl.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-03-HTTP-API`](specs/03-http-api.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-04-Manifests`](specs/04-manifests.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
@@ -44,33 +44,33 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 
 | Spec | Depends on | Supersedes |
 |---|---|---|
-| `Spec-01-Core` | None | spec/stigmem-spec-v0.9.0a1.md sections 1-5, 7-12, 14, and core CID material |
-| `Spec-02-Scopes-and-ACL` | `Spec-01-Core >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md sections 3.5 and 17 basic scope/ACL material |
-| `Spec-03-HTTP-API` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 5 API surface material |
-| `Spec-04-Manifests` | `Spec-01-Core >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 19.1-19.2 manifest material |
-| `Spec-05-Federation-Trust` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0`<br>`Spec-04-Manifests >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md sections 6 and 19 federation-trust material |
-| `Spec-06-Capability-Tokens` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-04-Manifests >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 19.3 capability-token material |
-| `Spec-07-Recall-Pipeline` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md sections 6 and 20 recall material |
-| `Spec-08-Quarantine-Garden` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md quarantine semantics from sections 17 and 19 |
-| `Spec-09-Audit-Log` | `Spec-01-Core >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 22.3 audit-log material |
-| `Spec-10-Hardening` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md sections 22.1, 22.2, 22.4, and 22.6 |
-| `Spec-11-Replay-Protection` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 22.5 replay-protection material |
-| `Spec-12-HLC-Bounded-Skew` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0` | R-19 HLC bounded-skew follow-up material |
-| `Spec-13-Capability-Based-Instructions` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | ADR-003 capability-based prompt-injection redesign material |
-| `Spec-14-Batch-Assert` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | ADR-006 batch assert material |
-| `Spec-X1-Lazy-Instruction-Discovery` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | pre-reset §21 lazy instruction discovery material |
-| `Spec-X2-RTBF-Tombstones` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset §23 right-to-be-forgotten tombstone material |
-| `Spec-X3-Time-Travel-Queries` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-X2-RTBF-Tombstones >= 0.1.0-alpha.0` | pre-reset §24 time-travel/as-of query material |
-| `Spec-X5-Memory-Garden-Advanced-ACL` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0` | pre-reset §17 advanced Memory Garden ACL material |
-| `Spec-X6-Source-Attestation` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset §18 source attestation material |
-| `Spec-X7-Subscriptions` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0` | pre-reset §20.5 subscription material |
-| `Spec-X8-Intent-Envelope` | `Spec-01-Core >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 4 intent envelope material |
-| `Spec-X9-Decay-Semantics` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | pre-reset §15 decay semantics material |
-| `Spec-X10-Synthesis` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | pre-reset §16 synthesis material |
-| `Spec-X11-Recall-Graph` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0`<br>`Spec-X5-Memory-Garden-Advanced-ACL >= 0.1.0-alpha.0`<br>`Spec-X6-Source-Attestation >= 0.1.0-alpha.0` | pre-reset §20 advanced recall and graph material |
+| `Spec-01-Fact-Model` | None | spec/stigmem-spec-v0.9.0a1.md section 2 fact-model material |
+| `Spec-02-Scopes-and-ACL` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md sections 3.5 and 17 basic scope/ACL material |
+| `Spec-03-HTTP-API` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 5 API surface material |
+| `Spec-04-Manifests` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 19.1-19.2 manifest material |
+| `Spec-05-Federation-Trust` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0`<br>`Spec-04-Manifests >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md sections 6 and 19 federation-trust material |
+| `Spec-06-Capability-Tokens` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-04-Manifests >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 19.3 capability-token material |
+| `Spec-07-Recall-Pipeline` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md sections 6 and 20 recall material |
+| `Spec-08-Quarantine-Garden` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md quarantine semantics from sections 17 and 19 |
+| `Spec-09-Audit-Log` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 22.3 audit-log material |
+| `Spec-10-Hardening` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md sections 22.1, 22.2, 22.4, and 22.6 |
+| `Spec-11-Replay-Protection` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 22.5 replay-protection material |
+| `Spec-12-HLC-Bounded-Skew` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0` | R-19 HLC bounded-skew follow-up material |
+| `Spec-13-Capability-Based-Instructions` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | ADR-003 capability-based prompt-injection redesign material |
+| `Spec-14-Batch-Assert` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | ADR-006 batch assert material |
+| `Spec-X1-Lazy-Instruction-Discovery` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | pre-reset §21 lazy instruction discovery material |
+| `Spec-X2-RTBF-Tombstones` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset §23 right-to-be-forgotten tombstone material |
+| `Spec-X3-Time-Travel-Queries` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-X2-RTBF-Tombstones >= 0.1.0-alpha.0` | pre-reset §24 time-travel/as-of query material |
+| `Spec-X5-Memory-Garden-Advanced-ACL` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0` | pre-reset §17 advanced Memory Garden ACL material |
+| `Spec-X6-Source-Attestation` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset §18 source attestation material |
+| `Spec-X7-Subscriptions` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0` | pre-reset §20.5 subscription material |
+| `Spec-X8-Intent-Envelope` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 4 intent envelope material |
+| `Spec-X9-Decay-Semantics` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | pre-reset §15 decay semantics material |
+| `Spec-X10-Synthesis` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | pre-reset §16 synthesis material |
+| `Spec-X11-Recall-Graph` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0`<br>`Spec-X5-Memory-Garden-Advanced-ACL >= 0.1.0-alpha.0`<br>`Spec-X6-Source-Attestation >= 0.1.0-alpha.0` | pre-reset §20 advanced recall and graph material |
 
 ## Extraction Status
 
-The files in `spec/specs/` are ADR-010 frontmatter-bearing core-spec stubs. They establish stable spec identifiers, dependencies, and version metadata for the migration. Normative prose remains in [`spec/stigmem-spec-v0.9.0a1.md`](stigmem-spec-v0.9.0a1.md) until section-by-section extraction PRs move that text into the modular spec files.
+The files in `spec/specs/` are being populated incrementally as ADR-010 extraction PRs migrate prose from the canonical and archived source material into modular component specs. Files that still include an `Extraction Status` stub are pending prose extraction.
 
 Experimental and deferred material remains colocated under `experimental/<feature>/spec.md`; those files now carry ADR-010 frontmatter and appear in this generated protocol index.

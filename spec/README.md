@@ -18,6 +18,7 @@ The canonical spec is in flight — content arrives section-by-section as the ma
 | §18 Source Attestation | Deferred | [`experimental/source-attestation/spec.md`](../experimental/source-attestation/spec.md) |
 | §19 Federation Trust | Basic stable (mTLS, capability tokens); advanced trust scoring deferred | Canonical (basic); future `experimental/federation-trust-extensions/spec.md` (advanced) |
 | §20 Recall and Graph (advanced) | Deferred | [`experimental/recall-graph/spec.md`](../experimental/recall-graph/spec.md) |
+| Subscriptions / push federation | Deferred | [`experimental/subscriptions/spec.md`](../experimental/subscriptions/spec.md) |
 | §21 Lazy Instruction Discovery | Deferred | [`experimental/lazy-instruction-discovery/spec.md`](../experimental/lazy-instruction-discovery/spec.md) |
 | §22 Security Hardening | Stable | This file → canonical spec |
 | §23 RTBF Tombstones | Deferred | [`experimental/tombstones/spec.md`](../experimental/tombstones/spec.md) |

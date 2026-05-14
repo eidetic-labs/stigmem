@@ -1,5 +1,5 @@
 ---
-spec_id: Spec-X7-Recall-Graph
+spec_id: Spec-X11-Recall-Graph
 version: 0.1.0-alpha.0
 status: Experimental
 applies_to: stigmem v0.9.0bN
@@ -13,14 +13,16 @@ depends_on:
 title: §20. Recall & Graph
 sidebar_label: §20 Recall & Graph
 audience: Spec
-description: "Stigmem spec section 20 — Graph adjacency index, vector embeddings, hybrid recall pipeline, memory cards, subscriptions, causal links."
+description: "Stigmem spec section 20 — Graph adjacency index, vector embeddings, hybrid recall pipeline, memory cards, and causal links."
 ---
 
 # §20. Recall & Graph {#section-20}
 
-**Status:** Normative (v1.1)
+**Status:** Experimental. Pre-reset source material was drafted as normative, but
+this spec is deferred from the supported v0.9.0aN surface and must pass ADR-008
+gates before reintroduction.
 
-Graph adjacency index, vector embeddings, hybrid recall pipeline, memory cards, subscriptions, causal links.
+Graph adjacency index, vector embeddings, hybrid recall pipeline, memory cards, and causal links.
 
 **Authoritative source:** [`spec/stigmem-spec-pre-reset draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-pre-reset draft.md)
 
@@ -31,7 +33,10 @@ Each subsection below shows the most recent normative text from the spec source.
 **Status:** DRAFT normative (pre-reset graph & recall design). Implementation issues build against this section.  
 **Depends on:** §2 (fact shape), §5 (wire format), §17 (memory garden), §18 (source attestation), §19 (federation trust).
 
-§20 defines the graph adjacency index, embedding storage, recall API, memory cards, subscription primitive, and causal/derivation link lifecycle.
+§20 defines the graph adjacency index, embedding storage, recall API, memory
+cards, and causal/derivation link lifecycle. The subscription primitive that
+previously lived in §20.5 is now colocated under
+[`Spec-X7-Subscriptions`](../subscriptions/spec.md).
 
 ---
 
@@ -496,79 +501,10 @@ When raw facts contradict the card's synthesized summary (i.e., a fact's current
 
 ### §20.5 Subscriptions {#section-20-5}
 
-#### §20.5.1 Route {#section-20-5-1}
-
-The subscription API follows standard REST conventions: POST to create, GET to list or inspect, DELETE to cancel. Subscription state is server-managed — the node tracks cursors internally and delivers events via the configured change mechanism.
-
-```
-POST   /v1/subscriptions
-GET    /v1/subscriptions
-GET    /v1/subscriptions/:id
-DELETE /v1/subscriptions/:id
-```
-
-#### §20.5.2 Request Shape {#section-20-5-2}
-
-A subscription request binds a `target` (either a scope or a specific entity) to a change-notification mechanism. The `on_change` field selects between two delivery modes: `webhook` for HTTP-based push delivery, and `wake` for Paperclip-integrated agent wake-ups. The `event_filter` array lets callers subscribe to a subset of event types, reducing noise for consumers that only care about specific lifecycle events. The `idempotency_key` ensures that retried creation requests do not produce duplicate subscriptions.
-
-```json
-{
-  "target":           "scope:global" | "entity:{entity_uri}",
-  "on_change":        "webhook" | "wake",
-  "webhook_url":      "https://example.com/hook",   // required if on_change = "webhook"
-  "wake_agent_id":    "{uuid}",                      // required if on_change = "wake"
-  "event_filter":     ["fact_assert", "fact_retract", "contradiction_detected", "card_refreshed"],
-  "idempotency_key":  "{opaque string}",             // optional; max 128 chars
-  "scope":            "{scope_id}"
-}
-```
-
-- `target` MUST be either a `scope:` prefixed scope identifier or an `entity:` prefixed entity URI.
-- `on_change = "webhook"` delivers events to `webhook_url` via HTTP POST. `webhook_url` MUST use HTTPS.
-- `on_change = "wake"` wakes the specified agent by triggering a Paperclip wake event on its assigned issue (requires the node to be running inside a Paperclip execution context). For standalone deployments, `wake` MUST return HTTP 422 with error code `wake_not_supported`.
-- Subscriptions MUST be scoped to the caller's authorized garden or to the global scope if the caller has global read access (§17.4).
-- Duplicate subscriptions (same `target` + `on_change` + `webhook_url`/`wake_agent_id`) MUST be deduplicated using `idempotency_key` if provided, or matched by structural equality if not. A duplicate POST MUST return 200 with the existing subscription.
-
-#### §20.5.3 Event Shape {#section-20-5-3}
-
-Events are delivered as JSON payloads with the following structure:
-
-```json
-{
-  "subscription_id": "{uuid}",
-  "event_id":        "{uuid}",
-  "event_type":      "fact_assert" | "fact_retract" | "contradiction_detected" | "card_refreshed",
-  "entity":          "{entity_uri}",
-  "scope":           "{scope_id}",
-  "fact_id":         "{uuid}",          // null for card_refreshed events
-  "hlc":             "{hlc}",
-  "payload":         { ... },            // event-specific; see below
-  "idempotency_key": "{event_id}"        // subscribers MUST use this for dedup
-}
-```
-
-The `idempotency_key` in the delivery envelope MUST equal `event_id`. Subscribers MUST treat deliveries with the same `idempotency_key` as duplicates and discard them after first processing.
-
-#### §20.5.4 Delivery Guarantees {#section-20-5-4}
-
-- Implementations MUST deliver each event **at least once**.
-- Implementations MUST retry failed webhook deliveries with exponential backoff (initial delay 1s, max 10 attempts, cap 300s).
-- A webhook endpoint that returns 5xx or times out (>10s) triggers a retry. A 410 response permanently removes the subscription.
-- Implementations MUST maintain a **replay window** of `STIGMEM_SUBSCRIPTION_REPLAY_S` (default 3600s). Subscribers MAY request replay from a given `event_id` using `GET /v1/subscriptions/:id/events?after={event_id}` within this window.
-- Events outside the replay window are not recoverable. Implementations SHOULD expose this limit in the subscription response as `replay_window_s`.
-
-#### §20.5.5 Auth and Scoping {#section-20-5-5}
-
-Subscription creation MUST require the caller to hold a capability token (§19.3) with verb `subscribe` on the target scope or entity URI. Tokens MUST be validated per §19.3.3 before any subscription is persisted.
-
-The security boundary is critical: a subscription's event stream MUST NOT leak facts from garden-scoped entities to callers without garden read access. At each event delivery, implementations MUST perform the following checks in order:
-
-1. **Token revocation check** — verify the subscriber's capability token is not revoked (§19.3.4). A revoked token MUST be treated the same as access revocation below.
-2. **Garden ACL check** — re-evaluate the caller's garden ACL against the event's target entity/scope, not just at subscription creation time.
-
-If either check fails, event content MUST NOT be populated or delivered. The event record MAY be queued internally before these checks to honour at-least-once delivery semantics, but event content MUST be withheld from the subscriber until both checks pass at delivery time. If the caller's access or token has been revoked since subscription creation, delivery MUST be silently dropped (not an error) and the subscription MUST be automatically cancelled with event type `subscription_cancelled_access_revoked`.
-
-This is the primary security concern for the subscription primitive: **cross-garden leakage via event streams**.
+The subscription primitive has been extracted into the colocated experimental
+spec [`Spec-X7-Subscriptions`](../subscriptions/spec.md). Recall and graph
+implementations that emit card-refresh or fact-change notifications depend on
+that spec for event delivery semantics.
 
 ---
 
@@ -675,36 +611,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS vec_facts USING vec0(
 ALTER TABLE facts ADD COLUMN IF NOT EXISTS access_count INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE facts ADD COLUMN IF NOT EXISTS last_accessed_at INTEGER;  -- Unix ms
 
--- Subscription table
-CREATE TABLE IF NOT EXISTS subscriptions (
-    id               TEXT PRIMARY KEY,
-    target           TEXT NOT NULL,
-    on_change        TEXT NOT NULL CHECK (on_change IN ('webhook', 'wake')),
-    webhook_url      TEXT,
-    wake_agent_id    TEXT,
-    event_filter     TEXT NOT NULL DEFAULT '["fact_assert","fact_retract"]',  -- JSON array
-    scope            TEXT NOT NULL,
-    idempotency_key  TEXT,
-    created_at       INTEGER NOT NULL,
-    last_event_at    INTEGER,
-    cancelled_at     INTEGER,
-    replay_window_s  INTEGER NOT NULL DEFAULT 3600
-);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_target ON subscriptions (target, scope);
-
--- Subscription event log (replay buffer)
-CREATE TABLE IF NOT EXISTS subscription_events (
-    id               TEXT PRIMARY KEY,  -- event UUID
-    subscription_id  TEXT NOT NULL REFERENCES subscriptions(id),
-    event_type       TEXT NOT NULL,
-    entity           TEXT,
-    fact_id          TEXT,
-    hlc              TEXT,
-    payload          TEXT,              -- JSON
-    delivered_at     INTEGER,
-    created_at       INTEGER NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_sub_events_sub_id ON subscription_events (subscription_id, created_at DESC);
+-- Subscription storage is owned by Spec-X7-Subscriptions.
 ```
 
 #### §20.8 Error Reference {#section-20-8}
@@ -719,9 +626,7 @@ CREATE INDEX IF NOT EXISTS idx_sub_events_sub_id ON subscription_events (subscri
 | 400 | `provenance_cycle_detected` | `derived_from` graph contains a cycle |
 | 400 | `invalid_relation_filter` | `relation_filter` uses unsupported regex beyond prefix-glob |
 | 422 | `derived_from_immutable` | Attempt to modify `derived_from` on an existing fact |
-| 422 | `wake_not_supported` | `on_change = "wake"` on a non-Paperclip deployment |
 | 422 | `embed_dimensionality_mismatch` | `vec_facts` configured dimensions differ from stored |
-| 404 | `subscription_not_found` | No subscription with given id exists |
 | 404 | `fact_not_found` | Provenance walk root fact not found |
 
 ---

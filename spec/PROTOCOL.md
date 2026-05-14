@@ -34,10 +34,11 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | [`Spec-X3-Time-Travel-Queries`](../experimental/time-travel/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/time-travel/spec.md` |
 | [`Spec-X5-Memory-Garden-Advanced-ACL`](../experimental/memory-garden-acl/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/memory-garden-acl/spec.md` |
 | [`Spec-X6-Source-Attestation`](../experimental/source-attestation/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/source-attestation/spec.md` |
-| [`Spec-X7-Recall-Graph`](../experimental/recall-graph/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/recall-graph/spec.md` |
+| [`Spec-X7-Subscriptions`](../experimental/subscriptions/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/subscriptions/spec.md` |
 | [`Spec-X8-Intent-Envelope`](../experimental/intent-envelope/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/intent-envelope/spec.md` |
 | [`Spec-X9-Decay-Semantics`](../experimental/decay/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/decay/spec.md` |
 | [`Spec-X10-Synthesis`](../experimental/synthesis/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/synthesis/spec.md` |
+| [`Spec-X11-Recall-Graph`](../experimental/recall-graph/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/recall-graph/spec.md` |
 
 ## Dependency Graph
 
@@ -62,10 +63,11 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | `Spec-X3-Time-Travel-Queries` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-X2-RTBF-Tombstones >= 0.1.0-alpha.0` | pre-reset §24 time-travel/as-of query material |
 | `Spec-X5-Memory-Garden-Advanced-ACL` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0` | pre-reset §17 advanced Memory Garden ACL material |
 | `Spec-X6-Source-Attestation` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset §18 source attestation material |
-| `Spec-X7-Recall-Graph` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0`<br>`Spec-X5-Memory-Garden-Advanced-ACL >= 0.1.0-alpha.0`<br>`Spec-X6-Source-Attestation >= 0.1.0-alpha.0` | pre-reset §20 advanced recall and graph material |
+| `Spec-X7-Subscriptions` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0` | pre-reset §20.5 subscription material |
 | `Spec-X8-Intent-Envelope` | `Spec-01-Core >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 4 intent envelope material |
 | `Spec-X9-Decay-Semantics` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | pre-reset §15 decay semantics material |
 | `Spec-X10-Synthesis` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | pre-reset §16 synthesis material |
+| `Spec-X11-Recall-Graph` | `Spec-01-Core >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0`<br>`Spec-X5-Memory-Garden-Advanced-ACL >= 0.1.0-alpha.0`<br>`Spec-X6-Source-Attestation >= 0.1.0-alpha.0` | pre-reset §20 advanced recall and graph material |
 
 ## Extraction Status
 

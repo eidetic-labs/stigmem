@@ -39,6 +39,7 @@ Report vulnerabilities via the [GitHub private advisory path](https://github.com
 | §18. Source Attestation | Deferred from v0.9.0a1 | Per ADR-002. Spec content at [`experimental/source-attestation/spec.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/source-attestation/spec.md). |
 | [§19. Federation Trust](./federation-trust) | Stable in v0.9.0a1 (basic mTLS + capability tokens) | Advanced trust scoring deferred. |
 | §20. Recall & Graph | Deferred from v0.9.0a1 | Per ADR-002. Spec content at [`experimental/recall-graph/spec.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/recall-graph/spec.md). |
+| Subscriptions / push federation | Deferred from v0.9.0a1 | Per ADR-010. Spec content at [`experimental/subscriptions/spec.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/subscriptions/spec.md). |
 | §21. Lazy Instruction Discovery | Deferred from v0.9.0a1 | Per ADR-002. Spec content at [`experimental/lazy-instruction-discovery/spec.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/lazy-instruction-discovery/spec.md). |
 | [§22. Security Hardening](./security-hardening) | Stable in v0.9.0a1 | mTLS federation, key rotation, audit log, per-principal quotas. |
 | §23. Right-to-be-Forgotten Tombstones | Deferred from v0.9.0a1 | Per ADR-002. Spec content at [`experimental/tombstones/spec.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/tombstones/spec.md). |

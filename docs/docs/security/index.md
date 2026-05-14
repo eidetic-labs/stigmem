@@ -91,5 +91,5 @@ Many features documented in earlier checkpoints are deferred from v0.9.0a1's def
 1. Read the **[Threat Model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md)** to understand the trust boundaries and current risk register.
 2. Read the **[Security Scenarios](./scenarios)** for operator-facing narratives.
 3. Read the **[Pen-test handbook](./pen-test.md)** for the engagement process and reproducer template.
-4. Set up a local node via Docker Compose (handbook §4).
+4. Set up a local node via the [quickstart tutorial](../get-started/quickstart-tutorial.md).
 5. File private advisories at [github.com/eidetic-labs/stigmem/security/advisories](https://github.com/eidetic-labs/stigmem/security/advisories).

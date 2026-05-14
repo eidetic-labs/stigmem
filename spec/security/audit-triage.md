@@ -120,7 +120,7 @@ No new `R-XX` entry is required: the residual is already accounted for in the ex
 
 **Retirement milestone.** v1.0.0 GA — bulk re-hash migration deletes `_legacy_sha256` from `auth.py`; CodeQL re-scan after that release auto-closes any residual reference to the function.
 
-**Tracking.** `Internal-Comms/stigmem/plans/master-checklist.md` § "Argon2id migration (per ADR-007)" carries the v1.0.0 retirement checklist item.
+**Tracking.** [ADR-007](../../docs/adr/007-argon2id.md) defines the dual-mode migration window; the v1.0.0 GA release checklist must verify that the legacy SHA-256 path has been retired before the stable release is cut.
 
 ---
 

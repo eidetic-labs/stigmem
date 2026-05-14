@@ -55,7 +55,7 @@ Every piece of knowledge is an **atomic, immutable fact** (spec §2):
 
 | Field | Type | Why it exists |
 |-------|------|---------------|
-| `entity` | URI (`stigmem://…` formal; informal deprecated in pre-reset) | *What* the fact is about. Entity-scoped, not agent-scoped — the same entity URI is shared across all agents and nodes (spec §4.6 origin in `upstream-surfaces.md §4.6`). |
+| `entity` | URI (`stigmem://…` formal; informal deprecated in pre-reset) | *What* the fact is about. Entity-scoped, not agent-scoped — the same entity URI is shared across all agents and nodes. |
 | `relation` | namespaced string (`memory:role`, `roadmap:status`, …) | *What kind* of statement this is. Namespaced to prevent collisions (spec §9 namespace registry). |
 | `value` | `FactValue` union | The asserted value. See §2.1 for the full type lattice: `string`, `text`, `number`, `boolean`, `datetime`, `ref`, `null`. |
 | `source` | URI | *Who* asserted the fact. Stored immutably; relayed facts carry the *originating* source, not the relay chain. |

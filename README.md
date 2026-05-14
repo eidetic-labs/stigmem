@@ -25,7 +25,7 @@ We previously announced `v1.0` and walked it back. Several controls our own thre
 
 The canonical version line is being reset. **`v0.9.0a1` is the *first build* of stigmem.** Earlier version markers (`v0.2` through `v2.0`) labeled internal development checkpoints, not tagged releases anyone deployed in production. The spec *content* under those markers is real product specification — it is being reviewed section by section against the actual implementation and migrated forward into the v0.9.0 canonical structure. Only the implied chronology is being corrected.
 
-We chose `v0.9.0a1` (PEP 440 alpha) over `v0.9.0-preview` because alpha-beta-rc has built-in iteration semantics (`a1`, `a2`, `b1`, `rc1`) and ecosystem-native sort ordering in PyPI and npm — see [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) (Internal-Comms repo).
+We chose `v0.9.0a1` (PEP 440 alpha) over `v0.9.0-preview` because alpha-beta-rc has built-in iteration semantics (`a1`, `a2`, `b1`, `rc1`) and ecosystem-native sort ordering in PyPI and npm — see [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md).
 
 For the full story, read [the retraction post on dev.to](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0). The in-repo canonical source is preserved at [`archive/devto-stigmem-v0.9.0a1-retraction.md`](archive/devto-stigmem-v0.9.0a1-retraction.md).
 

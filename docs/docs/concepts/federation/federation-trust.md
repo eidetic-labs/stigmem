@@ -1,38 +1,38 @@
 ---
-title: Federation Trust (§19)
+title: Federation Trust (Spec-05-Federation-Trust)
 sidebar_label: Federation Trust
-description: Org manifests, capability tokens, source-trust scoring, quarantine garden, provenance chains, and the recall-time sanitizer — §19 normative in spec v1.1.
+description: Org manifests, capability tokens, source-trust scoring, quarantine garden, provenance chains, and the recall-time sanitizer across the modular spec set.
 audience: Integrator
 ---
 
 # Federation Trust
 
 **Audience:** node operators deploying cross-org federation; spec contributors.
-**Spec reference:** §19 (normative, v1.1); §2.8 fact record extensions; §5.21–5.25 wire format.
+**Spec reference:** Spec-05-Federation-Trust, Spec-04-Manifests, Spec-06-Capability-Tokens, Spec-08-Quarantine-Garden, Spec-15-Fact-Semantics, and Spec-03-HTTP-API.
 
 ---
 
 Federation Trust is the mechanism by which Stigmem nodes establish verifiable identity, delegate cross-org write permissions, score incoming sources, quarantine untrusted facts, and sanitize recall output — without centralised coordination.
 
-§19 is normative in spec v1.1. It builds on the §18 Source Attestation machinery and adds seven interlocking subsystems:
+Federation trust is described across the modular specs. It builds on Spec-X6-Source-Attestation machinery and adds seven interlocking subsystems:
 
 | Subsystem | Section | Summary |
 |---|---|---|
-| Org manifests | §19.1 | Signed identity document; binds entity URIs to an Ed25519 public key |
-| Transparency log | §19.2 | Append-only audit anchor for manifests and revocations |
-| Capability tokens | §19.3 | Short-lived signed credentials delegating specific verbs on specific resources |
-| Source-trust score | §19.4 | Scalar `t ∈ [0,1]` per source; modulates effective confidence at recall time |
-| Quarantine garden | §19.5 | Isolation zone for facts that fail trust thresholds |
-| Provenance chain | §19.6 | `derived_from` + `attestation_chain` for verifiable fact lineage |
-| Recall-time sanitizer | §19.7 | Strips prompt-injection sentinels from recalled string values |
+| Org manifests | Spec-04-Manifests | Signed identity document; binds entity URIs to an Ed25519 public key |
+| Transparency log | Spec-05-Federation-Trust transparency-log rules | Append-only audit anchor for manifests and revocations |
+| Capability tokens | Spec-06-Capability-Tokens | Short-lived signed credentials delegating specific verbs on specific resources |
+| Source-trust score | Spec-05-Federation-Trust source-trust score | Scalar `t ∈ [0,1]` per source; modulates effective confidence at recall time |
+| Quarantine garden | Spec-08-Quarantine-Garden | Isolation zone for facts that fail trust thresholds |
+| Provenance chain | Spec-05-Federation-Trust provenance-chain rules | `derived_from` + `attestation_chain` for verifiable fact lineage |
+| Recall-time sanitizer | ADR-003 defense-in-depth sanitizer model | Strips prompt-injection sentinels from recalled string values |
 
 ---
 
-## Org Manifest (§19.1)
+## Org Manifest (Spec-04-Manifests)
 
 An **org manifest** declares the canonical Ed25519 public key for a node or organisation and the entity URIs it is authoritative for. Peers use the manifest key to verify capability tokens and provenance signatures.
 
-### Publish your manifest (§5.21)
+### Publish your manifest (Spec-03-HTTP-API manifest publication route)
 
 ```bash
 # Generate an Ed25519 keypair (one-time setup)
@@ -69,9 +69,9 @@ curl -X PUT https://your-node.example.com/v1/federation/manifest \
 # → { "manifest_id": "...", "log_entry_url": "..." }
 ```
 
-The `signature` MUST be computed over the JCS (RFC 8785) canonical encoding of all other manifest fields (§19.1.3).
+The `signature` MUST be computed over the JCS (RFC 8785) canonical encoding of all other manifest fields (Spec-04-Manifests signature rules).
 
-### Well-known endpoint (§19.1.6)
+### Well-known endpoint (Spec-04-Manifests publication)
 
 Nodes MUST publish their manifest at `/.well-known/stigmem-manifest.json`. Peers resolve it with:
 
@@ -79,7 +79,7 @@ Nodes MUST publish their manifest at `/.well-known/stigmem-manifest.json`. Peers
 curl https://peer-node.example.com/.well-known/stigmem-manifest.json
 ```
 
-### Key rotation (§19.1.4)
+### Key rotation (Spec-04-Manifests key rotation)
 
 When rotating your signing key, add a `rotation_events` entry signed by the **old** private key. This preserves a verifiable chain of custody back to the original manifest.
 
@@ -96,9 +96,9 @@ When rotating your signing key, add a `rotation_events` entry signed by the **ol
 }
 ```
 
-Submit the updated manifest to the transparency log after every rotation (§19.1.6).
+Submit the updated manifest to the transparency log after every rotation (Spec-04-Manifests publication).
 
-### Manifest resolution (§5.22)
+### Manifest resolution (Spec-03-HTTP-API manifest resolution route)
 
 ```bash
 ENTITY_URI_ENCODED=$(python3 -c "import urllib.parse, sys; \
@@ -112,11 +112,11 @@ curl https://your-node.example.com/v1/federation/manifest/$ENTITY_URI_ENCODED
 
 ---
 
-## Transparency Log (§19.2)
+## Transparency Log (Spec-05-Federation-Trust transparency-log rules)
 
 The transparency log is an append-only, tamper-evident audit anchor. Implementations SHOULD integrate with [Rekor](https://docs.sigstore.dev/rekor/overview/) (Sigstore) or an equivalent log that provides Merkle-tree inclusion proofs.
 
-After submitting a manifest, store the `LogEntry` at `/.well-known/stigmem-manifest-proof.json` (§19.2.4) so peers can independently verify inclusion.
+After submitting a manifest, store the `LogEntry` at `/.well-known/stigmem-manifest-proof.json` (Spec-05-Federation-Trust manifest-proof publication) so peers can independently verify inclusion.
 
 ```bash
 # Submit manifest to Rekor
@@ -131,15 +131,15 @@ rekor-cli verify \
   --entry <log-index>
 ```
 
-In `trust_mode: strict`, peers MUST verify log inclusion proofs before trusting a manifest (§19.2.3). Capability token revocations MUST also be submitted as separate log entries (§19.2.5).
+In `trust_mode: strict`, peers MUST verify log inclusion proofs before trusting a manifest (Spec-05-Federation-Trust log inclusion checks). Capability token revocations MUST also be submitted as separate log entries (Spec-05-Federation-Trust revocation log entries).
 
 ---
 
-## Capability Tokens (§19.3)
+## Capability Tokens (Spec-06-Capability-Tokens)
 
 A **capability token** grants a specific subject a specific verb on a specific resource. Tokens replace ad-hoc per-peer trust agreements with a verifiable, revocable delegation primitive.
 
-### Token shape (§19.3.2)
+### Token shape (Spec-06-Capability-Tokens token shape)
 
 ```
 CapabilityToken:
@@ -155,7 +155,7 @@ CapabilityToken:
   signature:      base64url       // Ed25519 sig over JCS-canonical body, signed by issuer key
 ```
 
-### Issue a token (§5.23)
+### Issue a token (Spec-03-HTTP-API capability-token issue route)
 
 ```bash
 curl -X POST https://your-node.example.com/v1/federation/capability-tokens \
@@ -172,7 +172,7 @@ curl -X POST https://your-node.example.com/v1/federation/capability-tokens \
 # → 201 { "token": "...", "token_id": "..." }
 ```
 
-### Verify a token (§19.3.3)
+### Verify a token (Spec-06-Capability-Tokens verification)
 
 Receivers MUST verify a token before honoring it:
 
@@ -183,20 +183,20 @@ Receivers MUST verify a token before honoring it:
 5. Check `expiry > now`.
 6. Confirm the token is not revoked.
 
-### Revoke a token (§5.24)
+### Revoke a token (Spec-03-HTTP-API capability-token revocation route)
 
 ```bash
 curl -X POST https://your-node.example.com/v1/federation/capability-tokens/$TOKEN_ID/revoke \
   -H "Authorization: Bearer $STIGMEM_ADMIN_KEY" \
   -d '{}'
-# → 204; revocation is logged to the transparency log (§19.2.5)
+# → 204; revocation is logged to the transparency log (Spec-05-Federation-Trust revocation log entries)
 ```
 
-A revoked token MUST be rejected even if it has not yet expired (§19.3.4). Nodes SHOULD cache revocation events with a TTL of at least 60 seconds.
+A revoked token MUST be rejected even if it has not yet expired (Spec-06-Capability-Tokens revocation). Nodes SHOULD cache revocation events with a TTL of at least 60 seconds.
 
 ---
 
-## Source-Trust Score (§19.4)
+## Source-Trust Score (Spec-05-Federation-Trust source-trust score)
 
 Every inbound fact source receives a scalar `t ∈ [0,1]`. At recall time, effective confidence is:
 
@@ -204,9 +204,9 @@ Every inbound fact source receives a scalar `t ∈ [0,1]`. At recall time, effec
 effective_confidence = fact.confidence × t(fact.source)
 ```
 
-`t` is recomputed live at recall time using current peer state (§19.4.4). The `source_trust` snapshot stored on the fact is informational only.
+`t` is recomputed live at recall time using current peer state (Spec-05-Federation-Trust recall-time multiplier). The `source_trust` snapshot stored on the fact is informational only.
 
-### Derivation formula (§19.4.2)
+### Derivation formula (Spec-05-Federation-Trust source-trust formula)
 
 ```
 t = clamp(
@@ -226,9 +226,9 @@ t = clamp(
 
 **`attestation_mode_factor`** reflects the node's attestation strictness: `enforce` → 1.0, `warn` → 0.6, `off` → 0.2.
 
-If all components are unavailable, `t` defaults to 0.5. Admin-blocklisted sources always receive `t = 0.0` (§19.4.5).
+If all components are unavailable, `t` defaults to 0.5. Admin-blocklisted sources always receive `t = 0.0` (Spec-05-Federation-Trust blocklist handling).
 
-### Trust mode (§19.4.3)
+### Trust mode (Spec-05-Federation-Trust trust mode)
 
 Configure via `STIGMEM_TRUST_MODE`:
 
@@ -238,23 +238,23 @@ Configure via `STIGMEM_TRUST_MODE`:
 | `relaxed` (default) | Trust scoring active; low scores logged but not quarantined |
 | `off` | No scoring; `source_trust` is `null` on all stored facts |
 
-When using non-default trust weights, declare them at `/.well-known/stigmem` under `federation_trust.trust_weights` (§19.10).
+When using non-default trust weights, declare them at `/.well-known/stigmem` under `federation_trust.trust_weights` (Spec-04-Manifests0).
 
 ---
 
-## Quarantine Garden (§19.5)
+## Quarantine Garden (Spec-08-Quarantine-Garden)
 
-A **quarantine garden** is a Memory Garden (§17) with `quarantine: true` set at creation. It holds facts pending human or automated review before they enter production scope.
+A **quarantine garden** is a Memory Garden (Spec-02-Scopes-and-ACL) with `quarantine: true` set at creation. It holds facts pending human or automated review before they enter production scope.
 
-In `trust_mode: strict`, the node automatically routes inbound facts to the designated quarantine garden when (§19.5.4):
+In `trust_mode: strict`, the node automatically routes inbound facts to the designated quarantine garden when (Spec-08-Quarantine-Garden routing):
 
 - The source has `t < 0.2`, **or**
 - The source lacks a valid org manifest, **or**
-- The fact fails provenance chain verification (§19.6.4).
+- The fact fails provenance chain verification (Spec-05-Federation-Trust provenance verification).
 
 If no quarantine garden is designated, these facts are rejected with HTTP 403 `trust_below_threshold`.
 
-### Review quarantined facts (§5.25)
+### Review quarantined facts (Spec-03-HTTP-API quarantine operations)
 
 ```bash
 QUARANTINE_ID="<your quarantine garden uuid>"
@@ -279,22 +279,22 @@ curl -X POST https://your-node.example.com/v1/gardens/$QUARANTINE_ID/reject \
   }"
 ```
 
-Callers need the `quarantine:moderator` or `admin` role on the quarantine garden (§19.5.3). All promote and reject events are written to the attestation audit log (§18.10 + §19.5.6).
+Callers need the `quarantine:moderator` or `admin` role on the quarantine garden (Spec-08-Quarantine-Garden roles). All promote and reject events are written to the attestation audit log (Spec-X6-Source-Attestation section 10 + Spec-08-Quarantine-Garden audit events).
 
 A rejected fact is retained in the quarantine garden for audit and MUST NOT appear in normal recall results.
 
 ---
 
-## Provenance Chain (§19.6)
+## Provenance Chain (Spec-05-Federation-Trust provenance-chain rules)
 
-Facts may declare their intellectual antecedents and carry cryptographic attestations from intermediate processors. Two new fields extend the v1.1 fact record (§2.8):
+Facts may declare their intellectual antecedents and carry cryptographic attestations from intermediate processors. Two new fields extend the modular fact record (Spec-15-Fact-Semantics):
 
 | Field | Type | Purpose |
 |---|---|---|
 | `derived_from` | `[FactHash]` | SHA-256 hashes of antecedent facts; ordered by derivation precedence |
 | `attestation_chain` | `[Signature]` | Ed25519 signatures from intermediate processors; paired with `attestation_chain_issuers` |
 
-### Fact hash computation (§19.6.2)
+### Fact hash computation (Spec-05-Federation-Trust fact-hash computation)
 
 A fact hash is the hex-encoded SHA-256 of the JCS-canonical JSON of:
 
@@ -312,7 +312,7 @@ A fact hash is the hex-encoded SHA-256 of the JCS-canonical JSON of:
 
 The following fields are excluded: `id`, `garden_id`, `attested`, `source_trust`, `derived_from`, `attestation_chain`, `attestation_chain_issuers`. Excluding trust annotations keeps the hash stable across metadata updates.
 
-### Example fact with provenance (§2.8)
+### Example fact with provenance (Spec-15-Fact-Semantics)
 
 ```json
 {
@@ -334,7 +334,7 @@ The following fields are excluded: `id`, `garden_id`, `attested`, `source_trust`
 }
 ```
 
-### Verification rules (§19.6.4)
+### Verification rules (Spec-05-Federation-Trust provenance verification)
 
 A provenance chain is **valid** if all of the following hold:
 
@@ -343,26 +343,26 @@ A provenance chain is **valid** if all of the following hold:
 3. No issuer appears more than once in `attestation_chain_issuers`.
 4. Each issuer's entity URI appears in their manifest's `entities` list.
 
-In `trust_mode: strict`, facts with invalid provenance chains MUST be rejected (§19.6.4). In `relaxed` mode, warnings are logged.
+In `trust_mode: strict`, facts with invalid provenance chains MUST be rejected (Spec-05-Federation-Trust provenance verification). In `relaxed` mode, warnings are logged.
 
 ---
 
-## Recall-Time Content Sanitizer (§19.7)
+## Recall-Time Content Sanitizer (ADR-003 defense-in-depth sanitizer model)
 
-The sanitizer prevents prompt-injection payloads from reaching recall consumers. It is applied immediately before API response serialisation — not at write time — so future policy changes apply retroactively to stored facts (§19.7.1).
+The sanitizer prevents prompt-injection payloads from reaching recall consumers. It is applied immediately before API response serialisation — not at write time — so future policy changes apply retroactively to stored facts (ADR-003 defense-in-depth sanitizer model).
 
-The sanitizer runs as the final step in the recall pipeline (§19.7.5):
+The sanitizer runs as the final step in the recall pipeline (ADR-003 recall-time sanitizer position):
 
 ```
 Storage
-  → Scope/garden ACL filter (§17.3)
-  → Source-trust multiplier → effective_confidence (§19.4.4)
-  → Provenance chain verification (§19.6.4, strict only)
+  → Scope/garden ACL filter (Spec-02-Scopes-and-ACL garden ACL filtering)
+  → Source-trust multiplier → effective_confidence (Spec-05-Federation-Trust recall-time multiplier)
+  → Provenance chain verification (Spec-05-Federation-Trust provenance verification, strict only)
   → Content sanitizer   ← HERE
   → API response serialiser
 ```
 
-### Enforcement modes (§19.7.4)
+### Enforcement modes (ADR-003 sanitizer enforcement modes)
 
 Configure via `STIGMEM_SANITIZER_MODE`:
 
@@ -375,7 +375,7 @@ Configure via `STIGMEM_SANITIZER_MODE`:
 
 Operators MAY configure a stricter mode than the `trust_mode` default; they MUST NOT configure a less restrictive mode in `trust_mode: strict`.
 
-### Default sentinel patterns (§19.7.2)
+### Default sentinel patterns (ADR-003 default sentinel patterns)
 
 The following are checked against string- and text-typed `FactValue` fields:
 
@@ -391,17 +391,17 @@ The following are checked against string- and text-typed `FactValue` fields:
 
 Add extra patterns via `STIGMEM_SANITIZER_EXTRA_PATTERNS` (newline-delimited regex file). Operators MUST NOT remove default patterns in `trust_mode: strict`.
 
-### Schema enforcement at recall time (§19.7.3)
+### Schema enforcement at recall time (ADR-003 recall-time schema enforcement)
 
 The sanitizer also enforces type correctness for structured values. `NaN`/`±Inf` numbers, malformed refs, and invalid JSON blobs are replaced with `null`. Facts where substitution occurs are marked `sanitizer_redacted: true` in the response.
 
-### Audit logging (§19.7.6)
+### Audit logging (ADR-003 sanitizer audit logging)
 
-Every sanitizer action is logged to the attestation audit log (§18.10) with `sanitizer_action`, `fact_id`, `matched_pattern`, and `recall_endpoint`.
+Every sanitizer action is logged to the attestation audit log (Spec-X6-Source-Attestation section 10) with `sanitizer_action`, `fact_id`, `matched_pattern`, and `recall_endpoint`.
 
 ---
 
-## Well-known advertisement (§19.10)
+## Well-known advertisement (Spec-04-Manifests0)
 
 Nodes MUST extend their `/.well-known/stigmem` response to declare federation trust configuration:
 
@@ -426,7 +426,7 @@ Nodes MUST extend their `/.well-known/stigmem` response to declare federation tr
 
 ---
 
-## Error reference (§19.9)
+## Error reference (Spec-05-Federation-Trust error reference)
 
 | HTTP | Code | Condition |
 |---|---|---|
@@ -447,7 +447,7 @@ Nodes MUST extend their `/.well-known/stigmem` response to declare federation tr
 ---
 
 :::info See also
-- [Federation guide](./)  — peer handshake and §6 wire protocol
+- [Federation guide](./)  — peer handshake and Spec-05-Federation-Trust wire protocol
 - [4-node federation topology](./federation-4node.md) — multi-node setup examples
-- [Source Attestation §18](../../spec/index.md) — the §18 foundation §19 builds on
+- [Source Attestation Spec-X6-Source-Attestation](../../spec/index.md) — the Spec-X6-Source-Attestation foundation Spec-05-Federation-Trust builds on
 :::

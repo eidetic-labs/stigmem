@@ -8,7 +8,7 @@ audience: Integrator
 # Recall
 
 **Audience:** Agent developers building on top of a Stigmem node.
-**Spec reference:** §20.3 Recall API.
+**Spec reference:** Spec-07-Recall-Pipeline and Spec-X11-Recall-Graph.
 
 ---
 
@@ -167,7 +167,7 @@ curl -s -X POST http://localhost:8765/v1/recall \
 
 ---
 
-## Memory cards and recall fast-path (§20.4)
+## Memory cards and recall fast-path (Spec-X11-Recall-Graph)
 
 Memory cards are per-entity, per-scope pre-aggregated summaries stored in the `memory_cards` table. They accelerate recall by short-circuiting raw-fact re-ranking for entities that have a fresh, reliable card.
 
@@ -183,9 +183,9 @@ Memory cards are per-entity, per-scope pre-aggregated summaries stored in the `m
 
 ## Security and access control
 
-- All recall results are filtered by the caller's garden ACL (§17) at query time — callers never see facts from gardens they don't have read access to.
-- The content sanitizer (§19.7) strips known prompt-injection sentinels and bidirectional-override characters from `value` fields before they appear in the response.
-- `source_trust` on each result reflects the identity strength of the writing agent (§19). Effective confidence = `confidence × source_trust`. Facts below `min_confidence` are excluded.
+- All recall results are filtered by the caller's garden ACL (Spec-02-Scopes-and-ACL) at query time — callers never see facts from gardens they don't have read access to.
+- The content sanitizer (ADR-003 defense-in-depth sanitizer model) strips known prompt-injection sentinels and bidirectional-override characters from `value` fields before they appear in the response.
+- `source_trust` on each result reflects the identity strength of the writing agent (Spec-05-Federation-Trust). Effective confidence = `confidence × source_trust`. Facts below `min_confidence` are excluded.
 
 ---
 

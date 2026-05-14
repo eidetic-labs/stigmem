@@ -8,17 +8,17 @@ audience: Operator
 # Key Rotation
 
 **Audience:** operators and security engineers managing key lifecycle in production.  
-**Spec reference:** §22.2 Key Rotation, §19.3.2 Max Token TTL; encryption key derivation in storage hardening; federation keys §5.3, §6.
+**Spec reference:** Spec-10-Hardening key rotation, Spec-06-Capability-Tokens max token TTL, encryption key derivation in storage hardening, and Spec-05-Federation-Trust federation keys.
 
 There are three distinct key types to rotate:
 
-| Key type | Purpose | Rotation impact | Max rotation cadence (§22.2.4) |
+| Key type | Purpose | Rotation impact | Max rotation cadence (Spec-10-Hardening max rotation cadence) |
 |---|---|---|---|
 | **Encryption passphrase** | At-rest encryption of the database file | Node must stop; no peer impact | — |
 | **Node identity key** (Ed25519) | Federation peer authentication, snapshot signing, manifest self-signature | All pinned peers must re-pin or auto-refresh | ≤ 365 days |
 | **Capability issuer key** (Ed25519) | Signing capability tokens issued to subjects | In-flight tokens valid during dual-trust window | ≤ 90 days |
 
-Both Ed25519 key types use a **dual-trust window** (§22.2.2): the retiring key remains in the accept-set for at least 90 days — long enough to cover all in-flight tokens (max TTL is 90 days per §19.3.2).
+Both Ed25519 key types use a **dual-trust window** (Spec-10-Hardening dual-trust window): the retiring key remains in the accept-set for at least 90 days — long enough to cover all in-flight tokens (max TTL is 90 days per Spec-06-Capability-Tokens token shape).
 
 ---
 
@@ -139,7 +139,7 @@ stigmem snapshot verify /backups/old-snap.tar.gz --trusted-key <old-base64url-pu
 
 ---
 
-## CLI-based rotation (spec §22.2)
+## CLI-based rotation (Spec-10-Hardening)
 
 The `stigmem identity rotate-key` command handles key generation, dual-trust window setup, and transparency-log entries in a single step:
 
@@ -176,7 +176,7 @@ After committing, update your secrets manager and restart the node — the same 
 | Forged rotation event | Rotation event signature must verify under the retiring key |
 | Key reuse / regression attack | `verify_rotation_chain` rejects any `new_key_id` already seen in the chain |
 | TL unavailable during rotation | In `trust_mode=strict`, TL failure surfaces as a hard error; use `--dry-run` to pre-check |
-| Dual-trust window too short | CLI enforces minimum 90 days; spec §22.2.2 prohibits shorter windows |
+| Dual-trust window too short | CLI enforces minimum 90 days; Spec-10-Hardening.2 prohibits shorter windows |
 
 ---
 

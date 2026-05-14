@@ -36,11 +36,11 @@ A fact is immutable once written. Updates are new facts. Retractions are facts w
 | Property | How |
 |---|---|
 | **Audit trail** | Every assertion ever made is preserved. Nothing is overwritten or deleted. |
-| **Typed values** | Seven value types: `string`, `text`, `number`, `boolean`, `datetime`, `ref`, `null` (spec §2.1). |
+| **Typed values** | Seven value types: `string`, `text`, `number`, `boolean`, `datetime`, `ref`, `null` (Spec-01-Fact-Model typed values). |
 | **Provenance** | Every fact carries `source` (who asserted it) and `timestamp` (when). |
 | **Confidence** | A float in [0.0, 1.0]. `1.0` = certain, `0.5` = uncertain, `0.0` = retracted. |
 | **Scope** | `local`, `team`, `company`, or `public` — governs visibility and federation. |
-| **Causal ordering** | The HLC field (spec §2.4) gives every fact a causally consistent position in time. |
+| **Causal ordering** | The HLC field (Spec-12-HLC-Bounded-Skew) gives every fact a causally consistent position in time. |
 
 ### Worked example: asserting and retracting a fact
 
@@ -81,29 +81,29 @@ Entities use a formal URI scheme that binds identity to the owning node:
 stigmem://{authority}/{type}/{id}
 ```
 
-For example: `stigmem://company.example/user/alice`, `stigmem://company.example/agent/cto`. This prevents identity collisions across federated nodes — two peers can each have a `user/alice` without ambiguity. Entity URIs are normalized to lowercase on ingest (spec §2.6) to prevent silent fragmentation.
+For example: `stigmem://company.example/user/alice`, `stigmem://company.example/agent/cto`. This prevents identity collisions across federated nodes — two peers can each have a `user/alice` without ambiguity. Entity URIs are normalized to lowercase on ingest (Spec-01-Fact-Model entity normalization) to prevent silent fragmentation.
 
 ## Why this is non-obvious
 
-**Immutability seems wasteful.** Storing every version of every fact sounds expensive. But the alternatives — mutable state with conflict resolution, or mutable state with locking — are *more* expensive in a federated system. Immutability eliminates an entire class of distributed systems problems: you never need distributed locks, two-phase commits, or merge algorithms. Contradiction detection (spec §3.3) becomes a simple comparison of existing facts.
+**Immutability seems wasteful.** Storing every version of every fact sounds expensive. But the alternatives — mutable state with conflict resolution, or mutable state with locking — are *more* expensive in a federated system. Immutability eliminates an entire class of distributed systems problems: you never need distributed locks, two-phase commits, or merge algorithms. Contradiction detection (Spec-15-Fact-Semantics) becomes a simple comparison of existing facts.
 
 **Retracting by asserting `confidence = 0.0` seems indirect.** But it preserves the retraction as a first-class event with its own provenance. You can answer "who retracted this, and when?" — which matters for compliance (GDPR Art. 17) and debugging. A `DELETE` operation would destroy that information.
 
-**Seven value types seem arbitrary.** They're the minimum set that covers the practical needs of agent memory systems without requiring schema registration. `string` for labels, `text` for narrative, `number`/`boolean`/`datetime` for structured data, `ref` for entity-to-entity links (which power the graph index in spec §20.1), and `null` for explicit "unknown."
+**Seven value types seem arbitrary.** They're the minimum set that covers the practical needs of agent memory systems without requiring schema registration. `string` for labels, `text` for narrative, `number`/`boolean`/`datetime` for structured data, `ref` for entity-to-entity links (which power the graph index in Spec-X11-Recall-Graph graph index), and `null` for explicit "unknown."
 
 ## What it costs
 
-- **Storage.** Every update creates a new row. For high-churn relations, the facts table grows proportionally. The decay sweeper (spec §15) mitigates this by automatically retracting stale facts based on configurable TTL and half-life policies.
+- **Storage.** Every update creates a new row. For high-churn relations, the facts table grows proportionally. The decay sweeper (Spec-X9-Decay-Semantics) mitigates this by automatically retracting stale facts based on configurable TTL and half-life policies.
 - **Query complexity.** Finding the "current" value for an entity-relation pair requires ordering by HLC and filtering by confidence — not a simple key lookup. The node handles this internally, but implementers should index on `(entity, relation, scope)`.
 - **No partial updates.** You can't change one field of a fact. You assert a complete new fact. For the atomic assertions Stigmem models, this is acceptable; for document-shaped data, use `ref`-type values to point to external storage.
 
 ## References
 
-- Spec §2 — Atomic Fact Shape
-- Spec §2.1 — FactValue types
-- Spec §2.4 — Hybrid Logical Clock
-- Spec §2.5 — Entity URI Scheme
-- Spec §2.6 — Entity Naming Rules and strict normalizer
-- Spec §5.1 — Assert a fact (wire format)
-- Spec §5.4 — Retract a fact
-- Spec §7 — Design Decisions Log (immutability rationale)
+- Spec-01-Fact-Model — Atomic Fact Shape
+- Spec-01-Fact-Model.1 — FactValue types
+- Spec-01-Fact-Model.4 — Hybrid Logical Clock
+- Spec-01-Fact-Model.5 — Entity URI Scheme
+- Spec-01-Fact-Model.6 — Entity Naming Rules and strict normalizer
+- Spec Spec-03-HTTP-API assert-fact route — Assert a fact (wire format)
+- Spec Spec-03-HTTP-API retract-fact route — Retract a fact
+- Protocol overview and ADRs — Design rationale for immutability

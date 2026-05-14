@@ -6,8 +6,8 @@ audience: Integrator
 
 # Scope Propagation Invariants
 
-:::info the pre-reset spec — Normative
-Scope propagation invariants are **normative** in spec the pre-reset spec (§6.8). These close the open question in §8.5 of pre-reset regarding `company`-scoped fact re-federation. All nodes running the pre-reset spec or later MUST implement invariant 6.8.1 and 6.8.2.
+:::info Modular spec
+Scope propagation invariants are covered by Spec-05-Federation-Trust scope-propagation invariants. These close the pre-reset open question about `company`-scoped fact re-federation. All conforming nodes MUST implement the transitive scope non-escalation and company-scope re-federation invariants.
 :::
 
 **Audience:** Node operators and federation architects building multi-hop topologies where facts cross organizational boundaries.
@@ -35,9 +35,9 @@ fact.scope ∩ origin_allowed_scopes ∩ C's PeerDeclaration allowed_scopes
 
 If the intersection is empty (e.g., A granted B `team` scope but C's PeerDeclaration only has `local`), the fact is excluded from B's pull response to C — not an error, just a scope filter.
 
-## Company-scoped facts: no re-federation (§6.8.2)
+## Company-scoped facts: no re-federation (Spec-05-Federation-Trust scope-propagation invariants)
 
-This invariant resolves pre-reset §8.5 directly.
+This invariant resolves the pre-reset company-scope re-federation question directly.
 
 **Invariant 6.8.2:** A node that receives a `company`-scoped fact MUST NOT re-federate it to any third node, regardless of the third node's PeerDeclaration.
 
@@ -52,7 +52,7 @@ Implementation: ingested company-scoped facts are tagged `re_federation_blocked=
 STIGMEM_FEDERATION_ALLOW_COMPANY_REFEDERATION=false  # default; recommended
 ```
 
-## Edge cases (§6.8.3)
+## Edge cases (Spec-05-Federation-Trust scope-propagation invariants)
 
 ### Mixed-scope batches
 
@@ -110,6 +110,6 @@ Monitor these entries to detect misconfigured PeerDeclarations before they cause
 
 - [Federation guide](./)  — PeerDeclaration registration and pull protocol
 - [Relay backpressure guide](./relay-backpressure) — lag signals in N-node topologies
-- Spec §6.8 — Scope Propagation Invariants
-- Spec §6 — Federation protocol
-- Spec §8.5 (pre-reset) — Open question resolved by §6.8.2
+- Spec-05-Federation-Trust.8 — Scope Propagation Invariants
+- Spec-05-Federation-Trust — Federation protocol
+- Pre-reset company-scope open question — resolved by Spec-05-Federation-Trust scope-propagation invariants

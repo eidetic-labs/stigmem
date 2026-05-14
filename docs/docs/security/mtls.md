@@ -7,7 +7,7 @@ audience: Operator
 
 # mTLS Federation Transport
 
-Stigmem nodes use **mutual TLS (mTLS)** for all federation peer-to-peer traffic — replication pulls, push wakes, and capability-token exchanges.  This is a normative requirement of spec §22.1 for any deployment that connects more than one node.
+Stigmem nodes use **mutual TLS (mTLS)** for all federation peer-to-peer traffic — replication pulls, push wakes, and capability-token exchanges.  This is a normative requirement of Spec-10-Hardening for any deployment that connects more than one node.
 
 > **Localhost opt-out.** mTLS is disabled by default.  Leave `STIGMEM_TLS_CERT_PATH` / `STIGMEM_TLS_KEY_PATH` unset only if **all** federation peers are on the same host (`localhost` / `127.0.0.1`).  Any cross-host deployment **must** configure mTLS.
 
@@ -22,7 +22,7 @@ When `STIGMEM_TLS_CERT_PATH` and `STIGMEM_TLS_KEY_PATH` are set:
 3. **Cert watcher**: A background task polls `STIGMEM_TLS_CERT_PATH` every 5 seconds.  When the mtime changes, it calls `ssl.SSLContext.load_cert_chain()` on the live context — in-flight connections are unaffected; new handshakes pick up the new cert immediately.
 4. **SIGHUP**: Sending `SIGHUP` to the node process triggers an immediate cert reload (same mechanism as the file watcher).
 
-### Cipher policy (spec §22.1.2.3)
+### Cipher policy (Spec-10-Hardening.2.3)
 
 TLS 1.3 is enforced as the minimum protocol version.  The permitted cipher suites are:
 
@@ -34,7 +34,7 @@ TLS 1.3 is enforced as the minimum protocol version.  The permitted cipher suite
 
 TLS 1.2 and earlier are **not** negotiated on federation ports.
 
-### SAN validation (spec §22.1.2.4)
+### SAN validation (Spec-10-Hardening.2.4)
 
 After each successful handshake, the node verifies that the peer certificate's `subjectAltName` contains a **URI SAN** matching the peer's `entity_uri` as declared in its org manifest (`/.well-known/stigmem-manifest.json`).  Connections where the SAN does not match are rejected with a structured JSON error before any federation data is exchanged.
 
@@ -92,7 +92,7 @@ metadata:
   namespace: stigmem
 spec:
   secretName: stigmem-node-tls
-  duration: 24h         # short-lived as recommended by spec §22.1.4
+  duration: 24h         # short-lived as recommended by Spec-10-Hardening.4
   renewBefore: 8h
   issuerRef:
     name: stigmem-ca-issuer
@@ -124,7 +124,7 @@ cert-manager rotates the secret automatically.  Stigmem's cert watcher detects t
 
 ---
 
-## Certificate rotation (spec §22.1.3)
+## Certificate rotation (Spec-10-Hardening.3)
 
 ### Zero-downtime rotation procedure
 
@@ -138,7 +138,7 @@ cert-manager rotates the secret automatically.  Stigmem's cert watcher detects t
    kill -HUP $(cat /var/run/stigmem.pid)
    ```
 
-6. **Dual-trust window**: During the rotation, federation peers may see either the old or the new certificate depending on timing.  Both are signed by the same CA, so peer verification succeeds throughout.  See spec §22.1.3.5 and §22.2.2 for the dual-trust period requirements (minimum 90 days for capability tokens).
+6. **Dual-trust window**: During the rotation, federation peers may see either the old or the new certificate depending on timing.  Both are signed by the same CA, so peer verification succeeds throughout.  See Spec-10-Hardening.3.5 and Spec-10-Hardening dual-trust window for the dual-trust period requirements (minimum 90 days for capability tokens).
 
 ### Verifying rotation
 

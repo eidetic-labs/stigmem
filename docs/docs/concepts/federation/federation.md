@@ -22,7 +22,7 @@ High-level flow:
 4. Node A's background pull loop periodically fetches new facts from Node B using that token
 5. The same flow runs in reverse so both nodes replicate to each other
 
-The full protocol is defined in spec §6.
+The full protocol is defined in Spec-05-Federation-Trust.
 
 ---
 
@@ -71,7 +71,7 @@ export STIGMEM_FEDERATION_PRIVKEY=<base64url-priv>
 
 ---
 
-## PeerDeclaration and signing (spec §6.1) {#peer-declaration}
+## PeerDeclaration and signing (Spec-05-Federation-Trust peer declaration) {#peer-declaration}
 
 To register Node A with Node B, Node A must produce a signed `PeerDeclaration` — a canonical
 JSON document that Node B verifies against Node A's published public key.
@@ -138,7 +138,7 @@ Node A is already registered — safe to skip. HTTP `403` means the signature di
 
 ---
 
-## Peer tokens (spec §6.3) {#peer-tokens}
+## Peer tokens (Spec-05-Federation-Trust replication protocol) {#peer-tokens}
 
 After registration, Node B issues a **peer token** to Node A. The token is scoped to the
 `allowed_scopes` declared at registration and is used exclusively for the pull-replication
@@ -168,7 +168,7 @@ and carry no write permissions. If a token is compromised, delete the peer with
 
 ---
 
-## Scope enforcement (spec §6.4) {#scope-enforcement}
+## Scope enforcement (Spec-05-Federation-Trust scope enforcement) {#scope-enforcement}
 
 Scopes control which facts flow across the federation link. Only facts whose `scope` field
 matches one of the `allowed_scopes` in the peer registration are replicated.
@@ -189,7 +189,7 @@ boundary does not leak existence information.
 
 ---
 
-## Conflict detection during ingest (spec §6.5) {#conflict-detection}
+## Conflict detection during ingest (Spec-05-Federation-Trust conflict handling) {#conflict-detection}
 
 When a pulled fact conflicts with a locally-held fact (same entity, relation, and scope but
 a different value), the ingest layer records a `ConflictRecord` and surfaces the contradiction.
@@ -322,7 +322,7 @@ node and a least-privilege key, and read the open audit limitations before using
 the adapter in an agent workflow. Full usage docs and the security model are in the
 [`adapters/openclaw` README](https://github.com/Eidetic-Labs/stigmem/tree/main/adapters/openclaw#readme);
 the current adopter warning is in
-[LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
+[LIMITATIONS.md Spec-16-Namespace-Registry](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::
 
@@ -411,4 +411,4 @@ Peer registrations are seeded by `infra/soak/setup_peers.py`. See the
 - [Paperclip connector](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/adapter-paperclip) — deploying stigmem as a Paperclip agent fleet's persistent fact store
 - [4-node topology](./federation-4node) — full-mesh setup, failure injection, soak metrics
 - [Federation API Reference](../../reference/api) — full endpoint reference
-- [Architecture](../../reference/architecture) — HLC, PeerDeclaration internals, spec §6
+- [Architecture](../../reference/architecture) — HLC, PeerDeclaration internals, Spec-05-Federation-Trust

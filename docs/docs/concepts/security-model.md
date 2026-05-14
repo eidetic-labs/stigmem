@@ -19,13 +19,13 @@ Every fact is written with one of four scopes:
 | `company` | Federated only when the active `PeerDeclaration` explicitly includes `"company"` in `allowed_scopes`. |
 | `public`  | Federated by default between registered peers.                                              |
 
-Scope enforcement is **read- and write-time**. A misconfigured peer cannot escalate `team` facts to `public` because the scope is checked before the fact is admitted to the federation pipeline. See [§3.5](../spec/) for the normative spec.
+Scope enforcement is **read- and write-time**. A misconfigured peer cannot escalate `team` facts to `public` because the scope is checked before the fact is admitted to the federation pipeline. See [Spec-02-Scopes-and-ACL](../spec/) for the normative spec.
 
 ## Signing — Ed25519 over every cross-node payload
 
 Every node publishes a `federation_pubkey` at `/.well-known/stigmem`. Cross-node primitives are signed with the corresponding private key:
 
-- **PeerDeclaration** — JSON document signed by the declaring node (excluded fields enumerated in spec §6.2).
+- **PeerDeclaration** — JSON document signed by the declaring node (excluded fields enumerated in Spec-05-Federation-Trust capability negotiation).
 - **Federation cursor advances** — HLC cursor checkpoints carry signatures so a misbehaving peer cannot replay or rewrite history.
 - **Capability tokens** (see below) — short-lived JWS signed by the scope owner.
 
@@ -35,13 +35,13 @@ Key rotation uses a **dual-trust window** — the previous and current keys are 
 
 Each cross-org write is admitted via a **source-trust score** `t ∈ [0,1]` derived from identity strength, peer history, scope authority, and attestation mode. Effective confidence at recall time is `confidence × t`.
 
-Facts below a configurable trust threshold land in a **quarantine garden** for human review before entering the canonical fact store. The quarantine garden is itself a Memory Garden (§17) with admin-only ACL — operators triage, accept, or reject quarantined writes from a single dashboard.
+Facts below a configurable trust threshold land in a **quarantine garden** for human review before entering the canonical fact store. The quarantine garden is itself a Memory Garden (Spec-02-Scopes-and-ACL) with admin-only ACL — operators triage, accept, or reject quarantined writes from a single dashboard.
 
 Facts also accumulate `derived_from: [fact_hash...]` and `attestation_chain: [signature...]` for tamper-evident audit. See [Federation Trust](./federation/federation-trust) for the operator runbook.
 
 ## Source Attestation — binding writes to identities
 
-Source Attestation (spec §18) binds an `entity_uri` to an API key so every fact written by that key carries a verifiable `attested` field. Three enforcement modes:
+Source Attestation (Spec-X6-Source-Attestation) binds an `entity_uri` to an API key so every fact written by that key carries a verifiable `attested` field. Three enforcement modes:
 
 | Mode      | Behaviour                                                                                    |
 |-----------|---------------------------------------------------------------------------------------------|

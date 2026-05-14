@@ -76,7 +76,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | `Spec-X2-RTBF-Tombstones` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset §23 right-to-be-forgotten tombstone material |
 | `Spec-X3-Time-Travel-Queries` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-X2-RTBF-Tombstones >= 0.1.0-alpha.0` | pre-reset §24 time-travel/as-of query material |
 | `Spec-X5-Memory-Garden-Advanced-ACL` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0` | pre-reset §17 advanced Memory Garden ACL material |
-| `Spec-X6-Source-Attestation` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset §18 source attestation material |
+| `Spec-X6-Source-Attestation` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset section 18 source-attestation material |
 | `Spec-X7-Subscriptions` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0` | pre-reset §20.5 subscription material |
 | `Spec-X8-Intent-Envelope` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 4 intent envelope material |
 | `Spec-X9-Decay-Semantics` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | pre-reset §15 decay semantics material |

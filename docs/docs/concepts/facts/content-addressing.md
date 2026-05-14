@@ -50,7 +50,7 @@ These six fields define *what was asserted, by whom, at what confidence, in what
 
 The canonical body is serialized using **RFC 8785 (JSON Canonicalization Scheme)**: deterministic key ordering, no whitespace, UTF-8. This ensures that any implementation computing the CID from the same six fields produces the same bytes, and therefore the same hash.
 
-The `"sha256:"` prefix enables future hash-algorithm rotation (e.g., `"sha3-256:"`) following the dual-trust rollover pattern from spec §22.2.
+The `"sha256:"` prefix enables future hash-algorithm rotation (e.g., `"sha3-256:"`) following the dual-trust rollover pattern from Spec-10-Hardening.
 
 ### Worked example: computing a CID
 
@@ -112,7 +112,7 @@ curl -X POST $STIGMEM_URL/v1/facts/fact_01J.../verify-cid
 # → {"cid_valid": true, "computed_cid": "sha256:...", "stored_cid": "sha256:..."}
 ```
 
-Existing facts (pre-v1.1) have `cid: null` until the backfill migration runs. New facts are always written with a CID.
+Existing pre-CID facts have `cid: null` until the backfill migration runs. New facts are always written with a CID.
 
 ## Why this is non-obvious
 
@@ -120,7 +120,7 @@ Existing facts (pre-v1.1) have `cid: null` until the backfill migration runs. Ne
 
 **Excluding `derived_from` prevents circularity.** If CID computation included `derived_from` (which references other fact CIDs), you'd need to know all ancestor CIDs before computing the current CID — and adding a new derivation link would change the CID. Excluding it keeps CID computation O(1) and non-recursive.
 
-**Some excluded fields are security-relevant.** `valid_until`, `derived_from`, `attestation_chain`, and `source_trust` are excluded from the CID but still need independent validation. A malicious peer could modify `valid_until` to extend a fact's lifetime without changing its CID. Spec §25.2.1 documents per-field validation requirements for each excluded field.
+**Some excluded fields are security-relevant.** `valid_until`, `derived_from`, `attestation_chain`, and `source_trust` are excluded from the CID but still need independent validation. A malicious peer could modify `valid_until` to extend a fact's lifetime without changing its CID. Spec-21-Content-Addressed-IDs.2.1 documents per-field validation requirements for each excluded field.
 
 **The `"sha256:"` prefix looks redundant today.** It exists for algorithm agility. If SHA-256 is ever deprecated, nodes can introduce `"sha3-256:"` and run a dual-trust transition period where both are accepted. Without the prefix, you'd need a flag day where all nodes switch simultaneously.
 
@@ -133,9 +133,9 @@ Existing facts (pre-v1.1) have `cid: null` until the backfill migration runs. Ne
 
 ## References
 
-- Spec §25.1 — CID scope and benefits (tamper detection, deduplication, provenance linkage)
-- Spec §25.2 — CID format (canonical body, hash function, field canonicalization, algorithm rotation)
-- Spec §25.3 — Migration path (alias table, dual addressing, `cid` field on FactRecord)
-- Spec §25.4 — Federation envelope extensions (CID in payloads, `derived_from` CID references)
-- Spec §25.7 — Migration procedure (schema migration, backfill runner, online write path)
-- Spec §19.6.2 — Fact hash computation (the pre-CID hash format used in provenance chains)
+- Spec-21-Content-Addressed-IDs.1 — CID scope and benefits (tamper detection, deduplication, provenance linkage)
+- Spec-21-Content-Addressed-IDs.2 — CID format (canonical body, hash function, field canonicalization, algorithm rotation)
+- Spec-21-Content-Addressed-IDs.3 — Migration path (alias table, dual addressing, `cid` field on FactRecord)
+- Spec-21-Content-Addressed-IDs.4 — Federation envelope extensions (CID in payloads, `derived_from` CID references)
+- Spec-21-Content-Addressed-IDs.7 — Migration procedure (schema migration, backfill runner, online write path)
+- Spec-05-Federation-Trust.6.2 — Fact hash computation (the pre-CID hash format used in provenance chains)

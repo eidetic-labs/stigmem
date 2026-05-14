@@ -131,7 +131,7 @@ If the DB is lost, see the [cursor-reset recovery guide](../../operators/runbook
 
 ### FM-4: Contradiction storm
 
-Under burst write conditions, each ingested contradiction generates two system facts (`stigmem:conflict:between`, `stigmem:conflict:status`). These use the `stigmem:` prefix and are **not** re-replicated. At 50 contradictions/s, the HLC counter increments rapidly but remains monotonically correct per spec §2.4.
+Under burst write conditions, each ingested contradiction generates two system facts (`stigmem:conflict:between`, `stigmem:conflict:status`). These use the `stigmem:` prefix and are **not** re-replicated. At 50 contradictions/s, the HLC counter increments rapidly but remains monotonically correct per Spec-12-HLC-Bounded-Skew.
 
 **Current limitation:** `conflicts` table has no TTL or eviction. Sustained storms will grow it unboundedly. A conflict archival policy is planned for a future spec version.
 
@@ -141,9 +141,9 @@ The pull endpoint returns HTTP 401 for expired, invalid-signature, or replayed-n
 
 ### FM-6: Scope boundary violation
 
-Peers can only pull facts for scopes declared in their `PeerDeclaration`, regardless of token claims. `local`-scope facts never leave origin (spec §6.4, verified: `TestScopeIsolation`). Violations are rejected with HTTP 403 and logged as `event_type="scope_violation"`.
+Peers can only pull facts for scopes declared in their `PeerDeclaration`, regardless of token claims. `local`-scope facts never leave origin (Spec-05-Federation-Trust scope enforcement, verified: `TestScopeIsolation`). Violations are rejected with HTTP 403 and logged as `event_type="scope_violation"`.
 
-See the [scope propagation guide](./scope-propagation) for `company`-scoped re-federation restrictions (§6.8).
+See the [scope propagation guide](./scope-propagation) for `company`-scoped re-federation restrictions (Spec-05-Federation-Trust scope-propagation invariants).
 
 ## Teardown
 
@@ -157,6 +157,6 @@ The `-v` flag removes data volumes so the next run starts from a clean state.
 
 - [Quickstart](../../get-started/quickstart-tutorial) — two-node setup in under 10 minutes
 - [Federation guide](./)  — PeerDeclaration registration, cursor behavior, and audit log
-- [Relay backpressure](./relay-backpressure) — lag signals in N-node topologies (§6.7)
-- [Scope propagation](./scope-propagation) — scope invariants across relay hops (§6.8)
-- Spec §6 — Federation protocol
+- [Relay backpressure](./relay-backpressure) — lag signals in N-node topologies (Spec-05-Federation-Trust relay-backpressure guidance)
+- [Scope propagation](./scope-propagation) — scope invariants across relay hops (Spec-05-Federation-Trust scope-propagation invariants)
+- Spec-05-Federation-Trust — Federation protocol

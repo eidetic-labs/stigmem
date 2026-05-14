@@ -1,13 +1,13 @@
 ---
 title: Audit Log & Per-Principal Quotas
 sidebar_label: Audit & Quotas
-description: Operator guide for the audit.read capability, the GET /v1/admin/audit endpoint, and per-principal token-bucket quota tuning (spec §22.3–§22.4).
+description: Operator guide for the audit.read capability, the GET /v1/admin/audit endpoint, and per-principal token-bucket quota tuning (Spec-09-Audit-Log–Spec-10-Hardening rate limits).
 audience: Operator
 ---
 
 # Audit Log & Per-Principal Quotas
 
-This guide covers two pre-reset hardening security hardening features (spec §22.3 and §22.4):
+This guide covers two pre-reset hardening security hardening features (Spec-09-Audit-Log and Spec-10-Hardening rate limits):
 
 - **Audit log surface** — how to mint an `audit.read` API key and query the structured audit log.
 - **Per-principal quotas** — the 7 token-bucket dimensions, their defaults, and how to tune them via environment variables.
@@ -16,7 +16,7 @@ This guide covers two pre-reset hardening security hardening features (spec §22
 
 ---
 
-## Audit log surface (§22.3)
+## Audit log surface (Spec-09-Audit-Log)
 
 ### The audit.read capability
 
@@ -95,7 +95,7 @@ Authorization: Bearer <audit.read key>
 
 - **`seq`** — monotonically increasing integer per database; use it as the `cursor` value for the next page.
 - **`next_cursor`** — absent when the current page is the last page.
-- **`detail`** — JSON-encoded map of event-specific fields; schema varies by `event_type` (see §22.3.1).
+- **`detail`** — JSON-encoded map of event-specific fields; schema varies by `event_type` (see Spec-09-Audit-Log event types).
 
 #### Tenant isolation
 
@@ -121,7 +121,7 @@ while true; do
 done
 ```
 
-### Audit event types (§22.3.1)
+### Audit event types (Spec-09-Audit-Log event types)
 
 Fourteen event types are emitted to `fact_audit_log`.  All are returned by `GET /v1/admin/audit` unless filtered by `event_type`.
 
@@ -142,11 +142,11 @@ Fourteen event types are emitted to `fact_audit_log`.  All are returned by `GET 
 | `instruction_audit` | Lazy instruction chunk loaded |
 | `api_key_rehashed` | Legacy SHA-256 API key row migrated to Argon2id after successful authentication |
 
-### Write-ahead ordering (§22.3.2)
+### Write-ahead ordering (Spec-09-Audit-Log write-ahead ordering)
 
 Audit events are persisted **before** the HTTP response is sent.  If the node crashes after writing the event but before responding, the event is still in the log.
 
-### Retention (§22.3.3)
+### Retention (Spec-09-Audit-Log retention)
 
 - **Minimum:** 90 days
 - **Recommended for forensics:** 1 year
@@ -154,13 +154,13 @@ Audit events are persisted **before** the HTTP response is sent.  If the node cr
 
 ---
 
-## Per-principal quotas (§22.4)
+## Per-principal quotas (Spec-10-Hardening rate limits)
 
 ### Model
 
-Stigmem uses a **token-bucket** rate limiter, one bucket per `(entity_uri, tenant_id, dimension)` triple (§22.4.1).  Every inbound request consumes one token from the relevant dimension bucket.  Tokens refill continuously at a fixed rate up to the bucket capacity.
+Stigmem uses a **token-bucket** rate limiter, one bucket per `(entity_uri, tenant_id, dimension)` triple (Spec-10-Hardening token-bucket model).  Every inbound request consumes one token from the relevant dimension bucket.  Tokens refill continuously at a fixed rate up to the bucket capacity.
 
-### The 7 dimensions and their defaults (§22.4.2)
+### The 7 dimensions and their defaults (Spec-10-Hardening quota dimensions)
 
 | Dimension | Capacity | Refill rate | Covers |
 |---|---|---|---|
@@ -200,7 +200,7 @@ STIGMEM_RATE_LIMIT_READ_PER_HOUR=0
 
 Bucket state (current tokens, last refill timestamp) is stored in the `quota_buckets` SQLite table.  It persists across restarts.
 
-### 429 response shape and Retry-After semantics (§22.4.3)
+### 429 response shape and Retry-After semantics (Spec-10-Hardening 429 backpressure)
 
 When a request exceeds the bucket:
 
@@ -286,6 +286,6 @@ No additional configuration is required — the endpoint is registered automatic
 
 ## Related
 
-- [mTLS Federation Transport](./mtls.md) — spec §22.1
-- [Key Rotation](./key-rotation.md) — spec §22.2
+- [mTLS Federation Transport](./mtls.md) — Spec-10-Hardening
+- [Key Rotation](./key-rotation.md) — Spec-10-Hardening
 - [Monitoring](../operators/observability/monitoring.md) — Prometheus metrics, structured logs, health endpoints

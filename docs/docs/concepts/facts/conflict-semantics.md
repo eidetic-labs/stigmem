@@ -109,24 +109,24 @@ sequenceDiagram
 
 **Storing both sides seems redundant.** It's not. In a federated system, the "wrong" value on one node may be the "right" value on another — they just haven't reconciled yet. Discarding either side before explicit resolution destroys information that may be needed for compliance, auditing, or debugging.
 
-**Contradiction records are facts about facts.** The `stigmem:conflict:between` entity is itself an immutable fact in the store. This means you can query, filter, and subscribe to conflicts the same way you query any other fact. No special-purpose conflict API is needed for monitoring — though one is provided for convenience (spec §5.9).
+**Contradiction records are facts about facts.** The `stigmem:conflict:between` entity is itself an immutable fact in the store. This means you can query, filter, and subscribe to conflicts the same way you query any other fact. No special-purpose conflict API is needed for monitoring — though one is provided for convenience in Spec-03-HTTP-API.
 
 **Resolution doesn't delete.** Resolving a conflict asserts a *new* winning fact and marks the conflict as resolved. The original conflicting facts are untouched. This preserves the full decision history: you can reconstruct not just what the final answer was, but what the competing values were and who adjudicated.
 
-**Entity normalization prevents ghost conflicts.** Before pre-reset, `project/EG-18` and `project/eg-18` were treated as different entities — so their conflicting facts would never be detected. The strict normalizer (spec §2.6) ensures case-variant URIs map to the same canonical form, closing this gap.
+**Entity normalization prevents ghost conflicts.** Before pre-reset, `project/EG-18` and `project/eg-18` were treated as different entities — so their conflicting facts would never be detected. The strict normalizer (Spec-01-Fact-Model entity normalization) ensures case-variant URIs map to the same canonical form, closing this gap.
 
 ## What it costs
 
 - **Storage for conflict records.** Every contradiction produces at least two additional fact rows (the `stigmem:conflict:between` and `stigmem:conflict:status` facts). In high-contradiction environments, this overhead is proportional to the number of disagreements.
 - **Query latency for contradicted triples.** Returning two facts instead of one means more data to serialize and more for the caller to process. The `include_contradicted=false` default hides this from callers who don't need it.
-- **Operator attention.** Unresolved conflicts accumulate. The lint operation (spec §14) includes a contradiction check that surfaces unresolved conflicts; operators should run it periodically and resolve or escalate stale contradictions.
+- **Operator attention.** Unresolved conflicts accumulate. The lint operation (Spec-20-Lint-Semantics) includes a contradiction check that surfaces unresolved conflicts; operators should run it periodically and resolve or escalate stale contradictions.
 - **No automatic merge.** Stigmem never guesses. If two values conflict and neither has higher confidence or a later HLC, the system surfaces the ambiguity rather than inventing a resolution. This is a deliberate tradeoff: correctness over convenience.
 
 ## References
 
-- Spec §3.3 — Contradiction detection, resolution order, and contradiction fact shape
-- Spec §5.9 — List conflicts (wire format)
-- Spec §5.10 — Resolve a conflict (wire format)
-- Spec §6.5 — Cross-node conflict semantics during federation
-- Spec §2.6 — Entity normalization and fragmentation prevention
-- Spec §14 — Lint operation (contradiction check)
+- Spec Spec-15-Fact-Semantics — Contradiction detection, resolution order, and contradiction fact shape
+- Spec-03-HTTP-API — List conflicts wire format
+- Spec Spec-03-HTTP-API conflict resolution route — Resolve a conflict (wire format)
+- Spec-05-Federation-Trust.5 — Cross-node conflict semantics during federation
+- Spec-01-Fact-Model.6 — Entity normalization and fragmentation prevention
+- Spec Spec-20-Lint-Semantics — Lint operation (contradiction check)

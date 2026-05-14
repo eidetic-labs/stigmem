@@ -1,7 +1,7 @@
 ---
 title: Content-Addressed Fact IDs (CIDs)
 sidebar_label: Content Addressing
-description: Deterministic content-addressed identifiers for facts — deduplication, integrity verification, and external citation (spec §25).
+description: Deterministic content-addressed identifiers for facts — deduplication, integrity verification, and external citation (Spec-21-Content-Addressed-IDs).
 audience: Integrator
 ---
 
@@ -9,7 +9,7 @@ audience: Integrator
 
 **Audience:** Integrators building deduplication pipelines, federation operators verifying fact integrity, and anyone citing facts by content hash.
 
-Every fact in Stigmem receives a **content identifier (CID)** — a deterministic SHA-256 hash of its canonical body. Two facts with the same entity, relation, value, source, and scope always produce the same CID, regardless of when or where they were asserted. The full protocol is defined in spec §25.
+Every fact in Stigmem receives a **content identifier (CID)** — a deterministic SHA-256 hash of its canonical body. Two facts with the same entity, relation, value, source, and scope always produce the same CID, regardless of when or where they were asserted. The full protocol is defined in Spec-21-Content-Addressed-IDs.
 
 ---
 
@@ -27,7 +27,7 @@ sha256:a3f2b8c901d4e5f6789012345678abcdef0123456789abcdef0123456789abcd
 
 ---
 
-## Canonical body (§25.2.2)
+## Canonical body (Spec-21-Content-Addressed-IDs canonical body)
 
 The CID is computed over a JSON object with exactly **6 fields** in lexicographic key order, serialized with RFC 8785 (JCS) determinism:
 
@@ -42,7 +42,7 @@ The CID is computed over a JSON object with exactly **6 fields** in lexicographi
 }
 ```
 
-**Excluded fields** (§25.2.1):
+**Excluded fields** (Spec-21-Content-Addressed-IDs excluded-field validation):
 
 | Field | Why excluded |
 |-------|-------------|
@@ -149,7 +149,7 @@ The node resolves CIDs via the `fact_cid_aliases` table, which maps each CID to 
 
 ---
 
-## Write-path deduplication (§25.7.3)
+## Write-path deduplication (Spec-21-Content-Addressed-IDs write-path deduplication)
 
 When you assert a fact, the node:
 
@@ -192,7 +192,7 @@ If the CID diverges from the stored canonical body, the node emits a `cid_mismat
 
 ---
 
-## Federation and tamper detection (§25.4)
+## Federation and tamper detection (Spec-21-Content-Addressed-IDs federation envelope behavior)
 
 Federation envelopes carry the CID for each fact. The receiving node:
 
@@ -200,11 +200,11 @@ Federation envelopes carry the CID for each fact. The receiving node:
 2. Compares it against the envelope's declared CID.
 3. Rejects the fact if they diverge — this detects tampering in transit.
 
-Facts with `cid: null` whose `created_at` is after the v1.1 GA date are rejected. Legacy facts (pre-v1.1) with `cid: null` are accepted during the backfill window.
+Facts with `cid: null` whose `created_at` falls after CID enforcement begins are rejected. Legacy pre-CID facts with `cid: null` are accepted during the backfill window.
 
 ---
 
-## CID backfill (§25.7.2)
+## CID backfill (Spec-21-Content-Addressed-IDs backfill)
 
 Existing facts created before the pre-reset design window do not have CIDs. The node backfills them in the background:
 
@@ -225,7 +225,7 @@ Response:
 }
 ```
 
-The backfill runs concurrently with live writes. The migration window is 12 months (§25.7.2). After the window closes, all facts must have CIDs.
+The backfill runs concurrently with live writes. The migration window is 12 months (Spec-21-Content-Addressed-IDs backfill). After the window closes, all facts must have CIDs.
 
 ---
 

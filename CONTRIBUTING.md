@@ -12,7 +12,7 @@ Thanks for your interest in contributing. Stigmem is a community spec — the go
 
 ## RFC process
 
-Use this when you want to propose a spec change, add a new field or endpoint, change semantics, or resolve an open question from §8.
+Use this when you want to propose a spec change, add a new field or endpoint, change semantics, or resolve an open question in a modular spec.
 
 1. **Open an RFC issue** using the [RFC template](.github/ISSUE_TEMPLATE/rfc.yml). Include:
    - The problem you're solving
@@ -136,7 +136,7 @@ The [Features page](docs/docs/concepts/features.md) status table is the **single
 1. Open `docs/docs/concepts/features.md`.
 2. Find or add the row for the capability in the appropriate section table.
 3. Set its **Status** column to one of: `Stable`, `Preview`, `Experimental`, or `Deferred`.
-4. Fill the **Spec** column with the relevant Spec ID (e.g., `Spec-X3-Time-Travel`) or legacy section (e.g., `§20.3`).
+4. Fill the **Spec** column with the relevant modular Spec ID (e.g., `Spec-X3-Time-Travel`).
 5. Fill the **Docs** column with a relative link to the guide or reference page.
 6. If a previously `Deferred` or `Experimental` feature graduates per [ADR-008](docs/adr/008-experimental-gates.md), update the row in place — do not add a duplicate. Run the [graduation procedure](ROADMAP.md#spec-graduation-process) for any spec moving from `experimental/` into the canonical surface.
 

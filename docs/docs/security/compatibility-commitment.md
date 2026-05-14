@@ -61,7 +61,7 @@ Content-Type: application/json
 { ... }
 ```
 
-The pinning header is documented in spec §3 (Wire Format). Server implementation lands in the v0.9.0bN beta series.x.
+The pinning header is documented in Spec-15-Fact-Semantics (Wire Format). Server implementation lands in the v0.9.0bN beta series.x.
 
 ## Beta opt-in via `Stigmem-Beta` header
 

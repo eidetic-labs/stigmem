@@ -26,6 +26,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | [`Spec-14-Batch-Assert`](specs/14-batch-assert.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0bN | 2026-05-14 |
 | [`Spec-15-Fact-Semantics`](specs/15-fact-semantics.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-16-Namespace-Registry`](specs/16-namespace-registry.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
+| [`Spec-17-Schema-and-Migration`](specs/17-schema-and-migration.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 
 ## Experimental Specs
 
@@ -62,6 +63,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | `Spec-14-Batch-Assert` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | ADR-006 batch assert material |
 | `Spec-15-Fact-Semantics` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 3 fact-semantics material |
 | `Spec-16-Namespace-Registry` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-15-Fact-Semantics >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 9 namespace-registry material |
+| `Spec-17-Schema-and-Migration` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-08-Quarantine-Garden >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0`<br>`Spec-15-Fact-Semantics >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 10 schema-and-migration material |
 | `Spec-X1-Lazy-Instruction-Discovery` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | pre-reset §21 lazy instruction discovery material |
 | `Spec-X2-RTBF-Tombstones` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset §23 right-to-be-forgotten tombstone material |
 | `Spec-X3-Time-Travel-Queries` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-X2-RTBF-Tombstones >= 0.1.0-alpha.0` | pre-reset §24 time-travel/as-of query material |

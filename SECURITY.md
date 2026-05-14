@@ -205,8 +205,8 @@ The stigmem reference node (`stigmem/node/`) is implemented in Python with FastA
 
 > The controls listed here are **dependency- and code-level controls** that are in effect at v0.9.0a1. **Federation-level and threat-model-level controls** named in the posture-reset banner at the top of this section (mTLS-default, audit log, rate limits, capability validation, bounded HLC skew, storage-immutability stack) are **not yet in effect** and are scheduled for the v0.9.0bN beta series.
 
-- **Authentication:** API keys enforced on all write endpoints; per-scope restrictions supported (§3.5).
-- **Federation:** Peer handshake uses Ed25519 signing; replay attack resistance via HLC timestamps (§6).
+- **Authentication:** API keys enforced on all write endpoints; per-scope restrictions supported by `Spec-02-Scopes-and-ACL` and `Spec-06-Capability-Tokens`.
+- **Federation:** Peer handshake uses Ed25519 signing; replay attack resistance via HLC timestamps per `Spec-05-Federation-Trust` and `Spec-11-Replay-Protection`.
 - **Input validation:** Pydantic models on all HTTP endpoints; malformed payloads return 422 before reaching business logic.
 - **Secrets:** No credentials are committed to the repository. Docker Compose uses environment variable injection.
 - **Container image retention:** Every released container image (`:0.9.0aN`, `:0.9.0bN`, `:1.0.0rcN`, `:1.0.0`, plus the semver-strict spellings) is **retained on GHCR indefinitely**, so an audit trail back to any historical release remains verifiable. Rolling pointers (`:latest`, `:edge`) are retained forever; short-SHA forensics tags are pruned after 90 days. Sigstore signatures are retained alongside their target image. See the [tag-selection guide](https://docs.stigmem.dev/operators/deployment/install#image-tags) for choosing the right pin for your deployment.

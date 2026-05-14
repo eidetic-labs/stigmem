@@ -6,30 +6,35 @@ This directory contains the canonical specification for the stigmem federated kn
 
 **[`stigmem-spec-v0.9.0a1.md`](stigmem-spec-v0.9.0a1.md)** is the canonical specification as of 2026-05-09. Per [ADR-001](../docs/adr/001-versioning.md) + [ADR-019](../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md), v0.9.0a1 is the first build of stigmem; the version *markers* on earlier evolutionary checkpoints labeled internal development steps, not tagged releases.
 
-The canonical spec is in flight — content arrives section-by-section as the master-checklist §4.3a per-section review completes against actual implementation in `node/`. Until a section is fully migrated, refer to the corresponding section in the v2.0 evolutionary snapshot at [`archive/evolution/stigmem-spec-v2.0.md`](archive/evolution/stigmem-spec-v2.0.md) (the most-complete pre-reset content).
+The ADR-010 component specs are the active protocol decomposition. The
+monolithic v0.9.0a1 file remains as the historical disposition map and bridge
+for legacy section numbers.
 
 ### Section disposition (full table in the canonical spec)
 
 | Section group | Status | Destination |
 |---|---|---|
-| §1–§14 (core protocol foundation) | Stable in v0.9.0a1 | This file → canonical spec |
+| §1–§14 (core protocol foundation) | Stable in v0.9.0a1 | `spec/specs/` component specs, plus monolithic overview/governance bridge prose |
 | §15 Decay, §16 Synthesis | Deferred per [ADR-002](../docs/adr/002-v1-scope.md) | [`experimental/decay/spec.md`](../experimental/decay/spec.md), [`experimental/synthesis/spec.md`](../experimental/synthesis/spec.md) |
-| §17 Memory Garden | Basic concept stable; advanced ACL deferred per [ADR-011](../docs/adr/011-cross-cutting-extraction.md) | Canonical (basic); [`experimental/memory-garden-acl/spec.md`](../experimental/memory-garden-acl/spec.md) (advanced) |
+| §17 Memory Garden | Basic concept stable; advanced ACL deferred per [ADR-011](../docs/adr/011-cross-cutting-extraction.md) | [`specs/02-scopes-and-acl.md`](specs/02-scopes-and-acl.md), [`specs/08-quarantine-garden.md`](specs/08-quarantine-garden.md), [`experimental/memory-garden-acl/spec.md`](../experimental/memory-garden-acl/spec.md) |
 | §18 Source Attestation | Deferred | [`experimental/source-attestation/spec.md`](../experimental/source-attestation/spec.md) |
-| §19 Federation Trust | Basic stable (mTLS, capability tokens); advanced trust scoring deferred | Canonical (basic); future `experimental/federation-trust-extensions/spec.md` (advanced) |
+| §19 Federation Trust | Basic stable (mTLS, capability tokens); advanced trust scoring deferred | [`specs/04-manifests.md`](specs/04-manifests.md), [`specs/05-federation-trust.md`](specs/05-federation-trust.md), [`specs/06-capability-tokens.md`](specs/06-capability-tokens.md) |
 | §20 Recall and Graph (advanced) | Deferred | [`experimental/recall-graph/spec.md`](../experimental/recall-graph/spec.md) |
 | Subscriptions / push federation | Deferred | [`experimental/subscriptions/spec.md`](../experimental/subscriptions/spec.md) |
 | §21 Lazy Instruction Discovery | Deferred | [`experimental/lazy-instruction-discovery/spec.md`](../experimental/lazy-instruction-discovery/spec.md) |
-| §22 Security Hardening | Stable | This file → canonical spec |
+| §22 Security Hardening | Stable | [`specs/09-audit-log.md`](specs/09-audit-log.md), [`specs/10-hardening.md`](specs/10-hardening.md), [`specs/11-replay-protection.md`](specs/11-replay-protection.md) |
 | §23 RTBF Tombstones | Deferred | [`experimental/tombstones/spec.md`](../experimental/tombstones/spec.md) |
 | §24 Time-Travel Queries | Deferred | [`experimental/time-travel/spec.md`](../experimental/time-travel/spec.md) |
 | §25 Content-Addressed Fact IDs (CIDs) | **Stable in core** per [ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md) | [`specs/21-content-addressed-ids.md`](specs/21-content-addressed-ids.md) |
 
 ## Modular spec migration (ADR-010)
 
-Per [ADR-010](../docs/adr/010-modular-specs.md), the spec decomposes into 14 core specs under [`spec/specs/`](specs/) with independent versioning. Experimental specs remain colocated with their feature code under [`experimental/<feature>/spec.md`](../experimental/). [`PROTOCOL.md`](PROTOCOL.md) is generated from those files' YAML frontmatter and records the current protocol composition.
-
-The modular files currently establish spec identifiers, dependency metadata, and extraction targets. Until prose is migrated section-by-section, [`stigmem-spec-v0.9.0a1.md`](stigmem-spec-v0.9.0a1.md) remains the normative source for canonical protocol text.
+Per [ADR-010](../docs/adr/010-modular-specs.md), supported component specs live
+under [`spec/specs/`](specs/) with independent versioning. Experimental specs
+remain colocated with their feature code under
+[`experimental/<feature>/spec.md`](../experimental/). [`PROTOCOL.md`](PROTOCOL.md)
+is generated from those files' YAML frontmatter and records the current
+protocol composition.
 
 ## Evolution
 

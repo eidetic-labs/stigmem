@@ -151,13 +151,13 @@ HLC = "{wall_ms_utc}.{counter}"    // e.g. "1746230400000.003"
 1. On local write: `hlc = max(now_ms, last_hlc_ms)` as wall; increment counter if wall unchanged.
 2. On receiving a federated fact: `hlc = max(now_ms, received_hlc_ms)`; increment counter.
 
-Causally ordered facts (`a.hlc < b.hlc`) are handled correctly across nodes. Equal HLCs on different nodes indicate concurrent writes; §3.3 contradiction policy applies. The HLC prevents the split-brain scenario where two nodes partition, accept divergent writes, and then disagree about ordering on reunion.
+Causally ordered facts (`a.hlc < b.hlc`) are handled correctly across nodes. Equal HLCs on different nodes indicate concurrent writes; `Spec-15-Fact-Semantics` contradiction policy applies. The HLC prevents the split-brain scenario where two nodes partition, accept divergent writes, and then disagree about ordering on reunion.
 
 ---
 
-## Federation protocol (§6)
+## Federation Protocol (`Spec-05-Federation-Trust`)
 
-### Handshake (§6.1–6.2)
+### Handshake
 
 A **PeerDeclaration** is a signed JSON document declaring federation intent:
 
@@ -172,9 +172,9 @@ A **PeerDeclaration** is a signed JSON document declaring federation intent:
 }
 ```
 
-The signature uses the declaring node's `federation_pubkey`, published at `/.well-known/stigmem`. Registration is mutual: both nodes must `POST /v1/federation/peers` with the declaration to activate the peering. Capability negotiation (§6.2) is required as of pre-reset.
+The signature uses the declaring node's `federation_pubkey`, published at `/.well-known/stigmem`. Registration is mutual: both nodes must `POST /v1/federation/peers` with the declaration to activate the peering. Capability negotiation is required by `Spec-05-Federation-Trust`.
 
-### Replication (§6.3)
+### Replication
 
 Pull-based: each node's background `federation_pull` task runs periodically, fetching facts from registered peers:
 
@@ -185,7 +185,7 @@ Authorization: Bearer <peer-token>
 
 Peer tokens are short-lived Ed25519-signed JWTs (max 1-hour expiry, replay-protected by nonce). Fact ingestion is **idempotent**: re-asserting a fact that already exists is a no-op. The HLC cursor ensures replication resumes exactly where it left off across restarts.
 
-### Failure modes (§11)
+### Failure Modes (`Spec-18-Conformance-and-Failure-Modes`)
 
 All four failure scenarios are automated in `node/tests/test_failure_modes.py`:
 
@@ -198,7 +198,7 @@ All four failure scenarios are automated in `node/tests/test_failure_modes.py`:
 
 ---
 
-## Auth model (§3.5)
+## Auth Model (`Spec-02-Scopes-and-ACL`, `Spec-06-Capability-Tokens`)
 
 the pre-reset design work implemented API-key auth; the pre-reset design work extended it with peer tokens for federation.
 

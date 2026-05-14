@@ -84,26 +84,26 @@ The **Memory** half reflects persistence and decay: facts have `valid_until` exp
 
 The features below are **implemented in code** but have **not yet completed adversarial validation** at v0.9.0a1. Read [LIMITATIONS.md](LIMITATIONS.md) for which deployment patterns are currently safe.
 
-| Area | Implementation | Spec section |
+| Area | Implementation | Spec reference |
 |------|--------|-------------|
-| Core fact shape (`entity`, `relation`, `value`, `source`, `timestamp`, `confidence`, `scope`) | Implemented | §2 |
-| `valid_until` decay, provenance, contradiction | Implemented | §3 |
-| HTTP wire format (assert, query, retract, single-fact GET) | Implemented | §5.1–5.5 |
-| Auth: API keys, per-scope restrictions | Implemented | §3.5 |
-| `/.well-known/stigmem` node metadata | Implemented | §5.3 |
-| Hybrid Logical Clock (HLC) | Implemented | §2.4 |
-| Federation: PeerDeclaration handshake (Ed25519), pull replication, scope enforcement | Implemented | §6 |
-| Conflict-first-class: auto-generated conflict records, resolution API | Implemented | §3.3, §5.9–5.10 |
-| Failure modes: split-brain, malicious peer, partial failure, replay attack | Automated tests | §11 |
-| Entity URI scheme (`stigmem://`) | Implemented | §2.5 |
-| Entity naming rules + lint semantics (`POST /v1/lint`, `lint_scope` MCP tool) | Implemented | §2.6, §14 |
-| Adapter ABI (MCP, Paperclip, OpenClaw) | Implemented | §12 |
-| Decay sweep (`POST /v1/decay/sweep`, configurable TTL + confidence-decay policies) | Implemented | §15 |
-| Synthesis (`POST /v1/synthesis`, `synthesize_scope` MCP tool) | Implemented | §16 |
-| Cursor-checkpoint export/import (bounded DB-loss recovery) | Implemented | §6 |
-| N-node federation backpressure + scope propagation invariants | Implemented | §6.7–6.8 |
+| Core fact shape (`entity`, `relation`, `value`, `source`, `timestamp`, `confidence`, `scope`) | Implemented | `Spec-01-Fact-Model` |
+| `valid_until`, provenance, contradiction | Implemented | `Spec-15-Fact-Semantics` |
+| HTTP wire format (assert, query, retract, single-fact GET) | Implemented | `Spec-03-HTTP-API` |
+| Auth: API keys, per-scope restrictions | Implemented | `Spec-02-Scopes-and-ACL`, `Spec-06-Capability-Tokens` |
+| `/.well-known/stigmem` node metadata | Implemented | `Spec-03-HTTP-API`, `Spec-04-Manifests` |
+| Hybrid Logical Clock (HLC) | Implemented | `Spec-01-Fact-Model`, `Spec-12-HLC-Bounded-Skew` |
+| Federation: PeerDeclaration handshake (Ed25519), pull replication, scope enforcement | Implemented | `Spec-05-Federation-Trust` |
+| Conflict-first-class: auto-generated conflict records, resolution API | Implemented | `Spec-15-Fact-Semantics`, `Spec-03-HTTP-API` |
+| Failure modes: split-brain, malicious peer, partial failure, replay attack | Automated tests | `Spec-18-Conformance-and-Failure-Modes` |
+| Entity URI scheme (`stigmem://`) | Implemented | `Spec-01-Fact-Model` |
+| Entity naming rules + lint semantics (`POST /v1/lint`, `lint_scope` MCP tool) | Implemented | `Spec-01-Fact-Model`, `Spec-20-Lint-Semantics` |
+| Adapter ABI (MCP, Paperclip, OpenClaw) | Implemented | `Spec-19-Adapter-ABI` |
+| Decay sweep (`POST /v1/decay/sweep`, configurable TTL + confidence-decay policies) | Implemented but deferred | `Spec-X9-Decay-Semantics` |
+| Synthesis (`POST /v1/synthesis`, `synthesize_scope` MCP tool) | Implemented but deferred | `Spec-X10-Synthesis` |
+| Cursor-checkpoint export/import (bounded DB-loss recovery) | Implemented | `Spec-05-Federation-Trust`, `Spec-17-Schema-and-Migration` |
+| N-node federation backpressure + scope propagation invariants | Implemented | `Spec-05-Federation-Trust` |
 | Browser UI (human surface) | Deferred (`experimental/dashboard/`, per [ADR-002](docs/adr/002-v1-scope.md)) | — |
-| Intent envelope (`goal`, `constraint`, `preference`, `handoff`) | Deferred indefinitely (`experimental/intent-envelope/`, per [ADR-001](docs/adr/001-versioning.md)) | §4 (legacy) |
+| Intent envelope (`goal`, `constraint`, `preference`, `handoff`) | Deferred indefinitely (`experimental/intent-envelope/`, per [ADR-001](docs/adr/001-versioning.md)) | `Spec-X8-Intent-Envelope` |
 
 ---
 

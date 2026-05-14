@@ -321,15 +321,15 @@ This is by design as the alpha-line iteration semantics ([ADR-019](docs/adr/019-
 
 [The retraction post](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) calls this gap out explicitly. We chose to ship the honest reset before completing the architectural cleanup so adopters read against the actual shipped artifacts rather than future-state claims.
 
-| Cross-cutting feature | Current home | Plugin destination | Target release |
-|---|---|---|---|
-| Lazy instruction discovery (§21) | `node/src/stigmem_node/instruction_migrate.py` + `routes/instruction.py` | `experimental/lazy-instruction-discovery/` plugin | v0.9.0a2 |
-| Content-addressed fact IDs (§25) | `node/src/stigmem_node/cid.py` | **Stays in core** ([ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | v0.9.0a3 |
-| Time-travel queries (§24) | pervasive `as_of` references in `node/src/stigmem_node/` | `experimental/time-travel/` plugin | v0.9.0a4 |
-| RTBF tombstones (§23) | `node/src/stigmem_node/tombstones.py` + 55 refs in facts.py + recall.py | `experimental/tombstones/` plugin | v0.9.0a5 |
-| Memory-garden advanced ACL (§17) | `node/src/stigmem_node/garden_acl.py` | `experimental/memory-garden-acl/` plugin | v0.9.0a6 |
-| Source attestation (§18) | `node/src/stigmem_node/source_trust.py` | `experimental/source-attestation/` plugin | v0.9.0a7 |
-| Multi-tenant isolation | `tenant_id` in 23 core files | `experimental/multi-tenant/` plugin | v0.9.0a8 |
+| Cross-cutting feature | Current home | Spec reference | Plugin destination | Target release |
+|---|---|---|---|---|
+| Lazy instruction discovery | `node/src/stigmem_node/instruction_migrate.py` + `routes/instruction.py` | `Spec-X1-Lazy-Instruction-Discovery` | `experimental/lazy-instruction-discovery/` plugin | v0.9.0a2 |
+| Content-addressed fact IDs | `node/src/stigmem_node/cid.py` | `Spec-21-Content-Addressed-IDs`; **stays in core** ([ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | n/a | v0.9.0a3 |
+| Time-travel queries | pervasive `as_of` references in `node/src/stigmem_node/` | `Spec-X3-Time-Travel-Queries` | `experimental/time-travel/` plugin | v0.9.0a4 |
+| RTBF tombstones | `node/src/stigmem_node/tombstones.py` + 55 refs in facts.py + recall.py | `Spec-X2-RTBF-Tombstones` | `experimental/tombstones/` plugin | v0.9.0a5 |
+| Memory-garden advanced ACL | `node/src/stigmem_node/garden_acl.py` | `Spec-X5-Memory-Garden-Advanced-ACL` | `experimental/memory-garden-acl/` plugin | v0.9.0a6 |
+| Source attestation | `node/src/stigmem_node/source_trust.py` | `Spec-X6-Source-Attestation` | `experimental/source-attestation/` plugin | v0.9.0a7 |
+| Multi-tenant isolation | `tenant_id` in 23 core files | Deferred plugin work; no supported protocol spec yet | `experimental/multi-tenant/` plugin | v0.9.0a8 |
 
 The CID exception is deliberate. CIDs are load-bearing for the storage immutability stack ([ADR-016](docs/adr/016-storage-immutability-enforcement.md) L3) and the prompt-injection trust boundary ([ADR-003](docs/adr/003-prompt-injection.md) L1–L2). Keeping CIDs as a plugin would mean default install lacks integrity verification that the spec's claims depend on; ADR-017 corrects that.
 

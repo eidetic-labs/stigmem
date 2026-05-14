@@ -25,7 +25,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 | `Spec-01-Fact-Model` | Atomic fact shape | §2 | Stable | `spec/specs/01-fact-model.md` during modular extraction |
 | `Spec-01-Fact-Model` + `Spec-02-Scopes-and-ACL` | Fact semantics | §3 | Stable | `Spec-02` scope-enforcement material is in `spec/specs/02-scopes-and-acl.md`; remaining fact-semantics material stays here until extraction |
 | (deferred indefinitely) | Intent envelope | §4 | **Deferred indefinitely** ([ADR-001](../docs/adr/001-versioning.md)) | `experimental/intent-envelope/spec.md` (placeholder for future reintroduction per ADR-008) |
-| `Spec-03-HTTP-API` | Wire format | §5 | Stable | This file until component prose extraction |
+| `Spec-03-HTTP-API` | Wire format | §5 | Stable | `spec/specs/03-http-api.md` |
 | `Spec-05-Federation-Trust` (basic parts) + `Spec-07-Recall-Pipeline` (basic) | Federation (basic) | §6 | Stable | This file |
 | (protocol governance) | Design decisions log | §7 | Stable | This file |
 | (protocol governance) | Open questions | §8 | Stable | This file |

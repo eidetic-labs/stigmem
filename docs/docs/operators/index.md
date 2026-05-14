@@ -23,6 +23,11 @@ This handbook covers everything you need to run a Stigmem node in production, fr
 | [Federation peer setup](./runbooks/federation-setup) | Key generation, pinning, and source-trust tuning |
 | [Backup & restore](./runbooks/backup-restore) | Signed snapshot workflow and cloud PITR |
 | [Monitoring & debugging](./observability/monitoring) | Health checks, metrics, and recall-latency diagnosis |
+| [Peer compromise response](./runbooks/r-peer-compromise) | Containment and recovery when a federation peer is suspicious or compromised |
+| [Worm detection response](./runbooks/r-worm-detected) | Response path for automated cross-peer or agent-to-agent propagation |
+| [Manifest failure response](./runbooks/r-manifest-failure) | What to do when peer manifest or key-rotation verification fails |
+| [HLC drift response](./runbooks/r-hlc-drift) | How to handle peers sending timestamps outside allowed skew |
+| [Key expiry response](./runbooks/r-key-expiry) | Recovery from expired API, federation, issuer, or encryption keys |
 | [Eval harness](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/eval-harness) | Automated evaluation and regression testing |
 | [Cost calculator](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing) | Estimating storage, egress, embedding, and operator costs |
 
@@ -56,5 +61,6 @@ A production Stigmem node has four operational concerns:
 **Day-two operations:**
 - [Backup & restore](./runbooks/backup-restore) — protect against data loss.
 - [Monitoring & debugging](./observability/monitoring) — observe and diagnose your node.
+- [Incident runbooks](./runbooks/r-peer-compromise) — respond to critical federation, manifest, HLC, worm, and key-expiry alerts.
 
 **Planning a deployment?** The [cost calculator](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing) helps you estimate storage growth, egress, embedding spend, and operator time before you commit to infrastructure.

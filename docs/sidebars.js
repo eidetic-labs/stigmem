@@ -172,6 +172,11 @@ const sidebars = {
         'operators/runbooks/federation-setup',
         'operators/runbooks/backup-restore',
         'operators/runbooks/cursor-reset-recovery',
+        'operators/runbooks/r-peer-compromise',
+        'operators/runbooks/r-worm-detected',
+        'operators/runbooks/r-manifest-failure',
+        'operators/runbooks/r-hlc-drift',
+        'operators/runbooks/r-key-expiry',
       ],
     },
     {

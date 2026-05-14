@@ -13,7 +13,9 @@ export interface paths {
         };
         /**
          * Node Metadata
-         * @description Return node identity, auth mode, and federation capability advertisement (spec §5.3).
+         * @description Return node identity, auth mode, and federation capability advertisement.
+         *
+         *     Covered by Spec-03-HTTP-API.
          */
         get: operations["node_metadata__well_known_stigmem_get"];
         put?: never;
@@ -70,7 +72,7 @@ export interface paths {
         };
         /**
          * Cid Backfill Status
-         * @description Return CID backfill progress for this node (spec §25.6.3).
+         * @description Return CID backfill progress for this node (Spec-21-Content-Addressed-IDs).
          */
         get: operations["cid_backfill_status_v1_admin_cid_backfill_status_get"];
         put?: never;
@@ -378,7 +380,7 @@ export interface paths {
         };
         /**
          * Get Card
-         * @description Fetch the synthesized memory card for an entity (spec §20).
+         * @description Fetch the synthesized memory card for an entity (Spec-X11-Recall-Graph).
          *
          *     Returns 404 when the entity has no live facts.
          */
@@ -419,7 +421,7 @@ export interface paths {
         put?: never;
         /**
          * Resolve Conflict
-         * @description Assert a canonical resolution fact and close the conflict (spec §5.10).
+         * @description Assert a canonical resolution fact and close the conflict (Spec-15-Fact-Semantics).
          */
         post: operations["resolve_conflict_v1_conflicts__conflict_id__resolve_post"];
         delete?: never;
@@ -437,7 +439,7 @@ export interface paths {
         };
         /**
          * Get Decay Job
-         * @description Poll the status of an async decay job (spec §15.4).
+         * @description Poll the status of an async decay job (Spec-X9-Decay-Semantics).
          */
         get: operations["get_decay_job_v1_decay_jobs__job_id__get"];
         put?: never;
@@ -459,11 +461,11 @@ export interface paths {
         put?: never;
         /**
          * Decay Sweep
-         * @description Mark stale facts as expired. Cron-friendly one-shot sweeper (Phase 6).
+         * @description Mark stale facts as expired. Cron-friendly one-shot sweeper.
          *
-         *     Returns 200 synchronously for scopes ≤ threshold facts (spec §15.4).
+         *     Returns 200 synchronously for scopes ≤ threshold facts (Spec-X9-Decay-Semantics).
          *     Returns 202 with job_id for larger scopes; poll GET /v1/decay/jobs/:job_id.
-         *     Note: dry_run is always synchronous per spec §15.4.
+         *     Note: dry_run is always synchronous per Spec-X9-Decay-Semantics.
          */
         post: operations["decay_sweep_v1_decay_sweep_post"];
         delete?: never;
@@ -481,7 +483,7 @@ export interface paths {
         };
         /**
          * Resolve Entity Uri
-         * @description Resolve a raw entity URI using 3-layer fuzzy resolution (spec §2.6.6).
+         * @description Resolve a raw entity URI using 3-layer fuzzy resolution (Spec-01-Fact-Model).
          *
          *     Layer 1: canonical normalisation (case/whitespace collapse).
          *     Layer 2: alias table lookup (explicit pre-registered mappings).
@@ -507,13 +509,18 @@ export interface paths {
         };
         /**
          * Query Facts
-         * @description Query facts by pattern (spec §5.2, §5.20). Omitted fields are wildcards. Entity/source are normalized (§2.6).
+         * @description Query facts by pattern (Spec-03-HTTP-API).
+         *
+         *     Omitted fields are wildcards. Entity/source are normalized by Spec-01-Fact-Model.
          */
         get: operations["query_facts_v1_facts_get"];
         put?: never;
         /**
          * Assert Fact
-         * @description Assert a fact into the fabric (spec §5.1, §2.6). Normalizes entity/source URIs on ingest.
+         * @description Assert a fact into the fabric.
+         *
+         *     Covered by Spec-03-HTTP-API and Spec-01-Fact-Model. Normalizes
+         *     entity/source URIs on ingest.
          */
         post: operations["assert_fact_v1_facts_post"];
         delete?: never;
@@ -531,7 +538,9 @@ export interface paths {
         };
         /**
          * Get Fact
-         * @description Retrieve a single fact by UUID or sha256: CID (spec v0.4 §5.5, §17.3, §25.5).
+         * @description Retrieve a single fact by UUID or sha256: CID.
+         *
+         *     Covered by Spec-03-HTTP-API and Spec-21-Content-Addressed-IDs.
          */
         get: operations["get_fact_v1_facts__fact_id__get"];
         put?: never;
@@ -551,12 +560,13 @@ export interface paths {
         };
         /**
          * Get Provenance
-         * @description Provenance walk with tombstone suppression (spec §23.3.2 r.4 + §20.6.2).
+         * @description Provenance walk with tombstone suppression.
          *
          *     Returns the derived_from chain for a fact.  Any entry whose referenced entity is
          *     tombstoned — or whose fact is otherwise inaccessible — is redacted to
-         *     {"hash": "...", "exists": false}, indistinguishable from the §20.6.2
-         *     unauthorized cross-scope pattern to prevent existence leakage.
+         *     {"hash": "...", "exists": false}, indistinguishable from unauthorized
+         *     cross-scope references to prevent existence leakage. Covered by
+         *     Spec-X2-RTBF-Tombstones and Spec-X11-Recall-Graph.
          */
         get: operations["get_provenance_v1_facts__fact_id__provenance_get"];
         put?: never;
@@ -578,7 +588,9 @@ export interface paths {
         put?: never;
         /**
          * Verify Cid
-         * @description Verify a fact's stored CID against a freshly computed one (spec §25.6.2).
+         * @description Verify a fact's stored CID against a freshly computed one.
+         *
+         *     Covered by Spec-21-Content-Addressed-IDs.
          */
         post: operations["verify_cid_v1_facts__fact_id__verify_cid_post"];
         delete?: never;
@@ -639,7 +651,7 @@ export interface paths {
         put?: never;
         /**
          * Verify Capability Token Endpoint
-         * @description Verify a capability token (spec §19.3.3 steps 1–6).
+         * @description Verify a capability token (Spec-06-Capability-Tokens).
          *
          *     Returns {"valid": true} on success, or {"valid": false, "reason": "..."}
          *     when the token fails any verification step (expired, bad sig, revoked, etc.).
@@ -681,7 +693,9 @@ export interface paths {
         };
         /**
          * Pull Facts
-         * @description Return scope-filtered, HLC-cursor-paged facts to an authenticated peer (§5.8).
+         * @description Return scope-filtered, HLC-cursor-paged facts to an authenticated peer.
+         *
+         *     Covered by Spec-05-Federation-Trust.
          */
         get: operations["pull_facts_v1_federation_facts_get"];
         put?: never;
@@ -703,11 +717,12 @@ export interface paths {
         put?: never;
         /**
          * Push Facts
-         * @description Receive push-replicated facts from a peer (§5.11). Off by default.
+         * @description Receive push-replicated facts from a peer. Off by default.
          *
          *     Auth (H-SEC-2): peer JWT first; if that fails and X-Stigmem-Capability is
          *     present, fall through to capability-token verification.  Capability tokens
          *     must carry verb=write and an object that covers all pushed fact scopes.
+         *     Covered by Spec-05-Federation-Trust.
          */
         post: operations["push_facts_v1_federation_facts_push_post"];
         delete?: never;
@@ -772,7 +787,10 @@ export interface paths {
         put?: never;
         /**
          * Register Peer
-         * @description Register a peer. Fetches its well-known doc and verifies declaration_sig (§5.6).
+         * @description Register a peer.
+         *
+         *     Fetches its well-known doc and verifies declaration_sig
+         *     (Spec-05-Federation-Trust).
          */
         post: operations["register_peer_v1_federation_peers_post"];
         delete?: never;
@@ -790,7 +808,9 @@ export interface paths {
         };
         /**
          * Federation List Tombstones
-         * @description Tombstone poll route (§23.4.3). Requires tombstone:read capability token.
+         * @description Tombstone poll route.
+         *
+         *     Requires tombstone:read capability token. Covered by Spec-X2-RTBF-Tombstones.
          */
         get: operations["federation_list_tombstones_v1_federation_tombstones_get"];
         put?: never;
@@ -812,10 +832,11 @@ export interface paths {
         put?: never;
         /**
          * Federation Ingest Tombstone
-         * @description Inbound tombstone push from a federation peer (§23.4.2).
+         * @description Inbound tombstone push from a federation peer.
          *
          *     Auth: peer JWT or capability token with tombstone:write verb (mirrors push_facts).
          *     Verifies signature against org manifest, writes to local tombstones table.
+         *     Covered by Spec-X2-RTBF-Tombstones.
          */
         post: operations["federation_ingest_tombstone_v1_federation_tombstones_ingest_post"];
         delete?: never;
@@ -833,13 +854,15 @@ export interface paths {
         };
         /**
          * List Gardens
-         * @description List accessible gardens (spec §5.15). Node admins see all; others see only their gardens.
+         * @description List accessible gardens (Spec-02-Scopes-and-ACL).
+         *
+         *     Node admins see all; others see only their gardens.
          */
         get: operations["list_gardens_v1_gardens_get"];
         put?: never;
         /**
          * Create Garden
-         * @description Create a new garden (spec §5.14). Creator is auto-added as admin.
+         * @description Create a new garden (Spec-02-Scopes-and-ACL). Creator is auto-added as admin.
          */
         post: operations["create_garden_v1_gardens_post"];
         delete?: never;
@@ -857,16 +880,18 @@ export interface paths {
         };
         /**
          * Get Garden
-         * @description Get a garden by slug or UUID (spec §5.16).
+         * @description Get a garden by slug or UUID (Spec-02-Scopes-and-ACL).
          */
         get: operations["get_garden_v1_gardens__garden_slug_or_id__get"];
         put?: never;
         post?: never;
         /**
          * Delete Garden
-         * @description Delete a garden (spec §5.17). Requires garden admin role. Facts are orphaned, not deleted.
+         * @description Delete a garden (Spec-02-Scopes-and-ACL).
          *
-         *     Quarantine gardens with pending facts cannot be deleted (§19.5.2 — HTTP 409).
+         *     Requires garden admin role. Facts are orphaned, not deleted.
+         *     Quarantine gardens with pending facts cannot be deleted
+         *     (Spec-08-Quarantine-Garden; HTTP 409).
          */
         delete: operations["delete_garden_v1_gardens__garden_slug_or_id__delete"];
         options?: never;
@@ -883,13 +908,13 @@ export interface paths {
         };
         /**
          * List Members
-         * @description List members of a garden (spec §5.18). Requires any member role.
+         * @description List members of a garden (Spec-02-Scopes-and-ACL). Requires any member role.
          */
         get: operations["list_members_v1_gardens__garden_slug_or_id__members_get"];
         put?: never;
         /**
          * Add Member
-         * @description Add a member to a garden (spec §5.18). Requires admin role.
+         * @description Add a member to a garden (Spec-02-Scopes-and-ACL). Requires admin role.
          */
         post: operations["add_member_v1_gardens__garden_slug_or_id__members_post"];
         delete?: never;
@@ -910,14 +935,14 @@ export interface paths {
         post?: never;
         /**
          * Remove Member
-         * @description Remove a member from a garden (spec §5.18). Cannot remove last admin.
+         * @description Remove a member from a garden (Spec-02-Scopes-and-ACL). Cannot remove last admin.
          */
         delete: operations["remove_member_v1_gardens__garden_slug_or_id__members__entity_uri__delete"];
         options?: never;
         head?: never;
         /**
          * Update Member Role
-         * @description Change a member's role (spec §5.18). Requires admin. Cannot demote last admin.
+         * @description Change a member's role (Spec-02-Scopes-and-ACL). Requires admin.
          */
         patch: operations["update_member_role_v1_gardens__garden_slug_or_id__members__entity_uri__patch"];
         trace?: never;
@@ -933,7 +958,7 @@ export interface paths {
         put?: never;
         /**
          * Promote Fact
-         * @description Promote a quarantined fact to a target garden (spec §5.25, §19.5.5).
+         * @description Promote a quarantined fact to a target garden (Spec-08-Quarantine-Garden).
          *
          *     Requires quarantine:moderator or admin role.
          */
@@ -955,7 +980,7 @@ export interface paths {
         put?: never;
         /**
          * Reject Fact
-         * @description Reject a quarantined fact (spec §5.25, §19.5.5).
+         * @description Reject a quarantined fact (Spec-08-Quarantine-Garden).
          *
          *     Sets confidence = 0.0 and quarantine_status = 'rejected'.
          *     Requires quarantine:moderator or admin role.
@@ -976,7 +1001,7 @@ export interface paths {
         };
         /**
          * Graph Neighbors
-         * @description Return graph neighbors of entity within depth hops (spec §20.2).
+         * @description Return graph neighbors of entity within depth hops (Spec-X11-Recall-Graph).
          */
         get: operations["graph_neighbors_v1_graph_neighbors_get"];
         put?: never;
@@ -1015,7 +1040,7 @@ export interface paths {
         put?: never;
         /**
          * Submit Intent
-         * @description Submit an IntentEnvelope (spec §5.14).
+         * @description Submit an IntentEnvelope (Spec-X8-Intent-Envelope).
          *
          *     Validates the envelope, normalizes URIs, decomposes it into atomic facts,
          *     and returns a receipt with the generated intent ID and all written fact IDs.
@@ -1038,7 +1063,9 @@ export interface paths {
         };
         /**
          * Get Intent
-         * @description Retrieve an IntentEnvelope by ID, reconstructed from its reified facts (spec §5.14).
+         * @description Retrieve an IntentEnvelope by ID, reconstructed from its reified facts.
+         *
+         *     Covered by Spec-X8-Intent-Envelope.
          */
         get: operations["get_intent_v1_intents__intent_id__get"];
         put?: never;
@@ -1060,7 +1087,7 @@ export interface paths {
         put?: never;
         /**
          * Lint Scope
-         * @description Health-check sweep for a scope (spec §14). Read-only.
+         * @description Health-check sweep for a scope (Spec-20-Lint-Semantics). Read-only.
          *
          *     Returns 200 with results synchronously for scopes ≤ threshold facts.
          *     Returns 202 with job_id for larger scopes; poll GET /v1/lint/jobs/:job_id.
@@ -1081,7 +1108,7 @@ export interface paths {
         };
         /**
          * Get Lint Job
-         * @description Poll the status of an async lint job (spec §14.5).
+         * @description Poll the status of an async lint job (Spec-20-Lint-Semantics).
          */
         get: operations["get_lint_job_v1_lint_jobs__job_id__get"];
         put?: never;
@@ -1118,7 +1145,7 @@ export interface paths {
         };
         /**
          * List Quarantined Facts
-         * @description List facts in the quarantine system (spec §19.5).
+         * @description List facts in the quarantine system (Spec-08-Quarantine-Garden).
          *
          *     Node admins see all quarantined facts across all gardens.
          *     Other callers see facts only in quarantine gardens where they hold a member role.
@@ -1191,7 +1218,7 @@ export interface paths {
          * @description Hybrid recall — return the most salient facts for a query, within budget.
          *
          *     Combines lexical (FTS5/BM25), dense-vector, and graph-traversal signals.
-         *     Honors §17 garden ACL and §19 source-trust at every step.
+         *     Honors Spec-02-Scopes-and-ACL and Spec-05-Federation-Trust at every step.
          */
         post: operations["recall_v1_recall_post"];
         delete?: never;
@@ -1238,7 +1265,9 @@ export interface paths {
         put?: never;
         /**
          * Create Subscription
-         * @description Create a subscription (spec §20.3.1). subscriber_identity is always the caller (BOLA).
+         * @description Create a subscription (Spec-X7-Subscriptions).
+         *
+         *     subscriber_identity is always the caller (BOLA).
          */
         post: operations["create_subscription_v1_subscriptions_post"];
         delete?: never;
@@ -1280,7 +1309,7 @@ export interface paths {
         };
         /**
          * List Subscription Events
-         * @description Replay window: return delivery events for a subscription (spec §20.5).
+         * @description Replay window: return delivery events for a subscription (Spec-X7-Subscriptions).
          *
          *     Results are bounded to the configured replay window (default 24 h).
          */
@@ -1438,7 +1467,7 @@ export interface components {
             entity: string;
             /**
              * Garden Id
-             * @description v0.9: URI of the garden this fact belongs to
+             * @description URI of the garden this fact belongs to (Spec-02-Scopes-and-ACL)
              */
             garden_id?: string | null;
             /** Relation */
@@ -1538,7 +1567,7 @@ export interface components {
         };
         /**
          * ConflictResolveRequest
-         * @description Request body for POST /v1/conflicts/:id/resolve (spec §5.10).
+         * @description Request body for POST /v1/conflicts/:id/resolve (Spec-15-Fact-Semantics).
          */
         ConflictResolveRequest: {
             new_value?: components["schemas"]["FactValue"] | null;
@@ -1552,7 +1581,7 @@ export interface components {
         };
         /**
          * Constraint
-         * @description Hard limit on an intent (spec §4.2).
+         * @description Hard limit on an intent (Spec-X8-Intent-Envelope).
          */
         Constraint: {
             /** Kind */
@@ -1563,7 +1592,7 @@ export interface components {
         };
         /**
          * DeferenceRule
-         * @description When to defer to another entity before proceeding (spec §4.4).
+         * @description When to defer to another entity before proceeding (Spec-X8-Intent-Envelope).
          */
         DeferenceRule: {
             /** Condition */
@@ -1575,7 +1604,7 @@ export interface components {
         };
         /**
          * EscalationPolicy
-         * @description Who to notify and how when escalation is required (spec §4.5).
+         * @description Who to notify and how when escalation is required (Spec-X8-Intent-Envelope).
          */
         EscalationPolicy: {
             /**
@@ -1711,7 +1740,7 @@ export interface components {
             name: string;
             /**
              * Quarantine
-             * @description v1.1: create as quarantine garden (§19.5)
+             * @description Create as a quarantine garden (Spec-08-Quarantine-Garden)
              * @default false
              */
             quarantine: boolean;
@@ -1782,7 +1811,7 @@ export interface components {
         };
         /**
          * HandoffArtifact
-         * @description Named artifact reference passed along with a handoff (spec §4.6).
+         * @description Named artifact reference passed along with a handoff (Spec-X8-Intent-Envelope).
          */
         HandoffArtifact: {
             /** Name */
@@ -1795,7 +1824,7 @@ export interface components {
         };
         /**
          * HandoffPayload
-         * @description Structured context transfer for agent handoffs (spec §4.6).
+         * @description Structured context transfer for agent handoffs (Spec-X8-Intent-Envelope).
          *
          *     fact_refs MUST include any facts the receiver needs to reconstitute context.
          */
@@ -1811,7 +1840,7 @@ export interface components {
         };
         /**
          * IntentEnvelopeRecord
-         * @description Response for POST /v1/intents and GET /v1/intents/:id (spec §5.14).
+         * @description Response for POST /v1/intents and GET /v1/intents/:id (Spec-X8-Intent-Envelope).
          */
         IntentEnvelopeRecord: {
             /** Constraint */
@@ -1847,7 +1876,7 @@ export interface components {
         };
         /**
          * IntentEnvelopeRequest
-         * @description POST /v1/intents request body (spec §4, §5.14).
+         * @description POST /v1/intents request body (Spec-X8-Intent-Envelope).
          *
          *     The ``from`` field is aliased as ``from_uri`` in Python to avoid the keyword clash.
          *     Clients MUST send the JSON key ``"from"``.
@@ -2040,7 +2069,7 @@ export interface components {
         };
         /**
          * Preference
-         * @description Soft preference on an intent (spec §4.3).
+         * @description Soft preference on an intent (Spec-X8-Intent-Envelope).
          */
         Preference: {
             /** Kind */
@@ -2057,7 +2086,7 @@ export interface components {
          * @description One entry in a fact's derived_from chain.
          *
          *     exists=False means the referenced entity is tombstoned or the fact is otherwise
-         *     inaccessible (§23.3.2 r.4 + §20.6.2). Shape is identical in both cases so
+         *     inaccessible. Shape is identical in both cases so
          *     callers cannot distinguish tombstone from unauthorized.
          */
         ProvenanceEntry: {
@@ -2196,7 +2225,7 @@ export interface components {
         RecallRequest: {
             /**
              * As Of
-             * @description §24: time-travel — return facts visible at this ISO 8601 timestamp
+             * @description Time-travel query: return facts visible at this ISO 8601 timestamp (Spec-X3-Time-Travel-Queries)
              */
             as_of?: string | null;
             /**
@@ -2482,7 +2511,9 @@ export interface components {
         };
         /**
          * TombstoneNotice
-         * @description Tombstone metadata surfaced to admin callers on time-travel queries (spec §24.3.2).
+         * @description Tombstone metadata surfaced to admin callers on time-travel queries.
+         *
+         *     Covered by Spec-X3-Time-Travel-Queries.
          */
         TombstoneNotice: {
             /** Entity Uri */
@@ -2496,7 +2527,9 @@ export interface components {
         };
         /**
          * TombstoneRecord
-         * @description Durable record directing every node to suppress facts about entity_uri (§23.2).
+         * @description Durable record directing every node to suppress facts about entity_uri.
+         *
+         *     Covered by Spec-X2-RTBF-Tombstones.
          */
         TombstoneRecord: {
             /** Created At */
@@ -2526,7 +2559,7 @@ export interface components {
         };
         /**
          * TombstoneRevocationRecord
-         * @description Record reinstating a tombstoned entity (§23.2.5).
+         * @description Record reinstating a tombstoned entity (Spec-X2-RTBF-Tombstones).
          */
         TombstoneRevocationRecord: {
             /** Created At */
@@ -3580,13 +3613,13 @@ export interface operations {
                 /** @description Opaque pagination cursor (fact id) */
                 cursor?: string | null;
                 limit?: number;
-                /** @description v0.9: filter to facts in this garden (spec §5.20) */
+                /** @description Filter to facts in this garden (Spec-02-Scopes-and-ACL) */
                 garden_id?: string | null;
-                /** @description v0.9: filter by attestation status (spec §18.6) */
+                /** @description Filter by source-attestation status (Spec-X6-Source-Attestation) */
                 attested?: boolean | null;
-                /** @description v1.1: include facts with effective_confidence < 0.3 (§19.4.4) */
+                /** @description Include facts with effective_confidence < 0.3 (Spec-05-Federation-Trust) */
                 include_low_trust?: boolean;
-                /** @description §24: time-travel — return facts visible at this ISO 8601 timestamp */
+                /** @description Time-travel query: return facts visible at this ISO 8601 timestamp (Spec-X3-Time-Travel-Queries) */
                 as_of?: string | null;
             };
             header?: never;

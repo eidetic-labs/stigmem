@@ -23,18 +23,18 @@ The spec is divided into supported protocol components (kept in this canonical f
 |---|---|---|---|---|
 | (protocol overview) | Motivation | §1 | Stable | This file |
 | `Spec-01-Fact-Model` | Atomic fact shape | §2 | Stable | `spec/specs/01-fact-model.md` during modular extraction |
-| `Spec-01-Fact-Model` + `Spec-02-Scopes-and-ACL` | Fact semantics | §3 | Stable | `Spec-02` scope-enforcement material is in `spec/specs/02-scopes-and-acl.md`; remaining fact-semantics material stays here until extraction |
+| `Spec-01-Fact-Model` + `Spec-02-Scopes-and-ACL` + `Spec-15-Fact-Semantics` | Fact semantics | §3 | Stable | `Spec-02` scope-enforcement material is in `spec/specs/02-scopes-and-acl.md`; remaining fact-semantics material is assigned to planned `spec/specs/15-fact-semantics.md` |
 | (deferred indefinitely) | Intent envelope | §4 | **Deferred indefinitely** ([ADR-001](../docs/adr/001-versioning.md)) | `experimental/intent-envelope/spec.md` (placeholder for future reintroduction per ADR-008) |
 | `Spec-03-HTTP-API` | Wire format | §5 | Stable | `spec/specs/03-http-api.md` |
 | `Spec-05-Federation-Trust` (basic parts) + `Spec-07-Recall-Pipeline` (basic) | Federation (basic) | §6 | Stable | `spec/specs/05-federation-trust.md`; recall-specific material extracted to `spec/specs/07-recall-pipeline.md` |
 | (protocol governance) | Design decisions log | §7 | Stable | This file |
 | (protocol governance) | Open questions | §8 | Stable | This file |
-| `Spec-01-Fact-Model` + component-specific registries | Namespace registry | §9 | Stable | This file until component prose extraction |
-| (storage/migration component, ID TBD) | Schema and migration | §10 | Stable | This file until component spec assignment |
-| (conformance/failure-mode component, ID TBD) | Failure-mode scenarios | §11 | Stable | This file until component spec assignment |
-| (adapter ABI component, ID TBD) | Adapter ABI | §12 | Stable | This file until component spec assignment |
+| `Spec-16-Namespace-Registry` | Namespace registry | §9 | Stable | Planned `spec/specs/16-namespace-registry.md` |
+| `Spec-17-Schema-and-Migration` | Schema and migration | §10 | Stable | Planned `spec/specs/17-schema-and-migration.md` |
+| `Spec-18-Conformance-and-Failure-Modes` | Failure-mode scenarios | §11 | Stable | Planned `spec/specs/18-conformance-and-failure-modes.md` |
+| `Spec-19-Adapter-ABI` | Adapter ABI | §12 | Stable | Planned `spec/specs/19-adapter-abi.md` |
 | (placeholder) | (reserved) | §13 | Placeholder | `docs/archive/placeholder-pages/spec/section-13.md` |
-| (lint/conformance component, ID TBD) | Lint semantics | §14 | Stable | This file until component spec assignment |
+| `Spec-20-Lint-Semantics` | Lint semantics | §14 | Stable | Planned `spec/specs/20-lint-semantics.md` |
 | (deferred) | Decay semantics | §15 | **Deferred** ([ADR-002](../docs/adr/002-v1-scope.md)) | `experimental/decay/spec.md` |
 | (deferred) | Synthesis | §16 | **Deferred** | `experimental/synthesis/spec.md` |
 | `Spec-02-Scopes-and-ACL` (basic) + `Spec-08-Quarantine-Garden` + `Spec-X5-Memory-Garden` (advanced) | Memory garden | §17 | Basic Stable; quarantine Stable; advanced ACL deferred | `spec/specs/02-scopes-and-acl.md` (basic); `spec/specs/08-quarantine-garden.md` (quarantine); `experimental/memory-garden-acl/spec.md` (advanced ACL per [ADR-011](../docs/adr/011-cross-cutting-extraction.md)) |
@@ -45,7 +45,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 | `Spec-09-Audit-Log` + `Spec-10-Hardening` + `Spec-11-Replay-Protection` | Security hardening | §22 | Stable | `Spec-09`, `Spec-10`, and `Spec-11` material extracted |
 | `Spec-X2-RTBF-Tombstones` | RTBF tombstones | §23 | **Deferred** | `experimental/tombstones/spec.md` |
 | `Spec-X3-Time-Travel` | Time-travel queries | §24 | **Deferred** | `experimental/time-travel/spec.md` |
-| `Spec-X4-Content-Addressed-IDs` | Content-addressed fact IDs (CIDs) | §25 | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md)). Will be assigned a core `Spec-NN` ID during the modular spec migration; this is a naming/migration step, not ADR-008 graduation. | This file |
+| `Spec-21-Content-Addressed-IDs` | Content-addressed fact IDs (CIDs) | §25 | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md)). This is a core modular-spec assignment, not ADR-008 graduation. | Planned `spec/specs/21-content-addressed-ids.md` |
 | `Spec-12-HLC-Bounded-Skew` | HLC bounded skew (R-19) | (new in v0.9.0a2) | Implemented on main for v0.9.0a2 | `spec/specs/12-hlc-bounded-skew.md` |
 | `Spec-13-Capability-Based-Instructions` | Capability-based instructions per ADR-003 | (new in v0.9.0bN beta series) | Targeted v0.9.0bN beta series | `spec/specs/13-capability-based-instructions.md` |
 | `Spec-14-Batch-Assert` | Batch assert API per ADR-006 | (new in v0.9.0bN beta series) | Targeted v0.9.0bN beta series | `spec/specs/14-batch-assert.md` |

@@ -265,6 +265,7 @@ const sidebars = {
       label: 'Disclosure & policy',
       collapsed: true,
       items: [
+        'community/ai-authorship',
         'community/security-disclosure',
         'security/compatibility-commitment',
       ],

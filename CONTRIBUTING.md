@@ -311,7 +311,7 @@ The spec file records authors in its header. RFC contributors who make substanti
 
 ## AI-authorship disclosure
 
-Stigmem is built by two contributors with heavy AI-coding assistance. We disclose this because a category whose product is trust shouldn't quietly hide where the work came from. The same disclosure appears in [README.md](README.md#ai-authorship-disclosure).
+Stigmem is built by two contributors with heavy AI-coding assistance. We disclose this because a category whose product is trust shouldn't quietly hide where the work came from. The same disclosure appears in [README.md](README.md#ai-authorship-disclosure) and the docs-site [AI authorship disclosure](docs/docs/community/ai-authorship.md).
 
 **Paths with deeper human review (line-by-line):**
 - `spec/` — protocol specification text

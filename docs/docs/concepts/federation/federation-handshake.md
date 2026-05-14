@@ -30,16 +30,16 @@ sequenceDiagram
     participant A as Node A
     participant B as Node B
 
-    Note over A,B: the pre-reset design work — Peer Declaration
+    Note over A,B: Peer declaration
     A->>B: POST /v1/federation/peers<br/>{node_url, node_id, federation_pubkey,<br/>allowed_scopes, declaration_sig}
     Note over B: Status: pending_verification
 
-    Note over A,B: the pre-reset design work — Verification
+    Note over A,B: Verification
     B->>A: GET /.well-known/stigmem<br/>(fetch A's public key)
     B->>B: Verify declaration_sig<br/>against A's published pubkey
     Note over B: Status: active (or rejected)
 
-    Note over A,B: the pre-reset design work — Capability Negotiation
+    Note over A,B: Capability negotiation
     A->>B: GET /v1/federation/peers/:peer_id/capabilities
     B->>A: GET /v1/federation/peers/:peer_id/capabilities
     Note over A,B: Both nodes know each other's<br/>relations, modes, and policies
@@ -49,7 +49,7 @@ sequenceDiagram
     Note over A: Bearer: fresh peer token (Ed25519 JWT)
 ```
 
-### the pre-reset design work — Peer Declaration
+### Peer declaration
 
 Node A sends a signed `PeerDeclaration` to Node B:
 
@@ -66,13 +66,13 @@ Node A sends a signed `PeerDeclaration` to Node B:
 
 The `allowed_scopes` array is the authorization grant: Node A is willing to share `public`-scoped facts with Node B. The signature proves that Node A (holder of the private key) issued this declaration.
 
-### the pre-reset design work — Verification
+### Verification
 
 Node B fetches Node A's `/.well-known/stigmem` to retrieve the published `federation_pubkey`. It verifies `declaration_sig` against that key. If the key in the declaration doesn't match the published key, the peer is rejected — this prevents a third party from forging declarations.
 
 Mutual federation requires both sides to complete this handshake. Replication does not begin until both peers are `"active"`.
 
-### the pre-reset design work — Capability Negotiation
+### Capability negotiation
 
 After verification, nodes exchange capability advertisements:
 
@@ -113,14 +113,14 @@ Scope boundaries are enforced per-hop with a two-factor check: `fact.scope ∈ a
 |---|---|
 | `local` | Never |
 | `team` | Never (unless explicit operator override) |
-| `company` | Only if PeerDeclaration includes `"company"` — and re-federation to third nodes is blocked by default (spec §6.8.2) |
+| `company` | Only if PeerDeclaration includes `"company"` — and re-federation to third nodes is blocked by default (Spec-05-Federation-Trust scope-propagation invariants) |
 | `public` | Yes, to any active peer |
 
 ## Why this is non-obvious
 
 **Bilateral, not unilateral.** Both nodes must independently register and verify. Node A's declaration to Node B doesn't grant Node B any access to Node A — B must also send a declaration, and A must verify it. This prevents asymmetric trust assumptions.
 
-**Company-scoped facts don't cascade.** A company-scoped fact shared with Peer B is *not* automatically shareable by B with Peer C. The originating node's grant is non-transitive (spec §6.8.2). This prevents a relay node with broader permissions from leaking internal knowledge to third parties.
+**Company-scoped facts don't cascade.** A company-scoped fact shared with Peer B is *not* automatically shareable by B with Peer C. The originating node's grant is non-transitive (Spec-05-Federation-Trust scope-propagation invariants). This prevents a relay node with broader permissions from leaking internal knowledge to third parties.
 
 **Capability negotiation is required.** Without it, a peer might replicate relations it doesn't understand (e.g., `paperclip:` lifecycle facts), leading to contradiction storms on semantically opaque data. The capability advertisement makes replication intent-aware.
 
@@ -129,16 +129,16 @@ Scope boundaries are enforced per-hop with a two-factor check: `fact.scope ∈ a
 ## What it costs
 
 - **Operational overhead.** Each federation relationship requires a key exchange, mutual registration, and ongoing monitoring. For N nodes in a full mesh, that's N×(N-1) peer declarations.
-- **Replication lag.** Pull-based replication introduces a lag proportional to `pull_interval_s` (default 30 seconds). Relay nodes in multi-hop topologies can compound this lag (spec §6.7).
+- **Replication lag.** Pull-based replication introduces a lag proportional to `pull_interval_s` (default 30 seconds). Relay nodes in multi-hop topologies can compound this lag (Spec-05-Federation-Trust relay-backpressure guidance).
 - **Key rotation coordination.** When a node rotates its federation keypair, it must keep the old key active for 24 hours. Peers that fail verification re-fetch `/.well-known/stigmem`, but a race window exists during the transition.
 - **No gossip protocol.** Stigmem uses pairwise peer declarations, not gossip. Adding a new node to a 10-node network requires 10 separate handshakes. This scales linearly, not logarithmically — acceptable for small-to-medium federations but a cost at large scale.
 
 ## References
 
-- Spec §6.1 — PeerDeclaration shape and signing
-- Spec §6.2 — Capability negotiation (required as of pre-reset)
-- Spec §6.3 — Replication protocol (pull cadence, idempotent ingestion, HLC sync)
-- Spec §6.4 — Scope enforcement per-hop
-- Spec §6.6 — Security invariants (non-escalation, non-forgery, replay resistance, partition safety)
-- Spec §6.7 — N-node backpressure patterns
-- Spec §6.8 — Scope propagation invariants and re-federation restrictions
+- Spec-05-Federation-Trust.1 — PeerDeclaration shape and signing
+- Spec-05-Federation-Trust.2 — Capability negotiation (required as of pre-reset)
+- Spec-05-Federation-Trust.3 — Replication protocol (pull cadence, idempotent ingestion, HLC sync)
+- Spec-05-Federation-Trust.4 — Scope enforcement per-hop
+- Spec-05-Federation-Trust.6 — Security invariants (non-escalation, non-forgery, replay resistance, partition safety)
+- Spec-05-Federation-Trust.7 — N-node backpressure patterns
+- Spec-05-Federation-Trust.8 — Scope propagation invariants and re-federation restrictions

@@ -71,7 +71,7 @@ Operators configure how aggressively the node enforces trust:
 
 ### Quarantine garden
 
-When a fact fails trust requirements in `strict` mode, it's routed to a **quarantine garden** — a special-purpose Memory Garden (spec §17) that isolates untrusted facts pending human review.
+When a fact fails trust requirements in `strict` mode, it's routed to a **quarantine garden** — a special-purpose Memory Garden (Spec-02-Scopes-and-ACL) that isolates untrusted facts pending human review.
 
 ```mermaid
 flowchart TD
@@ -86,7 +86,7 @@ flowchart TD
 Facts enter quarantine when:
 1. The source's trust score `t < 0.2`, OR
 2. The source lacks a valid org manifest, OR
-3. The fact fails provenance chain verification (spec §19.6.3)
+3. The fact fails provenance chain verification (Spec-05-Federation-Trust provenance-chain validation)
 
 A `quarantine:moderator` reviews and either **promotes** (moves the fact to a target garden) or **rejects** (retracts the fact). Both actions are logged to the attestation audit trail.
 
@@ -135,10 +135,10 @@ curl -X POST $STIGMEM_URL/v1/gardens/quarantine-default/reject \
 
 ## References
 
-- Spec §19.4 — Source-trust score derivation formula and component definitions
-- Spec §19.4.3 — Trust mode configuration (`strict`, `relaxed`, `off`)
-- Spec §19.4.4 — Recall-time multiplier
-- Spec §19.5 — Quarantine garden (purpose, roles, automatic policy, promote/reject)
-- Spec §18 — Source attestation (binds declared `source` to authenticated `entity_uri`)
-- Spec §17 — Memory Garden (the underlying garden machinery)
-- Spec §5.25 — Quarantine operations wire format (promote, reject)
+- Spec-05-Federation-Trust.4 — Source-trust score derivation formula and component definitions
+- Spec-05-Federation-Trust.4.3 — Trust mode configuration (`strict`, `relaxed`, `off`)
+- Spec-05-Federation-Trust.4.4 — Recall-time multiplier
+- Spec-05-Federation-Trust.5 — Quarantine garden (purpose, roles, automatic policy, promote/reject)
+- Spec-X6-Source-Attestation — Source attestation (binds declared `source` to authenticated `entity_uri`)
+- Spec Spec-02-Scopes-and-ACL — Memory Garden (the underlying garden machinery)
+- Spec-03-HTTP-API quarantine operations — Quarantine operations wire format (promote, reject)

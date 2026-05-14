@@ -6,8 +6,8 @@ audience: Integrator
 
 # N-node Relay Backpressure
 
-:::info the pre-reset spec
-N-node backpressure patterns are new in spec the pre-reset spec (§6.7). These behaviors are **SHOULD** (recommended), not **MUST** — conformant nodes that omit them will interoperate but downstream nodes may receive stale data without warning.
+:::info Modular spec
+N-node backpressure patterns are covered by Spec-05-Federation-Trust relay-backpressure guidance. These behaviors are **SHOULD** (recommended), not **MUST** — conformant nodes that omit them will interoperate but downstream nodes may receive stale data without warning.
 :::
 
 **Audience:** Node operators configuring multi-hop federation topologies (three or more nodes in a relay chain).
@@ -112,5 +112,5 @@ For multi-hop topologies:
 
 - [Federation guide](./)  — peer registration, pull protocol, and PeerDeclaration setup
 - [Scope propagation guide](./scope-propagation) — scope invariants in N-node topologies
-- Spec §6.7 — N-node backpressure patterns
-- Spec §6 — Federation protocol
+- Spec-05-Federation-Trust.7 — N-node backpressure patterns
+- Spec-05-Federation-Trust — Federation protocol

@@ -4,17 +4,17 @@ version: 0.1.0-alpha.0
 status: Experimental
 applies_to: stigmem v0.9.0bN
 last_updated: 2026-05-14
-supersedes: pre-reset §18 source attestation material
+supersedes: pre-reset section 18 source-attestation material
 depends_on:
   - Spec-01-Fact-Model >= 0.1.0-alpha.0
   - Spec-09-Audit-Log >= 0.1.0-alpha.0
-title: §18. Source Attestation
-sidebar_label: §18 Source Attestation
+title: Spec-X6-Source-Attestation
+sidebar_label: Source Attestation
 audience: Spec
-description: "Stigmem spec section 18 — API-key → entity_uri binding with enforce/warn/off modes; trust anchor for connectors."
+description: "API-key to entity_uri binding with enforce/warn/off modes; trust anchor for connectors."
 ---
 
-# §18. Source Attestation {#section-18}
+# Spec-X6-Source-Attestation: Source Attestation {#section-18}
 
 **Status:** Normative (v1.0)
 
@@ -26,9 +26,9 @@ API-key → entity_uri binding with enforce/warn/off modes; trust anchor for con
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-### §18.1 Motivation {#section-18-1}
+### Spec-X6-Source-Attestation section 1 Motivation {#section-18-1}
 
-In the pre-reset spec, the `source` field in a fact request body is caller-declared:
+In the pre-reset source-attestation design, the `source` field in a fact request body is caller-declared:
 
 ```json
 { "entity": "...", "relation": "...", "source": "stigmem://node/user/alice", ... }
@@ -41,21 +41,21 @@ Nothing prevents an `agent:assistant` principal from writing `"source": "stigmem
 
 Source attestation closes this gap by binding `source` to the verified `entity_uri` from the auth principal at write time.
 
-### §18.2 Attestation Model {#section-18-2}
+### Spec-X6-Source-Attestation section 2 Attestation Model {#section-18-2}
 
 When a fact is asserted with auth enabled, the node:
 
-1. Resolves the key's registered `entity_uri` and `allowed_source_entities` (§18.7).
-2. Normalizes `fact.source` and all entries in the authorized set using §2.6.3.
+1. Resolves the key's registered `entity_uri` and `allowed_source_entities` (Spec-X6-Source-Attestation section 7).
+2. Normalizes `fact.source` and all entries in the authorized set using Spec-01-Fact-Model URI normalization.
 3. Checks:
 
 ```
 attested = normalized(fact.source) ∈ { normalized(identity.entity_uri) } ∪ normalized(identity.allowed_source_entities)
 ```
 
-If `source` is absent from the request and the key has a registered `entity_uri`, the node auto-fills `source` from `key.entity_uri` before the check (§18.8). The auto-filled value is returned in the response.
+If `source` is absent from the request and the key has a registered `entity_uri`, the node auto-fills `source` from `key.entity_uri` before the check (Spec-X6-Source-Attestation section 8). The auto-filled value is returned in the response.
 
-The result is stored as the `attested` column on the fact record (see §2.7). The behavior on mismatch depends on the node's configured `SourceAttestationMode`:
+The result is stored as the `attested` column on the fact record (see Spec-X6-Source-Attestation attestation field). The behavior on mismatch depends on the node's configured `SourceAttestationMode`:
 
 ```
 SourceAttestationMode = "enforce" | "warn" | "off"
@@ -77,7 +77,7 @@ SourceAttestationMode = "enforce" | "warn" | "off"
 **`off` mode:**
 - No check. `attested: null` on all facts.
 
-### §18.3 Well-Known Advertisement {#section-18-3}
+### Spec-X6-Source-Attestation section 3 Well-Known Advertisement {#section-18-3}
 
 Nodes MUST advertise their attestation mode at `/.well-known/stigmem`:
 
@@ -90,17 +90,17 @@ Nodes MUST advertise their attestation mode at `/.well-known/stigmem`:
 
 Clients SHOULD read this before writing to understand whether their `source` claim will be enforced.
 
-### §18.4 Attestation and Retraction {#section-18-4}
+### Spec-X6-Source-Attestation section 4 Attestation and Retraction {#section-18-4}
 
 A retraction (fact with `confidence=0.0`) is subject to the same attestation rules as any other fact write. If the node is in `enforce` mode and the caller's identity differs from the `source` field in the retraction body, the retraction is rejected with `HTTP 403`.
 
 **Implication:** A fact written by `agent:assistant` can only be retracted by `agent:assistant` in `enforce` mode (since the source must match the caller). If the original writer is no longer available, node admins must temporarily set `warn` or `off` mode to perform administrative retractions.
 
-### §18.5 Integration with Track C (Per-Agent Keypairs) {#section-18-5}
+### Spec-X6-Source-Attestation section 5 Integration with Track C (Per-Agent Keypairs) {#section-18-5}
 
-the pre-reset substrate work Track C adds per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
+Track C adds per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
 
-the pre-reset spec source attestation is a first step. the pre-reset spec `attested: true` means the bearer-token-level check passed. Track C extends this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
+Source attestation is a first step. `attested: true` means the bearer-token-level check passed. Track C extends this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
 
 <details>
 <summary>Revisions before v1.0: pre-reset draft</summary>
@@ -109,13 +109,13 @@ the pre-reset spec source attestation is a first step. the pre-reset spec `attes
 
 ### 18.5 Integration with Track C (Per-Agent Keypairs)
 
-the pre-reset substrate work Track C will add per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
+Track C will add per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
 
-the pre-reset spec source attestation is a first step. the pre-reset spec `attested: true` means the bearer-token-level check passed. Track C will extend this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
+Source attestation is a first step. `attested: true` means the bearer-token-level check passed. Track C will extend this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
 
 </details>
 
-### §18.6 Querying by Attestation {#section-18-6}
+### Spec-X6-Source-Attestation section 6 Querying by Attestation {#section-18-6}
 
 Facts can be filtered by attestation status:
 
@@ -124,17 +124,17 @@ GET /v1/facts?attested=true    // only source-attested facts
 GET /v1/facts?attested=false   // only non-attested facts (warn/off mode)
 ```
 
-The `attested` query parameter is optional. Omitting it returns all facts (default behavior, unchanged from the pre-reset spec).
+The `attested` query parameter is optional. Omitting it returns all facts.
 
-### §18.7 Key Registration: Binding `entity_uri` to an API Key {#section-18-7}
+### Spec-X6-Source-Attestation section 7 Key Registration: Binding `entity_uri` to an API Key {#section-18-7}
 
 Source attestation depends on the node knowing the caller's authorized `entity_uri`. This binding is established at **key creation time** and is immutable — a key's `entity_uri` cannot be changed after creation (to prevent retroactive provenance forgery).
 
 #### `entity_uri` requirements
 
-- MUST be a formal URI matching the `stigmem://` scheme (§2.5). Informal URIs are rejected at key creation.
+- MUST be a formal URI matching the `stigmem://` scheme (Spec-01-Fact-Model entity URI scheme). Informal URIs are rejected at key creation.
 - MUST be unique within the node's `api_keys` table (one key per entity).
-- Stored in normalized form (§2.6.3) to align with ingest normalization.
+- Stored in normalized form (Spec-01-Fact-Model URI normalization) to align with ingest normalization.
 
 #### Key creation
 
@@ -176,8 +176,8 @@ The caller MUST store `raw_key` securely — it is not retrievable after creatio
 
 #### Updated `Identity` shape
 
-The `Identity` shape extends the pre-reset spec shape with the `allowed_source_entities`
-field needed for delegation (§18.9). This is the object the node constructs
+The `Identity` shape extends the authenticated identity shape with the `allowed_source_entities`
+field needed for delegation (Spec-X6-Source-Attestation section 9). This is the object the node constructs
 from the API key record when authenticating a request — it drives every
 attestation check in the write path.
 
@@ -187,19 +187,19 @@ Identity {
   credential:              string         // API key (SHA-256 stored server-side)
   node_url:                string
   allowed_scopes:          FactScope[]
-  allowed_source_entities: URI[]          // additional source URIs this key may claim (see §18.9)
+  allowed_source_entities: URI[]          // additional source URIs this key may claim (see Spec-X6-Source-Attestation section 9)
 }
 ```
 
-#### Updated attestation check (§18.2 with delegation)
+#### Updated attestation check (Spec-X6-Source-Attestation section 2 with delegation)
 
-The check in §18.2 is updated to include the delegation list:
+The check in Spec-X6-Source-Attestation section 2 is updated to include the delegation list:
 
 ```
 attested = normalized(fact.source) ∈ { normalized(identity.entity_uri) } ∪ normalized(identity.allowed_source_entities)
 ```
 
-All normalization uses §2.6.3. Delegation set entries are stored in normalized form at key creation.
+All normalization uses Spec-01-Fact-Model URI normalization. Delegation set entries are stored in normalized form at key creation.
 
 <details>
 <summary>Revisions before v1.0: pre-reset draft</summary>
@@ -212,9 +212,9 @@ Source attestation depends on the node knowing the caller's authorized `entity_u
 
 #### `entity_uri` requirements
 
-- MUST be a formal URI matching the `stigmem://` scheme (§2.5). Informal URIs are rejected at key creation.
+- MUST be a formal URI matching the `stigmem://` scheme (Spec-01-Fact-Model entity URI scheme). Informal URIs are rejected at key creation.
 - MUST be unique within the node's `api_keys` table (one key per entity).
-- Stored in normalized form (§2.6.3) to align with ingest normalization.
+- Stored in normalized form (Spec-01-Fact-Model URI normalization) to align with ingest normalization.
 
 #### Key creation
 
@@ -254,10 +254,10 @@ The caller MUST store `raw_key` securely — it is not retrievable after creatio
   "detail": "entity_uri cannot be changed after creation; revoke and re-create the key" }
 ```
 
-#### Updated `Identity` shape (pre-reset)
+#### Updated `Identity` shape
 
-The the pre-reset spec `Identity` shape extends the pre-reset spec shape with the `allowed_source_entities`
-field needed for delegation (§18.9). This is the object the node constructs
+The `Identity` shape extends the authenticated identity shape with the `allowed_source_entities`
+field needed for delegation (Spec-X6-Source-Attestation section 9). This is the object the node constructs
 from the API key record when authenticating a request — it drives every
 attestation check in the write path.
 
@@ -267,23 +267,23 @@ Identity {
   credential:              string         // API key (SHA-256 stored server-side)
   node_url:                string
   allowed_scopes:          FactScope[]
-  allowed_source_entities: URI[]          // the pre-reset spec: additional source URIs this key may claim (see §18.9)
+  allowed_source_entities: URI[]          // additional source URIs this key may claim (see Spec-X6-Source-Attestation section 9)
 }
 ```
 
-#### Updated attestation check (§18.2 with delegation)
+#### Updated attestation check (Spec-X6-Source-Attestation section 2 with delegation)
 
-The check in §18.2 is updated to include the delegation list:
+The check in Spec-X6-Source-Attestation section 2 is updated to include the delegation list:
 
 ```
 attested = normalized(fact.source) ∈ { normalized(identity.entity_uri) } ∪ normalized(identity.allowed_source_entities)
 ```
 
-All normalization uses §2.6.3. Delegation set entries are stored in normalized form at key creation.
+All normalization uses Spec-01-Fact-Model URI normalization. Delegation set entries are stored in normalized form at key creation.
 
 </details>
 
-### §18.8 Source Auto-fill {#section-18-8}
+### Spec-X6-Source-Attestation section 8 Source Auto-fill {#section-18-8}
 
 If the `source` field is absent from a `POST /v1/facts` request body and the presenting key has a registered `entity_uri`, the node MUST auto-fill `source` from `key.entity_uri`. The auto-filled value MUST appear in the response body.
 
@@ -305,7 +305,7 @@ If `source` is absent and the key has **no registered `entity_uri`**:
 | `warn` | Accept; include `X-Stigmem-Warn: source_unattested` in response; `attested: false`. |
 | `off` | Accept; `attested: null`. |
 
-### §18.9 Delegation via `allowed_source_entities` {#section-18-9}
+### Spec-X6-Source-Attestation section 9 Delegation via `allowed_source_entities` {#section-18-9}
 
 Some adapters write facts on behalf of other principals. The Paperclip hook, for example, writes facts with `source="stigmem://company.example/agent/cto"` while running inside an agent's context — but the adapter's own key may be bound to `stigmem://company.example/adapter/paperclip`.
 
@@ -327,7 +327,7 @@ This key may write facts with `source` equal to any of: the adapter itself, the 
 
 **Default:** `allowed_source_entities` defaults to `[]`. Every delegation must be an explicit operator grant.
 
-### §18.10 Full Key Management API {#section-18-10}
+### Spec-X6-Source-Attestation section 10 Full Key Management API {#section-18-10}
 
 All key management routes require a key with `admin=true`. The key management
 API covers the full lifecycle: creation, inspection, scope/delegation updates,
@@ -430,18 +430,18 @@ Track C3 () builds a consolidated audit surface joining `(principal, attested-so
 
 </details>
 
-### §18.11 Schema Migration (Migration 005) {#section-18-11}
+### Spec-X6-Source-Attestation section 11 Schema Migration (Migration 005) {#section-18-11}
 
 Migration 005 adds two tables to support source attestation. The `api_keys`
 table formalizes key storage that was previously external to the database,
 binding each key to an `entity_uri` and carrying its scope permissions and
 delegation list. The `attestation_audit` table provides the append-only event
-log queried by the admin audit endpoint (§18.10). Both tables are additive and
+log queried by the admin audit endpoint (Spec-X6-Source-Attestation section 10). Both tables are additive and
 do not alter the existing `facts` schema — the `attested` column on `facts`
-was already added in §2.7.
+was already added in Spec-X6-Source-Attestation attestation field.
 
 ```sql
--- API key management (spec §18.7)
+-- API key management (Spec-X6-Source-Attestation.7)
 CREATE TABLE IF NOT EXISTS api_keys (
   id                      TEXT PRIMARY KEY,
   description             TEXT,
@@ -457,7 +457,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
 CREATE INDEX IF NOT EXISTS idx_api_keys_credential ON api_keys(credential_hash);
 CREATE INDEX IF NOT EXISTS idx_api_keys_entity_uri ON api_keys(entity_uri);
 
--- Attestation audit log (spec §18.10)
+-- Attestation audit log (Spec-X6-Source-Attestation.10)
 CREATE TABLE IF NOT EXISTS attestation_audit (
   id               TEXT PRIMARY KEY,
   key_id           TEXT NOT NULL REFERENCES api_keys(id),
@@ -472,12 +472,12 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_key_ts   ON attestation_audit(k
 CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(attested, ts);
 ```
 
-**Migration note for existing deployments:** Pre-the pre-reset spec nodes may manage API keys outside the database. Migration 005 formalizes key storage. Operators MUST:
+**Migration note for existing deployments:** Older nodes may manage API keys outside the database. Migration 005 formalizes key storage. Operators MUST:
 1. Register existing keys via `POST /v1/auth/keys` using an `existing_credential` migration field (accepted for 30 days post-deploy).
 2. Set `STIGMEM_SOURCE_ATTESTATION_MODE=warn` initially.
 3. Register `entity_uri` for all keys, then switch to `enforce` after verifying the audit log shows no `attested=false` writes.
 
-### §18.12 Error Reference {#section-18-12}
+### Spec-X6-Source-Attestation section 12 Error Reference {#section-18-12}
 
 | HTTP | Error code | Condition |
 |---|---|---|
@@ -504,6 +504,6 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(a
 
 ---
 
-*pre-reset draft — §17 and §18 open for community feedback. See [CONTRIBUTING.md](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md).*
+*pre-reset draft — Spec-02-Scopes-and-ACL and Spec-X6-Source-Attestation open for community feedback. See [CONTRIBUTING.md](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md).*
 
 </details>

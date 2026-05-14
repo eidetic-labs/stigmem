@@ -52,12 +52,12 @@ Main now includes the 22-hook registry foundation and plugin test harness needed
 |---|---|
 | [Authentication](./authentication.md) | API key auth (Argon2id for new keys; v0.9.0a1 SHA-256 rows rehash on successful use per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)), expires_at enforcement, session model |
 | [Agent keypairs](./agent-keypairs.md) | Ed25519 keypair generation, storage, rotation |
-| [Audit log](./audit-log.md) | WAL-ordered audit log, 14 event types, 90-day retention (§22.3) |
-| [Audit & quotas](./audit-and-quotas.md) | Per-principal token-bucket quotas, 7 dimensions (§22.4) |
-| [Key rotation](./key-rotation.md) | Enforced API key max-age (90d default), Ed25519 rotation runbook (§22.2) |
-| [mTLS](./mtls.md) | Federation transport: TLS 1.3 floor, SAN ↔ entity_uri binding (§22.1) |
+| [Audit log](./audit-log.md) | WAL-ordered audit log, 14 event types, 90-day retention (Spec-09-Audit-Log) |
+| [Audit & quotas](./audit-and-quotas.md) | Per-principal token-bucket quotas, 7 dimensions (Spec-10-Hardening rate limits) |
+| [Key rotation](./key-rotation.md) | Enforced API key max-age (90d default), Ed25519 rotation runbook (Spec-10-Hardening key rotation) |
+| [mTLS](./mtls.md) | Federation transport: TLS 1.3 floor, SAN ↔ entity_uri binding (Spec-10-Hardening mTLS transport) |
 | [Encryption at rest](./encryption-at-rest.md) | SQLCipher (opt-in for regulated data) |
-| [Container hardening](./container-hardening.md) | Distroless, non-root UID 1000, read-only fs, seccomp (§22.6) |
+| [Container hardening](./container-hardening.md) | Distroless, non-root UID 1000, read-only fs, seccomp (Spec-10-Hardening container baseline) |
 
 ## Operator surfaces
 

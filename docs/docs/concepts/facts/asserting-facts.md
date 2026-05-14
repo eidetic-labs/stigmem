@@ -53,7 +53,7 @@ curl -s -X POST http://localhost:8765/v1/facts \
   }' | jq .
 ```
 
-To **update** a fact, assert a new one for the same `(entity, relation, scope)` triple — Stigmem marks the old fact as superseded (see spec §3).
+To **update** a fact, assert a new one for the same `(entity, relation, scope)` triple — Stigmem marks the old fact as superseded (see Spec-15-Fact-Semantics).
 
 To **retract** a fact, set `"confidence": 0.0`.
 
@@ -172,8 +172,8 @@ See [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/exp
 ## Additional topics
 
 - Retracting a fact: set `"confidence": 0.0` with the same `(entity, relation, scope)` triple
-- Reification for N-ary relationships: use `stigmem:rel:<uuid>` as an intermediate entity (see spec §2.3)
+- Reification for N-ary relationships: use `stigmem:rel:<uuid>` as an intermediate entity (see Spec-01-Fact-Model.3)
 - `valid_until`: ISO 8601 expiry; omit for a permanent fact
-- Updating facts: see spec §3 for supersession semantics
+- Updating facts: see Spec-15-Fact-Semantics for supersession semantics
 
 See the [API Reference](/docs/reference/api) for the full `POST /v1/facts` endpoint spec.

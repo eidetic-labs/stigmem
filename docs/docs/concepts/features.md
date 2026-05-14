@@ -11,7 +11,7 @@ description: What Stigmem does today in v0.9.0a1 — feature status table calibr
 
 Stigmem is an open, federated knowledge protocol — a layer where AI agents and humans store typed, traceable facts that travel across tools, platforms, and organizations. Each fact is an immutable record `(entity, relation, value, source, timestamp, confidence, scope)` written once, queryable forever, with full provenance and a defined expiry.
 
-**This page describes v0.9.0a1.** The canonical version line of stigmem begins at `v0.9.0a1` per [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md) + [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). Earlier version *markers* (`pre-reset`, `v1.1`, `v2.0`) labeled internal development checkpoints, not tagged releases. Many features that earlier docs described as "Stable" were deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) — the v1 critical-path scope cut. Those features remain in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md), gated, off by default.
+**This page describes v0.9.0a1.** The canonical version line of stigmem begins at `v0.9.0a1` per [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md) + [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). Earlier version markers labeled internal development checkpoints, not tagged releases. Many features that earlier docs described as "Stable" were deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) — the v1 critical-path scope cut. Those features remain in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md), gated, off by default.
 
 ---
 
@@ -34,48 +34,48 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 | Capability                          | Status     | Spec      |
 |-------------------------------------|------------|-----------|
-| Immutable typed facts (entity, relation, value, source, timestamp, confidence, scope) | Stable | §2, §3    |
-| Scope enforcement (`local` / `team` / `company` / `public`) | Stable | §3.5      |
-| Confidence (`valid_until`, retraction) | Stable | §3        |
-| Conflict surfacing & resolution     | Stable     | §6.3      |
-| Entity naming rules                 | Stable     | §2.5–§2.6 |
-| Lint semantics                      | Stable     | §14       |
-| Content-addressed fact IDs (CIDs)   | Stable in core ([ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | §25 |
+| Immutable typed facts (entity, relation, value, source, timestamp, confidence, scope) | Stable | Spec-01-Fact-Model, Spec-15-Fact-Semantics    |
+| Scope enforcement (`local` / `team` / `company` / `public`) | Stable | Spec-02-Scopes-and-ACL      |
+| Confidence (`valid_until`, retraction) | Stable | Spec-15-Fact-Semantics        |
+| Conflict surfacing & resolution     | Stable     | Spec-15-Fact-Semantics      |
+| Entity naming rules                 | Stable     | Spec-01-Fact-Model |
+| Lint semantics                      | Stable     | Spec-20-Lint-Semantics       |
+| Content-addressed fact IDs (CIDs)   | Stable in core ([ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | Spec-21-Content-Addressed-IDs |
 
 ## Recall (v0.9.0a1 critical path)
 
 | Capability                          | Status     | Spec   |
 |-------------------------------------|------------|--------|
-| `POST /v1/recall` basic typed-fact retrieval | Stable | §6   |
-| `query_facts` operation             | Stable     | §3     |
-| `assert_fact` operation             | Stable     | §3     |
+| `POST /v1/recall` basic typed-fact retrieval | Stable | Spec-07-Recall-Pipeline   |
+| `query_facts` operation             | Stable     | Spec-03-HTTP-API     |
+| `assert_fact` operation             | Stable     | Spec-03-HTTP-API     |
 
 ## Federation (v0.9.0a1 critical path)
 
 | Capability                          | Status     | Spec   |
 |-------------------------------------|------------|--------|
-| Two-node mTLS federation (TLS 1.3 floor, SAN ↔ entity_uri binding) | Stable | §22.1 |
-| Ed25519 signed manifests at `/.well-known/stigmem-manifest.json` | Stable | §19 |
-| Capability tokens (≤90d, Ed25519, verb+object validated at admission) | Stable | §19 |
-| Bounded HLC skew + per-peer drift tracking | Implemented on main for v0.9.0a2 (R-19) | §22.5 |
-| Quarantine garden (federation inbound writes) | Stable | §19   |
-| Pull replication                    | Stable     | §6     |
+| Two-node mTLS federation (TLS 1.3 floor, SAN ↔ entity_uri binding) | Stable | Spec-10-Hardening mTLS transport |
+| Ed25519 signed manifests at `/.well-known/stigmem-manifest.json` | Stable | Spec-04-Manifests |
+| Capability tokens (≤90d, Ed25519, verb+object validated at admission) | Stable | Spec-06-Capability-Tokens |
+| Bounded HLC skew + per-peer drift tracking | Implemented on main for v0.9.0a2 (R-19) | Spec-11-Replay-Protection |
+| Quarantine garden (federation inbound writes) | Stable | Spec-08-Quarantine-Garden   |
+| Pull replication                    | Stable     | Spec-05-Federation-Trust     |
 
 ## Authentication & authorization (v0.9.0a1 critical path)
 
 | Capability                          | Status     | Spec   |
 |-------------------------------------|------------|--------|
-| API-key authentication (per-scope)  | Stable (Argon2id for new keys; v0.9.0a1 SHA-256 rows rehash on successful use per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | §3.5 |
-| Enforced API key max-age (default 90d) | Stable | §22.2 |
-| Per-principal token-bucket rate limits (7 dimensions) | Stable | §22.4 |
-| Capability-based instruction handling (`interpret_as`) | Targeted v0.9.0bN beta series ([ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)) | §3 |
+| API-key authentication (per-scope)  | Stable (Argon2id for new keys; v0.9.0a1 SHA-256 rows rehash on successful use per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | Spec-02-Scopes-and-ACL |
+| Enforced API key max-age (default 90d) | Stable | Spec-10-Hardening key rotation |
+| Per-principal token-bucket rate limits (7 dimensions) | Stable | Spec-10-Hardening rate limits |
+| Capability-based instruction handling (`interpret_as`) | Targeted v0.9.0bN beta series ([ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)) | Spec-15-Fact-Semantics |
 
 ## Observability (v0.9.0a1 critical path)
 
 | Capability                          | Status     | Spec   |
 |-------------------------------------|------------|--------|
-| WAL-ordered audit log (14 event types, 90-day retention) | Stable | §22.3 |
-| Prometheus metrics (node health, request rates, quotas, federation peer status) | Stable | §22.3 |
+| WAL-ordered audit log (14 event types, 90-day retention) | Stable | Spec-09-Audit-Log |
+| Prometheus metrics (node health, request rates, quotas, federation peer status) | Stable | Spec-09-Audit-Log |
 
 ## Storage (v0.9.0a1 critical path)
 
@@ -132,17 +132,18 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 
 The following features are in the codebase under [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) but are **not in v0.9.0a1's default install**. Across the v0.9.0a2..a8 alpha series, cross-cutting features are extracted into opt-in experimental plugin packages per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md). That alpha extraction is not ADR-008 graduation; graduation into the supported surface happens later, after the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) five-gate process.
 
-| Feature                             | Spec § | alpha extraction target |
+| Feature                             | Spec | alpha extraction target |
 |-------------------------------------|--------|----------------|
-| Lazy instruction discovery          | §21    | v0.9.0a2 |
-| Time-travel `as_of` queries         | §24    | v0.9.0a4 |
-| RTBF tombstones                     | §23    | v0.9.0a5 |
-| Memory garden — advanced ACL        | §17 advanced | v0.9.0a6 |
-| Source attestation                  | §18    | v0.9.0a7 |
+| Lazy instruction discovery          | Spec-X1-Lazy-Instruction-Discovery    | v0.9.0a2 |
+| Time-travel `as_of` queries         | Spec-X3-Time-Travel-Queries    | v0.9.0a4 |
+| RTBF tombstones                     | Spec-X2-RTBF-Tombstones    | v0.9.0a5 |
+| Memory garden — advanced ACL        | Spec-X5-Memory-Garden-Advanced-ACL | v0.9.0a6 |
+| Source attestation                  | Spec-X6-Source-Attestation    | v0.9.0a7 |
 | Multi-tenant isolation              | (cross-cutting) | v0.9.0a8 |
-| §20 Recall & Graph (vector embeddings, MMR, memory cards, subscriptions) | §20 | the v0.9.0aN alpha series |
-| Decay sweep                         | §15    | Deferred (commercial path) |
-| Synthesis                           | §16    | Deferred (commercial path) |
+| Recall & Graph (vector embeddings, MMR, memory cards) | Spec-X11-Recall-Graph | the v0.9.0aN alpha series |
+| Subscriptions                       | Spec-X7-Subscriptions | the v0.9.0aN alpha series |
+| Decay sweep                         | Spec-X9-Decay-Semantics    | Deferred (commercial path) |
+| Synthesis                           | Spec-X10-Synthesis    | Deferred (commercial path) |
 | OIDC SSO                            | —      | the v0.9.0aN alpha series |
 | PostgreSQL backend, libSQL/Turso    | —      | Deferred (operator-validated demand) |
 | Cloud embedding                     | —      | Deferred (R-20 accepted) |

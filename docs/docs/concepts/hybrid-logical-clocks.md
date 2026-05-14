@@ -56,7 +56,7 @@ flowchart TD
 
 ### Causal ordering
 
-Two facts `a` and `b` are causally ordered if `a.hlc < b.hlc` (compared as `wall_ms` first, then `counter`). Equal HLCs on different nodes indicate concurrent writes — these are handled by the contradiction policy (spec §3.3).
+Two facts `a` and `b` are causally ordered if `a.hlc < b.hlc` (compared as `wall_ms` first, then `counter`). Equal HLCs on different nodes indicate concurrent writes — these are handled by the contradiction policy (Spec-15-Fact-Semantics).
 
 ### Worked example
 
@@ -84,9 +84,9 @@ If both nodes had written at the same millisecond, the counter would break the t
 
 **HLC looks like a wall clock, but isn't.** The `wall_ms` component tracks real time closely but is *not* a wall-clock timestamp. It can only advance forward, never backward. This means HLC values are always monotonically increasing on a single node, even if the system clock is corrected backward by NTP. Systems that treat HLC as a wall clock (e.g., for TTL expiry) will be approximately correct but not exact.
 
-**O(1) state vs. O(N) state.** Unlike vector clocks, HLC requires only a single `(wall_ms, counter)` pair per node — constant state regardless of federation size. This is why Stigmem chose HLC over vector clocks (spec §7 Design Decisions Log): vector clocks are O(N) and impractical beyond small clusters.
+**O(1) state vs. O(N) state.** Unlike vector clocks, HLC requires only a single `(wall_ms, counter)` pair per node — constant state regardless of federation size. This is why Stigmem chose HLC over vector clocks: vector clocks are O(N) and impractical beyond small clusters.
 
-**Equal HLCs are concurrent, not identical.** Two facts with the same HLC from different nodes are not duplicates — they are concurrent writes that happened to occur at the same logical instant. The contradiction policy (spec §3.3) handles this case explicitly.
+**Equal HLCs are concurrent, not identical.** Two facts with the same HLC from different nodes are not duplicates — they are concurrent writes that happened to occur at the same logical instant. The contradiction policy (Spec-15-Fact-Semantics) handles this case explicitly.
 
 ## What it costs
 
@@ -96,8 +96,8 @@ If both nodes had written at the same millisecond, the counter would break the t
 
 ## References
 
-- Spec §2.4 — Hybrid Logical Clock format, advance rules, and wire encoding
-- Spec §6.3 — HLC synchronization during federation
-- Spec §3.3 — Contradiction detection using HLC for tie-breaking
-- Spec §7 — Design Decisions Log ("HLC over pure vector clocks")
+- Spec-01-Fact-Model.4 — Hybrid Logical Clock format, advance rules, and wire encoding
+- Spec-05-Federation-Trust.3 — HLC synchronization during federation
+- Spec Spec-15-Fact-Semantics — Contradiction detection using HLC for tie-breaking
+- Protocol overview and ADRs — Design rationale for HLC over pure vector clocks
 - Kulkarni et al., "[Logical Physical Clocks and Consistent Snapshots in Globally Distributed Databases](https://cse.buffalo.edu/tech-reports/2014-04.pdf)" (2014) — the foundational HLC paper

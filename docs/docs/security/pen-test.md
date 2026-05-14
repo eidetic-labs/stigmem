@@ -28,12 +28,12 @@ The following surfaces are explicitly in scope for community pen testing:
 | **Reference node HTTP API** — `/v1/facts`, `/v1/query`, `/v1/recall`, `/v1/cards/*`, `/v1/graph/*`, `/v1/synthesis`, `/v1/decay`, `/v1/conflicts`, `/v1/subscriptions`, `/v1/federation/*`, `/v1/admin/*` | All endpoints, authenticated and unauthenticated paths. Both read and write surfaces. |
 | **Federation handshake and replication** | PeerDeclaration signing, HLC cursor handling, replay protection, capability token validation |
 | **Authentication and API key lifecycle** | Key issuance, storage (Argon2id hashing), validation, scope enforcement, revocation |
-| **Capability token issuance and validation** | Ed25519 signing, expiry, nonce, verb/object scope enforcement (spec §19.3) |
-| **Source Attestation (spec §18)** | Enforcement modes (`enforce`, `warn`, `off`); entity-URI binding |
-| **Memory Garden ACLs (spec §17)** | Role escalation paths; garden boundary enforcement; quarantine admit/release |
+| **Capability token issuance and validation** | Ed25519 signing, expiry, nonce, verb/object scope enforcement (Spec-06-Capability-Tokens) |
+| **Source Attestation (Spec-X6-Source-Attestation)** | Enforcement modes (`enforce`, `warn`, `off`); entity-URI binding |
+| **Memory Garden ACLs (Spec-02-Scopes-and-ACL)** | Role escalation paths; garden boundary enforcement; quarantine admit/release |
 | **MCP adapter** | `assert_fact`, `query_facts`, `recall`, `lint_scope` tool surface |
 | **OpenClaw / Claude Code adapter** | Memory read/write paths |
-| **Recall pipeline** | Scope isolation across lexical, vector, and graph stages (spec §20.3) |
+| **Recall pipeline** | Scope isolation across lexical, vector, and graph stages (Spec-07-Recall-Pipeline and Spec-X11-Recall-Graph) |
 | **Audit log endpoints** (pre-reset hardening) | Access control on `/v1/admin/audit-log`; log tamper-resistance |
 | **Per-principal quota enforcement** (pre-reset hardening) | Correct application of token-bucket ceilings; bypass attempts |
 
@@ -45,7 +45,7 @@ The following finding classes are of the highest interest to maintainers:
 - **Cross-org data leakage** — a capability token or API key granting access to facts beyond its declared scope.
 - **Federation peer impersonation** — successfully acting as a peer node without a valid mTLS certificate and matching org manifest.
 - **Capability token replay or forgery** — replaying a revoked token, forging a signature, or bypassing the nonce/timestamp window.
-- **Prompt injection via the recall pipeline** — bypassing the recall-time content sanitizer (spec §19.7) to inject instructions into an LLM context via stored fact values.
+- **Prompt injection via the recall pipeline** — bypassing the recall-time content sanitizer (ADR-003 defense-in-depth sanitizer model) to inject instructions into an LLM context via stored fact values.
 - **Quarantine garden bypass** — causing an untrusted fact to enter the main fact store without passing through quarantine review.
 - **Source Attestation bypass** — writing facts without a valid attestation in `enforce` mode.
 
@@ -269,12 +269,12 @@ The following are **known gaps** planned for the pre-reset hardening work (carri
 
 | Gap | v0.9.0bN beta-series target |
 |---|---|
-| mTLS for federation peer connections (currently TLS only, no client cert) | mTLS + TLS 1.3 floor + SAN/entity_uri binding (spec §22.1) |
-| API-key rotation: no enforced max-age | Enforced max-age + expiring-soon surface (spec §22.2) |
-| Per-principal write/recall rate limits: not enforced | Token-bucket quotas on 7 dimensions (spec §22.4) |
-| Audit log: not yet shipped | 13-event-type audit log, WAL ordering, 90-day retention (spec §22.3) |
-| Container runs as non-root but not distroless | Distroless base, read-only fs, dropped capabilities (spec §22.6) |
-| Federation replay-protection fuzz test coverage | Fuzz tests + HLC + nonce end-to-end verification (spec §22.5) |
+| mTLS for federation peer connections (currently TLS only, no client cert) | mTLS + TLS 1.3 floor + SAN/entity_uri binding (Spec-10-Hardening) |
+| API-key rotation: no enforced max-age | Enforced max-age + expiring-soon surface (Spec-10-Hardening) |
+| Per-principal write/recall rate limits: not enforced | Token-bucket quotas on 7 dimensions (Spec-10-Hardening) |
+| Audit log: not yet shipped | 13-event-type audit log, WAL ordering, 90-day retention (Spec-09-Audit-Log) |
+| Container runs as non-root but not distroless | Distroless base, read-only fs, dropped capabilities (Spec-10-Hardening) |
+| Federation replay-protection fuzz test coverage | Fuzz tests + HLC + nonce end-to-end verification (Spec-11-Replay-Protection) |
 | Constant-time crypto: audit pending | Full constant-time audit of Ed25519 path |
 
 The full threat model with STRIDE analysis per trust boundary, including status of all known risks, is at [`spec/security/threat-model.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md).
@@ -286,7 +286,7 @@ The full threat model with STRIDE analysis per trust boundary, including status 
 Stigmem does not currently operate a paid bug bounty program. Valid findings are recognized with:
 
 - **Hall of fame** — your name or handle is added to the `SECURITY.md` acknowledgments section and the fixing release's changelog.
-- **Attribution in the spec errata** — if your finding affects wire-format or protocol behavior (spec §§1–22), you are credited in the spec changelog as a contributor to that revision.
+- **Attribution in the spec errata** — if your finding affects wire-format or protocol behavior, you are credited in the relevant modular spec changelog as a contributor to that revision.
 - **Coordinated disclosure credit** — the GitHub Security Advisory, when published, lists you as the reporter.
 
 If you prefer to remain anonymous, say so in your report template (`[ ] I prefer anonymous credit`) and we will honor that throughout all public communications.

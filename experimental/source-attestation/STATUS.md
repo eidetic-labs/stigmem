@@ -3,7 +3,7 @@
 > Per [ADR-008](../../docs/adr/008-experimental-gates.md), gate status for `experimental/source-attestation/`.
 
 **Spec ID:** `Spec-X6-Source-Attestation`  
-**Legacy section:** §18
+**Legacy section:** Spec-X6-Source-Attestation
 
 **Status:** Dormant
 **Active version:** v0.9.0a1 (last tested against)
@@ -15,7 +15,7 @@
 
 ## Summary
 
-This feature was extracted to `experimental/` per [ADR-002](../../docs/adr/002-v1-scope.md) v1 critical-path scope cut + [ADR-009](../../docs/adr/009-repo-structure.md) §2(b). Code preserved as-is from pre-reset state; no immediate plan for ADR-008 promotion.
+This feature was extracted to `experimental/` per [ADR-002](../../docs/adr/002-v1-scope.md) v1 critical-path scope cut + [ADR-009](../../docs/adr/009-repo-structure.md) Spec-01-Fact-Model(b). Code preserved as-is from pre-reset state; no immediate plan for ADR-008 promotion.
 
 ## Why deferred
 

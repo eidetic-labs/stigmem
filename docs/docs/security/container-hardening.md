@@ -6,7 +6,7 @@ audience: Operator
 
 # Container hardening
 
-Stigmem's reference node image ships with a hardened container posture as of **pre-reset hardening** (spec §22.6). This page describes the controls baked into the image and how to verify them.
+Stigmem's reference node image ships with a hardened container posture as of **pre-reset hardening** (Spec-10-Hardening). This page describes the controls baked into the image and how to verify them.
 
 ## What's included
 

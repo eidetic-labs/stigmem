@@ -64,7 +64,7 @@ Create new facts manually.
 | Field | Notes |
 |-------|-------|
 | Entity URI | Required; free-text |
-| Relation | Required; should follow namespace registry (§9) |
+| Relation | Required; should follow namespace registry (Spec-16-Namespace-Registry) |
 | Value type | Selector: `string`, `text`, `number`, `boolean`, `datetime`, `ref`, `null` |
 | Value | Input adapts to the selected type |
 | Source URI | Required; pre-filled from `GET /v1/me` if you are authenticated |
@@ -84,7 +84,7 @@ Useful for compliance reviews and debugging — equivalent to `GET /v1/facts?inc
 
 ### Gardens
 
-Manage memory gardens (named, ACL-controlled partitions above scope — see spec §17).
+Manage memory gardens (named, ACL-controlled partitions above scope — see Spec-02-Scopes-and-ACL).
 
 **List view:** Cards show slug, display name, scope badge, and creation time. Click a card to open the detail view.
 
@@ -126,4 +126,4 @@ Every UI action maps to a REST endpoint:
 - [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) — how to sign in via your organisation's IdP instead of a static key
 - [Authentication](./authentication) — full API key and permission model
 - [Asserting Facts](../concepts/facts/asserting-facts) — `curl` examples for the same operations
-- [Gardens API](../concepts/facts/asserting-facts) — spec §17 for the data model behind the Gardens tab
+- [Gardens API](../concepts/facts/asserting-facts) — Spec-02-Scopes-and-ACL for the data model behind the Gardens tab

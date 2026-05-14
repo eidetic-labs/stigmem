@@ -30,7 +30,7 @@ curl -s 'http://localhost:8000/v1/facts?min_confidence=0.8' \
 
 ## Topics to be covered
 
-- Filtering by entity, relation, source, scope (see spec §5.2)
+- Filtering by entity, relation, source, scope (see Spec-03-HTTP-API query-facts route)
 - Cursor-based pagination via the `cursor` field
 - Polling for new facts with the `after` HLC cursor
 - Including contradicted and expired facts

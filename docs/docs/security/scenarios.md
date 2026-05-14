@@ -123,11 +123,11 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **What does the residual look like?** Individual fact payloads have no per-request integrity seal beyond TLS. If TLS is terminated at a proxy (load balancer, WAF) and the proxy-to-node segment is unencrypted, a local attacker with access to that internal segment could tamper with payloads. Deployments that terminate TLS at a proxy must ensure the internal path is also protected.
 
-**How would you know?** Content-Addressed Fact IDs (§25, CIDs) provide tamper detection at the fact level. If you have CID verification enabled, an altered fact will have a different CID than expected. Without CIDs, silent tampering on a compromised internal network is hard to detect.
+**How would you know?** Content-Addressed Fact IDs (Spec-21-Content-Addressed-IDs, CIDs) provide tamper detection at the fact level. If you have CID verification enabled, an altered fact will have a different CID than expected. Without CIDs, silent tampering on a compromised internal network is hard to detect.
 
 **How do you recover?** If you discover tampered facts, use the audit log to identify when they were written, then retract them and reassert the correct values.
 
-**Current protection status:** **Operational responsibility.** TLS 1.3 protects the transport when end-to-end. If TLS terminates at a proxy (load balancer, WAF), the internal path between proxy and node MUST also be encrypted; otherwise the residual applies and a local network attacker can tamper with payloads. CIDs (§25, core in v0.9.0a1 per [ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)) provide tamper detection at the fact level once verification is enabled on the read path.
+**Current protection status:** **Operational responsibility.** TLS 1.3 protects the transport when end-to-end. If TLS terminates at a proxy (load balancer, WAF), the internal path between proxy and node MUST also be encrypted; otherwise the residual applies and a local network attacker can tamper with payloads. CIDs (Spec-21-Content-Addressed-IDs, core in v0.9.0a1 per [ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)) provide tamper detection at the fact level once verification is enabled on the read path.
 
 ---
 
@@ -148,7 +148,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **What can't they do?** Pass mTLS verification without the legitimate peer's client certificate. mTLS requires a client certificate signed by a CA your node trusts. Without the private key of the legitimate peer, impersonation fails at the TLS handshake.
 
-**What does the "pre-§22.1 deployment" risk mean?** If you deployed a node before pre-reset hardening and did not enable mTLS, peer authentication relies only on the capability token — which is weaker (tokens can be stolen without a private key). Ensure mTLS is enabled: see [mTLS guide](docs/security/mtls.md).
+**What does the "pre-Spec-10-Hardening mTLS transport deployment" risk mean?** If you deployed a node before pre-reset hardening and did not enable mTLS, peer authentication relies only on the capability token — which is weaker (tokens can be stolen without a private key). Ensure mTLS is enabled: see [mTLS guide](docs/security/mtls.md).
 
 **How would you know?** The audit log records `federation_connect` events. Unexpected peer entity URIs in that log, or an unusual volume of quarantine admissions, are signals.
 
@@ -195,7 +195,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **What can't they do?** Change the Content-Addressed Fact ID (CID) — the CID is computed from the fact's core fields, not from `valid_until` or `source_trust`.
 
-**The spec says…** §25.2.1 mandates that your node MUST recompute `source_trust` locally from the source manifest and MUST reject any `valid_until` that extends beyond the value previously observed for the same CID. This is a defensive invariant, not a negotiated value.
+**The spec says…** Spec-21-Content-Addressed-IDs excluded-field validation mandates that your node MUST recompute `source_trust` locally from the source manifest and MUST reject any `valid_until` that extends beyond the value previously observed for the same CID. This is a defensive invariant, not a negotiated value.
 
 **How would you know?** This is difficult to detect without a regression test. The audit log does not currently record `valid_until` extension rejections. This gap is tracked as R-18.
 
@@ -283,11 +283,11 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 
 **Who is affected?** Any operator running federated deployments that depend on manifest verification.
 
-**What happens?** §19.2.6 defines failure-closed behavior: if the transparency log is unavailable, manifest verification returns a `503 transparency_log_unavailable` error. Federation operations that depend on manifest verification pause until the log is reachable again. This is the intended safe behavior — it is preferable to accepting an unverified manifest.
+**What happens?** Spec-05-Federation-Trust transparency-log rules define failure-closed behavior: if the transparency log is unavailable, manifest verification returns a `503 transparency_log_unavailable` error. Federation operations that depend on manifest verification pause until the log is reachable again. This is the intended safe behavior — it is preferable to accepting an unverified manifest.
 
 **What can't an attacker do?** Exploit log unavailability to inject a fraudulent manifest. The failure-closed behavior blocks manifest operations rather than falling back to an unverified path.
 
-**How do you recover?** Wait for Rekor availability to be restored. If your SLA requires continuity during Rekor outages, evaluate running a self-hosted Rekor instance (§22.7).
+**How do you recover?** Wait for Rekor availability to be restored. If your SLA requires continuity during Rekor outages, evaluate running a self-hosted Rekor instance (Spec-05-Federation-Trust transparency-log operations).
 
 **Current protection status:** **Operational risk only** — failure-closed behavior is normative. No security vulnerability; this is a reliability/availability concern.
 
@@ -329,7 +329,7 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 - The blast radius depends on the permissions of the LLM agent's API key. An agent with only `read` scope cannot write facts but may still take harmful external actions if the injection instructs it to use other tools it has access to.
 - **If the agent holds a writer key:** the LLM can use that key to assert attacker-chosen facts. Those facts look authoritative coming from your organization. They federate to peer organizations, where their agents may read and re-inject — the worm vector. This is covered in detail in [Scenario 5.2](#scenario-52--what-if-a-prompt-injected-agent-writes-attacker-chosen-facts-back-to-the-federation-worm-vector) (R-21).
 
-**What can't the attacker do?** Bypass the recall sanitizer for known injection patterns. §19.7 strips common prompt-injection sentinels at recall time. Novel or obfuscated injection patterns may still pass through.
+**What can't the attacker do?** Bypass the recall sanitizer for known injection patterns. ADR-003 defense-in-depth sanitizer model strips common prompt-injection sentinels at recall time. Novel or obfuscated injection patterns may still pass through.
 
 **What does "best-effort" mean in practice?** The sanitizer catches patterns like `[INST]`, `<|system|>`, `Ignore previous instructions`, and similar known markers. An attacker who encodes the injection in an unexpected way (e.g., using lookalike Unicode characters, embedding instructions inside a URL, or splitting the payload across multiple facts) may bypass it.
 
@@ -377,7 +377,7 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 4. If the attacker published a new org manifest, rotate the org signing key and republish.
 5. Review any tombstones issued during the compromise window — tombstones cannot be automatically reversed; you will need to issue `TombstoneRevocation` records for any illegitimate ones.
 
-**How do you protect yourself?** Treat admin keys with the same security as private signing keys. Store them in a hardware security module or secrets manager, not in environment files on disk. Rotate admin keys on a schedule matching your key rotation policy (§22.2 recommends ≤365 days).
+**How do you protect yourself?** Treat admin keys with the same security as private signing keys. Store them in a hardware security module or secrets manager, not in environment files on disk. Rotate admin keys on a schedule matching your key rotation policy (Spec-10-Hardening key rotation recommends ≤365 days).
 
 **Current protection status:** **Ongoing operational risk** — no single mitigation eliminates admin key risk. Defense is layered: key expiry (R-03 mitigated), audit log (R-09 mitigated), key rotation (R-03 mitigated).
 
@@ -424,7 +424,7 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 
 **What can't they do?** Access this data with a non-admin key. Legal-hold `as_of` responses are gated to admin API keys only; agent keys are blocked by the server.
 
-**What should operators understand?** This is a deliberate design tradeoff in §24.3.2: legal hold exists for regulatory use cases where preservation is legally required. The risk is that the "preserved for legal purposes" data becomes a high-value target. Treat deployments that hold legal-hold tombstones with the same care as systems containing court-ordered preservation data.
+**What should operators understand?** This is a deliberate design tradeoff in Spec-X2-RTBF-Tombstones legal-hold behavior: legal hold exists for regulatory use cases where preservation is legally required. The risk is that the "preserved for legal purposes" data becomes a high-value target. Treat deployments that hold legal-hold tombstones with the same care as systems containing court-ordered preservation data.
 
 **How do you reduce the risk?**
 - Do not issue `legal_hold: true` tombstones unless you have a documented legal basis.
@@ -443,7 +443,7 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 
 **Risk ID:** R-15 / T9-T1, T9-E1
 
-**What if** someone with write access to the `instruction:` scope stores a malicious fact that gets loaded as an agent's operational instruction via Lazy Instruction Discovery (§21)?
+**What if** someone with write access to the `instruction:` scope stores a malicious fact that gets loaded as an agent's operational instruction via Lazy Instruction Discovery (Spec-X1-Lazy-Instruction-Discovery)?
 
 **Who is the attacker?** Any caller whose API key grants `write` permission to the `instruction:` scope.
 
@@ -454,12 +454,12 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 - Because the instructions are loaded at boot before the agent encounters its real task, the agent cannot distinguish injected instructions from legitimate ones without an out-of-band verification mechanism.
 - If the compromised agent holds an admin API key or has `write` permission on broad scopes, the injected instructions can cause it to perform privileged operations.
 
-**What can't they do?** Inject instructions that violate hard constraints embedded directly in the boot stub (§21.1.1). Instructions that are unconditionally included in the boot stub body — such as hard "never-do" prohibitions — are always in context and cannot be silently bypassed by a retrieval failure or adversarial instruction fact.
+**What can't they do?** Inject instructions that violate hard constraints embedded directly in the boot stub (Spec-X1-Lazy-Instruction-Discovery boot-stub rules). Instructions that are unconditionally included in the boot stub body — such as hard "never-do" prohibitions — are always in context and cannot be silently bypassed by a retrieval failure or adversarial instruction fact.
 
 **What should operators do right now (this is an open risk)?**
 - Audit every API key that has `write` access to any scope beginning with `instruction:`. This list should be very short — ideally only admin keys or a dedicated instruction-management key.
 - Do not grant general agent API keys `write` on `instruction:` scope.
-- Ensure your agents' boot stubs embed hard prohibitions unconditionally (§21.1.1 guidance: "always-applicable rules" should be in the boot stub body, not lazy-loaded).
+- Ensure your agents' boot stubs embed hard prohibitions unconditionally (Spec-X1-Lazy-Instruction-Discovery boot-stub rules guidance: "always-applicable rules" should be in the boot stub body, not lazy-loaded).
 
 **How would you know?** The `instruction_audit` event type in the audit log records `recall_instruction` calls. Unexpected instruction scope writes (`fact_write` events where the entity URI is in the `instruction:` namespace) are a signal.
 

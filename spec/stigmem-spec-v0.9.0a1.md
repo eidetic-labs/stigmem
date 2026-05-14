@@ -31,7 +31,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 | (protocol governance) | Open questions | §8 | Stable | This file |
 | `Spec-16-Namespace-Registry` | Namespace registry | §9 | Stable | `spec/specs/16-namespace-registry.md` |
 | `Spec-17-Schema-and-Migration` | Schema and migration | §10 | Stable | `spec/specs/17-schema-and-migration.md` |
-| `Spec-18-Conformance-and-Failure-Modes` | Failure-mode scenarios | §11 | Stable | Planned `spec/specs/18-conformance-and-failure-modes.md` |
+| `Spec-18-Conformance-and-Failure-Modes` | Failure-mode scenarios | §11 | Stable | `spec/specs/18-conformance-and-failure-modes.md` |
 | `Spec-19-Adapter-ABI` | Adapter ABI | §12 | Stable | Planned `spec/specs/19-adapter-abi.md` |
 | (placeholder) | (reserved) | §13 | Placeholder | `docs/archive/placeholder-pages/spec/section-13.md` |
 | `Spec-20-Lint-Semantics` | Lint semantics | §14 | Stable | Planned `spec/specs/20-lint-semantics.md` |

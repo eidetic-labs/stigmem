@@ -13,13 +13,54 @@ depends_on:
 
 # Spec-13-Capability-Based-Instructions
 
-Structural content/instruction separation, explicit promotion of recalled memory into executable instruction, provenance retention, and capability enforcement for agent instruction flows.
+`Spec-13-Capability-Based-Instructions` defines structural separation between
+recalled content and executable instruction, plus the capability gate required
+to promote memory into instruction.
 
 ## Extraction Status
 
-This is the ADR-010 metadata stub for the modular spec migration. The normative prose is targeted for the v0.9.0bN capability-redesign work and remains anchored in ADR-003 until extracted.
+This file contains the ADR-010 prose extraction for ADR-003 capability-based
+instruction handling. The feature targets the `v0.9.0bN` capability redesign
+line and is not part of the `v0.9.0a1` stable surface.
 
-## Source Material
+## Principle
 
-- [`../../docs/adr/003-prompt-injection.md`](../../docs/adr/003-prompt-injection.md)
-- R-15 and R-21 entries in [`../security/threat-model.md`](../security/threat-model.md)
+Recalled memory is data. It MUST NOT become executable instruction merely
+because it appears in context. Promotion from content to instruction requires an
+explicit capability grant and a structurally separate channel.
+
+## FactValue Extension
+
+The capability redesign introduces an instruction interpretation marker on
+facts or recalled units. A fact marked as instruction-like MUST be treated as
+data unless the caller has the required capability to execute or inject that
+instruction.
+
+## Write-Time Enforcement
+
+Writing instruction-typed facts MUST require a capability token with the
+appropriate instruction write grant. Cross-organization instruction-typed facts
+SHOULD be quarantined or rejected unless a trusted deployment relationship
+explicitly permits them.
+
+## Recall-Time Enforcement
+
+Recall MUST preserve provenance and interpretation metadata. The recall pipeline
+MUST NOT collapse untrusted content into executable instructions. Agent runtimes
+must receive content and instructions through separate structures.
+
+## Federation Boundary
+
+Receiving nodes MUST NOT promote inbound content to instruction based on a
+sender's assertion alone. Any instruction interpretation that crosses federation
+must be revalidated against local policy and capability grants.
+
+## Audit
+
+Nodes SHOULD audit instruction writes, rejected promotions, cross-org
+instruction quarantine, and capability failures.
+
+## Out Of Scope
+
+This spec does not define lazy instruction discovery, boot-stub delivery, or
+instruction manifest retrieval; those belong to `Spec-X1-Lazy-Instruction-Discovery`.

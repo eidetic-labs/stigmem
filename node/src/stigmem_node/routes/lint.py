@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..jobs import create_job, get_job, mark_done, mark_failed, mark_running
-from ..models import VALID_SCOPES
+from ..models.constants import VALID_SCOPES
 from ..models.lint import ALL_CHECKS, LintCheck, LintFinding, LintRequest, LintResult
 from ..settings import settings
 

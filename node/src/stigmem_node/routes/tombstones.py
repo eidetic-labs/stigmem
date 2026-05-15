@@ -16,7 +16,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..auth import Identity, resolve_identity
-from ..models import (
+from ..models.tombstones import (
     TombstoneCreateRequest,
     TombstoneRecord,
     TombstoneRevocationRecord,

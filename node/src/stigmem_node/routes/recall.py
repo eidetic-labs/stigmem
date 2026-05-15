@@ -24,8 +24,10 @@ from ..db import db
 from ..garden_acl import caller_can_see_garden
 from ..graph import MAX_DEPTH, bfs_neighbors
 from ..metrics import FACT_READ, RECALL_RANKER_DURATION, observe_duration
-from ..models import VALID_SCOPES, FactRecord, FactValue, TombstoneNotice, row_to_record
+from ..models.constants import VALID_SCOPES
+from ..models.facts import FactRecord, FactValue, row_to_record
 from ..models.recall import RecallRequest, RecallResponse, RecallWeights, ScoreBreakdown, ScoredFact
+from ..models.tombstones import TombstoneNotice
 from ..recall_pipeline import apply_recall_pipeline
 from ..settings import settings
 from ..source_trust import compute_source_trust

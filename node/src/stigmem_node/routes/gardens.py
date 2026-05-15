@@ -21,8 +21,8 @@ from ..garden_acl import (
     require_garden_read,
     require_quarantine_moderator_or_admin,
 )
-from ..models import (
-    VALID_SCOPES,
+from ..models.constants import VALID_SCOPES
+from ..models.gardens import (
     GardenCreateRequest,
     GardenMemberRecord,
     GardenMemberRequest,

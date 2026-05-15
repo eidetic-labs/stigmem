@@ -29,7 +29,7 @@ from ..garden_acl import (
 )
 from ..hlc import node_hlc
 from ..metrics import CONTRADICTION, FACT_WRITE
-from ..models import AssertRequest, FactRecord, row_to_record
+from ..models.facts import AssertRequest, FactRecord, row_to_record
 from ..plugins import TenantContext, get_registry
 from ..settings import settings as _settings  # noqa: F401  — kept for parity
 

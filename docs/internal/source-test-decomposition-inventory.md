@@ -71,6 +71,20 @@ inventory, name validation commands, and avoid unrelated behavioral changes.
 - `node/src/stigmem_node/routes/instruction.py` stays deferred with lazy
   instruction discovery unless an implementation PR requires a local cleanup.
 
+## Compatibility Shim Retirement
+
+The `stigmem_node.models` package remains a backwards-compatible re-export
+surface after the Pydantic decomposition. Internal code should import from
+explicit domain modules such as `stigmem_node.models.facts` or
+`stigmem_node.models.tombstones`; a dedicated compatibility smoke test keeps
+the historical broad import path working for external consumers.
+
+Do not add a runtime deprecation warning to `stigmem_node.models` during the
+pre-rc import sweep. Per ADR-013, deprecating a public API surface requires a
+release-scoped deprecation PR with replacement guidance and release artifacts.
+The earliest appropriate retirement point for the compatibility shim is a
+future major-version deprecation/removal cycle after v1.0.0 GA.
+
 ## Tracking Notes
 
 - Parent: [#180](https://github.com/Eidetic-Labs/stigmem/issues/180)

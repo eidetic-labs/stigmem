@@ -211,7 +211,7 @@ def _subscriber_has_active_key(entity_uri: str, tenant_id: str) -> bool:
 
 def _sanitize_payload(event: Any, payload: dict[str, Any]) -> dict[str, Any] | None:
     """Apply §17 garden ACL and §19 sanitizer.  Returns None to suppress delivery."""
-    from .models import FactRecord, FactValue
+    from .models.facts import FactRecord, FactValue
 
     subscriber = event["subscriber_identity"]
     tenant_id = event["tenant_id"]

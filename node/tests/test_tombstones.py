@@ -971,7 +971,7 @@ class TestSignTombstoneNoFallback:
 
     def test_sign_tombstone_raises_without_key(self, tmp_path):
         """sign_tombstone must raise RuntimeError, not fall back to dev-unsigned."""
-        from stigmem_node.models import TombstoneRecord
+        from stigmem_node.models.tombstones import TombstoneRecord
         from stigmem_node.tombstone_signing import sign_tombstone
 
         original = settings_module.settings
@@ -999,7 +999,7 @@ class TestSignTombstoneNoFallback:
 
     def test_sign_revocation_raises_without_key(self, tmp_path):
         """sign_revocation must raise RuntimeError when key is missing."""
-        from stigmem_node.models import TombstoneRevocationRecord
+        from stigmem_node.models.tombstones import TombstoneRevocationRecord
         from stigmem_node.tombstone_signing import sign_revocation
 
         original = settings_module.settings

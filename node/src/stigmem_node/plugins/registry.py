@@ -100,11 +100,13 @@ class HookRegistry:
         *,
         discovery_source: dict[str, Any] | None = None,
         signing_identity: str = "unsigned",
+        signing_metadata: dict[str, Any] | None = None,
     ) -> None:
         """Register all handlers from a manually supplied plugin manifest."""
         audit_metadata = _registration_audit_metadata(
             discovery_source=discovery_source,
             signing_identity=signing_identity,
+            signing_metadata=signing_metadata,
         )
         with self._lock:
             self._ensure_mutable()
@@ -797,11 +799,15 @@ def _registration_audit_metadata(
     *,
     discovery_source: dict[str, Any] | None,
     signing_identity: str,
+    signing_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    metadata = {
         "discovery_source": discovery_source or {"type": "manual"},
         "signed_by": signing_identity,
     }
+    if signing_metadata is not None:
+        metadata["signing"] = dict(signing_metadata)
+    return metadata
 
 
 def _accepts_positional_args(handler: Callable[..., Any], required_count: int) -> bool:

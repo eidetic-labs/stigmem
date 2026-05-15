@@ -17,7 +17,9 @@ from stigmem_node.plugins import (
     PluginManifest,
     PluginSignatureError,
     PluginSigningInfo,
+    PluginTrustPolicy,
     RegistryFrozenError,
+    require_verified_signature,
 )
 
 
@@ -177,6 +179,30 @@ def test_register_discovered_plugins_rejects_unsigned_plugin_when_signing_requir
     assert registry.registered_plugins() == frozenset()
 
 
+def test_register_discovered_plugins_rejects_untrusted_signing_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest = _manifest("untrusted-plugin", {})
+    discovered = _signed_discovered(manifest, "untrusted@example.com")
+    registry = HookRegistry()
+    monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (discovered,))
+
+    def verifier(plugin: DiscoveredPlugin) -> PluginSigningInfo:
+        return require_verified_signature(
+            plugin,
+            policy=PluginTrustPolicy(trusted_publishers=frozenset({"trusted@example.com"})),
+        )
+
+    with pytest.raises(PluginSignatureError, match="untrusted identity"):
+        lifecycle.register_discovered_plugins(
+            registry=registry,
+            signing_required=True,
+            signature_verifier=verifier,
+        )
+
+    assert registry.registered_plugins() == frozenset()
+
+
 def test_register_discovered_plugins_records_verified_signing_identity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -193,7 +219,10 @@ def test_register_discovered_plugins_records_verified_signing_identity(
 
     def verifier(plugin: DiscoveredPlugin) -> PluginSigningInfo:
         assert plugin is discovered
-        return PluginSigningInfo(signing_identity=plugin.signing_identity)
+        return PluginSigningInfo(
+            signing_identity=plugin.signing_identity,
+            trust_decision="trusted_publisher",
+        )
 
     lifecycle.register_discovered_plugins(
         registry=registry,
@@ -206,6 +235,67 @@ def test_register_discovered_plugins_records_verified_signing_identity(
     assert info is not None
     assert info.signed_by == "issuer@example.com"
     assert events[0].metadata["signed_by"] == "issuer@example.com"
+    assert events[0].metadata["signing"]["trust_decision"] == "trusted_publisher"
+
+
+def test_register_discovered_plugins_uses_trusted_publishers_from_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import stigmem_node.settings as settings_module
+
+    manifest = _manifest("settings-trusted-plugin", {})
+    discovered = _signed_discovered(manifest, "settings@example.com")
+    registry = HookRegistry()
+    monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (discovered,))
+    monkeypatch.setattr(
+        settings_module.settings,
+        "plugin_trusted_publishers",
+        "settings@example.com",
+    )
+
+    lifecycle.register_discovered_plugins(
+        registry=registry,
+        signing_required=True,
+    )
+
+    info = registry.plugin_info("settings-trusted-plugin")
+    assert info is not None
+    assert info.signed_by == "settings@example.com"
+
+
+def test_register_discovered_plugins_records_operator_override_trust_decision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[AuditEvent] = []
+
+    def capture(_ctx: PluginContext, *, event: AuditEvent) -> None:
+        events.append(event)
+
+    manifest = _manifest("override-plugin", {})
+    discovered = _signed_discovered(manifest, "override@example.com")
+    registry = HookRegistry()
+    registry.register_core_handler("audit_emit", capture, name="core.001.audit")
+    monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (discovered,))
+
+    def verifier(plugin: DiscoveredPlugin) -> PluginSigningInfo:
+        return require_verified_signature(
+            plugin,
+            policy=PluginTrustPolicy(override_publishers=frozenset({"override@example.com"})),
+        )
+
+    lifecycle.register_discovered_plugins(
+        registry=registry,
+        freeze=False,
+        signing_required=True,
+        signature_verifier=verifier,
+    )
+
+    metadata = events[0].metadata
+    assert metadata["signed_by"] == "override@example.com"
+    assert metadata["signing"]["trust_decision"] == "operator_override"
+    assert metadata["signing"]["trust_reason"] == (
+        "signing identity accepted by explicit operator override"
+    )
 
 
 def test_register_discovered_plugins_fails_closed_on_duplicate_registration(

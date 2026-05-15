@@ -29,7 +29,11 @@ def register_discovered_plugins(
         registered_plugins=target.registered_plugins(),
     )
     for plugin in ordered:
-        target.register_plugin(plugin.manifest)
+        target.register_plugin(
+            plugin.manifest,
+            discovery_source=_discovery_source(plugin),
+            signing_identity="unsigned",
+        )
     if freeze:
         target.freeze()
     if ordered:
@@ -38,3 +42,12 @@ def register_discovered_plugins(
             ", ".join(plugin.manifest.name for plugin in ordered),
         )
     return ordered
+
+
+def _discovery_source(plugin: DiscoveredPlugin) -> dict[str, str | None]:
+    return {
+        "type": "python_entry_point",
+        "entry_point_name": plugin.entry_point_name,
+        "entry_point_value": plugin.entry_point_value,
+        "distribution": plugin.distribution,
+    }

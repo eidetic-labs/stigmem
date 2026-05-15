@@ -7,6 +7,7 @@ import pytest
 import stigmem_node.plugins.lifecycle as lifecycle
 from stigmem_node.plugins import (
     Allow,
+    AuditEvent,
     CapabilityError,
     CoreApis,
     DiscoveredPlugin,
@@ -85,6 +86,43 @@ def test_register_discovered_plugins_orders_registers_and_freezes(
         )
 
 
+def test_register_discovered_plugins_emits_discovery_audit_payload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[AuditEvent] = []
+
+    def capture(_ctx: PluginContext, *, event: AuditEvent) -> None:
+        events.append(event)
+
+    def handler(_ctx: PluginContext, **_: object) -> Allow:
+        return Allow()
+
+    manifest = _manifest(
+        "audited-plugin",
+        {"pre_assert_authorize": handler},
+        capabilities=frozenset({"audit.emit", "facts.read"}),
+    )
+    registry = HookRegistry()
+    registry.register_core_handler("audit_emit", capture, name="core.001.audit")
+    monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (_discovered(manifest),))
+
+    lifecycle.register_discovered_plugins(registry=registry, freeze=False)
+
+    assert [event.event_type for event in events] == ["plugin.registered"]
+    metadata = events[0].metadata
+    assert metadata["plugin_name"] == "audited-plugin"
+    assert metadata["version"] == "1.0.0"
+    assert metadata["capabilities"] == ["audit.emit", "facts.read"]
+    assert metadata["hooks"] == ["pre_assert_authorize"]
+    assert metadata["signed_by"] == "unsigned"
+    assert metadata["discovery_source"] == {
+        "type": "python_entry_point",
+        "entry_point_name": "audited-plugin",
+        "entry_point_value": "audited-plugin:plugin_manifest",
+        "distribution": "audited-plugin-dist",
+    }
+
+
 def test_register_discovered_plugins_preserves_capability_gated_context(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -123,6 +161,33 @@ def test_register_discovered_plugins_fails_closed_on_duplicate_registration(
 
     with pytest.raises(ManifestError, match="already registered"):
         lifecycle.register_discovered_plugins(registry=registry)
+
+
+def test_register_discovered_plugins_emits_failure_audit_payload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[AuditEvent] = []
+
+    def capture(_ctx: PluginContext, *, event: AuditEvent) -> None:
+        events.append(event)
+
+    manifest = _manifest("dupe-audit-plugin", {})
+    registry = HookRegistry()
+    registry.register_core_handler("audit_emit", capture, name="core.001.audit")
+    registry.register_plugin(manifest)
+    events.clear()
+    monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (_discovered(manifest),))
+
+    with pytest.raises(ManifestError, match="already registered"):
+        lifecycle.register_discovered_plugins(registry=registry)
+
+    assert [event.event_type for event in events] == ["plugin.registration_failed"]
+    metadata = events[0].metadata
+    assert metadata["plugin_name"] == "dupe-audit-plugin"
+    assert metadata["reason"] == "duplicate"
+    assert metadata["signed_by"] == "unsigned"
+    assert metadata["discovery_source"]["type"] == "python_entry_point"
+    assert metadata["discovery_source"]["entry_point_name"] == "dupe-audit-plugin"
 
 
 def test_register_discovered_plugins_fails_closed_on_registration_error(

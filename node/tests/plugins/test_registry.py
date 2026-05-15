@@ -405,7 +405,8 @@ def test_registry_emits_plugin_registered_audit_event() -> None:
     assert events[0].target_uri == "plugin:aaa"
     assert events[0].metadata["plugin_name"] == "aaa"
     assert events[0].metadata["hooks"] == ["pre_assert_authorize"]
-    assert events[0].metadata["signed_by"] is None
+    assert events[0].metadata["signed_by"] == "unsigned"
+    assert events[0].metadata["discovery_source"] == {"type": "manual"}
 
 
 def test_registry_emits_plugin_registration_failed_audit_event() -> None:

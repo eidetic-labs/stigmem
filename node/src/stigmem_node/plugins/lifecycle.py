@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import logging
 
+from stigmem_node.settings import settings
+
 from .discovery import DiscoveredPlugin, discover_plugin_manifests, resolve_plugin_dependencies
 from .registry import HookRegistry, get_registry
+from .signing import PluginSignatureVerifier, require_verified_signature
 
 logger = logging.getLogger("stigmem.plugins.lifecycle")
 
@@ -14,6 +17,8 @@ def register_discovered_plugins(
     *,
     registry: HookRegistry | None = None,
     freeze: bool = True,
+    signing_required: bool | None = None,
+    signature_verifier: PluginSignatureVerifier = require_verified_signature,
 ) -> tuple[DiscoveredPlugin, ...]:
     """Discover, dependency-order, and register installed plugin packages.
 
@@ -23,16 +28,22 @@ def register_discovered_plugins(
     """
 
     target = registry or get_registry()
+    require_signatures = (
+        settings.plugin_signing_required if signing_required is None else signing_required
+    )
     discovered = discover_plugin_manifests()
     ordered = resolve_plugin_dependencies(
         discovered,
         registered_plugins=target.registered_plugins(),
     )
     for plugin in ordered:
+        signing_identity = "unsigned"
+        if require_signatures:
+            signing_identity = signature_verifier(plugin).signing_identity
         target.register_plugin(
             plugin.manifest,
             discovery_source=_discovery_source(plugin),
-            signing_identity="unsigned",
+            signing_identity=signing_identity,
         )
     if freeze:
         target.freeze()

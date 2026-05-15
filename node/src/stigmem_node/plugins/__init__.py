@@ -24,6 +24,7 @@ from .errors import (
     PluginDiscoveryError,
     PluginExecutionError,
     PluginMigrationError,
+    PluginSignatureError,
     RegistryFrozenError,
     RejectError,
 )
@@ -49,6 +50,7 @@ from .hooks import HookName, HookOrdering, HookSemantic
 from .lifecycle import register_discovered_plugins
 from .manifest import PluginManifest
 from .registry import HookRegistry, get_registry, register_core_handler, set_registry
+from .signing import PluginSignatureVerifier, PluginSigningInfo, require_verified_signature
 
 __all__ = [
     "ALLOW_SINGLETON",
@@ -80,6 +82,9 @@ __all__ = [
     "PluginHealthStatus",
     "PluginInfo",
     "PluginMigrationError",
+    "PluginSignatureError",
+    "PluginSignatureVerifier",
+    "PluginSigningInfo",
     "RegistryFrozenError",
     "PluginManifest",
     "RejectError",
@@ -91,6 +96,7 @@ __all__ = [
     "handler_timeout",
     "register_core_handler",
     "register_discovered_plugins",
+    "require_verified_signature",
     "resolve_plugin_dependencies",
     "set_registry",
 ]

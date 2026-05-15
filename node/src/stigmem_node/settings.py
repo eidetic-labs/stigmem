@@ -154,6 +154,12 @@ class Settings(BaseSettings):
     # Path to YAML file defining operator auto-trust rules (always_trust / never_trust).
     trust_rules_file: str = ""
 
+    # Plugin signing gate (ADR-011 / PR 4-INF.3).
+    # When true, installed entry-point plugins must pass signing verification
+    # before registration. Kept off by default during alpha while the operator
+    # trust-policy surface lands in the follow-on PR 4-INF.3 slices.
+    plugin_signing_required: bool = False
+
     # Transparency log backend (§19.2.3):
     #   "local"  — append-only JSONL file with hash chain (default, no external deps).
     #   "rekor"  — Sigstore Rekor REST API.

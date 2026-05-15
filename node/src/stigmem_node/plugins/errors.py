@@ -27,6 +27,10 @@ class PluginMigrationError(RuntimeError):
     """Raised when plugin migration lifecycle checks fail."""
 
 
+class PluginSignatureError(RuntimeError):
+    """Raised when a discovered plugin fails signing verification."""
+
+
 class RegistryFrozenError(RuntimeError):
     """Raised when startup-only registry mutation is attempted after freeze."""
 

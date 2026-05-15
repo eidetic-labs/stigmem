@@ -109,7 +109,7 @@ Use these return shapes:
 | Score delta | adjust recall ranking | `dict[str, float]` keyed by result or fact id |
 | Fire and forget | audit or observe side effects | `None` |
 
-The stable v0.9.0a1 hook names are defined in the [hook source reference](https://github.com/Eidetic-Labs/stigmem/blob/main/node/src/stigmem_node/plugins/hooks.py). Do not register hooks outside that list; `health_check` is a manifest lifecycle callable, not a hook name.
+The stable v0.9.0a1 hook names are listed in the [Plugin Hook Reference](../../reference/plugin-api/hooks.md) and defined in the [hook source reference](https://github.com/Eidetic-Labs/stigmem/blob/main/node/src/stigmem_node/plugins/hooks.py). Do not register hooks outside that list; `health_check` is a manifest lifecycle callable, not a hook name.
 
 ## Capability declarations
 

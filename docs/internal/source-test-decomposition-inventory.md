@@ -90,3 +90,6 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
 - Parent: [#180](https://github.com/Eidetic-Labs/stigmem/issues/180)
 - Phase B parent: [#165](https://github.com/Eidetic-Labs/stigmem/issues/165)
 - Evidence tracker: [#158](https://github.com/Eidetic-Labs/stigmem/issues/158)
+- #264 implementation converts `stigmem_node.cli` from a monolithic module to
+  a package while preserving the public `stigmem_node.cli` import and
+  `python -m stigmem_node.cli` entry point.

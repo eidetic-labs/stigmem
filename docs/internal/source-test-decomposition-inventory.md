@@ -32,7 +32,7 @@ find node/src node/tests eval adapters experimental \
 | `node/tests/test_phase8_identity.py` | 1642 | Hard decomposition candidate | Split into `node/tests/identity/` by identity concern. |
 | `node/tests/test_federation.py` | 1237 | Discouraged size | Split by federation concern. |
 | `eval/federation/soak_driver.py` | 1189 | Discouraged size | Split into `eval/federation/soak/` phases. |
-| `node/src/stigmem_node/routes/facts.py` | 1114 | Discouraged size | Split into `routes/facts/` subpackage. |
+| `node/src/stigmem_node/routes/facts.py` | 1114 | Completed | Split into `routes/facts/` subpackage in #265; public import path preserved as `stigmem_node.routes.facts`. |
 | `node/tests/test_phase10_instruction.py` | 1084 | Discouraged size | Defer until lazy instruction discovery rework; keep linked to experimental feature. |
 | `node/src/stigmem_node/cli.py` | 1080 | Discouraged size | Split into `cli/` command-family modules. |
 | `node/src/stigmem_node/routes/recall.py` | 1025 | Discouraged size | Split into `routes/recall/` stage modules. |
@@ -93,3 +93,6 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
 - #264 implementation converts `stigmem_node.cli` from a monolithic module to
   a package while preserving the public `stigmem_node.cli` import and
   `python -m stigmem_node.cli` entry point.
+- #265 implementation converts `stigmem_node.routes.facts` from a monolithic
+  module to a route subpackage while preserving the public
+  `stigmem_node.routes.facts` import path and existing route registration.

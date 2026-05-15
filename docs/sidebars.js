@@ -126,6 +126,7 @@ const sidebars = {
       label: 'Plugin API',
       collapsed: true,
       items: [
+        'reference/plugin-api/capabilities',
         'reference/plugin-api/hooks',
       ],
     },

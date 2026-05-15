@@ -137,7 +137,7 @@ def plugin_manifest() -> PluginManifest:
 
 The v0.9.0a1 `CoreApis` handles are deliberately narrow and optional. Operators or tests may expose a callable or facade object behind a capability; plugins should handle `None` or an unexpected shape explicitly. If a handler calls `ctx.get_audit_emitter()` without declaring `audit.emit`, registration can succeed but the handler will fail with a capability error when the hook fires.
 
-The v0.9.0a1 capability allowlist is defined in the [capability source reference](https://github.com/Eidetic-Labs/stigmem/blob/main/node/src/stigmem_node/plugins/capabilities.py).
+The v0.9.0a1 capability allowlist is documented in the [Plugin Capability Reference](../../reference/plugin-api/capabilities.md) and defined in the [capability source reference](https://github.com/Eidetic-Labs/stigmem/blob/main/node/src/stigmem_node/plugins/capabilities.py).
 
 ## Local tests
 

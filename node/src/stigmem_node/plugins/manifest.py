@@ -20,6 +20,7 @@ class PluginManifest(BaseModel):
     capabilities: frozenset[str] = frozenset()
     async_safe: bool = True
     hooks: dict[str, Callable[..., Any]] = Field(default_factory=dict)
+    health_check: Callable[..., Any] | None = None
     config_schema: type[BaseModel] | None = None
     depends_on: frozenset[str] = frozenset()
 
@@ -45,6 +46,15 @@ class PluginManifest(BaseModel):
             if not callable(handler):
                 raise ValueError(f"handler for hook {name!r} is not callable")
         return hooks
+
+    @field_validator("health_check")
+    @classmethod
+    def _validate_health_check(
+        cls, health_check: Callable[..., Any] | None
+    ) -> Callable[..., Any] | None:
+        if health_check is not None and not callable(health_check):
+            raise ValueError("health_check must be callable")
+        return health_check
 
     @model_validator(mode="after")
     def _validate_self_dependency(self) -> PluginManifest:

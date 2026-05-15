@@ -32,7 +32,18 @@ from stigmem_node.metrics import (
 
 from .context import CoreApis, PluginContext
 from .errors import ManifestError, PluginExecutionError, RegistryFrozenError, RejectError
-from .handlers import ALLOW_SINGLETON, Allow, AuditEvent, Deny, Failure, Success, VotingDecision
+from .handlers import (
+    ALLOW_SINGLETON,
+    Allow,
+    AuditEvent,
+    Deny,
+    Failure,
+    PluginHealth,
+    PluginHealthReport,
+    PluginHealthStatus,
+    Success,
+    VotingDecision,
+)
 from .hooks import HOOK_SPECS, HookOrdering, HookSemantic
 from .manifest import PluginManifest
 
@@ -70,6 +81,9 @@ class HookRegistry:
         self._plugin_names: set[str] = set()
         self._plugin_order: list[str] = []
         self._plugin_versions: dict[str, str] = {}
+        self._plugin_contexts: dict[str, PluginContext] = {}
+        self._plugin_health_checks: dict[str, Callable[..., Any]] = {}
+        self._plugin_health_reports: dict[str, PluginHealthReport] = {}
         self._core_apis = core_apis or CoreApis()
         self._emit_metrics = emit_metrics
         self._handler_timeout_seconds = handler_timeout_seconds
@@ -181,6 +195,9 @@ class HookRegistry:
             self._plugin_names.add(manifest.name)
             self._plugin_order.append(manifest.name)
             self._plugin_versions[manifest.name] = manifest.version
+            self._plugin_contexts[manifest.name] = ctx
+            if manifest.health_check is not None:
+                self._plugin_health_checks[manifest.name] = manifest.health_check
             for hook, handler in manifest.hooks.items():
                 self._add_handler(
                     hook=hook,
@@ -339,6 +356,24 @@ class HookRegistry:
 
     def plugin_versions(self) -> dict[str, str]:
         return dict(self._plugin_versions)
+
+    def poll_plugin_health(self) -> tuple[PluginHealthReport, ...]:
+        """Run lifecycle health checks and record the latest report per plugin.
+
+        Health is informational for PR 4-INF.2; unhealthy plugins remain
+        registered and their handlers stay active until a future policy layer
+        chooses otherwise.
+        """
+        reports = tuple(self._poll_one_plugin_health(name) for name in self._plugin_order)
+        self._plugin_health_reports.update({report.plugin_name: report for report in reports})
+        return reports
+
+    def plugin_health_reports(self) -> tuple[PluginHealthReport, ...]:
+        return tuple(
+            report
+            for name in self._plugin_order
+            if (report := self._plugin_health_reports.get(name)) is not None
+        )
 
     def freeze(self) -> None:
         """Reject subsequent startup-time mutations.
@@ -614,6 +649,46 @@ class HookRegistry:
             for entries in self._handlers.values()
             for entry in entries
             if entry.timeout_seconds is not None
+        )
+
+    def _poll_one_plugin_health(self, plugin_name: str) -> PluginHealthReport:
+        checked_at = datetime.now(UTC)
+        version = self._plugin_versions[plugin_name]
+        checker = self._plugin_health_checks.get(plugin_name)
+        if checker is None:
+            return PluginHealthReport(
+                plugin_name=plugin_name,
+                plugin_version=version,
+                status=PluginHealthStatus.UNKNOWN,
+                message="no health check registered",
+                checked_at=checked_at,
+            )
+        try:
+            result = checker(self._plugin_contexts[plugin_name])
+        except Exception as exc:
+            return PluginHealthReport(
+                plugin_name=plugin_name,
+                plugin_version=version,
+                status=PluginHealthStatus.UNHEALTHY,
+                message=str(exc),
+                checked_at=checked_at,
+                error_summary=f"{type(exc).__name__}: {exc}",
+            )
+        if not isinstance(result, PluginHealth):
+            return PluginHealthReport(
+                plugin_name=plugin_name,
+                plugin_version=version,
+                status=PluginHealthStatus.UNHEALTHY,
+                message=f"health_check returned {type(result).__name__}; expected PluginHealth",
+                checked_at=checked_at,
+                error_summary=f"invalid result: {type(result).__name__}",
+            )
+        return PluginHealthReport(
+            plugin_name=plugin_name,
+            plugin_version=version,
+            status=result.status,
+            message=result.message,
+            checked_at=checked_at,
         )
 
     def _validate_manifest_compatibility(self, manifest: PluginManifest) -> None:

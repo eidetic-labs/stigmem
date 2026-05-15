@@ -1,8 +1,9 @@
 """Plugin hook registry public API.
 
 PR 4-INF.1 intentionally exposed only manual/core/test registration. PR 4-INF.2
-adds entry-point discovery while signing, health polling, and operator CLI
-support continue to land in focused follow-up slices.
+adds entry-point discovery, installed-plugin lifecycle registration, plugin
+migrations, registration audit payloads, and lifecycle health reporting while
+signing and operator CLI support continue to land in focused follow-up slices.
 """
 
 from __future__ import annotations
@@ -35,6 +36,9 @@ from .handlers import (
     Failure,
     Migration,
     Outcome,
+    PluginHealth,
+    PluginHealthReport,
+    PluginHealthStatus,
     Success,
     TenantContext,
     VotingDecision,
@@ -70,6 +74,9 @@ __all__ = [
     "PluginDependencyError",
     "PluginDiscoveryError",
     "PluginExecutionError",
+    "PluginHealth",
+    "PluginHealthReport",
+    "PluginHealthStatus",
     "PluginMigrationError",
     "RegistryFrozenError",
     "PluginManifest",

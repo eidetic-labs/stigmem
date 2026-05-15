@@ -94,6 +94,19 @@ class PluginHealthReport:
 
 
 @dataclass(frozen=True, slots=True)
+class PluginInfo:
+    """Operator-facing registered plugin metadata."""
+
+    name: str
+    version: str
+    capabilities: tuple[str, ...]
+    hooks: tuple[str, ...]
+    depends_on: tuple[str, ...]
+    discovery_source: dict[str, Any]
+    signed_by: str
+
+
+@dataclass(frozen=True, slots=True)
 class AuditEvent:
     """Normalized plugin audit event payload."""
 

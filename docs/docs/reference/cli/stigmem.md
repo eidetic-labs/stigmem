@@ -24,6 +24,7 @@ positional arguments:
   COMMAND
     capability   capability token management (Spec-06-Capability-Tokens)
     migrate      database migration utilities
+    plugins      inspect installed plugins (PR 4-INF.2)
     federation   federation management (Spec-05-Federation-Trust)
     snapshot     backup/restore with signed manifests (Phase 8)
     decay        decay sweeper — expire stale facts (Phase 6)
@@ -136,6 +137,43 @@ options:
   --dry-run   print aliases without inserting
   --db PATH   path to stigmem.db (default: STIGMEM_DB_PATH env or settings
               default)
+```
+
+### `stigmem plugins`
+
+```
+usage: stigmem plugins [-h] SUBCOMMAND ...
+
+positional arguments:
+  SUBCOMMAND
+    list      list installed plugins
+    describe  describe one installed plugin
+
+options:
+  -h, --help  show this help message and exit
+```
+
+#### `stigmem plugins list`
+
+```
+usage: stigmem plugins list [-h] [--json]
+
+options:
+  -h, --help  show this help message and exit
+  --json      output as JSON
+```
+
+#### `stigmem plugins describe`
+
+```
+usage: stigmem plugins describe [-h] [--json] NAME
+
+positional arguments:
+  NAME        plugin name
+
+options:
+  -h, --help  show this help message and exit
+  --json      output as JSON
 ```
 
 ### `stigmem federation`

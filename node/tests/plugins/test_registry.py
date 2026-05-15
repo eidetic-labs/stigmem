@@ -15,6 +15,8 @@ from stigmem_node.plugins import (
     ManifestError,
     PluginContext,
     PluginExecutionError,
+    PluginHealth,
+    PluginHealthStatus,
     PluginManifest,
     RegistryFrozenError,
     get_registry,
@@ -55,6 +57,7 @@ def _manifest(
     *,
     capabilities: frozenset[str] = frozenset(),
     requires_stigmem: str = ">=0.9.0a1",
+    health_check: object | None = None,
 ) -> PluginManifest:
     return PluginManifest(
         name=name,
@@ -63,6 +66,7 @@ def _manifest(
         capabilities=capabilities,
         async_safe=True,
         hooks=hooks,
+        health_check=health_check,
     )
 
 
@@ -259,6 +263,80 @@ def test_duplicate_plugin_name_rejected() -> None:
 
     with pytest.raises(ManifestError, match="already registered"):
         registry.register_plugin(_manifest("aaa", {}))
+
+
+def test_plugin_health_check_reports_healthy() -> None:
+    registry = HookRegistry()
+
+    def health(ctx: PluginContext) -> PluginHealth:
+        assert ctx.plugin_name == "aaa"
+        return PluginHealth(PluginHealthStatus.HEALTHY, "ready")
+
+    registry.register_plugin(_manifest("aaa", {}, health_check=health))
+
+    reports = registry.poll_plugin_health()
+
+    assert len(reports) == 1
+    assert reports[0].plugin_name == "aaa"
+    assert reports[0].plugin_version == "1.0.0"
+    assert reports[0].status == PluginHealthStatus.HEALTHY
+    assert reports[0].message == "ready"
+    assert reports[0].error_summary is None
+    assert registry.plugin_health_reports() == reports
+
+
+def test_plugin_health_check_reports_degraded_and_unhealthy() -> None:
+    registry = HookRegistry()
+
+    def degraded(_ctx: PluginContext) -> PluginHealth:
+        return PluginHealth(PluginHealthStatus.DEGRADED, "remote dependency slow")
+
+    def unhealthy(_ctx: PluginContext) -> PluginHealth:
+        return PluginHealth(PluginHealthStatus.UNHEALTHY, "remote dependency down")
+
+    registry.register_plugin(_manifest("aaa", {}, health_check=degraded))
+    registry.register_plugin(_manifest("bbb", {}, health_check=unhealthy))
+
+    reports = {report.plugin_name: report for report in registry.poll_plugin_health()}
+
+    assert reports["aaa"].status == PluginHealthStatus.DEGRADED
+    assert reports["aaa"].message == "remote dependency slow"
+    assert reports["bbb"].status == PluginHealthStatus.UNHEALTHY
+    assert reports["bbb"].message == "remote dependency down"
+
+
+def test_plugin_health_check_exception_reports_unhealthy_without_disabling() -> None:
+    registry = HookRegistry()
+    calls: list[str] = []
+
+    def health(_ctx: PluginContext) -> PluginHealth:
+        raise RuntimeError("boom")
+
+    def handler(_ctx: PluginContext, **_: object) -> Allow:
+        calls.append("handler")
+        return Allow()
+
+    registry.register_plugin(
+        _manifest("aaa", {"pre_assert_authorize": handler}, health_check=health)
+    )
+
+    reports = registry.poll_plugin_health()
+
+    assert reports[0].status == PluginHealthStatus.UNHEALTHY
+    assert reports[0].message == "boom"
+    assert reports[0].error_summary == "RuntimeError: boom"
+    assert isinstance(registry.fire_voting("pre_assert_authorize"), Allow)
+    assert calls == ["handler"]
+
+
+def test_plugin_without_health_check_reports_unknown() -> None:
+    registry = HookRegistry()
+    registry.register_plugin(_manifest("aaa", {}))
+
+    reports = registry.poll_plugin_health()
+
+    assert reports[0].status == PluginHealthStatus.UNKNOWN
+    assert reports[0].message == "no health check registered"
 
 
 def test_config_validate_core_handler_can_reject_registration() -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import StrEnum
 from typing import Any, Protocol, TypeAlias, TypeVar, cast
 
 T = TypeVar("T")
@@ -63,6 +64,33 @@ class Migration:
     description: str
     plugin_version: str = "0.0.0"
     backend: str = "sqlite"
+
+
+class PluginHealthStatus(StrEnum):
+    HEALTHY = "healthy"
+    DEGRADED = "degraded"
+    UNHEALTHY = "unhealthy"
+    UNKNOWN = "unknown"
+
+
+@dataclass(frozen=True, slots=True)
+class PluginHealth:
+    """Result returned by a plugin lifecycle health check."""
+
+    status: PluginHealthStatus
+    message: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class PluginHealthReport:
+    """Last observed lifecycle health state for one plugin."""
+
+    plugin_name: str
+    plugin_version: str
+    status: PluginHealthStatus
+    message: str
+    checked_at: datetime
+    error_summary: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

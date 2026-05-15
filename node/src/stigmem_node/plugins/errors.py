@@ -15,6 +15,10 @@ class ManifestError(ValueError):
     """Raised when a plugin manifest is invalid for this registry."""
 
 
+class PluginDiscoveryError(RuntimeError):
+    """Raised when package entry-point plugin discovery fails."""
+
+
 class RegistryFrozenError(RuntimeError):
     """Raised when startup-only registry mutation is attempted after freeze."""
 

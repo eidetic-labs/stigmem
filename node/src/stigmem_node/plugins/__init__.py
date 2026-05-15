@@ -1,8 +1,8 @@
 """Plugin hook registry public API.
 
-PR 4-INF.1 intentionally exposes only manual/core/test registration. Package
-discovery, signing, health polling, and operator CLI support land in later
-PR 4-INF slices.
+PR 4-INF.1 intentionally exposed only manual/core/test registration. PR 4-INF.2
+adds entry-point discovery while signing, health polling, and operator CLI
+support continue to land in focused follow-up slices.
 """
 
 from __future__ import annotations
@@ -10,9 +10,11 @@ from __future__ import annotations
 from .bands import Band
 from .capabilities import CAPABILITY_ALLOWLIST, Capability
 from .context import CoreApis, PluginContext
+from .discovery import ENTRY_POINT_GROUP, DiscoveredPlugin, discover_plugin_manifests
 from .errors import (
     CapabilityError,
     ManifestError,
+    PluginDiscoveryError,
     PluginExecutionError,
     RegistryFrozenError,
     RejectError,
@@ -46,6 +48,8 @@ __all__ = [
     "CapabilityError",
     "CoreApis",
     "Deny",
+    "DiscoveredPlugin",
+    "ENTRY_POINT_GROUP",
     "Failure",
     "HookName",
     "HookOrdering",
@@ -55,6 +59,7 @@ __all__ = [
     "Migration",
     "Outcome",
     "PluginContext",
+    "PluginDiscoveryError",
     "PluginExecutionError",
     "RegistryFrozenError",
     "PluginManifest",
@@ -62,6 +67,7 @@ __all__ = [
     "Success",
     "TenantContext",
     "VotingDecision",
+    "discover_plugin_manifests",
     "get_registry",
     "handler_timeout",
     "register_core_handler",

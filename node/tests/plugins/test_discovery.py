@@ -8,14 +8,17 @@ import pytest
 import stigmem_node.plugins.discovery as discovery
 from stigmem_node.plugins import (
     ENTRY_POINT_GROUP,
+    DiscoveredPlugin,
+    PluginDependencyError,
     PluginDiscoveryError,
     PluginManifest,
     discover_plugin_manifests,
+    resolve_plugin_dependencies,
 )
 
 
-def _manifest(name: str) -> PluginManifest:
-    return PluginManifest(name=name, version="1.0.0")
+def _manifest(name: str, *, depends_on: frozenset[str] = frozenset()) -> PluginManifest:
+    return PluginManifest(name=name, version="1.0.0", depends_on=depends_on)
 
 
 @dataclass(frozen=True)
@@ -154,3 +157,80 @@ def test_discover_plugin_manifests_rejects_duplicate_plugin_names(
         match="duplicate plugin name 'same'.*aaa-entry.*bbb-entry",
     ):
         discover_plugin_manifests()
+
+
+def test_resolve_plugin_dependencies_orders_dependencies_first() -> None:
+    base = DiscoveredPlugin(_manifest("base"), "base-entry", "pkg_base:create")
+    addon = DiscoveredPlugin(
+        _manifest("addon", depends_on=frozenset({"base"})),
+        "addon-entry",
+        "pkg_addon:create",
+    )
+
+    ordered = resolve_plugin_dependencies([addon, base])
+
+    assert [plugin.manifest.name for plugin in ordered] == ["base", "addon"]
+
+
+def test_resolve_plugin_dependencies_orders_multiple_roots_deterministically() -> None:
+    alpha = DiscoveredPlugin(_manifest("alpha"), "z-entry", "pkg_alpha:create")
+    beta = DiscoveredPlugin(_manifest("beta"), "a-entry", "pkg_beta:create")
+    leaf = DiscoveredPlugin(
+        _manifest("leaf", depends_on=frozenset({"alpha", "beta"})),
+        "leaf-entry",
+        "pkg_leaf:create",
+    )
+
+    ordered = resolve_plugin_dependencies([leaf, beta, alpha])
+
+    assert [plugin.manifest.name for plugin in ordered] == ["alpha", "beta", "leaf"]
+
+
+def test_resolve_plugin_dependencies_allows_registered_dependencies() -> None:
+    addon = DiscoveredPlugin(
+        _manifest("addon", depends_on=frozenset({"core-plugin"})),
+        "addon-entry",
+        "pkg_addon:create",
+    )
+
+    ordered = resolve_plugin_dependencies([addon], registered_plugins={"core-plugin"})
+
+    assert [plugin.manifest.name for plugin in ordered] == ["addon"]
+
+
+def test_resolve_plugin_dependencies_rejects_missing_dependency() -> None:
+    addon = DiscoveredPlugin(
+        _manifest("addon", depends_on=frozenset({"missing-a", "missing-b"})),
+        "addon-entry",
+        "pkg_addon:create",
+    )
+
+    with pytest.raises(
+        PluginDependencyError,
+        match="addon missing missing-a, missing-b",
+    ):
+        resolve_plugin_dependencies([addon])
+
+
+def test_resolve_plugin_dependencies_rejects_cycle_with_path() -> None:
+    alpha = DiscoveredPlugin(
+        _manifest("alpha", depends_on=frozenset({"gamma"})),
+        "alpha-entry",
+        "pkg_alpha:create",
+    )
+    beta = DiscoveredPlugin(
+        _manifest("beta", depends_on=frozenset({"alpha"})),
+        "beta-entry",
+        "pkg_beta:create",
+    )
+    gamma = DiscoveredPlugin(
+        _manifest("gamma", depends_on=frozenset({"beta"})),
+        "gamma-entry",
+        "pkg_gamma:create",
+    )
+
+    with pytest.raises(
+        PluginDependencyError,
+        match="alpha -> gamma -> beta -> alpha",
+    ):
+        resolve_plugin_dependencies([alpha, beta, gamma])

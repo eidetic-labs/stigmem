@@ -7,10 +7,13 @@ from dataclasses import dataclass
 from importlib.metadata import EntryPoint, entry_points
 from typing import Any
 
-from .errors import PluginDiscoveryError
+from .errors import PluginDependencyError, PluginDiscoveryError
 from .manifest import PluginManifest
 
 ENTRY_POINT_GROUP = "stigmem.plugins"
+_State = str
+_VISITING: _State = "visiting"
+_VISITED: _State = "visited"
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +63,74 @@ def discover_plugin_manifests(
             )
         )
     return tuple(discovered)
+
+
+def resolve_plugin_dependencies(
+    discovered: Iterable[DiscoveredPlugin],
+    *,
+    registered_plugins: Iterable[str] = (),
+) -> tuple[DiscoveredPlugin, ...]:
+    """Return discovered plugins in deterministic dependency-first order.
+
+    Dependencies may be satisfied by other discovered plugins or by names already
+    present in the registry. Already-registered dependencies are not returned;
+    they simply unlock discovered dependents for follow-on registration.
+    """
+
+    by_name: dict[str, DiscoveredPlugin] = {}
+    for plugin in discovered:
+        name = plugin.manifest.name
+        if name in by_name:
+            raise PluginDependencyError(f"duplicate discovered plugin name {name!r}")
+        by_name[name] = plugin
+
+    registered = frozenset(registered_plugins)
+    missing: dict[str, list[str]] = {}
+    for name, plugin in sorted(by_name.items()):
+        missing_deps = sorted(
+            dependency
+            for dependency in plugin.manifest.depends_on
+            if dependency not in by_name and dependency not in registered
+        )
+        if missing_deps:
+            missing[name] = missing_deps
+    if missing:
+        details = "; ".join(
+            f"{name} missing {', '.join(dependencies)}"
+            for name, dependencies in missing.items()
+        )
+        raise PluginDependencyError(f"missing plugin dependencies: {details}")
+
+    ordered: list[DiscoveredPlugin] = []
+    states: dict[str, _State] = {}
+    stack: list[str] = []
+
+    def visit(name: str) -> None:
+        state = states.get(name)
+        if state == _VISITED:
+            return
+        if state == _VISITING:
+            cycle_start = stack.index(name)
+            cycle_path = [*stack[cycle_start:], name]
+            raise PluginDependencyError(
+                f"plugin dependency cycle detected: {' -> '.join(cycle_path)}"
+            )
+
+        states[name] = _VISITING
+        stack.append(name)
+        plugin = by_name[name]
+        for dependency in sorted(plugin.manifest.depends_on):
+            if dependency in registered:
+                continue
+            visit(dependency)
+        stack.pop()
+        states[name] = _VISITED
+        ordered.append(plugin)
+
+    for name in sorted(by_name):
+        visit(name)
+
+    return tuple(ordered)
 
 
 def _entry_points_for_group(group: str) -> Iterable[EntryPoint]:

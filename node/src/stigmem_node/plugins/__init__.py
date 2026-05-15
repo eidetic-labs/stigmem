@@ -10,10 +10,16 @@ from __future__ import annotations
 from .bands import Band
 from .capabilities import CAPABILITY_ALLOWLIST, Capability
 from .context import CoreApis, PluginContext
-from .discovery import ENTRY_POINT_GROUP, DiscoveredPlugin, discover_plugin_manifests
+from .discovery import (
+    ENTRY_POINT_GROUP,
+    DiscoveredPlugin,
+    discover_plugin_manifests,
+    resolve_plugin_dependencies,
+)
 from .errors import (
     CapabilityError,
     ManifestError,
+    PluginDependencyError,
     PluginDiscoveryError,
     PluginExecutionError,
     RegistryFrozenError,
@@ -59,6 +65,7 @@ __all__ = [
     "Migration",
     "Outcome",
     "PluginContext",
+    "PluginDependencyError",
     "PluginDiscoveryError",
     "PluginExecutionError",
     "RegistryFrozenError",
@@ -71,5 +78,6 @@ __all__ = [
     "get_registry",
     "handler_timeout",
     "register_core_handler",
+    "resolve_plugin_dependencies",
     "set_registry",
 ]

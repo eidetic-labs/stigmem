@@ -52,6 +52,15 @@ def main() -> None:
         help="Write Markdown report to this file (default: print to stdout)",
     )
     parser.add_argument(
+        "--plugin-profile",
+        default="default",
+        choices=["default", "full"],
+        help=(
+            "Plugin install profile: default runs the v1.0 critical path with "
+            "no plugins; full registers a representative signed plugin set."
+        ),
+    )
+    parser.add_argument(
         "--verbose", "-v",
         action="store_true",
         help="Verbose pytest output",
@@ -66,6 +75,7 @@ def main() -> None:
         os.environ["STIGMEM_TEST_PG_SCHEMA"] = args.pg_schema
 
     import pytest
+
     from stigmem_conformance.report import ConformanceReporter
 
     reporter = ConformanceReporter(backend=args.backend)
@@ -74,6 +84,7 @@ def main() -> None:
     pytest_args = [
         str(tests_dir),
         f"--conformance-backend={args.backend}",
+        f"--conformance-plugin-profile={args.plugin_profile}",
         "--tb=short",
         "-p", "no:randomly",
     ]

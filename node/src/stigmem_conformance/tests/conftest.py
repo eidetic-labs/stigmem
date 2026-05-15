@@ -20,9 +20,9 @@ from __future__ import annotations
 import importlib
 import os
 import uuid
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import pytest
 from fastapi.testclient import TestClient
@@ -30,6 +30,8 @@ from fastapi.testclient import TestClient
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.main as main_mod
+import stigmem_node.plugins as plugins_mod
+import stigmem_node.plugins.lifecycle as plugin_lifecycle
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 import stigmem_node.storage as storage_mod
@@ -44,6 +46,9 @@ _MIGRATIONS_DIR = (
 )
 
 _ALL_BACKENDS = ["sqlite", "libsql", "postgres"]
+_PLUGIN_PROFILES = ["default", "full"]
+_CONFORMANCE_PLUGIN_SIGNING_IDENTITY = "sigstore:conformance-full-plugin"
+_DiscoverPlugins = Callable[[], tuple[plugins_mod.DiscoveredPlugin, ...]]
 
 
 # ---------------------------------------------------------------------------
@@ -57,6 +62,16 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=None,
         choices=_ALL_BACKENDS,
         help="Run conformance suite against a single backend (default: all)",
+    )
+    parser.addoption(
+        "--conformance-plugin-profile",
+        default="default",
+        choices=_PLUGIN_PROFILES,
+        help=(
+            "Plugin install profile for conformance runs: default keeps the "
+            "v1.0 critical path plugin-free; full registers a representative "
+            "signed plugin set."
+        ),
     )
 
 
@@ -115,6 +130,81 @@ def _restore_settings(original: Settings, extra: list[object]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Plugin install profiles
+# ---------------------------------------------------------------------------
+
+
+def _allow(_ctx: plugins_mod.PluginContext, **_: object) -> plugins_mod.Allow:
+    return plugins_mod.Allow()
+
+
+def _identity(
+    _ctx: plugins_mod.PluginContext, value: object, **_: object
+) -> object:
+    return value
+
+
+def _score_delta(
+    _ctx: plugins_mod.PluginContext, _scored_results: list[object], **_: object
+) -> dict[str, float]:
+    return {}
+
+
+def _noop(_ctx: plugins_mod.PluginContext, **_: object) -> None:
+    return None
+
+
+def _conformance_full_plugin() -> plugins_mod.DiscoveredPlugin:
+    manifest = plugins_mod.PluginManifest(
+        name="conformance-full-plugin",
+        version="1.0.0",
+        capabilities=frozenset({"audit.emit", "facts.read", "recall.read"}),
+        hooks={
+            "pre_assert_authorize": _allow,
+            "pre_assert_transform": _identity,
+            "recall_rank": _score_delta,
+            "post_assert_persist": _noop,
+        },
+        health_check=lambda _ctx: plugins_mod.PluginHealth(
+            plugins_mod.PluginHealthStatus.HEALTHY,
+            "conformance plugin profile ready",
+        ),
+    )
+    return plugins_mod.DiscoveredPlugin(
+        manifest=manifest,
+        entry_point_name=manifest.name,
+        entry_point_value="stigmem_conformance.plugins:full_profile",
+        distribution="stigmem-conformance",
+        signing_identity=_CONFORMANCE_PLUGIN_SIGNING_IDENTITY,
+        signature_verified=True,
+    )
+
+
+def _install_plugin_profile(profile: str) -> object:
+    original = cast(
+        _DiscoverPlugins,
+        plugin_lifecycle.discover_plugin_manifests,  # type: ignore[attr-defined]
+    )
+    if profile == "default":
+        def discover_default() -> tuple[plugins_mod.DiscoveredPlugin, ...]:
+            return ()
+
+        plugin_lifecycle.discover_plugin_manifests = discover_default  # type: ignore[assignment,attr-defined]
+    elif profile == "full":
+        def discover_full() -> tuple[plugins_mod.DiscoveredPlugin, ...]:
+            return (_conformance_full_plugin(),)
+
+        plugin_lifecycle.discover_plugin_manifests = discover_full  # type: ignore[assignment,attr-defined]
+    else:
+        raise ValueError(f"unknown conformance plugin profile: {profile}")
+    return original
+
+
+def _restore_plugin_profile(original: object) -> None:
+    plugin_lifecycle.discover_plugin_manifests = original  # type: ignore[assignment,attr-defined]
+
+
+# ---------------------------------------------------------------------------
 # Backend availability checks
 # ---------------------------------------------------------------------------
 
@@ -149,6 +239,7 @@ class ConformanceClient(NamedTuple):
 def _build_client(
     backend_name: str,
     tmp_path: Path,
+    plugin_profile: str = "default",
     pg_dsn: str = "",
     pg_schema: str = "",
 ) -> Generator[ConformanceClient, None, None]:
@@ -163,6 +254,7 @@ def _build_client(
             pg_schema=schema,
             auth_required=False,
             node_url="http://testnode",
+            plugin_trusted_publishers=_CONFORMANCE_PLUGIN_SIGNING_IDENTITY,
         )
     else:
         db_file = str(tmp_path / f"conformance_{backend_name}.db")
@@ -171,16 +263,23 @@ def _build_client(
             storage_backend=backend_name,
             auth_required=False,
             node_url="http://testnode",
+            plugin_trusted_publishers=_CONFORMANCE_PLUGIN_SIGNING_IDENTITY,
         )
 
     b = make_backend(_settings=settings_obj)
     b.apply_migrations(_MIGRATIONS_DIR)
 
     extra = _patch_settings(settings_obj)
-    app = main_mod.create_app()
-    with TestClient(app, raise_server_exceptions=True) as c:
-        yield ConformanceClient(client=c, backend=backend_name)
-    _restore_settings(original, extra)
+    original_discovery = _install_plugin_profile(plugin_profile)
+    previous_registry = plugins_mod.set_registry(plugins_mod.HookRegistry())
+    try:
+        app = main_mod.create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            yield ConformanceClient(client=c, backend=backend_name)
+    finally:
+        plugins_mod.set_registry(previous_registry)
+        _restore_plugin_profile(original_discovery)
+        _restore_settings(original, extra)
 
     # Drop Postgres schema to clean up; best-effort, CI job isolation handles the rest.
     if backend_name == "postgres":
@@ -212,6 +311,7 @@ def conformance_client(
     Can be pinned to a single backend via ``--conformance-backend``.
     """
     pinned: str | None = request.config.getoption("--conformance-backend")
+    plugin_profile: str = request.config.getoption("--conformance-plugin-profile")
     backend_name: str = request.param
 
     if pinned is not None and backend_name != pinned:
@@ -224,4 +324,10 @@ def conformance_client(
     pg_dsn = os.environ.get("STIGMEM_TEST_PG_DSN", "")
     pg_schema = os.environ.get("STIGMEM_TEST_PG_SCHEMA", "")
 
-    yield from _build_client(backend_name, tmp_path, pg_dsn=pg_dsn, pg_schema=pg_schema)
+    yield from _build_client(
+        backend_name,
+        tmp_path,
+        plugin_profile=plugin_profile,
+        pg_dsn=pg_dsn,
+        pg_schema=pg_schema,
+    )

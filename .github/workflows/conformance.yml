@@ -20,7 +20,8 @@ permissions:
 
 jobs:
   # -------------------------------------------------------------------------
-  # Legacy v1 wire-format conformance vectors (zero-skip enforced)
+  # Legacy v1 wire-format conformance vectors (zero-skip enforced).
+  # This is the default no-plugin install and remains the v1.0 critical path.
   # -------------------------------------------------------------------------
   conformance-vectors:
     name: Stigmem v1.0 Wire Conformance (vectors)
@@ -149,11 +150,59 @@ jobs:
           retention-days: 30
 
   # -------------------------------------------------------------------------
-  # Gate: all three backends must be green before merging to main
+  # Full-plugin behavioral conformance smoke (representative plugin install)
+  # -------------------------------------------------------------------------
+  conformance-full-plugins:
+    name: Full-plugin conformance (sqlite)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install stigmem-node (conformance extras)
+        run: |
+          uv pip install --system -e "node[dev,conformance]"
+
+      - name: Run conformance suite with representative plugin profile
+        run: |
+          python -m stigmem_conformance \
+            --backend sqlite \
+            --plugin-profile full \
+            --report conformance-sqlite-full-plugins.md \
+            --verbose
+        env:
+          STIGMEM_AUTH_REQUIRED: "false"
+          STIGMEM_SOURCE_ATTESTATION_MODE: "warn"
+
+      - name: Upload full-plugin conformance report
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: conformance-report-sqlite-full-plugins
+          path: conformance-sqlite-full-plugins.md
+          retention-days: 30
+
+  # -------------------------------------------------------------------------
+  # Gate: all conformance lanes must be green before merging to main
   # -------------------------------------------------------------------------
   conformance-gate:
     name: Conformance gate (all backends)
-    needs: [conformance-vectors, conformance-vectors-v2, conformance-multi-backend]
+    needs:
+      - conformance-vectors
+      - conformance-vectors-v2
+      - conformance-multi-backend
+      - conformance-full-plugins
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -167,5 +216,8 @@ jobs:
           fi
           if [[ "${{ needs.conformance-multi-backend.result }}" != "success" ]]; then
             echo "conformance-multi-backend failed" && exit 1
+          fi
+          if [[ "${{ needs.conformance-full-plugins.result }}" != "success" ]]; then
+            echo "conformance-full-plugins failed" && exit 1
           fi
           echo "All conformance checks passed."

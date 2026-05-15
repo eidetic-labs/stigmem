@@ -1,0 +1,412 @@
+"""Federation fact pull and push routes."""
+
+from __future__ import annotations
+
+import json
+from typing import Annotated, Any
+
+from fastapi import Header, HTTPException, Query, Request
+
+from ...db import db
+from ...federation_ingest import FederationHlcSkewError
+from ...identity.capability import CapabilityTokenError, verify_token
+from ...identity.trust_store import get_peer_manifest
+from ...metrics import FEDERATION_EGRESS
+from ...models.facts import row_to_record
+from ...models.federation import FederationFactsResponse
+from ...plugins import Deny, TenantContext, get_registry
+from ...tls import check_peer_san
+from .common import (
+    PeerTokenDep,
+    _allowed_output_scopes,
+    _cap_token_covers_scope,
+    _get_mtls_peer_cert,
+    _public_module,
+    _try_peer_token_auth,
+    logger,
+    router,
+)
+
+
+@router.get("/v1/federation/facts", response_model=FederationFactsResponse)
+def pull_facts(
+    peer_and_token: PeerTokenDep,
+    scope: str | None = Query(None),
+    cursor: str | None = Query(None),
+    limit: int = Query(100, ge=1, le=500),
+) -> FederationFactsResponse:
+    """Return scope-filtered, HLC-cursor-paged facts to an authenticated peer.
+
+    Covered by Spec-05-Federation-Trust.
+    """
+    peer, token_payload = peer_and_token
+
+    permitted = _allowed_output_scopes(peer, token_payload)
+    if not permitted:
+        raise HTTPException(status_code=403, detail="no permitted scopes")
+
+    if scope is not None:
+        if scope not in permitted:
+            _public_module().write_audit_log(
+                peer["id"],
+                "scope_violation",
+                {"requested_scope": scope, "permitted": list(permitted)},
+            )
+            raise HTTPException(status_code=403, detail="scope not permitted for this peer")
+        query_scopes = {scope}
+    else:
+        query_scopes = permitted
+
+    scope_placeholders = ",".join("?" * len(query_scopes))
+    params: list[Any] = list(query_scopes)
+    conditions: list[str] = [
+        f"scope IN ({scope_placeholders})",
+        "hlc IS NOT NULL",  # only facts with an HLC are replication-eligible
+        "received_from IS NULL",  # do not re-federate inbound facts (§3.1)
+        "entity NOT LIKE 'stigmem:conflict:%'",  # conflict entities are local (§6.5)
+        "relation NOT LIKE 'stigmem:%'",  # meta-facts (received_from, ttl) are local
+        "re_federation_blocked = 0",  # exclude company-scope relay-blocked facts (§6.8.2)
+    ]
+    if cursor:
+        conditions.append("hlc > ?")
+        params.append(cursor)
+
+    where = " AND ".join(conditions)
+    params.append(limit + 1)
+
+    with db() as conn:
+        rows = conn.execute(
+            f"SELECT * FROM facts WHERE {where} ORDER BY hlc ASC LIMIT ?",  # noqa: S608  # nosec B608 — where built from literal fragments; values in params
+            params,
+        ).fetchall()
+
+    has_more = len(rows) > limit
+    rows = rows[:limit]
+
+    seen: dict[tuple[str, str, str], int] = {}
+    for r in rows:
+        k = (r["entity"], r["relation"], r["scope"])
+        seen[k] = seen.get(k, 0) + 1
+
+    records = [
+        row_to_record(r, contradicted=seen[(r["entity"], r["relation"], r["scope"])] > 1)
+        for r in rows
+    ]
+    tenant = TenantContext(tenant_id="default")
+    registry = get_registry()
+    records = registry.fire_filter_chain(
+        "federation_outbound_filter",
+        records,
+        peer=peer,
+        token_payload=token_payload,
+        tenant=tenant,
+    )
+    records = registry.fire_filter_chain(
+        "federation_outbound_sign",
+        records,
+        peer=peer,
+        token_payload=token_payload,
+        tenant=tenant,
+    )
+
+    new_cursor: str | None = rows[-1]["hlc"] if rows else cursor
+    FEDERATION_EGRESS.labels(peer_id=peer["node_id"], status="ok").inc(len(records))
+    return FederationFactsResponse(facts=records, cursor=new_cursor, has_more=has_more)
+
+
+# ---------------------------------------------------------------------------
+# POST /v1/federation/facts/push — optional push (§5.11)
+# ---------------------------------------------------------------------------
+
+
+def _verify_push_cap_token(x_stigmem_capability: str) -> dict[str, Any]:
+    """Verify a capability-token header for the push path (H-SEC-2).
+
+    On verification failure logs ``capability_rejected`` and raises 401.
+    On success returns the decoded token dict and logs ``capability_verified``.
+    """
+    try:
+        verify_token(
+            x_stigmem_capability,
+            lambda uri: get_peer_manifest(
+                uri, refresh_if_expired=True, trust_mode=_public_module().settings.trust_mode
+            ),
+            trust_mode=_public_module().settings.trust_mode,
+        )
+    except CapabilityTokenError as exc:
+        # M-SEC-4: log capability_rejected
+        import uuid as _uuid
+        from datetime import UTC as _UTC
+        from datetime import datetime as _datetime
+
+        _now = _datetime.now(_UTC).isoformat()
+        try:
+            import json as _json
+
+            with db() as conn:
+                conn.execute(
+                    """INSERT INTO fact_audit_log
+                       (id, fact_id, event_type, entity_uri, oidc_sub, source,
+                        attested_key_id, detail, ts)
+                       VALUES (?,?,?,?,?,?,?,?,?)""",
+                    (
+                        str(_uuid.uuid4()),
+                        "capability:rejected",
+                        "capability_rejected",
+                        None,
+                        None,
+                        "system:capability",
+                        None,
+                        _json.dumps({"reason": str(exc)}),
+                        _now,
+                    ),
+                )
+        except Exception as audit_exc:  # nosec B110 — audit log best-effort
+            logger.debug("capability_rejected audit log failed: %s", audit_exc)
+        raise HTTPException(status_code=401, detail=f"capability token invalid: {exc}") from exc
+
+    try:
+        cap_token: dict[str, Any] = json.loads(x_stigmem_capability)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=400, detail=f"malformed capability token JSON: {exc}"
+        ) from exc
+
+    if cap_token.get("verb") != "write":
+        raise HTTPException(
+            status_code=403,
+            detail="insufficient_capability: token verb must be 'write' for push",
+        )
+
+    # M-SEC-4: log capability_verified
+    import uuid as _uuid2
+    from datetime import UTC as _UTC2
+    from datetime import datetime as _datetime2
+
+    _now2 = _datetime2.now(_UTC2).isoformat()
+    try:
+        with db() as conn:
+            conn.execute(
+                """INSERT INTO fact_audit_log
+                   (id, fact_id, event_type, entity_uri, oidc_sub, source,
+                    attested_key_id, detail, ts)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                (
+                    str(_uuid2.uuid4()),
+                    cap_token.get("token_id", "unknown"),
+                    "capability_verified",
+                    cap_token.get("subject"),
+                    None,
+                    "system:capability",
+                    None,
+                    json.dumps(
+                        {
+                            "token_id": cap_token.get("token_id"),
+                            "issuer": cap_token.get("issuer"),
+                            "verb": cap_token.get("verb"),
+                            "object": cap_token.get("object"),
+                        }
+                    ),
+                    _now2,
+                ),
+            )
+    except Exception as audit_exc:  # nosec B110 — audit log best-effort
+        logger.debug("capability_verified audit log failed: %s", audit_exc)
+
+    return cap_token
+
+
+@router.post("/v1/federation/facts/push", status_code=202)
+def push_facts(
+    request: Request,
+    body: dict[str, Any],
+    authorization: Annotated[str | None, Header(alias="authorization")] = None,
+    x_stigmem_capability: Annotated[str | None, Header(alias="x-stigmem-capability")] = None,
+) -> dict[str, Any]:
+    """Receive push-replicated facts from a peer. Off by default.
+
+    Auth (H-SEC-2): peer JWT first; if that fails and X-Stigmem-Capability is
+    present, fall through to capability-token verification.  Capability tokens
+    must carry verb=write and an object that covers all pushed fact scopes.
+    Covered by Spec-05-Federation-Trust.
+    """
+    if not _public_module().settings.federation_push_enabled:
+        raise HTTPException(status_code=405, detail="push replication not enabled on this node")
+
+    # --- Phase 1: try peer JWT auth ---
+    peer_auth = _try_peer_token_auth(authorization)
+
+    peer: dict[str, Any] | None = None
+    token_payload: dict[str, Any] | None = None
+    cap_token: dict[str, Any] | None = None
+    using_cap_token = False
+
+    if peer_auth is not None:
+        peer, token_payload = peer_auth
+        # §22.1.2.4 — enforce SAN on the push path too
+        if _public_module().settings.mtls_enabled:
+            peer_cert = _get_mtls_peer_cert(request)
+            if not check_peer_san(peer_cert, peer["node_id"]):
+                _public_module().write_audit_log(
+                    peer["id"], "san_mismatch", {"node_id": peer["node_id"]}
+                )
+                raise HTTPException(
+                    status_code=401,
+                    detail="peer certificate URI SAN does not match node_id",
+                )
+    elif x_stigmem_capability is not None:
+        cap_token = _verify_push_cap_token(x_stigmem_capability)
+        using_cap_token = True
+    else:
+        raise HTTPException(
+            status_code=401,
+            detail="peer token or X-Stigmem-Capability header required",
+        )
+
+    facts = body.get("facts", [])
+    accepted = 0
+    rejected = 0
+    errors: list[dict[str, Any]] = []
+
+    for fact in facts:
+        fact_scope = fact.get("scope", "")
+
+        if using_cap_token:
+            assert cap_token is not None
+            ok, err = _push_fact_with_cap_token(fact, fact_scope, cap_token)
+        else:
+            assert peer is not None and token_payload is not None
+            ok, err = _push_fact_with_peer_token(fact, fact_scope, peer, token_payload)
+
+        if ok:
+            accepted += 1
+        else:
+            rejected += 1
+            if err is not None:
+                errors.append(err)
+
+    return {"accepted": accepted, "rejected": rejected, "errors": errors}
+
+
+def _push_fact_with_cap_token(
+    fact: dict[str, Any],
+    fact_scope: str,
+    cap_token: dict[str, Any],
+) -> tuple[bool, dict[str, Any] | None]:
+    """Validate + ingest a single fact under capability-token auth.
+
+    Returns (ok, error_dict_or_None).
+    """
+    # H-SEC-2: verify capability token object covers this fact's scope
+    token_object = cap_token.get("object", "")
+    if not _cap_token_covers_scope(token_object, fact_scope):
+        return False, {
+            "fact_id": fact.get("id"),
+            "error": "insufficient_capability: token object does not cover scope",
+        }
+
+    sender_node_id = cap_token.get("subject", "")
+    fact_source = fact.get("source", "")
+    # Source non-forgery: source must match capability token subject
+    if fact_source != sender_node_id:
+        return False, {"fact_id": fact.get("id"), "error": "source_not_owned"}
+
+    tenant = TenantContext(tenant_id="default")
+    registry = get_registry()
+    decision = registry.fire_voting(
+        "federation_inbound_validate",
+        fact=fact,
+        fact_scope=fact_scope,
+        cap_token=cap_token,
+        tenant=tenant,
+    )
+    if isinstance(decision, Deny):
+        return False, {"fact_id": fact.get("id"), "error": decision.reason}
+    filtered_fact = registry.fire_filter_chain(
+        "federation_inbound_filter",
+        fact,
+        fact_scope=fact_scope,
+        cap_token=cap_token,
+        tenant=tenant,
+    )
+
+    try:
+        _public_module().ingest_fact(
+            filtered_fact,
+            sender_node_id,
+            identity_strength_boost=0.5,  # §19.4.2 boost for valid capability token
+        )
+        return True, None
+    except FederationHlcSkewError:
+        return False, {"fact_id": fact.get("id"), "error": "hlc_skew"}
+    except Exception:
+        return False, {"fact_id": fact.get("id"), "error": "ingest_error"}
+
+
+def _push_fact_with_peer_token(
+    fact: dict[str, Any],
+    fact_scope: str,
+    peer: dict[str, Any],
+    token_payload: dict[str, Any],
+) -> tuple[bool, dict[str, Any] | None]:
+    """Validate + ingest a single fact under peer-JWT auth.
+
+    Returns (ok, error_dict_or_None).
+    """
+    permitted = _allowed_output_scopes(peer, token_payload)
+
+    if fact_scope not in permitted:
+        _public_module().write_audit_log(
+            peer["id"],
+            "scope_violation",
+            {"fact_id": fact.get("id"), "scope": fact_scope},
+        )
+        return False, {"fact_id": fact.get("id"), "error": "scope_not_permitted"}
+
+    # Source non-forgery: source must match the sending peer's node_id (§6.4)
+    fact_source = fact.get("source", "")
+    if fact_source != peer["node_id"]:
+        _public_module().write_audit_log(
+            peer["id"],
+            "rejected_fact",
+            {
+                "fact_id": fact.get("id"),
+                "reason": "source_not_owned",
+                "source": fact_source,
+                "peer_node_id": peer["node_id"],
+            },
+        )
+        return False, {"fact_id": fact.get("id"), "error": "source_not_owned"}
+
+    tenant = TenantContext(tenant_id="default")
+    registry = get_registry()
+    decision = registry.fire_voting(
+        "federation_inbound_validate",
+        fact=fact,
+        fact_scope=fact_scope,
+        peer=peer,
+        token_payload=token_payload,
+        tenant=tenant,
+    )
+    if isinstance(decision, Deny):
+        return False, {"fact_id": fact.get("id"), "error": decision.reason}
+    filtered_fact = registry.fire_filter_chain(
+        "federation_inbound_filter",
+        fact,
+        fact_scope=fact_scope,
+        peer=peer,
+        token_payload=token_payload,
+        tenant=tenant,
+    )
+
+    try:
+        _public_module().ingest_fact(
+            filtered_fact,
+            peer["node_id"],
+            origin_allowed_scopes=json.loads(peer["allowed_scopes"]),
+        )
+        return True, None
+    except FederationHlcSkewError:
+        return False, {"fact_id": fact.get("id"), "error": "hlc_skew"}
+    except Exception:
+        return False, {"fact_id": fact.get("id"), "error": "ingest_error"}

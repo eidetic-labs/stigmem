@@ -37,7 +37,7 @@ find node/src node/tests eval adapters experimental \
 | `node/src/stigmem_node/cli.py` | 1080 | Discouraged size | Split into `cli/` command-family modules. |
 | `node/src/stigmem_node/routes/recall.py` | 1025 | Discouraged size | Split into `routes/recall/` stage modules. |
 | `node/tests/test_tombstones.py` | 1024 | Discouraged size | Defer to tombstones experimental/plugin rework. |
-| `node/src/stigmem_node/routes/federation.py` | 1009 | Discouraged size | Split into `routes/federation/` endpoint-family modules. |
+| `node/src/stigmem_node/routes/federation.py` | 1009 | Completed | Split into `routes/federation/` endpoint-family modules in #266; public import path preserved as `stigmem_node.routes.federation`. |
 | `node/src/stigmem_node/models.py` | 690 | Pydantic concentration | Split into domain modules before Phase C. |
 
 Generated files and archived specs are excluded from this tracker. Files below
@@ -96,3 +96,8 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
 - #265 implementation converts `stigmem_node.routes.facts` from a monolithic
   module to a route subpackage while preserving the public
   `stigmem_node.routes.facts` import path and existing route registration.
+- #266 implementation converts `stigmem_node.routes.federation` from a
+  monolithic module to endpoint-family route modules while preserving the
+  public `stigmem_node.routes.federation` import path, route registration, and
+  monkey-patch-compatible `settings`, `write_audit_log`, and `ingest_fact`
+  bindings used by existing tests.

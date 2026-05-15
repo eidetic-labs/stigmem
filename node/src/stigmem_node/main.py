@@ -56,6 +56,10 @@ def create_app() -> FastAPI:
         if settings.trust_mode == "strict" and not settings.node_private_key:
             raise RuntimeError("STIGMEM_NODE_PRIVATE_KEY must be set when trust_mode=strict")
 
+        from .plugins import register_discovered_plugins
+
+        register_discovered_plugins()
+
         if settings.otel_enabled:
             from .tracing import init_tracing
 

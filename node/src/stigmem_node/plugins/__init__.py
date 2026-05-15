@@ -40,6 +40,7 @@ from .handlers import (
     handler_timeout,
 )
 from .hooks import HookName, HookOrdering, HookSemantic
+from .lifecycle import register_discovered_plugins
 from .manifest import PluginManifest
 from .registry import HookRegistry, get_registry, register_core_handler, set_registry
 
@@ -78,6 +79,7 @@ __all__ = [
     "get_registry",
     "handler_timeout",
     "register_core_handler",
+    "register_discovered_plugins",
     "resolve_plugin_dependencies",
     "set_registry",
 ]

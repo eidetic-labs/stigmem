@@ -9,26 +9,15 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
 
 from ..auth import Identity, resolve_identity
 from ..card_materializer import get_fresh_card, refresh_card
 from ..db import db
 from ..entity_normalizer import NormalizationError, normalize_entity_uri
 from ..models import VALID_SCOPES
+from ..models.cards import MemoryCardResponse
 
 router = APIRouter(prefix="/v1/cards", tags=["cards"])
-
-
-class MemoryCardResponse(BaseModel):
-    entity_uri: str
-    scope: str
-    summary: str
-    fact_hashes: list[str]
-    avg_confidence: float
-    refreshed_at: str | None
-    is_stale: bool
-    has_contradictions: bool
 
 
 @router.get("/{entity_uri:path}", response_model=MemoryCardResponse)

@@ -11,27 +11,15 @@ from typing import Annotated, Any
 from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
 
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..fuzzy_resolver import register_alias
+from ..models.aliases import AliasRecord, AliasRequest
 
 router = APIRouter(prefix="/v1/aliases", tags=["aliases"])
 
 _VALID_KINDS = {"user", "migration"}
-
-
-class AliasRequest(BaseModel):
-    raw_uri: str
-    canonical_uri: str
-
-
-class AliasRecord(BaseModel):
-    raw_uri: str
-    canonical_uri: str
-    kind: str
-    created_at: str
 
 
 @router.post("", response_model=AliasRecord, status_code=status.HTTP_201_CREATED)

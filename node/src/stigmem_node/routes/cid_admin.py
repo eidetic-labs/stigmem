@@ -6,21 +6,14 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
 from ..auth import Identity, resolve_identity
 from ..db import db
+from ..models.admin import CidBackfillStatus
 
 logger = logging.getLogger("stigmem.cid_admin")
 
 router = APIRouter(prefix="/v1/admin", tags=["admin", "cid"])
-
-
-class CidBackfillStatus(BaseModel):
-    total_facts: int
-    backfilled_facts: int
-    pending_facts: int
-    backfill_complete: bool
 
 
 @router.get("/cid-backfill/status", response_model=CidBackfillStatus)

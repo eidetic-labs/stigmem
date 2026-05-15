@@ -26,7 +26,6 @@ from typing import Annotated, Any
 import httpx
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
 
 from ..audit_event import emit as audit_emit
 from ..auth import (
@@ -37,6 +36,13 @@ from ..auth import (
     resolve_identity,
 )
 from ..db import db
+from ..models.auth import (
+    ExchangeRequest,
+    ExchangeResponse,
+    KeyInfo,
+    RegisterKeyRequest,
+    RegisterKeyResponse,
+)
 from ..settings import settings
 
 logger = logging.getLogger("stigmem.auth")
@@ -143,28 +149,6 @@ def _derive_permission_ceiling(entity_uri: str) -> set[str]:
     return {"read"}
 
 
-class ExchangeRequest(BaseModel):
-    id_token: str
-    permissions: list[str] = Field(default=["read", "write"])
-
-
-class ExchangeResponse(BaseModel):
-    api_key: str
-    entity_uri: str
-    permissions: list[str]
-    expires_at: str
-
-
-class KeyInfo(BaseModel):
-    id: str
-    entity_uri: str
-    permissions: list[str]
-    description: str | None
-    created_at: str
-    expires_at: str | None
-    oidc_sub: str | None
-
-
 # ---------------------------------------------------------------------------
 # Static key registration (POST /v1/auth/keys) — issue #135
 #
@@ -177,39 +161,6 @@ class KeyInfo(BaseModel):
 _STATIC_KEY_ALLOWED_PERMISSIONS: frozenset[str] = frozenset(
     {"read", "write", "federate", "admin", "audit.read"}
 )
-_STATIC_KEY_MIN_RAW_LENGTH = 32  # matches bootstrap's `openssl rand -hex 32`
-
-
-class RegisterKeyRequest(BaseModel):
-    raw_key: str = Field(
-        ...,
-        min_length=_STATIC_KEY_MIN_RAW_LENGTH,
-        description=(
-            "Caller-generated raw key material (e.g. `openssl rand -hex 32`). "
-            "The node hashes it and never stores or echoes the raw value."
-        ),
-    )
-    entity_uri: str = Field(..., min_length=1)
-    permissions: list[str] = Field(default_factory=lambda: ["read", "write"])
-    description: str | None = None
-    expires_at: str | None = Field(
-        default=None,
-        description="ISO-8601 timestamp; omit for no expiry.",
-    )
-    tenant_id: str | None = Field(
-        default=None,
-        description="Target tenant; defaults to the caller's tenant.",
-    )
-
-
-class RegisterKeyResponse(BaseModel):
-    id: str
-    entity_uri: str
-    permissions: list[str]
-    description: str | None
-    created_at: str
-    expires_at: str | None
-    tenant_id: str
 
 
 # ---------------------------------------------------------------------------

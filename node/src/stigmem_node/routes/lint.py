@@ -11,50 +11,21 @@ GET /v1/lint/jobs/:job_id
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
 
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..jobs import create_job, get_job, mark_done, mark_failed, mark_running
 from ..models import VALID_SCOPES
+from ..models.lint import ALL_CHECKS, LintCheck, LintFinding, LintRequest, LintResult
 from ..settings import settings
 
 router = APIRouter(tags=["lint"])
 
-LintCheck = Literal["contradiction", "stale", "orphan", "broken_ref", "namespacing"]
-ALL_CHECKS: list[LintCheck] = ["contradiction", "stale", "orphan", "broken_ref", "namespacing"]
-
 INTENT_ROUTING_RELATIONS = frozenset({"intent:handoff_to", "intent:context_ref"})
-
-
-class LintRequest(BaseModel):
-    scope: str = Field(..., description="Fact scope to sweep")
-    checks: list[LintCheck] | None = Field(None, description="Checks to run; omit for all")
-    entity: str | None = Field(None, description="Restrict to a specific entity URI")
-    relation: str | None = Field(None, description="Restrict to a specific relation")
-    stale_lookahead_s: int = Field(0, ge=0, description="Also flag facts expiring within N seconds")
-
-
-class LintFinding(BaseModel):
-    check: LintCheck
-    severity: Literal["error", "warning", "info"]
-    entity: str
-    relation: str | None
-    fact_ids: list[str]
-    detail: str
-
-
-class LintResult(BaseModel):
-    findings: list[LintFinding]
-    checked_at: str
-    scope: str
-    checks_run: list[LintCheck]
-    fact_count: int
-
 
 # Constant WHERE-fragment tails for the lint queries.  Optional filters are
 # gated via ``(? IS NULL OR …)`` so the SQL strings are module-level constants

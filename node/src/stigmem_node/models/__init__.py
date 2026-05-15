@@ -8,7 +8,18 @@ domain modules.
 
 from __future__ import annotations
 
+from .admin import AdminAuditEntry, AdminAuditResponse, CidBackfillStatus
+from .aliases import AliasRecord, AliasRequest
 from .audit import AuditLogEntry, AuditLogResponse
+from .auth import (
+    STATIC_KEY_MIN_RAW_LENGTH,
+    ExchangeRequest,
+    ExchangeResponse,
+    KeyInfo,
+    RegisterKeyRequest,
+    RegisterKeyResponse,
+)
+from .cards import MemoryCardResponse
 from .constants import (
     QUARANTINE_PENDING,
     QUARANTINE_PROMOTED,
@@ -44,7 +55,15 @@ from .gardens import (
     QuarantineRecord,
     QuarantineRejectRequest,
 )
+from .graph import NeighborItem, NeighborsResponse
 from .identity import AgentKeyRecord, AgentKeyRegisterRequest
+from .instruction import (
+    AuditSubmitRequest,
+    LoadTriggers,
+    ManifestEntry,
+    PublishManifestRequest,
+    RecallInstructionRequest,
+)
 from .intents import (
     VALID_ESCALATION_CHANNELS,
     VALID_ESCALATION_PRIORITIES,
@@ -57,7 +76,9 @@ from .intents import (
     IntentEnvelopeRequest,
     Preference,
 )
+from .lint import ALL_CHECKS, LintCheck, LintFinding, LintRequest, LintResult
 from .provenance import ProvenanceEntry, ProvenanceResponse
+from .recall import RecallRequest, RecallResponse, RecallWeights, ScoreBreakdown, ScoredFact
 from .subscriptions import (
     VALID_ON_CHANGE,
     SubscriptionCreateRequest,
@@ -77,17 +98,26 @@ from .tombstones import (
 )
 
 __all__ = [
+    "ALL_CHECKS",
     "AgentKeyRecord",
     "AgentKeyRegisterRequest",
+    "AdminAuditEntry",
+    "AdminAuditResponse",
+    "AliasRecord",
+    "AliasRequest",
     "AssertRequest",
     "AttestationToken",
     "AuditEntry",
     "AuditLogEntry",
     "AuditLogResponse",
+    "AuditSubmitRequest",
+    "CidBackfillStatus",
     "ConflictResolveRequest",
     "Constraint",
     "DeferenceRule",
     "EscalationPolicy",
+    "ExchangeRequest",
+    "ExchangeResponse",
     "FactRecord",
     "FactValue",
     "FederationFactsResponse",
@@ -101,12 +131,23 @@ __all__ = [
     "HandoffPayload",
     "IntentEnvelopeRecord",
     "IntentEnvelopeRequest",
+    "KeyInfo",
+    "LintCheck",
+    "LintFinding",
+    "LintRequest",
+    "LintResult",
+    "LoadTriggers",
+    "ManifestEntry",
+    "MemoryCardResponse",
+    "NeighborItem",
+    "NeighborsResponse",
     "PeerRecord",
     "PeerRegisterRequest",
     "PeerRegisterResponse",
     "Preference",
     "ProvenanceEntry",
     "ProvenanceResponse",
+    "PublishManifestRequest",
     "QUARANTINE_PENDING",
     "QUARANTINE_PROMOTED",
     "QUARANTINE_REJECTED",
@@ -115,6 +156,15 @@ __all__ = [
     "QuarantinePromoteRequest",
     "QuarantineRecord",
     "QuarantineRejectRequest",
+    "RecallInstructionRequest",
+    "RecallRequest",
+    "RecallResponse",
+    "RecallWeights",
+    "RegisterKeyRequest",
+    "RegisterKeyResponse",
+    "STATIC_KEY_MIN_RAW_LENGTH",
+    "ScoreBreakdown",
+    "ScoredFact",
     "SubscriptionCreateRequest",
     "SubscriptionEventRecord",
     "SubscriptionEventsResponse",

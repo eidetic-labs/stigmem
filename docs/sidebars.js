@@ -123,6 +123,14 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: 'Plugin API',
+      collapsed: true,
+      items: [
+        'reference/plugin-api/hooks',
+      ],
+    },
+    {
+      type: 'category',
       label: 'SDKs',
       collapsed: false,
       items: [

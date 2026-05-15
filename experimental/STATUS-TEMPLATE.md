@@ -25,7 +25,7 @@ One paragraph: the reasoning from ADR-002 or a subsequent amendment for why this
 
 | Gate | Description | Status | Date | Artifact |
 |---|---|---|---|---|
-| 1 | Threat-model delta | `Open` / `Done` | YYYY-MM-DD | `spec/security/deltas/<feature>-threat-model.md` |
+| 1 | Threat-model delta | `Open` / `Done` | YYYY-MM-DD | `experimental/<feature>/security.md` |
 | 2 | ADR | `Open` / `Done` | YYYY-MM-DD | `docs/adr/NNN-<feature>.md` |
 | 3 | Conformance vectors | `Open` / `Done` | YYYY-MM-DD | `data/conformance/<feature>/` |
 | 4 | 30-day external operator soak | `Open` / `Done` | YYYY-MM-DD | LOG.md entry; closed soak issues |
@@ -39,7 +39,7 @@ When all five are `Done`, the feature is ready for promotion via an ADR-002 amen
 
 ### Gate 1 — Threat-model delta
 
-What new trust boundaries does this feature introduce? What new STRIDE entries? What new risks (R-XX)? Which existing risks does it widen or narrow? When the delta is merged, link it here.
+What new trust boundaries does this feature introduce? What new STRIDE entries? What new risks (R-XX)? Which existing risks does it widen or narrow? Per ADR-018, draft and maintain this analysis in `experimental/<feature>/security.md`; when the delta is merged into the unified threat model, link both artifacts here.
 
 ### Gate 2 — ADR
 

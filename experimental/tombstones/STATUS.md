@@ -6,7 +6,7 @@
 **Legacy section:** §23
 **Status:** Dormant
 **Active version:** v0.9.0a1 (code last functional under retracted v1.0)
-**Last updated:** 2026-05-06
+**Last updated:** 2026-05-15
 **Owner:** unowned
 **Buildable:** yes
 
@@ -31,7 +31,7 @@ Per ADR-002 and the threat-model risk register:
 
 | Gate | Description | Status | Date | Artifact |
 |---|---|---|---|---|
-| 1 | Threat-model delta | Open | — | — |
+| 1 | Threat-model delta | Open | 2026-05-15 | [`security.md`](security.md) |
 | 2 | ADR | Open | — | — |
 | 3 | Conformance vectors | Open | — | — |
 | 4 | 30-day external operator soak | Open | — | — |
@@ -43,7 +43,9 @@ Per ADR-002 and the threat-model risk register:
 
 ### Gate 1 — Threat-model delta
 
-The delta needs to address:
+The feature-owned security analysis now lives in [`security.md`](security.md)
+per ADR-018. It records R-16 and R-17 as owned risks. The remaining delta work
+needs to address:
 
 - **Tombstone DoS recovery:** what's the operational procedure when a compromised admin key issued tombstones for critical entities? The current §23 spec has revocation but no operator runbook. The delta should specify required time-to-detect, time-to-revoke targets, and the fallback when the revocation key is also compromised.
 - **Legal-hold scope:** R-17 implies a tighter scope on legal-hold than the original §23 design. Consider: should legal-hold `as_of` queries require a *separate* admin role (`legal_hold_reader`) distinct from general admin, so that a normal admin key compromise doesn't expose legal-hold history?
@@ -98,6 +100,7 @@ Tombstone soak is **higher-stakes than typical features** — operators run RTBF
 
 ## History
 
+- **2026-05-15** — added ADR-018 colocated security analysis in `security.md`.
 - **2026-05-06** — moved to `experimental/` per ADR-002. Status: Dormant.
 - **2026-05-04** — `EXPERIMENTAL` caution banner added to §23 in spec (see commit `10c4ace`).
 - **2026-05-03** — original §23 normative spec published in v2.0 (now retracted).

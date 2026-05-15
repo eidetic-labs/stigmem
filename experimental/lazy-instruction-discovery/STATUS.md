@@ -6,7 +6,7 @@
 **Legacy section:** §21
 **Status:** Blocked
 **Active version:** v0.9.0a1 (code last functional under retracted v1.0)
-**Last updated:** 2026-05-06
+**Last updated:** 2026-05-15
 **Owner:** unowned (contributors may revisit after ADR-003 lands)
 **Buildable:** yes — code compiles; tests pass at the level the original author wrote them
 
@@ -32,7 +32,7 @@ Reintroducing §21 without first solving these issues would be the single most d
 
 | Gate | Description | Status | Date | Artifact |
 |---|---|---|---|---|
-| 1 | Threat-model delta | **Blocked** on ADR-003 | — | (deferred) |
+| 1 | Threat-model delta | **Blocked** on ADR-003 | 2026-05-15 | [`security.md`](security.md) |
 | 2 | ADR (redesign required) | **Blocked** on Gate 1 | — | (deferred) |
 | 3 | Conformance vectors (especially adversarial) | Open | — | — |
 | 4 | 30-day external operator soak | Open | — | — |
@@ -50,6 +50,10 @@ The delta cannot be productively written until ADR-003 (capability-based prompt-
 - The dedicated `instruction_write` permission tier proposed in §8.2 of the threat model needs a concrete design. Should it be a new scope (`instruction:`-prefixed scopes are admin-write-only by default), a new capability-token verb, or both?
 - Cross-org instruction loading: should `recall_instruction` ever return instruction-typed facts written by federated peers? The current §21 design says yes; ADR-003's quarantine-by-default for cross-org instructions says no.
 - Boot-stub embedding requirements: §21.1.1 requires unconditional prohibitions to be embedded directly in the boot stub body. The threat-model delta needs to specify what "unconditional" means in operational terms.
+
+The feature-owned security analysis now lives in [`security.md`](security.md)
+per ADR-018. It records R-15 as the owned risk and R-21 as a contributed
+cross-cutting risk.
 
 **Estimated work to complete Gate 1 once unblocked:** 1 week of focused design + review.
 
@@ -98,6 +102,7 @@ Existing tests under `experimental/21-lazy-instruction-discovery/tests/` predate
 
 ## History
 
+- **2026-05-15** — added ADR-018 colocated security analysis in `security.md`.
 - **2026-05-06** — moved to `experimental/` per ADR-002. Status: Blocked on ADR-003.
 - **2026-05-04** — original §21 normative spec published in v2.0 (now retracted).
 - **2026-05-03** — `EXPERIMENTAL` caution banner added to §21 in spec (see commit `10c4ace`); this was the early signal that the feature wasn't shipping confidently.

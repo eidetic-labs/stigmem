@@ -189,6 +189,136 @@ class TestCapabilityIssue:
         assert _cmd_capability_issue(args) == 1
 
 
+class TestPluginsCli:
+    def test_list_no_plugins(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        import stigmem_node.plugins.lifecycle as lifecycle
+        from stigmem_node.cli import _cmd_plugins_list
+
+        monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: ())
+
+        rc = _cmd_plugins_list(_args(json=False))
+
+        assert rc == 0
+        assert "No plugins registered" in capsys.readouterr().out
+
+    def test_list_plugins_json(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        import stigmem_node.plugins.lifecycle as lifecycle
+        from stigmem_node.cli import _cmd_plugins_list
+        from stigmem_node.plugins import (
+            DiscoveredPlugin,
+            PluginContext,
+            PluginHealth,
+            PluginHealthStatus,
+            PluginManifest,
+        )
+
+        def health(_ctx: PluginContext) -> PluginHealth:
+            return PluginHealth(PluginHealthStatus.HEALTHY, "ready")
+
+        manifest = PluginManifest(
+            name="cli-plugin",
+            version="1.2.3",
+            capabilities=frozenset({"audit.emit"}),
+            hooks={},
+            health_check=health,
+        )
+        discovered = DiscoveredPlugin(
+            manifest=manifest,
+            entry_point_name="cli-plugin",
+            entry_point_value="pkg:manifest",
+            distribution="pkg",
+        )
+        monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (discovered,))
+
+        rc = _cmd_plugins_list(_args(json=True))
+        payload = json.loads(capsys.readouterr().out)
+
+        assert rc == 0
+        assert payload[0]["name"] == "cli-plugin"
+        assert payload[0]["version"] == "1.2.3"
+        assert payload[0]["capabilities"] == ["audit.emit"]
+        assert payload[0]["hook_count"] == 0
+        assert payload[0]["signed_by"] == "unsigned"
+        assert payload[0]["health"]["status"] == "healthy"
+
+    def test_describe_plugin_human_output(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        import stigmem_node.plugins.lifecycle as lifecycle
+        from stigmem_node.cli import _cmd_plugins_describe
+        from stigmem_node.plugins import Allow, DiscoveredPlugin, PluginContext, PluginManifest
+
+        def handler(_ctx: PluginContext, **_: object) -> Allow:
+            return Allow()
+
+        manifest = PluginManifest(
+            name="describe-plugin",
+            version="2.0.0",
+            capabilities=frozenset({"facts.read"}),
+            hooks={"pre_assert_authorize": handler},
+            depends_on=frozenset({"base-plugin"}),
+        )
+        base = PluginManifest(
+            name="base-plugin",
+            version="1.0.0",
+            hooks={},
+        )
+        discovered = DiscoveredPlugin(
+            manifest=manifest,
+            entry_point_name="describe-plugin",
+            entry_point_value="pkg:manifest",
+            distribution="pkg",
+        )
+        base_discovered = DiscoveredPlugin(
+            manifest=base,
+            entry_point_name="base-plugin",
+            entry_point_value="base:manifest",
+            distribution="base",
+        )
+        monkeypatch.setattr(
+            lifecycle,
+            "discover_plugin_manifests",
+            lambda: (discovered, base_discovered),
+        )
+
+        rc = _cmd_plugins_describe(_args(name="describe-plugin", json=False))
+        out = capsys.readouterr().out
+
+        assert rc == 0
+        assert "name: describe-plugin" in out
+        assert "version: 2.0.0" in out
+        assert "capabilities: facts.read" in out
+        assert "hooks (1): pre_assert_authorize" in out
+        assert "depends_on: base-plugin" in out
+        assert "signed_by: unsigned" in out
+        assert "health: unknown" in out
+
+    def test_describe_unknown_plugin_returns_nonzero(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        import stigmem_node.plugins.lifecycle as lifecycle
+        from stigmem_node.cli import _cmd_plugins_describe
+
+        monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: ())
+
+        rc = _cmd_plugins_describe(_args(name="missing-plugin", json=False))
+
+        assert rc == 1
+        assert "plugin not found: missing-plugin" in capsys.readouterr().err
+
+
 class TestCapabilityVerify:
     def test_valid_token_human_output(
         self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture

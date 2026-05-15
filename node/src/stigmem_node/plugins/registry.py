@@ -41,6 +41,7 @@ from .handlers import (
     PluginHealth,
     PluginHealthReport,
     PluginHealthStatus,
+    PluginInfo,
     Success,
     VotingDecision,
 )
@@ -81,6 +82,7 @@ class HookRegistry:
         self._plugin_names: set[str] = set()
         self._plugin_order: list[str] = []
         self._plugin_versions: dict[str, str] = {}
+        self._plugin_infos: dict[str, PluginInfo] = {}
         self._plugin_contexts: dict[str, PluginContext] = {}
         self._plugin_health_checks: dict[str, Callable[..., Any]] = {}
         self._plugin_health_reports: dict[str, PluginHealthReport] = {}
@@ -195,6 +197,15 @@ class HookRegistry:
             self._plugin_names.add(manifest.name)
             self._plugin_order.append(manifest.name)
             self._plugin_versions[manifest.name] = manifest.version
+            self._plugin_infos[manifest.name] = PluginInfo(
+                name=manifest.name,
+                version=manifest.version,
+                capabilities=tuple(sorted(manifest.capabilities)),
+                hooks=tuple(sorted(manifest.hooks)),
+                depends_on=tuple(sorted(manifest.depends_on)),
+                discovery_source=audit_metadata["discovery_source"],
+                signed_by=signing_identity,
+            )
             self._plugin_contexts[manifest.name] = ctx
             if manifest.health_check is not None:
                 self._plugin_health_checks[manifest.name] = manifest.health_check
@@ -356,6 +367,12 @@ class HookRegistry:
 
     def plugin_versions(self) -> dict[str, str]:
         return dict(self._plugin_versions)
+
+    def plugin_infos(self) -> tuple[PluginInfo, ...]:
+        return tuple(self._plugin_infos[name] for name in self._plugin_order)
+
+    def plugin_info(self, name: str) -> PluginInfo | None:
+        return self._plugin_infos.get(name)
 
     def poll_plugin_health(self) -> tuple[PluginHealthReport, ...]:
         """Run lifecycle health checks and record the latest report per plugin.

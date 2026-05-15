@@ -35,7 +35,7 @@ find node/src node/tests eval adapters experimental \
 | `node/src/stigmem_node/routes/facts.py` | 1114 | Completed | Split into `routes/facts/` subpackage in #265; public import path preserved as `stigmem_node.routes.facts`. |
 | `node/tests/test_phase10_instruction.py` | 1084 | Discouraged size | Defer until lazy instruction discovery rework; keep linked to experimental feature. |
 | `node/src/stigmem_node/cli.py` | 1080 | Discouraged size | Split into `cli/` command-family modules. |
-| `node/src/stigmem_node/routes/recall.py` | 1025 | Discouraged size | Split into `routes/recall/` stage modules. |
+| `node/src/stigmem_node/routes/recall.py` | 1025 | Completed | Split into `routes/recall/` stage modules in #268; public import path preserved as `stigmem_node.routes.recall`. |
 | `node/tests/test_tombstones.py` | 1024 | Discouraged size | Defer to tombstones experimental/plugin rework. |
 | `node/src/stigmem_node/routes/federation.py` | 1009 | Completed | Split into `routes/federation/` endpoint-family modules in #266; public import path preserved as `stigmem_node.routes.federation`. |
 | `node/src/stigmem_node/models.py` | 690 | Pydantic concentration | Split into domain modules before Phase C. |
@@ -101,3 +101,8 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
   public `stigmem_node.routes.federation` import path, route registration, and
   monkey-patch-compatible `settings`, `write_audit_log`, and `ingest_fact`
   bindings used by existing tests.
+- #268 implementation converts `stigmem_node.routes.recall` from a monolithic
+  module to stage-oriented modules for lexical search, vector search, graph
+  expansion, ranking/packing, as-of recall, and route orchestration while
+  preserving the public `stigmem_node.routes.recall` import path and helper
+  exports used by existing tests.

@@ -19,12 +19,12 @@ import time
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
 
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..entity_normalizer import NormalizationError, normalize_entity_uri
 from ..graph import MAX_DEPTH, bfs_neighbors
+from ..models.graph import NeighborItem, NeighborsResponse
 
 router = APIRouter(prefix="/v1/graph", tags=["graph"])
 
@@ -34,23 +34,6 @@ _CURSOR_TTL_S: float = 300.0
 # ---------------------------------------------------------------------------
 # Response models
 # ---------------------------------------------------------------------------
-
-
-class NeighborItem(BaseModel):
-    entity: str
-    relation: str
-    hops: int
-    confidence: float
-    source_trust: float | None = None
-    path: list[str] = Field(default_factory=list)
-
-
-class NeighborsResponse(BaseModel):
-    entity: str
-    depth: int
-    neighbors: list[NeighborItem]
-    next_cursor: str | None = None
-    total_hint: int
 
 
 # ---------------------------------------------------------------------------

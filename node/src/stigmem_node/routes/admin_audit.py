@@ -17,32 +17,12 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
 
 from ..auth import Identity, resolve_identity
 from ..db import db
+from ..models.admin import AdminAuditEntry, AdminAuditResponse
 
 router = APIRouter(prefix="/v1/admin", tags=["admin"])
-
-
-class AdminAuditEntry(BaseModel):
-    seq: int | None
-    id: str
-    event_type: str
-    entity_uri: str | None
-    oidc_sub: str | None
-    fact_id: str | None
-    source: str
-    attested_key_id: str | None
-    ts: str
-    tenant_id: str | None
-    detail: str | None
-
-
-class AdminAuditResponse(BaseModel):
-    entries: list[AdminAuditEntry]
-    total: int
-    next_cursor: int | None
 
 
 def _row_to_entry(row: Any) -> AdminAuditEntry:

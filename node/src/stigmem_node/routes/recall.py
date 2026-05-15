@@ -17,7 +17,6 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from pydantic import BaseModel, Field
 
 from ..auth import Identity, resolve_identity
 from ..card_materializer import CARD_MIN_CONFIDENCE, get_fresh_card
@@ -26,6 +25,7 @@ from ..garden_acl import caller_can_see_garden
 from ..graph import MAX_DEPTH, bfs_neighbors
 from ..metrics import FACT_READ, RECALL_RANKER_DURATION, observe_duration
 from ..models import VALID_SCOPES, FactRecord, FactValue, TombstoneNotice, row_to_record
+from ..models.recall import RecallRequest, RecallResponse, RecallWeights, ScoreBreakdown, ScoredFact
 from ..recall_pipeline import apply_recall_pipeline
 from ..settings import settings
 from ..source_trust import compute_source_trust
@@ -36,74 +36,9 @@ logger = logging.getLogger("stigmem.recall")
 
 router = APIRouter(prefix="/v1/recall", tags=["recall"])
 
-# ---------------------------------------------------------------------------
-# Request / response shapes
-# ---------------------------------------------------------------------------
-
-_DEFAULT_WEIGHTS = {
-    "lexical": 0.35,
-    "semantic": 0.35,
-    "graph": 0.15,
-    "source_trust": 0.10,
-    "recency": 0.05,
-}
-
 _MAX_SEED_ENTITIES = 5
 _MAX_GRAPH_ENTITIES = 50
 _MAX_CANDIDATES = 500
-
-
-class RecallWeights(BaseModel):
-    lexical: float = Field(_DEFAULT_WEIGHTS["lexical"], ge=0.0, le=1.0)
-    semantic: float = Field(_DEFAULT_WEIGHTS["semantic"], ge=0.0, le=1.0)
-    graph: float = Field(_DEFAULT_WEIGHTS["graph"], ge=0.0, le=1.0)
-    source_trust: float = Field(_DEFAULT_WEIGHTS["source_trust"], ge=0.0, le=1.0)
-    recency: float = Field(_DEFAULT_WEIGHTS["recency"], ge=0.0, le=1.0)
-
-
-class RecallRequest(BaseModel):
-    query: str = Field(..., min_length=1)
-    scope: str = Field("local")
-    token_budget: int = Field(4000, ge=1, le=200_000)
-    depth: int = Field(2, ge=1, le=3)
-    weights: RecallWeights = Field(default_factory=RecallWeights)
-    min_confidence: float = Field(0.1, ge=0.0, le=1.0)
-    include_neighbors: bool = Field(True)
-    limit: int = Field(100, ge=1, le=500, description="Max candidates before token-budget packing")
-    as_of: str | None = Field(
-        None,
-        description="Time-travel query: return facts visible at this ISO 8601 timestamp (Spec-X3-Time-Travel-Queries)",  # noqa: E501
-    )
-
-
-class ScoreBreakdown(BaseModel):
-    lexical: float = 0.0
-    semantic: float = 0.0
-    graph: float = 0.0
-    source_trust: float = 0.0
-    recency: float = 0.0
-    weighted_total: float = 0.0
-
-
-class ScoredFact(BaseModel):
-    fact: FactRecord
-    score: float
-    score_breakdown: ScoreBreakdown
-    hop_distance: int = 0
-    token_estimate: int
-    from_card: bool = False
-
-
-class RecallResponse(BaseModel):
-    recall_id: str
-    query_hash: str
-    facts: list[ScoredFact]
-    total_scored: int | None = None
-    token_budget: int
-    tokens_used: int
-    truncated: bool
-    tombstone_notices: list[TombstoneNotice] = Field(default_factory=list)
-
 
 # ---------------------------------------------------------------------------
 # Helpers

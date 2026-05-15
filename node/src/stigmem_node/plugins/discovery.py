@@ -24,6 +24,8 @@ class DiscoveredPlugin:
     entry_point_name: str
     entry_point_value: str
     distribution: str | None = None
+    signing_identity: str = "unsigned"
+    signature_verified: bool = False
 
 
 def discover_plugin_manifests(

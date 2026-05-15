@@ -15,6 +15,8 @@ from stigmem_node.plugins import (
     ManifestError,
     PluginContext,
     PluginManifest,
+    PluginSignatureError,
+    PluginSigningInfo,
     RegistryFrozenError,
 )
 
@@ -41,6 +43,17 @@ def _discovered(manifest: PluginManifest) -> DiscoveredPlugin:
         entry_point_name=manifest.name,
         entry_point_value=f"{manifest.name}:plugin_manifest",
         distribution=f"{manifest.name}-dist",
+    )
+
+
+def _signed_discovered(manifest: PluginManifest, signing_identity: str) -> DiscoveredPlugin:
+    return DiscoveredPlugin(
+        manifest=manifest,
+        entry_point_name=manifest.name,
+        entry_point_value=f"{manifest.name}:plugin_manifest",
+        distribution=f"{manifest.name}-dist",
+        signing_identity=signing_identity,
+        signature_verified=True,
     )
 
 
@@ -149,6 +162,50 @@ def test_register_discovered_plugins_preserves_capability_gated_context(
     assert ctx.get_audit_emitter() is audit_emitter
     with pytest.raises(CapabilityError):
         ctx.get_facts_reader()
+
+
+def test_register_discovered_plugins_rejects_unsigned_plugin_when_signing_required(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest = _manifest("unsigned-plugin", {})
+    registry = HookRegistry()
+    monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (_discovered(manifest),))
+
+    with pytest.raises(PluginSignatureError, match="production plugin registration requires"):
+        lifecycle.register_discovered_plugins(registry=registry, signing_required=True)
+
+    assert registry.registered_plugins() == frozenset()
+
+
+def test_register_discovered_plugins_records_verified_signing_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[AuditEvent] = []
+
+    def capture(_ctx: PluginContext, *, event: AuditEvent) -> None:
+        events.append(event)
+
+    manifest = _manifest("signed-plugin", {})
+    discovered = _signed_discovered(manifest, "issuer@example.com")
+    registry = HookRegistry()
+    registry.register_core_handler("audit_emit", capture, name="core.001.audit")
+    monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (discovered,))
+
+    def verifier(plugin: DiscoveredPlugin) -> PluginSigningInfo:
+        assert plugin is discovered
+        return PluginSigningInfo(signing_identity=plugin.signing_identity)
+
+    lifecycle.register_discovered_plugins(
+        registry=registry,
+        freeze=False,
+        signing_required=True,
+        signature_verifier=verifier,
+    )
+
+    info = registry.plugin_info("signed-plugin")
+    assert info is not None
+    assert info.signed_by == "issuer@example.com"
+    assert events[0].metadata["signed_by"] == "issuer@example.com"
 
 
 def test_register_discovered_plugins_fails_closed_on_duplicate_registration(

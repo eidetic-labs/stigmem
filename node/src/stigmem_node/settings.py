@@ -156,9 +156,9 @@ class Settings(BaseSettings):
 
     # Plugin signing gate (ADR-011 / PR 4-INF.3).
     # When true, installed entry-point plugins must pass signing verification
-    # before registration. Kept off by default during alpha while the operator
-    # trust-policy surface lands in the follow-on PR 4-INF.3 slices.
-    plugin_signing_required: bool = False
+    # before registration. Set false only for local development; unsigned plugin
+    # loading remains warning- and audit-visible.
+    plugin_signing_required: bool = True
     # Comma-separated Sigstore signing identities accepted for production plugin
     # registration when plugin_signing_required=true.
     plugin_trusted_publishers: str = ""

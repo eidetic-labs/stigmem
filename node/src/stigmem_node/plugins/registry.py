@@ -83,6 +83,7 @@ class HookRegistry:
         self._plugin_order: list[str] = []
         self._plugin_versions: dict[str, str] = {}
         self._plugin_infos: dict[str, PluginInfo] = {}
+        self._plugin_signing_metadata: dict[str, dict[str, Any]] = {}
         self._plugin_contexts: dict[str, PluginContext] = {}
         self._plugin_health_checks: dict[str, Callable[..., Any]] = {}
         self._plugin_health_reports: dict[str, PluginHealthReport] = {}
@@ -208,6 +209,8 @@ class HookRegistry:
                 discovery_source=audit_metadata["discovery_source"],
                 signed_by=signing_identity,
             )
+            if signing_metadata is not None:
+                self._plugin_signing_metadata[manifest.name] = dict(signing_metadata)
             self._plugin_contexts[manifest.name] = ctx
             if manifest.health_check is not None:
                 self._plugin_health_checks[manifest.name] = manifest.health_check
@@ -375,6 +378,17 @@ class HookRegistry:
 
     def plugin_info(self, name: str) -> PluginInfo | None:
         return self._plugin_infos.get(name)
+
+    def plugin_signing_metadata(self, name: str) -> dict[str, Any]:
+        return dict(self._plugin_signing_metadata.get(name, {}))
+
+    def development_unsigned_plugins(self) -> tuple[str, ...]:
+        return tuple(
+            name
+            for name in self._plugin_order
+            if self._plugin_signing_metadata.get(name, {}).get("trust_decision")
+            == "development_unsigned_override"
+        )
 
     def poll_plugin_health(self) -> tuple[PluginHealthReport, ...]:
         """Run lifecycle health checks and record the latest report per plugin.

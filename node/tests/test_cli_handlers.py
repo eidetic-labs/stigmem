@@ -211,6 +211,7 @@ class TestPluginsCli:
         capsys: pytest.CaptureFixture,
     ) -> None:
         import stigmem_node.plugins.lifecycle as lifecycle
+        import stigmem_node.settings as settings_module
         from stigmem_node.cli import _cmd_plugins_list
         from stigmem_node.plugins import (
             DiscoveredPlugin,
@@ -237,6 +238,7 @@ class TestPluginsCli:
             distribution="pkg",
         )
         monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (discovered,))
+        monkeypatch.setattr(settings_module.settings, "plugin_signing_required", False)
 
         rc = _cmd_plugins_list(_args(json=True))
         payload = json.loads(capsys.readouterr().out)
@@ -255,6 +257,7 @@ class TestPluginsCli:
         capsys: pytest.CaptureFixture,
     ) -> None:
         import stigmem_node.plugins.lifecycle as lifecycle
+        import stigmem_node.settings as settings_module
         from stigmem_node.cli import _cmd_plugins_describe
         from stigmem_node.plugins import Allow, DiscoveredPlugin, PluginContext, PluginManifest
 
@@ -290,6 +293,7 @@ class TestPluginsCli:
             "discover_plugin_manifests",
             lambda: (discovered, base_discovered),
         )
+        monkeypatch.setattr(settings_module.settings, "plugin_signing_required", False)
 
         rc = _cmd_plugins_describe(_args(name="describe-plugin", json=False))
         out = capsys.readouterr().out

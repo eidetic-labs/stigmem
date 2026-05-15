@@ -125,8 +125,8 @@ Stigmem is an open, federated knowledge protocol — a layer where AI agents and
 | Manual/core handler registration    | Landed — deterministic ordering with minimum manifest/context/capability APIs |
 | Hook-site wiring                    | Landed across assertion, recall, federation, auth, migration, and audit paths |
 | Registry observability and tests    | Landed — audit/metrics plumbing, test registry helpers, and hook-firing benchmark gate |
-| Entry-point discovery, lifecycle, health polling, operator CLI | Remaining alpha-series infrastructure work |
-| Production signing/trust and author/operator plugin docs | Remaining alpha-series infrastructure work |
+| Entry-point discovery, lifecycle, health polling, operator CLI | Landed — startup registration with dependency ordering, lifecycle health reporting, and `stigmem plugins` inspection |
+| Production signing/trust and author/operator plugin docs | Landed — fail-closed production signing gate, trusted-publisher policy, operator override metadata, author/operator references, and alpha tester migration guidance |
 
 ## Experimental & deferred features
 

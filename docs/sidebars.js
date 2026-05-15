@@ -110,6 +110,7 @@ const sidebars = {
           collapsed: true,
           items: [
             'guides/plugins/author-guide',
+            'guides/plugins/alpha-tester-migration',
           ],
         },
       ],

@@ -78,8 +78,18 @@ class HookRegistry:
         self._emitting_registry_audit = False
         self._lock = threading.RLock()
 
-    def register_plugin(self, manifest: PluginManifest) -> None:
+    def register_plugin(
+        self,
+        manifest: PluginManifest,
+        *,
+        discovery_source: dict[str, Any] | None = None,
+        signing_identity: str = "unsigned",
+    ) -> None:
         """Register all handlers from a manually supplied plugin manifest."""
+        audit_metadata = _registration_audit_metadata(
+            discovery_source=discovery_source,
+            signing_identity=signing_identity,
+        )
         with self._lock:
             self._ensure_mutable()
             if manifest.name in self._plugin_names:
@@ -88,6 +98,7 @@ class HookRegistry:
                     "plugin.registration_failed",
                     manifest=manifest,
                     reason="duplicate",
+                    metadata=audit_metadata,
                 )
                 raise ManifestError(f"plugin {manifest.name!r} is already registered")
             try:
@@ -100,6 +111,7 @@ class HookRegistry:
                     manifest=manifest,
                     reason="manifest_invalid",
                     validation_failure=str(exc),
+                    metadata=audit_metadata,
                 )
                 raise
             ctx = PluginContext(
@@ -116,6 +128,7 @@ class HookRegistry:
                     manifest=manifest,
                     reason="config_validate",
                     validation_failure=decision.reason,
+                    metadata=audit_metadata,
                 )
                 raise ManifestError(
                     f"plugin {manifest.name!r} failed config validation: {decision.reason}"
@@ -133,6 +146,7 @@ class HookRegistry:
                         manifest=manifest,
                         reason="config_exception",
                         validation_failure=str(exc),
+                        metadata=audit_metadata,
                     )
                     raise ManifestError(
                         f"plugin {manifest.name!r} config validator failed: {exc}"
@@ -146,6 +160,7 @@ class HookRegistry:
                         manifest=manifest,
                         reason="config_validate",
                         validation_failure=own_decision.reason,
+                        metadata=audit_metadata,
                     )
                     raise ManifestError(
                         f"plugin {manifest.name!r} failed config validation: {own_decision.reason}"
@@ -157,6 +172,7 @@ class HookRegistry:
                         manifest=manifest,
                         reason="config_result",
                         validation_failure=type(own_decision).__name__,
+                        metadata=audit_metadata,
                     )
                     raise ManifestError(
                         f"plugin {manifest.name!r} config validator returned "
@@ -177,7 +193,11 @@ class HookRegistry:
                 )
             self._metric_inc(PLUGIN_REGISTRATION, outcome="success", reason="")
             self._metric_set(PLUGIN_REGISTERED_COUNT, len(self._plugin_names))
-            self._emit_registry_audit("plugin.registered", manifest=manifest)
+            self._emit_registry_audit(
+                "plugin.registered",
+                manifest=manifest,
+                metadata=audit_metadata,
+            )
             logger.info(
                 "registered plugin %r version=%s hooks=%s capabilities=%s",
                 manifest.name,
@@ -526,7 +546,7 @@ class HookRegistry:
                     "capabilities": sorted(manifest.capabilities),
                     "hooks": sorted(manifest.hooks),
                     "async_safe": manifest.async_safe,
-                    "signed_by": None,
+                    "signed_by": event_metadata.get("signed_by", "unsigned"),
                     "requires_stigmem": manifest.requires_stigmem,
                 }
             )
@@ -679,6 +699,17 @@ def _current_stigmem_version() -> str:
         return version("stigmem-node")
     except PackageNotFoundError:
         return _FALLBACK_STIGMEM_VERSION
+
+
+def _registration_audit_metadata(
+    *,
+    discovery_source: dict[str, Any] | None,
+    signing_identity: str,
+) -> dict[str, Any]:
+    return {
+        "discovery_source": discovery_source or {"type": "manual"},
+        "signed_by": signing_identity,
+    }
 
 
 def _accepts_positional_args(handler: Callable[..., Any], required_count: int) -> bool:

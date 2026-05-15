@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from .db import db
-from .models import (
+from .models.tombstones import (
     TombstoneRecord,
     TombstoneRevocationRecord,
     TombstoneStatusResponse,

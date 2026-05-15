@@ -24,7 +24,7 @@ import stigmem_node.db as db_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.main import create_app
-from stigmem_node.models import QUARANTINE_PENDING
+from stigmem_node.models.constants import QUARANTINE_PENDING
 from stigmem_node.source_trust import bust_trust_cache, compute_source_trust
 
 # ---------------------------------------------------------------------------
@@ -583,7 +583,7 @@ class TestRecallPipeline:
 
     def test_low_trust_fact_hidden_in_strict_mode(self, node):
         """Strict mode hides facts below the low-trust confidence threshold."""
-        from stigmem_node.models import FactRecord, FactValue
+        from stigmem_node.models.facts import FactRecord, FactValue
         from stigmem_node.recall_pipeline import apply_recall_pipeline
 
         *_, ts, _ = node
@@ -609,7 +609,7 @@ class TestRecallPipeline:
             ts.trust_mode = original_mode
 
     def test_include_low_trust_includes_all(self, node):
-        from stigmem_node.models import FactRecord, FactValue
+        from stigmem_node.models.facts import FactRecord, FactValue
         from stigmem_node.recall_pipeline import apply_recall_pipeline
 
         record = FactRecord(
@@ -627,7 +627,8 @@ class TestRecallPipeline:
         assert len(results) == 1
 
     def test_pending_quarantine_fact_hidden_from_recall(self, node):
-        from stigmem_node.models import QUARANTINE_PENDING, FactRecord, FactValue
+        from stigmem_node.models.constants import QUARANTINE_PENDING
+        from stigmem_node.models.facts import FactRecord, FactValue
         from stigmem_node.recall_pipeline import apply_recall_pipeline
 
         record = FactRecord(

@@ -14,8 +14,8 @@ from ..auth import Identity, resolve_identity
 from ..card_materializer import get_fresh_card, refresh_card
 from ..db import db
 from ..entity_normalizer import NormalizationError, normalize_entity_uri
-from ..models import VALID_SCOPES
 from ..models.cards import MemoryCardResponse
+from ..models.constants import VALID_SCOPES
 
 router = APIRouter(prefix="/v1/cards", tags=["cards"])
 

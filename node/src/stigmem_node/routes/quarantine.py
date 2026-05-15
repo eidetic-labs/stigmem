@@ -21,8 +21,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..garden_acl import get_garden_by_slug_or_id, require_quarantine_moderator_or_admin
-from ..models import (
-    QUARANTINE_PENDING,
+from ..models.constants import QUARANTINE_PENDING
+from ..models.gardens import (
     QuarantineListResponse,
     QuarantineRecord,
 )

@@ -21,7 +21,7 @@ from fastapi.responses import StreamingResponse
 
 from ..auth import Identity, resolve_identity
 from ..db import db
-from ..models import AuditLogEntry, AuditLogResponse
+from ..models.audit import AuditLogEntry, AuditLogResponse
 
 router = APIRouter(prefix="/v1/audit", tags=["audit"])
 

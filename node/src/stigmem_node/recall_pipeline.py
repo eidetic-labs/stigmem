@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .auth import Identity
-    from .models import FactRecord
+    from .models.facts import FactRecord
 
 logger = logging.getLogger("stigmem.recall")
 
@@ -156,7 +156,7 @@ def apply_recall_pipeline(
 
 def _run_sanitizer(record: FactRecord, mode: str, effective_confidence: float) -> FactRecord:
     """Run content sanitizer on one fact record.  Returns possibly-modified record."""
-    from .models import FactValue
+    from .models.facts import FactValue
 
     value = record.value
     if value.type not in ("string", "text"):
@@ -220,7 +220,7 @@ def _enforce_schema_types(record: FactRecord) -> FactRecord:
     """Enforce schema correctness for non-string FactValue types (§19.7.3)."""
     import math
 
-    from .models import FactValue
+    from .models.facts import FactValue
 
     v = record.value
 

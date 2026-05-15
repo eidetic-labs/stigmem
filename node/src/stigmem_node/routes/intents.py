@@ -42,11 +42,11 @@ from ..auth import Identity, resolve_identity
 from ..db import db
 from ..entity_normalizer import NormalizationError, normalize_entity_uri
 from ..hlc import node_hlc
-from ..models import (
+from ..models.facts import FactValue
+from ..models.intents import (
     Constraint,
     DeferenceRule,
     EscalationPolicy,
-    FactValue,
     HandoffArtifact,
     HandoffPayload,
     IntentEnvelopeRecord,

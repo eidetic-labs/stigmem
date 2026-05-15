@@ -20,8 +20,8 @@ from .. import settings as _settings_pkg
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..garden_acl import get_garden_by_garden_uri, require_garden_read
-from ..models import (
-    VALID_SCOPES,
+from ..models.constants import VALID_SCOPES
+from ..models.subscriptions import (
     SubscriptionCreateRequest,
     SubscriptionEventRecord,
     SubscriptionEventsResponse,

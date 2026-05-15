@@ -40,14 +40,14 @@ from ..hlc import node_hlc
 from ..identity.capability import CapabilityTokenError, verify_token
 from ..identity.trust_store import get_peer_manifest
 from ..metrics import FEDERATION_EGRESS
-from ..models import (
+from ..models.facts import row_to_record
+from ..models.federation import (
     ConflictResolveRequest,
     FederationFactsResponse,
-    FederationTombstonesResponse,
     PeerRegisterRequest,
     PeerRegisterResponse,
-    row_to_record,
 )
+from ..models.tombstones import FederationTombstonesResponse
 from ..peer_token import TokenError, verify_peer_token
 from ..plugins import Deny, TenantContext, get_registry
 from ..settings import settings

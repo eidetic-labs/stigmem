@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .embedding.base import EmbeddingModel, Vector
-    from .models import FactRecord
+    from .models.facts import FactRecord
 
 logger = logging.getLogger("stigmem.vector_search")
 
@@ -199,7 +199,7 @@ def vector_search(
         List of (FactRecord, similarity) tuples, sorted descending by similarity.
     """
     from .db import db
-    from .models import row_to_record
+    from .models.facts import row_to_record
 
     blob = _encode_vector(query_embedding)
 

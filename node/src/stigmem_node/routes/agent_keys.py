@@ -22,7 +22,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db
-from ..models import AgentKeyRecord, AgentKeyRegisterRequest
+from ..models.identity import AgentKeyRecord, AgentKeyRegisterRequest
 
 logger = logging.getLogger("stigmem.agent_keys")
 router = APIRouter(prefix="/v1/auth/agent-keys", tags=["auth"])

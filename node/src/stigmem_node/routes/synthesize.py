@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..auth import Identity, resolve_identity
 from ..db import db
-from ..models import VALID_SCOPES
+from ..models.constants import VALID_SCOPES
 
 router = APIRouter(prefix="/v1/scopes", tags=["synthesis"])
 

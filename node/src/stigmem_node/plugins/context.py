@@ -35,16 +35,18 @@ class CoreApis:
 class PluginContext:
     """Capability-restricted context passed to plugin handlers."""
 
-    __slots__ = ("_capabilities", "_core_apis", "plugin_name")
+    __slots__ = ("_capabilities", "_core_apis", "plugin_name", "plugin_version")
 
     def __init__(
         self,
         *,
         plugin_name: str,
         capabilities: frozenset[str],
+        plugin_version: str = "0.0.0",
         core_apis: CoreApis | None = None,
     ) -> None:
         self.plugin_name = plugin_name
+        self.plugin_version = plugin_version
         self._capabilities = capabilities
         self._core_apis = core_apis or CoreApis()
 

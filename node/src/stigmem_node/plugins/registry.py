@@ -68,6 +68,8 @@ class HookRegistry:
             _validate_timeout_seconds(handler_timeout_seconds)
         self._handlers: dict[str, tuple[HandlerEntry, ...]] = {hook: () for hook in HOOK_SPECS}
         self._plugin_names: set[str] = set()
+        self._plugin_order: list[str] = []
+        self._plugin_versions: dict[str, str] = {}
         self._core_apis = core_apis or CoreApis()
         self._emit_metrics = emit_metrics
         self._handler_timeout_seconds = handler_timeout_seconds
@@ -102,6 +104,7 @@ class HookRegistry:
                 raise
             ctx = PluginContext(
                 plugin_name=manifest.name,
+                plugin_version=manifest.version,
                 capabilities=manifest.capabilities,
                 core_apis=self._core_apis,
             )
@@ -160,6 +163,8 @@ class HookRegistry:
                         f"{type(own_decision).__name__}; expected Allow or Deny"
                     )
             self._plugin_names.add(manifest.name)
+            self._plugin_order.append(manifest.name)
+            self._plugin_versions[manifest.name] = manifest.version
             for hook, handler in manifest.hooks.items():
                 self._add_handler(
                     hook=hook,
@@ -196,6 +201,7 @@ class HookRegistry:
         """
         ctx = PluginContext(
             plugin_name="core",
+            plugin_version="0.0.0",
             capabilities=capabilities or frozenset(),
             core_apis=self._core_apis,
         )
@@ -307,6 +313,12 @@ class HookRegistry:
 
     def registered_plugins(self) -> frozenset[str]:
         return frozenset(self._plugin_names)
+
+    def plugin_registration_order(self) -> tuple[str, ...]:
+        return tuple(self._plugin_order)
+
+    def plugin_versions(self) -> dict[str, str]:
+        return dict(self._plugin_versions)
 
     def freeze(self) -> None:
         """Reject subsequent startup-time mutations.

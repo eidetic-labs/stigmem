@@ -61,6 +61,7 @@ class Migration:
     migration_id: int
     sql: str
     description: str
+    plugin_version: str = "0.0.0"
     backend: str = "sqlite"
 
 

@@ -22,6 +22,7 @@ from .errors import (
     PluginDependencyError,
     PluginDiscoveryError,
     PluginExecutionError,
+    PluginMigrationError,
     RegistryFrozenError,
     RejectError,
 )
@@ -69,6 +70,7 @@ __all__ = [
     "PluginDependencyError",
     "PluginDiscoveryError",
     "PluginExecutionError",
+    "PluginMigrationError",
     "RegistryFrozenError",
     "PluginManifest",
     "RejectError",

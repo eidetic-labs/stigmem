@@ -23,6 +23,10 @@ class PluginDependencyError(RuntimeError):
     """Raised when discovered plugin dependencies cannot be resolved."""
 
 
+class PluginMigrationError(RuntimeError):
+    """Raised when plugin migration lifecycle checks fail."""
+
+
 class RegistryFrozenError(RuntimeError):
     """Raised when startup-only registry mutation is attempted after freeze."""
 

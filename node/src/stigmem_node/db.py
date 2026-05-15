@@ -17,6 +17,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from .plugin_migrations import apply_registered_plugin_migrations
 from .plugins import Migration, get_registry
 from .settings import settings as settings
 from .storage import make_backend
@@ -42,22 +43,29 @@ def apply_migrations(db_path: str | None = None) -> None:
     When *db_path* is given, always uses SQLite at that path (backward-compat
     for CLI tools and test fixtures).  When omitted, honours ``settings``.
     """
-    make_backend(db_path=db_path, _settings=settings).apply_migrations(_MIGRATIONS_DIR)
-    get_registry().fire_filter_chain(
+    registry = get_registry()
+    backend = make_backend(db_path=db_path, _settings=settings)
+    backend.apply_migrations(_MIGRATIONS_DIR)
+    migrations: list[Migration] = registry.fire_filter_chain(
         "migration_register",
         [],
         db_path=db_path,
         migrations_dir=_MIGRATIONS_DIR,
         settings=settings,
     )
+    apply_registered_plugin_migrations(
+        backend,
+        migrations,
+        plugin_order=registry.plugin_registration_order(),
+        plugin_versions=registry.plugin_versions(),
+    )
 
 
 def collect_registered_plugin_migrations(db_path: str | None = None) -> list[Migration]:
     """Collect plugin-declared migrations without applying them.
 
-    PR 4-INF.1 wires the typed hook surface only. Package discovery, dependency
-    graph resolution, downgrade checks, and plugin migration application are
-    follow-up lifecycle work.
+    This helper is intentionally read-only. ``apply_migrations()`` owns the
+    checksum/downgrade checks and application lifecycle.
     """
     return get_registry().fire_filter_chain(
         "migration_register",

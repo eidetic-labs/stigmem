@@ -104,6 +104,14 @@ const sidebars = {
             'concepts/federation/relay-backpressure',
           ],
         },
+        {
+          type: 'category',
+          label: 'Plugins',
+          collapsed: true,
+          items: [
+            'guides/plugins/author-guide',
+          ],
+        },
       ],
     },
     {

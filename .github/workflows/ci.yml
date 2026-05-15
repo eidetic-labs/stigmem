@@ -127,6 +127,8 @@ jobs:
             security_evidence:
               - '.github/workflows/ci.yml'
               - 'scripts/validate_security_evidence.py'
+              - 'scripts/check_security_documentation.py'
+              - 'experimental/**/security.md'
               - 'spec/security/evidence-registry.json'
               - 'spec/security/threat-model.md'
               - 'CONTRIBUTING.md'
@@ -498,7 +500,7 @@ jobs:
         run: python docs/scripts/check_drift.py
 
   security-evidence:
-    name: Security evidence registry
+    name: Security documentation registry
     needs: detect-changes
     if: needs.detect-changes.outputs.security_evidence == 'true'
     runs-on: ubuntu-latest
@@ -512,6 +514,9 @@ jobs:
 
       - name: Validate security evidence registry
         run: python scripts/validate_security_evidence.py
+
+      - name: Validate colocated security docs
+        run: python scripts/check_security_documentation.py
 
   container-smoke:
     name: Container hardening smoke test

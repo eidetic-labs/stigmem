@@ -7,7 +7,7 @@
 
 **Status:** Dormant
 **Active version:** v0.9.0a1 (last tested against)
-**Last updated:** 2026-05-09
+**Last updated:** 2026-05-15
 **Owner:** unowned
 **Buildable:** unknown — pending PR 3 verification sweep
 
@@ -27,7 +27,7 @@ Per ADR-002, v0.9.0a1's default install matches the v1 critical-path scope. This
 
 | Gate | Description | Status | Date | Artifact |
 |---|---|---|---|---|
-| 1 | Threat-model delta | Open | — | `spec/security/deltas/memory-garden-acl-threat-model.md` |
+| 1 | Threat-model delta | Open | 2026-05-15 | [`security.md`](security.md) |
 | 2 | ADR | Open | — | `docs/adr/NNN-memory-garden-acl.md` |
 | 3 | Conformance vectors | Open | — | `data/conformance/memory-garden-acl/` |
 | 4 | 30-day external operator soak | Open | — | LOG.md entry |
@@ -41,3 +41,4 @@ Per ADR-002, v0.9.0a1's default install matches the v1 critical-path scope. This
 - [`docs/docs/reference/experimental-features.md`](../../docs/docs/reference/experimental-features.md) — public-facing experimental index.
 - [ADR-008](../../docs/adr/008-experimental-gates.md) — re-introduction gates.
 - [ADR-009](../../docs/adr/009-repo-structure.md) — repo structure.
+- [`security.md`](security.md) — ADR-018 colocated security analysis and R-21 contribution note.

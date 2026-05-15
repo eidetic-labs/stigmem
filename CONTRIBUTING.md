@@ -61,6 +61,27 @@ The validator checks that every threat-model `Mitigated` risk is registered, tha
 required fields are present, and that listed paths still exist. It does not
 decide whether the evidence is good enough; reviewers still own that judgment.
 
+## Experimental feature security docs
+
+Per ADR-018, experimental features keep feature-owned security analysis beside
+the feature at `experimental/<feature>/security.md`. Use this file for Gate 1
+threat-model deltas, owned R-XX risks, contributed risks, operator scenarios,
+conformance pointers, reintroduction gates, and cross-references back to the
+unified threat model.
+
+Cross-cutting protocol risks stay in
+[`spec/security/threat-model.md`](spec/security/threat-model.md). A
+per-feature risk should have exactly one owning feature; contributing features
+carry short notes that link back to the canonical entry.
+
+Run both validators before opening a PR that changes threat-model or feature
+security content:
+
+```bash
+python scripts/validate_security_evidence.py
+python scripts/check_security_documentation.py
+```
+
 **Adding a new test vector:**
 
 1. Open (or create) a numbered file in `data/conformance/v1.0/` (e.g., `06_new_feature.json`). The runner loads all files matching `0*.json` in sorted order.

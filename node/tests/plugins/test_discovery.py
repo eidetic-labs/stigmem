@@ -133,7 +133,7 @@ def test_discover_plugin_manifests_rejects_non_manifest_return(
 ) -> None:
     _set_entry_points(
         monkeypatch,
-        _EntryPoint(name="bad-entry", value="pkg:create", loaded=lambda: object()),
+        _EntryPoint(name="bad-entry", value="pkg:create", loaded=object),
     )
 
     with pytest.raises(PluginDiscoveryError, match="bad-entry.*expected PluginManifest"):

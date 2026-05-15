@@ -85,7 +85,7 @@ def test_register_discovered_plugins_orders_registers_and_freezes(
         lambda: (_discovered(addon), _discovered(base)),
     )
 
-    registered = lifecycle.register_discovered_plugins(registry=registry)
+    registered = lifecycle.register_discovered_plugins(registry=registry, signing_required=False)
 
     assert [plugin.manifest.name for plugin in registered] == ["base-plugin", "addon-plugin"]
     assert registry.registered_plugins() == frozenset({"base-plugin", "addon-plugin"})
@@ -103,6 +103,7 @@ def test_register_discovered_plugins_orders_registers_and_freezes(
 
 def test_register_discovered_plugins_emits_discovery_audit_payload(
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     events: list[AuditEvent] = []
 
@@ -120,8 +121,9 @@ def test_register_discovered_plugins_emits_discovery_audit_payload(
     registry = HookRegistry()
     registry.register_core_handler("audit_emit", capture, name="core.001.audit")
     monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (_discovered(manifest),))
+    caplog.set_level("WARNING", logger="stigmem.plugins.lifecycle")
 
-    lifecycle.register_discovered_plugins(registry=registry, freeze=False)
+    lifecycle.register_discovered_plugins(registry=registry, freeze=False, signing_required=False)
 
     assert [event.event_type for event in events] == ["plugin.registered"]
     metadata = events[0].metadata
@@ -130,6 +132,9 @@ def test_register_discovered_plugins_emits_discovery_audit_payload(
     assert metadata["capabilities"] == ["audit.emit", "facts.read"]
     assert metadata["hooks"] == ["pre_assert_authorize"]
     assert metadata["signed_by"] == "unsigned"
+    assert metadata["signing"]["trust_decision"] == "development_unsigned_override"
+    assert registry.development_unsigned_plugins() == ("audited-plugin",)
+    assert "STIGMEM_PLUGIN_SIGNING_REQUIRED=false" in caplog.text
     assert metadata["discovery_source"] == {
         "type": "python_entry_point",
         "entry_point_name": "audited-plugin",
@@ -156,7 +161,7 @@ def test_register_discovered_plugins_preserves_capability_gated_context(
     registry = HookRegistry(core_apis=CoreApis(audit_emitter=audit_emitter))
     monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (_discovered(manifest),))
 
-    lifecycle.register_discovered_plugins(registry=registry, freeze=False)
+    lifecycle.register_discovered_plugins(registry=registry, freeze=False, signing_required=False)
 
     assert isinstance(registry.fire_voting("pre_assert_authorize"), Allow)
     ctx = captured_contexts[0]
@@ -307,7 +312,7 @@ def test_register_discovered_plugins_fails_closed_on_duplicate_registration(
     monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (_discovered(manifest),))
 
     with pytest.raises(ManifestError, match="already registered"):
-        lifecycle.register_discovered_plugins(registry=registry)
+        lifecycle.register_discovered_plugins(registry=registry, signing_required=False)
 
 
 def test_register_discovered_plugins_emits_failure_audit_payload(
@@ -326,7 +331,7 @@ def test_register_discovered_plugins_emits_failure_audit_payload(
     monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (_discovered(manifest),))
 
     with pytest.raises(ManifestError, match="already registered"):
-        lifecycle.register_discovered_plugins(registry=registry)
+        lifecycle.register_discovered_plugins(registry=registry, signing_required=False)
 
     assert [event.event_type for event in events] == ["plugin.registration_failed"]
     metadata = events[0].metadata
@@ -348,7 +353,7 @@ def test_register_discovered_plugins_fails_closed_on_registration_error(
     monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (_discovered(manifest),))
 
     with pytest.raises(ManifestError, match="must accept at least 1 positional argument"):
-        lifecycle.register_discovered_plugins(registry=registry)
+        lifecycle.register_discovered_plugins(registry=registry, signing_required=False)
 
     assert registry.registered_plugins() == frozenset()
     registry.register_plugin(_manifest("good-plugin", {}))

@@ -54,6 +54,7 @@ from .signing import (
     PluginSignatureVerifier,
     PluginSigningInfo,
     PluginTrustPolicy,
+    allow_unsigned_development_override,
     require_verified_signature,
 )
 
@@ -97,6 +98,7 @@ __all__ = [
     "Success",
     "TenantContext",
     "VotingDecision",
+    "allow_unsigned_development_override",
     "discover_plugin_manifests",
     "get_registry",
     "handler_timeout",

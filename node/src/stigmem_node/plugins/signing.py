@@ -49,6 +49,19 @@ class PluginSigningInfo:
 PluginSignatureVerifier = Callable[[DiscoveredPlugin], PluginSigningInfo]
 
 
+def allow_unsigned_development_override(plugin: DiscoveredPlugin) -> PluginSigningInfo:
+    """Return explicit development override metadata for an unsigned plugin."""
+
+    return PluginSigningInfo(
+        signing_identity=plugin.signing_identity,
+        trust_decision="development_unsigned_override",
+        trust_reason=(
+            "STIGMEM_PLUGIN_SIGNING_REQUIRED=false accepted an unsigned plugin; "
+            "do not use this setting in production"
+        ),
+    )
+
+
 def require_verified_signature(
     plugin: DiscoveredPlugin,
     *,

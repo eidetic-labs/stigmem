@@ -8,7 +8,11 @@ from stigmem_node.settings import settings
 
 from .discovery import DiscoveredPlugin, discover_plugin_manifests, resolve_plugin_dependencies
 from .registry import HookRegistry, get_registry
-from .signing import PluginSignatureVerifier, require_verified_signature
+from .signing import (
+    PluginSignatureVerifier,
+    allow_unsigned_development_override,
+    require_verified_signature,
+)
 
 logger = logging.getLogger("stigmem.plugins.lifecycle")
 
@@ -43,6 +47,15 @@ def register_discovered_plugins(
             signing_info = signature_verifier(plugin)
             signing_identity = signing_info.signing_identity
             signing_metadata = signing_info.audit_metadata()
+        else:
+            signing_info = allow_unsigned_development_override(plugin)
+            signing_identity = signing_info.signing_identity
+            signing_metadata = signing_info.audit_metadata()
+            logger.warning(
+                "SECURITY WARNING: unsigned plugin %r loaded because "
+                "STIGMEM_PLUGIN_SIGNING_REQUIRED=false; do not use this setting in production",
+                plugin.manifest.name,
+            )
         target.register_plugin(
             plugin.manifest,
             discovery_source=_discovery_source(plugin),

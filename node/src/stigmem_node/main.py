@@ -115,6 +115,23 @@ def create_app() -> FastAPI:
 
     app.add_middleware(RateLimitMiddleware)
 
+    @app.middleware("http")
+    async def unsigned_plugin_override_warning(
+        _request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
+        """Warn every request while development unsigned-plugin override is active."""
+        from .plugins import get_registry
+
+        unsigned_plugins = get_registry().development_unsigned_plugins()
+        if unsigned_plugins:
+            logger.warning(
+                "SECURITY WARNING: unsigned plugins active via "
+                "STIGMEM_PLUGIN_SIGNING_REQUIRED=false: %s",
+                ", ".join(unsigned_plugins),
+            )
+        return await call_next(_request)
+
     if settings.mtls_enabled:
 
         @app.middleware("http")

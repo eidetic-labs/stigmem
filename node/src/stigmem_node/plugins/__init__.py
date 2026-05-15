@@ -50,7 +50,12 @@ from .hooks import HookName, HookOrdering, HookSemantic
 from .lifecycle import register_discovered_plugins
 from .manifest import PluginManifest
 from .registry import HookRegistry, get_registry, register_core_handler, set_registry
-from .signing import PluginSignatureVerifier, PluginSigningInfo, require_verified_signature
+from .signing import (
+    PluginSignatureVerifier,
+    PluginSigningInfo,
+    PluginTrustPolicy,
+    require_verified_signature,
+)
 
 __all__ = [
     "ALLOW_SINGLETON",
@@ -85,6 +90,7 @@ __all__ = [
     "PluginSignatureError",
     "PluginSignatureVerifier",
     "PluginSigningInfo",
+    "PluginTrustPolicy",
     "RegistryFrozenError",
     "PluginManifest",
     "RejectError",

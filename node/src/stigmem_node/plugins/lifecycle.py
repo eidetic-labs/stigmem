@@ -38,12 +38,16 @@ def register_discovered_plugins(
     )
     for plugin in ordered:
         signing_identity = "unsigned"
+        signing_metadata = None
         if require_signatures:
-            signing_identity = signature_verifier(plugin).signing_identity
+            signing_info = signature_verifier(plugin)
+            signing_identity = signing_info.signing_identity
+            signing_metadata = signing_info.audit_metadata()
         target.register_plugin(
             plugin.manifest,
             discovery_source=_discovery_source(plugin),
             signing_identity=signing_identity,
+            signing_metadata=signing_metadata,
         )
     if freeze:
         target.freeze()

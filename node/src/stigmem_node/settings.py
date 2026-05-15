@@ -159,6 +159,13 @@ class Settings(BaseSettings):
     # before registration. Kept off by default during alpha while the operator
     # trust-policy surface lands in the follow-on PR 4-INF.3 slices.
     plugin_signing_required: bool = False
+    # Comma-separated Sigstore signing identities accepted for production plugin
+    # registration when plugin_signing_required=true.
+    plugin_trusted_publishers: str = ""
+    # Comma-separated signing identities accepted through explicit operator
+    # override. Overrides remain audit-visible and are not a substitute for the
+    # trusted-publisher allowlist.
+    plugin_trust_override_publishers: str = ""
 
     # Transparency log backend (§19.2.3):
     #   "local"  — append-only JSONL file with hash chain (default, no external deps).

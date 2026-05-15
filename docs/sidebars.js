@@ -207,6 +207,14 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: 'Plugins',
+      collapsed: true,
+      items: [
+        'operators/plugins/management',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Architecture',
       collapsed: true,
       items: [

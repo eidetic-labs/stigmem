@@ -2,13 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 
 import { StigmemAuthError } from "@eidetic-labs/stigmem-ts";
 
-import { TOOLS, handleToolCall } from "./server.js";
+import { SYSTEM_PROMPT_DIRECTIVE, TOOLS, handleToolCall } from "./server.js";
 
 describe("TOOLS", () => {
   it("exposes the expected MCP tool names", () => {
     expect(TOOLS.map((tool) => tool.name)).toEqual([
       "assert_fact",
       "query_facts",
+      "recall",
       "resolve_contradiction",
       "subscribe_scope",
       "lint_scope",
@@ -32,6 +33,7 @@ describe("handleToolCall", () => {
   const client = {
     assertFact: vi.fn(),
     query: vi.fn(),
+    recall: vi.fn(),
     resolveConflict: vi.fn(),
     lint: vi.fn(),
   };
@@ -102,6 +104,67 @@ describe("handleToolCall", () => {
       findings: [],
       summary: { total: 0 },
     });
+  });
+
+  it("returns recall content and instructions as separate channels", async () => {
+    const contentFact = { fact: { id: "content-1" }, score: 0.9 };
+    const instructionFact = { fact: { id: "instruction-1" }, score: 0.8 };
+    client.recall.mockResolvedValueOnce({
+      recall_id: "recall-001",
+      query_hash: "hash-001",
+      facts: [contentFact],
+      content: [contentFact],
+      instructions: [instructionFact],
+      total_scored: 2,
+      token_budget: 1000,
+      tokens_used: 25,
+      truncated: false,
+    });
+
+    const result = await handleToolCall(client, "recall", {
+      query: "project status",
+      scope: "local",
+      token_budget: 1000,
+      depth: 1,
+      include_neighbors: false,
+      limit: 10,
+      weights: "{\"lexical\":1}",
+    });
+
+    expect(client.recall).toHaveBeenCalledWith("project status", {
+      scope: "local",
+      token_budget: 1000,
+      depth: 1,
+      weights: { lexical: 1 },
+      min_confidence: undefined,
+      include_neighbors: false,
+      limit: 10,
+    });
+    const payload = JSON.parse(result.content[0].text);
+    expect(payload.content).toEqual([contentFact]);
+    expect(payload.instructions).toEqual([instructionFact]);
+    expect(payload.system_prompt_directive).toBe(SYSTEM_PROMPT_DIRECTIVE);
+  });
+
+  it("falls back to facts as content for legacy recall responses", async () => {
+    const fact = { fact: { id: "legacy-content" }, score: 0.7 };
+    client.recall.mockResolvedValueOnce({
+      recall_id: "recall-legacy",
+      query_hash: "hash-legacy",
+      facts: [fact],
+      total_scored: 1,
+      token_budget: 1000,
+      tokens_used: 12,
+      truncated: false,
+    });
+
+    const result = await handleToolCall(client, "recall", {
+      query: "legacy server",
+    });
+
+    const payload = JSON.parse(result.content[0].text);
+    expect(payload.content).toEqual([fact]);
+    expect(payload.instructions).toEqual([]);
   });
 
   it("returns MCP-friendly error text for SDK exceptions", async () => {

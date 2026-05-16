@@ -44,7 +44,7 @@ The canonical integration model is:
                    heartbeat        heartbeat
                          │               │
                          └──── MCP ──────┘
-                            (5 tools via stdio)
+                            (6 tools via stdio)
 ```
 
 Every agent in the Paperclip company points to the same `STIGMEM_URL`. Federation keeps

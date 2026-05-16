@@ -242,6 +242,8 @@ export interface RecallResponse {
   recall_id:    string;
   query_hash:   string;
   facts:        ScoredFact[];
+  content?:      ScoredFact[];
+  instructions?: ScoredFact[];
   total_scored: number;
   token_budget: number;
   tokens_used:  number;

@@ -60,7 +60,7 @@ bash stigmem/adapters/mcp/tests/smoke.sh
 The script (source: `tests/smoke.sh`) does:
 1. Starts the MCP server over stdio
 2. MCP `initialize` handshake
-3. `tools/list` — confirms all 5 tools are present
+3. `tools/list` — confirms all 6 tools are present
 4. `tools/call assert_fact` — writes a test fact to the node
 5. `tools/call query_facts` — reads it back and asserts the value
 

@@ -136,14 +136,14 @@ def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
 
     mock_cls, mock_inst = _patched_http_mock()
     barrier = threading.Barrier(8)
-    worker_errors: list[BaseException] = []
+    worker_errors: list[Exception] = []
     worker_errors_lock = threading.Lock()
 
     def worker() -> None:
         try:
             barrier.wait()  # release all threads simultaneously
             deliver_pending()
-        except BaseException as exc:
+        except Exception as exc:
             with worker_errors_lock:
                 worker_errors.append(exc)
 

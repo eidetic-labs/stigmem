@@ -23,13 +23,54 @@ import asyncio
 import threading
 from collections import Counter
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import MagicMock, call, patch
 
 from fastapi.testclient import TestClient
 
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_mod
 from stigmem_node.subscription_delivery import deliver_pending, sweep_loop
+
+
+class _ThreadSafePost:
+    """Minimal thread-safe stand-in for ``Mock.post`` call recording."""
+
+    def __init__(self, response: Any) -> None:
+        self.return_value = response
+        self.call_args_list: list[Any] = []
+        self._lock = threading.Lock()
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        with self._lock:
+            self.call_args_list.append(call(*args, **kwargs))
+        return self.return_value
+
+    @property
+    def call_count(self) -> int:
+        with self._lock:
+            return len(self.call_args_list)
+
+
+class _ThreadSafeHTTPClient:
+    """Shared fake ``httpx.Client`` whose POST log is safe under thread races."""
+
+    def __init__(self, response: Any) -> None:
+        self.post = _ThreadSafePost(response)
+
+    def __enter__(self) -> _ThreadSafeHTTPClient:
+        return self
+
+    def __exit__(self, *_exc_info: object) -> bool:
+        return False
+
+
+class _ThreadSafeHTTPClientFactory:
+    def __init__(self, client: _ThreadSafeHTTPClient) -> None:
+        self._client = client
+
+    def __call__(self, *_args: object, **_kwargs: object) -> _ThreadSafeHTTPClient:
+        return self._client
 
 
 def _make_subscription(client: TestClient) -> str:
@@ -60,17 +101,13 @@ def _insert_facts(client: TestClient, n: int) -> None:
         assert resp.status_code == 201, resp.text
 
 
-def _patched_http_mock() -> tuple[MagicMock, MagicMock]:
+def _patched_http_mock() -> tuple[_ThreadSafeHTTPClientFactory, _ThreadSafeHTTPClient]:
     """Return (mock_class, mock_instance) wired for use with patch()."""
     mock_resp = MagicMock()
     mock_resp.status_code = 200
 
-    mock_inst = MagicMock()
-    mock_inst.__enter__ = MagicMock(return_value=mock_inst)
-    mock_inst.__exit__ = MagicMock(return_value=False)
-    mock_inst.post.return_value = mock_resp
-
-    mock_cls = MagicMock(return_value=mock_inst)
+    mock_inst = _ThreadSafeHTTPClient(mock_resp)
+    mock_cls = _ThreadSafeHTTPClientFactory(mock_inst)
     return mock_cls, mock_inst
 
 
@@ -99,10 +136,16 @@ def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
 
     mock_cls, mock_inst = _patched_http_mock()
     barrier = threading.Barrier(8)
+    worker_errors: list[Exception] = []
+    worker_errors_lock = threading.Lock()
 
     def worker() -> None:
-        barrier.wait()  # release all threads simultaneously
-        deliver_pending()
+        try:
+            barrier.wait()  # release all threads simultaneously
+            deliver_pending()
+        except Exception as exc:
+            with worker_errors_lock:
+                worker_errors.append(exc)
 
     with (
         patch("stigmem_node.subscription_delivery.httpx.Client", mock_cls),
@@ -116,6 +159,8 @@ def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
             t.start()
         for t in threads:
             t.join()
+
+        assert worker_errors == []
 
         # Snapshot POSTs before the drain; the drain must not introduce
         # duplicates either, but the *race property* is fully captured here.

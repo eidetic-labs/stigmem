@@ -10,6 +10,7 @@ without installing any SDK.
 |---|---|
 | `assert_fact` | Write a typed fact to the node |
 | `query_facts` | Query facts by entity / relation / scope |
+| `recall` | Retrieve channel-separated recall context |
 | `resolve_contradiction` | Resolve a contradiction between two conflicting facts |
 | `subscribe_scope` | Poll for recent facts in a scope (single-shot, cursor-based) |
 | `lint_scope` | Health-check sweep — detect contradictions, stale facts, orphans, broken refs (read-only; `Spec-20-Lint-Semantics`) |
@@ -70,6 +71,9 @@ assert_fact(
 # Query all active project constraints
 query_facts(entity="project:acme-platform", relation="roadmap:constraint")
 
+# Recall context for a project question
+recall(query="What is blocking the launch?", scope="local", token_budget=1000)
+
 # Poll for recent public facts
 subscribe_scope(scope="public")
 
@@ -89,6 +93,10 @@ resolve_contradiction(
   `(entity, relation, scope)`. To retract, call `assert_fact` with `confidence=0.0`.
 - Scope filtering: `local` facts never leave the node. `public` facts are federatable.
   See `Spec-02-Scopes-and-ACL` for the full scope semantics.
+- `recall` returns `content` and `instructions` arrays as separate channels, plus
+  `system_prompt_directive`. MCP hosts must keep those channels distinct and place
+  the directive above recalled content instead of concatenating recalled data into
+  higher-priority prompts.
 
 ## Architecture
 

@@ -121,7 +121,7 @@ import sys, json
 d = json.load(sys.stdin)
 assert d.get('id') == 2, f'expected id=2'
 tools = {t['name'] for t in d['result']['tools']}
-expected = {'assert_fact', 'query_facts', 'resolve_contradiction', 'subscribe_scope', 'lint_scope'}
+expected = {'assert_fact', 'query_facts', 'recall', 'resolve_contradiction', 'subscribe_scope', 'lint_scope'}
 missing = expected - tools
 assert not missing, f'missing tools: {missing}'
 print(f'found {len(tools)} tools: {sorted(tools)}')

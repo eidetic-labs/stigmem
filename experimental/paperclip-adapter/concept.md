@@ -64,12 +64,13 @@ that starts at login and restarts on crash. See the
 
 ## Available tools
 
-The MCP server exposes five tools:
+The MCP server exposes six tools:
 
 | Tool | Purpose |
 |------|---------|
 | `assert_fact` | Write a typed fact to the Stigmem node |
 | `query_facts` | Query facts by entity, relation, scope, or confidence |
+| `recall` | Retrieve channel-separated recall context |
 | `resolve_contradiction` | Resolve a detected conflict between two facts |
 | `subscribe_scope` | Poll for recent facts in a scope (cursor-paginated) |
 | `lint_scope` | Sweep a scope for health issues: contradictions, stale facts, orphans, broken refs |

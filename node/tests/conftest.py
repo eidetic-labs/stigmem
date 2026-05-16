@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import base64
 import contextlib
+import importlib
 import json
 import logging
 import sqlite3
+import sys
 import time
 import uuid
 from collections.abc import Generator
@@ -28,6 +30,8 @@ import stigmem_node.db as db_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.main import create_app
+from stigmem_node.plugins.manifest import PluginManifest
+from stigmem_node.plugins.testing import stigmem_plugins
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +41,9 @@ Settings = settings_module.Settings
 
 # Path to migrations/ directory — used when building libSQL test databases.
 _MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
+_TIME_TRAVEL_PLUGIN_SRC = (
+    Path(__file__).resolve().parents[2] / "experimental" / "time-travel" / "src"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -285,6 +292,30 @@ def client(tmp_db: str, backend: str, encrypt: str) -> Generator[TestClient, Non
     app = create_app()
     with TestClient(app, raise_server_exceptions=True) as c:
         yield c
+    _restore_settings(original, extra)
+
+
+def _time_travel_plugin_manifest() -> PluginManifest:
+    if str(_TIME_TRAVEL_PLUGIN_SRC) not in sys.path:
+        sys.path.insert(0, str(_TIME_TRAVEL_PLUGIN_SRC))
+    plugin = importlib.import_module("stigmem_plugin_time_travel")
+    return plugin.plugin_manifest()
+
+
+@pytest.fixture()
+def time_travel_client(
+    tmp_db: str, backend: str, encrypt: str
+) -> Generator[TestClient, None, None]:
+    """TestClient with the experimental time-travel plugin registered."""
+    original = settings_module.settings
+    test_settings = _make_enc_settings(
+        tmp_db, backend, encrypt, auth_required=False, node_url="http://testnode"
+    )
+    extra = _patch_settings(test_settings)
+    with stigmem_plugins([_time_travel_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            yield c
     _restore_settings(original, extra)
 
 

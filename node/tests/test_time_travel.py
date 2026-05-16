@@ -6,6 +6,7 @@ import sqlite3
 import uuid
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 
 # ---------------------------------------------------------------------------
@@ -20,6 +21,12 @@ FACT = {
     "confidence": 1.0,
     "scope": "local",
 }
+
+
+@pytest.fixture()
+def client(time_travel_client: TestClient) -> TestClient:
+    """Run legacy time-travel behavior tests with the plugin registered."""
+    return time_travel_client
 
 
 def _iso(dt: datetime) -> str:
@@ -195,11 +202,17 @@ class TestQueryFactsAsOf:
         self, tmp_db: str, backend: str, encrypt: str
     ) -> None:
         """legal_hold=true tombstone: admin caller sees facts with tombstone_notices (§24.3.3)."""
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+        from conftest import (
+            _make_enc_settings,
+            _patch_settings,
+            _restore_settings,
+            _time_travel_plugin_manifest,
+        )
 
         import stigmem_node.settings as settings_module
         from stigmem_node.auth import create_api_key
         from stigmem_node.main import create_app
+        from stigmem_node.plugins.testing import stigmem_plugins
 
         original = settings_module.settings
         test_settings = _make_enc_settings(
@@ -207,29 +220,32 @@ class TestQueryFactsAsOf:
         )
         extra = _patch_settings(test_settings)
         admin_key = create_api_key("agent:admin", ["read", "write", "admin"])
-        app = create_app()
 
         try:
-            with TestClient(app, raise_server_exceptions=True) as c:
-                headers = {"Authorization": f"Bearer {admin_key}"}
+            with stigmem_plugins([_time_travel_plugin_manifest()]):
+                app = create_app()
+                with TestClient(app, raise_server_exceptions=True) as c:
+                    headers = {"Authorization": f"Bearer {admin_key}"}
 
-                r = c.post("/v1/facts", json=FACT, headers=headers)
-                assert r.status_code == 201
+                    r = c.post("/v1/facts", json=FACT, headers=headers)
+                    assert r.status_code == 201
 
-                _insert_tombstone(tmp_db, "user:alice", scope="*", legal_hold=True)
+                    _insert_tombstone(tmp_db, "user:alice", scope="*", legal_hold=True)
 
-                r2 = c.get(
-                    "/v1/facts",
-                    params={"as_of": _now(), "entity": "user:alice"},
-                    headers=headers,
-                )
-                assert r2.status_code == 200
-                body = r2.json()
-                assert len(body["facts"]) >= 1, "Admin must see legal_hold facts"
-                assert len(body["tombstone_notices"]) >= 1, "tombstone_notices must be populated"
-                notice = body["tombstone_notices"][0]
-                assert notice["entity_uri"] == "user:alice"
-                assert notice["legal_hold"] is True
+                    r2 = c.get(
+                        "/v1/facts",
+                        params={"as_of": _now(), "entity": "user:alice"},
+                        headers=headers,
+                    )
+                    assert r2.status_code == 200
+                    body = r2.json()
+                    assert len(body["facts"]) >= 1, "Admin must see legal_hold facts"
+                    assert len(body["tombstone_notices"]) >= 1, (
+                        "tombstone_notices must be populated"
+                    )
+                    notice = body["tombstone_notices"][0]
+                    assert notice["entity_uri"] == "user:alice"
+                    assert notice["legal_hold"] is True
         finally:
             _restore_settings(original, extra)
 
@@ -329,11 +345,17 @@ class TestRecallAsOf:
         self, tmp_db: str, backend: str, encrypt: str
     ) -> None:
         """Admin caller gets tombstone_notices for legal_hold entities in recall_as_of."""
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+        from conftest import (
+            _make_enc_settings,
+            _patch_settings,
+            _restore_settings,
+            _time_travel_plugin_manifest,
+        )
 
         import stigmem_node.settings as settings_module
         from stigmem_node.auth import create_api_key
         from stigmem_node.main import create_app
+        from stigmem_node.plugins.testing import stigmem_plugins
 
         original = settings_module.settings
         test_settings = _make_enc_settings(
@@ -341,28 +363,29 @@ class TestRecallAsOf:
         )
         extra = _patch_settings(test_settings)
         admin_key = create_api_key("agent:admin", ["read", "write", "admin"])
-        app = create_app()
 
         try:
-            with TestClient(app, raise_server_exceptions=True) as c:
-                headers = {"Authorization": f"Bearer {admin_key}"}
-                r = c.post("/v1/facts", json=FACT, headers=headers)
-                assert r.status_code == 201
+            with stigmem_plugins([_time_travel_plugin_manifest()]):
+                app = create_app()
+                with TestClient(app, raise_server_exceptions=True) as c:
+                    headers = {"Authorization": f"Bearer {admin_key}"}
+                    r = c.post("/v1/facts", json=FACT, headers=headers)
+                    assert r.status_code == 201
 
-                _insert_tombstone(tmp_db, "user:alice", scope="*", legal_hold=True)
+                    _insert_tombstone(tmp_db, "user:alice", scope="*", legal_hold=True)
 
-                r2 = c.post(
-                    "/v1/recall",
-                    json={"query": "CEO role", "scope": "local", "as_of": _now()},
-                    headers=headers,
-                )
-                assert r2.status_code == 200
-                body = r2.json()
-                assert any(sf["fact"]["entity"] == "user:alice" for sf in body["facts"]), (
-                    "Admin must see legal_hold entity facts in recall_as_of"
-                )
-                assert len(body["tombstone_notices"]) >= 1
-                assert body["tombstone_notices"][0]["legal_hold"] is True
+                    r2 = c.post(
+                        "/v1/recall",
+                        json={"query": "CEO role", "scope": "local", "as_of": _now()},
+                        headers=headers,
+                    )
+                    assert r2.status_code == 200
+                    body = r2.json()
+                    assert any(sf["fact"]["entity"] == "user:alice" for sf in body["facts"]), (
+                        "Admin must see legal_hold entity facts in recall_as_of"
+                    )
+                    assert len(body["tombstone_notices"]) >= 1
+                    assert body["tombstone_notices"][0]["legal_hold"] is True
         finally:
             _restore_settings(original, extra)
 

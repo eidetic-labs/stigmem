@@ -28,12 +28,15 @@ Covers spec §24 (time-travel) and §25 (content-addressing):
 from __future__ import annotations
 
 import hashlib
+import importlib
 import json
 import logging
 import sqlite3
+import sys
 import uuid
 from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -44,10 +47,17 @@ import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.cid import compute_cid, is_valid_cid
 from stigmem_node.main import create_app
+from stigmem_node.plugins.testing import stigmem_plugins
 
 apply_migrations = db_mod.apply_migrations
 Settings = settings_module.Settings
 logger = logging.getLogger(__name__)
+_TIME_TRAVEL_PLUGIN_SRC = (
+    Path(__file__).resolve().parents[2]
+    / "experimental"
+    / "time-travel"
+    / "src"
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -118,6 +128,13 @@ def _restore_settings(original: Settings, mods: list) -> None:
             mod.settings = original
 
 
+def _time_travel_plugin_manifest() -> object:
+    if str(_TIME_TRAVEL_PLUGIN_SRC) not in sys.path:
+        sys.path.insert(0, str(_TIME_TRAVEL_PLUGIN_SRC))
+    plugin = importlib.import_module("stigmem_plugin_time_travel")
+    return plugin.plugin_manifest()
+
+
 @pytest.fixture()
 def p13_client(tmp_path) -> Generator[TestClient, None, None]:
     """Unauthenticated TestClient on a fresh Phase-13 migrated DB."""
@@ -129,6 +146,21 @@ def p13_client(tmp_path) -> Generator[TestClient, None, None]:
     app = create_app()
     with TestClient(app, raise_server_exceptions=True) as c:
         yield c
+    _restore_settings(original, mods)
+
+
+@pytest.fixture()
+def p13_time_travel_client(tmp_path) -> Generator[TestClient, None, None]:
+    """Unauthenticated TestClient with the experimental time-travel plugin loaded."""
+    db_file = str(tmp_path / "p13_time_travel.db")
+    apply_migrations(db_path=db_file)
+    original = settings_module.settings
+    ts = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
+    mods = _patch_settings(ts)
+    with stigmem_plugins([_time_travel_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            yield c
     _restore_settings(original, mods)
 
 
@@ -415,19 +447,36 @@ def _ts(offset_seconds: int = 0) -> str:
     return (datetime.now(UTC) + timedelta(seconds=offset_seconds)).isoformat()
 
 
-def test_as_of_basic(p13_client: TestClient):
+def test_as_of_default_install_requires_time_travel_plugin(p13_client: TestClient):
+    r_facts = p13_client.get("/v1/facts", params={"as_of": _ts(-1)})
+    assert r_facts.status_code == 501
+    assert r_facts.json()["detail"]["code"] == "time_travel_plugin_not_loaded"
+
+    r_recall = p13_client.post(
+        "/v1/recall",
+        json={"query": "snapshot content", "scope": "local", "as_of": _ts(-1)},
+    )
+    assert r_recall.status_code == 501
+    assert r_recall.json()["detail"]["code"] == "time_travel_plugin_not_loaded"
+
+
+def test_as_of_basic(p13_time_travel_client: TestClient):
     before = _ts(-2)
-    f = _assert(p13_client, "stigmem://tt/1", "rel:tt", "snap")
+    f = _assert(p13_time_travel_client, "stigmem://tt/1", "rel:tt", "snap")
     after = _ts(2)
 
     # as_of after the fact was written: should see it
-    r = p13_client.get("/v1/facts", params={"as_of": after, "entity": "stigmem://tt/1"})
+    r = p13_time_travel_client.get(
+        "/v1/facts", params={"as_of": after, "entity": "stigmem://tt/1"}
+    )
     assert r.status_code == 200
     ids = [x["id"] for x in r.json()["facts"]]
     assert f["id"] in ids
 
     # as_of before the fact was written: should NOT see it
-    r2 = p13_client.get("/v1/facts", params={"as_of": before, "entity": "stigmem://tt/1"})
+    r2 = p13_time_travel_client.get(
+        "/v1/facts", params={"as_of": before, "entity": "stigmem://tt/1"}
+    )
     assert r2.status_code == 200
     ids2 = [x["id"] for x in r2.json()["facts"]]
     assert f["id"] not in ids2
@@ -440,65 +489,73 @@ def test_as_of_retracted_fact_excluded(tmp_path):
     original = settings_module.settings
     ts = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
     mods = _patch_settings(ts)
-    app = create_app()
-    with TestClient(app, raise_server_exceptions=True) as c:
-        f = _assert(c, "stigmem://tt/ret1", "rel:retract", "will_be_retracted")
+    with stigmem_plugins([_time_travel_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            f = _assert(c, "stigmem://tt/ret1", "rel:retract", "will_be_retracted")
 
-        # Back-date the fact so it was "written" 10 seconds ago
-        fact_ts = _ts(-10)
-        retract_at = _ts(-5)  # retracted 5 seconds ago
-        before = _ts(-7)  # 7 seconds ago: fact existed, no retraction yet
-        after_retract = _ts(-3)  # 3 seconds ago: retraction already applied
+            # Back-date the fact so it was "written" 10 seconds ago
+            fact_ts = _ts(-10)
+            retract_at = _ts(-5)  # retracted 5 seconds ago
+            before = _ts(-7)  # 7 seconds ago: fact existed, no retraction yet
+            after_retract = _ts(-3)  # 3 seconds ago: retraction already applied
 
-        conn = sqlite3.connect(db_file)
-        conn.execute("UPDATE facts SET timestamp = ? WHERE id = ?", (fact_ts, f["id"]))
-        conn.execute(
-            "INSERT INTO fact_retractions (id, fact_id, retracted_by, retracted_at)"
-            " VALUES (?, ?, ?, ?)",
-            (str(uuid.uuid4()), f["id"], "agent:test", retract_at),
-        )
-        conn.commit()
-        conn.close()
+            conn = sqlite3.connect(db_file)
+            conn.execute("UPDATE facts SET timestamp = ? WHERE id = ?", (fact_ts, f["id"]))
+            conn.execute(
+                "INSERT INTO fact_retractions (id, fact_id, retracted_by, retracted_at)"
+                " VALUES (?, ?, ?, ?)",
+                (str(uuid.uuid4()), f["id"], "agent:test", retract_at),
+            )
+            conn.commit()
+            conn.close()
 
-        # as_of before retraction: visible (fact existed at -7s, retracted at -5s)
-        r_before = c.get("/v1/facts", params={"as_of": before, "entity": "stigmem://tt/ret1"})
-        assert r_before.status_code == 200
-        ids_before = [x["id"] for x in r_before.json()["facts"]]
-        assert f["id"] in ids_before
+            # as_of before retraction: visible (fact existed at -7s, retracted at -5s)
+            r_before = c.get(
+                "/v1/facts", params={"as_of": before, "entity": "stigmem://tt/ret1"}
+            )
+            assert r_before.status_code == 200
+            ids_before = [x["id"] for x in r_before.json()["facts"]]
+            assert f["id"] in ids_before
 
-        # as_of after retraction: suppressed (retraction applied at -5s)
-        r_after = c.get("/v1/facts", params={"as_of": after_retract, "entity": "stigmem://tt/ret1"})
-        assert r_after.status_code == 200
-        ids_after = [x["id"] for x in r_after.json()["facts"]]
-        assert f["id"] not in ids_after
+            # as_of after retraction: suppressed (retraction applied at -5s)
+            r_after = c.get(
+                "/v1/facts",
+                params={"as_of": after_retract, "entity": "stigmem://tt/ret1"},
+            )
+            assert r_after.status_code == 200
+            ids_after = [x["id"] for x in r_after.json()["facts"]]
+            assert f["id"] not in ids_after
 
     _restore_settings(original, mods)
 
 
-def test_as_of_expired_fact_excluded(p13_client: TestClient):
+def test_as_of_expired_fact_excluded(p13_time_travel_client: TestClient):
     valid_until = _ts(-1)  # already expired
     f = _assert(
-        p13_client,
+        p13_time_travel_client,
         "stigmem://tt/exp1",
         "rel:expires",
         "ephemeral",
         valid_until=valid_until,
     )
-    r = p13_client.get("/v1/facts", params={"as_of": _ts(0), "entity": "stigmem://tt/exp1"})
+    r = p13_time_travel_client.get(
+        "/v1/facts", params={"as_of": _ts(0), "entity": "stigmem://tt/exp1"}
+    )
     assert r.status_code == 200
     ids = [x["id"] for x in r.json()["facts"]]
     assert f["id"] not in ids
 
 
-def test_as_of_future_rejected(p13_client: TestClient):
+def test_as_of_future_rejected(p13_time_travel_client: TestClient):
     future = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
-    r = p13_client.get("/v1/facts", params={"as_of": future})
+    r = p13_time_travel_client.get("/v1/facts", params={"as_of": future})
     assert r.status_code == 400
     assert "as_of_future" in r.text or "future" in r.text.lower()
 
 
-def test_as_of_invalid_ts_rejected(p13_client: TestClient):
-    r = p13_client.get("/v1/facts", params={"as_of": "not-a-date"})
+def test_as_of_invalid_ts_rejected(p13_time_travel_client: TestClient):
+    r = p13_time_travel_client.get("/v1/facts", params={"as_of": "not-a-date"})
     assert r.status_code == 400
 
 
@@ -521,36 +578,36 @@ def test_as_of_tombstone_retroactive_suppression(tmp_path):
     mods = _patch_settings(ts_settings)
     admin_key = auth_mod.create_api_key("agent:admin", ["read", "write", "federate", "admin"])
     agent_key = auth_mod.create_api_key("agent:user", ["read", "write"])
-    app = create_app()
+    with stigmem_plugins([_time_travel_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            pre_fact = (datetime.now(UTC) - timedelta(seconds=5)).isoformat()
+            f = _assert(
+                c, "stigmem://rtbf/user1", "rel:name", "Alice", scope="local", api_key=agent_key
+            )
+            # Override: direct DB insert to set timestamp in the past
+            conn = sqlite3.connect(db_file)
+            conn.execute("UPDATE facts SET timestamp = ? WHERE id = ?", (pre_fact, f["id"]))
+            conn.commit()
+            conn.close()
 
-    with TestClient(app, raise_server_exceptions=True) as c:
-        pre_fact = (datetime.now(UTC) - timedelta(seconds=5)).isoformat()
-        f = _assert(
-            c, "stigmem://rtbf/user1", "rel:name", "Alice", scope="local", api_key=agent_key
-        )
-        # Override: direct DB insert to set timestamp in the past
-        conn = sqlite3.connect(db_file)
-        conn.execute("UPDATE facts SET timestamp = ? WHERE id = ?", (pre_fact, f["id"]))
-        conn.commit()
-        conn.close()
+            # Issue tombstone via admin key
+            r_tomb = c.post(
+                "/v1/tombstones",
+                json={"entity_uri": "stigmem://rtbf/user1", "scope": "*", "reason": "RTBF test"},
+                headers={"Authorization": f"Bearer {admin_key}"},
+            )
+            assert r_tomb.status_code == 201, r_tomb.text
 
-        # Issue tombstone via admin key
-        r_tomb = c.post(
-            "/v1/tombstones",
-            json={"entity_uri": "stigmem://rtbf/user1", "scope": "*", "reason": "RTBF test"},
-            headers={"Authorization": f"Bearer {admin_key}"},
-        )
-        assert r_tomb.status_code == 201, r_tomb.text
-
-        # as_of BEFORE tombstone was created should still suppress the fact
-        very_early = (datetime.now(UTC) - timedelta(seconds=10)).isoformat()
-        r = c.get(
-            "/v1/facts",
-            params={"as_of": very_early, "entity": "stigmem://rtbf/user1"},
-            headers={"Authorization": f"Bearer {agent_key}"},
-        )
-        assert r.status_code == 200
-        assert r.json()["facts"] == []
+            # as_of BEFORE tombstone was created should still suppress the fact
+            very_early = (datetime.now(UTC) - timedelta(seconds=10)).isoformat()
+            r = c.get(
+                "/v1/facts",
+                params={"as_of": very_early, "entity": "stigmem://rtbf/user1"},
+                headers={"Authorization": f"Bearer {agent_key}"},
+            )
+            assert r.status_code == 200
+            assert r.json()["facts"] == []
 
     _restore_settings(original, mods)
 
@@ -568,37 +625,42 @@ def test_as_of_legal_hold_admin_sees_notice(tmp_path):
     )
     mods = _patch_settings(ts_settings)
     admin_key = auth_mod.create_api_key("agent:admin", ["read", "write", "federate", "admin"])
-    app = create_app()
+    with stigmem_plugins([_time_travel_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            f = _assert(
+                c,
+                "stigmem://rtbf/legal1",
+                "rel:value",
+                "sensitive",
+                scope="local",
+                api_key=admin_key,
+            )
+            r_tomb = c.post(
+                "/v1/tombstones",
+                json={
+                    "entity_uri": "stigmem://rtbf/legal1",
+                    "scope": "*",
+                    "reason": "legal hold test",
+                    "legal_hold": True,
+                },
+                headers={"Authorization": f"Bearer {admin_key}"},
+            )
+            assert r_tomb.status_code == 201
 
-    with TestClient(app, raise_server_exceptions=True) as c:
-        f = _assert(
-            c, "stigmem://rtbf/legal1", "rel:value", "sensitive", scope="local", api_key=admin_key
-        )
-        r_tomb = c.post(
-            "/v1/tombstones",
-            json={
-                "entity_uri": "stigmem://rtbf/legal1",
-                "scope": "*",
-                "reason": "legal hold test",
-                "legal_hold": True,
-            },
-            headers={"Authorization": f"Bearer {admin_key}"},
-        )
-        assert r_tomb.status_code == 201
-
-        # Admin as_of query: fact still returned with tombstone_notice
-        r = c.get(
-            "/v1/facts",
-            params={"as_of": _ts(2), "entity": "stigmem://rtbf/legal1"},
-            headers={"Authorization": f"Bearer {admin_key}"},
-        )
-        assert r.status_code == 200
-        body = r.json()
-        ids = [x["id"] for x in body["facts"]]
-        assert f["id"] in ids
-        notices = body.get("tombstone_notices", [])
-        assert any(n["entity_uri"] == "stigmem://rtbf/legal1" for n in notices)
-        assert any(n["legal_hold"] for n in notices)
+            # Admin as_of query: fact still returned with tombstone_notice
+            r = c.get(
+                "/v1/facts",
+                params={"as_of": _ts(2), "entity": "stigmem://rtbf/legal1"},
+                headers={"Authorization": f"Bearer {admin_key}"},
+            )
+            assert r.status_code == 200
+            body = r.json()
+            ids = [x["id"] for x in body["facts"]]
+            assert f["id"] in ids
+            notices = body.get("tombstone_notices", [])
+            assert any(n["entity_uri"] == "stigmem://rtbf/legal1" for n in notices)
+            assert any(n["legal_hold"] for n in notices)
 
     _restore_settings(original, mods)
 
@@ -617,32 +679,37 @@ def test_as_of_legal_hold_non_admin_excluded(tmp_path):
     mods = _patch_settings(ts_settings)
     admin_key = auth_mod.create_api_key("agent:admin", ["read", "write", "federate", "admin"])
     agent_key = auth_mod.create_api_key("agent:user", ["read", "write"])
-    app = create_app()
-
-    with TestClient(app, raise_server_exceptions=True) as c:
-        _assert(
-            c, "stigmem://rtbf/legal2", "rel:val", "sensitive", scope="local", api_key=admin_key
-        )
-        c.post(
-            "/v1/tombstones",
-            json={
-                "entity_uri": "stigmem://rtbf/legal2",
-                "scope": "*",
-                "reason": "legal hold",
-                "legal_hold": True,
-            },
-            headers={"Authorization": f"Bearer {admin_key}"},
-        )
-        # Non-admin as_of: silently empty, no error, no notices
-        r = c.get(
-            "/v1/facts",
-            params={"as_of": _ts(2), "entity": "stigmem://rtbf/legal2"},
-            headers={"Authorization": f"Bearer {agent_key}"},
-        )
-        assert r.status_code == 200
-        body = r.json()
-        assert body["facts"] == []
-        assert body.get("tombstone_notices", []) == []
+    with stigmem_plugins([_time_travel_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            _assert(
+                c,
+                "stigmem://rtbf/legal2",
+                "rel:val",
+                "sensitive",
+                scope="local",
+                api_key=admin_key,
+            )
+            c.post(
+                "/v1/tombstones",
+                json={
+                    "entity_uri": "stigmem://rtbf/legal2",
+                    "scope": "*",
+                    "reason": "legal hold",
+                    "legal_hold": True,
+                },
+                headers={"Authorization": f"Bearer {admin_key}"},
+            )
+            # Non-admin as_of: silently empty, no error, no notices
+            r = c.get(
+                "/v1/facts",
+                params={"as_of": _ts(2), "entity": "stigmem://rtbf/legal2"},
+                headers={"Authorization": f"Bearer {agent_key}"},
+            )
+            assert r.status_code == 200
+            body = r.json()
+            assert body["facts"] == []
+            assert body.get("tombstone_notices", []) == []
 
     _restore_settings(original, mods)
 
@@ -652,20 +719,20 @@ def test_as_of_legal_hold_non_admin_excluded(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_recall_as_of(p13_client: TestClient):
+def test_recall_as_of(p13_time_travel_client: TestClient):
     before = _ts(-2)
-    _assert(p13_client, "stigmem://recall/e1", "rel:bio", "snapshot content")
+    _assert(p13_time_travel_client, "stigmem://recall/e1", "rel:bio", "snapshot content")
     after = _ts(1)
 
     # as_of after write: recall should surface the fact
-    r_after = p13_client.post(
+    r_after = p13_time_travel_client.post(
         "/v1/recall",
         json={"query": "snapshot content", "scope": "local", "as_of": after},
     )
     assert r_after.status_code == 200
 
     # as_of before write: recall should NOT surface the fact
-    r_before = p13_client.post(
+    r_before = p13_time_travel_client.post(
         "/v1/recall",
         json={"query": "snapshot content", "scope": "local", "as_of": before},
     )
@@ -673,9 +740,9 @@ def test_recall_as_of(p13_client: TestClient):
     results_before = r_before.json().get("facts", [])
     ids_before = [x["id"] for x in results_before]
     # The fact was asserted AFTER `before`, so must not appear
-    for f_check in p13_client.get("/v1/facts", params={"entity": "stigmem://recall/e1"}).json()[
-        "facts"
-    ]:
+    for f_check in p13_time_travel_client.get(
+        "/v1/facts", params={"entity": "stigmem://recall/e1"}
+    ).json()["facts"]:
         assert f_check["id"] not in ids_before
 
 

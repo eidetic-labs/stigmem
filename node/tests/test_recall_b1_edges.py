@@ -55,7 +55,10 @@ def _recall(query: str = "alice", **overrides: object) -> dict:
 
 
 class TestAsOfDispatch:
-    def test_as_of_returns_facts_visible_at_timestamp(self, client: TestClient) -> None:
+    def test_as_of_returns_facts_visible_at_timestamp(
+        self, time_travel_client: TestClient
+    ) -> None:
+        client = time_travel_client
         client.post("/v1/facts", json=_fact(_ALICE, "alice the historian"))
         # _validate_as_of allows up to now+5s; "now" is always safe
         as_of = datetime.now(UTC).isoformat()
@@ -68,7 +71,10 @@ class TestAsOfDispatch:
         for field in ("recall_id", "query_hash", "facts", "tokens_used"):
             assert field in body
 
-    def test_as_of_response_uses_recall_response_shape(self, client: TestClient) -> None:
+    def test_as_of_response_uses_recall_response_shape(
+        self, time_travel_client: TestClient
+    ) -> None:
+        client = time_travel_client
         as_of = datetime.now(UTC).isoformat()
         r = client.post("/v1/recall", json=_recall("nothing", as_of=as_of))
         assert r.status_code == 200
@@ -77,7 +83,10 @@ class TestAsOfDispatch:
         assert body["facts"] == []
         assert body["tombstone_notices"] == []
 
-    def test_as_of_respects_pre_existing_facts_only(self, client: TestClient) -> None:
+    def test_as_of_respects_pre_existing_facts_only(
+        self, time_travel_client: TestClient
+    ) -> None:
+        client = time_travel_client
         # Snapshot the moment BEFORE inserting fact_b
         client.post("/v1/facts", json=_fact(_ALICE, "alice early fact"))
         before = (datetime.now(UTC) - timedelta(seconds=1)).isoformat()
@@ -93,7 +102,8 @@ class TestAsOfDispatch:
         entities = {sf["fact"]["entity"] for sf in r.json()["facts"]}
         assert _BOB not in entities
 
-    def test_as_of_invalid_timestamp_returns_400(self, client: TestClient) -> None:
+    def test_as_of_invalid_timestamp_returns_400(self, time_travel_client: TestClient) -> None:
+        client = time_travel_client
         r = client.post(
             "/v1/recall",
             json=_recall(as_of="this is not a timestamp"),
@@ -101,7 +111,8 @@ class TestAsOfDispatch:
         assert r.status_code == 400
         assert r.json()["detail"]["code"] == "as_of_invalid_timestamp"
 
-    def test_as_of_future_timestamp_returns_400(self, client: TestClient) -> None:
+    def test_as_of_future_timestamp_returns_400(self, time_travel_client: TestClient) -> None:
+        client = time_travel_client
         future = (datetime.now(UTC) + timedelta(days=7)).isoformat()
         r = client.post("/v1/recall", json=_recall(as_of=future))
         assert r.status_code == 400

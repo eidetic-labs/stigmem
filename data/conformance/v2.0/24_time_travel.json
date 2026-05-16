@@ -2,6 +2,7 @@
   "spec_section": "§24",
   "title": "Time-Travel (as_of) — Wire Format Conformance",
   "description": "Validates GET /v1/facts?as_of and POST /v1/recall?as_of parameter validation, past-timestamp filtering, and error codes per §24.",
+  "requires_plugin": "time-travel",
   "vectors": [
     {
       "id": "as-of-invalid-timestamp-format",

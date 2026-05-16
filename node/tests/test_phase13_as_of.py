@@ -14,12 +14,19 @@ import sqlite3
 import uuid
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 
 from stigmem_node.auth import create_api_key
 
 PAST = (datetime.now(UTC) - timedelta(hours=2)).isoformat()
 FUTURE = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
+
+
+@pytest.fixture()
+def client(time_travel_client: TestClient) -> TestClient:
+    """Run legacy as_of behavior tests with the time-travel plugin registered."""
+    return time_travel_client
 
 
 def _assert(client: TestClient, entity: str = "user:alice", scope: str = "local") -> dict:
@@ -92,10 +99,16 @@ class TestFactsAsOfValidation:
         assert "total" in body
 
     def test_retention_floor_enforced(self, tmp_db: str, backend: str, encrypt: str) -> None:
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+        from conftest import (
+            _make_enc_settings,
+            _patch_settings,
+            _restore_settings,
+            _time_travel_plugin_manifest,
+        )
 
         import stigmem_node.settings as settings_module
         from stigmem_node.main import create_app
+        from stigmem_node.plugins.testing import stigmem_plugins
 
         original = settings_module.settings
         floor = (datetime.now(UTC) - timedelta(days=30)).isoformat()
@@ -105,16 +118,19 @@ class TestFactsAsOfValidation:
             tmp_db, backend, encrypt, auth_required=False, as_of_retention_floor=floor
         )
         extra = _patch_settings(test_settings)
-        app = create_app()
-        with TestClient(app, raise_server_exceptions=True) as c:
-            r = c.get(f"/v1/facts?as_of={too_old}")
-            assert r.status_code == 400
-            assert r.json()["detail"]["code"] == "as_of_before_retention_floor"
+        try:
+            with stigmem_plugins([_time_travel_plugin_manifest()]):
+                app = create_app()
+                with TestClient(app, raise_server_exceptions=True) as c:
+                    r = c.get(f"/v1/facts?as_of={too_old}")
+                    assert r.status_code == 400
+                    assert r.json()["detail"]["code"] == "as_of_before_retention_floor"
 
-            # At-or-after floor: allowed
-            r2 = c.get(f"/v1/facts?as_of={floor}")
-            assert r2.status_code == 200
-        _restore_settings(original, extra)
+                    # At-or-after floor: allowed
+                    r2 = c.get(f"/v1/facts?as_of={floor}")
+                    assert r2.status_code == 200
+        finally:
+            _restore_settings(original, extra)
 
 
 # ---------------------------------------------------------------------------
@@ -212,98 +228,115 @@ class TestFactsAsOfTombstoneGating:
         self, tmp_db: str, backend: str, encrypt: str
     ) -> None:
         """Agent keys silently filter legal-hold facts instead of returning 403."""
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+        from conftest import (
+            _make_enc_settings,
+            _patch_settings,
+            _restore_settings,
+            _time_travel_plugin_manifest,
+        )
 
         import stigmem_node.settings as settings_module
         from stigmem_node.main import create_app
+        from stigmem_node.plugins.testing import stigmem_plugins
 
         original = settings_module.settings
         test_settings = _make_enc_settings(tmp_db, backend, encrypt, auth_required=True)
         extra = _patch_settings(test_settings)
         agent_key = create_api_key("agent:alice", ["read", "write"])
-        app = create_app()
+        try:
+            with stigmem_plugins([_time_travel_plugin_manifest()]):
+                app = create_app()
+                with TestClient(app, raise_server_exceptions=True) as c:
+                    # Assert fact
+                    r = c.post(
+                        "/v1/facts",
+                        headers={"Authorization": f"Bearer {agent_key}"},
+                        json={
+                            "entity": "stigmem://test/user/bob",
+                            "relation": "test:prop",
+                            "value": {"type": "string", "v": "secret"},
+                            "source": "agent:alice",
+                            "scope": "local",
+                        },
+                    )
+                    assert r.status_code == 201
+                    after = datetime.now(UTC).isoformat()
 
-        with TestClient(app, raise_server_exceptions=True) as c:
-            # Assert fact
-            r = c.post(
-                "/v1/facts",
-                headers={"Authorization": f"Bearer {agent_key}"},
-                json={
-                    "entity": "stigmem://test/user/bob",
-                    "relation": "test:prop",
-                    "value": {"type": "string", "v": "secret"},
-                    "source": "agent:alice",
-                    "scope": "local",
-                },
-            )
-            assert r.status_code == 201
-            after = datetime.now(UTC).isoformat()
+                    # Insert legal_hold tombstone
+                    _insert_tombstone(tmp_db, "stigmem://test/user/bob", legal_hold=True)
 
-            # Insert legal_hold tombstone
-            _insert_tombstone(tmp_db, "stigmem://test/user/bob", legal_hold=True)
-
-            # Agent key query — should return 200 with no facts (silent filter), not 403
-            r = c.get(
-                f"/v1/facts?as_of={after}",
-                headers={"Authorization": f"Bearer {agent_key}"},
-            )
-            assert r.status_code == 200
-            body = r.json()
-            {f["id"] for f in body["facts"]}
-            # Fact silently absent; no tombstone_notices for agent callers
-            assert "stigmem://test/user/bob" not in {f["entity"] for f in body["facts"]}
-            assert body.get("tombstone_notices", []) == []
-
-        _restore_settings(original, extra)
+                    # Agent key query should silently filter facts, not 403.
+                    r = c.get(
+                        f"/v1/facts?as_of={after}",
+                        headers={"Authorization": f"Bearer {agent_key}"},
+                    )
+                    assert r.status_code == 200
+                    body = r.json()
+                    # Fact silently absent; no tombstone_notices for agent callers
+                    assert "stigmem://test/user/bob" not in {
+                        f["entity"] for f in body["facts"]
+                    }
+                    assert body.get("tombstone_notices", []) == []
+        finally:
+            _restore_settings(original, extra)
 
     def test_legal_hold_entity_visible_with_notices_for_admin(
         self, tmp_db: str, backend: str, encrypt: str
     ) -> None:
         """Admin keys with 'admin' permission receive legal_hold facts + tombstone_notices."""
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+        from conftest import (
+            _make_enc_settings,
+            _patch_settings,
+            _restore_settings,
+            _time_travel_plugin_manifest,
+        )
 
         import stigmem_node.settings as settings_module
         from stigmem_node.main import create_app
+        from stigmem_node.plugins.testing import stigmem_plugins
 
         original = settings_module.settings
         test_settings = _make_enc_settings(tmp_db, backend, encrypt, auth_required=True)
         extra = _patch_settings(test_settings)
         admin_key = create_api_key("agent:admin", ["read", "write", "admin"])
-        app = create_app()
+        try:
+            with stigmem_plugins([_time_travel_plugin_manifest()]):
+                app = create_app()
+                with TestClient(app, raise_server_exceptions=True) as c:
+                    r = c.post(
+                        "/v1/facts",
+                        headers={"Authorization": f"Bearer {admin_key}"},
+                        json={
+                            "entity": "stigmem://test/user/carol",
+                            "relation": "test:prop",
+                            "value": {"type": "string", "v": "held"},
+                            "source": "agent:admin",
+                            "scope": "local",
+                        },
+                    )
+                    assert r.status_code == 201
+                    after = datetime.now(UTC).isoformat()
 
-        with TestClient(app, raise_server_exceptions=True) as c:
-            r = c.post(
-                "/v1/facts",
-                headers={"Authorization": f"Bearer {admin_key}"},
-                json={
-                    "entity": "stigmem://test/user/carol",
-                    "relation": "test:prop",
-                    "value": {"type": "string", "v": "held"},
-                    "source": "agent:admin",
-                    "scope": "local",
-                },
-            )
-            assert r.status_code == 201
-            after = datetime.now(UTC).isoformat()
+                    _insert_tombstone(
+                        tmp_db, "stigmem://test/user/carol", legal_hold=True
+                    )
 
-            _insert_tombstone(tmp_db, "stigmem://test/user/carol", legal_hold=True)
-
-            r = c.get(
-                f"/v1/facts?as_of={after}&entity=stigmem://test/user/carol",
-                headers={"Authorization": f"Bearer {admin_key}"},
-            )
-            assert r.status_code == 200
-            body = r.json()
-            # Admin sees the fact (it's not excluded)
-            entities = {f["entity"] for f in body["facts"]}
-            assert "stigmem://test/user/carol" in entities
-            # tombstone_notices present
-            assert len(body.get("tombstone_notices", [])) >= 1
-            notice = body["tombstone_notices"][0]
-            assert notice["legal_hold"] is True
-            assert notice["entity_uri"] == "stigmem://test/user/carol"
-
-        _restore_settings(original, extra)
+                    r = c.get(
+                        f"/v1/facts?as_of={after}&entity=stigmem://test/user/carol",
+                        headers={"Authorization": f"Bearer {admin_key}"},
+                    )
+                    assert r.status_code == 200
+                    body = r.json()
+                    # Admin sees the fact (it's not excluded)
+                    entities = {f["entity"] for f in body["facts"]}
+                    assert "stigmem://test/user/carol" in entities
+                    # tombstone_notices present
+                    assert len(body.get("tombstone_notices", [])) >= 1
+                    notice = body["tombstone_notices"][0]
+                    assert notice["legal_hold"] is True
+                    assert notice["entity_uri"] == "stigmem://test/user/carol"
+        finally:
+            _restore_settings(original, extra)
 
     def test_x_total_count_header_present(self, client: TestClient) -> None:
         _assert(client)
@@ -407,41 +440,50 @@ class TestRecallAsOf:
         self, tmp_db: str, backend: str, encrypt: str
     ) -> None:
         """Agent key: legal_hold fact silently absent from recall results (§24.3.2)."""
-        from conftest import _make_enc_settings, _patch_settings, _restore_settings
+        from conftest import (
+            _make_enc_settings,
+            _patch_settings,
+            _restore_settings,
+            _time_travel_plugin_manifest,
+        )
 
         import stigmem_node.settings as settings_module
         from stigmem_node.main import create_app
+        from stigmem_node.plugins.testing import stigmem_plugins
 
         original = settings_module.settings
         test_settings = _make_enc_settings(tmp_db, backend, encrypt, auth_required=True)
         extra = _patch_settings(test_settings)
         agent_key = create_api_key("agent:recall-agent", ["read", "write"])
-        app = create_app()
+        try:
+            with stigmem_plugins([_time_travel_plugin_manifest()]):
+                app = create_app()
+                with TestClient(app, raise_server_exceptions=True) as c:
+                    c.post(
+                        "/v1/facts",
+                        headers={"Authorization": f"Bearer {agent_key}"},
+                        json={
+                            "entity": "stigmem://test/user/held-entity",
+                            "relation": "test:prop",
+                            "value": {"type": "string", "v": "legal-hold-data"},
+                            "source": "agent:recall-agent",
+                            "scope": "local",
+                        },
+                    )
+                    after = datetime.now(UTC).isoformat()
+                    _insert_tombstone(
+                        tmp_db, "stigmem://test/user/held-entity", legal_hold=True
+                    )
 
-        with TestClient(app, raise_server_exceptions=True) as c:
-            c.post(
-                "/v1/facts",
-                headers={"Authorization": f"Bearer {agent_key}"},
-                json={
-                    "entity": "stigmem://test/user/held-entity",
-                    "relation": "test:prop",
-                    "value": {"type": "string", "v": "legal-hold-data"},
-                    "source": "agent:recall-agent",
-                    "scope": "local",
-                },
-            )
-            after = datetime.now(UTC).isoformat()
-            _insert_tombstone(tmp_db, "stigmem://test/user/held-entity", legal_hold=True)
-
-            r = c.post(
-                "/v1/recall",
-                headers={"Authorization": f"Bearer {agent_key}"},
-                json={"query": "held-entity", "as_of": after},
-            )
-            assert r.status_code == 200
-            body = r.json()
-            entities = {sf["fact"]["entity"] for sf in body["facts"]}
-            assert "stigmem://test/user/held-entity" not in entities
-            assert body["tombstone_notices"] == []
-
-        _restore_settings(original, extra)
+                    r = c.post(
+                        "/v1/recall",
+                        headers={"Authorization": f"Bearer {agent_key}"},
+                        json={"query": "held-entity", "as_of": after},
+                    )
+                    assert r.status_code == 200
+                    body = r.json()
+                    entities = {sf["fact"]["entity"] for sf in body["facts"]}
+                    assert "stigmem://test/user/held-entity" not in entities
+                    assert body["tombstone_notices"] == []
+        finally:
+            _restore_settings(original, extra)

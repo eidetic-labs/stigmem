@@ -38,58 +38,107 @@ def _failures_from_registry(registry: dict[str, Any]) -> list[str]:
 
     statuses = set(registry.get("status_vocabulary", []))
     decisions = set(registry.get("review_decision_vocabulary", []))
+    failures.extend(_vocabulary_failures(statuses, decisions))
+
+    for risk_id, entry in sorted(risks.items()):
+        failures.extend(_risk_entry_failures(risk_id, entry, statuses, decisions))
+
+    return failures
+
+
+def _vocabulary_failures(statuses: set[str], decisions: set[str]) -> list[str]:
+    failures: list[str] = []
     if not statuses:
         failures.append("registry must define status_vocabulary")
     if not decisions:
         failures.append("registry must define review_decision_vocabulary")
-
-    for risk_id, entry in sorted(risks.items()):
-        if not RISK_ID_RE.match(risk_id):
-            failures.append(f"{risk_id}: risk id must match R-##")
-            continue
-        if not isinstance(entry, dict):
-            failures.append(f"{risk_id}: entry must be an object")
-            continue
-
-        status = entry.get("status")
-        if status not in statuses:
-            failures.append(f"{risk_id}: status {status!r} is not in status_vocabulary")
-        if entry.get("title") in {None, ""}:
-            failures.append(f"{risk_id}: title is required")
-
-        if status == "Mitigated":
-            missing = REQUIRED_MITIGATED_FIELDS - set(entry)
-            if missing:
-                failures.append(f"{risk_id}: missing required mitigated fields: {sorted(missing)}")
-            version = entry.get("version_introduced")
-            if not isinstance(version, str) or not VERSION_RE.match(version):
-                failures.append(
-                    f"{risk_id}: version_introduced must be a release string, got {version!r}"
-                )
-            decision = entry.get("review_decision")
-            if decision not in decisions:
-                failures.append(
-                    f"{risk_id}: review_decision {decision!r} is not in "
-                    "review_decision_vocabulary"
-                )
-            for field in ("implementation_files", "test_files", "docs_reference_files"):
-                values = entry.get(field)
-                if not isinstance(values, list) or not values:
-                    failures.append(f"{risk_id}: {field} must be a non-empty list")
-                    continue
-                for rel_path in values:
-                    if not isinstance(rel_path, str) or not rel_path:
-                        failures.append(f"{risk_id}: {field} contains a non-string path")
-                        continue
-                    if Path(rel_path).is_absolute() or ".." in Path(rel_path).parts:
-                        failures.append(
-                            f"{risk_id}: {field} path must be repo-relative: {rel_path!r}"
-                        )
-                        continue
-                    if not (REPO_ROOT / rel_path).exists():
-                        failures.append(f"{risk_id}: {field} path does not exist: {rel_path}")
-
     return failures
+
+
+def _risk_entry_failures(
+    risk_id: str,
+    entry: Any,
+    statuses: set[str],
+    decisions: set[str],
+) -> list[str]:
+    if not RISK_ID_RE.match(risk_id):
+        return [f"{risk_id}: risk id must match R-##"]
+    if not isinstance(entry, dict):
+        return [f"{risk_id}: entry must be an object"]
+
+    failures = _base_risk_failures(risk_id, entry, statuses)
+    if entry.get("status") == "Mitigated":
+        failures.extend(_mitigated_risk_failures(risk_id, entry, decisions))
+    return failures
+
+
+def _base_risk_failures(
+    risk_id: str,
+    entry: dict[str, Any],
+    statuses: set[str],
+) -> list[str]:
+    failures: list[str] = []
+    status = entry.get("status")
+    if status not in statuses:
+        failures.append(f"{risk_id}: status {status!r} is not in status_vocabulary")
+    if entry.get("title") in {None, ""}:
+        failures.append(f"{risk_id}: title is required")
+    return failures
+
+
+def _mitigated_risk_failures(
+    risk_id: str,
+    entry: dict[str, Any],
+    decisions: set[str],
+) -> list[str]:
+    failures = _mitigated_metadata_failures(risk_id, entry, decisions)
+    for field in ("implementation_files", "test_files", "docs_reference_files"):
+        failures.extend(_evidence_path_failures(risk_id, field, entry.get(field)))
+    return failures
+
+
+def _mitigated_metadata_failures(
+    risk_id: str,
+    entry: dict[str, Any],
+    decisions: set[str],
+) -> list[str]:
+    failures: list[str] = []
+    missing = REQUIRED_MITIGATED_FIELDS - set(entry)
+    if missing:
+        failures.append(f"{risk_id}: missing required mitigated fields: {sorted(missing)}")
+
+    version = entry.get("version_introduced")
+    if not isinstance(version, str) or not VERSION_RE.match(version):
+        failures.append(f"{risk_id}: version_introduced must be a release string, got {version!r}")
+
+    decision = entry.get("review_decision")
+    if decision not in decisions:
+        failures.append(
+            f"{risk_id}: review_decision {decision!r} is not in "
+            "review_decision_vocabulary"
+        )
+    return failures
+
+
+def _evidence_path_failures(risk_id: str, field: str, values: Any) -> list[str]:
+    if not isinstance(values, list) or not values:
+        return [f"{risk_id}: {field} must be a non-empty list"]
+
+    failures: list[str] = []
+    for rel_path in values:
+        failures.extend(_single_evidence_path_failures(risk_id, field, rel_path))
+    return failures
+
+
+def _single_evidence_path_failures(risk_id: str, field: str, rel_path: Any) -> list[str]:
+    if not isinstance(rel_path, str) or not rel_path:
+        return [f"{risk_id}: {field} contains a non-string path"]
+    path = Path(rel_path)
+    if path.is_absolute() or ".." in path.parts:
+        return [f"{risk_id}: {field} path must be repo-relative: {rel_path!r}"]
+    if not (REPO_ROOT / rel_path).exists():
+        return [f"{risk_id}: {field} path does not exist: {rel_path}"]
+    return []
 
 
 def _mitigated_risks_from_threat_model(text: str) -> set[str]:

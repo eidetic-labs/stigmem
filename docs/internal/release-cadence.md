@@ -148,7 +148,7 @@ Every published version string in the repo must agree with the new release. The 
 
 - `pyproject.toml`, `node/pyproject.toml`, `sdks/stigmem-py/pyproject.toml`, `adapters/openclaw/pyproject.toml` — PEP 440 form (e.g. `0.9.0a2`).
 - `package.json`, `sdks/stigmem-ts/package.json` — semver form (e.g. `0.9.0-alpha.2`).
-- `infra/helm/stigmem/Chart.yaml`, `deploy/helm/stigmem/Chart.yaml` — `appVersion` in semver form.
+- `experimental/deploy-helm/helm/stigmem/Chart.yaml` — `appVersion` in semver form.
 
 **Documentation surfaces** (currently CI-skipped; sweep manually):
 

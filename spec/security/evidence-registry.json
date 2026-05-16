@@ -10,7 +10,8 @@
       "implementation_files": [
         "node/src/stigmem_node/tls.py",
         "node/src/stigmem_node/peer_auth.py",
-        "node/src/stigmem_node/routes/federation.py"
+        "node/src/stigmem_node/routes/federation/common.py",
+        "node/src/stigmem_node/routes/federation/replication.py"
       ],
       "test_files": ["node/tests/test_mtls.py"],
       "docs_reference_files": [
@@ -147,7 +148,8 @@
       "implementation_files": ["node/src/stigmem_node/identity/capability.py"],
       "test_files": [
         "node/tests/test_phase12_key_rotation.py",
-        "node/tests/test_phase8_identity.py"
+        "node/tests/identity/test_capability_tokens.py",
+        "node/tests/identity/test_federation_push.py"
       ],
       "docs_reference_files": [
         "spec/security/threat-model.md",

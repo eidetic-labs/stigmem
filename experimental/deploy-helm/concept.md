@@ -8,15 +8,15 @@ audience: Operator
 
 **Audience:** platform engineers deploying Stigmem nodes on Kubernetes via Helm.
 
-The Helm chart ships in [`deploy/helm/stigmem/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/helm/stigmem)
+The Helm chart ships in [`experimental/deploy-helm/helm/stigmem/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm/helm/stigmem)
 in the main repository. Install it directly from that path:
 
 ```bash
 # Quick install with defaults (SQLite, no auth, no ingress):
-helm install stigmem deploy/helm/stigmem --namespace stigmem --create-namespace
+helm install stigmem experimental/deploy-helm/helm/stigmem --namespace stigmem --create-namespace
 ```
 
-See the **[Helm recipe README](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/helm/README.md)**
+See the **[Helm recipe README](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/deploy-helm/helm/README.md)**
 for full instructions: ingress, TLS, libSQL/Turso, encryption at rest, federation keypair secrets,
 and multi-instance federation.
 

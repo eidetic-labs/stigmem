@@ -20,6 +20,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 ### Changed
 
 - Plugin infrastructure scope is now explicit: package discovery, dependency lifecycle, health polling, operator CLI, production signing/trust, plugin author/operator docs, and full plugin migration lifecycle/checksum tracking remain future alpha-series work.
+- Grade duplication cleanup now keeps `pnpm run grade:duplication` under the Phase A scoring threshold by replacing duplicated experimental status boilerplate with shared gate language, removing a duplicate Helm chart copy, and delegating the OpenClaw skill adapter to the packaged `stigmem-openclaw` implementation.
 
 ---
 

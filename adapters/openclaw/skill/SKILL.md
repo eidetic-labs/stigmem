@@ -24,7 +24,7 @@ metadata:
         description: "Entity URI that identifies this agent in the fact graph (default: agent:openclaw)."
     install:
       - kind: uv
-        package: "stigmem-py>=0.9.0a1,<1.0.0"
+        package: "stigmem-openclaw>=0.9.0a1,<1.0.0"
 ---
 
 # Stigmem
@@ -56,7 +56,7 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 
 ## Usage
 
-`adapter.py` is bundled with this skill. Import it directly from the skill directory — no separate package install needed beyond `stigmem-py` (declared in the install spec above).
+`adapter.py` is bundled with this skill as a compatibility shim. Import it directly from the skill directory; the install spec above supplies the packaged `stigmem-openclaw` adapter and its `stigmem-py` dependency.
 
 ```python
 from adapter import OpenClawStigmemAdapter

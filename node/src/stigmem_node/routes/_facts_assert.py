@@ -31,6 +31,7 @@ from ..hlc import node_hlc
 from ..metrics import CONTRADICTION, FACT_WRITE
 from ..models.facts import AssertRequest, FactRecord, row_to_record
 from ..plugins import TenantContext, get_registry
+from ..session_graph import encode_derived_from, ensure_write_allowed, record_write_scope
 from ..settings import settings as _settings  # noqa: F401  — kept for parity
 
 
@@ -275,6 +276,7 @@ def assert_fact_impl(
     *,
     request_id: str,
     tenant: TenantContext,
+    session_id: str | None = None,
 ) -> FactRecord:
     # Lazy imports of sibling helpers to avoid circular import with .facts
     from .facts import (
@@ -324,19 +326,37 @@ def assert_fact_impl(
     _embed_enabled = _live_settings().embed_enabled
     embedding_missing_val = 1 if _embed_enabled else None
 
+    derived_from_json = encode_derived_from(req.derived_from)
+
     # F-10 §25.7.3: idempotent CID pre-check — if CID already exists, return existing record
     with db() as _precheck_conn:
+        ensure_write_allowed(
+            _precheck_conn,
+            identity=identity,
+            session_id=session_id,
+            target_scope=req.scope,
+            write_mode=req.write_mode,
+            derived_from=req.derived_from,
+        )
         existing_record = _existing_record_for_cid(_precheck_conn, fact_cid, identity.tenant_id)
     if existing_record is not None:
         return existing_record
 
     with db() as conn:
+        ensure_write_allowed(
+            conn,
+            identity=identity,
+            session_id=session_id,
+            target_scope=req.scope,
+            write_mode=req.write_mode,
+            derived_from=req.derived_from,
+        )
         conn.execute(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
                 valid_until, confidence, scope, hlc, received_from, attested_key_id,
-                garden_id, attested, tenant_id, embedding_missing, cid)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                garden_id, attested, tenant_id, embedding_missing, cid, derived_from)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 entity,  # normalized (spec §2.6)
@@ -356,6 +376,7 @@ def assert_fact_impl(
                 identity.tenant_id,
                 embedding_missing_val,
                 fact_cid,
+                derived_from_json,
             ),
         )
 
@@ -373,6 +394,13 @@ def assert_fact_impl(
             ).fetchone()
             if existing is not None:
                 return row_to_record(existing, contradicted=False)
+
+        record_write_scope(
+            conn,
+            identity=identity,
+            session_id=session_id,
+            scope=req.scope,
+        )
 
         # C3 / §22.3: write-ahead audit entry for fact_write event (same transaction)
         from ..audit_event import emit as _emit_audit

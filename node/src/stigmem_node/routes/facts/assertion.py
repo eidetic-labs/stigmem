@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 
 from ...auth import Identity, resolve_identity
 from ...models.facts import AssertRequest, FactRecord
@@ -19,6 +19,7 @@ from .common import router
 def assert_fact(
     req: AssertRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
+    session_id: Annotated[str | None, Header(alias="Stigmem-Session")] = None,
 ) -> FactRecord:
     """Assert a fact into the fabric.
 
@@ -80,7 +81,14 @@ def assert_fact(
             request_id=request_id,
         )
         try:
-            fact = _assert_fact_impl(req, identity, _span, request_id=request_id, tenant=tenant)
+            fact = _assert_fact_impl(
+                req,
+                identity,
+                _span,
+                request_id=request_id,
+                tenant=tenant,
+                session_id=session_id,
+            )
             registry.fire_fire_and_forget(
                 "post_assert_propagate",
                 fact=fact,

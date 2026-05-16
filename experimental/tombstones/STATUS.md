@@ -6,7 +6,7 @@
 **Legacy section:** §23
 **Status:** Dormant
 **Active version:** v0.9.0a1 (code last functional under retracted v1.0)
-**Last updated:** 2026-05-15
+**Last updated:** 2026-05-16
 **Owner:** unowned
 **Buildable:** yes
 
@@ -100,6 +100,11 @@ Tombstone soak is **higher-stakes than typical features** — operators run RTBF
 
 ## History
 
+- **2026-05-16** — PR 4d scaffold added the
+  `experimental/tombstones/` plugin source package with manifest, config
+  schema, hook placeholders, plugin-owned tombstone migration declaration, and
+  registration tests. Runtime extraction and default-install gating remain
+  follow-on PR 4d work.
 - **2026-05-15** — added ADR-018 colocated security analysis in `security.md`.
 - **2026-05-06** — moved to `experimental/` per ADR-002. Status: Dormant.
 - **2026-05-04** — `EXPERIMENTAL` caution banner added to §23 in spec (see commit `10c4ace`).

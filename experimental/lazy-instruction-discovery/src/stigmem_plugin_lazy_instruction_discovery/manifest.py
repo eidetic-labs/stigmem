@@ -6,6 +6,7 @@ from stigmem_node.plugins import PluginManifest
 
 from . import handlers
 from .config import LazyInstructionDiscoveryConfig
+from .routes import router
 
 PLUGIN_NAME = "stigmem-plugin-lazy-instruction-discovery"
 PLUGIN_VERSION = "0.1.0"
@@ -36,6 +37,7 @@ def plugin_manifest() -> PluginManifest:
             "post_recall_audit": handlers.post_recall_audit,
             "migration_register": handlers.migration_register,
         },
+        routes=(router,),
         health_check=handlers.health_check,
         config_schema=LazyInstructionDiscoveryConfig,
         async_safe=True,

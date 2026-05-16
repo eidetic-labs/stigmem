@@ -8,8 +8,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fastapi import HTTPException
 
 import stigmem_node.plugins.discovery as discovery
+from stigmem_node.auth import Identity
+from stigmem_node.main import _include_plugin_routers, create_app
 from stigmem_node.plugins import (
     ENTRY_POINT_GROUP,
     Allow,
@@ -18,6 +21,7 @@ from stigmem_node.plugins import (
     PluginManifest,
     discover_plugin_manifests,
 )
+from stigmem_node.plugins.discovery import DiscoveredPlugin
 
 _FEATURE_DIR = (
     Path(__file__).resolve().parents[3] / "experimental" / "lazy-instruction-discovery"
@@ -30,6 +34,7 @@ _PLUGIN = importlib.import_module("stigmem_plugin_lazy_instruction_discovery")
 LazyInstructionDiscoveryConfig = _PLUGIN.LazyInstructionDiscoveryConfig
 PLUGIN_NAME = _PLUGIN.PLUGIN_NAME
 plugin_manifest = _PLUGIN.plugin_manifest
+plugin_routes = importlib.import_module("stigmem_plugin_lazy_instruction_discovery.routes")
 
 
 @dataclass(frozen=True)
@@ -89,6 +94,43 @@ def test_manifest_declares_expected_boundary() -> None:
         "post_recall_audit",
         "migration_register",
     }
+    assert len(manifest.routes) == 1
+
+
+def test_default_app_does_not_mount_lazy_instruction_routes() -> None:
+    app = create_app()
+
+    paths = {route.path for route in app.routes if hasattr(route, "path")}
+
+    assert "/v1/agents/{agent_id}/instruction-manifest" not in paths
+    assert "/v1/agents/{agent_id}/recall-instruction" not in paths
+
+
+def test_plugin_route_registration_mounts_lazy_instruction_routes() -> None:
+    app = create_app()
+    manifest = plugin_manifest()
+    discovered = DiscoveredPlugin(
+        manifest=manifest,
+        entry_point_name="lazy-instruction-discovery",
+        entry_point_value="stigmem_plugin_lazy_instruction_discovery:plugin_manifest",
+        distribution=PLUGIN_NAME,
+    )
+
+    _include_plugin_routers(app, (discovered,))
+    paths = {route.path for route in app.routes if hasattr(route, "path")}
+
+    assert "/v1/agents/{agent_id}/instruction-manifest" in paths
+    assert "/v1/agents/{agent_id}/recall-instruction" in paths
+
+
+def test_plugin_routes_fail_closed_by_default() -> None:
+    identity = Identity("agent:test-agent", ["read", "write", "federate"])
+
+    with pytest.raises(HTTPException) as exc_info:
+        plugin_routes.get_instruction_manifest("test-agent", identity)
+
+    assert exc_info.value.status_code == 503
+    assert exc_info.value.detail == "lazy_instruction_discovery_disabled"
 
 
 def test_default_config_keeps_behavior_disabled() -> None:
@@ -123,12 +165,16 @@ def test_manifest_registers_with_hook_registry() -> None:
         "query": "hello"
     }
     assert registry.fire_filter_chain("recall_filter", ["fact"]) == ["fact"]
-    assert registry.fire_filter_chain("migration_register", []) == []
+    migrations = registry.fire_filter_chain("migration_register", [])
+    assert len(migrations) == 1
+    assert migrations[0].plugin_name == PLUGIN_NAME
+    assert migrations[0].migration_id == 1
+    assert "CREATE TABLE IF NOT EXISTS instruction_manifests" in migrations[0].sql
     registry.fire_fire_and_forget("post_recall_audit")
     reports = {report.plugin_name: report for report in registry.poll_plugin_health()}
     report = reports[PLUGIN_NAME]
-    assert report.status == PluginHealthStatus.DEGRADED
-    assert "behavior extraction pending" in report.message
+    assert report.status == PluginHealthStatus.HEALTHY
+    assert "plugin registered" in report.message
 
 
 def test_entry_point_factory_is_discoverable(monkeypatch: pytest.MonkeyPatch) -> None:

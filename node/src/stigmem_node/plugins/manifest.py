@@ -20,6 +20,7 @@ class PluginManifest(BaseModel):
     capabilities: frozenset[str] = frozenset()
     async_safe: bool = True
     hooks: dict[str, Callable[..., Any]] = Field(default_factory=dict)
+    routes: tuple[Any, ...] = ()
     health_check: Callable[..., Any] | None = None
     config_schema: type[BaseModel] | None = None
     depends_on: frozenset[str] = frozenset()

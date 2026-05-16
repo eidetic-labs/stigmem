@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import sys
 import uuid
 from pathlib import Path
 
@@ -24,6 +25,18 @@ import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.main as main_mod
 import stigmem_node.settings as settings_mod
+from stigmem_node.plugins.testing import stigmem_plugins
+
+_FEATURE_SRC = (
+    Path(__file__).resolve().parents[2]
+    / "experimental"
+    / "lazy-instruction-discovery"
+    / "src"
+)
+if str(_FEATURE_SRC) not in sys.path:
+    sys.path.insert(0, str(_FEATURE_SRC))
+
+from stigmem_plugin_lazy_instruction_discovery import plugin_manifest  # noqa: E402
 
 create_api_key = auth_mod.create_api_key
 Settings = settings_mod.Settings
@@ -1064,21 +1077,60 @@ class TestMigrationRoundTrip:
 
 
 @pytest.fixture()
-def admin_client(tmp_db: str, backend: str) -> TestClient:
+def admin_client(tmp_db: str, backend: str, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     """A test client with full admin permissions (read+write+federate)."""
     original = settings_mod.settings
     s = Settings(db_path=tmp_db, auth_required=False)
     settings_mod.settings = s
     db_mod.settings = s
     auth_mod.settings = s
+    _enable_lazy_instruction_env(monkeypatch)
 
     # create_api_key uses module-level db(), which now points to tmp_db via settings
     raw_key = create_api_key("admin:test", ["read", "write", "federate"])
 
+    manifest = plugin_manifest()
     app = main_mod.create_app()
-    with TestClient(app, headers={"Authorization": f"Bearer {raw_key}"}) as c:
+    app.include_router(manifest.routes[0])
+    with (
+        stigmem_plugins([manifest]),
+        TestClient(app, headers={"Authorization": f"Bearer {raw_key}"}) as c,
+    ):
         yield c
 
     settings_mod.settings = original
     db_mod.settings = original
     auth_mod.settings = original
+
+
+@pytest.fixture()
+def authed_client(
+    tmp_db: str,
+    backend: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> tuple[TestClient, str]:
+    """Auth-enabled client with the lazy instruction plugin loaded."""
+    original = settings_mod.settings
+    s = Settings(db_path=tmp_db, auth_required=True)
+    settings_mod.settings = s
+    db_mod.settings = s
+    auth_mod.settings = s
+    _enable_lazy_instruction_env(monkeypatch)
+
+    raw_key = create_api_key("agent:test", ["read", "write"])
+    manifest = plugin_manifest()
+    app = main_mod.create_app()
+    app.include_router(manifest.routes[0])
+    with stigmem_plugins([manifest]), TestClient(app) as c:
+        yield c, raw_key
+
+    settings_mod.settings = original
+    db_mod.settings = original
+    auth_mod.settings = original
+
+
+def _enable_lazy_instruction_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ALLOW_MANIFEST_PUBLISH", "true")
+    monkeypatch.setenv("STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ALLOW_INSTRUCTION_RECALL", "true")
+    monkeypatch.setenv("STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ALLOW_FILE_PATH_ENTRIES", "true")

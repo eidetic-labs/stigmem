@@ -29,7 +29,7 @@ find node/src node/tests eval adapters experimental \
 
 | Path | Lines | Classification | Proposed slice |
 |---|---:|---|---|
-| `node/tests/test_phase8_identity.py` | 1642 | Hard decomposition candidate | Split into `node/tests/identity/` by identity concern. |
+| `node/tests/test_phase8_identity.py` | 1642 | Completed | Split into `node/tests/identity/` by identity concern in #267; shared helpers and fixtures live under the new test package. |
 | `node/tests/test_federation.py` | 1237 | Discouraged size | Split by federation concern. |
 | `eval/federation/soak_driver.py` | 1189 | Discouraged size | Split into `eval/federation/soak/` phases. |
 | `node/src/stigmem_node/routes/facts.py` | 1114 | Completed | Split into `routes/facts/` subpackage in #265; public import path preserved as `stigmem_node.routes.facts`. |
@@ -58,7 +58,7 @@ inventory, name validation commands, and avoid unrelated behavioral changes.
 | Facts route decomposition | [#265](https://github.com/Eidetic-Labs/stigmem/issues/265) | Split `routes/facts.py` into endpoint/helper modules. | Fact route tests, CID/provenance tests, OpenAPI check. |
 | Federation route decomposition | [#266](https://github.com/Eidetic-Labs/stigmem/issues/266) | Split `routes/federation.py` by endpoint family. | Federation, mTLS, capability, and conformance tests. |
 | Recall route decomposition | [#268](https://github.com/Eidetic-Labs/stigmem/issues/268) | Split `routes/recall.py` by lexical/vector/graph/ranking stages. | Recall, embeddings, vector search, and graph tests. |
-| Identity test decomposition | [#267](https://github.com/Eidetic-Labs/stigmem/issues/267) | Split `test_phase8_identity.py` into `node/tests/identity/`. | Identity/key/capability tests; no fixture behavior changes. |
+| Identity test decomposition | [#267](https://github.com/Eidetic-Labs/stigmem/issues/267) | Split `test_phase8_identity.py` into `node/tests/identity/`. | Completed with identity/key/capability subset validation and no fixture behavior changes. |
 | Federation test decomposition | [#269](https://github.com/Eidetic-Labs/stigmem/issues/269) | Split `test_federation.py` by federation concern. | Federation test subset; conformance smoke. |
 | Federation soak driver decomposition | [#270](https://github.com/Eidetic-Labs/stigmem/issues/270) | Split `eval/federation/soak_driver.py` into setup/run/monitor/report modules. | Eval soak import smoke and existing eval fast subset. |
 

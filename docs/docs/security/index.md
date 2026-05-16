@@ -50,7 +50,7 @@ Main now includes the 22-hook registry foundation and plugin test harness needed
 
 | Page | Topic |
 |---|---|
-| [Authentication](./authentication.md) | API key auth (Argon2id for new keys; v0.9.0a1 SHA-256 rows rehash on successful use per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)), expires_at enforcement, session model |
+| [Authentication](./authentication.md) | API key auth (Argon2id for new keys; v0.9.0a1 SHA-256 rows rehash on successful use per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)), local-agent `entity_uri` naming, expires_at enforcement, session model |
 | [Agent keypairs](./agent-keypairs.md) | Ed25519 keypair generation, storage, rotation |
 | [Audit log](./audit-log.md) | WAL-ordered audit log, 14 event types, 90-day retention (Spec-09-Audit-Log) |
 | [Audit & quotas](./audit-and-quotas.md) | Per-principal token-bucket quotas, 7 dimensions (Spec-10-Hardening rate limits) |

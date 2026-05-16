@@ -3,9 +3,10 @@ from __future__ import annotations
 import importlib
 import sys
 import tomllib
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 import pytest
 
@@ -14,6 +15,7 @@ from stigmem_node.plugins import (
     ENTRY_POINT_GROUP,
     Allow,
     HookRegistry,
+    PluginContext,
     PluginHealthStatus,
     PluginManifest,
     discover_plugin_manifests,
@@ -28,6 +30,7 @@ _PLUGIN = importlib.import_module("stigmem_plugin_time_travel")
 TimeTravelConfig = _PLUGIN.TimeTravelConfig
 PLUGIN_NAME = _PLUGIN.PLUGIN_NAME
 plugin_manifest = _PLUGIN.plugin_manifest
+T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -134,6 +137,67 @@ def test_manifest_registers_with_hook_registry() -> None:
     assert "plugin scaffold registered" in report.message
 
 
+def test_time_travel_plugin_hook_order_is_deterministic() -> None:
+    calls: list[str] = []
+    manifest = _recording_manifest(calls)
+    registry = HookRegistry()
+
+    def core_authorize(_ctx: PluginContext, **_: object) -> Allow:
+        calls.append("core:pre_recall_authorize")
+        return Allow()
+
+    def core_rewrite(
+        _ctx: PluginContext, value: dict[str, object], **_: object
+    ) -> dict[str, object]:
+        calls.append("core:pre_recall_rewrite")
+        return value
+
+    def core_audit(_ctx: PluginContext, **_: object) -> None:
+        calls.append("core:post_recall_audit")
+
+    registry.register_core_handler(
+        "pre_recall_authorize", core_authorize, name="core.001.authorize"
+    )
+    registry.register_core_handler("pre_recall_rewrite", core_rewrite, name="core.001.rewrite")
+    registry.register_core_handler("post_recall_audit", core_audit, name="core.001.audit")
+    registry.register_plugin(manifest)
+
+    assert _handler_names(registry, "pre_recall_authorize") == (
+        "core.001.authorize",
+        f"{PLUGIN_NAME}.pre_recall_authorize",
+    )
+    assert _handler_names(registry, "pre_recall_rewrite") == (
+        f"{PLUGIN_NAME}.pre_recall_rewrite",
+        "core.001.rewrite",
+    )
+    assert _handler_names(registry, "post_recall_audit") == (
+        "core.001.audit",
+        f"{PLUGIN_NAME}.post_recall_audit",
+    )
+
+    registry.fire_voting(
+        "pre_recall_authorize",
+        query={"query": "snapshot", "as_of": "2026-05-01T00:00:00Z"},
+    )
+    registry.fire_filter_chain(
+        "pre_recall_rewrite",
+        {"query": "snapshot", "as_of": "2026-05-01T00:00:00Z"},
+    )
+    registry.fire_fire_and_forget(
+        "post_recall_audit",
+        query={"query": "snapshot", "as_of": "2026-05-01T00:00:00Z"},
+    )
+
+    assert calls == [
+        "core:pre_recall_authorize",
+        "plugin:pre_recall_authorize",
+        "plugin:pre_recall_rewrite",
+        "core:pre_recall_rewrite",
+        "core:post_recall_audit",
+        "plugin:post_recall_audit",
+    ]
+
+
 def test_entry_point_factory_is_discoverable(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         discovery,
@@ -157,3 +221,28 @@ def test_entry_point_factory_is_discoverable(monkeypatch: pytest.MonkeyPatch) ->
     assert discovered[0].entry_point_name == "time-travel"
     assert discovered[0].entry_point_value == "stigmem_plugin_time_travel:plugin_manifest"
     assert discovered[0].distribution == PLUGIN_NAME
+
+
+def _recording_manifest(calls: list[str]) -> PluginManifest:
+    manifest = plugin_manifest()
+    hooks: dict[str, Callable[..., Any]] = {}
+    for hook_name, handler in manifest.hooks.items():
+        hooks[hook_name] = _recording_handler(hook_name, handler, calls)
+    return manifest.model_copy(update={"hooks": hooks})
+
+
+def _recording_handler(
+    hook_name: str,
+    handler: Callable[..., T],
+    calls: list[str],
+) -> Callable[..., T]:
+    def wrapper(ctx: PluginContext, *args: object, **kwargs: object) -> T:
+        calls.append(f"plugin:{hook_name}")
+        return handler(ctx, *args, **kwargs)
+
+    wrapper.__name__ = handler.__name__
+    return wrapper
+
+
+def _handler_names(registry: HookRegistry, hook_name: str) -> tuple[str, ...]:
+    return tuple(entry.handler_name for entry in registry.handlers_for(hook_name))

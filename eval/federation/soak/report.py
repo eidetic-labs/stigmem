@@ -15,11 +15,11 @@ def build_artifact(
     workload: dict,
     smoke: bool,
 ) -> dict:
-    with metrics._lock:
-        ab = list(metrics._lag_samples_ab)
-        ac = list(metrics._lag_samples_ac)
-        cap_total = metrics._cap_token_total
-        cap_verified = metrics._cap_token_verified
+    metrics_snapshot = metrics.snapshot()
+    ab = metrics_snapshot["lag_samples_ab"]
+    ac = metrics_snapshot["lag_samples_ac"]
+    cap_total = metrics_snapshot["cap_token_total"]
+    cap_verified = metrics_snapshot["cap_token_verified"]
 
     token_rate = cap_verified / cap_total if cap_total else 1.0
     audit_completeness = workload["audit_completeness"]

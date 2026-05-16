@@ -89,7 +89,7 @@ def run_workload(
             tracked_probe_ids.append(probe_id)
 
         # Cross-node capability-token verification probe (every ~10 probes)
-        if metrics._probe_count % 10 == 1 and probe_id:
+        if metrics.get_probe_count() % 10 == 1 and probe_id:
             _verify_cap_token(clients["node-a"], probe_id, admin_keys["node-a"])
 
         # Mixed steady-state: also assert on B and C
@@ -106,15 +106,15 @@ def run_workload(
     print("→ Waiting for final propagation (30 s)…")
     time.sleep(30.0)
 
-    # Audit completeness uses the probe facts tracked by _probe_replication()
-    # via the global _audit_facts_sent/_audit_facts_received counters.
+    # Audit completeness uses the probe facts tracked by _probe_replication().
     # Also spot-check a sample of recent probes on node-B for belt-and-suspenders.
     audit_completeness = check_audit_completeness(clients, tracked_probe_ids[:50])
+    metrics_snapshot = metrics.snapshot()
 
     return {
         "cc_results": cc_results,
         "audit_completeness": audit_completeness,
-        "audit_facts_sent": metrics._audit_facts_sent,
-        "audit_facts_received": metrics._audit_facts_received,
+        "audit_facts_sent": metrics_snapshot["audit_facts_sent"],
+        "audit_facts_received": metrics_snapshot["audit_facts_received"],
         "tracked_probe_count": len(tracked_probe_ids),
     }

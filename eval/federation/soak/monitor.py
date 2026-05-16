@@ -73,9 +73,7 @@ def _probe_replication(
     if not fact_id:
         return ""
 
-    with metrics._lock:
-        metrics._probe_count += 1
-        metrics._audit_facts_sent += 1
+    metrics.increment_probe_count()
 
     # Measure propagation to each peer in a thread
     def measure(target_name: str, target_client: httpx.Client) -> None:
@@ -88,8 +86,7 @@ def _probe_replication(
                     lag_ms = (time.monotonic() - t0) * 1000
                     metrics._record_lag(target_name, lag_ms)
                     if target_name == "node-b":
-                        with metrics._lock:
-                            metrics._audit_facts_received += 1
+                        metrics.increment_audit_facts_received()
                     return
             except httpx.HTTPError as exc:
                 last_error = exc
@@ -122,7 +119,7 @@ def _verify_cap_token(client: httpx.Client, fact_id: str, valid_key: str) -> Non
     - Attempt with a FORGED token → must return 401/403 (no partial data)
     - Attempt with the valid key → must return 200
 
-    Updates global metrics._cap_token_total / metrics._cap_token_verified counters.
+    Updates capability-token counters in the shared metrics state.
     """
     base_url = str(client.base_url).rstrip("/")
 
@@ -134,15 +131,13 @@ def _verify_cap_token(client: httpx.Client, fact_id: str, valid_key: str) -> Non
             headers={"Authorization": f"Bearer {forged}"},
             timeout=10.0,
         )
-        with metrics._lock:
-            metrics._cap_token_total += 1
-            if r.status_code in (401, 403):
-                # Correct — access was properly denied
-                metrics._cap_token_verified += 1
-            # 200 here = security regression (bypass)
+        metrics.increment_cap_token_total()
+        if r.status_code in (401, 403):
+            # Correct — access was properly denied
+            metrics.increment_cap_token_verified()
+        # 200 here = security regression (bypass)
     except httpx.HTTPError as exc:
-        with metrics._lock:
-            metrics._cap_token_total += 1
+        metrics.increment_cap_token_total()
         print(f"  forged-token probe failed before authorization decision: {exc}", file=sys.stderr)
 
     # Attempt with valid key — must succeed
@@ -152,13 +147,11 @@ def _verify_cap_token(client: httpx.Client, fact_id: str, valid_key: str) -> Non
             headers={"Authorization": f"Bearer {valid_key}"},
             timeout=10.0,
         )
-        with metrics._lock:
-            metrics._cap_token_total += 1
-            if r.status_code == 200:
-                metrics._cap_token_verified += 1
+        metrics.increment_cap_token_total()
+        if r.status_code == 200:
+            metrics.increment_cap_token_verified()
     except httpx.HTTPError as exc:
-        with metrics._lock:
-            metrics._cap_token_total += 1
+        metrics.increment_cap_token_total()
         print(f"  valid-token probe failed before authorization decision: {exc}", file=sys.stderr)
 
 

@@ -15,6 +15,49 @@ _audit_facts_sent = 0
 _audit_facts_received = 0
 
 
+def increment_probe_count() -> int:
+    global _probe_count, _audit_facts_sent
+    with _lock:
+        _probe_count += 1
+        _audit_facts_sent += 1
+        return _probe_count
+
+
+def increment_audit_facts_received() -> None:
+    global _audit_facts_received
+    with _lock:
+        _audit_facts_received += 1
+
+
+def increment_cap_token_total() -> None:
+    global _cap_token_total
+    with _lock:
+        _cap_token_total += 1
+
+
+def increment_cap_token_verified() -> None:
+    global _cap_token_verified
+    with _lock:
+        _cap_token_verified += 1
+
+
+def get_probe_count() -> int:
+    with _lock:
+        return _probe_count
+
+
+def snapshot() -> dict:
+    with _lock:
+        return {
+            "lag_samples_ab": list(_lag_samples_ab),
+            "lag_samples_ac": list(_lag_samples_ac),
+            "cap_token_total": _cap_token_total,
+            "cap_token_verified": _cap_token_verified,
+            "audit_facts_sent": _audit_facts_sent,
+            "audit_facts_received": _audit_facts_received,
+        }
+
+
 def _percentile(samples: list[float], pct: float) -> float:
     if not samples:
         return 0.0

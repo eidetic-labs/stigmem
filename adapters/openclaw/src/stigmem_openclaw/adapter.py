@@ -46,6 +46,24 @@ class OpenClawTargetError(ValueError):
     """Raised when a handoff or escalation target is not explicitly allowed."""
 
 
+class OpenClawWriteError(RuntimeError):
+    """Raised when an OpenClaw write surface cannot complete safely."""
+
+    def __init__(self, message: str, *, entity: str, relation: str | None = None) -> None:
+        super().__init__(message)
+        self.entity = entity
+        self.relation = relation
+
+
+@dataclass(frozen=True)
+class OpenClawWriteResult:
+    """Result for idempotent OpenClaw write surfaces."""
+
+    entity: str
+    relations: tuple[str, ...]
+    created: bool
+
+
 class OpenClawStigmemAdapter:
     """Stigmem adapter for OpenClaw agents.
 
@@ -182,13 +200,21 @@ class OpenClawStigmemAdapter:
         fact_refs: list[str],
         continuation: str | None = None,
         scope: FactScope = "company",
-    ) -> None:
+        idempotency_key: str | None = None,
+    ) -> OpenClawWriteResult:
         """Emit a handoff intent when a session ends or delegates.
 
         fact_refs are validated before asserting; invalid refs are skipped.
-        Individual assertion failures are logged but do not abort the handoff.
+        Assertion failures raise OpenClawWriteError so callers cannot miss
+        partial writes. Pass idempotency_key to make retries no-op after a
+        complete prior write and explicit errors after partial prior writes.
         """
         self._validate_handoff_target(to_entity)
+        handoff_id = _write_entity("handoff", idempotency_key)
+        core_relations = ("intent:handoff_to", "intent:handoff_summary")
+        if idempotency_key is not None and self._write_complete(handoff_id, core_relations, scope):
+            return OpenClawWriteResult(entity=handoff_id, relations=core_relations, created=False)
+
         valid_refs: list[str] = []
         for ref in fact_refs:
             try:
@@ -201,9 +227,8 @@ class OpenClawStigmemAdapter:
                     "emit_handoff: could not validate fact_ref %r: %s; skipping", ref, exc
                 )
 
-        handoff_id = f"handoff:{uuid.uuid4()}"
-
-        _safe_assert(
+        written: list[str] = []
+        _assert_fact(
             self._client,
             handoff_id,
             "intent:handoff_to",
@@ -211,7 +236,8 @@ class OpenClawStigmemAdapter:
             from_entity,
             scope,
         )
-        _safe_assert(
+        written.append("intent:handoff_to")
+        _assert_fact(
             self._client,
             handoff_id,
             "intent:handoff_summary",
@@ -219,8 +245,9 @@ class OpenClawStigmemAdapter:
             from_entity,
             scope,
         )
+        written.append("intent:handoff_summary")
         for ref in valid_refs:
-            _safe_assert(
+            _assert_fact(
                 self._client,
                 handoff_id,
                 "intent:context_ref",
@@ -228,8 +255,9 @@ class OpenClawStigmemAdapter:
                 from_entity,
                 scope,
             )
+            written.append("intent:context_ref")
         if continuation:
-            _safe_assert(
+            _assert_fact(
                 self._client,
                 handoff_id,
                 "intent:continuation",
@@ -237,6 +265,8 @@ class OpenClawStigmemAdapter:
                 from_entity,
                 scope,
             )
+            written.append("intent:continuation")
+        return OpenClawWriteResult(entity=handoff_id, relations=tuple(written), created=True)
 
     def emit_decision(
         self,
@@ -280,15 +310,21 @@ class OpenClawStigmemAdapter:
         goal: str,
         priority: str = "medium",
         scope: FactScope = "company",
-    ) -> None:
+        idempotency_key: str | None = None,
+    ) -> OpenClawWriteResult:
         """Emit an escalation intent fact with a 24-hour expiry."""
         self._validate_handoff_target(to_entity)
         valid_until = (datetime.now(tz=UTC) + timedelta(hours=24)).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
-        esc_id = f"escalation:{uuid.uuid4()}"
+        esc_id = _write_entity("escalation", idempotency_key)
+        core_relations = ("intent:escalation", "intent:escalate_to", "intent:goal")
+        if idempotency_key is not None and self._write_complete(esc_id, core_relations, scope):
+            return OpenClawWriteResult(entity=esc_id, relations=core_relations, created=False)
 
-        self._client.assert_fact(
+        written: list[str] = []
+        _assert_fact(
+            self._client,
             entity=esc_id,
             relation="intent:escalation",
             value=string_value(priority),
@@ -296,20 +332,26 @@ class OpenClawStigmemAdapter:
             scope=scope,
             valid_until=valid_until,
         )
-        self._client.assert_fact(
+        written.append("intent:escalation")
+        _assert_fact(
+            self._client,
             entity=esc_id,
             relation="intent:escalate_to",
             value=ref_value(to_entity),
             source=self._source,
             scope=scope,
         )
-        self._client.assert_fact(
+        written.append("intent:escalate_to")
+        _assert_fact(
+            self._client,
             entity=esc_id,
             relation="intent:goal",
             value=text_value(goal),
             source=self._source,
             scope=scope,
         )
+        written.append("intent:goal")
+        return OpenClawWriteResult(entity=esc_id, relations=tuple(written), created=True)
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -337,12 +379,69 @@ class OpenClawStigmemAdapter:
                 f"OpenClaw handoff target {target!r} is not in the configured allowlist"
             )
 
+    def _write_complete(
+        self,
+        entity: str,
+        required_relations: tuple[str, ...],
+        scope: FactScope,
+    ) -> bool:
+        existing = {fact.relation for fact in self._query_all(entity=entity, scope=scope)}
+        if not existing:
+            return False
+        missing = [relation for relation in required_relations if relation not in existing]
+        if missing:
+            raise OpenClawWriteError(
+                f"OpenClaw write {entity!r} already has partial facts; missing {missing}",
+                entity=entity,
+            )
+        return True
+
 
 # ---------------------------------------------------------------------------
 # Module-level helpers
 # ---------------------------------------------------------------------------
 
 _HANDOFF_TARGET_RE = re.compile(r"agent:[A-Za-z0-9][A-Za-z0-9._:/@+-]*")
+_IDEMPOTENCY_KEY_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}")
+
+
+def _write_entity(prefix: str, idempotency_key: str | None) -> str:
+    if idempotency_key is None:
+        idempotency_key = str(uuid.uuid4())
+    if not _IDEMPOTENCY_KEY_RE.fullmatch(idempotency_key):
+        raise OpenClawWriteError(
+            f"OpenClaw idempotency key {idempotency_key!r} is malformed",
+            entity=f"{prefix}:invalid",
+        )
+    return f"{prefix}:{idempotency_key}"
+
+
+def _assert_fact(
+    client: StigmemClient,
+    entity: str,
+    relation: str,
+    value: Any,
+    source: str,
+    scope: FactScope,
+    valid_until: str | None = None,
+) -> None:
+    """Assert a fact and raise typed write errors on failure."""
+    try:
+        client.assert_fact(
+            entity=entity,
+            relation=relation,
+            value=value,
+            source=source,
+            scope=scope,
+            valid_until=valid_until,
+        )
+    except StigmemError as exc:
+        raise OpenClawWriteError(
+            f"Failed to assert {entity}/{relation}: {exc}",
+            entity=entity,
+            relation=relation,
+        ) from exc
+
 
 def _safe_assert(
     client: StigmemClient,
@@ -352,17 +451,8 @@ def _safe_assert(
     source: str,
     scope: FactScope,
 ) -> None:
-    """Assert a fact, logging and swallowing errors so partial handoff failures don't crash."""
-    try:
-        client.assert_fact(
-            entity=entity,
-            relation=relation,
-            value=value,
-            source=source,
-            scope=scope,
-        )
-    except StigmemError as exc:
-        logger.warning("Failed to assert %s/%s: %s", entity, relation, exc)
+    """Compatibility wrapper; raises OpenClawWriteError on failed writes."""
+    _assert_fact(client, entity, relation, value, source, scope)
 
 
 _SANITIZE_TABLE = str.maketrans({

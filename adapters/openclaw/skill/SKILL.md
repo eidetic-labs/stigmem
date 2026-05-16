@@ -38,10 +38,9 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 > **Alpha status.** This source copy is queued for the v0.9.0a2 ClawHub artifact
 > refresh. It does not revise the already-published a1 package in place. The
 > OpenClaw skill is available for v0.9.0aN evaluation only, not as a recommended
-> production integration. The adapter still has open audit findings around
-> partial handoff writes and prompt-injection boundaries. Use it only with
-> private, access-controlled Stigmem nodes and least-privilege agent keys until
-> the hardening work lands. See
+> production integration. The adapter still has an open audit finding around
+> prompt-injection boundaries. Use it only with private, access-controlled
+> Stigmem nodes and least-privilege agent keys until the hardening work lands. See
 > [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 ## What this skill provides
@@ -95,6 +94,7 @@ adapter.emit_handoff(
     summary="Auth provider chosen; Stripe limit escalation pending.",
     fact_refs=["fact-auth-decision", "fact-esc-stripe"],
     continuation="Resume from the Stripe rate-limit discussion.",
+    idempotency_key="session-2026-05-02-abc",
 )
 ```
 

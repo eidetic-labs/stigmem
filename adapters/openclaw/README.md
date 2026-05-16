@@ -53,10 +53,9 @@ keys regularly; revoke via the Stigmem node admin API if compromised.
 
 ## Known alpha gaps
 
-The OpenClaw audit still has unresolved blocker findings in the v0.9.0a1 adapter:
-orphan/partial handoff writes and presentation-layer-only sanitization. These are
-tracked for the v0.9.0a2..aN / beta hardening path. Until then, keep the adapter
-limited to local, private-node evaluation.
+The OpenClaw audit still has an unresolved blocker around presentation-layer-only
+sanitization. This is tracked for the v0.9.0a2..aN / beta hardening path. Until
+then, keep the adapter limited to local, private-node evaluation.
 
 ## Changelog
 
@@ -85,7 +84,9 @@ OpenClaw agents are persistent and channel-agnostic. The Stigmem adapter hooks i
    context.
 2. **Handoff** — when a user ends a session or delegates to another channel/agent,
    emit a typed `intent:handoff` fact cluster with validated fact refs, an optional
-   continuation note, and a human-readable summary.
+   continuation note, and a human-readable summary. Pass an `idempotency_key` for
+   retries; complete prior writes no-op, while partial prior writes raise a typed
+   error.
 3. **Decision** — when the agent makes a meaningful choice, emit a
    `roadmap:decision` fact. A dedup guard skips the write when an equivalent fact
    already exists for the same (entity, source) pair.
@@ -188,8 +189,9 @@ adapter.emit_handoff(
     from_entity="agent:openclaw",
     to_entity="agent:assistant",
     summary="User asked about Q2 roadmap; auth provider chosen; Stripe limit escalation pending.",
-    fact_refs=["fact-auth-decision", "fact-esc-stripe"],   # invalid refs are silently skipped
+    fact_refs=["fact-auth-decision", "fact-esc-stripe"],   # invalid refs are skipped with a warning
     continuation="Resume from the Stripe rate-limit discussion.",
+    idempotency_key="session-2026-05-02-abc",
 )
 ```
 

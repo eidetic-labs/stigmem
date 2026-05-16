@@ -20,10 +20,9 @@ shared knowledge store across agents.
 The OpenClaw connector is available in the v0.9.0aN alpha line for evaluation, not
 as a recommended production integration. This wording is queued for the
 v0.9.0a2 artifact refresh; it does not revise the already-published a1 ClawHub
-package in place. The adapter has unresolved audit findings around partial
-handoff writes and prompt-injection boundaries. Use only private,
-access-controlled Stigmem nodes and least-privilege agent keys until the
-hardening work lands. See
+package in place. The adapter has an unresolved audit finding around
+prompt-injection boundaries. Use only private, access-controlled Stigmem nodes
+and least-privilege agent keys until the hardening work lands. See
 [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::
@@ -127,11 +126,13 @@ adapter.emit_handoff(
     summary="Auth provider chosen; Stripe limit escalation pending.",
     fact_refs=["fact-auth-decision", "fact-esc-stripe"],
     continuation="Resume from the Stripe rate-limit discussion.",
+    idempotency_key="session-2026-05-02-abc",
 )
 ```
 
 `fact_refs` are persisted as `ref`-typed fact values so the receiving agent can
-fetch them directly.
+fetch them directly. Use `idempotency_key` for retries; a complete previous write
+is a no-op, while a partial previous write raises an explicit error.
 
 ## Security
 

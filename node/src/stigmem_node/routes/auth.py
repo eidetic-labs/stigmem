@@ -162,7 +162,7 @@ def _derive_permission_ceiling(entity_uri: str) -> set[str]:
 # ---------------------------------------------------------------------------
 
 _STATIC_KEY_ALLOWED_PERMISSIONS: frozenset[str] = frozenset(
-    {"read", "write", "federate", "admin", "audit.read"}
+    {"read", "write", "instruction:write", "federate", "admin", "audit.read"}
 )
 
 

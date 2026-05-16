@@ -4,7 +4,7 @@ version: 0.1.0-alpha.0
 status: Draft
 audience: Spec
 applies_to: stigmem v0.9.0bN
-last_updated: 2026-05-14
+last_updated: 2026-05-16
 supersedes: ADR-003 capability-based prompt-injection redesign material
 depends_on:
   - Spec-01-Fact-Model >= 0.1.0-alpha.0
@@ -21,8 +21,11 @@ to promote memory into instruction.
 ## Extraction Status
 
 This file contains the ADR-010 prose extraction for ADR-003 capability-based
-instruction handling. The feature targets the `v0.9.0bN` capability redesign
-line and is not part of the `v0.9.0a1` stable surface.
+instruction handling. The first implementation slice shipped in #373:
+`FactValue.interpret_as` exists, local instruction writes require
+`instruction:write`, and recall preserves instruction/content channels. The
+remaining federation/admission pieces target the `v0.9.0bN` capability
+redesign line and are not part of the `v0.9.0a1` stable surface.
 
 ## Principle
 
@@ -39,10 +42,10 @@ instruction.
 
 ## Write-Time Enforcement
 
-Writing instruction-typed facts MUST require a capability token with the
-appropriate instruction write grant. Cross-organization instruction-typed facts
-SHOULD be quarantined or rejected unless a trusted deployment relationship
-explicitly permits them.
+Writing instruction-typed facts MUST require explicit `instruction:write`
+authority. General `write` authority is insufficient. Cross-organization
+instruction-typed facts SHOULD be quarantined or rejected unless a trusted
+deployment relationship explicitly permits them.
 
 ## Recall-Time Enforcement
 

@@ -11,11 +11,16 @@ from .constants import VALID_SCOPES, VALID_VALUE_TYPES
 from .tombstones import TombstoneNotice
 
 VALID_WRITE_MODES = {"assert", "summarize_with_provenance"}
+VALID_INTERPRET_AS = {"content", "instruction"}
 
 
 class FactValue(BaseModel):
     type: str
     v: Any = None
+    interpret_as: str = Field(
+        "content",
+        description="How the value may be interpreted by recall consumers.",
+    )
 
     @field_validator("type")
     @classmethod
@@ -23,6 +28,13 @@ class FactValue(BaseModel):
         if t not in VALID_VALUE_TYPES:
             raise ValueError(f"type must be one of {VALID_VALUE_TYPES}")
         return t
+
+    @field_validator("interpret_as")
+    @classmethod
+    def check_interpret_as(cls, mode: str) -> str:
+        if mode not in VALID_INTERPRET_AS:
+            raise ValueError(f"interpret_as must be one of {sorted(VALID_INTERPRET_AS)}")
+        return mode
 
 
 class AttestationToken(BaseModel):
@@ -144,7 +156,11 @@ def row_to_record(
         id=row["id"],
         entity=row["entity"],
         relation=row["relation"],
-        value=FactValue(type=row["value_type"], v=_parse_v(row["value_type"], row["value_v"])),
+        value=FactValue(
+            type=row["value_type"],
+            v=_parse_v(row["value_type"], row["value_v"]),
+            interpret_as=_optional_col(row, "interpret_as", keys) or "content",
+        ),
         source=row["source"],
         timestamp=row["timestamp"],
         hlc=_optional_col(row, "hlc", keys),

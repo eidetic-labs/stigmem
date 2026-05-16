@@ -4,7 +4,7 @@
 
 This file records the ADR-010 modular specification composition for the Stigmem protocol. It is generated from YAML frontmatter in component [`spec/specs/`](specs/) files and colocated experimental specs under `experimental/<feature>/spec.md`.
 
-**Metadata last updated:** 2026-05-14
+**Metadata last updated:** 2026-05-16
 
 ## Protocol Component Specs
 
@@ -22,7 +22,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | [`Spec-10-Hardening`](specs/10-hardening.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-11-Replay-Protection`](specs/11-replay-protection.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-12-HLC-Bounded-Skew`](specs/12-hlc-bounded-skew.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
-| [`Spec-13-Capability-Based-Instructions`](specs/13-capability-based-instructions.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0bN | 2026-05-14 |
+| [`Spec-13-Capability-Based-Instructions`](specs/13-capability-based-instructions.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0bN | 2026-05-16 |
 | [`Spec-14-Batch-Assert`](specs/14-batch-assert.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0bN | 2026-05-14 |
 | [`Spec-15-Fact-Semantics`](specs/15-fact-semantics.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-16-Namespace-Registry`](specs/16-namespace-registry.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |

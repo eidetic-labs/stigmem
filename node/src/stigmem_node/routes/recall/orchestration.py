@@ -84,6 +84,14 @@ def _legacy_recall_payload(result: RecallResponse) -> dict[str, Any]:
     return result.model_dump(mode="json", exclude={"content", "instructions"})
 
 
+def _split_interpretation_channels(
+    packed: list[ScoredFact],
+) -> tuple[list[ScoredFact], list[ScoredFact]]:
+    content = [scored for scored in packed if scored.fact.value.interpret_as != "instruction"]
+    instructions = [scored for scored in packed if scored.fact.value.interpret_as == "instruction"]
+    return content, instructions
+
+
 def _validate_recall_request(req: RecallRequest, identity: Identity) -> None:
     """Auth + scope + depth validation. Raises HTTPException on failure."""
     if not identity.can_read():
@@ -133,12 +141,13 @@ def _handle_as_of_recall(req: RecallRequest, identity: Identity) -> RecallRespon
             depth=req.depth,
         )
     tokens_used = sum(sf.token_estimate for sf in packed)
+    content, instructions = _split_interpretation_channels(packed)
     return RecallResponse(
         recall_id=recall_id,
         query_hash=query_hash,
         facts=packed,
-        content=packed,
-        instructions=[],
+        content=content,
+        instructions=instructions,
         # §23.3.3 r.3: suppress total_scored when tombstone filtering was applied
         total_scored=None if tombstone_filtered else len(packed),
         token_budget=req.token_budget,
@@ -453,12 +462,13 @@ def _recall_impl(
     _set_recall_span_attrs(_span, recall_id, total_scored, tokens_used, truncated)
 
     # §23.3.3 r.3: suppress total_scored when tombstone filtering was applied
+    content, instructions = _split_interpretation_channels(packed)
     return RecallResponse(
         recall_id=recall_id,
         query_hash=query_hash,
         facts=packed,
-        content=packed,
-        instructions=[],
+        content=content,
+        instructions=instructions,
         total_scored=None if tombstone_filtered else total_scored,
         token_budget=req.token_budget,
         tokens_used=tokens_used,

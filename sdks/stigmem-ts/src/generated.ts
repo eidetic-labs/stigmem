@@ -1534,6 +1534,12 @@ export interface components {
         };
         /** FactValue */
         FactValue: {
+            /**
+             * Interpret As
+             * @description How the value may be interpreted by recall consumers.
+             * @default content
+             */
+            interpret_as: string;
             /** Type */
             type: string;
             /** V */

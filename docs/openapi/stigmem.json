@@ -992,6 +992,12 @@
       },
       "FactValue": {
         "properties": {
+          "interpret_as": {
+            "default": "content",
+            "description": "How the value may be interpreted by recall consumers.",
+            "title": "Interpret As",
+            "type": "string"
+          },
           "type": {
             "title": "Type",
             "type": "string"

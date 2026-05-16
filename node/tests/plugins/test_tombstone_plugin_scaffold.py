@@ -3,9 +3,10 @@ from __future__ import annotations
 import importlib
 import sys
 import tomllib
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 import pytest
 
@@ -14,6 +15,7 @@ from stigmem_node.plugins import (
     ENTRY_POINT_GROUP,
     Allow,
     HookRegistry,
+    PluginContext,
     PluginHealthStatus,
     PluginManifest,
     discover_plugin_manifests,
@@ -28,6 +30,7 @@ _PLUGIN = importlib.import_module("stigmem_plugin_tombstones")
 TombstoneConfig = _PLUGIN.TombstoneConfig
 PLUGIN_NAME = _PLUGIN.PLUGIN_NAME
 plugin_manifest = _PLUGIN.plugin_manifest
+T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -172,6 +175,78 @@ def test_manifest_registers_with_hook_registry() -> None:
     assert "plugin scaffold registered" in report.message
 
 
+def test_tombstone_plugin_hook_order_is_deterministic() -> None:
+    calls: list[str] = []
+    manifest = _recording_manifest(calls)
+    registry = HookRegistry()
+
+    def core_recall_filter(_ctx: PluginContext, value: list[str], **_: object) -> list[str]:
+        calls.append("core:recall_filter")
+        return value
+
+    def core_inbound_validate(_ctx: PluginContext, **_: object) -> Allow:
+        calls.append("core:federation_inbound_validate")
+        return Allow()
+
+    def core_post_assert_propagate(_ctx: PluginContext, **_: object) -> None:
+        calls.append("core:post_assert_propagate")
+
+    def core_migration(_ctx: PluginContext, value: list[object], **_: object) -> list[object]:
+        calls.append("core:migration_register")
+        return value
+
+    registry.register_core_handler("recall_filter", core_recall_filter, name="core.001.filter")
+    registry.register_core_handler(
+        "federation_inbound_validate",
+        core_inbound_validate,
+        name="core.001.validate",
+    )
+    registry.register_core_handler(
+        "post_assert_propagate",
+        core_post_assert_propagate,
+        name="core.001.propagate",
+    )
+    registry.register_core_handler(
+        "migration_register",
+        core_migration,
+        name="core.001.migration",
+    )
+    registry.register_plugin(manifest)
+
+    assert _handler_names(registry, "recall_filter") == (
+        f"{PLUGIN_NAME}.recall_filter",
+        "core.001.filter",
+    )
+    assert _handler_names(registry, "federation_inbound_validate") == (
+        "core.001.validate",
+        f"{PLUGIN_NAME}.federation_inbound_validate",
+    )
+    assert _handler_names(registry, "post_assert_propagate") == (
+        "core.001.propagate",
+        f"{PLUGIN_NAME}.post_assert_propagate",
+    )
+    assert _handler_names(registry, "migration_register") == (
+        "core.001.migration",
+        f"{PLUGIN_NAME}.migration_register",
+    )
+
+    registry.fire_filter_chain("recall_filter", ["fact-1"])
+    registry.fire_voting("federation_inbound_validate")
+    registry.fire_fire_and_forget("post_assert_propagate")
+    registry.fire_filter_chain("migration_register", [])
+
+    assert calls == [
+        "plugin:recall_filter",
+        "core:recall_filter",
+        "core:federation_inbound_validate",
+        "plugin:federation_inbound_validate",
+        "core:post_assert_propagate",
+        "plugin:post_assert_propagate",
+        "core:migration_register",
+        "plugin:migration_register",
+    ]
+
+
 def test_entry_point_factory_is_discoverable(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         discovery,
@@ -195,3 +270,28 @@ def test_entry_point_factory_is_discoverable(monkeypatch: pytest.MonkeyPatch) ->
     assert discovered[0].entry_point_name == "tombstones"
     assert discovered[0].entry_point_value == "stigmem_plugin_tombstones:plugin_manifest"
     assert discovered[0].distribution == PLUGIN_NAME
+
+
+def _recording_manifest(calls: list[str]) -> PluginManifest:
+    manifest = plugin_manifest()
+    hooks: dict[str, Callable[..., Any]] = {}
+    for hook_name, handler in manifest.hooks.items():
+        hooks[hook_name] = _recording_handler(hook_name, handler, calls)
+    return manifest.model_copy(update={"hooks": hooks})
+
+
+def _recording_handler(
+    hook_name: str,
+    handler: Callable[..., T],
+    calls: list[str],
+) -> Callable[..., T]:
+    def wrapper(ctx: PluginContext, *args: object, **kwargs: object) -> T:
+        calls.append(f"plugin:{hook_name}")
+        return handler(ctx, *args, **kwargs)
+
+    wrapper.__name__ = handler.__name__
+    return wrapper
+
+
+def _handler_names(registry: HookRegistry, hook_name: str) -> tuple[str, ...]:
+    return tuple(entry.handler_name for entry in registry.handlers_for(hook_name))

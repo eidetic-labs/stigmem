@@ -25,6 +25,10 @@ as_of parameter on /v1/recall and /v1/facts; append-only retraction log.
 :::caution EXPERIMENTAL
 Time-travel semantics interact with tombstones in ways that are still being finalized. Specifically:
 
+- The default install rejects `as_of` requests unless
+  `stigmem-plugin-time-travel` is registered. This source package is available
+  for alpha validation on `main`, but signed/package artifact evidence is
+  deferred until all planned plugins are built.
 - Queries at a time `T` before a tombstone's `issued_at` may return erased data on some backends. Review your deletion workflow before relying on this for compliance.
 - Isolation guarantees differ between SQLite (`BEGIN IMMEDIATE`) and PostgreSQL (`READ COMMITTED`). Test your workload on the production backend before going live.
 - `legal_hold` fact handling requires the admin key; key management for this path is not yet documented.

@@ -47,3 +47,13 @@ future reintroduction work defines protocol behavior.
 - Keep per-feature gate details in each `experimental/<feature>/STATUS.md`.
 - Do not add a public docs link to this internal tracker; internal docs may link
   outward to public pages.
+
+## 2026-05-16 PR 4c Closeout
+
+- Time-travel query source now lives under
+  `experimental/time-travel/` as `stigmem-plugin-time-travel`.
+- Default installs reject `as_of` requests with
+  `time_travel_plugin_not_loaded`; plugin-loaded validation covers fact query,
+  recall, deterministic hook ordering, and plugin-required conformance vectors.
+- Signed/package artifact evidence remains deferred until the planned plugin set
+  is built.

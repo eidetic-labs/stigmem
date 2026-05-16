@@ -9,7 +9,16 @@ audience: Integrator
 
 **Audience:** Integrators and operators who need to query historical fact state — audit trails, regulatory snapshots, or debugging temporal inconsistencies.
 
-Stigmem supports **point-in-time queries** via the `as_of` parameter on both the fact query and recall endpoints. Instead of returning the current fact set, the node reconstructs what was visible at the specified timestamp. The full protocol is defined in spec §24.
+With the experimental `stigmem-plugin-time-travel` source package registered,
+Stigmem supports **point-in-time queries** via the `as_of` parameter on both the
+fact query and recall endpoints. Instead of returning the current fact set, the
+node reconstructs what was visible at the specified timestamp. The full protocol
+is defined in Spec-X3.
+
+Default installs intentionally fail closed: `as_of` requests return
+`time_travel_plugin_not_loaded` unless the time-travel plugin is registered.
+The plugin is source-available for alpha validation on `main`; signed/package
+artifact evidence is deferred until all planned plugins are built.
 
 ---
 
@@ -134,6 +143,11 @@ Cursor-based pagination works the same as for non-time-travel queries: use the `
 | `STIGMEM_AS_OF_RETENTION_FLOOR` | (none) | ISO 8601 timestamp; queries before this date are rejected |
 
 If not set, there is no floor — queries can go back to the earliest fact in the database.
+
+The source package also includes an experimental configuration schema with
+`STIGMEM_TIME_TRAVEL_*` gates. Treat those gates as alpha validation controls,
+not a support guarantee: ADR-008 graduation and release artifact evidence are
+still open.
 
 ---
 

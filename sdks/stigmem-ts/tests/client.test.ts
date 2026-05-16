@@ -227,7 +227,9 @@ describe("recall", () => {
 
   it("sends default options when none provided", async () => {
     let capturedBody: unknown;
+    let capturedUrl = "";
     const fetchMock = vi.fn(async (_url: string, opts?: RequestInit) => {
+      capturedUrl = _url;
       capturedBody = opts?.body ? JSON.parse(opts.body as string) : null;
       return { ok: true, status: 200, json: async () => RECALL_RESPONSE } as Response;
     });
@@ -237,6 +239,19 @@ describe("recall", () => {
     expect(body["scope"]).toBe("local");
     expect(body["token_budget"]).toBe(4000);
     expect(body["depth"]).toBe(2);
+    expect(capturedUrl).toBe(`${BASE}/v1/recall`);
+  });
+
+  it("passes legacy_format as a recall query parameter", async () => {
+    let capturedUrl = "";
+    const fetchMock = vi.fn(async (_url: string) => {
+      capturedUrl = _url;
+      return { ok: true, status: 200, json: async () => RECALL_RESPONSE } as Response;
+    });
+    const client = new StigmemClient({ url: BASE, apiKey: KEY, fetch: fetchMock as unknown as typeof fetch });
+    await client.recall("legacy query", { legacy_format: true });
+
+    expect(capturedUrl).toBe(`${BASE}/v1/recall?legacy_format=true`);
   });
 });
 

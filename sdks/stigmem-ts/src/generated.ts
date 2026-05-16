@@ -4217,7 +4217,10 @@ export interface operations {
     };
     recall_v1_recall_post: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the temporary legacy recall response shape without `content` / `instructions` channel fields. */
+                legacy_format?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;

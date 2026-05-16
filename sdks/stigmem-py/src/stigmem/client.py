@@ -280,6 +280,7 @@ class StigmemClient:
         min_confidence: float = 0.1,
         include_neighbors: bool = True,
         limit: int = 100,
+        legacy_format: bool = False,
     ) -> RecallResponse:
         """Hybrid recall — return the most salient facts for *query* within *token_budget*.
 
@@ -294,6 +295,7 @@ class StigmemClient:
             min_confidence: Minimum fact confidence to include.
             include_neighbors: Whether to expand via graph traversal.
             limit: Maximum candidate facts before token-budget packing.
+            legacy_format: Request the temporary pre-channel response shape.
 
         Returns:
             RecallResponse with scored + packed facts and score breakdowns.
@@ -308,7 +310,8 @@ class StigmemClient:
             include_neighbors=include_neighbors,
             limit=limit,
         )
-        resp = self._http.post("/v1/recall", json=req.model_dump())
+        params = {"legacy_format": "true"} if legacy_format else None
+        resp = self._http.post("/v1/recall", json=req.model_dump(), params=params)
         _raise_for_status(resp)
         return RecallResponse.model_validate(resp.json())
 
@@ -538,6 +541,7 @@ class AsyncStigmemClient:
         min_confidence: float = 0.1,
         include_neighbors: bool = True,
         limit: int = 100,
+        legacy_format: bool = False,
     ) -> RecallResponse:
         """Async hybrid recall — return the most salient facts for *query* within *token_budget*."""
         req = RecallRequest(
@@ -550,7 +554,8 @@ class AsyncStigmemClient:
             include_neighbors=include_neighbors,
             limit=limit,
         )
-        resp = await self._http.post("/v1/recall", json=req.model_dump())
+        params = {"legacy_format": "true"} if legacy_format else None
+        resp = await self._http.post("/v1/recall", json=req.model_dump(), params=params)
         _raise_for_status(resp)
         return RecallResponse.model_validate(resp.json())
 

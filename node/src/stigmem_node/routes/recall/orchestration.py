@@ -6,7 +6,8 @@ import hashlib
 import uuid
 from typing import Annotated, Any
 
-from fastapi import Depends, HTTPException, Response, status
+from fastapi import Depends, HTTPException, Query, Response, status
+from fastapi.responses import JSONResponse
 
 from ...auth import Identity, resolve_identity
 from ...card_materializer import CARD_MIN_CONFIDENCE, get_fresh_card
@@ -43,7 +44,16 @@ def recall(
     req: RecallRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
     response: Response,
-) -> RecallResponse:
+    legacy_format: Annotated[
+        bool,
+        Query(
+            description=(
+                "Return the temporary legacy recall response shape without "
+                "`content` / `instructions` channel fields."
+            )
+        ),
+    ] = False,
+) -> RecallResponse | JSONResponse:
     """Hybrid recall — return the most salient facts for a query, within budget.
 
     Combines lexical (FTS5/BM25), dense-vector, and graph-traversal signals.
@@ -58,9 +68,18 @@ def recall(
         },
     ) as _span:
         result = _recall_impl(req, identity, _span)
+    headers = {}
     if result.total_scored is not None:
-        response.headers["X-Total-Count"] = str(result.total_scored)
+        headers["X-Total-Count"] = str(result.total_scored)
+        response.headers["X-Total-Count"] = headers["X-Total-Count"]
+    if legacy_format:
+        return JSONResponse(content=_legacy_recall_payload(result), headers=headers)
     return result
+
+
+def _legacy_recall_payload(result: RecallResponse) -> dict[str, Any]:
+    """Return the one-minor-version compatibility shape for pre-channel clients."""
+    return result.model_dump(mode="json", exclude={"content", "instructions"})
 
 
 def _validate_recall_request(req: RecallRequest, identity: Identity) -> None:

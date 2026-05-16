@@ -86,6 +86,17 @@ If your agent is missing relevant facts, check `truncated` first. If it is `true
 | `min_confidence` | float | No | 0.1 | Minimum effective confidence for inclusion |
 | `force_refresh` | boolean | No | false | Block on synchronous memory card refresh |
 | `include_contradicted` | boolean | No | false | Include facts with unresolved contradictions |
+| `legacy_format` | query boolean | No | false | Temporary one-minor-version compatibility switch. When `true`, omits `content` and `instructions` from the response while preserving the legacy `facts` array. |
+
+---
+
+## Response channels
+
+By default, recall returns the legacy `facts` array plus channel-separated
+`content` and `instructions` arrays. New adapters should consume `content` and
+`instructions` separately and treat recalled content as untrusted data. Older
+clients can call `POST /v1/recall?legacy_format=true` during the compatibility
+window to receive the pre-channel response shape.
 
 ---
 

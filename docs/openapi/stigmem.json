@@ -6524,6 +6524,20 @@
       "post": {
         "description": "Hybrid recall \u2014 return the most salient facts for a query, within budget.\n\nCombines lexical (FTS5/BM25), dense-vector, and graph-traversal signals.\nHonors Spec-02-Scopes-and-ACL and Spec-05-Federation-Trust at every step.",
         "operationId": "recall_v1_recall_post",
+        "parameters": [
+          {
+            "description": "Return the temporary legacy recall response shape without `content` / `instructions` channel fields.",
+            "in": "query",
+            "name": "legacy_format",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Return the temporary legacy recall response shape without `content` / `instructions` channel fields.",
+              "title": "Legacy Format",
+              "type": "boolean"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {

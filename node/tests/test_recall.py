@@ -145,6 +145,19 @@ class TestRecallBasic:
         assert body["content"] == body["facts"]
         assert body["instructions"] == []
 
+    def test_legacy_format_omits_channel_fields(self, client: TestClient) -> None:
+        r = client.post(
+            "/v1/recall",
+            params={"legacy_format": True},
+            json=_recall_body(),
+        )
+        assert r.status_code == 200
+        body = r.json()
+        assert "facts" in body
+        assert "content" not in body
+        assert "instructions" not in body
+        assert r.headers["X-Total-Count"] == "0"
+
     def test_facts_ordered_by_score_desc(self, client: TestClient) -> None:
         for i in range(5):
             client.post(

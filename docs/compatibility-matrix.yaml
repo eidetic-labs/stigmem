@@ -115,8 +115,9 @@ features:
     spec_section: §23
     stability: experimental
     requires:
-      node: "experimental"
-    notes: "Deferred to experimental/tombstones/. Targeted v0.9.0a5."
+      node: ">=0.9.0a1"
+      tombstone_plugin: "source-only on main; no released artifact yet"
+    notes: "Extracted to experimental/tombstones/ as an opt-in plugin source package. Default installs do not expose tombstone routes or filters. Signed/package artifact evidence is queued in #298; ADR-008 graduation remains blocked on tombstone threat-model, conformance, soak, and operator-runbook gates."
 
   - id: time-travel
     name: Time-travel queries

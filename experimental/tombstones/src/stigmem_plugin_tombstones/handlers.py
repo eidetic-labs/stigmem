@@ -13,13 +13,13 @@ PLUGIN_VERSION = "0.1.0"
 
 
 def recall_filter(_ctx: PluginContext, value: T, **_: Any) -> T:
-    """Preserve recall results until PR 4d moves tombstone suppression here."""
+    """Preserve recall results unless plugin-loaded legacy filtering is configured."""
 
     return value
 
 
 def federation_inbound_validate(_ctx: PluginContext, **_: Any) -> Allow:
-    """Allow by default until PR 4d moves tombstone signature validation here."""
+    """Allow inbound federation unless plugin-loaded signature validation is configured."""
 
     return Allow()
 

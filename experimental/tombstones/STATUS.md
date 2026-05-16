@@ -4,17 +4,19 @@
 
 **Spec ID:** `Spec-X2-RTBF-Tombstones`
 **Legacy section:** §23
-**Status:** Dormant
-**Active version:** v0.9.0a1 (code last functional under retracted v1.0)
+**Status:** Extracted / opt-in experimental; ADR-008 blocked
+**Active version:** Source package extracted on main after v0.9.0a1; no released plugin artifact yet
 **Last updated:** 2026-05-16
-**Owner:** unowned
+**Owner:** unowned for ADR-008 graduation
 **Buildable:** yes
 
 ---
 
 ## Summary
 
-§23 introduces tombstone records — signed admin-issued records that suppress facts for a given entity URI from all recall and query results. Tombstones serve "right to be forgotten" (RTBF) workflows for regulatory compliance: a data subject requests erasure, an operator issues a tombstone, the entity's facts disappear from all reads. A `legal_hold: true` flag preserves the underlying facts in time-travel queries (§24) for legitimate legal-preservation purposes while still hiding them from normal recall.
+§23 introduces tombstone records — signed admin-issued records that suppress facts for a given entity URI from recall and query results. Tombstones are intended to support "right to be forgotten" (RTBF) workflows, but the feature is not part of the v0.9.0a1 default install and is not a supported compliance surface.
+
+PR 4d extracted the experimental source package at `experimental/tombstones/`, gated default-install behavior behind `stigmem-plugin-tombstones` registration, and added plugin-loading/order validation. Default installs do not mount tombstone admin or federation routes and do not apply legacy tombstone filters unless the plugin is explicitly registered. Signed package publication, launch evidence, and operator-ready artifact verification remain deferred to the all-plugins launch lane.
 
 ## Why deferred
 
@@ -104,11 +106,17 @@ Tombstone soak is **higher-stakes than typical features** — operators run RTBF
   `stigmem-plugin-tombstones` registration. Default installs no longer mount
   tombstone admin/federation routes or apply legacy tombstone read filters;
   plugin-loaded tests preserve the historical behavior for alpha validation.
+- **2026-05-16** — PR 4d #322 validated plugin-loaded behavior and
+  deterministic handler ordering for `recall_filter`,
+  `federation_inbound_validate`, `post_assert_propagate`, and
+  `migration_register`.
+- **2026-05-16** — PR 4d #323 closed out public/Internal-Comms docs for the
+  source-available, opt-in experimental state. Signed/published artifact
+  evidence remains deferred to the all-plugins launch lane.
 - **2026-05-16** — PR 4d scaffold added the
   `experimental/tombstones/` plugin source package with manifest, config
   schema, hook placeholders, plugin-owned tombstone migration declaration, and
-  registration tests. Runtime extraction and default-install gating remain
-  follow-on PR 4d work.
+  registration tests.
 - **2026-05-15** — added ADR-018 colocated security analysis in `security.md`.
 - **2026-05-06** — moved to `experimental/` per ADR-002. Status: Dormant.
 - **2026-05-04** — `EXPERIMENTAL` caution banner added to §23 in spec (see commit `10c4ace`).

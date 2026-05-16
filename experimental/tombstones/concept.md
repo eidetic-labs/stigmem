@@ -8,9 +8,17 @@ audience: Integrator
 
 **Audience:** Node operators handling GDPR Art. 17 / CCPA 1798.105 erasure requests.
 
+:::caution Experimental source package
+
+RTBF tombstones are not part of the v0.9.0a1 default install and are not a supported compliance surface. The source package lives under `experimental/tombstones/` and only becomes active when `stigmem-plugin-tombstones` is explicitly registered/configured. Default installs do not mount tombstone admin or federation routes and do not apply tombstone filters.
+
+Signed package publication, launch evidence, and operator-ready artifact verification are deferred to the all-plugins launch lane. Treat the API and CLI examples below as the target plugin-loaded workflow, not default-install behavior.
+
+:::
+
 ## Overview
 
-Stigmem implements erasure via **tombstones** rather than physical deletion. A tombstone marks
+The experimental tombstone design models erasure via **tombstones** rather than physical deletion. A tombstone marks
 an entity URI (and optionally a specific scope) as erased. Once tombstoned:
 
 - Facts for the entity are excluded from all query and recall results.
@@ -18,11 +26,11 @@ an entity URI (and optionally a specific scope) as erased. Once tombstoned:
 - Federation peers receive the tombstone and apply it locally.
 - The underlying rows remain in the database for audit and legal-hold purposes.
 
-The full protocol is defined in spec section 23.
+The full protocol is defined in `Spec-X2-RTBF-Tombstones`.
 
 ---
 
-## Creating a tombstone
+## Target workflow: creating a tombstone
 
 ### Via CLI
 
@@ -130,6 +138,8 @@ still honouring the erasure request for normal access paths.
 ---
 
 ## Federation propagation
+
+Federation propagation is part of the target plugin-loaded design. It is not active in default installs, and operators should not rely on it for production RTBF compliance until the feature passes the ADR-008 gates.
 
 Tombstones propagate automatically to federation peers:
 

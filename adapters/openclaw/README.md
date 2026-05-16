@@ -41,9 +41,11 @@ it uniquely identifies the agent deployment, not a shared or generic identifier.
 **Untrusted retrieved context** — `boot()` returns facts from an external Stigmem
 node. The adapter applies presentation-layer escaping before formatting fact values
 into the system-prompt summary, but this is only a partial mitigation, not a prompt
-injection boundary. Treat the summary and `ctx.facts` as untrusted input; do not use
-this adapter in high-stakes or irreversible workflows until the Phase B OpenClaw
-hardening work closes the audit findings.
+injection boundary. The C1/H5 OpenClaw audit finding remains open until ADR-003
+channel-separated recall output is integrated; tracked by
+[issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357). Treat the
+summary and `ctx.facts` as untrusted input; do not use this adapter in
+high-stakes or irreversible workflows until that structural path lands.
 
 **API key scope** — Set `STIGMEM_API_KEY` to a least-privilege key scoped only to
 the nodes this agent reads from and writes to. `OpenClawStigmemAdapter.from_env()`
@@ -53,9 +55,13 @@ keys regularly; revoke via the Stigmem node admin API if compromised.
 
 ## Known alpha gaps
 
-The OpenClaw audit still has an unresolved blocker around presentation-layer-only
-sanitization. This is tracked for the v0.9.0a2..aN / beta hardening path. Until
-then, keep the adapter limited to local, private-node evaluation.
+The OpenClaw audit still has an unresolved C1/H5 blocker: retrieved fact values
+are rendered into a prompt summary with presentation-layer escaping, not delivered
+through a structural instruction/content channel boundary. This adapter remains
+experimental and outside the supported production surface until the ADR-003
+channel-separated recall integration lands in
+[issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357). Until then,
+keep the adapter limited to local, private-node evaluation.
 
 ## Changelog
 

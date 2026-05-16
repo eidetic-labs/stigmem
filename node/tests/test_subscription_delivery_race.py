@@ -104,7 +104,13 @@ def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
         barrier.wait()  # release all threads simultaneously
         deliver_pending()
 
-    with patch("stigmem_node.subscription_delivery.httpx.Client", mock_cls):
+    with (
+        patch("stigmem_node.subscription_delivery.httpx.Client", mock_cls),
+        patch(
+            "stigmem_node.subscription_delivery._sanitize_payload",
+            side_effect=lambda _event, payload: payload,
+        ),
+    ):
         threads = [threading.Thread(target=worker) for _ in range(8)]
         for t in threads:
             t.start()

@@ -14,9 +14,11 @@
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "test": "turbo run test",
+    "grade:duplication": "jscpd --reporters console,json --output .jscpd --ignore \"**/node_modules/**,**/.venv/**,**/.git/**,**/build/**,**/dist/**,**/.next/**,**/.turbo/**,**/.mypy_cache/**,**/.pytest_cache/**,**/.ruff_cache/**,**/.jscpd/**,**/coverage/**\" --noTips node/src node/tests scripts adapters eval experimental sdks",
     "clean": "turbo run clean"
   },
   "devDependencies": {
+    "jscpd": "^4.2.2",
     "turbo": "^2.0.0",
     "typescript": "^5.4.0"
   },

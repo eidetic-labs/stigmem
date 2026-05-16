@@ -22,6 +22,8 @@ coverage/
 node_modules/
 .next/
 .turbo/
+.jscpd/
+.pnpm-store/
 dist/
 *.tsbuildinfo
 apps/dashboard/coverage/

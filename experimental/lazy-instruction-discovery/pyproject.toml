@@ -1,0 +1,15 @@
+[project]
+name = "stigmem-plugin-lazy-instruction-discovery"
+version = "0.1.0"
+description = "Experimental lazy instruction discovery plugin for Stigmem."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+]
+
+[project.entry-points."stigmem.plugins"]
+lazy-instruction-discovery = "stigmem_plugin_lazy_instruction_discovery:plugin_manifest"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

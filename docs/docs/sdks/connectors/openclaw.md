@@ -55,7 +55,7 @@ pip install --pre "stigmem-py>=0.9.0a1,<1.0.0"
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `STIGMEM_URL` | Yes | Base URL of your Stigmem node (e.g. `https://stigmem.example.com`). |
-| `STIGMEM_API_KEY` | No | API key for the node. Omit only for explicitly unauthenticated local development nodes. Production/evaluation nodes should use least-privilege keys. |
+| `STIGMEM_API_KEY` | Yes | Least-privilege API key for the node. `OpenClawStigmemAdapter.from_env()` fails closed when this is missing. |
 | `STIGMEM_SOURCE_ENTITY` | No | Entity URI identifying this agent in the fact graph. Default: `agent:openclaw`. |
 
 ## Usage

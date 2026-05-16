@@ -58,7 +58,7 @@ def _adapter() -> OpenClawStigmemAdapter:
 class TestC1H5StructuralChannelGap:
     """Audit findings C1/H5: presentation escaping is not the trust boundary."""
 
-    def test_docs_keep_adapter_experimental_until_channel_separation_lands(self) -> None:
+    def test_docs_describe_channel_boundary_without_escaping_claims(self) -> None:
         docs = [
             _OPENCLAW_ROOT / "README.md",
             _OPENCLAW_ROOT / "skill" / "SKILL.md",
@@ -68,11 +68,12 @@ class TestC1H5StructuralChannelGap:
 
         for path in docs:
             text = path.read_text()
-            assert "C1/H5" in text
-            assert "github.com/Eidetic-Labs/stigmem/issues/357" in text
+            assert "SYSTEM_PROMPT_DIRECTIVE" in text
+            assert "instruction-channel" in text
+            assert "presentation-layer escaping" not in text
 
         limitations = (_REPO_ROOT / "LIMITATIONS.md").read_text()
-        assert "outside\nthe supported production surface until #357 lands" in limitations
+        assert "UNTRUSTED STIGMEM CONTENT" in limitations
 
 
 class TestC2BootFailure:

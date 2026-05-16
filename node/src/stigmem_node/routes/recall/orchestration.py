@@ -116,6 +116,8 @@ def _handle_as_of_recall(req: RecallRequest, identity: Identity) -> RecallRespon
         recall_id=recall_id,
         query_hash=query_hash,
         facts=packed,
+        content=packed,
+        instructions=[],
         # §23.3.3 r.3: suppress total_scored when tombstone filtering was applied
         total_scored=None if tombstone_filtered else len(packed),
         token_budget=req.token_budget,
@@ -418,6 +420,8 @@ def _recall_impl(
         recall_id=recall_id,
         query_hash=query_hash,
         facts=packed,
+        content=packed,
+        instructions=[],
         total_scored=None if tombstone_filtered else total_scored,
         token_budget=req.token_budget,
         tokens_used=tokens_used,

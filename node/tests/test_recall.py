@@ -134,12 +134,16 @@ class TestRecallBasic:
             "recall_id",
             "query_hash",
             "facts",
+            "content",
+            "instructions",
             "total_scored",
             "token_budget",
             "tokens_used",
             "truncated",
         ):
             assert field in body
+        assert body["content"] == body["facts"]
+        assert body["instructions"] == []
 
     def test_facts_ordered_by_score_desc(self, client: TestClient) -> None:
         for i in range(5):

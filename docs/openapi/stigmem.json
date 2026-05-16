@@ -2231,11 +2231,25 @@
       },
       "RecallResponse": {
         "properties": {
+          "content": {
+            "items": {
+              "$ref": "#/components/schemas/ScoredFact"
+            },
+            "title": "Content",
+            "type": "array"
+          },
           "facts": {
             "items": {
               "$ref": "#/components/schemas/ScoredFact"
             },
             "title": "Facts",
+            "type": "array"
+          },
+          "instructions": {
+            "items": {
+              "$ref": "#/components/schemas/ScoredFact"
+            },
+            "title": "Instructions",
             "type": "array"
           },
           "query_hash": {

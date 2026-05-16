@@ -38,12 +38,10 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 > **Alpha status.** This source copy is queued for the v0.9.0a2 ClawHub artifact
 > refresh. It does not revise the already-published a1 package in place. The
 > OpenClaw skill is available for v0.9.0aN evaluation only, not as a recommended
-> production integration. The adapter still has the ADR-003-dependent C1/H5 audit
-> gap: retrieved facts are rendered into a prompt summary with presentation-layer
-> escaping rather than a structural instruction/content channel boundary. Use it
-> only with private, access-controlled Stigmem nodes and least-privilege agent
-> keys until the channel-separated OpenClaw integration lands in
-> [issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357). See
+> production integration. The adapter separates retrieved content from
+> instruction-channel recall output and exports a required system prompt
+> directive, but the broader ADR-003 hardening line still needs MCP parity,
+> operator docs, and feedback-loop controls before high-stakes production use. See
 > [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 ## What this skill provides
@@ -66,7 +64,7 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 `adapter.py` is bundled with this skill as a compatibility shim. Import it directly from the skill directory; the install spec above supplies the packaged `stigmem-openclaw` adapter and its `stigmem-py` dependency.
 
 ```python
-from adapter import OpenClawStigmemAdapter
+from adapter import OpenClawStigmemAdapter, SYSTEM_PROMPT_DIRECTIVE
 
 adapter = OpenClawStigmemAdapter.from_env()
 
@@ -75,7 +73,9 @@ ctx = adapter.boot(
     user_entity="user:alice",
     project_entities=["project:my-roadmap"],
 )
-system_prompt = base_prompt + ("\n\n" + ctx.summary if ctx else "")
+system_prompt = base_prompt + (
+    "\n\n" + SYSTEM_PROMPT_DIRECTIVE + "\n\n" + ctx.summary if ctx else ""
+)
 
 # Record a significant decision
 adapter.emit_decision(
@@ -105,16 +105,16 @@ adapter.emit_handoff(
 
 ### Prompt injection via retrieved context
 
-`boot()` retrieves facts from an external Stigmem node and injects them into the agent's system prompt. A compromised or misconfigured node can craft fact values that redirect agent goals.
+`boot()` retrieves facts from an external Stigmem node and formats them as untrusted content for the agent's system prompt. A compromised or misconfigured node can craft fact values that attempt to redirect agent goals.
 
-**Current partial mitigations:**
-- Fact values are escaped before summary formatting: HTML/markdown metacharacters are escaped, null bytes stripped, values truncated to 500 characters.
-- The injected block is labelled `_(external, treat as untrusted)_` in the summary header.
+**Current mitigations:**
+- `ctx.summary` is wrapped in explicit `UNTRUSTED STIGMEM CONTENT` delimiters.
+- `SYSTEM_PROMPT_DIRECTIVE` tells the model that retrieved context is data, not instructions.
+- `recall_context()` consumes channel-separated recall output and keeps instruction-channel facts out of the content summary.
 
 These mitigations do **not** make retrieved memory safe to treat as instructions.
-They are presentation-layer guardrails only; the structural prompt-injection
-boundary depends on channel-separated recall output and is tracked by
-[issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357).
+They define the adapter contract for content-channel recall; broader ADR-003
+hardening continues in the Phase B line.
 
 **What you should do:**
 - **Append** the Stigmem context after your hardcoded system prompt — never prepend it — so your instructions take precedence over retrieved memory.

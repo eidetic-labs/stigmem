@@ -2003,8 +2003,12 @@ export interface components {
         };
         /** RecallResponse */
         RecallResponse: {
+            /** Content */
+            content?: components["schemas"]["ScoredFact"][];
             /** Facts */
             facts: components["schemas"]["ScoredFact"][];
+            /** Instructions */
+            instructions?: components["schemas"]["ScoredFact"][];
             /** Query Hash */
             query_hash: string;
             /** Recall Id */

@@ -273,7 +273,9 @@ class RecallResponse(BaseModel):
     recall_id: str
     query_hash: str
     facts: list[ScoredFact]
-    total_scored: int
+    content: list[ScoredFact] = Field(default_factory=list)
+    instructions: list[ScoredFact] = Field(default_factory=list)
+    total_scored: int | None
     token_budget: int
     tokens_used: int
     truncated: bool

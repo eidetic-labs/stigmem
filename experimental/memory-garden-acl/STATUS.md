@@ -22,9 +22,11 @@ surface per ADR-002 and ADR-009. Basic garden CRUD, membership, and direct
 being extracted into the `stigmem-plugin-memory-garden-acl` source package.
 
 The PR 4e scaffold declares `pre_assert_authorize`, `pre_recall_authorize`, and
-`recall_filter` handlers with all behavior disabled by default. Runtime behavior
-movement, plugin-loaded validation, public docs closeout, and signed package
-artifact evidence remain follow-on work.
+`recall_filter` handlers with all behavior disabled by default. Runtime gating
+now keeps membership-derived OIDC permission ceilings and cross-surface
+recall/graph/subscription garden filtering inactive unless the plugin is
+registered and explicitly enabled. Plugin-loaded validation, public docs
+closeout, and signed package artifact evidence remain follow-on work.
 
 ## Gate progress
 
@@ -44,4 +46,7 @@ artifact evidence remain follow-on work.
 - **2026-05-16** — PR 4e #332 scaffolded the
   `experimental/memory-garden-acl/` plugin source package with manifest, config
   schema, hook placeholders, and registration/order tests.
+- **2026-05-16** — PR 4e #330 gated advanced behavior behind explicit plugin
+  registration plus opt-in environment flags while preserving core direct garden
+  CRUD, membership, and `garden_id` read/write checks.
 - **2026-05-15** — added ADR-018 colocated security analysis in `security.md`.

@@ -2,17 +2,27 @@
 
 from __future__ import annotations
 
+import importlib
+import sys
+from pathlib import Path
+
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
 
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.main import create_app
+from stigmem_node.plugins import PluginManifest
+from stigmem_node.plugins.testing import stigmem_plugins
 
 create_api_key = auth_mod.create_api_key
 apply_migrations = db_mod.apply_migrations
 Settings = settings_module.Settings
+_MEMORY_GARDEN_ACL_SRC = (
+    Path(__file__).resolve().parents[2] / "experimental" / "memory-garden-acl" / "src"
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -46,6 +56,18 @@ def _make_authed_client(tmp_path: object, node_url: str = "http://testnode"):
     client = TestClient(app, raise_server_exceptions=True)
     client.__enter__()
     return client, admin_key, reader_key, outsider_key, original
+
+
+def _memory_garden_acl_manifest() -> PluginManifest:
+    if str(_MEMORY_GARDEN_ACL_SRC) not in sys.path:
+        sys.path.insert(0, str(_MEMORY_GARDEN_ACL_SRC))
+    plugin = importlib.import_module("stigmem_plugin_memory_garden_acl")
+    return plugin.plugin_manifest()
+
+
+def _enable_acl_recall_filter(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setenv("STIGMEM_MEMORY_GARDEN_ACL_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_MEMORY_GARDEN_ACL_APPLY_RECALL_FILTER", "true")
 
 
 # ---------------------------------------------------------------------------
@@ -430,8 +452,10 @@ class TestGardenFactACL:
             db_mod.settings = original
             wk_mod.settings = original
 
-    def test_garden_facts_hidden_in_global_query(self, tmp_path: object) -> None:
-        """Non-member's global query must not surface garden-tagged facts (spec §17.3)."""
+    def test_default_global_query_does_not_apply_advanced_garden_filter(
+        self, tmp_path: object
+    ) -> None:
+        """Default installs keep cross-surface garden filtering inactive."""
         client, admin_key, reader_key, outsider_key, original = _make_authed_client(tmp_path)
         try:
             garden_uri = self._create_garden_and_add_reader(
@@ -447,6 +471,34 @@ class TestGardenFactACL:
                 "/v1/facts",
                 headers={"Authorization": f"Bearer {outsider_key}"},
             )
+            assert r.status_code == 200
+            assert r.json()["total"] == 1
+        finally:
+            settings_module.settings = original
+            auth_mod.settings = original
+            db_mod.settings = original
+            wk_mod.settings = original
+
+    def test_plugin_global_query_hides_garden_facts(
+        self, tmp_path: object, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Plugin-loaded advanced ACL hides garden-tagged facts from non-members."""
+        client, admin_key, reader_key, outsider_key, original = _make_authed_client(tmp_path)
+        try:
+            garden_uri = self._create_garden_and_add_reader(
+                client, admin_key, reader_key, "hidden-garden-plugin"
+            )
+            client.post(
+                "/v1/facts",
+                json={**FACT_PAYLOAD, "garden_id": garden_uri},
+                headers={"Authorization": f"Bearer {admin_key}"},
+            )
+            _enable_acl_recall_filter(monkeypatch)
+            with stigmem_plugins([_memory_garden_acl_manifest()]):
+                r = client.get(
+                    "/v1/facts",
+                    headers={"Authorization": f"Bearer {outsider_key}"},
+                )
             assert r.status_code == 200
             assert r.json()["total"] == 0
         finally:

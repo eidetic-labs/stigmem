@@ -13,6 +13,7 @@ from ...auth import Identity, resolve_identity
 from ...db import db
 from ...entity_normalizer import NormalizationError, normalize_entity_uri
 from ...garden_acl import caller_can_see_garden, get_garden_by_garden_uri, require_garden_read
+from ...memory_garden_acl_gate import recall_filter_enabled
 from ...metrics import FACT_READ
 from ...models.constants import VALID_SCOPES
 from ...models.facts import FactRecord, QueryResponse, row_to_record
@@ -456,6 +457,8 @@ def _append_garden_visibility_filter(
     if garden is not None:
         conditions.append("garden_id = ?")
         params.append(garden["id"])
+        return
+    if not recall_filter_enabled():
         return
     with db() as _g_conn:
         visible_garden_ids = [

@@ -149,10 +149,13 @@ def _fetch_incident_edges(
         # Garden ACL (§17.3): hide edges in gardens the caller cannot see
         garden_id = row["garden_id"]
         if garden_id is not None and identity is not None:
-            from .garden_acl import caller_can_see_garden
+            from .memory_garden_acl_gate import recall_filter_enabled
 
-            if not caller_can_see_garden(garden_id, identity):
-                continue
+            if recall_filter_enabled():
+                from .garden_acl import caller_can_see_garden
+
+                if not caller_can_see_garden(garden_id, identity):
+                    continue
 
         # Federation filter (§19.5.2): edges from remote nodes require federate perm
         received_from = row["received_from"]

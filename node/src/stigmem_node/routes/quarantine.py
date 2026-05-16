@@ -18,6 +18,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from ..audit_event import INSTRUCTION_PROMOTED, emit_instruction_event_if_applicable
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..garden_acl import get_garden_by_slug_or_id, require_quarantine_moderator_or_admin
@@ -148,7 +149,7 @@ def admit_fact(
     """
     _require_write(identity)
 
-    _get_quarantined_fact(fact_id, identity)
+    fact_row, garden = _get_quarantined_fact(fact_id, identity)
     now = datetime.now(UTC).isoformat()
 
     # Resolve target garden
@@ -173,6 +174,22 @@ def admit_fact(
             (target_db_id, identity.entity_uri, now, reason or "admitted via admin API", fact_id),
         )
         _write_quarantine_audit(conn, fact_id, "quarantine_promote", identity, now)
+        emit_instruction_event_if_applicable(
+            INSTRUCTION_PROMOTED,
+            fact_id=fact_id,
+            fact_entity=fact_row["entity"],
+            fact_relation=fact_row["relation"],
+            actor_uri=identity.entity_uri,
+            tenant_id=identity.tenant_id,
+            oidc_sub=identity.oidc_sub,
+            source=identity.entity_uri,
+            detail={
+                "reason": reason or "admitted via admin API",
+                "quarantine_garden_id": garden["id"],
+                "target_garden_id": target_db_id,
+            },
+            conn=conn,
+        )
 
     return {
         "fact_id": fact_id,

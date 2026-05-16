@@ -245,6 +245,7 @@ def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
     """Move a fact to the node's quarantine garden (sanitizer quarantine mode)."""
     from datetime import UTC, datetime
 
+    from .audit_event import INSTRUCTION_QUARANTINED, emit_instruction_event_if_applicable
     from .db import db
     from .settings import settings
 
@@ -271,6 +272,10 @@ def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
                     "Quarantine garden %s not found; skipping sanitizer quarantine", qg_id
                 )
                 return
+            fact_row = conn.execute(
+                "SELECT entity, relation FROM facts WHERE id = ?",
+                (fact_id,),
+            ).fetchone()
 
             conn.execute(
                 """UPDATE facts
@@ -299,6 +304,19 @@ def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
                     None,
                     now,
                 ),
+            )
+            emit_instruction_event_if_applicable(
+                INSTRUCTION_QUARANTINED,
+                fact_id=fact_id,
+                fact_entity=fact_row["entity"] if fact_row is not None else None,
+                fact_relation=fact_row["relation"] if fact_row is not None else None,
+                actor_uri="system:stigmem",
+                source="system:stigmem",
+                detail={
+                    "reason": "sanitizer_quarantine",
+                    "matched_pattern": matched_pattern,
+                },
+                conn=conn,
             )
     except Exception as exc:
         logger.error("Failed to quarantine fact %s via sanitizer: %s", fact_id, exc)

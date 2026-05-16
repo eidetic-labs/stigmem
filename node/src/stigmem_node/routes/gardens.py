@@ -9,6 +9,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from ..audit_event import INSTRUCTION_PROMOTED, emit_instruction_event_if_applicable
 from ..auth import Identity, resolve_identity
 from ..billing import BillingEvent, get_hook_bus
 from ..db import db
@@ -419,7 +420,8 @@ def promote_fact(
 
     with db() as conn:
         fact_row = conn.execute(
-            "SELECT id, quarantine_status, quarantine_garden_id FROM facts WHERE id = ?",
+            "SELECT id, entity, relation, quarantine_status, quarantine_garden_id "
+            "FROM facts WHERE id = ?",
             (req.fact_id,),
         ).fetchone()
 
@@ -482,6 +484,22 @@ def promote_fact(
                 None,
                 now,
             ),
+        )
+        emit_instruction_event_if_applicable(
+            INSTRUCTION_PROMOTED,
+            fact_id=req.fact_id,
+            fact_entity=fact_row["entity"],
+            fact_relation=fact_row["relation"],
+            actor_uri=identity.entity_uri,
+            tenant_id=identity.tenant_id,
+            oidc_sub=identity.oidc_sub,
+            source=identity.entity_uri,
+            detail={
+                "reason": req.reason or "promoted",
+                "quarantine_garden_id": garden["id"],
+                "target_garden_id": target_garden_db_id,
+            },
+            conn=conn,
         )
 
     return {

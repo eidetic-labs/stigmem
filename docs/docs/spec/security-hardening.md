@@ -126,6 +126,8 @@ Every Stigmem node MUST emit structured audit log events for the following opera
 | `admin_action` | Any admin API call | `event_type`, `timestamp`, `actor_entity`, `action`, `resource`, `outcome` |
 | `replay_rejected` | Capability token rejected due to replay | `event_type`, `timestamp`, `token_id`, `nonce`, `reject_reason` |
 | `instruction_audit` | Lazy instruction preload or recall (MUST emit if the instruction recall layer is active; nodes not implementing the lazy instruction layer are exempt) | `event_type`, `timestamp`, `agent_id`, `chunk_id`, `load_trigger`, `outcome` |
+| `instruction_quarantined` | Instruction-namespace fact placed in quarantine pending approval | `event_type`, `timestamp`, `fact_id`, `actor_entity`, `source`, `reason` |
+| `instruction_promoted` | Quarantined instruction-namespace fact promoted by an operator | `event_type`, `timestamp`, `fact_id`, `actor_entity`, `quarantine_garden_id`, `target_garden_id?` |
 
 Implementations MUST NOT omit required fields. Optional fields (marked `?`) SHOULD be included when available.
 

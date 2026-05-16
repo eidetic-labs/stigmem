@@ -9,7 +9,8 @@ Supported event_type values (spec §22.3.1):
   fact_write, fact_read, capability_token_issue, capability_token_revoke,
   manifest_publish, key_rotation, federation_connect, quarantine_admit,
   quarantine_release, quota_breach, admin_action, replay_rejected,
-  instruction_audit, peer_hlc_anomaly, api_key_rehashed
+  instruction_audit, instruction_quarantined, instruction_promoted,
+  peer_hlc_anomaly, api_key_rehashed
 """
 
 from __future__ import annotations
@@ -22,6 +23,17 @@ from typing import Any
 from .db import db
 from .metrics import AUDIT_EVENT
 from .plugins import AuditEvent, Success, get_registry
+
+INSTRUCTION_QUARANTINED = "instruction_quarantined"
+INSTRUCTION_PROMOTED = "instruction_promoted"
+
+
+def is_instruction_fact(entity: str | None, relation: str | None = None) -> bool:
+    """Return true for the instruction namespace used before interpret_as lands."""
+    return bool(
+        (entity and entity.startswith("instruction:"))
+        or (relation and relation.startswith("instruction:"))
+    )
 
 
 def _emit_with_conn(
@@ -176,3 +188,36 @@ def emit_nofail(
             entity_uri,
             tenant_id,
         )
+
+
+def emit_instruction_event_if_applicable(
+    event_type: str,
+    *,
+    fact_id: str,
+    fact_entity: str | None,
+    fact_relation: str | None,
+    actor_uri: str,
+    tenant_id: str = "default",
+    oidc_sub: str | None = None,
+    source: str = "",
+    detail: dict[str, Any] | None = None,
+    conn: Any,
+) -> None:
+    """Emit ADR-003 instruction audit events for instruction-namespace facts."""
+    if not is_instruction_fact(fact_entity, fact_relation):
+        return
+
+    emit(
+        event_type,
+        entity_uri=actor_uri,
+        tenant_id=tenant_id,
+        oidc_sub=oidc_sub,
+        fact_id=fact_id,
+        source=source or actor_uri,
+        detail={
+            "fact_entity": fact_entity,
+            "fact_relation": fact_relation,
+            **(detail or {}),
+        },
+        conn=conn,
+    )

@@ -53,30 +53,31 @@ These are unambiguous "do not" recommendations as of v0.9.0a1.
 
 ### 3. Treating recalled facts as instructions to your agent
 
-**Status:** Our current prompt-injection defense (a recall-time content sanitizer that strips known injection sentinels) does not work against motivated adversaries. We know this. We are replacing it with a capability-based design (ADR-003) in the current sprint.
+**Status:** Improved on `main`, but not yet release-certified or operator-soak validated. The old recall-time sanitizer remains defense-in-depth only. The ADR-003 structural design has landed for the core protocol surfaces: facts now carry `interpret_as`, instruction-typed writes require `instruction:write`, cross-org instruction-typed inbound facts are quarantined, `recall()` returns separate `content` and `instructions` channels, and MCP/OpenClaw consume the channel-separated response. ADR-015 `corpus-v1` now contains 80 validated prompt-injection patterns, but the live model certification runner and public model results are still pending.
 
-**What this means:** any fact written into a scope your agent reads from can attempt to inject instructions into the agent's context. The sanitizer catches obvious patterns and creates false confidence; novel injection patterns will pass through it.
+**What this means:** the protocol can now distinguish content from authorized instructions, but downstream safety still depends on adapter compliance, session propagation, and the consuming LLM honoring the system-prompt directive. Until the certification runner, public model results, and operator soak complete, this remains a hardening-in-progress surface rather than a production recommendation for adversarial cross-org workloads.
 
 **What to do today:** treat recalled fact `value` fields as untrusted external data, the same way you would treat a user-uploaded document. Specifically:
 
 - Do not concatenate fact values directly into a system prompt without a clear, structurally-delimited "untrusted data" framing.
 - Do not allow agents to act on instructions found in fact values without a separate authorization step that does not depend on the fact's content.
-- If you build adapters that consume `recall()` output, frame the output as content, not instructions, and instruct the consuming LLM accordingly.
+- If you build adapters that consume `recall()` output, preserve the `content` / `instructions` separation and include the ADR-003 system-prompt directive. Treat uncertified models as an accepted operator risk.
 
-The capability-based redesign (where facts carry an `interpret_as` field that defaults to `"content"` and only flows as instructions with explicit operator authorization) lands in the v0.9.0bN beta series.
+The capability-based redesign is present on `main`; the v0.9.0bN beta series remains the target for release posture, certification evidence, and operator validation.
 
 ---
 
 ### 4. The agent feedback loop (read-injected → write-poisoned → replicate)
 
-**Status:** Not currently mitigated. Not yet in the formal risk register; will be added as R-15 in the next threat-model revision.
+**Status:** Partially mitigated on `main`. Same-session read/write graph tracking rejects writes back into scopes a session has read unless the write carries explicit source-fact provenance, and `summarize_with_provenance` supports legitimate derived writes. Threat-model status and full adapter/session propagation evidence remain pending.
 
-**What this means:** an LLM-driven agent that has been prompt-injected by a recalled fact can use its own writer key to assert attacker-chosen facts back into the system. Those facts then look authoritative coming from your organization, and they replicate to your federation peers. This is the worm vector unique to federated agent memory.
+**What this means:** the most direct same-session worm path is blocked when clients propagate `Stigmem-Session` and provenance correctly. The risk is not closed until supported adapters propagate sessions by default and outbound replication excludes transitively recalled facts where required.
 
 **What to do today:**
 
 - Restrict agent writer keys to the narrowest possible scope. Agents should not hold writer keys for any scope they also read from where they consume cross-org content, period.
 - If your agent must both read company-scope facts and write company-scope facts, the read content must come from sources you trust (your own organization's writes, not federated peers).
+- Use session headers and `derived_from` provenance for any agent write derived from recalled facts.
 - Review the [OpenClaw audit findings](#) (especially C4) before using the bundled OpenClaw adapter — the adapter currently has paths that exemplify this risk.
 
 ---

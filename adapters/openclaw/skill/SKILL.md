@@ -38,9 +38,12 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 > **Alpha status.** This source copy is queued for the v0.9.0a2 ClawHub artifact
 > refresh. It does not revise the already-published a1 package in place. The
 > OpenClaw skill is available for v0.9.0aN evaluation only, not as a recommended
-> production integration. The adapter still has an open audit finding around
-> prompt-injection boundaries. Use it only with private, access-controlled
-> Stigmem nodes and least-privilege agent keys until the hardening work lands. See
+> production integration. The adapter still has the ADR-003-dependent C1/H5 audit
+> gap: retrieved facts are rendered into a prompt summary with presentation-layer
+> escaping rather than a structural instruction/content channel boundary. Use it
+> only with private, access-controlled Stigmem nodes and least-privilege agent
+> keys until the channel-separated OpenClaw integration lands in
+> [issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357). See
 > [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 ## What this skill provides
@@ -110,7 +113,8 @@ adapter.emit_handoff(
 
 These mitigations do **not** make retrieved memory safe to treat as instructions.
 They are presentation-layer guardrails only; the structural prompt-injection
-boundary is still planned for the v0.9.0aN/beta hardening path.
+boundary depends on channel-separated recall output and is tracked by
+[issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357).
 
 **What you should do:**
 - **Append** the Stigmem context after your hardcoded system prompt — never prepend it — so your instructions take precedence over retrieved memory.

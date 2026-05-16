@@ -135,11 +135,23 @@ The remaining beta hardening work brings: automated rotation runbooks and an "ex
 
 ### 9. Running the OpenClaw bundled adapter as-is
 
-**Status:** Several critical issues identified in audit (see `stigmem/openclaw/audit.md` in the repo). Some require ADR-003 to land before they can be fully fixed.
+**Status:** Most immediate OpenClaw safety issues have Phase B fixes in progress
+or landed, but the C1/H5 prompt-injection boundary remains open. That gap depends
+on ADR-003 channel-separated recall output and is tracked by
+[issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357).
 
-**What this means:** the OpenClaw adapter, in its v0.9.0a1 state, has a documented prompt-injection surface, an unvalidated handoff target (worm vector), partial-write semantics on multi-fact handoffs, and several other issues.
+**What this means:** the OpenClaw adapter still renders retrieved facts into a
+prompt summary with presentation-layer escaping. That is an evaluation guardrail,
+not a structural instruction/content boundary. Recent hardening has addressed
+API-key fail-closed behavior, boot failure handling, target allowlists, and
+visible multi-fact write failures, but it does not make recalled memory safe to
+treat as instructions.
 
-**What to do today:** treat the OpenClaw adapter as `experimental/`. If you've integrated against it, read the audit findings before deciding whether to keep the integration in production. The hardened adapter ships during the capability-redesign work in the v0.9.0bN beta series.
+**What to do today:** treat the OpenClaw adapter as `experimental/` and outside
+the supported production surface until #357 lands with tests. If you've
+integrated against it, use private nodes, least-privilege keys, explicit handoff
+allowlists, and avoid high-stakes workflows that inject recalled facts into an
+LLM prompt.
 
 ---
 

@@ -20,9 +20,12 @@ shared knowledge store across agents.
 The OpenClaw connector is available in the v0.9.0aN alpha line for evaluation, not
 as a recommended production integration. This wording is queued for the
 v0.9.0a2 artifact refresh; it does not revise the already-published a1 ClawHub
-package in place. The adapter has an unresolved audit finding around
-prompt-injection boundaries. Use only private, access-controlled Stigmem nodes
-and least-privilege agent keys until the hardening work lands. See
+package in place. The adapter still has the ADR-003-dependent C1/H5 audit gap:
+retrieved facts are rendered into a prompt summary with presentation-layer
+escaping rather than a structural instruction/content channel boundary. Use only
+private, access-controlled Stigmem nodes and least-privilege agent keys until the
+channel-separated OpenClaw integration lands in
+[issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357). See
 [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::
@@ -142,9 +145,10 @@ identity. Use a per-deployment entity URI, not a shared or generic identifier.
 
 **Untrusted retrieved context** — `boot()` applies presentation-layer escaping
 before injecting fact values into the system prompt, but that is not a security
-boundary. Treat the summary and raw facts as untrusted input. Use a private,
-access-controlled node for evaluation and avoid high-stakes workflows until the
-OpenClaw audit blockers close.
+boundary and does not close C1/H5. Treat the summary and raw facts as untrusted
+input. Use a private, access-controlled node for evaluation and avoid high-stakes
+workflows until OpenClaw consumes channel-separated recall output
+([#357](https://github.com/Eidetic-Labs/stigmem/issues/357)).
 
 **API key scope** — Set `STIGMEM_API_KEY` to a least-privilege key scoped only to
 the nodes this agent reads from and writes to. Do not share a key across unrelated

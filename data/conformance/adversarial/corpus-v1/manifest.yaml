@@ -1,0 +1,47 @@
+version: corpus-v1
+status: seed
+adr: ADR-015
+created: 2026-05-16
+minimum_stigmem_version: 0.9.0a1
+description: >
+  Seed prompt-injection corpus for ADR-015 consumer-layer adapter and model
+  certification work. This first slice establishes the manifest, category, and
+  pattern schema before live model certification is added.
+contributors:
+  - Eidetic Labs
+severity_weights:
+  critical: 4
+  high: 3
+  medium: 2
+  low: 1
+categories:
+  - id: "01-imperative-override"
+    slug: imperative-override
+    title: Imperative override
+  - id: "02-role-marker-injection"
+    slug: role-marker-injection
+    title: Role marker injection
+  - id: "03-encoded-payloads"
+    slug: encoded-payloads
+    title: Encoded payloads
+  - id: "04-language-switching"
+    slug: language-switching
+    title: Language switching
+  - id: "05-url-embedded"
+    slug: url-embedded
+    title: URL-embedded instructions
+  - id: "06-indirect-goal-hijacking"
+    slug: indirect-goal-hijacking
+    title: Indirect goal hijacking
+  - id: "07-jailbreak-templates"
+    slug: jailbreak-templates
+    title: Jailbreak templates
+  - id: "08-prompt-leaking"
+    slug: prompt-leaking
+    title: Prompt leaking
+  - id: "09-multi-turn-manipulation"
+    slug: multi-turn-manipulation
+    title: Multi-turn manipulation
+  - id: "10-character-level"
+    slug: character-level
+    title: Character-level attacks

@@ -41,6 +41,41 @@ curl -H 'Authorization: Bearer <your-key>' http://localhost:8000/v1/me
 # → {"entity_uri": "agent:my-service", "permissions": ["read", "write"], "tenant_id": "default"}
 ```
 
+## Naming local dogfooding agents
+
+When multiple local agents share one Stigmem node, give each agent its own API
+key and collision-resistant `entity_uri`. Do not reuse a broad identity such as
+`agent:codex` across concurrent Codex, Claude, CI, or adapter sessions: facts,
+audit entries, rate-limit buckets, and key listings all become ambiguous.
+
+Recommended pattern:
+
+```text
+agent:<tool>-<workspace-or-task>-<YYYYMMDDTHHMMSSZ>
+```
+
+Examples:
+
+```text
+agent:codex-app-pr4-inf1-20260516T032000Z
+agent:claude-code-docs-pass-20260516T032000Z
+agent:ci-release-smoke-20260516T032000Z
+```
+
+For source-attested writes, set each fact's `source` to the same value returned
+by `GET /v1/me` for the key in use. If the key is registered as
+`agent:codex-app-pr4-inf1-20260516T032000Z`, writes from that agent should use:
+
+```json
+{
+  "source": "agent:codex-app-pr4-inf1-20260516T032000Z"
+}
+```
+
+Use a new identity for materially distinct agents or work sessions. Use
+descriptions on API keys to capture human context, such as
+`"Codex app agent for PR 4-INF.1"`, instead of overloading the `entity_uri`.
+
 ## OIDC-issued keys (human users)
 
 Human users can obtain a short-lived key from their IdP via `POST /v1/auth/oidc/exchange`. These keys have the same shape as static keys and work identically at all endpoints. See [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) for configuration and the full exchange flow.

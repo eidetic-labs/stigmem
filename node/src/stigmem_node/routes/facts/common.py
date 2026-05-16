@@ -28,8 +28,9 @@ def _get_tombstone_filter(
     excluded_entity_uris: entities under active (non-legal-hold) tombstones.
     tombstone_notices: annotations for legal_hold tombstones visible to admin callers.
     """
+    from ...tombstone_gate import tombstone_plugin_registered
 
-    if not entity_uris:
+    if not entity_uris or not tombstone_plugin_registered():
         return set(), []
 
     placeholders = ",".join("?" * len(entity_uris))

@@ -24,7 +24,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from conftest import _patch_settings, _restore_settings  # type: ignore[import]
+from conftest import (  # type: ignore[import]
+    _patch_settings,
+    _restore_settings,
+    _tombstone_plugin_manifest,
+)
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
@@ -37,7 +41,9 @@ from fastapi.testclient import TestClient
 import stigmem_node.settings as settings_module
 from stigmem_node.db import apply_migrations
 from stigmem_node.identity.manifest import OrgManifest, manifest_to_dict, sign_manifest
-from stigmem_node.main import create_app
+from stigmem_node.main import _include_plugin_routers, create_app
+from stigmem_node.plugins.discovery import DiscoveredPlugin
+from stigmem_node.plugins.testing import stigmem_plugins
 
 Settings = settings_module.Settings
 
@@ -94,6 +100,7 @@ def _make_manifest(
 @pytest.fixture()
 def push_setup(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Generator[tuple[TestClient, str, str, str], None, None]:
     """Yield (client, issuer, write_token, db_path) — push-enabled node."""
     db_file = str(tmp_path / "push_b2.db")
@@ -120,10 +127,20 @@ def push_setup(
         federation_push_enabled=True,
     )
     extra = _patch_settings(test_settings)
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ALLOW_FEDERATION_ROUTES", "true")
+    manifest = _tombstone_plugin_manifest()
+    discovered = DiscoveredPlugin(
+        manifest=manifest,
+        entry_point_name="tombstones",
+        entry_point_value="stigmem_plugin_tombstones:plugin_manifest",
+        distribution=manifest.name,
+    )
 
     try:
         app = create_app()
-        with TestClient(app, raise_server_exceptions=True) as client:
+        _include_plugin_routers(app, (discovered,))
+        with stigmem_plugins([manifest]), TestClient(app, raise_server_exceptions=True) as client:
             m = _make_manifest(priv, pub_b64, entity_uri=issuer, entities=[issuer])
             r = client.put("/v1/federation/manifest", json=manifest_to_dict(m))
             assert r.status_code == 200, r.text

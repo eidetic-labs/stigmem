@@ -7,6 +7,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from conftest import _tombstone_plugin_manifest
 from fastapi.testclient import TestClient
 
 # ---------------------------------------------------------------------------
@@ -222,7 +223,7 @@ class TestQueryFactsAsOf:
         admin_key = create_api_key("agent:admin", ["read", "write", "admin"])
 
         try:
-            with stigmem_plugins([_time_travel_plugin_manifest()]):
+            with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
                 app = create_app()
                 with TestClient(app, raise_server_exceptions=True) as c:
                     headers = {"Authorization": f"Bearer {admin_key}"}
@@ -365,7 +366,7 @@ class TestRecallAsOf:
         admin_key = create_api_key("agent:admin", ["read", "write", "admin"])
 
         try:
-            with stigmem_plugins([_time_travel_plugin_manifest()]):
+            with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
                 app = create_app()
                 with TestClient(app, raise_server_exceptions=True) as c:
                     headers = {"Authorization": f"Bearer {admin_key}"}

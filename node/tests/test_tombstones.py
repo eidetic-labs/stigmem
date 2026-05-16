@@ -16,10 +16,15 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import sqlite3
+import sys
 import time
 import uuid
+from collections.abc import Generator
+from contextlib import contextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 
 import jwt as pyjwt
 import pytest
@@ -39,7 +44,9 @@ import stigmem_node.routes.tombstones as tomb_routes_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 import stigmem_node.tombstones as tombstones_mod
-from stigmem_node.main import create_app
+from stigmem_node.main import _include_plugin_routers, create_app
+from stigmem_node.plugins.discovery import DiscoveredPlugin
+from stigmem_node.plugins.testing import stigmem_plugins
 
 create_api_key = auth_mod.create_api_key
 apply_migrations = db_mod.apply_migrations
@@ -48,6 +55,47 @@ Settings = settings_module.Settings
 create_tombstone = tombstones_mod.create_tombstone
 is_tombstoned = tombstones_mod.is_tombstoned
 revoke_tombstone = tombstones_mod.revoke_tombstone
+
+_TOMBSTONE_PLUGIN_SRC = (
+    Path(__file__).resolve().parents[2] / "experimental" / "tombstones" / "src"
+)
+_TOMBSTONE_ENV = {
+    "STIGMEM_TOMBSTONES_ENABLED": "true",
+    "STIGMEM_TOMBSTONES_ALLOW_ADMIN_ROUTES": "true",
+    "STIGMEM_TOMBSTONES_ALLOW_FEDERATION_ROUTES": "true",
+    "STIGMEM_TOMBSTONES_ALLOW_RECALL_FILTER": "true",
+}
+
+
+def _tombstone_plugin_manifest():
+    if str(_TOMBSTONE_PLUGIN_SRC) not in sys.path:
+        sys.path.insert(0, str(_TOMBSTONE_PLUGIN_SRC))
+    plugin = __import__("stigmem_plugin_tombstones")
+    return plugin.plugin_manifest()
+
+
+@contextmanager
+def _tombstone_plugin_app(app) -> Generator[None, None, None]:
+    original_env = {name: os.environ.get(name) for name in _TOMBSTONE_ENV}
+    try:
+        for name, value in _TOMBSTONE_ENV.items():
+            os.environ[name] = value
+        manifest = _tombstone_plugin_manifest()
+        discovered = DiscoveredPlugin(
+            manifest=manifest,
+            entry_point_name="tombstones",
+            entry_point_value="stigmem_plugin_tombstones:plugin_manifest",
+            distribution=manifest.name,
+        )
+        _include_plugin_routers(app, (discovered,))
+        with stigmem_plugins([manifest]):
+            yield
+    finally:
+        for name, value in original_env.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
 
 
 def _reset_tombstone_cache() -> None:
@@ -163,10 +211,11 @@ def node(tmp_path):
         return _make_peer_token(peer_priv_b64, peer_node_id, sub=our_node_id)
 
     app = create_app()
-    client = TestClient(app, raise_server_exceptions=True)
-    client.__enter__()
-    yield client, admin_key, reader_key, ts, db_file, _mint_peer_token
-    client.__exit__(None, None, None)
+    with _tombstone_plugin_app(app):
+        client = TestClient(app, raise_server_exceptions=True)
+        client.__enter__()
+        yield client, admin_key, reader_key, ts, db_file, _mint_peer_token
+        client.__exit__(None, None, None)
     settings_module.settings = original
     auth_mod.settings = original
     db_mod.settings = original
@@ -688,6 +737,8 @@ class TestTwoNodeFederationPropagation:
             tomb_routes_mod.settings = ts_a
             _reset_tombstone_cache()
             app_a = create_app()
+            plugin_ctx_a = _tombstone_plugin_app(app_a)
+            plugin_ctx_a.__enter__()
             client_a = TestClient(app_a)
             client_a.__enter__()
 
@@ -707,6 +758,7 @@ class TestTwoNodeFederationPropagation:
             assert any(t["entity_uri"] == "user:quinn" for t in polled)
 
             client_a.__exit__(None, None, None)
+            plugin_ctx_a.__exit__(None, None, None)
 
             # ---- Node B ----
             ts_b, admin_b, db_b, mint_b = self._make_node(tmp_path, "node_b", "stigmem://ext-b")
@@ -718,6 +770,8 @@ class TestTwoNodeFederationPropagation:
             tomb_routes_mod.settings = ts_b
             _reset_tombstone_cache()
             app_b = create_app()
+            plugin_ctx_b = _tombstone_plugin_app(app_b)
+            plugin_ctx_b.__enter__()
             client_b = TestClient(app_b)
             client_b.__enter__()
 
@@ -757,6 +811,7 @@ class TestTwoNodeFederationPropagation:
             )
 
             client_b.__exit__(None, None, None)
+            plugin_ctx_b.__exit__(None, None, None)
 
         finally:
             settings_module.settings = original
@@ -866,10 +921,11 @@ class TestIngestSignatureEnforcement:
             return _make_peer_token(peer_priv_b64, peer_node_id, sub=our_node_id)
 
         app = create_app()
-        client = TestClient(app, raise_server_exceptions=True)
-        client.__enter__()
-        yield client, _mint, peer_pub_b64
-        client.__exit__(None, None, None)
+        with _tombstone_plugin_app(app):
+            client = TestClient(app, raise_server_exceptions=True)
+            client.__enter__()
+            yield client, _mint, peer_pub_b64
+            client.__exit__(None, None, None)
         settings_module.settings = original
         auth_mod.settings = original
         db_mod.settings = original

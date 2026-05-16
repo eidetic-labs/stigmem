@@ -38,7 +38,6 @@ from .routes.recall import router as recall_router
 from .routes.resolver import router as resolver_router
 from .routes.subscriptions import router as subscriptions_router
 from .routes.synthesize import router as synthesize_router
-from .routes.tombstones import router as tombstones_router
 from .routes.wellknown import router as wellknown_router
 from .settings import settings
 
@@ -172,7 +171,6 @@ def create_app() -> FastAPI:
     app.include_router(cards_router)
     app.include_router(recall_router)
     app.include_router(subscriptions_router)
-    app.include_router(tombstones_router)
     app.include_router(wellknown_router)
 
     @app.get("/healthz", tags=["ops"])

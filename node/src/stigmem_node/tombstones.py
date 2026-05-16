@@ -75,6 +75,10 @@ def _refresh_tombstone_cache() -> None:
 
 def is_tombstoned(entity_uri: str, fact_scope: str) -> bool:
     """Return True if entity_uri has an active tombstone covering fact_scope."""
+    from .tombstone_gate import tombstone_plugin_registered
+
+    if not tombstone_plugin_registered():
+        return False
     _refresh_tombstone_cache()
     for uri, pattern in _tombstone_scope_cache.active_set:
         if uri == entity_uri and _scope_matches(pattern, fact_scope):

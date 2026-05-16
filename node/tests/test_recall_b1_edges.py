@@ -19,11 +19,26 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from stigmem_node.plugins.testing import stigmem_plugins
+
 _ALICE = "stigmem://testnode/agent/alice"
 _BOB = "stigmem://testnode/agent/bob"
+_TOMBSTONE_PLUGIN_SRC = (
+    Path(__file__).resolve().parents[2] / "experimental" / "tombstones" / "src"
+)
+
+
+def _tombstone_plugin_manifest():
+    import sys
+
+    if str(_TOMBSTONE_PLUGIN_SRC) not in sys.path:
+        sys.path.insert(0, str(_TOMBSTONE_PLUGIN_SRC))
+    plugin = __import__("stigmem_plugin_tombstones")
+    return plugin.plugin_manifest()
 
 
 def _fact(entity: str, value: str, confidence: float = 1.0, scope: str = "local") -> dict:
@@ -274,43 +289,44 @@ class TestTombstoneEffect:
     def test_tombstoned_entity_suppresses_total_scored(
         self, client: TestClient, tmp_db: str
     ) -> None:
-        # Seed two facts about the same entity
-        client.post("/v1/facts", json=_fact(_ALICE, "tombstone target alice fact one"))
-        client.post("/v1/facts", json=_fact(_ALICE, "tombstone target alice fact two"))
+        with stigmem_plugins([_tombstone_plugin_manifest()]):
+            # Seed two facts about the same entity
+            client.post("/v1/facts", json=_fact(_ALICE, "tombstone target alice fact one"))
+            client.post("/v1/facts", json=_fact(_ALICE, "tombstone target alice fact two"))
 
-        # Insert a tombstone row directly so we don't drag in the admin auth flow.
-        # The recall path consults the in-process tombstone_cache, which we
-        # invalidate to force a re-read after the insert.
-        from stigmem_node import tombstone_cache as tc_mod
+            # Insert a tombstone row directly so we don't drag in the admin auth flow.
+            # The recall path consults the in-process tombstone_cache, which we
+            # invalidate to force a re-read after the insert.
+            from stigmem_node import tombstone_cache as tc_mod
 
-        conn = sqlite3.connect(tmp_db)
-        conn.execute(
-            """
-            INSERT INTO tombstones (id, entity_uri, scope, reason,
-                                    signed_by, signature, created_at,
-                                    legal_hold, tenant_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                "tomb-test-1",
-                _ALICE,
-                "local",
-                "rtbf",
-                "stigmem://testnode/admin",
-                "sig",
-                datetime.now(UTC).isoformat(),
-                0,
-                "default",
-            ),
-        )
-        conn.commit()
-        conn.close()
-        tc_mod.invalidate()
+            conn = sqlite3.connect(tmp_db)
+            conn.execute(
+                """
+                INSERT INTO tombstones (id, entity_uri, scope, reason,
+                                        signed_by, signature, created_at,
+                                        legal_hold, tenant_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "tomb-test-1",
+                    _ALICE,
+                    "local",
+                    "rtbf",
+                    "stigmem://testnode/admin",
+                    "sig",
+                    datetime.now(UTC).isoformat(),
+                    0,
+                    "default",
+                ),
+            )
+            conn.commit()
+            conn.close()
+            tc_mod.invalidate()
 
-        r = client.post(
-            "/v1/recall",
-            json=_recall("tombstone target alice fact"),
-        )
+            r = client.post(
+                "/v1/recall",
+                json=_recall("tombstone target alice fact"),
+            )
         assert r.status_code == 200
         body = r.json()
         # §23.3.3 r.3: total_scored is suppressed (None) when tombstone filtering applied

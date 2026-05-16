@@ -15,6 +15,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from conftest import _tombstone_plugin_manifest
 from fastapi.testclient import TestClient
 
 from stigmem_node.auth import create_api_key
@@ -119,7 +120,7 @@ class TestFactsAsOfValidation:
         )
         extra = _patch_settings(test_settings)
         try:
-            with stigmem_plugins([_time_travel_plugin_manifest()]):
+            with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
                 app = create_app()
                 with TestClient(app, raise_server_exceptions=True) as c:
                     r = c.get(f"/v1/facts?as_of={too_old}")
@@ -244,7 +245,7 @@ class TestFactsAsOfTombstoneGating:
         extra = _patch_settings(test_settings)
         agent_key = create_api_key("agent:alice", ["read", "write"])
         try:
-            with stigmem_plugins([_time_travel_plugin_manifest()]):
+            with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
                 app = create_app()
                 with TestClient(app, raise_server_exceptions=True) as c:
                     # Assert fact
@@ -300,7 +301,7 @@ class TestFactsAsOfTombstoneGating:
         extra = _patch_settings(test_settings)
         admin_key = create_api_key("agent:admin", ["read", "write", "admin"])
         try:
-            with stigmem_plugins([_time_travel_plugin_manifest()]):
+            with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
                 app = create_app()
                 with TestClient(app, raise_server_exceptions=True) as c:
                     r = c.post(
@@ -456,7 +457,7 @@ class TestRecallAsOf:
         extra = _patch_settings(test_settings)
         agent_key = create_api_key("agent:recall-agent", ["read", "write"])
         try:
-            with stigmem_plugins([_time_travel_plugin_manifest()]):
+            with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
                 app = create_app()
                 with TestClient(app, raise_server_exceptions=True) as c:
                     c.post(

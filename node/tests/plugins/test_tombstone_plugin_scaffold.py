@@ -92,6 +92,24 @@ def test_manifest_declares_expected_boundary() -> None:
     assert manifest.routes == ()
 
 
+def test_manifest_exposes_legacy_routes_when_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ALLOW_ADMIN_ROUTES", "true")
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ALLOW_FEDERATION_ROUTES", "true")
+
+    manifest = plugin_manifest()
+
+    route_paths = {
+        route.path
+        for router in manifest.routes
+        for route in getattr(router, "routes", ())
+        if hasattr(route, "path")
+    }
+    assert "/v1/tombstones" in route_paths
+    assert "/v1/federation/tombstones" in route_paths
+    assert "/v1/federation/tombstones/ingest" in route_paths
+
+
 def test_default_config_keeps_behavior_disabled() -> None:
     config = TombstoneConfig()
 

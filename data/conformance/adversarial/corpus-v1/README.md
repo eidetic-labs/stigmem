@@ -10,4 +10,14 @@ Run validation with:
 uv run python scripts/validate_adversarial_corpus.py
 ```
 
+Run the offline certification-harness smoke test with:
+
+```sh
+uv run python scripts/run_adversarial_conformance.py
+```
+
+The default provider is deterministic and credential-free. It verifies the
+ADR-015 result schema, rubric, and tier calculation before live provider-backed
+certification runs are added.
+
 Patterns are immutable once added. If a pattern becomes obsolete, add `deprecated_in` instead of editing its meaning.

@@ -234,6 +234,7 @@ const sidebars = {
       ],
     },
     'operators/conformance',
+    'operators/prompt-injection-hardening',
     'operators/compatibility',
     'operators/design-partner-notes',
   ],
@@ -266,6 +267,7 @@ const sidebars = {
         'security/human-key-issuance',
         'security/human-surface',
         'security/pen-test',
+        'security/model-certification',
       ],
     },
     {

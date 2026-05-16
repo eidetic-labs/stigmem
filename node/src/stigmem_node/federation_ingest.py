@@ -15,10 +15,15 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from .audit_event import INSTRUCTION_QUARANTINED, emit_instruction_event_if_applicable
+from .audit_event import (
+    INSTRUCTION_QUARANTINED,
+    emit_instruction_event_if_applicable,
+    is_instruction_fact,
+)
 from .db import db
 from .hlc import HLCRemoteSkewError, node_hlc
 from .metrics import PEER_HLC_ANOMALY
+from .models.facts import VALID_INTERPRET_AS
 
 
 class FederationHlcSkewError(ValueError):
@@ -45,6 +50,36 @@ def _encode_v(value: dict[str, Any]) -> str:
     if vtype == "boolean":
         return "true" if v else "false"
     return str(v)
+
+
+def _interpret_as(fact: dict[str, Any]) -> str:
+    interpret_as = fact.get("value", {}).get("interpret_as", "content")
+    if interpret_as not in VALID_INTERPRET_AS:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=422, detail="invalid_interpret_as")
+    return str(interpret_as)
+
+
+def _resolve_quarantine_garden_id(failure_detail: str) -> str:
+    from .settings import settings
+
+    qg_id = settings.quarantine_garden_id
+    if not qg_id:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=403, detail=failure_detail)
+
+    with db() as conn:
+        qg_row = conn.execute(
+            "SELECT id FROM gardens WHERE (id = ? OR slug = ?) AND quarantine = 1",
+            (qg_id, qg_id),
+        ).fetchone()
+    if qg_row is None:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=403, detail=failure_detail)
+    return str(qg_row["id"])
 
 
 def _audit_peer_hlc_anomaly(
@@ -107,11 +142,23 @@ def ingest_fact(
     fact_id = fact["id"]
     scope = fact["scope"]
     source = fact["source"]
+    interpret_as = _interpret_as(fact)
+    is_instruction = is_instruction_fact(
+        fact.get("entity"),
+        fact.get("relation"),
+        interpret_as,
+    )
 
     # Phase 8: compute source-trust snapshot (§19.4)
     trust_score: float | None = None
     quarantine_garden_db_id: str | None = None
     quarantine_status: str | None = None
+    quarantine_reason: str | None = None
+
+    if is_instruction:
+        quarantine_garden_db_id = _resolve_quarantine_garden_id("quarantine_garden_required")
+        quarantine_status = "pending"
+        quarantine_reason = "instruction_federation_inbound"
 
     trust_mode = settings.trust_mode
     if trust_mode != "off":
@@ -123,31 +170,9 @@ def ingest_fact(
         )
 
         if trust_mode == "strict" and trust_score < 0.2:
-            # Route to quarantine or reject (§19.5.4)
-            qg_id = settings.quarantine_garden_id
-            if not qg_id:
-                # No quarantine garden configured — reject the fact
-                from fastapi import HTTPException
-
-                raise HTTPException(
-                    status_code=403,
-                    detail="trust_below_threshold",
-                )
-            # Verify the configured quarantine garden exists
-            with db() as conn:
-                qg_row = conn.execute(
-                    "SELECT id FROM gardens WHERE (id = ? OR slug = ?) AND quarantine = 1",
-                    (qg_id, qg_id),
-                ).fetchone()
-            if qg_row is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(
-                    status_code=403,
-                    detail="trust_below_threshold",
-                )
-            quarantine_garden_db_id = qg_row["id"]
+            quarantine_garden_db_id = _resolve_quarantine_garden_id("trust_below_threshold")
             quarantine_status = "pending"
+            quarantine_reason = "trust_below_threshold"
 
     # Scope-propagation columns (spec §6.8.1)
     eff_origin_node_id = origin_node_id or sender_node_id
@@ -196,8 +221,9 @@ def ingest_fact(
                (id, entity, relation, value_type, value_v, source, timestamp,
                 valid_until, confidence, scope, hlc, received_from,
                 origin_node_id, origin_allowed_scopes, re_federation_blocked,
-                source_trust, quarantine_garden_id, quarantine_status)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                source_trust, quarantine_garden_id, quarantine_status,
+                quarantine_reason, interpret_as)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 fact["entity"],
@@ -217,6 +243,8 @@ def ingest_fact(
                 trust_score,
                 quarantine_garden_db_id,
                 quarantine_status,
+                quarantine_reason,
+                interpret_as,
             ),
         )
 
@@ -237,7 +265,13 @@ def ingest_fact(
                     None,
                     sender_node_id,
                     None,
-                    json.dumps({"trust_score": trust_score}),
+                    json.dumps(
+                        {
+                            "reason": quarantine_reason,
+                            "trust_score": trust_score,
+                            "interpret_as": interpret_as,
+                        }
+                    ),
                     audit_now,
                 ),
             )
@@ -246,10 +280,11 @@ def ingest_fact(
                 fact_id=fact_id,
                 fact_entity=fact.get("entity"),
                 fact_relation=fact.get("relation"),
+                fact_interpret_as=interpret_as,
                 actor_uri="system:federation",
                 source=sender_node_id,
                 detail={
-                    "reason": "trust_below_threshold",
+                    "reason": quarantine_reason,
                     "trust_score": trust_score,
                     "received_from": sender_node_id,
                 },

@@ -179,6 +179,7 @@ def admit_fact(
             fact_id=fact_id,
             fact_entity=fact_row["entity"],
             fact_relation=fact_row["relation"],
+            fact_interpret_as=fact_row["interpret_as"],
             actor_uri=identity.entity_uri,
             tenant_id=identity.tenant_id,
             oidc_sub=identity.oidc_sub,

@@ -459,9 +459,10 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 **What should operators do right now (this is an open risk with a partial protocol mitigation)?**
 - Audit every API key that has `instruction:write`. This list should be very short — ideally only admin keys or a dedicated instruction-management key.
 - Do not grant general agent API keys `instruction:write`.
+- Configure and monitor the quarantine garden before enabling federation. Federation-inbound instruction-typed facts are held there until admitted; a missing quarantine garden fails closed.
 - Ensure your agents' boot stubs embed hard prohibitions unconditionally (Spec-X1-Lazy-Instruction-Discovery boot-stub rules guidance: "always-applicable rules" should be in the boot stub body, not lazy-loaded).
 
-**How would you know?** The `instruction_audit` event type in the audit log records `recall_instruction` calls. Unexpected instruction-typed fact writes (`fact_write` events whose value has `interpret_as="instruction"`) are a signal.
+**How would you know?** The `instruction_audit` event type in the audit log records `recall_instruction` calls. Unexpected instruction-typed fact writes (`fact_write` events whose value has `interpret_as="instruction"`) and `instruction_quarantined` events from federation ingest are signals.
 
 **How do you recover?**
 1. Revoke the key that wrote the adversarial instruction fact.

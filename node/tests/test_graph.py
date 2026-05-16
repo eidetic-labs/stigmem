@@ -6,11 +6,16 @@ Backend-parameterised: run with --backend=sqlite (default) or --backend=libsql.
 from __future__ import annotations
 
 import sqlite3
+import sys
 import time
 import uuid
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+
+from stigmem_node.plugins import PluginManifest
+from stigmem_node.plugins.testing import stigmem_plugins
 
 # ---------------------------------------------------------------------------
 # Test entity URIs
@@ -20,6 +25,23 @@ _ALICE = "stigmem://testnode/agent/alice"
 _BOB = "stigmem://testnode/agent/bob"
 _CAROL = "stigmem://testnode/agent/carol"
 _DAVE = "stigmem://testnode/agent/dave"
+_MEMORY_GARDEN_ACL_SRC = (
+    Path(__file__).resolve().parents[2] / "experimental" / "memory-garden-acl" / "src"
+)
+
+
+def _memory_garden_acl_manifest() -> PluginManifest:
+    if str(_MEMORY_GARDEN_ACL_SRC) not in sys.path:
+        sys.path.insert(0, str(_MEMORY_GARDEN_ACL_SRC))
+    import importlib
+
+    plugin = importlib.import_module("stigmem_plugin_memory_garden_acl")
+    return plugin.plugin_manifest()
+
+
+def _enable_acl_recall_filter(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("STIGMEM_MEMORY_GARDEN_ACL_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_MEMORY_GARDEN_ACL_APPLY_RECALL_FILTER", "true")
 
 
 def _ref_fact(
@@ -371,8 +393,9 @@ class TestGraphGardenACL:
         tmp_db: str,
         authed_client: tuple,
         backend: str,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Edges in a garden must not be visible to callers who aren't members."""
+        """Advanced plugin filtering hides garden edges from non-members."""
         if backend == "libsql":
             pytest.skip("direct SQLite injection not available on libsql")
 
@@ -416,10 +439,20 @@ class TestGraphGardenACL:
         outsider_key = create_api_key("stigmem://testnode/agent/outsider", ["read"])
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:
-            r = c.get(
+            default_r = c.get(
                 f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local",
                 headers={"Authorization": f"Bearer {outsider_key}"},
             )
+            assert default_r.status_code == 200
+            default_entities = [n["entity"] for n in default_r.json()["neighbors"]]
+            assert _CAROL in default_entities
+
+            _enable_acl_recall_filter(monkeypatch)
+            with stigmem_plugins([_memory_garden_acl_manifest()]):
+                r = c.get(
+                    f"/v1/graph/neighbors?entity={_ALICE}&depth=1&scope=local",
+                    headers={"Authorization": f"Bearer {outsider_key}"},
+                )
             assert r.status_code == 200
             entities = [n["entity"] for n in r.json()["neighbors"]]
             assert _CAROL not in entities

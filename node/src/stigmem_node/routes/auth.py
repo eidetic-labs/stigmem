@@ -5,8 +5,10 @@ POST /v1/auth/keys            register a caller-provided static API key (admin)
 GET  /v1/auth/keys            list caller's own keys
 DELETE /v1/auth/keys/{key_id} revoke a specific key
 
-C2 addition: permissions are capped by the caller's garden membership role.
-admin/writer in any garden → up to ["read","write"]; reader/no membership → ["read"].
+C2 addition: when the experimental memory-garden advanced ACL plugin and its
+explicit OIDC ceiling gate are enabled, permissions are capped by the caller's
+garden membership role. admin/writer in any garden → up to ["read","write"];
+reader/no membership → ["read"].
 
 ``POST /v1/auth/keys`` is the supported post-bootstrap path for minting
 additional static (non-OIDC) keys.  It mirrors the bootstrap CLI's
@@ -36,6 +38,7 @@ from ..auth import (
     resolve_identity,
 )
 from ..db import db
+from ..memory_garden_acl_gate import oidc_permission_ceiling_enabled
 from ..models.auth import (
     ExchangeRequest,
     ExchangeResponse,
@@ -184,10 +187,11 @@ def oidc_exchange(body: ExchangeRequest) -> ExchangeResponse:
 
     entity_uri = f"oidc:{sub}"
 
-    # C2: cap permissions by the caller's garden membership role so curators
-    # only get the access their membership entitles them to.
-    ceiling = _derive_permission_ceiling(entity_uri)
-    requested = {p for p in body.permissions if p in _ALLOWED_PERMISSIONS} & ceiling
+    # Experimental memory-garden advanced ACL: cap permissions by garden membership
+    # only when the plugin and its explicit OIDC ceiling gate are enabled.
+    requested = {p for p in body.permissions if p in _ALLOWED_PERMISSIONS}
+    if oidc_permission_ceiling_enabled():
+        requested &= _derive_permission_ceiling(entity_uri)
     if not requested:
         requested = {"read"}
     permissions = sorted(requested, key=lambda p: _PERM_ORDER.index(p))

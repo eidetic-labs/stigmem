@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...auth import Identity
 from ...garden_acl import caller_can_see_garden
+from ...memory_garden_acl_gate import recall_filter_enabled
 from ...models.facts import FactRecord
 from ...models.recall import RecallWeights, ScoreBreakdown, ScoredFact
 from ...source_trust import compute_source_trust
@@ -37,7 +38,7 @@ def _score_candidates(
 
         # Salience signal: garden tier (quarantine garden = 0, normal = 1)
         garden_factor = 1.0
-        if record.garden_id is not None:
+        if record.garden_id is not None and recall_filter_enabled():
             if not caller_can_see_garden(record.garden_id, identity):
                 continue  # hidden by ACL
             # Penalise quarantine-tagged gardens (§17)

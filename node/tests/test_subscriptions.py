@@ -16,9 +16,11 @@ Coverage:
 from __future__ import annotations
 
 import json
+import sys
 import uuid
 from collections.abc import Generator
 from datetime import UTC, datetime
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -27,14 +29,33 @@ from fastapi.testclient import TestClient
 import stigmem_node.auth as auth_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.main import create_app
+from stigmem_node.plugins import PluginManifest
+from stigmem_node.plugins.testing import stigmem_plugins
 from stigmem_node.subscription_delivery import deliver_pending
 
 Settings = settings_module.Settings
 create_api_key = auth_mod.create_api_key
+_MEMORY_GARDEN_ACL_SRC = (
+    Path(__file__).resolve().parents[2] / "experimental" / "memory-garden-acl" / "src"
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _memory_garden_acl_manifest() -> PluginManifest:
+    if str(_MEMORY_GARDEN_ACL_SRC) not in sys.path:
+        sys.path.insert(0, str(_MEMORY_GARDEN_ACL_SRC))
+    import importlib
+
+    plugin = importlib.import_module("stigmem_plugin_memory_garden_acl")
+    return plugin.plugin_manifest()
+
+
+def _enable_acl_recall_filter(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("STIGMEM_MEMORY_GARDEN_ACL_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_MEMORY_GARDEN_ACL_APPLY_RECALL_FILTER", "true")
 
 
 def _assert_fact(
@@ -557,7 +578,64 @@ def test_replay_window_pagination(client: TestClient) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_delivery_skipped_when_not_garden_member(client: TestClient) -> None:
+def test_default_delivery_does_not_apply_advanced_garden_acl(client: TestClient) -> None:
+    """Default installs do not suppress subscription delivery by garden membership."""
+    sub = _create_subscription(client, target="stigmem://test/agent/alice", on_change="webhook")
+
+    garden_uuid = str(uuid.uuid4())
+    import stigmem_node.db as db_mod
+
+    payload = {
+        "id": str(uuid.uuid4()),
+        "entity": "stigmem://test/agent/alice",
+        "relation": "test:secret",
+        "value_type": "string",
+        "value_v": "classified",
+        "source": "stigmem://test/agent/alice",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "scope": "company",
+        "confidence": 1.0,
+        "garden_id": garden_uuid,
+    }
+    event_id = str(uuid.uuid4())
+    with db_mod.db() as conn:
+        conn.execute(
+            """INSERT INTO subscription_events
+               (id, subscription_id, event_type, entity_uri, fact_id, payload,
+                created_at, delivery_status)
+               VALUES (?,?,?,?,?,?,?,'pending')""",
+            (
+                event_id,
+                sub["id"],
+                "fact_asserted",
+                payload["entity"],
+                payload["id"],
+                json.dumps(payload),
+                datetime.now(UTC).isoformat(),
+            ),
+        )
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+
+    with (
+        patch("stigmem_node.subscription_delivery.get_member_role", return_value=None),
+        patch("stigmem_node.subscription_delivery.httpx.Client") as mock_client_cls,
+    ):
+        mock_client_instance = MagicMock()
+        mock_client_instance.__enter__ = MagicMock(return_value=mock_client_instance)
+        mock_client_instance.__exit__ = MagicMock(return_value=False)
+        mock_client_instance.post.return_value = mock_resp
+        mock_client_cls.return_value = mock_client_instance
+
+        deliver_pending()
+
+        mock_client_instance.post.assert_called_once()
+
+
+def test_plugin_delivery_skipped_when_not_garden_member(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """If the subscriber is not a garden member, delivery is silently suppressed."""
     sub = _create_subscription(client, target="stigmem://test/agent/alice", on_change="webhook")
 
@@ -598,7 +676,9 @@ def test_delivery_skipped_when_not_garden_member(client: TestClient) -> None:
     mock_resp.status_code = 200
 
     # Patch get_member_role to return None (subscriber not a member)
+    _enable_acl_recall_filter(monkeypatch)
     with (
+        stigmem_plugins([_memory_garden_acl_manifest()]),
         patch("stigmem_node.subscription_delivery.get_member_role", return_value=None),
         patch("stigmem_node.subscription_delivery.httpx.Client") as mock_client_cls,
     ):
@@ -691,7 +771,9 @@ def test_delivery_sanitizer_redacted(client: TestClient) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_replay_window_suppresses_garden_acl_blocked_events(client: TestClient) -> None:
+def test_replay_window_suppresses_garden_acl_blocked_events(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """S3 regression: garden-ACL-blocked events must not appear in the replay window.
 
     A scope subscriber who is removed from a garden should not be able to retrieve
@@ -735,8 +817,12 @@ def test_replay_window_suppresses_garden_acl_blocked_events(client: TestClient) 
             ),
         )
 
-    # Subscriber is NOT a member of garden_uuid — garden ACL should suppress
-    with patch("stigmem_node.subscription_delivery.get_member_role", return_value=None):
+    # Subscriber is NOT a member of garden_uuid — plugin ACL should suppress
+    _enable_acl_recall_filter(monkeypatch)
+    with (
+        stigmem_plugins([_memory_garden_acl_manifest()]),
+        patch("stigmem_node.subscription_delivery.get_member_role", return_value=None),
+    ):
         resp = client.get(f"/v1/subscriptions/{sub['id']}/events")
 
     assert resp.status_code == 200

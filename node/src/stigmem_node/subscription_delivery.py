@@ -30,6 +30,7 @@ from . import settings as _settings_pkg
 from .auth import Identity
 from .db import db
 from .garden_acl import get_member_role
+from .memory_garden_acl_gate import recall_filter_enabled
 from .recall_pipeline import apply_recall_pipeline
 from .tombstone_cache import is_tombstoned as _is_tombstoned
 
@@ -223,7 +224,7 @@ def _sanitize_payload(event: Any, payload: dict[str, Any]) -> dict[str, Any] | N
 
     # §17 garden ACL re-check: skip delivery if subscriber no longer a member
     garden_uuid = payload.get("garden_id")
-    if garden_uuid:
+    if garden_uuid and recall_filter_enabled():
         role = get_member_role(garden_uuid, subscriber)
         if role is None:
             return None

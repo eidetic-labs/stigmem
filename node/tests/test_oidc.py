@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import json
 import sqlite3 as _sqlite3
+import sys
 import time
 import uuid
 from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -26,12 +28,31 @@ import stigmem_node.routes.auth as auth_route_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.main import create_app
+from stigmem_node.plugins import PluginManifest
+from stigmem_node.plugins.testing import stigmem_plugins
 
 apply_migrations = db_mod.apply_migrations
 Settings = settings_module.Settings
 
 ISSUER = "https://oidc.example.com"
 AUDIENCE = "stigmem-test-client"
+_MEMORY_GARDEN_ACL_SRC = (
+    Path(__file__).resolve().parents[2] / "experimental" / "memory-garden-acl" / "src"
+)
+
+
+def _memory_garden_acl_manifest() -> PluginManifest:
+    if str(_MEMORY_GARDEN_ACL_SRC) not in sys.path:
+        sys.path.insert(0, str(_MEMORY_GARDEN_ACL_SRC))
+    import importlib
+
+    plugin = importlib.import_module("stigmem_plugin_memory_garden_acl")
+    return plugin.plugin_manifest()
+
+
+def _enable_oidc_ceiling(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("STIGMEM_MEMORY_GARDEN_ACL_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_MEMORY_GARDEN_ACL_ENABLE_OIDC_PERMISSION_CEILING", "true")
 
 
 # ---------------------------------------------------------------------------
@@ -484,48 +505,60 @@ def oidc_env(
     auth_route_mod._JWKS_CACHE.clear()
 
 
-def test_exchange_writer_membership_grants_write(oidc_env, rsa_keypair) -> None:
+def test_exchange_writer_membership_grants_write(
+    oidc_env, rsa_keypair, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """A user with writer role in any garden receives read+write permissions."""
     client, db_path = oidc_env
     private_key, _ = rsa_keypair
     _seed_garden_member(db_path, "oidc:writer-user", "writer")
 
     token = _sign_token(private_key, sub="writer-user")
-    resp = client.post(
-        "/v1/auth/oidc/exchange",
-        json={"id_token": token, "permissions": ["read", "write"]},
-    )
+    _enable_oidc_ceiling(monkeypatch)
+    with stigmem_plugins([_memory_garden_acl_manifest()]):
+        resp = client.post(
+            "/v1/auth/oidc/exchange",
+            json={"id_token": token, "permissions": ["read", "write"]},
+        )
     assert resp.status_code == 200
     body = resp.json()
     assert set(body["permissions"]) == {"read", "write"}
 
 
-def test_exchange_admin_membership_grants_write(oidc_env, rsa_keypair) -> None:
+def test_exchange_admin_membership_grants_write(
+    oidc_env, rsa_keypair, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """A user with admin role in any garden receives read+write permissions."""
     client, db_path = oidc_env
     private_key, _ = rsa_keypair
     _seed_garden_member(db_path, "oidc:admin-user", "admin")
 
     token = _sign_token(private_key, sub="admin-user")
-    resp = client.post(
-        "/v1/auth/oidc/exchange",
-        json={"id_token": token, "permissions": ["read", "write"]},
-    )
+    _enable_oidc_ceiling(monkeypatch)
+    with stigmem_plugins([_memory_garden_acl_manifest()]):
+        resp = client.post(
+            "/v1/auth/oidc/exchange",
+            json={"id_token": token, "permissions": ["read", "write"]},
+        )
     assert resp.status_code == 200
     assert set(resp.json()["permissions"]) == {"read", "write"}
 
 
-def test_exchange_reader_only_membership_caps_at_read(oidc_env, rsa_keypair) -> None:
+def test_exchange_reader_only_membership_caps_at_read(
+    oidc_env, rsa_keypair, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """A user with only reader role cannot obtain write permissions."""
     client, db_path = oidc_env
     private_key, _ = rsa_keypair
     _seed_garden_member(db_path, "oidc:reader-user", "reader")
 
     token = _sign_token(private_key, sub="reader-user")
-    resp = client.post(
-        "/v1/auth/oidc/exchange",
-        json={"id_token": token, "permissions": ["read", "write"]},
-    )
+    _enable_oidc_ceiling(monkeypatch)
+    with stigmem_plugins([_memory_garden_acl_manifest()]):
+        resp = client.post(
+            "/v1/auth/oidc/exchange",
+            json={"id_token": token, "permissions": ["read", "write"]},
+        )
     assert resp.status_code == 200
     assert resp.json()["permissions"] == ["read"]
 
@@ -539,18 +572,39 @@ def test_exchange_reader_only_membership_caps_at_read(oidc_env, rsa_keypair) -> 
     assert write_resp.status_code == 403
 
 
-def test_exchange_no_membership_caps_at_read(oidc_env, rsa_keypair) -> None:
+def test_exchange_no_membership_caps_at_read(
+    oidc_env, rsa_keypair, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """A user with no garden membership can only get read access."""
     client, _ = oidc_env
     private_key, _ = rsa_keypair
 
     token = _sign_token(private_key, sub="nomember-user", email="nomember@example.com")
+    _enable_oidc_ceiling(monkeypatch)
+    with stigmem_plugins([_memory_garden_acl_manifest()]):
+        resp = client.post(
+            "/v1/auth/oidc/exchange",
+            json={"id_token": token, "permissions": ["read", "write"]},
+        )
+    assert resp.status_code == 200
+    assert resp.json()["permissions"] == ["read"]
+
+
+def test_exchange_default_install_does_not_apply_garden_permission_ceiling(
+    oidc_env, rsa_keypair
+) -> None:
+    """Default installs do not apply advanced membership-derived OIDC ceilings."""
+    client, db_path = oidc_env
+    private_key, _ = rsa_keypair
+    _seed_garden_member(db_path, "oidc:default-reader-user", "reader")
+
+    token = _sign_token(private_key, sub="default-reader-user")
     resp = client.post(
         "/v1/auth/oidc/exchange",
         json={"id_token": token, "permissions": ["read", "write"]},
     )
     assert resp.status_code == 200
-    assert resp.json()["permissions"] == ["read"]
+    assert set(resp.json()["permissions"]) == {"read", "write"}
 
 
 def test_exchange_response_includes_permissions_field(oidc_env, rsa_keypair) -> None:

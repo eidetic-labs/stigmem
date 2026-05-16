@@ -15,6 +15,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 - **Docs-site AI authorship disclosure.** The README and CONTRIBUTING AI-assisted authorship disclosure is now mirrored in the docs site under Community / Disclosure & policy so adopters and reviewers can find the review-calibration guidance outside the repository root.
 - **ADR-010 modular spec foundation.** Core spec frontmatter stubs now live under `spec/specs/`, with generated `spec/PROTOCOL.md` composition metadata and a contract gate that fails on protocol-index drift.
 - **ADR-010 experimental spec indexing.** Experimental spec files now carry `Spec-XN` frontmatter and appear in generated `spec/PROTOCOL.md`; archived monolithic snapshots point readers to the modular index.
+- **Grade duplication audit tooling.** The workspace now installs `jscpd` as a root dev dependency and exposes `pnpm run grade:duplication`, so the grade duplication signal reports a numeric percentage instead of `unknown`.
 
 ### Changed
 

@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import httpx
 from stigmem import StigmemClient, ref_value, string_value, text_value
 from stigmem.exceptions import StigmemError, StigmemNotFoundError
 from stigmem.models import Fact, FactScope
@@ -33,6 +34,10 @@ class BootContext:
 
     def __bool__(self) -> bool:
         return bool(self.facts)
+
+
+class OpenClawBootError(RuntimeError):
+    """Raised when the boot handshake cannot reliably read Stigmem context."""
 
 
 class OpenClawStigmemAdapter:
@@ -79,17 +84,17 @@ class OpenClawStigmemAdapter:
         """Pull user prefs, project constraints, and pending handoffs.
 
         Returns a BootContext whose `summary` field is markdown ready to
-        prepend to the agent system prompt. Returns an empty context (with
-        a logged warning) when the node is unavailable — never crashes the
-        calling agent.
+        prepend to the agent system prompt. Raises OpenClawBootError when
+        Stigmem cannot be reached or returns an error so callers cannot
+        mistake a failed boot for a healthy empty context.
         """
         try:
             return self._boot_inner(user_entity, session_id, project_entities)
-        except Exception as exc:
-            logger.warning(
-                "Stigmem node unavailable during boot; proceeding with empty context: %s", exc
-            )
-            return BootContext()
+        except (StigmemError, httpx.HTTPError) as exc:
+            raise OpenClawBootError(
+                "OpenClaw boot could not read Stigmem context; "
+                "do not continue as if boot succeeded"
+            ) from exc
 
     def _boot_inner(
         self,

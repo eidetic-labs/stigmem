@@ -15,7 +15,7 @@ import pytest
 import respx
 
 # conftest.py adds the adapter directory to sys.path
-from adapter import BootContext, OpenClawStigmemAdapter
+from adapter import BootContext, OpenClawBootError, OpenClawStigmemAdapter
 
 BASE = "http://test-stigmem"
 SOURCE = "agent:openclaw"
@@ -192,28 +192,42 @@ def test_boot_pagination() -> None:
 
 
 @respx.mock
-def test_boot_node_unavailable_returns_empty() -> None:
-    """Node connection failure must return empty BootContext, not raise."""
+def test_boot_node_unavailable_raises_boot_error() -> None:
+    """Node connection failure must be visible to callers."""
     respx.get(f"{BASE}/v1/facts").mock(side_effect=httpx.ConnectError("refused"))
+
+    adapter = _adapter()
+
+    with pytest.raises(OpenClawBootError, match="could not read Stigmem context") as exc:
+        adapter.boot(user_entity="user:alice")
+
+    assert isinstance(exc.value.__cause__, httpx.ConnectError)
+
+
+@respx.mock
+def test_boot_http_error_raises_boot_error() -> None:
+    respx.get(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(503, json={"detail": "service unavailable"})
+    )
+
+    adapter = _adapter()
+
+    with pytest.raises(OpenClawBootError, match="could not read Stigmem context") as exc:
+        adapter.boot(user_entity="user:alice")
+
+    assert "HTTP 503" in str(exc.value.__cause__)
+
+
+@respx.mock
+def test_boot_empty_success_still_returns_empty_context() -> None:
+    """A healthy node with no matching facts remains a successful empty context."""
+    respx.get(f"{BASE}/v1/facts").mock(return_value=httpx.Response(200, json=_page([])))
 
     adapter = _adapter()
     ctx = adapter.boot(user_entity="user:alice")
 
     assert ctx == BootContext()
     assert not ctx
-
-
-@respx.mock
-def test_boot_http_error_returns_empty() -> None:
-    respx.get(f"{BASE}/v1/facts").mock(
-        return_value=httpx.Response(503, json={"detail": "service unavailable"})
-    )
-
-    adapter = _adapter()
-    ctx = adapter.boot(user_entity="user:alice")
-
-    assert not ctx
-    assert ctx.summary == ""
 
 
 # ---------------------------------------------------------------------------

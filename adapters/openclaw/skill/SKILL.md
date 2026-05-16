@@ -35,8 +35,8 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 > refresh. It does not revise the already-published a1 package in place. The
 > OpenClaw skill is available for v0.9.0aN evaluation only, not as a recommended
 > production integration. The adapter still has open audit findings around
-> fail-open boot behavior, optional API-key handling, handoff target validation,
-> partial handoff writes, and prompt-injection boundaries. Use it only with
+> handoff target validation, partial handoff writes, and prompt-injection
+> boundaries. Use it only with
 > private, access-controlled Stigmem nodes and least-privilege agent keys until
 > the hardening work lands. See
 > [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).

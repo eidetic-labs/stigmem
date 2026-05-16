@@ -54,10 +54,10 @@ keys regularly; revoke via the Stigmem node admin API if compromised.
 ## Known alpha gaps
 
 The OpenClaw audit still has unresolved blocker findings in the v0.9.0a1 adapter:
-fail-open boot behavior, optional API-key handling, unvalidated handoff targets,
-orphan/partial handoff writes, and presentation-layer-only sanitization. These are
-tracked for the v0.9.0a2..aN / beta hardening path. Until then, keep the adapter
-limited to local, private-node evaluation.
+unvalidated handoff targets, orphan/partial handoff writes, and
+presentation-layer-only sanitization. These are tracked for the v0.9.0a2..aN /
+beta hardening path. Until then, keep the adapter limited to local, private-node
+evaluation.
 
 ## Changelog
 
@@ -81,8 +81,9 @@ OpenClaw agents are persistent and channel-agnostic. The Stigmem adapter hooks i
 
 1. **Agent boot** — pull user preferences (`preference:*`), active project
    constraints (`roadmap:constraint`), pending handoff facts, and recent
-   escalations. All queries are paginated; node unavailability produces an empty
-   context with a logged warning instead of crashing the agent.
+   escalations. All queries are paginated; node unavailability raises a typed
+   boot error so callers cannot confuse a failed boot with a healthy empty
+   context.
 2. **Handoff** — when a user ends a session or delegates to another channel/agent,
    emit a typed `intent:handoff` fact cluster with validated fact refs, an optional
    continuation note, and a human-readable summary.
@@ -128,22 +129,23 @@ STIGMEM_SOURCE_ENTITY=agent:openclaw   # entity URI for this OpenClaw instance
 
 ```python
 import os
-from stigmem.adapters.openclaw.adapter import OpenClawStigmemAdapter
+from stigmem.adapters.openclaw.adapter import OpenClawBootError, OpenClawStigmemAdapter
 
 # 1. Construct from environment
 adapter = OpenClawStigmemAdapter.from_env()
 
 # 2. Boot at session start — pull all relevant facts and format a system prompt snippet
-ctx = adapter.boot(
-    user_entity="user:alice",
-    session_id="session:2026-05-02-abc",
-    project_entities=["project:acme-roadmap"],
-)
+try:
+    ctx = adapter.boot(
+        user_entity="user:alice",
+        session_id="session:2026-05-02-abc",
+        project_entities=["project:acme-roadmap"],
+    )
+except OpenClawBootError:
+    # Treat as a failed boot, not as a healthy empty context.
+    raise
 
-if ctx:
-    system_prompt = base_system_prompt + "\n\n" + ctx.summary
-else:
-    system_prompt = base_system_prompt  # node was unavailable; continue without stigmem
+system_prompt = base_system_prompt + ("\n\n" + ctx.summary if ctx else "")
 
 # ctx.summary looks like:
 #

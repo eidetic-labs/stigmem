@@ -20,10 +20,10 @@ shared knowledge store across agents.
 The OpenClaw connector is available in the v0.9.0aN alpha line for evaluation, not
 as a recommended production integration. This wording is queued for the
 v0.9.0a2 artifact refresh; it does not revise the already-published a1 ClawHub
-package in place. The adapter has unresolved audit findings around fail-open boot
-behavior, optional API-key handling, handoff target validation, partial handoff
-writes, and prompt-injection boundaries. Use only private, access-controlled
-Stigmem nodes and least-privilege agent keys until the hardening work lands. See
+package in place. The adapter has unresolved audit findings around handoff target
+validation, partial handoff writes, and prompt-injection boundaries. Use only
+private, access-controlled Stigmem nodes and least-privilege agent keys until the
+hardening work lands. See
 [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::
@@ -83,10 +83,9 @@ ctx = adapter.boot(
 system_prompt = base_prompt + ("\n\n" + ctx.summary if ctx else "")
 ```
 
-`boot()` returns an empty `BootContext` when the node is unreachable, so the agent
-can continue. Treat this as fail-open alpha behavior: log and monitor it, and do
-not use it for high-stakes workflows until the hardening work narrows failure
-handling.
+`boot()` raises `OpenClawBootError` when the node is unreachable or returns an
+error. Treat that as a failed boot, not as a healthy empty context. A successful
+query with no matching facts still returns an empty `BootContext`.
 
 ### Emit a decision
 

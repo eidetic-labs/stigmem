@@ -20,9 +20,9 @@ shared knowledge store across agents.
 The OpenClaw connector is available in the v0.9.0aN alpha line for evaluation, not
 as a recommended production integration. This wording is queued for the
 v0.9.0a2 artifact refresh; it does not revise the already-published a1 ClawHub
-package in place. The adapter has unresolved audit findings around handoff target
-validation, partial handoff writes, and prompt-injection boundaries. Use only
-private, access-controlled Stigmem nodes and least-privilege agent keys until the
+package in place. The adapter has unresolved audit findings around partial
+handoff writes and prompt-injection boundaries. Use only private,
+access-controlled Stigmem nodes and least-privilege agent keys until the
 hardening work lands. See
 [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
@@ -57,6 +57,7 @@ pip install --pre "stigmem-py>=0.9.0a1,<1.0.0"
 | `STIGMEM_URL` | Yes | Base URL of your Stigmem node (e.g. `https://stigmem.example.com`). |
 | `STIGMEM_API_KEY` | Yes | Least-privilege API key for the node. `OpenClawStigmemAdapter.from_env()` fails closed when this is missing. |
 | `STIGMEM_SOURCE_ENTITY` | No | Entity URI identifying this agent in the fact graph. Default: `agent:openclaw`. |
+| `STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS` | No | Comma-separated `agent:` entity URI allowlist for handoff and escalation targets. The source entity is always allowed. |
 
 ## Usage
 

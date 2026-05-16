@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import uuid
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -40,6 +42,10 @@ class OpenClawBootError(RuntimeError):
     """Raised when the boot handshake cannot reliably read Stigmem context."""
 
 
+class OpenClawTargetError(ValueError):
+    """Raised when a handoff or escalation target is not explicitly allowed."""
+
+
 class OpenClawStigmemAdapter:
     """Stigmem adapter for OpenClaw agents.
 
@@ -55,9 +61,13 @@ class OpenClawStigmemAdapter:
         url: str,
         api_key: str | None,
         source_entity: str,
+        allowed_handoff_targets: Iterable[str] | None = None,
     ) -> None:
         self._client = StigmemClient(url=url, api_key=api_key)
         self._source = source_entity
+        targets = set(allowed_handoff_targets or ())
+        targets.add(source_entity)
+        self._allowed_handoff_targets = frozenset(targets)
 
     @classmethod
     def from_env(cls) -> OpenClawStigmemAdapter:
@@ -69,7 +79,14 @@ class OpenClawStigmemAdapter:
                 "create a least-privilege Stigmem API key and set it explicitly"
             )
         source = os.environ.get("STIGMEM_SOURCE_ENTITY", "agent:openclaw")
-        return cls(url=url, api_key=api_key, source_entity=source)
+        raw_targets = os.environ.get("STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS", "")
+        allowed_targets = [target.strip() for target in raw_targets.split(",") if target.strip()]
+        return cls(
+            url=url,
+            api_key=api_key,
+            source_entity=source,
+            allowed_handoff_targets=allowed_targets,
+        )
 
     # ------------------------------------------------------------------
     # Boot handshake
@@ -171,6 +188,7 @@ class OpenClawStigmemAdapter:
         fact_refs are validated before asserting; invalid refs are skipped.
         Individual assertion failures are logged but do not abort the handoff.
         """
+        self._validate_handoff_target(to_entity)
         valid_refs: list[str] = []
         for ref in fact_refs:
             try:
@@ -264,6 +282,7 @@ class OpenClawStigmemAdapter:
         scope: FactScope = "company",
     ) -> None:
         """Emit an escalation intent fact with a 24-hour expiry."""
+        self._validate_handoff_target(to_entity)
         valid_until = (datetime.now(tz=UTC) + timedelta(hours=24)).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
@@ -308,10 +327,22 @@ class OpenClawStigmemAdapter:
             cursor = page.cursor
         return facts
 
+    def _validate_handoff_target(self, target: str) -> None:
+        if not _HANDOFF_TARGET_RE.fullmatch(target):
+            raise OpenClawTargetError(
+                f"OpenClaw handoff target {target!r} must be an agent: entity URI"
+            )
+        if target not in self._allowed_handoff_targets:
+            raise OpenClawTargetError(
+                f"OpenClaw handoff target {target!r} is not in the configured allowlist"
+            )
+
 
 # ---------------------------------------------------------------------------
 # Module-level helpers
 # ---------------------------------------------------------------------------
+
+_HANDOFF_TARGET_RE = re.compile(r"agent:[A-Za-z0-9][A-Za-z0-9._:/@+-]*")
 
 def _safe_assert(
     client: StigmemClient,

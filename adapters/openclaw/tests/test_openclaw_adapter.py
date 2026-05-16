@@ -15,7 +15,7 @@ import pytest
 import respx
 
 # conftest.py adds the adapter directory to sys.path
-from adapter import BootContext, OpenClawBootError, OpenClawStigmemAdapter
+from adapter import BootContext, OpenClawBootError, OpenClawStigmemAdapter, OpenClawTargetError
 
 BASE = "http://test-stigmem"
 SOURCE = "agent:openclaw"
@@ -52,7 +52,12 @@ def _page(facts: list[dict], cursor: str | None = None) -> dict:
 
 
 def _adapter() -> OpenClawStigmemAdapter:
-    return OpenClawStigmemAdapter(url=BASE, api_key="sk-test", source_entity=SOURCE)
+    return OpenClawStigmemAdapter(
+        url=BASE,
+        api_key="sk-test",
+        source_entity=SOURCE,
+        allowed_handoff_targets=["agent:assistant", "agent:cto"],
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -312,6 +317,59 @@ def test_emit_handoff_partial_assert_failure_does_not_raise() -> None:
     )
 
 
+@respx.mock
+def test_emit_handoff_rejects_unknown_target_before_writes() -> None:
+    get_route = respx.get(f"{BASE}/v1/facts/fact-ok").mock(
+        return_value=httpx.Response(200, json=_fact())
+    )
+    post_route = respx.post(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(201, json=_fact())
+    )
+
+    adapter = _adapter()
+
+    with pytest.raises(OpenClawTargetError, match="not in the configured allowlist"):
+        adapter.emit_handoff(
+            from_entity="agent:openclaw",
+            to_entity="agent:unknown",
+            summary="Summary",
+            fact_refs=["fact-ok"],
+        )
+
+    assert get_route.call_count == 0
+    assert post_route.call_count == 0
+
+
+@pytest.mark.parametrize("bad_target", ["assistant", "agent:", "agent:bad target"])
+def test_emit_handoff_rejects_malformed_target(bad_target: str) -> None:
+    adapter = _adapter()
+
+    with pytest.raises(OpenClawTargetError, match="must be an agent: entity URI"):
+        adapter.emit_handoff(
+            from_entity="agent:openclaw",
+            to_entity=bad_target,
+            summary="Summary",
+            fact_refs=[],
+        )
+
+
+def test_emit_handoff_rejects_confused_non_agent_target_even_if_allowlisted() -> None:
+    adapter = OpenClawStigmemAdapter(
+        url=BASE,
+        api_key="sk-test",
+        source_entity=SOURCE,
+        allowed_handoff_targets=["project:roadmap"],
+    )
+
+    with pytest.raises(OpenClawTargetError, match="must be an agent: entity URI"):
+        adapter.emit_handoff(
+            from_entity="agent:openclaw",
+            to_entity="project:roadmap",
+            summary="Summary",
+            fact_refs=[],
+        )
+
+
 # ---------------------------------------------------------------------------
 # emit_decision
 # ---------------------------------------------------------------------------
@@ -403,6 +461,20 @@ def test_emit_escalation_default_priority_is_medium() -> None:
     assert captured[0]["value"]["v"] == "medium"
 
 
+@respx.mock
+def test_emit_escalation_rejects_unknown_target_before_writes() -> None:
+    post_route = respx.post(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(201, json=_fact())
+    )
+
+    adapter = _adapter()
+
+    with pytest.raises(OpenClawTargetError, match="not in the configured allowlist"):
+        adapter.emit_escalation(to_entity="agent:unknown", goal="Some goal")
+
+    assert post_route.call_count == 0
+
+
 # ---------------------------------------------------------------------------
 # Summary formatting
 # ---------------------------------------------------------------------------
@@ -470,20 +542,25 @@ def test_from_env() -> None:
         "STIGMEM_URL": "http://my-node",
         "STIGMEM_API_KEY": "sk-abc",
         "STIGMEM_SOURCE_ENTITY": "agent:my-openclaw",
+        "STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS": "agent:assistant, agent:cto",
     }
     with patch.dict(os.environ, env):
         adapter = OpenClawStigmemAdapter.from_env()
     assert adapter._source == "agent:my-openclaw"
+    assert adapter._allowed_handoff_targets == frozenset(
+        {"agent:my-openclaw", "agent:assistant", "agent:cto"}
+    )
 
 
 def test_from_env_defaults() -> None:
     env = {"STIGMEM_URL": "http://my-node", "STIGMEM_API_KEY": "sk-abc"}
     with patch.dict(os.environ, env, clear=False):
         # Remove optional vars if present
-        for k in ("STIGMEM_SOURCE_ENTITY",):
+        for k in ("STIGMEM_SOURCE_ENTITY", "STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS"):
             os.environ.pop(k, None)
         adapter = OpenClawStigmemAdapter.from_env()
     assert adapter._source == "agent:openclaw"
+    assert adapter._allowed_handoff_targets == frozenset({"agent:openclaw"})
 
 
 def test_from_env_requires_api_key() -> None:

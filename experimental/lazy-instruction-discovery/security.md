@@ -22,7 +22,7 @@ threat model at [`spec/security/threat-model.md`](../../spec/security/threat-mod
 
 **Threat refs:** T9-T1, T9-E1  
 **STRIDE class:** Tampering / Elevation of privilege  
-**Status:** Open with partial local-write mitigation
+**Status:** Open with partial local-write and federation-inbound mitigation
 **Likelihood:** Low  
 **Impact:** Critical  
 **Priority:** High  
@@ -38,12 +38,15 @@ consuming agents.
 
 Current controls are scope-based access control, the dedicated
 `instruction:write` local-write gate, recall channel separation through
-`interpret_as`, and the requirement that boot stubs embed unconditional
-prohibitions directly instead of relying on lazy loaded content.
+`interpret_as`, federation-inbound quarantine for instruction-typed facts, and
+the requirement that boot stubs embed unconditional prohibitions directly
+instead of relying on lazy loaded content.
 
 Required mitigation remains an admission boundary for lazy instruction use:
-admin-approved promotion policy, federation-inbound quarantine or rejection for
-instruction-typed facts, and protocol adversarial vectors for the full path.
+admin-approved promotion policy and protocol adversarial vectors for the full
+path. Federation-inbound instruction-typed facts now fail closed without a
+configured quarantine garden and otherwise remain pending until an operator
+admits them.
 
 ## Contributed Risks
 

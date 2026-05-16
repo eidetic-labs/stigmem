@@ -28,9 +28,15 @@ INSTRUCTION_QUARANTINED = "instruction_quarantined"
 INSTRUCTION_PROMOTED = "instruction_promoted"
 
 
-def is_instruction_fact(entity: str | None, relation: str | None = None) -> bool:
-    """Return true for the instruction namespace used before interpret_as lands."""
+def is_instruction_fact(
+    entity: str | None,
+    relation: str | None = None,
+    interpret_as: str | None = None,
+) -> bool:
+    """Return true for instruction-namespace or instruction-interpreted facts."""
     return bool(
+        interpret_as == "instruction"
+        or
         (entity and entity.startswith("instruction:"))
         or (relation and relation.startswith("instruction:"))
     )
@@ -196,6 +202,7 @@ def emit_instruction_event_if_applicable(
     fact_id: str,
     fact_entity: str | None,
     fact_relation: str | None,
+    fact_interpret_as: str | None = None,
     actor_uri: str,
     tenant_id: str = "default",
     oidc_sub: str | None = None,
@@ -203,8 +210,8 @@ def emit_instruction_event_if_applicable(
     detail: dict[str, Any] | None = None,
     conn: Any,
 ) -> None:
-    """Emit ADR-003 instruction audit events for instruction-namespace facts."""
-    if not is_instruction_fact(fact_entity, fact_relation):
+    """Emit ADR-003 instruction audit events for instruction facts."""
+    if not is_instruction_fact(fact_entity, fact_relation, fact_interpret_as):
         return
 
     emit(
@@ -217,6 +224,7 @@ def emit_instruction_event_if_applicable(
         detail={
             "fact_entity": fact_entity,
             "fact_relation": fact_relation,
+            "fact_interpret_as": fact_interpret_as,
             **(detail or {}),
         },
         conn=conn,

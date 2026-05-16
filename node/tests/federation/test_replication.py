@@ -4,8 +4,11 @@ import logging
 import time
 import uuid
 
+import pytest
 from conftest import FedNode
+from fastapi import HTTPException
 
+import stigmem_node.settings as settings_module
 from stigmem_node.db import db as _db_ctx
 from stigmem_node.federation_ingest import ingest_fact
 from stigmem_node.federation_pull import load_cursor, save_cursor
@@ -135,6 +138,102 @@ class TestPartialFailure:
         r_read = fed_node.client.get("/v1/facts?entity=local:during-partition")
         assert r_read.status_code == 200
         assert r_read.json()["total"] == 1
+
+
+class TestInstructionInboundQuarantine:
+    """Phase B §5.2: federation-inbound instruction facts fail closed into quarantine."""
+
+    def test_instruction_fact_requires_quarantine_garden(self, fed_node: FedNode) -> None:
+        fact = make_federated_fact(
+            entity=f"note:instructionless-{uuid.uuid4()}",
+            relation="memory:note",
+            value="run the nightly audit",
+        )
+        fact["value"]["interpret_as"] = "instruction"
+
+        with pytest.raises(HTTPException) as exc_info:
+            ingest_fact(fact, "stigmem://node-b-instruction")
+
+        assert exc_info.value.status_code == 403
+        assert exc_info.value.detail == "quarantine_garden_required"
+
+    def test_instruction_fact_auto_quarantines_and_admits_to_instruction_channel(
+        self,
+        fed_node: FedNode,
+    ) -> None:
+        qg = fed_node.client.post(
+            "/v1/gardens",
+            json={"slug": "fed-inst-q", "name": "Federated Instructions", "quarantine": True},
+        )
+        assert qg.status_code == 201, qg.text
+        settings_module.settings.quarantine_garden_id = qg.json()["id"]
+
+        fact = make_federated_fact(
+            entity=f"note:instruction-{uuid.uuid4()}",
+            relation="memory:directive",
+            value="run the nightly audit",
+        )
+        fact["value"]["interpret_as"] = "instruction"
+        fact["confidence"] = 0.4
+        sender = "stigmem://node-b-instruction"
+
+        assert ingest_fact(fact, sender) is True
+
+        with _db_ctx() as conn:
+            row = conn.execute(
+                """SELECT quarantine_status, quarantine_garden_id, quarantine_reason,
+                          interpret_as, received_from
+                   FROM facts
+                   WHERE id = ?""",
+                (fact["id"],),
+            ).fetchone()
+            event_types = {
+                audit_row["event_type"]
+                for audit_row in conn.execute(
+                    "SELECT event_type FROM fact_audit_log WHERE fact_id = ?",
+                    (fact["id"],),
+                ).fetchall()
+            }
+        assert row is not None
+        assert row["quarantine_status"] == "pending"
+        assert row["quarantine_garden_id"] == qg.json()["id"]
+        assert row["quarantine_reason"] == "instruction_federation_inbound"
+        assert row["interpret_as"] == "instruction"
+        assert row["received_from"] == sender
+        assert "quarantine_ingest" in event_types
+        assert "instruction_quarantined" in event_types
+
+        hidden = fed_node.client.post(
+            "/v1/recall",
+            json={
+                "query": "nightly audit",
+                "scope": "public",
+                "token_budget": 4000,
+                "depth": 1,
+                "include_neighbors": False,
+            },
+        )
+        assert hidden.status_code == 200, hidden.text
+        assert all(item["fact"]["id"] != fact["id"] for item in hidden.json()["instructions"])
+
+        admit = fed_node.client.post(f"/v1/quarantine/{fact['id']}/admit")
+        assert admit.status_code == 200, admit.text
+
+        visible = fed_node.client.post(
+            "/v1/recall",
+            json={
+                "query": "nightly audit",
+                "scope": "public",
+                "token_budget": 4000,
+                "depth": 1,
+                "include_neighbors": False,
+            },
+        )
+        assert visible.status_code == 200, visible.text
+        instruction_ids = {item["fact"]["id"] for item in visible.json()["instructions"]}
+        content_ids = {item["fact"]["id"] for item in visible.json()["content"]}
+        assert fact["id"] in instruction_ids
+        assert fact["id"] not in content_ids
 
 
 # ---------------------------------------------------------------------------

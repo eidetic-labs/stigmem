@@ -44,6 +44,9 @@ _MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
 _TIME_TRAVEL_PLUGIN_SRC = (
     Path(__file__).resolve().parents[2] / "experimental" / "time-travel" / "src"
 )
+_TOMBSTONE_PLUGIN_SRC = (
+    Path(__file__).resolve().parents[2] / "experimental" / "tombstones" / "src"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -302,6 +305,13 @@ def _time_travel_plugin_manifest() -> PluginManifest:
     return plugin.plugin_manifest()
 
 
+def _tombstone_plugin_manifest() -> PluginManifest:
+    if str(_TOMBSTONE_PLUGIN_SRC) not in sys.path:
+        sys.path.insert(0, str(_TOMBSTONE_PLUGIN_SRC))
+    plugin = importlib.import_module("stigmem_plugin_tombstones")
+    return plugin.plugin_manifest()
+
+
 @pytest.fixture()
 def time_travel_client(
     tmp_db: str, backend: str, encrypt: str
@@ -312,7 +322,7 @@ def time_travel_client(
         tmp_db, backend, encrypt, auth_required=False, node_url="http://testnode"
     )
     extra = _patch_settings(test_settings)
-    with stigmem_plugins([_time_travel_plugin_manifest()]):
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:
             yield c

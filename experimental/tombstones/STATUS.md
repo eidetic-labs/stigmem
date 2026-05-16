@@ -100,6 +100,10 @@ Tombstone soak is **higher-stakes than typical features** — operators run RTBF
 
 ## History
 
+- **2026-05-16** — PR 4d #321 gated default-install tombstone behavior behind
+  `stigmem-plugin-tombstones` registration. Default installs no longer mount
+  tombstone admin/federation routes or apply legacy tombstone read filters;
+  plugin-loaded tests preserve the historical behavior for alpha validation.
 - **2026-05-16** — PR 4d scaffold added the
   `experimental/tombstones/` plugin source package with manifest, config
   schema, hook placeholders, plugin-owned tombstone migration declaration, and

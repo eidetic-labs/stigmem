@@ -58,6 +58,9 @@ _TIME_TRAVEL_PLUGIN_SRC = (
     / "time-travel"
     / "src"
 )
+_TOMBSTONE_PLUGIN_SRC = (
+    Path(__file__).resolve().parents[2] / "experimental" / "tombstones" / "src"
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -135,6 +138,36 @@ def _time_travel_plugin_manifest() -> object:
     return plugin.plugin_manifest()
 
 
+def _tombstone_plugin_manifest() -> object:
+    if str(_TOMBSTONE_PLUGIN_SRC) not in sys.path:
+        sys.path.insert(0, str(_TOMBSTONE_PLUGIN_SRC))
+    plugin = importlib.import_module("stigmem_plugin_tombstones")
+    return plugin.plugin_manifest()
+
+
+def _insert_tombstone(
+    db_path: str,
+    entity_uri: str,
+    *,
+    legal_hold: bool = False,
+    scope: str = "*",
+) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO tombstones
+               (id, entity_uri, scope, reason, signed_by, signature,
+                created_at, legal_hold, tenant_id)
+               VALUES (?, ?, ?, 'test', 'agent:admin', 'sig', ?, ?, 'default')""",
+            (
+                f"tomb_{uuid.uuid4().hex}",
+                entity_uri,
+                scope,
+                datetime.now(UTC).isoformat(),
+                1 if legal_hold else 0,
+            ),
+        )
+
+
 @pytest.fixture()
 def p13_client(tmp_path) -> Generator[TestClient, None, None]:
     """Unauthenticated TestClient on a fresh Phase-13 migrated DB."""
@@ -157,7 +190,7 @@ def p13_time_travel_client(tmp_path) -> Generator[TestClient, None, None]:
     original = settings_module.settings
     ts = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
     mods = _patch_settings(ts)
-    with stigmem_plugins([_time_travel_plugin_manifest()]):
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:
             yield c
@@ -489,7 +522,7 @@ def test_as_of_retracted_fact_excluded(tmp_path):
     original = settings_module.settings
     ts = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
     mods = _patch_settings(ts)
-    with stigmem_plugins([_time_travel_plugin_manifest()]):
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:
             f = _assert(c, "stigmem://tt/ret1", "rel:retract", "will_be_retracted")
@@ -576,9 +609,8 @@ def test_as_of_tombstone_retroactive_suppression(tmp_path):
         node_private_key=_gen_test_private_key(),
     )
     mods = _patch_settings(ts_settings)
-    admin_key = auth_mod.create_api_key("agent:admin", ["read", "write", "federate", "admin"])
     agent_key = auth_mod.create_api_key("agent:user", ["read", "write"])
-    with stigmem_plugins([_time_travel_plugin_manifest()]):
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:
             pre_fact = (datetime.now(UTC) - timedelta(seconds=5)).isoformat()
@@ -591,13 +623,7 @@ def test_as_of_tombstone_retroactive_suppression(tmp_path):
             conn.commit()
             conn.close()
 
-            # Issue tombstone via admin key
-            r_tomb = c.post(
-                "/v1/tombstones",
-                json={"entity_uri": "stigmem://rtbf/user1", "scope": "*", "reason": "RTBF test"},
-                headers={"Authorization": f"Bearer {admin_key}"},
-            )
-            assert r_tomb.status_code == 201, r_tomb.text
+            _insert_tombstone(db_file, "stigmem://rtbf/user1")
 
             # as_of BEFORE tombstone was created should still suppress the fact
             very_early = (datetime.now(UTC) - timedelta(seconds=10)).isoformat()
@@ -625,7 +651,7 @@ def test_as_of_legal_hold_admin_sees_notice(tmp_path):
     )
     mods = _patch_settings(ts_settings)
     admin_key = auth_mod.create_api_key("agent:admin", ["read", "write", "federate", "admin"])
-    with stigmem_plugins([_time_travel_plugin_manifest()]):
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:
             f = _assert(
@@ -636,17 +662,7 @@ def test_as_of_legal_hold_admin_sees_notice(tmp_path):
                 scope="local",
                 api_key=admin_key,
             )
-            r_tomb = c.post(
-                "/v1/tombstones",
-                json={
-                    "entity_uri": "stigmem://rtbf/legal1",
-                    "scope": "*",
-                    "reason": "legal hold test",
-                    "legal_hold": True,
-                },
-                headers={"Authorization": f"Bearer {admin_key}"},
-            )
-            assert r_tomb.status_code == 201
+            _insert_tombstone(db_file, "stigmem://rtbf/legal1", legal_hold=True)
 
             # Admin as_of query: fact still returned with tombstone_notice
             r = c.get(
@@ -679,7 +695,7 @@ def test_as_of_legal_hold_non_admin_excluded(tmp_path):
     mods = _patch_settings(ts_settings)
     admin_key = auth_mod.create_api_key("agent:admin", ["read", "write", "federate", "admin"])
     agent_key = auth_mod.create_api_key("agent:user", ["read", "write"])
-    with stigmem_plugins([_time_travel_plugin_manifest()]):
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:
             _assert(
@@ -690,16 +706,7 @@ def test_as_of_legal_hold_non_admin_excluded(tmp_path):
                 scope="local",
                 api_key=admin_key,
             )
-            c.post(
-                "/v1/tombstones",
-                json={
-                    "entity_uri": "stigmem://rtbf/legal2",
-                    "scope": "*",
-                    "reason": "legal hold",
-                    "legal_hold": True,
-                },
-                headers={"Authorization": f"Bearer {admin_key}"},
-            )
+            _insert_tombstone(db_file, "stigmem://rtbf/legal2", legal_hold=True)
             # Non-admin as_of: silently empty, no error, no notices
             r = c.get(
                 "/v1/facts",

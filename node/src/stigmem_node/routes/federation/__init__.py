@@ -28,7 +28,6 @@ from .replication import (  # noqa: F401
     pull_facts,
     push_facts,
 )
-from .tombstones import federation_ingest_tombstone, federation_list_tombstones  # noqa: F401
 
 __all__ = [
     "PeerTokenDep",
@@ -41,8 +40,6 @@ __all__ = [
     "_require_peer_token",
     "_try_peer_token_auth",
     "_verify_push_cap_token",
-    "federation_ingest_tombstone",
-    "federation_list_tombstones",
     "get_audit_log",
     "ingest_fact",
     "list_conflicts",

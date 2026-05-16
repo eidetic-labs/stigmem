@@ -15,8 +15,31 @@ import json
 import sqlite3
 import uuid
 from datetime import UTC, datetime
+from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
+
+from stigmem_node.plugins.testing import stigmem_plugins
+
+_TOMBSTONE_PLUGIN_SRC = (
+    Path(__file__).resolve().parents[2] / "experimental" / "tombstones" / "src"
+)
+
+
+def _tombstone_plugin_manifest():
+    import sys
+
+    if str(_TOMBSTONE_PLUGIN_SRC) not in sys.path:
+        sys.path.insert(0, str(_TOMBSTONE_PLUGIN_SRC))
+    plugin = __import__("stigmem_plugin_tombstones")
+    return plugin.plugin_manifest()
+
+
+@pytest.fixture(autouse=True)
+def _tombstone_plugin_registered():
+    with stigmem_plugins([_tombstone_plugin_manifest()]):
+        yield
 
 # ---------------------------------------------------------------------------
 # Helpers

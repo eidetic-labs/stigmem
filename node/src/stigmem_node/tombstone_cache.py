@@ -68,5 +68,9 @@ def is_tombstoned(entity_uri: str, tenant_id: str = "default") -> bool:
 
     Uses a thread-safe in-process cache refreshed at most every 60 s (§23.3.3 r.4).
     """
+    from .tombstone_gate import tombstone_plugin_registered
+
+    if not tombstone_plugin_registered():
+        return False
     _ensure_fresh()
     return (entity_uri, tenant_id) in _state.tombstoned

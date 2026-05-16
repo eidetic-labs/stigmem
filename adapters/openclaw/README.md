@@ -27,7 +27,7 @@ Then set the required env vars (ClawHub will prompt for them on first use):
 
 ```bash
 STIGMEM_URL=https://stigmem.example.com   # required
-STIGMEM_API_KEY=sk-your-key               # required if auth is enabled
+STIGMEM_API_KEY=sk-your-key               # required by from_env()
 STIGMEM_SOURCE_ENTITY=agent:openclaw      # optional; default: agent:openclaw
 ```
 
@@ -46,9 +46,10 @@ this adapter in high-stakes or irreversible workflows until the Phase B OpenClaw
 hardening work closes the audit findings.
 
 **API key scope** — Set `STIGMEM_API_KEY` to a least-privilege key scoped only to
-the nodes this agent reads from and writes to. Do not share a key across unrelated
-agent deployments. Rotate keys regularly; revoke via the Stigmem node admin API if
-compromised.
+the nodes this agent reads from and writes to. `OpenClawStigmemAdapter.from_env()`
+fails closed when the key is missing so deployments do not accidentally run
+unauthenticated. Do not share a key across unrelated agent deployments. Rotate
+keys regularly; revoke via the Stigmem node admin API if compromised.
 
 ## Known alpha gaps
 

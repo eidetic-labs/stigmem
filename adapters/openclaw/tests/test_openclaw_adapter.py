@@ -463,13 +463,22 @@ def test_from_env() -> None:
 
 
 def test_from_env_defaults() -> None:
-    env = {"STIGMEM_URL": "http://my-node"}
+    env = {"STIGMEM_URL": "http://my-node", "STIGMEM_API_KEY": "sk-abc"}
     with patch.dict(os.environ, env, clear=False):
         # Remove optional vars if present
-        for k in ("STIGMEM_API_KEY", "STIGMEM_SOURCE_ENTITY"):
+        for k in ("STIGMEM_SOURCE_ENTITY",):
             os.environ.pop(k, None)
         adapter = OpenClawStigmemAdapter.from_env()
     assert adapter._source == "agent:openclaw"
+
+
+def test_from_env_requires_api_key() -> None:
+    env = {"STIGMEM_URL": "http://my-node"}
+    with (
+        patch.dict(os.environ, env, clear=True),
+        pytest.raises(RuntimeError, match="STIGMEM_API_KEY is required"),
+    ):
+        OpenClawStigmemAdapter.from_env()
 
 
 # ---------------------------------------------------------------------------

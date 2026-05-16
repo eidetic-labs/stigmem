@@ -51,7 +51,7 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 ## Setup
 
 1. Set `STIGMEM_URL` to your Stigmem node URL.
-2. Optionally set `STIGMEM_API_KEY` (required if the node has auth enabled).
+2. Set `STIGMEM_API_KEY` to a least-privilege key for the node.
 3. Optionally set `STIGMEM_SOURCE_ENTITY` to the entity URI that represents this agent instance (default: `agent:openclaw`).
 
 ## Usage

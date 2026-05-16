@@ -10,7 +10,7 @@ import logging
 import os
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from stigmem import StigmemClient, ref_value, string_value, text_value
@@ -55,9 +55,14 @@ class OpenClawStigmemAdapter:
         self._source = source_entity
 
     @classmethod
-    def from_env(cls) -> "OpenClawStigmemAdapter":
+    def from_env(cls) -> OpenClawStigmemAdapter:
         url = os.environ["STIGMEM_URL"]
         api_key = os.environ.get("STIGMEM_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                "STIGMEM_API_KEY is required for OpenClaw from_env(); "
+                "create a least-privilege Stigmem API key and set it explicitly"
+            )
         source = os.environ.get("STIGMEM_SOURCE_ENTITY", "agent:openclaw")
         return cls(url=url, api_key=api_key, source_entity=source)
 
@@ -175,12 +180,40 @@ class OpenClawStigmemAdapter:
 
         handoff_id = f"handoff:{uuid.uuid4()}"
 
-        _safe_assert(self._client, handoff_id, "intent:handoff_to", ref_value(to_entity), from_entity, scope)
-        _safe_assert(self._client, handoff_id, "intent:handoff_summary", text_value(summary), from_entity, scope)
+        _safe_assert(
+            self._client,
+            handoff_id,
+            "intent:handoff_to",
+            ref_value(to_entity),
+            from_entity,
+            scope,
+        )
+        _safe_assert(
+            self._client,
+            handoff_id,
+            "intent:handoff_summary",
+            text_value(summary),
+            from_entity,
+            scope,
+        )
         for ref in valid_refs:
-            _safe_assert(self._client, handoff_id, "intent:context_ref", ref_value(ref), from_entity, scope)
+            _safe_assert(
+                self._client,
+                handoff_id,
+                "intent:context_ref",
+                ref_value(ref),
+                from_entity,
+                scope,
+            )
         if continuation:
-            _safe_assert(self._client, handoff_id, "intent:continuation", text_value(continuation), from_entity, scope)
+            _safe_assert(
+                self._client,
+                handoff_id,
+                "intent:continuation",
+                text_value(continuation),
+                from_entity,
+                scope,
+            )
 
     def emit_decision(
         self,
@@ -226,7 +259,7 @@ class OpenClawStigmemAdapter:
         scope: FactScope = "company",
     ) -> None:
         """Emit an escalation intent fact with a 24-hour expiry."""
-        valid_until = (datetime.now(tz=timezone.utc) + timedelta(hours=24)).strftime(
+        valid_until = (datetime.now(tz=UTC) + timedelta(hours=24)).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
         esc_id = f"escalation:{uuid.uuid4()}"
@@ -275,10 +308,23 @@ class OpenClawStigmemAdapter:
 # Module-level helpers
 # ---------------------------------------------------------------------------
 
-def _safe_assert(client: StigmemClient, entity: str, relation: str, value: Any, source: str, scope: FactScope) -> None:
+def _safe_assert(
+    client: StigmemClient,
+    entity: str,
+    relation: str,
+    value: Any,
+    source: str,
+    scope: FactScope,
+) -> None:
     """Assert a fact, logging and swallowing errors so partial handoff failures don't crash."""
     try:
-        client.assert_fact(entity=entity, relation=relation, value=value, source=source, scope=scope)
+        client.assert_fact(
+            entity=entity,
+            relation=relation,
+            value=value,
+            source=source,
+            scope=scope,
+        )
     except StigmemError as exc:
         logger.warning("Failed to assert %s/%s: %s", entity, relation, exc)
 
@@ -325,7 +371,9 @@ def _facts_to_summary(facts: list[Fact], user_entity: str) -> str:
         lines.append(f"### {ns}")
         for fact in ns_facts:
             val = _sanitize_fact_value(fact.value)
-            confidence_note = f" _(confidence: {fact.confidence:.2f})_" if fact.confidence < 1.0 else ""
+            confidence_note = (
+                f" _(confidence: {fact.confidence:.2f})_" if fact.confidence < 1.0 else ""
+            )
             lines.append(f"- **{fact.relation}** on `{fact.entity}`: {val}{confidence_note}")
         lines.append("")
 

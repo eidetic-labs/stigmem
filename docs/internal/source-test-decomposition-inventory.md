@@ -31,7 +31,7 @@ find node/src node/tests eval adapters experimental \
 |---|---:|---|---|
 | `node/tests/test_phase8_identity.py` | 1642 | Completed | Split into `node/tests/identity/` by identity concern in #267; shared helpers and fixtures live under the new test package. |
 | `node/tests/test_federation.py` | 1237 | Completed | Split into `node/tests/federation/` by federation concern in #269; shared helpers live under the new test package. |
-| `eval/federation/soak_driver.py` | 1189 | Discouraged size | Split into `eval/federation/soak/` phases. |
+| `eval/federation/soak_driver.py` | 1189 | Completed | Split into `eval/federation/soak/` phase modules in #270; the original path remains the stable CLI entrypoint. |
 | `node/src/stigmem_node/routes/facts.py` | 1114 | Completed | Split into `routes/facts/` subpackage in #265; public import path preserved as `stigmem_node.routes.facts`. |
 | `node/tests/test_phase10_instruction.py` | 1084 | Discouraged size | Defer until lazy instruction discovery rework; keep linked to experimental feature. |
 | `node/src/stigmem_node/cli.py` | 1080 | Discouraged size | Split into `cli/` command-family modules. |
@@ -60,7 +60,7 @@ inventory, name validation commands, and avoid unrelated behavioral changes.
 | Recall route decomposition | [#268](https://github.com/Eidetic-Labs/stigmem/issues/268) | Split `routes/recall.py` by lexical/vector/graph/ranking stages. | Recall, embeddings, vector search, and graph tests. |
 | Identity test decomposition | [#267](https://github.com/Eidetic-Labs/stigmem/issues/267) | Split `test_phase8_identity.py` into `node/tests/identity/`. | Completed with identity/key/capability subset validation and no fixture behavior changes. |
 | Federation test decomposition | [#269](https://github.com/Eidetic-Labs/stigmem/issues/269) | Split `test_federation.py` by federation concern. | Completed with federation subset validation and conformance smoke. |
-| Federation soak driver decomposition | [#270](https://github.com/Eidetic-Labs/stigmem/issues/270) | Split `eval/federation/soak_driver.py` into setup/run/monitor/report modules. | Eval soak import smoke and existing eval fast subset. |
+| Federation soak driver decomposition | [#270](https://github.com/Eidetic-Labs/stigmem/issues/270) | Split `eval/federation/soak_driver.py` into setup/run/monitor/report modules. | Completed with CLI/import smoke and existing eval fast subset. |
 
 ## Deferrals
 

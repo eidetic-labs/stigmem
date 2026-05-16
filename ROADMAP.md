@@ -36,7 +36,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [x] **Hook registry foundation** — main now includes the stable 22-hook registry surface, typed voting/filter-chain/score-delta/fire-and-forget semantics, deterministic manual/core registration, minimum `PluginManifest` / `PluginContext` / capability APIs, hook-site wiring across assertion/recall/federation/auth/migration/audit paths, registry audit/metrics plumbing, test registry helpers, and the hook-firing benchmark gate. This work landed after the v0.9.0a1 artifacts and is queued for the next alpha artifact refresh.
 - [x] **Plugin infrastructure operationalization** — package discovery, plugin dependency lifecycle, health polling, operator CLI, production signing/trust, plugin author/operator documentation, and plugin migration lifecycle/checksum tracking have landed on `main` after v0.9.0a1 and are queued for the next alpha artifact refresh.
 - [x] **Modular spec migration** — the monolithic spec has been decomposed into component specs and experimental `Spec-X*` specs with the public docs navigator reflecting the split. Follow-on spec evolution remains ongoing, but ADR-010's structural migration is no longer a beta-series blocker.
-- [ ] **Per-feature plugin extraction** — lazy instruction discovery, time-travel, tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation are extracted into opt-in experimental plugin packages across the alpha series. CIDs remain core.
+- [ ] **Per-feature plugin extraction** — lazy instruction discovery has been extracted on `main` as the first opt-in experimental plugin source package, with signed/package artifact evidence queued in [#298](https://github.com/Eidetic-Labs/stigmem/issues/298). Time-travel, tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation follow across the alpha series. CIDs remain core.
 - [ ] **v0.9.0a2 artifact refresh** — pick up the live retraction URL in packaged READMEs, TypeScript SDK README, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literal, wheel migration packaging fix, and ongoing lint/coverage/complexity ratchets.
 - [ ] **ClawHub/OpenClaw alpha-framing correction** — ship in the v0.9.0a2 refresh, not as a retroactive a1 edit. ClawHub and OpenClaw docs must say the connector is available for alpha evaluation only, remove “recommended production integration” language, correct stale dependency ranges, and link to the open audit limitations.
 - [ ] **OpenClaw audit planning for a2..aN** — keep the audit findings visible in alpha planning. Use a2 for public framing/docs corrections and issue decomposition; schedule adapter hardening work across the remaining alpha/beta path without claiming the a1 ClawHub package closed C1-C4 or H1/H2/H5.
@@ -220,17 +220,17 @@ Order matters per ADR-008: 1 before 2, 3 before 4, 5 last. Skipping requires exp
 
 ### What changes during alpha extraction (worked example)
 
-Using `Spec-X1-Lazy-Instruction-Discovery` being extracted at v0.9.0a2 as the worked case:
+Using `Spec-X1-Lazy-Instruction-Discovery` as the worked case:
 
-| Surface | Before extraction (v0.9.0a1) | After extraction (v0.9.0a2) |
+| Surface | Before extraction (v0.9.0a1) | After extraction on `main`, queued for the next alpha artifact refresh |
 |---|---|---|
 | Spec content | `experimental/lazy-instruction-discovery/spec.md` (Spec-X1) | Remains experimental under `experimental/lazy-instruction-discovery/spec.md` until a future ADR-008 graduation |
-| Plugin package | Not published | `stigmem-plugin-lazy-instruction-discovery` published to PyPI |
+| Plugin package | Not published | `stigmem-plugin-lazy-instruction-discovery` source package extracted under `experimental/lazy-instruction-discovery/`; signed/package publication evidence is queued in [#298](https://github.com/Eidetic-Labs/stigmem/issues/298) |
 | Default install behavior | Routes mounted but feature dormant unless configured (per LIMITATIONS §11) | Plugin is opt-in; default install is unchanged in user-visible behavior. Operators who want the feature install the plugin |
-| `experimental/<feature>/STATUS.md` | `Status: Dormant`, ADR-008 gates Open | `Status: Extracted / opt-in experimental`, ADR-008 gates still Open unless separately completed |
-| `ROADMAP.md` v0.9.0aN work table | This row | ✅ Done; deleted from the in-flight table; called out in the changelog |
-| `concepts/features.md` | Experimental; embedded/dormant implementation acknowledged | Experimental; opt-in plugin package available |
-| `docs/compatibility-matrix.yaml` | `stability: experimental` for the feature | Still `stability: experimental`; version requirements point at the plugin package |
+| `experimental/<feature>/STATUS.md` | `Status: Dormant`, ADR-008 gates Open | `Status: Extracted / opt-in experimental`; ADR-008 gates still Open unless separately completed |
+| `ROADMAP.md` v0.9.0aN work table | This row | Lazy-instruction extraction marked complete within the broader per-feature extraction row; remaining feature extractions stay in flight |
+| `concepts/features.md` | Experimental; embedded/dormant implementation acknowledged | Experimental; opt-in plugin source extracted, artifact publication queued |
+| `docs/compatibility-matrix.yaml` | `stability: experimental` for the feature | Still `stability: experimental`; source package and artifact-evidence status are explicit |
 | `CHANGELOG.md` | — | Entry under `### Added` for v0.9.0a2 noting the extraction and migration notes for alpha users |
 | `spec/EVOLUTION.md` | — | Entry recording the alpha extraction while preserving `Spec-X1` status |
 | `data/conformance/lazy-instruction-discovery/` | optional/empty | Targeted plugin-boundary tests; full ADR-008 conformance vectors arrive before graduation |

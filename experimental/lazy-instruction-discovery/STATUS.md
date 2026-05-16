@@ -4,17 +4,23 @@
 
 **Spec ID:** `Spec-X1-Lazy-Instruction-Discovery`
 **Legacy section:** §21
-**Status:** Blocked
-**Active version:** v0.9.0a1 (code last functional under retracted v1.0)
-**Last updated:** 2026-05-15
-**Owner:** unowned (contributors may revisit after ADR-003 lands)
-**Buildable:** yes — code compiles; tests pass at the level the original author wrote them
+**Status:** Extracted / opt-in experimental; ADR-008 graduation blocked
+**Active version:** source extracted on `main` after v0.9.0a1; queued for a later alpha artifact refresh
+**Last updated:** 2026-05-16
+**Owner:** unowned for ADR-008 graduation; PR 4a extraction maintained in `experimental/lazy-instruction-discovery/`
+**Buildable:** yes — plugin source, registration, default no-plugin tests, plugin-loaded route tests, and hook-order tests pass on `main`
 
 ---
 
 ## Summary
 
 §21 introduces a `recall_instruction` tool that agents call at boot time to load instruction-typed facts as their operational instructions. Unlike facts retrieved during task execution (which the agent treats as content), instructions retrieved at boot time become part of the agent's *governing instructions* before any task is processed. This was intended to enable runtime-configurable agent behavior — operators could update an agent's instructions by writing facts, without redeploying the agent.
+
+The alpha extraction moved that behavior from default core route mounting into
+the `stigmem-plugin-lazy-instruction-discovery` source package. Default installs
+no longer expose the lazy-instruction API routes unless the plugin is registered
+and configured. This extraction validates the ADR-011 plugin pattern; it does
+not graduate the feature into the supported surface.
 
 ## Why deferred
 
@@ -102,6 +108,10 @@ Existing tests under `experimental/21-lazy-instruction-discovery/tests/` predate
 
 ## History
 
+- **2026-05-16** — Alpha extraction closeout updated public roadmap, feature,
+  compatibility, and migration docs to describe lazy instruction discovery as
+  opt-in plugin source on `main`, with artifact evidence deferred to
+  [#298](https://github.com/Eidetic-Labs/stigmem/issues/298).
 - **2026-05-16** — PR 4a validation queued signed/package artifact evidence
   in [#298](https://github.com/Eidetic-Labs/stigmem/issues/298); source remains
   validation-only until a later alpha artifact refresh.

@@ -40,6 +40,9 @@ packages:
   mcp_adapter:
     name: stigmem-mcp
     versions: []  # not aligned to v0.9.0a1 (current 0.4.0); deferred to experimental/mcp-adapter/
+  lazy_instruction_plugin:
+    name: stigmem-plugin-lazy-instruction-discovery
+    versions: []  # source extracted on main; signed/package artifact evidence queued in #298
 
 connectors:
   - id: openclaw
@@ -103,8 +106,9 @@ features:
     spec_section: §21
     stability: experimental
     requires:
-      node: "experimental"
-    notes: "Deferred to experimental/lazy-instruction-discovery/ per ADR-002. Targeted v0.9.0a2."
+      node: ">=0.9.0a1"
+      lazy_instruction_plugin: "source-only on main; no released artifact yet"
+    notes: "Extracted to experimental/lazy-instruction-discovery/ as an opt-in plugin source package. Default installs do not expose lazy-instruction routes. Signed/package artifact evidence is queued in #298; ADR-008 graduation remains blocked on ADR-003."
 
   - id: rtbf-tombstones
     name: RTBF tombstones

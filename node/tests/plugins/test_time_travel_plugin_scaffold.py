@@ -13,7 +13,6 @@ import stigmem_node.plugins.discovery as discovery
 from stigmem_node.plugins import (
     ENTRY_POINT_GROUP,
     Allow,
-    Deny,
     HookRegistry,
     PluginHealthStatus,
     PluginManifest,
@@ -124,8 +123,7 @@ def test_manifest_registers_with_hook_registry() -> None:
         "pre_recall_authorize",
         query={"query": "alice", "as_of": "2026-05-01T00:00:00Z"},
     )
-    assert isinstance(decision, Deny)
-    assert decision.reason == "time_travel_plugin_not_enabled"
+    assert isinstance(decision, Allow)
     assert registry.fire_filter_chain("pre_recall_rewrite", {"query": "hello"}) == {
         "query": "hello"
     }

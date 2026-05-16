@@ -10,11 +10,11 @@ T = TypeVar("T")
 
 
 def pre_recall_authorize(_ctx: PluginContext, **kwargs: Any) -> Allow | Deny:
-    """Fail closed for historical queries until issue #310 wires plugin behavior."""
+    """Allow historical queries once the plugin is registered."""
 
     query = kwargs.get("query")
     if isinstance(query, dict) and query.get("as_of") is not None:
-        return Deny("time_travel_plugin_not_enabled")
+        return Allow()
     return Allow()
 
 

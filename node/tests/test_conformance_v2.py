@@ -47,7 +47,12 @@ def _load_file_groups() -> list[tuple[str, list[dict[str, Any]]]]:
     for path in sorted(_VECTOR_DIR.glob("*.json")):
         with path.open() as f:
             data = json.load(f)
-        groups.append((path.name, data.get("vectors", [])))
+        required_plugin = data.get("requires_plugin")
+        vectors = data.get("vectors", [])
+        if required_plugin:
+            for vector in vectors:
+                vector.setdefault("requires_plugin", required_plugin)
+        groups.append((path.name, vectors))
     return groups
 
 
@@ -251,6 +256,8 @@ def test_conformance_vector_v2(client: TestClient, vector: dict[str, Any]) -> No
 
     if vector.get("requires_auth"):
         pytest.skip(f"{ctx}: skipped (requires_auth — covered by dedicated auth tests)")
+    if vector.get("requires_plugin"):
+        pytest.skip(f"{ctx}: skipped (requires plugin {vector['requires_plugin']!r})")
 
     _run_setup_chain(client, vector)
 

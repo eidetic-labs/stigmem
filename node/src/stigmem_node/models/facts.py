@@ -10,6 +10,8 @@ from pydantic import BaseModel, Field, field_validator
 from .constants import VALID_SCOPES, VALID_VALUE_TYPES
 from .tombstones import TombstoneNotice
 
+VALID_WRITE_MODES = {"assert", "summarize_with_provenance"}
+
 
 class FactValue(BaseModel):
     type: str
@@ -51,6 +53,14 @@ class AssertRequest(BaseModel):
         None,
         description="URI of the garden this fact belongs to (Spec-02-Scopes-and-ACL)",
     )
+    write_mode: str = Field(
+        "assert",
+        description="Write mode; summarize_with_provenance carries read-derived provenance.",
+    )
+    derived_from: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Source fact hashes/ids used for provenance-carrying summary writes.",
+    )
 
     @field_validator("scope")
     @classmethod
@@ -58,6 +68,13 @@ class AssertRequest(BaseModel):
         if s not in VALID_SCOPES:
             raise ValueError(f"scope must be one of {VALID_SCOPES}")
         return s
+
+    @field_validator("write_mode")
+    @classmethod
+    def check_write_mode(cls, mode: str) -> str:
+        if mode not in VALID_WRITE_MODES:
+            raise ValueError(f"write_mode must be one of {sorted(VALID_WRITE_MODES)}")
+        return mode
 
 
 class FactRecord(BaseModel):
@@ -91,6 +108,8 @@ class FactRecord(BaseModel):
     sanitizer_redacted: bool = False
     # Phase 13: content-addressing (spec §25)
     cid: str | None = None
+    # R-21: provenance for summary writes derived from recalled/read facts
+    derived_from: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class QueryResponse(BaseModel):
@@ -147,6 +166,7 @@ def row_to_record(
         sanitizer_warnings=sanitizer_warnings or [],
         sanitizer_redacted=sanitizer_redacted,
         cid=_optional_col(row, "cid", keys),
+        derived_from=_json.loads(_optional_col(row, "derived_from", keys) or "[]"),
     )
 
 
@@ -158,4 +178,3 @@ def _parse_v(vtype: str, raw: str) -> Any:
     if vtype == "null":
         return None
     return raw  # string, text, datetime, ref
-

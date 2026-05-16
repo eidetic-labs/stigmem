@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 
 from ...auth import Identity, resolve_identity
 from ...cid import is_cid, is_valid_cid
@@ -12,6 +12,7 @@ from ...db import db
 from ...garden_acl import require_garden_read
 from ...models.facts import FactRecord, row_to_record
 from ...recall_pipeline import apply_recall_pipeline
+from ...session_graph import record_read_scopes
 from .common import router
 
 
@@ -19,6 +20,7 @@ from .common import router
 def get_fact(
     fact_id: str,
     identity: Annotated[Identity, Depends(resolve_identity)],
+    session_id: Annotated[str | None, Header(alias="Stigmem-Session")] = None,
 ) -> FactRecord:
     """Retrieve a single fact by UUID or sha256: CID.
 
@@ -81,6 +83,13 @@ def get_fact(
     # v1.1: recall pipeline (trust multiplier + sanitizer)
     pipeline_results = apply_recall_pipeline([record], identity=identity, include_low_trust=True)
     if pipeline_results:
+        with db() as conn:
+            record_read_scopes(
+                conn,
+                identity=identity,
+                session_id=session_id,
+                scopes={pipeline_results[0].scope},
+            )
         return pipeline_results[0]
     # Pending-quarantine facts return 404 to normal callers
     raise HTTPException(status_code=404, detail="fact not found")

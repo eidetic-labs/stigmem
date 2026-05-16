@@ -1280,6 +1280,13 @@ export interface components {
              * @default 1
              */
             confidence: number;
+            /**
+             * Derived From
+             * @description Source fact hashes/ids used for provenance-carrying summary writes.
+             */
+            derived_from?: {
+                [key: string]: unknown;
+            }[];
             /** Entity */
             entity: string;
             /**
@@ -1302,6 +1309,12 @@ export interface components {
              */
             valid_until?: string | null;
             value: components["schemas"]["FactValue"];
+            /**
+             * Write Mode
+             * @description Write mode; summarize_with_provenance carries read-derived provenance.
+             * @default assert
+             */
+            write_mode: string;
         };
         /**
          * AttestationToken
@@ -1472,6 +1485,10 @@ export interface components {
              * @default false
              */
             contradicted: boolean;
+            /** Derived From */
+            derived_from?: {
+                [key: string]: unknown;
+            }[];
             /** Effective Confidence */
             effective_confidence?: number | null;
             /** Entity */
@@ -3094,7 +3111,9 @@ export interface operations {
                 /** @description Time-travel query: return facts visible at this ISO 8601 timestamp (Spec-X3-Time-Travel-Queries) */
                 as_of?: string | null;
             };
-            header?: never;
+            header?: {
+                "Stigmem-Session"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3123,7 +3142,9 @@ export interface operations {
     assert_fact_v1_facts_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Stigmem-Session"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3156,7 +3177,9 @@ export interface operations {
     get_fact_v1_facts__fact_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Stigmem-Session"?: string | null;
+            };
             path: {
                 fact_id: string;
             };
@@ -4221,7 +4244,9 @@ export interface operations {
                 /** @description Return the temporary legacy recall response shape without `content` / `instructions` channel fields. */
                 legacy_format?: boolean;
             };
-            header?: never;
+            header?: {
+                "Stigmem-Session"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };

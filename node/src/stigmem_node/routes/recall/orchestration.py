@@ -6,7 +6,7 @@ import hashlib
 import uuid
 from typing import Annotated, Any
 
-from fastapi import Depends, HTTPException, Query, Response, status
+from fastapi import Depends, Header, HTTPException, Query, Response, status
 from fastapi.responses import JSONResponse
 
 from ...auth import Identity, resolve_identity
@@ -19,6 +19,7 @@ from ...models.facts import FactRecord, FactValue
 from ...models.recall import RecallRequest, RecallResponse, ScoreBreakdown, ScoredFact
 from ...plugins import get_registry
 from ...recall_pipeline import apply_recall_pipeline
+from ...session_graph import record_read_scopes
 from ...tombstone_cache import is_tombstoned as _is_tombstoned
 from ...tracing import start_span
 from .as_of import _recall_as_of_impl
@@ -44,6 +45,7 @@ def recall(
     req: RecallRequest,
     identity: Annotated[Identity, Depends(resolve_identity)],
     response: Response,
+    session_id: Annotated[str | None, Header(alias="Stigmem-Session")] = None,
     legacy_format: Annotated[
         bool,
         Query(
@@ -67,7 +69,7 @@ def recall(
             "stigmem.scope": req.scope,
         },
     ) as _span:
-        result = _recall_impl(req, identity, _span)
+        result = _recall_impl(req, identity, _span, session_id=session_id)
     headers = {}
     if result.total_scored is not None:
         headers["X-Total-Count"] = str(result.total_scored)
@@ -323,11 +325,21 @@ def _recall_impl(
     req: RecallRequest,
     identity: Identity,
     _span: object,
+    *,
+    session_id: str | None = None,
 ) -> RecallResponse:
     _validate_recall_request(req, identity)
 
     if req.as_of is not None:
-        return _handle_as_of_recall(req, identity)
+        result = _handle_as_of_recall(req, identity)
+        with db() as conn:
+            record_read_scopes(
+                conn,
+                identity=identity,
+                session_id=session_id,
+                scopes={scored.fact.scope for scored in result.facts},
+            )
+        return result
 
     recall_id = str(uuid.uuid4())
     query_hash = hashlib.sha256(req.query.encode()).hexdigest()
@@ -421,6 +433,12 @@ def _recall_impl(
             len(packed),
             tokens_used,
             truncated,
+        )
+        record_read_scopes(
+            conn,
+            identity=identity,
+            session_id=session_id,
+            scopes={scored.fact.scope for scored in packed},
         )
 
     logger.info(

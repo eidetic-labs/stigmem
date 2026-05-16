@@ -598,10 +598,11 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 4. Notify federation peers if the worm has propagated outbound; coordinate retractions with them.
 5. Review your agent-key issuance: any agent that both reads federated content and writes to non-trivial scopes is a worm-propagation candidate. Consider scope splitting.
 
-**Current protection status:** **Open** (R-21, High priority).
+**Current protection status:** **Open with a partial protocol mitigation** (R-21, High priority).
 - **OpenClaw adapter status:** the v0.9.0a1 adapter remains experimental. Handoff allowlisting, fail-closed boot behavior, and partial-write handling are tracked for the v0.9.0a2..aN hardening path before the adapter can be recommended.
-- **Structural fix at protocol layer:** per-session read/write graph isolation, ADR-003 capability separation, and outbound replication exclusion for transitive recalls are targeted for the v0.9.0bN beta series (capability redesign).
-- **Until those land:** issue agent writer keys with the narrowest possible scope, never overlapping the scopes the same agent reads from.
+- **Protocol control:** callers can set the `Stigmem-Session` header. Within that session, writes into scopes the caller already read are rejected unless the write uses `write_mode="summarize_with_provenance"` and carries `derived_from` source-fact provenance.
+- **Remaining structural work:** supported adapters must propagate sessions by default, and outbound replication exclusion for transitive recalls still needs to land before R-21 can close.
+- **Until the remaining work lands:** issue agent writer keys with the narrowest possible scope, never overlapping the scopes the same agent reads from.
 
 ---
 

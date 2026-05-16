@@ -283,6 +283,15 @@
             "title": "Confidence",
             "type": "number"
           },
+          "derived_from": {
+            "description": "Source fact hashes/ids used for provenance-carrying summary writes.",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Derived From",
+            "type": "array"
+          },
           "entity": {
             "minLength": 1,
             "title": "Entity",
@@ -329,6 +338,12 @@
           },
           "value": {
             "$ref": "#/components/schemas/FactValue"
+          },
+          "write_mode": {
+            "default": "assert",
+            "description": "Write mode; summarize_with_provenance carries read-derived provenance.",
+            "title": "Write Mode",
+            "type": "string"
           }
         },
         "required": [
@@ -793,6 +808,14 @@
             "default": false,
             "title": "Contradicted",
             "type": "boolean"
+          },
+          "derived_from": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Derived From",
+            "type": "array"
           },
           "effective_confidence": {
             "anyOf": [
@@ -4591,6 +4614,22 @@
               "description": "Time-travel query: return facts visible at this ISO 8601 timestamp (Spec-X3-Time-Travel-Queries)",
               "title": "As Of"
             }
+          },
+          {
+            "in": "header",
+            "name": "Stigmem-Session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stigmem-Session"
+            }
           }
         ],
         "responses": {
@@ -4628,6 +4667,24 @@
       "post": {
         "description": "Assert a fact into the fabric.\n\nCovered by Spec-03-HTTP-API and Spec-01-Fact-Model. Normalizes\nentity/source URIs on ingest.",
         "operationId": "assert_fact_v1_facts_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Stigmem-Session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stigmem-Session"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4683,6 +4740,22 @@
             "schema": {
               "title": "Fact Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Stigmem-Session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stigmem-Session"
             }
           }
         ],
@@ -6535,6 +6608,22 @@
               "description": "Return the temporary legacy recall response shape without `content` / `instructions` channel fields.",
               "title": "Legacy Format",
               "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Stigmem-Session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stigmem-Session"
             }
           }
         ],

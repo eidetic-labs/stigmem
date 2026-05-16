@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
 
-from fastapi import Depends, HTTPException, Query, Response, status
+from fastapi import Depends, Header, HTTPException, Query, Response, status
 
 from ... import settings as _settings_pkg
 from ...auth import Identity, resolve_identity
@@ -20,6 +20,7 @@ from ...models.facts import FactRecord, QueryResponse, row_to_record
 from ...models.tombstones import TombstoneNotice
 from ...plugins import Deny, Failure, Success, TenantContext, get_registry
 from ...recall_pipeline import apply_recall_pipeline
+from ...session_graph import record_read_scopes
 from .common import _get_tombstone_filter, logger, router
 
 
@@ -240,6 +241,7 @@ def _query_facts_as_of_impl(
 def query_facts(
     identity: Annotated[Identity, Depends(resolve_identity)],
     response: Response,
+    session_id: Annotated[str | None, Header(alias="Stigmem-Session")] = None,
     entity: str | None = Query(None),
     relation: str | None = Query(None),
     source: str | None = Query(None),
@@ -354,6 +356,13 @@ def query_facts(
             )
         if result.total is not None:
             response.headers["X-Total-Count"] = str(result.total)
+        with db() as conn:
+            record_read_scopes(
+                conn,
+                identity=identity,
+                session_id=session_id,
+                scopes={fact.scope for fact in result.facts},
+            )
         registry.fire_fire_and_forget(
             "post_recall_audit",
             result=result,
@@ -425,6 +434,13 @@ def query_facts(
     result = QueryResponse(facts=records, total=total, cursor=next_cursor)
     if result.total is not None:
         response.headers["X-Total-Count"] = str(result.total)
+    with db() as conn:
+        record_read_scopes(
+            conn,
+            identity=identity,
+            session_id=session_id,
+            scopes={fact.scope for fact in records},
+        )
     registry.fire_fire_and_forget(
         "post_recall_audit",
         result=result,

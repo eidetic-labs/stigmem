@@ -204,7 +204,8 @@ class OpenClawStigmemAdapter:
     ) -> OpenClawWriteResult:
         """Emit a handoff intent when a session ends or delegates.
 
-        fact_refs are validated before asserting; invalid refs are skipped.
+        fact_refs are validated before asserting; invalid refs are skipped, but
+        an all-invalid non-empty fact_refs list fails before any handoff writes.
         Assertion failures raise OpenClawWriteError so callers cannot miss
         partial writes. Pass idempotency_key to make retries no-op after a
         complete prior write and explicit errors after partial prior writes.
@@ -216,16 +217,28 @@ class OpenClawStigmemAdapter:
             return OpenClawWriteResult(entity=handoff_id, relations=core_relations, created=False)
 
         valid_refs: list[str] = []
+        dropped_refs: list[str] = []
         for ref in fact_refs:
             try:
                 self._client.get(ref)
                 valid_refs.append(ref)
             except StigmemNotFoundError:
                 logger.warning("emit_handoff: fact_ref %r not found; skipping", ref)
+                dropped_refs.append(ref)
             except StigmemError as exc:
                 logger.warning(
                     "emit_handoff: could not validate fact_ref %r: %s; skipping", ref, exc
                 )
+                dropped_refs.append(ref)
+
+        if fact_refs and not valid_refs:
+            raise OpenClawWriteError(
+                f"OpenClaw handoff refused: none of {len(fact_refs)} fact_refs validated",
+                entity=handoff_id,
+                relation="intent:context_ref",
+            )
+        if dropped_refs:
+            logger.warning("emit_handoff: dropped invalid fact_refs: %s", ", ".join(dropped_refs))
 
         written: list[str] = []
         _assert_fact(
@@ -277,25 +290,9 @@ class OpenClawStigmemAdapter:
         """Emit a decision fact for an architectural or significant choice.
 
         Always attributed to the configured source entity (STIGMEM_SOURCE_ENTITY).
-        Skips the assert when an equivalent non-retracted fact already exists
-        for (entity, roadmap:decision) — prevents duplicate decisions
-        from repeated calls in the same session.
+        Decisions are append-only; callers that need at-most-once semantics should
+        dedupe externally before calling.
         """
-        existing = self._query_all(
-            entity=entity,
-            relation="roadmap:decision",
-            source=self._source,
-            scope=scope,
-            min_confidence=0.5,
-        )
-        if existing:
-            logger.debug(
-                "emit_decision: %d existing fact(s) for %s/roadmap:decision; skipping",
-                len(existing),
-                entity,
-            )
-            return
-
         self._client.assert_fact(
             entity=entity,
             relation="roadmap:decision",

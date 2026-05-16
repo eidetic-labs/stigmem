@@ -93,8 +93,8 @@ query with no matching facts still returns an empty `BootContext`.
 ### Emit a decision
 
 Record a significant architectural decision as a durable `roadmap:decision` fact.
-A built-in dedup guard skips the write if an equivalent fact already exists for
-the same `(entity, source)` pair:
+Decisions are append-only; dedupe externally before calling if your workflow needs
+at-most-once semantics:
 
 ```python
 adapter.emit_decision(
@@ -134,8 +134,10 @@ adapter.emit_handoff(
 ```
 
 `fact_refs` are persisted as `ref`-typed fact values so the receiving agent can
-fetch them directly. Use `idempotency_key` for retries; a complete previous write
-is a no-op, while a partial previous write raises an explicit error.
+fetch them directly. If you pass a non-empty `fact_refs` list and none validate,
+the adapter raises before writing a provenance-free handoff. Use `idempotency_key`
+for retries; a complete previous write is a no-op, while a partial previous write
+raises an explicit error.
 
 ## Security
 

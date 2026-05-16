@@ -50,7 +50,7 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 
 - **Boot handshake** — on agent start, pull user preferences, project constraints, and pending handoffs from the Stigmem node and inject them into your system prompt.
 - **Handoff** — when a session ends or delegates, record a typed handoff cluster so the next agent or channel resumes with full context.
-- **Decision** — emit durable `roadmap:decision` facts for significant architectural choices; built-in dedup guard prevents repeated writes.
+- **Decision** — emit durable append-only `roadmap:decision` facts for significant architectural choices; dedupe externally before calling if your workflow needs at-most-once semantics.
 - **Escalation** — write `intent:escalation` facts with priority and a 24-hour expiry so stale escalations don't accumulate.
 
 ## Setup
@@ -132,7 +132,7 @@ Facts written by this adapter persist durably and propagate to every agent on th
 - Run experimental workloads against a separate Stigmem node or a dedicated scope
   namespace, not your primary operational node.
 - Retract incorrect facts explicitly (`DELETE /v1/facts/{id}`) rather than waiting for expiry. The 24-hour expiry on escalations is a safety net, not a correction mechanism.
-- Treat `emit_decision()` as a write to a shared audit log: only call it for confirmed, significant choices. The dedup guard prevents writing the same `(entity, source)` pair twice, but does not stop you from writing an incorrect decision in the first place.
+- Treat `emit_decision()` as a write to a shared audit log: only call it for confirmed, significant choices. The adapter records decisions append-only; dedupe externally before calling if repeated writes are a risk in your workflow.
 
 ### API key and agent identity scope
 

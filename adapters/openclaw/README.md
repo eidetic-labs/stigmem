@@ -90,12 +90,13 @@ OpenClaw agents are persistent and channel-agnostic. The Stigmem adapter hooks i
    context.
 2. **Handoff** — when a user ends a session or delegates to another channel/agent,
    emit a typed `intent:handoff` fact cluster with validated fact refs, an optional
-   continuation note, and a human-readable summary. Pass an `idempotency_key` for
-   retries; complete prior writes no-op, while partial prior writes raise a typed
-   error.
+   continuation note, and a human-readable summary. A non-empty `fact_refs` list
+   must have at least one valid ref; otherwise the adapter raises before writing a
+   provenance-free handoff. Pass an `idempotency_key` for retries; complete prior
+   writes no-op, while partial prior writes raise a typed error.
 3. **Decision** — when the agent makes a meaningful choice, emit a
-   `roadmap:decision` fact. A dedup guard skips the write when an equivalent fact
-   already exists for the same (entity, source) pair.
+   `roadmap:decision` fact. Decisions are append-only; dedupe externally before
+   calling if your workflow needs at-most-once semantics.
 4. **Escalation** — emit a priority-typed `intent:escalation` fact cluster with a
    24-hour expiry so stale escalations don't linger.
 
@@ -180,7 +181,6 @@ system_prompt = base_system_prompt + ("\n\n" + ctx.summary if ctx else "")
 adapter.emit_decision(
     entity="decision:auth-provider",
     summary="Chose Clerk over Auth0: simpler Next.js integration, lower per-seat cost at SMB scale.",
-    source="agent:openclaw",
 )
 
 # 4b. Escalate to the CTO when the agent hits a scope boundary
@@ -217,7 +217,7 @@ from `sdks/stigmem-py/tests/conformance_vectors.py` are included as smoke tests.
 |---|---|---|---|
 | `preference:*` | company | Any agent or user | Pulled on boot; filtered to `preference:` prefix |
 | `roadmap:constraint` | company | CTO / planning agents | Pulled per project entity |
-| `roadmap:decision` | company | Agent | Dedup guard: skips if fact already exists |
+| `roadmap:decision` | company | Agent | Append-only; caller dedupes externally if needed |
 | `intent:handoff_to` | company | Agent on session end | Ref to receiving agent |
 | `intent:handoff_summary` | company | Agent on session end | Text summary |
 | `intent:context_ref` | company | Agent on session end | Fact refs for receiver |

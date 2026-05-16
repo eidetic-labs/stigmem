@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+from collections.abc import Mapping
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -33,3 +36,30 @@ class LazyInstructionDiscoveryConfig(BaseModel):
         if len(set(normalized)) != len(normalized):
             raise ValueError("adapter profile names must be unique")
         return normalized
+
+
+def load_config_from_env(
+    environ: Mapping[str, str] | None = None,
+) -> LazyInstructionDiscoveryConfig:
+    """Load experimental plugin gates from environment variables."""
+
+    env = environ if environ is not None else os.environ
+    prefix = "STIGMEM_LAZY_INSTRUCTION_DISCOVERY_"
+    adapter_profiles_raw = env.get(f"{prefix}ADAPTER_PROFILES")
+    adapter_profiles = (
+        tuple(part.strip() for part in adapter_profiles_raw.split(","))
+        if adapter_profiles_raw
+        else LazyInstructionDiscoveryConfig().adapter_profiles
+    )
+    return LazyInstructionDiscoveryConfig(
+        enabled=_env_bool(env, f"{prefix}ENABLED"),
+        allow_manifest_publish=_env_bool(env, f"{prefix}ALLOW_MANIFEST_PUBLISH"),
+        allow_instruction_recall=_env_bool(env, f"{prefix}ALLOW_INSTRUCTION_RECALL"),
+        allow_file_path_entries=_env_bool(env, f"{prefix}ALLOW_FILE_PATH_ENTRIES"),
+        adapter_profiles=adapter_profiles,
+    )
+
+
+def _env_bool(env: Mapping[str, str], name: str) -> bool:
+    raw = env.get(name, "")
+    return raw.strip().lower() in {"1", "true", "yes", "on"}

@@ -1,17 +1,14 @@
-"""Inert hook handlers for the PR 4a plugin scaffold.
-
-The scaffold deliberately registers the final hook boundary without moving route
-behavior yet. Issue #291 owns the extraction of active lazy-instruction
-behavior into these handlers.
-"""
+"""Hook handlers for the lazy instruction discovery plugin."""
 
 from __future__ import annotations
 
+from importlib import resources
 from typing import Any, TypeVar
 
 from stigmem_node.plugins import Allow, Migration, PluginContext, PluginHealth, PluginHealthStatus
 
 T = TypeVar("T")
+PLUGIN_NAME = "stigmem-plugin-lazy-instruction-discovery"
 
 
 def pre_recall_authorize(_ctx: PluginContext, **_: Any) -> Allow:
@@ -37,15 +34,28 @@ def post_recall_audit(_ctx: PluginContext, **_: Any) -> None:
 
 
 def migration_register(_ctx: PluginContext, value: list[Migration], **_: Any) -> list[Migration]:
-    """Return unchanged migrations until plugin-owned schema moves in issue #291."""
+    """Declare the plugin-owned instruction-discovery schema migration."""
 
-    return value
+    sql = resources.files(__package__).joinpath(
+        "migrations/001_instruction_discovery.sql"
+    ).read_text(encoding="utf-8")
+    return [
+        *value,
+        Migration(
+            plugin_name=PLUGIN_NAME,
+            plugin_version="0.1.0",
+            migration_id=1,
+            backend="sqlite",
+            sql=sql,
+            description="lazy instruction discovery schema",
+        ),
+    ]
 
 
 def health_check(_ctx: PluginContext) -> PluginHealth:
-    """Report scaffold health for operator plugin inspection."""
+    """Report plugin health for operator plugin inspection."""
 
     return PluginHealth(
-        status=PluginHealthStatus.DEGRADED,
-        message="lazy instruction discovery scaffold registered; behavior extraction pending",
+        status=PluginHealthStatus.HEALTHY,
+        message="lazy instruction discovery plugin registered",
     )

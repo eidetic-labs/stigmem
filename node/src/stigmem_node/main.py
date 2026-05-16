@@ -31,7 +31,6 @@ from .routes.federation import router as federation_router
 from .routes.gardens import router as gardens_router
 from .routes.graph import router as graph_router
 from .routes.identity import router as identity_router
-from .routes.instruction import router as instruction_router
 from .routes.intents import router as intents_router
 from .routes.lint import router as lint_router
 from .routes.quarantine import router as quarantine_router
@@ -51,13 +50,15 @@ logger = logging.getLogger("stigmem")
 def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-        from .plugins import register_discovered_plugins
+        from .plugins import get_registry, register_discovered_plugins
 
         if settings.trust_mode == "strict" and not settings.node_private_key:
             raise RuntimeError("STIGMEM_NODE_PRIVATE_KEY must be set when trust_mode=strict")
 
-        register_discovered_plugins()
+        discovered_plugins = register_discovered_plugins(freeze=False)
+        _include_plugin_routers(app, discovered_plugins)
         apply_migrations()
+        get_registry().freeze()
 
         if settings.otel_enabled:
             from .tracing import init_tracing
@@ -173,7 +174,6 @@ def create_app() -> FastAPI:
     app.include_router(subscriptions_router)
     app.include_router(tombstones_router)
     app.include_router(wellknown_router)
-    app.include_router(instruction_router)
 
     @app.get("/healthz", tags=["ops"])
     def health() -> dict[str, str]:
@@ -204,6 +204,16 @@ def create_app() -> FastAPI:
         return FileResponse(_STATIC_DIR / "index.html", media_type="text/html")
 
     return app
+
+
+def _include_plugin_routers(app: FastAPI, discovered_plugins: tuple[Any, ...]) -> None:
+    """Include routers declared by installed plugins once per app instance."""
+    if getattr(app.state, "stigmem_plugin_routes_included", False):
+        return
+    for plugin in discovered_plugins:
+        for router in plugin.manifest.routes:
+            app.include_router(router)
+    app.state.stigmem_plugin_routes_included = True
 
 
 app = create_app()

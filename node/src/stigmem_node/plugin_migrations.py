@@ -54,7 +54,7 @@ def apply_registered_plugin_migrations(
                         f"{migration.plugin_name}:{migration.migration_id}"
                     )
                 continue
-            conn.execute(migration.sql)
+            _execute_migration_sql(conn, migration)
             conn.execute(
                 "INSERT INTO plugin_migrations "
                 "(plugin_name, plugin_version, migration_id, backend, checksum, "
@@ -69,6 +69,13 @@ def apply_registered_plugin_migrations(
                     datetime.now(UTC).isoformat(),
                 ),
             )
+
+
+def _execute_migration_sql(conn: Any, migration: Migration) -> None:
+    if migration.backend == "sqlite" and hasattr(conn, "executescript"):
+        conn.executescript(migration.sql)
+        return
+    conn.execute(migration.sql)
 
 
 def _ensure_plugin_migrations_table(conn: Any) -> None:

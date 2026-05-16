@@ -83,75 +83,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/agents/{agent_id}/boot-stub": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Boot Stub */
-        get: operations["get_boot_stub_v1_agents__agent_id__boot_stub_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agents/{agent_id}/instruction-manifest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Instruction Manifest */
-        get: operations["get_instruction_manifest_v1_agents__agent_id__instruction_manifest_get"];
-        /** Publish Instruction Manifest */
-        put: operations["publish_instruction_manifest_v1_agents__agent_id__instruction_manifest_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agents/{agent_id}/instruction-manifest/coverage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Manifest Coverage */
-        get: operations["get_manifest_coverage_v1_agents__agent_id__instruction_manifest_coverage_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agents/{agent_id}/recall-instruction": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Recall Instruction */
-        post: operations["recall_instruction_v1_agents__agent_id__recall_instruction_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/aliases": {
         parameters: {
             query?: never;
@@ -1012,23 +943,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/instruction/audit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Submit Discovery Audit */
-        post: operations["submit_discovery_audit_v1_instruction_audit_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/intents": {
         parameters: {
             query?: never;
@@ -1545,15 +1459,6 @@ export interface components {
             /** Total */
             total: number;
         };
-        /** AuditSubmitRequest */
-        AuditSubmitRequest: {
-            /** Audit Token */
-            audit_token: string;
-            /** Missed Chunks */
-            missed_chunks?: string[];
-            /** Used Chunks */
-            used_chunks?: string[];
-        };
         /** CidBackfillStatus */
         CidBackfillStatus: {
             /** Backfill Complete */
@@ -1964,38 +1869,6 @@ export interface components {
              */
             stale_lookahead_s: number;
         };
-        /** LoadTriggers */
-        LoadTriggers: {
-            /** Intents */
-            intents?: string[];
-            /** Keywords */
-            keywords?: string[];
-            /** Task Types */
-            task_types?: string[];
-        };
-        /** ManifestEntry */
-        ManifestEntry: {
-            /** Description */
-            description: string;
-            /** Fact Uri */
-            fact_uri?: string | null;
-            /** Force Position */
-            force_position?: string | null;
-            /**
-             * Guarantee Load
-             * @default false
-             */
-            guarantee_load: boolean;
-            load_triggers?: components["schemas"]["LoadTriggers"];
-            /** Name */
-            name: string;
-            /** Path */
-            path?: string | null;
-            /** Required By Task Types */
-            required_by_task_types?: string[];
-            /** Token Estimate */
-            token_estimate?: number | null;
-        };
         /** MemoryCardResponse */
         MemoryCardResponse: {
             /** Avg Confidence */
@@ -2111,18 +1984,6 @@ export interface components {
             /** Fact Id */
             fact_id: string;
         };
-        /** PublishManifestRequest */
-        PublishManifestRequest: {
-            /** Entries */
-            entries: components["schemas"]["ManifestEntry"][];
-            /**
-             * Skip Coverage Gate
-             * @default false
-             */
-            skip_coverage_gate: boolean;
-            /** Version */
-            version: string;
-        };
         /** QuarantineListResponse */
         QuarantineListResponse: {
             /** Items */
@@ -2203,23 +2064,6 @@ export interface components {
             tombstone_notices?: components["schemas"]["TombstoneNotice"][];
             /** Total */
             total?: number | null;
-        };
-        /** RecallInstructionRequest */
-        RecallInstructionRequest: {
-            /** Intent */
-            intent: string;
-            /** Manifest Hint */
-            manifest_hint?: string[];
-            /**
-             * Max Chunks
-             * @default 3
-             */
-            max_chunks: number;
-            /**
-             * Token Budget
-             * @default 2000
-             */
-            token_budget: number;
         };
         /** RecallRequest */
         RecallRequest: {
@@ -2635,7 +2479,6 @@ export type SchemaAssertRequest = components['schemas']['AssertRequest'];
 export type SchemaAttestationToken = components['schemas']['AttestationToken'];
 export type SchemaAuditLogEntry = components['schemas']['AuditLogEntry'];
 export type SchemaAuditLogResponse = components['schemas']['AuditLogResponse'];
-export type SchemaAuditSubmitRequest = components['schemas']['AuditSubmitRequest'];
 export type SchemaCidBackfillStatus = components['schemas']['CidBackfillStatus'];
 export type SchemaConflictResolveRequest = components['schemas']['ConflictResolveRequest'];
 export type SchemaConstraint = components['schemas']['Constraint'];
@@ -2659,8 +2502,6 @@ export type SchemaIntentEnvelopeRecord = components['schemas']['IntentEnvelopeRe
 export type SchemaIntentEnvelopeRequest = components['schemas']['IntentEnvelopeRequest'];
 export type SchemaKeyInfo = components['schemas']['KeyInfo'];
 export type SchemaLintRequest = components['schemas']['LintRequest'];
-export type SchemaLoadTriggers = components['schemas']['LoadTriggers'];
-export type SchemaManifestEntry = components['schemas']['ManifestEntry'];
 export type SchemaMemoryCardResponse = components['schemas']['MemoryCardResponse'];
 export type SchemaNeighborItem = components['schemas']['NeighborItem'];
 export type SchemaNeighborsResponse = components['schemas']['NeighborsResponse'];
@@ -2669,13 +2510,11 @@ export type SchemaPeerRegisterResponse = components['schemas']['PeerRegisterResp
 export type SchemaPreference = components['schemas']['Preference'];
 export type SchemaProvenanceEntry = components['schemas']['ProvenanceEntry'];
 export type SchemaProvenanceResponse = components['schemas']['ProvenanceResponse'];
-export type SchemaPublishManifestRequest = components['schemas']['PublishManifestRequest'];
 export type SchemaQuarantineListResponse = components['schemas']['QuarantineListResponse'];
 export type SchemaQuarantinePromoteRequest = components['schemas']['QuarantinePromoteRequest'];
 export type SchemaQuarantineRecord = components['schemas']['QuarantineRecord'];
 export type SchemaQuarantineRejectRequest = components['schemas']['QuarantineRejectRequest'];
 export type SchemaQueryResponse = components['schemas']['QueryResponse'];
-export type SchemaRecallInstructionRequest = components['schemas']['RecallInstructionRequest'];
 export type SchemaRecallRequest = components['schemas']['RecallRequest'];
 export type SchemaRecallResponse = components['schemas']['RecallResponse'];
 export type SchemaRecallWeights = components['schemas']['RecallWeights'];
@@ -2799,179 +2638,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CidBackfillStatus"];
-                };
-            };
-        };
-    };
-    get_boot_stub_v1_agents__agent_id__boot_stub_get: {
-        parameters: {
-            query?: {
-                profile?: string;
-            };
-            header?: never;
-            path: {
-                agent_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": string;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_instruction_manifest_v1_agents__agent_id__instruction_manifest_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                agent_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    publish_instruction_manifest_v1_agents__agent_id__instruction_manifest_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                agent_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PublishManifestRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_manifest_coverage_v1_agents__agent_id__instruction_manifest_coverage_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                agent_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    recall_instruction_v1_agents__agent_id__recall_instruction_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                agent_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RecallInstructionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -4545,37 +4211,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["NeighborsResponse"];
                 };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    submit_discovery_audit_v1_instruction_audit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuditSubmitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Validation Error */
             422: {

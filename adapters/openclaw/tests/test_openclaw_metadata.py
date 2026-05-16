@@ -33,7 +33,7 @@ def test_clawhub_skill_keeps_alpha_warning_and_limitation_link() -> None:
         for step in frontmatter["metadata"]["openclaw"]["install"]
         if step.get("kind") == "uv"
     ]
-    assert install_packages == ["stigmem-py>=0.9.0a1,<1.0.0"]
+    assert install_packages == ["stigmem-openclaw>=0.9.0a1,<1.0.0"]
     assert "v0.9.0aN evaluation only" in skill_text
     assert "LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is" in skill_text
 

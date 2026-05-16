@@ -473,15 +473,12 @@ jobs:
         with:
           version: "3.17.0"
 
-      - name: Lint stigmem chart (infra)
-        run: helm lint experimental/deploy-helm/stigmem
-
-      - name: Lint stigmem chart (deploy)
-        run: helm lint experimental/deploy-helm/stigmem
+      - name: Lint stigmem chart
+        run: helm lint experimental/deploy-helm/helm/stigmem
 
       - name: Dry-run install (template rendering)
         run: |
-          helm template stigmem ./experimental/deploy-helm/stigmem \
+          helm template stigmem ./experimental/deploy-helm/helm/stigmem \
             --debug \
             --set image.pullPolicy=Never
 

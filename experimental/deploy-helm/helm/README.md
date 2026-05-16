@@ -12,7 +12,7 @@ Kubernetes / enterprise deployment via Helm.
 
 ```bash
 # From repo root — installs with defaults (SQLite, no auth, no ingress):
-helm install stigmem deploy/helm/stigmem --namespace stigmem --create-namespace
+helm install stigmem experimental/deploy-helm/helm/stigmem --namespace stigmem --create-namespace
 
 # Check status
 kubectl -n stigmem get pods
@@ -128,7 +128,7 @@ resources:
 ## Upgrade
 
 ```bash
-helm upgrade stigmem deploy/helm/stigmem -n stigmem -f my-values.yaml
+helm upgrade stigmem experimental/deploy-helm/helm/stigmem -n stigmem -f my-values.yaml
 ```
 
 ## Uninstall (keeps PVC)

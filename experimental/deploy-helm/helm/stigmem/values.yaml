@@ -1,5 +1,5 @@
 # stigmem Helm chart — default values
-# Override with: helm install stigmem deploy/helm/stigmem -f my-values.yaml
+# Override with: helm install stigmem experimental/deploy-helm/helm/stigmem -f my-values.yaml
 
 image:
   repository: ghcr.io/eidetic-labs/stigmem-node

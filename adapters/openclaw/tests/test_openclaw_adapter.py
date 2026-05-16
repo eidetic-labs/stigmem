@@ -281,10 +281,30 @@ def test_emit_handoff_validates_refs_and_asserts() -> None:
 
 
 @respx.mock
-def test_emit_handoff_all_refs_invalid_still_asserts_core() -> None:
+def test_emit_handoff_all_refs_invalid_raises_before_writes() -> None:
     respx.get(f"{BASE}/v1/facts/fact-x").mock(
         return_value=httpx.Response(404, json={"detail": "not found"})
     )
+    assert_route = respx.post(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(201, json=_fact())
+    )
+
+    adapter = _adapter()
+
+    with pytest.raises(OpenClawWriteError, match="none of 1 fact_refs validated") as exc:
+        adapter.emit_handoff(
+            from_entity="agent:openclaw",
+            to_entity="agent:assistant",
+            summary="Summary",
+            fact_refs=["fact-x"],
+        )
+
+    assert exc.value.relation == "intent:context_ref"
+    assert assert_route.call_count == 0
+
+
+@respx.mock
+def test_emit_handoff_empty_refs_allows_summary_only_handoff() -> None:
     assert_route = respx.post(f"{BASE}/v1/facts").mock(
         return_value=httpx.Response(201, json=_fact())
     )
@@ -294,10 +314,9 @@ def test_emit_handoff_all_refs_invalid_still_asserts_core() -> None:
         from_entity="agent:openclaw",
         to_entity="agent:assistant",
         summary="Summary",
-        fact_refs=["fact-x"],
+        fact_refs=[],
     )
 
-    # intent:handoff_to + intent:handoff_summary — no context_ref because ref was invalid
     assert assert_route.call_count == 2
     assert result.relations == ("intent:handoff_to", "intent:handoff_summary")
 
@@ -448,9 +467,10 @@ def test_emit_handoff_rejects_confused_non_agent_target_even_if_allowlisted() ->
 
 
 @respx.mock
-def test_emit_decision_asserts_when_no_existing() -> None:
-    # query returns empty — no existing decision
-    respx.get(f"{BASE}/v1/facts").mock(return_value=httpx.Response(200, json=_page([])))
+def test_emit_decision_asserts() -> None:
+    query_route = respx.get(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(200, json=_page([]))
+    )
     assert_route = respx.post(f"{BASE}/v1/facts").mock(
         return_value=httpx.Response(201, json=_fact(relation="roadmap:decision"))
     )
@@ -458,13 +478,16 @@ def test_emit_decision_asserts_when_no_existing() -> None:
     adapter = _adapter()
     adapter.emit_decision(entity="decision:db-choice", summary="Chose PostgreSQL.")
 
+    assert query_route.call_count == 0
     assert assert_route.call_count == 1
 
 
 @respx.mock
-def test_emit_decision_skips_when_existing() -> None:
+def test_emit_decision_appends_even_when_existing_decision_present() -> None:
     existing = _fact(id="d-001", relation="roadmap:decision")
-    respx.get(f"{BASE}/v1/facts").mock(return_value=httpx.Response(200, json=_page([existing])))
+    query_route = respx.get(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(200, json=_page([existing]))
+    )
     assert_route = respx.post(f"{BASE}/v1/facts").mock(
         return_value=httpx.Response(201, json=_fact())
     )
@@ -472,7 +495,8 @@ def test_emit_decision_skips_when_existing() -> None:
     adapter = _adapter()
     adapter.emit_decision(entity="decision:db-choice", summary="Chose PostgreSQL.")
 
-    assert assert_route.call_count == 0
+    assert query_route.call_count == 0
+    assert assert_route.call_count == 1
 
 
 # ---------------------------------------------------------------------------

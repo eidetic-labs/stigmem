@@ -58,13 +58,40 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 
 ## `v0.9.0bN` — beta series (hardened core, with operator validation)
 
-**Status:** not started. Entry blocked on the alpha series exit.
+**Status:** in progress on `main`. Several beta-series hardening slices have
+landed ahead of a formal beta artifact; the remaining work is still blocking
+the beta-series exit and v1.0 release-candidate declaration.
+
+### Landed on `main`
+
+- OpenClaw safety hardening now has fail-closed startup behavior, visible
+  partial-write failures, channel-separated recall handling, and bounded
+  handoff-target allowlisting. Remaining OpenClaw audit closeout is tracked in
+  the hardening backlog.
+- The ADR-003 capability redesign has landed for the core protocol surfaces:
+  `FactValue.interpret_as`, `instruction:write` enforcement, instruction-typed
+  federation quarantine, channel-separated `recall()` output, MCP/OpenClaw
+  channel framing, instruction promotion/quarantine audit events, and
+  same-session read/write provenance controls.
+- Protocol-level adversarial vectors are in
+  `data/conformance/adversarial/protocol/` and are part of the blocking
+  conformance gate.
+- The ADR-015 consumer-layer `corpus-v1` prompt-injection corpus now contains
+  80 validated patterns across 10 categories, with validation wired into the
+  eval-fast CI path.
 
 ### Work (sub-work ordering matters)
 
-1. **OpenClaw safety hardening (entry PR)** — closes Critical/High audit findings (C1–C4, H1–H5). See `adapters/openclaw/AUDIT.md`.
-2. **Capability redesign** per [ADR-003](docs/adr/003-prompt-injection.md) — `interpret_as` field on `FactValue`; default-deny on instruction interpretation; cross-org instruction quarantine; channel-separated `recall()` response.
-3. **Adversarial conformance corpus** per [ADR-015](docs/adr/015-adversarial-conformance-and-model-certification.md) — 80+ patterns across 10 categories; multi-provider model certification framework.
+1. **Finish OpenClaw audit closeout** — remaining regression coverage and
+   duplicate ClawHub adapter cleanup. See `adapters/openclaw/AUDIT.md`.
+2. **Finish capability-redesign documentation and threat-model closure** per
+   [ADR-003](docs/adr/003-prompt-injection.md) — remaining risk-register status
+   updates and adapter/session propagation evidence.
+3. **Complete ADR-015 certification framework** per
+   [ADR-015](docs/adr/015-adversarial-conformance-and-model-certification.md) —
+   the 80-pattern corpus exists; remaining work is the multi-provider runner,
+   result schema/public certification list, operator hardening guide, and
+   scheduled re-run posture.
 4. **Storage immutability stack** per [ADR-016](docs/adr/016-storage-immutability-enforcement.md) — L1 architectural append-only journal + projection tables, L2 SQLite triggers, L3 CIDs (per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)), L4 local hash chain, L5 Sigstore Rekor anchor, plus client/peer verification.
 5. **Per-feature security colocation** per [ADR-018](docs/adr/018-security-documentation-colocation.md).
 6. **Federation hardening** — mTLS-default; HLC bounded skew; persistent audit log (90-day retention); per-principal token-bucket quotas; key max-age + rotation runbook.

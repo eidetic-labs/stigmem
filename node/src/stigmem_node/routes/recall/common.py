@@ -16,11 +16,6 @@ logger = logging.getLogger("stigmem.recall")
 
 router = APIRouter(prefix="/v1/recall", tags=["recall"])
 
-_MAX_SEED_ENTITIES = 5
-_MAX_GRAPH_ENTITIES = 50
-_MAX_CANDIDATES = 500
-
-
 def _public_module() -> Any:
     """Return the public recall module so test monkey-patches stay visible."""
     return sys.modules["stigmem_node.routes.recall"]

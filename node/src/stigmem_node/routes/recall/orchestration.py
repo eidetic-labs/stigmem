@@ -21,8 +21,6 @@ from ...tombstone_cache import is_tombstoned as _is_tombstoned
 from ...tracing import start_span
 from .as_of import _recall_as_of_impl
 from .common import (
-    _MAX_CANDIDATES,
-    _MAX_SEED_ENTITIES,
     _estimate_tokens,
     _fetch_facts_by_ids,
     _now_iso,
@@ -30,10 +28,12 @@ from .common import (
     logger,
     router,
 )
-from .graph import _graph_expand
+from .graph import _MAX_SEED_ENTITIES, _graph_expand
 from .lexical import _lexical_search
 from .ranking import _greedy_pack, _score_candidates
 from .vector import _semantic_search
+
+_MAX_CANDIDATES = 500
 
 
 @router.post("", response_model=RecallResponse)

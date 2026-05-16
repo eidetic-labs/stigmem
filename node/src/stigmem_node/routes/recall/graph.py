@@ -6,7 +6,9 @@ from typing import Any
 
 from ...auth import Identity
 from ...graph import bfs_neighbors
-from .common import _MAX_GRAPH_ENTITIES, _MAX_SEED_ENTITIES
+
+_MAX_SEED_ENTITIES = 5
+_MAX_GRAPH_ENTITIES = 50
 
 
 def _graph_expand(

@@ -134,7 +134,7 @@ The following features are in the codebase under [`experimental/<feature>/`](htt
 
 | Feature | Status | Spec or tracker |
 |---|---|---|
-| Lazy instruction discovery | Experimental, blocked on ADR-003 | Spec-X1-Lazy-Instruction-Discovery |
+| Lazy instruction discovery | Experimental opt-in plugin source extracted on `main`; ADR-008 graduation blocked on ADR-003; artifact evidence queued | Spec-X1-Lazy-Instruction-Discovery |
 | RTBF tombstones | Experimental, dormant | Spec-X2-RTBF-Tombstones |
 | Time-travel `as_of` queries | Experimental, dormant | Spec-X3-Time-Travel-Queries |
 | Memory Garden advanced ACL | Experimental, dormant | Spec-X5-Memory-Garden-Advanced-ACL |
@@ -153,7 +153,7 @@ See the full deferred-features list and source locations at [Experimental Featur
 
 The v0.9.0a1 default install ships with feature-specific code in `node/src/stigmem_node/` for several deferred features (`tombstones.py`, `instruction_migrate.py`, `card_materializer.py`, `source_trust.py`, etc.). The routes are mounted but the features are dormant unless explicitly configured. Per [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per ADR-011's C1 plugin architecture; after v0.9.0a8, default install will be true to ADR-011's commitment.
 
-Main now includes the hook-registry foundation and stable 22-hook surface, with manual/core handler registration, minimum manifest/context/capability APIs, hook-site wiring, registry observability, test helpers, benchmark coverage, entry-point package discovery, startup registration, operator inspection commands, and production signing/trust gates. The deferred features listed below have not yet been extracted into plugin packages. Plugin authors can start from the [Plugin Author Guide](../guides/plugins/author-guide.md).
+Main now includes the hook-registry foundation and stable 22-hook surface, with manual/core handler registration, minimum manifest/context/capability APIs, hook-site wiring, registry observability, test helpers, benchmark coverage, entry-point package discovery, startup registration, operator inspection commands, and production signing/trust gates. Lazy instruction discovery has been extracted as the first opt-in experimental plugin source package; signed/package artifact evidence remains queued before it should be described as a released installable artifact. The other deferred features listed below have not yet been extracted into plugin packages. Plugin authors can start from the [Plugin Author Guide](../guides/plugins/author-guide.md).
 
 See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md) for the full architectural-gap acknowledgment.
 
@@ -163,7 +163,7 @@ See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com
 
 The phase progression is in [ROADMAP.md](https://github.com/Eidetic-Labs/stigmem/blob/main/ROADMAP.md). At a high level:
 
-1. **v0.9.0a2 through v0.9.0a8** — incremental plugin extraction per ADR-011 (lazy-instruction-discovery → CIDs as core → time-travel → tombstones → memory-garden-acl → source-attestation → multi-tenant).
+1. **v0.9.0a2 through v0.9.0a8** — incremental plugin extraction per ADR-011. Lazy instruction discovery is extracted on `main` as opt-in experimental source; remaining work continues through time-travel, tombstones, memory-garden-acl, source-attestation, and multi-tenant. CIDs remain core.
 2. **v0.9.0bN (the v0.9.0bN beta series)** — capability redesign per ADR-003, federation hardening, OpenClaw safety, modular spec migration per ADR-010, storage immutability stack per ADR-016, 30-day external operator soak.
 3. **v1.0.0-rcN → v1.0.0 (the v1.0.0rcN release-candidate series)** — Sigstore-signed releases, reproducible builds, SBOM, 3+ external operators in production. Wire format frozen.
 

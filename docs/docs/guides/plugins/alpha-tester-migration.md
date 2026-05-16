@@ -11,7 +11,7 @@ audience: Integrator
 
 The v0.9.0a1 default install is the supported critical-path surface. It includes typed facts, scopes, basic recall, federation, audit, SQLite storage, Docker Compose deployment, and CIDs as core behavior. It does not include production support for deferred feature behavior such as lazy instruction discovery, time-travel queries, RTBF tombstones, advanced Memory Garden ACLs, source attestation, multi-tenant isolation, or advanced recall graph features.
 
-The plugin infrastructure now exists on `main`: stable 22-hook dispatch, package entry-point discovery, dependency ordering, lifecycle health checks, operator CLI inspection, production signing/trust policy, and author/operator documentation. That does not mean deferred feature plugins are available yet. Feature extraction happens later in the v0.9.0aN alpha series, one feature at a time.
+The plugin infrastructure now exists on `main`: stable 22-hook dispatch, package entry-point discovery, dependency ordering, lifecycle health checks, operator CLI inspection, production signing/trust policy, and author/operator documentation. Lazy instruction discovery has been extracted as the first opt-in experimental plugin source package under `experimental/lazy-instruction-discovery/`; signed/package artifact evidence is queued separately. Other deferred feature plugins arrive later in the v0.9.0aN alpha series, one feature at a time.
 
 Use this guide to decide what to keep testing now, what to disable, and what to wait for.
 
@@ -20,9 +20,9 @@ Use this guide to decide what to keep testing now, what to disable, and what to 
 | Area | v0.9.0a1 default behavior | Current `main` after plugin infrastructure | Later v0.9.0aN work |
 |---|---|---|---|
 | Default node install | No plugins required or registered. | Same default behavior; plugin support is opt-in. | Default install remains critical-path only. |
-| Plugin package loading | Not in the first alpha artifact. | Entry-point discovery and startup registration are implemented. | Feature packages are extracted and installed explicitly. |
+| Plugin package loading | Not in the first alpha artifact. | Entry-point discovery and startup registration are implemented; lazy-instruction plugin source is extracted for validation. | Feature packages are published and installed explicitly as artifact refreshes land. |
 | Plugin signing and trust | Not in the first alpha artifact. | Production registration requires verified signing/trust metadata; unsigned loading is development-only. | Package publication and feature-specific release hardening mature. |
-| Deferred feature behavior | May exist in source, but is dormant or unsupported. | Still not promoted by plugin infrastructure alone. | Specific feature plugins ship behind explicit install/configuration. |
+| Deferred feature behavior | May exist in source, but is dormant or unsupported. | Still not promoted by plugin infrastructure alone; lazy instruction behavior now requires plugin registration/configuration. | Specific feature plugins ship behind explicit install/configuration. |
 | Internal/pre-plugin test flows | Useful only as historical or local experiments. | Should be retired unless they test the supported default surface. | Replace with feature-plugin tests when each plugin lands. |
 
 ## Migration rules
@@ -37,7 +37,7 @@ Use this guide to decide what to keep testing now, what to disable, and what to 
 
 | Feature or flow | Current status | Migration destination |
 |---|---|---|
-| Lazy instruction discovery | Experimental and blocked on capability redesign. | Wait for the lazy-instruction-discovery plugin after the capability model is ready. Until then, use ordinary typed facts and explicit recall inputs. |
+| Lazy instruction discovery | Experimental; opt-in plugin source extracted on `main`, with signed/package artifact evidence queued. ADR-008 graduation remains blocked on the capability redesign. | Default installs should keep using ordinary typed facts and explicit recall inputs. Test the plugin only in isolated alpha environments with explicit registration/configuration. |
 | Content-addressed IDs | Core behavior. | Continue using the core CID/fact-ID behavior; do not plan for a CID plugin. |
 | Time-travel `as_of` queries | Experimental and dormant. | Wait for the time-travel plugin extraction. Do not depend on dormant route behavior for supported tests. |
 | RTBF tombstones | Experimental and dormant. | Wait for the tombstone plugin extraction and its operator/legal runbooks. Use ordinary retractions for current supported tests. |

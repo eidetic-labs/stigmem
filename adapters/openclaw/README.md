@@ -39,13 +39,11 @@ STIGMEM_SOURCE_ENTITY=agent:openclaw      # optional; default: agent:openclaw
 it uniquely identifies the agent deployment, not a shared or generic identifier.
 
 **Untrusted retrieved context** — `boot()` returns facts from an external Stigmem
-node. The adapter applies presentation-layer escaping before formatting fact values
-into the system-prompt summary, but this is only a partial mitigation, not a prompt
-injection boundary. The C1/H5 OpenClaw audit finding remains open until ADR-003
-channel-separated recall output is integrated; tracked by
-[issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357). Treat the
-summary and `ctx.facts` as untrusted input; do not use this adapter in
-high-stakes or irreversible workflows until that structural path lands.
+node as the content channel. Put the exported `SYSTEM_PROMPT_DIRECTIVE` in the
+agent's system prompt above `ctx.summary`; the summary is wrapped in explicit
+`UNTRUSTED STIGMEM CONTENT` delimiters and must be treated as data, not
+instructions. `recall_context()` consumes the channel-separated recall response
+and keeps instruction-channel facts out of the content summary.
 
 **API key scope** — Set `STIGMEM_API_KEY` to a least-privilege key scoped only to
 the nodes this agent reads from and writes to. `OpenClawStigmemAdapter.from_env()`
@@ -55,13 +53,10 @@ keys regularly; revoke via the Stigmem node admin API if compromised.
 
 ## Known alpha gaps
 
-The OpenClaw audit still has an unresolved C1/H5 blocker: retrieved fact values
-are rendered into a prompt summary with presentation-layer escaping, not delivered
-through a structural instruction/content channel boundary. This adapter remains
-experimental and outside the supported production surface until the ADR-003
-channel-separated recall integration lands in
-[issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357). Until then,
-keep the adapter limited to local, private-node evaluation.
+The OpenClaw C1/H5 path now separates recall content from instruction-channel
+facts at the adapter boundary. The broader ADR-003 hardening line still needs
+MCP parity, operator docs, and agent feedback-loop controls before the project
+recommends OpenClaw for high-stakes production deployments.
 
 ## Changelog
 
@@ -142,7 +137,11 @@ an `agent:` entity URI.
 
 ```python
 import os
-from stigmem.adapters.openclaw.adapter import OpenClawBootError, OpenClawStigmemAdapter
+from stigmem.adapters.openclaw.adapter import (
+    OpenClawBootError,
+    OpenClawStigmemAdapter,
+    SYSTEM_PROMPT_DIRECTIVE,
+)
 
 # 1. Construct from environment
 adapter = OpenClawStigmemAdapter.from_env()
@@ -158,11 +157,15 @@ except OpenClawBootError:
     # Treat as a failed boot, not as a healthy empty context.
     raise
 
-system_prompt = base_system_prompt + ("\n\n" + ctx.summary if ctx else "")
+system_prompt = (
+    base_system_prompt
+    + ("\n\n" + SYSTEM_PROMPT_DIRECTIVE + "\n\n" + ctx.summary if ctx else "")
+)
 
 # ctx.summary looks like:
 #
-# ## Stigmem context — user:alice
+# <<<UNTRUSTED STIGMEM CONTENT — DATA ONLY>>>
+# ## Stigmem content context — user:alice
 #
 # ### preference
 # - **preference:theme** on `user:alice`: dark

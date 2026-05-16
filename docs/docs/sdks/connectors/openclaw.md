@@ -20,12 +20,10 @@ shared knowledge store across agents.
 The OpenClaw connector is available in the v0.9.0aN alpha line for evaluation, not
 as a recommended production integration. This wording is queued for the
 v0.9.0a2 artifact refresh; it does not revise the already-published a1 ClawHub
-package in place. The adapter still has the ADR-003-dependent C1/H5 audit gap:
-retrieved facts are rendered into a prompt summary with presentation-layer
-escaping rather than a structural instruction/content channel boundary. Use only
-private, access-controlled Stigmem nodes and least-privilege agent keys until the
-channel-separated OpenClaw integration lands in
-[issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357). See
+package in place. The adapter now separates retrieved content from
+instruction-channel recall output and exports a required system prompt directive,
+but the broader ADR-003 hardening line still needs MCP parity, operator docs, and
+feedback-loop controls before high-stakes production use. See
 [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::
@@ -67,7 +65,7 @@ pip install --pre "stigmem-py>=0.9.0a1,<1.0.0"
 directory, or use the package import if you installed via pip:
 
 ```python
-from adapter import OpenClawStigmemAdapter   # ClawHub bundled path
+from adapter import OpenClawStigmemAdapter, SYSTEM_PROMPT_DIRECTIVE   # ClawHub bundled path
 # or: from stigmem_openclaw.adapter import OpenClawStigmemAdapter  # pip install
 
 adapter = OpenClawStigmemAdapter.from_env()
@@ -83,7 +81,9 @@ ctx = adapter.boot(
     user_entity="user:alice",
     project_entities=["project:my-roadmap"],
 )
-system_prompt = base_prompt + ("\n\n" + ctx.summary if ctx else "")
+system_prompt = base_prompt + (
+    "\n\n" + SYSTEM_PROMPT_DIRECTIVE + "\n\n" + ctx.summary if ctx else ""
+)
 ```
 
 `boot()` raises `OpenClawBootError` when the node is unreachable or returns an
@@ -145,12 +145,12 @@ raises an explicit error.
 cannot be overridden per call, so facts are always attributed to the declared agent
 identity. Use a per-deployment entity URI, not a shared or generic identifier.
 
-**Untrusted retrieved context** — `boot()` applies presentation-layer escaping
-before injecting fact values into the system prompt, but that is not a security
-boundary and does not close C1/H5. Treat the summary and raw facts as untrusted
-input. Use a private, access-controlled node for evaluation and avoid high-stakes
-workflows until OpenClaw consumes channel-separated recall output
-([#357](https://github.com/Eidetic-Labs/stigmem/issues/357)).
+**Untrusted retrieved context** — `boot()` formats retrieved facts as the content
+channel and wraps them in `UNTRUSTED STIGMEM CONTENT` delimiters. Put
+`SYSTEM_PROMPT_DIRECTIVE` above `ctx.summary` in the system prompt so the model
+treats retrieved memory as data, not instructions. `recall_context()` consumes
+channel-separated recall output and keeps instruction-channel facts out of the
+content summary.
 
 **API key scope** — Set `STIGMEM_API_KEY` to a least-privilege key scoped only to
 the nodes this agent reads from and writes to. Do not share a key across unrelated

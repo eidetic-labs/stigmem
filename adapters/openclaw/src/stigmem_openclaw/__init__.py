@@ -1,6 +1,7 @@
 """stigmem-openclaw — Stigmem adapter for OpenClaw agents."""
 
 from stigmem_openclaw.adapter import (
+    SYSTEM_PROMPT_DIRECTIVE,
     BootContext,
     OpenClawBootError,
     OpenClawStigmemAdapter,
@@ -16,4 +17,5 @@ __all__ = [
     "OpenClawTargetError",
     "OpenClawWriteError",
     "OpenClawWriteResult",
+    "SYSTEM_PROMPT_DIRECTIVE",
 ]

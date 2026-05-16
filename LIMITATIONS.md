@@ -135,17 +135,17 @@ The remaining beta hardening work brings: automated rotation runbooks and an "ex
 
 ### 9. Running the OpenClaw bundled adapter as-is
 
-**Status:** Most immediate OpenClaw safety issues have Phase B fixes in progress
-or landed, but the C1/H5 prompt-injection boundary remains open. That gap depends
-on ADR-003 channel-separated recall output and is tracked by
-[issue #357](https://github.com/Eidetic-Labs/stigmem/issues/357).
+**Status:** Most immediate OpenClaw safety issues have Phase B fixes landed. The
+adapter separates retrieved content from instruction-channel recall output and
+requires callers to place `SYSTEM_PROMPT_DIRECTIVE` above the delimited
+`UNTRUSTED STIGMEM CONTENT` summary. Broader ADR-003 hardening remains in flight
+for MCP parity, operator docs, and feedback-loop controls.
 
-**What this means:** the OpenClaw adapter still renders retrieved facts into a
-prompt summary with presentation-layer escaping. That is an evaluation guardrail,
-not a structural instruction/content boundary. Recent hardening has addressed
-API-key fail-closed behavior, boot failure handling, target allowlists, and
-visible multi-fact write failures, but it does not make recalled memory safe to
-treat as instructions.
+**What this means:** recent hardening has addressed API-key fail-closed behavior,
+boot failure handling, target allowlists, visible multi-fact write failures, and
+the OpenClaw content/instruction channel boundary. Recalled content is still
+untrusted data. Do not treat retrieved facts as instructions unless a future
+instruction-channel contract explicitly authorizes that use.
 
 **What to do today:** treat the OpenClaw adapter as `experimental/` and outside
 the supported production surface until #357 lands with tests. If you've

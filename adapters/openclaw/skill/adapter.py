@@ -6,6 +6,6 @@ OpenClaw users can continue to import ``adapter`` from the skill directory.
 
 from __future__ import annotations
 
-from stigmem_openclaw.adapter import BootContext, OpenClawStigmemAdapter
+from stigmem_openclaw.adapter import SYSTEM_PROMPT_DIRECTIVE, BootContext, OpenClawStigmemAdapter
 
-__all__ = ["BootContext", "OpenClawStigmemAdapter"]
+__all__ = ["BootContext", "OpenClawStigmemAdapter", "SYSTEM_PROMPT_DIRECTIVE"]

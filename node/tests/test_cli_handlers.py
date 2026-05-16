@@ -239,6 +239,7 @@ class TestPluginsCli:
         )
         monkeypatch.setattr(lifecycle, "discover_plugin_manifests", lambda: (discovered,))
         monkeypatch.setattr(settings_module.settings, "plugin_signing_required", False)
+        monkeypatch.setattr(lifecycle.settings, "plugin_signing_required", False)
 
         rc = _cmd_plugins_list(_args(json=True))
         payload = json.loads(capsys.readouterr().out)
@@ -294,6 +295,7 @@ class TestPluginsCli:
             lambda: (discovered, base_discovered),
         )
         monkeypatch.setattr(settings_module.settings, "plugin_signing_required", False)
+        monkeypatch.setattr(lifecycle.settings, "plugin_signing_required", False)
 
         rc = _cmd_plugins_describe(_args(name="describe-plugin", json=False))
         out = capsys.readouterr().out

@@ -202,6 +202,9 @@ class Identity:
     def can_write(self) -> bool:
         return self._has_capability("write")
 
+    def can_write_instruction(self) -> bool:
+        return self._has_capability("instruction:write")
+
     def can_federate(self) -> bool:
         return self._has_capability("federate")
 

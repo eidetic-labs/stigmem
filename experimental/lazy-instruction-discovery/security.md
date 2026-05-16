@@ -22,27 +22,28 @@ threat model at [`spec/security/threat-model.md`](../../spec/security/threat-mod
 
 **Threat refs:** T9-T1, T9-E1  
 **STRIDE class:** Tampering / Elevation of privilege  
-**Status:** Open  
+**Status:** Open with partial local-write mitigation
 **Likelihood:** Low  
 **Impact:** Critical  
 **Priority:** High  
 **Spec refs:** `Spec-X1-Lazy-Instruction-Discovery`, §3.5
 
-Lazy instruction discovery lets agents load `instruction:` scoped facts as
-operational instructions at boot. Any key that can write into an instruction
-scope can therefore author instructions for agents that consume that scope.
-Until Stigmem has a dedicated `instruction_write` permission tier and
-promotion controls, operators must treat `instruction:` write grants as
-admin-equivalent authority over the consuming agents.
+Lazy instruction discovery lets agents load instruction-typed facts as
+operational instructions at boot. Any key that can write facts with
+`interpret_as="instruction"` can therefore author instructions for agents that
+consume those facts. Stigmem now separates this from ordinary writes:
+`interpret_as="instruction"` requires `instruction:write` on local fact writes.
+Operators must still treat that grant as admin-equivalent authority over the
+consuming agents.
 
-Current controls are scope-based access control and the requirement that boot
-stubs embed unconditional prohibitions directly instead of relying on lazy
-loaded content. These controls reduce accidental exposure but do not create a
-technical boundary between ordinary writes and instruction-authoring writes.
+Current controls are scope-based access control, the dedicated
+`instruction:write` local-write gate, recall channel separation through
+`interpret_as`, and the requirement that boot stubs embed unconditional
+prohibitions directly instead of relying on lazy loaded content.
 
-Required mitigation remains a redesigned permission model: separate
-`instruction_write` from general `write`, require admin approval for grants,
-and enforce that separation in key issuance and federation admission.
+Required mitigation remains an admission boundary for lazy instruction use:
+admin-approved promotion policy, federation-inbound quarantine or rejection for
+instruction-typed facts, and protocol adversarial vectors for the full path.
 
 ## Contributed Risks
 

@@ -445,7 +445,7 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 
 **What if** someone with write access to the `instruction:` scope stores a malicious fact that gets loaded as an agent's operational instruction via Lazy Instruction Discovery (Spec-X1-Lazy-Instruction-Discovery)?
 
-**Who is the attacker?** Any caller whose API key grants `write` permission to the `instruction:` scope.
+**Who is the attacker?** Any caller whose API key grants `instruction:write` permission and can write instruction-typed facts consumed by the lazy instruction layer.
 
 **Why is this different from scenario 5.1 (prompt injection via recalled facts)?** Recalled facts are retrieved *during task execution*, where the agent is already operating under its full instruction context. Instruction content loaded via `recall_instruction` at boot time becomes part of the agent's *governing instructions* — before the agent processes any task. An attacker who controls instruction content controls the agent's behavior at a much more fundamental level.
 
@@ -456,12 +456,12 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 
 **What can't they do?** Inject instructions that violate hard constraints embedded directly in the boot stub (Spec-X1-Lazy-Instruction-Discovery boot-stub rules). Instructions that are unconditionally included in the boot stub body — such as hard "never-do" prohibitions — are always in context and cannot be silently bypassed by a retrieval failure or adversarial instruction fact.
 
-**What should operators do right now (this is an open risk)?**
-- Audit every API key that has `write` access to any scope beginning with `instruction:`. This list should be very short — ideally only admin keys or a dedicated instruction-management key.
-- Do not grant general agent API keys `write` on `instruction:` scope.
+**What should operators do right now (this is an open risk with a partial protocol mitigation)?**
+- Audit every API key that has `instruction:write`. This list should be very short — ideally only admin keys or a dedicated instruction-management key.
+- Do not grant general agent API keys `instruction:write`.
 - Ensure your agents' boot stubs embed hard prohibitions unconditionally (Spec-X1-Lazy-Instruction-Discovery boot-stub rules guidance: "always-applicable rules" should be in the boot stub body, not lazy-loaded).
 
-**How would you know?** The `instruction_audit` event type in the audit log records `recall_instruction` calls. Unexpected instruction scope writes (`fact_write` events where the entity URI is in the `instruction:` namespace) are a signal.
+**How would you know?** The `instruction_audit` event type in the audit log records `recall_instruction` calls. Unexpected instruction-typed fact writes (`fact_write` events whose value has `interpret_as="instruction"`) are a signal.
 
 **How do you recover?**
 1. Revoke the key that wrote the adversarial instruction fact.

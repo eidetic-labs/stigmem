@@ -144,6 +144,20 @@ def _existing_record_for_cid(
     return row_to_record(existing_row, contradicted=False) if existing_row is not None else None
 
 
+def _require_interpretation_write(identity: Identity, interpret_as: str) -> None:
+    if interpret_as != "instruction":
+        return
+    if identity.can_write_instruction():
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail={
+            "code": "instruction_write_required",
+            "message": "writing instruction-typed facts requires instruction:write permission",
+        },
+    )
+
+
 def _detect_and_record_contradictions(
     conn: Any,
     fact_id: str,
@@ -307,6 +321,8 @@ def assert_fact_impl(
     for w in relation_warnings:
         print(f"[stigmem] WARN: relation naming: {w}", file=sys.stderr)
 
+    _require_interpretation_write(identity, req.value.interpret_as)
+
     fact_id = str(uuid.uuid4())
     now = datetime.now(UTC).isoformat()
     hlc = node_hlc.tick()
@@ -355,8 +371,9 @@ def assert_fact_impl(
             """INSERT INTO facts
                (id, entity, relation, value_type, value_v, source, timestamp,
                 valid_until, confidence, scope, hlc, received_from, attested_key_id,
-                garden_id, attested, tenant_id, embedding_missing, cid, derived_from)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                garden_id, attested, tenant_id, embedding_missing, cid, derived_from,
+                interpret_as)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 entity,  # normalized (spec §2.6)
@@ -377,6 +394,7 @@ def assert_fact_impl(
                 embedding_missing_val,
                 fact_cid,
                 derived_from_json,
+                req.value.interpret_as,
             ),
         )
 

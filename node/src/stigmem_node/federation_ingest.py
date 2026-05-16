@@ -15,6 +15,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+from .audit_event import INSTRUCTION_QUARANTINED, emit_instruction_event_if_applicable
 from .db import db
 from .hlc import HLCRemoteSkewError, node_hlc
 from .metrics import PEER_HLC_ANOMALY
@@ -239,6 +240,20 @@ def ingest_fact(
                     json.dumps({"trust_score": trust_score}),
                     audit_now,
                 ),
+            )
+            emit_instruction_event_if_applicable(
+                INSTRUCTION_QUARANTINED,
+                fact_id=fact_id,
+                fact_entity=fact.get("entity"),
+                fact_relation=fact.get("relation"),
+                actor_uri="system:federation",
+                source=sender_node_id,
+                detail={
+                    "reason": "trust_below_threshold",
+                    "trust_score": trust_score,
+                    "received_from": sender_node_id,
+                },
+                conn=conn,
             )
 
         # Write stigmem:received_from meta-fact atomically (spec §3.1)

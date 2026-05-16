@@ -133,7 +133,7 @@ features:
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Basic memory-garden concept stable in core; advanced ACL deferred to experimental/memory-garden-acl/. Targeted v0.9.0a6."
+    notes: "Basic memory-garden concept stable in core; advanced ACL source package extracted to experimental/memory-garden-acl/ after v0.9.0a1. Default installs keep advanced ACL inactive; signed/package artifact evidence is deferred until all planned plugins are built."
 
   - id: source-attestation
     name: Source attestation

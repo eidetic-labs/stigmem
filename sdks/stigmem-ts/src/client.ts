@@ -272,7 +272,9 @@ export class StigmemClient {
       limit:             opts.limit             ?? 100,
     };
     if (opts.weights) body["weights"] = opts.weights;
-    return this.req<RecallResponse>("POST", "/v1/recall", body);
+    return this.req<RecallResponse>("POST", "/v1/recall", body, {
+      legacy_format: opts.legacy_format ? true : undefined,
+    });
   }
 
   // ------------------------------------------------------------------

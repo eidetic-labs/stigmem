@@ -218,6 +218,7 @@ export interface RecallOptions {
   min_confidence?:    number;
   include_neighbors?: boolean;
   limit?:             number;
+  legacy_format?:     boolean;
 }
 
 export interface ScoreBreakdown {

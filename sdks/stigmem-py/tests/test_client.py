@@ -14,7 +14,14 @@ from stigmem import (
     string_value,
     text_value,
 )
-from stigmem.models import ConflictPage, ConflictResolution, Fact, FactPage, NodeInfo
+from stigmem.models import (
+    ConflictPage,
+    ConflictResolution,
+    Fact,
+    FactPage,
+    NodeInfo,
+    RecallResponse,
+)
 
 BASE = "http://test-node"
 KEY = "sk-test"
@@ -39,6 +46,31 @@ SAMPLE_NODE_INFO = {
     "auth": "required",
     "federation": "disabled",
     "namespaces": ["memory:", "intent:"],
+}
+
+SAMPLE_RECALL_RESPONSE = {
+    "recall_id": "recall-001",
+    "query_hash": "abc123",
+    "facts": [
+        {
+            "fact": SAMPLE_FACT,
+            "score": 0.92,
+            "score_breakdown": {
+                "lexical": 0.4,
+                "semantic": 0.3,
+                "graph": 0.1,
+                "source_trust": 0.1,
+                "recency": 0.02,
+                "weighted_total": 0.92,
+            },
+            "hop_distance": 0,
+            "token_estimate": 42,
+        }
+    ],
+    "total_scored": 1,
+    "token_budget": 1000,
+    "tokens_used": 42,
+    "truncated": False,
 }
 
 
@@ -174,6 +206,17 @@ def test_federation_status() -> None:
     client = StigmemClient(url=BASE, api_key=KEY)
     peers = client.federation_status()
     assert peers == []
+
+
+@respx.mock
+def test_recall_legacy_format_param() -> None:
+    respx.post(f"{BASE}/v1/recall", params={"legacy_format": "true"}).mock(
+        return_value=httpx.Response(200, json=SAMPLE_RECALL_RESPONSE)
+    )
+    client = StigmemClient(url=BASE, api_key=KEY)
+    result = client.recall("what is Alice's role?", token_budget=1000, legacy_format=True)
+    assert isinstance(result, RecallResponse)
+    assert result.recall_id == "recall-001"
 
 
 @respx.mock

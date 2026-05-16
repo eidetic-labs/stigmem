@@ -98,6 +98,22 @@ class TestAsOfDispatch:
         assert body["facts"] == []
         assert body["tombstone_notices"] == []
 
+    def test_as_of_legacy_format_omits_channel_fields(
+        self, time_travel_client: TestClient
+    ) -> None:
+        client = time_travel_client
+        as_of = datetime.now(UTC).isoformat()
+        r = client.post(
+            "/v1/recall",
+            params={"legacy_format": True},
+            json=_recall("nothing", as_of=as_of),
+        )
+        assert r.status_code == 200
+        body = r.json()
+        assert "facts" in body
+        assert "content" not in body
+        assert "instructions" not in body
+
     def test_as_of_respects_pre_existing_facts_only(
         self, time_travel_client: TestClient
     ) -> None:

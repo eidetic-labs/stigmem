@@ -36,7 +36,7 @@ Reintroducing §21 without first solving these issues would be the single most d
 | 2 | ADR (redesign required) | **Blocked** on Gate 1 | — | (deferred) |
 | 3 | Conformance vectors (especially adversarial) | Open | — | — |
 | 4 | 30-day external operator soak | Open | — | — |
-| 5 | Documentation parity | Open | — | — |
+| 5 | Documentation parity | Open | — | Artifact publication evidence queued in [#298](https://github.com/Eidetic-Labs/stigmem/issues/298) |
 
 ---
 
@@ -102,6 +102,9 @@ Existing tests under `experimental/21-lazy-instruction-discovery/tests/` predate
 
 ## History
 
+- **2026-05-16** — PR 4a validation queued signed/package artifact evidence
+  in [#298](https://github.com/Eidetic-Labs/stigmem/issues/298); source remains
+  validation-only until a later alpha artifact refresh.
 - **2026-05-15** — added ADR-018 colocated security analysis in `security.md`.
 - **2026-05-06** — moved to `experimental/` per ADR-002. Status: Blocked on ADR-003.
 - **2026-05-04** — original §21 normative spec published in v2.0 (now retracted).

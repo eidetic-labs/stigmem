@@ -168,11 +168,17 @@ def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
             call.kwargs["json"]["event_id"] for call in mock_inst.post.call_args_list
         ]
 
-        # Drain any pending/delivering remainder.  Up to 5 extra passes
-        # is more than enough for backoff (next_retry_at is set into the
-        # future on failure, but ACL-blocked rows are immediately delivered).
+        # Drain any pending/delivering remainder. Transient delivery failures
+        # release the row back to ``pending`` with ``next_retry_at`` in the
+        # future, so make pending rows due before each drain pass. This keeps
+        # the test deterministic under CI load while preserving the duplicate
+        # delivery assertion: every POST is still recorded and checked below.
         for _ in range(5):
             with db_mod.db() as conn:
+                conn.execute(
+                    "UPDATE subscription_events SET next_retry_at = NULL"
+                    " WHERE delivery_status = 'pending'"
+                )
                 remaining = conn.execute(
                     "SELECT COUNT(*) AS n FROM subscription_events"
                     " WHERE delivery_status IN ('pending', 'delivering')"

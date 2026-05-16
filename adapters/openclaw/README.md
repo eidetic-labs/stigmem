@@ -54,10 +54,9 @@ keys regularly; revoke via the Stigmem node admin API if compromised.
 ## Known alpha gaps
 
 The OpenClaw audit still has unresolved blocker findings in the v0.9.0a1 adapter:
-unvalidated handoff targets, orphan/partial handoff writes, and
-presentation-layer-only sanitization. These are tracked for the v0.9.0a2..aN /
-beta hardening path. Until then, keep the adapter limited to local, private-node
-evaluation.
+orphan/partial handoff writes and presentation-layer-only sanitization. These are
+tracked for the v0.9.0a2..aN / beta hardening path. Until then, keep the adapter
+limited to local, private-node evaluation.
 
 ## Changelog
 
@@ -123,7 +122,13 @@ agents import it as a standard Python library.
 STIGMEM_URL=http://localhost:8765
 STIGMEM_API_KEY=sk-your-key
 STIGMEM_SOURCE_ENTITY=agent:openclaw   # entity URI for this OpenClaw instance
+STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS=agent:assistant,agent:cto
 ```
+
+`STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS` is a comma-separated allowlist for
+handoff and escalation targets. The adapter always includes its own
+`STIGMEM_SOURCE_ENTITY`; all other targets must be listed explicitly and must use
+an `agent:` entity URI.
 
 ## Worked example — full agent boot + session lifecycle
 

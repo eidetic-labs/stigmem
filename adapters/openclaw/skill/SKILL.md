@@ -12,16 +12,20 @@ metadata:
     requires:
       env:
         - STIGMEM_URL
+        - STIGMEM_API_KEY
     envVars:
       - name: STIGMEM_URL
         required: true
         description: "Base URL of your Stigmem node (e.g. https://stigmem.example.com)."
       - name: STIGMEM_API_KEY
-        required: false
-        description: "API key for the Stigmem node. Omit if the node runs with auth disabled. Use a least-privilege key scoped to the intended node only; rotate regularly."
+        required: true
+        description: "Least-privilege API key for the Stigmem node. Required by from_env(); rotate regularly."
       - name: STIGMEM_SOURCE_ENTITY
         required: false
         description: "Entity URI that identifies this agent in the fact graph (default: agent:openclaw)."
+      - name: STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS
+        required: false
+        description: "Comma-separated agent: entity URI allowlist for handoff and escalation targets. The source entity is always allowed."
     install:
       - kind: uv
         package: "stigmem-openclaw>=0.9.0a1,<1.0.0"
@@ -35,8 +39,7 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 > refresh. It does not revise the already-published a1 package in place. The
 > OpenClaw skill is available for v0.9.0aN evaluation only, not as a recommended
 > production integration. The adapter still has open audit findings around
-> handoff target validation, partial handoff writes, and prompt-injection
-> boundaries. Use it only with
+> partial handoff writes and prompt-injection boundaries. Use it only with
 > private, access-controlled Stigmem nodes and least-privilege agent keys until
 > the hardening work lands. See
 > [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
@@ -53,6 +56,8 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 1. Set `STIGMEM_URL` to your Stigmem node URL.
 2. Set `STIGMEM_API_KEY` to a least-privilege key for the node.
 3. Optionally set `STIGMEM_SOURCE_ENTITY` to the entity URI that represents this agent instance (default: `agent:openclaw`).
+4. Set `STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS` to any additional `agent:`
+   entity URIs this deployment may hand off or escalate to.
 
 ## Usage
 
@@ -136,6 +141,9 @@ Over-privileged API keys grant unnecessary read/write access across your node. T
   `agent:openclaw-eval-alice`). The generic default `agent:openclaw` should not
   be shared across deployments because facts from different deployments become
   indistinguishable in the fact graph.
+- Set `STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS` to the exact downstream agents
+  this deployment may contact. Unknown, malformed, or non-`agent:` targets are
+  rejected before any handoff or escalation writes occur.
 
 ### Dependency pinning
 

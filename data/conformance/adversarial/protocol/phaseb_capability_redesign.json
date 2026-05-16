@@ -1,0 +1,41 @@
+{
+  "title": "Phase B capability-redesign adversarial protocol vectors",
+  "description": "Protocol-level negative vectors for instruction typing, federation quarantine, capability signatures, HLC skew, and peer-token replay.",
+  "vectors": [
+    {
+      "id": "instruction-write-without-capability",
+      "description": "A caller with ordinary read/write permission cannot assert an instruction-typed fact.",
+      "scenario": "instruction_write_without_capability",
+      "expected_status": 403,
+      "expected_detail_code": "instruction_write_required"
+    },
+    {
+      "id": "instruction-federation-inbound-quarantine",
+      "description": "A federation-inbound instruction-typed fact is stored pending in the configured quarantine garden.",
+      "scenario": "instruction_federation_inbound_quarantine",
+      "expected_quarantine_status": "pending",
+      "expected_quarantine_reason": "instruction_federation_inbound"
+    },
+    {
+      "id": "forged-capability-signature-rejected",
+      "description": "Mutating a signed capability token invalidates its Ed25519 signature.",
+      "scenario": "forged_capability_signature",
+      "expected_error_contains": "signature"
+    },
+    {
+      "id": "far-future-hlc-rejected",
+      "description": "Federation ingest rejects a remote HLC wall time outside the configured future-skew bound.",
+      "scenario": "far_future_hlc_rejected",
+      "expected_error": "hlc_skew",
+      "expected_direction": "future"
+    },
+    {
+      "id": "peer-token-nonce-replay-rejected",
+      "description": "Reusing a federation peer token nonce is rejected on the second request.",
+      "scenario": "peer_token_nonce_replay",
+      "expected_first_status": 200,
+      "expected_replay_status": 401,
+      "expected_replay_detail": "nonce_already_seen"
+    }
+  ]
+}

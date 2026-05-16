@@ -209,6 +209,15 @@ Local validation for the implementation PRs should include:
 - hook ordering tests covering `pre_recall_authorize`, `pre_recall_rewrite`,
   `recall_filter`, `post_recall_audit`, and `migration_register`
 
+## Artifact evidence
+
+PR 4a implementation is landing before a signed/package-published lazy
+instruction discovery plugin artifact. Artifact publication and signing evidence
+are explicitly queued in
+[#298](https://github.com/Eidetic-Labs/stigmem/issues/298). Until that issue is
+closed, the plugin is source-available under `experimental/` for validation only
+and must not be described as a released installable plugin artifact.
+
 ## Risks and blockers
 
 - `Spec-X1` is still marked blocked on ADR-003. PR 4a can extract the feature

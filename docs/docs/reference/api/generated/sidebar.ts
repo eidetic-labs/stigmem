@@ -262,18 +262,6 @@ const sidebar: SidebarsConfig = {
           label: "Register Peer",
           className: "api-method post",
         },
-        {
-          type: "doc",
-          id: "reference/api/generated/federation-list-tombstones-v-1-federation-tombstones-get",
-          label: "Federation List Tombstones",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "reference/api/generated/federation-ingest-tombstone-v-1-federation-tombstones-ingest-post",
-          label: "Federation Ingest Tombstone",
-          className: "api-method post",
-        },
       ],
     },
     {
@@ -573,30 +561,6 @@ const sidebar: SidebarsConfig = {
           id: "reference/api/generated/list-subscription-events-v-1-subscriptions-subscription-id-events-get",
           label: "List Subscription Events",
           className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "tombstones",
-      items: [
-        {
-          type: "doc",
-          id: "reference/api/generated/issue-tombstone-v-1-tombstones-post",
-          label: "Issue Tombstone",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "reference/api/generated/check-tombstone-status-v-1-tombstones-entity-uri-encoded-get",
-          label: "Check Tombstone Status",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "reference/api/generated/revoke-tombstone-endpoint-v-1-tombstones-tombstone-id-revoke-post",
-          label: "Revoke Tombstone Endpoint",
-          className: "api-method post",
         },
       ],
     },

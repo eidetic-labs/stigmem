@@ -1,1 +1,0 @@
-{"parameters":[{"in":"path","name":"tombstone_id","required":true,"schema":{"title":"Tombstone Id","type":"string"}}]}

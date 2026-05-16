@@ -143,6 +143,6 @@ curl -X POST http://localhost:8765/v1/facts \
 
 ## Tombstone {#tombstone}
 
-A signed right-to-be-forgotten (RTBF) marker for retracted facts. Tombstones go beyond normal retraction (`confidence = 0.0`) by providing a cryptographically signed record with an expiry that instructs all receiving nodes to purge the target fact from storage, vector indexes, and caches. Tombstones are replicated via the federation tombstone route and are the primary mechanism for GDPR/RTBF compliance in federated deployments.
+A signed right-to-be-forgotten (RTBF) marker for suppressing facts about an entity URI, optionally scoped. Tombstones are distinct from normal retraction (`confidence = 0.0`) and are currently an opt-in experimental plugin source package, not part of the v0.9.0a1 default install or a supported compliance surface. Default installs do not expose tombstone routes or filtering unless `stigmem-plugin-tombstones` is explicitly registered.
 
 **Spec:** `Spec-X2-RTBF-Tombstones`

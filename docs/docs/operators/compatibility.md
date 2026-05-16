@@ -42,7 +42,7 @@ Per [ADR-014](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/014-com
 | `Stigmem-Version` header | Documented (implementation in the v0.9.0bN beta series) | `Spec-03-HTTP-API` | `node>=0.9.0bN` (planned) |
 | Argon2id API key hashing | Planned (the v0.9.0bN beta series per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)) | `Spec-03-HTTP-API` | `node>=0.9.0bN` (planned) |
 | Lazy instruction discovery | Experimental | `Spec-X1-Lazy-Instruction-Discovery` | [`experimental/lazy-instruction-discovery/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery) — targeted v0.9.0a2 |
-| RTBF tombstones | Experimental | `Spec-X2-RTBF-Tombstones` | [`experimental/tombstones/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/tombstones) — targeted v0.9.0a5 |
+| RTBF tombstones | Experimental | `Spec-X2-RTBF-Tombstones` | [`experimental/tombstones/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/tombstones) — source-only on `main`; no released plugin artifact yet |
 | Time-travel queries | Experimental | `Spec-X3-Time-Travel-Queries` | [`experimental/time-travel/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/time-travel) — targeted v0.9.0a4 |
 | Memory garden advanced ACL | Experimental | `Spec-X5-Memory-Garden-Advanced-ACL` | [`experimental/memory-garden-acl/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/memory-garden-acl) — targeted v0.9.0a6 |
 | Source attestation | Experimental | `Spec-X6-Source-Attestation` | [`experimental/source-attestation/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation) — targeted v0.9.0a7 |

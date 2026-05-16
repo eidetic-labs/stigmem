@@ -1,1 +1,0 @@
-{"parameters":[{"in":"path","name":"entity_uri_encoded","required":true,"schema":{"title":"Entity Uri Encoded","type":"string"}}]}

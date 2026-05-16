@@ -6,6 +6,8 @@ BootContext = _adapter.BootContext
 OpenClawBootError = _adapter.OpenClawBootError
 OpenClawStigmemAdapter = _adapter.OpenClawStigmemAdapter
 OpenClawTargetError = _adapter.OpenClawTargetError
+OpenClawWriteError = _adapter.OpenClawWriteError
+OpenClawWriteResult = _adapter.OpenClawWriteResult
 _facts_to_summary = _adapter._facts_to_summary
 _safe_assert = _adapter._safe_assert
 
@@ -14,6 +16,8 @@ __all__ = [
     "OpenClawBootError",
     "OpenClawStigmemAdapter",
     "OpenClawTargetError",
+    "OpenClawWriteError",
+    "OpenClawWriteResult",
     "_facts_to_summary",
     "_safe_assert",
 ]

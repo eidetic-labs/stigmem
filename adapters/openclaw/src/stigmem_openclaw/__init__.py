@@ -5,6 +5,8 @@ from stigmem_openclaw.adapter import (
     OpenClawBootError,
     OpenClawStigmemAdapter,
     OpenClawTargetError,
+    OpenClawWriteError,
+    OpenClawWriteResult,
 )
 
 __all__ = [
@@ -12,4 +14,6 @@ __all__ = [
     "BootContext",
     "OpenClawBootError",
     "OpenClawTargetError",
+    "OpenClawWriteError",
+    "OpenClawWriteResult",
 ]

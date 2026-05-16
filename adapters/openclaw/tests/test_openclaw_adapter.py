@@ -15,7 +15,13 @@ import pytest
 import respx
 
 # conftest.py adds the adapter directory to sys.path
-from adapter import BootContext, OpenClawBootError, OpenClawStigmemAdapter, OpenClawTargetError
+from adapter import (
+    BootContext,
+    OpenClawBootError,
+    OpenClawStigmemAdapter,
+    OpenClawTargetError,
+    OpenClawWriteError,
+)
 
 BASE = "http://test-stigmem"
 SOURCE = "agent:openclaw"
@@ -255,7 +261,7 @@ def test_emit_handoff_validates_refs_and_asserts() -> None:
     )
 
     adapter = _adapter()
-    adapter.emit_handoff(
+    result = adapter.emit_handoff(
         from_entity="agent:openclaw",
         to_entity="agent:assistant",
         summary="Handoff summary",
@@ -265,6 +271,13 @@ def test_emit_handoff_validates_refs_and_asserts() -> None:
 
     # intent:handoff_to, intent:handoff_summary, intent:context_ref (good only), intent:continuation
     assert assert_route.call_count == 4
+    assert result.created is True
+    assert result.relations == (
+        "intent:handoff_to",
+        "intent:handoff_summary",
+        "intent:context_ref",
+        "intent:continuation",
+    )
 
 
 @respx.mock
@@ -277,7 +290,7 @@ def test_emit_handoff_all_refs_invalid_still_asserts_core() -> None:
     )
 
     adapter = _adapter()
-    adapter.emit_handoff(
+    result = adapter.emit_handoff(
         from_entity="agent:openclaw",
         to_entity="agent:assistant",
         summary="Summary",
@@ -286,11 +299,12 @@ def test_emit_handoff_all_refs_invalid_still_asserts_core() -> None:
 
     # intent:handoff_to + intent:handoff_summary — no context_ref because ref was invalid
     assert assert_route.call_count == 2
+    assert result.relations == ("intent:handoff_to", "intent:handoff_summary")
 
 
 @respx.mock
-def test_emit_handoff_partial_assert_failure_does_not_raise() -> None:
-    """If one POST fails, the others still proceed."""
+def test_emit_handoff_partial_assert_failure_raises() -> None:
+    """A failed POST must surface the partial write instead of being hidden."""
     respx.get(f"{BASE}/v1/facts/fact-ok").mock(return_value=httpx.Response(200, json=_fact()))
 
     call_count = {"n": 0}
@@ -308,13 +322,71 @@ def test_emit_handoff_partial_assert_failure_does_not_raise() -> None:
     respx.post(f"{BASE}/v1/facts").mock(side_effect=assert_side_effect)
 
     adapter = _adapter()
-    # Must not raise even though one assert returns 500
-    adapter.emit_handoff(
+
+    with pytest.raises(OpenClawWriteError, match="intent:handoff_summary") as exc:
+        adapter.emit_handoff(
+            from_entity="agent:openclaw",
+            to_entity="agent:assistant",
+            summary="Summary",
+            fact_refs=["fact-ok"],
+        )
+
+    assert exc.value.relation == "intent:handoff_summary"
+    assert call_count["n"] == 2
+
+
+@respx.mock
+def test_emit_handoff_idempotency_key_skips_complete_retry() -> None:
+    existing = [
+        _fact(entity="handoff:retry-1", relation="intent:handoff_to"),
+        _fact(entity="handoff:retry-1", relation="intent:handoff_summary"),
+    ]
+    query_route = respx.get(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(200, json=_page(existing))
+    )
+    get_route = respx.get(f"{BASE}/v1/facts/fact-ok").mock(
+        return_value=httpx.Response(200, json=_fact())
+    )
+    post_route = respx.post(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(201, json=_fact())
+    )
+
+    adapter = _adapter()
+    result = adapter.emit_handoff(
         from_entity="agent:openclaw",
         to_entity="agent:assistant",
         summary="Summary",
         fact_refs=["fact-ok"],
+        idempotency_key="retry-1",
     )
+
+    assert result.created is False
+    assert result.entity == "handoff:retry-1"
+    assert query_route.call_count == 1
+    assert get_route.call_count == 0
+    assert post_route.call_count == 0
+
+
+@respx.mock
+def test_emit_handoff_idempotency_key_rejects_partial_retry() -> None:
+    existing = [_fact(entity="handoff:retry-2", relation="intent:handoff_to")]
+    respx.get(f"{BASE}/v1/facts").mock(return_value=httpx.Response(200, json=_page(existing)))
+    post_route = respx.post(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(201, json=_fact())
+    )
+
+    adapter = _adapter()
+
+    with pytest.raises(OpenClawWriteError, match="partial facts"):
+        adapter.emit_handoff(
+            from_entity="agent:openclaw",
+            to_entity="agent:assistant",
+            summary="Summary",
+            fact_refs=[],
+            idempotency_key="retry-2",
+        )
+
+    assert post_route.call_count == 0
 
 
 @respx.mock
@@ -421,7 +493,7 @@ def test_emit_escalation_includes_valid_until() -> None:
     respx.post(f"{BASE}/v1/facts").mock(side_effect=capture)
 
     adapter = _adapter()
-    adapter.emit_escalation(
+    result = adapter.emit_escalation(
         to_entity="agent:cto",
         goal="Approve infra spend",
         priority="high",
@@ -429,6 +501,12 @@ def test_emit_escalation_includes_valid_until() -> None:
 
     # Should be 3 asserts: intent:escalation, intent:escalate_to, intent:goal
     assert len(captured) == 3
+    assert result.created is True
+    assert result.relations == (
+        "intent:escalation",
+        "intent:escalate_to",
+        "intent:goal",
+    )
 
     escalation_body = captured[0]
     assert escalation_body["relation"] == "intent:escalation"
@@ -456,9 +534,10 @@ def test_emit_escalation_default_priority_is_medium() -> None:
     respx.post(f"{BASE}/v1/facts").mock(side_effect=capture)
 
     adapter = _adapter()
-    adapter.emit_escalation(to_entity="agent:cto", goal="Some goal")
+    result = adapter.emit_escalation(to_entity="agent:cto", goal="Some goal")
 
     assert captured[0]["value"]["v"] == "medium"
+    assert result.created is True
 
 
 @respx.mock
@@ -473,6 +552,44 @@ def test_emit_escalation_rejects_unknown_target_before_writes() -> None:
         adapter.emit_escalation(to_entity="agent:unknown", goal="Some goal")
 
     assert post_route.call_count == 0
+
+
+@respx.mock
+def test_emit_escalation_idempotency_key_skips_complete_retry() -> None:
+    existing = [
+        _fact(entity="escalation:retry-1", relation="intent:escalation"),
+        _fact(entity="escalation:retry-1", relation="intent:escalate_to"),
+        _fact(entity="escalation:retry-1", relation="intent:goal"),
+    ]
+    query_route = respx.get(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(200, json=_page(existing))
+    )
+    post_route = respx.post(f"{BASE}/v1/facts").mock(
+        return_value=httpx.Response(201, json=_fact())
+    )
+
+    adapter = _adapter()
+    result = adapter.emit_escalation(
+        to_entity="agent:cto",
+        goal="Some goal",
+        idempotency_key="retry-1",
+    )
+
+    assert result.created is False
+    assert result.entity == "escalation:retry-1"
+    assert query_route.call_count == 1
+    assert post_route.call_count == 0
+
+
+def test_emit_escalation_rejects_malformed_idempotency_key() -> None:
+    adapter = _adapter()
+
+    with pytest.raises(OpenClawWriteError, match="idempotency key"):
+        adapter.emit_escalation(
+            to_entity="agent:cto",
+            goal="Some goal",
+            idempotency_key="bad key",
+        )
 
 
 # ---------------------------------------------------------------------------

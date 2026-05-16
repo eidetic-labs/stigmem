@@ -100,14 +100,25 @@ def _validate_security_doc(
     except ValueError as exc:
         return [f"{rel_path}: {exc}"]
 
+    failures.extend(_frontmatter_shape_failures(rel_path, feature_dir, frontmatter))
+    failures.extend(_risk_reference_failures(rel_path, frontmatter, body, threat_model_risks))
+    failures.extend(_owned_risk_link_failures(rel_path, frontmatter, threat_model))
+    failures.extend(_internal_comms_reference_failures(rel_path, body))
+    return failures
+
+
+def _frontmatter_shape_failures(
+    rel_path: Path,
+    feature_dir: str,
+    frontmatter: dict[str, str | list[str]],
+) -> list[str]:
+    failures: list[str] = []
     missing = sorted(REQUIRED_FIELDS - set(frontmatter))
     if missing:
         failures.append(f"{rel_path}: missing frontmatter fields: {missing}")
 
     if frontmatter.get("feature") != feature_dir:
-        failures.append(
-            f"{rel_path}: feature must match directory name {feature_dir!r}"
-        )
+        failures.append(f"{rel_path}: feature must match directory name {feature_dir!r}")
 
     status = frontmatter.get("status")
     if status not in VALID_STATUSES:
@@ -116,37 +127,67 @@ def _validate_security_doc(
     spec_id = frontmatter.get("spec_id")
     if not isinstance(spec_id, str) or not spec_id.startswith("Spec-"):
         failures.append(f"{rel_path}: spec_id must start with 'Spec-'")
-
-    for field in ("owned_risks", "contributed_risks"):
-        risks = frontmatter.get(field)
-        if not isinstance(risks, list):
-            failures.append(f"{rel_path}: {field} must be a list")
-            continue
-        for risk_id in risks:
-            if not RISK_RE.fullmatch(risk_id):
-                failures.append(f"{rel_path}: {field} entry must match R-##: {risk_id}")
-            if risk_id not in threat_model_risks:
-                failures.append(f"{rel_path}: {risk_id} is not in the threat model")
-            if risk_id not in body:
-                failures.append(f"{rel_path}: body must mention {risk_id}")
-
-    owned_risks = frontmatter.get("owned_risks", [])
-    if isinstance(owned_risks, list):
-        for risk_id in owned_risks:
-            if str(rel_path) not in threat_model:
-                failures.append(
-                    f"{rel_path}: threat model must link to this owned-risk document"
-                )
-                break
-            if risk_id not in threat_model:
-                failures.append(f"{rel_path}: threat model must mention {risk_id}")
-
-    if "Internal-Comms" in body or "Internal Comms" in body:
-        failures.append(
-            f"{rel_path}: public security docs must not reference Internal-Comms"
-        )
-
     return failures
+
+
+def _risk_reference_failures(
+    rel_path: Path,
+    frontmatter: dict[str, str | list[str]],
+    body: str,
+    threat_model_risks: dict[str, str],
+) -> list[str]:
+    failures: list[str] = []
+    for field in ("owned_risks", "contributed_risks"):
+        failures.extend(
+            _risk_list_failures(rel_path, field, frontmatter.get(field), body, threat_model_risks)
+        )
+    return failures
+
+
+def _risk_list_failures(
+    rel_path: Path,
+    field: str,
+    risks: str | list[str] | None,
+    body: str,
+    threat_model_risks: dict[str, str],
+) -> list[str]:
+    if not isinstance(risks, list):
+        return [f"{rel_path}: {field} must be a list"]
+
+    failures: list[str] = []
+    for risk_id in risks:
+        if not RISK_RE.fullmatch(risk_id):
+            failures.append(f"{rel_path}: {field} entry must match R-##: {risk_id}")
+        if risk_id not in threat_model_risks:
+            failures.append(f"{rel_path}: {risk_id} is not in the threat model")
+        if risk_id not in body:
+            failures.append(f"{rel_path}: body must mention {risk_id}")
+    return failures
+
+
+def _owned_risk_link_failures(
+    rel_path: Path,
+    frontmatter: dict[str, str | list[str]],
+    threat_model: str,
+) -> list[str]:
+    owned_risks = frontmatter.get("owned_risks", [])
+    if not isinstance(owned_risks, list):
+        return []
+
+    failures: list[str] = []
+    for risk_id in owned_risks:
+        if str(rel_path) not in threat_model:
+            failures.append(f"{rel_path}: threat model must link to this owned-risk document")
+            break
+        if risk_id not in threat_model:
+            failures.append(f"{rel_path}: threat model must mention {risk_id}")
+    return failures
+
+
+def _internal_comms_reference_failures(rel_path: Path, body: str) -> list[str]:
+    if "Internal-Comms" in body or "Internal Comms" in body:
+        return [f"{rel_path}: public security docs must not reference Internal-Comms"]
+    return []
 
 
 def _validate_threat_model_links(threat_model: str) -> list[str]:

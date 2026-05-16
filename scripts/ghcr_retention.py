@@ -103,7 +103,7 @@ def _delete_version(org: str, package: str, version_id: int) -> None:
     _gh_delete(path)
 
 
-def main() -> int:
+def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--org", required=True)
     parser.add_argument("--package", required=True)
@@ -118,7 +118,104 @@ def main() -> int:
         default=os.environ.get("GITHUB_STEP_SUMMARY"),
         help="Markdown summary destination (defaults to $GITHUB_STEP_SUMMARY when set).",
     )
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def _version_tags(version: dict[str, Any]) -> list[str]:
+    return version.get("metadata", {}).get("container", {}).get("tags", []) or []
+
+
+def _keep_reason(
+    tags: list[str],
+    created_at: datetime,
+    cutoff: datetime,
+    min_age_days: int,
+) -> str | None:
+    protected, reason = _is_protected(tags)
+    if protected:
+        return reason
+    if created_at > cutoff:
+        return f"younger than {min_age_days}d (created {created_at.isoformat()})"
+    return None
+
+
+def _prune_versions(
+    args: argparse.Namespace,
+    versions: list[dict[str, Any]],
+    cutoff: datetime,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    deleted: list[dict[str, Any]] = []
+    kept: list[dict[str, Any]] = []
+
+    for version in versions:
+        version_id = version["id"]
+        created_at = datetime.fromisoformat(version["created_at"].replace("Z", "+00:00"))
+        tags = _version_tags(version)
+        reason = _keep_reason(tags, created_at, cutoff, args.min_age_days)
+        if reason is not None:
+            kept.append({"id": version_id, "tags": tags, "reason": reason})
+            continue
+
+        LOG.info(
+            "%s version id=%s tags=%s created=%s",
+            "WOULD DELETE" if args.dry_run else "Deleting",
+            version_id,
+            tags,
+            created_at.isoformat(),
+        )
+        if not args.dry_run and not _delete_version_safely(args.org, args.package, version_id):
+            continue
+        deleted.append({"id": version_id, "tags": tags, "created": created_at.isoformat()})
+
+    return deleted, kept
+
+
+def _delete_version_safely(org: str, package: str, version_id: int) -> bool:
+    try:
+        _delete_version(org, package, version_id)
+    except subprocess.CalledProcessError as exc:
+        LOG.error("Delete failed for version id=%s: %s", version_id, exc.stderr)
+        return False
+    return True
+
+
+def _write_summary(
+    summary_path: str,
+    args: argparse.Namespace,
+    cutoff: datetime,
+    deleted: list[dict[str, Any]],
+    kept: list[dict[str, Any]],
+) -> None:
+    try:
+        with open(summary_path, "a", encoding="utf-8") as fh:  # noqa: PTH123
+            fh.write(f"## GHCR retention — `{args.org}/{args.package}`\n\n")
+            fh.write(
+                f"- Cutoff: {cutoff.isoformat()} ({args.min_age_days}d window)\n"
+                f"- Dry run: **{args.dry_run}**\n"
+                f"- Deleted: **{len(deleted)}**\n"
+                f"- Kept: **{len(kept)}**\n\n"
+            )
+            _write_deleted_table(fh, deleted, args.dry_run)
+    except OSError as exc:
+        LOG.warning("Could not write step summary: %s", exc)
+
+
+def _write_deleted_table(fh: Any, deleted: list[dict[str, Any]], dry_run: bool) -> None:
+    if not deleted:
+        return
+    fh.write(
+        "### "
+        f"{'Would delete' if dry_run else 'Deleted'}\n\n"
+        "| Version id | Tags | Created |\n|---|---|---|\n"
+    )
+    for item in deleted:
+        tags_str = ", ".join(f"`{tag}`" for tag in item["tags"]) or "_(none)_"
+        fh.write(f"| {item['id']} | {tags_str} | {item['created']} |\n")
+    fh.write("\n")
+
+
+def main() -> int:
+    args = _parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
@@ -138,45 +235,7 @@ def main() -> int:
         LOG.error("Failed to list versions: %s", exc.stderr)
         return 2
 
-    deleted: list[dict[str, Any]] = []
-    kept: list[dict[str, Any]] = []
-    for v in versions:
-        version_id = v["id"]
-        created_at = datetime.fromisoformat(v["created_at"].replace("Z", "+00:00"))
-        tags = v.get("metadata", {}).get("container", {}).get("tags", []) or []
-        protected, reason = _is_protected(tags)
-        too_young = created_at > cutoff
-
-        if protected:
-            kept.append({"id": version_id, "tags": tags, "reason": reason})
-            continue
-        if too_young:
-            kept.append({
-                "id": version_id,
-                "tags": tags,
-                "reason": f"younger than {args.min_age_days}d (created {created_at.isoformat()})",
-            })
-            continue
-
-        LOG.info(
-            "%s version id=%s tags=%s created=%s",
-            "WOULD DELETE" if args.dry_run else "Deleting",
-            version_id,
-            tags,
-            created_at.isoformat(),
-        )
-        if not args.dry_run:
-            try:
-                _delete_version(args.org, args.package, version_id)
-            except subprocess.CalledProcessError as exc:
-                LOG.error(
-                    "Delete failed for version id=%s: %s",
-                    version_id,
-                    exc.stderr,
-                )
-                continue
-        deleted.append({"id": version_id, "tags": tags, "created": created_at.isoformat()})
-
+    deleted, kept = _prune_versions(args, versions, cutoff)
     LOG.info(
         "Done. %d version(s) %s; %d kept.",
         len(deleted),
@@ -185,27 +244,7 @@ def main() -> int:
     )
 
     if args.summary_path:
-        try:
-            with open(args.summary_path, "a", encoding="utf-8") as fh:  # noqa: PTH123
-                fh.write(f"## GHCR retention — `{args.org}/{args.package}`\n\n")
-                fh.write(
-                    f"- Cutoff: {cutoff.isoformat()} ({args.min_age_days}d window)\n"
-                    f"- Dry run: **{args.dry_run}**\n"
-                    f"- Deleted: **{len(deleted)}**\n"
-                    f"- Kept: **{len(kept)}**\n\n"
-                )
-                if deleted:
-                    fh.write(
-                        "### "
-                        f"{'Would delete' if args.dry_run else 'Deleted'}\n\n"
-                        "| Version id | Tags | Created |\n|---|---|---|\n"
-                    )
-                    for d in deleted:
-                        tags_str = ", ".join(f"`{t}`" for t in d["tags"]) or "_(none)_"
-                        fh.write(f"| {d['id']} | {tags_str} | {d['created']} |\n")
-                    fh.write("\n")
-        except OSError as exc:
-            LOG.warning("Could not write step summary: %s", exc)
+        _write_summary(args.summary_path, args, cutoff, deleted, kept)
 
     return 0
 

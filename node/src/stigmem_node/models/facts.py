@@ -152,6 +152,23 @@ def row_to_record(
     origin_allowed_scopes: list[str] | None = _json.loads(raw_scopes) if raw_scopes else None
     source_trust_raw = _optional_col(row, "source_trust", keys)
     source_trust: float | None = float(source_trust_raw) if source_trust_raw is not None else None
+    valid_until = _optional_col(row, "projected_valid_until", keys)
+    if valid_until is None:
+        valid_until = row["valid_until"]
+    confidence_raw = _optional_col(row, "projected_confidence", keys)
+    confidence = row["confidence"] if confidence_raw is None else confidence_raw
+    garden_id = _optional_col(row, "projected_garden_id", keys)
+    if garden_id is None:
+        garden_id = _optional_col(row, "garden_id", keys)
+    quarantine_status = _optional_col(row, "projected_quarantine_status", keys)
+    if quarantine_status is None:
+        quarantine_status = _optional_col(row, "quarantine_status", keys)
+    quarantine_garden_id = _optional_col(row, "projected_quarantine_garden_id", keys)
+    if quarantine_garden_id is None:
+        quarantine_garden_id = _optional_col(row, "quarantine_garden_id", keys)
+    cid = _optional_col(row, "projected_cid", keys)
+    if cid is None:
+        cid = _optional_col(row, "cid", keys)
     return FactRecord(
         id=row["id"],
         entity=row["entity"],
@@ -165,23 +182,23 @@ def row_to_record(
         timestamp=row["timestamp"],
         hlc=_optional_col(row, "hlc", keys),
         received_from=_optional_col(row, "received_from", keys),
-        valid_until=row["valid_until"],
-        confidence=row["confidence"],
+        valid_until=valid_until,
+        confidence=confidence,
         scope=row["scope"],
         attested_key_id=_optional_col(row, "attested_key_id", keys),
         origin_node_id=_optional_col(row, "origin_node_id", keys),
         origin_allowed_scopes=origin_allowed_scopes,
-        garden_id=_optional_col(row, "garden_id", keys),
+        garden_id=garden_id,
         attested=attested,
         contradicted=contradicted,
         warnings=warnings or [],
         source_trust=source_trust,
-        quarantine_status=_optional_col(row, "quarantine_status", keys),
-        quarantine_garden_id=_optional_col(row, "quarantine_garden_id", keys),
+        quarantine_status=quarantine_status,
+        quarantine_garden_id=quarantine_garden_id,
         effective_confidence=effective_confidence,
         sanitizer_warnings=sanitizer_warnings or [],
         sanitizer_redacted=sanitizer_redacted,
-        cid=_optional_col(row, "cid", keys),
+        cid=cid,
         derived_from=_json.loads(_optional_col(row, "derived_from", keys) or "[]"),
     )
 

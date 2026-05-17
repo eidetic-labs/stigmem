@@ -11,7 +11,12 @@ from types import ModuleType
 from fastapi.testclient import TestClient
 
 from stigmem_node.db import apply_migrations
-from stigmem_node.immutability import set_embedding_status
+from stigmem_node.immutability import (
+    set_embedding_status,
+    set_fact_garden_membership,
+    set_fact_quarantine_status,
+    set_fact_validity_override,
+)
 from stigmem_node.vector_search import store_embedding
 
 FACT = {
@@ -145,6 +150,108 @@ def test_local_assert_writes_append_only_fact_journal(
     assert row["scope"] == "local"
     assert row["cid"] == fact["cid"]
     assert '"relation":"memory:note"' in row["body_json"]
+
+
+def test_fact_query_uses_validity_projection(
+    client: TestClient,
+    tmp_db: str,
+) -> None:
+    if tmp_db.startswith("pg:"):
+        return
+
+    response = client.post("/v1/facts", json=FACT)
+    assert response.status_code == 201
+    fact = response.json()
+
+    conn = sqlite3.connect(tmp_db)
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute("SELECT valid_until FROM facts WHERE id = ?", (fact["id"],)).fetchone()
+        set_fact_validity_override(
+            conn,
+            fact_id=fact["id"],
+            valid_until="2026-01-01T00:00:00+00:00",
+            reason="test",
+            updated_by="agent:test",
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    query = client.get("/v1/facts", params={"entity": FACT["entity"]})
+    assert query.status_code == 200
+    assert query.json()["facts"] == []
+    assert row is not None
+    assert row["valid_until"] is None
+
+
+def test_quarantine_and_garden_projections_do_not_mutate_fact_row(tmp_path: Path) -> None:
+    db_file = str(tmp_path / "quarantine_projection.db")
+    apply_migrations(db_path=db_file)
+
+    conn = sqlite3.connect(db_file)
+    conn.row_factory = sqlite3.Row
+    try:
+        conn.execute(
+            "INSERT INTO facts "
+            "(id, entity, relation, value_type, value_v, source, timestamp, "
+            "confidence, scope, garden_id, quarantine_garden_id, quarantine_status) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                "fact-1",
+                "stigmem://example/entity/a",
+                "memory:summary",
+                "string",
+                "hello",
+                "stigmem://example/source/test",
+                "2026-05-17T00:00:00+00:00",
+                1.0,
+                "local",
+                None,
+                "garden-quarantine",
+                "pending",
+            ),
+        )
+
+        set_fact_garden_membership(
+            conn,
+            fact_id="fact-1",
+            garden_id="garden-target",
+            updated_by="agent:test",
+        )
+        set_fact_quarantine_status(
+            conn,
+            fact_id="fact-1",
+            quarantine_garden_id="garden-quarantine",
+            quarantine_status="promoted",
+            quarantine_reason="test",
+            quarantine_acted_by="agent:test",
+            quarantine_acted_at="2026-05-17T00:00:01+00:00",
+        )
+        conn.commit()
+
+        fact_row = conn.execute(
+            "SELECT garden_id, quarantine_status FROM facts WHERE id = ?",
+            ("fact-1",),
+        ).fetchone()
+        garden_projection = conn.execute(
+            "SELECT garden_id FROM fact_garden_membership WHERE fact_id = ?",
+            ("fact-1",),
+        ).fetchone()
+        quarantine_projection = conn.execute(
+            "SELECT quarantine_status FROM fact_quarantine_status WHERE fact_id = ?",
+            ("fact-1",),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    assert fact_row is not None
+    assert garden_projection is not None
+    assert quarantine_projection is not None
+    assert fact_row["garden_id"] is None
+    assert fact_row["quarantine_status"] == "pending"
+    assert garden_projection["garden_id"] == "garden-target"
+    assert quarantine_projection["quarantine_status"] == "promoted"
 
 
 def test_facts_mutation_inventory_guard_is_current() -> None:

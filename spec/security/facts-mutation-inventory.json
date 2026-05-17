@@ -1,15 +1,9 @@
 {
   "schema_version": "facts-mutation-inventory-v1",
   "scope": "node/src/stigmem_node",
-  "remaining_direct_fact_mutations": {
-    "node/src/stigmem_node/cli_admin_handlers.py": 1,
-    "node/src/stigmem_node/decay.py": 1,
-    "node/src/stigmem_node/recall_pipeline.py": 1,
-    "node/src/stigmem_node/routes/gardens.py": 2,
-    "node/src/stigmem_node/routes/quarantine.py": 2
-  },
+  "remaining_direct_fact_mutations": {},
   "notes": [
-    "ADR-016 L1 begins tracking direct UPDATE/DELETE facts call sites.",
-    "New direct facts mutations must not be added; later §5.2a slices should reduce this inventory as paths move to projections."
+    "ADR-016 L1 retired tracked direct UPDATE/DELETE facts call sites.",
+    "New direct facts mutations must not be added; this inventory should remain empty."
   ]
 }

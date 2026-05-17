@@ -683,8 +683,9 @@ class TestRecallPipeline:
         """Regression: fact_audit_log INSERT was using wrong table name 'fact_audit'.
 
         Verifies that sanitizer_mode='quarantine' on an injection-pattern fact:
-        1. Sets quarantine_status='pending' in the facts table.
-        2. Writes a sanitizer_quarantine row to fact_audit_log.
+        1. Sets quarantine_status='pending' in the L1 projection table.
+        2. Leaves the base facts row immutable.
+        3. Writes a sanitizer_quarantine row to fact_audit_log.
         """
         import stigmem_node.db as _db_mod
 
@@ -724,15 +725,22 @@ class TestRecallPipeline:
             # Trigger recall so the sanitizer pipeline runs.
             client.get("/v1/facts?scope=local", headers=_ah(admin_key))
 
-            # 1. Fact must have quarantine_status='pending' in the DB.
+            # 1. Fact must have quarantine_status='pending' in the projection.
             with _db_mod.db() as conn:
                 row = conn.execute(
-                    "SELECT quarantine_status FROM facts WHERE id = ?", (fact_id,)
+                    "SELECT quarantine_status FROM fact_quarantine_status WHERE fact_id = ?",
+                    (fact_id,),
                 ).fetchone()
-            assert row is not None, "fact not found in DB"
+                fact_row = conn.execute(
+                    "SELECT quarantine_status FROM facts WHERE id = ?",
+                    (fact_id,),
+                ).fetchone()
+            assert row is not None, "fact quarantine projection not found in DB"
+            assert fact_row is not None, "fact not found in DB"
             assert row["quarantine_status"] == "pending", (
                 f"expected 'pending', got {row['quarantine_status']!r}"
             )
+            assert fact_row["quarantine_status"] is None
 
             # 2. Generic and instruction-specific audit entries must exist.
             with _db_mod.db() as conn:

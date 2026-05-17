@@ -22,6 +22,11 @@ from ..garden_acl import (
     require_garden_read,
     require_quarantine_moderator_or_admin,
 )
+from ..immutability import (
+    set_fact_garden_membership,
+    set_fact_quarantine_status,
+    set_fact_validity_override,
+)
 from ..models.constants import VALID_SCOPES
 from ..models.gardens import (
     GardenCreateRequest,
@@ -420,8 +425,14 @@ def promote_fact(
 
     with db() as conn:
         fact_row = conn.execute(
-            "SELECT id, entity, relation, quarantine_status, quarantine_garden_id "
-            "FROM facts WHERE id = ?",
+            """SELECT f.id, f.entity, f.relation,
+                      COALESCE(fqs.quarantine_status, f.quarantine_status)
+                        AS quarantine_status,
+                      COALESCE(fqs.quarantine_garden_id, f.quarantine_garden_id)
+                        AS quarantine_garden_id
+               FROM facts f
+               LEFT JOIN fact_quarantine_status fqs ON fqs.fact_id = f.id
+               WHERE f.id = ?""",
             (req.fact_id,),
         ).fetchone()
 
@@ -448,21 +459,20 @@ def promote_fact(
                 )
             target_garden_db_id = tg["id"]
 
-        conn.execute(
-            """UPDATE facts
-               SET garden_id = ?,
-                   quarantine_status = 'promoted',
-                   quarantine_acted_by = ?,
-                   quarantine_acted_at = ?,
-                   quarantine_reason = ?
-               WHERE id = ?""",
-            (
-                target_garden_db_id,
-                identity.entity_uri,
-                now,
-                req.reason or "promoted",
-                req.fact_id,
-            ),
+        set_fact_garden_membership(
+            conn,
+            fact_id=req.fact_id,
+            garden_id=target_garden_db_id,
+            updated_by=identity.entity_uri,
+        )
+        set_fact_quarantine_status(
+            conn,
+            fact_id=req.fact_id,
+            quarantine_garden_id=garden["id"],
+            quarantine_status="promoted",
+            quarantine_reason=req.reason or "promoted",
+            quarantine_acted_by=identity.entity_uri,
+            quarantine_acted_at=now,
         )
 
         # Audit log (§19.5.6)
@@ -538,7 +548,14 @@ def reject_fact(
 
     with db() as conn:
         fact_row = conn.execute(
-            "SELECT id, quarantine_status, quarantine_garden_id FROM facts WHERE id = ?",
+            """SELECT f.id,
+                      COALESCE(fqs.quarantine_status, f.quarantine_status)
+                        AS quarantine_status,
+                      COALESCE(fqs.quarantine_garden_id, f.quarantine_garden_id)
+                        AS quarantine_garden_id
+               FROM facts f
+               LEFT JOIN fact_quarantine_status fqs ON fqs.fact_id = f.id
+               WHERE f.id = ?""",
             (req.fact_id,),
         ).fetchone()
 
@@ -554,15 +571,21 @@ def reject_fact(
                 detail="fact_not_quarantine_pending",
             )
 
-        conn.execute(
-            """UPDATE facts
-               SET confidence = 0.0,
-                   quarantine_status = 'rejected',
-                   quarantine_acted_by = ?,
-                   quarantine_acted_at = ?,
-                   quarantine_reason = ?
-               WHERE id = ?""",
-            (identity.entity_uri, now, req.reason or "rejected", req.fact_id),
+        set_fact_validity_override(
+            conn,
+            fact_id=req.fact_id,
+            confidence=0.0,
+            reason=req.reason or "rejected",
+            updated_by=identity.entity_uri,
+        )
+        set_fact_quarantine_status(
+            conn,
+            fact_id=req.fact_id,
+            quarantine_garden_id=garden["id"],
+            quarantine_status="rejected",
+            quarantine_reason=req.reason or "rejected",
+            quarantine_acted_by=identity.entity_uri,
+            quarantine_acted_at=now,
         )
 
         # Append-only retraction log (§24.2.1 c.3)

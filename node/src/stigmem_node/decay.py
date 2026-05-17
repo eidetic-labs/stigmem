@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from .db import db
+from .immutability import set_fact_validity_override
 from .settings import settings
 
 # Exclude system-internal facts (stigmem: prefix but not stigmem:// URI content)
@@ -40,8 +41,10 @@ def _select_ttl_candidates(
     """Return fact ids whose timestamp is older than (now - effective_ttl)."""
     cutoff = (now_dt - timedelta(seconds=effective_ttl)).isoformat()
     sql = (
-        "SELECT id FROM facts "  # nosec B608 — _NOT_SYSTEM_SQL is a module-level constant; user values in params
-        f"WHERE timestamp <= ? AND valid_until IS NULL AND {_NOT_SYSTEM_SQL}"
+        "SELECT f.id FROM facts f "  # nosec B608 — _NOT_SYSTEM_SQL is a module-level constant; user values in params
+        "LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id "
+        "WHERE f.timestamp <= ? "
+        f"AND COALESCE(fvo.valid_until, f.valid_until) IS NULL AND {_NOT_SYSTEM_SQL}"
     )
     params: list[Any] = [cutoff]
     if scope:
@@ -55,9 +58,12 @@ def _select_confidence_candidates(
 ) -> list[str]:
     """Return active fact ids whose confidence is below the floor."""
     sql = (
-        "SELECT id FROM facts "  # nosec B608 — _NOT_SYSTEM_SQL is a module-level constant; user values in params
-        "WHERE confidence < ? AND confidence > 0.0 "
-        "AND (valid_until IS NULL OR valid_until > ?) "
+        "SELECT f.id FROM facts f "  # nosec B608 — _NOT_SYSTEM_SQL is a module-level constant; user values in params
+        "LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id "
+        "WHERE COALESCE(fvo.confidence, f.confidence) < ? "
+        "AND COALESCE(fvo.confidence, f.confidence) > 0.0 "
+        "AND (COALESCE(fvo.valid_until, f.valid_until) IS NULL "
+        "OR COALESCE(fvo.valid_until, f.valid_until) > ?) "
         f"AND {_NOT_SYSTEM_SQL}"
     )
     params: list[Any] = [effective_min_conf, now]
@@ -69,11 +75,14 @@ def _select_confidence_candidates(
 
 def _apply_decay(conn: Any, candidates: list[str], conf_ids: list[str], now: str) -> None:
     """Persist decay: mark candidates expired, log confidence retractions, sync graph."""
-    placeholders = ",".join("?" * len(candidates))
-    conn.execute(
-        f"UPDATE facts SET valid_until = ? WHERE id IN ({placeholders})",  # nosec B608 — placeholders is "?,?,?" sequence, not user input
-        [now, *candidates],
-    )
+    for fact_id in candidates:
+        set_fact_validity_override(
+            conn,
+            fact_id=fact_id,
+            valid_until=now,
+            reason="decay_sweep",
+            updated_by="stigmem:system:decay",
+        )
     # Append-only retraction log for confidence-floor drops (§24.2.1 c.3)
     if conf_ids:
         conn.executemany(

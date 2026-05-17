@@ -130,8 +130,11 @@ def quarantine_garden_has_pending_facts(garden_uuid: str) -> bool:
     """True if the quarantine garden holds at least one fact with quarantine_status='pending'."""
     with db() as conn:
         row = conn.execute(
-            "SELECT id FROM facts"
-            " WHERE quarantine_garden_id = ? AND quarantine_status = 'pending' LIMIT 1",
+            "SELECT f.id FROM facts f"
+            " LEFT JOIN fact_quarantine_status fqs ON fqs.fact_id = f.id"
+            " WHERE COALESCE(fqs.quarantine_garden_id, f.quarantine_garden_id) = ?"
+            " AND COALESCE(fqs.quarantine_status, f.quarantine_status) = 'pending'"
+            " LIMIT 1",
             (garden_uuid,),
         ).fetchone()
     return row is not None

@@ -183,7 +183,7 @@ All variables use the `STIGMEM_` prefix and can be set in the `environment:` blo
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `STIGMEM_ATTESTATION_REQUIRED` | `false` | Require a valid Ed25519 attestation token on every `POST /v1/facts`. Enable for multi-tenant or public nodes |
-| `STIGMEM_SOURCE_ATTESTATION_MODE` | `warn` | How the node enforces source attestation. `off` = no check · `warn` = accept with `attested=false`, log warning · `enforce` = reject with HTTP 403 |
+| `STIGMEM_SOURCE_ATTESTATION_MODE` | `off` | Legacy compatibility field for source-attestation mode. Default installs do not enforce source-attestation behavior; use the experimental source-attestation plugin plus explicit plugin gates for runtime enforcement. |
 
 ### OIDC bridge (§B3)
 

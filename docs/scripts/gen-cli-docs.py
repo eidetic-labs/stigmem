@@ -21,7 +21,7 @@ FRONTMATTER_STIGMEM = """\
 title: "stigmem"
 sidebar_label: "stigmem"
 sidebar_position: 1
-description: "CLI reference for the stigmem command — capability tokens, federation, snapshots, decay, instructions, audit, identity, and CID backfill."
+description: "CLI reference for stigmem command operations."
 audience: Operator
 ---
 
@@ -106,7 +106,8 @@ def generate_node_docs() -> str:
     parts.append("| `STIGMEM_DB_PATH` | `stigmem.db` | SQLite database path |\n")
     parts.append("| `STIGMEM_AUTH_REQUIRED` | `false` | Require API key authentication |\n")
     parts.append(
-        "| `STIGMEM_SOURCE_ATTESTATION_MODE` | `warn` | Source attestation: `enforce`, `warn`, or `off` |\n"
+        "| `STIGMEM_SOURCE_ATTESTATION_MODE` | `off` | "
+        "Legacy source-attestation mode field; runtime enforcement is plugin-gated |\n"
     )
     parts.append(
         "| `STIGMEM_FEDERATION_PULL_INTERVAL` | `30` | Seconds between federation pull cycles |\n"

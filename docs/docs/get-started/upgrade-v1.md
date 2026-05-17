@@ -27,7 +27,7 @@ A new `stigmem_node.billing` module emits a `BillingEvent` after every fact writ
 
 ### Source attestation
 
-Source attestation remains experimental in the v0.9.0aN line (`Spec-X6-Source-Attestation`). The default mode is unchanged (`warn`), so existing deployments are unaffected. To harden an evaluation node, set `STIGMEM_SOURCE_ATTESTATION_MODE=enforce`. See [Source Attestation](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation).
+Source attestation remains experimental in the v0.9.0aN line (`Spec-X6-Source-Attestation`). Default installs keep source-attestation behavior off; runtime enforcement is moving behind `stigmem-plugin-source-attestation` registration and explicit plugin configuration. See [Source Attestation](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation).
 
 ### Conformance test suite
 

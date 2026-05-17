@@ -17,6 +17,7 @@ process maintains its own cache (acceptable for single-process deployments).
 from __future__ import annotations
 
 import logging
+import os
 import time
 from functools import lru_cache
 from typing import TYPE_CHECKING
@@ -230,8 +231,11 @@ def _scope_authority(source_uri: str, scope: str, identity: Identity | None) -> 
 
 
 def _attestation_mode_factor() -> float:
-    """Score based on the node's source_attestation_mode setting."""
+    """Score based on source-attestation mode only when the plugin is enabled."""
     from .settings import settings
+
+    if not _source_attestation_plugin_enabled():
+        return 0.2
 
     mode = settings.source_attestation_mode
     if mode == "enforce":
@@ -239,6 +243,15 @@ def _attestation_mode_factor() -> float:
     if mode == "warn":
         return 0.6
     return 0.2  # "off"
+
+
+def _source_attestation_plugin_enabled() -> bool:
+    from .plugins import get_registry
+
+    if "stigmem-plugin-source-attestation" not in get_registry().registered_plugins():
+        return False
+    raw = os.environ.get("STIGMEM_SOURCE_ATTESTATION_ENABLED", "")
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def is_blocklisted(source_uri: str) -> bool:

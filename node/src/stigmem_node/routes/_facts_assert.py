@@ -295,7 +295,6 @@ def assert_fact_impl(
 ) -> FactRecord:
     # Lazy imports of sibling helpers to avoid circular import with .facts
     from .facts import (
-        _check_source_attestation,
         _encode_v,
         _is_valid_entity_uri,
         _validate_relation,
@@ -310,8 +309,9 @@ def assert_fact_impl(
     attested_key_id = _verify_or_require_attestation(req, identity)
     entity, source = _normalise_and_alias_uris(req)
 
-    # --- Source attestation (spec §18) + Garden ACL (spec §17.3) ---
-    attested = _check_source_attestation(source, identity)
+    # Source-attestation policy is plugin-owned. Core preserves the field but
+    # does not evaluate source/identity binding in default installs.
+    attested = None
     garden = _resolve_garden_for_assert(req, identity)
 
     garden_uuid = garden["id"] if garden is not None else None

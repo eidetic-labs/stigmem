@@ -7,8 +7,8 @@ from ...garden_acl import caller_can_see_garden
 from ...memory_garden_acl_gate import recall_filter_enabled
 from ...models.facts import FactRecord
 from ...models.recall import RecallWeights, ScoreBreakdown, ScoredFact
-from ...source_trust import compute_source_trust
-from .common import _estimate_tokens, _public_module, _recency_score
+from ...plugins import get_registry
+from .common import _estimate_tokens, _recency_score
 
 
 def _score_candidates(
@@ -22,7 +22,7 @@ def _score_candidates(
 ) -> list[ScoredFact]:
     """Compute composite score for each candidate fact."""
     w = weights
-    total_weight = w.lexical + w.semantic + w.graph + w.source_trust + w.recency
+    total_weight = w.lexical + w.semantic + w.graph + w.recency
     if total_weight <= 0:
         total_weight = 1.0
 
@@ -44,10 +44,9 @@ def _score_candidates(
             # Penalise quarantine-tagged gardens (§17)
             garden_factor = 0.5
 
-        # Salience signal: source trust
-        st_score = 0.5  # default when trust_mode=off
-        if _public_module().settings.trust_mode != "off":
-            st_score = compute_source_trust(record.source, record.scope, identity)
+        # Source-trust rank contribution is plugin-owned. Default installs keep
+        # this salience signal at 0 and can receive deltas from recall_rank.
+        st_score = 0.0
 
         # Lexical signal
         lex = lex_scores.get(fact_id, 0.0)
@@ -73,7 +72,6 @@ def _score_candidates(
             w.lexical * lex
             + w.semantic * sem
             + w.graph * graph_s
-            + w.source_trust * st_score
             + w.recency * recency_s
         ) / total_weight
 
@@ -98,6 +96,33 @@ def _score_candidates(
                 token_estimate=_estimate_tokens(record),
             )
         )
+
+    source_deltas = get_registry().fire_score_delta(
+        "recall_rank",
+        results,
+        identity=identity,
+        weights=weights,
+        depth=depth,
+    )
+    if source_deltas:
+        adjusted: list[ScoredFact] = []
+        for scored in results:
+            delta = source_deltas.get(scored.fact.id, 0.0)
+            if delta == 0.0:
+                adjusted.append(scored)
+                continue
+            next_score = round(max(0.0, scored.score + delta), 6)
+            adjusted.append(
+                scored.model_copy(
+                    update={
+                        "score": next_score,
+                        "score_breakdown": scored.score_breakdown.model_copy(
+                            update={"weighted_total": next_score}
+                        ),
+                    }
+                )
+            )
+        results = adjusted
 
     return results
 

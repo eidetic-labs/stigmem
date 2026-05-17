@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 import logging
-import sys
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 
-from ... import settings as _settings_pkg
-from ...auth import Identity
 from ...hlc import node_hlc
 from ...models.tombstones import TombstoneNotice
 
@@ -103,31 +100,6 @@ def _validate_relation(relation: str) -> list[str]:
             "non-system callers should use a custom namespace prefix (see spec §9.1)"
         ]
     return []
-
-
-def _check_source_attestation(source: str, identity: Identity) -> bool | None:
-    """Enforce source attestation per spec §18. Returns attested value or raises 403."""
-    mode = _settings_pkg.settings.source_attestation_mode
-    if mode == "off" or not _settings_pkg.settings.auth_required:
-        return None
-
-    attested = source == identity.entity_uri
-    if not attested:
-        if mode == "enforce":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    f"source_attestation_failed: declared source {source!r} does not match "
-                    f"authenticated principal {identity.entity_uri!r} (Spec-X6-Source-Attestation)"
-                ),
-            )
-        # warn mode
-        print(
-            f"[stigmem] WARN: source attestation mismatch — "
-            f"declared source={source!r}, identity={identity.entity_uri!r}",
-            file=sys.stderr,
-        )
-    return attested
 
 
 def _is_valid_entity_uri(uri: str) -> bool:

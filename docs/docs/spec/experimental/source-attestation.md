@@ -474,8 +474,8 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(a
 
 **Migration note for existing deployments:** Older nodes may manage API keys outside the database. Migration 005 formalizes key storage. Operators MUST:
 1. Register existing keys via `POST /v1/auth/keys` using an `existing_credential` migration field (accepted for 30 days post-deploy).
-2. Set `STIGMEM_SOURCE_ATTESTATION_MODE=warn` initially.
-3. Register `entity_uri` for all keys, then switch to `enforce` after verifying the audit log shows no `attested=false` writes.
+2. Leave default-install source-attestation behavior off until `stigmem-plugin-source-attestation` is registered.
+3. Register `entity_uri` for all keys, then enable plugin enforcement after verifying the audit log shows no unexpected source mismatches.
 
 ### Spec-X6-Source-Attestation section 12 Error Reference {#section-18-12}
 

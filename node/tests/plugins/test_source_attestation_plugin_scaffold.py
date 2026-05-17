@@ -6,6 +6,7 @@ import tomllib
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, TypeVar
 
 import pytest
@@ -14,6 +15,7 @@ import stigmem_node.plugins.discovery as discovery
 from stigmem_node.plugins import (
     ENTRY_POINT_GROUP,
     Allow,
+    Deny,
     HookRegistry,
     PluginContext,
     PluginHealthStatus,
@@ -86,6 +88,7 @@ def test_manifest_declares_expected_boundary() -> None:
         }
     )
     assert set(manifest.hooks) == {
+        "config_validate",
         "pre_assert_validate",
         "recall_rank",
         "federation_inbound_validate",
@@ -177,6 +180,7 @@ def test_source_attestation_plugin_hook_order_is_deterministic() -> None:
         name="core.001.validate",
     )
     registry.register_plugin(manifest)
+    calls.clear()
 
     assert _handler_names(registry, "pre_assert_validate") == (
         "core.001.assert-validate",
@@ -191,11 +195,13 @@ def test_source_attestation_plugin_hook_order_is_deterministic() -> None:
         f"{PLUGIN_NAME}.federation_inbound_validate",
     )
 
+    registry.fire_voting("config_validate", plugin=manifest)
     registry.fire_voting("pre_assert_validate")
     registry.fire_score_delta("recall_rank", [{"id": "fact-1"}])
     registry.fire_voting("federation_inbound_validate")
 
     assert calls == [
+        "plugin:config_validate",
         "core:pre_assert_validate",
         "plugin:pre_assert_validate",
         "plugin:recall_rank",
@@ -203,6 +209,89 @@ def test_source_attestation_plugin_hook_order_is_deterministic() -> None:
         "core:federation_inbound_validate",
         "plugin:federation_inbound_validate",
     ]
+
+
+def test_assert_validation_is_inert_without_explicit_gate() -> None:
+    registry = HookRegistry()
+    registry.register_plugin(plugin_manifest())
+
+    decision = registry.fire_voting(
+        "pre_assert_validate",
+        req=SimpleNamespace(source="agent:other"),
+        identity=SimpleNamespace(entity_uri="agent:caller"),
+    )
+
+    assert isinstance(decision, Allow)
+
+
+def test_assert_validation_denies_mismatch_when_explicitly_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENFORCE_ASSERT_VALIDATION", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_WARN_ONLY", "false")
+    registry = HookRegistry()
+    registry.register_plugin(plugin_manifest())
+
+    decision = registry.fire_voting(
+        "pre_assert_validate",
+        req=SimpleNamespace(source="agent:other"),
+        identity=SimpleNamespace(entity_uri="agent:caller"),
+    )
+
+    assert isinstance(decision, Deny)
+    assert "source_attestation_failed" in decision.reason
+
+
+def test_recall_rank_returns_source_trust_delta_when_explicitly_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import stigmem_node.source_trust as source_trust_mod
+
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_APPLY_RECALL_RANK", "true")
+    monkeypatch.setattr(source_trust_mod, "compute_source_trust", lambda *_: 0.75)
+    registry = HookRegistry()
+    registry.register_plugin(plugin_manifest())
+    scored = [
+        SimpleNamespace(
+            fact=SimpleNamespace(
+                id="fact-1",
+                source="stigmem://example.test/agent/source",
+                scope="public",
+                confidence=1.0,
+            )
+        )
+    ]
+    weights = SimpleNamespace(lexical=0.0, semantic=0.0, graph=0.0, source_trust=1.0, recency=0.0)
+
+    deltas = registry.fire_score_delta(
+        "recall_rank",
+        scored,
+        identity=SimpleNamespace(entity_uri="agent:caller"),
+        weights=weights,
+    )
+
+    assert deltas["fact-1"] > 0.0
+
+
+def test_federation_validation_denies_mismatch_when_explicitly_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENFORCE_FEDERATION_INBOUND", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_WARN_ONLY", "false")
+    registry = HookRegistry()
+    registry.register_plugin(plugin_manifest())
+
+    decision = registry.fire_voting(
+        "federation_inbound_validate",
+        fact={"source": "stigmem://example.test/peer/other"},
+        peer={"node_id": "stigmem://example.test/peer/sender"},
+    )
+
+    assert isinstance(decision, Deny)
+    assert "source_attestation_failed" in decision.reason
 
 
 def test_entry_point_factory_is_discoverable(monkeypatch: pytest.MonkeyPatch) -> None:

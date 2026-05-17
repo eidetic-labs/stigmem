@@ -139,9 +139,9 @@ SourceAttestationMode = "enforce" | "warn" | "off"
 | `warn`    | Node accepts the fact; logs a warning; sets `attested: false` on the stored record. |
 | `off`     | No attestation check. `attested: null` on all records. |
 
-**Default mode:** `warn`. Single-operator deployments that trust all their callers do not need to change the default. Production multi-tenant deployments SHOULD set `enforce`.
+**Default mode:** `off`. Default installs do not apply source-attestation behavior; runtime enforcement is owned by `stigmem-plugin-source-attestation` and requires explicit plugin gates. Single-operator deployments that trust all their callers do not need to enable the plugin. Production multi-tenant deployments SHOULD enable plugin enforcement once source bindings are verified.
 
-**Node configuration:** `STIGMEM_SOURCE_ATTESTATION_MODE=enforce|warn|off`. Nodes expose the active mode at `/.well-known/stigmem` as `"source_attestation": "enforce" | "warn" | "off"`.
+**Node configuration:** `STIGMEM_SOURCE_ATTESTATION_MODE` is a legacy compatibility field. Nodes expose the configured compatibility value at `/.well-known/stigmem` as `"source_attestation": "enforce" | "warn" | "off"`.
 
 **Auth-disabled mode:** When `STIGMEM_AUTH_REQUIRED=false`, the caller identity is anonymous. Attestation cannot be performed; `attested` is `null` for all writes in this mode.
 
@@ -239,9 +239,9 @@ SourceAttestationMode = "enforce" | "warn" | "off"
 | `warn`    | Node accepts the fact; logs a warning; sets `attested: false` on the stored record. |
 | `off`     | No attestation check. `attested: null` on all records. |
 
-**Default mode:** `warn`. Single-operator deployments that trust all their callers do not need to change the default. Production multi-tenant deployments SHOULD set `enforce`.
+**Default mode:** `off`. Default installs do not apply source-attestation behavior; runtime enforcement is owned by `stigmem-plugin-source-attestation` and requires explicit plugin gates. Single-operator deployments that trust all their callers do not need to enable the plugin. Production multi-tenant deployments SHOULD enable plugin enforcement once source bindings are verified.
 
-**Node configuration:** `STIGMEM_SOURCE_ATTESTATION_MODE=enforce|warn|off`. Nodes expose the active mode at `/.well-known/stigmem` as `"source_attestation": "enforce" | "warn" | "off"`.
+**Node configuration:** `STIGMEM_SOURCE_ATTESTATION_MODE` is a legacy compatibility field. Nodes expose the configured compatibility value at `/.well-known/stigmem` as `"source_attestation": "enforce" | "warn" | "off"`.
 
 **Auth-disabled mode:** When `STIGMEM_AUTH_REQUIRED=false`, the caller identity is anonymous. Attestation cannot be performed; `attested` is `null` for all writes in this mode.
 

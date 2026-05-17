@@ -37,10 +37,13 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [x] **Plugin infrastructure operationalization** — package discovery, plugin dependency lifecycle, health polling, operator CLI, production signing/trust, plugin author/operator documentation, and plugin migration lifecycle/checksum tracking have landed on `main` after v0.9.0a1 and are queued for the next alpha artifact refresh.
 - [x] **Modular spec migration** — the monolithic spec has been decomposed into component specs and experimental `Spec-X*` specs with the public docs navigator reflecting the split. Follow-on spec evolution remains ongoing, but ADR-010's structural migration is no longer a beta-series blocker.
 - [x] **CID core/spec validation** — content-addressed fact IDs remain core per ADR-017. Main includes CID computation, write-path persistence, alias lookup, verify endpoint, backfill status/CLI, migration support, tests, and conformance vectors; no `stigmem-plugin-cids` package exists or is planned.
-- [ ] **Per-feature plugin extraction** — lazy instruction discovery, time-travel queries, RTBF tombstones, and memory-garden advanced ACL have been extracted on `main` as opt-in experimental plugin source packages, with signed/package artifact evidence deferred until all planned plugins are built. Source attestation and multi-tenant isolation follow across the alpha series. CIDs remain core.
+- [ ] **Per-feature plugin extraction** — lazy instruction discovery, time-travel queries, RTBF tombstones, memory-garden advanced ACL, and source attestation have been extracted on `main` as opt-in experimental plugin source packages, with signed/package artifact evidence deferred until all planned plugins are built ([#298](https://github.com/Eidetic-Labs/stigmem/issues/298)). Multi-tenant isolation remains the final Phase A feature extraction ([#431](https://github.com/Eidetic-Labs/stigmem/issues/431)). CIDs remain core.
+- [ ] **Phase A exit validation** — validate the complete extraction set, default-install behavior, plugin docs/trust posture, and roadmap/checklist closeout after the multi-tenant plugin lands ([#432](https://github.com/Eidetic-Labs/stigmem/issues/432)).
 - [ ] **v0.9.0a2 artifact refresh** — pick up the live retraction URL in packaged READMEs, TypeScript SDK README, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literal, wheel migration packaging fix, and ongoing lint/coverage/complexity ratchets.
-- [ ] **ClawHub/OpenClaw alpha-framing correction** — ship in the v0.9.0a2 refresh, not as a retroactive a1 edit. ClawHub and OpenClaw docs must say the connector is available for alpha evaluation only, remove “recommended production integration” language, correct stale dependency ranges, and link to the open audit limitations.
-- [ ] **OpenClaw audit planning for a2..aN** — keep the audit findings visible in alpha planning. Use a2 for public framing/docs corrections and issue decomposition; schedule adapter hardening work across the remaining alpha/beta path without claiming the a1 ClawHub package closed C1-C4 or H1/H2/H5.
+- [ ] **ClawHub/OpenClaw alpha-framing correction** — next-alpha source copy now frames OpenClaw as alpha/evaluation-only; the historical a1 package is not revised retroactively. Remaining OpenClaw audit hardening stays visible in the alpha/beta hardening lane.
+- [ ] **OpenClaw audit planning for a2..aN** — keep the audit findings visible in alpha planning. Use a2+ for issue decomposition and adapter hardening work without claiming the a1 ClawHub package closed C1-C4 or H1/H2/H5.
+- [ ] **Docs/spec cleanup** — finish remaining spec status/header, stale-version, redirect/banner, snapshot, stability metadata, and deduplication cleanup ([#433](https://github.com/Eidetic-Labs/stigmem/issues/433)).
+- [ ] **Dogfood disposition** — resolve dogfood script, tokenomics, and operator-documentation disposition so public docs no longer point at obsolete internal paths ([#434](https://github.com/Eidetic-Labs/stigmem/issues/434)).
 
 ### Exit criteria
 - Public retraction visible.
@@ -103,13 +106,16 @@ the beta-series exit and v1.0 release-candidate declaration.
    the 80-pattern corpus, runner/result schema, and OpenAI/Anthropic/Ollama
    provider adapters exist; result-index validation and re-run posture are in
    place; remaining work is credentialed/provider-backed live certification and
-   publication of reviewed result rows.
+   publication of reviewed result rows
+   ([#398](https://github.com/Eidetic-Labs/stigmem/issues/398)).
 3. **Storage immutability stack** per [ADR-016](docs/adr/016-storage-immutability-enforcement.md) — L1 architectural append-only journal + projection tables has landed with projection schema, local-assert journal writes, embedding-status projection, zero remaining direct `facts` mutations in the tracked inventory, and read paths joined to validity/garden/quarantine/CID projections; L2 SQLite triggers now reject `UPDATE`/`DELETE` attempts on `facts` and preserve `fact_mutation_attempted` audit rows; L3 CIDs (per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)) are computed on fact writes, recorded in `fact_cid_aliases`, and verified on direct fact reads, fact queries, and recall hydration with `409 cid_mismatch` on tampering; L4 local hash-chain entries are recorded for local fact inserts and can be verified for sequence/link tampering; L5 checkpoint storage now queues/submits chain-head checkpoints through the transparency-log abstraction and exposes checkpoint metadata in full recall proofs; client/peer verification now includes Python SDK CID/chain-proof helpers, inbound federation CID rejection/persistence, and full-verification pull requests; operator hardening docs now cover the R-23 mitigation stack, WORM evidence storage, and TEE deployment options.
 4. **Per-feature security colocation** per [ADR-018](docs/adr/018-security-documentation-colocation.md).
-5. **Federation hardening** — mTLS-default; HLC bounded skew; persistent audit log (90-day retention); per-principal token-bucket quotas; key max-age + rotation runbook.
+5. **Federation hardening** — mTLS-default; HLC bounded skew; persistent audit log (90-day retention); per-principal token-bucket quotas; key max-age + rotation runbook. Remaining tracked work: mTLS compose smoke automation ([#425](https://github.com/Eidetic-Labs/stigmem/issues/425)), audit retention/observability ([#435](https://github.com/Eidetic-Labs/stigmem/issues/435)), and API-key lifecycle/rotation controls ([#436](https://github.com/Eidetic-Labs/stigmem/issues/436)).
 6. **Argon2id migration** per [ADR-007](docs/adr/007-argon2id.md) — dual-mode verification; opportunistic re-hash; benchmarks.
 7. **Operator-facing documentation** — runbooks, observability signals per [ADR-004](docs/adr/004-federation-observability.md), prompt-injection hardening guide.
-8. **30-day external operator soak** — at least one external operator runs against the hardened core with public bug reporting.
+8. **Best-practice and quality gates** — adopt remaining internal/public quality gates, dependency cadence, generated-file markers, and test marker automation ([#437](https://github.com/Eidetic-Labs/stigmem/issues/437)).
+9. **Contributor and demo readiness** — polish demo flows, contributor architecture pages, issue templates, and good-first issue tagging ([#438](https://github.com/Eidetic-Labs/stigmem/issues/438)).
+10. **30-day external operator soak** — at least one external operator runs against the hardened core with public bug reporting; operator validation and Phase B exit evidence are tracked in [#439](https://github.com/Eidetic-Labs/stigmem/issues/439).
 
 ### Exit criteria
 - Threat-model risk register has no Open status entries for v1.0.0-critical-path risks.
@@ -124,12 +130,9 @@ the beta-series exit and v1.0 release-candidate declaration.
 **Status:** not started. Entry blocked on the beta-series exit + 14 days of v1.0.0rcN observation without critical regression.
 
 ### Work
-- Sigstore-signed releases (verifiable on every artifact).
-- Reproducible builds (verified by an independent party).
-- SBOM publication.
-- 3+ external organizations running stigmem with pairwise federation.
-- Public bug bounty operational.
-- Wire-format freeze; backwards compatibility committed within v1.x.
+- Sigstore-signed releases, reproducible builds, SBOM publication, and Rekor/operator verification evidence ([#440](https://github.com/Eidetic-Labs/stigmem/issues/440)).
+- 3+ external organizations running stigmem with pairwise federation and public external-review/bug-bounty posture ([#441](https://github.com/Eidetic-Labs/stigmem/issues/441)).
+- Wire-format freeze; backwards compatibility committed within v1.x ([#442](https://github.com/Eidetic-Labs/stigmem/issues/442)).
 
 ### Exit criteria
 - v1.0.0 stable shipped.
@@ -143,10 +146,11 @@ the beta-series exit and v1.0 release-candidate declaration.
 **Status:** not started. Entry blocked on v1.0.0 GA shipping.
 
 ### Work
-- Experimental features graduate into the supported surface via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates (each gate produces a concrete artifact: threat-model delta, ADR, conformance vectors, 30-day soak, documentation parity). Cross-cutting features remain opt-in plugins per ADR-011 unless a future ADR explicitly changes that boundary.
+- Experimental features graduate into the supported surface via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates (each gate produces a concrete artifact: threat-model delta, ADR, conformance vectors, 30-day soak, documentation parity). Cross-cutting features remain opt-in plugins per ADR-011 unless a future ADR explicitly changes that boundary. Post-GA plugin stewardship is tracked in [#443](https://github.com/Eidetic-Labs/stigmem/issues/443).
 - Multi-tenant remains a plugin (`stigmem-plugin-multi-tenant`); the cross-cutting plugin shape per ADR-011 is the permanent home, not a stop on the path to core. Adopters who need multi-tenancy install the plugin explicitly.
 - Modular spec evolution.
 - Plugin ecosystem matures; third-party plugins become first-class.
+- Cross-phase source/test layout hygiene remains tracked separately from feature work ([#444](https://github.com/Eidetic-Labs/stigmem/issues/444)), and dependency/security evidence maintenance remains an ongoing release responsibility ([#445](https://github.com/Eidetic-Labs/stigmem/issues/445)).
 
 ### Exit criteria
 - None defined; this is the project's steady state.

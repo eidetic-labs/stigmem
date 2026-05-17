@@ -11,7 +11,6 @@ Coverage:
 
 from __future__ import annotations
 
-import json
 import sqlite3
 import uuid
 from datetime import UTC, datetime
@@ -46,7 +45,12 @@ def _tombstone_plugin_registered():
 # ---------------------------------------------------------------------------
 
 
-def _insert_fact(client: TestClient, entity: str, value: str = "test") -> dict:
+def _insert_fact(
+    client: TestClient,
+    entity: str,
+    value: str = "test",
+    derived_from: list[dict] | None = None,
+) -> dict:
     resp = client.post(
         "/v1/facts",
         json={
@@ -55,21 +59,11 @@ def _insert_fact(client: TestClient, entity: str, value: str = "test") -> dict:
             "value": {"type": "string", "v": value},
             "source": entity,
             "scope": "local",
+            "derived_from": derived_from or [],
         },
     )
     assert resp.status_code == 201, resp.text
     return resp.json()
-
-
-def _set_derived_from(db_path: str, fact_id: str, derived_from: list[dict]) -> None:
-    """Directly update a fact row's derived_from JSON (no write API for this field yet)."""
-    conn = sqlite3.connect(db_path)
-    conn.execute(
-        "UPDATE facts SET derived_from = ? WHERE id = ?",
-        (json.dumps(derived_from), fact_id),
-    )
-    conn.commit()
-    conn.close()
 
 
 def _insert_tombstone(db_path: str, entity_uri: str) -> str:
@@ -101,11 +95,13 @@ class TestProvenanceTombstoneSuppression:
         entity_b = "stigmem://test/entity/beta"
 
         f1 = _insert_fact(client, entity=entity_a, value="alpha data")
-        f2 = _insert_fact(client, entity=entity_b, value="derived from alpha")
-        _set_derived_from(
-            tmp_db,
-            f2["id"],
-            [{"hash": f1.get("cid") or f"sha256:{'0' * 64}", "fact_id": f1["id"]}],
+        f2 = _insert_fact(
+            client,
+            entity=entity_b,
+            value="derived from alpha",
+            derived_from=[
+                {"hash": f1.get("cid") or f"sha256:{'0' * 64}", "fact_id": f1["id"]}
+            ],
         )
 
         _insert_tombstone(tmp_db, entity_a)
@@ -128,11 +124,13 @@ class TestProvenanceTombstoneSuppression:
         entity_b = "stigmem://test/entity/delta"
 
         f1 = _insert_fact(client, entity=entity_a, value="gamma data")
-        f2 = _insert_fact(client, entity=entity_b, value="derived from gamma")
-        _set_derived_from(
-            tmp_db,
-            f2["id"],
-            [{"hash": f1.get("cid") or f"sha256:{'0' * 64}", "fact_id": f1["id"]}],
+        f2 = _insert_fact(
+            client,
+            entity=entity_b,
+            value="derived from gamma",
+            derived_from=[
+                {"hash": f1.get("cid") or f"sha256:{'0' * 64}", "fact_id": f1["id"]}
+            ],
         )
 
         # No tombstone on entity_a
@@ -153,12 +151,11 @@ class TestProvenanceTombstoneSuppression:
 
         f_tomb = _insert_fact(client, entity=entity_tombed, value="to be forgotten")
         f_alive = _insert_fact(client, entity=entity_alive, value="staying alive")
-        f_derived = _insert_fact(client, entity=entity_derived, value="derived from both")
-
-        _set_derived_from(
-            tmp_db,
-            f_derived["id"],
-            [
+        f_derived = _insert_fact(
+            client,
+            entity=entity_derived,
+            value="derived from both",
+            derived_from=[
                 {"hash": f_tomb.get("cid") or f"sha256:{'1' * 64}", "fact_id": f_tomb["id"]},
                 {"hash": f_alive.get("cid") or f"sha256:{'2' * 64}", "fact_id": f_alive["id"]},
             ],
@@ -185,11 +182,13 @@ class TestProvenanceTombstoneSuppression:
         entity_b = "stigmem://test/entity/public"
 
         f1 = _insert_fact(client, entity=entity_a, value="secret data")
-        f2 = _insert_fact(client, entity=entity_b, value="derived data")
-        _set_derived_from(
-            tmp_db,
-            f2["id"],
-            [{"hash": f1.get("cid") or f"sha256:{'a' * 64}", "fact_id": f1["id"]}],
+        f2 = _insert_fact(
+            client,
+            entity=entity_b,
+            value="derived data",
+            derived_from=[
+                {"hash": f1.get("cid") or f"sha256:{'a' * 64}", "fact_id": f1["id"]}
+            ],
         )
         _insert_tombstone(tmp_db, entity_a)
 

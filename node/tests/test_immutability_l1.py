@@ -1,4 +1,4 @@
-"""ADR-016 L1 append-only journal and projection foundation tests."""
+"""ADR-016 append-only journal, projection, and trigger-enforcement tests."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from stigmem_node.immutability import (
     set_fact_quarantine_status,
     set_fact_validity_override,
 )
+from stigmem_node.storage.libsql_backend import _split_sql
 from stigmem_node.vector_search import store_embedding
 
 FACT = {
@@ -252,6 +253,90 @@ def test_quarantine_and_garden_projections_do_not_mutate_fact_row(tmp_path: Path
     assert fact_row["quarantine_status"] == "pending"
     assert garden_projection["garden_id"] == "garden-target"
     assert quarantine_projection["quarantine_status"] == "promoted"
+
+
+def test_facts_table_update_delete_triggers_block_mutation_and_audit(tmp_path: Path) -> None:
+    db_file = str(tmp_path / "immutability_l2_triggers.db")
+    apply_migrations(db_path=db_file)
+
+    conn = sqlite3.connect(db_file)
+    conn.row_factory = sqlite3.Row
+    try:
+        conn.execute(
+            "INSERT INTO facts "
+            "(id, entity, relation, value_type, value_v, source, timestamp, "
+            "confidence, scope, tenant_id) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            (
+                "fact-trigger-1",
+                "stigmem://example/entity/a",
+                "memory:summary",
+                "string",
+                "hello",
+                "stigmem://example/source/test",
+                "2026-05-17T00:00:00+00:00",
+                1.0,
+                "local",
+                "default",
+            ),
+        )
+        conn.commit()
+
+        try:
+            conn.execute("UPDATE facts SET confidence = ? WHERE id = ?", (0.25, "fact-trigger-1"))
+        except sqlite3.IntegrityError as exc:
+            assert "append-only" in str(exc)
+        else:
+            raise AssertionError("UPDATE facts should be blocked by facts_no_update")
+
+        row = conn.execute(
+            "SELECT confidence FROM facts WHERE id = ?",
+            ("fact-trigger-1",),
+        ).fetchone()
+        update_audit = conn.execute(
+            "SELECT event_type, source, detail FROM fact_audit_log "
+            "WHERE fact_id = ? AND source = ?",
+            ("fact-trigger-1", "sqlite-trigger:facts_no_update"),
+        ).fetchone()
+
+        try:
+            conn.execute("DELETE FROM facts WHERE id = ?", ("fact-trigger-1",))
+        except sqlite3.IntegrityError as exc:
+            assert "append-only" in str(exc)
+        else:
+            raise AssertionError("DELETE FROM facts should be blocked by facts_no_delete")
+
+        still_present = conn.execute(
+            "SELECT COUNT(*) AS n FROM facts WHERE id = ?",
+            ("fact-trigger-1",),
+        ).fetchone()
+        delete_audit = conn.execute(
+            "SELECT event_type, source, detail FROM fact_audit_log "
+            "WHERE fact_id = ? AND source = ?",
+            ("fact-trigger-1", "sqlite-trigger:facts_no_delete"),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    assert row is not None
+    assert row["confidence"] == 1.0
+    assert update_audit is not None
+    assert update_audit["event_type"] == "fact_mutation_attempted"
+    assert '"UPDATE"' in update_audit["detail"]
+    assert still_present is not None
+    assert still_present["n"] == 1
+    assert delete_audit is not None
+    assert delete_audit["event_type"] == "fact_mutation_attempted"
+    assert '"DELETE"' in delete_audit["detail"]
+
+
+def test_libsql_migration_splitter_keeps_trigger_bodies_intact() -> None:
+    migration = Path("node/migrations/034_sqlite_facts_immutability_triggers.sql")
+    stmts = _split_sql(migration.read_text())
+
+    assert len(stmts) == 2
+    assert all(stmt.startswith("CREATE TRIGGER") for stmt in stmts)
+    assert all("RAISE(FAIL" in stmt for stmt in stmts)
 
 
 def test_facts_mutation_inventory_guard_is_current() -> None:

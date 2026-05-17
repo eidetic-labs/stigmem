@@ -1,0 +1,3 @@
+-- Phase B §5.2a.3 is SQLite-specific.
+-- PostgreSQL immutability enforcement is handled by backend-specific controls
+-- outside this SQLite trigger migration.

@@ -255,6 +255,27 @@ def _assert(
     return r.json()
 
 
+def _insert_legacy_fact_row(
+    db_path: str,
+    *,
+    fact_id: str,
+    entity: str,
+    relation: str,
+    value: str,
+    timestamp: str = "2026-05-17T00:00:00+00:00",
+    scope: str = "local",
+    cid: str | None = None,
+) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "INSERT INTO facts "
+            "(id, entity, relation, value_type, value_v, source, timestamp, "
+            "confidence, scope, tenant_id, cid) "
+            "VALUES (?, ?, ?, 'string', ?, 'agent:test', ?, 1.0, ?, 'default', ?)",
+            (fact_id, entity, relation, value, timestamp, scope, cid),
+        )
+
+
 # ---------------------------------------------------------------------------
 # CID computation unit tests
 # ---------------------------------------------------------------------------
@@ -406,14 +427,15 @@ def test_verify_cid_null_stored(tmp_path):
     ts = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
     mods = _patch_settings(ts)
     app = create_app()
+    fid = f"legacy-null-cid-{uuid.uuid4()}"
+    _insert_legacy_fact_row(
+        db_file,
+        fact_id=fid,
+        entity="stigmem://e/null_cid",
+        relation="rel:old",
+        value="legacy",
+    )
     with TestClient(app, raise_server_exceptions=True) as c:
-        f = _assert(c, "stigmem://e/null_cid", "rel:old", "legacy")
-        fid = f["id"]
-        # Simulate pre-Phase-13 record: wipe the cid column
-        conn = sqlite3.connect(db_file)
-        conn.execute("UPDATE facts SET cid = NULL WHERE id = ?", (fid,))
-        conn.commit()
-        conn.close()
         r = c.post(f"/v1/facts/{fid}/verify-cid")
     _restore_settings(original, mods)
 
@@ -449,19 +471,21 @@ def test_backfill_status_all_backfilled(p13_client: TestClient):
 
 
 def test_backfill_status_pending(tmp_path):
-    """Manually null out a cid to simulate a pre-Phase-13 row."""
+    """Insert a legacy cid-null fact to simulate a pre-Phase-13 row."""
     db_file = str(tmp_path / "pending_cid.db")
     apply_migrations(db_path=db_file)
     original = settings_module.settings
     ts = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
     mods = _patch_settings(ts)
     app = create_app()
+    _insert_legacy_fact_row(
+        db_file,
+        fact_id=f"legacy-pending-{uuid.uuid4()}",
+        entity="stigmem://e/pending",
+        relation="rel:p",
+        value="pv",
+    )
     with TestClient(app, raise_server_exceptions=True) as c:
-        f = _assert(c, "stigmem://e/pending", "rel:p", "pv")
-        conn = sqlite3.connect(db_file)
-        conn.execute("UPDATE facts SET cid = NULL WHERE id = ?", (f["id"],))
-        conn.commit()
-        conn.close()
         r = c.get("/v1/admin/cid-backfill/status")
     _restore_settings(original, mods)
 
@@ -525,20 +549,25 @@ def test_as_of_retracted_fact_excluded(tmp_path):
     with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:
-            f = _assert(c, "stigmem://tt/ret1", "rel:retract", "will_be_retracted")
-
-            # Back-date the fact so it was "written" 10 seconds ago
+            fact_id = f"retract-asof-{uuid.uuid4()}"
             fact_ts = _ts(-10)
             retract_at = _ts(-5)  # retracted 5 seconds ago
             before = _ts(-7)  # 7 seconds ago: fact existed, no retraction yet
             after_retract = _ts(-3)  # 3 seconds ago: retraction already applied
+            _insert_legacy_fact_row(
+                db_file,
+                fact_id=fact_id,
+                entity="stigmem://tt/ret1",
+                relation="rel:retract",
+                value="will_be_retracted",
+                timestamp=fact_ts,
+            )
 
             conn = sqlite3.connect(db_file)
-            conn.execute("UPDATE facts SET timestamp = ? WHERE id = ?", (fact_ts, f["id"]))
             conn.execute(
                 "INSERT INTO fact_retractions (id, fact_id, retracted_by, retracted_at)"
                 " VALUES (?, ?, ?, ?)",
-                (str(uuid.uuid4()), f["id"], "agent:test", retract_at),
+                (str(uuid.uuid4()), fact_id, "agent:test", retract_at),
             )
             conn.commit()
             conn.close()
@@ -549,7 +578,7 @@ def test_as_of_retracted_fact_excluded(tmp_path):
             )
             assert r_before.status_code == 200
             ids_before = [x["id"] for x in r_before.json()["facts"]]
-            assert f["id"] in ids_before
+            assert fact_id in ids_before
 
             # as_of after retraction: suppressed (retraction applied at -5s)
             r_after = c.get(
@@ -558,7 +587,7 @@ def test_as_of_retracted_fact_excluded(tmp_path):
             )
             assert r_after.status_code == 200
             ids_after = [x["id"] for x in r_after.json()["facts"]]
-            assert f["id"] not in ids_after
+            assert fact_id not in ids_after
 
     _restore_settings(original, mods)
 
@@ -614,14 +643,15 @@ def test_as_of_tombstone_retroactive_suppression(tmp_path):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:
             pre_fact = (datetime.now(UTC) - timedelta(seconds=5)).isoformat()
-            f = _assert(
-                c, "stigmem://rtbf/user1", "rel:name", "Alice", scope="local", api_key=agent_key
+            fact_id = f"tomb-asof-{uuid.uuid4()}"
+            _insert_legacy_fact_row(
+                db_file,
+                fact_id=fact_id,
+                entity="stigmem://rtbf/user1",
+                relation="rel:name",
+                value="Alice",
+                timestamp=pre_fact,
             )
-            # Override: direct DB insert to set timestamp in the past
-            conn = sqlite3.connect(db_file)
-            conn.execute("UPDATE facts SET timestamp = ? WHERE id = ?", (pre_fact, f["id"]))
-            conn.commit()
-            conn.close()
 
             _insert_tombstone(db_file, "stigmem://rtbf/user1")
 
@@ -767,18 +797,20 @@ def test_backfill_cids_idempotent(tmp_path):
     original = settings_module.settings
     ts_settings = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
     mods = _patch_settings(ts_settings)
-    app = create_app()
-
-    with TestClient(app, raise_server_exceptions=True) as c:
-        _assert(c, "stigmem://bf/e1", "rel:bf", "v1")
-        _assert(c, "stigmem://bf/e2", "rel:bf", "v2")
-
-    # Wipe CIDs to simulate pre-Phase-13 state
-    conn = sqlite3.connect(db_file)
-    conn.execute("UPDATE facts SET cid = NULL")
-    conn.execute("DELETE FROM fact_cid_aliases")
-    conn.commit()
-    conn.close()
+    _insert_legacy_fact_row(
+        db_file,
+        fact_id=f"legacy-bf-1-{uuid.uuid4()}",
+        entity="stigmem://bf/e1",
+        relation="rel:bf",
+        value="v1",
+    )
+    _insert_legacy_fact_row(
+        db_file,
+        fact_id=f"legacy-bf-2-{uuid.uuid4()}",
+        entity="stigmem://bf/e2",
+        relation="rel:bf",
+        value="v2",
+    )
 
     # First backfill run
     class _Args:

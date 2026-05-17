@@ -199,6 +199,9 @@ STIGMEM_RATE_LIMIT_READ_PER_HOUR=0
 ```
 
 > Setting either variable to `0` disables the token-bucket check for that dimension globally (all principals).  Never do this in production — it removes the per-principal backpressure that protects the node from noisy neighbours and credential misuse.
+> When both read and write limits are set to `0`, Stigmem emits a startup
+> `SECURITY WARNING` because quota enforcement is disabled. Treat that warning
+> as acceptable only in isolated local/dev/test environments.
 
 Bucket state (current tokens, last refill timestamp) is stored in the `quota_buckets` SQLite table.  It persists across restarts.
 

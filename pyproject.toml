@@ -123,6 +123,8 @@ markers = [
   "libsql: tests that require a libSQL backend",
   "docker: tests that require Docker or containerized dependencies",
   "eval: adversarial or recall evaluation suites",
+  "security: adversarial vectors and threat-model regression tests",
+  "experimental: tests for features in experimental/ (excluded from default CI unless explicitly selected)",
   "slow: tests intentionally excluded from fast PR loops",
   "network: tests that require outbound network access",
 ]

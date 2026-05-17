@@ -60,4 +60,10 @@ Each control review record should answer:
 
 ## Current Stigmem Use
 
-The federation control worksheet in `stigmem/plans/master-checklist.md` is the right human-facing shape. The next step is to turn it into a registry that CI can validate so future threat-model updates cannot silently drift.
+Stigmem now keeps the machine-readable registry at
+`spec/security/evidence-registry.json`. CI runs
+`scripts/validate_security_evidence.py` whenever the threat model, registry,
+colocated feature-security docs, contributor guidance, or validator changes.
+
+The cross-phase owner/trigger map for this control lives in
+`docs/internal/evidence-maintenance.md`.

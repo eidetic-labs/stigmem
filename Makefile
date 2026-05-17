@@ -1,5 +1,6 @@
 .PHONY: sdk-ts sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack help \
         check check-python check-node check-contract check-go check-docs check-obsidian check-sdk-compat check-sdk-backward-compat check-migration-compat \
+        check-evidence-maintenance \
         demo demo-attack \
         eval-soak eval-soak-smoke \
         eval-fast eval-adversarial eval-recall eval-fast-baseline \
@@ -23,6 +24,7 @@ help:
 	@echo "  check-sdk-compat  Live-node smoke across Python, TypeScript, and Go SDKs"
 	@echo "  check-sdk-backward-compat  Previous-release SDK smoke against the current node"
 	@echo "  check-migration-compat     Upgrade a v1.0-rc schema baseline and verify it"
+	@echo "  check-evidence-maintenance Cross-phase evidence owner/trigger wiring"
 	@echo ""
 	@echo "  demo              Two-node Docker quickstart: peer, assert, replicate, audit"
 	@echo "  demo-attack       Malicious-peer rejection demo (scope + source forgery)"
@@ -65,6 +67,11 @@ check-sdk-backward-compat:
 
 check-migration-compat:
 	uv run pytest node/tests/test_migration_compat.py -q --tb=short
+
+check-evidence-maintenance:
+	python3 scripts/check_evidence_maintenance.py
+	python3 scripts/validate_security_evidence.py
+	python3 scripts/check_security_documentation.py
 
 demo:
 	bash scripts/quickstart-verify.sh

@@ -9,7 +9,7 @@ Targets:
 - ``ensure_vec_table``: success + RuntimeError wrapping
 - ``check_or_register_model``: insert / no-op / mismatch (id, dim)
 - ``_encode_vector``: round-trip via struct
-- ``store_embedding``: INSERT into vec_facts + UPDATE facts.embedding_missing
+- ``store_embedding``: INSERT into vec_facts + update fact_embedding_status projection
 - ``embed_and_store_fact``: invokes model.embed and persists
 - ``backfill_missing_embeddings``: success / per-fact failure / LIMIT
 - ``vector_search``: skipped (requires sqlite-vec)
@@ -85,6 +85,14 @@ def _insert_fact(
         (fact_id, entity, relation, value_v, now, confidence, now, embedding_missing),
     )
     return fact_id
+
+
+def _embedding_missing(conn: sqlite3.Connection, fact_id: str) -> int | None:
+    row = conn.execute(
+        "SELECT embedding_missing FROM fact_embedding_status WHERE fact_id = ?",
+        (fact_id,),
+    ).fetchone()
+    return None if row is None else int(row["embedding_missing"])
 
 
 # ---------------------------------------------------------------------------
@@ -201,8 +209,7 @@ def test_store_embedding_persists_vector_and_clears_flag(tmp_path: Path) -> None
     store_embedding(conn, fact_id, vec)
     conn.commit()
 
-    flag = conn.execute("SELECT embedding_missing FROM facts WHERE id=?", (fact_id,)).fetchone()
-    assert flag["embedding_missing"] == 0
+    assert _embedding_missing(conn, fact_id) == 0
 
     blob = conn.execute("SELECT embedding FROM vec_facts WHERE fact_id=?", (fact_id,)).fetchone()
     assert blob is not None
@@ -251,11 +258,10 @@ def test_embed_and_store_fact_calls_model_and_persists(tmp_path: Path) -> None:
     text = model.calls[0][0]
     assert "alice" in text and "memory:role" in text and "CEO" in text
 
-    # Vector landed in vec_facts and the fact's flag is cleared.
+    # Vector landed in vec_facts and the projection flag is cleared.
     blob = conn.execute("SELECT embedding FROM vec_facts WHERE fact_id=?", (fact_id,)).fetchone()
     assert blob["embedding"] == _encode_vector([0.5, 0.5, 0.5, 0.5])
-    flag = conn.execute("SELECT embedding_missing FROM facts WHERE id=?", (fact_id,)).fetchone()
-    assert flag["embedding_missing"] == 0
+    assert _embedding_missing(conn, fact_id) == 0
     conn.close()
 
 
@@ -277,8 +283,7 @@ def test_backfill_embeds_all_missing(tmp_path: Path) -> None:
 
     assert count == 3
     for fid in ids:
-        flag = conn.execute("SELECT embedding_missing FROM facts WHERE id=?", (fid,)).fetchone()
-        assert flag["embedding_missing"] == 0
+        assert _embedding_missing(conn, fid) == 0
     conn.close()
 
 
@@ -330,7 +335,10 @@ def test_backfill_respects_limit(tmp_path: Path) -> None:
 
     assert count == 2
     remaining = conn.execute(
-        "SELECT COUNT(*) AS n FROM facts WHERE embedding_missing = 1"
+        """SELECT COUNT(*) AS n
+           FROM facts f
+           LEFT JOIN fact_embedding_status fes ON fes.fact_id = f.id
+           WHERE COALESCE(fes.embedding_missing, f.embedding_missing) = 1"""
     ).fetchone()
     assert remaining["n"] == 3
     conn.close()

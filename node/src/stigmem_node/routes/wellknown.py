@@ -47,7 +47,7 @@ def node_metadata() -> dict[str, object]:
     }
 
     if settings.federation_enabled:
-        from ..peer_token import get_local_pubkey
+        from ..federation.peer_token import get_local_pubkey
 
         result["federation_pubkey"] = get_local_pubkey()
         result["federation_version"] = "0.5"

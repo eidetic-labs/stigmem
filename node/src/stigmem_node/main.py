@@ -106,8 +106,8 @@ def create_app() -> FastAPI:
 
         pull_task: asyncio.Task[None] | None = None
         if settings.federation_enabled:
-            from .federation_pull import pull_loop_task
-            from .peer_token import init_federation_keys
+            from .federation.federation_pull import pull_loop_task
+            from .federation.peer_token import init_federation_keys
 
             init_federation_keys()
             pull_task = asyncio.create_task(pull_loop_task())
@@ -281,7 +281,7 @@ def run() -> None:
         )
         return
 
-    from .tls import cert_watcher_task, reload_tls_cert
+    from .federation.tls import cert_watcher_task, reload_tls_cert
 
     # Let uvicorn build the SSL context from cert/key files, then enforce TLS 1.3
     # floor and mTLS client-cert requirement on the resulting context object.

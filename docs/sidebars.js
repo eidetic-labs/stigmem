@@ -193,6 +193,7 @@ const sidebars = {
         'operators/runbooks/r-peer-compromise',
         'operators/runbooks/r-worm-detected',
         'operators/runbooks/r-manifest-failure',
+        'operators/runbooks/r-rekor-unavailable',
         'operators/runbooks/r-hlc-drift',
         'operators/runbooks/r-key-expiry',
       ],

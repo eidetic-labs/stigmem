@@ -259,6 +259,47 @@ def test_recall_sends_session_header() -> None:
 
 
 @respx.mock
+def test_recall_verify_full_sends_header_and_parses_chain_proof() -> None:
+    response_body = {
+        **SAMPLE_RECALL_RESPONSE,
+        "chain_proof": {
+            "tenant_id": "default",
+            "checked_entries": 2,
+            "head_hash": "sha256:abc",
+            "checkpoint": {
+                "id": "chaincp_1",
+                "tenant_id": "default",
+                "covered_chain_seq": 2,
+                "chain_hash": "sha256:abc",
+                "status": "submitted",
+                "attempt_count": 1,
+                "created_at": "2026-01-01T00:00:00+00:00",
+                "submitted_at": "2026-01-01T00:00:01+00:00",
+                "tl_backend": "local",
+                "tl_log_id": "local-log",
+                "tl_leaf_hash": "a" * 64,
+                "tl_log_index": 0,
+                "tl_integrated_time": 1_767_225_601,
+                "tl_inclusion_proof": {"chain_hash": "sha256:abc"},
+                "tl_raw": {"index": 0},
+            },
+        },
+    }
+
+    def side_effect(request: httpx.Request) -> httpx.Response:
+        assert request.headers["Stigmem-Verify"] == "full"
+        return httpx.Response(200, json=response_body)
+
+    respx.post(f"{BASE}/v1/recall").mock(side_effect=side_effect)
+    client = StigmemClient(url=BASE, api_key=KEY)
+    result = client.recall("what is Alice's role?", verify_full=True)
+    assert result.chain_proof is not None
+    assert result.chain_proof.checked_entries == 2
+    assert result.chain_proof.checkpoint is not None
+    assert result.chain_proof.checkpoint.status == "submitted"
+
+
+@respx.mock
 def test_auth_error() -> None:
     respx.get(f"{BASE}/.well-known/stigmem").mock(
         return_value=httpx.Response(401, json={"detail": "unauthorized"})

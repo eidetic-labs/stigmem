@@ -26,6 +26,7 @@ This handbook covers everything you need to run a Stigmem node in production, fr
 | [Peer compromise response](./runbooks/r-peer-compromise) | Containment and recovery when a federation peer is suspicious or compromised |
 | [Worm detection response](./runbooks/r-worm-detected) | Response path for automated cross-peer or agent-to-agent propagation |
 | [Manifest failure response](./runbooks/r-manifest-failure) | What to do when peer manifest or key-rotation verification fails |
+| [Rekor unavailable response](./runbooks/r-rekor-unavailable) | How to handle delayed fact-chain transparency-log checkpoints |
 | [HLC drift response](./runbooks/r-hlc-drift) | How to handle peers sending timestamps outside allowed skew |
 | [Key expiry response](./runbooks/r-key-expiry) | Recovery from expired API, federation, issuer, or encryption keys |
 | [Eval harness](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/eval-harness) | Automated evaluation and regression testing |

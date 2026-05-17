@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from .facts import FactRecord
@@ -61,6 +63,26 @@ class FactChainProof(BaseModel):
     tenant_id: str
     checked_entries: int
     head_hash: str | None = None
+    checkpoint: FactChainCheckpointProof | None = None
+
+
+class FactChainCheckpointProof(BaseModel):
+    id: str
+    tenant_id: str
+    covered_chain_seq: int
+    chain_hash: str
+    status: str
+    attempt_count: int
+    created_at: str
+    submitted_at: str | None = None
+    last_error: str | None = None
+    tl_backend: str
+    tl_log_id: str | None = None
+    tl_leaf_hash: str | None = None
+    tl_log_index: int | None = None
+    tl_integrated_time: int | None = None
+    tl_inclusion_proof: dict[str, Any] = Field(default_factory=dict)
+    tl_raw: dict[str, Any] = Field(default_factory=dict)
 
 
 class RecallResponse(BaseModel):

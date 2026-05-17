@@ -39,12 +39,32 @@ def _recall_as_of_impl(
     # Candidate fetch: facts visible at as_of
     rows = conn.execute(
         """
-        SELECT f.*
+        SELECT f.*,
+               COALESCE(fvo.valid_until, f.valid_until) AS projected_valid_until,
+               COALESCE(fvo.confidence, f.confidence) AS projected_confidence,
+               COALESCE(fgm.garden_id, f.garden_id) AS projected_garden_id,
+               COALESCE(fqs.quarantine_status, f.quarantine_status)
+                 AS projected_quarantine_status,
+               COALESCE(fqs.quarantine_garden_id, f.quarantine_garden_id)
+                 AS projected_quarantine_garden_id,
+               (
+                 SELECT fca.cid
+                 FROM fact_cid_aliases fca
+                 WHERE fca.fact_id = f.id
+                 ORDER BY fca.cid
+                 LIMIT 1
+               ) AS projected_cid
         FROM facts f
+        LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id
+        LEFT JOIN fact_garden_membership fgm ON fgm.fact_id = f.id
+        LEFT JOIN fact_quarantine_status fqs ON fqs.fact_id = f.id
         WHERE f.scope = ?
           AND f.tenant_id = ?
           AND f.timestamp <= ?
-          AND (f.valid_until IS NULL OR f.valid_until > ?)
+          AND (
+            COALESCE(fvo.valid_until, f.valid_until) IS NULL
+            OR COALESCE(fvo.valid_until, f.valid_until) > ?
+          )
           AND NOT EXISTS (
             SELECT 1 FROM fact_retractions fr
             WHERE fr.fact_id = f.id AND fr.retracted_at <= ?

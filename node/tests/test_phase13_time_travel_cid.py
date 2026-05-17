@@ -788,15 +788,20 @@ def test_backfill_cids_idempotent(tmp_path):
 
     _cmd_backfill_cids(_Args())
 
-    # Verify all facts now have CIDs
+    # Verify CIDs were projected through aliases/backfill rows. The base facts
+    # table remains immutable, so facts.cid stays null for these legacy rows.
     conn = sqlite3.connect(db_file)
     conn.row_factory = sqlite3.Row
     null_count = conn.execute("SELECT COUNT(*) FROM facts WHERE cid IS NULL").fetchone()[0]
     alias_count = conn.execute("SELECT COUNT(*) FROM fact_cid_aliases").fetchone()[0]
-    conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0]
+    fact_count = conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0]
+    complete_count = conn.execute(
+        "SELECT COUNT(*) FROM fact_cid_backfill WHERE status = 'complete'"
+    ).fetchone()[0]
     conn.close()
-    assert null_count == 0
+    assert null_count == fact_count
     assert alias_count >= 2  # at least one per user fact (conflict/meta facts may lack aliases)
+    assert complete_count == fact_count
 
     # Second backfill run must be idempotent (no errors, same counts)
     _cmd_backfill_cids(_Args())
@@ -804,7 +809,13 @@ def test_backfill_cids_idempotent(tmp_path):
     conn = sqlite3.connect(db_file)
     conn.row_factory = sqlite3.Row
     null_count2 = conn.execute("SELECT COUNT(*) FROM facts WHERE cid IS NULL").fetchone()[0]
+    alias_count2 = conn.execute("SELECT COUNT(*) FROM fact_cid_aliases").fetchone()[0]
+    complete_count2 = conn.execute(
+        "SELECT COUNT(*) FROM fact_cid_backfill WHERE status = 'complete'"
+    ).fetchone()[0]
     conn.close()
-    assert null_count2 == 0
+    assert null_count2 == fact_count
+    assert alias_count2 == alias_count
+    assert complete_count2 == complete_count
 
     _restore_settings(original, mods)

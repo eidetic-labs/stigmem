@@ -125,6 +125,7 @@ def push_setup(
         tl_backend="off",
         node_private_key=priv_b64,
         federation_push_enabled=True,
+        federation_insecure=True,
     )
     extra = _patch_settings(test_settings)
     monkeypatch.setenv("STIGMEM_TOMBSTONES_ENABLED", "true")

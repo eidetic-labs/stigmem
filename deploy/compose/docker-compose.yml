@@ -2,7 +2,7 @@
 #
 # Profiles:
 #   default (no --profile flag) — single node, SQLite backend
-#   --profile federation         — two-node local federation ring (SQLite)
+#   --profile federation         — two-node local plaintext federation ring (SQLite)
 #   --profile postgres           — placeholder; requires postgres backend (coming soon)
 #
 # Quick start (single node):
@@ -71,6 +71,8 @@ services:
 
   # ---------------------------------------------------------------------------
   # second node for local two-node federation testing (--profile federation)
+  # This profile is a local plaintext demo and explicitly opts in to insecure
+  # federation. Production federation must configure mTLS instead.
   # ---------------------------------------------------------------------------
   stigmem-b:
     profiles: [federation]
@@ -88,6 +90,7 @@ services:
       STIGMEM_LOG_LEVEL: "${STIGMEM_LOG_LEVEL:-info}"
       STIGMEM_AUTH_REQUIRED: "${STIGMEM_AUTH_REQUIRED:-true}"
       STIGMEM_FEDERATION_ENABLED: "true"
+      STIGMEM_FEDERATION_INSECURE: "1"
       STIGMEM_STORAGE_BACKEND: "sqlite"
     volumes:
       - stigmem-b-data:/data

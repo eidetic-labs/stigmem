@@ -381,6 +381,55 @@ def test_non_federation_routes_bypass_mtls_guard(
     assert client.get("/healthz").status_code == 200
 
 
+def test_federation_startup_requires_mtls_without_insecure_opt_in(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Federation cannot start over plaintext unless explicitly acknowledged."""
+    from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
+
+    fake_settings = settings_module.Settings(
+        db_path=str(tmp_path / "fed_requires_mtls.db"),
+        federation_enabled=True,
+        federation_insecure=False,
+    )
+    monkeypatch.setattr(settings_module, "settings", fake_settings)
+    monkeypatch.setattr(main_mod, "settings", fake_settings)
+
+    app = main_mod.create_app()
+    with pytest.raises(RuntimeError, match="Federation requires mTLS by default"), TestClient(app):
+        pass
+
+
+def test_federation_insecure_opt_in_logs_warning(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Explicit insecure federation opt-in is allowed but audit-visible in logs."""
+    from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
+
+    fake_settings = settings_module.Settings(
+        db_path=str(tmp_path / "fed_insecure.db"),
+        federation_enabled=True,
+        federation_insecure=True,
+    )
+    monkeypatch.setattr(settings_module, "settings", fake_settings)
+    monkeypatch.setattr(main_mod, "settings", fake_settings)
+
+    app = main_mod.create_app()
+    with caplog.at_level(logging.WARNING, logger="stigmem"), TestClient(app):
+        pass
+
+    assert "STIGMEM_FEDERATION_INSECURE=1" in caplog.text
+
+
 # ---------------------------------------------------------------------------
 # Regression: HIGH-1 — ca_bundle required when mTLS enabled (§22.1.2.2)
 # ---------------------------------------------------------------------------

@@ -81,6 +81,7 @@ services:
       STIGMEM_TLS_CERT_PATH: /tls/node.crt
       STIGMEM_TLS_KEY_PATH:  /tls/node.key
       STIGMEM_TLS_CA_BUNDLE: /tls/ca.crt
+      STIGMEM_FEDERATION_INSECURE: "0"
     volumes:
       - /etc/stigmem/tls:/tls:ro
 ```
@@ -109,6 +110,10 @@ curl http://localhost:8765/healthz 2>&1 | grep -i "empty reply\|SSL\|refused"
 ```
 
 > If you see an HTTP response here, TLS is not yet active — check that `STIGMEM_TLS_CERT_PATH` and `STIGMEM_TLS_KEY_PATH` are set and the files are readable.
+
+Federation will not start without those TLS settings unless
+`STIGMEM_FEDERATION_INSECURE=1` is explicitly set. Keep that flag unset or set
+to `"0"` in production.
 
 For full configuration reference and troubleshooting, see [mTLS Federation Transport](../security/mtls.md).
 

@@ -46,6 +46,25 @@ _STATIC_DIR = Path(__file__).parent / "static"
 logger = logging.getLogger("stigmem")
 
 
+def _enforce_federation_transport_security() -> None:
+    """Require explicit opt-in for federation without mTLS."""
+    federation_active = settings.federation_enabled or settings.federation_push_enabled
+    if not federation_active or settings.mtls_enabled:
+        return
+
+    if not settings.federation_insecure:
+        raise RuntimeError(
+            "Federation requires mTLS by default. Configure STIGMEM_TLS_CERT_PATH, "
+            "STIGMEM_TLS_KEY_PATH, and STIGMEM_TLS_CA_BUNDLE, or set "
+            "STIGMEM_FEDERATION_INSECURE=1 only for local/dev/test federation."
+        )
+
+    logger.warning(
+        "SECURITY WARNING: federation is running without mTLS because "
+        "STIGMEM_FEDERATION_INSECURE=1 is set. Use this only for local/dev/test."
+    )
+
+
 def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -53,6 +72,7 @@ def create_app() -> FastAPI:
 
         if settings.trust_mode == "strict" and not settings.node_private_key:
             raise RuntimeError("STIGMEM_NODE_PRIVATE_KEY must be set when trust_mode=strict")
+        _enforce_federation_transport_security()
 
         discovered_plugins = register_discovered_plugins(freeze=False)
         _include_plugin_routers(app, discovered_plugins)

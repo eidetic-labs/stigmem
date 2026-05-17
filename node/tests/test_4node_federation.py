@@ -144,6 +144,7 @@ def _start_node(
         "STIGMEM_HOST": "127.0.0.1",
         "STIGMEM_NODE_URL": node_url,
         "STIGMEM_FEDERATION_ENABLED": "true",
+        "STIGMEM_FEDERATION_INSECURE": "1",
         "STIGMEM_FEDERATION_PULL_INTERVAL_S": str(PULL_INTERVAL_S),
         "STIGMEM_FEDERATION_PUBKEY": pub_b64,
         "STIGMEM_FEDERATION_PRIVKEY": priv_b64,

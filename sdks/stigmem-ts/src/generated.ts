@@ -1470,10 +1470,50 @@ export interface components {
             /** Permissions */
             permissions: string[];
         };
+        /** FactChainCheckpointProof */
+        FactChainCheckpointProof: {
+            /** Attempt Count */
+            attempt_count: number;
+            /** Chain Hash */
+            chain_hash: string;
+            /** Covered Chain Seq */
+            covered_chain_seq: number;
+            /** Created At */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Last Error */
+            last_error?: string | null;
+            /** Status */
+            status: string;
+            /** Submitted At */
+            submitted_at?: string | null;
+            /** Tenant Id */
+            tenant_id: string;
+            /** Tl Backend */
+            tl_backend: string;
+            /** Tl Inclusion Proof */
+            tl_inclusion_proof?: {
+                [key: string]: unknown;
+            };
+            /** Tl Integrated Time */
+            tl_integrated_time?: number | null;
+            /** Tl Leaf Hash */
+            tl_leaf_hash?: string | null;
+            /** Tl Log Id */
+            tl_log_id?: string | null;
+            /** Tl Log Index */
+            tl_log_index?: number | null;
+            /** Tl Raw */
+            tl_raw?: {
+                [key: string]: unknown;
+            };
+        };
         /** FactChainProof */
         FactChainProof: {
             /** Checked Entries */
             checked_entries: number;
+            checkpoint?: components["schemas"]["FactChainCheckpointProof"] | null;
             /** Head Hash */
             head_hash?: string | null;
             /** Tenant Id */
@@ -2331,6 +2371,7 @@ export type SchemaDeferenceRule = components['schemas']['DeferenceRule'];
 export type SchemaEscalationPolicy = components['schemas']['EscalationPolicy'];
 export type SchemaExchangeRequest = components['schemas']['ExchangeRequest'];
 export type SchemaExchangeResponse = components['schemas']['ExchangeResponse'];
+export type SchemaFactChainCheckpointProof = components['schemas']['FactChainCheckpointProof'];
 export type SchemaFactChainProof = components['schemas']['FactChainProof'];
 export type SchemaFactRecord = components['schemas']['FactRecord'];
 export type SchemaFactValue = components['schemas']['FactValue'];

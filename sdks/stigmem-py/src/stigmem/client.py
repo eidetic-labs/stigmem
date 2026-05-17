@@ -35,6 +35,14 @@ from .models import (
 
 logger = logging.getLogger("stigmem")
 SESSION_HEADER = "Stigmem-Session"
+VERIFY_HEADER = "Stigmem-Verify"
+
+
+def _recall_headers(session_id: str | None, verify_full: bool = False) -> dict[str, str] | None:
+    headers = _session_headers(session_id) or {}
+    if verify_full:
+        headers[VERIFY_HEADER] = "full"
+    return headers or None
 
 
 def _session_headers(session_id: str | None) -> dict[str, str] | None:
@@ -298,6 +306,7 @@ class StigmemClient:
         limit: int = 100,
         legacy_format: bool = False,
         session_id: str | None = None,
+        verify_full: bool = False,
     ) -> RecallResponse:
         """Hybrid recall — return the most salient facts for *query* within *token_budget*.
 
@@ -313,6 +322,7 @@ class StigmemClient:
             include_neighbors: Whether to expand via graph traversal.
             limit: Maximum candidate facts before token-budget packing.
             legacy_format: Request the temporary pre-channel response shape.
+            verify_full: Request full server-side integrity proof metadata.
 
         Returns:
             RecallResponse with scored + packed facts and score breakdowns.
@@ -332,7 +342,7 @@ class StigmemClient:
             "/v1/recall",
             json=req.model_dump(),
             params=params,
-            headers=_session_headers(session_id),
+            headers=_recall_headers(session_id, verify_full),
         )
         _raise_for_status(resp)
         return RecallResponse.model_validate(resp.json())
@@ -577,6 +587,7 @@ class AsyncStigmemClient:
         limit: int = 100,
         legacy_format: bool = False,
         session_id: str | None = None,
+        verify_full: bool = False,
     ) -> RecallResponse:
         """Async hybrid recall — return the most salient facts for *query* within *token_budget*."""
         req = RecallRequest(
@@ -594,7 +605,7 @@ class AsyncStigmemClient:
             "/v1/recall",
             json=req.model_dump(),
             params=params,
-            headers=_session_headers(session_id),
+            headers=_recall_headers(session_id, verify_full),
         )
         _raise_for_status(resp)
         return RecallResponse.model_validate(resp.json())

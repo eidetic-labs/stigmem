@@ -24,6 +24,8 @@ from .models import (
     ConflictResolution,
     DatetimeValue,
     Fact,
+    FactChainCheckpointProof,
+    FactChainProof,
     FactPage,
     FactScope,
     FactValue,
@@ -63,6 +65,8 @@ __all__ = [
     "StigmemConflictError",
     # models
     "Fact",
+    "FactChainCheckpointProof",
+    "FactChainProof",
     "FactPage",
     "FactValue",
     "FactScope",

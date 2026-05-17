@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -71,6 +72,85 @@ def test_recall_full_verification_includes_chain_proof(client: TestClient) -> No
     assert proof["tenant_id"] == "default"
     assert proof["checked_entries"] == 2
     assert proof["head_hash"].startswith("sha256:")
+    assert proof["checkpoint"] is None
+
+
+def test_due_checkpoint_submits_to_transparency_log(
+    client: TestClient, tmp_path: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import stigmem_node.settings as settings_module
+
+    tl_path = tmp_path / "fact-chain-tl.jsonl"
+    monkeypatch.setattr(settings_module.settings, "tl_backend", "local")
+    monkeypatch.setattr(settings_module.settings, "tl_local_path", str(tl_path))
+    monkeypatch.setattr(settings_module.settings, "fact_chain_checkpoint_interval", 2)
+
+    _assert_fact(client, "stigmem://test/entity/checkpoint-1", "one")
+    _assert_fact(client, "stigmem://test/entity/checkpoint-2", "two")
+
+    from stigmem_node.db import db
+
+    with db() as conn:
+        checkpoint = conn.execute(
+            """
+            SELECT *
+            FROM fact_chain_checkpoints
+            WHERE tenant_id = 'default'
+            """
+        ).fetchone()
+
+    assert checkpoint is not None
+    assert int(checkpoint["covered_chain_seq"]) == 2
+    assert checkpoint["status"] == "submitted"
+    assert int(checkpoint["attempt_count"]) == 1
+    assert checkpoint["tl_log_id"]
+    assert checkpoint["tl_leaf_hash"]
+    assert checkpoint["tl_log_index"] == 0
+    assert tl_path.exists()
+
+    response = client.post(
+        "/v1/recall",
+        json={
+            "query": "checkpoint",
+            "scope": "local",
+            "limit": 5,
+            "weights": {"lexical": 1.0, "semantic": 0.0, "graph": 0.0},
+        },
+        headers={"Stigmem-Verify": "full"},
+    )
+    assert response.status_code == 200, response.text
+    proof_checkpoint = response.json()["chain_proof"]["checkpoint"]
+    assert proof_checkpoint["status"] == "submitted"
+    assert proof_checkpoint["covered_chain_seq"] == 2
+    assert proof_checkpoint["tl_leaf_hash"] == checkpoint["tl_leaf_hash"]
+
+
+def test_rekor_unavailable_leaves_checkpoint_pending(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import stigmem_node.settings as settings_module
+
+    monkeypatch.setattr(settings_module.settings, "tl_backend", "off")
+    monkeypatch.setattr(settings_module.settings, "fact_chain_checkpoint_interval", 1)
+
+    response = _assert_fact(client, "stigmem://test/entity/checkpoint-pending", "pending")
+
+    from stigmem_node.db import db
+
+    with db() as conn:
+        checkpoint = conn.execute(
+            """
+            SELECT *
+            FROM fact_chain_checkpoints
+            WHERE tenant_id = 'default' AND covered_chain_seq = 1
+            """
+        ).fetchone()
+
+    assert response["id"]
+    assert checkpoint is not None
+    assert checkpoint["status"] == "pending"
+    assert int(checkpoint["attempt_count"]) == 1
+    assert "transparency log is disabled" in checkpoint["last_error"]
 
 
 def test_fact_chain_verification_detects_rewritten_link(client: TestClient) -> None:

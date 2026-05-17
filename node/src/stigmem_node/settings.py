@@ -174,6 +174,9 @@ class Settings(BaseSettings):
     tl_backend: str = "local"
     tl_local_path: str = "stigmem_tl.jsonl"
     tl_rekor_url: str = "https://rekor.sigstore.dev"
+    fact_chain_checkpoint_interval: int = 1000
+    fact_chain_checkpoint_max_age_s: int = 60
+    fact_chain_checkpoint_retry_s: int = 60
 
     # Capability token signing — spec §19.3.2 (C-SEC-1).
     # Base64url-encoded raw 32-byte Ed25519 seed used to sign capability tokens and

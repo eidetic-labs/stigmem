@@ -765,11 +765,145 @@
         "title": "ExchangeResponse",
         "type": "object"
       },
+      "FactChainCheckpointProof": {
+        "properties": {
+          "attempt_count": {
+            "title": "Attempt Count",
+            "type": "integer"
+          },
+          "chain_hash": {
+            "title": "Chain Hash",
+            "type": "string"
+          },
+          "covered_chain_seq": {
+            "title": "Covered Chain Seq",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "tl_backend": {
+            "title": "Tl Backend",
+            "type": "string"
+          },
+          "tl_inclusion_proof": {
+            "additionalProperties": true,
+            "title": "Tl Inclusion Proof",
+            "type": "object"
+          },
+          "tl_integrated_time": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tl Integrated Time"
+          },
+          "tl_leaf_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tl Leaf Hash"
+          },
+          "tl_log_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tl Log Id"
+          },
+          "tl_log_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tl Log Index"
+          },
+          "tl_raw": {
+            "additionalProperties": true,
+            "title": "Tl Raw",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "covered_chain_seq",
+          "chain_hash",
+          "status",
+          "attempt_count",
+          "created_at",
+          "tl_backend"
+        ],
+        "title": "FactChainCheckpointProof",
+        "type": "object"
+      },
       "FactChainProof": {
         "properties": {
           "checked_entries": {
             "title": "Checked Entries",
             "type": "integer"
+          },
+          "checkpoint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FactChainCheckpointProof"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "head_hash": {
             "anyOf": [

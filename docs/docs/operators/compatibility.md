@@ -44,8 +44,8 @@ Per [ADR-014](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/014-com
 | Lazy instruction discovery | Experimental | `Spec-X1-Lazy-Instruction-Discovery` | [`experimental/lazy-instruction-discovery/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery) — targeted v0.9.0a2 |
 | RTBF tombstones | Experimental | `Spec-X2-RTBF-Tombstones` | [`experimental/tombstones/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/tombstones) — source-only on `main`; no released plugin artifact yet |
 | Time-travel queries | Experimental | `Spec-X3-Time-Travel-Queries` | [`experimental/time-travel/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/time-travel) — targeted v0.9.0a4 |
-| Memory garden advanced ACL | Experimental | `Spec-X5-Memory-Garden-Advanced-ACL` | [`experimental/memory-garden-acl/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/memory-garden-acl) — targeted v0.9.0a6 |
-| Source attestation | Experimental | `Spec-X6-Source-Attestation` | [`experimental/source-attestation/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation) — targeted v0.9.0a7 |
+| Memory garden advanced ACL | Experimental | `Spec-X5-Memory-Garden-Advanced-ACL` | [`experimental/memory-garden-acl/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/memory-garden-acl) — source-only on `main`; no released plugin artifact yet |
+| Source attestation | Experimental | `Spec-X6-Source-Attestation` | [`experimental/source-attestation/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation) — source-only on `main`; no released plugin artifact yet |
 | Multi-tenant isolation | Experimental | (cross-cutting) | [`experimental/multi-tenant/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) — targeted v0.9.0a8 |
 
 ## Protocol release composition

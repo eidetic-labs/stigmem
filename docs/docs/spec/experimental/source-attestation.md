@@ -3,7 +3,7 @@ spec_id: Spec-X6-Source-Attestation
 version: 0.1.0-alpha.0
 status: Experimental
 applies_to: stigmem v0.9.0bN
-last_updated: 2026-05-14
+last_updated: 2026-05-17
 supersedes: pre-reset section 18 source-attestation material
 depends_on:
   - Spec-01-Fact-Model >= 0.1.0-alpha.0
@@ -16,11 +16,20 @@ description: "API-key to entity_uri binding with enforce/warn/off modes; trust a
 
 # Spec-X6-Source-Attestation: Source Attestation {#section-18}
 
-**Status:** Normative (v1.0)
+**Status:** Experimental / opt-in source package on `main`
 
 API-key → entity_uri binding with enforce/warn/off modes; trust anchor for connectors.
 
-**Authoritative source:** [`spec/stigmem-spec-v1.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md)
+**Implementation state:** `stigmem-plugin-source-attestation` lives under
+`experimental/source-attestation/` and registers `pre_assert_validate`,
+`recall_rank`, and `federation_inbound_validate` hook handlers. Default installs
+keep source-attestation behavior inert; operators must register the plugin and
+enable the relevant `STIGMEM_SOURCE_ATTESTATION_*` gates before enforcement or
+ranking behavior runs.
+
+**Artifact state:** signed/package publication remains deferred to the
+all-plugins launch lane. This page documents source availability and validation
+on `main`, not a released installable artifact.
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
@@ -69,13 +78,18 @@ SourceAttestationMode = "enforce" | "warn" | "off"
   ```
 - `attested: true` on all accepted facts.
 
-**`warn` mode (default):**
+**`warn` mode:**
 - Mismatch logged to stderr: `[stigmem] WARN: source attestation mismatch — declared source=X, identity=Y`.
 - Fact accepted with `attested: false`.
 - `attested: true` if source matches.
 
 **`off` mode:**
 - No check. `attested: null` on all facts.
+
+**Default-install behavior:** default installs use inert behavior. The legacy
+`STIGMEM_SOURCE_ATTESTATION_MODE` compatibility value is advertised at
+`/.well-known/stigmem`, but the runtime checks above require
+`stigmem-plugin-source-attestation` plus explicit plugin gates.
 
 ### Spec-X6-Source-Attestation section 3 Well-Known Advertisement {#section-18-3}
 

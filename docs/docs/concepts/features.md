@@ -137,8 +137,8 @@ The following features are in the codebase under [`experimental/<feature>/`](htt
 | Lazy instruction discovery | Experimental opt-in plugin source extracted on `main`; ADR-008 graduation blocked on ADR-003; artifact evidence queued | Spec-X1-Lazy-Instruction-Discovery |
 | RTBF tombstones | Experimental opt-in plugin source extracted on `main`; default install has tombstone routes/filters inactive; artifact evidence queued | Spec-X2-RTBF-Tombstones |
 | Time-travel `as_of` queries | Experimental opt-in plugin source extracted on `main`; default install fails closed on `as_of`; artifact evidence deferred | Spec-X3-Time-Travel-Queries |
-| Memory Garden advanced ACL | Experimental, dormant | Spec-X5-Memory-Garden-Advanced-ACL |
-| Source attestation | Experimental, dormant | Spec-X6-Source-Attestation |
+| Memory Garden advanced ACL | Experimental opt-in plugin source extracted on `main`; default install keeps advanced ACL inactive; artifact evidence deferred | Spec-X5-Memory-Garden-Advanced-ACL |
+| Source attestation | Experimental opt-in plugin source extracted on `main`; default install is inert; artifact evidence deferred | Spec-X6-Source-Attestation |
 | Subscriptions | Experimental, dormant | Spec-X7-Subscriptions |
 | Intent envelope | Deferred indefinitely | Spec-X8-Intent-Envelope |
 | Decay semantics | Experimental, dormant | Spec-X9-Decay-Semantics |
@@ -153,7 +153,7 @@ See the full deferred-features list and source locations at [Experimental Featur
 
 The v0.9.0a1 default install ships with feature-specific code in `node/src/stigmem_node/` for several deferred features (`tombstones.py`, `instruction_migrate.py`, `card_materializer.py`, `source_trust.py`, etc.). The routes are mounted but the features are dormant unless explicitly configured. Per [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per ADR-011's C1 plugin architecture; after v0.9.0a8, default install will be true to ADR-011's commitment.
 
-Main now includes the hook-registry foundation and stable 22-hook surface, with manual/core handler registration, minimum manifest/context/capability APIs, hook-site wiring, registry observability, test helpers, benchmark coverage, entry-point package discovery, startup registration, operator inspection commands, and production signing/trust gates. Lazy instruction discovery, time-travel queries, and RTBF tombstones have been extracted as opt-in experimental plugin source packages; signed/package artifact evidence remains queued before any should be described as a released installable plugin artifact. The ADR-003 instruction-handling core is also present on `main`: `interpret_as`, `instruction:write`, instruction quarantine, channel-separated recall output, MCP/OpenClaw channel framing, instruction audit events, and same-session provenance controls. The other deferred features listed below have not yet been extracted into plugin packages. Plugin authors can start from the [Plugin Author Guide](../guides/plugins/author-guide.md).
+Main now includes the hook-registry foundation and stable 22-hook surface, with manual/core handler registration, minimum manifest/context/capability APIs, hook-site wiring, registry observability, test helpers, benchmark coverage, entry-point package discovery, startup registration, operator inspection commands, and production signing/trust gates. Lazy instruction discovery, time-travel queries, RTBF tombstones, advanced Memory Garden ACLs, and source attestation have been extracted as opt-in experimental plugin source packages; signed/package artifact evidence remains queued before any should be described as a released installable plugin artifact. The ADR-003 instruction-handling core is also present on `main`: `interpret_as`, `instruction:write`, instruction quarantine, channel-separated recall output, MCP/OpenClaw channel framing, instruction audit events, and same-session provenance controls. The remaining deferred feature plugin is multi-tenant isolation. Plugin authors can start from the [Plugin Author Guide](../guides/plugins/author-guide.md).
 
 See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md) for the full architectural-gap acknowledgment.
 
@@ -163,7 +163,7 @@ See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com
 
 The phase progression is in [ROADMAP.md](https://github.com/Eidetic-Labs/stigmem/blob/main/ROADMAP.md). At a high level:
 
-1. **v0.9.0a2 through v0.9.0a8** — incremental plugin extraction per ADR-011. Lazy instruction discovery, time-travel queries, and RTBF tombstones are extracted on `main` as opt-in experimental source; remaining work continues through memory-garden-acl, source-attestation, and multi-tenant. CIDs remain core.
+1. **v0.9.0a2 through v0.9.0a8** — incremental plugin extraction per ADR-011. Lazy instruction discovery, time-travel queries, RTBF tombstones, advanced Memory Garden ACLs, and source attestation are extracted on `main` as opt-in experimental source; remaining extraction work continues through multi-tenant. CIDs remain core.
 2. **v0.9.0bN (the v0.9.0bN beta series)** — complete the remaining hardening evidence around the landed capability redesign, finish ADR-015 model-certification runner/results, federation hardening, OpenClaw audit closeout, modular spec migration per ADR-010, storage immutability stack per ADR-016, 30-day external operator soak.
 3. **v1.0.0-rcN → v1.0.0 (the v1.0.0rcN release-candidate series)** — Sigstore-signed releases, reproducible builds, SBOM, 3+ external operators in production. Wire format frozen.
 

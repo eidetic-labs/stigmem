@@ -13,6 +13,7 @@ from typing import Annotated, Any, cast
 
 import uvicorn
 from fastapi import Depends, FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from .auth import Identity, resolve_identity
@@ -44,6 +45,8 @@ from .settings import settings
 _STATIC_DIR = Path(__file__).parent / "static"
 
 logger = logging.getLogger("stigmem")
+
+_DEV_LOCALHOST_CORS_REGEX = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
 
 
 def _enforce_federation_transport_security() -> None:
@@ -148,6 +151,20 @@ def create_app() -> FastAPI:
     )
 
     app.add_middleware(RateLimitMiddleware)
+    _cors_regex = settings.cors_allowed_origin_regex
+    if settings.cors_dev_localhost:
+        _cors_regex = _DEV_LOCALHOST_CORS_REGEX
+    if settings.cors_allowed_origins or _cors_regex:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.cors_allowed_origins,
+            allow_origin_regex=_cors_regex,
+            allow_credentials=settings.cors_allow_credentials,
+            allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+            allow_headers=["*"],
+            expose_headers=["ETag"],
+            max_age=600,
+        )
 
     @app.middleware("http")
     async def unsigned_plugin_override_warning(
@@ -174,6 +191,8 @@ def create_app() -> FastAPI:
             call_next: Callable[[Request], Awaitable[Response]],
         ) -> Response:
             """Reject plaintext federation requests when mTLS is configured (§22.1)."""
+            if request.method == "OPTIONS":
+                return await call_next(request)
             if request.url.path.startswith("/v1/federation") and request.url.scheme != "https":
                 return JSONResponse(
                     {

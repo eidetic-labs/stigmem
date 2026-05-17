@@ -11,6 +11,7 @@ from fastapi import APIRouter
 
 from ...auth import Identity
 from ...models.facts import FactRecord, row_to_record
+from ..cid_integrity import enforce_read_path_cid
 
 logger = logging.getLogger("stigmem.recall")
 
@@ -75,6 +76,8 @@ def _fetch_facts_by_ids(
         """,  # noqa: S608  # nosec B608
         fact_ids,
     ).fetchall()
+    for row in rows:
+        enforce_read_path_cid(row)
     return {row["id"]: row_to_record(row) for row in rows}
 
 

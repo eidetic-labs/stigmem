@@ -10,6 +10,7 @@ from ...models.recall import RecallWeights, ScoreBreakdown, ScoredFact
 from ...models.tombstones import TombstoneNotice
 from ...recall_pipeline import apply_recall_pipeline
 from ...source_trust import compute_source_trust
+from ..cid_integrity import enforce_read_path_cid
 from .common import _estimate_tokens, _public_module
 from .ranking import _greedy_pack
 
@@ -78,6 +79,8 @@ def _recall_as_of_impl(
     if not rows:
         return [], [], False
 
+    for row in rows:
+        enforce_read_path_cid(row)
     all_facts_raw = {row["id"]: row_to_record(row) for row in rows}
 
     # Apply recall pipeline (trust, sanitizer)

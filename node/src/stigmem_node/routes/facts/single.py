@@ -13,6 +13,7 @@ from ...garden_acl import require_garden_read
 from ...models.facts import FactRecord, row_to_record
 from ...recall_pipeline import apply_recall_pipeline
 from ...session_graph import record_read_scopes
+from ..cid_integrity import enforce_read_path_cid
 from .common import router
 from .query import _FACT_PROJECTION_JOINS, _FACT_PROJECTION_SELECT
 
@@ -85,6 +86,7 @@ def get_fact(
             "SELECT COUNT(*) FROM facts WHERE entity=? AND relation=? AND scope=? AND tenant_id=?",
             (row["entity"], row["relation"], row["scope"], identity.tenant_id),
         ).fetchone()[0]
+    enforce_read_path_cid(row)
     record = row_to_record(row, contradicted=sibling_count > 1)
     # v1.1: recall pipeline (trust multiplier + sanitizer)
     pipeline_results = apply_recall_pipeline([record], identity=identity, include_low_trust=True)

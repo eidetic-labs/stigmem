@@ -41,7 +41,12 @@ uv run python scripts/run_adversarial_conformance.py
 ```
 
 This does not certify a live model. It is a local readiness check for the
-framework that will be used by provider-backed certification runs.
+framework used by provider-backed certification runs.
+
+When you are ready to test a live model, use `--provider openai`,
+`--provider anthropic`, or `--provider ollama` with the model and credential
+configuration described in the model-certification page. Treat the generated
+JSON as evidence for review, not as an automatic project certification.
 
 ## When Live Certifications Land
 

@@ -1,5 +1,5 @@
 name: Bug / spec ambiguity
-description: Report a prototype bug or a spec section that is unclear or contradictory
+description: Report reference-node behavior, docs, or spec text that is unclear or incorrect
 title: "Bug: "
 labels: ["bug"]
 body:
@@ -8,7 +8,8 @@ body:
     attributes:
       label: Kind
       options:
-        - Prototype bug (incorrect behavior)
+        - Reference-node bug (incorrect behavior)
+        - Documentation bug (incorrect or stale content)
         - Spec ambiguity (two valid readings)
         - Spec contradiction (two sections conflict)
         - Missing behavior (spec is silent on a case that matters)
@@ -18,8 +19,8 @@ body:
   - type: input
     id: section
     attributes:
-      label: Spec section (if applicable)
-      placeholder: "§3.3 Contradiction"
+      label: Spec, doc, or code path (if applicable)
+      placeholder: "Spec-05 Federation Trust, docs/docs/security/mtls.md, node/src/..."
     validations:
       required: false
 
@@ -35,7 +36,16 @@ body:
     id: repro
     attributes:
       label: Reproduction (prototype bugs only)
-      description: Steps to reproduce. Include the HTTP request/response if relevant.
+      description: Steps to reproduce. Include commands, HTTP request/response, logs, and version/commit if relevant. Do not include secrets.
       render: bash
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, install method, Docker/Python/Node versions, and any relevant config.
+      placeholder: "macOS 15, Docker Desktop 4.x, stigmem commit abc123..."
     validations:
       required: false

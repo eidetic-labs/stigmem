@@ -1,0 +1,37 @@
+name: Federation expressivity
+description: Discuss federation semantics that need design before implementation
+title: "Federation expressivity: "
+labels: ["area/federation-expressivity", "type/discussion"]
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: Scenario
+      description: What federation behavior do you need to express?
+      placeholder: "Example: one-way federation for public facts with per-relation restrictions..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_limit
+    attributes:
+      label: Current limitation
+      description: What cannot be represented cleanly with the current PeerDeclaration, scope, or capability model?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_shape
+    attributes:
+      label: Proposed shape
+      description: Optional sketch of a protocol, policy, or docs change.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: expectation
+    attributes:
+      label: Expectation
+      options:
+        - label: I understand this is a design discussion, not a commitment to implement the behavior immediately.
+          required: true

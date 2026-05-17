@@ -8,7 +8,41 @@ Thanks for your interest in contributing. Stigmem is a community spec — the go
 |---|---|---|
 | **RFC** | Propose a spec change via issue + PR | Anyone with a concrete problem or proposed improvement |
 | **Implementation** | Build an alternative node or client | Developers who want to validate the wire format against real workloads |
-| **Bug / gap report** | File an issue about a spec ambiguity or prototype bug | Anyone reading the spec |
+| **Bug / gap report** | File an issue about a spec ambiguity, docs issue, or reference-node bug | Anyone reading the spec |
+| **Starter issue** | Pick up a scoped `good first issue` | New contributors who want a small, reviewable first PR |
+
+## New contributor orientation
+
+Start with the smallest set of pages that explains how the system hangs
+together:
+
+1. [Architecture overview](docs/docs/reference/architecture/index.md) — repo map,
+   request path, fact model, HLC, federation, and storage.
+2. [Single-host node](docs/docs/reference/architecture/single-host-node.md) —
+   how the reference node handles local reads, writes, auth, and persistence.
+3. [Federated network](docs/docs/reference/architecture/federated-network.md) —
+   peer registration, pull replication, scope enforcement, and audit flow.
+4. [Threat model](spec/security/threat-model.md) and
+   [SECURITY.md](SECURITY.md) — what is safe today, what remains residual, and
+   how to report vulnerabilities.
+5. [ADRs](docs/adr/) — accepted architectural decisions. ADRs are immutable once
+   accepted; propose amendments instead of editing accepted ADR history.
+6. [Roadmap](ROADMAP.md) — current phase, open work, and exit criteria.
+
+Then run the two demo paths:
+
+```bash
+make demo
+make demo-attack
+```
+
+`make demo` proves two-node local federation end-to-end. `make demo-attack`
+shows malicious-peer rejection for unauthorized scope writes and source forgery.
+
+Good starter work is labeled
+[`good first issue`](https://github.com/Eidetic-Labs/stigmem/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22).
+Prefer one small issue per PR. If a starter issue touches docs, update the
+roadmap or checklist only when the issue explicitly changes project status.
 
 ## RFC process
 
@@ -20,7 +54,8 @@ Use this when you want to propose a spec change, add a new field or endpoint, ch
    - Alternatives you considered
    - Open questions
 2. **Discuss** on the issue. Aim for at least one week of async discussion before calling for merge.
-3. **Submit a PR** against the active spec file (currently `spec/stigmem-spec-v0.9.0a1.md`; see [`ROADMAP.md`](ROADMAP.md) §Spec naming convention for the modular per-topic spec layout that lands in the v0.9.0bN beta series). Reference the issue.
+3. **Submit a PR** against the relevant modular spec under `docs/docs/spec/specs/`
+   and any generated/canonical mirrors that the issue names. Reference the issue.
 4. **Merge criteria:** ≥2 approvals from contributors who have merged at least one prior PR. The spec maintainer may veto with a written rationale.
 
 For small fixes (typos, clarity, example corrections), skip the RFC issue and send a PR directly.
@@ -126,6 +161,22 @@ python scripts/check_security_documentation.py
 ## CLI reference docs
 
 Regenerate the CLI reference pages (under `docs/docs/reference/cli/`) after changing CLI flags or adding subcommands: `make gen-cli-docs`.
+
+## Issue templates
+
+Use the issue template that matches the work:
+
+- **Bug / spec ambiguity** — prototype behavior, docs mistakes, unclear spec
+  text, or contradictory semantics.
+- **RFC** — proposed wire-format, protocol, namespace, or semantic changes.
+- **Security advisory coordination** — public, non-sensitive coordination only.
+  Do not disclose active vulnerabilities, exploit details, secrets, or private
+  operator information in a public issue; use GitHub private security advisories
+  or the path in [SECURITY.md](SECURITY.md).
+- **Operator candidate** — teams interested in running a node during external
+  validation or the Phase B soak.
+- **Federation expressivity** — discussion of federation semantics that do not
+  yet fit an implementation issue.
 
 ## Branch and publish verification
 

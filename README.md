@@ -29,6 +29,8 @@ We chose `v0.9.0a1` (PEP 440 alpha) over `v0.9.0-preview` because alpha-beta-rc 
 
 For the full story, read [the retraction post on dev.to](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0). The in-repo canonical source is preserved at [`archive/devto-stigmem-v0.9.0a1-retraction.md`](archive/devto-stigmem-v0.9.0a1-retraction.md).
 
+Project progress notes live in [`LOG.md`](LOG.md).
+
 ---
 
 ## Security posture
@@ -190,8 +192,21 @@ curl -s 'http://localhost:8766/v1/facts?entity=user:alice&scope=company' | jq .f
 For automated reproducibility testing:
 
 ```bash
-bash scripts/quickstart-verify.sh
+make demo
 ```
+
+Set `DEMO_BUILD=1 make demo` if you want the demo to force-build the local
+working tree instead of using the pinned GHCR image.
+
+To see the adversarial federation path, run:
+
+```bash
+make demo-attack
+```
+
+`make demo-attack` exercises the malicious-peer rejection gate: a peer attempts
+an unauthorized scope write and a source-forged write; both are rejected and
+audited.
 
 ### Run the test suite
 

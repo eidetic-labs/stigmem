@@ -17,11 +17,13 @@
 # Environment overrides:
 #   PULL_WAIT_S   Seconds to wait for federation pull (default: 35)
 #   KEEP_UP       Set to 1 to skip teardown (useful for debugging)
+#   DEMO_BUILD    Set to 1 to force a local image rebuild before starting
 
 set -euo pipefail
 
 PULL_WAIT_S="${PULL_WAIT_S:-35}"
 KEEP_UP="${KEEP_UP:-0}"
+DEMO_BUILD="${DEMO_BUILD:-0}"
 START_TIME=$(date +%s)
 
 # ---- helpers -----------------------------------------------------------------
@@ -109,8 +111,13 @@ docker compose down -v --remove-orphans 2>&1 | tail -3 || true
 
 # ---- step 0: build + start ---------------------------------------------------
 
-log "Step 0 — docker compose up --build -d"
-docker compose up --build -d
+if [[ "$DEMO_BUILD" == "1" ]]; then
+    log "Step 0 — docker compose up --build -d"
+    docker compose up --build -d
+else
+    log "Step 0 — docker compose up -d"
+    docker compose up -d
+fi
 ok "Containers started"
 
 # ---- step 1: health ----------------------------------------------------------

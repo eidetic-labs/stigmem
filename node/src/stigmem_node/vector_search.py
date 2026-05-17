@@ -103,7 +103,7 @@ def _encode_vector(vec: Vector) -> bytes:
 
 def store_embedding(conn: Any, fact_id: str, vec: Vector) -> None:
     """Upsert a vector into ``vec_facts`` and mark the fact as embedded."""
-    from .immutability import set_embedding_status
+    from .lifecycle.immutability import set_embedding_status
 
     blob = _encode_vector(vec)
     conn.execute(

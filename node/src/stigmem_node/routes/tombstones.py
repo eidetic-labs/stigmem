@@ -16,20 +16,20 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..auth import Identity, resolve_identity
+from ..lifecycle.tombstone_signing import get_node_key_id, sign_revocation, sign_tombstone
+from ..lifecycle.tombstones import (
+    create_tombstone,
+    get_tombstone_status,
+)
+from ..lifecycle.tombstones import (
+    revoke_tombstone as _revoke_tombstone,
+)
 from ..models.tombstones import (
     TombstoneCreateRequest,
     TombstoneRecord,
     TombstoneRevocationRecord,
     TombstoneRevokeRequest,
     TombstoneStatusResponse,
-)
-from ..tombstone_signing import get_node_key_id, sign_revocation, sign_tombstone
-from ..tombstones import (
-    create_tombstone,
-    get_tombstone_status,
-)
-from ..tombstones import (
-    revoke_tombstone as _revoke_tombstone,
 )
 
 router = APIRouter(prefix="/v1/tombstones", tags=["tombstones"])

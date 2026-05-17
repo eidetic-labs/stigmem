@@ -116,3 +116,6 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
 - #471 continues module flattening by moving federation ingest/pull and
   federation transport/security helpers into `stigmem_node.federation`, while
   retaining root-level compatibility aliases for historical imports.
+- #473 continues module flattening by moving lifecycle/deletion implementation
+  helpers into `stigmem_node.lifecycle`, while retaining root-level compatibility
+  aliases for historical imports.

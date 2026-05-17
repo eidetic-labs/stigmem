@@ -22,7 +22,7 @@ from ..garden_acl import (
     require_garden_read,
     require_quarantine_moderator_or_admin,
 )
-from ..immutability import (
+from ..lifecycle.immutability import (
     set_fact_garden_membership,
     set_fact_quarantine_status,
     set_fact_validity_override,

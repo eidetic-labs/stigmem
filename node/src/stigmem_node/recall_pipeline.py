@@ -246,7 +246,7 @@ def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
     from datetime import UTC, datetime
 
     from .db import db
-    from .immutability import set_fact_quarantine_status
+    from .lifecycle.immutability import set_fact_quarantine_status
     from .observability.audit_event import (
         INSTRUCTION_QUARANTINED,
         emit_instruction_event_if_applicable,

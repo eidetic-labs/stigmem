@@ -332,8 +332,8 @@ def _verify_signed_artifact_or_400(
 
 def _ingest_revocation(payload: dict[str, Any], fed_settings: Any) -> dict[str, Any]:
     """Parse + verify + apply an inbound revocation. Returns the success response dict."""
-    from ..tombstone_signing import verify_revocation_signature
-    from ..tombstones import apply_inbound_revocation
+    from ..lifecycle.tombstone_signing import verify_revocation_signature
+    from ..lifecycle.tombstones import apply_inbound_revocation
 
     try:
         rev = TombstoneRevocationRecord(**payload)
@@ -357,8 +357,8 @@ def _ingest_revocation(payload: dict[str, Any], fed_settings: Any) -> dict[str, 
 
 def _ingest_tombstone(payload: dict[str, Any], fed_settings: Any) -> dict[str, Any]:
     """Parse + verify + apply an inbound tombstone. Returns the success response dict."""
-    from ..tombstone_signing import verify_tombstone_signature
-    from ..tombstones import apply_inbound_tombstone
+    from ..lifecycle.tombstone_signing import verify_tombstone_signature
+    from ..lifecycle.tombstones import apply_inbound_tombstone
 
     try:
         record = TombstoneRecord(**payload)

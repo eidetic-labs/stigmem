@@ -8,7 +8,7 @@ import sys
 
 def _cmd_decay_sweep(args: argparse.Namespace) -> int:
     from ..db import apply_migrations
-    from ..decay import run_decay_sweep
+    from ..lifecycle.decay import run_decay_sweep
     from ..settings import settings
 
     db_path: str = args.db or settings.db_path

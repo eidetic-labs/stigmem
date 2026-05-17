@@ -503,7 +503,7 @@ def _cmd_backfill_cids(args: argparse.Namespace) -> int:
     import sqlite3 as _sqlite3
 
     from .cid import compute_cid as _compute_cid
-    from .immutability import set_fact_cid_backfill_status
+    from .lifecycle.immutability import set_fact_cid_backfill_status
 
     db_path: str | None = getattr(args, "db", None)
     if db_path is None:

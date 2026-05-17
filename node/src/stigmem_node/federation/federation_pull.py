@@ -231,8 +231,8 @@ async def pull_tombstones_from_peer_once(
         )
 
     # Ingest tombstones and revocations
+    from ..lifecycle.tombstones import apply_inbound_revocation, apply_inbound_tombstone
     from ..models.tombstones import TombstoneRecord, TombstoneRevocationRecord
-    from ..tombstones import apply_inbound_revocation, apply_inbound_tombstone
 
     for t in tombstones:
         try:

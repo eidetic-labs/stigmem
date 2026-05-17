@@ -8,7 +8,7 @@ from typing import Annotated, Any
 from fastapi import Header, HTTPException, Query, Request
 
 from ...db import db
-from ...federation_ingest import FederationHlcSkewError
+from ...federation_ingest import FederationHlcSkewError, FederationIntegrityError
 from ...identity.capability import CapabilityTokenError, verify_token
 from ...identity.trust_store import get_peer_manifest
 from ...metrics import FEDERATION_EGRESS
@@ -340,6 +340,8 @@ def _push_fact_with_cap_token(
         return True, None
     except FederationHlcSkewError:
         return False, {"fact_id": fact.get("id"), "error": "hlc_skew"}
+    except FederationIntegrityError as exc:
+        return False, {"fact_id": fact.get("id"), "error": exc.reason}
     except Exception:
         return False, {"fact_id": fact.get("id"), "error": "ingest_error"}
 
@@ -409,5 +411,7 @@ def _push_fact_with_peer_token(
         return True, None
     except FederationHlcSkewError:
         return False, {"fact_id": fact.get("id"), "error": "hlc_skew"}
+    except FederationIntegrityError as exc:
+        return False, {"fact_id": fact.get("id"), "error": exc.reason}
     except Exception:
         return False, {"fact_id": fact.get("id"), "error": "ingest_error"}

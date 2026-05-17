@@ -16,7 +16,7 @@ from typing import Any
 import httpx
 
 from .db import db
-from .federation_ingest import ingest_fact, write_audit_log
+from .federation_ingest import FederationIntegrityError, ingest_fact, write_audit_log
 from .metrics import FEDERATION_INGRESS, REPLICATION_LAG
 from .peer_token import create_peer_token
 from .settings import settings
@@ -71,7 +71,7 @@ async def pull_from_peer_once(
             resp = await client.get(
                 f"{peer['node_url']}/v1/federation/facts",
                 params=params,
-                headers={"Authorization": f"Bearer {token}"},
+                headers={"Authorization": f"Bearer {token}", "Stigmem-Verify": "full"},
                 timeout=30.0,
             )
         except httpx.RequestError as exc:
@@ -113,11 +113,30 @@ async def pull_from_peer_once(
         # derive them from the peer registry rather than reading from the fact payload.
         ingested = 0
         for fact in data.get("facts", []):
-            ingest_fact(
-                fact,
-                peer["node_id"],
-                origin_allowed_scopes=allowed_scopes,
-            )
+            try:
+                ingest_fact(
+                    fact,
+                    peer["node_id"],
+                    origin_allowed_scopes=allowed_scopes,
+                )
+            except FederationIntegrityError as exc:
+                logger.warning(
+                    "Rejected federated fact %s from %s: %s",
+                    exc.fact_id,
+                    peer["node_id"],
+                    exc.reason,
+                )
+                write_audit_log(
+                    peer["node_id"],
+                    "federation_integrity_rejected",
+                    {
+                        "fact_id": exc.fact_id,
+                        "reason": exc.reason,
+                        "stored_cid": exc.stored_cid,
+                        "computed_cid": exc.computed_cid,
+                    },
+                )
+                continue
             ingested += 1
 
         if ingested:

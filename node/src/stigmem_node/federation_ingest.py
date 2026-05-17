@@ -42,6 +42,26 @@ class FederationHlcSkewError(ValueError):
         )
 
 
+class FederationIntegrityError(ValueError):
+    """Inbound federated fact failed integrity verification before ingest."""
+
+    def __init__(
+        self,
+        *,
+        fact_id: str,
+        sender_node_id: str,
+        reason: str,
+        stored_cid: str | None = None,
+        computed_cid: str | None = None,
+    ) -> None:
+        self.fact_id = fact_id
+        self.sender_node_id = sender_node_id
+        self.reason = reason
+        self.stored_cid = stored_cid
+        self.computed_cid = computed_cid
+        super().__init__(f"inbound fact integrity verification failed: {reason}")
+
+
 def _encode_v(value: dict[str, Any]) -> str:
     vtype = value["type"]
     v = value.get("v")
@@ -59,6 +79,34 @@ def _interpret_as(fact: dict[str, Any]) -> str:
 
         raise HTTPException(status_code=422, detail="invalid_interpret_as")
     return str(interpret_as)
+
+
+def _verify_inbound_cid(fact: dict[str, Any], sender_node_id: str) -> str | None:
+    from .cid import compute_cid
+
+    stored_cid = fact.get("cid")
+    if stored_cid is None:
+        return None
+    fact_id = str(fact.get("id", ""))
+    value = fact.get("value", {})
+    computed_cid = compute_cid(
+        entity=str(fact.get("entity", "")),
+        relation=str(fact.get("relation", "")),
+        value_type=str(value.get("type", "")),
+        value_v=_encode_v(value),
+        source=str(fact.get("source", "")),
+        scope=str(fact.get("scope", "")),
+        confidence=float(fact.get("confidence", 1.0)),
+    )
+    if stored_cid != computed_cid:
+        raise FederationIntegrityError(
+            fact_id=fact_id,
+            sender_node_id=sender_node_id,
+            reason="cid_mismatch",
+            stored_cid=str(stored_cid),
+            computed_cid=computed_cid,
+        )
+    return str(stored_cid)
 
 
 def _resolve_quarantine_garden_id(failure_detail: str) -> str:
@@ -110,6 +158,28 @@ def _audit_peer_hlc_anomaly(
     )
 
 
+def _audit_peer_integrity_failure(
+    *,
+    conn: Any,
+    exc: FederationIntegrityError,
+) -> None:
+    from .audit_event import emit
+
+    emit(
+        "federation_integrity_rejected",
+        entity_uri="system:federation",
+        fact_id=exc.fact_id,
+        source=exc.sender_node_id,
+        detail={
+            "sender_node_id": exc.sender_node_id,
+            "reason": exc.reason,
+            "stored_cid": exc.stored_cid,
+            "computed_cid": exc.computed_cid,
+        },
+        conn=conn,
+    )
+
+
 def ingest_fact(
     fact: dict[str, Any],
     sender_node_id: str,
@@ -142,6 +212,13 @@ def ingest_fact(
     fact_id = fact["id"]
     scope = fact["scope"]
     source = fact["source"]
+    try:
+        inbound_cid = _verify_inbound_cid(fact, sender_node_id)
+    except FederationIntegrityError as exc:
+        with db() as conn:
+            _audit_peer_integrity_failure(conn=conn, exc=exc)
+            conn.commit()
+        raise
     interpret_as = _interpret_as(fact)
     is_instruction = is_instruction_fact(
         fact.get("entity"),
@@ -222,8 +299,8 @@ def ingest_fact(
                 valid_until, confidence, scope, hlc, received_from,
                 origin_node_id, origin_allowed_scopes, re_federation_blocked,
                 source_trust, quarantine_garden_id, quarantine_status,
-                quarantine_reason, interpret_as)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                quarantine_reason, interpret_as, cid)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 fact_id,
                 fact["entity"],
@@ -245,6 +322,7 @@ def ingest_fact(
                 quarantine_status,
                 quarantine_reason,
                 interpret_as,
+                inbound_cid,
             ),
         )
 

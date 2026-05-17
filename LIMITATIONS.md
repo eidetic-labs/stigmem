@@ -69,16 +69,16 @@ The capability-based redesign is present on `main`; the v0.9.0bN beta series rem
 
 ### 4. The agent feedback loop (read-injected → write-poisoned → replicate)
 
-**Status:** Partially mitigated on `main`. Same-session read/write graph tracking rejects writes back into scopes a session has read unless the write carries explicit source-fact provenance, and `summarize_with_provenance` supports legitimate derived writes. Threat-model status is current; full adapter/session propagation evidence and outbound replication exclusion remain pending.
+**Status:** In review on `main`. Same-session read/write graph tracking rejects writes back into scopes a session has read unless the write carries explicit source-fact provenance, and `summarize_with_provenance` supports legitimate derived writes. Supported MCP/OpenClaw/Python/TypeScript surfaces now propagate sessions and provenance, and outbound federation pull excludes provenance-derived facts.
 
-**What this means:** the most direct same-session worm path is blocked when clients propagate `Stigmem-Session` and provenance correctly. The risk is not closed until supported adapters propagate sessions by default and outbound replication excludes transitively recalled facts where required.
+**What this means:** the most direct same-session worm path is structurally blocked for supported clients and adapters when they use the shipped session/provenance contract. The risk stays in review until release certification and operator validation exercise those controls.
 
 **What to do today:**
 
 - Restrict agent writer keys to the narrowest possible scope. Agents should not hold writer keys for any scope they also read from where they consume cross-org content, period.
 - If your agent must both read company-scope facts and write company-scope facts, the read content must come from sources you trust (your own organization's writes, not federated peers).
 - Use session headers and `derived_from` provenance for any agent write derived from recalled facts.
-- Treat OpenClaw as alpha/evaluation-only. The adapter now has audit-mapped C1-C4/H1-H5 regression coverage, fail-closed boot behavior, visible partial-write failures, channel-separated recall handling, and handoff-target allowlisting, but the broader R-21 risk remains open until supported adapters propagate sessions by default and outbound replication excludes transitively recalled facts.
+- Treat OpenClaw as alpha/evaluation-only. The adapter now has audit-mapped C1-C4/H1-H5 regression coverage, fail-closed boot behavior, visible partial-write failures, channel-separated recall handling, handoff-target allowlisting, stable session propagation, and provenance-carrying handoff writes, but the broader R-21 risk remains in review until certification and operator validation complete.
 
 ---
 
@@ -140,9 +140,9 @@ The remaining beta hardening work brings: automated rotation runbooks and an "ex
 adapter separates retrieved content from instruction-channel recall output and
 requires callers to place `SYSTEM_PROMPT_DIRECTIVE` above the delimited
 `UNTRUSTED STIGMEM CONTENT` summary. Audit-mapped C1-C4/H1-H5 regression tests
-now cover the known critical/high adapter findings. Broader R-21 hardening
-remains in flight for supported-adapter session propagation and outbound
-replication exclusion.
+now cover the known critical/high adapter findings. Broader R-21 hardening has
+landed for supported-adapter session propagation and outbound replication
+exclusion, but still needs release certification and operator validation.
 
 **What this means:** recent hardening has addressed API-key fail-closed behavior,
 boot failure handling, target allowlists, visible multi-fact write failures, and
@@ -151,7 +151,7 @@ untrusted data. Do not treat retrieved facts as instructions unless a future
 instruction-channel contract explicitly authorizes that use.
 
 **What to do today:** treat the OpenClaw adapter as `experimental/` and outside
-the supported production surface until #357 lands with tests. If you've
+the supported production surface until certification and operator validation complete. If you've
 integrated against it, use private nodes, least-privilege keys, explicit handoff
 allowlists, and avoid high-stakes workflows that inject recalled facts into an
 LLM prompt.

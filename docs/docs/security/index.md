@@ -17,19 +17,19 @@ sidebar_position: 1
 | Status | Count | Description |
 |---|---|---|
 | **Mitigated** | 10 | mTLS, quotas, key max-age, audit log, replay fuzz, capability tokens, container hardening, and R-19 HLC skew bounds — see the [threat model risk register](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md) |
-| **In review** | 1 | Prompt injection (R-05); ADR-003 structural controls now exist on `main`, sanitizer remains defense-in-depth, and live certification plus operator validation evidence are still required before marking the risk mitigated |
+| **In review** | 2 | Prompt injection (R-05) and agent feedback-loop worm (R-21); structural controls now exist on `main`, sanitizer remains defense-in-depth, and live certification plus operator validation evidence are still required before marking the risks mitigated |
 | **Residual** | 0 | No risks are currently tracked as sanitizer-only residual risk in the v0.9.0a1 register |
-| **Open** | 7 | R-15 instruction-scope injection, R-16 RTBF DoS, R-17 legal-hold exposure, R-18 CID field-exclusion, R-21 agent feedback-loop worm, R-22 release supply-chain, R-23 admin-level storage tampering |
+| **Open** | 6 | R-15 instruction-scope injection, R-16 RTBF DoS, R-17 legal-hold exposure, R-18 CID field-exclusion, R-22 release supply-chain, R-23 admin-level storage tampering |
 | **Accepted** | 5 | R-04 at-rest encryption default-off, R-07 Obsidian plugin key storage, R-08 libSQL cloud backend, R-13 cloud embedding data residency, R-20 cloud embedding poisoning |
 
 **The most-severe new structural risk in v0.9.0a1 is R-23** (admin-level storage tampering): an attacker with admin privileges on a stigmem node can — without [ADR-016](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/016-storage-immutability-enforcement.md)'s mitigations — overwrite stored facts, bypassing [ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)'s prompt-injection trust boundary by silently changing `interpret_as` from `content` to `instruction` at the storage layer. Mitigation is the ADR-016 stack (L1-L5: append-only journal, SQLite triggers, CIDs per [ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md), local hash chain, Sigstore Rekor anchor). Targeted: the v0.9.0bN beta series.
 
 The second-priority new risk is R-21 (agent feedback-loop worm). Main now has
-same-session read/write provenance controls and OpenClaw handoff-target
-allowlisting, but the risk remains open until supported adapters propagate
-sessions by default and outbound replication excludes transitively recalled
-facts. The OpenClaw adapter remains an experimental alpha connector until its
-remaining audit blockers close.
+same-session read/write provenance controls, OpenClaw handoff-target
+allowlisting, supported adapter/session propagation, and outbound replication
+exclusion for provenance-derived facts. R-21 remains in review until release
+certification and operator validation cover those controls. The OpenClaw adapter
+remains an experimental alpha connector until that validation is complete.
 
 For the full risk register: see the **[Threat Model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md)** (`spec/security/threat-model.md`).
 

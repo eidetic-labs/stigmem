@@ -66,6 +66,7 @@ def pull_facts(
         "entity NOT LIKE 'stigmem:conflict:%'",  # conflict entities are local (§6.5)
         "relation NOT LIKE 'stigmem:%'",  # meta-facts (received_from, ttl) are local
         "re_federation_blocked = 0",  # exclude company-scope relay-blocked facts (§6.8.2)
+        "(derived_from IS NULL OR derived_from = '' OR derived_from = '[]')",
     ]
     if cursor:
         conditions.append("hlc > ?")

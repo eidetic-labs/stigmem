@@ -201,6 +201,8 @@ class AssertRequest(BaseModel):
     confidence: float = 1.0
     scope: FactScope = "company"
     valid_until: str | None = None
+    write_mode: str = "assert"
+    derived_from: list[dict[str, Any]] = Field(default_factory=list)
 
     model_config = {"extra": "allow"}
 

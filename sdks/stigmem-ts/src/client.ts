@@ -13,6 +13,7 @@ import type {
   FactPage,
   FactScope,
   FactValue,
+  GetFactOptions,
   LintOptions,
   LintResult,
   MemoryCard,
@@ -25,6 +26,8 @@ import type {
   SubscribeOptions,
 } from "./types.js";
 import { sv } from "./types.js";
+
+const SESSION_HEADER = "Stigmem-Session";
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -123,6 +126,7 @@ export class StigmemClient {
     path: string,
     body?: unknown,
     params?: Record<string, string | number | boolean | undefined>,
+    headers?: Record<string, string>,
   ): Promise<T> {
     let url = `${this.baseUrl}${path}`;
     if (params) {
@@ -134,11 +138,15 @@ export class StigmemClient {
     }
     const res = await this.fetchFn(url, {
       method,
-      headers: this.headers,
+      headers: { ...this.headers, ...headers },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
     await raiseForStatus(res);
     return res.json() as Promise<T>;
+  }
+
+  private sessionHeaders(sessionId?: string): Record<string, string> | undefined {
+    return sessionId ? { [SESSION_HEADER]: sessionId } : undefined;
   }
 
   // ------------------------------------------------------------------
@@ -167,9 +175,11 @@ export class StigmemClient {
       source,
       confidence: opts.confidence ?? 1.0,
       scope: opts.scope ?? "company",
+      write_mode: opts.write_mode ?? "assert",
+      derived_from: opts.derived_from ?? [],
       ...(opts.valid_until ? { valid_until: opts.valid_until } : {}),
     };
-    return this.req<Fact>("POST", "/v1/facts", body);
+    return this.req<Fact>("POST", "/v1/facts", body, undefined, this.sessionHeaders(opts.session_id));
   }
 
   async retract(
@@ -188,8 +198,8 @@ export class StigmemClient {
     );
   }
 
-  async getFact(factId: string): Promise<Fact> {
-    return this.req<Fact>("GET", `/v1/facts/${factId}`);
+  async getFact(factId: string, opts: GetFactOptions = {}): Promise<Fact> {
+    return this.req<Fact>("GET", `/v1/facts/${factId}`, undefined, undefined, this.sessionHeaders(opts.session_id));
   }
 
   async query(opts: QueryOptions = {}): Promise<FactPage> {
@@ -204,7 +214,7 @@ export class StigmemClient {
       cursor:               opts.cursor,
       after:                opts.after,
       limit:                opts.limit ?? 50,
-    });
+    }, this.sessionHeaders(opts.session_id));
   }
 
   // ------------------------------------------------------------------
@@ -274,7 +284,7 @@ export class StigmemClient {
     if (opts.weights) body["weights"] = opts.weights;
     return this.req<RecallResponse>("POST", "/v1/recall", body, {
       legacy_format: opts.legacy_format ? true : undefined,
-    });
+    }, this.sessionHeaders(opts.session_id));
   }
 
   // ------------------------------------------------------------------

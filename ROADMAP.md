@@ -73,7 +73,10 @@ the beta-series exit and v1.0 release-candidate declaration.
   `FactValue.interpret_as`, `instruction:write` enforcement, instruction-typed
   federation quarantine, channel-separated `recall()` output, MCP/OpenClaw
   channel framing, instruction promotion/quarantine audit events, and
-  same-session read/write provenance controls.
+  same-session read/write provenance controls. R-21's remaining structural
+  gap has also landed: supported Python/TypeScript/MCP/OpenClaw surfaces
+  propagate sessions and provenance, and outbound federation pull excludes
+  provenance-derived facts.
 - Protocol-level adversarial vectors are in
   `data/conformance/adversarial/protocol/` and are part of the blocking
   conformance gate.
@@ -91,8 +94,8 @@ the beta-series exit and v1.0 release-candidate declaration.
 1. **Finish capability-redesign documentation and threat-model closure** per
    [ADR-003](docs/adr/003-prompt-injection.md) — R-05 is now in review after
    ADR-003/ADR-015 infrastructure landed, R-15 has the TB-3 adapter-promotion
-   threat row, and R-21 separates landed same-session controls from remaining
-   adapter/session propagation plus outbound replication exclusion evidence.
+   threat row, and R-21 is in review after same-session controls, supported
+   adapter/session propagation, and outbound replication exclusion landed.
 2. **Complete ADR-015 certification framework** per
    [ADR-015](docs/adr/015-adversarial-conformance-and-model-certification.md) —
    the 80-pattern corpus, runner/result schema, and OpenAI/Anthropic/Ollama

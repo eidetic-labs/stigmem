@@ -599,11 +599,12 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 4. Notify federation peers if the worm has propagated outbound; coordinate retractions with them.
 5. Review your agent-key issuance: any agent that both reads federated content and writes to non-trivial scopes is a worm-propagation candidate. Consider scope splitting.
 
-**Current protection status:** **Open with a partial protocol mitigation** (R-21, High priority).
-- **OpenClaw adapter status:** the adapter remains experimental. Fail-closed boot behavior, visible partial-write failures, channel-separated recall handling, and handoff-target allowlisting have landed; remaining audit closeout still blocks recommendation.
+**Current protection status:** **In review with structural controls landed** (R-21, High priority).
+- **OpenClaw adapter status:** the adapter remains experimental. Fail-closed boot behavior, visible partial-write failures, channel-separated recall handling, handoff-target allowlisting, stable session propagation, and provenance-carrying handoff writes have landed.
 - **Protocol control:** callers can set the `Stigmem-Session` header. Within that session, writes into scopes the caller already read are rejected unless the write uses `write_mode="summarize_with_provenance"` and carries `derived_from` source-fact provenance.
-- **Remaining structural work:** supported adapters must propagate sessions by default, and outbound replication exclusion for transitive recalls still needs to land before R-21 can close.
-- **Until the remaining work lands:** issue agent writer keys with the narrowest possible scope, never overlapping the scopes the same agent reads from.
+- **Replication control:** outbound federation pull excludes provenance-derived facts, preventing supported nodes from automatically re-exporting recalled summaries.
+- **Remaining review work:** release certification and operator validation must exercise these controls before R-21 moves from in review to mitigated.
+- **Until review completes:** issue agent writer keys with the narrowest possible scope, never overlapping the scopes the same agent reads from unless provenance-carrying summaries are explicitly required.
 
 ---
 
@@ -636,7 +637,7 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 4. Review the admin's session activity in the window since the malicious handoff was written.
 5. If OpenClaw is still in use, treat it as an alpha connector and keep handoff-target allowlists narrow until the remaining adapter audit closeout lands.
 
-**Current protection status:** **Partially mitigated; R-21 remains open.** Handoff allowlisting and fail-closed behavior have landed, but OpenClaw remains experimental until the remaining audit closeout is complete. Do not use OpenClaw handoffs in high-stakes or cross-org agent workflows without narrow allowlists and operator review.
+**Current protection status:** **In review; R-21 structural controls have landed.** Handoff allowlisting, fail-closed behavior, stable session propagation, and provenance-carrying handoff writes have landed, but OpenClaw remains experimental until release certification and operator validation complete. Do not use OpenClaw handoffs in high-stakes or cross-org agent workflows without narrow allowlists and operator review.
 
 ---
 
@@ -707,8 +708,8 @@ Until those ship, operators rely on out-of-band trust signals.
 | 9.1 Obsidian plugin key exposure | R-07 | Accepted | Issue minimum-scope key; rotate on suspicion |
 | 1.5 Rate limits disabled in production | R-02 (re-opened by misconfig) | Operational | Set non-zero rate limits before production deploy |
 | 4.3 Adversarial cloud embedding vectors | R-20 | Accepted | Stay on offline default; spot-check ranking if cloud-enabled |
-| 5.2 Feedback-loop worm | R-21 | Open (**High**) | Issue narrow-scope writer keys; keep supported adapters on session propagation once available; block outbound replication of transitively recalled facts until the replication exclusion lands |
-| 5.3 OpenClaw handoff to admin entity | R-21 (handoff variant) | Partially mitigated; R-21 still open | Keep OpenClaw evaluation-only; configure narrow handoff allowlists and review handoff writes until remaining adapter audit closeout lands |
+| 5.2 Feedback-loop worm | R-21 | In review (**High**) | Issue narrow-scope writer keys; require session propagation and provenance for agent-derived writes; rely on outbound replication exclusion for provenance-derived facts |
+| 5.3 OpenClaw handoff to admin entity | R-21 (handoff variant) | In review; OpenClaw remains experimental | Keep OpenClaw evaluation-only; configure narrow handoff allowlists and review handoff writes until release certification and operator validation complete |
 | 10.1 Build-pipeline compromise | R-22 | Open (**High**) | Pin versions; verify SHA256; watch advisories until Sigstore ships |
 
 ---

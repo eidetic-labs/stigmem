@@ -135,6 +135,9 @@ export interface AssertOptions {
   confidence?: number;
   scope?:      FactScope;
   valid_until?: string;
+  write_mode?: "assert" | "summarize_with_provenance";
+  derived_from?: Array<Record<string, unknown>>;
+  session_id?: string;
 }
 
 export interface QueryOptions {
@@ -148,6 +151,11 @@ export interface QueryOptions {
   cursor?:               string;
   after?:                string;
   limit?:                number;
+  session_id?:           string;
+}
+
+export interface GetFactOptions {
+  session_id?: string;
 }
 
 export interface ResolveOptions {
@@ -219,6 +227,7 @@ export interface RecallOptions {
   include_neighbors?: boolean;
   limit?:             number;
   legacy_format?:     boolean;
+  session_id?:        string;
 }
 
 export interface ScoreBreakdown {

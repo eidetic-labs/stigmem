@@ -5,6 +5,7 @@ Run with: uv run pytest stigmem/adapters/openclaw/tests/
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -101,6 +102,7 @@ def _adapter() -> OpenClawStigmemAdapter:
         api_key="sk-test",
         source_entity=SOURCE,
         allowed_handoff_targets=["agent:assistant", "agent:cto"],
+        session_id="openclaw-session-test",
     )
 
 
@@ -138,6 +140,17 @@ def test_boot_collects_user_prefs() -> None:
     assert ctx.facts[0].relation == "preference:theme"
     assert ctx.summary != ""
     assert "user:alice" in ctx.summary
+
+
+@respx.mock
+def test_boot_propagates_stable_session_header() -> None:
+    def side_effect(request: httpx.Request) -> httpx.Response:
+        assert request.headers["Stigmem-Session"] == "openclaw-session-test"
+        return httpx.Response(200, json=_page([]))
+
+    respx.get(f"{BASE}/v1/facts").mock(side_effect=side_effect)
+
+    _adapter().boot(user_entity="user:alice")
 
 
 @respx.mock
@@ -309,6 +322,11 @@ def test_emit_handoff_validates_refs_and_asserts() -> None:
 
     # intent:handoff_to, intent:handoff_summary, intent:context_ref (good only), intent:continuation
     assert assert_route.call_count == 4
+    for call in assert_route.calls:
+        assert call.request.headers["Stigmem-Session"] == "openclaw-session-test"
+        payload = json.loads(call.request.content)
+        assert payload["write_mode"] == "summarize_with_provenance"
+        assert payload["derived_from"] == [{"fact_id": "fact-good"}]
     assert result.created is True
     assert result.relations == (
         "intent:handoff_to",

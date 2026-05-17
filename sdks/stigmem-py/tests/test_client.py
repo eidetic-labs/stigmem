@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import httpx
 import pytest
 import respx
@@ -124,6 +126,31 @@ def test_assert_fact_text() -> None:
 
 
 @respx.mock
+def test_session_header_and_provenance_are_sent() -> None:
+    def side_effect(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        assert request.headers["Stigmem-Session"] == "session-123"
+        assert payload["write_mode"] == "summarize_with_provenance"
+        assert payload["derived_from"] == [{"fact_id": "fact-source"}]
+        return httpx.Response(
+            201,
+            json={**SAMPLE_FACT, "derived_from": [{"fact_id": "fact-source"}]},
+        )
+
+    respx.post(f"{BASE}/v1/facts").mock(side_effect=side_effect)
+    client = StigmemClient(url=BASE, api_key=KEY)
+    client.assert_fact(
+        entity="summary:1",
+        relation="roadmap:summary",
+        value=text_value("summary"),
+        source="agent:test",
+        write_mode="summarize_with_provenance",
+        derived_from=[{"fact_id": "fact-source"}],
+        session_id="session-123",
+    )
+
+
+@respx.mock
 def test_retract() -> None:
     retracted = {**SAMPLE_FACT, "id": "fact-003", "confidence": 0.0}
     respx.post(f"{BASE}/v1/facts").mock(
@@ -216,6 +243,18 @@ def test_recall_legacy_format_param() -> None:
     client = StigmemClient(url=BASE, api_key=KEY)
     result = client.recall("what is Alice's role?", token_budget=1000, legacy_format=True)
     assert isinstance(result, RecallResponse)
+    assert result.recall_id == "recall-001"
+
+
+@respx.mock
+def test_recall_sends_session_header() -> None:
+    def side_effect(request: httpx.Request) -> httpx.Response:
+        assert request.headers["Stigmem-Session"] == "session-123"
+        return httpx.Response(200, json=SAMPLE_RECALL_RESPONSE)
+
+    respx.post(f"{BASE}/v1/recall").mock(side_effect=side_effect)
+    client = StigmemClient(url=BASE, api_key=KEY)
+    result = client.recall("what is Alice's role?", session_id="session-123")
     assert result.recall_id == "recall-001"
 
 

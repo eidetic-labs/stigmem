@@ -35,6 +35,21 @@ This handbook covers everything you need to run a Stigmem node in production, fr
 
 ---
 
+## Operator helper scripts
+
+The public repo keeps reusable operator helpers in
+[`scripts/`](https://github.com/Eidetic-Labs/stigmem/tree/main/scripts):
+
+- `import_markdown_tree.py` imports a markdown index and linked markdown files
+  into a Stigmem node as facts. It is useful for bootstrapping runbooks,
+  team wikis, or personal knowledge bases into a deployment.
+- `stigmem-snapshot.sh` creates a human-readable markdown export of selected
+  facts and contradiction metrics. It complements, but does not replace, the
+  signed `stigmem snapshot` backup format described in
+  [Backup & restore](./runbooks/backup-restore).
+
+---
+
 ## Quick orientation
 
 A production Stigmem node has four operational concerns:

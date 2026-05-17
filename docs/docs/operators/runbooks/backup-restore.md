@@ -73,6 +73,29 @@ SNAP=$(stigmem snapshot create --out /tmp/snap.tar.gz && echo /tmp/snap.tar.gz)
 aws s3 cp "$SNAP" "s3://your-bucket/stigmem/$(basename $SNAP)"
 ```
 
+### Markdown export helper
+
+The signed `stigmem snapshot` CLI is the canonical backup and restore path. For
+operators who also want a human-readable markdown export for review, source
+control, or incident response packets, the repo includes
+[`scripts/stigmem-snapshot.sh`](https://github.com/Eidetic-Labs/stigmem/blob/main/scripts/stigmem-snapshot.sh).
+
+The helper queries the HTTP API for a chosen scope and entity list, writes a
+markdown report grouped by entity, and can include contradiction metrics. It
+expects `curl`, `jq`, and either `STIGMEM_API_KEY` or `--api-key` when the node
+requires auth.
+
+```bash
+scripts/stigmem-snapshot.sh \
+  --node-url http://localhost:8765 \
+  --scope team \
+  --entities "team:ops,team:eng" \
+  --output /var/backups/stigmem/team-export-$(date -u +%Y-%m-%d).md
+```
+
+Treat this export as a secondary operator artifact, not as a restore format. Use
+the signed snapshot commands above for disaster recovery.
+
 ---
 
 ## Verifying a snapshot

@@ -216,6 +216,10 @@ STIGMEM_RATE_LIMIT_READ_PER_HOUR=50000
 
 Restart the node.
 
+Do not set both quota knobs to `0` in production. That kill switch disables
+quota enforcement globally and Stigmem logs a startup `SECURITY WARNING` when
+it is active; it is intended only for isolated local/dev/test environments.
+
 **Verify 429 enforcement:**
 
 ```bash

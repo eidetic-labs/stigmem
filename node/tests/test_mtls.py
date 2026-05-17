@@ -430,6 +430,34 @@ def test_federation_insecure_opt_in_logs_warning(
     assert "STIGMEM_FEDERATION_INSECURE=1" in caplog.text
 
 
+def test_rate_limit_kill_switch_logs_warning(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Both read/write rate-limit knobs at 0 should be loud at startup."""
+    from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
+
+    fake_settings = settings_module.Settings(
+        db_path=str(tmp_path / "rate_limit_warning.db"),
+        auth_required=False,
+        rate_limit_write_per_hour=0,
+        rate_limit_read_per_hour=0,
+    )
+    monkeypatch.setattr(settings_module, "settings", fake_settings)
+    monkeypatch.setattr(main_mod, "settings", fake_settings)
+
+    app = main_mod.create_app()
+    with caplog.at_level(logging.WARNING, logger="stigmem"), TestClient(app):
+        pass
+
+    assert "SECURITY WARNING: quota enforcement is disabled" in caplog.text
+    assert "local/dev/test" in caplog.text
+
+
 # ---------------------------------------------------------------------------
 # Regression: HIGH-1 — ca_bundle required when mTLS enabled (§22.1.2.2)
 # ---------------------------------------------------------------------------

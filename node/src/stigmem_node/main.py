@@ -65,6 +65,19 @@ def _enforce_federation_transport_security() -> None:
     )
 
 
+def _warn_if_rate_limit_kill_switch_enabled() -> None:
+    """Warn when both legacy rate-limit knobs disable quota enforcement."""
+    if settings.rate_limit_write_per_hour != 0 or settings.rate_limit_read_per_hour != 0:
+        return
+
+    logger.warning(
+        "SECURITY WARNING: quota enforcement is disabled because "
+        "STIGMEM_RATE_LIMIT_WRITE_PER_HOUR=0 and "
+        "STIGMEM_RATE_LIMIT_READ_PER_HOUR=0 are both set. Use this only for "
+        "local/dev/test."
+    )
+
+
 def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -73,6 +86,7 @@ def create_app() -> FastAPI:
         if settings.trust_mode == "strict" and not settings.node_private_key:
             raise RuntimeError("STIGMEM_NODE_PRIVATE_KEY must be set when trust_mode=strict")
         _enforce_federation_transport_security()
+        _warn_if_rate_limit_kill_switch_enabled()
 
         discovered_plugins = register_discovered_plugins(freeze=False)
         _include_plugin_routers(app, discovered_plugins)

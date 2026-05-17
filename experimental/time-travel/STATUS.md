@@ -32,7 +32,7 @@ signed or published plugin artifact is available yet.
 
 | Gate | Description | Status | Date | Artifact |
 |---|---|---|---|---|
-| 1 | Threat-model delta | Open | — | — |
+| 1 | Threat-model delta | Partial | 2026-05-16 | [`security.md`](security.md) records R-17/R-18 contributions; promotion still requires legal-hold and CID/source-trust test evidence |
 | 2 | ADR or amendment | Open | — | — |
 | 3 | Conformance vectors | Partial | 2026-05-16 | Plugin-required vectors and plugin-loaded/default-install tests on `main` |
 | 4 | 30-day external operator soak | Open | — | — |

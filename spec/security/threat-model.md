@@ -1,7 +1,7 @@
 # Stigmem Threat Model
 
-**Revision:** 2.5 — ADR-018 per-feature security colocation (2026-05-15)
-**Status:** Current. Re-versioned from Rev 2.0 to v0.9.0a1 baseline per [ADR-001](../../docs/adr/001-versioning.md) + [ADR-019](../../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). pre-reset hardening evidence carried forward; R-19 through R-23 added; STRIDE residual columns refreshed; ADR-003 / ADR-007 / ADR-016 cross-references added. Rev 2.6 records the Phase B §5.2 prompt-injection status pass after ADR-003 controls and ADR-015 corpus/runner infrastructure landed.
+**Revision:** 2.8 — ADR-018 per-feature security colocation completion (2026-05-16)
+**Status:** Current. Re-versioned from Rev 2.0 to v0.9.0a1 baseline per [ADR-001](../../docs/adr/001-versioning.md) + [ADR-019](../../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). pre-reset hardening evidence carried forward; R-19 through R-23 added; STRIDE residual columns refreshed; ADR-003 / ADR-007 / ADR-016 cross-references added. Rev 2.8 completes the ADR-018 per-feature security colocation map for Phase B §5.2b.
 **Previous revisions:** 2.0 (2026-05-05, retracted-label posture preserved as historical context); 1.0 — pre-reset hardening (2026-05-04) — archived.
 **Applies to:** Stigmem v0.9.0a1 and reference node implementation.
 **Spec cross-reference:** §19 (Federation Trust), §20 (Recall & Graph), §21 (Lazy Instruction Discovery), §22 (Security Hardening), §23 (RTBF Tombstones), §24 (Time-Travel Queries), §25 (Content-Addressed Fact IDs).
@@ -324,7 +324,7 @@ ownership is:
 |---|---|---|
 | R-19 | Mitigated | Protocol-level, cross-cutting federation risk. Evidence is recorded in `spec/security/evidence-registry.json`; no per-feature `security.md` owner. |
 | R-20 | Accepted | Protocol-level operator opt-in risk for cloud embedding. Tracked in the unified register and experimental feature index; no v0.9.x mitigation planned. |
-| R-21 | In review | Protocol-level cross-cutting risk. Contributor notes now live in [`experimental/lazy-instruction-discovery/security.md`](../../experimental/lazy-instruction-discovery/security.md) and [`experimental/memory-garden-acl/security.md`](../../experimental/memory-garden-acl/security.md). |
+| R-21 | In review | Protocol-level cross-cutting risk. Contributor notes now live in [`experimental/lazy-instruction-discovery/security.md`](../../experimental/lazy-instruction-discovery/security.md), [`experimental/memory-garden-acl/security.md`](../../experimental/memory-garden-acl/security.md), and [`experimental/multi-tenant/security.md`](../../experimental/multi-tenant/security.md). |
 | R-22 | Open | Protocol-level release-engineering risk. Stays in this register until the v1.0.0rcN signed-release pipeline lands. |
 
 Per-feature owned risks are colocated under the owning experimental feature:
@@ -332,6 +332,16 @@ R-15 in [`experimental/lazy-instruction-discovery/security.md`](../../experiment
 and R-16/R-17 in [`experimental/tombstones/security.md`](../../experimental/tombstones/security.md).
 R-18 and R-21 are intentionally protocol-level per ADR-018 because CIDs are
 core and the worm vector is structurally cross-cutting.
+
+Feature-local security analysis also exists for material contributors without
+owned risks: [`experimental/time-travel/security.md`](../../experimental/time-travel/security.md)
+records R-17/R-18 contributions, [`experimental/source-attestation/security.md`](../../experimental/source-attestation/security.md)
+records the R-22 release-supply-chain boundary, and
+[`experimental/multi-tenant/security.md`](../../experimental/multi-tenant/security.md)
+records tenant-boundary contributions to R-01, R-02, and R-21. Adapter,
+deployment, SDK, dashboard, and workbench directories under `experimental/`
+remain covered by their `STATUS.md` files and this protocol-level register
+until they own or materially contribute to a numbered R-XX risk.
 
 ---
 
@@ -405,6 +415,7 @@ Pre-reset hardening is complete. The following risks remain in the v0.9.0a1 base
 ## 10. Review and Maintenance
 
 - This threat model is reviewed on every spec revision that introduces a new trust boundary or modifies an existing one.
+- **Rev 2.8 (2026-05-16):** Completed the Phase B §5.2b documentation map: added feature-local security files for time-travel, source-attestation, and multi-tenant; documented why other experimental adapter/deployment/SDK/workbench directories do not receive `security.md` until they own or materially contribute to a numbered risk; and added the operator-facing navigation page for where security analysis lives.
 - **Rev 2.7 (2026-05-16):** Moved R-21 from **Open** to **In review** after #394 closed the remaining structural worm-boundary gaps: supported adapter/session propagation for MCP and OpenClaw, Python/TypeScript SDK session/provenance options, and outbound pull-replication exclusion for provenance-derived facts. R-21 still requires release certification and operator validation before mitigation status.
 - **Rev 2.6 (2026-05-16):** Closed the Phase B §5.2 prompt-injection status pass. R-05 moved from sanitizer-only residual framing to **In review** after ADR-003 structural controls and ADR-015 corpus/runner infrastructure landed; R-15 gained a TB-3 adapter-promotion STRIDE row and now records the remaining admission/promotion-policy and adapter-conformance evidence; R-21 status now separates landed same-session provenance controls and OpenClaw handoff allowlisting from remaining adapter/session propagation plus outbound replication exclusion work.
 - **Rev 2.5 (2026-05-15):** Implemented ADR-018 colocation for feature-owned security analysis. R-15 canonical analysis moved to `experimental/lazy-instruction-discovery/security.md`; R-16/R-17 canonical analysis moved to `experimental/tombstones/security.md`; R-21 contributor notes added for lazy instruction discovery and memory garden ACLs. Added CI validation for per-feature security frontmatter, risk IDs, cross-references, and public-doc isolation from private planning paths.

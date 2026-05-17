@@ -57,6 +57,12 @@ class ScoredFact(BaseModel):
     from_card: bool = False
 
 
+class FactChainProof(BaseModel):
+    tenant_id: str
+    checked_entries: int
+    head_hash: str | None = None
+
+
 class RecallResponse(BaseModel):
     recall_id: str
     query_hash: str
@@ -68,3 +74,4 @@ class RecallResponse(BaseModel):
     tokens_used: int
     truncated: bool
     tombstone_notices: list[TombstoneNotice] = Field(default_factory=list)
+    chain_proof: FactChainProof | None = None

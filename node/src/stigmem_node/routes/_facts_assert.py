@@ -485,6 +485,9 @@ def assert_fact_impl(
             )
 
         row = conn.execute("SELECT * FROM facts WHERE id=?", (fact_id,)).fetchone()
+        from ..fact_chain import append_fact_chain_entry
+
+        append_fact_chain_entry(conn, row)
         persisted_record = row_to_record(row, contradicted=False)
         get_registry().fire_fire_and_forget(
             "post_assert_persist",

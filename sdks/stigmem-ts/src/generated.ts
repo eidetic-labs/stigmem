@@ -1470,6 +1470,15 @@ export interface components {
             /** Permissions */
             permissions: string[];
         };
+        /** FactChainProof */
+        FactChainProof: {
+            /** Checked Entries */
+            checked_entries: number;
+            /** Head Hash */
+            head_hash?: string | null;
+            /** Tenant Id */
+            tenant_id: string;
+        };
         /** FactRecord */
         FactRecord: {
             /** Attested */
@@ -2026,6 +2035,7 @@ export interface components {
         };
         /** RecallResponse */
         RecallResponse: {
+            chain_proof?: components["schemas"]["FactChainProof"] | null;
             /** Content */
             content?: components["schemas"]["ScoredFact"][];
             /** Facts */
@@ -2321,6 +2331,7 @@ export type SchemaDeferenceRule = components['schemas']['DeferenceRule'];
 export type SchemaEscalationPolicy = components['schemas']['EscalationPolicy'];
 export type SchemaExchangeRequest = components['schemas']['ExchangeRequest'];
 export type SchemaExchangeResponse = components['schemas']['ExchangeResponse'];
+export type SchemaFactChainProof = components['schemas']['FactChainProof'];
 export type SchemaFactRecord = components['schemas']['FactRecord'];
 export type SchemaFactValue = components['schemas']['FactValue'];
 export type SchemaFederationFactsResponse = components['schemas']['FederationFactsResponse'];
@@ -4252,6 +4263,7 @@ export interface operations {
             };
             header?: {
                 "Stigmem-Session"?: string | null;
+                "Stigmem-Verify"?: string | null;
             };
             path?: never;
             cookie?: never;

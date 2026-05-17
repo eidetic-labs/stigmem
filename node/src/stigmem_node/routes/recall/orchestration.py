@@ -16,7 +16,13 @@ from ...graph import MAX_DEPTH
 from ...metrics import FACT_READ, RECALL_RANKER_DURATION, observe_duration
 from ...models.constants import VALID_SCOPES
 from ...models.facts import FactRecord, FactValue
-from ...models.recall import RecallRequest, RecallResponse, ScoreBreakdown, ScoredFact
+from ...models.recall import (
+    FactChainProof,
+    RecallRequest,
+    RecallResponse,
+    ScoreBreakdown,
+    ScoredFact,
+)
 from ...plugins import get_registry
 from ...recall_pipeline import apply_recall_pipeline
 from ...session_graph import record_read_scopes
@@ -46,6 +52,7 @@ def recall(
     identity: Annotated[Identity, Depends(resolve_identity)],
     response: Response,
     session_id: Annotated[str | None, Header(alias="Stigmem-Session")] = None,
+    verify_mode: Annotated[str | None, Header(alias="Stigmem-Verify")] = None,
     legacy_format: Annotated[
         bool,
         Query(
@@ -69,7 +76,13 @@ def recall(
             "stigmem.scope": req.scope,
         },
     ) as _span:
-        result = _recall_impl(req, identity, _span, session_id=session_id)
+        result = _recall_impl(
+            req,
+            identity,
+            _span,
+            session_id=session_id,
+            verify_full=verify_mode == "full",
+        )
     headers = {}
     if result.total_scored is not None:
         headers["X-Total-Count"] = str(result.total_scored)
@@ -111,7 +124,31 @@ def _validate_recall_request(req: RecallRequest, identity: Identity) -> None:
         )
 
 
-def _handle_as_of_recall(req: RecallRequest, identity: Identity) -> RecallResponse:
+def _chain_proof_or_409(conn: Any, tenant_id: str) -> FactChainProof:
+    from ...fact_chain import FactChainIntegrityError, build_fact_chain_proof
+
+    try:
+        return FactChainProof(**build_fact_chain_proof(conn, tenant_id=tenant_id))
+    except FactChainIntegrityError as exc:
+        result = exc.result
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "fact_chain_mismatch",
+                "message": "local fact hash chain verification failed",
+                "mismatch_reason": result.mismatch_reason,
+                "fact_id": result.fact_id,
+                "chain_seq": result.chain_seq,
+            },
+        ) from exc
+
+
+def _handle_as_of_recall(
+    req: RecallRequest,
+    identity: Identity,
+    *,
+    verify_full: bool = False,
+) -> RecallResponse:
     """§24 time-travel path. Validates as_of, runs the as_of impl, returns the response."""
     from ..facts import _validate_as_of
 
@@ -140,6 +177,7 @@ def _handle_as_of_recall(req: RecallRequest, identity: Identity) -> RecallRespon
             weights=req.weights,
             depth=req.depth,
         )
+        chain_proof = _chain_proof_or_409(conn, identity.tenant_id) if verify_full else None
     tokens_used = sum(sf.token_estimate for sf in packed)
     content, instructions = _split_interpretation_channels(packed)
     return RecallResponse(
@@ -154,6 +192,7 @@ def _handle_as_of_recall(req: RecallRequest, identity: Identity) -> RecallRespon
         tokens_used=tokens_used,
         truncated=False,
         tombstone_notices=notices,
+        chain_proof=chain_proof,
     )
 
 
@@ -336,11 +375,12 @@ def _recall_impl(
     _span: object,
     *,
     session_id: str | None = None,
+    verify_full: bool = False,
 ) -> RecallResponse:
     _validate_recall_request(req, identity)
 
     if req.as_of is not None:
-        result = _handle_as_of_recall(req, identity)
+        result = _handle_as_of_recall(req, identity, verify_full=verify_full)
         with db() as conn:
             record_read_scopes(
                 conn,
@@ -449,6 +489,7 @@ def _recall_impl(
             session_id=session_id,
             scopes={scored.fact.scope for scored in packed},
         )
+        chain_proof = _chain_proof_or_409(conn, identity.tenant_id) if verify_full else None
 
     logger.info(
         "recall id=%s scored=%d packed=%d tokens=%d truncated=%s",
@@ -473,4 +514,5 @@ def _recall_impl(
         token_budget=req.token_budget,
         tokens_used=tokens_used,
         truncated=truncated,
+        chain_proof=chain_proof,
     )

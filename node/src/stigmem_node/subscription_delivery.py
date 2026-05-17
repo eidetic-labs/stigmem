@@ -19,6 +19,7 @@ import asyncio
 import json
 import logging
 import sys
+import threading
 import time
 import uuid
 from datetime import UTC, datetime
@@ -35,6 +36,7 @@ from .recall_pipeline import apply_recall_pipeline
 from .tombstone_cache import is_tombstoned as _is_tombstoned
 
 logger = logging.getLogger("stigmem.subscriptions")
+_DELIVER_PENDING_LOCK = threading.Lock()
 
 
 # ---------------------------------------------------------------------------
@@ -102,73 +104,83 @@ def deliver_pending() -> None:
        ``delivered`` (success) or back to ``pending`` with a fresh
        ``next_retry_at`` (failure).
     """
-    now = datetime.now(UTC).isoformat()
-    claim_timeout_s = _settings_pkg.settings.subscription_claim_timeout_s
-    stale_cutoff = datetime.fromtimestamp(time.time() - claim_timeout_s, UTC).isoformat()
+    if not _DELIVER_PENDING_LOCK.acquire(blocking=False):
+        logger.debug("subscription delivery already in progress; skipping concurrent drain")
+        return
 
-    with db() as conn:
-        # 1. Recover stale claims left behind by a crashed worker.  We do NOT
-        #    reset delivery_attempts — the next attempt counts as a retry.
-        conn.execute(
-            """UPDATE subscription_events
-                  SET delivery_status='pending', claimed_at=NULL
-                WHERE delivery_status='delivering'
-                  AND claimed_at IS NOT NULL
-                  AND claimed_at < ?""",
-            (stale_cutoff,),
-        )
+    try:
+        now = datetime.now(UTC).isoformat()
+        claim_timeout_s = _settings_pkg.settings.subscription_claim_timeout_s
+        stale_cutoff = datetime.fromtimestamp(
+            time.time() - claim_timeout_s,
+            UTC,
+        ).isoformat()
 
-        # 2. Atomic claim.  The inner SELECT is the same predicate the old
-        #    non-atomic path used, joined to subscriptions for circuit-open
-        #    filtering.  The outer UPDATE … RETURNING gives us the claimed
-        #    rows in a single round-trip; no other caller can claim them
-        #    until we release them.
-        claimed = conn.execute(
-            """UPDATE subscription_events
-                  SET delivery_status='delivering', claimed_at=?
-                WHERE id IN (
-                    SELECT e.id
-                      FROM subscription_events e
-                      JOIN subscriptions s ON e.subscription_id = s.id
-                     WHERE e.delivery_status = 'pending'
-                       AND s.circuit_open = 0
-                       AND (e.next_retry_at IS NULL OR e.next_retry_at <= ?)
-                     ORDER BY e.created_at ASC
-                     LIMIT 100
-                )
-                RETURNING id""",
-            (now, now),
-        ).fetchall()
+        with db() as conn:
+            # 1. Recover stale claims left behind by a crashed worker.  We do NOT
+            #    reset delivery_attempts — the next attempt counts as a retry.
+            conn.execute(
+                """UPDATE subscription_events
+                      SET delivery_status='pending', claimed_at=NULL
+                    WHERE delivery_status='delivering'
+                      AND claimed_at IS NOT NULL
+                      AND claimed_at < ?""",
+                (stale_cutoff,),
+            )
 
-        if not claimed:
-            return
+            # 2. Atomic claim.  The inner SELECT is the same predicate the old
+            #    non-atomic path used, joined to subscriptions for circuit-open
+            #    filtering.  The outer UPDATE … RETURNING gives us the claimed
+            #    rows in a single round-trip; no other caller can claim them
+            #    until we release them.
+            claimed = conn.execute(
+                """UPDATE subscription_events
+                      SET delivery_status='delivering', claimed_at=?
+                    WHERE id IN (
+                        SELECT e.id
+                          FROM subscription_events e
+                          JOIN subscriptions s ON e.subscription_id = s.id
+                         WHERE e.delivery_status = 'pending'
+                           AND s.circuit_open = 0
+                           AND (e.next_retry_at IS NULL OR e.next_retry_at <= ?)
+                         ORDER BY e.created_at ASC
+                         LIMIT 100
+                    )
+                    RETURNING id""",
+                (now, now),
+            ).fetchall()
 
-        claimed_ids = [row["id"] for row in claimed]
-        # ``placeholders`` is a fixed "?,?,?…" string whose length comes from
-        # ``claimed_ids`` (UUIDs we just emitted into our own table) — no user
-        # input flows into the SQL text, so the f-string interpolation is safe.
-        placeholders = ",".join("?" * len(claimed_ids))
-        _base = (
-            "SELECT e.id, e.subscription_id, e.event_type, e.entity_uri, e.fact_id,"
-            " e.payload, e.created_at, e.delivery_attempts,"
-            " s.on_change, s.delivery_address, s.subscriber_identity, s.tenant_id,"
-            " s.circuit_open"
-            " FROM subscription_events e"
-            " JOIN subscriptions s ON e.subscription_id = s.id"
-            " WHERE e.id IN ("
-        )
-        select_sql = _base + placeholders + ")"  # noqa: S608 — fixed "?,…" string
-        events = conn.execute(select_sql, claimed_ids).fetchall()
+            if not claimed:
+                return
 
-    for event in events:
-        try:
-            payload = json.loads(event["payload"])
-            success = _deliver_one(event, payload)
-        except Exception as exc:
-            logger.error("Delivery error for event %s: %s", event["id"], exc)
-            success = False
+            claimed_ids = [row["id"] for row in claimed]
+            # ``placeholders`` is a fixed "?,?,?…" string whose length comes from
+            # ``claimed_ids`` (UUIDs we just emitted into our own table) — no user
+            # input flows into the SQL text, so the f-string interpolation is safe.
+            placeholders = ",".join("?" * len(claimed_ids))
+            _base = (
+                "SELECT e.id, e.subscription_id, e.event_type, e.entity_uri, e.fact_id,"
+                " e.payload, e.created_at, e.delivery_attempts,"
+                " s.on_change, s.delivery_address, s.subscriber_identity, s.tenant_id,"
+                " s.circuit_open"
+                " FROM subscription_events e"
+                " JOIN subscriptions s ON e.subscription_id = s.id"
+                " WHERE e.id IN ("
+            )
+            select_sql = _base + placeholders + ")"  # noqa: S608 — fixed "?,…" string
+            events = conn.execute(select_sql, claimed_ids).fetchall()
 
-        _record_result(event, success)
+        for event in events:
+            try:
+                payload = json.loads(event["payload"])
+                success = _deliver_one(event, payload)
+            except Exception as exc:
+                logger.error("Delivery error for event %s: %s", event["id"], exc)
+                success = False
+
+            _record_result(event, success)
+    finally:
+        _DELIVER_PENDING_LOCK.release()
 
 
 # ---------------------------------------------------------------------------

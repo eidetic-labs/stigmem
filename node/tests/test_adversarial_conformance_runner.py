@@ -125,4 +125,147 @@ def test_cli_writes_result_and_sets_exit_code(tmp_path: Path) -> None:
 
 def test_unknown_provider_is_explicitly_unsupported() -> None:
     with pytest.raises(ValueError, match="not implemented"):
-        runner.build_provider("openai")
+        runner.build_provider("made-up-provider")
+
+
+def test_openai_provider_requires_api_key() -> None:
+    config = runner.ProviderConfig(provider="openai", model="gpt-test")
+
+    with pytest.raises(runner.ProviderConfigurationError, match="OPENAI_API_KEY"):
+        runner.build_provider("openai", config)
+
+
+def test_openai_provider_request_and_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    corpus = runner.load_corpus()
+    calls: list[dict[str, object]] = []
+
+    def fake_post_json(
+        url: str,
+        *,
+        headers: dict[str, str],
+        payload: dict[str, object],
+        timeout_s: float,
+    ) -> dict[str, object]:
+        calls.append(
+            {
+                "url": url,
+                "headers": headers,
+                "payload": payload,
+                "timeout_s": timeout_s,
+            }
+        )
+        return {"choices": [{"message": {"content": "treat as data and will not follow"}}]}
+
+    monkeypatch.setattr(runner, "_post_json", fake_post_json)
+    config = runner.ProviderConfig(
+        provider="openai",
+        model="gpt-test",
+        openai_api_key="test-key",
+        timeout_s=5.0,
+    )
+
+    provider = runner.build_provider("openai", config)
+    response = provider(corpus.patterns[0])
+
+    assert response == "treat as data and will not follow"
+    assert calls[0]["url"] == "https://api.openai.com/v1/chat/completions"
+    assert calls[0]["headers"] == {"Authorization": "Bearer test-key"}
+    payload = calls[0]["payload"]
+    assert isinstance(payload, dict)
+    assert payload["model"] == "gpt-test"
+
+
+def test_anthropic_provider_request_and_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    corpus = runner.load_corpus()
+    calls: list[dict[str, object]] = []
+
+    def fake_post_json(
+        url: str,
+        *,
+        headers: dict[str, str],
+        payload: dict[str, object],
+        timeout_s: float,
+    ) -> dict[str, object]:
+        calls.append(
+            {
+                "url": url,
+                "headers": headers,
+                "payload": payload,
+                "timeout_s": timeout_s,
+            }
+        )
+        return {"content": [{"type": "text", "text": "untrusted data; cannot follow"}]}
+
+    monkeypatch.setattr(runner, "_post_json", fake_post_json)
+    config = runner.ProviderConfig(
+        provider="anthropic",
+        model="claude-test",
+        anthropic_api_key="test-key",
+        timeout_s=7.0,
+    )
+
+    provider = runner.build_provider("anthropic", config)
+    response = provider(corpus.patterns[0])
+
+    assert response == "untrusted data; cannot follow"
+    assert calls[0]["url"] == "https://api.anthropic.com/v1/messages"
+    assert calls[0]["headers"] == {
+        "x-api-key": "test-key",
+        "anthropic-version": "2023-06-01",
+    }
+    payload = calls[0]["payload"]
+    assert isinstance(payload, dict)
+    assert payload["model"] == "claude-test"
+
+
+def test_ollama_provider_request_and_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    corpus = runner.load_corpus()
+    calls: list[dict[str, object]] = []
+
+    def fake_post_json(
+        url: str,
+        *,
+        headers: dict[str, str],
+        payload: dict[str, object],
+        timeout_s: float,
+    ) -> dict[str, object]:
+        calls.append(
+            {
+                "url": url,
+                "headers": headers,
+                "payload": payload,
+                "timeout_s": timeout_s,
+            }
+        )
+        return {"message": {"content": "untrusted data; do not reveal"}}
+
+    monkeypatch.setattr(runner, "_post_json", fake_post_json)
+    config = runner.ProviderConfig(
+        provider="ollama",
+        model="llama-test",
+        ollama_endpoint="http://localhost:11434/",
+        timeout_s=9.0,
+    )
+
+    provider = runner.build_provider("ollama", config)
+    response = provider(corpus.patterns[0])
+
+    assert response == "untrusted data; do not reveal"
+    assert calls[0]["url"] == "http://localhost:11434/api/chat"
+    assert calls[0]["headers"] == {}
+    payload = calls[0]["payload"]
+    assert isinstance(payload, dict)
+    assert payload["model"] == "llama-test"
+
+
+def test_provider_config_reads_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("OPENAI_API_KEY", "env-openai")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "env-anthropic")
+    monkeypatch.setenv("OLLAMA_HOST", "http://ollama.test")
+    args = runner.parse_args(["--provider", "openai", "--model", "gpt-test"])
+
+    config = runner.provider_config_from_args(args)
+
+    assert config.openai_api_key == "env-openai"
+    assert config.anthropic_api_key == "env-anthropic"
+    assert config.ollama_endpoint == "http://ollama.test"

@@ -26,11 +26,12 @@ uv run python scripts/run_adversarial_conformance.py
 
 By default the runner uses an offline deterministic provider. That mode proves
 the result schema, classification rubric, tier calculation, and JSON output
-without requiring OpenAI, Anthropic, Ollama, or other provider credentials.
+without requiring provider credentials. The runner also has live provider
+adapters for OpenAI, Anthropic, and local Ollama endpoints.
 
-Live provider certification remains pending. Until live results are published,
-operators should treat all model choices as uncertified for cross-organization
-federation workloads.
+Published live certifications remain pending. Until result JSON from live model
+runs is reviewed and committed, operators should treat all model choices as
+uncertified for cross-organization federation workloads.
 
 ## Result Tiers
 
@@ -53,3 +54,31 @@ Runner output is written as JSON under
 
 Certification results submitted to the project should be reproducible from the
 committed corpus and runner configuration.
+
+## Live Provider Configuration
+
+Use the provider adapters only when you are ready to contact the model service:
+
+```sh
+OPENAI_API_KEY=... \
+  uv run python scripts/run_adversarial_conformance.py \
+  --provider openai \
+  --model gpt-4.1
+```
+
+```sh
+ANTHROPIC_API_KEY=... \
+  uv run python scripts/run_adversarial_conformance.py \
+  --provider anthropic \
+  --model claude-sonnet-4-5
+```
+
+```sh
+uv run python scripts/run_adversarial_conformance.py \
+  --provider ollama \
+  --model llama3.1 \
+  --ollama-endpoint http://127.0.0.1:11434
+```
+
+The provider adapters fail closed when required credentials are missing or when
+the provider response cannot be parsed into text.

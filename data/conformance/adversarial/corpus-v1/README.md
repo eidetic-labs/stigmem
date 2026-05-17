@@ -18,6 +18,9 @@ uv run python scripts/run_adversarial_conformance.py
 
 The default provider is deterministic and credential-free. It verifies the
 ADR-015 result schema, rubric, and tier calculation before live provider-backed
-certification runs are added.
+certification runs are added. The same runner also supports live provider
+execution with `--provider openai`, `--provider anthropic`, or
+`--provider ollama` when the corresponding credentials or local endpoint are
+configured.
 
 Patterns are immutable once added. If a pattern becomes obsolete, add `deprecated_in` instead of editing its meaning.

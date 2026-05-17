@@ -130,7 +130,7 @@ def get_or_create_node_id(db_path: str | None = None) -> str:
         row = conn.execute("SELECT value FROM node_meta WHERE key='node_id'").fetchone()
         if row:
             return str(row["value"])
-        node_id = f"stigmem:node:{uuid.uuid4()}"
+        node_id = settings.node_id or f"stigmem:node:{uuid.uuid4()}"
         conn.execute("INSERT INTO node_meta (key, value) VALUES ('node_id', ?)", (node_id,))
 
     return node_id

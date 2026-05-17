@@ -44,6 +44,21 @@ from ..tls import check_peer_san
 logger = logging.getLogger("stigmem.federation")
 
 
+def _make_federation_client() -> httpx.AsyncClient:
+    from . import federation as _fed_mod
+
+    if _fed_mod.settings.mtls_enabled:
+        from ..tls import build_client_ssl_context
+
+        ssl_ctx = build_client_ssl_context(
+            _fed_mod.settings.tls_cert_path,
+            _fed_mod.settings.tls_key_path,
+            _fed_mod.settings.tls_ca_bundle,
+        )
+        return httpx.AsyncClient(verify=ssl_ctx, trust_env=False)
+    return httpx.AsyncClient(trust_env=False)
+
+
 async def register_peer_impl(
     req: PeerRegisterRequest,
     background_tasks: BackgroundTasks,
@@ -94,7 +109,7 @@ async def register_peer_impl(
     # Fetch peer's /.well-known/stigmem to retrieve their published pubkey (§5.6 step 1–3)
     fetched_pubkey: str | None = None
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with _make_federation_client() as client:
             wk_resp = await client.get(f"{req.node_url}/.well-known/stigmem")
         if wk_resp.status_code == 200:
             fetched_pubkey = wk_resp.json().get("federation_pubkey")

@@ -10,6 +10,7 @@ def _cmd_federation_register_peer(args: argparse.Namespace) -> int:
     """Register this node as a peer with a remote node (Spec-05-Federation-Trust)."""
     import base64
     import json
+    import ssl
     from datetime import UTC, datetime
 
     import httpx
@@ -24,12 +25,24 @@ def _cmd_federation_register_peer(args: argparse.Namespace) -> int:
     local_url = (args.local_url or settings.node_url).rstrip("/")
     remote_url = args.remote_url.rstrip("/")
     allowed_scopes: list[str] = [s.strip() for s in args.scopes.split(",") if s.strip()]
+    cert = (args.tls_cert, args.tls_key) if args.tls_cert and args.tls_key else None
+    client_kwargs: dict[str, object] = {}
+    if cert is not None:
+        ssl_ctx = ssl.create_default_context(cafile=args.ca_bundle or None)
+        ssl_ctx.load_cert_chain(*cert)
+        client_kwargs["verify"] = ssl_ctx
+    elif args.ca_bundle:
+        client_kwargs["verify"] = args.ca_bundle
 
     # ------------------------------------------------------------------
     # 1. Fetch local /.well-known/stigmem to get our published metadata.
     # ------------------------------------------------------------------
     try:
-        wk = httpx.get(f"{local_url}/.well-known/stigmem", timeout=10.0)
+        if client_kwargs:
+            with httpx.Client(timeout=15.0, trust_env=False, **client_kwargs) as client:
+                wk = client.get(f"{local_url}/.well-known/stigmem")
+        else:
+            wk = httpx.get(f"{local_url}/.well-known/stigmem", timeout=10.0)
         wk.raise_for_status()
     except Exception as exc:
         print(f"error: cannot reach local node at {local_url}: {exc}", file=sys.stderr)
@@ -89,12 +102,20 @@ def _cmd_federation_register_peer(args: argparse.Namespace) -> int:
         headers["Authorization"] = f"Bearer {args.api_key}"
 
     try:
-        resp = httpx.post(
-            f"{remote_url}/v1/federation/peers",
-            json=payload,
-            headers=headers,
-            timeout=15.0,
-        )
+        if client_kwargs:
+            with httpx.Client(timeout=15.0, trust_env=False, **client_kwargs) as client:
+                resp = client.post(
+                    f"{remote_url}/v1/federation/peers",
+                    json=payload,
+                    headers=headers,
+                )
+        else:
+            resp = httpx.post(
+                f"{remote_url}/v1/federation/peers",
+                json=payload,
+                headers=headers,
+                timeout=15.0,
+            )
     except Exception as exc:
         print(f"error: cannot reach remote node at {remote_url}: {exc}", file=sys.stderr)
         return 1

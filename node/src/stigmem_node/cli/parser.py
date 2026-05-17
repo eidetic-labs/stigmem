@@ -197,6 +197,24 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="KEY",
         help="API key for the remote node (required when remote auth_required=true)",
     )
+    rp_p.add_argument(
+        "--tls-cert",
+        default=None,
+        metavar="FILE",
+        help="client certificate for mTLS federation registration",
+    )
+    rp_p.add_argument(
+        "--tls-key",
+        default=None,
+        metavar="FILE",
+        help="client private key for mTLS federation registration",
+    )
+    rp_p.add_argument(
+        "--ca-bundle",
+        default=None,
+        metavar="FILE",
+        help="CA bundle used to verify HTTPS federation peers",
+    )
     rp_p.set_defaults(func=_cmd_federation_register_peer)
 
     # ------------------------------------------------------------------ federation cursor-export

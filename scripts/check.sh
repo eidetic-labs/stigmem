@@ -111,6 +111,7 @@ run_python() {
   timed_run python-pip-audit uv run pip-audit --progress-spinner off
   timed_run python-bandit uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml -q
   timed_run python-constant-time uv run python scripts/check_constant_time.py node/src/ sdks/stigmem-py/src/
+  timed_run python-facts-immutability-inventory uv run python scripts/check_facts_immutability_inventory.py
   write_timing_report
 }
 

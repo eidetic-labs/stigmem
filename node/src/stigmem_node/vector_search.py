@@ -103,15 +103,14 @@ def _encode_vector(vec: Vector) -> bytes:
 
 def store_embedding(conn: Any, fact_id: str, vec: Vector) -> None:
     """Upsert a vector into ``vec_facts`` and mark the fact as embedded."""
+    from .immutability import set_embedding_status
+
     blob = _encode_vector(vec)
     conn.execute(
         "INSERT OR REPLACE INTO vec_facts (fact_id, embedding) VALUES (?, ?)",
         (fact_id, blob),
     )
-    conn.execute(
-        "UPDATE facts SET embedding_missing = 0 WHERE id = ?",
-        (fact_id,),
-    )
+    set_embedding_status(conn, fact_id=fact_id, embedding_missing=False)
 
 
 def embed_and_store_fact(
@@ -149,9 +148,11 @@ def backfill_missing_embeddings(
     from .embedding.base import compose_triple_text
 
     rows = conn.execute(
-        """SELECT id, entity, relation, value_type, value_v
-           FROM facts
-           WHERE embedding_missing = 1 AND confidence > 0.1
+        """SELECT f.id, f.entity, f.relation, f.value_type, f.value_v
+           FROM facts f
+           LEFT JOIN fact_embedding_status fes ON fes.fact_id = f.id
+           WHERE COALESCE(fes.embedding_missing, f.embedding_missing) = 1
+             AND f.confidence > 0.1
            LIMIT ?""",
         (limit,),
     ).fetchall()

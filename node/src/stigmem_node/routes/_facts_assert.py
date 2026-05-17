@@ -28,6 +28,7 @@ from ..garden_acl import (
     require_garden_write,
 )
 from ..hlc import node_hlc
+from ..immutability import set_embedding_status, write_fact_journal
 from ..metrics import CONTRADICTION, FACT_WRITE
 from ..models.facts import AssertRequest, FactRecord, row_to_record
 from ..plugins import TenantContext, get_registry
@@ -397,6 +398,35 @@ def assert_fact_impl(
                 req.value.interpret_as,
             ),
         )
+        write_fact_journal(
+            conn,
+            fact_id=fact_id,
+            event_type="fact_insert",
+            tenant_id=identity.tenant_id,
+            actor_uri=identity.entity_uri,
+            source=source,
+            scope=req.scope,
+            cid=fact_cid,
+            body={
+                "entity": entity,
+                "relation": req.relation,
+                "value_type": req.value.type,
+                "value_v": value_v,
+                "source": source,
+                "timestamp": now,
+                "valid_until": req.valid_until,
+                "confidence": req.confidence,
+                "scope": req.scope,
+                "interpret_as": req.value.interpret_as,
+            },
+        )
+        if embedding_missing_val is not None:
+            set_embedding_status(
+                conn,
+                fact_id=fact_id,
+                embedding_missing=bool(embedding_missing_val),
+                updated_by="fact_assert",
+            )
 
         # F-10 §25.7.3: alias table row — idempotent upsert on CID collision
         alias_result = conn.execute(

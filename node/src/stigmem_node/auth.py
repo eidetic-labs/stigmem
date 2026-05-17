@@ -131,7 +131,7 @@ def _rehash_legacy_key(conn: Any, row: Any, raw_key: str) -> None:
         (new_hash, row["id"], row["key_hash"]),
     )
 
-    from .audit_event import emit
+    from .observability.audit_event import emit
 
     emit(
         "api_key_rehashed",

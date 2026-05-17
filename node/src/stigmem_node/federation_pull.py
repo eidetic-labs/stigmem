@@ -17,7 +17,7 @@ import httpx
 
 from .db import db
 from .federation_ingest import FederationIntegrityError, ingest_fact, write_audit_log
-from .metrics import FEDERATION_INGRESS, REPLICATION_LAG
+from .observability.metrics import FEDERATION_INGRESS, REPLICATION_LAG
 from .peer_token import create_peer_token
 from .settings import settings
 from .tls import check_peer_san
@@ -216,7 +216,7 @@ async def pull_tombstones_from_peer_once(
     # F-13 §23.4.3: emit tombstone_sync_gap when result set is non-empty and cursor
     # indicates skipped pages (more results available beyond this batch)
     if tombstones and new_cursor is not None:
-        from .audit_event import emit_nofail
+        from .observability.audit_event import emit_nofail
 
         emit_nofail(
             "tombstone_sync_gap",

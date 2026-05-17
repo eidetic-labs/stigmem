@@ -21,7 +21,7 @@ import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
-from .entity_normalizer import NormalizationError, normalize_entity_uri
+from .utility.entity_normalizer import NormalizationError, normalize_entity_uri
 
 
 def resolve_entity(conn: sqlite3.Connection, normalized_uri: str) -> str:

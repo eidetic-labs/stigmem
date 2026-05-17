@@ -18,7 +18,7 @@ from typing import Any, TypeVar, cast
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import Version
 
-from stigmem_node.metrics import (
+from stigmem_node.observability.metrics import (
     PLUGIN_HANDLER_DURATION,
     PLUGIN_HANDLER_ERROR,
     PLUGIN_HANDLER_INVOCATION,

@@ -106,3 +106,10 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
   expansion, ranking/packing, as-of recall, and route orchestration while
   preserving the public `stigmem_node.routes.recall` import path and helper
   exports used by existing tests.
+- #465 implementation moves the remaining root-level node tests into concern
+  directories under `node/tests/` while preserving recursive pytest discovery
+  and fixture behavior.
+- #467 starts the module-flattening work by moving leaf observability and
+  utility implementation modules into `stigmem_node.observability` and
+  `stigmem_node.utility`, with root-level compatibility shims for historical
+  imports.

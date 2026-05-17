@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 from typing import Any
 
-from .entity_normalizer import NormalizationError, normalize_entity_uri
+from .utility.entity_normalizer import NormalizationError, normalize_entity_uri
 
 _TOKEN_SPLIT_RE = re.compile(r"[.\-_/\s]+")
 _FORMAL_PREFIX = "stigmem://"

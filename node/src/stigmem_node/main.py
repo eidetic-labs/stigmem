@@ -97,7 +97,7 @@ def create_app() -> FastAPI:
         get_registry().freeze()
 
         if settings.otel_enabled:
-            from .tracing import init_tracing
+            from .observability.tracing import init_tracing
 
             init_tracing(
                 service_name=settings.otel_service_name,
@@ -232,7 +232,7 @@ def create_app() -> FastAPI:
 
     @app.get("/metrics", include_in_schema=False, tags=["ops"])
     def prometheus_metrics() -> Response:
-        from .metrics import make_metrics_response
+        from .observability.metrics import make_metrics_response
 
         resp = make_metrics_response()
         if resp is None:

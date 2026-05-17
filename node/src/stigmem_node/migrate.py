@@ -6,7 +6,7 @@ import logging
 import sqlite3
 from datetime import UTC, datetime
 
-from .entity_normalizer import NormalizationError, normalize_entity_uri
+from .utility.entity_normalizer import NormalizationError, normalize_entity_uri
 
 logger = logging.getLogger(__name__)
 

@@ -160,7 +160,7 @@ the beta-series exit and v1.0 release-candidate declaration.
 - Multi-tenant remains a plugin (`stigmem-plugin-multi-tenant`); the cross-cutting plugin shape per ADR-011 is the permanent home, not a stop on the path to core. Adopters who need multi-tenancy install the plugin explicitly.
 - Modular spec evolution.
 - Plugin ecosystem matures; third-party plugins become first-class.
-- Cross-phase source/test layout hygiene remains tracked separately from feature work ([#444](https://github.com/Eidetic-Labs/stigmem/issues/444)); the node test-layout slice is tracked by [#465](https://github.com/Eidetic-Labs/stigmem/issues/465). Dependency/security evidence maintenance remains an ongoing release responsibility ([#445](https://github.com/Eidetic-Labs/stigmem/issues/445)). The owner/trigger map lives in `docs/internal/evidence-maintenance.md` and is mechanically checked by `make check-evidence-maintenance`.
+- Cross-phase source/test layout hygiene remains tracked separately from feature work ([#444](https://github.com/Eidetic-Labs/stigmem/issues/444)); the node test-layout slice is complete via [#465](https://github.com/Eidetic-Labs/stigmem/issues/465), and the first leaf-module flattening slice is tracked by [#467](https://github.com/Eidetic-Labs/stigmem/issues/467). Dependency/security evidence maintenance remains an ongoing release responsibility ([#445](https://github.com/Eidetic-Labs/stigmem/issues/445)). The owner/trigger map lives in `docs/internal/evidence-maintenance.md` and is mechanically checked by `make check-evidence-maintenance`.
 
 ### Exit criteria
 - None defined; this is the project's steady state.

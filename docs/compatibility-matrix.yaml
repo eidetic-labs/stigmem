@@ -140,8 +140,9 @@ features:
     spec_section: §18
     stability: experimental
     requires:
-      node: "experimental"
-    notes: "Deferred to experimental/source-attestation/. Targeted v0.9.0a7."
+      node: ">=0.9.0a1"
+      source_attestation_plugin: "source-only on main; no released artifact yet"
+    notes: "Extracted to experimental/source-attestation/ as an opt-in plugin source package. Default installs keep source-attestation behavior inert; explicit plugin registration plus source-attestation gates are required. Signed/package artifact evidence is deferred until all planned plugins are built."
 
   - id: multi-tenant
     name: Multi-tenant isolation

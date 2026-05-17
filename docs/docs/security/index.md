@@ -64,6 +64,10 @@ Main now includes the 22-hook registry foundation and plugin test harness needed
 | [Immutability & attestation](./immutability-and-attestation.md) | ADR-016 R-23 mitigation stack, fact-chain checkpoints, WORM storage, and TEE deployment options |
 | [Where security analysis lives](./where-security-analysis-lives.md) | ADR-018 split between the protocol-level threat model and feature-local `experimental/<feature>/security.md` files |
 
+The Phase B federation-hardening control review lives with the canonical
+security evidence at
+[`spec/security/federation-control-review.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/federation-control-review.md).
+
 ## Operator surfaces
 
 | Page | Topic |

@@ -16,6 +16,7 @@
       "test_files": ["node/tests/test_mtls.py"],
       "docs_reference_files": [
         "spec/security/threat-model.md",
+        "spec/security/federation-control-review.md",
         "docs/docs/security/mtls.md"
       ],
       "review_decision": "accept-as-is",
@@ -32,6 +33,7 @@
       "test_files": ["node/tests/test_quota.py"],
       "docs_reference_files": [
         "spec/security/threat-model.md",
+        "spec/security/federation-control-review.md",
         "docs/docs/security/audit-and-quotas.md"
       ],
       "review_decision": "accept-as-is",
@@ -53,6 +55,7 @@
       ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
+        "spec/security/federation-control-review.md",
         "docs/docs/security/key-rotation.md",
         "docs/adr/007-argon2id.md"
       ],
@@ -86,6 +89,7 @@
       ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
+        "spec/security/federation-control-review.md",
         "docs/docs/security/audit-log.md",
         "docs/docs/security/audit-and-quotas.md"
       ],
@@ -103,6 +107,7 @@
       "test_files": ["node/tests/test_phase12_key_rotation.py"],
       "docs_reference_files": [
         "spec/security/threat-model.md",
+        "spec/security/federation-control-review.md",
         "docs/docs/security/key-rotation.md"
       ],
       "review_decision": "accept-as-is",
@@ -136,6 +141,7 @@
       "test_files": ["node/tests/test_quota.py"],
       "docs_reference_files": [
         "spec/security/threat-model.md",
+        "spec/security/federation-control-review.md",
         "docs/docs/security/audit-and-quotas.md"
       ],
       "review_decision": "accept-as-is",
@@ -153,6 +159,7 @@
       ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
+        "spec/security/federation-control-review.md",
         "docs/docs/security/agent-keypairs.md"
       ],
       "review_decision": "accept-as-is",

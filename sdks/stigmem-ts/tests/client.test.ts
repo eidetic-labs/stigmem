@@ -89,6 +89,28 @@ describe("assertFact", () => {
     const fact = await client.assertFact("project:acme", "roadmap:summary", tv("long summary"), "agent:cto");
     expect(fact.value.type).toBe("text");
   });
+
+  it("sends session header and provenance options", async () => {
+    let capturedBody: unknown;
+    let capturedHeaders: HeadersInit | undefined;
+    const fetchMock = vi.fn(async (_url: string, opts?: RequestInit) => {
+      capturedBody = opts?.body ? JSON.parse(opts.body as string) : null;
+      capturedHeaders = opts?.headers;
+      return { ok: true, status: 201, json: async () => SAMPLE_FACT } as Response;
+    });
+    const client = new StigmemClient({ url: BASE, apiKey: KEY, fetch: fetchMock as unknown as typeof fetch });
+
+    await client.assertFact("user:alice", "memory:role", sv("CEO"), "agent:test", {
+      write_mode: "summarize_with_provenance",
+      derived_from: [{ fact_id: "source-fact" }],
+      session_id: "session-ts-001",
+    });
+
+    const body = capturedBody as Record<string, unknown>;
+    expect(body["write_mode"]).toBe("summarize_with_provenance");
+    expect(body["derived_from"]).toEqual([{ fact_id: "source-fact" }]);
+    expect(capturedHeaders).toMatchObject({ "Stigmem-Session": "session-ts-001" });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -124,6 +146,19 @@ describe("getFact", () => {
     expect(fact.entity).toBe("user:alice");
   });
 
+  it("sends session header when fetching by ID", async () => {
+    let capturedHeaders: HeadersInit | undefined;
+    const fetchMock = vi.fn(async (_url: string, opts?: RequestInit) => {
+      capturedHeaders = opts?.headers;
+      return { ok: true, status: 200, json: async () => SAMPLE_FACT } as Response;
+    });
+    const client = new StigmemClient({ url: BASE, apiKey: KEY, fetch: fetchMock as unknown as typeof fetch });
+
+    await client.getFact("fact-001", { session_id: "session-ts-002" });
+
+    expect(capturedHeaders).toMatchObject({ "Stigmem-Session": "session-ts-002" });
+  });
+
   it("throws StigmemNotFoundError on 404", async () => {
     const fetchMock = mockFetch(new Map([
       ["/v1/facts/missing", { status: 404, body: { detail: "not found" } }],
@@ -146,6 +181,19 @@ describe("query", () => {
     const page = await client.query({ entity: "user:alice" });
     expect(page.facts).toHaveLength(1);
     expect(page.facts[0]?.entity).toBe("user:alice");
+  });
+
+  it("sends session header with query", async () => {
+    let capturedHeaders: HeadersInit | undefined;
+    const fetchMock = vi.fn(async (_url: string, opts?: RequestInit) => {
+      capturedHeaders = opts?.headers;
+      return { ok: true, status: 200, json: async () => ({ facts: [SAMPLE_FACT], total: 1, cursor: null }) } as Response;
+    });
+    const client = new StigmemClient({ url: BASE, apiKey: KEY, fetch: fetchMock as unknown as typeof fetch });
+
+    await client.query({ entity: "user:alice", session_id: "session-ts-003" });
+
+    expect(capturedHeaders).toMatchObject({ "Stigmem-Session": "session-ts-003" });
   });
 });
 
@@ -252,6 +300,19 @@ describe("recall", () => {
     await client.recall("legacy query", { legacy_format: true });
 
     expect(capturedUrl).toBe(`${BASE}/v1/recall?legacy_format=true`);
+  });
+
+  it("sends session header with recall", async () => {
+    let capturedHeaders: HeadersInit | undefined;
+    const fetchMock = vi.fn(async (_url: string, opts?: RequestInit) => {
+      capturedHeaders = opts?.headers;
+      return { ok: true, status: 200, json: async () => RECALL_RESPONSE } as Response;
+    });
+    const client = new StigmemClient({ url: BASE, apiKey: KEY, fetch: fetchMock as unknown as typeof fetch });
+
+    await client.recall("session query", { session_id: "session-ts-004" });
+
+    expect(capturedHeaders).toMatchObject({ "Stigmem-Session": "session-ts-004" });
   });
 });
 

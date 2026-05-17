@@ -221,3 +221,73 @@ class TestScopePropagationColumnsUnit:
             f"company fact {fact['id']} (re_federation_blocked=1) appeared in pull response — "
             "spec §6.8.2 violation: company-scope facts MUST NOT re-federate to third nodes"
         )
+
+    def test_derived_fact_excluded_from_pull_endpoint(self, fed_node: FedNode) -> None:
+        """R-21: facts derived from recalled/source facts must not replicate outbound."""
+        source_resp = fed_node.client.post(
+            "/v1/facts",
+            json={
+                "entity": f"source:{uuid.uuid4()}",
+                "relation": "memory:note",
+                "value": {"type": "string", "v": "source"},
+                "source": "agent:test-fed",
+                "scope": "company",
+            },
+        )
+        assert source_resp.status_code == 201, source_resp.text
+        source_id = source_resp.json()["id"]
+
+        derived_resp = fed_node.client.post(
+            "/v1/facts",
+            json={
+                "entity": f"summary:{uuid.uuid4()}",
+                "relation": "memory:summary",
+                "value": {"type": "text", "v": "derived summary"},
+                "source": "agent:test-fed",
+                "scope": "company",
+                "write_mode": "summarize_with_provenance",
+                "derived_from": [{"fact_id": source_id}],
+            },
+        )
+        assert derived_resp.status_code == 201, derived_resp.text
+        derived_id = derived_resp.json()["id"]
+
+        pub_b64_third, priv_b64_third = generate_keypair()
+        third_id = f"stigmem://third-node-{uuid.uuid4()}"
+
+        conn = sqlite3.connect(fed_node.db_path)
+        try:
+            conn.execute(
+                """INSERT INTO peers
+                   (id, node_id, node_url, federation_pubkey, allowed_scopes,
+                    status, established_at, declaration_sig, signed_at)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                (
+                    str(uuid.uuid4()),
+                    third_id,
+                    "http://third-node",
+                    pub_b64_third,
+                    json.dumps(["public", "company"]),
+                    "active",
+                    "2026-05-02T00:00:00Z",
+                    "dummy_sig",
+                    "2026-05-02T00:00:00Z",
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        pull_token = make_peer_token(
+            priv_b64_third, third_id, fed_node.node_id, ["public", "company"]
+        )
+        pull_resp = fed_node.client.get(
+            "/v1/federation/facts",
+            params={"limit": 500},
+            headers={"Authorization": f"Bearer {pull_token}"},
+        )
+        assert pull_resp.status_code == 200, pull_resp.text
+
+        returned_ids = {f["id"] for f in pull_resp.json().get("facts", [])}
+        assert source_id in returned_ids
+        assert derived_id not in returned_ids

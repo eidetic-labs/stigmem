@@ -91,9 +91,11 @@ class OpenClawStigmemAdapter:
         api_key: str | None,
         source_entity: str,
         allowed_handoff_targets: Iterable[str] | None = None,
+        session_id: str | None = None,
     ) -> None:
         self._client = StigmemClient(url=url, api_key=api_key)
         self._source = source_entity
+        self._session_id = session_id or f"openclaw:{uuid.uuid4().hex}"
         targets = set(allowed_handoff_targets or ())
         targets.add(source_entity)
         self._allowed_handoff_targets = frozenset(targets)
@@ -108,6 +110,7 @@ class OpenClawStigmemAdapter:
                 "create a least-privilege Stigmem API key and set it explicitly"
             )
         source = os.environ.get("STIGMEM_SOURCE_ENTITY", "agent:openclaw")
+        session_id = os.environ.get("STIGMEM_SESSION_ID")
         raw_targets = os.environ.get("STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS", "")
         allowed_targets = [target.strip() for target in raw_targets.split(",") if target.strip()]
         return cls(
@@ -115,6 +118,7 @@ class OpenClawStigmemAdapter:
             api_key=api_key,
             source_entity=source,
             allowed_handoff_targets=allowed_targets,
+            session_id=session_id,
         )
 
     # ------------------------------------------------------------------
@@ -135,7 +139,7 @@ class OpenClawStigmemAdapter:
         mistake a failed boot for a healthy empty context.
         """
         try:
-            return self._boot_inner(user_entity, session_id, project_entities)
+            return self._boot_inner(user_entity, session_id or self._session_id, project_entities)
         except (StigmemError, httpx.HTTPError) as exc:
             raise OpenClawBootError(
                 "OpenClaw boot could not read Stigmem context; "
@@ -155,6 +159,7 @@ class OpenClawStigmemAdapter:
             entity=user_entity,
             scope="company",
             min_confidence=0.7,
+            session_id=session_id,
         )
         facts.extend(f for f in user_facts if f.relation.startswith("preference:"))
 
@@ -165,6 +170,7 @@ class OpenClawStigmemAdapter:
                 relation="roadmap:constraint",
                 scope="company",
                 min_confidence=0.7,
+                session_id=session_id,
             )
             facts.extend(constraints)
 
@@ -173,6 +179,7 @@ class OpenClawStigmemAdapter:
             relation="intent:handoff_to",
             scope="company",
             min_confidence=0.8,
+            session_id=session_id,
         )
         my_handoffs = [
             f
@@ -185,6 +192,7 @@ class OpenClawStigmemAdapter:
                     entity=handoff.entity,
                     relation=rel,
                     scope="company",
+                    session_id=session_id,
                 )
                 facts.extend(sub)
 
@@ -193,6 +201,7 @@ class OpenClawStigmemAdapter:
             relation="intent:escalation",
             scope="company",
             min_confidence=0.8,
+            session_id=session_id,
         )
         facts.extend(escalations)
 
@@ -206,6 +215,7 @@ class OpenClawStigmemAdapter:
         scope: FactScope = "company",
         token_budget: int = 4000,
         limit: int = 100,
+        session_id: str | None = None,
     ) -> BootContext:
         """Recall context through the channel-separated recall response.
 
@@ -219,6 +229,7 @@ class OpenClawStigmemAdapter:
                 scope=scope,
                 token_budget=token_budget,
                 limit=limit,
+                session_id=session_id or self._session_id,
             )
         except (StigmemError, httpx.HTTPError) as exc:
             raise OpenClawBootError(
@@ -253,6 +264,7 @@ class OpenClawStigmemAdapter:
         continuation: str | None = None,
         scope: FactScope = "company",
         idempotency_key: str | None = None,
+        session_id: str | None = None,
     ) -> OpenClawWriteResult:
         """Emit a handoff intent when a session ends or delegates.
 
@@ -272,7 +284,7 @@ class OpenClawStigmemAdapter:
         dropped_refs: list[str] = []
         for ref in fact_refs:
             try:
-                self._client.get(ref)
+                self._client.get(ref, session_id=session_id or self._session_id)
                 valid_refs.append(ref)
             except StigmemNotFoundError:
                 logger.warning("emit_handoff: fact_ref %r not found; skipping", ref)
@@ -293,6 +305,8 @@ class OpenClawStigmemAdapter:
             logger.warning("emit_handoff: dropped invalid fact_refs: %s", ", ".join(dropped_refs))
 
         written: list[str] = []
+        provenance = [{"fact_id": ref} for ref in valid_refs]
+        write_mode = "summarize_with_provenance" if provenance else "assert"
         _assert_fact(
             self._client,
             handoff_id,
@@ -300,6 +314,9 @@ class OpenClawStigmemAdapter:
             ref_value(to_entity),
             from_entity,
             scope,
+            session_id=session_id or self._session_id,
+            write_mode=write_mode,
+            derived_from=provenance,
         )
         written.append("intent:handoff_to")
         _assert_fact(
@@ -309,6 +326,9 @@ class OpenClawStigmemAdapter:
             text_value(summary),
             from_entity,
             scope,
+            session_id=session_id or self._session_id,
+            write_mode=write_mode,
+            derived_from=provenance,
         )
         written.append("intent:handoff_summary")
         for ref in valid_refs:
@@ -319,6 +339,9 @@ class OpenClawStigmemAdapter:
                 ref_value(ref),
                 from_entity,
                 scope,
+                session_id=session_id or self._session_id,
+                write_mode=write_mode,
+                derived_from=provenance,
             )
             written.append("intent:context_ref")
         if continuation:
@@ -329,6 +352,9 @@ class OpenClawStigmemAdapter:
                 text_value(continuation),
                 from_entity,
                 scope,
+                session_id=session_id or self._session_id,
+                write_mode=write_mode,
+                derived_from=provenance,
             )
             written.append("intent:continuation")
         return OpenClawWriteResult(entity=handoff_id, relations=tuple(written), created=True)
@@ -338,6 +364,8 @@ class OpenClawStigmemAdapter:
         entity: str,
         summary: str,
         scope: FactScope = "company",
+        session_id: str | None = None,
+        derived_from: list[dict[str, Any]] | None = None,
     ) -> None:
         """Emit a decision fact for an architectural or significant choice.
 
@@ -351,6 +379,9 @@ class OpenClawStigmemAdapter:
             value=text_value(summary),
             source=self._source,
             scope=scope,
+            session_id=session_id or self._session_id,
+            write_mode="summarize_with_provenance" if derived_from else "assert",
+            derived_from=derived_from,
         )
 
     def emit_escalation(
@@ -360,6 +391,7 @@ class OpenClawStigmemAdapter:
         priority: str = "medium",
         scope: FactScope = "company",
         idempotency_key: str | None = None,
+        session_id: str | None = None,
     ) -> OpenClawWriteResult:
         """Emit an escalation intent fact with a 24-hour expiry."""
         self._validate_handoff_target(to_entity)
@@ -380,6 +412,7 @@ class OpenClawStigmemAdapter:
             source=self._source,
             scope=scope,
             valid_until=valid_until,
+            session_id=session_id or self._session_id,
         )
         written.append("intent:escalation")
         _assert_fact(
@@ -389,6 +422,7 @@ class OpenClawStigmemAdapter:
             value=ref_value(to_entity),
             source=self._source,
             scope=scope,
+            session_id=session_id or self._session_id,
         )
         written.append("intent:escalate_to")
         _assert_fact(
@@ -398,6 +432,7 @@ class OpenClawStigmemAdapter:
             value=text_value(goal),
             source=self._source,
             scope=scope,
+            session_id=session_id or self._session_id,
         )
         written.append("intent:goal")
         return OpenClawWriteResult(entity=esc_id, relations=tuple(written), created=True)
@@ -410,8 +445,9 @@ class OpenClawStigmemAdapter:
         """Paginate through all facts matching the given query filters."""
         facts: list[Fact] = []
         cursor: str | None = None
+        session_id = kwargs.pop("session_id", self._session_id)
         while True:
-            page = self._client.query(cursor=cursor, **kwargs)
+            page = self._client.query(cursor=cursor, session_id=session_id, **kwargs)
             facts.extend(page.facts)
             if page.cursor is None:
                 break
@@ -473,6 +509,9 @@ def _assert_fact(
     source: str,
     scope: FactScope,
     valid_until: str | None = None,
+    session_id: str | None = None,
+    write_mode: str = "assert",
+    derived_from: list[dict[str, Any]] | None = None,
 ) -> None:
     """Assert a fact and raise typed write errors on failure."""
     try:
@@ -483,6 +522,9 @@ def _assert_fact(
             source=source,
             scope=scope,
             valid_until=valid_until,
+            session_id=session_id,
+            write_mode=write_mode,
+            derived_from=derived_from,
         )
     except StigmemError as exc:
         raise OpenClawWriteError(

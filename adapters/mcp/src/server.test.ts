@@ -53,9 +53,42 @@ describe("handleToolCall", () => {
       "memory:role",
       { type: "string", v: "CEO" },
       "agent:cto",
-      { confidence: 1, scope: "company", valid_until: undefined },
+      expect.objectContaining({
+        confidence: 1,
+        scope: "company",
+        valid_until: undefined,
+        write_mode: "assert",
+        derived_from: [],
+        session_id: expect.stringMatching(/^mcp:/),
+      }),
     );
     expect(JSON.parse(result.content[0].text)).toEqual({ id: "fact-001" });
+  });
+
+  it("passes explicit session and provenance options for assert_fact", async () => {
+    client.assertFact.mockResolvedValueOnce({ id: "fact-002" });
+
+    await handleToolCall(client, "assert_fact", {
+      entity: "thread:handoff",
+      relation: "memory:summary",
+      value: "{\"type\":\"text\",\"v\":\"summary\"}",
+      source: "agent:cto",
+      write_mode: "summarize_with_provenance",
+      derived_from: "[{\"fact_id\":\"fact-source\"}]",
+      session_id: "session-mcp-001",
+    });
+
+    expect(client.assertFact).toHaveBeenCalledWith(
+      "thread:handoff",
+      "memory:summary",
+      { type: "text", v: "summary" },
+      "agent:cto",
+      expect.objectContaining({
+        write_mode: "summarize_with_provenance",
+        derived_from: [{ fact_id: "fact-source" }],
+        session_id: "session-mcp-001",
+      }),
+    );
   });
 
   it("maps subscribe_scope onto query pagination and emits has_more", async () => {
@@ -75,6 +108,7 @@ describe("handleToolCall", () => {
       scope: "company",
       cursor: "cursor-1",
       limit: 25,
+      session_id: expect.stringMatching(/^mcp:/),
     });
     expect(JSON.parse(result.content[0].text)).toEqual({
       facts: [{ id: "fact-001" }],
@@ -139,6 +173,7 @@ describe("handleToolCall", () => {
       min_confidence: undefined,
       include_neighbors: false,
       limit: 10,
+      session_id: expect.stringMatching(/^mcp:/),
     });
     const payload = JSON.parse(result.content[0].text);
     expect(payload.content).toEqual([contentFact]);

@@ -34,6 +34,16 @@ from .models import (
 )
 
 logger = logging.getLogger("stigmem")
+SESSION_HEADER = "Stigmem-Session"
+
+
+def _session_headers(session_id: str | None) -> dict[str, str] | None:
+    if session_id is None:
+        return None
+    normalized = session_id.strip()
+    if not normalized:
+        return None
+    return {SESSION_HEADER: normalized}
 
 
 def _raise_for_status(resp: httpx.Response) -> None:
@@ -110,6 +120,9 @@ class StigmemClient:
         confidence: float = 1.0,
         scope: FactScope = "company",
         valid_until: str | None = None,
+        write_mode: str = "assert",
+        derived_from: list[dict[str, Any]] | None = None,
+        session_id: str | None = None,
     ) -> Fact:
         req = AssertRequest(
             entity=entity,
@@ -119,10 +132,12 @@ class StigmemClient:
             confidence=confidence,
             scope=scope,
             valid_until=valid_until,
+            write_mode=write_mode,
+            derived_from=derived_from or [],
         )
         body = req.model_dump(exclude_none=True)
         body["value"] = value.model_dump()
-        resp = self._http.post("/v1/facts", json=body)
+        resp = self._http.post("/v1/facts", json=body, headers=_session_headers(session_id))
         _raise_for_status(resp)
         return Fact.model_validate(resp.json())
 
@@ -148,8 +163,8 @@ class StigmemClient:
             scope=scope,
         )
 
-    def get(self, fact_id: str) -> Fact:
-        resp = self._http.get(f"/v1/facts/{fact_id}")
+    def get(self, fact_id: str, *, session_id: str | None = None) -> Fact:
+        resp = self._http.get(f"/v1/facts/{fact_id}", headers=_session_headers(session_id))
         _raise_for_status(resp)
         return Fact.model_validate(resp.json())
 
@@ -166,6 +181,7 @@ class StigmemClient:
         cursor: str | None = None,
         limit: int = 50,
         after: str | None = None,
+        session_id: str | None = None,
     ) -> FactPage:
         params: dict[str, Any] = {"limit": limit}
         if entity:
@@ -186,7 +202,7 @@ class StigmemClient:
             params["cursor"] = cursor
         if after:
             params["after"] = after
-        resp = self._http.get("/v1/facts", params=params)
+        resp = self._http.get("/v1/facts", params=params, headers=_session_headers(session_id))
         _raise_for_status(resp)
         return FactPage.model_validate(resp.json())
 
@@ -281,6 +297,7 @@ class StigmemClient:
         include_neighbors: bool = True,
         limit: int = 100,
         legacy_format: bool = False,
+        session_id: str | None = None,
     ) -> RecallResponse:
         """Hybrid recall — return the most salient facts for *query* within *token_budget*.
 
@@ -311,7 +328,12 @@ class StigmemClient:
             limit=limit,
         )
         params = {"legacy_format": "true"} if legacy_format else None
-        resp = self._http.post("/v1/recall", json=req.model_dump(), params=params)
+        resp = self._http.post(
+            "/v1/recall",
+            json=req.model_dump(),
+            params=params,
+            headers=_session_headers(session_id),
+        )
         _raise_for_status(resp)
         return RecallResponse.model_validate(resp.json())
 
@@ -386,6 +408,9 @@ class AsyncStigmemClient:
         confidence: float = 1.0,
         scope: FactScope = "company",
         valid_until: str | None = None,
+        write_mode: str = "assert",
+        derived_from: list[dict[str, Any]] | None = None,
+        session_id: str | None = None,
     ) -> Fact:
         req = AssertRequest(
             entity=entity,
@@ -395,10 +420,14 @@ class AsyncStigmemClient:
             confidence=confidence,
             scope=scope,
             valid_until=valid_until,
+            write_mode=write_mode,
+            derived_from=derived_from or [],
         )
         body = req.model_dump(exclude_none=True)
         body["value"] = value.model_dump()
-        resp = await self._http.post("/v1/facts", json=body)
+        resp = await self._http.post(
+            "/v1/facts", json=body, headers=_session_headers(session_id)
+        )
         _raise_for_status(resp)
         return Fact.model_validate(resp.json())
 
@@ -423,8 +452,10 @@ class AsyncStigmemClient:
             scope=scope,
         )
 
-    async def get(self, fact_id: str) -> Fact:
-        resp = await self._http.get(f"/v1/facts/{fact_id}")
+    async def get(self, fact_id: str, *, session_id: str | None = None) -> Fact:
+        resp = await self._http.get(
+            f"/v1/facts/{fact_id}", headers=_session_headers(session_id)
+        )
         _raise_for_status(resp)
         return Fact.model_validate(resp.json())
 
@@ -441,6 +472,7 @@ class AsyncStigmemClient:
         cursor: str | None = None,
         limit: int = 50,
         after: str | None = None,
+        session_id: str | None = None,
     ) -> FactPage:
         params: dict[str, Any] = {"limit": limit}
         if entity:
@@ -461,7 +493,9 @@ class AsyncStigmemClient:
             params["cursor"] = cursor
         if after:
             params["after"] = after
-        resp = await self._http.get("/v1/facts", params=params)
+        resp = await self._http.get(
+            "/v1/facts", params=params, headers=_session_headers(session_id)
+        )
         _raise_for_status(resp)
         return FactPage.model_validate(resp.json())
 
@@ -542,6 +576,7 @@ class AsyncStigmemClient:
         include_neighbors: bool = True,
         limit: int = 100,
         legacy_format: bool = False,
+        session_id: str | None = None,
     ) -> RecallResponse:
         """Async hybrid recall — return the most salient facts for *query* within *token_budget*."""
         req = RecallRequest(
@@ -555,7 +590,12 @@ class AsyncStigmemClient:
             limit=limit,
         )
         params = {"legacy_format": "true"} if legacy_format else None
-        resp = await self._http.post("/v1/recall", json=req.model_dump(), params=params)
+        resp = await self._http.post(
+            "/v1/recall",
+            json=req.model_dump(),
+            params=params,
+            headers=_session_headers(session_id),
+        )
         _raise_for_status(resp)
         return RecallResponse.model_validate(resp.json())
 

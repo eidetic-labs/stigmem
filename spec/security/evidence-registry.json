@@ -186,7 +186,21 @@
     },
     "R-21": {
       "title": "Agent feedback-loop worm",
-      "status": "Open",
+      "status": "In review",
+      "implementation_files": [
+        "node/src/stigmem_node/routes/federation/replication.py",
+        "sdks/stigmem-py/src/stigmem/client.py",
+        "sdks/stigmem-ts/src/client.ts",
+        "adapters/mcp/src/server.ts",
+        "adapters/openclaw/src/stigmem_openclaw/adapter.py"
+      ],
+      "test_files": [
+        "node/tests/test_scope_propagation.py",
+        "sdks/stigmem-py/tests/test_client.py",
+        "sdks/stigmem-ts/tests/client.test.ts",
+        "adapters/mcp/src/server.test.ts",
+        "adapters/openclaw/tests/test_openclaw_adapter.py"
+      ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "docs/docs/security/scenarios.md",
@@ -194,7 +208,7 @@
         "docs/adr/018-security-documentation-colocation.md"
       ],
       "review_decision": "patch",
-      "notes": "Cross-cutting risk spanning prompt-injection capability separation, read/write graph isolation, and adapter hardening. ADR-018 keeps the canonical risk at protocol level with contributor notes queued for lazy-instruction-discovery and memory-garden-acl security docs."
+      "notes": "Cross-cutting risk spanning prompt-injection capability separation, read/write graph isolation, adapter hardening, and federation egress. Structural controls landed across #371 and #394: session read/write graph isolation, provenance summaries, supported SDK/adapter session propagation, and outbound pull exclusion for provenance-derived facts. Remains in review until release certification and operator validation complete."
     },
     "R-22": {
       "title": "Release supply-chain integrity",

@@ -9,7 +9,7 @@ handoffs, decisions, and escalations.
 > evaluation surface, not a recommended production integration. This source copy
 > is queued for the v0.9.0a2 artifact refresh so future ClawHub docs carry that
 > framing explicitly. The adapter has audit-mapped regression coverage and
-> remains alpha while broader R-21/session-propagation evidence is pending; see
+> remains alpha while broader R-21 certification/operator evidence is pending; see
 > [LIMITATIONS.md §9](../../LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 ## ClawHub skill
@@ -30,6 +30,7 @@ Then set the required env vars (ClawHub will prompt for them on first use):
 STIGMEM_URL=https://stigmem.example.com   # required
 STIGMEM_API_KEY=sk-your-key               # required by from_env()
 STIGMEM_SOURCE_ENTITY=agent:openclaw      # optional; default: agent:openclaw
+STIGMEM_SESSION_ID=openclaw:agent-01      # optional; generated per adapter instance if unset
 ```
 
 ## Security model
@@ -52,14 +53,23 @@ fails closed when the key is missing so deployments do not accidentally run
 unauthenticated. Do not share a key across unrelated agent deployments. Rotate
 keys regularly; revoke via the Stigmem node admin API if compromised.
 
+**Session and provenance propagation** — The adapter carries a stable
+`Stigmem-Session` value across boot, recall, decision, escalation, and handoff
+surfaces. Set `STIGMEM_SESSION_ID` when an operator needs a stable process or
+agent identity; otherwise the adapter generates one per instance. Handoff writes
+that reference source facts use `write_mode="summarize_with_provenance"` with
+`derived_from` entries so the node can distinguish legitimate summaries from
+same-session write poisoning.
+
 ## Known alpha gaps
 
 The OpenClaw C1/H5 path now separates recall content from instruction-channel
 facts at the adapter boundary, and C1-C4/H1-H5 audit-mapped regression tests
 cover the adapter's known critical/high findings. The broader R-21 hardening
-line still needs supported-adapter session propagation and outbound replication
-exclusion evidence before the project recommends OpenClaw for high-stakes
-production deployments.
+line now has supported-adapter session propagation and outbound replication
+exclusion evidence, but still needs release certification and operator
+validation before the project recommends OpenClaw for high-stakes production
+deployments.
 
 ## Changelog
 
@@ -69,8 +79,8 @@ production deployments.
   description so the next `stigmem-openclaw` publish presents the adapter as a
   v0.9.0aN alpha/evaluation surface.
 - Documentation: align the package README with the ClawHub skill warning that
-  OpenClaw is not a recommended production integration while R-21/session
-  propagation and outbound replication evidence remain open.
+  OpenClaw is not a recommended production integration while R-21 certification
+  and operator validation remain open.
 - Packaging: keep the dependency contract on the active alpha line with
   `stigmem-py>=0.9.0a1,<1.0.0`.
 

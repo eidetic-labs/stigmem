@@ -36,6 +36,7 @@ const fact = await client.assertFact(
   "memory:role",           // relation
   sv("CEO"),               // value (string)
   "agent:cto",             // source
+  { session_id: "session:example" },
 );
 
 // Query facts
@@ -75,6 +76,27 @@ The full client surface covers:
 - **Subscriptions**: `subscribe` (push federation, opt-in)
 
 Full TypeScript types are exported from the main package — your editor will autocomplete and check at compile time.
+
+## Session and provenance options
+
+Agent integrations should pass a stable `session_id` on reads and writes so the
+node can enforce same-session read/write graph isolation. Writes that summarize
+facts read earlier in the same session should use `write_mode:
+"summarize_with_provenance"` and carry source facts in `derived_from`.
+
+```ts
+await client.assertFact(
+  "handoff:session-123",
+  "intent:handoff_summary",
+  tv("Summarized context for the next agent."),
+  "agent:openclaw",
+  {
+    session_id: "session:example",
+    write_mode: "summarize_with_provenance",
+    derived_from: [{ fact_id: "fact-source-001" }],
+  },
+);
+```
 
 ## Compatibility
 

@@ -41,7 +41,8 @@ Add to `.claude/mcp_servers.json` (or the global MCP config):
     "args": ["/path/to/stigmem/adapters/mcp/dist/server.js"],
     "env": {
       "STIGMEM_URL": "http://localhost:8765",
-      "STIGMEM_API_KEY": "sk-your-key-here"
+      "STIGMEM_API_KEY": "sk-your-key-here",
+      "STIGMEM_SESSION_ID": "mcp:agent-01"
     }
   }
 }
@@ -53,6 +54,7 @@ Add to `.claude/mcp_servers.json` (or the global MCP config):
 |---|---|---|---|
 | `STIGMEM_URL` | yes | — | Base URL of your Stigmem node |
 | `STIGMEM_API_KEY` | no | — | API key if the node requires auth |
+| `STIGMEM_SESSION_ID` | no | generated per process | Stable session id propagated as `Stigmem-Session` for reads and writes |
 | `STIGMEM_POLL_LIMIT` | no | `50` | Facts per `subscribe_scope` call |
 
 ## Usage examples
@@ -65,7 +67,8 @@ assert_fact(
   entity="decision:use-sqlite",
   relation="roadmap:status",
   value={"type":"string","v":"approved"},
-  source="agent:cto"
+  source="agent:cto",
+  session_id="mcp:agent-01"
 )
 
 # Query all active project constraints
@@ -97,6 +100,12 @@ resolve_contradiction(
   `system_prompt_directive`. MCP hosts must keep those channels distinct and place
   the directive above recalled content instead of concatenating recalled data into
   higher-priority prompts.
+- `assert_fact`, `query_facts`, `recall`, and `subscribe_scope` propagate a
+  `Stigmem-Session` header. Set `STIGMEM_SESSION_ID` for a stable process-level
+  value, or pass `session_id` per tool call to override it.
+- `assert_fact` accepts `write_mode="summarize_with_provenance"` plus
+  `derived_from=[{"fact_id":"..."}]` for legitimate agent summaries derived
+  from recalled facts.
 
 ## Architecture
 

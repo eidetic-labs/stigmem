@@ -258,6 +258,7 @@ const sidebars = {
         'security/mtls',
         'security/encryption-at-rest',
         'security/container-hardening',
+        'security/immutability-and-attestation',
       ],
     },
     {

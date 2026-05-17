@@ -29,6 +29,7 @@ This handbook covers everything you need to run a Stigmem node in production, fr
 | [Rekor unavailable response](./runbooks/r-rekor-unavailable) | How to handle delayed fact-chain transparency-log checkpoints |
 | [HLC drift response](./runbooks/r-hlc-drift) | How to handle peers sending timestamps outside allowed skew |
 | [Key expiry response](./runbooks/r-key-expiry) | Recovery from expired API, federation, issuer, or encryption keys |
+| [Immutability & attestation](../security/immutability-and-attestation) | R-23 hardening stack, WORM evidence, and TEE deployment options |
 | [Eval harness](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/eval-harness) | Automated evaluation and regression testing |
 | [Cost calculator](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing) | Estimating storage, egress, embedding, and operator costs |
 

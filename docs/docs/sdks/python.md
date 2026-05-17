@@ -132,10 +132,13 @@ client.recall(
     min_confidence: float = 0.1,
     include_neighbors: bool = True,
     limit: int = 100,
+    verify_full: bool = False,
 ) -> RecallResponse
 ```
 
 Hybrid recall — return the most salient facts for `query` within `token_budget`. Combines lexical (FTS5/BM25), dense-vector (ANN), and graph-traversal signals. See the [Recall guide](../concepts/recall/) for details.
+
+Set `verify_full=True` to send `Stigmem-Verify: full` and request server-side integrity proof metadata, including the current fact-chain proof when the node can provide it.
 
 `RecallResponse` fields:
 
@@ -148,8 +151,33 @@ Hybrid recall — return the most salient facts for `query` within `token_budget
 | `token_budget` | `int` | Requested budget |
 | `tokens_used` | `int` | Tokens actually used |
 | `truncated` | `bool` | True when budget was exhausted |
+| `chain_proof` | `FactChainProof \| None` | Full-verification fact-chain metadata when requested |
 
 `ScoredFact` fields include `fact`, `score`, `score_breakdown`, `hop_distance`, `token_estimate`, and `from_card` (see below).
+
+### Verification helpers
+
+The SDK exposes local integrity helpers for clients that need to fail closed on tampered responses:
+
+```python
+from stigmem import (
+    StigmemVerificationError,
+    compute_fact_cid,
+    verify_fact_chain_proof,
+    verify_fact_cid,
+)
+
+result = client.recall("project status", verify_full=True)
+
+try:
+    for scored in result.facts:
+        verify_fact_cid(scored.fact)
+    verify_fact_chain_proof(result.chain_proof, require_checkpoint=True)
+except StigmemVerificationError as exc:
+    raise RuntimeError(f"Stigmem verification failed: {exc}") from exc
+```
+
+`verify_fact_cid` recomputes the content-addressed fact ID from the canonical fact body and rejects mismatches when a stored `cid` is present. `verify_fact_chain_proof` validates compact proof metadata and deterministic local transparency-log checkpoint payloads; Rekor cryptographic inclusion verification remains a node/operator responsibility because it requires live log trust roots.
 
 ### Memory cards (pre-reset graph & recall design — §20.4)
 

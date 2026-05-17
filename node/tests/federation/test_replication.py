@@ -9,13 +9,27 @@ from conftest import FedNode
 from fastapi import HTTPException
 
 import stigmem_node.settings as settings_module
+from stigmem_node.cid import compute_cid
 from stigmem_node.db import db as _db_ctx
-from stigmem_node.federation_ingest import ingest_fact
+from stigmem_node.federation_ingest import FederationIntegrityError, ingest_fact
 from stigmem_node.federation_pull import load_cursor, save_cursor
 
 from .helpers import insert_active_peer, make_federated_fact
 
 logger = logging.getLogger(__name__)
+
+
+def _with_cid(fact: dict) -> dict:
+    fact["cid"] = compute_cid(
+        entity=fact["entity"],
+        relation=fact["relation"],
+        value_type=fact["value"]["type"],
+        value_v=str(fact["value"]["v"]),
+        source=fact["source"],
+        scope=fact["scope"],
+        confidence=fact["confidence"],
+    )
+    return fact
 
 
 class TestPartialFailure:
@@ -49,6 +63,34 @@ class TestPartialFailure:
                 (fact["id"],),
             ).fetchone()[0]
         assert meta_count == 1
+
+    def test_ingest_fact_verifies_and_stores_inbound_cid(self, fed_node: FedNode) -> None:
+        fact = _with_cid(make_federated_fact())
+
+        assert ingest_fact(fact, "stigmem://node-b") is True
+
+        with _db_ctx() as conn:
+            row = conn.execute("SELECT cid FROM facts WHERE id = ?", (fact["id"],)).fetchone()
+        assert row is not None
+        assert row["cid"] == fact["cid"]
+
+    def test_ingest_fact_rejects_inbound_cid_mismatch(self, fed_node: FedNode) -> None:
+        fact = _with_cid(make_federated_fact())
+        fact["cid"] = "sha256:" + ("0" * 64)
+
+        with pytest.raises(FederationIntegrityError) as exc_info:
+            ingest_fact(fact, "stigmem://node-b")
+
+        assert exc_info.value.reason == "cid_mismatch"
+        with _db_ctx() as conn:
+            row = conn.execute("SELECT id FROM facts WHERE id = ?", (fact["id"],)).fetchone()
+            audit = conn.execute(
+                "SELECT event_type FROM fact_audit_log WHERE fact_id = ?",
+                (fact["id"],),
+            ).fetchone()
+        assert row is None
+        assert audit is not None
+        assert audit["event_type"] == "federation_integrity_rejected"
 
     def test_cursor_save_and_load_roundtrip(self, fed_node: FedNode) -> None:
         """Cursor persistence survives a save/load cycle."""

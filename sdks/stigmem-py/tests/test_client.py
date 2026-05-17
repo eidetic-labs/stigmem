@@ -13,8 +13,12 @@ from stigmem import (
     StigmemAuthError,
     StigmemClient,
     StigmemNotFoundError,
+    StigmemVerificationError,
+    compute_fact_cid,
     string_value,
     text_value,
+    verify_fact_chain_proof,
+    verify_fact_cid,
 )
 from stigmem.models import (
     ConflictPage,
@@ -297,6 +301,51 @@ def test_recall_verify_full_sends_header_and_parses_chain_proof() -> None:
     assert result.chain_proof.checked_entries == 2
     assert result.chain_proof.checkpoint is not None
     assert result.chain_proof.checkpoint.status == "submitted"
+
+
+def test_verify_fact_cid_accepts_matching_cid() -> None:
+    fact = Fact.model_validate(SAMPLE_FACT)
+    cid = compute_fact_cid(fact)
+    verified = Fact.model_validate({**SAMPLE_FACT, "cid": cid})
+
+    assert verify_fact_cid(verified) == cid
+
+
+def test_verify_fact_cid_rejects_mismatch() -> None:
+    fact = Fact.model_validate({**SAMPLE_FACT, "cid": "sha256:" + ("0" * 64)})
+
+    with pytest.raises(StigmemVerificationError, match="CID mismatch"):
+        verify_fact_cid(fact)
+
+
+def test_verify_fact_chain_proof_rejects_mismatched_checkpoint_head() -> None:
+    response = RecallResponse.model_validate(
+        {
+            **SAMPLE_RECALL_RESPONSE,
+            "chain_proof": {
+                "tenant_id": "default",
+                "checked_entries": 2,
+                "head_hash": "sha256:head-a",
+                "checkpoint": {
+                    "id": "chaincp_1",
+                    "tenant_id": "default",
+                    "covered_chain_seq": 2,
+                    "chain_hash": "sha256:head-b",
+                    "status": "submitted",
+                    "attempt_count": 1,
+                    "created_at": "2026-05-02T00:00:00Z",
+                    "tl_backend": "local",
+                    "tl_leaf_hash": "abc",
+                    "tl_log_index": 0,
+                    "tl_inclusion_proof": {},
+                    "tl_raw": {},
+                },
+            },
+        }
+    )
+
+    with pytest.raises(StigmemVerificationError, match="chain_hash"):
+        verify_fact_chain_proof(response.chain_proof, require_checkpoint=True)
 
 
 @respx.mock

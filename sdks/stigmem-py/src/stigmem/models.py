@@ -101,6 +101,7 @@ class Fact(BaseModel):
     scope: FactScope
     contradicted: bool = False
     received_from: str | None = None
+    cid: str | None = None
 
     model_config = {"extra": "allow"}
 

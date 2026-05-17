@@ -503,7 +503,10 @@ async def test_pull_from_peer_san_mismatch_returns_old_cursor(
 
     # Make client.get awaitable
 
+    captured_headers = {}
+
     async def _fake_get(*args, **kwargs):
+        captured_headers.update(kwargs.get("headers", {}))
         return mock_resp
 
     mock_client.get = _fake_get
@@ -521,3 +524,4 @@ async def test_pull_from_peer_san_mismatch_returns_old_cursor(
 
     result = await pull_mod.pull_from_peer_once(peer, mock_client, old_cursor)
     assert result == old_cursor, "SAN mismatch must return old cursor (fail-closed)"
+    assert captured_headers["Stigmem-Verify"] == "full"

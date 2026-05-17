@@ -52,6 +52,12 @@ from .models import (
     string_value,
     text_value,
 )
+from .verification import (
+    StigmemVerificationError,
+    compute_fact_cid,
+    verify_fact_chain_proof,
+    verify_fact_cid,
+)
 
 __all__ = [
     # clients
@@ -100,6 +106,11 @@ __all__ = [
     "datetime_value",
     "ref_value",
     "null_value",
+    # verification
+    "StigmemVerificationError",
+    "compute_fact_cid",
+    "verify_fact_cid",
+    "verify_fact_chain_proof",
 ]
 
 # Read version from installed package metadata so __version__ stays in

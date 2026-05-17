@@ -62,6 +62,7 @@ Main now includes the 22-hook registry foundation and plugin test harness needed
 | [Encryption at rest](./encryption-at-rest.md) | SQLCipher (opt-in for regulated data) |
 | [Container hardening](./container-hardening.md) | Distroless, non-root UID 1000, read-only fs, seccomp (Spec-10-Hardening container baseline) |
 | [Immutability & attestation](./immutability-and-attestation.md) | ADR-016 R-23 mitigation stack, fact-chain checkpoints, WORM storage, and TEE deployment options |
+| [Where security analysis lives](./where-security-analysis-lives.md) | ADR-018 split between the protocol-level threat model and feature-local `experimental/<feature>/security.md` files |
 
 ## Operator surfaces
 

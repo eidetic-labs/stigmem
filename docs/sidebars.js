@@ -259,6 +259,7 @@ const sidebars = {
         'security/encryption-at-rest',
         'security/container-hardening',
         'security/immutability-and-attestation',
+        'security/where-security-analysis-lives',
       ],
     },
     {

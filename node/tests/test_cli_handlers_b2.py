@@ -287,12 +287,23 @@ class TestBackfillCids:
         err = capsys.readouterr().err
         assert "2 facts updated" in err
 
-        # Verify CIDs were written
+        # Verify CID aliases/backfill projection rows were written while facts
+        # remain immutable.
         conn = sqlite3.connect(db)
-        rows = conn.execute("SELECT id, cid FROM facts WHERE cid IS NOT NULL").fetchall()
+        rows = conn.execute(
+            """
+            SELECT f.id, f.cid, fca.cid AS alias_cid, fcb.status
+            FROM facts f
+            LEFT JOIN fact_cid_aliases fca ON fca.fact_id = f.id
+            LEFT JOIN fact_cid_backfill fcb ON fcb.fact_id = f.id
+            ORDER BY f.id
+            """
+        ).fetchall()
         conn.close()
         assert len(rows) == 2
-        assert all(cid for _, cid in rows)
+        assert all(base_cid is None for _, base_cid, _, _ in rows)
+        assert all(alias_cid for _, _, alias_cid, _ in rows)
+        assert all(status == "complete" for _, _, _, status in rows)
 
     def test_db_path_falls_back_to_env(
         self,

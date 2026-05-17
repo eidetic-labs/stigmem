@@ -57,13 +57,17 @@ def _graph_expand(
     entities = list(entity_min_hops.keys())[:_MAX_GRAPH_ENTITIES]
     placeholders = ",".join("?" * len(entities))
     sql = f"""
-        SELECT id, entity
-        FROM facts
-        WHERE entity IN ({placeholders})  -- nosec B608
-          AND scope = ?
-          AND tenant_id = ?
-          AND confidence >= ?
-          AND (valid_until IS NULL OR valid_until > ?)
+        SELECT f.id, f.entity
+        FROM facts f
+        LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id
+        WHERE f.entity IN ({placeholders})  -- nosec B608
+          AND f.scope = ?
+          AND f.tenant_id = ?
+          AND COALESCE(fvo.confidence, f.confidence) >= ?
+          AND (
+            COALESCE(fvo.valid_until, f.valid_until) IS NULL
+            OR COALESCE(fvo.valid_until, f.valid_until) > ?
+          )
         LIMIT ?
         """  # noqa: S608  # nosec B608
     fact_rows = conn.execute(

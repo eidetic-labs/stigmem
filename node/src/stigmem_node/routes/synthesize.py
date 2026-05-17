@@ -24,10 +24,16 @@ def _is_system(entity: str, relation: str) -> bool:
 
 
 _SYNTHESIZE_SQL = (
-    "SELECT * FROM facts"
-    " WHERE scope = ?"
-    "   AND (? = 1 OR valid_until IS NULL OR valid_until > ?)"
-    " ORDER BY confidence DESC, timestamp DESC"
+    "SELECT f.*, "
+    "       COALESCE(fvo.valid_until, f.valid_until) AS projected_valid_until, "
+    "       COALESCE(fvo.confidence, f.confidence) AS projected_confidence "
+    "FROM facts f "
+    "LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id"
+    " WHERE f.scope = ?"
+    "   AND (? = 1"
+    "        OR COALESCE(fvo.valid_until, f.valid_until) IS NULL"
+    "        OR COALESCE(fvo.valid_until, f.valid_until) > ?)"
+    " ORDER BY COALESCE(fvo.confidence, f.confidence) DESC, f.timestamp DESC"
     " LIMIT ?"
 )
 
@@ -74,9 +80,9 @@ def _build_synthesized_fact(
         "entity": r["entity"],
         "relation": r["relation"],
         "value": {"type": r["value_type"], "v": r["value_v"]},
-        "confidence": r["confidence"],
+        "confidence": r["projected_confidence"],
         "timestamp": r["timestamp"],
-        "valid_until": r["valid_until"],
+        "valid_until": r["projected_valid_until"],
         "is_expired": is_expired,
         "age_seconds": age_seconds,
         "contradicted": contradicted,
@@ -116,7 +122,9 @@ def synthesize_scope(
     expired_count = 0
 
     for r in rows:
-        is_expired = r["valid_until"] is not None and r["valid_until"] <= now
+        is_expired = (
+            r["projected_valid_until"] is not None and r["projected_valid_until"] <= now
+        )
         if is_expired:
             expired_count += 1
 

@@ -34,12 +34,15 @@ def _like_search(
         pat = f"%{w}%"
         params.extend([pat, pat])
     params.extend([scope, tenant_id, min_confidence, now, k])
-    sql = (
-        "SELECT id AS fact_id, confidence AS rank FROM facts"  # noqa: S608
-        f" WHERE ({clauses})"  # nosec B608 — clauses built from literal "?" placeholders
-        " AND scope = ? AND tenant_id = ? AND confidence >= ?"
-        " AND (valid_until IS NULL OR valid_until > ?)"
-        " ORDER BY confidence DESC LIMIT ?"
+    sql = (  # noqa: S608
+        "SELECT f.id AS fact_id, COALESCE(fvo.confidence, f.confidence) AS rank "  # noqa: S608
+        "FROM facts f LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id"  # noqa: S608
+        f" WHERE ({clauses})"  # noqa: S608  # nosec B608 — clauses built from "?"
+        " AND f.scope = ? AND f.tenant_id = ?"
+        " AND COALESCE(fvo.confidence, f.confidence) >= ?"
+        " AND (COALESCE(fvo.valid_until, f.valid_until) IS NULL"
+        " OR COALESCE(fvo.valid_until, f.valid_until) > ?)"
+        " ORDER BY COALESCE(fvo.confidence, f.confidence) DESC LIMIT ?"  # noqa: S608
     )
     try:
         rows = conn.execute(sql, params).fetchall()
@@ -82,11 +85,13 @@ def _lexical_search(
             SELECT ff.fact_id, bm25(facts_fts) AS rank
             FROM facts_fts ff
             JOIN facts f ON f.id = ff.fact_id
+            LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id
             WHERE facts_fts MATCH ?
               AND f.scope = ?
               AND f.tenant_id = ?
-              AND f.confidence >= ?
-              AND (f.valid_until IS NULL OR f.valid_until > ?)
+              AND COALESCE(fvo.confidence, f.confidence) >= ?
+              AND (COALESCE(fvo.valid_until, f.valid_until) IS NULL
+                   OR COALESCE(fvo.valid_until, f.valid_until) > ?)
             ORDER BY rank
             LIMIT ?
             """,

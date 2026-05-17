@@ -22,6 +22,11 @@ from ..audit_event import INSTRUCTION_PROMOTED, emit_instruction_event_if_applic
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..garden_acl import get_garden_by_slug_or_id, require_quarantine_moderator_or_admin
+from ..immutability import (
+    set_fact_garden_membership,
+    set_fact_quarantine_status,
+    set_fact_validity_override,
+)
 from ..models.constants import QUARANTINE_PENDING
 from ..models.gardens import (
     QuarantineListResponse,
@@ -63,26 +68,32 @@ def list_quarantined_facts(
             status_code=status.HTTP_403_FORBIDDEN, detail="read permission required"
         )
 
-    filters: list[str] = ["f.quarantine_garden_id IS NOT NULL"]
+    projection_joins = (
+        " LEFT JOIN fact_quarantine_status fqs ON fqs.fact_id = f.id"
+        " LEFT JOIN fact_garden_membership fgm ON fgm.fact_id = f.id"
+    )
+    quarantine_garden_expr = "COALESCE(fqs.quarantine_garden_id, f.quarantine_garden_id)"
+    quarantine_status_expr = "COALESCE(fqs.quarantine_status, f.quarantine_status)"
+    filters: list[str] = [f"{quarantine_garden_expr} IS NOT NULL"]
     params: list[Any] = []
 
     if quarantine_status:
-        filters.append("f.quarantine_status = ?")
+        filters.append(f"{quarantine_status_expr} = ?")
         params.append(quarantine_status)
     else:
-        filters.append("f.quarantine_status IS NOT NULL")
+        filters.append(f"{quarantine_status_expr} IS NOT NULL")
 
     if garden_id:
         # Resolve slug to UUID
         garden = get_garden_by_slug_or_id(garden_id, tenant_id=identity.tenant_id)
         if garden is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="garden not found")
-        filters.append("f.quarantine_garden_id = ?")
+        filters.append(f"{quarantine_garden_expr} = ?")
         params.append(garden["id"])
     elif not identity.can_write():
         # Non-admins: only see facts in gardens they're members of
         filters.append(
-            "f.quarantine_garden_id IN ("
+            f"{quarantine_garden_expr} IN ("  # nosec B608
             "  SELECT gm.garden_id FROM garden_members gm"
             "  WHERE gm.entity_uri = ?"
             ")"
@@ -93,17 +104,22 @@ def list_quarantined_facts(
 
     with db() as conn:
         count_row = conn.execute(
-            f"SELECT COUNT(*) FROM facts f WHERE {where_clause}",  # nosec B608
+            f"SELECT COUNT(*) FROM facts f {projection_joins} WHERE {where_clause}",  # nosec B608
             params,
         ).fetchone()
         total: int = count_row[0] if count_row else 0
 
         rows = conn.execute(
             f"""SELECT f.id, f.entity, f.relation, f.source,
-                       f.quarantine_status, f.quarantine_garden_id, f.quarantine_reason,
-                       f.quarantine_acted_by, f.quarantine_acted_at,
+                       {quarantine_status_expr} AS quarantine_status,
+                       {quarantine_garden_expr} AS quarantine_garden_id,
+                       COALESCE(fqs.quarantine_reason, f.quarantine_reason) AS quarantine_reason,
+                       COALESCE(fqs.quarantine_acted_by, f.quarantine_acted_by)
+                         AS quarantine_acted_by,
+                       COALESCE(fqs.quarantine_acted_at, f.quarantine_acted_at)
+                         AS quarantine_acted_at,
                        f.source_trust, f.received_from, f.timestamp
-                FROM facts f
+                FROM facts f {projection_joins}
                 WHERE {where_clause}
                 ORDER BY f.timestamp DESC
                 LIMIT ? OFFSET ?""",  # nosec B608
@@ -163,15 +179,20 @@ def admit_fact(
         target_db_id = tg["id"]
 
     with db() as conn:
-        conn.execute(
-            """UPDATE facts
-               SET garden_id = ?,
-                   quarantine_status = 'promoted',
-                   quarantine_acted_by = ?,
-                   quarantine_acted_at = ?,
-                   quarantine_reason = ?
-               WHERE id = ?""",
-            (target_db_id, identity.entity_uri, now, reason or "admitted via admin API", fact_id),
+        set_fact_garden_membership(
+            conn,
+            fact_id=fact_id,
+            garden_id=target_db_id,
+            updated_by=identity.entity_uri,
+        )
+        set_fact_quarantine_status(
+            conn,
+            fact_id=fact_id,
+            quarantine_garden_id=garden["id"],
+            quarantine_status="promoted",
+            quarantine_reason=reason or "admitted via admin API",
+            quarantine_acted_by=identity.entity_uri,
+            quarantine_acted_at=now,
         )
         _write_quarantine_audit(conn, fact_id, "quarantine_promote", identity, now)
         emit_instruction_event_if_applicable(
@@ -219,19 +240,25 @@ def reject_fact(
     """
     _require_write(identity)
 
-    _get_quarantined_fact(fact_id, identity)
+    _fact_row, garden = _get_quarantined_fact(fact_id, identity)
     now = datetime.now(UTC).isoformat()
 
     with db() as conn:
-        conn.execute(
-            """UPDATE facts
-               SET confidence = 0.0,
-                   quarantine_status = 'rejected',
-                   quarantine_acted_by = ?,
-                   quarantine_acted_at = ?,
-                   quarantine_reason = ?
-               WHERE id = ?""",
-            (identity.entity_uri, now, reason or "rejected via admin API", fact_id),
+        set_fact_validity_override(
+            conn,
+            fact_id=fact_id,
+            confidence=0.0,
+            reason=reason or "rejected via admin API",
+            updated_by=identity.entity_uri,
+        )
+        set_fact_quarantine_status(
+            conn,
+            fact_id=fact_id,
+            quarantine_garden_id=garden["id"],
+            quarantine_status="rejected",
+            quarantine_reason=reason or "rejected via admin API",
+            quarantine_acted_by=identity.entity_uri,
+            quarantine_acted_at=now,
         )
         # Append-only retraction log (§24.2.1 c.3)
         conn.execute(
@@ -263,7 +290,17 @@ def _get_quarantined_fact(
     """
     with db() as conn:
         row = conn.execute(
-            "SELECT * FROM facts WHERE id = ? AND quarantine_garden_id IS NOT NULL",
+            """SELECT f.*,
+                      COALESCE(fqs.quarantine_garden_id, f.quarantine_garden_id)
+                        AS projected_quarantine_garden_id,
+                      COALESCE(fqs.quarantine_status, f.quarantine_status)
+                        AS projected_quarantine_status,
+                      COALESCE(fqs.quarantine_reason, f.quarantine_reason)
+                        AS projected_quarantine_reason
+               FROM facts f
+               LEFT JOIN fact_quarantine_status fqs ON fqs.fact_id = f.id
+               WHERE f.id = ?
+                 AND COALESCE(fqs.quarantine_garden_id, f.quarantine_garden_id) IS NOT NULL""",
             (fact_id,),
         ).fetchone()
 
@@ -272,13 +309,13 @@ def _get_quarantined_fact(
             status_code=status.HTTP_404_NOT_FOUND, detail="quarantined fact not found"
         )
 
-    if row["quarantine_status"] != QUARANTINE_PENDING:
+    if row["projected_quarantine_status"] != QUARANTINE_PENDING:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="fact_not_quarantine_pending",
         )
 
-    garden = get_garden_by_slug_or_id(row["quarantine_garden_id"])
+    garden = get_garden_by_slug_or_id(row["projected_quarantine_garden_id"])
     if garden is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="quarantine garden not found"

@@ -99,6 +99,24 @@ _AS_OF_SELECT_SQL = (
     " LIMIT ?"
 )
 
+_FACT_PROJECTION_SELECT = (
+    "f.*, "
+    "COALESCE(fvo.valid_until, f.valid_until) AS projected_valid_until, "
+    "COALESCE(fvo.confidence, f.confidence) AS projected_confidence, "
+    "COALESCE(fgm.garden_id, f.garden_id) AS projected_garden_id, "
+    "COALESCE(fqs.quarantine_status, f.quarantine_status) AS projected_quarantine_status, "
+    "COALESCE(fqs.quarantine_garden_id, f.quarantine_garden_id) "
+    "AS projected_quarantine_garden_id, "
+    "COALESCE(f.cid, (SELECT fca.cid FROM fact_cid_aliases fca "
+    "WHERE fca.fact_id = f.id ORDER BY fca.cid LIMIT 1)) AS projected_cid"
+)
+
+_FACT_PROJECTION_JOINS = (
+    " LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id"
+    " LEFT JOIN fact_garden_membership fgm ON fgm.fact_id = f.id"
+    " LEFT JOIN fact_quarantine_status fqs ON fqs.fact_id = f.id"
+)
+
 _TIME_TRAVEL_PLUGIN_NAME = "stigmem-plugin-time-travel"
 
 
@@ -393,7 +411,10 @@ def query_facts(
     )
 
     where = " AND ".join(conditions)
-    sql = f"SELECT * FROM facts WHERE {where} ORDER BY timestamp DESC, id DESC LIMIT ?"  # noqa: S608  # nosec B608 — where is built from literal SQL fragments; all user values in params
+    sql = (
+        f"SELECT {_FACT_PROJECTION_SELECT} FROM facts f {_FACT_PROJECTION_JOINS} "  # noqa: S608  # nosec B608
+        f"WHERE {where} ORDER BY f.timestamp DESC, f.id DESC LIMIT ?"
+    )  # nosec B608 — where/join fragments are static; all user values in params
     params.append(limit + 1)
 
     with db() as conn:
@@ -471,7 +492,7 @@ def _append_garden_visibility_filter(
 ) -> None:
     """Either restrict to garden_id OR mask non-visible garden-tagged facts (§17.3)."""
     if garden is not None:
-        conditions.append("garden_id = ?")
+        conditions.append("COALESCE(fgm.garden_id, f.garden_id) = ?")
         params.append(garden["id"])
         return
     if not recall_filter_enabled():
@@ -486,10 +507,13 @@ def _append_garden_visibility_filter(
         ]
     if visible_garden_ids:
         placeholders = ",".join("?" * len(visible_garden_ids))
-        conditions.append(f"(garden_id IS NULL OR garden_id IN ({placeholders}))")
+        conditions.append(
+            f"(COALESCE(fgm.garden_id, f.garden_id) IS NULL "
+            f"OR COALESCE(fgm.garden_id, f.garden_id) IN ({placeholders}))"
+        )
         params.extend(visible_garden_ids)
     else:
-        conditions.append("garden_id IS NULL")
+        conditions.append("COALESCE(fgm.garden_id, f.garden_id) IS NULL")
 
 
 def _normalise_uri_or_raw(raw_value: str) -> str:
@@ -502,12 +526,18 @@ def _normalise_uri_or_raw(raw_value: str) -> str:
 
 def _entity_filter_clause() -> str:
     """Hardcoded entity-or-alias WHERE fragment. Pulled out so CodeQL sees a literal."""
-    return "(entity = ? OR entity IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+    return (
+        "(f.entity = ? "
+        "OR f.entity IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+    )
 
 
 def _source_filter_clause() -> str:
     """Hardcoded source-or-alias WHERE fragment. Pulled out so CodeQL sees a literal."""
-    return "(source = ? OR source IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+    return (
+        "(f.source = ? "
+        "OR f.source IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+    )
 
 
 def _build_query_conditions(  # noqa: PLR0913 — narrow internal helper, keeps query_facts signature flat
@@ -525,20 +555,20 @@ def _build_query_conditions(  # noqa: PLR0913 — narrow internal helper, keeps 
     include_expired: bool,
 ) -> tuple[list[str], list[Any]]:
     """Build the WHERE clause + bound parameters list for the facts query."""
-    conditions: list[str] = ["confidence >= ?", "tenant_id = ?"]
+    conditions: list[str] = ["COALESCE(fvo.confidence, f.confidence) >= ?", "f.tenant_id = ?"]
     params: list[Any] = [min_confidence, identity.tenant_id]
 
     _append_garden_visibility_filter(conditions, params, garden, identity)
 
     if attested is not None:
-        conditions.append("attested = ?")
+        conditions.append("f.attested = ?")
         params.append(1 if attested else 0)
     if entity:
         normalised_entity = _normalise_uri_or_raw(entity)
         conditions.append(_entity_filter_clause())
         params.extend([normalised_entity, normalised_entity])
     if relation:
-        conditions.append("relation = ?")
+        conditions.append("f.relation = ?")
         params.append(relation)
     if source:
         normalised_source = _normalise_uri_or_raw(source)
@@ -547,16 +577,19 @@ def _build_query_conditions(  # noqa: PLR0913 — narrow internal helper, keeps 
     if scope:
         if scope not in VALID_SCOPES:
             raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
-        conditions.append("scope = ?")
+        conditions.append("f.scope = ?")
         params.append(scope)
     if after:
-        conditions.append("timestamp > ?")
+        conditions.append("f.timestamp > ?")
         params.append(after)
     if cursor:
-        conditions.append("id > ?")
+        conditions.append("f.id > ?")
         params.append(cursor)
     if not include_expired:
-        conditions.append("(valid_until IS NULL OR valid_until > ?)")
+        conditions.append(
+            "(COALESCE(fvo.valid_until, f.valid_until) IS NULL "
+            "OR COALESCE(fvo.valid_until, f.valid_until) > ?)"
+        )
         params.append(datetime.now(UTC).isoformat())
 
     return conditions, params

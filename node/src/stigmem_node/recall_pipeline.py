@@ -247,6 +247,7 @@ def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
 
     from .audit_event import INSTRUCTION_QUARANTINED, emit_instruction_event_if_applicable
     from .db import db
+    from .immutability import set_fact_quarantine_status
     from .settings import settings
 
     qg_id = settings.quarantine_garden_id
@@ -277,13 +278,12 @@ def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
                 (fact_id,),
             ).fetchone()
 
-            conn.execute(
-                """UPDATE facts
-                   SET quarantine_garden_id = ?,
-                       quarantine_status = 'pending',
-                       quarantine_reason = ?
-                   WHERE id = ?""",
-                (qg_row["id"], f"sanitizer: {matched_pattern}", fact_id),
+            set_fact_quarantine_status(
+                conn,
+                fact_id=fact_id,
+                quarantine_garden_id=qg_row["id"],
+                quarantine_status="pending",
+                quarantine_reason=f"sanitizer: {matched_pattern}",
             )
 
             # Audit (§19.7.6)

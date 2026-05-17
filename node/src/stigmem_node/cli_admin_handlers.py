@@ -503,6 +503,7 @@ def _cmd_backfill_cids(args: argparse.Namespace) -> int:
     import sqlite3 as _sqlite3
 
     from .cid import compute_cid as _compute_cid
+    from .immutability import set_fact_cid_backfill_status
 
     db_path: str | None = getattr(args, "db", None)
     if db_path is None:
@@ -521,8 +522,12 @@ def _cmd_backfill_cids(args: argparse.Namespace) -> int:
 
     while True:
         rows = conn.execute(
-            "SELECT id, entity, relation, value_type, value_v, source, scope, confidence"
-            " FROM facts WHERE cid IS NULL LIMIT ?",
+            "SELECT f.id, f.entity, f.relation, f.value_type, f.value_v, f.source, "
+            "f.scope, f.confidence"
+            " FROM facts f"
+            " LEFT JOIN fact_cid_backfill fcb ON fcb.fact_id = f.id"
+            " WHERE f.cid IS NULL AND COALESCE(fcb.status, 'pending') != 'complete'"
+            " LIMIT ?",
             (batch_size,),
         ).fetchall()
         if not rows:
@@ -546,11 +551,11 @@ def _cmd_backfill_cids(args: argparse.Namespace) -> int:
                 collision_skipped += 1
                 continue
 
-            conn.execute("UPDATE facts SET cid = ? WHERE id = ?", (cid, row["id"]))
             conn.execute(
                 "INSERT OR IGNORE INTO fact_cid_aliases (fact_id, cid) VALUES (?, ?)",
                 (row["id"], cid),
             )
+            set_fact_cid_backfill_status(conn, fact_id=row["id"], status="complete")
 
         conn.commit()
         total_updated += len(rows)

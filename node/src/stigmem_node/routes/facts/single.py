@@ -14,6 +14,7 @@ from ...models.facts import FactRecord, row_to_record
 from ...recall_pipeline import apply_recall_pipeline
 from ...session_graph import record_read_scopes
 from .common import router
+from .query import _FACT_PROJECTION_JOINS, _FACT_PROJECTION_SELECT
 
 
 @router.get("/{fact_id}", response_model=FactRecord)
@@ -52,7 +53,8 @@ def get_fact(
 
     with db() as conn:
         row = conn.execute(
-            "SELECT * FROM facts WHERE id = ? AND tenant_id = ?",
+            f"SELECT {_FACT_PROJECTION_SELECT} FROM facts f {_FACT_PROJECTION_JOINS} "  # noqa: S608  # nosec B608
+            "WHERE f.id = ? AND f.tenant_id = ?",
             (resolved_fact_id, identity.tenant_id),
         ).fetchone()
     if row is None:
@@ -65,11 +67,15 @@ def get_fact(
         raise HTTPException(status_code=404, detail="fact not found")
 
     # Garden ACL: fact in a garden is only readable by members (spec §17.3)
-    if "garden_id" in row.keys() and row["garden_id"] is not None:  # noqa: SIM118
+    row_keys = row.keys()
+    garden_id = (
+        row["projected_garden_id"] if "projected_garden_id" in row_keys else row["garden_id"]
+    )
+    if garden_id is not None:
         with db() as conn:
             garden_row = conn.execute(
                 "SELECT * FROM gardens WHERE id = ? AND tenant_id = ?",
-                (row["garden_id"], identity.tenant_id),
+                (garden_id, identity.tenant_id),
             ).fetchone()
         if garden_row is not None:
             require_garden_read(dict(garden_row), identity)

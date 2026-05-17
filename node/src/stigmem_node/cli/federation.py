@@ -62,7 +62,7 @@ def _cmd_federation_register_peer(args: argparse.Namespace) -> int:
     # ------------------------------------------------------------------
     # 2. Load local private key and sign the PeerDeclaration.
     # ------------------------------------------------------------------
-    from ..peer_token import init_federation_keys
+    from ..federation.peer_token import init_federation_keys
 
     _, priv_b64 = init_federation_keys()
 

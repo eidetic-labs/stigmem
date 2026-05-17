@@ -198,7 +198,7 @@ def _push_tombstone_to_peers(record: TombstoneRecord) -> None:
     import httpx
 
     from ..db import db
-    from ..peer_token import create_peer_token
+    from ..federation.peer_token import create_peer_token
 
     log = logging.getLogger("stigmem.tombstones.federation")
     try:

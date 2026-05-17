@@ -8,14 +8,14 @@ from typing import Annotated, Any
 from fastapi import Header, HTTPException, Query, Request
 
 from ...db import db
-from ...federation_ingest import FederationHlcSkewError, FederationIntegrityError
+from ...federation.federation_ingest import FederationHlcSkewError, FederationIntegrityError
+from ...federation.tls import check_peer_san
 from ...identity.capability import CapabilityTokenError, verify_token
 from ...identity.trust_store import get_peer_manifest
 from ...metrics import FEDERATION_EGRESS
 from ...models.facts import row_to_record
 from ...models.federation import FederationFactsResponse
 from ...plugins import Deny, TenantContext, get_registry
-from ...tls import check_peer_san
 from .common import (
     PeerTokenDep,
     _allowed_output_scopes,

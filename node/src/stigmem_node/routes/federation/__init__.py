@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...federation_ingest import ingest_fact, write_audit_log  # noqa: F401
+from ...federation.federation_ingest import ingest_fact, write_audit_log  # noqa: F401
 from ...settings import settings  # noqa: F401
 from .audit_conflicts import (  # noqa: F401
     _encode_value,

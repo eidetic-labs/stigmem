@@ -113,3 +113,6 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
   utility implementation modules into `stigmem_node.observability` and
   `stigmem_node.utility`, with root-level compatibility shims for historical
   imports.
+- #471 continues module flattening by moving federation ingest/pull and
+  federation transport/security helpers into `stigmem_node.federation`, while
+  retaining root-level compatibility aliases for historical imports.

@@ -10,8 +10,8 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
 from ...db import db
-from ...peer_token import TokenError, verify_peer_token
-from ...tls import check_peer_san
+from ...federation.peer_token import TokenError, verify_peer_token
+from ...federation.tls import check_peer_san
 
 logger = logging.getLogger("stigmem.federation")
 

@@ -24,6 +24,8 @@ from fastapi import BackgroundTasks, HTTPException, Request, status
 
 from ..auth import Identity
 from ..db import db
+from ..federation.peer_token import verify_declaration_sig
+from ..federation.tls import check_peer_san
 from ..identity.capability import CapabilityTokenError, verify_token
 from ..identity.manifest import ManifestError, manifest_from_dict, verify_manifest
 from ..identity.transparency_log import LogEntry, TransparencyLogUnavailable, make_transparency_log
@@ -37,9 +39,7 @@ from ..models.tombstones import (
     TombstoneRevocationRecord,
 )
 from ..net_util import assert_safe_url
-from ..peer_token import verify_declaration_sig
 from ..plugins import Deny, TenantContext, get_registry
-from ..tls import check_peer_san
 
 logger = logging.getLogger("stigmem.federation")
 
@@ -48,7 +48,7 @@ def _make_federation_client() -> httpx.AsyncClient:
     from . import federation as _fed_mod
 
     if _fed_mod.settings.mtls_enabled:
-        from ..tls import build_client_ssl_context
+        from ..federation.tls import build_client_ssl_context
 
         ssl_ctx = build_client_ssl_context(
             _fed_mod.settings.tls_cert_path,

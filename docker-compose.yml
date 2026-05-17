@@ -29,6 +29,10 @@
 # in your shell or .env to remap. The internal container port stays
 # at 8765 — federation between containers uses the service-network
 # DNS name (`http://node-a:8765`) regardless of the host port.
+#
+# This quickstart is an intentionally local, plaintext federation demo.
+# Production federation must configure mTLS instead of using
+# STIGMEM_FEDERATION_INSECURE.
 services:
   node-a:
     image: ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
@@ -40,6 +44,7 @@ services:
     environment:
       STIGMEM_NODE_URL: "http://node-a:8765"
       STIGMEM_FEDERATION_ENABLED: "true"
+      STIGMEM_FEDERATION_INSECURE: "1"
       STIGMEM_AUTH_REQUIRED: "false"
       STIGMEM_DB_PATH: "/data/stigmem.db"
       STIGMEM_LOG_LEVEL: "info"
@@ -71,6 +76,7 @@ services:
     environment:
       STIGMEM_NODE_URL: "http://node-b:8765"
       STIGMEM_FEDERATION_ENABLED: "true"
+      STIGMEM_FEDERATION_INSECURE: "1"
       STIGMEM_AUTH_REQUIRED: "false"
       STIGMEM_DB_PATH: "/data/stigmem.db"
       STIGMEM_LOG_LEVEL: "info"

@@ -1,0 +1,63 @@
+# GitHub Actions workflow for dependency currency.
+# Drop in at: .github/workflows/dependency-currency.yml
+#
+# This is intentionally separate from vulnerability scanning. It tracks
+# packages behind latest so routine upgrade debt does not hide security fixes.
+
+name: Dependency Currency
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-currency:
+    name: Check dependency currency
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install workspace dependencies
+        run: |
+          uv sync --all-packages
+          pnpm install --frozen-lockfile
+
+      - name: Run currency checks
+        run: |
+          mkdir -p artifacts/dependency-currency
+          pnpm outdated -r --format json > artifacts/dependency-currency/pnpm-outdated.json || true
+          uv tree --outdated --all-groups --no-progress > artifacts/dependency-currency/uv-outdated.txt || true
+          if [ -f docs/package.json ]; then
+            (cd docs && npm outdated --json > ../artifacts/dependency-currency/docs-npm-outdated.json) || true
+          fi
+          if [ -f experimental/obsidian-adapter/plugin/package.json ]; then
+            (cd experimental/obsidian-adapter/plugin && npm outdated --json > ../../../artifacts/dependency-currency/obsidian-plugin-npm-outdated.json) || true
+          fi
+
+      - name: Upload dependency currency report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-currency-${{ github.run_id }}
+          path: artifacts/dependency-currency/
+          retention-days: 30

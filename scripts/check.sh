@@ -45,9 +45,9 @@ timed_run() {
   local name="$1"
   shift
   local start_ms end_ms duration_ms
-  start_ms="$(date +%s%3N)"
+  start_ms="$(python3 -c 'import time; print(time.time_ns() // 1_000_000)')"
   "$@"
-  end_ms="$(date +%s%3N)"
+  end_ms="$(python3 -c 'import time; print(time.time_ns() // 1_000_000)')"
   duration_ms="$((end_ms - start_ms))"
   TIMING_LINES+=("${name}:${duration_ms}")
 }
@@ -83,7 +83,10 @@ run_python() {
     timed_run python-sync uv sync --all-packages
   fi
 
-  mapfile -t common_pytest_args < <(pytest_args)
+  local common_pytest_args=()
+  while IFS= read -r arg; do
+    common_pytest_args+=("$arg")
+  done < <(pytest_args)
   timed_run python-ruff-baseline uv run python scripts/check_ruff_baseline.py
   timed_run python-mypy-baseline uv run python scripts/check_mypy_baseline.py
   timed_run python-sdk-ruff uv run ruff check sdks/stigmem-py/src sdks/stigmem-py/tests
@@ -213,6 +216,7 @@ run_contract() {
     cd "$ROOT_DIR/sdks/stigmem-ts"
     pnpm_cmd exec openapi-typescript ../../docs/openapi/stigmem.json -o "$generated_tmp" --root-types
   )
+  uv run python scripts/mark_openapi_typescript_generated.py "$generated_tmp"
   diff -u "$ROOT_DIR/sdks/stigmem-ts/src/generated.ts" "$generated_tmp"
   rm -f "$generated_tmp"
 }

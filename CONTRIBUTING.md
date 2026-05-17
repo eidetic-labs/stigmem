@@ -127,6 +127,41 @@ python scripts/check_security_documentation.py
 
 Regenerate the CLI reference pages (under `docs/docs/reference/cli/`) after changing CLI flags or adding subcommands: `make gen-cli-docs`.
 
+## Branch and publish verification
+
+Before pushing a review branch or publishing an artifact, verify the target from
+the repository you intend to update:
+
+```bash
+git rev-parse --show-toplevel
+git status --short --branch
+git fetch origin
+git rev-list --left-right --count origin/main...HEAD
+git ls-remote --heads origin "$(git branch --show-current)"
+```
+
+Confirm the branch name, ahead/behind count, and remote ref before pushing. For
+release or package publishing work, include the checked branch and publish target
+in the PR body so reviewers can verify that the artifact came from the expected
+source.
+
+## Major-version dependency holds
+
+Major-version holds are allowed only when they are explicit. Record intentional
+holds in [`docs/internal/major-version-holds.md`](docs/internal/major-version-holds.md)
+or the active release tracker with:
+
+- package and owning workspace;
+- current major and latest major;
+- owner;
+- rationale and security impact;
+- tests required before the bump;
+- review date.
+
+Patch and minor updates for runtime, auth/session, parsing, validation, bundling,
+or protocol-generation packages should normally be evaluated before framework
+major migrations.
+
 ## Per-version-line docs-delta requirement
 
 Every version line of the roadmap MUST ship a docs-improvement deliverable. This is a board mandate (2026-05-03).

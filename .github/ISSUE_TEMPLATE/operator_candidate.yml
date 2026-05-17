@@ -1,0 +1,38 @@
+name: Operator candidate
+description: Express interest in running Stigmem during external validation or soak testing
+title: "Operator candidate: "
+labels: ["type/operator-finding"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template if your team is interested in running a Stigmem node during external validation. Do not include secrets or private infrastructure details.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Deployment context
+      description: What kind of workload or environment would you like to validate?
+      placeholder: "Single-org agent memory, internal developer tooling, cross-team federation trial..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: federation
+    attributes:
+      label: Federation interest
+      options:
+        - Single-node only
+        - Same-organization federation
+        - Cross-organization federation discussion
+        - Unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints or questions
+      description: Share public constraints, review needs, or questions. Keep sensitive details private.
+    validations:
+      required: false

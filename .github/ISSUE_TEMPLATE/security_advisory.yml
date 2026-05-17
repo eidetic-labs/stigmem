@@ -1,0 +1,39 @@
+name: Security advisory coordination
+description: Coordinate public security-process work without disclosing sensitive vulnerability details
+title: "Security: "
+labels: ["area/security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not disclose active vulnerabilities, exploit details, secrets, private keys, private operator data, or unpublished third-party findings in a public issue.
+
+        For a private vulnerability report, use GitHub private security advisories or the disclosure path in SECURITY.md.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Security documentation or runbook update
+        - Public advisory follow-up after private disclosure is complete
+        - Safe-harbor or reporting-process question
+        - Security test or evidence gap without exploit details
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Public summary
+      description: Describe the process, documentation, or already-public security issue. Keep sensitive details out.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: This issue does not include secrets, exploit steps, private operator data, or undisclosed vulnerability details.
+          required: true

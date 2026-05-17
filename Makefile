@@ -1,5 +1,6 @@
 .PHONY: sdk-ts sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack help \
         check check-python check-node check-contract check-go check-docs check-obsidian check-sdk-compat check-sdk-backward-compat check-migration-compat \
+        demo demo-attack \
         eval-soak eval-soak-smoke \
         eval-fast eval-adversarial eval-recall eval-fast-baseline \
         gen-cli-docs
@@ -22,6 +23,9 @@ help:
 	@echo "  check-sdk-compat  Live-node smoke across Python, TypeScript, and Go SDKs"
 	@echo "  check-sdk-backward-compat  Previous-release SDK smoke against the current node"
 	@echo "  check-migration-compat     Upgrade a v1.0-rc schema baseline and verify it"
+	@echo ""
+	@echo "  demo              Two-node Docker quickstart: peer, assert, replicate, audit"
+	@echo "  demo-attack       Malicious-peer rejection demo (scope + source forgery)"
 	@echo ""
 	@echo "  sdk-ts            Full TypeScript SDK pipeline: generate → build → test → pack"
 	@echo "  sdk-ts-generate   Regenerate src/generated.ts from $(OPENAPI_SPEC)"
@@ -61,6 +65,12 @@ check-sdk-backward-compat:
 
 check-migration-compat:
 	uv run pytest node/tests/test_migration_compat.py -q --tb=short
+
+demo:
+	bash scripts/quickstart-verify.sh
+
+demo-attack:
+	bash scripts/demo-attack.sh
 
 # Full pipeline — matches the acceptance criterion in the Phase 13 spec.
 sdk-ts: sdk-ts-generate sdk-ts-build sdk-ts-test sdk-ts-pack

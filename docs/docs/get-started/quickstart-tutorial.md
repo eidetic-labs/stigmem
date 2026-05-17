@@ -9,7 +9,9 @@ slug: quickstart-tutorial
 **Goal:** run two stigmem nodes on one machine and watch a fact asserted on Node A replicate automatically to Node B.  
 **Time:** under 5 minutes on a machine with Docker and Docker Compose installed.
 
-Federation peer registration is **automatic** — no manual `docker exec` commands needed.
+The fastest reproducible path is `make demo`. It starts two local nodes,
+registers them as peers, asserts a fact on node A, waits for pull replication,
+checks node B, prints recent audit entries, and tears the stack down.
 
 ## Prerequisites
 
@@ -27,61 +29,53 @@ No Python installation required — the nodes run in containers.
 ```bash
 git clone https://github.com/Eidetic-Labs/stigmem
 cd stigmem
-make up
+make demo
 ```
 
-`make up` runs `docker compose up --build -d` (both `docker-compose.yml` and `compose.override.yml`), which starts three services:
+`make demo` runs `scripts/quickstart-verify.sh`. By default it uses the pinned
+GHCR image from `docker-compose.yml` for speed. Contributors who need to prove
+the local working tree can set `DEMO_BUILD=1 make demo` to force a local image
+build first.
+
+The quickstart starts two services:
 
 | Service | Role | Host port |
 |---------|------|-----------|
 | `node-a` | stigmem node | 8765 |
 | `node-b` | stigmem node | 8766 |
-| `federation-init` | one-shot peer wirer | — |
 
-**Startup ordering:** `node-b` has `depends_on: node-a: condition: service_healthy` — it does not start until `node-a` passes its `/healthz` check. `federation-init` waits for _both_ nodes to be healthy before running.
+If ports 8765/8766 are busy, the demo script automatically selects free host
+ports starting at 18765.
 
-## Step 2 — Verify automatic federation
+## Step 2 — Verify federation
 
-Wait about 15 s, then check service status:
+The demo prints each step as it runs:
+
+```text
+Step 0 — docker compose up -d
+Step 2 — Inspecting /.well-known/stigmem
+Step 3 — Peer handshake (both directions)
+Step 4 — Asserting fact on node-a
+Step 5 — Waiting 35s for federation pull
+Step 6 — Federation audit log on node-b
+```
+
+`quickstart smoke test PASSED` confirms the receiving node accepted the signed
+peer declaration, pull replication moved the fact, and the audit endpoint stayed
+readable.
+
+To keep the demo stack running for manual inspection:
 
 ```bash
-docker compose ps
+KEEP_UP=1 make demo
 ```
 
-Expected: `node-a` and `node-b` show `healthy`; `federation-init` shows `exited (0)`.
+## Step 3 — Manual fact assertion
 
-Inspect the init log:
+With `KEEP_UP=1`, assert another fact on node A:
 
 ```bash
-make logs
-```
-
-Look for:
-
-```
-federation-init-1  | federation-init: starting
-federation-init-1  |   node-a  id=abc12345…  pub=abc123def456…
-federation-init-1  |   node-b  id=def67890…  pub=def456ghi789…
-federation-init-1  |   registering node-a → node-b…
-federation-init-1  |     status=active
-federation-init-1  |   registering node-b → node-a…
-federation-init-1  |     status=active
-federation-init-1  | federation-init: done
-```
-
-`status=active` confirms the receiving node fetched the sender's `/.well-known/stigmem`, verified the Ed25519 public key, and accepted the signed `PeerDeclaration` (`Spec-05-Federation-Trust`).
-
-Confirm directly:
-
-```bash
-curl -s http://localhost:8765/v1/federation/peers | jq '.[].status'  # "active"
-curl -s http://localhost:8766/v1/federation/peers | jq '.[].status'  # "active"
-```
-
-## Step 3 — Assert a fact on Node A
-
-```bash
-curl -s -X POST http://localhost:8765/v1/facts \
+curl -s -X POST "${NODE_A:-http://localhost:8765}/v1/facts" \
   -H 'Content-Type: application/json' \
   -d '{
     "entity":     "user:alice",
@@ -101,7 +95,7 @@ Node B pulls facts from Node A on the background pull interval (default 30 s):
 
 ```bash
 sleep 35
-curl -s 'http://localhost:8766/v1/facts?entity=user:alice&scope=company' \
+curl -s "${NODE_B:-http://localhost:8766}/v1/facts?entity=user:alice&scope=company" \
   -H 'Content-Type: application/json' | jq '.facts[] | {id, entity, value, scope, source_node}'
 ```
 
@@ -116,7 +110,7 @@ The default pull interval is 30 s (`STIGMEM_FEDERATION_PULL_INTERVAL_S`). Lower 
 Every pull event and peer action is recorded:
 
 ```bash
-curl -s http://localhost:8766/v1/federation/audit | jq '.entries[-3:]'
+curl -s "${NODE_B:-http://localhost:8766}/v1/federation/audit" | jq '.entries[-3:]'
 ```
 
 ---
@@ -125,32 +119,12 @@ curl -s http://localhost:8766/v1/federation/audit | jq '.entries[-3:]'
 
 | Target | What it does |
 |--------|-------------|
-| `make up` | Build and start the stack detached. Dev overlay (`compose.override.yml`) applied automatically. |
-| `make down` | Stop containers; keep data volumes. |
-| `make logs` | Tail logs from all services (`docker compose logs -f`). |
-| `make verify` | End-to-end smoke test — starts nodes, asserts a fact, verifies replication, tears down. |
+| `make demo` | End-to-end two-node smoke test: start, peer, assert, replicate, audit, tear down. |
+| `DEMO_BUILD=1 make demo` | Same demo, but force-build the local working tree image. |
+| `KEEP_UP=1 make demo` | Leave the stack running after the demo for manual inspection. |
+| `make demo-attack` | Malicious-peer rejection demo: unauthorized scope write and source forgery. |
 
-To run without the dev overlay (production-only):
-
-```bash
-make up COMPOSE_FLAGS="-f docker-compose.yml"
-```
-
-## Development profile (live-reload)
-
-`compose.override.yml` is automatically merged by `docker compose` and `make up`. It:
-
-- Sets `STIGMEM_LOG_LEVEL=debug` on both nodes.
-- Mounts `./node/src` into the containers (read-only) so the running process sees source changes.
-- Overrides both node entrypoints to `uvicorn --reload` so any `.py` change under `node/src/` restarts the node process inside the container within ~1 s.
-
-To run without live-reload:
-
-```bash
-make up COMPOSE_FLAGS="-f docker-compose.yml"
-# or
-docker compose -f docker-compose.yml up --build -d
-```
+For ad hoc compose work, use `docker compose up -d` and `docker compose down -v`.
 
 :::caution Helm / Kubernetes is deferred in v0.9.0a1
 The Helm chart has been moved to [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md). It remains buildable but is unsupported until the [ADR-008 reintroduction gates](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) pass. The supported v0.9.0a1 deployment surface is Docker Compose (above).
@@ -160,33 +134,37 @@ The Helm chart has been moved to [`experimental/deploy-helm/`](https://github.co
 Generate Ed25519 keypairs with `python3 infra/soak/keys.py`. Keys must be base64url-encoded without padding (`=`).
 :::
 
-## federation-init internals (for operators)
+## Peer registration internals
 
-`federation-init` is a one-shot init container defined in `docker-compose.yml`. It runs `scripts/federation-init.py` and exits.
+The demo registers each direction by running the CLI inside each node container:
 
-### How it works
+```bash
+stigmem federation register-peer \
+  --local-url  http://node-a:8765 \
+  --remote-url http://node-b:8765 \
+  --scopes company,public
+```
 
-1. **Wait for node DBs** — polls each node's SQLite DB (`/data/node-a/stigmem.db`, `/data/node-b/stigmem.db`) every 2 s until `federation_pubkey`, `federation_privkey`, and `node_id` rows are present in `node_meta` (up to 30 retries = 60 s). The DBs are mounted read-only via named volumes.
-
-2. **Sign PeerDeclarations** — for each direction (A→B, B→A), constructs a `PeerDeclaration` with `node_id`, `node_url`, `federation_pubkey`, `allowed_scopes`, and `signed_at` (UTC). Produces canonical JSON (sorted keys, no whitespace) and signs with Ed25519 (`Spec-05-Federation-Trust`).
-
-3. **Register peers** — POSTs the signed payload to `POST /v1/federation/peers` on the remote node. HTTP 409 means already registered and is silently skipped.
-
-4. **Exit** — exits 0 on success, 1 if any registration failed. `restart: on-failure` in `docker-compose.yml` retries on transient errors.
+The receiving node fetches the sender's `/.well-known/stigmem`, verifies the
+federation public key, and stores an active peer record. HTTP 409 means a prior
+run already registered that peer; the demo clears volumes before starting so the
+handshake is deterministic.
 
 ### Environment overrides
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `NODE_A_DB` | `/data/node-a/stigmem.db` | Path to node-a's SQLite DB |
-| `NODE_B_DB` | `/data/node-b/stigmem.db` | Path to node-b's SQLite DB |
-| `NODE_A_URL` | `http://node-a:8765` | Node A internal URL |
-| `NODE_B_URL` | `http://node-b:8765` | Node B internal URL |
-| `SCOPES` | `company,public` | Comma-separated allowed scopes |
+| `STIGMEM_NODE_A_HOST_PORT` | first free port at/above 18765 | Node A host port for the demo script |
+| `STIGMEM_NODE_B_HOST_PORT` | next free port after node A | Node B host port for the demo script |
+| `PULL_WAIT_S` | `35` | Seconds to wait before checking node B for replicated facts |
+| `KEEP_UP` | `0` | Set to `1` to leave containers running after the demo |
+| `DEMO_BUILD` | `0` | Set to `1` to force `docker compose up --build -d` |
 
 ### Idempotency
 
-Re-running `federation-init` (e.g., after `make down && make up`) is safe — HTTP 409 on already-registered peers is silently skipped, and the service exits 0 as long as both nodes are reachable.
+Re-running `make demo` is safe. The script starts by running
+`docker compose down -v --remove-orphans` so stale peer registrations, test
+facts, and volumes do not affect the next handshake.
 
 ---
 
@@ -201,6 +179,5 @@ Re-running `federation-init` (e.g., after `make down && make up`) is safe — HT
 ## Teardown
 
 ```bash
-make down              # stop containers; keep data volumes
 docker compose down -v # stop and delete all data volumes
 ```

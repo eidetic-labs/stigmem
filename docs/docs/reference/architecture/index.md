@@ -220,11 +220,12 @@ Auth mode is advertised at `/.well-known/stigmem` as `"auth": "none" | "required
 
 ```
 stigmem/
-├── spec/                           ← canonical spec (pre-reset → pre-reset-draft)
-│   └── README.md                   ← spec status table
+├── spec/                           ← canonical security evidence and generated spec mirrors
+│   ├── security/                   ← threat model and evidence registry
+│   └── specs/                      ← generated protocol spec snapshots
 │
 ├── node/                           ← reference node (FastAPI + SQLite)
-│   ├── stigmem_node/
+│   ├── src/stigmem_node/
 │   │   ├── main.py                 ← FastAPI app factory, lifespan, router registration
 │   │   ├── auth.py                 ← resolve_identity() dependency; API key validation
 │   │   ├── db.py                   ← SQLite connection, schema migrations
@@ -234,28 +235,30 @@ stigmem/
 │   │   ├── peer_auth.py            ← PeerDeclaration verification, peer token generation
 │   │   ├── peer_token.py           ← Ed25519 JWT sign/verify, nonce cache
 │   │   └── routes/
-│   │       ├── facts.py            ← POST/GET /v1/facts, conflict detection
-│   │       ├── federation.py       ← /v1/federation/* , /v1/conflicts
+│   │       ├── facts.py            ← POST/GET /v1/facts
+│   │       ├── federation.py       ← /v1/federation/* facade
+│   │       ├── conflicts.py        ← /v1/conflicts
 │   │       └── wellknown.py        ← GET /.well-known/stigmem
-│   ├── migrations/
-│   │   ├── 001_init.sql            ← facts table
-│   │   └── 002_federation.sql      ← peers, conflicts, audit tables
-│   └── tests/                      ← 74 passing tests
-│       ├── test_facts.py           ← fact CRUD, contradiction, scope enforcement
-│       ├── test_federation.py      ← handshake, pull replication, scope leak attempts
-│       └── test_failure_modes.py   ← Spec-18 acceptance tests: split-brain, malicious peer, partial failure, replay
+│   ├── migrations/                 ← schema migrations
+│   └── tests/                      ← reference-node unit, integration, conformance, and security tests
 │
 ├── adapters/                       ← platform adapters
 │   ├── mcp/                        ← MCP server (TypeScript): stigmem_assert + stigmem_query tools
-│   ├── openclaw/                   ← Claude Code / OpenClaw adapter (Python): PARA→fact mapping
-│   └── paperclip/                  ← Paperclip hook adapter (JS): emits lifecycle events as facts
+│   └── openclaw/                   ← compatibility shim; active package lives under packages/
+│
+├── packages/                       ← published Python packages and extracted plugins
+├── sdks/                           ← SDKs and generated clients
+├── experimental/                   ← deferred or gated features per ADR-002 / ADR-008
 │
 └── docs/                           ← Docusaurus 3 documentation site
     └── docs/                       ← content
-        ├── learn/                  ← concepts, features, quickstart
-        ├── build/                  ← guides, connectors, SDKs, tutorials
-        ├── operate/                ← backends, deployment, runbooks, security, observability
-        ├── reference/              ← spec, API, architecture, CLI, glossary
+        ├── get-started/            ← installation and quickstart guides
+        ├── concepts/               ← conceptual model and feature status
+        ├── guides/                 ← plugin and integration guides
+        ├── operators/              ← deployment, runbooks, observability, hardening
+        ├── reference/              ← API, architecture, CLI, glossary
+        ├── security/               ← security architecture and posture
+        ├── spec/                   ← modular protocol specs and experimental specs
         └── community/              ← project resources, contributing
 ```
 

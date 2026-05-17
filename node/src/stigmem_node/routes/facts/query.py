@@ -412,7 +412,7 @@ def query_facts(
 
     where = " AND ".join(conditions)
     sql = (
-        f"SELECT {_FACT_PROJECTION_SELECT} FROM facts f {_FACT_PROJECTION_JOINS} "  # noqa: S608
+        f"SELECT {_FACT_PROJECTION_SELECT} FROM facts f {_FACT_PROJECTION_JOINS} "  # noqa: S608  # nosec B608
         f"WHERE {where} ORDER BY f.timestamp DESC, f.id DESC LIMIT ?"
     )  # nosec B608 — where/join fragments are static; all user values in params
     params.append(limit + 1)

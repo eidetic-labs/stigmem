@@ -93,7 +93,7 @@ def list_quarantined_facts(
     elif not identity.can_write():
         # Non-admins: only see facts in gardens they're members of
         filters.append(
-            f"{quarantine_garden_expr} IN ("
+            f"{quarantine_garden_expr} IN ("  # nosec B608
             "  SELECT gm.garden_id FROM garden_members gm"
             "  WHERE gm.entity_uri = ?"
             ")"

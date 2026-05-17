@@ -53,7 +53,7 @@ def get_fact(
 
     with db() as conn:
         row = conn.execute(
-            f"SELECT {_FACT_PROJECTION_SELECT} FROM facts f {_FACT_PROJECTION_JOINS} "  # noqa: S608
+            f"SELECT {_FACT_PROJECTION_SELECT} FROM facts f {_FACT_PROJECTION_JOINS} "  # noqa: S608  # nosec B608
             "WHERE f.id = ? AND f.tenant_id = ?",
             (resolved_fact_id, identity.tenant_id),
         ).fetchone()

@@ -56,6 +56,8 @@ data/*.db
 data/*.db-shm
 data/*.db-wal
 stigmem.db
+stigmem.db-shm
+stigmem.db-wal
 logs/
 # Eval results (CI-generated artifacts)
 eval/results/

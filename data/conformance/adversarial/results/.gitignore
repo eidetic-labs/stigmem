@@ -1,0 +1,4 @@
+*.raw-local.json
+*.sanitized.json
+*.assessment.json
+*.review.md

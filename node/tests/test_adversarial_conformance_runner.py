@@ -123,6 +123,25 @@ def test_cli_writes_result_and_sets_exit_code(tmp_path: Path) -> None:
     assert fail_exit == 1
 
 
+def test_default_results_dir_stays_outside_repo(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("STIGMEM_ADR015_RESULTS_DIR", raising=False)
+
+    results_dir = runner.default_results_dir()
+
+    assert not results_dir.is_relative_to(runner.ROOT)
+    assert results_dir.name == "adr-015-results"
+
+
+def test_default_results_dir_honors_env(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configured = tmp_path / "local-artifacts"
+    monkeypatch.setenv("STIGMEM_ADR015_RESULTS_DIR", str(configured))
+
+    assert runner.default_results_dir() == configured
+
+
 def test_unknown_provider_is_explicitly_unsupported() -> None:
     with pytest.raises(ValueError, match="not implemented"):
         runner.build_provider("made-up-provider")

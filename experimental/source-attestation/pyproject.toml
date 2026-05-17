@@ -1,0 +1,15 @@
+[project]
+name = "stigmem-plugin-source-attestation"
+version = "0.1.0"
+description = "Experimental source-attestation plugin for Stigmem."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+]
+
+[project.entry-points."stigmem.plugins"]
+source-attestation = "stigmem_plugin_source_attestation:plugin_manifest"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

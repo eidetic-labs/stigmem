@@ -44,7 +44,7 @@ The current active implementation is present in these locations:
   - exposes `as_of_retention_floor`.
 - `data/conformance/v2.0/24_time_travel.json`
   - validates active default-install `as_of` behavior.
-- `node/tests/test_phase13_time_travel_cid.py`
+- `node/tests/time_travel/test_phase13_time_travel_cid.py`
   - interleaves CID tests with active time-travel tests for fact query, recall,
     retraction, expiry, tombstones, and legal hold.
 - `docs/openapi/stigmem.json`

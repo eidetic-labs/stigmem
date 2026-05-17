@@ -15,14 +15,14 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
             item.add_marker(pytest.mark.eval)
             item.add_marker(pytest.mark.slow)
 
-        if rel.startswith("node/src/stigmem_conformance/tests/") or "/conformance/" in rel:
+        if (
+            rel.startswith("node/src/stigmem_conformance/tests/")
+            or rel.startswith("node/tests/conformance/")
+        ):
             item.add_marker(pytest.mark.conformance)
             item.add_marker(pytest.mark.integration)
 
-        if rel.endswith("node/tests/test_conformance_v1.py"):
-            item.add_marker(pytest.mark.conformance)
-            item.add_marker(pytest.mark.integration)
-        elif rel.startswith("node/tests/"):
+        if rel.startswith("node/tests/"):
             item.add_marker(pytest.mark.integration)
 
         if rel.startswith("sdks/stigmem-py/tests/"):
@@ -37,8 +37,9 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         if (
             "security" in rel
             or "adversarial" in rel
+            or rel.startswith("node/tests/auth/")
+            or rel.startswith("node/tests/secure_defaults/")
             or rel.endswith("test_mtls.py")
-            or rel.endswith("test_auth.py")
             or rel.endswith("test_argon2_auth.py")
         ):
             item.add_marker(pytest.mark.security)

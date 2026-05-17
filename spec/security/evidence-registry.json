@@ -13,7 +13,7 @@
         "node/src/stigmem_node/routes/federation/common.py",
         "node/src/stigmem_node/routes/federation/replication.py"
       ],
-      "test_files": ["node/tests/test_mtls.py"],
+      "test_files": ["node/tests/federation/test_mtls.py"],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "spec/security/federation-control-review.md",
@@ -30,7 +30,7 @@
         "node/src/stigmem_node/rate_limit.py",
         "node/migrations/022_quota_buckets.sql"
       ],
-      "test_files": ["node/tests/test_quota.py"],
+      "test_files": ["node/tests/observability/test_quota.py"],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "spec/security/federation-control-review.md",
@@ -49,9 +49,9 @@
         "node/src/stigmem_node/rate_limit.py"
       ],
       "test_files": [
-        "node/tests/test_argon2_auth.py",
-        "node/tests/test_phase12_key_rotation.py",
-        "node/tests/test_rate_limit.py"
+        "node/tests/auth/test_argon2_auth.py",
+        "node/tests/federation/test_phase12_key_rotation.py",
+        "node/tests/observability/test_rate_limit.py"
       ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
@@ -70,7 +70,7 @@
         "node/src/stigmem_node/identity/capability.py",
         "node/src/stigmem_node/peer_token.py"
       ],
-      "test_files": ["node/tests/test_phase12_replay_fuzz.py"],
+      "test_files": ["node/tests/federation/test_phase12_replay_fuzz.py"],
       "docs_reference_files": ["spec/security/threat-model.md"],
       "review_decision": "accept-as-is",
       "notes": "Evidence focuses on fuzz and nonce-cache survival tests named by the threat model."
@@ -84,8 +84,8 @@
         "node/src/stigmem_node/routes/admin_audit.py"
       ],
       "test_files": [
-        "node/tests/test_admin_audit.py",
-        "node/tests/test_audit_enriched.py"
+        "node/tests/routes/test_admin_audit.py",
+        "node/tests/observability/test_audit_enriched.py"
       ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
@@ -104,7 +104,7 @@
         "node/src/stigmem_node/identity/key_rotation.py",
         "node/src/stigmem_node/identity/transparency_log.py"
       ],
-      "test_files": ["node/tests/test_phase12_key_rotation.py"],
+      "test_files": ["node/tests/federation/test_phase12_key_rotation.py"],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "spec/security/federation-control-review.md",
@@ -122,7 +122,7 @@
         "deploy/seccomp/stigmem-node.json",
         ".github/workflows/ci.yml"
       ],
-      "test_files": ["node/tests/test_secure_defaults.py"],
+      "test_files": ["node/tests/secure_defaults/test_secure_defaults.py"],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "docs/docs/security/container-hardening.md"
@@ -138,7 +138,7 @@
         "node/src/stigmem_node/rate_limit.py",
         "node/migrations/022_quota_buckets.sql"
       ],
-      "test_files": ["node/tests/test_quota.py"],
+      "test_files": ["node/tests/observability/test_quota.py"],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "spec/security/federation-control-review.md",
@@ -153,7 +153,7 @@
       "version_introduced": "0.9.0a1",
       "implementation_files": ["node/src/stigmem_node/identity/capability.py"],
       "test_files": [
-        "node/tests/test_phase12_key_rotation.py",
+        "node/tests/federation/test_phase12_key_rotation.py",
         "node/tests/identity/test_capability_tokens.py",
         "node/tests/identity/test_federation_push.py"
       ],
@@ -175,7 +175,7 @@
         "node/src/stigmem_node/settings.py",
         "node/src/stigmem_node/metrics.py"
       ],
-      "test_files": ["node/tests/test_failure_modes.py"],
+      "test_files": ["node/tests/observability/test_failure_modes.py"],
       "docs_reference_files": ["spec/security/threat-model.md"],
       "review_decision": "accept-as-is",
       "notes": "Federation ingest rejects far-future and far-past remote HLC wall times, writes peer_hlc_anomaly audit evidence, and leaves rejected facts uninserted."
@@ -202,7 +202,7 @@
         "adapters/openclaw/src/stigmem_openclaw/adapter.py"
       ],
       "test_files": [
-        "node/tests/test_scope_propagation.py",
+        "node/tests/federation/test_scope_propagation.py",
         "sdks/stigmem-py/tests/test_client.py",
         "sdks/stigmem-ts/tests/client.test.ts",
         "adapters/mcp/src/server.test.ts",

@@ -187,7 +187,7 @@ Peer tokens are short-lived Ed25519-signed JWTs (max 1-hour expiry, replay-prote
 
 ### Failure Modes (`Spec-18-Conformance-and-Failure-Modes`)
 
-All four failure scenarios are automated in `node/tests/test_failure_modes.py`:
+All four failure scenarios are automated in `node/tests/observability/test_failure_modes.py`:
 
 | Scenario | Behavior |
 |----------|----------|

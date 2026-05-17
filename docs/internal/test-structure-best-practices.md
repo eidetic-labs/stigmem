@@ -98,7 +98,7 @@ For every source file `node/src/stigmem_node/<path>/<module>.py`, the correspond
 
 | Source | Test |
 |---|---|
-| `node/src/stigmem_node/auth.py` | `node/tests/test_auth.py` (current; flat) → `node/tests/test_auth.py` (after reorg if `auth.py` stays flat) |
+| `node/src/stigmem_node/auth.py` | `node/tests/auth/test_*.py` for auth, agent-key, and trust-rule concerns |
 | `node/src/stigmem_node/auth/peer_auth.py` (after sub-package work) | `node/tests/auth/test_peer_auth.py` |
 | `node/src/stigmem_node/routes/facts.py` | `node/tests/routes/test_facts.py` |
 | `node/src/stigmem_node/routes/federation.py` | `node/tests/routes/test_federation.py` |
@@ -393,13 +393,19 @@ A few things that look like they might be affected but aren't:
 
 This is **v0.9.x work**, not Phase A. Sequence after the source-side reorganizations to keep the test/source mirror in sync:
 
+> 2026-05-17 update: issue #465 performs the broad `node/tests/` mirror pass
+> after the CLI, route, Pydantic, identity, federation, and soak-driver
+> decompositions landed. Root-level node tests are moved into concern
+> directories while keeping `node/tests/conftest.py`, recursive pytest
+> discovery, and existing fixture behavior intact.
+
 | When | What |
 |---|---|
 | early Phase B | Add `security` and `experimental` markers; update root conftest auto-marker rules. |
-| v0.9.x — alongside `cli/` decomposition | Move CLI tests into `node/tests/cli/`. |
-| v0.9.x — alongside `routes/facts/` decomposition | Move route tests into `node/tests/routes/`. |
-| v0.9.x — alongside Pydantic models decomposition | Add `node/tests/models/` mirroring `node/src/stigmem_node/models/`. |
-| v0.9.x — alongside `node/src/stigmem_node/` sub-package organization | Reorganize `node/tests/` into matching sub-directories. |
+| v0.9.x — alongside `cli/` decomposition | Move CLI tests into `node/tests/cli/`. Completed as part of the #465 mirror pass. |
+| v0.9.x — alongside `routes/facts/` decomposition | Move route tests into `node/tests/routes/`. Completed as part of the #465 mirror pass. |
+| v0.9.x — alongside Pydantic models decomposition | Add `node/tests/models/` mirroring `node/src/stigmem_node/models/`. Completed as part of the #465 mirror pass. |
+| v0.9.x — alongside `node/src/stigmem_node/` sub-package organization | Reorganize `node/tests/` into matching sub-directories. Completed for existing node tests by #465; future module-flattening PRs should move any new tests with their source concern. |
 | Phase A — alongside ADR-011 (C1) plugin implementations | Tests move with their features to `experimental/<feature>/tests/` as part of each plugin's implementation. |
 | v0.9.x — adapter hardening | Add `test_adapter_security.py` per audit findings; populate `adapters/mcp/tests/`. |
 | Pre-v1.0.0-rc.0 | Confirm test/source mirror is consistent across the codebase. |

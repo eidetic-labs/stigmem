@@ -106,7 +106,7 @@ jobs:
               - '.github/workflows/ci.yml'
               - 'node/migrations/**'
               - 'node/src/**'
-              - 'node/tests/test_migration_compat.py'
+              - 'node/tests/lifecycle/test_migration_compat.py'
               - 'scripts/check.sh'
             quickstart:
               - '.github/workflows/ci.yml'
@@ -445,7 +445,7 @@ jobs:
       - name: Run migration compatibility tests
         run: |
           mkdir -p artifacts
-          uv run pytest node/tests/test_migration_compat.py -q --tb=short \
+          uv run pytest node/tests/lifecycle/test_migration_compat.py -q --tb=short \
             --timeout=120 \
             --junitxml=artifacts/migration-compat-junit.xml
 

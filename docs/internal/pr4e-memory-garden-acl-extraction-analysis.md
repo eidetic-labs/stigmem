@@ -63,12 +63,12 @@ needs plugin-owned metadata later, it should declare it through
 
 Primary tests:
 
-- `node/tests/test_gardens.py` covers CRUD, membership, direct fact write/read
+- `node/tests/routes/test_gardens.py` covers CRUD, membership, direct fact write/read
   ACL, hidden global query behavior, scope mismatch, and quarantine garden
   operations.
-- `node/tests/test_subscriptions.py::test_replay_window_suppresses_garden_acl_blocked_events`
+- `node/tests/routes/test_subscriptions.py::test_replay_window_suppresses_garden_acl_blocked_events`
   covers subscription replay leakage.
-- `node/tests/test_gardens.py::TestGardenFactACL` should be split during PR 4e:
+- `node/tests/routes/test_gardens.py::TestGardenFactACL` should be split during PR 4e:
   direct `garden_id` read/write protections remain core tests; global hiding or
   recall/graph behavior can move under plugin-loaded fixtures if classified as
   advanced.

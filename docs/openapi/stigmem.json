@@ -765,6 +765,35 @@
         "title": "ExchangeResponse",
         "type": "object"
       },
+      "FactChainProof": {
+        "properties": {
+          "checked_entries": {
+            "title": "Checked Entries",
+            "type": "integer"
+          },
+          "head_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head Hash"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "checked_entries"
+        ],
+        "title": "FactChainProof",
+        "type": "object"
+      },
       "FactRecord": {
         "properties": {
           "attested": {
@@ -2260,6 +2289,16 @@
       },
       "RecallResponse": {
         "properties": {
+          "chain_proof": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FactChainProof"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "content": {
             "items": {
               "$ref": "#/components/schemas/ScoredFact"
@@ -6630,6 +6669,22 @@
                 }
               ],
               "title": "Stigmem-Session"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Stigmem-Verify",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stigmem-Verify"
             }
           }
         ],

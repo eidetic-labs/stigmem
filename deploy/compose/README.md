@@ -6,7 +6,7 @@ The compose file supports three profiles:
 | Profile flag | What starts |
 |---|---|
 | _(none)_ | Single stigmem node (SQLite) |
-| `--profile federation` | Two-node local federation ring |
+| `--profile federation` | Two-node local plaintext federation ring |
 | `--profile postgres` | Postgres sidecar (placeholder; backend coming soon) |
 
 ## Quick start
@@ -37,6 +37,10 @@ curl -s 'http://localhost:8765/v1/facts?entity=deploy&scope=local' | python3 -m 
 
 ## Two-node federation ring
 
+This profile is a local plaintext demo. It sets `STIGMEM_FEDERATION_INSECURE=1`
+so contributors can exercise replication without provisioning certificates. Do
+not use it for production or cross-host federation.
+
 ```bash
 docker compose -f deploy/compose/docker-compose.yml \
                --env-file deploy/compose/.env \
@@ -47,6 +51,43 @@ docker compose -f deploy/compose/docker-compose.yml \
 curl http://localhost:8765/healthz
 curl http://localhost:8766/healthz
 ```
+
+## Two-node mTLS federation example
+
+Use the mTLS compose example when you want a production-shaped local federation
+ring. It mounts node certificates and a shared CA bundle, sets
+`STIGMEM_TLS_CERT_PATH`, `STIGMEM_TLS_KEY_PATH`, and
+`STIGMEM_TLS_CA_BUNDLE`, and does not set `STIGMEM_FEDERATION_INSECURE`.
+
+Generate demo certificate material:
+
+```bash
+./deploy/compose/generate-mtls-demo-certs.sh
+```
+
+Start the mTLS ring:
+
+```bash
+docker compose -f deploy/compose/docker-compose.mtls.yml up -d --build
+```
+
+Verify both nodes using the generated client certificates:
+
+```bash
+curl --cacert deploy/compose/tls/ca.crt \
+  --cert deploy/compose/tls/node-a.crt \
+  --key deploy/compose/tls/node-a.key \
+  https://localhost:8765/healthz
+
+curl --cacert deploy/compose/tls/ca.crt \
+  --cert deploy/compose/tls/node-b.crt \
+  --key deploy/compose/tls/node-b.key \
+  https://localhost:8766/healthz
+```
+
+The generated files under `deploy/compose/tls/` are ignored by git. Replace
+them with certificates from your real federation CA for any persistent
+environment.
 
 ## Data persistence
 

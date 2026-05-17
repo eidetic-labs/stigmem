@@ -119,7 +119,7 @@ def test_plugin_loaded_preserves_baseline_federation_inbound_match(monkeypatch) 
 
     monkeypatch.setattr(
         "stigmem_node.routes.federation.replication._public_module",
-        lambda: _FederationIngestStub(),
+        _FederationIngestStub,
     )
     with stigmem_plugins([plugin_manifest()]):
         ok, error = _push_fact_with_peer_token(

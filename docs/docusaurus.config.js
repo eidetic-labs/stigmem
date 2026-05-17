@@ -18,16 +18,6 @@ const config = {
   url: 'https://docs.stigmem.dev',
   baseUrl,
 
-  // 'warn' (not 'throw') is a temporary state during the v0.9.0a1 reset
-  // window. Sub-phase 2.5.G moved ~30 deferred-feature pages out of canonical
-  // docs/docs/ into experimental/<feature>/. Surviving public pages still
-  // have markdown cross-links to those moved pages — each link breaks until
-  // it's individually rewritten to either prose or a GitHub URL pointing at
-  // experimental/<feature>/. That cleanup is acknowledged as a follow-up
-  // commit within PR 2.5 or a follow-up PR; the warning surface is bounded
-  // and visible in build output.
-  //
-  // Set back to 'throw' once the cross-link cleanup lands.
   onBrokenLinks: 'throw',
 
   i18n: {
@@ -55,8 +45,8 @@ const config = {
           // ADR-001 + ADR-019). Pre-reset versioned snapshots (v0.2, v1.1)
           // and the v2.0-draft "current" label labeled internal development
           // checkpoints, not tagged releases. Snapshots preserved at
-          // docs/archive/snapshots/ (sub-phase 2.5.D); ADR-005's four-tab
-          // IA migration lands in sub-phase 2.5.F.
+          // docs/archive/snapshots/. The rendered docs now use ADR-005's
+          // Learn / Build / Operate / Secure information architecture.
           //
           // Multi-version configuration will be reintroduced when v0.9.0a2
           // ships and we have an actual prior release to snapshot
@@ -123,26 +113,26 @@ const config = {
     [
       '@docusaurus/plugin-client-redirects',
       {
-        // Redirects under v0.9.0a1 single-version mode (master-checklist
-        // §4.3a, sub-phase 2.5.C). Pre-reset v1.1-IA redirects (~100 entries
-        // routing to /docs/learn/, /docs/build/, /docs/operate/) targeted
-        // an IA that no longer exists; those entries removed.
-        //
-        // The redirects below cover URLs in already-published artifact
-        // metadata (PyPI wheel `Documentation` for stigmem-openclaw 0.9.0a1,
-        // ClawHub `homepage`, README) plus the most-likely external-link
-        // patterns that survived the v1.0 retraction. Adding a new redirect
-        // here is a contract change; leave existing entries.
-        //
-        // Sub-phase 2.5.F (4-tab IA migration per ADR-005) will revisit
-        // this list when the Learn / Build / Operate / Secure tab paths
-        // settle.
+        // Redirects under v0.9.0a1 single-version mode. The entries below
+        // cover URLs in already-published artifact metadata plus the most
+        // likely external-link patterns that survived the v1.0 retraction.
+        // Archived version snapshots live in docs/archive/snapshots/ as repo
+        // preservation artifacts; public routes redirect to current docs.
         redirects: [
           { from: '/docs/guides/connectors/openclaw',  to: '/docs/sdks/connectors/openclaw' },
           { from: '/docs/guides/federation',           to: '/docs/concepts/federation/' },
           { from: '/docs/about/state-of-stigmem',      to: '/docs/concepts/features' },
           { from: '/docs/getting-started/installation', to: '/docs/get-started/installation' },
           { from: '/docs/getting-started/quickstart',  to: '/docs/get-started/quickstart-tutorial' },
+          { from: '/docs/concepts/lifecycle/decay-and-confidence', to: '/docs/spec/experimental/decay-semantics' },
+          { from: '/docs/concepts/lifecycle/time-travel-queries', to: '/docs/spec/experimental/time-travel-queries' },
+          { from: '/docs/concepts/lifecycle/tombstones-and-rtbf', to: '/docs/spec/experimental/rtbf-tombstones' },
+          { from: '/docs/concepts/recall/memory-cards-as-fast-path', to: '/docs/spec/experimental/recall-graph' },
+          { from: '/docs/concepts/recall/memory-gardens', to: '/docs/concepts/memory-garden' },
+          { from: '/v1.1',                             to: '/docs/concepts/' },
+          { from: '/v0.2',                             to: '/docs/concepts/' },
+          { from: '/docs/v1.1',                        to: '/docs/concepts/' },
+          { from: '/docs/v0.2',                        to: '/docs/concepts/' },
           { from: '/install',                          to: '/docs/operators/deployment/install' },
         ],
       },

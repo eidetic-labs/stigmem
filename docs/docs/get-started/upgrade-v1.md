@@ -1,25 +1,36 @@
 ---
-title: Upgrading to v1.0
-sidebar_label: Upgrading to v1.0
+title: Pre-v0.9.0a1 Upgrade Notes
+sidebar_label: Pre-v0.9.0a1 notes
 ---
 
-# Upgrading to v1.0
+# Pre-v0.9.0a1 Upgrade Notes
 
-**Audience:** Operators running a stigmem node on any v0.x release who want to upgrade to the stable v1.0 reference node.
+**Audience:** Operators with an older local checkout, stale dependency pin, or
+pre-reset deployment artifact who need to align with the `v0.9.0a1` alpha reset.
 
-v1.0 is backward compatible with all v0.x data. The upgrade is a `git pull` + container rebuild. No manual SQL or data migration is required.
+No `v1.0` or `v2.0` Stigmem release shipped publicly. Per ADR-001 and
+ADR-019, `v0.9.0a1` is the first build. Treat older `v0.x`, `v1.x`, and `v2.0`
+labels in local branches, old docs, or unpublished artifacts as internal
+development checkpoints.
 
-## What changed in v1.0.0
+For source checkouts, the alignment path is still a `git pull` plus rebuild.
+The node applies migrations at startup; take a database backup first if your
+local data matters.
+
+## What changed in the alpha reset
 
 ### Multi-tenant isolation (migration `012`)
 
-v1.0 adds `tenant_id` columns to `facts`, `gardens`, `api_keys`, and `fact_audit_log`. On upgrade:
+The storage schema includes `tenant_id` columns on write-bearing tables for
+compatibility with the extracted multi-tenant plugin. On upgrade:
 
 - All existing rows receive `tenant_id = "default"` automatically.
-- All existing API keys continue to work and operate in the `"default"` tenant.
+- Existing API keys continue to work in the `"default"` tenant.
 - Single-tenant deployments require zero configuration changes.
+- Default installs collapse tenant resolution to `"default"` unless the
+  opt-in multi-tenant plugin is registered.
 
-See [Multi-Tenancy](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) for the full model.
+See [Multi-Tenancy](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) for the extracted plugin source package.
 
 ### Billing hooks
 
@@ -31,7 +42,10 @@ Source attestation remains experimental in the v0.9.0aN line (`Spec-X6-Source-At
 
 ### Conformance test suite
 
-v1.0.0 ships a conformance suite (`node/tests/conformance/`) that any compliant node implementation can run. CI enforces it on every commit.
+The source tree includes conformance and adversarial suites that drive the
+current alpha/beta readiness gates. The public compatibility contract remains
+pre-GA; pin exact versions and do not assume wire-format stability until the
+roadmap reaches `v1.0.0`.
 
 ---
 
@@ -44,7 +58,8 @@ git pull
 docker compose up --build -d
 ```
 
-The node runs `apply_migrations()` on startup. Migration `012_multi_tenant` is idempotent — if it has already run (e.g., on a the pre-reset spec-rc build) it is skipped.
+The node runs `apply_migrations()` on startup. Migration `012_multi_tenant` is
+idempotent; if it has already run in an older local checkout, it is skipped.
 
 Verify the node is healthy and the migration applied:
 
@@ -74,9 +89,10 @@ launchctl kickstart -k gui/$(id -u)/com.eidetic-labs.stigmem
 
 ---
 
-## Verifying existing data after upgrade
+## Verifying existing data after alignment
 
-All pre-v1.0 facts and gardens live in `tenant_id = "default"`. Confirm with any of your existing API keys:
+Facts and gardens from older local checkouts live in `tenant_id = "default"`.
+Confirm with any of your existing API keys:
 
 ```bash
 # Your existing key still works, now in tenant "default"
@@ -91,28 +107,11 @@ curl -s -H 'Authorization: Bearer <existing-key>' \
 
 ---
 
-## Adding a second tenant (optional)
-
-After upgrading you can start issuing keys for additional tenants. Existing data in `"default"` is unaffected:
-
-```bash
-curl -s -X POST http://localhost:8765/v1/auth/keys \
-  -H 'Authorization: Bearer <admin-key>' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "entity_uri": "service:beta-app",
-    "permissions": ["read", "write"],
-    "tenant_id": "beta-inc"
-  }'
-```
-
-Keys issued for `beta-inc` see only facts written by `beta-inc` keys. See [Multi-Tenancy → Isolation in practice](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) for a cross-tenant verification example.
-
----
-
 ## Breaking changes
 
-None. v1.0 is fully backward compatible with v0.x data and API keys.
+The alpha reset is not a stable-release upgrade path. The supported public
+surface is `v0.9.0a1` plus current `main` changes queued for later alpha
+artifacts. Breaking changes may occur until `v1.0.0`.
 
 The only behavior difference is billing events: the `LogHookBus` now writes a JSON line to stderr for each fact write and garden creation. If your log ingestion pipeline is sensitive to unexpected stderr output, either configure a custom `HookBus` that discards events or filter the `{"billing": ...}` lines at your log collector.
 
@@ -120,7 +119,7 @@ The only behavior difference is billing events: the `LogHookBus` now writes a JS
 
 ## Migration history at a glance
 
-| Migration | What it adds | Mandatory for v1.0? |
+| Migration | What it adds | Required for current source? |
 |-----------|--------------|---------------------|
 | `001_init` | facts, api_keys, node_meta | ✓ (baseline) |
 | `002_federation` | peers, nonces | required for federation |

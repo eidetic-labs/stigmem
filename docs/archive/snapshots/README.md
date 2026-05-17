@@ -2,7 +2,7 @@
 
 This directory holds Docusaurus `versioned_docs/` snapshots that were configured as versioned releases but **never represented actual publicly-shipped versions of stigmem**. Per [ADR-001](../../adr/001-versioning.md) + [ADR-019](../../adr/019-amendment-to-adr-001-prerelease-version-strings.md), the canonical version line of stigmem begins at `v0.9.0a1` (2026-05-09); prior version *markers* labeled internal development checkpoints, not tagged releases.
 
-The snapshots are preserved here per the master-checklist §4.3a binding preservation principle. URLs that pointed at `/v1.1/*` and `/v0.2/*` were redirected to a landing page explaining that those URLs were not real releases.
+The snapshots are preserved here per the master-checklist §4.3a binding preservation principle. Known legacy version entry points (`/v1.1`, `/v0.2`, `/docs/v1.1`, and `/docs/v0.2`) redirect to the current concepts landing page because those labels were not real releases.
 
 ## Snapshots
 

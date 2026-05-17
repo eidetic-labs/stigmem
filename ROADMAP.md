@@ -42,7 +42,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [ ] **v0.9.0a2 artifact refresh** — pick up the live retraction URL in packaged READMEs, TypeScript SDK README, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literal, wheel migration packaging fix, and ongoing lint/coverage/complexity ratchets.
 - [ ] **ClawHub/OpenClaw alpha-framing correction** — next-alpha source copy now frames OpenClaw as alpha/evaluation-only; the historical a1 package is not revised retroactively. Remaining OpenClaw audit hardening stays visible in the alpha/beta hardening lane.
 - [ ] **OpenClaw audit planning for a2..aN** — keep the audit findings visible in alpha planning. Use a2+ for issue decomposition and adapter hardening work without claiming the a1 ClawHub package closed C1-C4 or H1/H2/H5.
-- [ ] **Docs/spec cleanup** — finish remaining spec status/header, stale-version, redirect/banner, snapshot, stability metadata, and deduplication cleanup ([#433](https://github.com/Eidetic-Labs/stigmem/issues/433)).
+- [x] **Docs/spec cleanup** — normalized rendered Spec-X status/source language, added experimental spec stability/since metadata validation, restored Security Model under the Secure sidebar, calibrated stale upgrade copy, and wired redirects for archived duplicate/snapshot entry points ([#433](https://github.com/Eidetic-Labs/stigmem/issues/433)).
 - [ ] **Dogfood disposition** — resolve dogfood script, tokenomics, and operator-documentation disposition so public docs no longer point at obsolete internal paths ([#434](https://github.com/Eidetic-Labs/stigmem/issues/434)).
 
 ### Exit criteria
@@ -63,6 +63,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - Source packages now exist under `experimental/` for all six ADR-011 cross-cutting features: lazy instruction discovery, time-travel, RTBF tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation.
 - Default installs do not register those plugins. Default behavior remains the v1.0.0 critical path: single-tenant `default` partitioning, no tombstone filtering/routes, no time-travel recall authorization, no advanced garden ACL, no source-attestation enforcement, and no lazy instruction discovery.
 - Plugin-loaded tests cover each feature boundary, including multi-tenant isolation and default single-tenant collapse after [#431](https://github.com/Eidetic-Labs/stigmem/issues/431).
+- Docs/spec cleanup now keeps rendered experimental specs honest: Spec-X pages identify themselves as experimental, include stability/since metadata, and no longer point at stale v1.0/pre-reset files as authoritative sources.
 - Signed/package artifact launch evidence is intentionally not a Phase A blocker and remains tracked in [#298](https://github.com/Eidetic-Labs/stigmem/issues/298) until all planned plugins are built.
 
 ---

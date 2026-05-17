@@ -12,15 +12,17 @@ title: §16. Synthesis
 sidebar_label: §16 Synthesis
 audience: Spec
 description: "Stigmem spec section 16 — POST /v1/synthesis — confidence-weighted current-state snapshots per entity/scope."
+stability: experimental
+since: 0.9.0a1
 ---
 
 # §16. Synthesis {#section-16}
 
-**Status:** Stable
+**Status:** Experimental / dormant source package
 
 POST /v1/synthesis — confidence-weighted current-state snapshots per entity/scope.
 
-**Authoritative source:** [`spec/stigmem-spec-v1.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md)
+**Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for synthesis semantics.
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.

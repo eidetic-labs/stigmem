@@ -14,23 +14,23 @@ title: §20. Recall & Graph
 sidebar_label: §20 Recall & Graph
 audience: Spec
 description: "Stigmem spec section 20 — Graph adjacency index, vector embeddings, hybrid recall pipeline, memory cards, and causal links."
+stability: experimental
+since: 0.9.0a1
 ---
 
 # §20. Recall & Graph {#section-20}
 
-**Status:** Experimental. Pre-reset source material was drafted as normative, but
-this spec is deferred from the supported v0.9.0aN surface and must pass ADR-008
-gates before reintroduction.
+**Status:** Experimental / dormant source package. Archived source material was drafted as normative, but this spec is deferred from the supported v0.9.0aN surface and must pass ADR-008 gates before reintroduction.
 
 Graph adjacency index, vector embeddings, hybrid recall pipeline, memory cards, and causal links.
 
-**Authoritative source:** [`spec/stigmem-spec-pre-reset draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-pre-reset draft.md)
+**Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for recall graph semantics.
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-**Status:** DRAFT normative (pre-reset graph & recall design). Implementation issues build against this section.  
+**Status:** Experimental. Implementation issues may reference this preserved design, but it is not part of the supported default install.
 **Depends on:** §2 (fact shape), §5 (wire format), §17 (memory garden), §18 (source attestation), §19 (federation trust).
 
 §20 defines the graph adjacency index, embedding storage, recall API, memory

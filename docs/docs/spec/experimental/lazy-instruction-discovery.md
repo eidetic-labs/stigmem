@@ -13,15 +13,17 @@ title: §21. Lazy Instruction Discovery
 sidebar_label: §21 Lazy Instruction Discovery
 audience: Spec
 description: "Stigmem spec section 21 — Boot stub + manifest + on-demand recall for token-efficient agent instruction loading."
+stability: experimental
+since: 0.9.0a1
 ---
 
 # §21. Lazy Instruction Discovery {#section-21}
 
-**Status:** DRAFT normative (DRAFT normative, pre-reset)
+**Status:** Experimental / opt-in source package on `main`
 
 Boot stub + manifest + on-demand recall for token-efficient agent instruction loading.
 
-**Authoritative source:** [`spec/stigmem-spec-pre-reset draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-pre-reset draft.md)
+**Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for lazy instruction discovery.
 
 :::caution EXPERIMENTAL
 The boot-stub schema and instruction-manifest format are not yet finalized and may change in a future minor release. Do not deploy lazy-discovered instructions in production agents handling sensitive data or irreversible tool use until this section reaches GA. Always pin `instructions_manifest_uri` to a trusted, integrity-verified source.
@@ -31,7 +33,7 @@ The boot-stub schema and instruction-manifest format are not yet finalized and m
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-**Status: DRAFT normative (pre-reset instruction-discovery design)**
+**Status:** Experimental. Implementation source is opt-in and remains outside the supported default install.
 
 This section specifies how agents discover and load their instructions on demand rather than preloading every instruction document at startup. The mechanism has three runtime components — a **boot stub**, an **instruction manifest**, and the **`recall_instruction` tool** — and one off-path component, the **discovery audit**, used for continuous retrieval-quality evaluation.
 

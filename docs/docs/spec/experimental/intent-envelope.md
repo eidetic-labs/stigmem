@@ -11,15 +11,17 @@ title: §4. Intent Envelope
 sidebar_label: §4 Intent Envelope
 audience: Spec
 description: "Stigmem spec section 4 — Goal/constraint/preference/handoff envelope types for richer agent coordination."
+stability: experimental
+since: 0.9.0a1
 ---
 
 # §4. Intent Envelope {#section-4}
 
-**Status:** Stable (v1.0)
+**Status:** Experimental / deferred indefinitely
 
 Goal/constraint/preference/handoff envelope types for richer agent coordination.
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**Source material:** Archived evolutionary spec snapshots. This page preserves the maintained Spec-X home for intent-envelope semantics.
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.

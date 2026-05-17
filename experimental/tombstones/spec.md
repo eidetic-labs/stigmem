@@ -13,15 +13,17 @@ title: §23. Right-to-be-Forgotten Tombstones
 sidebar_label: §23 Right-to-be-Forgotten Tombstones
 audience: Spec
 description: "Stigmem spec section 23 — Cryptographic tombstones, recall-time suppression, federation propagation, legal-hold mode."
+stability: experimental
+since: 0.9.0a1
 ---
 
 # §23. Right-to-be-Forgotten Tombstones {#section-23}
 
-**Status:** DRAFT normative (pre-reset draft, the pre-reset design window)
+**Status:** Experimental / opt-in source package on `main`
 
 Cryptographic tombstones, recall-time suppression, federation propagation, legal-hold mode.
 
-**Authoritative source:** [`spec/stigmem-spec-pre-reset draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-pre-reset draft.md)
+**Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for RTBF tombstone semantics.
 
 :::caution EXPERIMENTAL
 The tombstone signing format and federation propagation rules are still under security review. Until §23 reaches GA:
@@ -35,7 +37,7 @@ The tombstone signing format and federation propagation rules are still under se
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
 :::
 
-**Status:** DRAFT normative (the pre-reset design window). §23.1–§23.7 carry MUST/SHOULD/MAY normative language.
+**Status:** Experimental. §23.1–§23.7 preserve proposed MUST/SHOULD/MAY language for ADR-008 review, but they are not part of the supported default install.
 
 ### §23.1 Scope {#section-23-1}
 

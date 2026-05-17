@@ -13,6 +13,8 @@ title: Subscriptions
 sidebar_label: Subscriptions
 audience: Spec
 description: "Stigmem experimental subscriptions spec — push-style event delivery for fact, contradiction, and memory-card changes."
+stability: experimental
+since: 0.9.0a1
 ---
 
 # Spec-X7-Subscriptions

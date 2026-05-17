@@ -1,0 +1,15 @@
+[project]
+name = "stigmem-plugin-multi-tenant"
+version = "0.1.0"
+description = "Experimental multi-tenant isolation plugin for Stigmem."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+]
+
+[project.entry-points."stigmem.plugins"]
+multi-tenant = "stigmem_plugin_multi_tenant:plugin_manifest"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

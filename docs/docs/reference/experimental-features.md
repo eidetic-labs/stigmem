@@ -56,7 +56,7 @@ only if reintroduction work defines protocol behavior.
 
 | Feature | Source | Status | Notes |
 |---|---|---|---|
-| Multi-tenant isolation | [`experimental/multi-tenant/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) | Dormant | Adds a tenant boundary above scopes; no `Spec-X` assigned yet. |
+| Multi-tenant isolation | [`experimental/multi-tenant/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) | Source-available experimental | Adds an opt-in tenant boundary above scopes through `stigmem-plugin-multi-tenant`; no `Spec-X` assigned yet. |
 | Async jobs | [`experimental/async-jobs/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/async-jobs) | Dormant | Deferred async execution surface for long-running jobs. |
 | Fuzzy resolver | [`experimental/fuzzy-resolver/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/fuzzy-resolver) | Dormant | Convenience resolver, not critical-path protocol behavior. |
 | OIDC SSO | [`experimental/oidc-sso/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) | Dormant | Adds an external identity-provider trust boundary. |

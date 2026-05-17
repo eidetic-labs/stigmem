@@ -272,7 +272,10 @@ def _apply_identity_hooks(identity: Identity, raw_credentials: str | None) -> Id
     )
     tenant = registry.fire_filter_chain(
         "tenant_resolve",
-        TenantContext(tenant_id=resolved.tenant_id),
+        TenantContext(
+            tenant_id="default",
+            metadata={"source_tenant_id": resolved.tenant_id},
+        ),
         identity=resolved,
     )
     if tenant.tenant_id != resolved.tenant_id:

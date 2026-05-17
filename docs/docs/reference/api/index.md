@@ -381,15 +381,17 @@ Human principals can obtain an API key via OIDC. Configure `STIGMEM_OIDC_*` env 
 
 ### Multi-tenant requests
 
-Include the `X-Stigmem-Tenant` header to scope a request to a specific tenant:
+Default installs resolve all API keys into the single `default` tenant. To use
+non-default tenants, install and enable `stigmem-plugin-multi-tenant`, then
+provision API keys with the target `tenant_id`. Requests are scoped by the
+resolved key identity:
 
 ```bash
 curl -H 'Authorization: Bearer <your-key>' \
-     -H 'X-Stigmem-Tenant: acme-corp' \
      http://localhost:8000/v1/facts
 ```
 
-The header is required when `STIGMEM_TENANT_HEADER_REQUIRED=true`. See [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant).
+See [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant).
 
 ### Federation peer tokens
 

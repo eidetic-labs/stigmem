@@ -133,7 +133,10 @@ Keys carry a `permissions` array. Current values: `read`, `write`, `federate`, `
 
 ## Multi-tenant key provisioning
 
-Keys also carry a `tenant_id` that scopes all data written with that key to an isolated partition. Pass `tenant_id` to `create_api_key` when provisioning a new tenant:
+Keys may carry a `tenant_id`, but default installs resolve every caller into
+the single `default` tenant. Install and enable
+`stigmem-plugin-multi-tenant` before relying on non-default tenant isolation.
+Then pass `tenant_id` to `create_api_key` when provisioning a new tenant:
 
 ```python
 from stigmem_node.auth import create_api_key

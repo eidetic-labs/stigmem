@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import importlib
+import sys
 from collections.abc import Generator
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,10 +14,18 @@ import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.main import create_app
+from stigmem_node.plugins.testing import stigmem_plugins
+
+_PLUGIN_SRC = Path(__file__).resolve().parents[2] / "experimental" / "multi-tenant" / "src"
+if str(_PLUGIN_SRC) not in sys.path:
+    sys.path.insert(0, str(_PLUGIN_SRC))
+
+_PLUGIN = importlib.import_module("stigmem_plugin_multi_tenant")
 
 create_api_key = auth_mod.create_api_key
 apply_migrations = db_mod.apply_migrations
 Settings = settings_module.Settings
+plugin_manifest = _PLUGIN.plugin_manifest
 
 # ---------------------------------------------------------------------------
 # Fixture: two authenticated tenants sharing one DB
@@ -22,8 +33,8 @@ Settings = settings_module.Settings
 
 
 @pytest.fixture()
-def two_tenants(tmp_path: object) -> Generator[tuple[TestClient, str, str], None, None]:
-    """Single DB, two tenant keys.  Yields (client, key_a, key_b)."""
+def default_two_tenants(tmp_path: object) -> Generator[tuple[TestClient, str, str], None, None]:
+    """Single DB with two non-default keys and no multi-tenant plugin."""
     db_file = str(tmp_path) + "/mt.db"  # type: ignore[operator]
     apply_migrations(db_path=db_file)
 
@@ -45,9 +56,67 @@ def two_tenants(tmp_path: object) -> Generator[tuple[TestClient, str, str], None
     db_mod.settings = original
 
 
+@pytest.fixture()
+def two_tenants(
+    tmp_path: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[tuple[TestClient, str, str], None, None]:
+    """Single DB, two tenant keys, and the multi-tenant plugin enabled."""
+    db_file = str(tmp_path) + "/mt.db"  # type: ignore[operator]
+    apply_migrations(db_path=db_file)
+
+    original = settings_module.settings
+    test_settings = Settings(db_path=db_file, auth_required=True, node_url="http://testnode")
+    settings_module.settings = test_settings
+    auth_mod.settings = test_settings
+    db_mod.settings = test_settings
+
+    key_a = create_api_key("agent:alice", ["read", "write"], tenant_id="tenant-a")
+    key_b = create_api_key("agent:bob", ["read", "write"], tenant_id="tenant-b")
+
+    monkeypatch.setenv("STIGMEM_MULTI_TENANT_ENABLED", "true")
+    with stigmem_plugins([plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            yield c, key_a, key_b
+
+    settings_module.settings = original
+    auth_mod.settings = original
+    db_mod.settings = original
+
+
 # ---------------------------------------------------------------------------
 # Fact isolation
 # ---------------------------------------------------------------------------
+
+
+def test_default_install_collapses_non_default_tenant_keys(
+    default_two_tenants: tuple,
+) -> None:
+    """Without the plugin, all callers resolve into the default tenant."""
+    client, key_a, key_b = default_two_tenants
+
+    resp = client.post(
+        "/v1/facts",
+        json={
+            "entity": "stigmem://test/agent/alice",
+            "relation": "test:color",
+            "value": {"type": "string", "v": "red"},
+            "source": "agent:alice",
+        },
+        headers={"Authorization": f"Bearer {key_a}"},
+    )
+    assert resp.status_code == 201
+    fact_id = resp.json()["id"]
+
+    me = client.get("/v1/me", headers={"Authorization": f"Bearer {key_a}"})
+    assert me.status_code == 200
+    assert me.json()["tenant_id"] == "default"
+
+    assert (
+        client.get(f"/v1/facts/{fact_id}", headers={"Authorization": f"Bearer {key_b}"}).status_code
+        == 200
+    )
 
 
 def test_tenant_a_fact_invisible_to_tenant_b(two_tenants: tuple) -> None:

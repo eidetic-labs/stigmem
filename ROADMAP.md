@@ -87,7 +87,9 @@ the beta-series exit and v1.0 release-candidate declaration.
   `scripts/run_adversarial_conformance.py`. It provides a deterministic offline
   provider, auditable rubric, result JSON schema, tier calculation, and result
   output path. The runner now includes OpenAI, Anthropic, and local Ollama
-  provider adapters; published live certification results remain pending.
+  provider adapters. The public reviewed-results index now exists at
+  `data/conformance/adversarial/results/index.json` with CI validation and
+  scheduled re-run posture; provider-backed live result rows remain pending.
 
 ### Work (sub-work ordering matters)
 
@@ -99,8 +101,9 @@ the beta-series exit and v1.0 release-candidate declaration.
 2. **Complete ADR-015 certification framework** per
    [ADR-015](docs/adr/015-adversarial-conformance-and-model-certification.md) —
    the 80-pattern corpus, runner/result schema, and OpenAI/Anthropic/Ollama
-   provider adapters exist; remaining work is reviewed public certification
-   results and scheduled re-run posture.
+   provider adapters exist; result-index validation and re-run posture are in
+   place; remaining work is credentialed/provider-backed live certification and
+   publication of reviewed result rows.
 3. **Storage immutability stack** per [ADR-016](docs/adr/016-storage-immutability-enforcement.md) — L1 architectural append-only journal + projection tables, L2 SQLite triggers, L3 CIDs (per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)), L4 local hash chain, L5 Sigstore Rekor anchor, plus client/peer verification.
 4. **Per-feature security colocation** per [ADR-018](docs/adr/018-security-documentation-colocation.md).
 5. **Federation hardening** — mTLS-default; HLC bounded skew; persistent audit log (90-day retention); per-principal token-bucket quotas; key max-age + rotation runbook.

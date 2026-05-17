@@ -35,7 +35,7 @@ For the full risk register: see the **[Threat Model](https://github.com/Eidetic-
 
 For operator-facing scenarios: see the **[Security Scenarios](./scenarios)**.
 
-For the trust boundary against prompt injection (L1–L6): see [ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md) § Trust boundary. Main now includes the core L1-L3 protocol controls (`interpret_as`, instruction-write authorization, instruction quarantine, and channel-separated recall) plus protocol-level adversarial vectors in CI. ADR-015 `corpus-v1` contains 80 prompt-injection patterns for L4-L6 consumer-layer evaluation, and the certification runner now supports deterministic offline runs plus OpenAI, Anthropic, and local Ollama provider adapters; reviewed public model certification results are still pending.
+For the trust boundary against prompt injection (L1–L6): see [ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md) § Trust boundary. Main now includes the core L1-L3 protocol controls (`interpret_as`, instruction-write authorization, instruction quarantine, and channel-separated recall) plus protocol-level adversarial vectors in CI. ADR-015 `corpus-v1` contains 80 prompt-injection patterns for L4-L6 consumer-layer evaluation, and the certification runner now supports deterministic offline runs plus OpenAI, Anthropic, and local Ollama provider adapters. The reviewed-results index exists and is validated in CI; reviewed public model certification result rows are still pending provider-backed runs.
 
 ---
 

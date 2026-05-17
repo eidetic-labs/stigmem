@@ -28,7 +28,7 @@ posture while ADR-015 certification work continues.
   for authoring instruction facts.
 - Prefer adapters that consume channel-separated recall output directly.
 - Treat all live models as uncertified until public ADR-015 certification
-  results exist.
+  results exist in `data/conformance/adversarial/results/index.json`.
 - For cross-organization federation workloads, document the accepted risk if an
   uncertified model is used.
 
@@ -57,4 +57,5 @@ Use the model certification page to choose a model tier:
 - **Uncertified:** requires explicit risk acceptance.
 
 Re-run certification when the corpus version changes or when a provider changes
-the model version used in production.
+the model version used in production. Published certified and provisional
+results also expire after 90 days unless a newer reviewed result replaces them.

@@ -4,9 +4,12 @@ sidebar_label: Observability
 audience: Operator
 ---
 
-# Observability — Prometheus, Grafana, and OpenTelemetry
+# Observability — Prometheus and OpenTelemetry
 
-This runbook covers the full observability stack shipped with the Stigmem reference node (the pre-reset design window).
+This runbook covers the observability surface that is implemented in the
+Stigmem reference node. Grafana dashboards and packaged observability compose
+recipes remain experimental repo assets until they pass the ADR-008
+reintroduction gates.
 
 ## What is included
 
@@ -14,34 +17,20 @@ This runbook covers the full observability stack shipped with the Stigmem refere
 |---|---|
 | `/metrics` endpoint | Prometheus text exposition (always on when `prometheus-client` is installed) |
 | OpenTelemetry SDK | Distributed traces for assert, recall, subscribe, and federation operations |
-| `dashboards/grafana/stigmem-overview.json` | Node throughput, latency, contradictions, subscriptions |
-| `dashboards/grafana/stigmem-federation.json` | Ingress/egress, replication lag, conflict rate per peer |
-| `dashboards/prometheus/alerts.yml` | Four alerting rules covering the key red lines |
-| `docker-compose.observability.yml` | Tempo + Prometheus + Grafana compose overlay |
+| `experimental/deploy-grafana/stigmem-dashboard.json` | Unsupported dashboard seed for self-import |
 
 ---
 
-## Quick start — local observability stack
+## Quick start — local metrics
 
 ```bash
-# Start stigmem nodes + Tempo + Prometheus + Grafana
-docker compose \
-  -f docker-compose.yml \
-  -f docker-compose.observability.yml \
-  up --build -d
-
-# Wait for services to be healthy
-docker compose ps
+# Start a node, then scrape metrics from the node process.
+curl -s http://localhost:8765/metrics | grep '^stigmem_'
 ```
 
-After the stack is up:
-
-- **Grafana** → [http://localhost:3000](http://localhost:3000) (admin / admin)
-- **Prometheus** → [http://localhost:9090](http://localhost:9090)
-- **Tempo OTLP** → `http://localhost:4318` (HTTP) · `http://localhost:4317` (gRPC)
-
-The two Grafana dashboards (**Stigmem — Overview** and **Stigmem — Federation**) are
-pre-loaded automatically via the provisioning volume mount.
+Prometheus, Grafana, and Tempo deployment topology is operator-owned today.
+Point your scrape target at `/metrics`, and import the experimental Grafana
+dashboard manually if it fits your deployment.
 
 ---
 
@@ -67,6 +56,7 @@ pip install "stigmem-node[observability]"
 | `stigmem_quota_breach_total` | `principal`, `tenant`, `dimension` | Rate-limit 429 responses |
 | `stigmem_federation_ingress_total` | `peer_id`, `status` | Facts received via federation pull |
 | `stigmem_federation_egress_total` | `peer_id`, `status` | Facts served via federation pull endpoint |
+| `stigmem_peer_hlc_anomaly_total` | `peer_id`, `direction` | Inbound federation HLC skew rejections |
 | `stigmem_subscription_event_total` | `delivery_type`, `status` | Subscription delivery events |
 
 ### Histograms
@@ -118,13 +108,14 @@ pip install "stigmem-node[observability]"
 
 The OTLP exporter sends traces to the configured endpoint via HTTP/protobuf.  Any
 OpenTelemetry-compatible backend works — Grafana Tempo, Jaeger, Honeycomb, Datadog, etc.
-The compose overlay uses Tempo for a zero-config local setup.
 
 ---
 
 ## Alerting rules
 
-The four alerting rules in `dashboards/prometheus/alerts.yml` cover the key red lines:
+Experimental Prometheus alert seeds are available at
+[`experimental/deploy-grafana/dashboards/prometheus/alerts.yml`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/deploy-grafana/dashboards/prometheus/alerts.yml).
+Review and adapt them before production use.
 
 | Alert | Condition | Severity |
 |---|---|---|
@@ -133,19 +124,19 @@ The four alerting rules in `dashboards/prometheus/alerts.yml` cover the key red 
 | `StigmemAuditEventsMissing` | Writes but no audit events for 2 m | critical |
 | `StigmemQuotaBreachSustained` | > 0.05 quota breaches/s for 10 m | warning |
 
-To load the rules into a standalone Prometheus (not using the compose overlay):
+To load adapted rules into a standalone Prometheus:
 
 ```yaml
 # prometheus.yml
 rule_files:
-  - /path/to/dashboards/prometheus/alerts.yml
+  - /path/to/stigmem-alerts.yml
 ```
 
 ---
 
 ## Smoke test
 
-After the stack is running, run a quick smoke workload to verify the metric set:
+After the node is running, run a quick smoke workload to verify the metric set:
 
 ```bash
 # 1. Write a fact
@@ -173,10 +164,11 @@ curl -s http://localhost:8765/metrics | grep stigmem_recall_ranker_duration_seco
 
 ## Importing dashboards manually
 
-If you are not using the compose overlay, import dashboards manually:
+The Grafana dashboard seeds live under
+`experimental/deploy-grafana/dashboards/grafana/`. To try them manually:
 
 1. Open Grafana at your instance URL.
 2. Go to **Dashboards → Import**.
-3. Upload `dashboards/grafana/stigmem-overview.json`.
+3. Upload `experimental/deploy-grafana/dashboards/grafana/stigmem-overview.json`.
 4. Select your Prometheus datasource when prompted.
-5. Repeat for `dashboards/grafana/stigmem-federation.json`.
+5. Repeat for `experimental/deploy-grafana/dashboards/grafana/stigmem-federation.json`.

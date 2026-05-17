@@ -3331,6 +3331,7 @@ export interface operations {
         parameters: {
             query?: {
                 peer_id?: string | null;
+                event_type?: string | null;
                 limit?: number;
                 cursor?: string | null;
             };

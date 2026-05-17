@@ -83,12 +83,15 @@ Key metrics:
 
 | Metric | Description |
 |---|---|
-| `stigmem_facts_total` | Total facts in the node (by scope) |
-| `stigmem_recall_latency_seconds` | Histogram of recall request durations |
-| `stigmem_federation_pull_latency_seconds` | Histogram of federation pull cycle durations |
-| `stigmem_federation_pull_errors_total` | Count of pull failures by peer and error type |
-| `stigmem_storage_query_latency_seconds` | Histogram of storage query durations |
-| `stigmem_embedding_latency_seconds` | Histogram of embedding provider call durations |
+| `stigmem_fact_write_total` | Successful fact assertions by principal and tenant |
+| `stigmem_fact_read_total` | Fact queries and recall requests by principal and tenant |
+| `stigmem_request_latency_seconds` | End-to-end HTTP request latency by route, method, and status |
+| `stigmem_recall_ranker_duration_seconds` | Hybrid recall ranker duration by tenant |
+| `stigmem_federation_ingress_total` | Facts received via federation pull by peer and status |
+| `stigmem_federation_egress_total` | Facts served via federation pull endpoint by peer and status |
+| `stigmem_replication_lag_seconds` | Estimated replication lag by peer |
+| `stigmem_peer_hlc_anomaly_total` | Inbound federation HLC skew rejections by peer and direction |
+| `stigmem_audit_event_total` | Audit events written by event type and tenant |
 
 ### Grafana dashboard
 
@@ -198,18 +201,25 @@ groups:
           summary: "Stigmem node is down"
 
       - alert: StigmemHighRecallLatency
-        expr: histogram_quantile(0.99, stigmem_recall_latency_seconds_bucket) > 5
+        expr: histogram_quantile(0.99, stigmem_recall_ranker_duration_seconds_bucket) > 5
         for: 5m
         labels: { severity: warning }
         annotations:
-          summary: "99th-percentile recall latency > 5s"
+          summary: "99th-percentile recall ranker latency > 5s"
 
-      - alert: StigmemFederationPullErrors
-        expr: increase(stigmem_federation_pull_errors_total[5m]) > 3
+      - alert: StigmemFederationIngressErrors
+        expr: sum by (peer_id) (increase(stigmem_federation_ingress_total{status!="accepted"}[5m])) > 3
         for: 5m
         labels: { severity: warning }
         annotations:
-          summary: "Federation pull errors spiking"
+          summary: "Federation ingress errors spiking"
+
+      - alert: StigmemPeerHlcAnomaly
+        expr: sum by (peer_id) (increase(stigmem_peer_hlc_anomaly_total[1h])) > 5
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Peer HLC anomaly events above threshold"
 
       - alert: StigmemLibSQLHighSyncLag
         expr: stigmem_libsql_sync_lag_ms > 10000

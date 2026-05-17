@@ -21,6 +21,7 @@ from .common import router
 def get_audit_log(
     identity: Annotated[Identity, Depends(resolve_identity)],
     peer_id: str | None = Query(None),
+    event_type: str | None = Query(None),
     limit: int = Query(50, ge=1, le=500),
     cursor: str | None = Query(None),
 ) -> dict[str, Any]:
@@ -32,6 +33,9 @@ def get_audit_log(
     if peer_id:
         conditions.append("peer_id = ?")
         params.append(peer_id)
+    if event_type:
+        conditions.append("event_type = ?")
+        params.append(event_type)
     if cursor:
         conditions.append("id > ?")
         params.append(cursor)

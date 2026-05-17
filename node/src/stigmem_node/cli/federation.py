@@ -26,20 +26,20 @@ def _cmd_federation_register_peer(args: argparse.Namespace) -> int:
     remote_url = args.remote_url.rstrip("/")
     allowed_scopes: list[str] = [s.strip() for s in args.scopes.split(",") if s.strip()]
     cert = (args.tls_cert, args.tls_key) if args.tls_cert and args.tls_key else None
-    client_kwargs: dict[str, object] = {}
+    verify: ssl.SSLContext | str | bool | None = None
     if cert is not None:
         ssl_ctx = ssl.create_default_context(cafile=args.ca_bundle or None)
         ssl_ctx.load_cert_chain(*cert)
-        client_kwargs["verify"] = ssl_ctx
+        verify = ssl_ctx
     elif args.ca_bundle:
-        client_kwargs["verify"] = args.ca_bundle
+        verify = args.ca_bundle
 
     # ------------------------------------------------------------------
     # 1. Fetch local /.well-known/stigmem to get our published metadata.
     # ------------------------------------------------------------------
     try:
-        if client_kwargs:
-            with httpx.Client(timeout=15.0, trust_env=False, **client_kwargs) as client:
+        if verify is not None:
+            with httpx.Client(timeout=15.0, trust_env=False, verify=verify) as client:
                 wk = client.get(f"{local_url}/.well-known/stigmem")
         else:
             wk = httpx.get(f"{local_url}/.well-known/stigmem", timeout=10.0)
@@ -102,8 +102,8 @@ def _cmd_federation_register_peer(args: argparse.Namespace) -> int:
         headers["Authorization"] = f"Bearer {args.api_key}"
 
     try:
-        if client_kwargs:
-            with httpx.Client(timeout=15.0, trust_env=False, **client_kwargs) as client:
+        if verify is not None:
+            with httpx.Client(timeout=15.0, trust_env=False, verify=verify) as client:
                 resp = client.post(
                     f"{remote_url}/v1/federation/peers",
                     json=payload,

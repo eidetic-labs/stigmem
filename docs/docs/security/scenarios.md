@@ -105,7 +105,7 @@ Scenarios that are marked **Mitigated** are included so you understand what the 
 
 **How do you recover?** Investigate the query pattern that bypassed scope, patch the pipeline, and rotate any keys that may have accessed out-of-scope data.
 
-**Current protection status:** **Residual** — scope enforcement is implemented and tested; fuzz coverage of edge cases is ongoing.
+**Current protection status:** **In review** — scope enforcement and ADR-003 content/instruction separation are implemented and tested; live certification evidence and operator validation are still required before R-05 moves to mitigated.
 
 ---
 
@@ -329,9 +329,9 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 - The blast radius depends on the permissions of the LLM agent's API key. An agent with only `read` scope cannot write facts but may still take harmful external actions if the injection instructs it to use other tools it has access to.
 - **If the agent holds a writer key:** the LLM can use that key to assert attacker-chosen facts. Those facts look authoritative coming from your organization. They federate to peer organizations, where their agents may read and re-inject — the worm vector. This is covered in detail in [Scenario 5.2](#scenario-52--what-if-a-prompt-injected-agent-writes-attacker-chosen-facts-back-to-the-federation-worm-vector) (R-21).
 
-**What can't the attacker do?** Bypass the recall sanitizer for known injection patterns. ADR-003 defense-in-depth sanitizer model strips common prompt-injection sentinels at recall time. Novel or obfuscated injection patterns may still pass through.
+**What can't the attacker do?** Directly promote ordinary recalled content into the instruction channel. ADR-003 now stores `interpret_as` metadata, separates content and instruction channels in recall output, requires `instruction:write` for local instruction-typed writes, and quarantines inbound federation instruction facts. The recall sanitizer remains defense-in-depth for known injection patterns; novel or obfuscated content may still expose model or adapter behavior gaps.
 
-**What does "best-effort" mean in practice?** The sanitizer catches patterns like `[INST]`, `<|system|>`, `Ignore previous instructions`, and similar known markers. An attacker who encodes the injection in an unexpected way (e.g., using lookalike Unicode characters, embedding instructions inside a URL, or splitting the payload across multiple facts) may bypass it.
+**What does "in review" mean in practice?** The protocol now separates content from instructions, and the sanitizer catches patterns like `[INST]`, `<|system|>`, `Ignore previous instructions`, and similar known markers. The remaining boundary is L4-L6 consumer behavior: supported adapters and model configurations need reviewed ADR-015 certification evidence before the risk is marked mitigated.
 
 **How do you reduce the risk?**
 - Issue agents the minimum scope they need. An agent that only needs to read `public` facts should not have a key that reads `team` or `local` facts — this limits the pool of adversarial content the attacker can leverage.
@@ -345,7 +345,7 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 - **Adapter-level signals:** OpenClaw remains an alpha connector in v0.9.0a1; watch for boot failures, dropped fact refs, partial handoff writes, and unusual handoff targets. These are warning signals, not complete mitigations.
 - **External system logs** — calls to dangerous tools, network egress to unfamiliar destinations, API errors from operations the agent should not be performing.
 
-**Current protection status:** **Residual** — sanitizer is shipped and fuzz-tested; novel injection patterns remain a residual risk.
+**Current protection status:** **In review** — ADR-003 structural controls, sanitizer defense-in-depth, protocol adversarial vectors, and the ADR-015 corpus/runner are shipped; reviewed live certification results and operator validation are still pending.
 
 ---
 
@@ -600,7 +600,7 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 5. Review your agent-key issuance: any agent that both reads federated content and writes to non-trivial scopes is a worm-propagation candidate. Consider scope splitting.
 
 **Current protection status:** **Open with a partial protocol mitigation** (R-21, High priority).
-- **OpenClaw adapter status:** the v0.9.0a1 adapter remains experimental. Handoff allowlisting, fail-closed boot behavior, and partial-write handling are tracked for the v0.9.0a2..aN hardening path before the adapter can be recommended.
+- **OpenClaw adapter status:** the adapter remains experimental. Fail-closed boot behavior, visible partial-write failures, channel-separated recall handling, and handoff-target allowlisting have landed; remaining audit closeout still blocks recommendation.
 - **Protocol control:** callers can set the `Stigmem-Session` header. Within that session, writes into scopes the caller already read are rejected unless the write uses `write_mode="summarize_with_provenance"` and carries `derived_from` source-fact provenance.
 - **Remaining structural work:** supported adapters must propagate sessions by default, and outbound replication exclusion for transitive recalls still needs to land before R-21 can close.
 - **Until the remaining work lands:** issue agent writer keys with the narrowest possible scope, never overlapping the scopes the same agent reads from.
@@ -619,10 +619,10 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 
 **What can they do?**
 - Cause the agent to call `emit_handoff(to_entity="agent:admin", summary=<attacker text>, ...)`.
-- Without an allowlist, the handoff is accepted; on the admin's next session, the boot pulls `intent:handoff_to`, `intent:handoff_summary`, and `intent:continuation` for the admin entity into the system prompt.
+- If the target is allowed by configuration, the handoff is accepted; on the admin's next session, the boot pulls `intent:handoff_to`, `intent:handoff_summary`, and `intent:continuation` for the admin entity into the system prompt.
 - The admin's LLM session now operates with attacker-controlled context. Any further actions the admin agent takes can be influenced by the injected handoff.
 
-**What can't they do?** In v0.9.0a1, this adapter does not yet provide a reliable allowlist boundary. The attack is bounded only by the agent key's write permissions and by any operator-side controls outside the adapter.
+**What can't they do?** Bypass the adapter's handoff-target allowlist when it is configured. The remaining blast radius is bounded by the agent key's write permissions, the allowlist, and any operator-side controls outside the adapter.
 
 **How would you know?**
 - The audit log records every `fact_write` for handoff facts. Watch for handoff writes whose `to_entity` is outside your expected delegation graph.
@@ -634,9 +634,9 @@ Operators running archival backfills who temporarily relax the past-skew bound m
 2. Revoke its writer key.
 3. Retract the handoff facts and any continuation facts it created.
 4. Review the admin's session activity in the window since the malicious handoff was written.
-5. If OpenClaw is still in use, treat it as an alpha connector and either disable handoff writes or restrict them with operator-side controls until the adapter hardening lands.
+5. If OpenClaw is still in use, treat it as an alpha connector and keep handoff-target allowlists narrow until the remaining adapter audit closeout lands.
 
-**Current protection status:** **Open** for v0.9.0a1. The handoff allowlist and fail-closed behavior are planned for the v0.9.0a2..aN OpenClaw hardening path; until then, do not use OpenClaw handoffs in high-stakes or cross-org agent workflows.
+**Current protection status:** **Partially mitigated; R-21 remains open.** Handoff allowlisting and fail-closed behavior have landed, but OpenClaw remains experimental until the remaining audit closeout is complete. Do not use OpenClaw handoffs in high-stakes or cross-org agent workflows without narrow allowlists and operator review.
 
 ---
 
@@ -688,7 +688,7 @@ Until those ship, operators rely on out-of-band trust signals.
 |---|---|---|---|
 | 1.1 API key theft | R-03 | Mitigated | Set `expires_at` on all keys; rotate on schedule |
 | 1.2 Recall flooding / DoS | R-02, R-12 | Mitigated | Keep rate limits enabled; do not set both limits to 0 in production |
-| 1.3 Cross-scope recall | R-05 | Residual | Issue minimum-scope keys; monitor `fact_read` audit events |
+| 1.3 Cross-scope recall | R-05 | In review | Issue minimum-scope keys; monitor `fact_read` audit events |
 | 1.4 In-transit tampering | T1-T1 | No gap (TLS) | Ensure TLS not terminated on an unencrypted internal segment |
 | 2.1 Peer impersonation | R-01 | Mitigated | Enable mTLS; do not run federation over plain TLS |
 | 2.2 Capability token replay | R-06 | Mitigated | No action needed; persistent nonce cache enforced |
@@ -698,7 +698,7 @@ Until those ship, operators rely on out-of-band trust signals.
 | 3.2 libSQL cloud interception | R-08 | Accepted | Use Turso TLS; review data residency settings |
 | 4.1 Rekor unavailability | T5-D1 | Operational | Monitor Rekor availability; consider self-hosted Rekor for HA |
 | 4.2 Cloud embedding key leak | R-13 | Accepted | Disable cloud embedding if key cannot be secured |
-| 5.1 Prompt injection via recalled facts | R-05 | Residual | Minimum-scope keys; sandboxed agent execution |
+| 5.1 Prompt injection via recalled facts | R-05 | In review | Minimum-scope keys; sandboxed agent execution; use only certified model/provider paths for high-stakes deployments |
 | 6.1 Admin key compromise | T7-S1 | Ongoing operational | Store in secrets manager; rotate ≤365 days; audit `admin_action` events |
 | 6.2 Tombstone DoS via admin key | R-16 | Open (Medium) | Rotate admin keys immediately on suspected compromise; review tombstone audit events |
 | 7.1 Legal-hold data exposure | R-17 | Open (Medium) | Limit `legal_hold: true` use; tighten admin key cycle during active holds |
@@ -707,8 +707,8 @@ Until those ship, operators rely on out-of-band trust signals.
 | 9.1 Obsidian plugin key exposure | R-07 | Accepted | Issue minimum-scope key; rotate on suspicion |
 | 1.5 Rate limits disabled in production | R-02 (re-opened by misconfig) | Operational | Set non-zero rate limits before production deploy |
 | 4.3 Adversarial cloud embedding vectors | R-20 | Accepted | Stay on offline default; spot-check ranking if cloud-enabled |
-| 5.2 Feedback-loop worm | R-21 | Open (**High**) | Issue narrow-scope writer keys; keep OpenClaw evaluation-only until the a2..aN hardening work lands; await ADR-003 |
-| 5.3 OpenClaw handoff to admin entity | R-21 (handoff variant) | Open in v0.9.0a1 | Disable/restrict handoff writes until adapter allowlisting and fail-closed behavior land |
+| 5.2 Feedback-loop worm | R-21 | Open (**High**) | Issue narrow-scope writer keys; keep supported adapters on session propagation once available; block outbound replication of transitively recalled facts until the replication exclusion lands |
+| 5.3 OpenClaw handoff to admin entity | R-21 (handoff variant) | Partially mitigated; R-21 still open | Keep OpenClaw evaluation-only; configure narrow handoff allowlists and review handoff writes until remaining adapter audit closeout lands |
 | 10.1 Build-pipeline compromise | R-22 | Open (**High**) | Pin versions; verify SHA256; watch advisories until Sigstore ships |
 
 ---

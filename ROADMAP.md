@@ -90,8 +90,10 @@ the beta-series exit and v1.0 release-candidate declaration.
 1. **Finish OpenClaw audit closeout** — remaining regression coverage and
    duplicate ClawHub adapter cleanup. See `adapters/openclaw/AUDIT.md`.
 2. **Finish capability-redesign documentation and threat-model closure** per
-   [ADR-003](docs/adr/003-prompt-injection.md) — remaining risk-register status
-   updates and adapter/session propagation evidence.
+   [ADR-003](docs/adr/003-prompt-injection.md) — R-05 is now in review after
+   ADR-003/ADR-015 infrastructure landed, R-15 has the TB-3 adapter-promotion
+   threat row, and R-21 separates landed same-session controls from remaining
+   adapter/session propagation plus outbound replication exclusion evidence.
 3. **Complete ADR-015 certification framework** per
    [ADR-015](docs/adr/015-adversarial-conformance-and-model-certification.md) —
    the 80-pattern corpus, runner/result schema, and OpenAI/Anthropic/Ollama

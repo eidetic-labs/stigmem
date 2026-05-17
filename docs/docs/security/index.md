@@ -61,6 +61,7 @@ Main now includes the 22-hook registry foundation and plugin test harness needed
 | [mTLS](./mtls.md) | Federation transport: TLS 1.3 floor, SAN ↔ entity_uri binding (Spec-10-Hardening mTLS transport) |
 | [Encryption at rest](./encryption-at-rest.md) | SQLCipher (opt-in for regulated data) |
 | [Container hardening](./container-hardening.md) | Distroless, non-root UID 1000, read-only fs, seccomp (Spec-10-Hardening container baseline) |
+| [Immutability & attestation](./immutability-and-attestation.md) | ADR-016 R-23 mitigation stack, fact-chain checkpoints, WORM storage, and TEE deployment options |
 
 ## Operator surfaces
 

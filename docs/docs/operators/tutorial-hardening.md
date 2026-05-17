@@ -9,7 +9,7 @@ audience: Integrator
 
 **Audience:** node operators running Stigmem in production or preparing for production.  
 **Time:** ~45 minutes.  
-**Outcome:** a running Stigmem node with mTLS federation, rotated Ed25519 identity and issuer keys, per-principal quotas tuned to your baseline traffic, and the hardened distroless container image.
+**Outcome:** a running Stigmem node with mTLS federation, rotated Ed25519 identity and issuer keys, per-principal quotas tuned to your baseline traffic, the hardened distroless container image, and an operator plan for immutable evidence.
 
 **Prerequisites:**
 - A Stigmem node running the v0.9.0a1 reference image (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a1`). For hardened production, pin to a digest (`@sha256:<digest>`) instead — see the [tag-selection guide](./deployment/install#image-tags).
@@ -31,6 +31,7 @@ Step 4 — Key rotation: rotate the capability issuer key
 Step 5 — Quotas: tune write/read ceilings and verify 429 behaviour
 Step 6 — Audit: mint an audit.read key and confirm events are emitted
 Step 7 — Container: switch to the hardened image and verify seccomp
+Step 8 — Immutability: route evidence to WORM storage and plan TEE deployment
 ```
 
 ---
@@ -337,6 +338,22 @@ For Kubernetes / Helm security context configuration and SBOM verification, see 
 
 ---
 
+## Step 8 — Preserve immutable evidence
+
+The ADR-016 storage-immutability stack gives clients and peers tamper evidence through CIDs, local fact-chain verification, and transparency-log checkpoints. Operators still need to preserve that evidence outside the mutable node.
+
+For production:
+
+- Use `STIGMEM_TL_BACKEND=rekor` for external fact-chain checkpoints where possible.
+- If using `STIGMEM_TL_BACKEND=local`, place `STIGMEM_TL_LOCAL_PATH` on storage the node process cannot rewrite outside append-only operation.
+- Export `fact_audit_log` and `federation_audit` rows to WORM-capable object storage before local retention expiry.
+- Keep signed database snapshots under retention lock, and record Rekor checkpoint metadata with restore evidence.
+- For high-assurance deployments, evaluate a TEE-capable runtime and seal node private keys to the measured runtime.
+
+See [Immutability & Attestation](../security/immutability-and-attestation.md) for the R-23 mitigation stack, verification commands, WORM storage guidance, and TEE deployment notes.
+
+---
+
 ## Final verification
 
 Run the full hardening checklist:
@@ -362,6 +379,14 @@ docker exec $(docker ps -qf name=stigmem-node) id | grep 65532
 # 5. Healthcheck passing
 curl -s https://your-node.example.com/healthz | jq .status
 # → "ok"
+
+# 6. Full verification metadata available
+curl -s https://your-node.example.com/v1/recall \
+  -H "Authorization: Bearer $STIGMEM_ADMIN_KEY" \
+  -H "Stigmem-Verify: full" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"hardening check","scope":"company","token_budget":1000}' \
+  | jq '.chain_proof'
 ```
 
 ---
@@ -376,6 +401,8 @@ curl -s https://your-node.example.com/healthz | jq .status
 | Audit log with 14 event types | `Spec-09-Audit-Log` | Active |
 | Per-principal token-bucket quotas | `Spec-10-Hardening` | Active |
 | Non-root distroless container, read-only fs, dropped caps | `Spec-10-Hardening` | Active |
+| CID, local hash-chain, and checkpoint verification plan | `ADR-016` | Active |
+| WORM/TEE evidence plan | `ADR-016` | Deployment option |
 
 Your deployment is now at the pre-reset hardening hardened posture.  Run the [Community Pen-Test Handbook](../security/pen-test.md) test matrix against it to verify from the attacker's perspective.
 
@@ -387,3 +414,4 @@ Your deployment is now at the pre-reset hardening hardened posture.  Run the [Co
 - Configure SIEM retention — export `fact_audit_log` rows to immutable storage before the 90-day minimum window.
 - Review the [Key Rotation Runbook](../security/key-rotation.md#rotation-checklist) post-rotation checklist.
 - For cert-manager-based auto-rotation on Kubernetes, see [mTLS — cert-manager](../security/mtls.md#cert-manager-kubernetes).
+- Review [Immutability & Attestation](../security/immutability-and-attestation.md) before enabling production federation.

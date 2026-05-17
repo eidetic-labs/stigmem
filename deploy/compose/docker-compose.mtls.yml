@@ -1,0 +1,107 @@
+# mTLS-backed two-node federation example.
+#
+# Generate local demo certificates first:
+#   ./deploy/compose/generate-mtls-demo-certs.sh
+#
+# Then start the ring:
+#   docker compose -f deploy/compose/docker-compose.mtls.yml up -d --build
+#
+# This recipe intentionally does not set STIGMEM_FEDERATION_INSECURE.
+services:
+  stigmem-a:
+    build:
+      context: ../..
+      dockerfile: node/Dockerfile
+    image: stigmem-node:local
+    ports:
+      - "8765:8765"
+    environment:
+      STIGMEM_HOST: "0.0.0.0"
+      STIGMEM_PORT: "8765"
+      STIGMEM_DB_PATH: "/data/stigmem.db"
+      STIGMEM_NODE_URL: "https://stigmem-a:8765"
+      STIGMEM_LOG_LEVEL: "${STIGMEM_LOG_LEVEL:-info}"
+      STIGMEM_AUTH_REQUIRED: "${STIGMEM_AUTH_REQUIRED:-false}"
+      STIGMEM_FEDERATION_ENABLED: "true"
+      STIGMEM_FEDERATION_PULL_INTERVAL_S: "${STIGMEM_FEDERATION_PULL_INTERVAL_S:-30}"
+      STIGMEM_STORAGE_BACKEND: "sqlite"
+      STIGMEM_TLS_CERT_PATH: "/tls/node-a.crt"
+      STIGMEM_TLS_KEY_PATH: "/tls/node-a.key"
+      STIGMEM_TLS_CA_BUNDLE: "/tls/ca.crt"
+    volumes:
+      - stigmem-a-data:/data
+      - ./tls:/tls:ro
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+      - /run:mode=755,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:../../deploy/seccomp/stigmem-node.json
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import ssl, urllib.request; ctx=ssl.create_default_context(cafile='/tls/ca.crt'); ctx.check_hostname=False; ctx.load_cert_chain('/tls/node-a.crt', '/tls/node-a.key'); urllib.request.urlopen('https://localhost:8765/healthz', context=ctx)",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  stigmem-b:
+    build:
+      context: ../..
+      dockerfile: node/Dockerfile
+    image: stigmem-node:local
+    ports:
+      - "8766:8765"
+    environment:
+      STIGMEM_HOST: "0.0.0.0"
+      STIGMEM_PORT: "8765"
+      STIGMEM_DB_PATH: "/data/stigmem.db"
+      STIGMEM_NODE_URL: "https://stigmem-b:8765"
+      STIGMEM_LOG_LEVEL: "${STIGMEM_LOG_LEVEL:-info}"
+      STIGMEM_AUTH_REQUIRED: "${STIGMEM_AUTH_REQUIRED:-false}"
+      STIGMEM_FEDERATION_ENABLED: "true"
+      STIGMEM_FEDERATION_PULL_INTERVAL_S: "${STIGMEM_FEDERATION_PULL_INTERVAL_S:-30}"
+      STIGMEM_STORAGE_BACKEND: "sqlite"
+      STIGMEM_TLS_CERT_PATH: "/tls/node-b.crt"
+      STIGMEM_TLS_KEY_PATH: "/tls/node-b.key"
+      STIGMEM_TLS_CA_BUNDLE: "/tls/ca.crt"
+    volumes:
+      - stigmem-b-data:/data
+      - ./tls:/tls:ro
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+      - /run:mode=755,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:../../deploy/seccomp/stigmem-node.json
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import ssl, urllib.request; ctx=ssl.create_default_context(cafile='/tls/ca.crt'); ctx.check_hostname=False; ctx.load_cert_chain('/tls/node-b.crt', '/tls/node-b.key'); urllib.request.urlopen('https://localhost:8765/healthz', context=ctx)",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  stigmem-a-data:
+  stigmem-b-data:

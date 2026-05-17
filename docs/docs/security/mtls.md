@@ -93,6 +93,37 @@ export STIGMEM_TLS_CA_BUNDLE=/etc/stigmem/tls/ca.crt
 
 Repeat step 2 for each node, using its own `ENTITY_URI`.  All nodes in the federation share the same CA certificate in their `STIGMEM_TLS_CA_BUNDLE`.
 
+### Docker Compose mTLS example
+
+The local plaintext quickstart remains available for contributor smoke tests,
+but production-shaped federation should use mTLS. The compose example under
+`deploy/compose/docker-compose.mtls.yml` mounts a generated CA bundle plus one
+node certificate/key pair per service and leaves `STIGMEM_FEDERATION_INSECURE`
+unset.
+
+```bash
+./deploy/compose/generate-mtls-demo-certs.sh
+docker compose -f deploy/compose/docker-compose.mtls.yml up -d --build
+```
+
+Verify the nodes with the generated client certificates:
+
+```bash
+curl --cacert deploy/compose/tls/ca.crt \
+  --cert deploy/compose/tls/node-a.crt \
+  --key deploy/compose/tls/node-a.key \
+  https://localhost:8765/healthz
+
+curl --cacert deploy/compose/tls/ca.crt \
+  --cert deploy/compose/tls/node-b.crt \
+  --key deploy/compose/tls/node-b.key \
+  https://localhost:8766/healthz
+```
+
+The generated certificates are suitable only for local validation. For a real
+deployment, issue node certificates from your federation CA and keep the
+service DNS SAN plus the node `entity_uri` URI SAN.
+
 ### cert-manager (Kubernetes)
 
 ```yaml

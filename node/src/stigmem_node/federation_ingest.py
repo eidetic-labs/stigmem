@@ -15,15 +15,15 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from .audit_event import (
+from .db import db
+from .hlc import HLCRemoteSkewError, node_hlc
+from .models.facts import VALID_INTERPRET_AS
+from .observability.audit_event import (
     INSTRUCTION_QUARANTINED,
     emit_instruction_event_if_applicable,
     is_instruction_fact,
 )
-from .db import db
-from .hlc import HLCRemoteSkewError, node_hlc
-from .metrics import PEER_HLC_ANOMALY
-from .models.facts import VALID_INTERPRET_AS
+from .observability.metrics import PEER_HLC_ANOMALY
 
 
 class FederationHlcSkewError(ValueError):
@@ -137,7 +137,7 @@ def _audit_peer_hlc_anomaly(
     sender_node_id: str,
     exc: HLCRemoteSkewError,
 ) -> None:
-    from .audit_event import emit
+    from .observability.audit_event import emit
 
     PEER_HLC_ANOMALY.labels(peer_id=sender_node_id, direction=exc.direction).inc()
     emit(
@@ -163,7 +163,7 @@ def _audit_peer_integrity_failure(
     conn: Any,
     exc: FederationIntegrityError,
 ) -> None:
-    from .audit_event import emit
+    from .observability.audit_event import emit
 
     emit(
         "federation_integrity_rejected",

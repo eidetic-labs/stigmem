@@ -224,7 +224,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         allowed, retry_after = _check_and_consume(entity_uri, tenant_id, dimension)
         if not allowed:
             # Write-ahead: emit quota_breach audit event before returning 429.
-            from .audit_event import emit_nofail
+            from .observability.audit_event import emit_nofail
 
             emit_nofail(
                 "quota_breach",

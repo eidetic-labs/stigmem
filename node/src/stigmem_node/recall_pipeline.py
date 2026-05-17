@@ -245,9 +245,12 @@ def _quarantine_via_sanitizer(fact_id: str, matched_pattern: str) -> None:
     """Move a fact to the node's quarantine garden (sanitizer quarantine mode)."""
     from datetime import UTC, datetime
 
-    from .audit_event import INSTRUCTION_QUARANTINED, emit_instruction_event_if_applicable
     from .db import db
     from .immutability import set_fact_quarantine_status
+    from .observability.audit_event import (
+        INSTRUCTION_QUARANTINED,
+        emit_instruction_event_if_applicable,
+    )
     from .settings import settings
 
     qg_id = settings.quarantine_garden_id

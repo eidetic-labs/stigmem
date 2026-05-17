@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 import sys
+from typing import TYPE_CHECKING
 
-from .utility import net_util as _impl
+__all__ = ["assert_safe_url"]
 
-sys.modules[__name__] = _impl
+if TYPE_CHECKING:
+    from .utility.net_util import assert_safe_url
+else:
+    from .utility import net_util as _impl
+
+    sys.modules[__name__] = _impl

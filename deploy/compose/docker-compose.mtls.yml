@@ -14,11 +14,12 @@ services:
       dockerfile: node/Dockerfile
     image: stigmem-node:local
     ports:
-      - "8765:8765"
+      - "${STIGMEM_MTLS_NODE_A_HOST_PORT:-8765}:8765"
     environment:
       STIGMEM_HOST: "0.0.0.0"
       STIGMEM_PORT: "8765"
       STIGMEM_DB_PATH: "/data/stigmem.db"
+      STIGMEM_NODE_ID: "stigmem://compose/node-a"
       STIGMEM_NODE_URL: "https://stigmem-a:8765"
       STIGMEM_LOG_LEVEL: "${STIGMEM_LOG_LEVEL:-info}"
       STIGMEM_AUTH_REQUIRED: "${STIGMEM_AUTH_REQUIRED:-false}"
@@ -30,7 +31,7 @@ services:
       STIGMEM_TLS_CA_BUNDLE: "/tls/ca.crt"
     volumes:
       - stigmem-a-data:/data
-      - ./tls:/tls:ro
+      - ${STIGMEM_MTLS_TLS_DIR:-./tls}:/tls:ro
     user: "65532:65532"
     read_only: true
     tmpfs:
@@ -61,11 +62,12 @@ services:
       dockerfile: node/Dockerfile
     image: stigmem-node:local
     ports:
-      - "8766:8765"
+      - "${STIGMEM_MTLS_NODE_B_HOST_PORT:-8766}:8765"
     environment:
       STIGMEM_HOST: "0.0.0.0"
       STIGMEM_PORT: "8765"
       STIGMEM_DB_PATH: "/data/stigmem.db"
+      STIGMEM_NODE_ID: "stigmem://compose/node-b"
       STIGMEM_NODE_URL: "https://stigmem-b:8765"
       STIGMEM_LOG_LEVEL: "${STIGMEM_LOG_LEVEL:-info}"
       STIGMEM_AUTH_REQUIRED: "${STIGMEM_AUTH_REQUIRED:-false}"
@@ -77,7 +79,7 @@ services:
       STIGMEM_TLS_CA_BUNDLE: "/tls/ca.crt"
     volumes:
       - stigmem-b-data:/data
-      - ./tls:/tls:ro
+      - ${STIGMEM_MTLS_TLS_DIR:-./tls}:/tls:ro
     user: "65532:65532"
     read_only: true
     tmpfs:

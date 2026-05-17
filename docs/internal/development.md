@@ -97,6 +97,18 @@ The internal container port stays at 8765; only the host-side mapping changes. F
 bash scripts/quickstart-verify.sh
 ```
 
+For the production-shaped mTLS compose path:
+
+```bash
+bash scripts/mtls-compose-smoke.sh
+```
+
+That command generates demo certificates in a temp directory, starts the
+two-node mTLS compose stack, verifies HTTPS health checks with client
+certificates, registers peers, asserts a fact, confirms federation on the peer,
+and tears everything down. Set `KEEP_UP=1` to inspect the running stack after a
+failure.
+
 What it does (~40 seconds end-to-end):
 
 1. Pre-flight teardown (`docker compose down -v --remove-orphans`) clears any leftover state from a dirty previous run.

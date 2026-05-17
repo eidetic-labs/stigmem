@@ -304,7 +304,6 @@ def run() -> None:
                 with suppress(asyncio.CancelledError):
                     _unused_result = await cast("asyncio.Task[object]", watcher_task)
 
-    config.setup_event_loop()
     asyncio.run(_serve_with_cert_watcher())
 
 

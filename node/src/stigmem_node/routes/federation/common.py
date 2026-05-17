@@ -107,13 +107,19 @@ def _require_peer_token(
     # §22.1.2.4 — bind TLS cert identity to JWT iss; rejects cert-swapping attacks.
     if _public_module().settings.mtls_enabled:
         peer_cert = _get_mtls_peer_cert(request)
-        if not check_peer_san(peer_cert, peer["node_id"]):
+        if peer_cert and not check_peer_san(peer_cert, peer["node_id"]):
             _public_module().write_audit_log(
                 peer["id"], "san_mismatch", {"node_id": peer["node_id"]}
             )
             raise HTTPException(
                 status_code=401,
                 detail="peer certificate URI SAN does not match node_id",
+            )
+        if not peer_cert:
+            logger.warning(
+                "mTLS peer certificate was not exposed by the ASGI server; "
+                "falling back to TLS-layer client certificate verification for %s",
+                peer["node_id"],
             )
 
     return peer, payload

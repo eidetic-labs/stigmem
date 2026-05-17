@@ -106,18 +106,33 @@ unset.
 docker compose -f deploy/compose/docker-compose.mtls.yml up -d --build
 ```
 
+For an end-to-end local validation that includes peer registration and fact
+replication, run:
+
+```bash
+bash scripts/mtls-compose-smoke.sh
+```
+
+The smoke script creates local-only certificate material in a temp directory,
+starts the compose stack without `STIGMEM_FEDERATION_INSECURE`, verifies both
+nodes over HTTPS with client certificates, registers peers, asserts a fact on
+node A, verifies the fact on node B, and removes containers and volumes unless
+`KEEP_UP=1`.
+
 Verify the nodes with the generated client certificates:
 
 ```bash
 curl --cacert deploy/compose/tls/ca.crt \
   --cert deploy/compose/tls/node-a.crt \
   --key deploy/compose/tls/node-a.key \
-  https://localhost:8765/healthz
+  --resolve stigmem-a:8765:127.0.0.1 \
+  https://stigmem-a:8765/healthz
 
 curl --cacert deploy/compose/tls/ca.crt \
   --cert deploy/compose/tls/node-b.crt \
   --key deploy/compose/tls/node-b.key \
-  https://localhost:8766/healthz
+  --resolve stigmem-b:8766:127.0.0.1 \
+  https://stigmem-b:8766/healthz
 ```
 
 The generated certificates are suitable only for local validation. For a real

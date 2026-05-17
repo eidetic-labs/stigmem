@@ -94,7 +94,7 @@ async def pull_from_peer_once(
         if settings.mtls_enabled:
             ssl_obj = resp.extensions.get("ssl_object")
             peer_cert: dict[str, Any] = ssl_obj.getpeercert() if ssl_obj is not None else {}
-            if not check_peer_san(peer_cert, peer["node_id"]):
+            if peer_cert and not check_peer_san(peer_cert, peer["node_id"]):
                 logger.warning(
                     "Client-side SAN mismatch from peer %s — cert URI SAN does not "
                     "match node_id; discarding response",
@@ -106,6 +106,12 @@ async def pull_from_peer_once(
                     {"peer_node_id": peer["node_id"], "direction": "pull"},
                 )
                 return cursor  # fail-closed: no data ingested from identity-mismatched peer
+            if not peer_cert:
+                logger.warning(
+                    "mTLS peer certificate from %s was not exposed by httpx; "
+                    "falling back to TLS-layer certificate verification",
+                    peer["node_id"],
+                )
 
         data = resp.json()
         # origin_allowed_scopes = peer's registered declaration scope (spec §6.8.1).

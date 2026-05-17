@@ -457,6 +457,7 @@ def _patch_httpx(
 
     def fake_get(url: str, **kw: Any) -> _FakeResponse:
         captured.setdefault("get_calls", []).append(url)
+        captured.setdefault("get_kwargs", []).append(kw)
         if get_raises is not None:
             raise get_raises
         for prefix, resp in (get_responses or {}).items():
@@ -465,7 +466,14 @@ def _patch_httpx(
         raise AssertionError(f"unexpected GET {url}")
 
     def fake_post(url: str, **kw: Any) -> _FakeResponse:
-        captured.setdefault("post_calls", []).append({"url": url, "json": kw.get("json")})
+        captured.setdefault("post_calls", []).append(
+            {
+                "url": url,
+                "json": kw.get("json"),
+                "cert": kw.get("cert"),
+                "verify": kw.get("verify"),
+            }
+        )
         if post_raises is not None:
             raise post_raises
         for prefix, resp in (post_responses or {}).items():
@@ -487,6 +495,9 @@ class TestFederationRegisterPeer:
             remote_url="http://remote",
             scopes="public,local",
             api_key=None,
+            tls_cert=None,
+            tls_key=None,
+            ca_bundle=None,
         )
         base.update(overrides)
         return _args(**base)
@@ -592,6 +603,75 @@ class TestFederationRegisterPeer:
         rc = _cmd_federation_register_peer(self._common_args())
         assert rc == 0
         assert "peer registered and verified" in capsys.readouterr().out
+
+    def test_tls_options_are_passed_to_httpx(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
+        tmp_path: Path,
+    ) -> None:
+        from stigmem_node import db as db_mod
+        from stigmem_node.cli import _cmd_federation_register_peer
+
+        db = _migrated_db(tmp_path)
+        monkeypatch.setattr(db_mod.settings, "db_path", db)
+
+        captured: dict[str, object] = {"client_kwargs": []}
+
+        class FakeClient:
+            def __init__(self, **kwargs: object) -> None:
+                captured["client_kwargs"].append(kwargs)  # type: ignore[attr-defined]
+
+            def __enter__(self) -> FakeClient:
+                return self
+
+            def __exit__(self, *args: object) -> None:
+                return None
+
+            def get(self, url: str) -> _FakeResponse:
+                captured["get_url"] = url
+                return _FakeResponse(
+                    200,
+                    {"node_id": "stigmem://local", "federation_pubkey": "PUB"},
+                )
+
+            def post(
+                self,
+                url: str,
+                json: dict[str, object],
+                headers: dict[str, str],
+            ) -> _FakeResponse:
+                captured["post_url"] = url
+                captured["post_json"] = json
+                captured["post_headers"] = headers
+                return _FakeResponse(201, {"status": "active", "peer_id": "p-99"})
+
+        import ssl
+
+        import httpx
+
+        class FakeSSLContext:
+            def load_cert_chain(self, certfile: str, keyfile: str) -> None:
+                captured["certfile"] = certfile
+                captured["keyfile"] = keyfile
+
+        monkeypatch.setattr(ssl, "create_default_context", lambda cafile=None: FakeSSLContext())
+
+        monkeypatch.setattr(httpx, "Client", FakeClient)
+        rc = _cmd_federation_register_peer(
+            self._common_args(
+                tls_cert="/tls/node.crt",
+                tls_key="/tls/node.key",
+                ca_bundle="/tls/ca.crt",
+            )
+        )
+        assert rc == 0
+        assert "peer registered and verified" in capsys.readouterr().out
+        client_kwargs = captured["client_kwargs"]
+        assert isinstance(client_kwargs[0]["verify"], FakeSSLContext)
+        assert isinstance(client_kwargs[1]["verify"], FakeSSLContext)
+        assert captured["certfile"] == "/tls/node.crt"
+        assert captured["keyfile"] == "/tls/node.key"
 
     def test_remote_returns_pending_status(
         self,

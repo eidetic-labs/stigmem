@@ -65,6 +65,19 @@ Generate demo certificate material:
 ./deploy/compose/generate-mtls-demo-certs.sh
 ```
 
+Run the scripted end-to-end smoke:
+
+```bash
+bash scripts/mtls-compose-smoke.sh
+```
+
+The smoke command generates local-only certificate material in a temp directory,
+starts the mTLS compose stack without `STIGMEM_FEDERATION_INSECURE`, verifies
+both HTTPS health checks with client certificates, registers peers in both
+directions, asserts a fact on node A, verifies federation on node B, and tears
+the stack down. Set `KEEP_UP=1` to leave the compose project running for
+debugging.
+
 Start the mTLS ring:
 
 ```bash
@@ -77,12 +90,14 @@ Verify both nodes using the generated client certificates:
 curl --cacert deploy/compose/tls/ca.crt \
   --cert deploy/compose/tls/node-a.crt \
   --key deploy/compose/tls/node-a.key \
-  https://localhost:8765/healthz
+  --resolve stigmem-a:8765:127.0.0.1 \
+  https://stigmem-a:8765/healthz
 
 curl --cacert deploy/compose/tls/ca.crt \
   --cert deploy/compose/tls/node-b.crt \
   --key deploy/compose/tls/node-b.key \
-  https://localhost:8766/healthz
+  --resolve stigmem-b:8766:127.0.0.1 \
+  https://stigmem-b:8766/healthz
 ```
 
 The generated files under `deploy/compose/tls/` are ignored by git. Replace

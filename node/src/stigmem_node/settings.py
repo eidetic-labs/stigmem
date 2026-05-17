@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     db_path: str = "stigmem.db"
     host: str = "0.0.0.0"  # noqa: S104  # nosec B104 — overridable via STIGMEM_HOST
     port: int = 8765
+    # Optional stable node identity for deterministic local/CI federation fixtures.
+    # When unset, the node creates and persists a stigmem:node:<uuid> identity.
+    node_id: str = ""
     node_url: str = "http://localhost:8765"
     log_level: str = "info"
 

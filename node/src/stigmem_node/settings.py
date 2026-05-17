@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     # from peer overrides this.
     federation_pull_interval_s: int = 30
     federation_push_enabled: bool = False
+    # Explicit dev/test escape hatch for federation without mTLS. Production
+    # federation should leave this false and configure STIGMEM_TLS_* instead.
+    federation_insecure: bool = False
     # Nonce window: how long (seconds) a nonce is kept to detect replays
     # (spec §6.6, default 5 min).
     federation_nonce_window_s: int = 300

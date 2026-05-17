@@ -41,6 +41,7 @@ def push_client(tmp_path: Path) -> Generator[tuple[TestClient, str, str], None, 
         tl_backend="off",
         node_private_key=priv_b64,
         federation_push_enabled=True,
+        federation_insecure=True,
     )
 
     with patched_test_settings(test_settings):

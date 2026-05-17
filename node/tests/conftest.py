@@ -413,6 +413,7 @@ def fed_node(tmp_path: object) -> Generator[FedNode, None, None]:
         auth_required=False,
         node_url=node_url,
         federation_enabled=True,
+        federation_insecure=True,
         federation_pubkey=pub_b64,
         federation_privkey=priv_b64,
     )
@@ -470,6 +471,7 @@ def fed_node_a(tmp_path: object) -> Generator[FedNode, None, None]:
         auth_required=False,
         node_url=node_url,
         federation_enabled=True,
+        federation_insecure=True,
         federation_pubkey=pub_b64,
         federation_privkey=priv_b64,
     )

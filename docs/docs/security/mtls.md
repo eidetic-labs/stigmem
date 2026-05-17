@@ -9,7 +9,10 @@ audience: Operator
 
 Stigmem nodes use **mutual TLS (mTLS)** for all federation peer-to-peer traffic — replication pulls, push wakes, and capability-token exchanges.  This is a normative requirement of Spec-10-Hardening for any deployment that connects more than one node.
 
-> **Localhost opt-out.** mTLS is disabled by default.  Leave `STIGMEM_TLS_CERT_PATH` / `STIGMEM_TLS_KEY_PATH` unset only if **all** federation peers are on the same host (`localhost` / `127.0.0.1`).  Any cross-host deployment **must** configure mTLS.
+> **Explicit local/dev/test opt-out.** Federation startup requires mTLS by
+> default. Leave `STIGMEM_TLS_CERT_PATH` / `STIGMEM_TLS_KEY_PATH` unset only for
+> local/dev/test federation and only with `STIGMEM_FEDERATION_INSECURE=1`. The
+> node logs a security warning while that flag is active.
 
 ---
 
@@ -33,6 +36,14 @@ TLS 1.3 is enforced as the minimum protocol version.  The permitted cipher suite
 | TLS_CHACHA20_POLY1305_SHA256 | Required |
 
 TLS 1.2 and earlier are **not** negotiated on federation ports.
+
+### Insecure local/dev/test mode
+
+If `STIGMEM_FEDERATION_ENABLED=true` or `STIGMEM_FEDERATION_PUSH_ENABLED=true`
+and the TLS cert/key paths are unset, the node refuses to start unless
+`STIGMEM_FEDERATION_INSECURE=1` is also set. Use that flag only for local
+single-machine tests or development fixtures. It does not provide peer
+authentication and is not a production setting.
 
 ### SAN validation (Spec-10-Hardening.2.4)
 

@@ -36,6 +36,7 @@ class TestMaliciousPeer:
             federation_pubkey=original.federation_pubkey,
             federation_privkey=original.federation_privkey,
             federation_push_enabled=True,
+            federation_insecure=True,
         )
         monkeypatch.setattr(_settings_mod, "settings", new_settings)
         for mod_name in [

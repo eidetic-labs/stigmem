@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
 
 from ...auth import Identity, resolve_identity
-from ...cid import compute_cid_from_row
+from ...cid import compute_cid_from_row, stored_cid_from_row
 from ...db import db
 from .common import logger, router
 
@@ -41,7 +41,7 @@ def verify_cid(
     if row is None:
         raise HTTPException(status_code=404, detail="fact not found")
     computed = compute_cid_from_row(row)
-    stored = row["cid"] if "cid" in row.keys() else None  # noqa: SIM118
+    stored = stored_cid_from_row(row)
     if stored is None:
         return _CidVerifyResponse(
             cid_valid=False,

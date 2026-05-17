@@ -63,6 +63,47 @@ def compute_cid_from_row(row: Any) -> str:
     )
 
 
+class CidMismatchError(ValueError):
+    """Raised when a stored fact CID does not match its canonical body."""
+
+    def __init__(self, *, fact_id: str, stored_cid: str, computed_cid: str) -> None:
+        super().__init__(f"CID mismatch for fact {fact_id}")
+        self.fact_id = fact_id
+        self.stored_cid = stored_cid
+        self.computed_cid = computed_cid
+
+
+def _optional_row_value(row: Any, key: str) -> Any:
+    try:
+        keys = row.keys()
+    except AttributeError:
+        return row.get(key) if isinstance(row, dict) else None
+    return row[key] if key in keys else None
+
+
+def stored_cid_from_row(row: Any) -> str | None:
+    """Return the stored/projected CID for a fact row, if one is present."""
+    projected = _optional_row_value(row, "projected_cid")
+    if projected is not None:
+        return str(projected)
+    stored = _optional_row_value(row, "cid")
+    return None if stored is None else str(stored)
+
+
+def verify_cid_from_row(row: Any) -> None:
+    """Verify a fact row's stored CID, preserving legacy NULL-CID rows."""
+    stored = stored_cid_from_row(row)
+    if stored is None:
+        return
+    computed = compute_cid_from_row(row)
+    if computed != stored:
+        raise CidMismatchError(
+            fact_id=str(row["id"]),
+            stored_cid=stored,
+            computed_cid=computed,
+        )
+
+
 def is_valid_cid(s: str) -> bool:
     """Return True if *s* looks like a well-formed sha256 CID (spec §25.2)."""
     return bool(_CID_HEX_RE.match(s))

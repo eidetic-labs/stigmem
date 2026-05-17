@@ -21,6 +21,7 @@ from ...models.tombstones import TombstoneNotice
 from ...plugins import Deny, Failure, Success, TenantContext, get_registry
 from ...recall_pipeline import apply_recall_pipeline
 from ...session_graph import record_read_scopes
+from ..cid_integrity import enforce_read_path_cid
 from .common import _get_tombstone_filter, logger, router
 
 
@@ -227,6 +228,8 @@ def _query_facts_as_of_impl(
         key = (r["entity"], r["relation"], r["scope"])
         seen[key] = seen.get(key, 0) + 1
 
+    for r in rows:
+        enforce_read_path_cid(r)
     records = [
         row_to_record(r, contradicted=seen[(r["entity"], r["relation"], r["scope"])] > 1)
         for r in rows
@@ -599,6 +602,7 @@ def _rows_to_records(rows: list[Any]) -> list[FactRecord]:
     """Convert raw rows into FactRecords; mark within-key duplicates contradicted."""
     seen: dict[tuple[str, str, str], int] = {}
     for r in rows:
+        enforce_read_path_cid(r)
         key = (r["entity"], r["relation"], r["scope"])
         seen[key] = seen.get(key, 0) + 1
     return [

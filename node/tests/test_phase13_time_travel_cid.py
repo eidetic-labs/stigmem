@@ -183,6 +183,20 @@ def p13_client(tmp_path) -> Generator[TestClient, None, None]:
 
 
 @pytest.fixture()
+def p13_client_with_db(tmp_path) -> Generator[tuple[TestClient, str], None, None]:
+    """Unauthenticated TestClient plus the SQLite DB path for direct tamper tests."""
+    db_file = str(tmp_path / "p13_cid_read.db")
+    apply_migrations(db_path=db_file)
+    original = settings_module.settings
+    ts = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
+    mods = _patch_settings(ts)
+    app = create_app()
+    with TestClient(app, raise_server_exceptions=True) as c:
+        yield c, db_file
+    _restore_settings(original, mods)
+
+
+@pytest.fixture()
 def p13_time_travel_client(tmp_path) -> Generator[TestClient, None, None]:
     """Unauthenticated TestClient with the experimental time-travel plugin loaded."""
     db_file = str(tmp_path / "p13_time_travel.db")
@@ -274,6 +288,14 @@ def _insert_legacy_fact_row(
             "VALUES (?, ?, ?, 'string', ?, 'agent:test', ?, 1.0, ?, 'default', ?)",
             (fact_id, entity, relation, value, timestamp, scope, cid),
         )
+
+
+def _tamper_fact_value_after_admin_bypass(db_path: str, fact_id: str, value: str) -> None:
+    """Simulate an admin-level store mutation that bypasses L2 SQLite triggers."""
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("DROP TRIGGER IF EXISTS facts_no_update")
+        conn.execute("DROP TRIGGER IF EXISTS facts_fts_au")
+        conn.execute("UPDATE facts SET value_v = ? WHERE id = ?", (value, fact_id))
 
 
 # ---------------------------------------------------------------------------
@@ -401,6 +423,61 @@ def test_get_fact_by_cid_malformed(p13_client: TestClient):
     r = p13_client.get("/v1/facts/sha256:tooshort")
     assert r.status_code == 400
     assert "cid_malformed" in r.text
+
+
+def test_get_fact_rejects_cid_mismatch_on_read_path(
+    p13_client_with_db: tuple[TestClient, str],
+) -> None:
+    client, db_path = p13_client_with_db
+    fact = _assert(client, "stigmem://e/cid-read-mismatch", "rel", "original")
+
+    _tamper_fact_value_after_admin_bypass(db_path, fact["id"], "tampered")
+
+    response = client.get(f"/v1/facts/{fact['id']}")
+    assert response.status_code == 409
+    detail = response.json()["detail"]
+    assert detail["code"] == "cid_mismatch"
+    assert detail["fact_id"] == fact["id"]
+    assert detail["stored_cid"] == fact["cid"]
+    assert detail["computed_cid"] != fact["cid"]
+
+
+def test_query_facts_rejects_cid_mismatch_on_read_path(
+    p13_client_with_db: tuple[TestClient, str],
+) -> None:
+    client, db_path = p13_client_with_db
+    fact = _assert(client, "stigmem://e/cid-query-mismatch", "rel", "original")
+
+    _tamper_fact_value_after_admin_bypass(db_path, fact["id"], "tampered")
+
+    response = client.get("/v1/facts", params={"entity": "stigmem://e/cid-query-mismatch"})
+    assert response.status_code == 409
+    detail = response.json()["detail"]
+    assert detail["code"] == "cid_mismatch"
+    assert detail["fact_id"] == fact["id"]
+
+
+def test_recall_rejects_cid_mismatch_during_hydration(
+    p13_client_with_db: tuple[TestClient, str],
+) -> None:
+    client, db_path = p13_client_with_db
+    fact = _assert(client, "stigmem://e/cid-recall-mismatch", "rel", "original")
+
+    _tamper_fact_value_after_admin_bypass(db_path, fact["id"], "tampered")
+
+    response = client.post(
+        "/v1/recall",
+        json={
+            "query": "cid-recall-mismatch",
+            "scope": "local",
+            "limit": 5,
+            "weights": {"lexical": 1.0, "semantic": 0.0, "graph": 0.0},
+        },
+    )
+    assert response.status_code == 409
+    detail = response.json()["detail"]
+    assert detail["code"] == "cid_mismatch"
+    assert detail["fact_id"] == fact["id"]
 
 
 # ---------------------------------------------------------------------------

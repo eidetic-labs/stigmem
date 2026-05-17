@@ -3,7 +3,7 @@
 > Public roadmap for stigmem. Milestone-gated, not time-gated — version lines complete when their exit criteria are met.
 >
 > **Current build:** v0.9.0a1 (first build; per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
-> **Last updated:** 2026-05-16.
+> **Last updated:** 2026-05-17.
 
 ---
 
@@ -22,7 +22,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 
 ## `v0.9.0aN` — alpha series
 
-**Status:** in progress.
+**Status:** Phase A plugin extraction and exit validation are complete on `main`; remaining alpha follow-ups stay open below. Signed/package plugin artifact evidence remains tracked separately in [#298](https://github.com/Eidetic-Labs/stigmem/issues/298).
 
 ### Entry criteria
 - [x] Pre-flight contributor decisions complete
@@ -38,7 +38,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [x] **Modular spec migration** — the monolithic spec has been decomposed into component specs and experimental `Spec-X*` specs with the public docs navigator reflecting the split. Follow-on spec evolution remains ongoing, but ADR-010's structural migration is no longer a beta-series blocker.
 - [x] **CID core/spec validation** — content-addressed fact IDs remain core per ADR-017. Main includes CID computation, write-path persistence, alias lookup, verify endpoint, backfill status/CLI, migration support, tests, and conformance vectors; no `stigmem-plugin-cids` package exists or is planned.
 - [x] **Per-feature plugin extraction** — lazy instruction discovery, time-travel queries, RTBF tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation have been extracted on `main` as opt-in experimental plugin source packages. Signed/package artifact evidence remains deferred until all planned plugins are built ([#298](https://github.com/Eidetic-Labs/stigmem/issues/298)). CIDs remain core.
-- [ ] **Phase A exit validation** — validate the complete extraction set, default-install behavior, plugin docs/trust posture, and roadmap/checklist closeout after the multi-tenant plugin lands ([#432](https://github.com/Eidetic-Labs/stigmem/issues/432)).
+- [x] **Phase A exit validation** — validated the complete extraction set, default-install behavior, plugin docs/trust posture, and roadmap/checklist closeout after the multi-tenant plugin landed ([#432](https://github.com/Eidetic-Labs/stigmem/issues/432)). Deferred signed/package artifact evidence remains queued in [#298](https://github.com/Eidetic-Labs/stigmem/issues/298).
 - [ ] **v0.9.0a2 artifact refresh** — pick up the live retraction URL in packaged READMEs, TypeScript SDK README, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literal, wheel migration packaging fix, and ongoing lint/coverage/complexity ratchets.
 - [ ] **ClawHub/OpenClaw alpha-framing correction** — next-alpha source copy now frames OpenClaw as alpha/evaluation-only; the historical a1 package is not revised retroactively. Remaining OpenClaw audit hardening stays visible in the alpha/beta hardening lane.
 - [ ] **OpenClaw audit planning for a2..aN** — keep the audit findings visible in alpha planning. Use a2+ for issue decomposition and adapter hardening work without claiming the a1 ClawHub package closed C1-C4 or H1/H2/H5.
@@ -49,13 +49,21 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - Public retraction visible.
 - Repo top-level matches ADR-009 shape (~22 entries; `experimental/` is canonical home for deferred features).
 - Hook registry foundation shipped, and remaining plugin infrastructure operationalized per ADR-011: package discovery/lifecycle, dependency resolution, health polling, operator CLI, production signing/trust, author/operator docs, and plugin migration lifecycle tracking.
-- All six cross-cutting features implemented as plugins under `experimental/<feature>/`; CIDs remain core per ADR-017. Core has no remaining feature-specific code for deferred plugin features.
+- All six cross-cutting features implemented as plugins under `experimental/<feature>/`; CIDs remain core per ADR-017. Core has no remaining default-on deferred plugin behavior outside the hook registry, plugin infrastructure, CIDs, and intentional storage compatibility/migration surfaces.
 - Default install (no plugins registered) produces v1.0.0-critical-path behavior.
 - Multi-tenant adopters opt into `stigmem-plugin-multi-tenant`.
 - All 19 ADRs committed to `docs/adr/`.
 - Threat model and scenarios calibrated to v0.9.0a1 posture.
 - `make demo` works on a clean machine.
 - Per-hook firing benchmarks within budget (<10μs per hook).
+
+### Phase A exit evidence
+
+- Plugin infrastructure is present on `main` with the stable hook registry, typed plugin manifest/context/capability APIs, discovery/lifecycle/health/signing/CLI surfaces, migration registration, observability, and test helpers.
+- Source packages now exist under `experimental/` for all six ADR-011 cross-cutting features: lazy instruction discovery, time-travel, RTBF tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation.
+- Default installs do not register those plugins. Default behavior remains the v1.0.0 critical path: single-tenant `default` partitioning, no tombstone filtering/routes, no time-travel recall authorization, no advanced garden ACL, no source-attestation enforcement, and no lazy instruction discovery.
+- Plugin-loaded tests cover each feature boundary, including multi-tenant isolation and default single-tenant collapse after [#431](https://github.com/Eidetic-Labs/stigmem/issues/431).
+- Signed/package artifact launch evidence is intentionally not a Phase A blocker and remains tracked in [#298](https://github.com/Eidetic-Labs/stigmem/issues/298) until all planned plugins are built.
 
 ---
 

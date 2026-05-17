@@ -1,0 +1,27 @@
+{
+  "schema_version": "adversarial-certification-index-v1",
+  "corpus_version": "corpus-v1",
+  "last_reviewed_at": null,
+  "reviewed_results": [],
+  "rerun_policy": {
+    "cadence": "nightly for every newly certified model with configured CI credentials",
+    "stale_after_days": 90,
+    "triggers": [
+      "corpus minor-version bump",
+      "provider model-version change",
+      "adapter prompt or channel-contract change",
+      "operator-reported prompt-injection escape"
+    ]
+  },
+  "status_definitions": {
+    "certified": "Reviewed live result meets certified tier thresholds and is fresh for this corpus version.",
+    "provisional": "Reviewed live result meets provisional tier thresholds and is fresh for this corpus version.",
+    "uncertified": "No reviewed live result exists, or the reviewed result does not meet provisional thresholds.",
+    "expired": "A prior reviewed result exists but is stale or tied to an older corpus version.",
+    "review-needed": "Runner output exists but requires human review before publication."
+  },
+  "notes": [
+    "Deterministic dry-run output is framework smoke evidence only; it is never a live model certification.",
+    "The initial public index is intentionally empty until provider-backed results are generated with operator-approved credentials and reviewed."
+  ]
+}

@@ -1,0 +1,74 @@
+name: Operator finding
+description: Report a non-sensitive finding from an external operator validation run
+title: "Operator finding: "
+labels: ["type/operator-finding", "operator-soak-finding"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for non-sensitive findings from an operator validation run.
+        Do not include secrets, private infrastructure details, private customer data, exploit steps, or undisclosed vulnerability details.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version under test
+      placeholder: "commit SHA or release tag"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment_shape
+    attributes:
+      label: Deployment shape
+      options:
+        - Single node
+        - Same-organization federation
+        - Limited cross-organization validation
+        - Other non-sensitive shape described below
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - P0 — blocks safe continuation
+        - P1 — must fix before Phase B exit
+        - P2 — should fix before release candidate
+        - P3 — docs/usability/quality improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: finding
+    attributes:
+      label: Finding
+      description: What happened, what did you expect, and what operator impact did it have?
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Sanitized logs, command output, screenshots, or links. Keep secrets and private data out.
+    validations:
+      required: false
+
+  - type: textarea
+    id: observability
+    attributes:
+      label: Observability notes
+      description: Which signals helped? Which runbook, metric, audit event, or log line was missing?
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: This public issue contains no secrets, private infrastructure details, private customer data, exploit steps, or undisclosed vulnerability details.
+          required: true

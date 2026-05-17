@@ -32,6 +32,7 @@ def plugin_manifest() -> PluginManifest:
             }
         ),
         hooks={
+            "config_validate": handlers.config_validate,
             "pre_assert_validate": handlers.pre_assert_validate,
             "recall_rank": handlers.recall_rank,
             "federation_inbound_validate": handlers.federation_inbound_validate,

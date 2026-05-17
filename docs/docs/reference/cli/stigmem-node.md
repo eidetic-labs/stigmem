@@ -41,7 +41,7 @@ stigmem-node [--host HOST] [--port PORT]
 
 | `STIGMEM_AUTH_REQUIRED` | `false` | Require API key authentication |
 
-| `STIGMEM_SOURCE_ATTESTATION_MODE` | `warn` | Source attestation: `enforce`, `warn`, or `off` |
+| `STIGMEM_SOURCE_ATTESTATION_MODE` | `off` | Legacy source-attestation mode field; runtime enforcement is plugin-gated |
 
 | `STIGMEM_FEDERATION_PULL_INTERVAL` | `30` | Seconds between federation pull cycles |
 

@@ -8,10 +8,10 @@ from ...auth import Identity
 from ...models.facts import row_to_record
 from ...models.recall import RecallWeights, ScoreBreakdown, ScoredFact
 from ...models.tombstones import TombstoneNotice
+from ...plugins import get_registry
 from ...recall_pipeline import apply_recall_pipeline
-from ...source_trust import compute_source_trust
 from ..cid_integrity import enforce_read_path_cid
-from .common import _estimate_tokens, _public_module
+from .common import _estimate_tokens
 from .ranking import _greedy_pack
 
 
@@ -105,7 +105,7 @@ def _recall_as_of_impl(
 
     scored: list[ScoredFact] = []
     q_lower = query.lower()
-    total_weight = weights.lexical + weights.recency + weights.source_trust
+    total_weight = weights.lexical + weights.recency
     if total_weight <= 0:
         total_weight = 1.0
 
@@ -115,12 +115,8 @@ def _recall_as_of_impl(
         text = f"{record.entity} {record.relation} {record.value.v or ''}".lower()
         lex = sum(1.0 for w in q_lower.split() if w and w in text) / max(1, len(q_lower.split()))
         rec_s = _recency_as_of(record.timestamp, as_of)
-        trust_s = 0.5
-        if _public_module().settings.trust_mode != "off":
-            trust_s = compute_source_trust(record.source, record.scope, identity)
-        raw = (
-            weights.lexical * lex + weights.recency * rec_s + weights.source_trust * trust_s
-        ) / total_weight
+        trust_s = 0.0
+        raw = (weights.lexical * lex + weights.recency * rec_s) / total_weight
         final_score = raw * max(0.0, record.confidence)
         scored.append(
             ScoredFact(
@@ -136,6 +132,33 @@ def _recall_as_of_impl(
                 token_estimate=_estimate_tokens(record),
             )
         )
+
+    source_deltas = get_registry().fire_score_delta(
+        "recall_rank",
+        scored,
+        identity=identity,
+        weights=weights,
+        as_of=as_of,
+    )
+    if source_deltas:
+        scored = [
+            sf.model_copy(
+                update={
+                    "score": round(max(0.0, sf.score + source_deltas.get(sf.fact.id, 0.0)), 6),
+                    "score_breakdown": sf.score_breakdown.model_copy(
+                        update={
+                            "weighted_total": round(
+                                max(0.0, sf.score + source_deltas.get(sf.fact.id, 0.0)),
+                                6,
+                            )
+                        }
+                    ),
+                }
+            )
+            if source_deltas.get(sf.fact.id, 0.0) != 0.0
+            else sf
+            for sf in scored
+        ]
 
     scored.sort(key=lambda c: c.score, reverse=True)
 

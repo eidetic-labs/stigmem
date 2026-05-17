@@ -8,7 +8,6 @@ from .assertion import assert_fact  # noqa: F401
 from .cid import _CidVerifyResponse, verify_cid  # noqa: F401
 from .common import (  # noqa: F401
     _SYSTEM_RELATION_PREFIX,
-    _check_source_attestation,
     _embed_fact_background,
     _encode_v,
     _get_tombstone_filter,
@@ -25,7 +24,6 @@ from .single import get_fact  # noqa: F401
 __all__ = [
     "_CidVerifyResponse",
     "_SYSTEM_RELATION_PREFIX",
-    "_check_source_attestation",
     "_embed_fact_background",
     "_encode_v",
     "_get_tombstone_filter",

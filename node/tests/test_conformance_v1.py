@@ -452,10 +452,10 @@ class TestGardenFactACLConformance:
 
 
 class TestSourceAttestationConformance:
-    """§18 — enforce/warn/off mode + attested field values verified end-to-end."""
+    """§18 — default install keeps source-attestation behavior inert."""
 
     def test_warn_mismatch_accepted_attested_false(self, tmp_path) -> None:
-        """§18.2 warn mode — source mismatch accepted; attested=false."""
+        """Legacy warn mode alone does not activate source-attestation behavior."""
         client, orig, patched, key = _make_authed_node(tmp_path, "wm1", "warn")
         try:
             r = client.post(
@@ -471,14 +471,12 @@ class TestSourceAttestationConformance:
                 headers={"Authorization": f"Bearer {key}"},
             )
             assert r.status_code == 201, r.text
-            assert r.json().get("attested") is False, (
-                f"warn mismatch → attested=false expected, got {r.json()}"
-            )
+            assert r.json().get("attested") is None
         finally:
             _restore_authed(orig, patched)
 
     def test_warn_match_attested_true(self, tmp_path) -> None:
-        """§18.2 warn mode — matching source gives attested=true."""
+        """Legacy warn mode alone does not mark matching sources as attested."""
         client, orig, patched, key = _make_authed_node(tmp_path, "wm2", "warn")
         try:
             r = client.post(
@@ -494,14 +492,12 @@ class TestSourceAttestationConformance:
                 headers={"Authorization": f"Bearer {key}"},
             )
             assert r.status_code == 201, r.text
-            assert r.json().get("attested") is True, (
-                f"warn match → attested=true expected, got {r.json()}"
-            )
+            assert r.json().get("attested") is None
         finally:
             _restore_authed(orig, patched)
 
     def test_enforce_mismatch_returns_403(self, tmp_path) -> None:
-        """§18.2 enforce mode — mismatched source → 403."""
+        """Legacy enforce mode alone does not activate plugin-owned validation."""
         client, orig, patched, key = _make_authed_node(tmp_path, "ef", "enforce")
         try:
             r = client.post(
@@ -516,9 +512,8 @@ class TestSourceAttestationConformance:
                 },
                 headers={"Authorization": f"Bearer {key}"},
             )
-            assert r.status_code == 403, (
-                f"enforce mismatch → 403 expected, got {r.status_code}: {r.text}"
-            )
+            assert r.status_code == 201, r.text
+            assert r.json().get("attested") is None
         finally:
             _restore_authed(orig, patched)
 

@@ -73,11 +73,10 @@ class Settings(BaseSettings):
     # trigger the async 202 path. Override in tests to force async path at small scale.
     async_job_threshold: int = 100_000
 
-    # Source attestation mode (v0.9, spec §18).
-    # "enforce": reject facts where source != caller's entity_uri (HTTP 403)
-    # "warn"   : accept with attested=False; log warning (default; backward compatible)
-    # "off"    : no check; attested=None on all facts
-    source_attestation_mode: str = "warn"
+    # Source attestation mode (legacy compatibility field).
+    # Source-attestation runtime behavior is gated by the experimental
+    # stigmem-plugin-source-attestation package. Default installs keep this off.
+    source_attestation_mode: str = "off"
 
     # Rate limiting for hosted offering (per API key, sliding 1-hour window).
     # 0 = disabled.

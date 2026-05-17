@@ -66,8 +66,9 @@ the beta-series exit and v1.0 release-candidate declaration.
 
 - OpenClaw safety hardening now has fail-closed startup behavior, visible
   partial-write failures, channel-separated recall handling, and bounded
-  handoff-target allowlisting. Remaining OpenClaw audit closeout is tracked in
-  the hardening backlog.
+  handoff-target allowlisting. Audit-mapped C1-C4/H1-H5 regression coverage
+  lives in `adapters/openclaw/tests/test_adapter_security.py`, and the ClawHub
+  skill adapter is now a compatibility re-export of the packaged adapter.
 - The ADR-003 capability redesign has landed for the core protocol surfaces:
   `FactValue.interpret_as`, `instruction:write` enforcement, instruction-typed
   federation quarantine, channel-separated `recall()` output, MCP/OpenClaw
@@ -87,24 +88,22 @@ the beta-series exit and v1.0 release-candidate declaration.
 
 ### Work (sub-work ordering matters)
 
-1. **Finish OpenClaw audit closeout** — remaining regression coverage and
-   duplicate ClawHub adapter cleanup. See `adapters/openclaw/AUDIT.md`.
-2. **Finish capability-redesign documentation and threat-model closure** per
+1. **Finish capability-redesign documentation and threat-model closure** per
    [ADR-003](docs/adr/003-prompt-injection.md) — R-05 is now in review after
    ADR-003/ADR-015 infrastructure landed, R-15 has the TB-3 adapter-promotion
    threat row, and R-21 separates landed same-session controls from remaining
    adapter/session propagation plus outbound replication exclusion evidence.
-3. **Complete ADR-015 certification framework** per
+2. **Complete ADR-015 certification framework** per
    [ADR-015](docs/adr/015-adversarial-conformance-and-model-certification.md) —
    the 80-pattern corpus, runner/result schema, and OpenAI/Anthropic/Ollama
    provider adapters exist; remaining work is reviewed public certification
    results and scheduled re-run posture.
-4. **Storage immutability stack** per [ADR-016](docs/adr/016-storage-immutability-enforcement.md) — L1 architectural append-only journal + projection tables, L2 SQLite triggers, L3 CIDs (per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)), L4 local hash chain, L5 Sigstore Rekor anchor, plus client/peer verification.
-5. **Per-feature security colocation** per [ADR-018](docs/adr/018-security-documentation-colocation.md).
-6. **Federation hardening** — mTLS-default; HLC bounded skew; persistent audit log (90-day retention); per-principal token-bucket quotas; key max-age + rotation runbook.
-7. **Argon2id migration** per [ADR-007](docs/adr/007-argon2id.md) — dual-mode verification; opportunistic re-hash; benchmarks.
-8. **Operator-facing documentation** — runbooks, observability signals per [ADR-004](docs/adr/004-federation-observability.md), prompt-injection hardening guide.
-9. **30-day external operator soak** — at least one external operator runs against the hardened core with public bug reporting.
+3. **Storage immutability stack** per [ADR-016](docs/adr/016-storage-immutability-enforcement.md) — L1 architectural append-only journal + projection tables, L2 SQLite triggers, L3 CIDs (per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)), L4 local hash chain, L5 Sigstore Rekor anchor, plus client/peer verification.
+4. **Per-feature security colocation** per [ADR-018](docs/adr/018-security-documentation-colocation.md).
+5. **Federation hardening** — mTLS-default; HLC bounded skew; persistent audit log (90-day retention); per-principal token-bucket quotas; key max-age + rotation runbook.
+6. **Argon2id migration** per [ADR-007](docs/adr/007-argon2id.md) — dual-mode verification; opportunistic re-hash; benchmarks.
+7. **Operator-facing documentation** — runbooks, observability signals per [ADR-004](docs/adr/004-federation-observability.md), prompt-injection hardening guide.
+8. **30-day external operator soak** — at least one external operator runs against the hardened core with public bug reporting.
 
 ### Exit criteria
 - Threat-model risk register has no Open status entries for v1.0.0-critical-path risks.

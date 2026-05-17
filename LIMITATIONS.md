@@ -53,7 +53,7 @@ These are unambiguous "do not" recommendations as of v0.9.0a1.
 
 ### 3. Treating recalled facts as instructions to your agent
 
-**Status:** Improved on `main`, but not yet release-certified or operator-soak validated. The old recall-time sanitizer remains defense-in-depth only. The ADR-003 structural design has landed for the core protocol surfaces: facts now carry `interpret_as`, instruction-typed writes require `instruction:write`, cross-org instruction-typed inbound facts are quarantined, `recall()` returns separate `content` and `instructions` channels, and MCP/OpenClaw consume the channel-separated response. ADR-015 `corpus-v1` now contains 80 validated prompt-injection patterns, but the live model certification runner and public model results are still pending.
+**Status:** Improved on `main`, but not yet release-certified or operator-soak validated. The old recall-time sanitizer remains defense-in-depth only. The ADR-003 structural design has landed for the core protocol surfaces: facts now carry `interpret_as`, instruction-typed writes require `instruction:write`, cross-org instruction-typed inbound facts are quarantined, `recall()` returns separate `content` and `instructions` channels, and MCP/OpenClaw consume the channel-separated response. ADR-015 `corpus-v1` now contains 80 validated prompt-injection patterns, and the certification runner supports deterministic offline runs plus OpenAI, Anthropic, and local Ollama provider adapters; reviewed public model results are still pending.
 
 **What this means:** the protocol can now distinguish content from authorized instructions, but downstream safety still depends on adapter compliance, session propagation, and the consuming LLM honoring the system-prompt directive. Until the certification runner, public model results, and operator soak complete, this remains a hardening-in-progress surface rather than a production recommendation for adversarial cross-org workloads.
 
@@ -69,7 +69,7 @@ The capability-based redesign is present on `main`; the v0.9.0bN beta series rem
 
 ### 4. The agent feedback loop (read-injected → write-poisoned → replicate)
 
-**Status:** Partially mitigated on `main`. Same-session read/write graph tracking rejects writes back into scopes a session has read unless the write carries explicit source-fact provenance, and `summarize_with_provenance` supports legitimate derived writes. Threat-model status and full adapter/session propagation evidence remain pending.
+**Status:** Partially mitigated on `main`. Same-session read/write graph tracking rejects writes back into scopes a session has read unless the write carries explicit source-fact provenance, and `summarize_with_provenance` supports legitimate derived writes. Threat-model status is current; full adapter/session propagation evidence and outbound replication exclusion remain pending.
 
 **What this means:** the most direct same-session worm path is blocked when clients propagate `Stigmem-Session` and provenance correctly. The risk is not closed until supported adapters propagate sessions by default and outbound replication excludes transitively recalled facts where required.
 
@@ -78,7 +78,7 @@ The capability-based redesign is present on `main`; the v0.9.0bN beta series rem
 - Restrict agent writer keys to the narrowest possible scope. Agents should not hold writer keys for any scope they also read from where they consume cross-org content, period.
 - If your agent must both read company-scope facts and write company-scope facts, the read content must come from sources you trust (your own organization's writes, not federated peers).
 - Use session headers and `derived_from` provenance for any agent write derived from recalled facts.
-- Review the [OpenClaw audit findings](#) (especially C4) before using the bundled OpenClaw adapter — the adapter currently has paths that exemplify this risk.
+- Treat OpenClaw as alpha/evaluation-only. The adapter now has audit-mapped C1-C4/H1-H5 regression coverage, fail-closed boot behavior, visible partial-write failures, channel-separated recall handling, and handoff-target allowlisting, but the broader R-21 risk remains open until supported adapters propagate sessions by default and outbound replication excludes transitively recalled facts.
 
 ---
 
@@ -139,8 +139,10 @@ The remaining beta hardening work brings: automated rotation runbooks and an "ex
 **Status:** Most immediate OpenClaw safety issues have Phase B fixes landed. The
 adapter separates retrieved content from instruction-channel recall output and
 requires callers to place `SYSTEM_PROMPT_DIRECTIVE` above the delimited
-`UNTRUSTED STIGMEM CONTENT` summary. Broader ADR-003 hardening remains in flight
-for MCP parity, operator docs, and feedback-loop controls.
+`UNTRUSTED STIGMEM CONTENT` summary. Audit-mapped C1-C4/H1-H5 regression tests
+now cover the known critical/high adapter findings. Broader R-21 hardening
+remains in flight for supported-adapter session propagation and outbound
+replication exclusion.
 
 **What this means:** recent hardening has addressed API-key fail-closed behavior,
 boot failure handling, target allowlists, visible multi-fact write failures, and

@@ -8,7 +8,8 @@ handoffs, decisions, and escalations.
 > [`stigmem-node`](https://clawhub.ai/skills/stigmem-node), but it is an
 > evaluation surface, not a recommended production integration. This source copy
 > is queued for the v0.9.0a2 artifact refresh so future ClawHub docs carry that
-> framing explicitly. The adapter still has open audit findings; see
+> framing explicitly. The adapter has audit-mapped regression coverage and
+> remains alpha while broader R-21/session-propagation evidence is pending; see
 > [LIMITATIONS.md §9](../../LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 ## ClawHub skill
@@ -54,9 +55,11 @@ keys regularly; revoke via the Stigmem node admin API if compromised.
 ## Known alpha gaps
 
 The OpenClaw C1/H5 path now separates recall content from instruction-channel
-facts at the adapter boundary. The broader ADR-003 hardening line still needs
-MCP parity, operator docs, and agent feedback-loop controls before the project
-recommends OpenClaw for high-stakes production deployments.
+facts at the adapter boundary, and C1-C4/H1-H5 audit-mapped regression tests
+cover the adapter's known critical/high findings. The broader R-21 hardening
+line still needs supported-adapter session propagation and outbound replication
+exclusion evidence before the project recommends OpenClaw for high-stakes
+production deployments.
 
 ## Changelog
 
@@ -66,8 +69,8 @@ recommends OpenClaw for high-stakes production deployments.
   description so the next `stigmem-openclaw` publish presents the adapter as a
   v0.9.0aN alpha/evaluation surface.
 - Documentation: align the package README with the ClawHub skill warning that
-  OpenClaw is not a recommended production integration while audit findings
-  remain open.
+  OpenClaw is not a recommended production integration while R-21/session
+  propagation and outbound replication evidence remain open.
 - Packaging: keep the dependency contract on the active alpha line with
   `stigmem-py>=0.9.0a1,<1.0.0`.
 

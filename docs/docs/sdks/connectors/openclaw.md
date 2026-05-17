@@ -22,8 +22,9 @@ as a recommended production integration. This wording is queued for the
 v0.9.0a2 artifact refresh; it does not revise the already-published a1 ClawHub
 package in place. The adapter now separates retrieved content from
 instruction-channel recall output and exports a required system prompt directive,
-but the broader ADR-003 hardening line still needs MCP parity, operator docs, and
-feedback-loop controls before high-stakes production use. See
+with audit-mapped C1-C4/H1-H5 regression coverage. The broader R-21 hardening
+line still needs supported-adapter session propagation and outbound replication
+exclusion evidence before high-stakes production use. See
 [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::

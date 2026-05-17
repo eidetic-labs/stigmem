@@ -765,6 +765,83 @@
         "title": "ExchangeResponse",
         "type": "object"
       },
+      "ExpiringKeyInfo": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "days_remaining": {
+            "title": "Days Remaining",
+            "type": "number"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "entity_uri": {
+            "title": "Entity Uri",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "oidc_sub": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oidc Sub"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "entity_uri",
+          "permissions",
+          "description",
+          "created_at",
+          "expires_at",
+          "oidc_sub",
+          "tenant_id",
+          "days_remaining"
+        ],
+        "title": "ExpiringKeyInfo",
+        "type": "object"
+      },
       "FactChainCheckpointProof": {
         "properties": {
           "attempt_count": {
@@ -4041,6 +4118,63 @@
           }
         ],
         "summary": "Register a caller-provided static API key (admin only).",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/keys/expiring-soon": {
+      "get": {
+        "description": "List active API keys approaching expiry (admin only).",
+        "operationId": "list_expiring_keys_v1_auth_keys_expiring_soon_get",
+        "parameters": [
+          {
+            "description": "Return active keys expiring within this many days.",
+            "in": "query",
+            "name": "within_days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "description": "Return active keys expiring within this many days.",
+              "maximum": 365,
+              "minimum": 1,
+              "title": "Within Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExpiringKeyInfo"
+                  },
+                  "title": "Response List Expiring Keys V1 Auth Keys Expiring Soon Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Expiring Keys",
         "tags": [
           "auth"
         ]

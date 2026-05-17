@@ -262,6 +262,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/keys/expiring-soon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Expiring Keys
+         * @description List active API keys approaching expiry (admin only).
+         */
+        get: operations["list_expiring_keys_v1_auth_keys_expiring_soon_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/keys/{key_id}": {
         parameters: {
             query?: never;
@@ -1470,6 +1490,27 @@ export interface components {
             /** Permissions */
             permissions: string[];
         };
+        /** ExpiringKeyInfo */
+        ExpiringKeyInfo: {
+            /** Created At */
+            created_at: string;
+            /** Days Remaining */
+            days_remaining: number;
+            /** Description */
+            description: string | null;
+            /** Entity Uri */
+            entity_uri: string;
+            /** Expires At */
+            expires_at: string | null;
+            /** Id */
+            id: string;
+            /** Oidc Sub */
+            oidc_sub: string | null;
+            /** Permissions */
+            permissions: string[];
+            /** Tenant Id */
+            tenant_id: string;
+        };
         /** FactChainCheckpointProof */
         FactChainCheckpointProof: {
             /** Attempt Count */
@@ -2371,6 +2412,7 @@ export type SchemaDeferenceRule = components['schemas']['DeferenceRule'];
 export type SchemaEscalationPolicy = components['schemas']['EscalationPolicy'];
 export type SchemaExchangeRequest = components['schemas']['ExchangeRequest'];
 export type SchemaExchangeResponse = components['schemas']['ExchangeResponse'];
+export type SchemaExpiringKeyInfo = components['schemas']['ExpiringKeyInfo'];
 export type SchemaFactChainCheckpointProof = components['schemas']['FactChainCheckpointProof'];
 export type SchemaFactChainProof = components['schemas']['FactChainProof'];
 export type SchemaFactRecord = components['schemas']['FactRecord'];
@@ -2856,6 +2898,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RegisterKeyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_expiring_keys_v1_auth_keys_expiring_soon_get: {
+        parameters: {
+            query?: {
+                /** @description Return active keys expiring within this many days. */
+                within_days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpiringKeyInfo"][];
                 };
             };
             /** @description Validation Error */

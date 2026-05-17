@@ -96,7 +96,7 @@ curl -s -X DELETE \
 
 After the one-shot bootstrap (`stigmem auth bootstrap-key`), additional static (non-OIDC) keys are minted via `POST /v1/auth/keys` authenticated with an admin-scoped key — typically the bootstrap key.
 
-The node never generates key material: the caller supplies the raw value, the node hashes and stores it. The response carries the new key's metadata but **never the raw value** — only the caller knows it.
+The node never generates key material: the caller supplies the raw value, the node hashes and stores it. The response carries the new key's metadata but **never the raw value** — only the caller knows it. Static keys receive an expiry automatically: `STIGMEM_API_KEY_MAX_AGE_DAYS` defaults to `90`, and the node rejects any requested `expires_at` beyond that window. Set the value to `0` only for a tightly controlled development node where non-expiring keys are intentional.
 
 ```bash
 # Caller generates the key material (do this once, store the value securely)
@@ -120,6 +120,22 @@ curl -s -X POST \
 Required `permissions` on the caller: `admin`. Allowed permission values for the new key: `read`, `write`, `federate`, `admin`, `audit.read`. The raw key must be at least 32 characters (matching `openssl rand -hex 32`). A 409 response means the proposed raw key's hash collides with an existing key — generate a new value.
 
 Every successful registration writes an `admin_action` audit row capturing the actor (caller's `entity_uri`), the new key's id, and its permissions.
+
+## Expiring-soon visibility
+
+Admin callers can list active keys nearing expiry:
+
+```bash
+curl -s \
+  -H 'Authorization: Bearer <admin-key>' \
+  'http://localhost:8000/v1/auth/keys/expiring-soon?within_days=30' | jq .
+```
+
+The response includes key metadata, `tenant_id`, and `days_remaining`; it never includes raw key material. Use this endpoint from monitoring or SIEM jobs to page owners before expiry. The reference node does not run a background notifier for `key_expiring_soon` events; operators should alert on this endpoint or the equivalent database view until a dedicated scheduler exists.
+
+## Entity URI policy
+
+Multiple active keys may share one `entity_uri`. This is intentional: it supports rotation overlap, devices, sessions, and service-account redeploys without changing fact provenance. For materially distinct agents or concurrent local tools, use distinct `entity_uri` values so facts, audit rows, rate-limit buckets, and key listings stay attributable. Use the key `description` field for human context such as owner, deployment, or ticket number.
 
 ## Permissions
 
@@ -155,6 +171,8 @@ See [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/exp
 | Env var | Default | Description |
 |---------|---------|-------------|
 | `STIGMEM_AUTH_REQUIRED` | `true` | Require a valid Bearer token on all requests (default). Set `false` only for local dev |
+| `STIGMEM_API_KEY_MAX_AGE_DAYS` | `90` | Maximum lifetime for newly registered static API keys. `0` disables max-age enforcement. |
+| `STIGMEM_API_KEY_EXPIRING_SOON_DAYS` | `30` | Default lookahead for `/v1/auth/keys/expiring-soon`. |
 
 ## See also
 

@@ -17,7 +17,8 @@ Trigger alerts:
 
 Supporting signals:
 
-- `key_expiring_soon` was emitted at 30, 14, 7, or 1 day and not acted on.
+- `/v1/auth/keys/expiring-soon` showed the key inside the operator's alert
+  window and was not acted on.
 - Federation pulls fail after a peer key or manifest expiry.
 
 ## Identify
@@ -49,6 +50,8 @@ curl -s "https://your-node.example.com/v1/audit/events?limit=200" \
 Determine why the rotation was missed:
 
 - Was a `key_expiring_soon` alert configured?
+- Was the alert backed by `/v1/auth/keys/expiring-soon` or an equivalent
+  database/SIEM query?
 - Did the alert route to the right owner?
 - Did the key lack an owner or rotation date?
 - Was the rotation procedure blocked by peer coordination?

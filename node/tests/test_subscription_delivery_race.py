@@ -170,14 +170,21 @@ def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
 
         # Drain any pending/delivering remainder. Transient delivery failures
         # release the row back to ``pending`` with ``next_retry_at`` in the
-        # future, so make pending rows due before each drain pass. This keeps
-        # the test deterministic under CI load while preserving the duplicate
-        # delivery assertion: every POST is still recorded and checked below.
+        # future; interrupted workers can leave rows in ``delivering`` until
+        # the stale-claim timeout. Force both states through the production
+        # recovery path before each drain pass. This keeps the test
+        # deterministic under CI load while preserving the duplicate delivery
+        # assertion: every POST is still recorded and checked below.
         for _ in range(5):
             with db_mod.db() as conn:
                 conn.execute(
                     "UPDATE subscription_events SET next_retry_at = NULL"
                     " WHERE delivery_status = 'pending'"
+                )
+                conn.execute(
+                    "UPDATE subscription_events SET claimed_at = ?"
+                    " WHERE delivery_status = 'delivering'",
+                    ((datetime.now(UTC) - timedelta(seconds=3600)).isoformat(),),
                 )
                 remaining = conn.execute(
                     "SELECT COUNT(*) AS n FROM subscription_events"

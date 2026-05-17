@@ -45,7 +45,7 @@ Per [LIMITATIONS.md §11](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMI
 
 Main now includes the 22-hook registry foundation and plugin test harness needed for extraction work. The landed foundation includes typed hook semantics, deterministic manual/core registration, minimum manifest/context/capability APIs, hook-site wiring across assertion, recall, federation, auth, migration, and audit paths, registry audit/metrics plumbing, benchmark coverage, startup package discovery, production plugin signing enforcement, and operator CLI inspection. Per-feature plugin packages remain future alpha-series work.
 
-**For v0.9.0a1 evaluators:** the user-visible default behavior matches v1.0 critical-path scope (single-tenant, no tombstones, no time-travel, no advanced ACL). Architecturally, the cross-cutting code is still in core; that's a known gap with a documented v0.9.0a2..a8 extraction roadmap.
+**For v0.9.0a1 evaluators:** the user-visible default behavior matches v1.0 critical-path scope (single-tenant, no tombstones, no time-travel, no advanced ACL). Cross-cutting experimental behavior is being extracted into opt-in source packages across the v0.9.0aN line; signed/published plugin artifacts remain deferred until all planned plugins are built.
 
 ---
 

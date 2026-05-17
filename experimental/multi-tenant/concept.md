@@ -2,22 +2,38 @@
 title: Multi-Tenant Scoping
 sidebar_label: Multi-Tenant Scoping
 audience: Integrator
-status: Beta
+status: Experimental
 ---
 
 # Multi-Tenant Scoping
 
 **Audience:** Node operators running a shared stigmem node for multiple teams, customers, or isolated environments.
 
-Multi-tenancy is a reference-node feature (not a spec §). A single stigmem process can serve multiple tenants with complete data isolation — facts, gardens, audit records, and API keys are partitioned by `tenant_id` at the database level.
+Multi-tenancy is an opt-in experimental plugin, not part of the default v1.0
+critical path. A single stigmem process can serve multiple tenants with data
+isolation — facts, gardens, audit records, and API keys are partitioned by
+`tenant_id` at the database level — only when
+`stigmem-plugin-multi-tenant` is installed and enabled.
 
-:::info v1.0 reference node
-Tenant isolation shipped in migration `012_multi_tenant` with the pre-reset v1.0-rc snapshot reference node. All pre-migration rows are automatically assigned `tenant_id = "default"`, so single-tenant deployments require no configuration change.
+:::info source-available experimental plugin
+The storage compatibility columns remain in core so existing single-tenant data
+continues to live in `tenant_id = "default"`. Non-default tenant resolution is
+owned by `stigmem-plugin-multi-tenant`, which is source-available on `main` and
+not yet a signed/published plugin artifact.
 :::
+
+Enable the plugin explicitly:
+
+```bash
+STIGMEM_MULTI_TENANT_ENABLED=true
+```
 
 ## How it works
 
-Every API key carries a `tenant_id`. When the node authenticates a request it extracts `tenant_id` from the resolved identity and applies it to every read and write:
+Every API key may carry a `tenant_id`. Without the plugin, every request
+resolves to the `default` tenant. With the plugin enabled, authentication
+passes the key's stored `tenant_id` through the `tenant_resolve` hook and the
+node applies that tenant to every read and write:
 
 ```
 Bearer token → Identity(entity_uri, permissions, tenant_id)
@@ -77,7 +93,7 @@ All subsequent requests made with this key operate exclusively within `tenant_id
 
 ## Verifying tenant assignment
 
-`GET /v1/me` returns the caller's resolved identity, including `tenant_id`:
+`GET /v1/me` returns the caller's resolved identity, including the plugin-resolved `tenant_id`:
 
 ```bash
 curl -H 'Authorization: Bearer stgm_...' http://localhost:8765/v1/me
@@ -110,7 +126,8 @@ curl -s -H "Authorization: Bearer $KEY_B" \
 Keys created without an explicit `tenant_id` are assigned `tenant_id = "default"`. All pre-v1.0 data already lives in `"default"`. This means:
 
 - Single-tenant deployments continue working with zero changes.
-- If you want to add a second tenant, you create new keys with a different `tenant_id` — existing keys remain in `"default"`.
+- If you want to add a second tenant, install and enable the plugin, then create
+  new keys with a different `tenant_id`; existing keys remain in `"default"`.
 
 ## Security posture
 

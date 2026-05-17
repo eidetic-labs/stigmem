@@ -12,6 +12,8 @@ import stigmem_node.billing as billing_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.main import create_app
+from stigmem_node.plugins import PluginContext, PluginManifest, TenantContext
+from stigmem_node.plugins.testing import stigmem_plugins
 
 create_api_key = auth_mod.create_api_key
 apply_migrations = db_mod.apply_migrations
@@ -75,7 +77,7 @@ def test_fact_written_event_emitted(hooked_client: tuple) -> None:
 
 
 def test_fact_written_captures_tenant_id(tmp_path: object) -> None:
-    """fact_written event carries the correct tenant_id from the API key."""
+    """fact_written carries the plugin-resolved tenant_id from the API key."""
     db_file = str(tmp_path) + "/billing_tenant.db"  # type: ignore[operator]
     apply_migrations(db_path=db_file)
 
@@ -91,19 +93,36 @@ def test_fact_written_captures_tenant_id(tmp_path: object) -> None:
 
     key = create_api_key("agent:tester", ["read", "write"], tenant_id="acme-corp")
 
-    app = create_app()
-    with TestClient(app, raise_server_exceptions=True) as c:
-        resp = c.post(
-            "/v1/facts",
-            json={
-                "entity": "stigmem://test/e2",
-                "relation": "test:y",
-                "value": {"type": "number", "v": 7},
-                "source": "agent:tester",
-            },
-            headers={"Authorization": f"Bearer {key}"},
-        )
-        assert resp.status_code == 201
+    def tenant_resolve(
+        _ctx: PluginContext,
+        value: TenantContext,
+        **_: object,
+    ) -> TenantContext:
+        source_tenant_id = value.metadata.get("source_tenant_id")
+        if isinstance(source_tenant_id, str):
+            return TenantContext(tenant_id=source_tenant_id)
+        return value
+
+    manifest = PluginManifest(
+        name="billing-tenant-test",
+        version="1.0.0",
+        hooks={"tenant_resolve": tenant_resolve},
+    )
+
+    with stigmem_plugins([manifest]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            resp = c.post(
+                "/v1/facts",
+                json={
+                    "entity": "stigmem://test/e2",
+                    "relation": "test:y",
+                    "value": {"type": "number", "v": 7},
+                    "source": "agent:tester",
+                },
+                headers={"Authorization": f"Bearer {key}"},
+            )
+            assert resp.status_code == 201
 
     assert len(bus.events) == 1
     assert bus.events[0].tenant_id == "acme-corp"

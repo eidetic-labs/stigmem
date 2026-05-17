@@ -7,7 +7,7 @@ audience: Operator
 
 # Audit Log & Per-Principal Quotas
 
-This guide covers two pre-reset hardening security hardening features (Spec-09-Audit-Log and Spec-10-Hardening rate limits):
+This guide covers two pre-reset hardening security features (Spec-09-Audit-Log and Spec-10-Hardening rate limits):
 
 - **Audit log surface** — how to mint an `audit.read` API key and query the structured audit log.
 - **Per-principal quotas** — the 7 token-bucket dimensions, their defaults, and how to tune them via environment variables.
@@ -150,9 +150,13 @@ Audit events are persisted **before** the HTTP response is sent.  If the node cr
 
 ### Retention (Spec-09-Audit-Log retention)
 
-- **Minimum:** 90 days
+- **Operator minimum target:** 90 days
 - **Recommended for forensics:** 1 year
-- The `fact_audit_log` table is append-only; rows are never modified by the node
+- The `fact_audit_log` table is append-only; rows are never modified or purged by
+  the node.
+- Stigmem does not currently enforce a local 90-day retention job. Operators who
+  must prove a retention window should keep the local database, signed snapshots,
+  or immutable audit exports for at least that long.
 
 ---
 
@@ -270,9 +274,8 @@ When `prometheus_client` is installed, the node exposes a `/metrics` endpoint wi
 
 | Metric | Description |
 |---|---|
-| `stigmem_quota_breaches_total` | Counter by `(dimension, entity_uri)` |
-| `stigmem_audit_events_total` | Counter by `event_type` |
-| `stigmem_audit_log_rows` | Current row count in `fact_audit_log` |
+| `stigmem_quota_breach_total` | Counter by `(principal, tenant, dimension)` |
+| `stigmem_audit_event_total` | Counter by `(event_type, tenant)` |
 
 Install the optional dependency:
 
@@ -285,7 +288,7 @@ No additional configuration is required — the endpoint is registered automatic
 ### Quota baselines
 
 - [ ] After 24 hours of representative traffic, query `quota_breach` events and identify principals that breach repeatedly.  Increase `STIGMEM_RATE_LIMIT_WRITE_PER_HOUR` / `STIGMEM_RATE_LIMIT_READ_PER_HOUR` if the defaults are too tight for legitimate workloads, or investigate the offending principal.
-- [ ] Set a Prometheus alert on `stigmem_quota_breaches_total` to catch runaway clients before they degrade the node for other principals.
+- [ ] Set a Prometheus alert on `stigmem_quota_breach_total` to catch runaway clients before they degrade the node for other principals.
 
 ---
 

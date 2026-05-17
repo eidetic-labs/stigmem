@@ -126,8 +126,14 @@ jobs:
               - 'docker-compose.yml'
             security_evidence:
               - '.github/workflows/ci.yml'
+              - 'scripts/check_evidence_maintenance.py'
               - 'scripts/validate_security_evidence.py'
               - 'scripts/check_security_documentation.py'
+              - 'docs/internal/evidence-maintenance.md'
+              - 'docs/internal/dependency-currency.md'
+              - 'docs/internal/security-evidence-registry.md'
+              - 'docs/internal/release-cadence.md'
+              - 'docs/internal/major-version-holds.md'
               - 'experimental/**/security.md'
               - 'spec/security/evidence-registry.json'
               - 'spec/security/threat-model.md'
@@ -520,6 +526,9 @@ jobs:
 
       - name: Validate colocated security docs
         run: python scripts/check_security_documentation.py
+
+      - name: Validate cross-phase evidence maintenance wiring
+        run: python scripts/check_evidence_maintenance.py
 
   container-smoke:
     name: Container hardening smoke test

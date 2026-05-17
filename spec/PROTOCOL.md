@@ -4,7 +4,7 @@
 
 This file records the ADR-010 modular specification composition for the Stigmem protocol. It is generated from YAML frontmatter in component [`spec/specs/`](specs/) files and colocated experimental specs under `experimental/<feature>/spec.md`.
 
-**Metadata last updated:** 2026-05-16
+**Metadata last updated:** 2026-05-17
 
 ## Protocol Component Specs
 

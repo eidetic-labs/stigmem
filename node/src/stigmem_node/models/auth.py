@@ -29,6 +29,11 @@ class KeyInfo(BaseModel):
     oidc_sub: str | None
 
 
+class ExpiringKeyInfo(KeyInfo):
+    tenant_id: str
+    days_remaining: float
+
+
 class RegisterKeyRequest(BaseModel):
     raw_key: str = Field(
         ...,

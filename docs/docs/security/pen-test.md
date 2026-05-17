@@ -270,7 +270,7 @@ The following are **known gaps** planned for the pre-reset hardening work (carri
 | Gap | v0.9.0bN beta-series target |
 |---|---|
 | mTLS for federation peer connections (currently TLS only, no client cert) | mTLS + TLS 1.3 floor + SAN/entity_uri binding (Spec-10-Hardening) |
-| API-key rotation: no enforced max-age | Enforced max-age + expiring-soon surface (Spec-10-Hardening) |
+| API-key rotation edge cases | Exercise enforced max-age, expiring-soon visibility, and revocation behavior (Spec-10-Hardening) |
 | Per-principal write/recall rate limits: not enforced | Token-bucket quotas on 7 dimensions (Spec-10-Hardening) |
 | Audit log: not yet shipped | 13-event-type audit log, WAL ordering, 90-day retention (Spec-09-Audit-Log) |
 | Container runs as non-root but not distroless | Distroless base, read-only fs, dropped capabilities (Spec-10-Hardening) |

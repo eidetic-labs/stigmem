@@ -68,7 +68,7 @@ class TestRegisterStaticKey:
         assert body["entity_uri"] == "agent:service-account"
         assert body["permissions"] == ["read", "write"]
         assert body["description"] == "CI bot"
-        assert body["expires_at"] is None
+        assert body["expires_at"] is not None
         assert body["tenant_id"] == "default"
         assert body["id"]  # non-empty UUID
 
@@ -111,7 +111,7 @@ class TestRegisterStaticKey:
     ) -> None:
         client, _ = authed_client
         admin_key = _mint_admin_key()
-        expires = (datetime.now(UTC) + timedelta(days=90)).isoformat()
+        expires = (datetime.now(UTC) + timedelta(days=30)).isoformat()
 
         resp = client.post(
             "/v1/auth/keys",
@@ -125,6 +125,50 @@ class TestRegisterStaticKey:
         )
         assert resp.status_code == 201, resp.text
         assert resp.json()["expires_at"] == expires
+
+    def test_registration_applies_default_static_key_max_age(
+        self, authed_client: tuple[TestClient, str]
+    ) -> None:
+        client, _ = authed_client
+        admin_key = _mint_admin_key()
+
+        before = datetime.now(UTC)
+        resp = client.post(
+            "/v1/auth/keys",
+            headers={"Authorization": f"Bearer {admin_key}"},
+            json={
+                "raw_key": _new_raw_key(),
+                "entity_uri": "agent:max-age-default",
+                "permissions": ["read"],
+            },
+        )
+        after = datetime.now(UTC)
+
+        assert resp.status_code == 201, resp.text
+        expires_at = datetime.fromisoformat(resp.json()["expires_at"])
+        assert before + timedelta(days=90) - timedelta(seconds=1) <= expires_at
+        assert expires_at <= after + timedelta(days=90) + timedelta(seconds=1)
+
+    def test_registration_rejects_expiry_beyond_static_key_max_age(
+        self, authed_client: tuple[TestClient, str]
+    ) -> None:
+        client, _ = authed_client
+        admin_key = _mint_admin_key()
+        expires = (datetime.now(UTC) + timedelta(days=91)).isoformat()
+
+        resp = client.post(
+            "/v1/auth/keys",
+            headers={"Authorization": f"Bearer {admin_key}"},
+            json={
+                "raw_key": _new_raw_key(),
+                "entity_uri": "agent:max-age-too-long",
+                "permissions": ["read"],
+                "expires_at": expires,
+            },
+        )
+
+        assert resp.status_code == 400, resp.text
+        assert "max age" in resp.json()["detail"]
 
     def test_audit_event_emitted_on_register(
         self, authed_client: tuple[TestClient, str]
@@ -167,6 +211,64 @@ class TestRegisterStaticKey:
         assert detail["action"] == "api_key_register"
         assert detail["new_key_id"] == new_key_id
         assert detail["target_entity_uri"] == "agent:service-account"
+
+
+class TestExpiringSoonKeys:
+    def test_admin_can_list_expiring_keys(
+        self, authed_client: tuple[TestClient, str]
+    ) -> None:
+        client, _ = authed_client
+        admin_key = _mint_admin_key()
+        soon_expiry = (datetime.now(UTC) + timedelta(days=7)).isoformat()
+        later_expiry = (datetime.now(UTC) + timedelta(days=60)).isoformat()
+
+        soon = client.post(
+            "/v1/auth/keys",
+            headers={"Authorization": f"Bearer {admin_key}"},
+            json={
+                "raw_key": _new_raw_key(),
+                "entity_uri": "agent:expiring-soon",
+                "permissions": ["read"],
+                "expires_at": soon_expiry,
+            },
+        )
+        assert soon.status_code == 201, soon.text
+        later = client.post(
+            "/v1/auth/keys",
+            headers={"Authorization": f"Bearer {admin_key}"},
+            json={
+                "raw_key": _new_raw_key(),
+                "entity_uri": "agent:expiring-later",
+                "permissions": ["read"],
+                "expires_at": later_expiry,
+            },
+        )
+        assert later.status_code == 201, later.text
+
+        resp = client.get(
+            "/v1/auth/keys/expiring-soon?within_days=30",
+            headers={"Authorization": f"Bearer {admin_key}"},
+        )
+
+        assert resp.status_code == 200, resp.text
+        entities = {row["entity_uri"] for row in resp.json()}
+        assert "agent:expiring-soon" in entities
+        assert "agent:expiring-later" not in entities
+        row = next(row for row in resp.json() if row["entity_uri"] == "agent:expiring-soon")
+        assert 0 < row["days_remaining"] <= 8
+        assert row["tenant_id"] == "default"
+
+    def test_non_admin_cannot_list_expiring_keys(
+        self, authed_client: tuple[TestClient, str]
+    ) -> None:
+        client, agent_key = authed_client
+
+        resp = client.get(
+            "/v1/auth/keys/expiring-soon",
+            headers={"Authorization": f"Bearer {agent_key}"},
+        )
+
+        assert resp.status_code == 403, resp.text
 
 
 # ---------------------------------------------------------------------------

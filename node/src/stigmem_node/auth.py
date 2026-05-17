@@ -34,7 +34,7 @@ import hmac
 import json
 import re
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
 
 from argon2 import PasswordHasher
@@ -90,6 +90,37 @@ def _verify_key_hash(raw_key: str, stored_hash: str) -> bool:
 def _row_expired(row: Any, now: str) -> bool:
     expires_at = row["expires_at"]
     return bool(expires_at and expires_at < now)
+
+
+def _parse_api_key_expiry(expires_at: str) -> datetime:
+    normalized = expires_at.replace("Z", "+00:00")
+    parsed = datetime.fromisoformat(normalized)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def _normalize_api_key_expiry(
+    expires_at: str | None,
+    *,
+    created_at: datetime,
+) -> str | None:
+    """Apply static API-key max-age policy and return the persisted expiry."""
+    max_age_days = settings.api_key_max_age_days
+    if max_age_days <= 0:
+        return expires_at
+
+    max_expires_at = created_at + timedelta(days=max_age_days)
+    if expires_at is None:
+        return max_expires_at.isoformat()
+
+    requested_expires_at = _parse_api_key_expiry(expires_at)
+    if requested_expires_at > max_expires_at:
+        raise ValueError(
+            "expires_at exceeds configured static API key max age "
+            f"({max_age_days} days)"
+        )
+    return requested_expires_at.isoformat()
 
 
 def _rehash_legacy_key(conn: Any, row: Any, raw_key: str) -> None:
@@ -321,6 +352,11 @@ def register_api_key(
     if find_api_key_id_by_raw_key(raw_key) is not None:
         raise ValueError("raw API key already exists")
     key_id = str(uuid.uuid4())
+    created_at = datetime.now(UTC).replace(microsecond=0)
+    normalized_expires_at = _normalize_api_key_expiry(
+        expires_at,
+        created_at=created_at,
+    )
     with db() as conn:
         conn.execute(
             """INSERT INTO api_keys
@@ -333,8 +369,8 @@ def register_api_key(
                 entity_uri,
                 json.dumps(permissions),
                 description,
-                datetime.now(UTC).isoformat(),
-                expires_at,
+                created_at.isoformat(),
+                normalized_expires_at,
                 oidc_sub,
                 tenant_id,
             ),

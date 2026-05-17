@@ -27,7 +27,7 @@ from typing import Annotated, Any
 
 import httpx
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..audit_event import emit as audit_emit
 from ..auth import (
@@ -42,6 +42,7 @@ from ..memory_garden_acl_gate import oidc_permission_ceiling_enabled
 from ..models.auth import (
     ExchangeRequest,
     ExchangeResponse,
+    ExpiringKeyInfo,
     KeyInfo,
     RegisterKeyRequest,
     RegisterKeyResponse,
@@ -295,6 +296,11 @@ def register_static_key(
             tenant_id=target_tenant,
         )
     except ValueError as exc:
+        if "max age" in str(exc):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(exc),
+            ) from exc
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="raw_key already exists; generate a new key value",
@@ -376,6 +382,61 @@ def list_keys(identity: Annotated[Identity, Depends(resolve_identity)]) -> list[
         )
         for r in rows
     ]
+
+
+@router.get("/keys/expiring-soon", response_model=list[ExpiringKeyInfo])
+def list_expiring_keys(
+    identity: Annotated[Identity, Depends(resolve_identity)],
+    within_days: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=365,
+            description="Return active keys expiring within this many days.",
+        ),
+    ] = settings.api_key_expiring_soon_days,
+) -> list[ExpiringKeyInfo]:
+    """List active API keys approaching expiry (admin only)."""
+    if not identity.is_admin():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="admin permission required to list expiring API keys",
+        )
+
+    now = datetime.now(UTC)
+    cutoff = now + timedelta(days=within_days)
+    with db() as conn:
+        rows = conn.execute(
+            """SELECT id, entity_uri, permissions, description, created_at,
+                      expires_at, oidc_sub, tenant_id
+               FROM api_keys
+               WHERE expires_at IS NOT NULL
+                 AND expires_at > ?
+                 AND expires_at <= ?
+               ORDER BY expires_at ASC, created_at DESC""",
+            (now.isoformat(), cutoff.isoformat()),
+        ).fetchall()
+
+    result: list[ExpiringKeyInfo] = []
+    for r in rows:
+        expires_at = datetime.fromisoformat(r["expires_at"].replace("Z", "+00:00"))
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=UTC)
+        days_remaining = (expires_at.astimezone(UTC) - now).total_seconds() / 86_400
+        result.append(
+            ExpiringKeyInfo(
+                id=r["id"],
+                entity_uri=r["entity_uri"],
+                permissions=json.loads(r["permissions"]),
+                description=r["description"],
+                created_at=r["created_at"],
+                expires_at=r["expires_at"],
+                oidc_sub=r["oidc_sub"],
+                tenant_id=r["tenant_id"] or "default",
+                days_remaining=max(days_remaining, 0.0),
+            )
+        )
+    return result
 
 
 @router.delete("/keys/{key_id}", status_code=204)

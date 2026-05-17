@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # When True (default), every request must carry a valid Bearer token.
     # Set to False only for local development / single-operator installs.
     auth_required: bool = True
+    # Static API-key lifecycle controls. 0 disables max-age enforcement.
+    api_key_max_age_days: int = 90
+    api_key_expiring_soon_days: int = 30
 
     # Federation — Phase 3 (spec §6)
     federation_enabled: bool = False

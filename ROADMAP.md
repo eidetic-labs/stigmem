@@ -43,7 +43,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [ ] **ClawHub/OpenClaw alpha-framing correction** — next-alpha source copy now frames OpenClaw as alpha/evaluation-only; the historical a1 package is not revised retroactively. Remaining OpenClaw audit hardening stays visible in the alpha/beta hardening lane.
 - [ ] **OpenClaw audit planning for a2..aN** — keep the audit findings visible in alpha planning. Use a2+ for issue decomposition and adapter hardening work without claiming the a1 ClawHub package closed C1-C4 or H1/H2/H5.
 - [x] **Docs/spec cleanup** — normalized rendered Spec-X status/source language, added experimental spec stability/since metadata validation, restored Security Model under the Secure sidebar, calibrated stale upgrade copy, and wired redirects for archived duplicate/snapshot entry points ([#433](https://github.com/Eidetic-Labs/stigmem/issues/433)).
-- [ ] **Dogfood disposition** — resolve dogfood script, tokenomics, and operator-documentation disposition so public docs no longer point at obsolete internal paths ([#434](https://github.com/Eidetic-Labs/stigmem/issues/434)).
+- [x] **Dogfood disposition** — genericized dogfood-derived scripts are in `scripts/`, operator-facing docs reference their public paths, the historical tokenomics post is preserved under `archive/`, and the obsolete `dogfood/` tree is absent ([#434](https://github.com/Eidetic-Labs/stigmem/issues/434)).
 
 ### Exit criteria
 - Public retraction visible.

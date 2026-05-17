@@ -250,10 +250,6 @@ stigmem/
 │   ├── openclaw/                   ← Claude Code / OpenClaw adapter (Python): PARA→fact mapping
 │   └── paperclip/                  ← Paperclip hook adapter (JS): emits lifecycle events as facts
 │
-├── dogfood/                        ← CEO memory migration scripts
-│   ├── migrate_ceo_memory.py       ← PARA memory → Stigmem fact migration
-│   └── snapshot.sh                 ← snapshot current node state
-│
 └── docs/                           ← Docusaurus 3 documentation site
     └── docs/                       ← content
         ├── learn/                  ← concepts, features, quickstart

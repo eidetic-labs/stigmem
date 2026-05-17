@@ -291,7 +291,7 @@ These env vars configure relay behavior:
 | `STIGMEM_FEDERATION_RELAY_ENABLED` | `true` | Set `false` to disable relay behavior (leaf nodes) |
 
 Conformance tests for relay backpressure will be added to the 4-node topology test
-suite (`stigmem/node/tests/test_federation_4node.py`) before the pre-reset spec stabilization.
+suite (`node/tests/federation/test_4node_federation.py`) before the pre-reset spec stabilization.
 
 ### §6.8 Scope Propagation Invariants — the pre-reset spec Draft {#section-6-8}
 

@@ -64,8 +64,8 @@ For tests, the soft limit is doubled (1000 lines) because parameterized test cla
 | `eval/federation/soak_driver.py` | 1137 | Eval | Discouraged |
 | `node/src/stigmem_node/routes/federation.py` | 1122 | Source | Discouraged |
 | `node/src/stigmem_node/routes/facts.py` | 1031 | Source | Discouraged |
-| `node/tests/test_tombstones.py` | 970 | Test | Within test soft limit |
-| `node/tests/test_phase10_instruction.py` | 948 | Test | Within test soft limit |
+| `node/tests/tombstones/test_tombstones.py` | 970 | Test | Within test soft limit |
+| `node/tests/instruction/test_phase10_instruction.py` | 948 | Test | Within test soft limit |
 | `node/src/stigmem_node/routes/recall.py` | 879 | Source | Acceptable with justification |
 | `node/src/stigmem_node/routes/instruction.py` | 804 | Source | Acceptable with justification |
 
@@ -198,7 +198,7 @@ Split by federation concern: handshake, replication, capability admission, manif
 
 **Effort:** 1 day.
 
-#### `node/tests/test_tombstones.py` (970 lines) — defer
+#### `node/tests/tombstones/test_tombstones.py` (970 lines) — defer
 
 Per ADR-011, tombstone code (and tests) move to `experimental/23-rtbf-tombstones/` during v0.9.x. The `experimental/` directory imposes its own structure; this test file can decompose there.
 
@@ -390,7 +390,7 @@ This work is **not Phase A strengthening-plan work.** It comes after the v0.9.0a
 - Decompose `routes/recall.py` into `routes/recall/` sub-package (1.5 days).
 - Decompose `tests/test_phase8_identity.py` into `tests/identity/` (1 day).
 - Decompose `tests/test_federation.py` (1 day).
-- `routes/instruction.py` and `tests/test_tombstones.py` are absorbed into their respective plugin packages as part of the ADR-011 (C1) plugin implementations; no separate effort needed.
+- `routes/instruction.py` and `tests/tombstones/test_tombstones.py` are absorbed into their respective plugin packages as part of the ADR-011 (C1) plugin implementations; no separate effort needed.
 - `eval/federation/soak_driver.py` split into `eval/federation/soak/` (half day).
 
 ### Pre-v1.0.0-rc.0

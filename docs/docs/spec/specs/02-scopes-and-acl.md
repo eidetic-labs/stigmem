@@ -34,7 +34,7 @@ Legacy section labels from archived sources are normalized to the current
 |---|---|---|
 | `spec/archive/evolution/stigmem-spec-v0.8-draft.md` section 3.4 | Scope enforcement | The old stub pointed at section 3.5, but section 3.5 is identity/auth. |
 | `spec/archive/evolution/stigmem-spec-v1.0.md` section 17 | Basic Memory Garden ACL | Quarantine and advanced ACL behavior are excluded. |
-| `node/src/stigmem_node/garden_acl.py` and `node/tests/test_gardens.py` | Implementation evidence | Confirms garden membership roles, read/write gates, hidden global-query behavior, and scope mismatch rejection. |
+| `node/src/stigmem_node/garden_acl.py` and `node/tests/routes/test_gardens.py` | Implementation evidence | Confirms garden membership roles, read/write gates, hidden global-query behavior, and scope mismatch rejection. |
 
 ## Scope Enforcement
 

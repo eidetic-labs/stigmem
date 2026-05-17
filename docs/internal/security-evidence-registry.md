@@ -16,7 +16,7 @@ risks:
       - node/src/stigmem_node/tls.py
       - node/src/stigmem_node/main.py
     tests:
-      - node/tests/test_mtls.py
+      - node/tests/federation/test_mtls.py
     docs:
       - docs/security/mtls.md
       - spec/security/threat-model.md

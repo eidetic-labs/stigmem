@@ -135,7 +135,7 @@ jobs:
       - name: Run migration compatibility tests
         run: |
           mkdir -p artifacts
-          uv run pytest node/tests/test_migration_compat.py -q --tb=short \
+          uv run pytest node/tests/lifecycle/test_migration_compat.py -q --tb=short \
             --timeout=120 \
             --junitxml=artifacts/migration-compat-junit.xml
 

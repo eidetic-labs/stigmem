@@ -42,7 +42,7 @@ roadmap's desired production posture or operator ergonomics.
 
 **Test evidence**
 
-- `node/tests/test_mtls.py` covers TLS 1.3-only contexts, client certificate
+- `node/tests/federation/test_mtls.py` covers TLS 1.3-only contexts, client certificate
   rejection, certificate reload behavior, plaintext federation route rejection
   when mTLS is configured, and required CA-bundle validation.
 
@@ -65,7 +65,7 @@ sound when mTLS is configured.
 
 **Test evidence**
 
-- `node/tests/test_mtls.py` covers wrong-CA client rejection, URI SAN matching,
+- `node/tests/federation/test_mtls.py` covers wrong-CA client rejection, URI SAN matching,
   plaintext rejection when mTLS is configured, missing peer cert handling, and
   pull behavior when SAN/entity binding fails.
 
@@ -88,7 +88,7 @@ the TLS primitives.
 
 **Test evidence**
 
-- `node/tests/test_quota.py` covers write/read burst behavior, 429 response
+- `node/tests/observability/test_quota.py` covers write/read burst behavior, 429 response
   shape, `Retry-After`, read/write bucket independence, unauthenticated bypass,
   federation endpoint bypass, and `quota_breach` audit emission.
 
@@ -114,11 +114,11 @@ be explicit because the kill switch re-opens the rate-limit risk in production.
 
 **Test evidence**
 
-- `node/tests/test_admin_audit.py` covers authentication/authorization, fact
+- `node/tests/routes/test_admin_audit.py` covers authentication/authorization, fact
   write visibility, principal and event filters, pagination, time range
   filters, and response shape.
-- `node/tests/test_audit_enriched.py` covers enriched audit metadata.
-- `node/tests/test_quota.py` covers `quota_breach` audit emission.
+- `node/tests/observability/test_audit_enriched.py` covers enriched audit metadata.
+- `node/tests/observability/test_quota.py` covers `quota_breach` audit emission.
 - `node/tests/identity/test_capability_tokens.py` covers capability issue and
   revoke audit entries.
 
@@ -145,7 +145,7 @@ query surfaces are implemented and tested.
   audit events.
 - `node/tests/identity/test_federation_push.py` covers federation push
   behavior that depends on capability validation.
-- `node/tests/test_phase12_key_rotation.py` covers capability-token behavior
+- `node/tests/federation/test_phase12_key_rotation.py` covers capability-token behavior
   across key rotation and dual-trust windows.
 
 **Decision**
@@ -167,11 +167,11 @@ part of this federation-control review.
 
 **Test evidence**
 
-- `node/tests/test_phase12_key_rotation.py` covers key-id generation, rotation
+- `node/tests/federation/test_phase12_key_rotation.py` covers key-id generation, rotation
   event signing, dry-run behavior, dual-trust validation, expired rotation
   windows, malformed rotation timestamps, and in-flight token acceptance during
   key rotation.
-- `node/tests/test_argon2_auth.py` covers API-key verification behavior and
+- `node/tests/auth/test_argon2_auth.py` covers API-key verification behavior and
   legacy-hash rehashing.
 
 **Decision**
@@ -192,9 +192,9 @@ retirement item.
 
 **Test evidence**
 
-- `node/tests/test_quota.py` exercises quota state creation, independent
+- `node/tests/observability/test_quota.py` exercises quota state creation, independent
   dimensions, retry behavior, bypass paths, and audit evidence on breaches.
-- `node/tests/test_admin_audit.py` exercises the `seq`-ordered audit export
+- `node/tests/routes/test_admin_audit.py` exercises the `seq`-ordered audit export
   surface that depends on migration 022.
 
 **Decision**

@@ -29,7 +29,7 @@ The current wire-vector suite is the executable test contract for the v0.9.0a1 w
 
 ```bash
 # From the repo root
-uv run pytest node/tests/test_conformance_v1.py -v
+uv run pytest node/tests/conformance/test_conformance_v1.py -v
 ```
 
 The runner starts an in-process test node, executes every vector against it, and fails on any regression. Zero skips are enforced — if your change causes a vector to be skipped, CI will fail.
@@ -37,7 +37,7 @@ The runner starts an in-process test node, executes every vector against it, and
 To run a single vector group:
 
 ```bash
-uv run pytest node/tests/test_conformance_v1.py -v -k "garden"
+uv run pytest node/tests/conformance/test_conformance_v1.py -v -k "garden"
 ```
 
 ### CI
@@ -64,7 +64,7 @@ Every new spec section or wire-format change MUST include at least one new confo
 
 1. Add to an existing group file that covers the relevant spec section. If no group exists, create a new numbered file: `06_my_feature.json`.
 2. Follow the vector structure (see below).
-3. Run `uv run pytest node/tests/test_conformance_v1.py -v` locally before opening a PR.
+3. Run `uv run pytest node/tests/conformance/test_conformance_v1.py -v` locally before opening a PR.
 
 #### Vector structure
 
@@ -112,7 +112,7 @@ Each vector in the `vectors` array:
 | `expected_body_has_keys` | string[] | Response object includes these keys (any value) |
 | `expected_nested` | object | Dotted-path assertions into the response |
 
-Do **not** add vectors with `requires_auth: true` — zero skips are enforced and auth-dependent scenarios belong in `node/tests/test_auth.py`.
+Do **not** add vectors with `requires_auth: true` — zero skips are enforced and auth-dependent scenarios belong under `node/tests/auth/`.
 
 ---
 

@@ -196,6 +196,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next: Any) -> Any:
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         if request.url.path.startswith("/v1/federation/"):
             return await call_next(request)
 

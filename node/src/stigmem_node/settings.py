@@ -1,5 +1,7 @@
+from typing import Annotated
+
 from pydantic import field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -18,6 +20,10 @@ class Settings(BaseSettings):
     node_id: str = ""
     node_url: str = "http://localhost:8765"
     log_level: str = "info"
+    cors_allowed_origins: Annotated[list[str], NoDecode] = []
+    cors_allowed_origin_regex: str | None = None
+    cors_allow_credentials: bool = True
+    cors_dev_localhost: bool = False
 
     # When True (default), every request must carry a valid Bearer token.
     # Set to False only for local development / single-operator installs.
@@ -25,6 +31,17 @@ class Settings(BaseSettings):
     # Static API-key lifecycle controls. 0 disables max-age enforcement.
     api_key_max_age_days: int = 90
     api_key_expiring_soon_days: int = 30
+
+    @field_validator("cors_allowed_origins", mode="before")
+    @classmethod
+    def _parse_cors_allowed_origins(cls, v: object) -> list[str]:
+        if v is None or v == "":
+            return []
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        if isinstance(v, list):
+            return [str(origin).strip() for origin in v if str(origin).strip()]
+        return v  # type: ignore[return-value]
 
     # Federation — Phase 3 (spec §6)
     federation_enabled: bool = False

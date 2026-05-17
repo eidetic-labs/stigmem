@@ -32,6 +32,51 @@ All settings via environment variables (prefix `STIGMEM_`):
 | `STIGMEM_AUTH_REQUIRED`| `false`                  | Enforce API-key auth |
 | `STIGMEM_LOG_LEVEL`    | `info`                   | uvicorn log level |
 
+## CORS
+
+The Stigmem node ships with CORS disabled by default. Enable it only for the
+deployment shape you operate.
+
+### Local development (any localhost port)
+
+```bash
+STIGMEM_CORS_DEV_LOCALHOST=1
+```
+
+Accepts any `Origin` matching
+`^https?://(localhost|127\.0\.0\.1)(:\d+)?$`. Use this when the UI and API run
+on separate, dynamically chosen localhost ports.
+
+### Production with a known UI origin
+
+```bash
+STIGMEM_CORS_ALLOWED_ORIGINS=https://stigmem-ui.example.com
+```
+
+### Production with multiple UI origins
+
+```bash
+STIGMEM_CORS_ALLOWED_ORIGINS=https://a.example.com,https://b.example.com
+```
+
+### Self-managed regex (advanced)
+
+```bash
+STIGMEM_CORS_ALLOWED_ORIGIN_REGEX=^https://[a-z0-9-]+\.example\.com$
+```
+
+### Credentials
+
+`STIGMEM_CORS_ALLOW_CREDENTIALS` defaults to `true` and controls whether
+browsers may send cookies or `Authorization` headers cross-origin. Set it to
+`false` only when the deployment does not use credentialed browser requests.
+
+### Security note
+
+Do not combine `STIGMEM_CORS_DEV_LOCALHOST=1` with a production deployment. The
+dev-localhost regex is intentionally permissive and must only run on
+maintainer-controlled machines.
+
 ## API
 
 | Route | Description |

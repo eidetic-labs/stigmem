@@ -17,6 +17,7 @@ from stigmem_node.immutability import (
     set_fact_quarantine_status,
     set_fact_validity_override,
 )
+from stigmem_node.storage.libsql_backend import _split_sql
 from stigmem_node.vector_search import store_embedding
 
 FACT = {
@@ -327,6 +328,15 @@ def test_facts_table_update_delete_triggers_block_mutation_and_audit(tmp_path: P
     assert delete_audit is not None
     assert delete_audit["event_type"] == "fact_mutation_attempted"
     assert '"DELETE"' in delete_audit["detail"]
+
+
+def test_libsql_migration_splitter_keeps_trigger_bodies_intact() -> None:
+    migration = Path("node/migrations/034_sqlite_facts_immutability_triggers.sql")
+    stmts = _split_sql(migration.read_text())
+
+    assert len(stmts) == 2
+    assert all(stmt.startswith("CREATE TRIGGER") for stmt in stmts)
+    assert all("RAISE(FAIL" in stmt for stmt in stmts)
 
 
 def test_facts_mutation_inventory_guard_is_current() -> None:

@@ -19,6 +19,7 @@ Install the optional dependency before use::
 from __future__ import annotations
 
 import re
+import sqlite3
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -32,19 +33,27 @@ def _split_sql(sql: str) -> list[str]:
     """Split a SQL script into individual statements, stripping comments.
 
     libsql-experimental does not expose ``executescript()``, so we split
-    manually on ``';'``.  Trigger bodies contain ``BEGIN...END`` blocks with
-    inner semicolons; we filter the resulting fragments rather than trying to
-    parse them.  FTS5 virtual tables and their sync triggers are SQLite-only
-    and are silently dropped so libsql-experimental (which lacks FTS5) can
-    still run every migration.
+    scripts into complete SQLite statements before executing each one. Trigger
+    bodies contain ``BEGIN...END`` blocks with inner semicolons, so a plain
+    string split would emit incomplete fragments. FTS5 virtual tables and their
+    sync triggers are SQLite-only and are silently dropped so libsql-experimental
+    (which lacks FTS5) can still run every migration.
     """
     sql = re.sub(r"--[^\n]*", "", sql)
     sql = re.sub(r"/\*.*?\*/", "", sql, flags=re.DOTALL)
-    stmts = []
-    for stmt in sql.split(";"):
-        stmt = stmt.strip()
-        if not stmt:
+    stmts: list[str] = []
+    pending: list[str] = []
+
+    for line in sql.splitlines():
+        if not line.strip():
             continue
+        pending.append(line)
+        candidate = "\n".join(pending).strip()
+        if not sqlite3.complete_statement(candidate):
+            continue
+
+        pending.clear()
+        stmt = candidate.removesuffix(";").strip()
         upper = stmt.upper()
         # Bare keywords left after splitting trigger/transaction bodies
         if upper in ("BEGIN", "END", "COMMIT", "ROLLBACK"):
@@ -56,6 +65,10 @@ def _split_sql(sql: str) -> list[str]:
         if re.search(r"\bfacts_fts\b", stmt, re.IGNORECASE):
             continue
         stmts.append(stmt)
+
+    if pending:
+        raise ValueError("incomplete SQL statement in migration")
+
     return stmts
 
 

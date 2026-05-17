@@ -21,6 +21,7 @@ This handbook covers everything you need to run a Stigmem node in production, fr
 | [Choose your backend (experimental)](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/storage-backends) | Decision tree: SQLite vs libSQL vs Postgres |
 | [Deploy runbooks](./runbooks/deploy-runbooks) | Step-by-step runbooks for Fly, Compose, Helm, systemd, and PaaS |
 | [Federation peer setup](./runbooks/federation-setup) | Key generation, pinning, and source-trust tuning |
+| [Operator validation soak](./validation-soak) | 30-day external validation checklist, weekly digest shape, and finding triage |
 | [Backup & restore](./runbooks/backup-restore) | Signed snapshot workflow and cloud PITR |
 | [Monitoring & debugging](./observability/monitoring) | Health checks, metrics, and recall-latency diagnosis |
 | [Peer compromise response](./runbooks/r-peer-compromise) | Containment and recovery when a federation peer is suspicious or compromised |
@@ -81,3 +82,7 @@ A production Stigmem node has four operational concerns:
 - [Incident runbooks](./runbooks/r-peer-compromise) — respond to critical federation, manifest, HLC, worm, and key-expiry alerts.
 
 **Planning a deployment?** The [cost calculator](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing) helps you estimate storage growth, egress, embedding spend, and operator time before you commit to infrastructure.
+
+**Joining external validation?** Start with the
+[Operator validation soak](./validation-soak) checklist so public findings,
+weekly digests, and Phase B exit evidence are traceable from the first day.

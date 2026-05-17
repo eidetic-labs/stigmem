@@ -18,3 +18,21 @@ architecture overview, single-host node, federated network, threat model, ADRs,
 and `good first issue` work. The intent is that a new contributor can understand
 the reference node, run the demo, pick a starter issue, and open a focused PR
 without first reverse-engineering the project structure.
+
+## Operator Soak Digest Template
+
+Use this template for the weekly public digest once the Phase B external
+operator validation soak begins:
+
+```md
+## YYYY-MM-DD — Operator Soak Digest, Week N
+
+- Operator context: <public non-sensitive summary>
+- Version under test: <commit or release tag>
+- Deployment shape: <single node / same-org federation / limited federation>
+- Findings opened: #NN, #NN
+- Findings closed: #NN
+- P0 status: none / #NN
+- ADR-004 observability notes: <signals that helped or were missing>
+- Next week: <planned validation focus>
+```

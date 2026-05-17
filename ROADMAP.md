@@ -125,7 +125,7 @@ the beta-series exit and v1.0 release-candidate declaration.
 7. **Operator-facing documentation** — runbooks, observability signals per [ADR-004](docs/adr/004-federation-observability.md), prompt-injection hardening guide.
 8. **Best-practice and quality gates** — internal best-practice docs, dependency-currency reporting, generated-file markers, file-size CI, stale internal-link linting, pytest `security`/`experimental` markers, root auto-marker assignment, major-version hold register, and branch/publish verification are queued in [#437](https://github.com/Eidetic-Labs/stigmem/issues/437). Follow-on dependency upgrade execution remains tracked separately from the gate adoption work.
 9. **Contributor and demo readiness** — `make demo` / `make demo-attack`, contributor architecture path, issue templates, engineering log, and good-first issue tagging are being completed in [#438](https://github.com/Eidetic-Labs/stigmem/issues/438).
-10. **30-day external operator soak** — at least one external operator runs against the hardened core with public bug reporting; operator validation and Phase B exit evidence are tracked in [#439](https://github.com/Eidetic-Labs/stigmem/issues/439).
+10. **30-day external operator soak** — at least one external operator runs against the hardened core with public bug reporting; operator validation and Phase B exit evidence are tracked in [#439](https://github.com/Eidetic-Labs/stigmem/issues/439). The evidence framework lives in the operator validation soak guide; the actual 30-day run remains open until an external operator completes it.
 
 ### Exit criteria
 - Threat-model risk register has no Open status entries for v1.0.0-critical-path risks.

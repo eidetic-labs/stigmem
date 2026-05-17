@@ -178,6 +178,7 @@ const sidebars = {
       collapsed: true,
       items: [
         'operators/deployment/install',
+        'operators/validation-soak',
       ],
     },
     {

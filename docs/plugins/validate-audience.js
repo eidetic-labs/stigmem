@@ -12,6 +12,7 @@
 // backfill in one pass.
 
 const VALID_AUDIENCES = ['Evaluator', 'Integrator', 'Operator', 'Security', 'Spec'];
+const VALID_STABILITIES = ['stable', 'beta', 'experimental', 'deprecated'];
 
 // Audience badges are only meaningful where the page's audience is non-obvious from
 // its top-level section. The Learn section name already implies a general reader, so
@@ -41,6 +42,21 @@ module.exports = function validateAudiencePlugin() {
             }
           } else if (!VALID_AUDIENCES.includes(audience)) {
             errors.push(`${doc.id}: invalid audience "${audience}" (must be one of ${VALID_AUDIENCES.join(', ')})`);
+          }
+
+          if (doc.id?.startsWith('spec/experimental/')) {
+            const stability = doc.frontMatter?.stability;
+            const since = doc.frontMatter?.since;
+            if (!stability) {
+              errors.push(`${doc.id}: missing "stability" frontmatter`);
+            } else if (!VALID_STABILITIES.includes(stability)) {
+              errors.push(`${doc.id}: invalid stability "${stability}" (must be one of ${VALID_STABILITIES.join(', ')})`);
+            }
+            if (!since) {
+              errors.push(`${doc.id}: missing "since" frontmatter`);
+            } else if (!/^\d+\.\d+\.\d+(?:a\d+|b\d+|rc\d+)?$/.test(String(since))) {
+              errors.push(`${doc.id}: invalid since "${since}" (expected e.g. 0.9.0a1)`);
+            }
           }
         }
       }

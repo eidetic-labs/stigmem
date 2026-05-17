@@ -12,15 +12,17 @@ title: §15. Decay Semantics
 sidebar_label: §15 Decay Semantics
 audience: Spec
 description: "Stigmem spec section 15 — Configurable TTL and confidence-decay policies; POST /v1/decay/sweep."
+stability: experimental
+since: 0.9.0a1
 ---
 
 # §15. Decay Semantics {#section-15}
 
-**Status:** Stable
+**Status:** Experimental / dormant source package
 
 Configurable TTL and confidence-decay policies; POST /v1/decay/sweep.
 
-**Authoritative source:** [`spec/stigmem-spec-v1.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md)
+**Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for decay semantics.
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.

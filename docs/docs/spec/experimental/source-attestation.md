@@ -12,6 +12,8 @@ title: Spec-X6-Source-Attestation
 sidebar_label: Source Attestation
 audience: Spec
 description: "API-key to entity_uri binding with enforce/warn/off modes; trust anchor for connectors."
+stability: experimental
+since: 0.9.0a1
 ---
 
 # Spec-X6-Source-Attestation: Source Attestation {#section-18}
@@ -116,18 +118,6 @@ Track C adds per-agent keypair registration. Once an agent's public key is regis
 
 Source attestation is a first step. `attested: true` means the bearer-token-level check passed. Track C extends this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
 
-<details>
-<summary>Revisions before v1.0: pre-reset draft</summary>
-
-**From `stigmem-spec-pre-reset draft.md`:**
-
-### 18.5 Integration with Track C (Per-Agent Keypairs)
-
-Track C will add per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
-
-Source attestation is a first step. `attested: true` means the bearer-token-level check passed. Track C will extend this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
-
-</details>
 
 ### Spec-X6-Source-Attestation section 6 Querying by Attestation {#section-18-6}
 
@@ -215,87 +205,6 @@ attested = normalized(fact.source) ∈ { normalized(identity.entity_uri) } ∪ n
 
 All normalization uses Spec-01-Fact-Model URI normalization. Delegation set entries are stored in normalized form at key creation.
 
-<details>
-<summary>Revisions before v1.0: pre-reset draft</summary>
-
-**From `stigmem-spec-pre-reset draft.md`:**
-
-### 18.7 Key Registration: Binding `entity_uri` to an API Key
-
-Source attestation depends on the node knowing the caller's authorized `entity_uri`. This binding is established at **key creation time** and is immutable — a key's `entity_uri` cannot be changed after creation (to prevent retroactive provenance forgery).
-
-#### `entity_uri` requirements
-
-- MUST be a formal URI matching the `stigmem://` scheme (Spec-01-Fact-Model entity URI scheme). Informal URIs are rejected at key creation.
-- MUST be unique within the node's `api_keys` table (one key per entity).
-- Stored in normalized form (Spec-01-Fact-Model URI normalization) to align with ingest normalization.
-
-#### Key creation
-
-A key is created with a single POST that binds the `entity_uri`, scope
-permissions, and optional delegation list at creation time. The node returns
-the raw API key exactly once in the response; only its SHA-256 digest is
-stored server-side. The `entity_uri` is immutable after creation to prevent
-retroactive re-attribution of facts already written with this key.
-
-```
-POST /v1/auth/keys
-Authorization: Bearer <admin-key>
-{
-  "description":             "CTO agent key",
-  "entity_uri":              "stigmem://company.example/agent/cto",
-  "allowed_scopes":          ["company", "public"],
-  "allowed_source_entities": []
-}
-→ 201 {
-    "key_id":                  "<uuid>",
-    "raw_key":                 "<secret>",   // shown once; SHA-256 stored
-    "entity_uri":              "stigmem://company.example/agent/cto",
-    "allowed_scopes":          ["company","public"],
-    "allowed_source_entities": [],
-    "created_at":              "2026-05-03T00:00:00Z"
-  }
-```
-
-The caller MUST store `raw_key` securely — it is not retrievable after creation. The node stores only the SHA-256 hex digest.
-
-**Creating a key without `entity_uri`** is allowed for backward compatibility. Such a key can still write facts; in `enforce` mode it will be rejected (HTTP 400 `key_not_attested`); in `warn` mode writes are accepted with `attested: false`.
-
-**Immutability:** Nodes MUST NOT allow `entity_uri` to be updated via `PATCH`. Attempting to update it returns HTTP 422:
-
-```json
-{ "error": "immutable_field",
-  "detail": "entity_uri cannot be changed after creation; revoke and re-create the key" }
-```
-
-#### Updated `Identity` shape
-
-The `Identity` shape extends the authenticated identity shape with the `allowed_source_entities`
-field needed for delegation (Spec-X6-Source-Attestation section 9). This is the object the node constructs
-from the API key record when authenticating a request — it drives every
-attestation check in the write path.
-
-```
-Identity {
-  entity_uri:              URI            // registered at key creation; enforced against fact.source
-  credential:              string         // API key (SHA-256 stored server-side)
-  node_url:                string
-  allowed_scopes:          FactScope[]
-  allowed_source_entities: URI[]          // additional source URIs this key may claim (see Spec-X6-Source-Attestation section 9)
-}
-```
-
-#### Updated attestation check (Spec-X6-Source-Attestation section 2 with delegation)
-
-The check in Spec-X6-Source-Attestation section 2 is updated to include the delegation list:
-
-```
-attested = normalized(fact.source) ∈ { normalized(identity.entity_uri) } ∪ normalized(identity.allowed_source_entities)
-```
-
-All normalization uses Spec-01-Fact-Model URI normalization. Delegation set entries are stored in normalized form at key creation.
-
-</details>
 
 ### Spec-X6-Source-Attestation section 8 Source Auto-fill {#section-18-8}
 
@@ -388,61 +297,6 @@ GET /v1/auth/attestation-audit?key_id=<id>&attested=false&limit=50
 
 Filter params: `key_id`, `attested` (true/false), `after` (pagination cursor), `limit` (max 500).
 
-<details>
-<summary>Revisions before v1.0: pre-reset draft</summary>
-
-**From `stigmem-spec-pre-reset draft.md`:**
-
-### 18.10 Full Key Management API
-
-All key management routes require a key with `admin=true`. The key management
-API covers the full lifecycle: creation, inspection, scope/delegation updates,
-and revocation. Revocation is a soft delete — the key record is retained with a
-`revoked_at` timestamp for audit purposes, but all subsequent authentication
-attempts with the revoked key are rejected. A separate attestation-audit
-endpoint provides a searchable event log of every attestation decision the node
-has made, filterable by key, outcome, and time.
-
-```
-POST   /v1/auth/keys                             // create key
-GET    /v1/auth/keys                             // list all keys
-GET    /v1/auth/keys/:key_id                     // get key metadata
-PATCH  /v1/auth/keys/:key_id                     // update description, allowed_scopes, allowed_source_entities
-DELETE /v1/auth/keys/:key_id                     // revoke key (sets revoked_at; record retained for audit)
-
-GET    /v1/auth/attestation-audit                // attestation event log (admin only)
-```
-
-`PATCH` request body may include `description`, `allowed_scopes`, `allowed_source_entities`. `entity_uri` and `admin` are immutable after creation.
-
-The attestation audit endpoint returns a paginated log of every attestation
-decision the node has made. Each event records the key that was used, the
-`source` value the caller claimed, whether attestation passed, and — when it
-failed — the specific rejection reason. This log is essential for operators
-transitioning from `warn` to `enforce` mode: querying for `attested=false`
-events surfaces all callers that would break under strict enforcement.
-
-```
-GET /v1/auth/attestation-audit?key_id=<id>&attested=false&limit=50
-→ 200 {
-    "events": [{
-      "id":              "<uuid>",
-      "key_id":          "...",
-      "entity_uri":      "...",           // key's registered entity_uri; null for legacy keys
-      "claimed_source":  "...",           // source value from the request
-      "attested":        true | false,
-      "rejection_reason": null | "source_attestation_failed" | "source_required" | "key_not_attested",
-      "ts":              "2026-05-03T00:00:00Z"
-    }],
-    "cursor": "...", "has_more": false
-  }
-```
-
-Filter params: `key_id`, `attested` (true/false), `after` (pagination cursor), `limit` (max 500).
-
-Track C3 () builds a consolidated audit surface joining `(principal, attested-source, fact-id)` across `api_keys`, `attestation_audit`, and `facts`.
-
-</details>
 
 ### Spec-X6-Source-Attestation section 11 Schema Migration (Migration 005) {#section-18-11}
 
@@ -501,23 +355,3 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(a
 | 422 | `immutable_field` | Attempt to PATCH `entity_uri` or `admin` |
 
 ---
-
-<details>
-<summary>Revisions before v1.0: pre-reset draft</summary>
-
-**From `stigmem-spec-pre-reset draft.md`:**
-
-### 18.12 Error Reference
-
-| HTTP | Error code | Condition |
-|---|---|---|
-| 400 | `source_required` | `source` omitted; key has no `entity_uri`; `enforce` mode |
-| 400 | `key_not_attested` | Key has no `entity_uri`; node requires attestation |
-| 403 | `source_attestation_failed` | `source` not in `{entity_uri} ∪ allowed_source_entities` |
-| 422 | `immutable_field` | Attempt to PATCH `entity_uri` or `admin` |
-
----
-
-*pre-reset draft — Spec-02-Scopes-and-ACL and Spec-X6-Source-Attestation open for community feedback. See [CONTRIBUTING.md](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md).*
-
-</details>

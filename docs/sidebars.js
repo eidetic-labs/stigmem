@@ -50,7 +50,6 @@ const sidebars = {
         'concepts/federation/source-trust-and-quarantine',
         'concepts/facts/content-addressing',
         'concepts/memory-garden',
-        'concepts/security-model',
       ],
     },
     {
@@ -260,6 +259,7 @@ const sidebars = {
         'security/container-hardening',
         'security/immutability-and-attestation',
         'security/where-security-analysis-lives',
+        'concepts/security-model',
       ],
     },
     {

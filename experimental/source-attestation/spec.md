@@ -12,6 +12,8 @@ title: Spec-X6-Source-Attestation
 sidebar_label: Source Attestation
 audience: Spec
 description: "API-key to entity_uri binding with enforce/warn/off modes; trust anchor for connectors."
+stability: experimental
+since: 0.9.0a1
 ---
 
 # Spec-X6-Source-Attestation: Source Attestation {#section-18}

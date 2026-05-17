@@ -11,7 +11,7 @@ Houses the `versioned_docs/` snapshots that were configured as Docusaurus versio
 - `version-v1.1/` — snapshot configured under `lastVersion: v1.1`. The v1.1 release was never publicly tagged or shipped.
 - `version-v0.2/` — historical evolutionary checkpoint.
 
-Each snapshot retains its original Docusaurus structure for reference. URLs that pointed at `/v1.1/*` and `/v0.2/*` redirect to a "this URL was not a real release; see /docs/" landing page.
+Each snapshot retains its original Docusaurus structure for reference. Known legacy version entry points such as `/v1.1`, `/v0.2`, `/docs/v1.1`, and `/docs/v0.2` redirect to the current concepts landing page.
 
 ### `superseded/` — duplicate-loser pages from the content deduplication pass
 
@@ -31,7 +31,7 @@ Houses pages where the original page was a placeholder (e.g., `spec/section-13.m
 ## How to use this directory
 
 - **Looking for a page that's no longer in the canonical tree?** Check `superseded/` for the original path.
-- **Following an old `/v1.1/*` or `/v0.2/*` link?** The URL redirects; the source content lives under `snapshots/`.
+- **Following an old `/v1.1` or `/v0.2` entry point?** The URL redirects; the source content lives under `snapshots/`.
 - **Bringing content back?** When a `superseded/` page's content is needed, the canonical page is the source of truth — the `superseded/` copy is the historical record, not a re-merge target.
 
 ## Cross-references

@@ -12,15 +12,17 @@ title: §17. Memory Garden
 sidebar_label: §17 Memory Garden
 audience: Spec
 description: "Stigmem spec section 17 — Named, ACL'd partitions of the fact store with admin/writer/reader role model."
+stability: experimental
+since: 0.9.0a1
 ---
 
 # §17. Memory Garden {#section-17}
 
-**Status:** Normative (v1.0)
+**Status:** Experimental / opt-in source package on `main`
 
 Named, ACL'd partitions of the fact store with admin/writer/reader role model.
 
-**Authoritative source:** [`spec/stigmem-spec-v1.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md)
+**Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for advanced Memory Garden ACL semantics.
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.

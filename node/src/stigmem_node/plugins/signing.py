@@ -9,6 +9,8 @@ from typing import Any
 from .discovery import DiscoveredPlugin
 from .errors import PluginSignatureError
 
+_UNSIGNED_PLUGIN_ACK = "i-understand-plugins-are-unsigned"
+
 
 def _parse_identity_set(raw: str) -> frozenset[str]:
     return frozenset(identity.strip() for identity in raw.split(",") if identity.strip())
@@ -51,6 +53,14 @@ PluginSignatureVerifier = Callable[[DiscoveredPlugin], PluginSigningInfo]
 
 def allow_unsigned_development_override(plugin: DiscoveredPlugin) -> PluginSigningInfo:
     """Return explicit development override metadata for an unsigned plugin."""
+    from stigmem_node.settings import settings
+
+    if settings.plugin_unsigned_ack != _UNSIGNED_PLUGIN_ACK:
+        raise RuntimeError(
+            "STIGMEM_PLUGIN_SIGNING_REQUIRED=false requires "
+            "STIGMEM_PLUGIN_UNSIGNED_ACK='i-understand-plugins-are-unsigned' "
+            "to confirm the operator accepts unsigned-plugin code execution risk."
+        )
 
     return PluginSigningInfo(
         signing_identity=plugin.signing_identity,

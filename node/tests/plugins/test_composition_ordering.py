@@ -42,10 +42,17 @@ def _register_discovered(
     registry: HookRegistry,
     *manifests: PluginManifest,
 ) -> None:
+    import stigmem_node.settings as settings_mod
+
     monkeypatch.setattr(
         lifecycle,
         "discover_plugin_manifests",
         lambda: tuple(_discovered(manifest) for manifest in manifests),
+    )
+    monkeypatch.setattr(
+        settings_mod.settings,
+        "plugin_unsigned_ack",
+        "i-understand-plugins-are-unsigned",
     )
     lifecycle.register_discovered_plugins(
         registry=registry,

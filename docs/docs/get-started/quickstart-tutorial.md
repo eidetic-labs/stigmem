@@ -174,6 +174,7 @@ curl -s "${NODE_B:-http://localhost:8766}/v1/federation/audit" | jq '.entries[-3
 | `DEMO_BUILD=1 make demo` | Same demo, but force-build the local working tree image. |
 | `KEEP_UP=1 make demo` | Leave the stack running after the demo for manual inspection. |
 | `make demo-attack` | Malicious-peer rejection demo: unauthorized scope write and source forgery. |
+| `DEMO_ATTACK_TRANSCRIPT=/tmp/demo-attack.json make demo-attack` | Same malicious-peer demo, plus a small JSON transcript with no secrets or private keys. |
 
 For ad hoc compose work, use `docker compose up -d` and `docker compose down -v`.
 

@@ -9,9 +9,24 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 
 logger = logging.getLogger("stigmem.cli")
+
+
+def _write_owner_only_text(path: str, text: str) -> None:
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.fchmod(fd, 0o600)
+        file_obj = os.fdopen(fd, "w")
+        fd = -1
+        with file_obj as f:
+            f.write(text)
+    finally:
+        if fd != -1:
+            os.close(fd)
+    os.chmod(path, 0o600)
 
 
 def _resolve_scope_prefix_and_label(
@@ -309,8 +324,7 @@ def _cmd_instruction_manifest_generate(args: argparse.Namespace) -> int:
     output = json.dumps(result, indent=2)
 
     if args.out:
-        with open(args.out, "w") as f:
-            f.write(output)
+        _write_owner_only_text(args.out, output)
         print(f"Wrote {len(entries)} entries to {args.out}")
     else:
         print(output)

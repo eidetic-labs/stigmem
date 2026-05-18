@@ -71,6 +71,22 @@ def _is_legacy_sha256_hash(stored_hash: str) -> bool:
     return bool(_LEGACY_SHA256_HEX.fullmatch(stored_hash))
 
 
+def _legacy_sha256_allowed() -> bool:
+    deadline = settings.legacy_sha256_accept_until
+    if deadline is None:
+        return True
+    if deadline.tzinfo is None:
+        deadline = deadline.replace(tzinfo=UTC)
+    return datetime.now(UTC) <= deadline.astimezone(UTC)
+
+
+def _raise_legacy_sha256_disabled() -> None:
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Legacy API key hashes are no longer accepted; rotate the key.",
+    )
+
+
 def _verify_key_hash(raw_key: str, stored_hash: str) -> bool:
     """Verify *raw_key* against either current Argon2id or legacy SHA-256."""
     if stored_hash.startswith("$argon2id$"):
@@ -83,6 +99,8 @@ def _verify_key_hash(raw_key: str, stored_hash: str) -> bool:
         except InvalidHash:
             return False
     if _is_legacy_sha256_hash(stored_hash):
+        if not _legacy_sha256_allowed():
+            _raise_legacy_sha256_disabled()
         return hmac.compare_digest(stored_hash, _legacy_sha256(raw_key))
     return False
 
@@ -171,6 +189,8 @@ def _find_key_row(
             (_legacy_sha256(raw_key),),
         ).fetchone()
         if legacy_row is not None and (include_expired or not _row_expired(legacy_row, now)):
+            if not _legacy_sha256_allowed():
+                _raise_legacy_sha256_disabled()
             if rehash_legacy:
                 _rehash_legacy_key(conn, legacy_row, raw_key)
                 legacy_row = conn.execute(

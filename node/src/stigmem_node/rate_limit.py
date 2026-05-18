@@ -172,9 +172,14 @@ def _lookup_principal(raw_key: str) -> tuple[str, str, str | None] | None:
             return result
         del _HASH_CACHE[fingerprint]
 
+    from fastapi import HTTPException
+
     from .auth import lookup_principal
 
-    principal = lookup_principal(raw_key)
+    try:
+        principal = lookup_principal(raw_key)
+    except HTTPException:
+        return None
     if principal is None:
         return None
     _HASH_CACHE[fingerprint] = (principal, time.time())

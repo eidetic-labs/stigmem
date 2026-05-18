@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
+import stat
 from pathlib import Path
 from typing import Any
 
@@ -603,6 +604,7 @@ class TestFederationCursorExport:
         args = _args(db=db, out=str(out_path))
         assert _cmd_federation_cursor_export(args) == 0
         assert "checkpoint written" in capsys.readouterr().err
+        assert stat.S_IMODE(out_path.stat().st_mode) == 0o600
         payload = json.loads(out_path.read_text())
         assert len(payload["cursors"]) == 1
         assert payload["cursors"][0]["cursor"] == "abc123"

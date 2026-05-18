@@ -11,6 +11,8 @@ and database path without touching the environment.
 
 from __future__ import annotations
 
+import logging
+import os
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -24,6 +26,7 @@ from .storage import make_backend
 
 # Resolved once at import time; exposed for test fixtures that need the path.
 _MIGRATIONS_DIR = Path(__file__).parent.parent.parent / "migrations"
+logger = logging.getLogger("stigmem.db")
 
 
 @contextmanager
@@ -46,6 +49,7 @@ def apply_migrations(db_path: str | None = None) -> None:
     registry = get_registry()
     backend = make_backend(db_path=db_path, _settings=settings)
     backend.apply_migrations(_MIGRATIONS_DIR)
+    _enforce_sqlite_owner_only_permissions(_sqlite_db_path(db_path))
     migrations: list[Migration] = registry.fire_filter_chain(
         "migration_register",
         [],
@@ -59,6 +63,32 @@ def apply_migrations(db_path: str | None = None) -> None:
         plugin_order=registry.plugin_registration_order(),
         plugin_versions=registry.plugin_versions(),
     )
+    _enforce_sqlite_owner_only_permissions(_sqlite_db_path(db_path))
+
+
+def _sqlite_db_path(db_path: str | None) -> Path | None:
+    if db_path is not None:
+        selected = db_path
+    elif getattr(settings, "storage_backend", "sqlite") == "sqlite":
+        selected = settings.db_path
+    else:
+        return None
+    if selected in {"", ":memory:"}:
+        return None
+    return Path(selected)
+
+
+def _enforce_sqlite_owner_only_permissions(path: Path | None) -> None:
+    """Restrict local SQLite database artifacts to the owner when present."""
+    if path is None or os.name == "nt":
+        return
+    for artifact in (path, Path(f"{path}-wal"), Path(f"{path}-shm")):
+        if not artifact.exists():
+            continue
+        try:
+            artifact.chmod(0o600)
+        except OSError as exc:
+            logger.warning("failed to restrict SQLite artifact permissions: %s", exc)
 
 
 def collect_registered_plugin_migrations(db_path: str | None = None) -> list[Migration]:

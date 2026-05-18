@@ -6,7 +6,7 @@ import hashlib
 import json
 import time
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -87,6 +87,22 @@ def test_legacy_sha256_key_rehashes_on_successful_auth(
     assert detail["key_id"] == key_id
     assert detail["from"] == "sha256"
     assert detail["to"] == "argon2id"
+
+
+def test_legacy_sha256_key_rejected_after_acceptance_deadline(
+    authed_client: tuple[TestClient, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, _admin_key = authed_client
+    raw_key = f"legacy-{uuid.uuid4().hex}"
+    _insert_legacy_sha256_key(raw_key)
+    expired_deadline = datetime.now(UTC) - timedelta(seconds=1)
+    monkeypatch.setattr(db_mod.settings, "legacy_sha256_accept_until", expired_deadline)
+
+    response = client.get("/v1/me", headers={"Authorization": f"Bearer {raw_key}"})
+
+    assert response.status_code == 401
+    assert "Legacy API key hashes are no longer accepted" in response.json()["detail"]
 
 
 def test_invalid_key_does_not_rehash_legacy_rows(

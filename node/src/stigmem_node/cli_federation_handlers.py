@@ -8,7 +8,22 @@ verbatim from cli.py.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
+
+
+def _write_owner_only_text(path: str, text: str) -> None:
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.fchmod(fd, 0o600)
+        file_obj = os.fdopen(fd, "w")
+        fd = -1
+        with file_obj as f:
+            f.write(text)
+    finally:
+        if fd != -1:
+            os.close(fd)
+    os.chmod(path, 0o600)
 
 
 def _cmd_federation_cursor_export(args: argparse.Namespace) -> int:
@@ -70,9 +85,7 @@ def _cmd_federation_cursor_export(args: argparse.Namespace) -> int:
     if args.out == "-":
         print(payload)
     else:
-        with open(args.out, "w") as fh:
-            fh.write(payload)
-            fh.write("\n")
+        _write_owner_only_text(args.out, f"{payload}\n")
         print(f"checkpoint written: {args.out} ({len(rows)} cursor(s))", file=sys.stderr)
 
     return 0

@@ -95,6 +95,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: mode=max
 
       # ── SBOM ──────────────────────────────────────────────────────────────
       - name: Install syft
@@ -130,6 +131,13 @@ jobs:
       - name: Sign image (keyless)
         run: |
           cosign sign --yes \
+            "${{ env.NODE_IMAGE }}@${{ steps.build.outputs.digest }}"
+
+      - name: Attest SBOM (keyless)
+        run: |
+          cosign attest --yes \
+            --predicate stigmem-node-sbom.spdx.json \
+            --type spdxjson \
             "${{ env.NODE_IMAGE }}@${{ steps.build.outputs.digest }}"
 
   # publish-dashboard intentionally removed: per ADR-002 the dashboard is
@@ -392,6 +400,7 @@ jobs:
             echo "- **PyPI:** \`pip install --pre stigmem-py==$VER\` (also: \`stigmem\`, \`stigmem-node\`, \`stigmem-openclaw\`)"
             echo "- **npm:** \`npm install @eidetic-labs/stigmem-ts@${{ steps.ver.outputs.semver }}\`"
             echo "- **GHCR:** \`docker pull ghcr.io/eidetic-labs/stigmem-node:$VER\` (also \`:${{ steps.ver.outputs.semver }}\`)"
+            echo "- **Supply-chain evidence:** GHCR image is keyless-signed with Sigstore/cosign; SBOM and BuildKit provenance are attached as OCI referrers. Verification instructions: https://docs.stigmem.dev/operators/release-verification"
             echo ""
             echo "---"
             echo ""

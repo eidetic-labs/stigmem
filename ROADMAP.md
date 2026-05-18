@@ -137,10 +137,12 @@ the beta-series exit and v1.0 release-candidate declaration.
 
 ## `v1.0.0rcN` → `v1.0.0` — release candidates and GA
 
-**Status:** not started. Entry blocked on the beta-series exit + 14 days of v1.0.0rcN observation without critical regression.
+**Status:** in progress. Entry is still blocked on the beta-series exit + 14
+days of v1.0.0rcN observation without critical regression, but the Phase C
+release-evidence track has started.
 
 ### Work
-- Sigstore-signed releases, reproducible builds, SBOM publication, and Rekor/operator verification evidence ([#440](https://github.com/Eidetic-Labs/stigmem/issues/440)).
+- Sigstore-signed releases, reproducible-source evidence, SBOM publication, and Rekor/operator verification evidence ([#440](https://github.com/Eidetic-Labs/stigmem/issues/440)). The publish workflow now signs GHCR images keylessly, attaches SBOM and BuildKit provenance evidence, publishes npm/PyPI provenance, and documents operator verification commands.
 - 3+ external organizations running stigmem with pairwise federation and public external-review/bug-bounty posture ([#441](https://github.com/Eidetic-Labs/stigmem/issues/441)).
 - Wire-format freeze; backwards compatibility committed within v1.x ([#442](https://github.com/Eidetic-Labs/stigmem/issues/442)).
 

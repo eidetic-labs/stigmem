@@ -126,9 +126,12 @@ jobs:
               - 'docker-compose.yml'
             security_evidence:
               - '.github/workflows/ci.yml'
+              - '.github/workflows/publish.yml'
               - 'scripts/check_evidence_maintenance.py'
               - 'scripts/validate_security_evidence.py'
               - 'scripts/check_security_documentation.py'
+              - 'scripts/check_release_evidence.py'
+              - 'docs/docs/operators/release-verification.md'
               - 'docs/internal/evidence-maintenance.md'
               - 'docs/internal/dependency-currency.md'
               - 'docs/internal/security-evidence-registry.md'
@@ -529,6 +532,9 @@ jobs:
 
       - name: Validate cross-phase evidence maintenance wiring
         run: python scripts/check_evidence_maintenance.py
+
+      - name: Validate release evidence wiring
+        run: python scripts/check_release_evidence.py
 
   container-smoke:
     name: Container hardening smoke test

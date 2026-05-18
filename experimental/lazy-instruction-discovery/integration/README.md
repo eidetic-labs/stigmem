@@ -211,9 +211,9 @@ Local validation for the implementation PRs should include:
 
 ## Artifact evidence
 
-PR 4a implementation is landing before a signed/package-published lazy
-instruction discovery plugin artifact. Artifact publication and signing evidence
-are explicitly queued in
+PR 4a implementation landed before a signed/package-published lazy instruction
+discovery plugin artifact. Artifact publication and signing evidence are
+deferred until the plugin launch train and tracked in
 [#298](https://github.com/eidetic-labs/stigmem/issues/298). Until that issue is
 closed, the plugin is source-available under `experimental/` for validation only
 and must not be described as a released installable plugin artifact.

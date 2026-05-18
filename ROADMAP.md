@@ -22,7 +22,7 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 
 ## `v0.9.0aN` — alpha series
 
-**Status:** Phase A plugin extraction and exit validation are complete on `main`; remaining alpha release evidence is tracked in [#298](https://github.com/eidetic-labs/stigmem/issues/298). Source-side OpenClaw/ClawHub alpha framing corrections have landed for the next artifact refresh.
+**Status:** Phase A plugin extraction and exit validation are complete on `main`. Source-side OpenClaw/ClawHub alpha framing corrections have landed for the next artifact refresh. Plugin package publication evidence is intentionally deferred until the plugin launch train; it remains tracked in [#298](https://github.com/eidetic-labs/stigmem/issues/298) and is not a v0.9.0a2 blocker.
 
 ### Entry criteria
 - [x] Pre-flight contributor decisions complete
@@ -38,9 +38,9 @@ The work is organized into four sequential version lines per [ADR-019](docs/adr/
 - [x] **Modular spec migration** — the monolithic spec has been decomposed into component specs and experimental `Spec-X*` specs with the public docs navigator reflecting the split. Follow-on spec evolution remains ongoing, but ADR-010's structural migration is no longer a beta-series blocker.
 - [x] **CID core/spec validation** — content-addressed fact IDs remain core per ADR-017. Main includes CID computation, write-path persistence, alias lookup, verify endpoint, backfill status/CLI, migration support, tests, and conformance vectors; no `stigmem-plugin-cids` package exists or is planned.
 - [x] **Per-feature plugin extraction** — lazy instruction discovery, time-travel queries, RTBF tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation have been extracted on `main` as opt-in experimental plugin source packages. Signed/package artifact evidence remains deferred until all planned plugins are built ([#298](https://github.com/eidetic-labs/stigmem/issues/298)). CIDs remain core.
-- [x] **Phase A exit validation** — validated the complete extraction set, default-install behavior, plugin docs/trust posture, and roadmap/checklist closeout after the multi-tenant plugin landed ([#432](https://github.com/eidetic-labs/stigmem/issues/432)). Deferred signed/package artifact evidence remains queued in [#298](https://github.com/eidetic-labs/stigmem/issues/298).
+- [x] **Phase A exit validation** — validated the complete extraction set, default-install behavior, plugin docs/trust posture, and roadmap/checklist closeout after the multi-tenant plugin landed ([#432](https://github.com/eidetic-labs/stigmem/issues/432)). Deferred signed/package artifact evidence remains tracked in [#298](https://github.com/eidetic-labs/stigmem/issues/298).
 - [x] **Federation audit retention/observability** — verified persistent federation audit storage, endpoint tests, implemented federation metrics, and corrected public docs so retention and observability claims match code-backed behavior ([#435](https://github.com/eidetic-labs/stigmem/issues/435)).
-- [ ] **v0.9.0a2 artifact refresh** — publish the next alpha artifacts and capture release evidence. Remaining blocker: signed/package evidence for the first plugin artifact, tracked in [#298](https://github.com/eidetic-labs/stigmem/issues/298). Source-prep work for packaged READMEs, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literals, wheel migration packaging, and lint/coverage/complexity ratchets has landed or moved into the normal release gates.
+- [ ] **v0.9.0a2 artifact refresh** — publish the next alpha artifacts and capture release evidence for the core packages, SDKs, OpenClaw adapter, docs, and GHCR surfaces. Plugin artifact publication evidence is deferred until the plugin launch train because there is no released plugin artifact to attest yet; [#298](https://github.com/eidetic-labs/stigmem/issues/298) stays open for that later evidence. Source-prep work for packaged READMEs, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literals, wheel migration packaging, and lint/coverage/complexity ratchets has landed or moved into the normal release gates.
 - [x] **ClawHub/OpenClaw alpha-framing correction** — next-alpha source copy now frames OpenClaw as alpha/evaluation-only; the historical a1 package is not revised retroactively. Remaining OpenClaw audit hardening stays visible in the alpha/beta hardening lane. Closed by [#169](https://github.com/eidetic-labs/stigmem/issues/169).
 - [x] **OpenClaw audit planning for a2..aN** — OpenClaw hardening remains visible in the alpha/beta lane without claiming the a1 ClawHub package closed C1-C4 or H1/H2/H5. Source/docs now point operators to the experimental/evaluation posture and the remaining certification/operator-validation lane.
 - [x] **Docs/spec cleanup** — normalized rendered Spec-X status/source language, added experimental spec stability/since metadata validation, restored Security Model under the Secure sidebar, calibrated stale upgrade copy, and wired redirects for archived duplicate/snapshot entry points ([#433](https://github.com/eidetic-labs/stigmem/issues/433)).
@@ -278,14 +278,14 @@ Order matters per ADR-008: 1 before 2, 3 before 4, 5 last. Skipping requires exp
 
 Using `Spec-X1-Lazy-Instruction-Discovery` as the worked case:
 
-| Surface | Before extraction (v0.9.0a1) | After extraction on `main`, queued for the next alpha artifact refresh |
+| Surface | Before extraction (v0.9.0a1) | After extraction on `main`, before plugin artifact launch |
 |---|---|---|
 | Spec content | `experimental/lazy-instruction-discovery/spec.md` (Spec-X1) | Remains experimental under `experimental/lazy-instruction-discovery/spec.md` until a future ADR-008 graduation |
-| Plugin package | Not published | `stigmem-plugin-lazy-instruction-discovery` source package extracted under `experimental/lazy-instruction-discovery/`; signed/package publication evidence is queued in [#298](https://github.com/eidetic-labs/stigmem/issues/298) |
+| Plugin package | Not published | `stigmem-plugin-lazy-instruction-discovery` source package extracted under `experimental/lazy-instruction-discovery/`; signed/package publication evidence is deferred until the plugin launch train and tracked in [#298](https://github.com/eidetic-labs/stigmem/issues/298) |
 | Default install behavior | Routes mounted but feature dormant unless configured (per LIMITATIONS §11) | Plugin is opt-in; default install is unchanged in user-visible behavior. Operators who want the feature install the plugin |
 | `experimental/<feature>/STATUS.md` | `Status: Dormant`, ADR-008 gates Open | `Status: Extracted / opt-in experimental`; ADR-008 gates still Open unless separately completed |
 | `ROADMAP.md` v0.9.0aN work table | This row | Lazy-instruction extraction marked complete within the broader per-feature extraction row; remaining feature extractions stay in flight |
-| `concepts/features.md` | Experimental; embedded/dormant implementation acknowledged | Experimental; opt-in plugin source extracted, artifact publication queued |
+| `concepts/features.md` | Experimental; embedded/dormant implementation acknowledged | Experimental; opt-in plugin source extracted, artifact publication deferred |
 | `docs/compatibility-matrix.yaml` | `stability: experimental` for the feature | Still `stability: experimental`; source package and artifact-evidence status are explicit |
 | `CHANGELOG.md` | — | Entry under `### Added` for v0.9.0a2 noting the extraction and migration notes for alpha users |
 | `spec/EVOLUTION.md` | — | Entry recording the alpha extraction while preserving `Spec-X1` status |

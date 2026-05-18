@@ -27,10 +27,10 @@ dependencies = [
 lazy-instruction-discovery = "stigmem_plugin_lazy_instruction_discovery:plugin_manifest"
 
 [project.urls]
-Homepage = "https://github.com/Eidetic-Labs/stigmem"
-Documentation = "https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery"
-Repository = "https://github.com/Eidetic-Labs/stigmem"
-Issues = "https://github.com/Eidetic-Labs/stigmem/issues"
+Homepage = "https://github.com/eidetic-labs/stigmem"
+Documentation = "https://github.com/eidetic-labs/stigmem/tree/main/experimental/lazy-instruction-discovery"
+Repository = "https://github.com/eidetic-labs/stigmem"
+Issues = "https://github.com/eidetic-labs/stigmem/issues"
 
 [build-system]
 requires = ["hatchling"]

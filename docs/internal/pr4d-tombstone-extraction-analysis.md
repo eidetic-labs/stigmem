@@ -1,7 +1,7 @@
 # PR 4d Tombstone Extraction Analysis
 
-Issue: [#319](https://github.com/Eidetic-Labs/stigmem/issues/319)
-Parent: [#318](https://github.com/Eidetic-Labs/stigmem/issues/318)
+Issue: [#319](https://github.com/eidetic-labs/stigmem/issues/319)
+Parent: [#318](https://github.com/eidetic-labs/stigmem/issues/318)
 Date: 2026-05-16
 
 ## Summary

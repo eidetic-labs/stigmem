@@ -1,7 +1,7 @@
 # multi-tenant — Status
 
 multi-tenant is Source-available experimental on `main` after Stigmem issue
-[#431](https://github.com/Eidetic-Labs/stigmem/issues/431); owner unowned;
+[#431](https://github.com/eidetic-labs/stigmem/issues/431); owner unowned;
 buildable from source; last updated 2026-05-17. Spec ID: (no Spec-X assigned
 — deferred per [ADR-002](../../docs/adr/002-v1-scope.md); if reintroduced,
 gets next available Spec-X number per

@@ -14,7 +14,7 @@ for experimental features.
 ## Canonical risk register
 
 The numbered R-XX risk register lives in
-[`spec/security/threat-model.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md).
+[`spec/security/threat-model.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md).
 Cross-cutting protocol risks stay there. Examples include transport security,
 quota enforcement, prompt-injection controls, CID integrity, release
 supply-chain integrity, and storage immutability.
@@ -26,12 +26,12 @@ numbered risk keeps its feature analysis beside the feature:
 
 | Feature | Security analysis | Risk relationship |
 |---|---|---|
-| Lazy instruction discovery | [`experimental/lazy-instruction-discovery/security.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/lazy-instruction-discovery/security.md) | Owns R-15; contributes to R-21 |
-| RTBF tombstones | [`experimental/tombstones/security.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/tombstones/security.md) | Owns R-16 and R-17 |
-| Time-travel queries | [`experimental/time-travel/security.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/time-travel/security.md) | Contributes to R-17 and R-18 |
-| Memory garden ACL | [`experimental/memory-garden-acl/security.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/memory-garden-acl/security.md) | Contributes to R-21 |
-| Source attestation | [`experimental/source-attestation/security.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/source-attestation/security.md) | Contributes to R-22 |
-| Multi-tenant scoping | [`experimental/multi-tenant/security.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/multi-tenant/security.md) | Contributes to R-01, R-02, and R-21 |
+| Lazy instruction discovery | [`experimental/lazy-instruction-discovery/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/lazy-instruction-discovery/security.md) | Owns R-15; contributes to R-21 |
+| RTBF tombstones | [`experimental/tombstones/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/tombstones/security.md) | Owns R-16 and R-17 |
+| Time-travel queries | [`experimental/time-travel/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/time-travel/security.md) | Contributes to R-17 and R-18 |
+| Memory garden ACL | [`experimental/memory-garden-acl/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/memory-garden-acl/security.md) | Contributes to R-21 |
+| Source attestation | [`experimental/source-attestation/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/source-attestation/security.md) | Contributes to R-22 |
+| Multi-tenant scoping | [`experimental/multi-tenant/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/multi-tenant/security.md) | Contributes to R-01, R-02, and R-21 |
 
 These files do not replace the risk register. They give operators and
 contributors the local threat-model delta, operator scenarios, conformance

@@ -129,7 +129,7 @@ def annotate_subsection_anchors(body: str, top_num: str) -> str:
     return '\n'.join(out)
 
 
-REPO_BASE = 'https://github.com/Eidetic-Labs/stigmem/blob/main'
+REPO_BASE = 'https://github.com/eidetic-labs/stigmem/blob/main'
 
 def rewrite_relative_links(body: str) -> str:
     """Repoint repo-relative links in spec source to their GitHub canonical URL.
@@ -330,7 +330,7 @@ def page_for_section(top_num: str, body: str | None) -> str:
     out.append('')
     out.append(summary)
     out.append('')
-    out.append(f'**Authoritative source:** [`spec/{spec_file}`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/{spec_file})')
+    out.append(f'**Authoritative source:** [`spec/{spec_file}`](https://github.com/eidetic-labs/stigmem/blob/main/spec/{spec_file})')
     out.append('')
     if body:
         out.append(':::note Section body')
@@ -401,7 +401,7 @@ def main():
     idx.append('# Stigmem Protocol Specification')
     idx.append('')
     idx.append(':::note Authoritative source')
-    idx.append('Spec source markdown lives in [`spec/stigmem-spec-v1.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) and [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md). Each section below renders the source text inline; sections marked stub have content only in earlier spec drafts and link to GitHub for the full history.')
+    idx.append('Spec source markdown lives in [`spec/stigmem-spec-v1.0.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) and [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md). Each section below renders the source text inline; sections marked stub have content only in earlier spec drafts and link to GitHub for the full history.')
     idx.append(':::')
     idx.append('')
     idx.append(':::info Security disclosure')

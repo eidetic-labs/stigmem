@@ -190,4 +190,4 @@ Default is `false` for backward compatibility with clients that predate Track C.
 - [Authentication](./authentication) — Bearer-key model and OIDC-issued keys
 - [Human Key Issuance](./human-key-issuance) — C2: per-garden key scoping for human principals
 - [Audit Log](./audit-log) — C3: querying the principal → attested-source → fact-id trail
-- [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) — how human principals receive their `entity_uri`
+- [OIDC / SSO Integration](https://github.com/eidetic-labs/stigmem/tree/main/experimental/oidc-sso) — how human principals receive their `entity_uri`

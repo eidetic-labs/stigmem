@@ -45,7 +45,7 @@ Facts are immutable. Contradictions between nodes are surfaced as first-class co
 ## Federation in 2 minutes
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem && cd stigmem
+git clone https://github.com/eidetic-labs/stigmem && cd stigmem
 docker compose up --build -d
 
 # Register peers
@@ -93,20 +93,20 @@ It fills the gap none of them fill: typed, provenance-traceable, expiry-aware, f
 
 Stigmem is Apache 2.0 and genuinely needs contributors. A few areas where help would make the biggest difference right now:
 
-* **Spec feedback:** the [Intent envelope](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) (section 4: goal, constraint, preference, handoff) is still in draft status and we're actively looking for real use-case feedback before stabilizing it
+* **Spec feedback:** the [Intent envelope](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) (section 4: goal, constraint, preference, handoff) is still in draft status and we're actively looking for real use-case feedback before stabilizing it
 * **Adapter authors:** there are stubs for additional agent runtimes and we'd love to see community-maintained adapters
 * **Node implementations:** the reference node is FastAPI + SQLite; alternative implementations in other languages are explicitly encouraged by the spec
-* **Real-world federation topologies:** if you run an interesting multi-node setup, [open a discussion](https://github.com/Eidetic-Labs/stigmem/discussions) and we'd like to document it
+* **Real-world federation topologies:** if you run an interesting multi-node setup, [open a discussion](https://github.com/eidetic-labs/stigmem/discussions) and we'd like to document it
 
 The contribution process uses an RFC model: open a GitHub issue with the RFC template, discuss, then PR against the spec. New spec sections start as draft blocks and need 2+ approvals from active contributors to merge.
 
-If you're building something on stigmem or have questions about the federation protocol, the HLC implementation, or how to write an adapter, drop a comment or open a [GitHub discussion](https://github.com/Eidetic-Labs/stigmem/discussions). We read everything.
+If you're building something on stigmem or have questions about the federation protocol, the HLC implementation, or how to write an adapter, drop a comment or open a [GitHub discussion](https://github.com/eidetic-labs/stigmem/discussions). We read everything.
 
 ## Links
 
-* [GitHub Repository (Apache 2.0)](https://github.com/Eidetic-Labs/stigmem)
+* [GitHub Repository (Apache 2.0)](https://github.com/eidetic-labs/stigmem)
 * [Documentation](https://docs.stigmem.dev)
-* [v1.0 Specification](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md)
+* [v1.0 Specification](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md)
 * [Quickstart: two nodes federating in under 10 minutes](https://docs.stigmem.dev/docs/getting-started/quickstart)
-* [Contributing guide](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md)
-* [GitHub Discussions](https://github.com/Eidetic-Labs/stigmem/discussions)
+* [Contributing guide](https://github.com/eidetic-labs/stigmem/blob/main/CONTRIBUTING.md)
+* [GitHub Discussions](https://github.com/eidetic-labs/stigmem/discussions)

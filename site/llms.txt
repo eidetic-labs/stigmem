@@ -6,7 +6,7 @@ Stigmem = Stigmergy + Memory. Like ant colonies coordinating through pheromone t
 
 **License:** Apache-2.0
 **Status:** v1.0 stable
-**Repository:** https://github.com/Eidetic-Labs/stigmem
+**Repository:** https://github.com/eidetic-labs/stigmem
 
 ## Core Concepts
 
@@ -71,6 +71,6 @@ When connected via the MCP adapter, agents get:
 
 ## Optional
 
-- [CHANGELOG](https://github.com/Eidetic-Labs/stigmem/blob/main/CHANGELOG.md)
-- [Contributing guide](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md)
-- [Security policy](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md)
+- [CHANGELOG](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md)
+- [Contributing guide](https://github.com/eidetic-labs/stigmem/blob/main/CONTRIBUTING.md)
+- [Security policy](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md)

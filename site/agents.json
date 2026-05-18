@@ -3,7 +3,7 @@
   "description": "Federated knowledge fabric and intent protocol for AI agents. Provides typed, traceable, decaying facts that replicate across nodes and organizations.",
   "url": "https://stigmem.dev",
   "documentation": "https://docs.stigmem.dev/en/latest/docs/learn",
-  "repository": "https://github.com/Eidetic-Labs/stigmem",
+  "repository": "https://github.com/eidetic-labs/stigmem",
   "license": "Apache-2.0",
   "version": "1.0.0",
   "capabilities": [
@@ -30,8 +30,8 @@
       ]
     }
   },
-  "quickstart": "git clone https://github.com/Eidetic-Labs/stigmem && cd stigmem && docker compose up --build -d",
+  "quickstart": "git clone https://github.com/eidetic-labs/stigmem && cd stigmem && docker compose up --build -d",
   "contact": {
-    "github": "https://github.com/Eidetic-Labs/stigmem/issues"
+    "github": "https://github.com/eidetic-labs/stigmem/issues"
   }
 }

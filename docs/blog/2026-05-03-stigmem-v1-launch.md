@@ -3,7 +3,7 @@ slug: stigmem-v1-launch
 title: "Stigmem v1.0: A Federated Knowledge Fabric for AI Agents"
 authors:
   - name: Eidetic Labs
-    url: https://github.com/Eidetic-Labs
+    url: https://github.com/eidetic-labs
 date: 2026-05-03
 tags: [release, federation, mcp, ai-agents]
 description: >
@@ -12,9 +12,9 @@ description: >
 
 :::warning Retracted: this v1.0 announcement was withdrawn
 
-This post announced stigmem v1.0 on 2026-05-03. **The v1.0 label was withdrawn shortly after.** The canonical version line of stigmem now begins at `v0.9.0a1` per [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md) and [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). This post is preserved in place to keep external links from breaking; it is not the current state of the project.
+This post announced stigmem v1.0 on 2026-05-03. **The v1.0 label was withdrawn shortly after.** The canonical version line of stigmem now begins at `v0.9.0a1` per [ADR-001](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/001-versioning.md) and [ADR-019](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). This post is preserved in place to keep external links from breaking; it is not the current state of the project.
 
-For the current posture, the retraction's reasoning, and what changed, see [the retraction post on dev.to](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) and [LIMITATIONS.md](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md).
+For the current posture, the retraction's reasoning, and what changed, see [the retraction post on dev.to](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) and [LIMITATIONS.md](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md).
 
 :::
 
@@ -72,7 +72,7 @@ The reference node is a FastAPI + SQLite implementation with 74 tests, including
 Two nodes federating takes under two minutes with Docker:
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem && cd stigmem
+git clone https://github.com/eidetic-labs/stigmem && cd stigmem
 docker compose up --build -d
 
 # Register peers (both directions)
@@ -136,10 +136,10 @@ It fills the gap none of them fill: typed, provenance-traceable, expiry-aware, f
 
 **Self-hosted:** [docs.stigmem.dev/docs/getting-started/quickstart](https://docs.stigmem.dev/docs/getting-started/quickstart)
 
-**Repo:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem) — Apache 2.0
+**Repo:** [github.com/eidetic-labs/stigmem](https://github.com/eidetic-labs/stigmem) — Apache 2.0
 
-**Spec:** [`spec/stigmem-spec-v1.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) — all 18 sections stable
+**Spec:** [`spec/stigmem-spec-v1.0.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) — all 18 sections stable
 
-**Free-tier hosted node:** coming soon — [join the list](https://github.com/Eidetic-Labs/stigmem/discussions)
+**Free-tier hosted node:** coming soon — [join the list](https://github.com/eidetic-labs/stigmem/discussions)
 
 We'd love to hear what you're building. Open a discussion on GitHub, or drop a comment below.

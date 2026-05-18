@@ -10,7 +10,7 @@ audience: Operator
 
 **Audience:** operators deploying Stigmem for the first time or migrating between environments.  
 **Spec reference:** none — this is operational, not protocol.  
-**Source recipes:** [`deploy/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy) in the repo.
+**Source recipes:** [`deploy/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy) in the repo.
 
 Pick the environment that matches your infrastructure, then follow the runbook end to end. Each runbook ends with a health check and a pointer to next steps.
 
@@ -123,7 +123,7 @@ Migrations run automatically on startup.
 ### Step 1 — Clone and configure
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 cp deploy/compose/.env.example deploy/compose/.env
 ```

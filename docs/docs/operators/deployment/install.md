@@ -15,22 +15,22 @@ For the narrative Docker Compose runbook, see **[Operating Stigmem → Deploy ru
 The reference node ships as a Docker image. Docker Compose is the supported deployment path in v0.9.0a1 for both local development and single-host production. For development against source, see [Running without Docker](#running-without-docker).
 
 :::caution Other deployment surfaces are deferred
-Fly.io, Helm/Kubernetes, systemd, PaaS, and Grafana recipes have been moved to [`experimental/deploy-*/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental) per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md). They remain available as starting points but are unsupported until they pass the [ADR-008 reintroduction gates](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). See **[Features → Deployment](../../concepts/features#operations-v090a1-critical-path)** for the full disposition.
+Fly.io, Helm/Kubernetes, systemd, PaaS, and Grafana recipes have been moved to [`experimental/deploy-*/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental) per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md). They remain available as starting points but are unsupported until they pass the [ADR-008 reintroduction gates](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). See **[Features → Deployment](../../concepts/features#operations-v090a1-critical-path)** for the full disposition.
 :::
 
 ## Deploy recipe
 
-The [`deploy/compose/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/compose) directory contains the supported Docker Compose reference recipe. The sections below cover the Docker Compose path in detail.
+The [`deploy/compose/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/compose) directory contains the supported Docker Compose reference recipe. The sections below cover the Docker Compose path in detail.
 
 ---
 
 ## Container image tags — which one should I pull? {#image-tags}
 
-The reference node image is published to GHCR at [`ghcr.io/eidetic-labs/stigmem-node`](https://github.com/Eidetic-Labs/stigmem/pkgs/container/stigmem-node). Several tag flavours are published in parallel — choose the one that matches your stability needs:
+The reference node image is published to GHCR at [`ghcr.io/eidetic-labs/stigmem-node`](https://github.com/eidetic-labs/stigmem/pkgs/container/stigmem-node). Several tag flavours are published in parallel — choose the one that matches your stability needs:
 
 | Tag | Stability | Use when… | Example |
 |---|---|---|---|
-| `:0.9.0aN` (or `:0.9.0bN`, `:1.0.0rcN`, `:1.0.0`) | **Immutable** — never reassigned after publish ([release rule 2](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/internal/release-cadence.md#rule-2--tags-are-immutable-after-publish)) | **Production.** Reproducible builds, audit-traceable deployments, change-control gates. | `ghcr.io/eidetic-labs/stigmem-node:0.9.0a1` |
+| `:0.9.0aN` (or `:0.9.0bN`, `:1.0.0rcN`, `:1.0.0`) | **Immutable** — never reassigned after publish ([release rule 2](https://github.com/eidetic-labs/stigmem/blob/main/docs/internal/release-cadence.md#rule-2--tags-are-immutable-after-publish)) | **Production.** Reproducible builds, audit-traceable deployments, change-control gates. | `ghcr.io/eidetic-labs/stigmem-node:0.9.0a1` |
 | `:0.9.0-alpha.N` / `:0.9.0-beta.N` / `:1.0.0-rc.N` / `:1.0.0` | Immutable | Same artefact as the row above, in semver-strict spelling. Use whichever your tooling prefers. | `ghcr.io/eidetic-labs/stigmem-node:0.9.0-alpha.1` |
 | `:latest` | Rolling — advances on every release tag push, never on a plain `main` push | Quickstart, eval, demos. You accept that the image will silently advance when a new release ships. | `ghcr.io/eidetic-labs/stigmem-node:latest` |
 | `:edge` | Rolling — advances on every `main` push | Tracking tip-of-trunk between releases. CI-tested but not release-gated. | `ghcr.io/eidetic-labs/stigmem-node:edge` |
@@ -58,7 +58,7 @@ The publish workflow tags every release with `:latest` + the version pair (`:0.9
 - **Retained forever:** `:latest`; all version tags (`:0.9.0aN`, `:0.9.0bN`, `:1.0.0rcN`, `:1.0.0`); `:edge`.
 - **Retained for 90 days:** short-SHA tags (`:<7-char-sha>`) and their orphan Sigstore signature artefacts (`sha256-…sig`).
 
-Operationally enforced by [`.github/workflows/ghcr-retention.yml`](https://github.com/Eidetic-Labs/stigmem/blob/main/.github/workflows/ghcr-retention.yml), which runs weekly. The retention policy itself is documented as [release rule 7](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/internal/release-cadence.md#rule-7--ghcr-image-retention) in `docs/internal/release-cadence.md`.
+Operationally enforced by [`.github/workflows/ghcr-retention.yml`](https://github.com/eidetic-labs/stigmem/blob/main/.github/workflows/ghcr-retention.yml), which runs weekly. The retention policy itself is documented as [release rule 7](https://github.com/eidetic-labs/stigmem/blob/main/docs/internal/release-cadence.md#rule-7--ghcr-image-retention) in `docs/internal/release-cadence.md`.
 
 ---
 
@@ -79,7 +79,7 @@ No Python or Node.js installation is required for the Docker path.
 Clone the repo and start two federated nodes with a single command:
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 docker compose up --build -d
 ```

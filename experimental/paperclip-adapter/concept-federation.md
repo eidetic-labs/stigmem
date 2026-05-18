@@ -69,7 +69,7 @@ the company node in sync with upstream peers. Agents never talk directly to an u
 ### Option A: Docker Compose (recommended for getting started)
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 
 # Generate a federation keypair for this node

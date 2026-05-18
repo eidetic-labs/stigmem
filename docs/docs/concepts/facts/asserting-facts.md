@@ -133,7 +133,7 @@ curl -s -X POST http://localhost:8765/v1/facts \
 ```
 
 :::tip Using the MCP tool instead of curl
-If you are inside a Paperclip or Claude Code session with the Stigmem MCP server configured, call `assert_fact` directly — no `curl` required. See the [Paperclip connector guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/adapter-paperclip).
+If you are inside a Paperclip or Claude Code session with the Stigmem MCP server configured, call `assert_fact` directly — no `curl` required. See the [Paperclip connector guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip).
 :::
 
 ## Multi-tenant fact assertion
@@ -167,7 +167,7 @@ curl -s "http://localhost:8765/v1/facts?entity=user:alice" \
   -H "Authorization: Bearer $ACME_KEY" | jq .
 ```
 
-See [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) for the full isolation model and key provisioning guide.
+See [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant) for the full isolation model and key provisioning guide.
 
 ## Additional topics
 

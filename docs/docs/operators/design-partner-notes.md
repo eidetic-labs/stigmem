@@ -12,7 +12,7 @@ Three design-partner pilots ran during the pre-reset design-partner window: Zep,
 
 ## Zep
 
-**Adapter:** [`experimental/zep-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/zep-adapter) (deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
+**Adapter:** [`experimental/zep-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/zep-adapter) (deferred per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
 
 Zep stores agent memory as session-scoped "propositions" extracted from dialogue. The adapter bridges these into stigmem facts and back.
 
@@ -29,7 +29,7 @@ Zep stores agent memory as session-scoped "propositions" extracted from dialogue
 
 ## Letta
 
-**Adapter:** [`experimental/letta-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/letta-adapter) (deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
+**Adapter:** [`experimental/letta-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/letta-adapter) (deferred per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
 
 Letta is an agent framework with first-class persistent memory blocks. The adapter federates stigmem facts into Letta's in-context memory and back.
 
@@ -43,11 +43,11 @@ Letta is an agent framework with first-class persistent memory blocks. The adapt
 - Decay policies were useful for memory block hygiene: Letta agent memory tends to accumulate stale "task status" facts. The `memory:last_seen` retract policy cleaned these automatically.
 - Contradiction detection fired frequently for task-status facts when two agents held different views. The Letta pilot drove the `alt_value` / `alt_confidence` fields in the `SynthesisEntry` response — callers needed to see the losing value, not just know a contradiction existed.
 
-**See also:** [Synthesis guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/synthesis), [Decay guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/decay)
+**See also:** [Synthesis guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/synthesis), [Decay guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/decay)
 
 ## Cognee
 
-**Adapter:** [`experimental/cognee-adapter/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/cognee-adapter) (deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
+**Adapter:** [`experimental/cognee-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/cognee-adapter) (deferred per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
 
 Cognee builds knowledge graphs from unstructured text. The adapter bridges stigmem's (entity, relation, value) triple model with Cognee's graph representation.
 

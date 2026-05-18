@@ -95,7 +95,7 @@ Key metrics:
 
 ### Grafana dashboard
 
-A sample Grafana dashboard JSON is available at [`experimental/deploy-grafana/stigmem-dashboard.json`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/deploy-grafana/stigmem-dashboard.json) in the repo. Grafana support is deferred per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md); the dashboard remains buildable for self-import but is unsupported until it passes the [ADR-008 reintroduction gates](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). Import it into your Grafana instance and point the data source at your Prometheus scrape target.
+A sample Grafana dashboard JSON is available at [`experimental/deploy-grafana/stigmem-dashboard.json`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/deploy-grafana/stigmem-dashboard.json) in the repo. Grafana support is deferred per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md); the dashboard remains buildable for self-import but is unsupported until it passes the [ADR-008 reintroduction gates](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). Import it into your Grafana instance and point the data source at your Prometheus scrape target.
 
 ---
 

@@ -9,7 +9,7 @@ audience: Operator
 
 **Audience:** platform engineers deploying Stigmem nodes on Kubernetes via Helm.
 
-The Helm chart ships in [`deploy/helm/stigmem/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/helm/stigmem)
+The Helm chart ships in [`deploy/helm/stigmem/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/helm/stigmem)
 in the main repository. Install it directly from that path:
 
 ```bash
@@ -17,7 +17,7 @@ in the main repository. Install it directly from that path:
 helm install stigmem deploy/helm/stigmem --namespace stigmem --create-namespace
 ```
 
-See the **[Helm recipe README](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/helm/README.md)**
+See the **[Helm recipe README](https://github.com/eidetic-labs/stigmem/blob/main/deploy/helm/README.md)**
 for full instructions: ingress, TLS, libSQL/Turso, encryption at rest, federation keypair secrets,
 and multi-instance federation.
 
@@ -100,12 +100,12 @@ Never embed `STIGMEM_FEDERATION_PRIVKEY` directly in a `values.yaml` file commit
 
 | Recipe | Guide |
 |---|---|
-| Fly.io | [`deploy/fly/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/fly) |
-| Docker Compose | [`deploy/compose/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/compose) |
-| systemd / bare-metal | [`deploy/systemd/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/systemd) |
-| Render / Railway / App Runner / Cloud Run | [`deploy/paas/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/paas) |
+| Fly.io | [`deploy/fly/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/fly) |
+| Docker Compose | [`deploy/compose/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/compose) |
+| systemd / bare-metal | [`deploy/systemd/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/systemd) |
+| Render / Railway / App Runner / Cloud Run | [`deploy/paas/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/paas) |
 
-See the top-level [`deploy/README.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/README.md)
+See the top-level [`deploy/README.md`](https://github.com/eidetic-labs/stigmem/blob/main/deploy/README.md)
 decision tree for help picking the right recipe.
 
 For local and single-host deployments, see [Deployment & Installation](./install).

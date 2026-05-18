@@ -42,7 +42,7 @@ Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://sti
 > instruction-channel recall output and exports a required system prompt
 > directive, but the broader ADR-003 hardening line still needs MCP parity,
 > operator docs, and feedback-loop controls before high-stakes production use. See
-> [LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
+> [LIMITATIONS.md §9](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 ## What this skill provides
 
@@ -248,4 +248,4 @@ Initial release — boot handshake, handoff, decision, and escalation surfaces.
 
 ## Source
 
-[github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem) — Apache-2.0
+[github.com/eidetic-labs/stigmem](https://github.com/eidetic-labs/stigmem) — Apache-2.0

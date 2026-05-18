@@ -167,7 +167,7 @@ Running it on yourself first is the only honest way to know it works.
 Stigmem is open source. The instruction migration CLI ships as part of the reference node. Clone the repo and install from source:
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 
 # install the node package (includes the stigmem CLI)

@@ -1,7 +1,7 @@
 # PR 4b CID Core Validation
 
-Issue: [#302](https://github.com/Eidetic-Labs/stigmem/issues/302)
-Parent: [#301](https://github.com/Eidetic-Labs/stigmem/issues/301)
+Issue: [#302](https://github.com/eidetic-labs/stigmem/issues/302)
+Parent: [#301](https://github.com/eidetic-labs/stigmem/issues/301)
 
 ## Decision
 

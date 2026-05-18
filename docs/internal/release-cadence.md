@@ -45,7 +45,7 @@ GHCR packages default to **private** when first published. Adopters following th
 
 **Required after the first publish of any new GHCR image:**
 
-1. Go to `https://github.com/orgs/Eidetic-Labs/packages/container/<package-name>/settings`
+1. Go to `https://github.com/orgs/eidetic-labs/packages/container/<package-name>/settings`
 2. **Danger Zone** → **Change visibility** → **Public**
 3. Confirm
 
@@ -188,7 +188,7 @@ git tag v0.9.0a2          # adjust version
 git push origin v0.9.0a2
 
 # Watch the workflow run
-gh run watch --repo Eidetic-Labs/stigmem $(gh run list --workflow=publish.yml --limit 1 --json databaseId --jq '.[0].databaseId')
+gh run watch --repo eidetic-labs/stigmem $(gh run list --workflow=publish.yml --limit 1 --json databaseId --jq '.[0].databaseId')
 ```
 
 Pushing the tag triggers `.github/workflows/publish.yml`, which fans out into:
@@ -212,16 +212,16 @@ Within ~5 minutes of tag push:
 - [ ] **PyPI** — `pip install --pre stigmem` resolves to the new version. `pip show stigmem` returns the expected `Version:`. Repeat for `stigmem-py`, `stigmem-node`, `stigmem-openclaw`.
 - [ ] **npm** — `npm view @eidetic-labs/stigmem-ts version` returns the new semver. `npm view @eidetic-labs/stigmem-ts` shows the right `dist-tags`: the line-specific tag (`alpha` / `beta` / `rc`) advances to the new prerelease, AND `latest` advances to it too (per the project convention in [`LIMITATIONS.md` §npm `latest` dist-tag](../../LIMITATIONS.md). The publish workflow's "Advance latest dist-tag" step handles this automatically; the verification just confirms it ran).
 - [ ] **GHCR** — `docker pull ghcr.io/eidetic-labs/stigmem-node:<tag>` succeeds. (No `stigmem-dashboard` image: dashboard is deferred per ADR-002; `publish-dashboard` was removed from `publish.yml` in PR #64.)
-- [ ] **GHCR visibility** — for first publish of a new package only: visit `https://github.com/orgs/Eidetic-Labs/packages` → find the package → Package settings → Danger Zone → Change visibility → **Public**. Subsequent pushes inherit the visibility setting; this is one-time per package.
+- [ ] **GHCR visibility** — for first publish of a new package only: visit `https://github.com/orgs/eidetic-labs/packages` → find the package → Package settings → Danger Zone → Change visibility → **Public**. Subsequent pushes inherit the visibility setting; this is one-time per package.
 - [ ] **Cosign** — replace `<tag>` with the actual version (e.g. `0.9.0a2`):
   ```bash
   TAG=0.9.0a2
   cosign verify \
-    --certificate-identity-regexp 'github.com/Eidetic-Labs/stigmem' \
+    --certificate-identity-regexp 'github.com/eidetic-labs/stigmem' \
     --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
     ghcr.io/eidetic-labs/stigmem-node:$TAG
   ```
-- [ ] **GitHub release** — Created automatically by `publish.yml` `create-release` job. Verify the release page at `https://github.com/Eidetic-Labs/stigmem/releases/tag/v<tag>` shows: (1) the install-commands header, (2) the full CHANGELOG section for this version, (3) the prerelease badge (for alpha/beta/rc) or no badge (for final). If the page is missing or notes are empty, check the `create-release` job log for an extraction error.
+- [ ] **GitHub release** — Created automatically by `publish.yml` `create-release` job. Verify the release page at `https://github.com/eidetic-labs/stigmem/releases/tag/v<tag>` shows: (1) the install-commands header, (2) the full CHANGELOG section for this version, (3) the prerelease badge (for alpha/beta/rc) or no badge (for final). If the page is missing or notes are empty, check the `create-release` job log for an extraction error.
 - [ ] **Close the tracking issue** for this release if one was opened (e.g., the PR-N issue in the master-checklist).
 
 Within ~2 hours of tag push:

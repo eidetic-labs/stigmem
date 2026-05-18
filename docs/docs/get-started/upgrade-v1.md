@@ -30,15 +30,15 @@ compatibility with the extracted multi-tenant plugin. On upgrade:
 - Default installs collapse tenant resolution to `"default"` unless the
   opt-in multi-tenant plugin is registered.
 
-See [Multi-Tenancy](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) for the extracted plugin source package.
+See [Multi-Tenancy](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant) for the extracted plugin source package.
 
 ### Billing hooks
 
-A new `stigmem_node.billing` module emits a `BillingEvent` after every fact write and garden creation. The default implementation logs structured JSON to stderr — no configuration needed unless you want a custom backend. See [Billing Hooks](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing).
+A new `stigmem_node.billing` module emits a `BillingEvent` after every fact write and garden creation. The default implementation logs structured JSON to stderr — no configuration needed unless you want a custom backend. See [Billing Hooks](https://github.com/eidetic-labs/stigmem/tree/main/experimental/billing).
 
 ### Source attestation
 
-Source attestation remains experimental in the v0.9.0aN line (`Spec-X6-Source-Attestation`). Default installs keep source-attestation behavior off; runtime enforcement is moving behind `stigmem-plugin-source-attestation` registration and explicit plugin configuration. See [Source Attestation](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation).
+Source attestation remains experimental in the v0.9.0aN line (`Spec-X6-Source-Attestation`). Default installs keep source-attestation behavior off; runtime enforcement is moving behind `stigmem-plugin-source-attestation` registration and explicit plugin configuration. See [Source Attestation](https://github.com/eidetic-labs/stigmem/tree/main/experimental/source-attestation).
 
 ### Conformance test suite
 
@@ -135,7 +135,7 @@ All migrations run automatically at startup in ascending numeric order. There is
 ## See also
 
 - [Installation](./installation) — fresh install with Docker Compose
-- [Multi-Tenancy](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) — tenant isolation model
-- [Billing Hooks](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing) — hooking into write events
-- [Source Attestation](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/source-attestation) — hardening entity_uri binding
+- [Multi-Tenancy](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant) — tenant isolation model
+- [Billing Hooks](https://github.com/eidetic-labs/stigmem/tree/main/experimental/billing) — hooking into write events
+- [Source Attestation](https://github.com/eidetic-labs/stigmem/tree/main/experimental/source-attestation) — hardening entity_uri binding
 - [Audit Log](../security/audit-log) — querying the per-principal write trail

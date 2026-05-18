@@ -39,4 +39,4 @@ These paths receive high-level direction and spot checks:
 
 When a PR includes AI-generated code or prose, say so in the PR description. The project does not reject AI-assisted contributions; it calibrates review effort. Reviewers should verify behavior against the spec, run the relevant conformance or test suite, and audit higher-risk paths before merging.
 
-The canonical source copy for this disclosure is also maintained in [`README.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/README.md#ai-authorship-disclosure) and [`CONTRIBUTING.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md#ai-authorship-disclosure).
+The canonical source copy for this disclosure is also maintained in [`README.md`](https://github.com/eidetic-labs/stigmem/blob/main/README.md#ai-authorship-disclosure) and [`CONTRIBUTING.md`](https://github.com/eidetic-labs/stigmem/blob/main/CONTRIBUTING.md#ai-authorship-disclosure).

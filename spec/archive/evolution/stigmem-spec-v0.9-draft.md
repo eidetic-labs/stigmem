@@ -15,7 +15,7 @@
 
 **Status:** Working draft — Phase 7. §1–§16 promoted to stable (normative) from v0.8. §17 Memory Garden new (draft). §18 Source Attestation new (draft). §5 extended with garden and attestation routes (§5.14–§5.20). §2 extended with `garden_id` and `attested` fact fields. §3.5 extended with source attestation enforcement. §10 migration 004 (gardens) + migration 005 (api_keys + attestation_audit).
 **License:** Apache-2.0
-**Authors:** Eidetic-Labs
+**Authors:** Eidetic Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
 - v0.9 (Phase 7 — substrate): §17 Memory Garden — named, ACL'd partition above scope with admin/writer/reader role model and entity membership. §18 Source Attestation — `entity_uri` bound to API key at creation (immutable); enforcement at write time via enforce/warn/off modes; auto-fill source from key's entity_uri when omitted; delegation via `allowed_source_entities`; key management API (`POST/GET/PATCH/DELETE /v1/auth/keys`); attestation audit log; migration 005 (api_keys, attestation_audit). §5.14–§5.20 garden + attestation wire routes. §2 `garden_id` and `attested` fields on FactRecord. §3.5 source attestation rules + updated Identity shape with `allowed_source_entities`. §9 `garden:` prefix reserved. §10 migrations 004–005.

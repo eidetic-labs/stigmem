@@ -3,7 +3,7 @@ import styles from './styles.module.css';
 
 type Variant = 'star' | 'fork';
 
-const REPO = 'Eidetic-Labs/stigmem';
+const REPO = 'eidetic-labs/stigmem';
 const CACHE_KEY = `gh:${REPO}`;
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1h
 

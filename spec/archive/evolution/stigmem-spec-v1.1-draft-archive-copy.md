@@ -15,7 +15,7 @@
 
 **Status:** DRAFT — §19 proposed normative; §20–§25 DRAFT. §1–§18 stable from v1.0.
 **License:** Apache-2.0
-**Authors:** Eidetic-Labs
+**Authors:** Eidetic Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
 - v1.1-draft rev 12 (2026-05-04): §23–§25 DRAFT normative (Phase 13). Adds §23 Right-to-be-Forgotten tombstones (`TombstoneRecord` shape with `entity_uri`, `scope`, `reason`, `signed_by`, `signature`, `created_at`, `legal_hold`; recall-time filter excluding tombstoned subjects and graph references; federation propagation with inbound verification and `/v1/federation/tombstones` poll route; storage-trait extension: `tombstone()`, `is_tombstoned()`, `list_tombstones()`, `revoke_tombstone()`; Migration 013a DDL); §24 Time-travel / as-of queries (`as_of` timestamp parameter on `/v1/recall` and `/v1/facts`; fact visibility definition at time T; default RTBF retroactive suppression; `legal_hold: true` preserves facts for admin-key `as_of` queries only with `tombstone_notices` annotation; `query_facts_as_of` and `recall_as_of` storage-trait methods); §25 Content-addressed fact IDs (CID = `"sha256:" + hex(SHA-256(RFC8785(canonical_body)))` over 6 canonical fields; `"sha256:"` prefix for future algorithm rotation per §22.2 pattern; `fact_cid_aliases` alias table for dual UUID/CID addressing; 12-month migration window; federation envelope MUST carry CID for tamper detection; `stigmem backfill-cids` CLI; Migration 013b DDL). Adds 11 new error codes across §23–§25.
@@ -2584,7 +2584,7 @@ Nodes MUST synchronise their system clocks via NTP (or equivalent). Operators SH
 
 #### 22.6.1 Scope
 
-This section specifies the normative security posture for reference operator container images published by Eidetic-Labs. Third-party operators running Stigmem from source SHOULD adopt the same baseline.
+This section specifies the normative security posture for reference operator container images published by Eidetic Labs. Third-party operators running Stigmem from source SHOULD adopt the same baseline.
 
 #### 22.6.2 Distroless Image
 
@@ -2632,7 +2632,7 @@ Reference images MUST be signed using [Sigstore Cosign](https://github.com/sigst
 
 #### 22.7.1 Purpose
 
-§19.2.2 permits but does not require operating a self-hosted Rekor instance. This section provides normative decision criteria so that operators can determine whether self-hosting is appropriate, and records the Eidetic-Labs reference deployment position.
+§19.2.2 permits but does not require operating a self-hosted Rekor instance. This section provides normative decision criteria so that operators can determine whether self-hosting is appropriate, and records the Eidetic Labs reference deployment position.
 
 #### 22.7.2 Decision Criteria
 
@@ -2648,9 +2648,9 @@ An operator SHOULD self-host a Rekor instance if and only if ALL of the followin
 
 If any criterion is not met, the operator SHOULD use the public Rekor instance at `https://rekor.sigstore.dev` (or a hosted equivalent). Operators MUST NOT self-host without documented answers to each criterion in their ops runbook.
 
-#### 22.7.3 Reference Deployment Position (Eidetic-Labs)
+#### 22.7.3 Reference Deployment Position (Eidetic Labs)
 
-The Eidetic-Labs reference deployment uses the **public Rekor instance** (`https://rekor.sigstore.dev`). Criteria evaluation:
+The Eidetic Labs reference deployment uses the **public Rekor instance** (`https://rekor.sigstore.dev`). Criteria evaluation:
 
 | Criterion | Status |
 |---|---|
@@ -2660,7 +2660,7 @@ The Eidetic-Labs reference deployment uses the **public Rekor instance** (`https
 | Independent peer accessibility | Not evaluated — moot given above |
 | Dedicated key ceremony team | Not evaluated — moot given above |
 
-**Decision: defer self-hosted Rekor to backlog.** A self-hosted Rekor instance for the Eidetic-Labs reference deployment does not meet the minimum decision criteria at this phase. A backlog issue SHOULD be filed when the following change conditions are met: (a) a private-network deployment tier is productised, or (b) a dedicated SRE function is established. Implementation of a self-hosted instance is explicitly out of scope for Phase 12.
+**Decision: defer self-hosted Rekor to backlog.** A self-hosted Rekor instance for the Eidetic Labs reference deployment does not meet the minimum decision criteria at this phase. A backlog issue SHOULD be filed when the following change conditions are met: (a) a private-network deployment tier is productised, or (b) a dedicated SRE function is established. Implementation of a self-hosted instance is explicitly out of scope for Phase 12.
 
 #### 22.7.4 Configuration
 

@@ -31,10 +31,10 @@ dependencies = [
 stigmem-obsidian = "stigmem_obsidian.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/Eidetic-Labs/stigmem"
+Homepage = "https://github.com/eidetic-labs/stigmem"
 Documentation = "https://docs.stigmem.dev/en/latest/docs/guides/connectors/obsidian"
-Repository = "https://github.com/Eidetic-Labs/stigmem"
-Issues = "https://github.com/Eidetic-Labs/stigmem/issues"
+Repository = "https://github.com/eidetic-labs/stigmem"
+Issues = "https://github.com/eidetic-labs/stigmem/issues"
 
 [project.optional-dependencies]
 dev = [

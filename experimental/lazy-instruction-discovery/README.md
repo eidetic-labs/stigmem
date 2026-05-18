@@ -26,6 +26,6 @@ pip install --pre stigmem-node==0.9.0a2 stigmem-plugin-lazy-instruction-discover
 
 ## Project Links
 
-- Repository: <https://github.com/Eidetic-Labs/stigmem>
-- Plugin source: <https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/lazy-instruction-discovery>
-- Issue tracker: <https://github.com/Eidetic-Labs/stigmem/issues>
+- Repository: <https://github.com/eidetic-labs/stigmem>
+- Plugin source: <https://github.com/eidetic-labs/stigmem/tree/main/experimental/lazy-instruction-discovery>
+- Issue tracker: <https://github.com/eidetic-labs/stigmem/issues>

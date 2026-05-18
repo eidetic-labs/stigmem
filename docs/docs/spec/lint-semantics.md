@@ -7,11 +7,11 @@ description: "Spec-20-Lint-Semantics rendered entry point — read-only lint che
 
 # Spec-20-Lint-Semantics {#section-14}
 
-**Status:** Rendered compatibility entry point for [`Spec-20-Lint-Semantics`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/20-lint-semantics.md).
+**Status:** Rendered compatibility entry point for [`Spec-20-Lint-Semantics`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/20-lint-semantics.md).
 
 POST /v1/lint — orphan relations, scope-escalation violations, contradiction surfacing.
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.

@@ -8,7 +8,7 @@ audience: Integrator
 # Tutorial: Two-Org Federated Network
 
 **Audience:** node operators and protocol implementers setting up cross-org federation for the first time.
-**Spec references:** §6 Federation, §19 Federation Trust (canonicalized at v0.9.0a1; see [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)), §5.21–5.25 wire format.
+**Spec references:** §6 Federation, §19 Federation Trust (canonicalized at v0.9.0a1; see [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)), §5.21–5.25 wire format.
 **Time:** ~30 minutes on two local machines or two cloud VMs. A laptop with two terminal windows works fine.
 
 ---
@@ -502,5 +502,5 @@ You now have a working two-org federated Stigmem network with:
 - **4-node topology:** see the [4-Node Federation guide](../concepts/federation/federation-4node.md) for N-node backpressure, relay configuration, and scope propagation invariants (§6.7–6.8).
 - **Key rotation:** rotate Org A's signing key without federation downtime — see the Key Rotation section in the [Federation Trust guide](../concepts/federation/federation-trust.md).
 - **Trust mode tuning:** lower `STIGMEM_QUARANTINE_TRUST_THRESHOLD` to admit more facts automatically from known peers.
-- **Encrypted storage:** add `STIGMEM_AT_REST_ENCRYPTION=on` before going to production — [Backends guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/storage-backends).
-- **Signed snapshots:** back up both nodes — [Backends guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/storage-backends).
+- **Encrypted storage:** add `STIGMEM_AT_REST_ENCRYPTION=on` before going to production — [Backends guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/storage-backends).
+- **Signed snapshots:** back up both nodes — [Backends guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/storage-backends).

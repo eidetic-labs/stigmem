@@ -7,11 +7,11 @@ description: "Spec-16-Namespace-Registry rendered entry point — reserved relat
 
 # Spec-16-Namespace-Registry {#section-9}
 
-**Status:** Rendered compatibility entry point for [`Spec-16-Namespace-Registry`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/16-namespace-registry.md).
+**Status:** Rendered compatibility entry point for [`Spec-16-Namespace-Registry`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/16-namespace-registry.md).
 
 Reserved relation prefixes (memory, system, stigmem, garden) and community registry process.
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.

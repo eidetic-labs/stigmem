@@ -1,7 +1,7 @@
 # PR 4a integration analysis
 
-Issue: [#290](https://github.com/Eidetic-Labs/stigmem/issues/290)
-Parent: [#289](https://github.com/Eidetic-Labs/stigmem/issues/289)
+Issue: [#290](https://github.com/eidetic-labs/stigmem/issues/290)
+Parent: [#289](https://github.com/eidetic-labs/stigmem/issues/289)
 
 ## Decision
 
@@ -214,7 +214,7 @@ Local validation for the implementation PRs should include:
 PR 4a implementation is landing before a signed/package-published lazy
 instruction discovery plugin artifact. Artifact publication and signing evidence
 are explicitly queued in
-[#298](https://github.com/Eidetic-Labs/stigmem/issues/298). Until that issue is
+[#298](https://github.com/eidetic-labs/stigmem/issues/298). Until that issue is
 closed, the plugin is source-available under `experimental/` for validation only
 and must not be described as a released installable plugin artifact.
 

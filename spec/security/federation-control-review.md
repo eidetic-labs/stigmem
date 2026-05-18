@@ -206,10 +206,10 @@ needed for this review.
 
 This review requires two follow-up implementation issues:
 
-1. [#419](https://github.com/Eidetic-Labs/stigmem/issues/419): Federation mTLS should become the default production posture, and insecure
+1. [#419](https://github.com/eidetic-labs/stigmem/issues/419): Federation mTLS should become the default production posture, and insecure
    federation should require `STIGMEM_FEDERATION_INSECURE=1` plus a startup
    warning.
-2. [#420](https://github.com/Eidetic-Labs/stigmem/issues/420): Rate-limit kill-switch mode should emit a loud startup warning when both
+2. [#420](https://github.com/eidetic-labs/stigmem/issues/420): Rate-limit kill-switch mode should emit a loud startup warning when both
    read and write rate limits are set to zero.
 
 Both follow-ups are narrow patches. They should update public docs and

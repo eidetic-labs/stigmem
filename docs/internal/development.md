@@ -24,7 +24,7 @@ If using Colima on macOS, the smoke-test runbook below assumes you've already do
 ## First-time setup
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 
 # Python deps

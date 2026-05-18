@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "minAppVersion": "1.4.0",
   "description": "Real-time vault ↔ stigmem memory reflection. Sidebar recall, inline facts, command palette sync.",
-  "author": "Eidetic-Labs",
+  "author": "Eidetic Labs",
   "authorUrl": "https://docs.stigmem.dev",
   "fundingUrl": "https://docs.stigmem.dev",
   "isDesktopOnly": false

@@ -26,7 +26,7 @@ Timestamps:
 8:45 — STIGMEM_POLL_LIMIT and tuning
 9:20 — What's next
 
-GitHub: https://github.com/Eidetic-Labs/stigmem
+GitHub: https://github.com/eidetic-labs/stigmem
 Docs: https://stigmem.dev/docs/guides/connectors
 ```
 

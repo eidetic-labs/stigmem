@@ -68,7 +68,7 @@ External-registry credentials used by CI to publish stigmem artifacts rotate on 
 ### Rotation procedure
 
 1. **Generate replacement** at the registry (npm Settings → Access Tokens → Generate New Token; or PyPI account settings → API tokens → Add API token). New token uses naming convention `<repo>-gh-actions-<purpose>-<YYYY-MM-DD>` (e.g., `stigmem-gh-actions-publish-2026-08-06`).
-2. **Update GH repo secret** at `Eidetic-Labs/stigmem` → Settings → Secrets and variables → Actions. Edit the existing `NPM_TOKEN` (or `PYPI_API_TOKEN`) and paste the new value. The secret name stays the same; the value is rotated in place.
+2. **Update GH repo secret** at `eidetic-labs/stigmem` → Settings → Secrets and variables → Actions. Edit the existing `NPM_TOKEN` (or `PYPI_API_TOKEN`) and paste the new value. The secret name stays the same; the value is rotated in place.
 3. **Verify CI can publish** — manually trigger the `publish.yml` workflow (or wait for the next tag push) and confirm the publish step succeeds with the new token.
 4. **Revoke the old token** at the registry. **Do not** revoke before step 3 confirms the new token works — race window for failed publishes.
 5. **Update this file** with the new "Created" + "Rotate by" dates.

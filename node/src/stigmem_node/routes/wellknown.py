@@ -35,7 +35,7 @@ def node_metadata() -> dict[str, object]:
         "federation": "enabled" if settings.federation_enabled else "disabled",
         "source_attestation": settings.source_attestation_mode,
         "namespaces": _NAMESPACES,
-        "spec": "https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md",
+        "spec": "https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md",
         "cors": {
             "dev_localhost": settings.cors_dev_localhost,
             "configured": bool(

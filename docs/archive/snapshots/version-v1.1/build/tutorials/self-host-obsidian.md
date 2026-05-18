@@ -146,8 +146,8 @@ You have two options. Use the **community plugin** if you want in-process sync i
 ```bash
 cd /path/to/vault-a/.obsidian/plugins/
 mkdir stigmem && cd stigmem
-curl -LO https://github.com/Eidetic-Labs/stigmem/releases/latest/download/main.js
-curl -LO https://github.com/Eidetic-Labs/stigmem/releases/latest/download/manifest.json
+curl -LO https://github.com/eidetic-labs/stigmem/releases/latest/download/main.js
+curl -LO https://github.com/eidetic-labs/stigmem/releases/latest/download/manifest.json
 ```
 
 Reload Obsidian (**Cmd/Ctrl+R**), enable the plugin under **Settings → Community plugins**, then configure it:

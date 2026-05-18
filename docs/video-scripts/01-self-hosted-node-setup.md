@@ -25,7 +25,7 @@ Timestamps:
 8:30 — Teardown
 9:00 — What's next
 
-GitHub: https://github.com/Eidetic-Labs/stigmem
+GitHub: https://github.com/eidetic-labs/stigmem
 Docs: https://stigmem.dev/docs
 ```
 
@@ -71,7 +71,7 @@ jq --version
 > "Clone the repo and start the node with a single make command."
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 make up
 ```

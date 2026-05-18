@@ -26,7 +26,7 @@ No Python installation required — the nodes run in containers.
 ## Step 1 — Clone and start the stack
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 make up
 ```

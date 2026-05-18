@@ -322,7 +322,7 @@ skill install stigmem-node
 
 Set `STIGMEM_URL` (and optionally `STIGMEM_API_KEY`) and the skill is ready to use.
 Full usage docs and the security model are in the
-[`adapters/openclaw` README](https://github.com/Eidetic-Labs/stigmem/tree/main/adapters/openclaw#readme).
+[`adapters/openclaw` README](https://github.com/eidetic-labs/stigmem/tree/main/adapters/openclaw#readme).
 
 :::
 

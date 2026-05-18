@@ -99,7 +99,7 @@ Key metrics:
 
 ### Grafana dashboard
 
-A sample Grafana dashboard JSON is available at [`deploy/grafana/stigmem-dashboard.json`](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/grafana/stigmem-dashboard.json) in the repo. Import it into your Grafana instance and point the data source at your Prometheus scrape target.
+A sample Grafana dashboard JSON is available at [`deploy/grafana/stigmem-dashboard.json`](https://github.com/eidetic-labs/stigmem/blob/main/deploy/grafana/stigmem-dashboard.json) in the repo. Import it into your Grafana instance and point the data source at your Prometheus scrape target.
 
 ---
 

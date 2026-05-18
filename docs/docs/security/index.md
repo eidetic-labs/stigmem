@@ -8,7 +8,7 @@ sidebar_position: 1
 
 # Security
 
-> Per [ADR-005](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/005-docs-ia.md): "Lead Secure with the risk register." This page is the entry point to stigmem's security posture for evaluators, integrators, operators, and security engineers. The threat model and scenarios are the most important artifacts on this page, surfaced first.
+> Per [ADR-005](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/005-docs-ia.md): "Lead Secure with the risk register." This page is the entry point to stigmem's security posture for evaluators, integrators, operators, and security engineers. The threat model and scenarios are the most important artifacts on this page, surfaced first.
 
 ---
 
@@ -16,13 +16,13 @@ sidebar_position: 1
 
 | Status | Count | Description |
 |---|---|---|
-| **Mitigated** | 10 | mTLS, quotas, key max-age, audit log, replay fuzz, capability tokens, container hardening, and R-19 HLC skew bounds — see the [threat model risk register](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md) |
+| **Mitigated** | 10 | mTLS, quotas, key max-age, audit log, replay fuzz, capability tokens, container hardening, and R-19 HLC skew bounds — see the [threat model risk register](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md) |
 | **In review** | 2 | Prompt injection (R-05) and agent feedback-loop worm (R-21); structural controls now exist on `main`, sanitizer remains defense-in-depth, and live certification plus operator validation evidence are still required before marking the risks mitigated |
 | **Residual** | 0 | No risks are currently tracked as sanitizer-only residual risk in the v0.9.0a1 register |
 | **Open** | 6 | R-15 instruction-scope injection, R-16 RTBF DoS, R-17 legal-hold exposure, R-18 CID field-exclusion, R-22 release supply-chain, R-23 admin-level storage tampering |
 | **Accepted** | 5 | R-04 at-rest encryption default-off, R-07 Obsidian plugin key storage, R-08 libSQL cloud backend, R-13 cloud embedding data residency, R-20 cloud embedding poisoning |
 
-**The most-severe new structural risk in v0.9.0a1 is R-23** (admin-level storage tampering): an attacker with admin privileges on a stigmem node can — without [ADR-016](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/016-storage-immutability-enforcement.md)'s mitigations — overwrite stored facts, bypassing [ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)'s prompt-injection trust boundary by silently changing `interpret_as` from `content` to `instruction` at the storage layer. Mitigation is the ADR-016 stack (L1-L5: append-only journal, SQLite triggers, CIDs per [ADR-017](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md), local hash chain, Sigstore Rekor anchor). Targeted: the v0.9.0bN beta series.
+**The most-severe new structural risk in v0.9.0a1 is R-23** (admin-level storage tampering): an attacker with admin privileges on a stigmem node can — without [ADR-016](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/016-storage-immutability-enforcement.md)'s mitigations — overwrite stored facts, bypassing [ADR-003](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)'s prompt-injection trust boundary by silently changing `interpret_as` from `content` to `instruction` at the storage layer. Mitigation is the ADR-016 stack (L1-L5: append-only journal, SQLite triggers, CIDs per [ADR-017](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md), local hash chain, Sigstore Rekor anchor). Targeted: the v0.9.0bN beta series.
 
 The second-priority new risk is R-21 (agent feedback-loop worm). Main now has
 same-session read/write provenance controls, OpenClaw handoff-target
@@ -31,17 +31,17 @@ exclusion for provenance-derived facts. R-21 remains in review until release
 certification and operator validation cover those controls. The OpenClaw adapter
 remains an experimental alpha connector until that validation is complete.
 
-For the full risk register: see the **[Threat Model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md)** (`spec/security/threat-model.md`).
+For the full risk register: see the **[Threat Model](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md)** (`spec/security/threat-model.md`).
 
 For operator-facing scenarios: see the **[Security Scenarios](./scenarios)**.
 
-For the trust boundary against prompt injection (L1–L6): see [ADR-003](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/003-prompt-injection.md) § Trust boundary. Main now includes the core L1-L3 protocol controls (`interpret_as`, instruction-write authorization, instruction quarantine, and channel-separated recall) plus protocol-level adversarial vectors in CI. ADR-015 `corpus-v1` contains 80 prompt-injection patterns for L4-L6 consumer-layer evaluation, and the certification runner now supports deterministic offline runs plus OpenAI, Anthropic, and local Ollama provider adapters. The reviewed-results index exists and is validated in CI; reviewed public model certification result rows are still pending provider-backed runs.
+For the trust boundary against prompt injection (L1–L6): see [ADR-003](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/003-prompt-injection.md) § Trust boundary. Main now includes the core L1-L3 protocol controls (`interpret_as`, instruction-write authorization, instruction quarantine, and channel-separated recall) plus protocol-level adversarial vectors in CI. ADR-015 `corpus-v1` contains 80 prompt-injection patterns for L4-L6 consumer-layer evaluation, and the certification runner now supports deterministic offline runs plus OpenAI, Anthropic, and local Ollama provider adapters. The reviewed-results index exists and is validated in CI; reviewed public model certification result rows are still pending provider-backed runs.
 
 ---
 
 ## v0.9.0a1 architectural posture
 
-Per [LIMITATIONS.md §11](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md): the default install of v0.9.0a1 ships with feature-specific code in `node/src/stigmem_node/` for features deferred from v1.0 critical-path scope per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md). The routes are mounted but the features are dormant unless explicitly configured (capability tokens, migrations, manifests). Per [ADR-019](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per [ADR-011](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md).
+Per [LIMITATIONS.md §11](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md): the default install of v0.9.0a1 ships with feature-specific code in `node/src/stigmem_node/` for features deferred from v1.0 critical-path scope per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md). The routes are mounted but the features are dormant unless explicitly configured (capability tokens, migrations, manifests). Per [ADR-019](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per [ADR-011](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md).
 
 Main now includes the 22-hook registry foundation and plugin test harness needed for extraction work. The landed foundation includes typed hook semantics, deterministic manual/core registration, minimum manifest/context/capability APIs, hook-site wiring across assertion, recall, federation, auth, migration, and audit paths, registry audit/metrics plumbing, benchmark coverage, startup package discovery, production plugin signing enforcement, and operator CLI inspection. Per-feature plugin packages remain future alpha-series work.
 
@@ -53,7 +53,7 @@ Main now includes the 22-hook registry foundation and plugin test harness needed
 
 | Page | Topic |
 |---|---|
-| [Authentication](./authentication.md) | API key auth (Argon2id for new keys; v0.9.0a1 SHA-256 rows rehash on successful use per [ADR-007](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/007-argon2id.md)), local-agent `entity_uri` naming, expires_at enforcement, session model |
+| [Authentication](./authentication.md) | API key auth (Argon2id for new keys; v0.9.0a1 SHA-256 rows rehash on successful use per [ADR-007](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/007-argon2id.md)), local-agent `entity_uri` naming, expires_at enforcement, session model |
 | [Agent keypairs](./agent-keypairs.md) | Ed25519 keypair generation, storage, rotation |
 | [Audit log](./audit-log.md) | WAL-ordered audit log, 14 event types, 90-day retention (Spec-09-Audit-Log) |
 | [Audit & quotas](./audit-and-quotas.md) | Per-principal token-bucket quotas, 7 dimensions (Spec-10-Hardening rate limits) |
@@ -66,7 +66,7 @@ Main now includes the 22-hook registry foundation and plugin test harness needed
 
 The Phase B federation-hardening control review lives with the canonical
 security evidence at
-[`spec/security/federation-control-review.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/federation-control-review.md).
+[`spec/security/federation-control-review.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/federation-control-review.md).
 
 ## Operator surfaces
 
@@ -78,7 +78,7 @@ security evidence at
 
 ## Disclosure & policy
 
-- **[Compatibility commitment](./compatibility-commitment.md)** — written commitment per [ADR-013](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/013-deprecation-policy.md).
+- **[Compatibility commitment](./compatibility-commitment.md)** — written commitment per [ADR-013](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/013-deprecation-policy.md).
 - **[Security disclosure policy](../community/security-disclosure.md)** — how to report a vulnerability.
 - **[SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md)** — supported versions, dependency posture.
 
@@ -87,17 +87,17 @@ security evidence at
 The protocol specification is the contract security depends on. It lives under Secure per ADR-005:
 
 - **[Specification index](../spec/index.md)** — section navigator with disposition table (which sections are stable in v0.9.0a1, which are deferred to `experimental/<feature>/`).
-- **[Canonical spec source](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)** — `spec/stigmem-spec-v0.9.0a1.md`. Section-by-section content review against the `node/` implementation is ongoing.
+- **[Canonical spec source](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)** — `spec/stigmem-spec-v0.9.0a1.md`. Section-by-section content review against the `node/` implementation is ongoing.
 
 ## Experimental & deferred features
 
-Many features documented in earlier checkpoints are deferred from v0.9.0a1's default install. They live in [`experimental/<feature>/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental). Alpha-series extraction may package some of them as opt-in experimental plugins; promotion into the supported surface requires the [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) gate process. See **[Experimental & Deferred Features](../reference/experimental-features.md)** for the canonical list.
+Many features documented in earlier checkpoints are deferred from v0.9.0a1's default install. They live in [`experimental/<feature>/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental). Alpha-series extraction may package some of them as opt-in experimental plugins; promotion into the supported surface requires the [ADR-008](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) gate process. See **[Experimental & Deferred Features](../reference/experimental-features.md)** for the canonical list.
 
 ---
 
 ## Quick-start for security researchers
 
-1. Read the **[Threat Model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md)** to understand the trust boundaries and current risk register.
+1. Read the **[Threat Model](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md)** to understand the trust boundaries and current risk register.
 2. Read the **[Security Scenarios](./scenarios)** for operator-facing narratives.
 3. Read the **[Pen-test handbook](./pen-test.md)** for the engagement process and reproducer template.
 4. Set up a local node via the [quickstart tutorial](../get-started/quickstart-tutorial.md).

@@ -7,11 +7,11 @@ description: "Spec-03-HTTP-API rendered entry point — JSON/HTTP API surface an
 
 # Spec-03-HTTP-API {#section-5}
 
-**Status:** Rendered compatibility entry point for [`Spec-03-HTTP-API`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/03-http-api.md).
+**Status:** Rendered compatibility entry point for [`Spec-03-HTTP-API`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/03-http-api.md).
 
 JSON/HTTP wire format for facts, peers, gardens, trust manifests, and capability tokens.
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.

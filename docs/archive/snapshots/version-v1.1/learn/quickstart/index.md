@@ -19,7 +19,7 @@ Video walkthroughs for self-hosted node setup, federation, and MCP adapter usage
 No Python required. Install with a single command:
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 docker compose up --build -d
 ```
@@ -75,7 +75,7 @@ curl -s 'http://localhost:8000/v1/facts?entity=user:alice&relation=memory:prefer
 ## Hosted offering
 
 :::info Coming soon
-A free-tier hosted stigmem node is on the roadmap. [Join the discussion](https://github.com/Eidetic-Labs/stigmem/discussions) to register interest and get notified at launch.
+A free-tier hosted stigmem node is on the roadmap. [Join the discussion](https://github.com/eidetic-labs/stigmem/discussions) to register interest and get notified at launch.
 :::
 
 ## Two-node federation quickstart

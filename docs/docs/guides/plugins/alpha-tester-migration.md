@@ -92,7 +92,7 @@ Before enabling tester plugins in a shared environment:
 
 - [Features](../../concepts/features.md)
 - [Experimental Features](../../reference/experimental-features.md)
-- [Roadmap](https://github.com/Eidetic-Labs/stigmem/blob/main/ROADMAP.md)
+- [Roadmap](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md)
 - [Plugin Author Guide](./author-guide.md)
 - [Plugin Hook Reference](../../reference/plugin-api/hooks.md)
 - [Plugin Capability Reference](../../reference/plugin-api/capabilities.md)

@@ -11,7 +11,7 @@ description: "Stigmem spec section 18 — API-key → entity_uri binding with en
 
 API-key → entity_uri binding with enforce/warn/off modes; trust anchor for connectors.
 
-**Authoritative source:** [`spec/stigmem-spec-v1.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md)
+**Authoritative source:** [`spec/stigmem-spec-v1.0.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md)
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
@@ -495,6 +495,6 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(a
 
 ---
 
-*v0.9-draft — §17 and §18 open for community feedback. See [CONTRIBUTING.md](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md).*
+*v0.9-draft — §17 and §18 open for community feedback. See [CONTRIBUTING.md](https://github.com/eidetic-labs/stigmem/blob/main/CONTRIBUTING.md).*
 
 </details>

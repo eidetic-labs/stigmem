@@ -15,7 +15,7 @@
 
 **Status:** Working draft. §1–5, §7–10 promoted from v0.4 (stable). §6 Federation promoted from RFC stub to concrete spec. §11 Failure Modes new.
 **License:** Apache-2.0
-**Authors:** Eidetic-Labs
+**Authors:** Eidetic Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
 - v0.5: §6 Federation promoted from RFC stub to concrete implementable spec; new federation wire routes (§5.6–§5.10); HLC timestamps (§2.4); per-scope key restrictions on `api_keys` (§3.5); conflict-first-class semantics formalized (§3.3, §6.5); §11 Failure Modes acceptance scenarios; schema additions (§10); design decisions updated.

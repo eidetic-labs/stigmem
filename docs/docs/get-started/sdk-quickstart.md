@@ -237,9 +237,9 @@ Each fact you asserted received a UUID (`id`) and a content identifier (`cid`) �
 ## Next steps
 
 - [Recall guide](../concepts/recall/) — weight tuning, memory card fast-path, depth control
-- [Time-Travel Queries](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/time-travel) — query facts as they existed at a past timestamp
-- [RTBF Tombstones](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/tombstones) — experimental source package for entity-erasure semantics; not default-install or supported compliance behavior
+- [Time-Travel Queries](https://github.com/eidetic-labs/stigmem/tree/main/experimental/time-travel) — query facts as they existed at a past timestamp
+- [RTBF Tombstones](https://github.com/eidetic-labs/stigmem/tree/main/experimental/tombstones) — experimental source package for entity-erasure semantics; not default-install or supported compliance behavior
 - [Observability](../operators/observability/) — Prometheus metrics and OpenTelemetry tracing
 - [TypeScript SDK Reference](../sdks/typescript) — full API reference
-- [Go SDK Reference](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/sdk-go) — full API reference
+- [Go SDK Reference](https://github.com/eidetic-labs/stigmem/tree/main/experimental/sdk-go) — full API reference
 - [Python SDK Reference](../sdks/python) — full API reference

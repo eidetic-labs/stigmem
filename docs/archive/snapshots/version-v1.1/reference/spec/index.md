@@ -9,7 +9,7 @@ description: Stigmem protocol specification — section navigator. Each row link
 # Stigmem Protocol Specification
 
 :::note Authoritative source
-Spec source markdown lives in [`spec/stigmem-spec-v1.0.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) and [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md). Each section below renders the source text inline; sections marked stub have content only in earlier spec drafts and link to GitHub for the full history.
+Spec source markdown lives in [`spec/stigmem-spec-v1.0.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.0.md) and [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md). Each section below renders the source text inline; sections marked stub have content only in earlier spec drafts and link to GitHub for the full history.
 :::
 
 :::info Security disclosure

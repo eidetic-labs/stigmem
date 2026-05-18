@@ -34,7 +34,7 @@ on:
         type: number
         default: 90
       package:
-        description: "Package name (under Eidetic-Labs)"
+        description: "Package name (under eidetic-labs)"
         type: string
         default: "stigmem-node"
 
@@ -49,7 +49,7 @@ jobs:
     name: Prune short-SHA versions older than the retention window
     runs-on: ubuntu-latest
     env:
-      ORG: "Eidetic-Labs"
+      ORG: "eidetic-labs"
       PACKAGE: ${{ inputs.package || 'stigmem-node' }}
       DRY_RUN: ${{ inputs.dry_run == false && 'false' || 'true' }}
       MIN_AGE_DAYS: ${{ inputs.min_age_days || 90 }}

@@ -2,7 +2,7 @@
 
 **Issue:** [#180](https://github.com/Eidetic-Labs/stigmem/issues/180)  
 **Status:** Pre-rc planning tracker  
-**Last updated:** 2026-05-15  
+**Last updated:** 2026-05-18
 **Scope:** Post-plugin-extraction source/test decomposition work that should
 complete before v1.0.0-rc.0, without blocking active PR 4 plugin work.
 
@@ -119,6 +119,6 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
 - #473 continues module flattening by moving lifecycle/deletion implementation
   helpers into `stigmem_node.lifecycle`, while retaining root-level compatibility
   aliases for historical imports.
-- #475 continues module flattening by moving recall, resolver, vector-search, and
+- #475 completes module flattening by moving recall, resolver, vector-search, and
   graph helper implementations into `stigmem_node.recall`, while retaining
   root-level compatibility aliases for historical imports.

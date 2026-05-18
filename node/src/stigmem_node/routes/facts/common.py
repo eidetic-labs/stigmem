@@ -61,24 +61,37 @@ def _get_tombstone_filter(
     try:
         conn.execute("BEGIN IMMEDIATE")
     except Exception as exc:  # nosec B110
-        logger.debug("BEGIN IMMEDIATE unavailable for tombstone filter transaction: %s", exc)
+        logger.debug(
+            "BEGIN IMMEDIATE not supported or failed for tombstone filter transaction "
+            "(expected on some backends, e.g. postgres); continuing with default "
+            "transaction behavior: %s",
+            exc,
+        )
         try:  # noqa: SIM105
             conn.rollback()
         except Exception as rollback_exc:  # nosec B110
-            logger.debug("rollback after BEGIN IMMEDIATE failure also failed: %s", rollback_exc)
+            logger.debug(
+                "Rollback after BEGIN IMMEDIATE failure also failed; continuing because "
+                "explicit BEGIN IMMEDIATE is optional in this path: %s",
+                rollback_exc,
+            )
     rows = conn.execute(
         f"""SELECT t.id, t.entity_uri, t.scope, t.created_at, t.legal_hold
             FROM tombstones t
             WHERE t.entity_uri IN ({placeholders})
             AND NOT EXISTS (
                 SELECT 1 FROM tombstone_revocations r WHERE r.tombstone_id = t.id
-            )""",  # noqa: S608  # nosec B608
+            )""",  # noqa: S608  # nosec B608 - dynamic SQL is generated placeholders only; entity values are bound params.
         entity_uris,
     ).fetchall()
     try:  # noqa: SIM105
         conn.execute("COMMIT")
     except Exception as exc:  # nosec B110
-        logger.debug("tombstone filter transaction commit skipped or failed: %s", exc)
+        logger.debug(
+            "Tombstone filter COMMIT skipped or failed (can occur when explicit "
+            "BEGIN IMMEDIATE was unavailable on this backend); continuing: %s",
+            exc,
+        )
 
     excluded: set[str] = set()
     notices: list[TombstoneNotice] = []
@@ -129,7 +142,7 @@ def _validate_relation(relation: str) -> list[str]:
 
 
 def _is_valid_entity_uri(uri: str) -> bool:
-    """Minimal check: URI must contain '://' or start with 'urn:'."""
+    """Return whether a ref value is eligible for graph edge derivation."""
     return "://" in uri or uri.startswith("urn:")
 
 

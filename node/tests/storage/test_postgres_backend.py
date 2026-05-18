@@ -336,7 +336,7 @@ class TestSQLAdaptation:
                 "SELECT id FROM facts WHERE entity LIKE 'stigmem://%%'",
             ).fetchall()
             sql_template = "SELECT id FROM %(table)s WHERE entity LIKE 'stigmem://%%%%'"
-            sql_with_percent_format = sql_template.__mod__({"table": "facts"})
+            sql_with_percent_format = sql_template % {"table": "facts"}
             rows_percent_format = conn.execute(sql_with_percent_format).fetchall()
         returned_ids = {r["id"] for r in rows}
         returned_ids_percent_format = {r["id"] for r in rows_percent_format}

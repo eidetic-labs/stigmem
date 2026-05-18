@@ -23,30 +23,30 @@ Two Stigmem nodes run by different organizations want to share knowledge. But sh
 
 ## Our model
 
-Stigmem's federation handshake is a three-phase protocol: **peer declaration**, **verification**, and **capability negotiation**.
+Stigmem's federation handshake is a three-phase protocol: **peer declaration**, **verification**, and **capability negotiation**. The registration contract is defined in [`Spec-05-Federation-Trust`](../../spec/specs/05-federation-trust.md).
 
 ```mermaid
 sequenceDiagram
-    participant A as Node A
-    participant B as Node B
+    participant Local as Local node
+    participant Remote as Remote node
 
-    Note over A,B: Peer declaration
-    A->>B: POST /v1/federation/peers<br/>{node_url, node_id, federation_pubkey,<br/>allowed_scopes, declaration_sig}
-    Note over B: Status: pending_verification
+    Note over Local,Remote: Happy-path peer registration
 
-    Note over A,B: Verification
-    B->>A: GET /.well-known/stigmem<br/>(fetch A's public key)
-    B->>B: Verify declaration_sig<br/>against A's published pubkey
-    Note over B: Status: active (or rejected)
+    Local->>Remote: GET /.well-known/stigmem
+    Remote-->>Local: node_id, federation_pubkey,<br/>supported scopes
+    Local->>Local: Build PeerDeclaration<br/>with allowed_scopes
+    Local->>Local: Sign declaration with<br/>local Ed25519 federation key
+    Local->>Remote: POST /v1/federation/peers<br/>{PeerDeclaration, declaration_sig}
+    Remote->>Remote: Validate remote key,<br/>scope grant, and signature
+    Remote->>Remote: Store peer record<br/>status = active
+    Remote-->>Local: 201 Created<br/>peer status = active
 
-    Note over A,B: Capability negotiation
-    A->>B: GET /v1/federation/peers/:peer_id/capabilities
-    B->>A: GET /v1/federation/peers/:peer_id/capabilities
-    Note over A,B: Both nodes know each other's<br/>relations, modes, and policies
+    Note over Local,Remote: Capability negotiation
 
-    Note over A,B: Replication begins
-    A->>B: GET /v1/federation/facts?scope=public&cursor=...
-    Note over A: Bearer: fresh peer token (Ed25519 JWT)
+    Local->>Remote: GET /v1/federation/peers/:peer_id/capabilities
+    Remote-->>Local: relations, modes, policies
+
+    Note over Local,Remote: Replication can begin
 ```
 
 ### Peer declaration

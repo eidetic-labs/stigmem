@@ -163,6 +163,8 @@ pip install --pre stigmem[all]       # everything published from this repo
 ## Quickstart — two nodes federating
 
 → **[Get started → Quickstart tutorial](docs/docs/get-started/quickstart-tutorial.md)** — zero to two-node federation in under 10 minutes.
+The quickstart also includes troubleshooting notes for busy host ports, Docker
+image pull failures, and inspecting a failed demo before teardown.
 
 Quick summary:
 

@@ -137,9 +137,12 @@ def create_tombstone(
     signature: str,
     legal_hold: bool = False,
     tenant_id: str = "default",
+    *,
+    tombstone_id: str | None = None,
+    created_at: str | None = None,
 ) -> TombstoneRecord:
     """Write a tombstone record. Idempotent on (entity_uri, scope) for active tombstones."""
-    now = datetime.now(UTC).isoformat()
+    now = created_at or datetime.now(UTC).isoformat()
     with db() as conn:
         existing = conn.execute(
             """SELECT t.id FROM tombstones t
@@ -155,7 +158,7 @@ def create_tombstone(
             ).fetchone()
             return _row_to_tombstone(row)
 
-        tomb_id = "tomb_" + str(uuid.uuid4())
+        tomb_id = tombstone_id or "tomb_" + str(uuid.uuid4())
         conn.execute(
             """INSERT INTO tombstones
                (id, entity_uri, scope, reason, signed_by, key_id, signature,

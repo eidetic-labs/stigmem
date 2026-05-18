@@ -347,9 +347,9 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
                 suppress_health_check=[HealthCheck.too_slow],
             )
             def inner(nonce_val: str) -> None:
-                now_ts = int(time.time())
-                exp_ts = now_ts + 3600
-                expires_iso = datetime.fromtimestamp(exp_ts, UTC).isoformat()
+                now_ts = int(time.time() * 1000)
+                exp_ts = now_ts + 3_600_000
+                expires_iso = datetime.fromtimestamp(exp_ts / 1000, UTC).isoformat()
 
                 # Pre-populate the nonce cache (simulates "already seen").
                 inner_conn = sqlite3.connect(db_file)

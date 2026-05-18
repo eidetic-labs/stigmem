@@ -340,16 +340,14 @@ def _ingest_revocation(payload: dict[str, Any], fed_settings: Any) -> dict[str, 
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
-    if fed_settings.trust_mode != "off":
-        # F-2 fix: verify revocation signature before applying.
-        _verify_signed_artifact_or_400(
-            record=rev,
-            key_id=rev.key_id or "",
-            artifact_label="revocation",
-            missing_manifest_detail="no manifest for revocation signer",
-            signer_uri=rev.signed_by,
-            verifier=verify_revocation_signature,
-        )
+    _verify_signed_artifact_or_400(
+        record=rev,
+        key_id=rev.key_id or "",
+        artifact_label="revocation",
+        missing_manifest_detail="no manifest for revocation signer",
+        signer_uri=rev.signed_by,
+        verifier=verify_revocation_signature,
+    )
 
     apply_inbound_revocation(rev)
     return {"status": "ok", "type": "revocation"}
@@ -365,17 +363,15 @@ def _ingest_tombstone(payload: dict[str, Any], fed_settings: Any) -> dict[str, A
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
-    if fed_settings.trust_mode != "off":
-        # §23.4.2.1 — fail-closed signature verification.
-        _verify_signed_artifact_or_400(
-            record=record,
-            key_id=record.key_id or "",
-            artifact_label="tombstone",
-            missing_manifest_detail="no manifest for signer",
-            signer_uri=record.signed_by,
-            verifier=verify_tombstone_signature,
-            on_failure=_emit_tombstone_verification_failed,
-        )
+    _verify_signed_artifact_or_400(
+        record=record,
+        key_id=record.key_id or "",
+        artifact_label="tombstone",
+        missing_manifest_detail="no manifest for signer",
+        signer_uri=record.signed_by,
+        verifier=verify_tombstone_signature,
+        on_failure=_emit_tombstone_verification_failed,
+    )
 
     written = apply_inbound_tombstone(record)
     return {"status": "ok", "written": written}

@@ -144,12 +144,13 @@ class TestPeerTokenMintVerify:
 
         _patched_db(tmp_path, monkeypatch)
         priv, _ = peer_auth.get_or_create_keypair()
-        # Mint manually with exp in the past
+        # Mint manually with exp in the past. Peer token timestamps are epoch ms.
+        now_ms = int(time.time() * 1000)
         payload: dict = {
             "iss": "stigmem://issuer",
             "sub": "stigmem://target",
-            "iat": int(time.time()) - 7200,
-            "exp": int(time.time()) - 3600,
+            "iat": now_ms - 7_200_000,
+            "exp": now_ms - 3_600_000,
             "nonce": "n1",
             "scopes": ["public"],
         }
@@ -226,7 +227,7 @@ class TestNonceAndDeclaration:
         from stigmem_node.peer_auth import consume_nonce
 
         db = _patched_db(tmp_path, monkeypatch)
-        consume_nonce("p1", "nonce-1", int(time.time()) + 3600)
+        consume_nonce("p1", "nonce-1", int(time.time() * 1000) + 3_600_000)
 
         # Verify nonce row exists
         conn = sqlite3.connect(db)

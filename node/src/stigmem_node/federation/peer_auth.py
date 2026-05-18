@@ -5,8 +5,8 @@ Spec §3.5 (peer tokens), §6.6 (security invariants).
 PeerToken JWT payload:
   iss:    issuing node_id (URI)
   sub:    target node_id (URI)
-  iat:    issued-at (seconds since epoch; standard JWT)
-  exp:    expiry (seconds since epoch; MUST be ≤ iat + 3600)
+  iat:    issued-at (milliseconds since epoch)
+  exp:    expiry (milliseconds since epoch; MUST be <= iat + 3_600_000)
   nonce:  UUID for replay protection
   scopes: list[FactScope]
 """
@@ -91,16 +91,16 @@ def mint_peer_token(
     local_node_id: str,
     target_node_id: str,
     scopes: list[str],
-    ttl_s: int = 3600,
+    ttl_ms: int = 3_600_000,
 ) -> str:
     """Mint a signed Ed25519 JWT peer token for pull replication."""
     priv, _ = get_or_create_keypair()
-    now = int(time.time())
+    now_ms = int(time.time() * 1000)
     payload: dict[str, Any] = {
         "iss": local_node_id,
         "sub": target_node_id,
-        "iat": now,
-        "exp": now + min(ttl_s, 3600),
+        "iat": now_ms,
+        "exp": now_ms + min(ttl_ms, 3_600_000),
         "nonce": str(uuid.uuid4()),
         "scopes": scopes,
     }
@@ -148,8 +148,8 @@ def verify_peer_token(
     scopes = unverified.get("scopes", [])
 
     # Step 2 — expiry check (before touching DB)
-    now = int(time.time())
-    if exp <= now:
+    now_ms = int(time.time() * 1000)
+    if exp <= now_ms:
         _write_audit(audit_writer, iss, "rejected_token", {"reason": "token_expired", "exp": exp})
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="token_expired")
 
@@ -173,7 +173,11 @@ def verify_peer_token(
             raw_token,
             public_key,
             algorithms=["EdDSA"],
-            options={"verify_exp": False},
+            options={
+                "verify_exp": False,
+                "verify_iat": False,
+                "verify_nbf": False,
+            },
         )
     except (
         jwt.exceptions.InvalidSignatureError,
@@ -217,7 +221,7 @@ def verify_peer_token(
 
 def consume_nonce(peer_id: str, nonce: str, exp: int) -> None:
     """Persist nonce to prevent replay. Call after successful auth."""
-    expires_iso = datetime.fromtimestamp(exp, UTC).isoformat()
+    expires_iso = datetime.fromtimestamp(exp / 1000, UTC).isoformat()
     with db() as conn:
         conn.execute(
             "INSERT OR IGNORE INTO nonce_cache (nonce, peer_id, expires_at) VALUES (?,?,?)",

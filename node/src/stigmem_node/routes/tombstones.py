@@ -11,6 +11,8 @@ All endpoints require write + federate permissions (admin API key).
 from __future__ import annotations
 
 import urllib.parse
+import uuid
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -75,15 +77,17 @@ def issue_tombstone(
 
     key_id = get_node_key_id() or ""
 
+    tombstone_id = "tomb_" + str(uuid.uuid4())
+    created_at = datetime.now(UTC).isoformat()
     draft = TombstoneRecord(
-        id="",
+        id=tombstone_id,
         entity_uri=req.entity_uri,
         scope=req.scope,
         reason=req.reason,
         signed_by=identity.entity_uri,
         key_id=key_id,
         signature="",
-        created_at="",
+        created_at=created_at,
         legal_hold=req.legal_hold,
     )
 
@@ -98,6 +102,8 @@ def issue_tombstone(
             key_id=signed.key_id,
             signature=signed.signature,
             legal_hold=signed.legal_hold,
+            tombstone_id=signed.id,
+            created_at=signed.created_at,
         )
     except Exception as exc:
         if "already exists" in str(exc) or "UNIQUE" in str(exc):

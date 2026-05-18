@@ -23,7 +23,7 @@ import time
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import jwt as pyjwt
@@ -44,9 +44,13 @@ import stigmem_node.routes.tombstones as tomb_routes_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 import stigmem_node.tombstones as tombstones_mod
+from stigmem_node.identity.manifest import OrgManifest, sign_manifest
+from stigmem_node.identity.trust_store import store_peer_manifest
 from stigmem_node.main import _include_plugin_routers, create_app
+from stigmem_node.models.tombstones import TombstoneRecord, TombstoneRevocationRecord
 from stigmem_node.plugins.discovery import DiscoveredPlugin
 from stigmem_node.plugins.testing import stigmem_plugins
+from stigmem_node.tombstone_signing import _revocation_signing_body, _signing_body
 
 create_api_key = auth_mod.create_api_key
 apply_migrations = db_mod.apply_migrations
@@ -166,6 +170,32 @@ def _make_peer_token(priv_b64: str, iss: str, sub: str = "tombnode") -> str:
     return pyjwt.encode(payload, privkey, algorithm="EdDSA")
 
 
+def _make_manifest(priv: Ed25519PrivateKey, pub_b64: str, entity_uri: str) -> OrgManifest:
+    now = datetime.now(UTC)
+    manifest = OrgManifest(
+        entity_uri=entity_uri,
+        key_id="key-1",
+        public_key=pub_b64,
+        issued_at=now.isoformat(),
+        expires_at=(now + timedelta(days=365)).isoformat(),
+        entities=[entity_uri],
+    )
+    sign_manifest(manifest, priv)
+    return manifest
+
+
+def _sign_tombstone_payload(payload: dict, priv: Ed25519PrivateKey) -> dict:
+    record = TombstoneRecord(**{**payload, "key_id": "key-1", "signature": ""})
+    sig = base64.urlsafe_b64encode(priv.sign(_signing_body(record))).decode().rstrip("=")
+    return record.model_copy(update={"signature": sig}).model_dump()
+
+
+def _sign_revocation_payload(payload: dict, priv: Ed25519PrivateKey) -> dict:
+    record = TombstoneRevocationRecord(**{**payload, "key_id": "key-1", "signature": ""})
+    sig = base64.urlsafe_b64encode(priv.sign(_revocation_signing_body(record))).decode().rstrip("=")
+    return record.model_copy(update={"signature": sig}).model_dump()
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -179,7 +209,7 @@ def node(tmp_path):
     original = settings_module.settings
     _priv, _pub_b64, priv_b64 = _gen_key_b64()
     # Peer keypair for federation ingest auth
-    _peer_priv, peer_pub_b64, peer_priv_b64 = _gen_key_b64()
+    peer_priv, peer_pub_b64, peer_priv_b64 = _gen_key_b64()
     peer_node_id = "stigmem://peer-node"
 
     ts = Settings(
@@ -198,6 +228,7 @@ def node(tmp_path):
 
     # Register the peer so peer tokens pass auth
     _register_peer(db_file, peer_node_id, peer_pub_b64)
+    store_peer_manifest(peer_node_id, _make_manifest(peer_priv, peer_pub_b64, peer_node_id))
 
     # Reset module-level tombstone cache for clean test isolation
     _reset_tombstone_cache()
@@ -214,7 +245,7 @@ def node(tmp_path):
     with _tombstone_plugin_app(app):
         client = TestClient(app, raise_server_exceptions=True)
         client.__enter__()
-        yield client, admin_key, reader_key, ts, db_file, _mint_peer_token
+        yield client, admin_key, reader_key, ts, db_file, _mint_peer_token, peer_priv
         client.__exit__(None, None, None)
     settings_module.settings = original
     auth_mod.settings = original
@@ -585,19 +616,20 @@ class TestFederationTombstoneRoutes:
         assert len(resp.json()["tombstones"]) == 0
 
     def test_federation_tombstone_ingest(self, node):
-        client, admin_key, reader_key, ts, db_file, mint_peer_token = node
+        client, admin_key, reader_key, ts, db_file, mint_peer_token, peer_priv = node
         tomb_id = f"tomb_{uuid.uuid4()}"
-        payload = {
-            "id": tomb_id,
-            "entity_uri": "user:nina",
-            "scope": "*",
-            "reason": "test-ingest",
-            "signed_by": "stigmem://peer-node/admin",
-            "key_id": "abcd1234",
-            "signature": "dGVzdA",  # trust_mode=off skips sig verification
-            "created_at": datetime.now(UTC).isoformat(),
-            "legal_hold": False,
-        }
+        payload = _sign_tombstone_payload(
+            {
+                "id": tomb_id,
+                "entity_uri": "user:nina",
+                "scope": "*",
+                "reason": "test-ingest",
+                "signed_by": "stigmem://peer-node",
+                "created_at": datetime.now(UTC).isoformat(),
+                "legal_hold": False,
+            },
+            peer_priv,
+        )
         resp = client.post(
             "/v1/federation/tombstones/ingest",
             json=payload,
@@ -616,24 +648,25 @@ class TestFederationTombstoneRoutes:
         assert resp2.json()["written"] is False
 
     def test_federation_tombstone_ingest_applies_filter(self, node):
-        client, admin_key, reader_key, ts, db_file, mint_peer_token = node
+        client, admin_key, reader_key, ts, db_file, mint_peer_token, peer_priv = node
 
         # Create a fact for oscar
         _assert_fact(client, _ah(admin_key), entity="user:oscar")
 
         # Ingest tombstone for oscar via federation
         tomb_id = f"tomb_{uuid.uuid4()}"
-        payload = {
-            "id": tomb_id,
-            "entity_uri": "user:oscar",
-            "scope": "*",
-            "reason": None,
-            "signed_by": "stigmem://peer-node/admin",
-            "key_id": "abcd1234",
-            "signature": "dGVzdA",
-            "created_at": datetime.now(UTC).isoformat(),
-            "legal_hold": False,
-        }
+        payload = _sign_tombstone_payload(
+            {
+                "id": tomb_id,
+                "entity_uri": "user:oscar",
+                "scope": "*",
+                "reason": None,
+                "signed_by": "stigmem://peer-node",
+                "created_at": datetime.now(UTC).isoformat(),
+                "legal_hold": False,
+            },
+            peer_priv,
+        )
         client.post(
             "/v1/federation/tombstones/ingest", json=payload, headers=_ah(mint_peer_token())
         )
@@ -643,6 +676,107 @@ class TestFederationTombstoneRoutes:
         resp = client.get("/v1/facts?entity=user:oscar&scope=local", headers=_ah(reader_key))
         assert resp.status_code == 200
         assert len(resp.json()["facts"]) == 0
+
+    def test_federation_tombstone_ingest_rejects_missing_signature(self, node):
+        client, admin_key, reader_key, ts, db_file, mint_peer_token, *_extra = node
+        payload = {
+            "id": f"tomb_{uuid.uuid4()}",
+            "entity_uri": "user:missing-signature",
+            "scope": "*",
+            "reason": "test",
+            "signed_by": "stigmem://peer-node",
+            "key_id": "key-1",
+            "created_at": datetime.now(UTC).isoformat(),
+            "legal_hold": False,
+        }
+        resp = client.post(
+            "/v1/federation/tombstones/ingest",
+            json=payload,
+            headers=_ah(mint_peer_token()),
+        )
+        assert resp.status_code == 400
+
+    def test_federation_tombstone_ingest_rejects_bad_signature(self, node):
+        client, admin_key, reader_key, ts, db_file, mint_peer_token, peer_priv = node
+        payload = _sign_tombstone_payload(
+            {
+                "id": f"tomb_{uuid.uuid4()}",
+                "entity_uri": "user:bad-signature",
+                "scope": "*",
+                "reason": "test",
+                "signed_by": "stigmem://peer-node",
+                "created_at": datetime.now(UTC).isoformat(),
+                "legal_hold": False,
+            },
+            peer_priv,
+        )
+        payload["signature"] = "bad-signature"
+        resp = client.post(
+            "/v1/federation/tombstones/ingest",
+            json=payload,
+            headers=_ah(mint_peer_token()),
+        )
+        assert resp.status_code == 400
+
+    def test_federation_revocation_ingest_accepts_valid_signature(self, node):
+        client, admin_key, reader_key, ts, db_file, mint_peer_token, peer_priv = node
+        tombstone_id = f"tomb_{uuid.uuid4()}"
+        tombstone_payload = _sign_tombstone_payload(
+            {
+                "id": tombstone_id,
+                "entity_uri": "user:revoked",
+                "scope": "*",
+                "reason": "test",
+                "signed_by": "stigmem://peer-node",
+                "created_at": datetime.now(UTC).isoformat(),
+                "legal_hold": False,
+            },
+            peer_priv,
+        )
+        tombstone_resp = client.post(
+            "/v1/federation/tombstones/ingest",
+            json=tombstone_payload,
+            headers=_ah(mint_peer_token()),
+        )
+        assert tombstone_resp.status_code == 200
+
+        payload = _sign_revocation_payload(
+            {
+                "id": f"tombrevoke_{uuid.uuid4()}",
+                "tombstone_id": tombstone_id,
+                "reason": "test",
+                "signed_by": "stigmem://peer-node",
+                "created_at": datetime.now(UTC).isoformat(),
+            },
+            peer_priv,
+        )
+        resp = client.post(
+            "/v1/federation/tombstones/ingest",
+            json=payload,
+            headers=_ah(mint_peer_token()),
+        )
+        assert resp.status_code == 200
+        assert resp.json() == {"status": "ok", "type": "revocation"}
+
+    def test_federation_revocation_ingest_rejects_bad_signature(self, node):
+        client, admin_key, reader_key, ts, db_file, mint_peer_token, peer_priv = node
+        payload = _sign_revocation_payload(
+            {
+                "id": f"tombrevoke_{uuid.uuid4()}",
+                "tombstone_id": f"tomb_{uuid.uuid4()}",
+                "reason": "test",
+                "signed_by": "stigmem://peer-node",
+                "created_at": datetime.now(UTC).isoformat(),
+            },
+            peer_priv,
+        )
+        payload["signature"] = "bad-signature"
+        resp = client.post(
+            "/v1/federation/tombstones/ingest",
+            json=payload,
+            headers=_ah(mint_peer_token()),
+        )
+        assert resp.status_code == 400
 
     # -- F-3 regression tests: auth bypass fix --
 
@@ -697,7 +831,7 @@ class TestTwoNodeFederationPropagation:
     def _make_node(self, tmp_path, name: str, peer_node_id: str = "stigmem://peer"):
         db_file = str(tmp_path / f"{name}.db")
         apply_migrations(db_path=db_file)
-        _priv, _pub_b64, priv_b64 = _gen_key_b64()
+        node_priv, node_pub_b64, priv_b64 = _gen_key_b64()
         _peer_priv, peer_pub_b64, peer_priv_b64 = _gen_key_b64()
         ts = Settings(
             db_path=db_file,
@@ -720,7 +854,7 @@ class TestTwoNodeFederationPropagation:
         def _mint():
             return _make_peer_token(peer_priv_b64, peer_node_id, sub=our_node_id)
 
-        return ts, admin_key, db_file, _mint
+        return ts, admin_key, db_file, _mint, node_priv, node_pub_b64
 
     def test_tombstone_propagates_via_ingest(self, tmp_path):
         """Tombstone created on node A is applied on node B via federation/tombstones/ingest."""
@@ -728,7 +862,9 @@ class TestTwoNodeFederationPropagation:
 
         try:
             # ---- Node A ----
-            ts_a, admin_a, db_a, _peer_a = self._make_node(tmp_path, "node_a", "stigmem://ext-a")
+            ts_a, admin_a, db_a, _peer_a, node_a_priv, node_a_pub = self._make_node(
+                tmp_path, "node_a", "stigmem://ext-a"
+            )
             settings_module.settings = ts_a
             auth_mod.settings = ts_a
             db_mod.settings = ts_a
@@ -761,13 +897,27 @@ class TestTwoNodeFederationPropagation:
             plugin_ctx_a.__exit__(None, None, None)
 
             # ---- Node B ----
-            ts_b, admin_b, db_b, mint_b = self._make_node(tmp_path, "node_b", "stigmem://ext-b")
+            ts_b, admin_b, db_b, mint_b, _node_b_priv, _node_b_pub = self._make_node(
+                tmp_path, "node_b", "stigmem://ext-b"
+            )
             settings_module.settings = ts_b
             auth_mod.settings = ts_b
             db_mod.settings = ts_b
             wk_mod.settings = ts_b
             fed_mod.settings = ts_b
             tomb_routes_mod.settings = ts_b
+            signer_manifest = OrgManifest(
+                entity_uri=tomb_record["signed_by"],
+                key_id=tomb_record["key_id"],
+                public_key=node_a_pub,
+                issued_at=datetime.now(UTC).isoformat(),
+                expires_at=(datetime.now(UTC) + timedelta(days=365)).isoformat(),
+                entities=[tomb_record["signed_by"]],
+            )
+            store_peer_manifest(
+                tomb_record["signed_by"],
+                sign_manifest(signer_manifest, node_a_priv),
+            )
             _reset_tombstone_cache()
             app_b = create_app()
             plugin_ctx_b = _tombstone_plugin_app(app_b)

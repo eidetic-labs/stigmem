@@ -143,7 +143,7 @@ def test_options_bypasses_rate_limit_and_does_not_consume_quota(tmp_db: str) -> 
     assert post.status_code == 201, post.text
 
 
-def test_options_bypasses_mtls_plaintext_guard(tmp_db: str) -> None:
+def test_options_bypasses_mtls_plaintext_guard_for_non_federation_paths(tmp_db: str) -> None:
     with _client(
         tmp_db,
         cors_dev_localhost=True,
@@ -151,15 +151,19 @@ def test_options_bypasses_mtls_plaintext_guard(tmp_db: str) -> None:
         tls_key_path="/tmp/node.key",
         tls_ca_bundle="/tmp/ca.crt",
     ) as client:
-        options = _preflight(client, "http://localhost:18765", path="/v1/federation/peers")
-        real_request = client.get(
+        options = _preflight(client, "http://localhost:18765", path="/v1/facts")
+        federation_options = _preflight(
+            client, "http://localhost:18765", path="/v1/federation/peers"
+        )
+        federation_get = client.get(
             "/v1/federation/peers",
             headers={"Origin": "http://localhost:18765"},
         )
 
     assert options.status_code == 200
     assert options.headers["access-control-allow-origin"] == "http://localhost:18765"
-    assert real_request.status_code == 421
+    assert federation_options.status_code == 421
+    assert federation_get.status_code == 421
 
 
 def _preflight(

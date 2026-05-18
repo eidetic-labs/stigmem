@@ -235,7 +235,7 @@ def create_app() -> FastAPI:
             call_next: Callable[[Request], Awaitable[Response]],
         ) -> Response:
             """Reject plaintext federation requests when mTLS is configured (§22.1)."""
-            if request.method == "OPTIONS":
+            if request.method == "OPTIONS" and not request.url.path.startswith("/v1/federation"):
                 return await call_next(request)
             if request.url.path.startswith("/v1/federation") and request.url.scheme != "https":
                 return JSONResponse(

@@ -158,6 +158,28 @@ Audit events are persisted **before** the HTTP response is sent.  If the node cr
   must prove a retention window should keep the local database, signed snapshots,
   or immutable audit exports for at least that long.
 
+### Audit evidence posture by trust mode
+
+Audit rows record operational events; they are not, by themselves, a cryptographic
+immutability guarantee. The local fact-chain and transparency-log checkpoints
+provide tamper evidence for fact history, while audit exports and snapshots
+preserve the event trail for review.
+
+`STIGMEM_TRUST_MODE` changes how strongly the node enforces federation trust
+decisions, but it does not disable ordinary `fact_audit_log` or
+`federation_audit` writes:
+
+| Trust mode | Enforcement posture | Audit evidence posture |
+|---|---|---|
+| `strict` | Federation trust decisions fail closed where required; low-trust or unverifiable inputs are rejected, quarantined, or downgraded according to the active control. | Best high-assurance mode. Preserve `fact_audit_log`, `federation_audit`, fact-chain checkpoints, and transparency-log evidence together. |
+| `relaxed` | Trust signals are computed and warnings are emitted, but some paths accept data with warning evidence instead of failing closed. | Suitable for staged federation rollout. Treat warnings as review items and export audit rows before local retention expiry. |
+| `off` | Source-trust scoring and related federation trust checks are skipped. | Operational audit rows still exist, but trust-enforcement evidence is intentionally absent. Do not treat this as a production assurance posture. |
+
+For production deployments, use `STIGMEM_TL_BACKEND=rekor` when available, or
+place the local transparency-log file on append-only storage. Export both audit
+tables to WORM-capable storage on a schedule that is shorter than your local
+retention target.
+
 ---
 
 ## Per-principal quotas (Spec-10-Hardening rate limits) {#per-principal-quotas}

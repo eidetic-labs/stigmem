@@ -35,6 +35,7 @@ FACT_PROJECTION_JOINS = (
 __all__ = [
     "FACT_PROJECTION_JOINS",
     "FACT_PROJECTION_SELECT",
+    "router",
 ]
 
 
@@ -109,6 +110,7 @@ def _get_tombstone_filter(
 router = APIRouter(prefix="/v1/facts", tags=["facts"])
 
 _SYSTEM_RELATION_PREFIX = "stigmem:"
+
 
 def _validate_relation(relation: str) -> list[str]:
     """Return convention warnings for a relation name (see relation-convention.md)."""

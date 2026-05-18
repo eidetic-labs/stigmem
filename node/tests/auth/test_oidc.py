@@ -127,11 +127,11 @@ def _sign_token(
 
 @pytest.fixture()
 def oidc_client(
-    tmp_path: object,
+    tmp_path: Path,
     rsa_keypair,
     jwks_document,
 ) -> Generator[TestClient, None, None]:
-    db_file = str(Path(tmp_path) / "oidc_test.db")
+    db_file = str(tmp_path / "oidc_test.db")
     apply_migrations(db_path=db_file)
 
     original = settings_module.settings
@@ -405,10 +405,10 @@ def test_exchange_wrong_audience_returns_401(oidc_client: TestClient, rsa_keypai
 
 
 def test_exchange_domain_restriction_blocks_wrong_domain(
-    tmp_path: object, rsa_keypair, jwks_document
+    tmp_path: Path, rsa_keypair, jwks_document
 ) -> None:
     """When oidc_allowed_domains is set, out-of-domain emails must be rejected."""
-    db_file = str(Path(tmp_path) / "domain_test.db")
+    db_file = str(tmp_path / "domain_test.db")
     apply_migrations(db_path=db_file)
 
     original = settings_module.settings
@@ -615,12 +615,12 @@ def _seed_garden_member(db_path: str, entity_uri: str, role: str) -> None:
 
 @pytest.fixture()
 def oidc_env(
-    tmp_path: object,
+    tmp_path: Path,
     rsa_keypair,
     jwks_document,
 ) -> Generator[tuple[TestClient, str], None, None]:
     """Like oidc_client but yields (client, db_path) so tests can pre-seed garden rows."""
-    db_file = str(Path(tmp_path) / "oidc_c2_test.db")
+    db_file = str(tmp_path / "oidc_c2_test.db")
     apply_migrations(db_path=db_file)
 
     original = settings_module.settings

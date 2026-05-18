@@ -1,7 +1,7 @@
 ---
 title: Audit Log & Per-Principal Quotas
 sidebar_label: Audit & Quotas
-description: Operator guide for the audit.read capability, the GET /v1/admin/audit endpoint, and per-principal token-bucket quota tuning (Spec-09-Audit-Log–Spec-10-Hardening rate limits).
+description: Operator guide for the audit.read capability, the GET /v1/admin/audit endpoint, and per-principal token-bucket quota tuning (Spec-09-Audit-Log--Spec-10-Hardening rate limits).
 audience: Operator
 ---
 
@@ -216,7 +216,7 @@ rate_per_second = ceiling / 3600
 | `STIGMEM_RATE_LIMIT_READ_PER_HOUR` | `5000` | Sets `fact_read` refill rate |
 
 ```bash
-# Example: allow 10 000 writes/hour for a high-throughput ingest node
+# Example: allow 10,000 writes/hour for a high-throughput ingest node
 STIGMEM_RATE_LIMIT_WRITE_PER_HOUR=10000
 
 # Disable quotas entirely (dev/test only — do not use in production)
@@ -288,7 +288,7 @@ curl -s "https://node.example.com/v1/admin/audit?event_type=quota_breach&limit=1
   SELECT min(ts), count(*) FROM fact_audit_log;
   ```
 
-- [ ] For compliance use cases, export audit log rows to an immutable store (S3 Object Lock, GCS object versioning, Worm-enabled storage) before the 90-day window.
+- [ ] For compliance use cases, export audit log rows to an immutable store (S3 Object Lock, GCS object versioning, WORM-enabled storage) before the 90-day window.
 
 ### Prometheus metrics
 

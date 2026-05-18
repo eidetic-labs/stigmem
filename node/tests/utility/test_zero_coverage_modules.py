@@ -159,7 +159,7 @@ class TestOllamaEmbeddingModel:
         assert m.dimension == 4
         # Internal: trailing slash stripped (we just verify embed builds the right URL below)
 
-    def test_embed_posts_to_ollama_and_normalises(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_embed_posts_to_ollama_and_normalizes(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from stigmem_node.embedding.local_adapter import OllamaEmbeddingModel
 
         captured: dict[str, Any] = {}

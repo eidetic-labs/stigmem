@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+import stigmem_node.settings as settings_mod
 from stigmem_node.plugins.discovery import DiscoveredPlugin
 from stigmem_node.plugins.manifest import PluginManifest
 from stigmem_node.plugins.signing import allow_unsigned_development_override
-from stigmem_node.settings import Settings
 
 
 def _plugin() -> DiscoveredPlugin:
@@ -19,9 +19,9 @@ def _plugin() -> DiscoveredPlugin:
 
 
 def test_unsigned_override_requires_ack(monkeypatch: pytest.MonkeyPatch) -> None:
-    import stigmem_node.settings as settings_mod
-
-    test_settings = Settings(plugin_signing_required=False, plugin_unsigned_ack="")
+    test_settings = settings_mod.Settings(
+        plugin_signing_required=False, plugin_unsigned_ack=""
+    )
     monkeypatch.setattr(settings_mod, "settings", test_settings)
 
     with pytest.raises(RuntimeError, match="STIGMEM_PLUGIN_UNSIGNED_ACK"):
@@ -29,9 +29,9 @@ def test_unsigned_override_requires_ack(monkeypatch: pytest.MonkeyPatch) -> None
 
 
 def test_unsigned_override_rejects_wrong_ack(monkeypatch: pytest.MonkeyPatch) -> None:
-    import stigmem_node.settings as settings_mod
-
-    test_settings = Settings(plugin_signing_required=False, plugin_unsigned_ack="yes")
+    test_settings = settings_mod.Settings(
+        plugin_signing_required=False, plugin_unsigned_ack="yes"
+    )
     monkeypatch.setattr(settings_mod, "settings", test_settings)
 
     with pytest.raises(RuntimeError, match="STIGMEM_PLUGIN_UNSIGNED_ACK"):
@@ -39,9 +39,7 @@ def test_unsigned_override_rejects_wrong_ack(monkeypatch: pytest.MonkeyPatch) ->
 
 
 def test_unsigned_override_allows_exact_ack(monkeypatch: pytest.MonkeyPatch) -> None:
-    import stigmem_node.settings as settings_mod
-
-    test_settings = Settings(
+    test_settings = settings_mod.Settings(
         plugin_signing_required=False,
         plugin_unsigned_ack="i-understand-plugins-are-unsigned",
     )

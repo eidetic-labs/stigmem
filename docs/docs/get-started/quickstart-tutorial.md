@@ -47,6 +47,57 @@ The quickstart starts two services:
 If ports 8765/8766 are busy, the demo script automatically selects free host
 ports starting at 18765.
 
+## Troubleshooting `make demo`
+
+### Ports 8765/8766 are already in use
+
+The containers still listen on port 8765 internally, but the host ports can
+move. When 8765 or 8766 are busy, `make demo` automatically selects available
+host ports starting at 18765 and prints the Node A and Node B URLs it used.
+
+Use those printed URLs for manual `curl` commands, or set explicit ports before
+running the demo:
+
+```bash
+STIGMEM_NODE_A_HOST_PORT=18765 STIGMEM_NODE_B_HOST_PORT=18766 make demo
+```
+
+If a browser or `curl` command still points at `localhost:8765` or
+`localhost:8766`, it may be talking to another local process instead of the
+demo stack.
+
+### Docker image pull failures
+
+By default, the demo pulls the pinned GHCR image from `docker-compose.yml`.
+Transient network, registry, or local Docker cache failures are usually safe to
+retry. Contributors validating local changes, or anyone blocked by a published
+image pull, can build the local image instead:
+
+```bash
+DEMO_BUILD=1 make demo
+```
+
+### Failure before teardown
+
+`make demo` prints each step before it runs it. When a failure happens before
+teardown, the first failing step and the Docker error output are the most useful
+diagnostics.
+
+To keep containers available for inspection, rerun with:
+
+```bash
+KEEP_UP=1 make demo
+```
+
+Then inspect the stack with:
+
+```bash
+docker compose ps
+docker compose logs node-a node-b
+```
+
+When you are done, clean up with `docker compose down -v --remove-orphans`.
+
 ## Step 2 — Verify federation
 
 The demo prints each step as it runs:

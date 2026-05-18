@@ -36,6 +36,7 @@ from cryptography.hazmat.primitives.serialization import (
 from fastapi import HTTPException, status
 
 from ..db import db
+from ..settings import settings
 
 # ---------------------------------------------------------------------------
 # Base64url helpers
@@ -120,6 +121,22 @@ class PeerTokenClaims:
         self.nonce = nonce
 
 
+def _claim_epoch_ms(payload: dict[str, Any], claim: str) -> int:
+    value = payload.get(claim)
+    if value is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"invalid_{claim}",
+        )
+    try:
+        return int(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"invalid_{claim}",
+        ) from exc
+
+
 def verify_peer_token(
     raw_token: str,
     local_node_id: str,
@@ -143,9 +160,9 @@ def verify_peer_token(
         ) from e
 
     iss = unverified.get("iss", "")
-    nonce = unverified.get("nonce", "")
-    exp = unverified.get("exp", 0)
-    scopes = unverified.get("scopes", [])
+    if not isinstance(iss, str) or not iss:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_iss")
+    exp = _claim_epoch_ms(unverified, "exp")
 
     # Step 2 — expiry check (before touching DB)
     now_ms = int(time.time() * 1000)
@@ -182,7 +199,7 @@ def verify_peer_token(
     except (
         jwt.exceptions.InvalidSignatureError,
         InvalidSignature,
-        jwt.exceptions.DecodeError,
+        jwt.exceptions.PyJWTError,
     ) as e:
         _write_audit(audit_writer, iss, "rejected_token", {"reason": "invalid_signature"})
         raise HTTPException(
@@ -190,8 +207,28 @@ def verify_peer_token(
         ) from e
 
     # Step 5 — sub must match local node
-    if verified.get("sub") != local_node_id:
+    sub = verified.get("sub")
+    if not isinstance(sub, str) or sub != local_node_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="sub_mismatch")
+
+    iat = _claim_epoch_ms(verified, "iat")
+    nbf_raw = verified.get("nbf")
+    leeway_ms = settings.peer_token_leeway_s * 1000
+    if iat > now_ms + leeway_ms or (
+        nbf_raw is not None and _claim_epoch_ms(verified, "nbf") > now_ms + leeway_ms
+    ):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="token_not_yet_valid")
+
+    nonce = verified.get("nonce")
+    if not isinstance(nonce, str) or not nonce:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_nonce")
+
+    raw_scopes = verified.get("scopes", [])
+    scopes = (
+        [scope for scope in raw_scopes if isinstance(scope, str)]
+        if isinstance(raw_scopes, list)
+        else []
+    )
 
     # Step 6 — replay check (nonce must not be in nonce_cache)
     now_iso = datetime.now(UTC).isoformat()

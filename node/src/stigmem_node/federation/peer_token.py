@@ -25,6 +25,7 @@ from ..settings import settings
 
 _cached_pub: str | None = None
 _cached_priv: str | None = None
+_MAX_PEER_TOKEN_IAT_AGE_MS = 24 * 60 * 60 * 1000
 
 
 def _pad(s: str) -> str:
@@ -86,6 +87,15 @@ class TokenError(Exception):
         super().__init__(kind)
 
 
+def _get_peer_node_id_by_db_id(peer_db_id: str) -> str:
+    """Return the registered node_id for a peer database row."""
+    with db() as conn:
+        row = conn.execute("SELECT node_id FROM peers WHERE id = ?", (peer_db_id,)).fetchone()
+    if row is None:
+        raise TokenError("peer_not_found")
+    return str(row["node_id"])
+
+
 def verify_peer_token(
     raw_token: str,
     peer_pubkey_b64: str,
@@ -124,12 +134,27 @@ def verify_peer_token(
         raise TokenError("invalid_token") from exc
 
     now_ms = int(time.time() * 1000)
-    exp = payload.get("exp", 0)
-    if now_ms > exp:
+    leeway_ms = settings.peer_token_leeway_s * 1000
+    exp = int(payload.get("exp", 0))
+    if now_ms > exp + leeway_ms:
         raise TokenError("token_expired")
 
     if payload.get("sub") != our_node_id:
         raise TokenError("invalid_sub")
+
+    expected_iss = _get_peer_node_id_by_db_id(peer_db_id)
+    if payload.get("iss") != expected_iss:
+        raise TokenError("invalid_iss")
+
+    iat = int(payload.get("iat", 0))
+    if iat > now_ms + leeway_ms:
+        raise TokenError("iat_in_future")
+    if iat < now_ms - _MAX_PEER_TOKEN_IAT_AGE_MS:
+        raise TokenError("iat_too_old")
+
+    nbf = payload.get("nbf")
+    if nbf is not None and int(nbf) > now_ms + leeway_ms:
+        raise TokenError("nbf_in_future")
 
     nonce = payload.get("nonce")
     if not nonce:
@@ -137,7 +162,8 @@ def verify_peer_token(
 
     # Atomically insert nonce (UNIQUE constraint rejects replays)
     window_ms = settings.federation_nonce_window_s * 1000
-    expires_at = datetime.fromtimestamp(min(exp, now_ms + window_ms) / 1000, tz=UTC).isoformat()
+    nonce_expires_ms = max(exp, now_ms + window_ms)
+    expires_at = datetime.fromtimestamp(nonce_expires_ms / 1000, tz=UTC).isoformat()
     try:
         with db() as conn:
             conn.execute(

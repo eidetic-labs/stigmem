@@ -58,6 +58,8 @@ class Settings(BaseSettings):
     # Nonce window: how long (seconds) a nonce is kept to detect replays
     # (spec §6.6, default 5 min).
     federation_nonce_window_s: int = 300
+    # Clock-skew leeway for peer-token exp/iat/nbf claim checks.
+    peer_token_leeway_s: int = 30
     # Maximum accepted remote HLC skew for federated fact ingest. Future skew is
     # strict by default because it can advance local logical time; past skew is a
     # wider archival bound and may be set to 0 for one-off historical backfills.

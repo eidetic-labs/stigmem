@@ -21,8 +21,11 @@ import sqlite3
 import tempfile
 import time
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import canonicaljson
 import jwt
@@ -36,8 +39,28 @@ from fastapi import HTTPException
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
+import stigmem_node.db as db_mod
+import stigmem_node.settings as settings_module
 from stigmem_node.identity.capability import CapabilityTokenError, verify_token
 from stigmem_node.identity.manifest import OrgManifest, sign_manifest
+from stigmem_node.peer_auth import verify_peer_token
+
+apply_migrations = db_mod.apply_migrations
+Settings = settings_module.Settings
+
+
+@contextmanager
+def _patched_test_settings(test_settings: Any) -> Iterator[None]:
+    original_settings = settings_module.settings
+    original_db_settings = db_mod.settings
+    settings_module.settings = test_settings
+    db_mod.settings = test_settings
+    try:
+        yield
+    finally:
+        settings_module.settings = original_settings
+        db_mod.settings = original_db_settings
+
 
 # ---------------------------------------------------------------------------
 # Module-level fixed keypair (generated once; reused across all Hypothesis
@@ -70,7 +93,7 @@ def _make_fuzz_manifest(entity_uri: str = _FUZZ_ISSUER) -> OrgManifest:
 def _make_valid_token_dict(
     entity_uri: str = _FUZZ_ISSUER,
     expiry_delta: timedelta | None = None,
-) -> dict:
+) -> dict[str, object]:
     """Build a correctly signed token dict (no DB insert).
 
     All fields except 'signature' are canonical-JSON-signed with _FUZZ_PRIV.
@@ -78,7 +101,7 @@ def _make_valid_token_dict(
     if expiry_delta is None:
         expiry_delta = timedelta(hours=1)
     now = datetime.now(UTC)
-    body: dict = {
+    body: dict[str, object] = {
         "token_id": str(uuid.uuid4()),
         "token_version": 1,
         "issuer": entity_uri,
@@ -237,9 +260,10 @@ def test_fuzz_expired_token_always_rejected(seconds_past: int) -> None:
     deadline=2000,
     suppress_health_check=[HealthCheck.too_slow],
 )
-def test_fuzz_arbitrary_json_never_crashes(payload: dict) -> None:
+def test_fuzz_arbitrary_json_never_crashes(payload: dict[str, object]) -> None:
     """verify_token on arbitrary JSON must only raise CapabilityTokenError, not crash."""
     token_json = json.dumps(payload)
+    expected_error: CapabilityTokenError | None
 
     try:
         verify_token(token_json, lambda _: None, trust_mode="relaxed")
@@ -252,7 +276,23 @@ def test_fuzz_arbitrary_json_never_crashes(payload: dict) -> None:
     else:
         expected_error = None
 
-    assert expected_error is None or isinstance(expected_error, CapabilityTokenError)
+    required_fields = {
+        "token_id",
+        "token_version",
+        "issuer",
+        "subject",
+        "verb",
+        "object",
+        "issued_at",
+        "expiry",
+        "nonce",
+        "signature",
+    }
+    is_malformed = not required_fields.issubset(payload.keys())
+    if is_malformed:
+        assert expected_error is not None
+    else:
+        assert expected_error is None or isinstance(expected_error, CapabilityTokenError)
 
 
 # ---------------------------------------------------------------------------
@@ -284,6 +324,7 @@ def test_fuzz_mutated_signed_field_rejected(field_name: str, new_value: str) -> 
 
     token[field_name] = new_value
     token_json = json.dumps(token)
+    expected_error: CapabilityTokenError | None
 
     try:
         verify_token(token_json, _manifest_lookup, trust_mode="relaxed")
@@ -318,14 +359,6 @@ _PEER_CLAIM_VALUE = st.one_of(
 
 def test_fuzz_peer_token_arbitrary_payload_never_crashes() -> None:
     """Signed peer JWTs with varied claim shapes must fail with HTTPException only."""
-    import stigmem_node.db as db_mod
-
-    apply_migrations = db_mod.apply_migrations
-    import stigmem_node.settings as settings_module
-
-    Settings = settings_module.Settings
-    from stigmem_node.peer_auth import verify_peer_token
-
     with tempfile.TemporaryDirectory() as tmpdir:
         db_file = str(Path(tmpdir) / "peer_payload_fuzz.db")
         apply_migrations(db_path=db_file)
@@ -360,13 +393,8 @@ def test_fuzz_peer_token_arbitrary_payload_never_crashes() -> None:
         conn.commit()
         conn.close()
 
-        original_settings = settings_module.settings
         test_settings = Settings(db_path=db_file, auth_required=False, node_url=local_node_id)
-        settings_module.settings = test_settings  # type: ignore[assignment]
-        db_mod.settings = test_settings  # type: ignore[assignment]
-
-        try:
-
+        with _patched_test_settings(test_settings):
             @given(
                 exp=st.one_of(
                     st.integers(min_value=int(time.time() * 1000) + 1, max_value=10**15),
@@ -407,6 +435,7 @@ def test_fuzz_peer_token_arbitrary_payload_never_crashes() -> None:
                 if nbf is not None:
                     payload["nbf"] = nbf
                 raw_token = _encode_eddsa_jwt(payload, peer_priv)
+                expected_error: HTTPException | None
 
                 try:
                     verify_peer_token(raw_token, local_node_id)
@@ -423,10 +452,6 @@ def test_fuzz_peer_token_arbitrary_payload_never_crashes() -> None:
 
             inner()
 
-        finally:
-            settings_module.settings = original_settings  # type: ignore[assignment]
-            db_mod.settings = original_settings  # type: ignore[assignment]
-
 
 # ---------------------------------------------------------------------------
 # 7. Peer-token nonce replay: nonce already in replay-cache is always rejected
@@ -441,14 +466,6 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
     predicate without the cross-example contamination that arises from
     consuming nonces inside the loop.
     """
-    import stigmem_node.db as db_mod
-
-    apply_migrations = db_mod.apply_migrations
-    import stigmem_node.settings as settings_module
-
-    Settings = settings_module.Settings
-    from stigmem_node.peer_auth import verify_peer_token
-
     with tempfile.TemporaryDirectory() as tmpdir:
         db_file = str(Path(tmpdir) / "nonce_fuzz.db")
         apply_migrations(db_path=db_file)
@@ -478,13 +495,8 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
         conn.commit()
         conn.close()
 
-        original_settings = settings_module.settings
         test_settings = Settings(db_path=db_file, auth_required=False, node_url=local_node_id)
-        settings_module.settings = test_settings  # type: ignore[assignment]
-        db_mod.settings = test_settings  # type: ignore[assignment]
-
-        try:
-
+        with _patched_test_settings(test_settings):
             @given(nonce_val=st.uuids().map(str))
             @settings(
                 max_examples=50,
@@ -525,7 +537,3 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
                 assert exc_info.value.detail == "nonce_already_seen"
 
             inner()
-
-        finally:
-            settings_module.settings = original_settings  # type: ignore[assignment]
-            db_mod.settings = original_settings  # type: ignore[assignment]

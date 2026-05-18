@@ -32,7 +32,9 @@ from pathlib import Path
 
 import pytest
 
-_MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
+import stigmem_node
+
+_MIGRATIONS_DIR = Path(stigmem_node.__file__).resolve().parent.parent / "migrations"
 FLOAT_COMPARISON_TOLERANCE = 1e-6
 logger = logging.getLogger(__name__)
 
@@ -72,6 +74,33 @@ def _require_pg() -> str:
     return dsn
 
 
+def _drop_test_schema(dsn: str, schema: str) -> None:
+    try:
+        import psycopg2
+        from psycopg2 import sql
+    except ImportError as exc:
+        logger.warning(
+            "psycopg2 unavailable during postgres test schema cleanup %s: %s",
+            schema,
+            exc,
+        )
+        return
+
+    conn = None
+    try:
+        conn = psycopg2.connect(dsn)
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            cur.execute(
+                sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(sql.Identifier(schema))
+            )
+    except psycopg2.Error as exc:
+        logger.warning("failed to drop postgres test schema %s: %s", schema, exc)
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 # ---------------------------------------------------------------------------
 # Fixture: fresh schema per test
 # ---------------------------------------------------------------------------
@@ -90,19 +119,7 @@ def pg_backend():
     yield b
 
     # Teardown: drop the test schema.
-    try:
-        import psycopg2  # type: ignore[import]
-        from psycopg2 import sql  # type: ignore[import]
-
-        conn = psycopg2.connect(dsn)
-        conn.autocommit = True
-        with conn.cursor() as cur:
-            cur.execute(
-                sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(sql.Identifier(schema))
-            )
-        conn.close()
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("failed to drop postgres test schema %s: %s", schema, exc)
+    _drop_test_schema(dsn, schema)
 
 
 # ---------------------------------------------------------------------------
@@ -444,19 +461,7 @@ class TestVectorIndex:
             assert row is not None
             assert row["n"] == 1
         finally:
-            try:
-                import psycopg2  # type: ignore[import]
-                from psycopg2 import sql  # type: ignore[import]
-
-                conn2 = psycopg2.connect(dsn)
-                conn2.autocommit = True
-                with conn2.cursor() as cur:
-                    cur.execute(
-                        sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(sql.Identifier(schema))
-                    )
-                conn2.close()
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("failed to drop postgres test schema %s: %s", schema, exc)
+            _drop_test_schema(dsn, schema)
 
 
 # ---------------------------------------------------------------------------

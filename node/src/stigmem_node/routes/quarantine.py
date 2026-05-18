@@ -22,7 +22,7 @@ from ..audit_event import INSTRUCTION_PROMOTED, emit_instruction_event_if_applic
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..garden_acl import get_garden_by_slug_or_id, require_quarantine_moderator_or_admin
-from ..immutability import (
+from ..lifecycle.immutability import (
     set_fact_garden_membership,
     set_fact_quarantine_status,
     set_fact_validity_override,

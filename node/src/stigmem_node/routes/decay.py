@@ -16,8 +16,8 @@ from fastapi.responses import JSONResponse
 
 from ..auth import Identity, resolve_identity
 from ..db import db
-from ..decay import run_decay_sweep
 from ..jobs import create_job, get_job, mark_done, mark_failed, mark_running
+from ..lifecycle.decay import run_decay_sweep
 from ..models.constants import VALID_SCOPES
 from ..settings import settings
 

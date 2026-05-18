@@ -1,13 +1,16 @@
-"""Runtime gate for experimental RTBF tombstone behavior."""
+"""Compatibility alias for :mod:`stigmem_node.lifecycle.tombstone_gate`."""
 
 from __future__ import annotations
 
-TOMBSTONE_PLUGIN_NAME = "stigmem-plugin-tombstones"
+import sys
+from typing import TYPE_CHECKING
 
+__all__ = ["TOMBSTONE_PLUGIN_NAME", "tombstone_plugin_registered"]
 
-def tombstone_plugin_registered() -> bool:
-    """Return True when the RTBF tombstone plugin is active in the registry."""
-    from .plugins import get_registry
+if TYPE_CHECKING:
+    from .lifecycle.tombstone_gate import TOMBSTONE_PLUGIN_NAME, tombstone_plugin_registered
+else:
+    from .lifecycle import tombstone_gate as _impl
 
-    return TOMBSTONE_PLUGIN_NAME in get_registry().registered_plugins()
+    sys.modules[__name__] = _impl
 

@@ -62,7 +62,7 @@ def get_fact(
         raise HTTPException(status_code=404, detail="fact not found")
 
     # F-11 §25.6.1/§23.3.3: tombstone indistinguishability — tombstoned facts return 404
-    from ...tombstone_cache import is_tombstoned as _is_tombstoned_check
+    from ...lifecycle.tombstone_cache import is_tombstoned as _is_tombstoned_check
 
     if _is_tombstoned_check(row["entity"], identity.tenant_id):
         raise HTTPException(status_code=404, detail="fact not found")

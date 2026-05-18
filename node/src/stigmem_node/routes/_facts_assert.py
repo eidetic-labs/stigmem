@@ -28,7 +28,7 @@ from ..garden_acl import (
     require_garden_write,
 )
 from ..hlc import node_hlc
-from ..immutability import set_embedding_status, write_fact_journal
+from ..lifecycle.immutability import set_embedding_status, write_fact_journal
 from ..metrics import CONTRADICTION, FACT_WRITE
 from ..models.facts import AssertRequest, FactRecord, row_to_record
 from ..plugins import TenantContext, get_registry

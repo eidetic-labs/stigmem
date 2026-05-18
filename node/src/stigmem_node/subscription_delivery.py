@@ -33,7 +33,7 @@ from .db import db
 from .garden_acl import get_member_role
 from .lifecycle.tombstone_cache import is_tombstoned as _is_tombstoned
 from .memory_garden_acl_gate import recall_filter_enabled
-from .recall_pipeline import apply_recall_pipeline
+from .recall.recall_pipeline import apply_recall_pipeline
 
 logger = logging.getLogger("stigmem.subscriptions")
 _DELIVER_PENDING_LOCK = threading.Lock()

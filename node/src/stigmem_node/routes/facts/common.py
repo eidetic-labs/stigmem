@@ -119,7 +119,7 @@ def _embed_fact_background(
         from ... import settings as settings_pkg
         from ...db import db
         from ...embedding import get_embedding_model
-        from ...vector_search import check_or_register_model, embed_and_store_fact
+        from ...recall.vector_search import check_or_register_model, embed_and_store_fact
 
         model = get_embedding_model(settings_pkg.settings)
         with db() as conn:

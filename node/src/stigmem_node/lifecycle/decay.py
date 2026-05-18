@@ -88,7 +88,7 @@ def _apply_decay(conn: Any, candidates: list[str], conf_ids: list[str], now: str
             [(str(uuid.uuid4()), fid, now, "stigmem:system:decay") for fid in conf_ids],
         )
     # Graph adjacency index (§20.1.2): propagate expiry to entity_edges
-    from ..graph_index import sync_edge_expiry
+    from ..recall.graph_index import sync_edge_expiry
 
     sync_edge_expiry(conn, candidates, now)
 

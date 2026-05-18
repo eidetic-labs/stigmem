@@ -119,3 +119,6 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
 - #473 continues module flattening by moving lifecycle/deletion implementation
   helpers into `stigmem_node.lifecycle`, while retaining root-level compatibility
   aliases for historical imports.
+- #475 continues module flattening by moving recall, resolver, vector-search, and
+  graph helper implementations into `stigmem_node.recall`, while retaining
+  root-level compatibility aliases for historical imports.

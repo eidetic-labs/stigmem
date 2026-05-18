@@ -61,7 +61,7 @@ def eval_node():
         db_path=tmp,
         storage_backend="sqlite",
         auth_required=False,
-        node_url="http://eval-testnode",
+        node_url="http://127.0.0.1:8765",
     )
     settings_module.settings = test_settings  # type: ignore[assignment]
     auth_mod.settings = test_settings  # type: ignore[assignment]
@@ -90,7 +90,7 @@ def eval_node():
 
             @property
             def base_url(self):
-                return "http://eval-testnode"
+                return "http://127.0.0.1:8765"
 
         yield _TestClientAdapter(tc)
 

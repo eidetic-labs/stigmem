@@ -6,7 +6,8 @@ Property/fuzz tests covering:
   3. verify_token: past-expiry tokens always rejected (clock-skew boundary)
   4. verify_token: arbitrary JSON never raises unexpected exception types
   5. verify_token: mutating any signed field after signing always rejected
-  6. verify_peer_token: nonce already in replay-cache always rejected
+  6. verify_peer_token: arbitrary payloads never raise unexpected exception types
+  7. verify_peer_token: nonce already in replay-cache always rejected
 
 CI: runs under HYPOTHESIS_SEED=0 for reproducible seeds.
 Total budget: max_examples are tuned so the full suite runs well under 60 s.
@@ -24,12 +25,14 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import canonicaljson
+import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
     PublicFormat,
 )
+from fastapi import HTTPException
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
@@ -90,6 +93,25 @@ def _make_valid_token_dict(
     sig_bytes = _FUZZ_PRIV.sign(signing_body)
     body["signature"] = base64.urlsafe_b64encode(sig_bytes).decode().rstrip("=")
     return body
+
+
+def _b64url_json(value: object) -> str:
+    raw = json.dumps(value, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+
+def _encode_eddsa_jwt(payload: dict[str, object], private_key: Ed25519PrivateKey) -> str:
+    """Build an EdDSA JWT directly so malformed claim shapes reach the verifier."""
+    signing_input = ".".join(
+        [
+            _b64url_json({"alg": "EdDSA", "typ": "JWT"}),
+            _b64url_json(payload),
+        ]
+    ).encode("ascii")
+    signature = (
+        base64.urlsafe_b64encode(private_key.sign(signing_input)).decode("ascii").rstrip("=")
+    )
+    return f"{signing_input.decode('ascii')}.{signature}"
 
 
 # Single manifest instance shared across all no-DB examples.
@@ -281,7 +303,133 @@ def test_fuzz_mutated_signed_field_rejected(field_name: str, new_value: str) -> 
 
 
 # ---------------------------------------------------------------------------
-# 6. Peer-token nonce replay: nonce already in replay-cache is always rejected
+# 6. Peer-token arbitrary payloads: validation failures are controlled HTTP errors
+# ---------------------------------------------------------------------------
+
+
+_PEER_CLAIM_VALUE = st.one_of(
+    st.none(),
+    st.booleans(),
+    st.integers(min_value=-(10**12), max_value=10**15),
+    st.text(max_size=80),
+    st.lists(st.text(max_size=24), max_size=5),
+)
+
+
+def test_fuzz_peer_token_arbitrary_payload_never_crashes() -> None:
+    """Signed peer JWTs with varied claim shapes must fail with HTTPException only."""
+    import stigmem_node.db as db_mod
+
+    apply_migrations = db_mod.apply_migrations
+    import stigmem_node.settings as settings_module
+
+    Settings = settings_module.Settings
+    from stigmem_node.peer_auth import verify_peer_token
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_file = str(Path(tmpdir) / "peer_payload_fuzz.db")
+        apply_migrations(db_path=db_file)
+
+        peer_priv = Ed25519PrivateKey.generate()
+        peer_pub_b64 = (
+            base64.urlsafe_b64encode(
+                peer_priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+            )
+            .decode()
+            .rstrip("=")
+        )
+        peer_node_id = "stigmem://payload-fuzz-peer"
+        local_node_id = "stigmem://payload-fuzz-local"
+        now_iso = datetime.now(UTC).isoformat()
+
+        conn = sqlite3.connect(db_file)
+        conn.execute(
+            "INSERT INTO peers "
+            "(id, node_id, node_url, federation_pubkey, status, allowed_scopes, "
+            "created_at, declaration_sig, signed_at) "
+            "VALUES (?, ?, ?, ?, 'active', '[]', ?, 'test-sig', ?)",
+            (
+                str(uuid.uuid4()),
+                peer_node_id,
+                "http://payload-fuzz-peer",
+                peer_pub_b64,
+                now_iso,
+                now_iso,
+            ),
+        )
+        conn.commit()
+        conn.close()
+
+        original_settings = settings_module.settings
+        test_settings = Settings(db_path=db_file, auth_required=False, node_url=local_node_id)
+        settings_module.settings = test_settings  # type: ignore[assignment]
+        db_mod.settings = test_settings  # type: ignore[assignment]
+
+        try:
+
+            @given(
+                exp=st.one_of(
+                    st.integers(min_value=int(time.time() * 1000) + 1, max_value=10**15),
+                    _PEER_CLAIM_VALUE,
+                ),
+                iat=st.one_of(
+                    st.integers(min_value=0, max_value=int(time.time() * 1000)),
+                    _PEER_CLAIM_VALUE,
+                ),
+                nbf=st.one_of(_PEER_CLAIM_VALUE, st.just(None)),
+                iss=st.one_of(st.just(peer_node_id), _PEER_CLAIM_VALUE),
+                sub=st.one_of(st.just(local_node_id), _PEER_CLAIM_VALUE),
+                nonce=st.one_of(st.uuids().map(str), _PEER_CLAIM_VALUE),
+                scopes=st.one_of(st.lists(st.text(max_size=24), max_size=5), _PEER_CLAIM_VALUE),
+            )
+            @settings(
+                max_examples=100,
+                deadline=5000,
+                suppress_health_check=[HealthCheck.too_slow],
+            )
+            def inner(
+                exp: object,
+                iat: object,
+                nbf: object,
+                iss: object,
+                sub: object,
+                nonce: object,
+                scopes: object,
+            ) -> None:
+                payload: dict[str, object] = {
+                    "iss": iss,
+                    "sub": sub,
+                    "iat": iat,
+                    "exp": exp,
+                    "nonce": nonce,
+                    "scopes": scopes,
+                }
+                if nbf is not None:
+                    payload["nbf"] = nbf
+                raw_token = _encode_eddsa_jwt(payload, peer_priv)
+
+                try:
+                    verify_peer_token(raw_token, local_node_id)
+                except HTTPException as exc:
+                    expected_error = exc
+                except Exception as exc:
+                    raise AssertionError(
+                        f"verify_peer_token raised unexpected {type(exc).__name__}: {exc}"
+                    ) from exc
+                else:
+                    expected_error = None
+
+                assert expected_error is None or isinstance(expected_error, HTTPException)
+
+            inner()
+
+        finally:
+            settings_module.settings = original_settings  # type: ignore[assignment]
+            db_mod.settings = original_settings  # type: ignore[assignment]
+
+
+# ---------------------------------------------------------------------------
+# 7. Peer-token nonce replay: nonce already in replay-cache is always rejected
 # ---------------------------------------------------------------------------
 
 
@@ -293,9 +441,6 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
     predicate without the cross-example contamination that arises from
     consuming nonces inside the loop.
     """
-    import jwt
-    from fastapi import HTTPException
-
     import stigmem_node.db as db_mod
 
     apply_migrations = db_mod.apply_migrations

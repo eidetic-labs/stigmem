@@ -40,6 +40,17 @@ class PeerRegisterResponse(BaseModel):
     verified_at: str | None
 
 
+class PeerApprovalRequest(BaseModel):
+    pubkey_fingerprint: str = Field(..., min_length=1)
+
+
+class PeerApprovalResponse(BaseModel):
+    peer_id: str
+    node_id: str
+    status: str
+    approved_at: str
+
+
 class FederationFactsResponse(BaseModel):
     facts: list[FactRecord]
     cursor: str | None
@@ -60,4 +71,3 @@ class ConflictResolveRequest(BaseModel):
     winning_fact_id: str | None = None
     resolution_note: str = ""
     new_value: FactValue | None = None
-

@@ -8,6 +8,7 @@ id_tokens with the private key and exercise every code path.
 from __future__ import annotations
 
 import json
+import socket
 import sqlite3 as _sqlite3
 import sys
 import time
@@ -20,6 +21,7 @@ from unittest.mock import MagicMock, patch
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 import stigmem_node.auth as auth_mod
@@ -171,7 +173,9 @@ def oidc_client(
             return disco_response
         return jwks_response
 
-    with patch("stigmem_node.routes.auth.httpx.get", side_effect=_fake_get):
+    with patch("stigmem_node.routes.auth.httpx.get", side_effect=_fake_get), patch(
+        "stigmem_node.routes.auth.assert_safe_url"
+    ):
         # Also mock PyJWKClient so it serves our in-memory JWKS
         real_PyJWKClient = jwt.PyJWKClient
 
@@ -200,6 +204,99 @@ def oidc_client(
 def test_oidc_disabled_returns_503(client: TestClient) -> None:
     resp = client.post("/v1/auth/oidc/exchange", json={"id_token": "dummy"})
     assert resp.status_code == 503
+
+
+def test_oidc_discovery_blocks_http_scheme(monkeypatch: pytest.MonkeyPatch) -> None:
+    auth_route_mod._JWKS_CACHE.clear()
+
+    def _unexpected_get(*_args: Any, **_kwargs: Any) -> None:
+        raise AssertionError("discovery fetch must not run for unsafe issuer URLs")
+
+    monkeypatch.setattr(auth_route_mod.httpx, "get", _unexpected_get)
+
+    with pytest.raises(HTTPException) as exc:
+        auth_route_mod._get_jwks_client("http://login.example.com")
+
+    assert exc.value.status_code == 503
+
+
+def test_oidc_discovery_blocks_private_ip(monkeypatch: pytest.MonkeyPatch) -> None:
+    auth_route_mod._JWKS_CACHE.clear()
+
+    def _unexpected_get(*_args: Any, **_kwargs: Any) -> None:
+        raise AssertionError("discovery fetch must not run for unsafe issuer URLs")
+
+    monkeypatch.setattr(auth_route_mod.httpx, "get", _unexpected_get)
+
+    with pytest.raises(HTTPException) as exc:
+        auth_route_mod._get_jwks_client("https://127.0.0.1:8443")
+
+    assert exc.value.status_code == 503
+
+
+def test_oidc_discovery_uses_https_without_redirects(monkeypatch: pytest.MonkeyPatch) -> None:
+    auth_route_mod._JWKS_CACHE.clear()
+    calls: list[dict[str, Any]] = []
+
+    def _safe_getaddrinfo(_host: str, port: int | None, *_args: Any, **_kwargs: Any):
+        return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", port or 0))]
+
+    class _FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict[str, str]:
+            return {"jwks_uri": "https://login.example.com/keys"}
+
+    class _FakeJwksClient:
+        def __init__(self, jwks_uri: str) -> None:
+            self.uri = jwks_uri
+
+    def _fake_get(url: str, **kwargs: Any) -> _FakeResponse:
+        calls.append({"url": url, **kwargs})
+        return _FakeResponse()
+
+    monkeypatch.setattr("socket.getaddrinfo", _safe_getaddrinfo)
+    monkeypatch.setattr(auth_route_mod.httpx, "get", _fake_get)
+    monkeypatch.setattr(auth_route_mod.jwt, "PyJWKClient", _FakeJwksClient)
+
+    client = auth_route_mod._get_jwks_client("https://login.example.com")
+
+    assert isinstance(client, _FakeJwksClient)
+    assert client.uri == "https://login.example.com/keys"
+    assert calls == [
+        {
+            "url": "https://login.example.com/.well-known/openid-configuration",
+            "timeout": 5.0,
+            "follow_redirects": False,
+        }
+    ]
+
+
+def test_oidc_discovery_blocks_unsafe_jwks_uri(monkeypatch: pytest.MonkeyPatch) -> None:
+    auth_route_mod._JWKS_CACHE.clear()
+
+    def _safe_getaddrinfo(host: str, port: int | None, *_args: Any, **_kwargs: Any):
+        ip = "93.184.216.34" if host == "login.example.com" else "169.254.169.254"
+        return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", (ip, port or 0))]
+
+    class _FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict[str, str]:
+            return {"jwks_uri": "https://metadata.example/keys"}
+
+    def _fake_get(_url: str, **_kwargs: Any) -> _FakeResponse:
+        return _FakeResponse()
+
+    monkeypatch.setattr("socket.getaddrinfo", _safe_getaddrinfo)
+    monkeypatch.setattr(auth_route_mod.httpx, "get", _fake_get)
+
+    with pytest.raises(HTTPException) as exc:
+        auth_route_mod._get_jwks_client("https://login.example.com")
+
+    assert exc.value.status_code == 503
 
 
 def test_exchange_valid_token_returns_key(oidc_client: TestClient, rsa_keypair) -> None:
@@ -285,6 +382,7 @@ def test_exchange_domain_restriction_blocks_wrong_domain(
         with (
             patch("stigmem_node.routes.auth.httpx.get", side_effect=_fake_get),
             patch("stigmem_node.routes.auth.jwt.PyJWKClient", _FakeJWKSClient),
+            patch("stigmem_node.routes.auth.assert_safe_url"),
         ):
             app = create_app()
             with TestClient(app, raise_server_exceptions=True) as c:
@@ -492,6 +590,7 @@ def oidc_env(
     with (
         patch("stigmem_node.routes.auth.httpx.get", side_effect=_fake_get),
         patch("stigmem_node.routes.auth.jwt.PyJWKClient", _FakeJWKSClient),
+        patch("stigmem_node.routes.auth.assert_safe_url"),
     ):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:

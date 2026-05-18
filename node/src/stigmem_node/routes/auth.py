@@ -47,6 +47,7 @@ from ..models.auth import (
     RegisterKeyRequest,
     RegisterKeyResponse,
 )
+from ..net_util import assert_safe_url
 from ..settings import settings
 
 logger = logging.getLogger("stigmem.auth")
@@ -68,9 +69,11 @@ def _get_jwks_client(issuer_url: str) -> jwt.PyJWKClient:
     # Discover JWKS URI from OIDC metadata document
     disco_url = issuer_url.rstrip("/") + "/.well-known/openid-configuration"
     try:
-        resp = httpx.get(disco_url, timeout=5.0)
+        assert_safe_url(disco_url, allow_schemes=frozenset({"https"}))
+        resp = httpx.get(disco_url, timeout=5.0, follow_redirects=False)
         resp.raise_for_status()
         jwks_uri: str = resp.json()["jwks_uri"]
+        assert_safe_url(jwks_uri, allow_schemes=frozenset({"https"}))
     except Exception as exc:
         logger.warning("OIDC discovery failed for %s: %s", issuer_url, exc)
         raise HTTPException(

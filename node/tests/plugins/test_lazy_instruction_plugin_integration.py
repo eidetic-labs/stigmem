@@ -10,6 +10,7 @@ import pytest
 from conftest import _make_enc_settings, _patch_settings, _restore_settings
 from fastapi.testclient import TestClient
 
+import stigmem_node.plugins.registry as plugin_registry
 import stigmem_node.settings as settings_module
 from stigmem_node.main import _include_plugin_routers, create_app
 from stigmem_node.plugins import Allow, HookRegistry, PluginContext, PluginManifest
@@ -50,6 +51,7 @@ def lazy_plugin_client(
     monkeypatch.setenv("STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ALLOW_MANIFEST_PUBLISH", "true")
     monkeypatch.setenv("STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ALLOW_INSTRUCTION_RECALL", "true")
     monkeypatch.setenv("STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ALLOW_FILE_PATH_ENTRIES", "true")
+    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a2")
 
     manifest = plugin_manifest()
     discovered = DiscoveredPlugin(
@@ -188,7 +190,10 @@ def test_plugin_loaded_lazy_instruction_discovery_round_trip(
     }
 
 
-def test_lazy_instruction_plugin_hook_order_is_deterministic() -> None:
+def test_lazy_instruction_plugin_hook_order_is_deterministic(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a2")
     calls: list[str] = []
     manifest = _recording_manifest(calls)
     registry = HookRegistry()

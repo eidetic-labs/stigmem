@@ -9,6 +9,7 @@ from stigmem_node.plugins import Allow, Migration, PluginContext, PluginHealth, 
 
 T = TypeVar("T")
 PLUGIN_NAME = "stigmem-plugin-lazy-instruction-discovery"
+PLUGIN_VERSION = "0.9.0-alpha.2"
 
 
 def pre_recall_authorize(_ctx: PluginContext, **_: Any) -> Allow:
@@ -43,7 +44,7 @@ def migration_register(_ctx: PluginContext, value: list[Migration], **_: Any) ->
         *value,
         Migration(
             plugin_name=PLUGIN_NAME,
-            plugin_version="0.1.0",
+            plugin_version=PLUGIN_VERSION,
             migration_id=1,
             backend="sqlite",
             sql=sql,

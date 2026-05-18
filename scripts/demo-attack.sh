@@ -11,6 +11,7 @@
 set -euo pipefail
 
 START_TIME=$(date +%s)
+PYTEST_CMD=(uv run pytest node/tests/federation/test_malicious_peer.py -q --tb=short)
 
 echo "Stigmem malicious-peer rejection demo"
 echo ""
@@ -24,7 +25,7 @@ echo "Running focused acceptance gate..."
 echo ""
 
 set +e
-uv run pytest node/tests/federation/test_malicious_peer.py -q --tb=short
+"${PYTEST_CMD[@]}"
 PYTEST_STATUS=$?
 set -e
 
@@ -35,6 +36,7 @@ if [[ -n "${DEMO_ATTACK_TRANSCRIPT:-}" ]]; then
   export DEMO_ATTACK_TRANSCRIPT
   export DEMO_ATTACK_ELAPSED_S="${ELAPSED}"
   export DEMO_ATTACK_PYTEST_STATUS="${PYTEST_STATUS}"
+  export DEMO_ATTACK_GATE_COMMAND="${PYTEST_CMD[*]}"
   python3 - <<'PY'
 from __future__ import annotations
 
@@ -52,7 +54,7 @@ transcript = {
     "demo": "demo-attack",
     "elapsed_s": int(os.environ["DEMO_ATTACK_ELAPSED_S"]),
     "acceptance_gate": {
-        "command": "uv run pytest node/tests/federation/test_malicious_peer.py -q --tb=short",
+        "command": os.environ["DEMO_ATTACK_GATE_COMMAND"],
         "exit_code": pytest_status,
         "passed": gate_passed,
     },

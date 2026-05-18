@@ -11,6 +11,7 @@ import pytest
 from fastapi import HTTPException
 
 import stigmem_node.plugins.discovery as discovery
+import stigmem_node.plugins.registry as plugin_registry
 from stigmem_node.auth import Identity
 from stigmem_node.main import _include_plugin_routers, create_app
 from stigmem_node.plugins import (
@@ -21,7 +22,6 @@ from stigmem_node.plugins import (
     PluginManifest,
     discover_plugin_manifests,
 )
-from stigmem_node.plugins.discovery import DiscoveredPlugin
 
 _FEATURE_DIR = (
     Path(__file__).resolve().parents[3] / "experimental" / "lazy-instruction-discovery"
@@ -74,8 +74,8 @@ def test_manifest_declares_expected_boundary() -> None:
 
     assert isinstance(manifest, PluginManifest)
     assert manifest.name == PLUGIN_NAME
-    assert manifest.version == "0.1.0"
-    assert manifest.requires_stigmem == ">=0.9.0a1"
+    assert manifest.version == "0.9.0-alpha.2"
+    assert manifest.requires_stigmem == ">=0.9.0a2"
     assert manifest.config_schema is LazyInstructionDiscoveryConfig
     assert manifest.capabilities == frozenset(
         {
@@ -109,7 +109,7 @@ def test_default_app_does_not_mount_lazy_instruction_routes() -> None:
 def test_plugin_route_registration_mounts_lazy_instruction_routes() -> None:
     app = create_app()
     manifest = plugin_manifest()
-    discovered = DiscoveredPlugin(
+    discovered = discovery.DiscoveredPlugin(
         manifest=manifest,
         entry_point_name="lazy-instruction-discovery",
         entry_point_value="stigmem_plugin_lazy_instruction_discovery:plugin_manifest",
@@ -153,7 +153,8 @@ def test_config_rejects_empty_or_duplicate_adapter_profiles() -> None:
         LazyInstructionDiscoveryConfig(adapter_profiles=("generic", "generic"))
 
 
-def test_manifest_registers_with_hook_registry() -> None:
+def test_manifest_registers_with_hook_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a2")
     registry = HookRegistry()
     manifest = plugin_manifest()
 

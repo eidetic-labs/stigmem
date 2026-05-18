@@ -72,11 +72,7 @@ def rsa_keypair():
 @pytest.fixture(scope="module")
 def jwks_document(rsa_keypair):
     _, public_key = rsa_keypair
-    public_numbers = (
-        public_key.public_key().public_numbers()
-        if hasattr(public_key, "public_key")
-        else public_key.public_numbers()
-    )
+    public_numbers = public_key.public_numbers()
 
     import base64
 
@@ -135,7 +131,7 @@ def oidc_client(
     rsa_keypair,
     jwks_document,
 ) -> Generator[TestClient, None, None]:
-    db_file = str(tmp_path) + "/oidc_test.db"  # type: ignore[operator]
+    db_file = str(Path(tmp_path) / "oidc_test.db")
     apply_migrations(db_path=db_file)
 
     original = settings_module.settings
@@ -340,7 +336,7 @@ def test_exchange_domain_restriction_blocks_wrong_domain(
     tmp_path: object, rsa_keypair, jwks_document
 ) -> None:
     """When oidc_allowed_domains is set, out-of-domain emails must be rejected."""
-    db_file = str(tmp_path) + "/domain_test.db"  # type: ignore[operator]
+    db_file = str(Path(tmp_path) / "domain_test.db")
     apply_migrations(db_path=db_file)
 
     original = settings_module.settings
@@ -552,7 +548,7 @@ def oidc_env(
     jwks_document,
 ) -> Generator[tuple[TestClient, str], None, None]:
     """Like oidc_client but yields (client, db_path) so tests can pre-seed garden rows."""
-    db_file = str(tmp_path) + "/oidc_c2_test.db"  # type: ignore[operator]
+    db_file = str(Path(tmp_path) / "oidc_c2_test.db")
     apply_migrations(db_path=db_file)
 
     original = settings_module.settings

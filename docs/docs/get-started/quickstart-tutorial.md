@@ -178,6 +178,30 @@ curl -s "${NODE_B:-http://localhost:8766}/v1/federation/audit" | jq '.entries[-3
 
 For ad hoc compose work, use `docker compose up -d` and `docker compose down -v`.
 
+## Malicious-Peer Rejection Demo
+
+`make demo-attack` runs the focused malicious-peer acceptance gate without
+leaving a demo cluster running. It validates two rejection paths:
+unauthorized writes outside a peer's allowed scopes, and source-forged public
+writes where a peer claims another source identity.
+
+Expected result:
+
+- The command exits successfully.
+- Output shows the focused pytest gate passed.
+- The rejected attempts are recorded as rejection/audit outcomes, not accepted
+  replicated facts.
+
+To save a machine-readable summary:
+
+```bash
+DEMO_ATTACK_TRANSCRIPT=/tmp/demo-attack.json make demo-attack
+jq . /tmp/demo-attack.json
+```
+
+The transcript records the gate command, exit code, elapsed time, and expected
+scenario outcomes. It does not contain secrets or private keys.
+
 :::caution Helm / Kubernetes is deferred in v0.9.0a1
 The Helm chart has been moved to [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md). It remains buildable but is unsupported until the [ADR-008 reintroduction gates](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) pass. The supported v0.9.0a1 deployment surface is Docker Compose (above).
 :::

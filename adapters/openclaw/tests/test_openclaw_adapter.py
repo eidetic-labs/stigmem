@@ -565,8 +565,6 @@ def test_emit_escalation_includes_valid_until() -> None:
     captured: list[dict] = []
 
     def capture(request: httpx.Request) -> httpx.Response:
-        import json
-
         captured.append(json.loads(request.content))
         return httpx.Response(201, json=_fact())
 
@@ -606,8 +604,6 @@ def test_emit_escalation_default_priority_is_medium() -> None:
     captured: list[dict] = []
 
     def capture(request: httpx.Request) -> httpx.Response:
-        import json
-
         captured.append(json.loads(request.content))
         return httpx.Response(201, json=_fact())
 

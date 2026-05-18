@@ -20,6 +20,7 @@ import os
 import sqlite3
 import sys
 import time
+import urllib.parse
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -39,11 +40,11 @@ from fastapi.testclient import TestClient
 
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
+import stigmem_node.lifecycle.tombstones as tombstones_mod
 import stigmem_node.routes.federation as fed_mod
 import stigmem_node.routes.tombstones as tomb_routes_mod
 import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
-import stigmem_node.tombstones as tombstones_mod
 from stigmem_node.identity.manifest import OrgManifest, sign_manifest
 from stigmem_node.identity.trust_store import store_peer_manifest
 from stigmem_node.main import _include_plugin_routers, create_app
@@ -103,8 +104,7 @@ def _tombstone_plugin_app(app) -> Generator[None, None, None]:
 
 
 def _reset_tombstone_cache() -> None:
-    tombstones_mod._tombstone_scope_cache.active_set = set()
-    tombstones_mod._tombstone_scope_cache.refreshed_at = 0.0
+    tombstones_mod.invalidate_tombstone_cache()
 
 
 def _gen_key_b64() -> tuple[Ed25519PrivateKey, str, str]:
@@ -129,6 +129,7 @@ def _gen_key_b64() -> tuple[Ed25519PrivateKey, str, str]:
 def _register_peer(db_file: str, node_id: str, pub_b64: str) -> str:
     """Insert an active peer into the DB. Returns peer row id."""
     peer_id = str(uuid.uuid4())
+    peer_timestamp = datetime.now(UTC).replace(microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
     conn = sqlite3.connect(db_file)
     try:
         conn.execute(
@@ -143,9 +144,9 @@ def _register_peer(db_file: str, node_id: str, pub_b64: str) -> str:
                 pub_b64,
                 json.dumps(["public", "*"]),
                 "active",
-                "2026-05-01T00:00:00Z",
+                peer_timestamp,
                 "test_sig",
-                "2026-05-01T00:00:00Z",
+                peer_timestamp,
             ),
         )
         conn.commit()
@@ -154,12 +155,8 @@ def _register_peer(db_file: str, node_id: str, pub_b64: str) -> str:
     return peer_id
 
 
-def _make_peer_token(priv_b64: str, iss: str, sub: str = "tombnode") -> str:
-    """Mint an Ed25519-signed peer JWT."""
-    raw = base64.urlsafe_b64decode(priv_b64 + "=" * (-len(priv_b64) % 4))
-    privkey = Ed25519PrivateKey.from_private_bytes(raw)
-    now_ms = int(time.time() * 1000)
-    payload = {
+def _build_peer_token_payload(iss: str, sub: str, now_ms: int) -> dict:
+    return {
         "iss": iss,
         "sub": sub,
         "iat": now_ms,
@@ -167,6 +164,13 @@ def _make_peer_token(priv_b64: str, iss: str, sub: str = "tombnode") -> str:
         "nonce": str(uuid.uuid4()),
         "scopes": ["public", "*"],
     }
+
+
+def _make_peer_token(priv_b64: str, iss: str, sub: str = "tombnode") -> str:
+    """Mint an Ed25519-signed peer JWT."""
+    raw = base64.urlsafe_b64decode(priv_b64 + "=" * (-len(priv_b64) % 4))
+    privkey = Ed25519PrivateKey.from_private_bytes(raw)
+    payload = _build_peer_token_payload(iss=iss, sub=sub, now_ms=int(time.time() * 1000))
     return pyjwt.encode(payload, privkey, algorithm="EdDSA")
 
 
@@ -355,8 +359,6 @@ class TestTombstoneStatus:
             json={"entity_uri": "user:dave", "scope": "*"},
             headers=_ah(admin_key),
         )
-        import urllib.parse
-
         encoded = urllib.parse.quote("user:dave", safe="")
         resp = client.get(f"/v1/tombstones/{encoded}", headers=_ah(admin_key))
         assert resp.status_code == 200
@@ -366,8 +368,6 @@ class TestTombstoneStatus:
 
     def test_check_unknown_entity_returns_false(self, node):
         client, admin_key, reader_key, ts, db_file, *_extra = node
-        import urllib.parse
-
         encoded = urllib.parse.quote("user:nobody", safe="")
         resp = client.get(f"/v1/tombstones/{encoded}", headers=_ah(admin_key))
         assert resp.status_code == 200
@@ -375,8 +375,6 @@ class TestTombstoneStatus:
 
     def test_reader_cannot_check(self, node):
         client, admin_key, reader_key, ts, db_file, *_extra = node
-        import urllib.parse
-
         encoded = urllib.parse.quote("user:dave", safe="")
         resp = client.get(f"/v1/tombstones/{encoded}", headers=_ah(reader_key))
         assert resp.status_code == 403
@@ -408,8 +406,6 @@ class TestTombstoneRevoke:
         assert data["tombstone_id"] == tomb_id
 
         # After revocation, status check should show tombstoned=False
-        import urllib.parse
-
         encoded = urllib.parse.quote("user:eve", safe="")
         status_resp = client.get(f"/v1/tombstones/{encoded}", headers=_ah(admin_key))
         assert status_resp.json()["tombstoned"] is False
@@ -607,7 +603,7 @@ class TestFederationTombstoneRoutes:
             json={"entity_uri": "user:mia", "scope": "*"},
             headers=_ah(admin_key),
         )
-        future = "2099-01-01T00:00:00+00:00"
+        future = (datetime.now(UTC) + timedelta(days=365 * 100)).isoformat()
         resp = client.get(
             f"/v1/federation/tombstones?since={future}",
             headers=_ah(admin_key),

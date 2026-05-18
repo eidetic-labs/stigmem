@@ -14,6 +14,30 @@ from ...models.tombstones import TombstoneNotice
 
 logger = logging.getLogger("stigmem.facts")
 
+FACT_PROJECTION_SELECT = (
+    "f.*, "
+    "COALESCE(fvo.valid_until, f.valid_until) AS projected_valid_until, "
+    "COALESCE(fvo.confidence, f.confidence) AS projected_confidence, "
+    "COALESCE(fgm.garden_id, f.garden_id) AS projected_garden_id, "
+    "COALESCE(fqs.quarantine_status, f.quarantine_status) AS projected_quarantine_status, "
+    "COALESCE(fqs.quarantine_garden_id, f.quarantine_garden_id) "
+    "AS projected_quarantine_garden_id, "
+    "COALESCE(f.cid, (SELECT fca.cid FROM fact_cid_aliases fca "
+    "WHERE fca.fact_id = f.id ORDER BY fca.cid LIMIT 1)) AS projected_cid"
+)
+
+FACT_PROJECTION_JOINS = (
+    " LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id"
+    " LEFT JOIN fact_garden_membership fgm ON fgm.fact_id = f.id"
+    " LEFT JOIN fact_quarantine_status fqs ON fqs.fact_id = f.id"
+)
+
+__all__ = [
+    "FACT_PROJECTION_JOINS",
+    "FACT_PROJECTION_SELECT",
+]
+
+
 def _get_tombstone_filter(
     conn: Any,
     entity_uris: list[str],

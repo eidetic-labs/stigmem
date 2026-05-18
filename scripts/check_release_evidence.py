@@ -21,13 +21,13 @@ PUBLISH_REQUIREMENTS = {
     "keyless signing permission": "id-token: write",
     "cosign install": "sigstore/cosign-installer",
     "image signature": "cosign sign --yes",
-    "SBOM generation": "stigmem-node-sbom.spdx.json",
+    "SBOM generation": "spdx.json",
     "SBOM attestation": "cosign attest --yes",
     "SPDX attestation type": "--type spdxjson",
     "BuildKit provenance": "provenance: mode=max",
     "npm provenance": "npm publish --provenance",
     "PyPI Trusted Publisher": "use_oidc: true",
-    "release-page verification link": "docs.stigmem.dev/operators/release-verification",
+    "release-page verification link": "https://docs.stigmem.dev/operators/release-verification",
 }
 
 DOC_REQUIREMENTS = {

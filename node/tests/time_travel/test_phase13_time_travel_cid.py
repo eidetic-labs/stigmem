@@ -85,8 +85,6 @@ _PATCHABLE = [
 
 
 def _patch_settings(test_settings: Settings) -> list:
-    import importlib
-
     mods = []
     for name in _PATCHABLE:
         try:

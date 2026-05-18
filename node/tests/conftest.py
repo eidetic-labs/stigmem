@@ -187,8 +187,6 @@ _PATCHABLE_MODULES = [
 
 
 def _get_extra_modules():
-    import importlib
-
     mods = []
     for name in _PATCHABLE_MODULES:
         with contextlib.suppress(ImportError):

@@ -357,6 +357,64 @@ _PEER_CLAIM_VALUE = st.one_of(
 )
 
 
+@given(
+    exp=st.one_of(
+        st.integers(min_value=int(time.time() * 1000) + 1, max_value=10**15),
+        _PEER_CLAIM_VALUE,
+    ),
+    iat=st.one_of(
+        st.integers(min_value=0, max_value=int(time.time() * 1000)),
+        _PEER_CLAIM_VALUE,
+    ),
+    nbf=st.one_of(_PEER_CLAIM_VALUE, st.just(None)),
+    iss=st.one_of(st.just("stigmem://payload-fuzz-peer"), _PEER_CLAIM_VALUE),
+    sub=st.one_of(st.just("stigmem://payload-fuzz-local"), _PEER_CLAIM_VALUE),
+    nonce=st.one_of(st.uuids().map(str), _PEER_CLAIM_VALUE),
+    scopes=st.one_of(st.lists(st.text(max_size=24), max_size=5), _PEER_CLAIM_VALUE),
+)
+@settings(
+    max_examples=100,
+    deadline=5000,
+    suppress_health_check=[HealthCheck.too_slow],
+)
+def _check_peer_token_arbitrary_payload(
+    peer_priv: Ed25519PrivateKey,
+    local_node_id: str,
+    exp: object,
+    iat: object,
+    nbf: object,
+    iss: object,
+    sub: object,
+    nonce: object,
+    scopes: object,
+) -> None:
+    payload: dict[str, object] = {
+        "iss": iss,
+        "sub": sub,
+        "iat": iat,
+        "exp": exp,
+        "nonce": nonce,
+        "scopes": scopes,
+    }
+    if nbf is not None:
+        payload["nbf"] = nbf
+    raw_token = _encode_eddsa_jwt(payload, peer_priv)
+    expected_error: HTTPException | None
+
+    try:
+        verify_peer_token(raw_token, local_node_id)
+    except HTTPException as exc:
+        expected_error = exc
+    except Exception as exc:
+        raise AssertionError(
+            f"verify_peer_token raised unexpected {type(exc).__name__}: {exc}"
+        ) from exc
+    else:
+        expected_error = None
+
+    assert expected_error is None or isinstance(expected_error, HTTPException)
+
+
 def test_fuzz_peer_token_arbitrary_payload_never_crashes() -> None:
     """Signed peer JWTs with varied claim shapes must fail with HTTPException only."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -395,62 +453,7 @@ def test_fuzz_peer_token_arbitrary_payload_never_crashes() -> None:
 
         test_settings = Settings(db_path=db_file, auth_required=False, node_url=local_node_id)
         with _patched_test_settings(test_settings):
-            @given(
-                exp=st.one_of(
-                    st.integers(min_value=int(time.time() * 1000) + 1, max_value=10**15),
-                    _PEER_CLAIM_VALUE,
-                ),
-                iat=st.one_of(
-                    st.integers(min_value=0, max_value=int(time.time() * 1000)),
-                    _PEER_CLAIM_VALUE,
-                ),
-                nbf=st.one_of(_PEER_CLAIM_VALUE, st.just(None)),
-                iss=st.one_of(st.just(peer_node_id), _PEER_CLAIM_VALUE),
-                sub=st.one_of(st.just(local_node_id), _PEER_CLAIM_VALUE),
-                nonce=st.one_of(st.uuids().map(str), _PEER_CLAIM_VALUE),
-                scopes=st.one_of(st.lists(st.text(max_size=24), max_size=5), _PEER_CLAIM_VALUE),
-            )
-            @settings(
-                max_examples=100,
-                deadline=5000,
-                suppress_health_check=[HealthCheck.too_slow],
-            )
-            def inner(
-                exp: object,
-                iat: object,
-                nbf: object,
-                iss: object,
-                sub: object,
-                nonce: object,
-                scopes: object,
-            ) -> None:
-                payload: dict[str, object] = {
-                    "iss": iss,
-                    "sub": sub,
-                    "iat": iat,
-                    "exp": exp,
-                    "nonce": nonce,
-                    "scopes": scopes,
-                }
-                if nbf is not None:
-                    payload["nbf"] = nbf
-                raw_token = _encode_eddsa_jwt(payload, peer_priv)
-                expected_error: HTTPException | None
-
-                try:
-                    verify_peer_token(raw_token, local_node_id)
-                except HTTPException as exc:
-                    expected_error = exc
-                except Exception as exc:
-                    raise AssertionError(
-                        f"verify_peer_token raised unexpected {type(exc).__name__}: {exc}"
-                    ) from exc
-                else:
-                    expected_error = None
-
-                assert expected_error is None or isinstance(expected_error, HTTPException)
-
-            inner()
+            _check_peer_token_arbitrary_payload(peer_priv, local_node_id)
 
 
 # ---------------------------------------------------------------------------

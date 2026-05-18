@@ -95,7 +95,7 @@ def make_backend(
                 "storage_backend='postgres' requires a connection string. "
                 "Set STIGMEM_PG_DSN, STIGMEM_DATABASE_URL, or DATABASE_URL."
             )
-        schema: str = getattr(_settings, "pg_schema", "public")
+        schema: str = getattr(_settings, "pg_schema", "public") or "public"
         embed_enabled_pg: bool = getattr(_settings, "embed_enabled", False)
         embed_dimension_pg: int = int(getattr(_settings, "embed_dimension", 768))
         return PostgresBackend(

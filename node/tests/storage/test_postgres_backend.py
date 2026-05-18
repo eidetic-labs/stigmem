@@ -36,6 +36,25 @@ _MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
 FLOAT_COMPARISON_TOLERANCE = 1e-6
 logger = logging.getLogger(__name__)
 
+
+class TestSchemaNameValidation:
+    def test_schema_name_rejects_sql_identifier_injection(self) -> None:
+        from stigmem_node.storage.postgres_backend import PostgresBackend
+
+        with pytest.raises(ValueError, match="schema name must match"):
+            PostgresBackend(
+                dsn="postgresql://example.invalid/db",
+                schema='public"; DROP TABLE x; --',
+            )
+
+    def test_schema_name_accepts_safe_identifier(self) -> None:
+        from stigmem_node.storage.postgres_backend import PostgresBackend
+
+        backend = PostgresBackend(dsn="postgresql://example.invalid/db", schema="valid_name_123")
+
+        assert backend.backend_name == "postgres"
+
+
 # ---------------------------------------------------------------------------
 # Skip guard
 # ---------------------------------------------------------------------------

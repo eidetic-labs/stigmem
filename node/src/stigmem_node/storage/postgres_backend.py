@@ -54,6 +54,19 @@ from .base import StorageBackend
 
 logger = logging.getLogger("stigmem.storage.postgres")
 
+_SCHEMA_NAME_RE = re.compile(r"^[a-z][a-z0-9_]{0,62}$")
+
+
+def _validate_schema_name(schema: str) -> str:
+    """Validate a Postgres schema identifier accepted by this backend."""
+    if not _SCHEMA_NAME_RE.fullmatch(schema):
+        raise ValueError(
+            "PostgresBackend schema name must match [a-z][a-z0-9_]{0,62}; "
+            f"got {schema!r}"
+        )
+    return schema
+
+
 # ---------------------------------------------------------------------------
 # Primary-key map for INSERT OR REPLACE rewriting
 # ---------------------------------------------------------------------------
@@ -337,7 +350,7 @@ class PostgresBackend(StorageBackend):
         embed_dimension: int = 768,
     ) -> None:
         self._dsn = dsn
-        self._schema = schema
+        self._schema = _validate_schema_name(schema)
         self._pool_min = pool_min
         self._pool_max = pool_max
         self._embed_enabled = embed_enabled
@@ -367,7 +380,6 @@ class PostgresBackend(StorageBackend):
             self._pool_min,
             self._pool_max,
             self._dsn,
-            options=f"-c search_path={self._schema}",
         )
         return self._pool
 
@@ -380,7 +392,16 @@ class PostgresBackend(StorageBackend):
                 "psycopg2 is required for the PostgreSQL backend. "
                 "Install it with: pip install 'stigmem-node[postgres]'"
             ) from exc
-        return psycopg2.connect(self._dsn, options=f"-c search_path={self._schema}")
+        return psycopg2.connect(self._dsn)
+
+    def _set_search_path(self, conn: Any) -> None:
+        """Set the active schema using identifier quoting."""
+        from psycopg2 import sql
+
+        with conn.cursor() as cur:
+            cur.execute(
+                sql.SQL("SET search_path TO {}").format(sql.Identifier(self._schema))
+            )
 
     def _pg_migrations(self, migrations_dir: Path) -> list[Path]:
         """Ordered migration files, preferring Postgres-specific overrides.
@@ -409,6 +430,7 @@ class PostgresBackend(StorageBackend):
         pg_conn = pool.getconn()
         wrapped = _PGConn(pg_conn)
         try:
+            self._set_search_path(pg_conn)
             yield wrapped
             pg_conn.commit()
         except Exception:
@@ -421,8 +443,15 @@ class PostgresBackend(StorageBackend):
         conn = self._open_raw_conn()
         try:
             # Ensure the target schema exists (for per-test schema isolation).
+            from psycopg2 import sql
+
             with conn.cursor() as cur:
-                cur.execute(f"CREATE SCHEMA IF NOT EXISTS {self._schema}")
+                cur.execute(
+                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(
+                        sql.Identifier(self._schema)
+                    )
+                )
+            self._set_search_path(conn)
             conn.commit()
 
             # Bootstrap schema_migrations table.

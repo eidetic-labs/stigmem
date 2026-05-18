@@ -105,6 +105,7 @@ class Settings(BaseSettings):
     # 0 = disabled.
     rate_limit_write_per_hour: int = 1000
     rate_limit_read_per_hour: int = 5000
+    rate_limit_disabled_ack: bool = False
 
     # Storage backend (Phase 8 / 11).
     # "sqlite"   (default) — local SQLite file at db_path.
@@ -184,6 +185,8 @@ class Settings(BaseSettings):
     # before registration. Set false only for local development; unsigned plugin
     # loading remains warning- and audit-visible.
     plugin_signing_required: bool = True
+    # Required literal acknowledgement before unsigned-plugin loading is allowed.
+    plugin_unsigned_ack: str = ""
     # Comma-separated Sigstore signing identities accepted for production plugin
     # registration when plugin_signing_required=true.
     plugin_trusted_publishers: str = ""

@@ -49,6 +49,15 @@ _TOMBSTONE_PLUGIN_SRC = (
 )
 
 
+@pytest.fixture(autouse=True)
+def _allow_unsigned_plugin_test_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        settings_module.settings,
+        "plugin_unsigned_ack",
+        "i-understand-plugins-are-unsigned",
+    )
+
+
 # ---------------------------------------------------------------------------
 # Backend selection CLI option (Phase 8 — multi-backend conformance)
 # ---------------------------------------------------------------------------

@@ -47,7 +47,8 @@ def eval_node():
     db_mod = importlib.import_module("stigmem_node.db")
     settings_module = importlib.import_module("stigmem_node.settings")
 
-    tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False).name
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
+        tmp = tmp_file.name
     original = settings_module.settings
 
     def _extra_mods():
@@ -61,7 +62,7 @@ def eval_node():
         db_path=tmp,
         storage_backend="sqlite",
         auth_required=False,
-        node_url="http://eval-testnode",
+        node_url="http://127.0.0.1:8765",
     )
     settings_module.settings = test_settings  # type: ignore[assignment]
     auth_mod.settings = test_settings  # type: ignore[assignment]
@@ -69,7 +70,7 @@ def eval_node():
     wk_mod.settings = test_settings  # type: ignore[assignment]
     extra = _extra_mods()
     for mod in extra:
-        setattr(mod, "settings", test_settings)
+        mod.settings = test_settings
 
     db_mod.apply_migrations(db_path=tmp)
     app = create_app()
@@ -90,7 +91,7 @@ def eval_node():
 
             @property
             def base_url(self):
-                return "http://eval-testnode"
+                return "http://127.0.0.1:8765"
 
         yield _TestClientAdapter(tc)
 
@@ -101,7 +102,7 @@ def eval_node():
     wk_mod.settings = original  # type: ignore[assignment]
     for mod in extra:
         if hasattr(mod, "settings"):
-            setattr(mod, "settings", original)
+            mod.settings = original
 
     # Clean up temp DB. The file may already be gone if the fixture failed during setup.
     with contextlib.suppress(FileNotFoundError):
@@ -136,9 +137,10 @@ def auth_eval_node():
     saved_map: dict[str, object] = {}
     for name, mod in list(sys.modules.items()):
         if name.startswith("stigmem_node") and hasattr(mod, "settings"):
-            saved_map[name] = getattr(mod, "settings")
+            saved_map[name] = mod.settings
 
-    tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False).name
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
+        tmp = tmp_file.name
     auth_settings = settings_module.Settings(
         db_path=tmp,
         storage_backend="sqlite",
@@ -146,7 +148,7 @@ def auth_eval_node():
         node_url="http://eval-authnode",
     )
     for name in saved_map:
-        setattr(sys.modules[name], "settings", auth_settings)
+        sys.modules[name].settings = auth_settings
 
     db_mod.apply_migrations(db_path=tmp)
     app = create_app()
@@ -171,7 +173,7 @@ def auth_eval_node():
 
     for name, saved_val in saved_map.items():
         if name in sys.modules:
-            setattr(sys.modules[name], "settings", saved_val)
+            sys.modules[name].settings = saved_val
 
     # Clean up temp DB. The file may already be gone if the fixture failed during setup.
     with contextlib.suppress(FileNotFoundError):

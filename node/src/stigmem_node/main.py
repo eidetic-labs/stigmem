@@ -10,6 +10,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from typing import Annotated, Any, cast
+from urllib.parse import urlparse
 
 import uvicorn
 from fastapi import Depends, FastAPI, Request, Response
@@ -62,23 +63,65 @@ def _enforce_federation_transport_security() -> None:
             "STIGMEM_FEDERATION_INSECURE=1 only for local/dev/test federation."
         )
 
+    if not _node_url_is_loopback(settings.node_url):
+        raise RuntimeError(
+            "STIGMEM_FEDERATION_INSECURE=1 is only permitted when node_url is "
+            f"bound to 127.0.0.1 or localhost. Got node_url={settings.node_url!r}. "
+            "Configure mTLS for any non-loopback deployment."
+        )
+
     logger.warning(
         "SECURITY WARNING: federation is running without mTLS because "
-        "STIGMEM_FEDERATION_INSECURE=1 is set. Use this only for local/dev/test."
+        "STIGMEM_FEDERATION_INSECURE=1 is set. This is only allowed because "
+        "node_url is a loopback address. Use this only for local/dev/test."
     )
 
 
-def _warn_if_rate_limit_kill_switch_enabled() -> None:
-    """Warn when both legacy rate-limit knobs disable quota enforcement."""
+def _enforce_auth_required_in_production() -> None:
+    """Refuse to run unauthenticated outside loopback."""
+    if settings.auth_required:
+        return
+    if not _node_url_is_loopback(settings.node_url):
+        raise RuntimeError(
+            "STIGMEM_AUTH_REQUIRED=false is only permitted when node_url is "
+            f"bound to 127.0.0.1 or localhost. Got node_url={settings.node_url!r}. "
+            "Anonymous identity has read/write/federate permissions; never expose "
+            "this configuration to a network."
+        )
+    logger.warning(
+        "SECURITY WARNING: STIGMEM_AUTH_REQUIRED=false. Anonymous identity has "
+        "full read/write/federate permissions. This is only allowed because "
+        "node_url is a loopback address."
+    )
+
+
+def _enforce_rate_limit_kill_switch_ack() -> None:
+    """Refuse boot when quota is fully disabled without an explicit acknowledgement."""
     if settings.rate_limit_write_per_hour != 0 or settings.rate_limit_read_per_hour != 0:
         return
+    if not settings.rate_limit_disabled_ack:
+        raise RuntimeError(
+            "STIGMEM_RATE_LIMIT_WRITE_PER_HOUR=0 and "
+            "STIGMEM_RATE_LIMIT_READ_PER_HOUR=0 fully disable quota enforcement. "
+            "To proceed, set STIGMEM_RATE_LIMIT_DISABLED_ACK=1 to acknowledge "
+            "that this node accepts unbounded read and write traffic."
+        )
 
     logger.warning(
-        "SECURITY WARNING: quota enforcement is disabled because "
-        "STIGMEM_RATE_LIMIT_WRITE_PER_HOUR=0 and "
-        "STIGMEM_RATE_LIMIT_READ_PER_HOUR=0 are both set. Use this only for "
-        "local/dev/test."
+        "SECURITY WARNING: quota enforcement is fully disabled "
+        "(write=0, read=0) with explicit operator acknowledgment via "
+        "STIGMEM_RATE_LIMIT_DISABLED_ACK=1."
     )
+
+
+def _node_url_is_loopback(node_url: str) -> bool:
+    """Return True iff node_url's host is a loopback address."""
+    try:
+        parsed = urlparse(node_url)
+        host = (parsed.hostname or "").lower()
+    except ValueError:
+        return False
+    return host in {"localhost", "127.0.0.1", "::1"}
 
 
 def create_app() -> FastAPI:
@@ -89,7 +132,8 @@ def create_app() -> FastAPI:
         if settings.trust_mode == "strict" and not settings.node_private_key:
             raise RuntimeError("STIGMEM_NODE_PRIVATE_KEY must be set when trust_mode=strict")
         _enforce_federation_transport_security()
-        _warn_if_rate_limit_kill_switch_enabled()
+        _enforce_auth_required_in_production()
+        _enforce_rate_limit_kill_switch_ack()
 
         discovered_plugins = register_discovered_plugins(freeze=False)
         _include_plugin_routers(app, discovered_plugins)

@@ -419,6 +419,7 @@ def test_federation_insecure_opt_in_logs_warning(
         db_path=str(tmp_path / "fed_insecure.db"),
         federation_enabled=True,
         federation_insecure=True,
+        node_url="http://127.0.0.1:8765",
     )
     monkeypatch.setattr(settings_module, "settings", fake_settings)
     monkeypatch.setattr(main_mod, "settings", fake_settings)
@@ -428,9 +429,107 @@ def test_federation_insecure_opt_in_logs_warning(
         pass
 
     assert "STIGMEM_FEDERATION_INSECURE=1" in caplog.text
+    assert "loopback address" in caplog.text
 
 
-def test_rate_limit_kill_switch_logs_warning(
+def test_federation_insecure_opt_in_rejects_non_loopback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Explicit insecure federation opt-in is still local-only."""
+    from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
+
+    fake_settings = settings_module.Settings(
+        db_path=str(tmp_path / "fed_insecure_non_loopback.db"),
+        federation_enabled=True,
+        federation_insecure=True,
+        node_url="http://stigmem.example.com:8765",
+    )
+    monkeypatch.setattr(settings_module, "settings", fake_settings)
+    monkeypatch.setattr(main_mod, "settings", fake_settings)
+
+    app = main_mod.create_app()
+    with pytest.raises(RuntimeError, match="only permitted when node_url"), TestClient(app):
+        pass
+
+
+def test_auth_disabled_allows_loopback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Unauthenticated local-only mode stays available for local workflows."""
+    from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
+
+    fake_settings = settings_module.Settings(
+        db_path=str(tmp_path / "auth_disabled_loopback.db"),
+        auth_required=False,
+        node_url="http://localhost:8765",
+    )
+    monkeypatch.setattr(settings_module, "settings", fake_settings)
+    monkeypatch.setattr(main_mod, "settings", fake_settings)
+
+    app = main_mod.create_app()
+    with caplog.at_level(logging.WARNING, logger="stigmem"), TestClient(app):
+        pass
+
+    assert "STIGMEM_AUTH_REQUIRED=false" in caplog.text
+    assert "loopback address" in caplog.text
+
+
+def test_auth_disabled_rejects_non_loopback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Unauthenticated mode is refused for non-local node URLs."""
+    from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
+
+    fake_settings = settings_module.Settings(
+        db_path=str(tmp_path / "auth_disabled_non_loopback.db"),
+        auth_required=False,
+        node_url="http://stigmem.example.com:8765",
+    )
+    monkeypatch.setattr(settings_module, "settings", fake_settings)
+    monkeypatch.setattr(main_mod, "settings", fake_settings)
+
+    app = main_mod.create_app()
+    with pytest.raises(RuntimeError, match="STIGMEM_AUTH_REQUIRED=false"), TestClient(app):
+        pass
+
+
+def test_rate_limit_kill_switch_requires_ack(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Both read/write rate-limit knobs at 0 require an explicit acknowledgement."""
+    from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
+
+    fake_settings = settings_module.Settings(
+        db_path=str(tmp_path / "rate_limit_requires_ack.db"),
+        rate_limit_write_per_hour=0,
+        rate_limit_read_per_hour=0,
+    )
+    monkeypatch.setattr(settings_module, "settings", fake_settings)
+    monkeypatch.setattr(main_mod, "settings", fake_settings)
+
+    app = main_mod.create_app()
+    with pytest.raises(RuntimeError, match="fully disable quota enforcement"), TestClient(app):
+        pass
+
+
+def test_rate_limit_kill_switch_with_ack_logs_warning(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
@@ -443,9 +542,9 @@ def test_rate_limit_kill_switch_logs_warning(
 
     fake_settings = settings_module.Settings(
         db_path=str(tmp_path / "rate_limit_warning.db"),
-        auth_required=False,
         rate_limit_write_per_hour=0,
         rate_limit_read_per_hour=0,
+        rate_limit_disabled_ack=True,
     )
     monkeypatch.setattr(settings_module, "settings", fake_settings)
     monkeypatch.setattr(main_mod, "settings", fake_settings)
@@ -454,8 +553,8 @@ def test_rate_limit_kill_switch_logs_warning(
     with caplog.at_level(logging.WARNING, logger="stigmem"), TestClient(app):
         pass
 
-    assert "SECURITY WARNING: quota enforcement is disabled" in caplog.text
-    assert "local/dev/test" in caplog.text
+    assert "SECURITY WARNING: quota enforcement is fully disabled" in caplog.text
+    assert "STIGMEM_RATE_LIMIT_DISABLED_ACK=1" in caplog.text
 
 
 # ---------------------------------------------------------------------------

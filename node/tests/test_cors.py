@@ -183,7 +183,7 @@ def _client(tmp_db: str, **overrides: object) -> Generator[TestClient, None, Non
     test_settings = Settings(
         db_path=tmp_db,
         auth_required=False,
-        node_url="http://testnode",
+        node_url="http://127.0.0.1:8765",
         **cast("Any", overrides),
     )
     with _patched_settings(test_settings):

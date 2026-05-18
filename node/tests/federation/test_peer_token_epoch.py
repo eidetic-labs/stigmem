@@ -10,7 +10,6 @@ import pytest
 import stigmem_node.db as db_mod
 import stigmem_node.federation.peer_token as peer_token_mod
 import stigmem_node.settings as settings_module
-from stigmem_node.federation.peer_token import TokenError
 
 Settings = settings_module.Settings
 
@@ -77,7 +76,7 @@ def test_peer_token_seconds_shaped_expiration_is_rejected(tmp_path: Path) -> Non
             algorithm="EdDSA",
         )
 
-        with pytest.raises(TokenError) as exc:
+        with pytest.raises(peer_token_mod.TokenError) as exc:
             peer_token_mod.verify_peer_token(token, peer_token_mod.get_local_pubkey(), "peer-self")
 
     assert exc.value.kind == "token_expired"

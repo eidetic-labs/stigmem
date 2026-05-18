@@ -41,21 +41,17 @@ def register_discovered_plugins(
         registered_plugins=target.registered_plugins(),
     )
     for plugin in ordered:
-        signing_identity = "unsigned"
-        signing_metadata = None
         if require_signatures:
             signing_info = signature_verifier(plugin)
-            signing_identity = signing_info.signing_identity
-            signing_metadata = signing_info.audit_metadata()
         else:
             signing_info = allow_unsigned_development_override(plugin)
-            signing_identity = signing_info.signing_identity
-            signing_metadata = signing_info.audit_metadata()
             logger.warning(
                 "SECURITY WARNING: unsigned plugin %r loaded because "
                 "STIGMEM_PLUGIN_SIGNING_REQUIRED=false; do not use this setting in production",
                 plugin.manifest.name,
             )
+        signing_identity = signing_info.signing_identity
+        signing_metadata = signing_info.audit_metadata()
         target.register_plugin(
             plugin.manifest,
             discovery_source=_discovery_source(plugin),

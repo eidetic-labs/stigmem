@@ -14,8 +14,7 @@ from ...models.facts import FactRecord, row_to_record
 from ...recall.recall_pipeline import apply_recall_pipeline
 from ...session_graph import record_read_scopes
 from ..cid_integrity import enforce_read_path_cid
-from .common import router
-from .query import _FACT_PROJECTION_JOINS, _FACT_PROJECTION_SELECT
+from .common import FACT_PROJECTION_JOINS, FACT_PROJECTION_SELECT, router
 
 
 @router.get("/{fact_id}", response_model=FactRecord)
@@ -54,7 +53,7 @@ def get_fact(
 
     with db() as conn:
         row = conn.execute(
-            f"SELECT {_FACT_PROJECTION_SELECT} FROM facts f {_FACT_PROJECTION_JOINS} "  # noqa: S608  # nosec B608
+            f"SELECT {FACT_PROJECTION_SELECT} FROM facts f {FACT_PROJECTION_JOINS} "  # noqa: S608  # nosec B608
             "WHERE f.id = ? AND f.tenant_id = ?",
             (resolved_fact_id, identity.tenant_id),
         ).fetchone()

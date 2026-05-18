@@ -20,7 +20,7 @@ from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
-from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import ed25519, rsa
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
@@ -293,6 +293,78 @@ def test_oidc_discovery_blocks_unsafe_jwks_uri(monkeypatch: pytest.MonkeyPatch) 
         auth_route_mod._get_jwks_client("https://login.example.com")
 
     assert exc.value.status_code == 503
+
+
+def test_verify_id_token_accepts_configured_eddsa_algorithm(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    private_key = ed25519.Ed25519PrivateKey.generate()
+    public_key = private_key.public_key()
+    token = _sign_eddsa_token(private_key)
+    test_settings = Settings(
+        oidc_issuer_url=ISSUER,
+        oidc_audience=AUDIENCE,
+        oidc_id_token_algorithms=["RS256", "ES256", "PS256", "EdDSA"],
+    )
+
+    monkeypatch.setattr(auth_route_mod, "settings", test_settings)
+    monkeypatch.setattr(auth_route_mod, "_get_jwks_client", lambda _issuer: _Jwks(public_key))
+
+    claims = auth_route_mod._verify_id_token(token)
+
+    assert claims["sub"] == "user-eddsa"
+
+
+def test_verify_id_token_rejects_algorithm_not_in_configured_allowlist(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    private_key = ed25519.Ed25519PrivateKey.generate()
+    public_key = private_key.public_key()
+    token = _sign_eddsa_token(private_key)
+    test_settings = Settings(
+        oidc_issuer_url=ISSUER,
+        oidc_audience=AUDIENCE,
+        oidc_id_token_algorithms=["RS256"],
+    )
+
+    monkeypatch.setattr(auth_route_mod, "settings", test_settings)
+    monkeypatch.setattr(auth_route_mod, "_get_jwks_client", lambda _issuer: _Jwks(public_key))
+
+    with pytest.raises(HTTPException) as exc:
+        auth_route_mod._verify_id_token(token)
+
+    assert exc.value.status_code == 401
+
+
+class _SigningKey:
+    def __init__(self, key: object) -> None:
+        self.key = key
+
+
+class _Jwks:
+    def __init__(self, key: object) -> None:
+        self.key = key
+
+    def get_signing_key_from_jwt(self, _token: str) -> _SigningKey:
+        return _SigningKey(self.key)
+
+
+def _sign_eddsa_token(private_key: ed25519.Ed25519PrivateKey) -> str:
+    now = int(time.time())
+    return jwt.encode(
+        {
+            "iss": ISSUER,
+            "sub": "user-eddsa",
+            "aud": AUDIENCE,
+            "iat": now,
+            "exp": now + 3600,
+            "email": "eddsa@example.com",
+            "email_verified": True,
+        },
+        private_key,
+        algorithm="EdDSA",
+        headers={"kid": "test-eddsa"},
+    )
 
 
 def test_exchange_valid_token_returns_key(oidc_client: TestClient, rsa_keypair) -> None:

@@ -91,6 +91,8 @@ class Settings(BaseSettings):
     oidc_audience: str = ""
     # lifetime of issued API keys in hours (default 8 h working-day session)
     oidc_token_ttl_hours: int = 8
+    # Accepted OIDC id_token signing algorithms. Operators can narrow this list.
+    oidc_id_token_algorithms: list[str] = ["RS256", "ES256", "PS256", "EdDSA"]
     # comma-separated list of allowed email domains; empty = allow any
     oidc_allowed_domains: str = ""
 

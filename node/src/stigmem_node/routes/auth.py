@@ -94,7 +94,7 @@ def _verify_id_token(id_token: str) -> dict[str, Any]:
         claims: dict[str, Any] = jwt.decode(
             id_token,
             signing_key.key,
-            algorithms=["RS256", "ES256"],
+            algorithms=settings.oidc_id_token_algorithms,
             audience=settings.oidc_audience,
             issuer=settings.oidc_issuer_url,
         )

@@ -210,6 +210,11 @@ make demo-attack
 an unauthorized scope write and a source-forged write; both are rejected and
 audited.
 
+Set `DEMO_ATTACK_TRANSCRIPT=/tmp/demo-attack.json make demo-attack` to write a
+small JSON transcript with the two scenarios, their expected outcomes, and the
+focused acceptance gate result. The transcript intentionally excludes secrets,
+tokens, and private keys.
+
 ### Run the test suite
 
 ```bash

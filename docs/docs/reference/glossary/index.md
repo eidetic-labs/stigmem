@@ -29,11 +29,13 @@ A signed, short-lived credential that grants a specific named permission (verb) 
 
 ---
 
-## CID (Content Identifier) {#cid}
+## CID (Content ID) {#cid}
 
 A content-addressed hash that uniquely identifies a fact by its canonical body. Computed as `sha256:` followed by the hex-encoded SHA-256 digest of the fact's deterministic canonical JSON serialization. CIDs enable deduplication, tamper detection, and idempotent federation ingestion without requiring a central ID authority.
 
-**Spec:** `Spec-21-Content-Addressed-IDs`
+**Spec:** [`Spec-21-Content-Addressed-IDs`](../../spec/specs/21-content-addressed-ids.md)
+
+**Guide:** [Content Addressing](../../concepts/facts/content-addressing.md)
 
 ```
 sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
@@ -84,11 +86,23 @@ curl -X POST http://localhost:8765/v1/gardens \
 
 The timestamp scheme used for causal ordering across federated nodes. Format: `{wall_ms_utc}.{counter}` (e.g., `1746230400000.003`). On each local write, the node advances the clock to `max(now_ms, last_hlc_ms)` and increments the counter if the wall component is unchanged. On receiving a federated fact, the clock advances to `max(now_ms, received_hlc_ms)`. HLCs ensure that causally related facts are correctly ordered even when wall clocks drift between nodes.
 
-**Spec:** `Spec-12-HLC-Bounded-Skew`
+**Spec:** [`Spec-12-HLC-Bounded-Skew`](../../spec/specs/12-hlc-bounded-skew.md)
+
+**Architecture:** [Federated Network](../architecture/federated-network.md)
 
 ```
 1746230400000.003   ← wall_ms = 1746230400000, counter = 3
 ```
+
+---
+
+## PeerDeclaration {#peerdeclaration}
+
+A signed statement one Stigmem node sends to another when establishing federation. It identifies the peer, publishes the peer's federation public key, and lists the scopes the peer is allowed to exchange. The receiving node verifies the signature before marking the peer active.
+
+**Spec:** [`Spec-05-Federation-Trust`](../../spec/specs/05-federation-trust.md)
+
+**Guide:** [Federation Handshake](../../concepts/federation/federation-handshake.md)
 
 ---
 
@@ -120,6 +134,16 @@ One of four visibility levels that partition facts for access control and federa
 Scope is enforced at write time (API key must permit the scope), read time (queries only return facts the caller's key allows), and federation time (outbound replication respects PeerDeclaration scope limits).
 
 **Spec:** `Spec-02-Scopes-and-ACL`
+
+---
+
+## Source Trust {#source-trust}
+
+A per-source score used to estimate how much weight to give facts from a particular source. Source trust combines identity strength, peer history, scope authority, and attestation mode; recall can use it to downweight less-trusted facts, and strict deployments can route low-trust facts to quarantine for review.
+
+**Spec:** [`Spec-05-Federation-Trust`](../../spec/specs/05-federation-trust.md)
+
+**Guide:** [Source Trust and Quarantine](../../concepts/federation/source-trust-and-quarantine.md)
 
 ---
 

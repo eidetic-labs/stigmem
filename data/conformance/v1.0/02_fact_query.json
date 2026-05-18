@@ -49,6 +49,25 @@
       "expected_body_has_keys": ["facts"]
     },
     {
+      "id": "fact-query-null-value-round-trip",
+      "description": "A null-valued fact accepted by POST /v1/facts round-trips through GET /v1/facts",
+      "method": "GET",
+      "path": "/v1/facts?entity=stigmem%3A%2F%2Ftestnode%2Fuser%2Falice&relation=memory%3Aalias&scope=company",
+      "body": null,
+      "requires_setup": "fact-assert-null",
+      "expected_status": 200,
+      "expected_body_contains": {
+        "facts": [
+          {
+            "entity": "stigmem://testnode/user/alice",
+            "relation": "memory:alias",
+            "scope": "company",
+            "value": {"type": "null", "v": null}
+          }
+        ]
+      }
+    },
+    {
       "id": "fact-query-no-entity-empty",
       "description": "Query for entity that does not exist returns 200 with empty facts list",
       "method": "GET",

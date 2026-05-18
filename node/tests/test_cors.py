@@ -68,6 +68,17 @@ def test_dev_localhost_options_allows_localhost_origin(tmp_db: str) -> None:
     assert response.headers["access-control-max-age"] == "600"
 
 
+def test_dev_localhost_logs_startup_warning(
+    tmp_db: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level("WARNING", logger="stigmem")
+    with _client(tmp_db, cors_dev_localhost=True):
+        pass
+
+    assert "STIGMEM_CORS_DEV_LOCALHOST=1" in caplog.text
+
+
 def test_dev_localhost_options_allows_loopback_origin(tmp_db: str) -> None:
     with _client(tmp_db, cors_dev_localhost=True) as client:
         response = _preflight(client, "http://127.0.0.1:54321")

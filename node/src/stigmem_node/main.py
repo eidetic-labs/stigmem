@@ -114,6 +114,16 @@ def _enforce_rate_limit_kill_switch_ack() -> None:
     )
 
 
+def _warn_if_cors_dev_localhost_enabled() -> None:
+    """Log the expanded development CORS posture at startup."""
+    if settings.cors_dev_localhost:
+        logger.warning(
+            "SECURITY WARNING: STIGMEM_CORS_DEV_LOCALHOST=1 enables browser "
+            "access from localhost and loopback origins. Use this only for "
+            "local development."
+        )
+
+
 def _node_url_is_loopback(node_url: str) -> bool:
     """Return True iff node_url's host is a loopback address."""
     try:
@@ -134,6 +144,7 @@ def create_app() -> FastAPI:
         _enforce_federation_transport_security()
         _enforce_auth_required_in_production()
         _enforce_rate_limit_kill_switch_ack()
+        _warn_if_cors_dev_localhost_enabled()
 
         discovered_plugins = register_discovered_plugins(freeze=False)
         _include_plugin_routers(app, discovered_plugins)

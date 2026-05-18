@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
+import stat
 import textwrap
 from pathlib import Path
 from typing import Any
@@ -140,6 +141,7 @@ class TestInstructionManifestGenerate:
         )
         assert _cmd_instruction_manifest_generate(args) == 0
         assert out_path.exists()
+        assert stat.S_IMODE(out_path.stat().st_mode) == 0o600
         assert "Wrote" in capsys.readouterr().out
         manifest = json.loads(out_path.read_text())
         assert manifest["entries"]

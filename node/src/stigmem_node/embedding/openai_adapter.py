@@ -54,9 +54,11 @@ class OpenAIEmbeddingModel(EmbeddingModel):
 
         api_key = os.environ.get(self._api_key_env)
         if not api_key:
+            logger.debug("OpenAI embedding API key environment variable is unset")
             raise EmbeddingError(
-                f"OpenAI API key not found in env var {self._api_key_env!r}. "
-                "Set the variable or use a different embed_model_provider."
+                "OpenAI embedding credentials are not configured. "
+                "Set the configured API key environment variable or use a "
+                "different embed_model_provider."
             )
 
         try:

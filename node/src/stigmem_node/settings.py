@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import field_validator, model_validator
@@ -31,6 +32,7 @@ class Settings(BaseSettings):
     # Static API-key lifecycle controls. 0 disables max-age enforcement.
     api_key_max_age_days: int = 90
     api_key_expiring_soon_days: int = 30
+    legacy_sha256_accept_until: datetime | None = None
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod

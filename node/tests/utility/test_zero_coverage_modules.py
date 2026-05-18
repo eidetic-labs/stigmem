@@ -234,8 +234,9 @@ class TestOpenAIEmbeddingModel:
 
         monkeypatch.delenv("STIGMEM_TEST_OPENAI_KEY", raising=False)
         m = OpenAIEmbeddingModel(api_key_env="STIGMEM_TEST_OPENAI_KEY")
-        with pytest.raises(EmbeddingError, match="OpenAI API key not found"):
+        with pytest.raises(EmbeddingError, match="credentials are not configured") as excinfo:
             m.embed(["x"])
+        assert "STIGMEM_TEST_OPENAI_KEY" not in str(excinfo.value)
 
     def test_embed_calls_openai_client_with_api_key(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from stigmem_node.embedding.openai_adapter import OpenAIEmbeddingModel

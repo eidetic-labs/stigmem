@@ -59,7 +59,7 @@ jobs:
 
       - name: Lowercase repository owner
         # OCI references must be lowercase; github.repository_owner preserves
-        # case (e.g. "Eidetic-Labs"), so lowercase it for the image ref.
+        # case, so lowercase it for the image ref.
         id: owner
         run: |
           echo "lc=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"

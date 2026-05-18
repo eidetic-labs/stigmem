@@ -188,7 +188,7 @@ Memory cards are per-entity, per-scope pre-aggregated summaries stored in the `m
 
 **Divergence policy.** When any condition is false (including a transient refresh error), the entity falls through to full raw-fact re-ranking. The fallback is transparent to callers: the only signal is the absence of `from_card: true` on those facts. This policy ensures that entities with unresolved contradictions or outdated confidence scores never have their raw evidence hidden behind a potentially unreliable summary.
 
-**Fetching or forcing a card refresh.** Use `GET /v1/cards/{entity_uri}` to inspect a card directly or force a server-side refresh with `?refresh=true`. See the [Memory Cards guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/recall-graph) for the full lifecycle, schema, and Python SDK usage.
+**Fetching or forcing a card refresh.** Use `GET /v1/cards/{entity_uri}` to inspect a card directly or force a server-side refresh with `?refresh=true`. See the [Memory Cards guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph) for the full lifecycle, schema, and Python SDK usage.
 
 ---
 
@@ -203,6 +203,6 @@ Memory cards are per-entity, per-scope pre-aggregated summaries stored in the `m
 ## Related guides
 
 - [Querying facts](../facts/querying-facts) — structured, predicate-based fact queries
-- [Embeddings](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/recall-graph) — model selection, reindexing, and mixed-model safety
-- [Memory Gardens](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/memory-garden-acl) — garden ACL and recall scoping
-- [Subscriptions](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/subscriptions) — push notifications when watched facts change
+- [Embeddings](https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph) — model selection, reindexing, and mixed-model safety
+- [Memory Gardens](https://github.com/eidetic-labs/stigmem/tree/main/experimental/memory-garden-acl) — garden ACL and recall scoping
+- [Subscriptions](https://github.com/eidetic-labs/stigmem/tree/main/experimental/subscriptions) — push notifications when watched facts change

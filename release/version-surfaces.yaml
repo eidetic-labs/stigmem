@@ -436,7 +436,7 @@ surfaces:
   #
   # If we ever add a CLI like `stigmem` (federation handshake helper, scope
   # linter, etc.), brew makes sense for that — open a tap repo
-  # `Eidetic-Labs/homebrew-stigmem` and put a Formula/stigmem.rb file in it.
+  # `eidetic-labs/homebrew-stigmem` and put a Formula/stigmem.rb file in it.
   #
   # - id: homebrew-stigmem (DEFERRED — stigmem isn't a CLI; revisit if we ship one)
   #   kind: external-registry

@@ -25,7 +25,7 @@ Timestamps:
 8:30 — Federation audit log
 9:15 — What's next
 
-GitHub: https://github.com/Eidetic-Labs/stigmem
+GitHub: https://github.com/eidetic-labs/stigmem
 Docs: https://stigmem.dev/docs/guides/federation
 ```
 
@@ -61,7 +61,7 @@ Docs: https://stigmem.dev/docs/guides/federation
 > "From the repo root, start the stack."
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem   # skip if already cloned
+git clone https://github.com/eidetic-labs/stigmem   # skip if already cloned
 cd stigmem
 make up
 ```

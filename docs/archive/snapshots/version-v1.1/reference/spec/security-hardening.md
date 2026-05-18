@@ -11,7 +11,7 @@ description: "Stigmem spec section 22 — mTLS federation, key rotation, audit l
 
 mTLS federation, key rotation, audit log, per-principal quotas, container baseline.
 
-**Authoritative source:** [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md)
+**Authoritative source:** [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md)
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
@@ -282,7 +282,7 @@ Nodes MUST synchronise their system clocks via NTP (or equivalent). Operators SH
 
 #### §22.6.1 Scope {#section-22-6-1}
 
-This section specifies the normative security posture for reference operator container images published by Eidetic-Labs. Third-party operators running Stigmem from source SHOULD adopt the same baseline.
+This section specifies the normative security posture for reference operator container images published by Eidetic Labs. Third-party operators running Stigmem from source SHOULD adopt the same baseline.
 
 #### §22.6.2 Distroless Image {#section-22-6-2}
 
@@ -330,7 +330,7 @@ Reference images MUST be signed using [Sigstore Cosign](https://github.com/sigst
 
 #### §22.7.1 Purpose {#section-22-7-1}
 
-§19.2.2 permits but does not require operating a self-hosted Rekor instance. This section provides normative decision criteria so that operators can determine whether self-hosting is appropriate, and records the Eidetic-Labs reference deployment position.
+§19.2.2 permits but does not require operating a self-hosted Rekor instance. This section provides normative decision criteria so that operators can determine whether self-hosting is appropriate, and records the Eidetic Labs reference deployment position.
 
 #### §22.7.2 Decision Criteria {#section-22-7-2}
 
@@ -346,9 +346,9 @@ An operator SHOULD self-host a Rekor instance if and only if ALL of the followin
 
 If any criterion is not met, the operator SHOULD use the public Rekor instance at `https://rekor.sigstore.dev` (or a hosted equivalent). Operators MUST NOT self-host without documented answers to each criterion in their ops runbook.
 
-#### §22.7.3 Reference Deployment Position (Eidetic-Labs) {#section-22-7-3}
+#### §22.7.3 Reference Deployment Position (Eidetic Labs) {#section-22-7-3}
 
-The Eidetic-Labs reference deployment uses the **public Rekor instance** (`https://rekor.sigstore.dev`). Criteria evaluation:
+The Eidetic Labs reference deployment uses the **public Rekor instance** (`https://rekor.sigstore.dev`). Criteria evaluation:
 
 | Criterion | Status |
 |---|---|
@@ -358,7 +358,7 @@ The Eidetic-Labs reference deployment uses the **public Rekor instance** (`https
 | Independent peer accessibility | Not evaluated — moot given above |
 | Dedicated key ceremony team | Not evaluated — moot given above |
 
-**Decision: defer self-hosted Rekor to backlog.** A self-hosted Rekor instance for the Eidetic-Labs reference deployment does not meet the minimum decision criteria at this phase. A backlog issue SHOULD be filed when the following change conditions are met: (a) a private-network deployment tier is productised, or (b) a dedicated SRE function is established. Implementation of a self-hosted instance is explicitly out of scope for Phase 12.
+**Decision: defer self-hosted Rekor to backlog.** A self-hosted Rekor instance for the Eidetic Labs reference deployment does not meet the minimum decision criteria at this phase. A backlog issue SHOULD be filed when the following change conditions are met: (a) a private-network deployment tier is productised, or (b) a dedicated SRE function is established. Implementation of a self-hosted instance is explicitly out of scope for Phase 12.
 
 #### §22.7.4 Configuration {#section-22-7-4}
 

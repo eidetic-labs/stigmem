@@ -26,12 +26,12 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Eidetic-Labs/stigmem.git",
+    "url": "git+https://github.com/eidetic-labs/stigmem.git",
     "directory": "sdks/stigmem-ts"
   },
-  "homepage": "https://github.com/Eidetic-Labs/stigmem/tree/main/sdks/stigmem-ts#readme",
+  "homepage": "https://github.com/eidetic-labs/stigmem/tree/main/sdks/stigmem-ts#readme",
   "bugs": {
-    "url": "https://github.com/Eidetic-Labs/stigmem/issues"
+    "url": "https://github.com/eidetic-labs/stigmem/issues"
   },
   "publishConfig": {
     "access": "public",

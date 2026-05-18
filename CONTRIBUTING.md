@@ -40,7 +40,7 @@ make demo-attack
 shows malicious-peer rejection for unauthorized scope writes and source forgery.
 
 Good starter work is labeled
-[`good first issue`](https://github.com/Eidetic-Labs/stigmem/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22).
+[`good first issue`](https://github.com/eidetic-labs/stigmem/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22).
 Prefer one small issue per PR. If a starter issue touches docs, update the
 roadmap or checklist only when the issue explicitly changes project status.
 

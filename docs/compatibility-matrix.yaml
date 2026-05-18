@@ -13,27 +13,27 @@ packages:
     name: stigmem-node
     versions:
       - "0.9.0a1"
-    repository: github.com/Eidetic-Labs/stigmem
+    repository: github.com/eidetic-labs/stigmem
   python_sdk:
     name: stigmem-py
     versions:
       - "0.9.0a1"
-    repository: github.com/Eidetic-Labs/stigmem
+    repository: github.com/eidetic-labs/stigmem
   typescript_sdk:
     name: "@eidetic-labs/stigmem-ts"
     versions:
       - "0.9.0-alpha.1"
-    repository: github.com/Eidetic-Labs/stigmem
+    repository: github.com/eidetic-labs/stigmem
   meta_package:
     name: stigmem
     versions:
       - "0.9.0a1"
-    repository: github.com/Eidetic-Labs/stigmem
+    repository: github.com/eidetic-labs/stigmem
   openclaw_adapter:
     name: stigmem-openclaw
     versions:
       - "0.9.0a1"
-    repository: github.com/Eidetic-Labs/stigmem
+    repository: github.com/eidetic-labs/stigmem
   go_sdk:
     name: stigmem-go
     versions: []  # not shipped in v0.9.0a1; deferred to experimental/sdk-go/

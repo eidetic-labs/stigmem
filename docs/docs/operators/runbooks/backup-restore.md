@@ -78,7 +78,7 @@ aws s3 cp "$SNAP" "s3://your-bucket/stigmem/$(basename $SNAP)"
 The signed `stigmem snapshot` CLI is the canonical backup and restore path. For
 operators who also want a human-readable markdown export for review, source
 control, or incident response packets, the repo includes
-[`scripts/stigmem-snapshot.sh`](https://github.com/Eidetic-Labs/stigmem/blob/main/scripts/stigmem-snapshot.sh).
+[`scripts/stigmem-snapshot.sh`](https://github.com/eidetic-labs/stigmem/blob/main/scripts/stigmem-snapshot.sh).
 
 The helper queries the HTTP API for a chosen scope and entity list, writes a
 markdown report grouped by entity, and can include contradiction metrics. It
@@ -196,7 +196,7 @@ turso db snapshot list stigmem-prod
 turso db restore stigmem-prod --timestamp 2026-06-01T03:00:00Z --name stigmem-restored
 ```
 
-After restoring to a new Turso database, update `STIGMEM_LIBSQL_URL` in your secrets to point at the restored database and restart the node. For detailed libSQL point-in-time restore via the Turso replica protocol, see the [libSQL PITR guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/storage-libsql).
+After restoring to a new Turso database, update `STIGMEM_LIBSQL_URL` in your secrets to point at the restored database and restart the node. For detailed libSQL point-in-time restore via the Turso replica protocol, see the [libSQL PITR guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/storage-libsql).
 
 ### Postgres
 

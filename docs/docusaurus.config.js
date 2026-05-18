@@ -219,9 +219,9 @@ const config = {
           {
             title: 'Project',
             items: [
-              { label: 'GitHub', href: 'https://github.com/Eidetic-Labs/stigmem' },
-              { label: 'License (Apache 2.0)', href: 'https://github.com/Eidetic-Labs/stigmem/blob/main/LICENSE' },
-              { label: 'Security policy', href: 'https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md' },
+              { label: 'GitHub', href: 'https://github.com/eidetic-labs/stigmem' },
+              { label: 'License (Apache 2.0)', href: 'https://github.com/eidetic-labs/stigmem/blob/main/LICENSE' },
+              { label: 'Security policy', href: 'https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md' },
               { label: 'Blog', to: '/blog' },
             ],
           },
@@ -229,8 +229,8 @@ const config = {
             title: 'Community',
             items: [
               { label: 'Discord', href: 'https://discord.gg/Z47Re7FjjV' },
-              { label: 'Discussions', href: 'https://github.com/Eidetic-Labs/stigmem/discussions' },
-              { label: 'Issues', href: 'https://github.com/Eidetic-Labs/stigmem/issues' },
+              { label: 'Discussions', href: 'https://github.com/eidetic-labs/stigmem/discussions' },
+              { label: 'Issues', href: 'https://github.com/eidetic-labs/stigmem/issues' },
             ],
           },
         ],

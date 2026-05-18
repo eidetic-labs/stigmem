@@ -142,7 +142,7 @@ ts
 
 Audit entries are automatically scoped to the caller's tenant. A key provisioned for tenant `"acme"` can only query audit entries where `tenant_id = 'acme'` — cross-tenant audit data is never returned, even with node-admin permissions.
 
-This scoping was added in migration `012_multi_tenant.sql`. Rows written before that migration carry `tenant_id = 'default'`. See [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) for the full isolation model.
+This scoping was added in migration `012_multi_tenant.sql`. Rows written before that migration carry `tenant_id = 'default'`. See [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant) for the full isolation model.
 
 ---
 
@@ -165,5 +165,5 @@ The Audit Log tab in the browser UI (`/` on the node) shows the same joined view
 - [Agent Keypairs](./agent-keypairs) — C1: registering keys and signing fact assertions
 - [Human Key Issuance](./human-key-issuance) — C2: how OIDC principals and garden roles flow into `entity_uri`
 - [Authentication](./authentication) — Bearer-key model and permissions
-- [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) — OIDC bridge that populates `oidc_sub`
-- [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) — tenant_id isolation model and migration 012
+- [OIDC / SSO Integration](https://github.com/eidetic-labs/stigmem/tree/main/experimental/oidc-sso) — OIDC bridge that populates `oidc_sub`
+- [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant) — tenant_id isolation model and migration 012

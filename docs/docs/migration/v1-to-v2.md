@@ -9,9 +9,9 @@ audience: Operator
 
 :::warning Retracted — neither v1.x nor v2.0 shipped publicly
 
-Per [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md), the canonical version line of stigmem begins at `v0.9.0a1` (2026-05-09). The version *markers* `v1.x` and `v2.0` referenced in this document labeled internal development checkpoints, not tagged public releases — there is no installed v1.x or v2.0 to migrate from. This document is preserved as historical record of an announced-but-withdrawn migration path.
+Per [ADR-001](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/001-versioning.md), the canonical version line of stigmem begins at `v0.9.0a1` (2026-05-09). The version *markers* `v1.x` and `v2.0` referenced in this document labeled internal development checkpoints, not tagged public releases — there is no installed v1.x or v2.0 to migrate from. This document is preserved as historical record of an announced-but-withdrawn migration path.
 
-If you have a stale dependency pinned to a `v1.x` or `v2.0` version that doesn't actually resolve (e.g., `stigmem-py>=1.0.0rc1` per the yanked `stigmem-openclaw` 1.0.3/1.0.5), see the [v0.9.0a1 release notes in CHANGELOG.md](https://github.com/Eidetic-Labs/stigmem/blob/main/CHANGELOG.md) for the canonical install path.
+If you have a stale dependency pinned to a `v1.x` or `v2.0` version that doesn't actually resolve (e.g., `stigmem-py>=1.0.0rc1` per the yanked `stigmem-openclaw` 1.0.3/1.0.5), see the [v0.9.0a1 release notes in CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md) for the canonical install path.
 
 :::
 
@@ -499,7 +499,7 @@ The `cid` column and `fact_cid_aliases` table can be dropped. Facts revert to UU
 
 ## Getting help
 
-- [Spec v2.0 (full text)](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/docs/spec)
-- [Operator runbooks](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/docs/operators/runbooks/deploy-runbooks)
-- [Security hardening guide](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/docs/security/container-hardening)
-- [API reference](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/docs/reference/api)
+- [Spec v2.0 (full text)](https://github.com/eidetic-labs/stigmem/blob/main/docs/docs/spec)
+- [Operator runbooks](https://github.com/eidetic-labs/stigmem/blob/main/docs/docs/operators/runbooks/deploy-runbooks)
+- [Security hardening guide](https://github.com/eidetic-labs/stigmem/blob/main/docs/docs/security/container-hardening)
+- [API reference](https://github.com/eidetic-labs/stigmem/blob/main/docs/docs/reference/api)

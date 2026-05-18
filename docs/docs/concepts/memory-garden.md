@@ -138,4 +138,4 @@ See the [Quickstart guide](../get-started) for a full walkthrough including the 
 
 ---
 
-*Memory Garden / Stigmem — Apache 2.0. [Spec](../spec/) · [GitHub](https://github.com/Eidetic-Labs/stigmem) · [Contributing](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md)*
+*Memory Garden / Stigmem — Apache 2.0. [Spec](../spec/) · [GitHub](https://github.com/eidetic-labs/stigmem) · [Contributing](https://github.com/eidetic-labs/stigmem/blob/main/CONTRIBUTING.md)*

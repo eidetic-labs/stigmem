@@ -1,14 +1,14 @@
 # Stigmem — Federated Knowledge Fabric + Intent Protocol
 
-[![CI](https://github.com/Eidetic-Labs/stigmem/actions/workflows/ci.yml/badge.svg)](https://github.com/Eidetic-Labs/stigmem/actions/workflows/ci.yml)
-[![Conformance](https://github.com/Eidetic-Labs/stigmem/actions/workflows/conformance.yml/badge.svg)](https://github.com/Eidetic-Labs/stigmem/actions/workflows/conformance.yml)
+[![CI](https://github.com/eidetic-labs/stigmem/actions/workflows/ci.yml/badge.svg)](https://github.com/eidetic-labs/stigmem/actions/workflows/ci.yml)
+[![Conformance](https://github.com/eidetic-labs/stigmem/actions/workflows/conformance.yml/badge.svg)](https://github.com/eidetic-labs/stigmem/actions/workflows/conformance.yml)
 [![PyPI version](https://img.shields.io/pypi/v/stigmem?include_prereleases&label=pypi)](https://pypi.org/project/stigmem/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Stability: preview alpha](https://img.shields.io/badge/stability-preview%20alpha-orange.svg)](#why-v090a1-and-not-v10)
 [![Discord](https://img.shields.io/discord/1502847943118684331?label=discord&logo=discord&logoColor=white&color=5865F2)](https://discord.gg/Z47Re7FjjV)
 
 > **Status: `v0.9.0a1` — preview alpha, pre-stable · Apache-2.0**
-> **Repository:** [github.com/Eidetic-Labs/stigmem](https://github.com/Eidetic-Labs/stigmem)
+> **Repository:** [github.com/eidetic-labs/stigmem](https://github.com/eidetic-labs/stigmem)
 > **Not yet recommended for production federation across organizational boundaries.** See [LIMITATIONS.md](LIMITATIONS.md) and the [retraction post](#why-v090a1-and-not-v10) for context.
 
 Stigmem is an open specification and reference implementation for a federated knowledge fabric: a shared, persistent layer where AI agents and humans write typed, traceable facts that travel across tools, platforms, and organizations.
@@ -114,7 +114,7 @@ The features below are **implemented in code** but have **not yet completed adve
 **Single node (Docker — recommended):**
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 docker compose up -d
 ```
@@ -170,7 +170,7 @@ Quick summary:
 
 ```bash
 # 1. Start two nodes (pulls signed images from GHCR; add --build for contributors)
-git clone https://github.com/Eidetic-Labs/stigmem && cd stigmem
+git clone https://github.com/eidetic-labs/stigmem && cd stigmem
 docker compose up -d
 
 # 2. Federation handshake (register both directions)
@@ -263,7 +263,7 @@ The spec is being reviewed and improved into the v0.9.0a1 canonical structure: c
 
 Real-time chat: **[discord.gg/Z47Re7FjjV](https://discord.gg/Z47Re7FjjV)**.
 
-The Stigmem Discord is where adopters, contributors, and operators discuss installation, federation, the spec, and SDK use. Help channels are organized by topic (`#install-help`, `#usage-questions`, `#federation-help`, `#troubleshooting`); spec and contributor discussion lives under the **Development** category. Asynchronous discussion continues to happen in [GitHub Discussions](https://github.com/Eidetic-Labs/stigmem/discussions) — both work.
+The Stigmem Discord is where adopters, contributors, and operators discuss installation, federation, the spec, and SDK use. Help channels are organized by topic (`#install-help`, `#usage-questions`, `#federation-help`, `#troubleshooting`); spec and contributor discussion lives under the **Development** category. Asynchronous discussion continues to happen in [GitHub Discussions](https://github.com/eidetic-labs/stigmem/discussions) — both work.
 
 If you're already running Stigmem in production and would consider participating in the v0.9.0bN external operator soak, mention it in `#dev-general` or DM `@offbyonce`. We're recruiting.
 

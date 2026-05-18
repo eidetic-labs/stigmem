@@ -296,7 +296,7 @@ docker pull ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
 
 # Verify the Sigstore keyless signature
 cosign verify \
-  --certificate-identity-regexp "https://github.com/Eidetic-Labs/stigmem/.github/workflows/publish.yml" \
+  --certificate-identity-regexp "https://github.com/eidetic-labs/stigmem/.github/workflows/publish.yml" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
 ```

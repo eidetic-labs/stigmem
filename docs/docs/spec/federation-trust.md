@@ -7,11 +7,11 @@ description: "Rendered entry point for federation trust component specs: manifes
 
 # Federation Trust Components {#section-19}
 
-**Status:** Rendered compatibility entry point for [`Spec-04-Manifests`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/04-manifests.md), [`Spec-05-Federation-Trust`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/05-federation-trust.md), [`Spec-06-Capability-Tokens`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/06-capability-tokens.md), and [`Spec-08-Quarantine-Garden`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/08-quarantine-garden.md).
+**Status:** Rendered compatibility entry point for [`Spec-04-Manifests`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/04-manifests.md), [`Spec-05-Federation-Trust`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/05-federation-trust.md), [`Spec-06-Capability-Tokens`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/06-capability-tokens.md), and [`Spec-08-Quarantine-Garden`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/08-quarantine-garden.md).
 
 Org manifests, capability tokens, source-trust score, quarantine garden, recall-time sanitizer.
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
@@ -19,13 +19,13 @@ Each subsection below shows the most recent normative text from the spec source.
 
 *This section is non-normative.*
 
-The active security policy — supported versions, vulnerability reporting instructions, scope definitions, and the coordinated disclosure timeline — is maintained in [`SECURITY.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md) at the root of the repository.
+The active security policy — supported versions, vulnerability reporting instructions, scope definitions, and the coordinated disclosure timeline — is maintained in [`SECURITY.md`](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md) at the root of the repository.
 
 **Reporting:** Do not open a public GitHub issue for security vulnerabilities. Report via the [GitHub private advisory path](https://github.com/eidetic-labs/stigmem/security/advisories). We acknowledge within 48 hours and target a patch within 14 days for critical vulnerabilities.
 
 **Disclosure timeline:** 90 days from the report date before public disclosure, except for vulnerabilities already being actively exploited in the wild.
 
-For the current security posture and Dependabot alert triage covering the pre-reset v1.0-rc snapshot, see the [Security Posture section of SECURITY.md](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md#security-posture--v10-rc-2026-05-03).
+For the current security posture and Dependabot alert triage covering the pre-reset v1.0-rc snapshot, see the [Security Posture section of SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md#security-posture--v10-rc-2026-05-03).
 
 ---
 

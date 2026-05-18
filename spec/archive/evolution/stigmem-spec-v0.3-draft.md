@@ -15,7 +15,7 @@
 
 **Status:** Working draft. v0.2 sections are stable. §6 (Federation) is open for community feedback.
 **License:** Apache-2.0
-**Authors:** Eidetic-Labs
+**Authors:** Eidetic Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
 - v0.3: Auth stub (§3.5), namespace registry plan (§9), expanded federation (§6), `stigmem:channel` escalation fix

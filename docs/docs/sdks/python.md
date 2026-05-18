@@ -346,6 +346,6 @@ except StigmemAuthError:
 ## See also
 
 - [Recall guide](../concepts/recall/) — hybrid recall, weight tuning, fast-path
-- [Memory Cards guide](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/recall-graph) — card lifecycle and divergence policy
+- [Memory Cards guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph) — card lifecycle and divergence policy
 - [Asserting facts](../concepts/facts/asserting-facts) — detailed fact write patterns
 - [Querying facts](../concepts/facts/querying-facts) — structured predicate queries

@@ -54,8 +54,8 @@ it like any other community plugin and point it at your stigmem node.
 # Download the latest release assets
 cd <your-vault>/.obsidian/plugins/
 mkdir stigmem && cd stigmem
-curl -LO https://github.com/Eidetic-Labs/stigmem/releases/latest/download/main.js
-curl -LO https://github.com/Eidetic-Labs/stigmem/releases/latest/download/manifest.json
+curl -LO https://github.com/eidetic-labs/stigmem/releases/latest/download/main.js
+curl -LO https://github.com/eidetic-labs/stigmem/releases/latest/download/manifest.json
 ```
 
 Reload Obsidian (**Ctrl/Cmd+R**) and enable the plugin under **Settings →

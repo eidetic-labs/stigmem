@@ -25,7 +25,7 @@ instruction-channel recall output and exports a required system prompt directive
 with audit-mapped C1-C4/H1-H5 regression coverage. The broader R-21 hardening
 line still needs supported-adapter session propagation and outbound replication
 exclusion evidence before high-stakes production use. See
-[LIMITATIONS.md §9](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
+[LIMITATIONS.md §9](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::
 
@@ -191,7 +191,7 @@ print("boot ok:", ctx.summary[:80] if ctx else "(no prior context)")
 
 ## See also
 
-- [`adapters/openclaw` README](https://github.com/Eidetic-Labs/stigmem/tree/main/adapters/openclaw#readme) — package source, changelog, full security model
+- [`adapters/openclaw` README](https://github.com/eidetic-labs/stigmem/tree/main/adapters/openclaw#readme) — package source, changelog, full security model
 - [Federation guide](../../concepts/federation/) — external node onboarding and multi-node topology
-- [Paperclip / Claude Code](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/adapter-paperclip) — MCP-based integration for Paperclip agents
+- [Paperclip / Claude Code](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip) — MCP-based integration for Paperclip agents
 - [Authentication](../../security/authentication) — API key setup and OIDC options

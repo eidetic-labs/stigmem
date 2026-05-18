@@ -114,7 +114,7 @@ OpenTelemetry-compatible backend works — Grafana Tempo, Jaeger, Honeycomb, Dat
 ## Alerting rules
 
 Experimental Prometheus alert seeds are available at
-[`experimental/deploy-grafana/dashboards/prometheus/alerts.yml`](https://github.com/Eidetic-Labs/stigmem/blob/main/experimental/deploy-grafana/dashboards/prometheus/alerts.yml).
+[`experimental/deploy-grafana/dashboards/prometheus/alerts.yml`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/deploy-grafana/dashboards/prometheus/alerts.yml).
 Review and adapt them before production use.
 
 | Alert | Condition | Severity |

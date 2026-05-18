@@ -270,7 +270,7 @@ jobs:
           # All four PyPI projects use OIDC (Trusted Publisher) per the
           # path-of-least-privilege intent. Each project has its Trusted
           # Publisher configured at pypi.org/manage/project/<name>/settings/publishing/
-          # for repository=Eidetic-Labs/stigmem, workflow=publish.yml.
+          # for repository=eidetic-labs/stigmem, workflow=publish.yml.
           #
           # The `stigmem` meta-package was first published via OIDC against
           # a pending Trusted Publisher (configured pre-first-publish to

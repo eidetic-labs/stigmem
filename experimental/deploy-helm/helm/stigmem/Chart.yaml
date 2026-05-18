@@ -9,9 +9,9 @@ keywords:
   - knowledge-graph
   - federation
   - ai
-home: https://github.com/Eidetic-Labs/stigmem
+home: https://github.com/eidetic-labs/stigmem
 sources:
-  - https://github.com/Eidetic-Labs/stigmem
+  - https://github.com/eidetic-labs/stigmem
 maintainers:
   - name: Eidetic Labs
     email: oss@eidetic-labs.ai

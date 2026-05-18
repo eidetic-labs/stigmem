@@ -109,7 +109,7 @@ Use these return shapes:
 | Score delta | adjust recall ranking | `dict[str, float]` keyed by result or fact id |
 | Fire and forget | audit or observe side effects | `None` |
 
-The stable v0.9.0a1 hook names are listed in the [Plugin Hook Reference](../../reference/plugin-api/hooks.md) and defined in the [hook source reference](https://github.com/Eidetic-Labs/stigmem/blob/main/node/src/stigmem_node/plugins/hooks.py). Do not register hooks outside that list; `health_check` is a manifest lifecycle callable, not a hook name.
+The stable v0.9.0a1 hook names are listed in the [Plugin Hook Reference](../../reference/plugin-api/hooks.md) and defined in the [hook source reference](https://github.com/eidetic-labs/stigmem/blob/main/node/src/stigmem_node/plugins/hooks.py). Do not register hooks outside that list; `health_check` is a manifest lifecycle callable, not a hook name.
 
 ## Capability declarations
 
@@ -137,7 +137,7 @@ def plugin_manifest() -> PluginManifest:
 
 The v0.9.0a1 `CoreApis` handles are deliberately narrow and optional. Operators or tests may expose a callable or facade object behind a capability; plugins should handle `None` or an unexpected shape explicitly. If a handler calls `ctx.get_audit_emitter()` without declaring `audit.emit`, registration can succeed but the handler will fail with a capability error when the hook fires.
 
-The v0.9.0a1 capability allowlist is documented in the [Plugin Capability Reference](../../reference/plugin-api/capabilities.md) and defined in the [capability source reference](https://github.com/Eidetic-Labs/stigmem/blob/main/node/src/stigmem_node/plugins/capabilities.py).
+The v0.9.0a1 capability allowlist is documented in the [Plugin Capability Reference](../../reference/plugin-api/capabilities.md) and defined in the [capability source reference](https://github.com/eidetic-labs/stigmem/blob/main/node/src/stigmem_node/plugins/capabilities.py).
 
 ## Local tests
 
@@ -162,7 +162,7 @@ def test_blocks_configured_source() -> None:
     assert decision.reason == "source is blocked by example-stigmem-plugin"
 ```
 
-For tests that need to replace the process-global registry temporarily, use the [testing helper reference](https://github.com/Eidetic-Labs/stigmem/blob/main/node/src/stigmem_node/plugins/testing.py):
+For tests that need to replace the process-global registry temporarily, use the [testing helper reference](https://github.com/eidetic-labs/stigmem/blob/main/node/src/stigmem_node/plugins/testing.py):
 
 ```python
 from stigmem_node.plugins.testing import stigmem_plugins
@@ -197,7 +197,7 @@ Production plugin registration requires a verified signing identity. The current
 - `STIGMEM_PLUGIN_TRUST_OVERRIDE_PUBLISHERS` lists explicit audited exceptions.
 - Unsigned plugins are rejected when `STIGMEM_PLUGIN_SIGNING_REQUIRED=true`.
 
-The signing gate is implemented in the [signing source reference](https://github.com/Eidetic-Labs/stigmem/blob/main/node/src/stigmem_node/plugins/signing.py). Operator-facing trust setup is covered separately in the plugin management guide.
+The signing gate is implemented in the [signing source reference](https://github.com/eidetic-labs/stigmem/blob/main/node/src/stigmem_node/plugins/signing.py). Operator-facing trust setup is covered separately in the plugin management guide.
 
 ## Author checklist
 

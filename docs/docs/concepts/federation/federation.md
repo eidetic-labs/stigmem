@@ -60,7 +60,7 @@ print(f"STIGMEM_FEDERATION_PUBKEY={pub_b64}")
 print(f"STIGMEM_FEDERATION_PRIVKEY={priv_b64}")
 ```
 
-**Never store the private key in source control.** Use an environment-specific secrets manager (Docker secrets, AWS Secrets Manager, Vault, Doppler, etc.). The Helm chart and its `secretRef` example are deferred to [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) in v0.9.0a1.
+**Never store the private key in source control.** Use an environment-specific secrets manager (Docker secrets, AWS Secrets Manager, Vault, Doppler, etc.). The Helm chart and its `secretRef` example are deferred to [`experimental/deploy-helm/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-helm) in v0.9.0a1.
 
 Provide the keys via environment variables before starting the node:
 
@@ -320,9 +320,9 @@ skill install stigmem-node
 This path is for alpha evaluation only, not production federation. Use a private
 node and a least-privilege key, and read the open audit limitations before using
 the adapter in an agent workflow. Full usage docs and the security model are in the
-[`adapters/openclaw` README](https://github.com/Eidetic-Labs/stigmem/tree/main/adapters/openclaw#readme);
+[`adapters/openclaw` README](https://github.com/eidetic-labs/stigmem/tree/main/adapters/openclaw#readme);
 the current adopter warning is in
-[LIMITATIONS.md Spec-16-Namespace-Registry](https://github.com/Eidetic-Labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
+[LIMITATIONS.md Spec-16-Namespace-Registry](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::
 
@@ -408,7 +408,7 @@ Peer registrations are seeded by `infra/soak/setup_peers.py`. See the
 ## See also
 
 - [Quickstart — two nodes federating](../../get-started/quickstart-tutorial) — local two-node test in under 5 minutes
-- [Paperclip connector](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/adapter-paperclip) — deploying stigmem as a Paperclip agent fleet's persistent fact store
+- [Paperclip connector](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip) — deploying stigmem as a Paperclip agent fleet's persistent fact store
 - [4-node topology](./federation-4node) — full-mesh setup, failure injection, soak metrics
 - [Federation API Reference](../../reference/api) — full endpoint reference
 - [Architecture](../../reference/architecture) — HLC, PeerDeclaration internals, Spec-05-Federation-Trust

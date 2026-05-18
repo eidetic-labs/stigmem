@@ -9,7 +9,7 @@ audience: Integrator
 **Audience:** Node operators configuring access control.
 
 :::tip OIDC available
-Human users can authenticate via their organisation's IdP instead of a static key — see [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso). Per-agent keypair auth is coming in Track C: [Agent Keypairs](./agent-keypairs).
+Human users can authenticate via their organisation's IdP instead of a static key — see [OIDC / SSO Integration](https://github.com/eidetic-labs/stigmem/tree/main/experimental/oidc-sso). Per-agent keypair auth is coming in Track C: [Agent Keypairs](./agent-keypairs).
 :::
 
 ## API key auth (client requests)
@@ -78,7 +78,7 @@ descriptions on API keys to capture human context, such as
 
 ## OIDC-issued keys (human users)
 
-Human users can obtain a short-lived key from their IdP via `POST /v1/auth/oidc/exchange`. These keys have the same shape as static keys and work identically at all endpoints. See [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) for configuration and the full exchange flow.
+Human users can obtain a short-lived key from their IdP via `POST /v1/auth/oidc/exchange`. These keys have the same shape as static keys and work identically at all endpoints. See [OIDC / SSO Integration](https://github.com/eidetic-labs/stigmem/tree/main/experimental/oidc-sso) for configuration and the full exchange flow.
 
 ## Listing and revoking your keys
 
@@ -164,7 +164,7 @@ key = create_api_key(
 )
 ```
 
-See [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) for the full isolation model and migration details.
+See [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant) for the full isolation model and migration details.
 
 ## Environment variables
 
@@ -176,9 +176,9 @@ See [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/exp
 
 ## See also
 
-- [OIDC / SSO Integration](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/oidc-sso) — human IdP → scoped key exchange
+- [OIDC / SSO Integration](https://github.com/eidetic-labs/stigmem/tree/main/experimental/oidc-sso) — human IdP → scoped key exchange
 - [Agent Keypairs](./agent-keypairs) — C1: Ed25519 keypair registration and attested source claims
 - [Human Key Issuance](./human-key-issuance) — C2: per-garden key scoping on top of OIDC
 - [Audit Log](./audit-log) — C3: querying the principal → source → fact audit trail
-- [Multi-Tenant Scoping](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/multi-tenant) — tenant_id isolation model and migration 012
-- [Billing Hooks](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/billing) — per-tenant usage events emitted on every write
+- [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant) — tenant_id isolation model and migration 012
+- [Billing Hooks](https://github.com/eidetic-labs/stigmem/tree/main/experimental/billing) — per-tenant usage events emitted on every write

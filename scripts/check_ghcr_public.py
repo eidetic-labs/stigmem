@@ -69,7 +69,7 @@ def probe(image: str, tag: str) -> int:
                 file=sys.stderr,
             )
             print(
-                "Fix: https://github.com/orgs/Eidetic-Labs/packages/container/"
+                "Fix: https://github.com/orgs/eidetic-labs/packages/container/"
                 f"{repo.split('/', 1)[1]}/settings → Change visibility → Public",
                 file=sys.stderr,
             )

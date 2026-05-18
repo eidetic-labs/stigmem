@@ -108,4 +108,4 @@ the other per vault.
 
 ## License
 
-MIT — see [LICENSE](https://github.com/Eidetic-Labs/stigmem) for details.
+MIT — see [LICENSE](https://github.com/eidetic-labs/stigmem) for details.

@@ -17,18 +17,18 @@ The reference node ships as a Docker image. Docker Compose is the recommended de
 
 ## Deploy recipes
 
-The [`deploy/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy) directory
+The [`deploy/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy) directory
 contains self-contained reference recipes for every common hosting environment:
 
 | Recipe | Best for |
 |---|---|
-| [Fly.io](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/fly) | Personal / small team; zero-config TLS |
-| [Docker Compose](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/compose) | Local dev / single-server self-host |
-| [Helm](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/helm) | Kubernetes / enterprise |
-| [systemd](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/systemd) | Sovereign, air-gapped, bare metal |
-| [PaaS](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/paas) | Render, Railway, AWS App Runner, GCP Cloud Run |
+| [Fly.io](https://github.com/eidetic-labs/stigmem/tree/main/deploy/fly) | Personal / small team; zero-config TLS |
+| [Docker Compose](https://github.com/eidetic-labs/stigmem/tree/main/deploy/compose) | Local dev / single-server self-host |
+| [Helm](https://github.com/eidetic-labs/stigmem/tree/main/deploy/helm) | Kubernetes / enterprise |
+| [systemd](https://github.com/eidetic-labs/stigmem/tree/main/deploy/systemd) | Sovereign, air-gapped, bare metal |
+| [PaaS](https://github.com/eidetic-labs/stigmem/tree/main/deploy/paas) | Render, Railway, AWS App Runner, GCP Cloud Run |
 
-See [`deploy/README.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/deploy/README.md)
+See [`deploy/README.md`](https://github.com/eidetic-labs/stigmem/blob/main/deploy/README.md)
 for a decision tree. The sections below cover the Docker Compose path in detail.
 
 ---
@@ -50,7 +50,7 @@ No Python or Node.js installation is required for the Docker path.
 Clone the repo and start two federated nodes with a single command:
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 docker compose up --build -d
 ```

@@ -23,12 +23,12 @@ testable, auditable, and easier to adopt.
 |---|---|---|
 | Reference node | [Architecture](../reference/architecture/) and [single-host node](../reference/architecture/single-host-node) | Focused tests, docs corrections, small route/CLI fixes |
 | Federation | [Federated network](../reference/architecture/federated-network) and [federation concepts](../concepts/federation/) | Scope/audit examples, demo polish, conformance gaps |
-| Security review | [Security architecture](../security/) and [threat model](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/security/threat-model.md) | Evidence links, runbook clarity, safe test cases |
+| Security review | [Security architecture](../security/) and [threat model](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md) | Evidence links, runbook clarity, safe test cases |
 | Plugin ecosystem | [Plugin author guide](../guides/plugins/author-guide) and [Adapter ABI](../spec/adapter-abi) | Plugin docs examples, lifecycle tests, fixture improvements |
-| Docs and onboarding | [Contributing](https://github.com/Eidetic-Labs/stigmem/blob/main/CONTRIBUTING.md) and [Roadmap](https://github.com/Eidetic-Labs/stigmem/blob/main/ROADMAP.md) | Glossary entries, quickstart troubleshooting, issue-template polish |
+| Docs and onboarding | [Contributing](https://github.com/eidetic-labs/stigmem/blob/main/CONTRIBUTING.md) and [Roadmap](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md) | Glossary entries, quickstart troubleshooting, issue-template polish |
 
 Starter work is labeled
-[`good first issue`](https://github.com/Eidetic-Labs/stigmem/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22).
+[`good first issue`](https://github.com/eidetic-labs/stigmem/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22).
 Pick one issue, keep the PR narrow, and include the focused validation you ran.
 
 ## Demos to run first
@@ -50,14 +50,14 @@ writes and source-forged facts are rejected, audited, and not stored.
 ## Operator validation
 
 Teams interested in running a node during external validation should open an
-[operator candidate issue](https://github.com/Eidetic-Labs/stigmem/issues/new?template=operator_candidate.yml).
+[operator candidate issue](https://github.com/eidetic-labs/stigmem/issues/new?template=operator_candidate.yml).
 Keep infrastructure details, secrets, and private organization data out of the
 public issue; the public thread should describe the validation shape and the
 questions you want to answer.
 
 ## Security research
 
-Security researchers should read [SECURITY.md](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md)
+Security researchers should read [SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md)
 before filing anything. Public issues are appropriate for security documentation,
 safe-harbor questions, or already-public advisory follow-up. Active
 vulnerabilities, exploit details, secrets, and private operator findings should

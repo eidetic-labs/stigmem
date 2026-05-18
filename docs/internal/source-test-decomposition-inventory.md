@@ -1,7 +1,7 @@
 # Source and Test Decomposition Inventory
 
-**Issue:** [#180](https://github.com/Eidetic-Labs/stigmem/issues/180)  
-**Status:** Pre-rc planning tracker  
+**Issue:** [#180](https://github.com/eidetic-labs/stigmem/issues/180)
+**Status:** Pre-rc planning tracker
 **Last updated:** 2026-05-18
 **Scope:** Post-plugin-extraction source/test decomposition work that should
 complete before v1.0.0-rc.0, without blocking active PR 4 plugin work.
@@ -51,16 +51,16 @@ inventory, name validation commands, and avoid unrelated behavioral changes.
 
 | Slice | Issue | Target | Validation gate |
 |---|---|---|---|
-| Pydantic models PR A | [#263](https://github.com/Eidetic-Labs/stigmem/issues/263) | Create `node/src/stigmem_node/models/` domain modules and a compatibility shim. | `uv run pytest node/tests -q --tb=short`; `uv run mypy node/src`. |
-| Pydantic models PR B | [#262](https://github.com/Eidetic-Labs/stigmem/issues/262) | Move inline route wire-format models into domain modules. | Route tests for touched modules; OpenAPI contract check. |
-| Pydantic models PR C | [#261](https://github.com/Eidetic-Labs/stigmem/issues/261) | Sweep imports to explicit domain paths and document shim retirement. | Full Python fast gate and changed-file quality gate. |
-| CLI decomposition | [#264](https://github.com/Eidetic-Labs/stigmem/issues/264) | Split `node/src/stigmem_node/cli.py` into command-family modules. | CLI handler tests and generated CLI docs check. |
-| Facts route decomposition | [#265](https://github.com/Eidetic-Labs/stigmem/issues/265) | Split `routes/facts.py` into endpoint/helper modules. | Fact route tests, CID/provenance tests, OpenAPI check. |
-| Federation route decomposition | [#266](https://github.com/Eidetic-Labs/stigmem/issues/266) | Split `routes/federation.py` by endpoint family. | Federation, mTLS, capability, and conformance tests. |
-| Recall route decomposition | [#268](https://github.com/Eidetic-Labs/stigmem/issues/268) | Split `routes/recall.py` by lexical/vector/graph/ranking stages. | Recall, embeddings, vector search, and graph tests. |
-| Identity test decomposition | [#267](https://github.com/Eidetic-Labs/stigmem/issues/267) | Split `test_phase8_identity.py` into `node/tests/identity/`. | Completed with identity/key/capability subset validation and no fixture behavior changes. |
-| Federation test decomposition | [#269](https://github.com/Eidetic-Labs/stigmem/issues/269) | Split `test_federation.py` by federation concern. | Completed with federation subset validation and conformance smoke. |
-| Federation soak driver decomposition | [#270](https://github.com/Eidetic-Labs/stigmem/issues/270) | Split `eval/federation/soak_driver.py` into setup/run/monitor/report modules. | Completed with CLI/import smoke and existing eval fast subset. |
+| Pydantic models PR A | [#263](https://github.com/eidetic-labs/stigmem/issues/263) | Create `node/src/stigmem_node/models/` domain modules and a compatibility shim. | `uv run pytest node/tests -q --tb=short`; `uv run mypy node/src`. |
+| Pydantic models PR B | [#262](https://github.com/eidetic-labs/stigmem/issues/262) | Move inline route wire-format models into domain modules. | Route tests for touched modules; OpenAPI contract check. |
+| Pydantic models PR C | [#261](https://github.com/eidetic-labs/stigmem/issues/261) | Sweep imports to explicit domain paths and document shim retirement. | Full Python fast gate and changed-file quality gate. |
+| CLI decomposition | [#264](https://github.com/eidetic-labs/stigmem/issues/264) | Split `node/src/stigmem_node/cli.py` into command-family modules. | CLI handler tests and generated CLI docs check. |
+| Facts route decomposition | [#265](https://github.com/eidetic-labs/stigmem/issues/265) | Split `routes/facts.py` into endpoint/helper modules. | Fact route tests, CID/provenance tests, OpenAPI check. |
+| Federation route decomposition | [#266](https://github.com/eidetic-labs/stigmem/issues/266) | Split `routes/federation.py` by endpoint family. | Federation, mTLS, capability, and conformance tests. |
+| Recall route decomposition | [#268](https://github.com/eidetic-labs/stigmem/issues/268) | Split `routes/recall.py` by lexical/vector/graph/ranking stages. | Recall, embeddings, vector search, and graph tests. |
+| Identity test decomposition | [#267](https://github.com/eidetic-labs/stigmem/issues/267) | Split `test_phase8_identity.py` into `node/tests/identity/`. | Completed with identity/key/capability subset validation and no fixture behavior changes. |
+| Federation test decomposition | [#269](https://github.com/eidetic-labs/stigmem/issues/269) | Split `test_federation.py` by federation concern. | Completed with federation subset validation and conformance smoke. |
+| Federation soak driver decomposition | [#270](https://github.com/eidetic-labs/stigmem/issues/270) | Split `eval/federation/soak_driver.py` into setup/run/monitor/report modules. | Completed with CLI/import smoke and existing eval fast subset. |
 
 ## Deferrals
 
@@ -87,9 +87,9 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
 
 ## Tracking Notes
 
-- Parent: [#180](https://github.com/Eidetic-Labs/stigmem/issues/180)
-- Phase B parent: [#165](https://github.com/Eidetic-Labs/stigmem/issues/165)
-- Evidence tracker: [#158](https://github.com/Eidetic-Labs/stigmem/issues/158)
+- Parent: [#180](https://github.com/eidetic-labs/stigmem/issues/180)
+- Phase B parent: [#165](https://github.com/eidetic-labs/stigmem/issues/165)
+- Evidence tracker: [#158](https://github.com/eidetic-labs/stigmem/issues/158)
 - #264 implementation converts `stigmem_node.cli` from a monolithic module to
   a package while preserving the public `stigmem_node.cli` import and
   `python -m stigmem_node.cli` entry point.

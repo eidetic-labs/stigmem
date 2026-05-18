@@ -1,7 +1,7 @@
 # PR 4c Time-Travel Plugin Extraction Analysis
 
-Issue: [#308](https://github.com/Eidetic-Labs/stigmem/issues/308)
-Parent: [#307](https://github.com/Eidetic-Labs/stigmem/issues/307)
+Issue: [#308](https://github.com/eidetic-labs/stigmem/issues/308)
+Parent: [#307](https://github.com/eidetic-labs/stigmem/issues/307)
 
 ## Decision
 

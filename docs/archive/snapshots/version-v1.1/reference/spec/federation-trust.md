@@ -11,7 +11,7 @@ description: "Stigmem spec section 19 — Org manifests, capability tokens, sour
 
 Org manifests, capability tokens, source-trust score, quarantine garden, recall-time sanitizer.
 
-**Authoritative source:** [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md)
+**Authoritative source:** [`spec/stigmem-spec-v1.1-draft.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v1.1-draft.md)
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
@@ -19,13 +19,13 @@ Each subsection below shows the most recent normative text from the spec source.
 
 *This section is non-normative.*
 
-The active security policy — supported versions, vulnerability reporting instructions, scope definitions, and the coordinated disclosure timeline — is maintained in [`SECURITY.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md) at the root of the repository.
+The active security policy — supported versions, vulnerability reporting instructions, scope definitions, and the coordinated disclosure timeline — is maintained in [`SECURITY.md`](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md) at the root of the repository.
 
 **Reporting:** Do not open a public GitHub issue for security vulnerabilities. Report via the [GitHub private advisory path](https://github.com/eidetic-labs/stigmem/security/advisories). We acknowledge within 48 hours and target a patch within 14 days for critical vulnerabilities.
 
 **Disclosure timeline:** 90 days from the report date before public disclosure, except for vulnerabilities already being actively exploited in the wild.
 
-For the current security posture and Dependabot alert triage covering v1.0-rc, see the [Security Posture section of SECURITY.md](https://github.com/Eidetic-Labs/stigmem/blob/main/SECURITY.md#security-posture--v10-rc-2026-05-03).
+For the current security posture and Dependabot alert triage covering v1.0-rc, see the [Security Posture section of SECURITY.md](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.md#security-posture--v10-rc-2026-05-03).
 
 ---
 

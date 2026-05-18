@@ -39,7 +39,7 @@ The `<tag>` placeholder above stands in for the tag you choose. For supply-chain
 ```bash
 # Requires cosign ≥ 2.x
 cosign verify \
-  --certificate-identity-regexp "https://github.com/Eidetic-Labs/stigmem/.github/workflows/publish.yml" \
+  --certificate-identity-regexp "https://github.com/eidetic-labs/stigmem/.github/workflows/publish.yml" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   ghcr.io/eidetic-labs/stigmem-node:<tag>
 ```
@@ -88,7 +88,7 @@ docker run -d \
 For audit-traceable production, replace `:0.9.0a1` with `@sha256:<digest>` — see the [tag-selection guide](../operators/deployment/install#image-tags).
 
 :::note Kubernetes / Helm and Fly.io
-Helm chart hardening defaults and Fly.io micro-VM guidance lived alongside the v1.0 deploy recipes. Those recipes are deferred to [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) and [`experimental/deploy-fly/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-fly) in v0.9.0a1 and are unsupported until they pass the [ADR-008 reintroduction gates](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). The Docker and Docker Compose hardening guidance above is the supported v0.9.0a1 surface.
+Helm chart hardening defaults and Fly.io micro-VM guidance lived alongside the v1.0 deploy recipes. Those recipes are deferred to [`experimental/deploy-helm/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-helm) and [`experimental/deploy-fly/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-fly) in v0.9.0a1 and are unsupported until they pass the [ADR-008 reintroduction gates](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). The Docker and Docker Compose hardening guidance above is the supported v0.9.0a1 surface.
 :::
 
 ## Build reproducibility

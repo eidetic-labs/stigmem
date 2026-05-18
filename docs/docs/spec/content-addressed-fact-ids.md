@@ -7,13 +7,13 @@ description: "Spec-21-Content-Addressed-IDs rendered entry point — core SHA-25
 
 # Spec-21-Content-Addressed-IDs {#section-25}
 
-**Status:** Rendered compatibility entry point for [`Spec-21-Content-Addressed-IDs`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/21-content-addressed-ids.md), which is core behavior per ADR-017.
+**Status:** Rendered compatibility entry point for [`Spec-21-Content-Addressed-IDs`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/21-content-addressed-ids.md), which is core behavior per ADR-017.
 
 Content-addressed fact IDs (CIDs) are now maintained in the modular protocol
 spec:
 
-- [`Spec-21-Content-Addressed-IDs`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/specs/21-content-addressed-ids.md)
-- [`ADR-017: Amendment to ADR-011 — CIDs as core`](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)
+- [`Spec-21-Content-Addressed-IDs`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/21-content-addressed-ids.md)
+- [`ADR-017: Amendment to ADR-011 — CIDs as core`](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md)
 
 The component spec defines CID format, canonical fact-body fields, excluded
 metadata, storage and alias persistence, dual UUID/CID addressing, verification,

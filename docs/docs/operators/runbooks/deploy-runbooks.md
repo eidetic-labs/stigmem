@@ -9,10 +9,10 @@ audience: Operator
 
 **Audience:** operators deploying Stigmem for the first time or migrating between environments.
 **Spec reference:** none — this is operational, not protocol.
-**Source recipes:** [`deploy/compose/`](https://github.com/Eidetic-Labs/stigmem/tree/main/deploy/compose) in the repo.
+**Source recipes:** [`deploy/compose/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/compose) in the repo.
 
 :::caution Scope in v0.9.0a1
-The only **Stable** deployment surface in v0.9.0a1 is the Docker Compose reference deployment. Fly.io, Helm/Kubernetes, systemd, Grafana dashboards, and PaaS templates have been moved to `experimental/deploy-*/` per [ADR-002](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/002-v1-scope.md) and are gated by the [ADR-008 reintroduction process](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). Recipes still exist as starting points but are unsupported until they pass ADR-008 promotion. See **[Features → Deployment](../../concepts/features#operations-v090a1-critical-path)** for the full disposition.
+The only **Stable** deployment surface in v0.9.0a1 is the Docker Compose reference deployment. Fly.io, Helm/Kubernetes, systemd, Grafana dashboards, and PaaS templates have been moved to `experimental/deploy-*/` per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md) and are gated by the [ADR-008 reintroduction process](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). Recipes still exist as starting points but are unsupported until they pass ADR-008 promotion. See **[Features → Deployment](../../concepts/features#operations-v090a1-critical-path)** for the full disposition.
 :::
 
 ---
@@ -30,7 +30,7 @@ The only **Stable** deployment surface in v0.9.0a1 is the Docker Compose referen
 ### Step 1 — Clone and configure
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 cp deploy/compose/.env.example deploy/compose/.env
 ```
@@ -107,11 +107,11 @@ The recipes below are **not part of the v0.9.0a1 supported surface.** They live 
 
 | Surface | Recipe location | Status |
 |---|---|---|
-| Fly.io | [`experimental/deploy-fly/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-fly) | Deferred (no Spec-X assigned) |
-| Helm / Kubernetes | [`experimental/deploy-helm/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-helm) | Deferred (no Spec-X assigned) |
-| systemd / bare metal | [`experimental/deploy-systemd/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-systemd) | Deferred (no Spec-X assigned) |
-| PaaS (Render, Railway, App Runner, Cloud Run) | [`experimental/deploy-paas/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-paas) | Deferred (no Spec-X assigned) |
-| Grafana dashboards | [`experimental/deploy-grafana/`](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/deploy-grafana) | Deferred (no Spec-X assigned) |
+| Fly.io | [`experimental/deploy-fly/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-fly) | Deferred (no Spec-X assigned) |
+| Helm / Kubernetes | [`experimental/deploy-helm/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-helm) | Deferred (no Spec-X assigned) |
+| systemd / bare metal | [`experimental/deploy-systemd/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-systemd) | Deferred (no Spec-X assigned) |
+| PaaS (Render, Railway, App Runner, Cloud Run) | [`experimental/deploy-paas/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-paas) | Deferred (no Spec-X assigned) |
+| Grafana dashboards | [`experimental/deploy-grafana/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-grafana) | Deferred (no Spec-X assigned) |
 
 Each `experimental/deploy-*/` directory contains a `STATUS.md` describing what would be required to graduate the surface.
 

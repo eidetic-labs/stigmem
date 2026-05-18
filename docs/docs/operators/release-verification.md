@@ -34,7 +34,7 @@ and release workflow:
 
 ```bash
 cosign verify \
-  --certificate-identity-regexp 'https://github.com/Eidetic-Labs/stigmem/.github/workflows/publish.yml@refs/tags/v.*' \
+  --certificate-identity-regexp 'https://github.com/eidetic-labs/stigmem/.github/workflows/publish.yml@refs/tags/v.*' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   "$REF"
 ```
@@ -44,7 +44,7 @@ Verify the SBOM attestation:
 ```bash
 cosign verify-attestation \
   --type spdxjson \
-  --certificate-identity-regexp 'https://github.com/Eidetic-Labs/stigmem/.github/workflows/publish.yml@refs/tags/v.*' \
+  --certificate-identity-regexp 'https://github.com/eidetic-labs/stigmem/.github/workflows/publish.yml@refs/tags/v.*' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   "$REF"
 ```
@@ -54,7 +54,7 @@ Verify the BuildKit provenance attestation:
 ```bash
 cosign verify-attestation \
   --type slsaprovenance \
-  --certificate-identity-regexp 'https://github.com/Eidetic-Labs/stigmem/.github/workflows/publish.yml@refs/tags/v.*' \
+  --certificate-identity-regexp 'https://github.com/eidetic-labs/stigmem/.github/workflows/publish.yml@refs/tags/v.*' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   "$REF"
 ```
@@ -81,7 +81,7 @@ production release until signature and attestation verification succeeds.
 
 For npm, install the exact package version from the GitHub release notes and
 verify the package provenance in npm points back to
-`Eidetic-Labs/stigmem`, `publish.yml`, and the release tag.
+`eidetic-labs/stigmem`, `publish.yml`, and the release tag.
 
 ```bash
 npm view @eidetic-labs/stigmem-ts@0.9.0-alpha.1 dist.integrity dist.tarball
@@ -89,7 +89,7 @@ npm view @eidetic-labs/stigmem-ts@0.9.0-alpha.1 dist.integrity dist.tarball
 
 For PyPI packages, use the exact versions from the release notes and verify that
 the PyPI project publishing metadata shows the GitHub Trusted Publisher for
-`Eidetic-Labs/stigmem` and `.github/workflows/publish.yml`.
+`eidetic-labs/stigmem` and `.github/workflows/publish.yml`.
 
 ```bash
 python -m pip download --no-deps --dest /tmp/stigmem-release stigmem-py==0.9.0a1

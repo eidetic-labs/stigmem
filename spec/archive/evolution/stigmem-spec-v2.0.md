@@ -21,7 +21,7 @@ published_at: "2026-05-05"
 
 **Status:** Release. §1–§25 normative. §1–§18 stable from v1.0; §19–§25 promoted to normative in v2.0.
 **License:** Apache-2.0
-**Authors:** Eidetic-Labs
+**Authors:** Eidetic Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
 - v2.0 (2026-05-05): Promote all DRAFT-normative sections (§19–§25, including §20 Recall & Graph, §21 Lazy Instruction Discovery, §22 Security Hardening, §23 RTBF Tombstones, §24 Time-Travel/As-Of Queries, §25 Content-Addressed Fact IDs) to normative release. §1–§18 unchanged from v1.0. OpenAPI spec version bumped to 2.0.0.
@@ -2593,7 +2593,7 @@ Nodes MUST synchronise their system clocks via NTP (or equivalent). Operators SH
 
 #### 22.6.1 Scope
 
-This section specifies the normative security posture for reference operator container images published by Eidetic-Labs. Third-party operators running Stigmem from source SHOULD adopt the same baseline.
+This section specifies the normative security posture for reference operator container images published by Eidetic Labs. Third-party operators running Stigmem from source SHOULD adopt the same baseline.
 
 #### 22.6.2 Distroless Image
 
@@ -2641,7 +2641,7 @@ Reference images MUST be signed using [Sigstore Cosign](https://github.com/sigst
 
 #### 22.7.1 Purpose
 
-§19.2.2 permits but does not require operating a self-hosted Rekor instance. This section provides normative decision criteria so that operators can determine whether self-hosting is appropriate, and records the Eidetic-Labs reference deployment position.
+§19.2.2 permits but does not require operating a self-hosted Rekor instance. This section provides normative decision criteria so that operators can determine whether self-hosting is appropriate, and records the Eidetic Labs reference deployment position.
 
 #### 22.7.2 Decision Criteria
 
@@ -2657,9 +2657,9 @@ An operator SHOULD self-host a Rekor instance if and only if ALL of the followin
 
 If any criterion is not met, the operator SHOULD use the public Rekor instance at `https://rekor.sigstore.dev` (or a hosted equivalent). Operators MUST NOT self-host without documented answers to each criterion in their ops runbook.
 
-#### 22.7.3 Reference Deployment Position (Eidetic-Labs)
+#### 22.7.3 Reference Deployment Position (Eidetic Labs)
 
-The Eidetic-Labs reference deployment uses the **public Rekor instance** (`https://rekor.sigstore.dev`). Criteria evaluation:
+The Eidetic Labs reference deployment uses the **public Rekor instance** (`https://rekor.sigstore.dev`). Criteria evaluation:
 
 | Criterion | Status |
 |---|---|
@@ -2669,7 +2669,7 @@ The Eidetic-Labs reference deployment uses the **public Rekor instance** (`https
 | Independent peer accessibility | Not evaluated — moot given above |
 | Dedicated key ceremony team | Not evaluated — moot given above |
 
-**Decision: defer self-hosted Rekor to backlog.** A self-hosted Rekor instance for the Eidetic-Labs reference deployment does not meet the minimum decision criteria at this phase. A backlog issue SHOULD be filed when the following change conditions are met: (a) a private-network deployment tier is productised, or (b) a dedicated SRE function is established. Implementation of a self-hosted instance is explicitly out of scope for Phase 12.
+**Decision: defer self-hosted Rekor to backlog.** A self-hosted Rekor instance for the Eidetic Labs reference deployment does not meet the minimum decision criteria at this phase. A backlog issue SHOULD be filed when the following change conditions are met: (a) a private-network deployment tier is productised, or (b) a dedicated SRE function is established. Implementation of a self-hosted instance is explicitly out of scope for Phase 12.
 
 #### 22.7.4 Configuration
 

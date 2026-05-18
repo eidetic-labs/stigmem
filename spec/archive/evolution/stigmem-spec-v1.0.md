@@ -15,7 +15,7 @@
 
 **Status:** v1.0 — Stable. §1–§18 normative.
 **License:** Apache-2.0
-**Authors:** Eidetic-Labs
+**Authors:** Eidetic Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
 - v1.0 (2026-05-03): Promoted §17 Memory Garden and §18 Source Attestation from draft to normative. All sections stable.

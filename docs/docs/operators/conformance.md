@@ -42,9 +42,9 @@ uv run pytest node/tests/conformance/test_conformance_v1.py -v -k "garden"
 
 ### CI
 
-The **Conformance** workflow ([`conformance.yml`](https://github.com/Eidetic-Labs/stigmem/blob/main/.github/workflows/conformance.yml)) runs automatically on every push to `main` and on pull requests that touch `node/`, `spec/`, `data/conformance/`, or the workflow file.
+The **Conformance** workflow ([`conformance.yml`](https://github.com/eidetic-labs/stigmem/blob/main/.github/workflows/conformance.yml)) runs automatically on every push to `main` and on pull requests that touch `node/`, `spec/`, `data/conformance/`, or the workflow file.
 
-[![Conformance](https://github.com/Eidetic-Labs/stigmem/actions/workflows/conformance.yml/badge.svg)](https://github.com/Eidetic-Labs/stigmem/actions/workflows/conformance.yml)
+[![Conformance](https://github.com/eidetic-labs/stigmem/actions/workflows/conformance.yml/badge.svg)](https://github.com/eidetic-labs/stigmem/actions/workflows/conformance.yml)
 
 ### Vector groups
 
@@ -220,4 +220,4 @@ All three backends are required to be green. The Postgres backend is feature-fla
 
 ## Spec citations
 
-Every vector group file declares the modular spec it covers. Keep these citations up to date with the canonical spec composition in [`spec/PROTOCOL.md`](https://github.com/Eidetic-Labs/stigmem/blob/main/spec/PROTOCOL.md). When the spec and a vector disagree, the spec is authoritative — update the vector and open a bug report for the reference node.
+Every vector group file declares the modular spec it covers. Keep these citations up to date with the canonical spec composition in [`spec/PROTOCOL.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/PROTOCOL.md). When the spec and a vector disagree, the spec is authoritative — update the vector and open a bug report for the reference node.

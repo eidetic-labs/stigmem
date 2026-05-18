@@ -15,7 +15,7 @@
 
 **Status:** Working draft — Phase 6. §1–14 promoted to stable (normative). §15 Decay Semantics new (draft). §16 Synthesis new (draft). §6 extended with N-node backpressure patterns and scope-propagation invariants. §8 open questions updated.
 **License:** Apache-2.0
-**Authors:** Eidetic-Labs
+**Authors:** Eidetic Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
 - v0.8 (Phase 6 — public beta): §15 Decay Semantics — decay sweeper, configurable TTL + confidence-decay policies, `POST /v1/decay/sweep`, `DecayPolicy` registry. §16 Synthesis — `synthesize_scope` MCP tool and `POST /v1/synthesis` route, confidence-weighted summary view. §6.7 N-node federation backpressure — cascade behavior in relay nodes, 4-node topology findings. §6.8 Scope propagation invariants — transitive scope escalation prevention, re-federation restrictions. §5.13 `synthesize_scope` wire route. §8 open questions updated: multi-node federation (§8.2) addressed; `company`-scoped federation edge case resolved (§8.5). §§1–14 promoted to stable; footnote on v0.7-draft removed. §9 `stigmem:decay:` prefix reserved. §13 updated for Phase 6 progress.

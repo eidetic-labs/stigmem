@@ -10,7 +10,7 @@
     "version": "node version-bump.mjs && git add manifest.json versions.json"
   },
   "keywords": ["obsidian", "stigmem", "memory", "knowledge-graph"],
-  "author": "Eidetic-Labs",
+  "author": "Eidetic Labs",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -18,10 +18,10 @@ config.
 
 | Guide | Host |
 |-------|------|
-| [Zed (experimental)](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/mcp-adapter) | Zed editor — `mcp_servers` block in `settings.json` |
-| [Cursor](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/mcp-adapter) | Cursor editor — `.cursor/mcp.json` |
-| [Codex CLI](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/mcp-adapter) | OpenAI Codex CLI — `~/.codex/config.yaml` |
-| [Continue.dev](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/mcp-adapter) | Continue VS Code/JetBrains extension — `.continue/config.json` |
+| [Zed (experimental)](https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter) | Zed editor — `mcp_servers` block in `settings.json` |
+| [Cursor](https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter) | Cursor editor — `.cursor/mcp.json` |
+| [Codex CLI](https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter) | OpenAI Codex CLI — `~/.codex/config.yaml` |
+| [Continue.dev](https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter) | Continue VS Code/JetBrains extension — `.continue/config.json` |
 
 ## Runtime adapters
 
@@ -30,8 +30,8 @@ non-MCP runtimes.
 
 | Guide | Runtime |
 |-------|---------|
-| [Gemini](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/adapter-gemini) | Google Gemini — native `FunctionDeclaration` format |
-| [Ollama / LiteLLM (experimental)](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/adapter-ollama-litellm) | OpenAI-compatible tool-use format for local models |
+| [Gemini](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-gemini) | Google Gemini — native `FunctionDeclaration` format |
+| [Ollama / LiteLLM (experimental)](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-ollama-litellm) | OpenAI-compatible tool-use format for local models |
 
 ## Agent platform adapters
 
@@ -41,7 +41,7 @@ native skill or hook surfaces (not MCP).
 | Guide | Platform |
 |-------|----------|
 | [OpenClaw](./openclaw) | OpenClaw — ClawHub skill providing boot handshake, handoff, decision, and escalation surfaces |
-| [Paperclip / Claude Code](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/adapter-paperclip) | Paperclip and Claude Code — MCP server registered in `.mcp.json` |
+| [Paperclip / Claude Code](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip) | Paperclip and Claude Code — MCP server registered in `.mcp.json` |
 
 ## Vault / note-taking adapters
 
@@ -50,7 +50,7 @@ integration with note-taking tools.
 
 | Guide | Tool |
 |-------|------|
-| [Obsidian Vault](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/adapter-obsidian) | CLI/daemon sync for Obsidian, Logseq, Dendron, and plain-folder markdown vaults |
+| [Obsidian Vault](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-obsidian) | CLI/daemon sync for Obsidian, Logseq, Dendron, and plain-folder markdown vaults |
 
 ## Memory federation adapters
 
@@ -59,7 +59,7 @@ boundaries.
 
 | Guide | System |
 |-------|--------|
-| [Zep](https://github.com/Eidetic-Labs/stigmem/tree/main/experimental/adapter-zep) | Zep — mirror shared facts into per-user/session episodic memory |
+| [Zep](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-zep) | Zep — mirror shared facts into per-user/session episodic memory |
 
 ## Shared prerequisites
 

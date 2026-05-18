@@ -42,7 +42,7 @@ packages:
   node:
     versions:
       - "0.9.0-preview"
-    repository: github.com/Eidetic-Labs/stigmem
+    repository: github.com/eidetic-labs/stigmem
   python_sdk:
     name: stigmem-py
     versions:

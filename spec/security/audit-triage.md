@@ -33,7 +33,7 @@ Entries are append-only. If a previously-dismissed alert is later determined to 
 
 ### 2026-05-11 — conditional SQL-fragment assembly (7 SQL + 1 transitive ReDoS)
 
-**Alerts:** [#18](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/18), [#19](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/19), [#21](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/21), [#22](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/22), [#23](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/23), [#24](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/24), [#25](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/25), [#26](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/26).
+**Alerts:** [#18](https://github.com/eidetic-labs/stigmem/security/code-scanning/18), [#19](https://github.com/eidetic-labs/stigmem/security/code-scanning/19), [#21](https://github.com/eidetic-labs/stigmem/security/code-scanning/21), [#22](https://github.com/eidetic-labs/stigmem/security/code-scanning/22), [#23](https://github.com/eidetic-labs/stigmem/security/code-scanning/23), [#24](https://github.com/eidetic-labs/stigmem/security/code-scanning/24), [#25](https://github.com/eidetic-labs/stigmem/security/code-scanning/25), [#26](https://github.com/eidetic-labs/stigmem/security/code-scanning/26).
 
 **Rules:** 7× `py/sql-injection`, 1× `py/polynomial-redos`.
 
@@ -67,7 +67,7 @@ The user value (`entity`) reaches an f-string control flow because the branch th
 
 Both produced the same conclusion: the durable remediation is structural, not declarative.
 
-**Remediation:** [PR #117](https://github.com/Eidetic-Labs/stigmem/pull/117) refactors all three SQL builders to a constant-SQL pattern. The WHERE clause becomes a module-level string constant and optional filters are gated by bound parameters using `(? IS NULL OR col = ?)` (or a `? = 1` sentinel for boolean toggles). After the refactor:
+**Remediation:** [PR #117](https://github.com/eidetic-labs/stigmem/pull/117) refactors all three SQL builders to a constant-SQL pattern. The WHERE clause becomes a module-level string constant and optional filters are gated by bound parameters using `(? IS NULL OR col = ?)` (or a `? = 1` sentinel for boolean toggles). After the refactor:
 
 - No f-string concatenation reachable from user input.
 - No taint flow from `routes/` to `_pg_translate`'s regex.
@@ -88,11 +88,11 @@ Lesson: even after the constant-SQL refactor, the SQL string must never appear i
 
 ## CodeQL — acknowledged risks (ADR-tracked remediation)
 
-### 2026-05-13 — SHA-256 in the Argon2id migration verifier ([alert #34](https://github.com/Eidetic-Labs/stigmem/security/code-scanning/34))
+### 2026-05-13 — SHA-256 in the Argon2id migration verifier ([alert #34](https://github.com/eidetic-labs/stigmem/security/code-scanning/34))
 
 **Rule:** `py/weak-sensitive-data-hashing`.
 **Severity:** High.
-**Location at triage:** `node/src/stigmem_node/auth.py:67` — function `_legacy_sha256(raw: str) -> str` and its sibling `_verify_key_hash(...)` which calls it. Introduced in [PR #172](https://github.com/Eidetic-Labs/stigmem/pull/172) (Argon2id API key hashing migration per ADR-007).
+**Location at triage:** `node/src/stigmem_node/auth.py:67` — function `_legacy_sha256(raw: str) -> str` and its sibling `_verify_key_hash(...)` which calls it. Introduced in [PR #172](https://github.com/eidetic-labs/stigmem/pull/172) (Argon2id API key hashing migration per ADR-007).
 
 **Why this is NOT a false positive.** Unlike the 2026-05-11 SQL-injection cluster above, the analyzer is **technically correct**: SHA-256 is computationally cheap and inappropriate as a password-hashing primitive in isolation. The function genuinely hashes credential material with SHA-256.
 

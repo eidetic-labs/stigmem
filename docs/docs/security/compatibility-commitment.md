@@ -7,7 +7,7 @@ description: Stigmem's written compatibility commitment per ADR-013 deprecation 
 
 # Compatibility Commitment
 
-> Per [ADR-013](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/013-deprecation-policy.md). This document is the written commitment about what stigmem will not break, scaled to project resources and the v0.9.0a1 reset posture.
+> Per [ADR-013](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/013-deprecation-policy.md). This document is the written commitment about what stigmem will not break, scaled to project resources and the v0.9.0a1 reset posture.
 
 This commitment is reviewed at every major release. Tightening or loosening goes through an ADR amendment per ADR-001 §Contributor approval rule.
 
@@ -50,7 +50,7 @@ This commitment is reviewed at every major release. Tightening or loosening goes
 
 ## Wire-format pinning via `Stigmem-Version` header
 
-Per [ADR-012](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/012-version-aware-feature-exposure.md): clients lock to a declared protocol version via the `Stigmem-Version` request header. Server honors the pin; future server versions stay backward-compatible to declared protocol versions for at least one major version after a deprecation lands.
+Per [ADR-012](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/012-version-aware-feature-exposure.md): clients lock to a declared protocol version via the `Stigmem-Version` request header. Server honors the pin; future server versions stay backward-compatible to declared protocol versions for at least one major version after a deprecation lands.
 
 ```http
 POST /v1/facts HTTP/1.1
@@ -88,9 +88,9 @@ Lists of supported beta names live at `/v1/.well-known/stigmem` in a `betas` fie
 
 ## Cross-references
 
-- [ADR-001](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/001-versioning.md) — versioning, phases, stability commitments.
-- [ADR-008](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) — reintroduction gates.
-- [ADR-012](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/012-version-aware-feature-exposure.md) — version-aware feature exposure.
-- [ADR-013](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/013-deprecation-policy.md) — deprecation policy.
-- [ADR-014](https://github.com/Eidetic-Labs/stigmem/blob/main/docs/adr/014-compatibility-matrix.md) — compatibility matrix.
+- [ADR-001](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/001-versioning.md) — versioning, phases, stability commitments.
+- [ADR-008](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) — reintroduction gates.
+- [ADR-012](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/012-version-aware-feature-exposure.md) — version-aware feature exposure.
+- [ADR-013](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/013-deprecation-policy.md) — deprecation policy.
+- [ADR-014](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/014-compatibility-matrix.md) — compatibility matrix.
 - [Experimental & Deferred Features](../reference/experimental-features.md) — current deferred-feature index.

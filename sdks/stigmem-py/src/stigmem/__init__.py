@@ -1,7 +1,7 @@
 """stigmem-py — Python client SDK for Stigmem.
 
 Compatible with the canonical Stigmem spec at v0.9.0a1 and onward.
-See https://github.com/Eidetic-Labs/stigmem for the protocol spec,
+See https://github.com/eidetic-labs/stigmem for the protocol spec,
 threat model, and adopter documentation.
 """
 

@@ -15,7 +15,7 @@
 
 **Status:** Working draft — CTO reviewed. §1–5, §7–10 promoted from v0.5 (stable). §6 stable. §11 stable. §12 Adapter ABI promoted from Phase 4 reserved to normative. §2.5 Entity URI scheme new (normative). §6.2 capability negotiation now required. Phase 5 additions: §2.6 entity naming rules (normative, implemented), §5.12 lint-semantics (normative, implemented).
 **License:** Apache-2.0
-**Authors:** Eidetic-Labs
+**Authors:** Eidetic Labs
 **Layer:** Cross-platform federated substrate; sits above company orchestration layers and agent runtimes, below the open internet.
 **Changelog:**
 - v0.6+phase5: §2.6 entity naming rules normative (strict normalizer shipped); §5.12 lint-semantics new (lint_scope MCP tool + backend route); §5.10 resolution semantics corrected — resolution facts now namespace to `stigmem:resolution:<conflict-id>` to prevent cascade contradiction wave; query_facts `include_contradicted=false` default now enforced server-side.

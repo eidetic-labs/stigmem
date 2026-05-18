@@ -17,7 +17,7 @@ Stigmem ships as a Docker image. The quickest way to get a running node is with 
 ## Single-command install (two-node federation)
 
 ```bash
-git clone https://github.com/Eidetic-Labs/stigmem
+git clone https://github.com/eidetic-labs/stigmem
 cd stigmem
 docker compose up --build -d
 ```

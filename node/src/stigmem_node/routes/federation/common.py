@@ -85,15 +85,23 @@ def _require_peer_token(
 
     with db() as conn:
         peer_row = conn.execute(
-            "SELECT * FROM peers WHERE node_id = ? AND status = 'active'",
+            "SELECT * FROM peers WHERE node_id = ?",
             (iss,),
         ).fetchone()
 
     if peer_row is None:
         _public_module().write_audit_log(
-            iss, "rejected_token", {"reason": "peer_not_found_or_inactive", "iss": iss}
+            iss, "rejected_token", {"reason": "peer_not_found", "iss": iss}
         )
-        raise HTTPException(status_code=401, detail="peer not registered or not active")
+        raise HTTPException(status_code=401, detail="peer not registered")
+
+    if peer_row["status"] != "active":
+        _public_module().write_audit_log(
+            peer_row["id"],
+            "rejected_token",
+            {"reason": "peer_not_approved", "iss": iss, "status": peer_row["status"]},
+        )
+        raise HTTPException(status_code=401, detail="peer_not_approved")
 
     peer = dict(peer_row)
 
@@ -161,11 +169,11 @@ def _try_peer_token_auth(
     iss = unverified.get("iss", "")
     with db() as conn:
         peer_row = conn.execute(
-            "SELECT * FROM peers WHERE node_id = ? AND status = 'active'",
+            "SELECT * FROM peers WHERE node_id = ?",
             (iss,),
         ).fetchone()
 
-    if peer_row is None:
+    if peer_row is None or peer_row["status"] != "active":
         return None
 
     peer = dict(peer_row)

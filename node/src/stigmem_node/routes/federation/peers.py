@@ -9,8 +9,13 @@ from fastapi import BackgroundTasks, Depends, HTTPException, status
 
 from ...auth import Identity, resolve_identity
 from ...db import db
-from ...models.federation import PeerRegisterRequest, PeerRegisterResponse
-from .._federation_impl import register_peer_impl
+from ...models.federation import (
+    PeerApprovalRequest,
+    PeerApprovalResponse,
+    PeerRegisterRequest,
+    PeerRegisterResponse,
+)
+from .._federation_impl import approve_peer_impl, register_peer_impl
 from .common import router
 
 
@@ -31,6 +36,20 @@ async def register_peer(
     """
     # Implementation lives in _federation_impl.register_peer_impl.
     return await register_peer_impl(req, background_tasks, identity)
+
+
+@router.post(
+    "/v1/federation/peers/{peer_id}/approve",
+    response_model=PeerApprovalResponse,
+)
+def approve_peer(
+    peer_id: str,
+    req: PeerApprovalRequest,
+    background_tasks: BackgroundTasks,
+    identity: Annotated[Identity, Depends(resolve_identity)],
+) -> PeerApprovalResponse:
+    """Approve a pending peer after out-of-band public-key confirmation."""
+    return approve_peer_impl(peer_id, req.pubkey_fingerprint, background_tasks, identity)
 
 
 # ---------------------------------------------------------------------------

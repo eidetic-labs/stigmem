@@ -750,6 +750,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/federation/peers/{peer_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve Peer
+         * @description Approve a pending peer after out-of-band public-key confirmation.
+         */
+        post: operations["approve_peer_v1_federation_peers__peer_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/gardens": {
         parameters: {
             query?: never;
@@ -1923,6 +1943,22 @@ export interface components {
             /** Total Hint */
             total_hint: number;
         };
+        /** PeerApprovalRequest */
+        PeerApprovalRequest: {
+            /** Pubkey Fingerprint */
+            pubkey_fingerprint: string;
+        };
+        /** PeerApprovalResponse */
+        PeerApprovalResponse: {
+            /** Approved At */
+            approved_at: string;
+            /** Node Id */
+            node_id: string;
+            /** Peer Id */
+            peer_id: string;
+            /** Status */
+            status: string;
+        };
         /** PeerRegisterRequest */
         PeerRegisterRequest: {
             /** Allowed Scopes */
@@ -2433,6 +2469,8 @@ export type SchemaLintRequest = components['schemas']['LintRequest'];
 export type SchemaMemoryCardResponse = components['schemas']['MemoryCardResponse'];
 export type SchemaNeighborItem = components['schemas']['NeighborItem'];
 export type SchemaNeighborsResponse = components['schemas']['NeighborsResponse'];
+export type SchemaPeerApprovalRequest = components['schemas']['PeerApprovalRequest'];
+export type SchemaPeerApprovalResponse = components['schemas']['PeerApprovalResponse'];
 export type SchemaPeerRegisterRequest = components['schemas']['PeerRegisterRequest'];
 export type SchemaPeerRegisterResponse = components['schemas']['PeerRegisterResponse'];
 export type SchemaPreference = components['schemas']['Preference'];
@@ -3737,6 +3775,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PeerRegisterResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_peer_v1_federation_peers__peer_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                peer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeerApprovalRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeerApprovalResponse"];
                 };
             };
             /** @description Validation Error */

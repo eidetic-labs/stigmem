@@ -20,6 +20,7 @@ the cluster boots once, runs all tests, then tears down.
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import socket
@@ -121,7 +122,11 @@ conn.execute(
 )
 conn.commit()
 conn.close()
-key = create_api_key('test:admin', ['read', 'write', 'federate'], description='integration-test')
+key = create_api_key(
+    'test:admin',
+    ['read', 'write', 'federate', 'admin:federation'],
+    description='integration-test',
+)
 print(key, end='')
 """
     result = subprocess.run(
@@ -217,7 +222,19 @@ def _register_peer(
     )
     assert resp.status_code == 201, f"peer registration failed: {resp.status_code} {resp.text}"
     data = resp.json()
-    assert data["status"] == "active", f"peer status not active: {data}"
+    assert data["status"] == "pending_approval", f"peer status not pending approval: {data}"
+    peer_id = data["peer_id"]
+
+    approve = httpx.post(
+        f"{registrar_url}/v1/federation/peers/{peer_id}/approve",
+        json={"pubkey_fingerprint": f"sha256:{hashlib.sha256(peer_pub_b64.encode()).hexdigest()}"},
+        headers={"Authorization": f"Bearer {federate_key}"},
+        timeout=10.0,
+    )
+    assert approve.status_code == 200, (
+        f"peer approval failed: {approve.status_code} {approve.text}"
+    )
+    assert approve.json()["status"] == "active", f"peer status not active: {approve.json()}"
 
 
 # ---------------------------------------------------------------------------

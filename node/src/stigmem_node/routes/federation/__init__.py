@@ -20,7 +20,7 @@ from .common import (  # noqa: F401
     logger,
     router,
 )
-from .peers import list_peers, register_peer  # noqa: F401
+from .peers import approve_peer, list_peers, register_peer  # noqa: F401
 from .replication import (  # noqa: F401
     _push_fact_with_cap_token,
     _push_fact_with_peer_token,
@@ -41,6 +41,7 @@ __all__ = [
     "_try_peer_token_auth",
     "_verify_push_cap_token",
     "get_audit_log",
+    "approve_peer",
     "ingest_fact",
     "list_conflicts",
     "list_peers",

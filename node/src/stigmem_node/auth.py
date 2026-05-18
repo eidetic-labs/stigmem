@@ -259,6 +259,9 @@ class Identity:
     def can_federate(self) -> bool:
         return self._has_capability("federate")
 
+    def can_admin_federation(self) -> bool:
+        return self._has_capability("admin:federation")
+
     def can_audit(self) -> bool:
         """True when the principal holds the audit.read capability (spec §22.3)."""
         return self._has_capability("audit.read")

@@ -13,6 +13,7 @@ bodies rather than binding them at import time.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
 import logging
 import uuid
@@ -31,6 +32,7 @@ from ..identity.manifest import ManifestError, manifest_from_dict, verify_manife
 from ..identity.transparency_log import LogEntry, TransparencyLogUnavailable, make_transparency_log
 from ..identity.trust_store import get_peer_manifest, store_peer_manifest
 from ..models.federation import (
+    PeerApprovalResponse,
     PeerRegisterRequest,
     PeerRegisterResponse,
 )
@@ -42,6 +44,11 @@ from ..net_util import assert_safe_url
 from ..plugins import Deny, TenantContext, get_registry
 
 logger = logging.getLogger("stigmem.federation")
+
+
+def peer_pubkey_fingerprint(pubkey: str) -> str:
+    """Return the operator-verifiable fingerprint for a pinned peer public key."""
+    return f"sha256:{hashlib.sha256(pubkey.encode()).hexdigest()}"
 
 
 def _make_federation_client() -> httpx.AsyncClient:
@@ -129,8 +136,7 @@ async def register_peer_impl(
             "signed_at": req.signed_at,
         }
         if verify_declaration_sig(signed_fields, req.declaration_sig, fetched_pubkey):
-            final_status = "active"
-            verified_at = datetime.now(UTC).isoformat()
+            final_status = "pending_approval"
 
     with db() as conn:
         conn.execute(
@@ -138,11 +144,71 @@ async def register_peer_impl(
             (final_status, verified_at, peer_id),
         )
 
-    # §19.2.3 — TL inclusion proof check runs after response to avoid blocking registration
-    if final_status == "active":
-        background_tasks.add_task(_check_tl_inclusion_for_peer, req.node_id, req.node_url, peer_id)
-
     return PeerRegisterResponse(peer_id=peer_id, status=final_status, verified_at=verified_at)
+
+
+def approve_peer_impl(
+    peer_id: str,
+    pubkey_fingerprint: str,
+    background_tasks: BackgroundTasks,
+    identity: Identity,
+) -> PeerApprovalResponse:
+    """Approve a verified peer after operator out-of-band key confirmation."""
+    if not identity.can_admin_federation():
+        raise HTTPException(status_code=403, detail="admin:federation required")
+
+    now = datetime.now(UTC).isoformat()
+    fingerprint_mismatch_peer: dict[str, Any] | None = None
+    with db() as conn:
+        peer = conn.execute("SELECT * FROM peers WHERE id = ?", (peer_id,)).fetchone()
+        if peer is None:
+            raise HTTPException(status_code=404, detail="peer not found")
+        if peer["status"] != "pending_approval":
+            raise HTTPException(
+                status_code=409,
+                detail=f"peer is not pending approval (status={peer['status']})",
+            )
+
+        expected = peer_pubkey_fingerprint(peer["federation_pubkey"])
+        if pubkey_fingerprint != expected:
+            fingerprint_mismatch_peer = dict(peer)
+        else:
+            fingerprint_mismatch_peer = None
+
+            conn.execute(
+                "UPDATE peers SET status = 'active', established_at = ? WHERE id = ?",
+                (now, peer["id"]),
+            )
+
+    if fingerprint_mismatch_peer is not None:
+        from . import federation as _fed_mod
+
+        _fed_mod.write_audit_log(
+            fingerprint_mismatch_peer["id"],
+            "peer_approval_failed",
+            {"node_id": fingerprint_mismatch_peer["node_id"], "reason": "fingerprint_mismatch"},
+        )
+        raise HTTPException(status_code=400, detail="fingerprint mismatch")
+
+    from . import federation as _fed_mod
+
+    _fed_mod.write_audit_log(
+        peer_id,
+        "peer_approved",
+        {"node_id": peer["node_id"], "approved_by": identity.entity_uri},
+    )
+    background_tasks.add_task(
+        _check_tl_inclusion_for_peer,
+        peer["node_id"],
+        peer["node_url"],
+        peer_id,
+    )
+    return PeerApprovalResponse(
+        peer_id=peer_id,
+        node_id=peer["node_id"],
+        status="active",
+        approved_at=now,
+    )
 
 
 async def _check_tl_inclusion_for_peer(node_id: str, node_url: str, peer_id: str) -> None:

@@ -14,8 +14,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..auth import Identity, resolve_identity
 from ..db import db
-from ..fuzzy_resolver import register_alias
 from ..models.aliases import AliasRecord, AliasRequest
+from ..recall.fuzzy_resolver import register_alias
 
 router = APIRouter(prefix="/v1/aliases", tags=["aliases"])
 

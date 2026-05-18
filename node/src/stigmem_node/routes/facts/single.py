@@ -11,7 +11,7 @@ from ...cid import is_cid, is_valid_cid
 from ...db import db
 from ...garden_acl import require_garden_read
 from ...models.facts import FactRecord, row_to_record
-from ...recall_pipeline import apply_recall_pipeline
+from ...recall.recall_pipeline import apply_recall_pipeline
 from ...session_graph import record_read_scopes
 from ..cid_integrity import enforce_read_path_cid
 from .common import router

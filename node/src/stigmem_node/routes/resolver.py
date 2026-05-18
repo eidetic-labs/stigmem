@@ -18,7 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..auth import Identity, resolve_identity
 from ..db import db
-from ..entity_resolver import FUZZY_SCORE_THRESHOLD, resolve_entity
+from ..recall.entity_resolver import FUZZY_SCORE_THRESHOLD, resolve_entity
 
 router = APIRouter(prefix="/v1/entities", tags=["entities"])
 

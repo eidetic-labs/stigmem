@@ -9,7 +9,7 @@ from ...models.facts import row_to_record
 from ...models.recall import RecallWeights, ScoreBreakdown, ScoredFact
 from ...models.tombstones import TombstoneNotice
 from ...plugins import get_registry
-from ...recall_pipeline import apply_recall_pipeline
+from ...recall.recall_pipeline import apply_recall_pipeline
 from ..cid_integrity import enforce_read_path_cid
 from .common import _estimate_tokens
 from .ranking import _greedy_pack

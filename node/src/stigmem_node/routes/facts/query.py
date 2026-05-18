@@ -12,14 +12,14 @@ from ... import settings as _settings_pkg
 from ...auth import Identity, resolve_identity
 from ...db import db
 from ...entity_normalizer import NormalizationError, normalize_entity_uri
-from ...garden_acl import caller_can_see_garden, get_garden_by_garden_uri, require_garden_read
+from ...garden_acl import get_garden_by_garden_uri, require_garden_read
 from ...memory_garden_acl_gate import recall_filter_enabled
 from ...metrics import FACT_READ
 from ...models.constants import VALID_SCOPES
 from ...models.facts import FactRecord, QueryResponse, row_to_record
 from ...models.tombstones import TombstoneNotice
 from ...plugins import Deny, Failure, Success, TenantContext, get_registry
-from ...recall_pipeline import apply_recall_pipeline
+from ...recall.recall_pipeline import apply_recall_pipeline
 from ...session_graph import record_read_scopes
 from ..cid_integrity import enforce_read_path_cid
 from .common import _get_tombstone_filter, logger, router
@@ -116,6 +116,52 @@ _FACT_PROJECTION_JOINS = (
     " LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id"
     " LEFT JOIN fact_garden_membership fgm ON fgm.fact_id = f.id"
     " LEFT JOIN fact_quarantine_status fqs ON fqs.fact_id = f.id"
+)
+
+_GARDEN_VISIBILITY_NONE = 0
+_GARDEN_VISIBILITY_EXACT = 1
+_GARDEN_VISIBILITY_VISIBLE_SET = 2
+_GARDEN_VISIBILITY_NULL_ONLY = 3
+
+_FACT_QUERY_SQL = (
+    "SELECT f.*, "
+    "COALESCE(fvo.valid_until, f.valid_until) AS projected_valid_until, "
+    "COALESCE(fvo.confidence, f.confidence) AS projected_confidence, "
+    "COALESCE(fgm.garden_id, f.garden_id) AS projected_garden_id, "
+    "COALESCE(fqs.quarantine_status, f.quarantine_status) AS projected_quarantine_status, "
+    "COALESCE(fqs.quarantine_garden_id, f.quarantine_garden_id) "
+    "AS projected_quarantine_garden_id, "
+    "COALESCE(f.cid, (SELECT fca.cid FROM fact_cid_aliases fca "
+    "WHERE fca.fact_id = f.id ORDER BY fca.cid LIMIT 1)) AS projected_cid"
+    " FROM facts f"
+    " LEFT JOIN fact_validity_overrides fvo ON fvo.fact_id = f.id"
+    " LEFT JOIN fact_garden_membership fgm ON fgm.fact_id = f.id"
+    " LEFT JOIN fact_quarantine_status fqs ON fqs.fact_id = f.id"
+    " WHERE COALESCE(fvo.confidence, f.confidence) >= ?"
+    " AND f.tenant_id = ?"
+    " AND ("
+    "   ? = 0"
+    "   OR (? = 1 AND COALESCE(fgm.garden_id, f.garden_id) = ?)"
+    "   OR (? = 2 AND (COALESCE(fgm.garden_id, f.garden_id) IS NULL"
+    "       OR EXISTS (SELECT 1 FROM _query_visible_gardens qvg"
+    "                  WHERE qvg.id = COALESCE(fgm.garden_id, f.garden_id))))"
+    "   OR (? = 3 AND COALESCE(fgm.garden_id, f.garden_id) IS NULL)"
+    " )"
+    " AND (? IS NULL OR f.attested = ?)"
+    " AND (? IS NULL"
+    "      OR f.entity = ?"
+    "      OR f.entity IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+    " AND (? IS NULL OR f.relation = ?)"
+    " AND (? IS NULL"
+    "      OR f.source = ?"
+    "      OR f.source IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
+    " AND (? IS NULL OR f.scope = ?)"
+    " AND (? IS NULL OR f.timestamp > ?)"
+    " AND (? IS NULL OR f.id > ?)"
+    " AND (? = 1"
+    "      OR COALESCE(fvo.valid_until, f.valid_until) IS NULL"
+    "      OR COALESCE(fvo.valid_until, f.valid_until) > ?)"
+    " ORDER BY f.timestamp DESC, f.id DESC LIMIT ?"
 )
 
 _TIME_TRAVEL_PLUGIN_NAME = "stigmem-plugin-time-travel"
@@ -399,29 +445,27 @@ def query_facts(
     # Garden ACL: resolve and enforce membership before querying (spec §5.20, §17.3)
     garden = _resolve_garden_or_404(garden_id, identity)
 
-    conditions, params = _build_query_conditions(
-        identity=identity,
-        garden=garden,
-        entity=entity,
-        relation=relation,
-        source=source,
-        scope=scope,
-        min_confidence=min_confidence,
-        attested=attested,
-        after=after,
-        cursor=cursor,
-        include_expired=include_expired,
-    )
-
-    where = " AND ".join(conditions)
-    sql = (
-        f"SELECT {_FACT_PROJECTION_SELECT} FROM facts f {_FACT_PROJECTION_JOINS} "  # noqa: S608  # nosec B608
-        f"WHERE {where} ORDER BY f.timestamp DESC, f.id DESC LIMIT ?"
-    )  # nosec B608 — where/join fragments are static; all user values in params
-    params.append(limit + 1)
-
     with db() as conn:
-        rows = conn.execute(sql, params).fetchall()
+        garden_visibility_mode, exact_garden_id, visible_garden_ids = _resolve_garden_visibility(
+            conn, garden, identity
+        )
+        _prepare_garden_visibility_table(conn, visible_garden_ids)
+        params = _build_query_params(
+            identity=identity,
+            garden_visibility_mode=garden_visibility_mode,
+            exact_garden_id=exact_garden_id,
+            entity=entity,
+            relation=relation,
+            source=source,
+            scope=scope,
+            min_confidence=min_confidence,
+            attested=attested,
+            after=after,
+            cursor=cursor,
+            include_expired=include_expired,
+            limit=limit,
+        )
+        rows = conn.execute(_FACT_QUERY_SQL, params).fetchall()
 
     has_more = len(rows) > limit
     rows = rows[:limit]
@@ -487,36 +531,40 @@ def _resolve_garden_or_404(garden_id: str | None, identity: Identity) -> Any:
     return garden
 
 
-def _append_garden_visibility_filter(
-    conditions: list[str],
-    params: list[Any],
+def _resolve_garden_visibility(
+    conn: Any,
     garden: Any,
     identity: Identity,
-) -> None:
-    """Either restrict to garden_id OR mask non-visible garden-tagged facts (§17.3)."""
+) -> tuple[int, str | None, list[str]]:
+    """Return query visibility mode, exact garden id, and visible garden id set."""
     if garden is not None:
-        conditions.append("COALESCE(fgm.garden_id, f.garden_id) = ?")
-        params.append(garden["id"])
-        return
+        return _GARDEN_VISIBILITY_EXACT, garden["id"], []
     if not recall_filter_enabled():
-        return
-    with db() as _g_conn:
-        visible_garden_ids = [
-            row["id"]
-            for row in _g_conn.execute(
-                "SELECT id FROM gardens WHERE tenant_id = ?", (identity.tenant_id,)
-            ).fetchall()
-            if caller_can_see_garden(row["id"], identity)
-        ]
+        return _GARDEN_VISIBILITY_NONE, None, []
+
+    visible_garden_ids = [
+        row["id"]
+        for row in conn.execute(
+            "SELECT g.id FROM gardens g"
+            " WHERE g.tenant_id = ?"
+            " AND EXISTS ("
+            "     SELECT 1 FROM garden_members gm"
+            "      WHERE gm.garden_id = g.id AND gm.entity_uri = ?"
+            " )",
+            (identity.tenant_id, identity.entity_uri),
+        ).fetchall()
+    ]
     if visible_garden_ids:
-        placeholders = ",".join("?" * len(visible_garden_ids))
-        conditions.append(
-            f"(COALESCE(fgm.garden_id, f.garden_id) IS NULL "
-            f"OR COALESCE(fgm.garden_id, f.garden_id) IN ({placeholders}))"
-        )
-        params.extend(visible_garden_ids)
-    else:
-        conditions.append("COALESCE(fgm.garden_id, f.garden_id) IS NULL")
+        return _GARDEN_VISIBILITY_VISIBLE_SET, None, visible_garden_ids
+    return _GARDEN_VISIBILITY_NULL_ONLY, None, []
+
+
+def _prepare_garden_visibility_table(conn: Any, visible_garden_ids: list[str]) -> None:
+    """Populate the per-connection visibility table referenced by ``_FACT_QUERY_SQL``."""
+    conn.execute("CREATE TEMP TABLE IF NOT EXISTS _query_visible_gardens (id TEXT PRIMARY KEY)")
+    conn.execute("DELETE FROM _query_visible_gardens")
+    for garden_id in visible_garden_ids:
+        conn.execute("INSERT OR IGNORE INTO _query_visible_gardens (id) VALUES (?)", (garden_id,))
 
 
 def _normalise_uri_or_raw(raw_value: str) -> str:
@@ -527,26 +575,11 @@ def _normalise_uri_or_raw(raw_value: str) -> str:
         return raw_value  # malformed — fall through to exact match
 
 
-def _entity_filter_clause() -> str:
-    """Hardcoded entity-or-alias WHERE fragment. Pulled out so CodeQL sees a literal."""
-    return (
-        "(f.entity = ? "
-        "OR f.entity IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
-    )
-
-
-def _source_filter_clause() -> str:
-    """Hardcoded source-or-alias WHERE fragment. Pulled out so CodeQL sees a literal."""
-    return (
-        "(f.source = ? "
-        "OR f.source IN (SELECT raw_uri FROM entity_aliases WHERE canonical_uri = ?))"
-    )
-
-
-def _build_query_conditions(  # noqa: PLR0913 — narrow internal helper, keeps query_facts signature flat
+def _build_query_params(  # noqa: PLR0913 — narrow internal helper, keeps query_facts signature flat
     *,
     identity: Identity,
-    garden: Any,
+    garden_visibility_mode: int,
+    exact_garden_id: str | None,
     entity: str | None,
     relation: str | None,
     source: str | None,
@@ -556,46 +589,44 @@ def _build_query_conditions(  # noqa: PLR0913 — narrow internal helper, keeps 
     after: str | None,
     cursor: str | None,
     include_expired: bool,
-) -> tuple[list[str], list[Any]]:
-    """Build the WHERE clause + bound parameters list for the facts query."""
-    conditions: list[str] = ["COALESCE(fvo.confidence, f.confidence) >= ?", "f.tenant_id = ?"]
-    params: list[Any] = [min_confidence, identity.tenant_id]
+    limit: int,
+) -> list[Any]:
+    """Return bind values for the fixed ``_FACT_QUERY_SQL`` template."""
+    if scope and scope not in VALID_SCOPES:
+        raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
 
-    _append_garden_visibility_filter(conditions, params, garden, identity)
-
-    if attested is not None:
-        conditions.append("f.attested = ?")
-        params.append(1 if attested else 0)
-    if entity:
-        normalised_entity = _normalise_uri_or_raw(entity)
-        conditions.append(_entity_filter_clause())
-        params.extend([normalised_entity, normalised_entity])
-    if relation:
-        conditions.append("f.relation = ?")
-        params.append(relation)
-    if source:
-        normalised_source = _normalise_uri_or_raw(source)
-        conditions.append(_source_filter_clause())
-        params.extend([normalised_source, normalised_source])
-    if scope:
-        if scope not in VALID_SCOPES:
-            raise HTTPException(status_code=400, detail=f"scope must be one of {VALID_SCOPES}")
-        conditions.append("f.scope = ?")
-        params.append(scope)
-    if after:
-        conditions.append("f.timestamp > ?")
-        params.append(after)
-    if cursor:
-        conditions.append("f.id > ?")
-        params.append(cursor)
-    if not include_expired:
-        conditions.append(
-            "(COALESCE(fvo.valid_until, f.valid_until) IS NULL "
-            "OR COALESCE(fvo.valid_until, f.valid_until) > ?)"
-        )
-        params.append(datetime.now(UTC).isoformat())
-
-    return conditions, params
+    normalised_entity = _normalise_uri_or_raw(entity) if entity else None
+    normalised_source = _normalise_uri_or_raw(source) if source else None
+    attested_value = None if attested is None else 1 if attested else 0
+    now = datetime.now(UTC).isoformat()
+    return [
+        min_confidence,
+        identity.tenant_id,
+        garden_visibility_mode,
+        garden_visibility_mode,
+        exact_garden_id,
+        garden_visibility_mode,
+        garden_visibility_mode,
+        attested_value,
+        attested_value,
+        normalised_entity,
+        normalised_entity,
+        normalised_entity,
+        relation or None,
+        relation or None,
+        normalised_source,
+        normalised_source,
+        normalised_source,
+        scope or None,
+        scope or None,
+        after or None,
+        after or None,
+        cursor or None,
+        cursor or None,
+        1 if include_expired else 0,
+        now,
+        limit + 1,
+    ]
 
 
 def _rows_to_records(rows: list[Any]) -> list[FactRecord]:

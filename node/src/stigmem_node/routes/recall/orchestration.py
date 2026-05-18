@@ -12,7 +12,6 @@ from fastapi.responses import JSONResponse
 from ...auth import Identity, resolve_identity
 from ...card_materializer import CARD_MIN_CONFIDENCE, get_fresh_card
 from ...db import db
-from ...graph import MAX_DEPTH
 from ...lifecycle.tombstone_cache import is_tombstoned as _is_tombstoned
 from ...metrics import FACT_READ, RECALL_RANKER_DURATION, observe_duration
 from ...models.constants import VALID_SCOPES
@@ -25,7 +24,8 @@ from ...models.recall import (
     ScoredFact,
 )
 from ...plugins import get_registry
-from ...recall_pipeline import apply_recall_pipeline
+from ...recall.graph import MAX_DEPTH
+from ...recall.recall_pipeline import apply_recall_pipeline
 from ...session_graph import record_read_scopes
 from ...tracing import start_span
 from .as_of import _recall_as_of_impl

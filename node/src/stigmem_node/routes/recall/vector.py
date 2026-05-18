@@ -19,7 +19,7 @@ def _semantic_search(
         return {}
     try:
         from ...embedding import get_embedding_model
-        from ...vector_search import vector_search
+        from ...recall.vector_search import vector_search
 
         model = get_embedding_model()
         vecs = model.embed([query])

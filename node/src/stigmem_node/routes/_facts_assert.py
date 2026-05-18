@@ -22,7 +22,6 @@ from ..billing import BillingEvent, get_hook_bus
 from ..cid import compute_cid
 from ..db import db
 from ..entity_normalizer import NormalizationError, is_informal, normalize_entity_uri
-from ..fuzzy_resolver import resolve_entity
 from ..garden_acl import (
     get_garden_by_garden_uri,
     require_garden_write,
@@ -32,6 +31,7 @@ from ..lifecycle.immutability import set_embedding_status, write_fact_journal
 from ..metrics import CONTRADICTION, FACT_WRITE
 from ..models.facts import AssertRequest, FactRecord, row_to_record
 from ..plugins import TenantContext, get_registry
+from ..recall.fuzzy_resolver import resolve_entity
 from ..session_graph import encode_derived_from, ensure_write_allowed, record_write_scope
 from ..settings import settings as _settings  # noqa: F401  — kept for parity
 
@@ -467,7 +467,7 @@ def assert_fact_impl(
 
         # Graph adjacency index (§20.1.1): materialize edge for ref-typed facts
         if req.value.type == "ref" and value_v and _is_valid_entity_uri(value_v):
-            from ..graph_index import upsert_edge as _upsert_edge
+            from ..recall.graph_index import upsert_edge as _upsert_edge
 
             _upsert_edge(
                 conn,

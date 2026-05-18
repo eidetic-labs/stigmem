@@ -23,8 +23,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from ..auth import Identity, resolve_identity
 from ..db import db
 from ..entity_normalizer import NormalizationError, normalize_entity_uri
-from ..graph import MAX_DEPTH, bfs_neighbors
 from ..models.graph import NeighborItem, NeighborsResponse
+from ..recall.graph import MAX_DEPTH, bfs_neighbors
 
 router = APIRouter(prefix="/v1/graph", tags=["graph"])
 

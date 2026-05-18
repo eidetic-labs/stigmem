@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ...auth import Identity
-from ...graph import bfs_neighbors
+from ...recall.graph import bfs_neighbors
 
 _MAX_SEED_ENTITIES = 5
 _MAX_GRAPH_ENTITIES = 50

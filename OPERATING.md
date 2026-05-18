@@ -28,6 +28,7 @@ Before putting a node on the public internet or joining a federation:
 Start with the install and deployment docs:
 
 - [Install](docs/docs/operators/deployment/install.md)
+- [Release verification](docs/docs/operators/release-verification.md)
 - [Deploy runbooks](docs/docs/operators/runbooks/deploy-runbooks.md)
 - [Monitoring and debugging](docs/docs/operators/observability/monitoring.md)
 
@@ -43,6 +44,14 @@ At minimum, configure:
 
 Use `/healthz` as the liveness/readiness probe and `/metrics` as the Prometheus
 scrape target.
+
+Before deploying a tagged release, verify its supply-chain evidence. The GHCR
+node image is keyless-signed with Sigstore/cosign, carries an SPDX SBOM and
+BuildKit provenance as OCI referrers, and records Rekor transparency-log
+evidence through the keyless signing flow. npm and PyPI packages use registry
+provenance via GitHub Actions OIDC. Use
+[Release Verification](docs/docs/operators/release-verification.md) for the
+commands and acceptance checks.
 
 ## Peer With Another Org
 

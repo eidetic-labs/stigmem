@@ -72,6 +72,7 @@ check-evidence-maintenance:
 	python3 scripts/check_evidence_maintenance.py
 	python3 scripts/validate_security_evidence.py
 	python3 scripts/check_security_documentation.py
+	python3 scripts/check_release_evidence.py
 
 demo:
 	bash scripts/quickstart-verify.sh

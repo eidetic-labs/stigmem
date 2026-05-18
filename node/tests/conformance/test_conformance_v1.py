@@ -84,8 +84,17 @@ def _assert_contains(actual: Any, expected: Any, *, path: str) -> None:
         assert isinstance(actual, list), f"{path}: expected list, got {type(actual)}"
         for item in expected:
             if isinstance(item, dict):
-                match = any(all(a.get(k) == v for k, v in item.items()) for a in actual)
+                match = False
+                for candidate in actual:
+                    try:
+                        _assert_contains(candidate, item, path=f"{path}[]")
+                    except AssertionError:
+                        continue
+                    match = True
+                    break
                 assert match, f"{path}: list missing item matching {item!r}"
+            else:
+                assert item in actual, f"{path}: list missing item {item!r}"
     else:
         assert actual == expected, f"{path}: got {actual!r}, expected {expected!r}"
 

@@ -9,13 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ## [Unreleased]
 
+---
+
+## [0.9.0a2] — 2026-05-18
+
+**Status:** preview alpha — pre-stable, not for production federation across organizational boundaries. See [LIMITATIONS.md](LIMITATIONS.md).
+
+**Per-ecosystem version strings (per ADR-019):**
+- PyPI / Python: `stigmem 0.9.0a2`, `stigmem-py 0.9.0a2`, `stigmem-node 0.9.0a2`, and `stigmem-openclaw 0.9.0a2` (PEP 440). The `stigmem` meta-package now depends on the alpha.2 package line by default.
+- npm / Node: `@eidetic-labs/stigmem-ts@0.9.0-alpha.2` (semver).
+- GHCR: `ghcr.io/eidetic-labs/stigmem-node:0.9.0a2` and `:0.9.0-alpha.2`, plus `:latest` on the release tag.
+- Git tag, GitHub release, prose: `v0.9.0a2` (shorthand).
+
 ### Added
 
-- **Configurable CORS middleware for browser UI clients.** CORS remains disabled
-  by default. Operators can enable it with `STIGMEM_CORS_DEV_LOCALHOST=1` for
-  local development with any localhost port, `STIGMEM_CORS_ALLOWED_ORIGINS=<csv>`
-  for production with known origins, or `STIGMEM_CORS_ALLOWED_ORIGIN_REGEX=<regex>`
-  for advanced patterns. See the node README for full configuration reference.
+- **Configurable CORS middleware for browser UI clients.** CORS remains disabled by default. Operators can enable it with `STIGMEM_CORS_DEV_LOCALHOST=1` for local development with any localhost port, `STIGMEM_CORS_ALLOWED_ORIGINS=<csv>` for production with known origins, or `STIGMEM_CORS_ALLOWED_ORIGIN_REGEX=<regex>` for advanced patterns. See the node README for full configuration reference.
 - **Plugin registry foundation.** Main now includes the stable 22-hook surface, typed voting/filter-chain/score-delta/fire-and-forget semantics, deterministic `HookRegistry` dispatch, manual/core handler registration, minimum `PluginManifest` and capability-restricted `PluginContext`, hook-site wiring across assertion/recall/federation/auth/migration/audit paths, registry audit/metrics plumbing, `TestPluginRegistry`, focused plugin tests, and a hook-firing benchmark gate.
 - **Docs-site AI authorship disclosure.** The README and CONTRIBUTING AI-assisted authorship disclosure is now mirrored in the docs site under Community / Disclosure & policy so adopters and reviewers can find the review-calibration guidance outside the repository root.
 - **ADR-010 modular spec foundation.** Core spec frontmatter stubs now live under `spec/specs/`, with generated `spec/PROTOCOL.md` composition metadata and a contract gate that fails on protocol-index drift.
@@ -24,8 +32,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ### Changed
 
+- **Version surfaces advanced to alpha.2.** Python, npm, FastAPI, OpenAPI, conformance, plugin fallback, Docker Compose, and release-documentation surfaces now agree on the `v0.9.0a2` line.
 - Plugin infrastructure scope is now explicit: package discovery, dependency lifecycle, health polling, operator CLI, production signing/trust, plugin author/operator docs, and full plugin migration lifecycle/checksum tracking remain future alpha-series work.
 - Grade duplication cleanup now keeps `pnpm run grade:duplication` under the Phase A scoring threshold by replacing duplicated experimental status boilerplate with shared gate language, removing a duplicate Helm chart copy, and delegating the OpenClaw skill adapter to the packaged `stigmem-openclaw` implementation.
+
+### Security
+
+- Dependency and static-analysis release gates are clean for alpha.2: Dependabot alerts, CodeQL alerts, Python dependency audit, npm audit, and pnpm audit all report no open vulnerabilities at release-prep time.
 
 ---
 

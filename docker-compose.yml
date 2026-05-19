@@ -1,7 +1,7 @@
 # Two-node stigmem federation quickstart.
 #
 # Default behavior: pull pre-built multi-arch images from GHCR
-# (ghcr.io/eidetic-labs/stigmem-node:0.9.0a1). Falls back to local
+# (ghcr.io/eidetic-labs/stigmem-node:0.9.0a2). Falls back to local
 # build from node/Dockerfile if the image can't be pulled (e.g.,
 # pre-first-publish working copy, or in air-gapped environments).
 #
@@ -10,7 +10,7 @@
 # Contributor usage:
 #   docker compose up --build -d          # forces local rebuild
 #
-# After v0.9.0a1 publishes, the image: tag below is the canonical
+# After v0.9.0a2 publishes, the image: tag below is the canonical
 # artifact. Bump it on each release per docs/internal/release-cadence.md.
 #
 # Why a pinned version tag (and not :latest, :edge, or :<sha>)?
@@ -35,7 +35,7 @@
 # STIGMEM_FEDERATION_INSECURE.
 services:
   node-a:
-    image: ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
+    image: ghcr.io/eidetic-labs/stigmem-node:0.9.0a2
     build:
       context: .
       dockerfile: node/Dockerfile
@@ -67,7 +67,7 @@ services:
       start_period: 5s
 
   node-b:
-    image: ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
+    image: ghcr.io/eidetic-labs/stigmem-node:0.9.0a2
     build:
       context: .
       dockerfile: node/Dockerfile

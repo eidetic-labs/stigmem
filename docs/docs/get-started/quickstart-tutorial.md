@@ -202,8 +202,8 @@ jq . /tmp/demo-attack.json
 The transcript records the gate command, exit code, elapsed time, and expected
 scenario outcomes. It does not contain secrets or private keys.
 
-:::caution Helm / Kubernetes is deferred in v0.9.0a1
-The Helm chart has been moved to [`experimental/deploy-helm/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-helm) per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md). It remains buildable but is unsupported until the [ADR-008 reintroduction gates](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) pass. The supported v0.9.0a1 deployment surface is Docker Compose (above).
+:::caution Helm / Kubernetes is deferred in v0.9.0a2
+The Helm chart has been moved to [`experimental/deploy-helm/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-helm) per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md). It remains buildable but is unsupported until the [ADR-008 reintroduction gates](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) pass. The supported v0.9.0a2 deployment surface is Docker Compose (above).
 :::
 
 :::tip Key generation

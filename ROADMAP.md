@@ -2,8 +2,8 @@
 
 > Public roadmap for stigmem. Milestone-gated, not time-gated — version lines complete when their exit criteria are met.
 >
-> **Current build:** v0.9.0a1 (first build; per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
-> **Last updated:** 2026-05-17.
+> **Current build:** v0.9.0a2 (release-prep branch; per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
+> **Last updated:** 2026-05-18.
 
 ---
 

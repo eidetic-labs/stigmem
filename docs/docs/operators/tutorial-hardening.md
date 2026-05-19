@@ -12,7 +12,7 @@ audience: Integrator
 **Outcome:** a running Stigmem node with mTLS federation, rotated Ed25519 identity and issuer keys, per-principal quotas tuned to your baseline traffic, the hardened distroless container image, and an operator plan for immutable evidence.
 
 **Prerequisites:**
-- A Stigmem node running the v0.9.0a1 reference image (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a1`). For hardened production, pin to a digest (`@sha256:<digest>`) instead — see the [tag-selection guide](./deployment/install#image-tags).
+- A Stigmem node running the v0.9.0a2 reference image (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a2`). For hardened production, pin to a digest (`@sha256:<digest>`) instead — see the [tag-selection guide](./deployment/install#image-tags).
 - Docker Compose installed (`docker compose version`).
 - `openssl`, `curl`, `jq` available.
 - Admin API key (`STIGMEM_ADMIN_KEY`).
@@ -287,18 +287,18 @@ Store `AUDIT_KEY` in your secrets manager and configure your SIEM to poll `/v1/a
 
 ## Step 7 — Switch to the hardened container image
 
-The v0.9.0a1 reference image runs as UID/GID 65532 (non-root) on a distroless base with a read-only root filesystem and a custom seccomp profile.
+The v0.9.0a2 reference image runs as UID/GID 65532 (non-root) on a distroless base with a read-only root filesystem and a custom seccomp profile.
 
 **Pull and verify the image:**
 
 ```bash
-docker pull ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
+docker pull ghcr.io/eidetic-labs/stigmem-node:0.9.0a2
 
 # Verify the Sigstore keyless signature
 cosign verify \
   --certificate-identity-regexp "https://github.com/eidetic-labs/stigmem/.github/workflows/publish.yml" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
+  ghcr.io/eidetic-labs/stigmem-node:0.9.0a2
 ```
 
 **Run with the full security posture:**
@@ -319,7 +319,7 @@ docker run -d \
   -e STIGMEM_TLS_CA_BUNDLE=/tls/ca.crt \
   -v /etc/stigmem/tls:/tls:ro \
   -p 8765:8765 \
-  ghcr.io/eidetic-labs/stigmem-node:0.9.0a1
+  ghcr.io/eidetic-labs/stigmem-node:0.9.0a2
 ```
 
 Or use the deploy Compose recipe, which applies the same flags automatically:

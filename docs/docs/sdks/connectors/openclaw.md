@@ -46,9 +46,9 @@ is needed beyond `stigmem-py` (declared in the install spec).
 For direct package installs outside ClawHub:
 
 ```bash
-uv add "stigmem-py>=0.9.0a1,<1.0.0"
+uv add "stigmem-py>=0.9.0a2,<1.0.0"
 # or
-pip install --pre "stigmem-py>=0.9.0a1,<1.0.0"
+pip install --pre "stigmem-py>=0.9.0a2,<1.0.0"
 ```
 
 ## Environment variables

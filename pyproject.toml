@@ -1,6 +1,6 @@
 [project]
 name = "stigmem"
-version = "0.9.0a1"
+version = "0.9.0a2"
 description = "Stigmem — federated knowledge fabric for AI agents (meta-package)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,18 +23,18 @@ classifiers = [
 # Operators self-hosting a node use `pip install stigmem[node]` or
 # `pip install stigmem-node` directly. See the install table below for extras.
 dependencies = [
-  "stigmem-py>=0.9.0a1,<1.0.0",
+  "stigmem-py>=0.9.0a2,<1.0.0",
 ]
 
 [project.optional-dependencies]
 # pip install stigmem[node] → SDK + reference node service
-node = ["stigmem-node>=0.9.0a1,<1.0.0"]
+node = ["stigmem-node>=0.9.0a2,<1.0.0"]
 # pip install stigmem[openclaw] → SDK + OpenClaw adapter
-openclaw = ["stigmem-openclaw>=0.9.0a1,<1.0.0"]
+openclaw = ["stigmem-openclaw>=0.9.0a2,<1.0.0"]
 # pip install stigmem[all] → everything published from this monorepo
 all = [
-  "stigmem-node>=0.9.0a1,<1.0.0",
-  "stigmem-openclaw>=0.9.0a1,<1.0.0",
+  "stigmem-node>=0.9.0a2,<1.0.0",
+  "stigmem-openclaw>=0.9.0a2,<1.0.0",
 ]
 
 [project.urls]

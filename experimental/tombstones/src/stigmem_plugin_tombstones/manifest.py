@@ -9,7 +9,7 @@ from .config import TombstoneConfig, load_config_from_env
 
 PLUGIN_NAME = "stigmem-plugin-tombstones"
 PLUGIN_VERSION = "0.1.0"
-REQUIRES_STIGMEM = ">=0.9.0a1"
+REQUIRES_STIGMEM = ">=0.9.0a2"
 
 
 def plugin_manifest() -> PluginManifest:

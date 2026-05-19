@@ -16,7 +16,7 @@ class PluginManifest(BaseModel):
 
     name: str = Field(pattern=r"^[a-z][a-z0-9-]{2,63}$")
     version: str = Field(pattern=r"^\d+\.\d+\.\d+(?:[-+][a-zA-Z0-9.-]+)?$")
-    requires_stigmem: str = ">=0.9.0a1"
+    requires_stigmem: str = ">=0.9.0a2"
     capabilities: frozenset[str] = frozenset()
     async_safe: bool = True
     hooks: dict[str, Callable[..., Any]] = Field(default_factory=dict)

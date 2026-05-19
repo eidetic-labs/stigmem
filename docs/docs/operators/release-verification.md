@@ -24,7 +24,7 @@ digest rather than mutable tag.
 
 ```bash
 IMAGE=ghcr.io/eidetic-labs/stigmem-node
-VERSION=0.9.0a1
+VERSION=0.9.0a2
 DIGEST="$(crane digest "$IMAGE:$VERSION")"
 REF="$IMAGE@$DIGEST"
 ```
@@ -84,7 +84,7 @@ verify the package provenance in npm points back to
 `eidetic-labs/stigmem`, `publish.yml`, and the release tag.
 
 ```bash
-npm view @eidetic-labs/stigmem-ts@0.9.0-alpha.1 dist.integrity dist.tarball
+npm view @eidetic-labs/stigmem-ts@0.9.0-alpha.2 dist.integrity dist.tarball
 ```
 
 For PyPI packages, use the exact versions from the release notes and verify that
@@ -92,7 +92,7 @@ the PyPI project publishing metadata shows the GitHub Trusted Publisher for
 `eidetic-labs/stigmem` and `.github/workflows/publish.yml`.
 
 ```bash
-python -m pip download --no-deps --dest /tmp/stigmem-release stigmem-py==0.9.0a1
+python -m pip download --no-deps --dest /tmp/stigmem-release stigmem-py==0.9.0a2
 python -m pip hash /tmp/stigmem-release/*
 ```
 

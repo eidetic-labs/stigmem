@@ -97,6 +97,8 @@ else
 fi
 NODE_A="http://localhost:${STIGMEM_NODE_A_HOST_PORT}"
 NODE_B="http://localhost:${STIGMEM_NODE_B_HOST_PORT}"
+NODE_A_ADMIN_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+NODE_B_ADMIN_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
 
 # ---- pre-flight: clear stale state -------------------------------------------
 #
@@ -139,7 +141,7 @@ ok "node-b node_id: $NODE_B_ID"
 
 # ---- step 3: federation handshake (both directions) -------------------------
 
-log "Step 3 — Peer handshake (both directions)"
+log "Step 3 — Peer handshake and approval (both directions)"
 CONTAINER_A=$(docker compose ps --format '{{.Name}}' | grep node-a | head -1)
 CONTAINER_B=$(docker compose ps --format '{{.Name}}' | grep node-b | head -1)
 [[ -n "$CONTAINER_A" ]] || fail "Could not find node-a container"
@@ -147,19 +149,73 @@ CONTAINER_B=$(docker compose ps --format '{{.Name}}' | grep node-b | head -1)
 ok "node-a container: $CONTAINER_A"
 ok "node-b container: $CONTAINER_B"
 
-log "  Registering node-a with node-b…"
+log "  Bootstrapping local admin-federation keys for peer approval…"
 docker exec "$CONTAINER_A" \
+    stigmem auth bootstrap-key \
+        --key "$NODE_A_ADMIN_KEY" \
+        --entity-uri agent:quickstart-node-a-admin \
+        --permissions admin,admin:federation,federate,write,read >/dev/null 2>&1
+docker exec "$CONTAINER_B" \
+    stigmem auth bootstrap-key \
+        --key "$NODE_B_ADMIN_KEY" \
+        --entity-uri agent:quickstart-node-b-admin \
+        --permissions admin,admin:federation,federate,write,read >/dev/null 2>&1
+
+approve_peer() {
+    local registrar_url="$1" registrar_key="$2" peer_node_id="$3" peer_pubkey="$4"
+    local peer_id fingerprint
+
+    peer_id=$(curl -sf "$registrar_url/v1/federation/peers" \
+        -H "Authorization: Bearer $registrar_key" \
+        | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+for p in d.get('peers', []):
+    if p.get('node_id') == '$peer_node_id':
+        print(p['peer_id'])
+        break
+")
+    [[ -n "$peer_id" ]] || fail "Could not find pending peer for $peer_node_id"
+
+    fingerprint=$(python3 -c "import hashlib; print('sha256:' + hashlib.sha256('$peer_pubkey'.encode()).hexdigest())")
+    curl -sf -X POST "$registrar_url/v1/federation/peers/$peer_id/approve" \
+        -H "Authorization: Bearer $registrar_key" \
+        -H 'Content-Type: application/json' \
+        -d "{\"pubkey_fingerprint\":\"$fingerprint\"}" >/dev/null
+}
+
+log "  Registering node-a with node-b…"
+set +e
+REGISTER_A_OUT=$(docker exec "$CONTAINER_A" \
     stigmem federation register-peer \
         --local-url  http://node-a:8765 \
         --remote-url http://node-b:8765 \
-        --scopes company,public
+        --scopes company,public \
+        --api-key "$NODE_B_ADMIN_KEY" 2>&1)
+REGISTER_A_STATUS=$?
+set -e
+if [[ "$REGISTER_A_STATUS" -ne 0 && "$REGISTER_A_OUT" != *"pending_approval"* ]]; then
+    echo "$REGISTER_A_OUT" >&2
+    fail "node-a registration with node-b failed"
+fi
+approve_peer "$NODE_B" "$NODE_B_ADMIN_KEY" "$NODE_A_ID" "$(curl -sf "$NODE_A/.well-known/stigmem" | python3 -c "import sys,json; print(json.load(sys.stdin)['federation_pubkey'])")"
 
 log "  Registering node-b with node-a…"
-docker exec "$CONTAINER_B" \
+set +e
+REGISTER_B_OUT=$(docker exec "$CONTAINER_B" \
     stigmem federation register-peer \
         --local-url  http://node-b:8765 \
         --remote-url http://node-a:8765 \
-        --scopes company,public
+        --scopes company,public \
+        --api-key "$NODE_A_ADMIN_KEY" 2>&1)
+REGISTER_B_STATUS=$?
+set -e
+if [[ "$REGISTER_B_STATUS" -ne 0 && "$REGISTER_B_OUT" != *"pending_approval"* ]]; then
+    echo "$REGISTER_B_OUT" >&2
+    fail "node-b registration with node-a failed"
+fi
+approve_peer "$NODE_A" "$NODE_A_ADMIN_KEY" "$NODE_B_ID" "$(curl -sf "$NODE_B/.well-known/stigmem" | python3 -c "import sys,json; print(json.load(sys.stdin)['federation_pubkey'])")"
+ok "Peers registered and approved"
 
 # ---- step 4: assert fact on node-a ------------------------------------------
 

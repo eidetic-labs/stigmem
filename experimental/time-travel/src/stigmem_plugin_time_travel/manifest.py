@@ -9,7 +9,7 @@ from .config import TimeTravelConfig
 
 PLUGIN_NAME = "stigmem-plugin-time-travel"
 PLUGIN_VERSION = "0.1.0"
-REQUIRES_STIGMEM = ">=0.9.0a1"
+REQUIRES_STIGMEM = ">=0.9.0a2"
 
 
 def plugin_manifest() -> PluginManifest:

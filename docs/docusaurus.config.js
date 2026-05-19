@@ -41,7 +41,7 @@ const config = {
           sidebarPath: './sidebars.js',
           docItemComponent: '@theme/ApiItem',
           remarkPlugins: [remarkGlossaryLink, remarkSpecLink],
-          // Single-version mode for v0.9.0a1 (canonical first build per
+          // Single-version mode for the current v0.9.0 alpha line (canonical first build per
           // ADR-001 + ADR-019). Pre-reset versioned snapshots (v0.2, v1.1)
           // and the v2.0-draft "current" label labeled internal development
           // checkpoints, not tagged releases. Snapshots preserved at
@@ -54,9 +54,9 @@ const config = {
           // policy).
           versions: {
             current: {
-              label: 'v0.9.0a1',
+              label: 'v0.9.0a2',
               badge: true,
-              // banner: 'none' — v0.9.0a1 was published 2026-05-10
+              // banner: 'none' — v0.9.0a2 is the current preview-alpha docs line
               // (PyPI: stigmem, stigmem-py, stigmem-node, stigmem-openclaw;
               // npm: @eidetic-labs/stigmem-ts; GHCR: stigmem-node).
               // The label remains a preview-alpha (no stability guarantee
@@ -113,7 +113,7 @@ const config = {
     [
       '@docusaurus/plugin-client-redirects',
       {
-        // Redirects under v0.9.0a1 single-version mode. The entries below
+        // Redirects under preview-alpha single-version mode. The entries below
         // cover URLs in already-published artifact metadata plus the most
         // likely external-link patterns that survived the v1.0 retraction.
         // Archived version snapshots live in docs/archive/snapshots/ as repo

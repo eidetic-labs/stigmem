@@ -48,13 +48,13 @@ We follow coordinated disclosure. We ask reporters to give us 90 days before pub
 
 ---
 
-## Security Posture — v0.9.0a1 (2026-05-08; updated 2026-05-12)
+## Security Posture — v0.9.0a2 (2026-05-18)
 
-> **Posture-reset note.** Stigmem's `v1.0` announcement was withdrawn on 2026-05-08; the canonical version line was reset to `v0.9.0a1` per [ADR-001](docs/adr/001-versioning.md) and [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). The dependency-alert triage in this section was originally compiled for `the pre-reset v1.0-rc snapshot` on 2026-05-03 and is **carried forward to v0.9.0a1** because the underlying dependency upgrades remain in effect — the same or newer fixed package versions that resolved the alerts at the pre-reset v1.0-rc snapshot are installed at v0.9.0a1. The supported-version posture changed (see "Supported Versions" above); the dependency-fix evidence did not.
+> **Posture-reset note.** Stigmem's `v1.0` announcement was withdrawn on 2026-05-08; the canonical version line was reset to `v0.9.0a1` per [ADR-001](docs/adr/001-versioning.md) and [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). The dependency-alert triage in this section was originally compiled for `the pre-reset v1.0-rc snapshot` on 2026-05-03 and is **carried forward to v0.9.0a2** because the underlying dependency upgrades remain in effect — the same or newer fixed package versions that resolved the alerts at the pre-reset v1.0-rc snapshot are installed at v0.9.0a2. The supported-version posture changed (see "Supported Versions" above); the dependency-fix evidence did not.
 >
-> **Open security gaps named explicitly:** several controls our threat model identifies as required for stable production — mTLS-default federation, persistent audit log, per-principal rate limits, capability-level validation for cross-org instructions, bounded HLC skew enforcement, the storage-immutability stack ([ADR-016](docs/adr/016-storage-immutability-enforcement.md)) — are scheduled for the v0.9.0bN beta series and are **not yet in effect at v0.9.0a1**. Adopters running federation across organizational boundaries should wait for the v0.9.0bN beta series per [LIMITATIONS.md](LIMITATIONS.md).
+> **Open security gaps named explicitly:** several controls our threat model identifies as required for stable production — mTLS-default federation, persistent audit log, per-principal rate limits, capability-level validation for cross-org instructions, bounded HLC skew enforcement, the storage-immutability stack ([ADR-016](docs/adr/016-storage-immutability-enforcement.md)) — are scheduled for the v0.9.0bN beta series and are **not yet in effect at v0.9.0a2**. Adopters running federation across organizational boundaries should wait for the v0.9.0bN beta series per [LIMITATIONS.md](LIMITATIONS.md).
 
-This section documents the current security posture of the stigmem `v0.9.0a1` release, including Dependabot and CodeQL triage carried forward from the 2026-05-03 pre-reset v1.0-rc snapshot plus follow-up dependency patches through 2026-05-12.
+This section documents the current security posture of the stigmem `v0.9.0a2` release, including Dependabot and CodeQL triage carried forward from the 2026-05-03 pre-reset v1.0-rc snapshot plus follow-up dependency patches through 2026-05-18.
 
 ### Summary
 

@@ -46,10 +46,14 @@ For the full two-node federation walk-through (peer handshake, assert a fact, ve
 |----------|---------|-------------|
 | `STIGMEM_FEDERATION_ENABLED` | `true` | Enable/disable federation pull loop |
 | `STIGMEM_NODE_URL` | (container URL) | Public URL of this node (used in PeerDeclarations) |
+| `STIGMEM_FEDERATION_INSECURE` | `1` | Local quickstart-only plaintext federation acknowledgement |
+| `STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK` | `1` | Allows local Docker service DNS names (`node-a`, `node-b`) for the plaintext demo |
 | `STIGMEM_FEDERATION_PULL_INTERVAL_S` | `30` | Seconds between pull cycles |
 | `STIGMEM_SECRET_KEY` | auto-generated | Ed25519 private key seed — persist this across restarts |
 
 To customize, copy `docker-compose.yml` and edit the `environment:` block before running.
+For production federation, remove both insecure local-dev flags and configure
+mTLS as described in [mTLS Federation Transport](../security/mtls.md).
 
 ## 4-node topology (soak / staging)
 

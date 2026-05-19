@@ -21,7 +21,7 @@ def test_package_readme_does_not_render_pre_reset_changelog() -> None:
 def test_package_dependency_stays_on_active_alpha_line() -> None:
     pyproject = tomllib.loads((_OPENCLAW_ROOT / "pyproject.toml").read_text())
 
-    assert "stigmem-py>=0.9.0a1,<1.0.0" in pyproject["project"]["dependencies"]
+    assert "stigmem-py>=0.9.0a2,<1.0.0" in pyproject["project"]["dependencies"]
 
 
 def test_clawhub_skill_keeps_alpha_warning_and_limitation_link() -> None:

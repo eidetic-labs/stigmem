@@ -63,17 +63,23 @@ def _enforce_federation_transport_security() -> None:
             "STIGMEM_FEDERATION_INSECURE=1 only for local/dev/test federation."
         )
 
-    if not _node_url_is_loopback(settings.node_url):
+    if not _node_url_is_loopback(settings.node_url) and not (
+        settings.local_dev_allow_insecure_non_loopback
+    ):
         raise RuntimeError(
             "STIGMEM_FEDERATION_INSECURE=1 is only permitted when node_url is "
             f"bound to 127.0.0.1 or localhost. Got node_url={settings.node_url!r}. "
-            "Configure mTLS for any non-loopback deployment."
+            "Configure mTLS for any non-loopback deployment, or set "
+            "STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK=1 only for local "
+            "Docker/dev networks."
         )
 
     logger.warning(
         "SECURITY WARNING: federation is running without mTLS because "
         "STIGMEM_FEDERATION_INSECURE=1 is set. This is only allowed because "
-        "node_url is a loopback address. Use this only for local/dev/test."
+        "node_url is a loopback address or "
+        "STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK=1 is set. Use this only "
+        "for local/dev/test."
     )
 
 
@@ -81,17 +87,22 @@ def _enforce_auth_required_in_production() -> None:
     """Refuse to run unauthenticated outside loopback."""
     if settings.auth_required:
         return
-    if not _node_url_is_loopback(settings.node_url):
+    if not _node_url_is_loopback(settings.node_url) and not (
+        settings.local_dev_allow_insecure_non_loopback
+    ):
         raise RuntimeError(
             "STIGMEM_AUTH_REQUIRED=false is only permitted when node_url is "
             f"bound to 127.0.0.1 or localhost. Got node_url={settings.node_url!r}. "
             "Anonymous identity has read/write/federate permissions; never expose "
-            "this configuration to a network."
+            "this configuration to a network. Set "
+            "STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK=1 only for local "
+            "Docker/dev networks."
         )
     logger.warning(
         "SECURITY WARNING: STIGMEM_AUTH_REQUIRED=false. Anonymous identity has "
         "full read/write/federate permissions. This is only allowed because "
-        "node_url is a loopback address."
+        "node_url is a loopback address or "
+        "STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK=1 is set."
     )
 
 

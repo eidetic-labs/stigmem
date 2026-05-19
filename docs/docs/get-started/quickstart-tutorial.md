@@ -44,6 +44,12 @@ The quickstart starts two services:
 | `node-a` | stigmem node | 8765 |
 | `node-b` | stigmem node | 8766 |
 
+The compose file is intentionally local and plaintext. It sets
+`STIGMEM_FEDERATION_INSECURE=1` plus
+`STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK=1` because containers address
+each other with Docker service DNS names instead of `localhost`. Do not carry
+those flags into production; use mTLS for any deployed federation.
+
 If ports 8765/8766 are busy, the demo script automatically selects free host
 ports starting at 18765.
 
@@ -212,19 +218,23 @@ Generate Ed25519 keypairs with `python3 infra/soak/keys.py`. Keys must be base64
 
 ## Peer registration internals
 
-The demo registers each direction by running the CLI inside each node container:
+The demo bootstraps local-only admin-federation keys inside each fresh
+container, registers each direction by running the CLI, then approves each
+pending peer with its public-key fingerprint:
 
 ```bash
 stigmem federation register-peer \
   --local-url  http://node-a:8765 \
   --remote-url http://node-b:8765 \
-  --scopes company,public
+  --scopes company,public \
+  --api-key "$NODE_B_ADMIN_KEY"
 ```
 
 The receiving node fetches the sender's `/.well-known/stigmem`, verifies the
-federation public key, and stores an active peer record. HTTP 409 means a prior
-run already registered that peer; the demo clears volumes before starting so the
-handshake is deterministic.
+federation public key, and stores a pending peer record. The script approves the
+peer after matching the SHA-256 fingerprint of the advertised public key. HTTP
+409 means a prior run already registered that peer; the demo clears volumes
+before starting so the handshake is deterministic.
 
 ### Environment overrides
 

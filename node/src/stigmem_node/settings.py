@@ -57,6 +57,9 @@ class Settings(BaseSettings):
     # Explicit dev/test escape hatch for federation without mTLS. Production
     # federation should leave this false and configure STIGMEM_TLS_* instead.
     federation_insecure: bool = False
+    # Additional acknowledgement for local Docker/dev networks whose service DNS
+    # names are not loopback. Never set in production.
+    local_dev_allow_insecure_non_loopback: bool = False
     # Nonce window: how long (seconds) a nonce is kept to detect replays
     # (spec §6.6, default 5 min).
     federation_nonce_window_s: int = 300

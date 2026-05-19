@@ -45,6 +45,11 @@ and the TLS cert/key paths are unset, the node refuses to start unless
 single-machine tests or development fixtures. It does not provide peer
 authentication and is not a production setting.
 
+When a local Docker demo uses service DNS names such as `node-a` or `node-b`,
+the node also requires `STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK=1`.
+That second acknowledgement is only for local Docker/dev networks; production
+non-loopback federation must use mTLS.
+
 ### SAN validation (Spec-10-Hardening.2.4)
 
 After each successful handshake, the node verifies that the peer certificate's `subjectAltName` contains a **URI SAN** matching the peer's `entity_uri` as declared in its org manifest (`/.well-known/stigmem-manifest.json`).  Connections where the SAN does not match are rejected with a structured JSON error before any federation data is exchanged.

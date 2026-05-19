@@ -456,6 +456,34 @@ def test_federation_insecure_opt_in_rejects_non_loopback(
         pass
 
 
+def test_federation_insecure_opt_in_allows_acknowledged_local_dev_network(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Local Docker service DNS can run plaintext only with the extra dev ack."""
+    from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
+
+    fake_settings = settings_module.Settings(
+        db_path=str(tmp_path / "fed_insecure_local_dev_network.db"),
+        federation_enabled=True,
+        federation_insecure=True,
+        local_dev_allow_insecure_non_loopback=True,
+        node_url="http://node-a:8765",
+    )
+    monkeypatch.setattr(settings_module, "settings", fake_settings)
+    monkeypatch.setattr(main_mod, "settings", fake_settings)
+
+    app = main_mod.create_app()
+    with caplog.at_level(logging.WARNING, logger="stigmem"), TestClient(app):
+        pass
+
+    assert "STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK=1" in caplog.text
+
+
 def test_auth_disabled_allows_loopback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -504,6 +532,34 @@ def test_auth_disabled_rejects_non_loopback(
     app = main_mod.create_app()
     with pytest.raises(RuntimeError, match="STIGMEM_AUTH_REQUIRED=false"), TestClient(app):
         pass
+
+
+def test_auth_disabled_allows_acknowledged_local_dev_network(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Unauthenticated Docker service DNS requires an extra local-dev ack."""
+    from fastapi.testclient import TestClient
+
+    import stigmem_node.main as main_mod
+    from stigmem_node import settings as settings_module
+
+    fake_settings = settings_module.Settings(
+        db_path=str(tmp_path / "auth_disabled_local_dev_network.db"),
+        auth_required=False,
+        local_dev_allow_insecure_non_loopback=True,
+        node_url="http://node-a:8765",
+    )
+    monkeypatch.setattr(settings_module, "settings", fake_settings)
+    monkeypatch.setattr(main_mod, "settings", fake_settings)
+
+    app = main_mod.create_app()
+    with caplog.at_level(logging.WARNING, logger="stigmem"), TestClient(app):
+        pass
+
+    assert "STIGMEM_AUTH_REQUIRED=false" in caplog.text
+    assert "STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK=1" in caplog.text
 
 
 def test_rate_limit_kill_switch_requires_ack(

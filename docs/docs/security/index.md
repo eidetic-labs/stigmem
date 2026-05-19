@@ -12,17 +12,17 @@ sidebar_position: 1
 
 ---
 
-## Risk register status (v0.9.0a1)
+## Risk register status (v0.9.0a2)
 
 | Status | Count | Description |
 |---|---|---|
 | **Mitigated** | 10 | mTLS, quotas, key max-age, audit log, replay fuzz, capability tokens, container hardening, and R-19 HLC skew bounds — see the [threat model risk register](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md) |
 | **In review** | 2 | Prompt injection (R-05) and agent feedback-loop worm (R-21); structural controls now exist on `main`, sanitizer remains defense-in-depth, and live certification plus operator validation evidence are still required before marking the risks mitigated |
-| **Residual** | 0 | No risks are currently tracked as sanitizer-only residual risk in the v0.9.0a1 register |
+| **Residual** | 0 | No risks are currently tracked as sanitizer-only residual risk in the v0.9.0a2 register |
 | **Open** | 6 | R-15 instruction-scope injection, R-16 RTBF DoS, R-17 legal-hold exposure, R-18 CID field-exclusion, R-22 release supply-chain, R-23 admin-level storage tampering |
 | **Accepted** | 5 | R-04 at-rest encryption default-off, R-07 Obsidian plugin key storage, R-08 libSQL cloud backend, R-13 cloud embedding data residency, R-20 cloud embedding poisoning |
 
-**The most-severe new structural risk in v0.9.0a1 is R-23** (admin-level storage tampering): an attacker with admin privileges on a stigmem node can — without [ADR-016](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/016-storage-immutability-enforcement.md)'s mitigations — overwrite stored facts, bypassing [ADR-003](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)'s prompt-injection trust boundary by silently changing `interpret_as` from `content` to `instruction` at the storage layer. Mitigation is the ADR-016 stack (L1-L5: append-only journal, SQLite triggers, CIDs per [ADR-017](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md), local hash chain, Sigstore Rekor anchor). Targeted: the v0.9.0bN beta series.
+**The most-severe structural risk carried into v0.9.0a2 is R-23** (admin-level storage tampering): an attacker with admin privileges on a stigmem node can — without [ADR-016](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/016-storage-immutability-enforcement.md)'s mitigations — overwrite stored facts, bypassing [ADR-003](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/003-prompt-injection.md)'s prompt-injection trust boundary by silently changing `interpret_as` from `content` to `instruction` at the storage layer. Mitigation is the ADR-016 stack (L1-L5: append-only journal, SQLite triggers, CIDs per [ADR-017](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md), local hash chain, Sigstore Rekor anchor). Targeted: the v0.9.0bN beta series.
 
 The second-priority new risk is R-21 (agent feedback-loop worm). Main now has
 same-session read/write provenance controls, OpenClaw handoff-target
@@ -39,13 +39,26 @@ For the trust boundary against prompt injection (L1–L6): see [ADR-003](https:/
 
 ---
 
-## v0.9.0a1 architectural posture
+## v0.9.0a2 architectural posture
 
-Per [LIMITATIONS.md §11](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md): the default install of v0.9.0a1 ships with feature-specific code in `node/src/stigmem_node/` for features deferred from v1.0 critical-path scope per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md). The routes are mounted but the features are dormant unless explicitly configured (capability tokens, migrations, manifests). Per [ADR-019](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per [ADR-011](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md).
+Per [LIMITATIONS.md §11](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md): the default install of v0.9.0a2 ships with feature-specific code in `node/src/stigmem_node/` for features deferred from v1.0 critical-path scope per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md). The routes are mounted but the features are dormant unless explicitly configured (capability tokens, migrations, manifests). Per [ADR-019](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md) iteration semantics, each v0.9.0aN extracts one cross-cutting feature into a plugin per [ADR-011](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/011-cross-cutting-extraction.md).
 
 Main now includes the 22-hook registry foundation and plugin test harness needed for extraction work. The landed foundation includes typed hook semantics, deterministic manual/core registration, minimum manifest/context/capability APIs, hook-site wiring across assertion, recall, federation, auth, migration, and audit paths, registry audit/metrics plumbing, benchmark coverage, startup package discovery, production plugin signing enforcement, and operator CLI inspection. Per-feature plugin packages remain future alpha-series work.
 
-**For v0.9.0a1 evaluators:** the user-visible default behavior matches v1.0 critical-path scope (single-tenant, no tombstones, no time-travel, no advanced ACL). Cross-cutting experimental behavior is being extracted into opt-in source packages across the v0.9.0aN line; signed/published plugin artifacts remain deferred until all planned plugins are built.
+**For v0.9.0a2 evaluators:** the user-visible default behavior matches v1.0 critical-path scope (single-tenant, no tombstones, no time-travel, no advanced ACL). Cross-cutting experimental behavior is being extracted into opt-in source packages across the v0.9.0aN line; signed/published plugin artifacts remain deferred until all planned plugins are built.
+
+## Published advisories
+
+Stigmem publishes GitHub Security Advisories for Critical and High CVSS 4.0 findings that affect a supported published artifact. The v0.9.0a2 hardening release patches the following advisory batch:
+
+| GHSA | Severity | CVSS 4.0 | Patched version |
+|---|---|---:|---|
+| [GHSA-jmfc-hfjq-pxcp](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-jmfc-hfjq-pxcp) | Critical | 9.1 | `stigmem-node 0.9.0a2` |
+| [GHSA-fp6w-8wpg-74g5](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-fp6w-8wpg-74g5) | Critical | 9.2 | `stigmem-node 0.9.0a2` |
+| [GHSA-9vp8-3hmv-8fgh](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-9vp8-3hmv-8fgh) | Critical | 9.1 | `stigmem-node 0.9.0a2` |
+| [GHSA-xh5j-xjfq-qvvx](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-xh5j-xjfq-qvvx) | High | 7.1 | `stigmem-node 0.9.0a2` |
+| [GHSA-w7pm-9g55-mxfm](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-w7pm-9g55-mxfm) | High | 7.3 | `stigmem-node 0.9.0a2` |
+| [GHSA-9pc9-4crj-mhpj](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-9pc9-4crj-mhpj) | High | 7.5 | `stigmem-node 0.9.0a2` |
 
 ---
 
@@ -86,12 +99,12 @@ security evidence at
 
 The protocol specification is the contract security depends on. It lives under Secure per ADR-005:
 
-- **[Specification index](../spec/index.md)** — section navigator with disposition table (which sections are stable in v0.9.0a1, which are deferred to `experimental/<feature>/`).
+- **[Specification index](../spec/index.md)** — section navigator with disposition table (which sections are stable in v0.9.0a2, which are deferred to `experimental/<feature>/`).
 - **[Canonical spec source](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)** — `spec/stigmem-spec-v0.9.0a1.md`. Section-by-section content review against the `node/` implementation is ongoing.
 
 ## Experimental & deferred features
 
-Many features documented in earlier checkpoints are deferred from v0.9.0a1's default install. They live in [`experimental/<feature>/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental). Alpha-series extraction may package some of them as opt-in experimental plugins; promotion into the supported surface requires the [ADR-008](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) gate process. See **[Experimental & Deferred Features](../reference/experimental-features.md)** for the canonical list.
+Many features documented in earlier checkpoints are deferred from v0.9.0a2's default install. They live in [`experimental/<feature>/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental). Alpha-series extraction may package some of them as opt-in experimental plugins; promotion into the supported surface requires the [ADR-008](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md) gate process. See **[Experimental & Deferred Features](../reference/experimental-features.md)** for the canonical list.
 
 ---
 

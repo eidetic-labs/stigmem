@@ -38,7 +38,7 @@ For the formal threat model (trust boundaries, STRIDE analysis, risk register), 
 
 | Version | Supported |
 | ------- | --------- |
-| `0.9.0a*` (the v0.9.0aN alpha series alpha — current) | Yes — pre-release; no stability guarantee. |
+| `0.9.0a*` (the v0.9.0aN alpha series — current) | Yes — pre-release; no stability guarantee. |
 | `1.0.0rc1` (retracted) | No — yanked from PyPI; see the retraction post linked from `README.md`. |
 | `< 0.9.0a1` (development checkpoints `pre-reset`–`v2.0`) | No — internal checkpoints, not tagged releases. |
 
@@ -89,7 +89,7 @@ If you conduct good-faith testing within the scope above, Eidetic Labs will not 
 
 ## Severity guidance
 
-Use CVSS v3.1 as the primary severity signal. For Stigmem-specific surfaces:
+Use CVSS 4.0 as the primary severity signal. For Stigmem-specific surfaces:
 
 | Severity | Examples |
 |---|---|
@@ -101,11 +101,38 @@ Use CVSS v3.1 as the primary severity signal. For Stigmem-specific surfaces:
 
 ---
 
-## Security posture — v0.9.0a1
+## Advisory publication
 
-> **Posture-reset note.** The 2026-05-08 reset to `v0.9.0a1` carried forward the dependency-fix posture from the withdrawn v1.0 release-candidate snapshot — the same patched package versions are still in effect. Several **threat-model** controls (mTLS-default federation, persistent audit log, per-principal rate limits, capability-level cross-org instruction validation, bounded HLC skew, the ADR-016 storage-immutability stack) are scheduled for the v0.9.0bN beta series and are **not yet in effect** at v0.9.0a1. Adopters running federation across organizational boundaries should wait for the v0.9.0bN beta series per `LIMITATIONS.md` at the repo root: [github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md). The canonical security posture lives in repo-root `SECURITY.md`; this page mirrors the dependency-alert summary.
+Stigmem publishes GitHub Security Advisories for Critical and High CVSS 4.0 findings that affect a supported published artifact once a patched version is available. Medium and Low findings are documented in release notes, security posture docs, or operator guidance unless exploitation, reporter coordination, or downstream compliance needs justify a formal advisory.
 
-The dependency-alert posture carried forward to v0.9.0a1 has **zero unaddressed Dependabot alerts**:
+The v0.9.0a2 hardening release includes six Critical/High GHSAs. Upgrade with:
+
+```bash
+pip install --upgrade --pre stigmem-node
+```
+
+or, for the meta-package install:
+
+```bash
+pip install --upgrade --pre 'stigmem[node]'
+```
+
+| GHSA | Severity | CVSS 4.0 |
+| ---- | -------- | -------- |
+| [GHSA-jmfc-hfjq-pxcp](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-jmfc-hfjq-pxcp) | Critical | 9.1 |
+| [GHSA-fp6w-8wpg-74g5](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-fp6w-8wpg-74g5) | Critical | 9.2 |
+| [GHSA-9vp8-3hmv-8fgh](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-9vp8-3hmv-8fgh) | Critical | 9.1 |
+| [GHSA-xh5j-xjfq-qvvx](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-xh5j-xjfq-qvvx) | High | 7.1 |
+| [GHSA-w7pm-9g55-mxfm](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-w7pm-9g55-mxfm) | High | 7.3 |
+| [GHSA-9pc9-4crj-mhpj](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-9pc9-4crj-mhpj) | High | 7.5 |
+
+---
+
+## Security posture — v0.9.0a2
+
+> **Posture-reset note.** The 2026-05-08 reset to `v0.9.0a1` carried forward the dependency-fix posture from the withdrawn v1.0 release-candidate snapshot — the same patched package versions are still in effect. Several **threat-model** controls (mTLS-default federation, persistent audit log, per-principal rate limits, capability-level cross-org instruction validation, bounded HLC skew, the ADR-016 storage-immutability stack) are scheduled for the v0.9.0bN beta series and are **not yet in effect** at v0.9.0a2. Adopters running federation across organizational boundaries should wait for the v0.9.0bN beta series per `LIMITATIONS.md` at the repo root: [github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md). The canonical security posture lives in repo-root `SECURITY.md`; this page mirrors the dependency-alert summary.
+
+The dependency-alert posture carried forward to v0.9.0a2 has **zero unaddressed Dependabot alerts**:
 
 | Category | Count |
 | -------- | ----- |

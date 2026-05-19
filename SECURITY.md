@@ -46,6 +46,14 @@ Out-of-scope:
 
 We follow coordinated disclosure. We ask reporters to give us 90 days before public disclosure, except for issues already being actively exploited in the wild.
 
+## Advisory Publication Policy
+
+Stigmem uses **CVSS 4.0** as the primary severity signal for GitHub Security Advisories (GHSAs). For the supported alpha line:
+
+- Critical and High vulnerabilities that affect a published artifact are disclosed with a GitHub repository security advisory after a patched version is available.
+- Medium and Low vulnerabilities are documented in release notes, security posture docs, or operator guidance unless there is known exploitation, third-party reporter coordination, or a downstream compliance need that makes a formal advisory appropriate.
+- CVE requests are optional. Stigmem reserves CVE requests for broadly deployed stable releases, known exploitation, third-party reporter coordination, or explicit partner/customer compliance needs.
+
 ---
 
 ## Security Posture — v0.9.0a2 (2026-05-18)
@@ -65,7 +73,32 @@ This section documents the current security posture of the stigmem `v0.9.0a2` re
 | CodeQL — conditional SQL-fragment assembly (false positives, closed by structural constant-SQL refactor) | Static dataflow analysis | 8 |
 | Unaddressed / escalated blockers | — | 0 |
 
-**Net result: zero unaddressed security alerts at v0.9.0a1.** Dependabot alerts are a *dependency* concern and CodeQL alerts are a *static-analysis* concern — both are separate from the threat-model risks named in the posture-reset banner above.
+**Net result: zero unaddressed security alerts at v0.9.0a2.** Dependabot alerts are a *dependency* concern and CodeQL alerts are a *static-analysis* concern — both are separate from the threat-model risks named in the posture-reset banner above.
+
+### GitHub Security Advisories — v0.9.0a2
+
+The v0.9.0a2 hardening release includes a batch of GitHub Security Advisories for Critical and High CVSS 4.0 findings identified during internal audit. All listed advisories are patched by `stigmem-node 0.9.0a2`; upgrade with:
+
+```bash
+pip install --upgrade --pre stigmem-node
+```
+
+If you install through the meta-package, use:
+
+```bash
+pip install --upgrade --pre 'stigmem[node]'
+```
+
+| GHSA | Severity | CVSS 4.0 | Summary |
+| ---- | -------- | -------- | ------- |
+| [GHSA-jmfc-hfjq-pxcp](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-jmfc-hfjq-pxcp) | Critical | 9.1 | Federation insecure transport settings may allow non-loopback cleartext federation |
+| [GHSA-fp6w-8wpg-74g5](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-fp6w-8wpg-74g5) | Critical | 9.2 | Auth-disabled deployments may grant broad anonymous access outside loopback |
+| [GHSA-9vp8-3hmv-8fgh](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-9vp8-3hmv-8fgh) | Critical | 9.1 | Federation peer registration lacked explicit out-of-band approval |
+| [GHSA-xh5j-xjfq-qvvx](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-xh5j-xjfq-qvvx) | High | 7.1 | Federation peer token timestamp validation may reject valid peer tokens |
+| [GHSA-w7pm-9g55-mxfm](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-w7pm-9g55-mxfm) | High | 7.3 | Unsigned plugin override could be enabled without a second explicit acknowledgment |
+| [GHSA-9pc9-4crj-mhpj](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-9pc9-4crj-mhpj) | High | 7.5 | Postgres schema identifier handling required defensive quoting |
+
+Medium and Low findings from the same internal audit are tracked in the security posture docs and release notes rather than published as formal GHSAs unless their risk profile changes.
 
 ---
 
@@ -99,7 +132,7 @@ The Next.js curator dashboard (`experimental/dashboard/`) was pinned at Next.js 
 | #2 | MEDIUM | CVE-2024-47831 | DoS via image optimization | `next@15.5.15` ≥ patched `14.2.7` |
 | #1 | HIGH | CVE-2024-46982 | Cache poisoning | `next@15.5.15` ≥ patched `14.2.10` |
 
-> **Deployment gate:** The dashboard at `experimental/dashboard/` is deferred per ADR-002 and is not deployed to production at v0.9.0a1. Even so, all CVEs above are fixed in the installed version. No deployment should occur on any prior version.
+> **Deployment gate:** The dashboard at `experimental/dashboard/` is deferred per ADR-002 and is not deployed to production at v0.9.0a2. Even so, all CVEs above are fixed in the installed version. No deployment should occur on any prior version.
 
 #### vite — 1 alert
 
@@ -201,9 +234,9 @@ The stigmem reference node (`stigmem/node/`) is implemented in Python with FastA
 
 ---
 
-### Security Controls in Effect (v0.9.0a1)
+### Security Controls in Effect (v0.9.0a2)
 
-> The controls listed here are **dependency- and code-level controls** that are in effect at v0.9.0a1. **Federation-level and threat-model-level controls** named in the posture-reset banner at the top of this section (mTLS-default, audit log, rate limits, capability validation, bounded HLC skew, storage-immutability stack) are **not yet in effect** and are scheduled for the v0.9.0bN beta series.
+> The controls listed here are **dependency- and code-level controls** that are in effect at v0.9.0a2. **Federation-level and threat-model-level controls** named in the posture-reset banner at the top of this section (mTLS-default, audit log, rate limits, capability validation, bounded HLC skew, storage-immutability stack) are **not yet in effect** and are scheduled for the v0.9.0bN beta series.
 
 - **Authentication:** API keys enforced on all write endpoints; per-scope restrictions supported by `Spec-02-Scopes-and-ACL` and `Spec-06-Capability-Tokens`.
 - **Federation:** Peer handshake uses Ed25519 signing; replay attack resistance via HLC timestamps per `Spec-05-Federation-Trust` and `Spec-11-Replay-Protection`.

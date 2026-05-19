@@ -9,6 +9,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ## [Unreleased]
 
+### Security
+
+- Document the v0.9.0a2 GitHub Security Advisory publication policy: Critical and High CVSS 4.0 findings in supported published artifacts receive GHSAs once patched; Medium and Low findings are documented in release notes or security posture docs unless their risk profile changes.
+- Add public security-doc references for the six Critical/High v0.9.0a2 advisory disclosures and the `stigmem-node 0.9.0a2` upgrade command.
+
 ---
 
 ## [0.9.0a2] — 2026-05-18

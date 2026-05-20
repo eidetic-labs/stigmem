@@ -18,9 +18,20 @@ since: 0.9.0a1
 
 # §16. Synthesis {#section-16}
 
-**Status:** Experimental / dormant source package
+<p className="stigmem-meta"><span>5 min read</span><span>Spec contributor · SDK author</span><span>Experimental · v0.9.0bN</span></p>
 
-POST /v1/synthesis — confidence-weighted current-state snapshots per entity/scope.
+<div className="stigmem-lead">
+
+**What this section covers**
+
+`POST /v1/synthesis` — a confidence-weighted summary view of the
+live facts in a scope. Where lint reports raw health findings and
+decay sweeps apply remediation, synthesis answers: *"given everything
+I know right now, what is the current state of this scope?"*
+
+</div>
+
+**Status:** Experimental / dormant source package
 
 **Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for synthesis semantics.
 
@@ -33,24 +44,19 @@ Each subsection below shows the most recent normative text from the spec source.
 > vectors (`SYNTHESIS_VECTORS`) will be finalized with D4 implementation. This section
 > will be promoted to normative in the pre-reset spec.
 
-The **synthesis** operation produces a **confidence-weighted summary view** of the live
-facts in a scope. Where lint reports raw health findings and decay sweeps apply remediation,
-synthesis answers the question: *"given everything I know right now, what is the current
-state of this scope?"*
+<div className="stigmem-keypoint">
 
-Synthesis is designed for agent consumption at context injection time: an agent querying
-`synthesize_scope("company")` gets a structured view of the most reliable current
-knowledge without needing to manually filter contradictions, expired facts, or low-confidence noise.
+**Synthesis is designed for agent context injection.**
+
+An agent querying `synthesize_scope("company")` gets a structured
+view of the most reliable current knowledge without needing to
+manually filter contradictions, expired facts, or low-confidence noise.
+
+</div>
 
 ### §16.1 SynthesisEntry Shape {#section-16-1}
 
-Each row in the synthesis response is a `SynthesisEntry` — the collapsed,
-current-state view of a single `(entity, relation, scope)` triple. Where a raw
-fact query might return ten historical assertions for "Alice's role," synthesis
-returns one entry with the highest-confidence live value. If that triple is
-contradicted (two live values competing), synthesis surfaces both via the
-`alt_value`/`alt_confidence` fields and flags `contradicted: true` so the
-consuming agent can decide whether to act on or escalate the ambiguity.
+Each row in the synthesis response is a `SynthesisEntry` — the collapsed, current-state view of a single `(entity, relation, scope)` triple. Where a raw fact query might return ten historical assertions for "Alice's role," synthesis returns one entry with the highest-confidence live value. If that triple is contradicted (two live values competing), synthesis surfaces both via the `alt_value`/`alt_confidence` fields and flags `contradicted: true` so the consuming agent can decide whether to act on or escalate the ambiguity.
 
 ```
 SynthesisEntry {
@@ -70,10 +76,12 @@ SynthesisEntry {
 
 For each `(entity, relation, scope)` triple with at least one live fact (confidence > 0.0, not expired):
 
-1. Apply contradiction resolution order (§3.3): higher confidence wins; equal confidence → higher HLC wins.
-2. If an unresolved contradiction exists, set `contradicted=true` and populate `alt_value`/`alt_confidence` with the losing fact's value and confidence.
-3. Filter by `min_confidence` (if provided): skip entries where the winning fact's confidence is below the threshold.
-4. Include the entry in the response.
+<ol className="stigmem-steps">
+<li>Apply contradiction resolution order (§3.3): higher confidence wins; equal confidence → higher HLC wins.</li>
+<li>If an unresolved contradiction exists, set <code>contradicted=true</code> and populate <code>alt_value</code>/<code>alt_confidence</code> with the losing fact's value and confidence.</li>
+<li>Filter by <code>min_confidence</code> (if provided): skip entries where the winning fact's confidence is below the threshold.</li>
+<li>Include the entry in the response.</li>
+</ol>
 
 Expired facts (`valid_until < now`) and retracted facts (`confidence=0.0`) are excluded unless `include_expired=true` is passed.
 
@@ -116,10 +124,27 @@ The `summary` array contains one `SynthesisEntry` (§16.1) per live `(entity, re
 
 #### Error responses
 
-| HTTP | Condition |
-|---|---|
-| 400 | `scope` missing or invalid; `min_confidence` out of [0.0, 1.0] range |
-| 403 | Caller's key lacks read access to the requested scope |
+<div className="stigmem-fields">
+
+<div>
+<dt>HTTP</dt>
+<dt><span className="stigmem-fields__type">Code</span></dt>
+<dd>Condition</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type">validation</span></dt>
+<dd><code>scope</code> missing or invalid; <code>min_confidence</code> out of [0.0, 1.0] range.</dd>
+</div>
+
+<div>
+<dt>403</dt>
+<dt><span className="stigmem-fields__type">authorization</span></dt>
+<dd>Caller's key lacks read access to the requested scope.</dd>
+</div>
+
+</div>
 
 ### §16.4 MCP Tool: `synthesize_scope` {#section-16-4}
 
@@ -151,18 +176,43 @@ The `summary` array contains one `SynthesisEntry` (§16.1) per live `(entity, re
 
 ### §16.5 Relationship to Lint and Decay {#section-16-5}
 
-The three the pre-reset design-partner window operational tools form a pipeline:
+The three pre-reset design-partner window operational tools form a pipeline:
 
-| Tool | Question answered | Writes? |
-|---|---|---|
-| `lint_scope` | "What is wrong?" | No |
-| `decay_scope` | "Apply configured remediation" | Yes (retractions/confidence updates) |
-| `synthesize_scope` | "What do I currently know?" | No |
+<div className="stigmem-fields">
+
+<div>
+<dt>Tool</dt>
+<dt><span className="stigmem-fields__type">Writes?</span></dt>
+<dd>Question answered</dd>
+</div>
+
+<div>
+<dt><code>lint_scope</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>"What is wrong?"</dd>
+</div>
+
+<div>
+<dt><code>decay_scope</code></dt>
+<dt><span className="stigmem-fields__type">yes</span></dt>
+<dd>"Apply configured remediation" (retractions / confidence updates).</dd>
+</div>
+
+<div>
+<dt><code>synthesize_scope</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>"What do I currently know?"</dd>
+</div>
+
+</div>
 
 The typical agent workflow:
-1. Boot: call `synthesize_scope` to get current reliable knowledge for context injection.
-2. Background (periodic): call `lint_scope` to identify health issues; optionally call `decay_scope` to apply configured policies.
-3. Resolution: call `POST /v1/conflicts/:id/resolve` for contradictions surfaced by lint.
+
+<ol className="stigmem-steps">
+<li>Boot: call <code>synthesize_scope</code> to get current reliable knowledge for context injection.</li>
+<li>Background (periodic): call <code>lint_scope</code> to identify health issues; optionally call <code>decay_scope</code> to apply configured policies.</li>
+<li>Resolution: call <code>POST /v1/conflicts/:id/resolve</code> for contradictions surfaced by lint.</li>
+</ol>
 
 ---
 

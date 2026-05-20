@@ -18,9 +18,21 @@ since: 0.9.0a1
 
 # §17. Memory Garden {#section-17}
 
-**Status:** Experimental / opt-in source package on `main`
+<p className="stigmem-meta"><span>4 min read</span><span>Spec contributor · Operator</span><span>Experimental · v0.9.0bN</span></p>
 
-Named, ACL'd partitions of the fact store with admin/writer/reader role model.
+<div className="stigmem-lead">
+
+**What this section covers**
+
+Named, ACL'd logical partitions of the fact store that sit *inside* a
+scope. Memory Gardens add fine-grained, membership-based read/write
+control on top of the coarse `local | team | company | public`
+boundary. Basic ACL is owned by `Spec-02-Scopes-and-ACL`; advanced
+behavior is staged here.
+
+</div>
+
+**Status:** Experimental / opt-in source package on `main`
 
 **Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for advanced Memory Garden ACL semantics.
 
@@ -31,10 +43,23 @@ Each subsection below shows the most recent normative text from the spec source.
 ### §17.1 Motivation {#section-17-1}
 
 The existing scope model (`local | team | company | public`) is a coarse, operator-level boundary. There is no way to create a named partition shared among a specific set of principals (e.g. "Project Atlas team: Alice + CTO agent + Codex assistant") without either:
-- Exposing all those facts to the entire `company` scope, or
-- Running a separate node.
 
-**Memory Gardens** fill this gap. A garden is a named, ACL'd logical partition that sits *inside* a scope. It adds fine-grained, membership-based read/write control on top of the existing scope model.
+<div className="stigmem-grid">
+
+<div><h4>Exposing facts</h4><p>To the entire <code>company</code> scope.</p></div>
+<div><h4>Running a separate node</h4><p>One node per partition is operationally expensive.</p></div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Memory Gardens fill this gap.**
+
+A garden is a named, ACL'd logical partition that sits *inside* a
+scope. It adds fine-grained, membership-based read/write control on
+top of the existing scope model.
+
+</div>
 
 ### §17.2 Garden Primitive {#section-17-2}
 
@@ -73,42 +98,129 @@ Garden ACL is checked at fact read and write time, in addition to (not instead o
 
 **Write access:**
 
-| Condition | Result |
-|-----------|--------|
-| `garden_id` not provided | Normal scope enforcement only; fact is not garden-tagged. |
-| `garden_id` provided; caller is `admin` or `writer` in garden | Allowed. |
-| `garden_id` provided; caller is `reader` in garden | `HTTP 403 write permission required` |
-| `garden_id` provided; caller not a member | `HTTP 403 not a member of this garden` |
-| `garden_id` provided; fact's `scope` ≠ garden's `scope` | `HTTP 422 scope mismatch` |
-| `garden_id` provided; garden not found | `HTTP 404 garden not found` |
+<div className="stigmem-fields">
+
+<div>
+<dt>Condition</dt>
+<dt><span className="stigmem-fields__type">Result</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt><code>garden_id</code> not provided</dt>
+<dt><span className="stigmem-fields__type">scope-only</span></dt>
+<dd>Normal scope enforcement only; fact is not garden-tagged.</dd>
+</div>
+
+<div>
+<dt>caller is <code>admin</code>/<code>writer</code></dt>
+<dt><span className="stigmem-fields__type">allowed</span></dt>
+<dd>Write succeeds if scopes match.</dd>
+</div>
+
+<div>
+<dt>caller is <code>reader</code></dt>
+<dt><span className="stigmem-fields__type">HTTP 403</span></dt>
+<dd>Write permission required.</dd>
+</div>
+
+<div>
+<dt>caller not a member</dt>
+<dt><span className="stigmem-fields__type">HTTP 403</span></dt>
+<dd>Not a member of this garden.</dd>
+</div>
+
+<div>
+<dt>fact scope ≠ garden scope</dt>
+<dt><span className="stigmem-fields__type">HTTP 422</span></dt>
+<dd>Scope mismatch.</dd>
+</div>
+
+<div>
+<dt>garden not found</dt>
+<dt><span className="stigmem-fields__type">HTTP 404</span></dt>
+<dd>—</dd>
+</div>
+
+</div>
 
 **Read access:**
 
 A fact with `garden_id` set is returned in query results ONLY if the caller:
-1. Passes normal scope enforcement (has `read` permission), AND
-2. Holds at least `reader` role in the garden.
 
-Non-member callers do not receive an empty result — they receive `HTTP 403` when querying by `garden_id` filter. If a non-member queries by entity/relation without a `garden_id` filter, garden-tagged facts are silently excluded from results (they cannot enumerate gardens they do not belong to).
+<ol className="stigmem-steps">
+<li>Passes normal scope enforcement (has <code>read</code> permission).</li>
+<li>Holds at least <code>reader</code> role in the garden.</li>
+</ol>
+
+<div className="stigmem-keypoint">
+
+**Non-members cannot enumerate gardens they do not belong to.**
+
+When querying by `garden_id` filter, non-members receive `HTTP 403`.
+When querying by entity/relation without a `garden_id` filter,
+garden-tagged facts are silently excluded.
+
+</div>
 
 **Admin operations:**
 
-| Operation | Required role |
-|-----------|--------------|
-| Add member | `admin` |
-| Change member role | `admin` |
-| Remove member | `admin` (cannot remove the last admin) |
-| Delete garden | `admin` |
-| Read member roster | `reader` or above |
-| List accessible gardens | Any valid API key |
+<div className="stigmem-fields">
+
+<div>
+<dt>Operation</dt>
+<dt><span className="stigmem-fields__type">Required role</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt>Add member</dt>
+<dt><span className="stigmem-fields__type">admin</span></dt>
+<dd>—</dd>
+</div>
+
+<div>
+<dt>Change member role</dt>
+<dt><span className="stigmem-fields__type">admin</span></dt>
+<dd>—</dd>
+</div>
+
+<div>
+<dt>Remove member</dt>
+<dt><span className="stigmem-fields__type">admin</span></dt>
+<dd>Cannot remove the last admin.</dd>
+</div>
+
+<div>
+<dt>Delete garden</dt>
+<dt><span className="stigmem-fields__type">admin</span></dt>
+<dd>—</dd>
+</div>
+
+<div>
+<dt>Read member roster</dt>
+<dt><span className="stigmem-fields__type">reader or above</span></dt>
+<dd>—</dd>
+</div>
+
+<div>
+<dt>List accessible gardens</dt>
+<dt><span className="stigmem-fields__type">any valid API key</span></dt>
+<dd>Non-admin callers see only gardens where they are members.</dd>
+</div>
+
+</div>
 
 ### §17.4 Garden Lifecycle {#section-17-4}
 
-1. **Create:** Any principal with `write` permission on the node can create a garden. Creator is automatically `admin`.
-2. **Invite:** Garden admin adds members via `POST /v1/gardens/:id/members`.
-3. **Write facts:** Members with `writer` or `admin` role include `garden_id` in `POST /v1/facts`.
-4. **Query:** Members include `garden_id` query param in `GET /v1/facts`.
-5. **Retract:** Garden writers/admins retract facts using the normal retraction pattern (assert with `confidence=0.0`); must include the same `garden_id`.
-6. **Delete:** Garden admin deletes with `DELETE /v1/gardens/:id`. Associated facts become orphaned (garden_id becomes a dangling reference; surfaced by lint, §14).
+<ol className="stigmem-steps">
+<li><strong>Create:</strong> Any principal with <code>write</code> permission on the node can create a garden. Creator is automatically <code>admin</code>.</li>
+<li><strong>Invite:</strong> Garden admin adds members via <code>POST /v1/gardens/:id/members</code>.</li>
+<li><strong>Write facts:</strong> Members with <code>writer</code> or <code>admin</code> role include <code>garden_id</code> in <code>POST /v1/facts</code>.</li>
+<li><strong>Query:</strong> Members include <code>garden_id</code> query param in <code>GET /v1/facts</code>.</li>
+<li><strong>Retract:</strong> Garden writers/admins retract facts using the normal retraction pattern (assert with <code>confidence=0.0</code>); must include the same <code>garden_id</code>.</li>
+<li><strong>Delete:</strong> Garden admin deletes with <code>DELETE /v1/gardens/:id</code>. Associated facts become orphaned (garden_id becomes a dangling reference; surfaced by lint, §14).</li>
+</ol>
 
 ### §17.5 Relationship to Scope {#section-17-5}
 
@@ -120,9 +232,14 @@ Garden (fine, named subset):  any subset of principals within a scope
 ```
 
 A garden's `scope` field declares which scope its facts inhabit. This means:
-- A `company`-scoped garden's facts are visible to all `company`-level readers... unless they are not members (garden ACL trumps scope for garden-tagged facts).
-- A `public`-scoped garden's facts would normally federate, but garden isolation prevents federation (§6 garden isolation invariant). This is a deliberate constraint: gardens are local-first.
-- Facts without `garden_id` are unaffected by garden ACL — they continue to use scope-only access control.
+
+<div className="stigmem-grid">
+
+<div><h4>Garden ACL trumps scope</h4><p>A <code>company</code>-scoped garden's facts are not visible to every company-level reader; non-members are excluded.</p></div>
+<div><h4>Garden isolation prevents federation</h4><p>A <code>public</code>-scoped garden's facts would normally federate, but garden isolation prevents federation (§6 invariant). Gardens are local-first by design.</p></div>
+<div><h4>Untagged facts unaffected</h4><p>Facts without <code>garden_id</code> continue to use scope-only access control.</p></div>
+
+</div>
 
 ### §17.6 Conventions {#section-17-6}
 
@@ -133,6 +250,13 @@ A garden's `scope` field declares which scope its facts inhabit. This means:
 (entity=<garden_id>, relation="garden:role:<entity_uri>", value={type:"string", v:"writer"}, ...)
 ```
 
-These system facts are written automatically on membership changes and MUST NOT be modified directly by callers. The `garden:` prefix is reserved in the namespace registry (§9.1).
+<div className="stigmem-keypoint">
+
+**System facts in `garden:` MUST NOT be modified directly by callers.**
+
+These system facts are written automatically on membership changes.
+The `garden:` prefix is reserved in the namespace registry (§9.1).
+
+</div>
 
 ---

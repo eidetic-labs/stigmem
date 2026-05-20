@@ -8,9 +8,20 @@ audience: Spec
 
 # Federated Network
 
-*Audience: engineers implementing federation, deploying multi-node clusters, or reviewing `Spec-05-Federation-Trust`.*
+<p className="stigmem-meta"><span>2 min read</span><span>Federation engineer</span><span>Spec-05</span></p>
 
-Stigmem federation is pull-based: each node periodically fetches new facts from registered peers using an HLC cursor. Peering is established via mutual PeerDeclaration exchange, and replication respects scope boundaries.
+<div className="stigmem-lead">
+
+**What this page covers**
+
+Stigmem federation is pull-based: each node periodically fetches new
+facts from registered peers using an HLC cursor. Peering is
+established via mutual PeerDeclaration exchange, and replication
+respects scope boundaries.
+
+</div>
+
+**Audience:** engineers implementing federation, deploying multi-node clusters, or reviewing `Spec-05-Federation-Trust`.
 
 ## Network topology
 
@@ -33,7 +44,15 @@ graph LR
     A -. "no direct peering" .- C
 ```
 
-Peering is pair-wise and explicit. Node A federates with Node B, and Node B federates with Node C, but A and C have no direct peering. Facts flow A→B→C only if B's pull from A and C's pull from B both cover the relevant scope.
+<div className="stigmem-keypoint">
+
+**Peering is pair-wise and explicit.**
+
+Node A federates with Node B, and Node B federates with Node C, but
+A and C have no direct peering. Facts flow A→B→C only if B's pull
+from A and C's pull from B both cover the relevant scope.
+
+</div>
 
 ## Handshake sequence
 
@@ -76,9 +95,22 @@ flowchart TB
 ```
 
 Nodes enforce scope on both sides:
-- **Outbound:** facts whose scope exceeds the PeerDeclaration's `allowed_scopes` are silently dropped.
-- **Inbound:** facts whose scope exceeds what the peer is authorized to write are rejected and logged to the federation audit table.
+
+<div className="stigmem-grid">
+
+<div><h4>Outbound</h4><p>Facts whose scope exceeds the PeerDeclaration's <code>allowed_scopes</code> are silently dropped.</p></div>
+<div><h4>Inbound</h4><p>Facts whose scope exceeds what the peer is authorized to write are rejected and logged to the federation audit table.</p></div>
+
+</div>
 
 ## Conflict on reunion
 
-When two nodes write divergent values for the same `(entity, relation, scope)` during a network partition, both facts survive. On reunion the receiving node detects the contradiction and creates a conflict record (`Spec-15-Fact-Semantics`). Resolution is explicit via `POST /v1/conflicts/:id/resolve`.
+<div className="stigmem-keypoint">
+
+**When two nodes write divergent values during a partition, both facts survive.**
+
+On reunion the receiving node detects the contradiction and creates
+a conflict record (`Spec-15-Fact-Semantics`). Resolution is explicit
+via `POST /v1/conflicts/:id/resolve`.
+
+</div>

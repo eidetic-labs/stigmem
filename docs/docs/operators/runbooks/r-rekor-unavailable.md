@@ -7,15 +7,26 @@ audience: Operator
 
 # R-REKOR-UNAVAILABLE
 
-Use this runbook when fact writes continue locally but chain checkpoints cannot
-be submitted to the configured transparency log.
+<p className="stigmem-meta"><span>3 min read</span><span>On-call operator</span><span>Runbook</span></p>
 
-Trigger signals:
+<div className="stigmem-lead">
 
-- `fact_chain_checkpoints.status = 'pending'` for longer than your alert window.
-- `fact_chain_checkpoints.last_error` mentions Rekor, transparency-log, network,
-  or signing-package availability.
-- Full recall proofs show a pending checkpoint while recent writes continue.
+**When to use**
+
+Fact writes continue locally but chain checkpoints cannot be
+submitted to the configured transparency log.
+
+</div>
+
+**Trigger signals:**
+
+<div className="stigmem-grid">
+
+<div><h4>Pending checkpoint</h4><p><code>fact_chain_checkpoints.status = 'pending'</code> for longer than your alert window.</p></div>
+<div><h4>Rekor in last_error</h4><p><code>fact_chain_checkpoints.last_error</code> mentions Rekor, transparency-log, network, or signing-package availability.</p></div>
+<div><h4>Stale chain proofs</h4><p>Full recall proofs show a pending checkpoint while recent writes continue.</p></div>
+
+</div>
 
 ## Identify
 
@@ -44,41 +55,47 @@ echo "$STIGMEM_TL_REKOR_URL"
 
 ## Contain
 
-1. Keep fact writes enabled unless your deployment policy requires fail-closed
-   external witnessing. Facts remain locally chained while checkpoints retry.
-2. Preserve the pending checkpoint rows and application logs.
-3. Avoid rebuilding or truncating `fact_chain` while checkpoint submission is
-   pending.
-4. If the outage is caused by a bad Rekor URL or missing Sigstore dependency,
-   correct configuration before restarting the node.
+<ol className="stigmem-steps">
+<li>Keep fact writes enabled unless your deployment policy requires fail-closed external witnessing. Facts remain locally chained while checkpoints retry.</li>
+<li>Preserve the pending checkpoint rows and application logs.</li>
+<li>Avoid rebuilding or truncating <code>fact_chain</code> while checkpoint submission is pending.</li>
+<li>If the outage is caused by a bad Rekor URL or missing Sigstore dependency, correct configuration before restarting the node.</li>
+</ol>
 
 ## Investigate
 
-Determine whether the failure is local or external:
+<div className="stigmem-grid">
 
-- For local configuration failures, verify the configured backend, Rekor URL,
-  package extras, and outbound egress policy.
-- For public Rekor outages, check the Sigstore status page and retry later.
-- For private Rekor deployments, contact the log operator and preserve the last
-  successful `tl_log_index`.
+<div><h4>Local config failure</h4><p>Verify backend, Rekor URL, package extras, and outbound egress policy.</p></div>
+<div><h4>Public Rekor outage</h4><p>Check the Sigstore status page and retry later.</p></div>
+<div><h4>Private Rekor</h4><p>Contact the log operator and preserve the last successful <code>tl_log_index</code>.</p></div>
+
+</div>
 
 ## Recover
 
-After the transparency log is reachable again, allow the node to retry pending
-checkpoints. A healthy checkpoint has:
+After the transparency log is reachable again, allow the node to retry pending checkpoints.
 
-- `status = 'submitted'`
-- non-null `submitted_at`
-- non-null `tl_log_id`
-- non-null `tl_leaf_hash`
-- non-null `tl_log_index`
+<div className="stigmem-keypoint">
 
-Run a full recall verification request and confirm the returned `chain_proof`
-includes the latest submitted checkpoint metadata.
+**A healthy checkpoint has all of:**
+
+`status = 'submitted'`, non-null `submitted_at`, non-null `tl_log_id`,
+non-null `tl_leaf_hash`, non-null `tl_log_index`.
+
+</div>
+
+Run a full recall verification request and confirm the returned `chain_proof` includes the latest submitted checkpoint metadata.
 
 ## Communicate
 
-Tell peer operators and auditors the affected tenant, the highest locally
-covered chain sequence, the first pending checkpoint timestamp, and whether the
-gap was local configuration, network reachability, or Rekor service
-availability.
+Tell peer operators and auditors:
+
+<div className="stigmem-grid">
+
+<div><h4>Affected tenant</h4></div>
+<div><h4>Highest locally covered chain sequence</h4></div>
+<div><h4>First pending checkpoint timestamp</h4></div>
+<div><h4>Root cause class</h4><p>Local configuration, network reachability, or Rekor service availability.</p></div>
+
+</div>

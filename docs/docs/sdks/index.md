@@ -7,24 +7,56 @@ audience: Integrator
 
 # SDKs
 
+<p className="stigmem-meta"><span>1 min read</span><span>Integrator</span><span>Section overview</span></p>
+
+<div className="stigmem-lead">
+
+**What this section covers**
+
 Client libraries and integration connectors for Stigmem.
+
+</div>
 
 ## Language SDKs
 
-| Language | Package |
-|----------|---------|
-| [Python](./python.md) | `stigmem` on PyPI |
-| [TypeScript](./typescript.md) | `@stigmem/sdk` on npm |
-| [Go](https://github.com/eidetic-labs/stigmem/tree/main/experimental/sdk-go) | `github.com/eidetic-labs/stigmem-go` |
+<div className="stigmem-fields">
+
+<div>
+<dt>Language</dt>
+<dt><span className="stigmem-fields__type">Package</span></dt>
+<dd>Source</dd>
+</div>
+
+<div>
+<dt><a href="./python.md">Python</a></dt>
+<dt><span className="stigmem-fields__type">PyPI</span></dt>
+<dd><code>stigmem</code></dd>
+</div>
+
+<div>
+<dt><a href="./typescript.md">TypeScript</a></dt>
+<dt><span className="stigmem-fields__type">npm</span></dt>
+<dd><code>@stigmem/sdk</code></dd>
+</div>
+
+<div>
+<dt><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/sdk-go">Go</a></dt>
+<dt><span className="stigmem-fields__type">experimental</span></dt>
+<dd><code>github.com/eidetic-labs/stigmem-go</code></dd>
+</div>
+
+</div>
 
 ## Connectors
 
-Pre-built adapters for popular AI hosts, agent platforms, and note-taking tools.
+Pre-built adapters for popular AI hosts, agent platforms, and note-taking tools. See the [Connectors index](./connectors/index.md) for the full list.
 
-See the [Connectors index](./connectors/index.md) for the full list.
+## Integration guides
 
-## Integration Guides
+<div className="stigmem-grid">
 
-- [Intent envelopes](https://github.com/eidetic-labs/stigmem/tree/main/experimental/intent-envelope) — wrapping fact operations in typed intents
-- [Lazy instruction loading](https://github.com/eidetic-labs/stigmem/tree/main/experimental/lazy-instruction-discovery) — on-demand instruction discovery
-- [Instruction migration](https://github.com/eidetic-labs/stigmem/tree/main/experimental/lazy-instruction-discovery) — upgrading instruction schemas across versions
+<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/intent-envelope">Intent envelopes</a></h4><p>Wrapping fact operations in typed intents.</p></div>
+<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/lazy-instruction-discovery">Lazy instruction loading</a></h4><p>On-demand instruction discovery.</p></div>
+<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/lazy-instruction-discovery">Instruction migration</a></h4><p>Upgrading instruction schemas across versions.</p></div>
+
+</div>

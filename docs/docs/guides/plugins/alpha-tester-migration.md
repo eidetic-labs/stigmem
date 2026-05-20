@@ -7,93 +7,244 @@ audience: Integrator
 
 # Alpha Tester Migration Guide
 
+<p className="stigmem-meta"><span>3 min read</span><span>Alpha tester</span><span>v0.9.0a1</span></p>
+
+<div className="stigmem-lead">
+
+**What this guide covers**
+
+Migration guidance for testers moving from deferred or pre-plugin
+Stigmem feature flows to the v0.9.0aN plugin infrastructure path.
+
+</div>
+
 **Audience:** Alpha testers who used deferred Stigmem feature surfaces before the plugin infrastructure landed.
 
-The v0.9.0a1 default install is the supported critical-path surface. It includes typed facts, scopes, basic recall, federation, audit, SQLite storage, Docker Compose deployment, and CIDs as core behavior. It does not include production support for deferred feature behavior such as lazy instruction discovery, time-travel queries, RTBF tombstones, advanced Memory Garden ACLs, source attestation, multi-tenant isolation, or advanced recall graph features.
+<div className="stigmem-keypoint">
 
-The plugin infrastructure now exists on `main`: stable 22-hook dispatch, package entry-point discovery, dependency ordering, lifecycle health checks, operator CLI inspection, production signing/trust policy, and author/operator documentation. Lazy instruction discovery, time-travel queries, RTBF tombstones, advanced Memory Garden ACLs, and source attestation have been extracted as opt-in experimental plugin source packages under `experimental/`; signed/package artifact evidence is deferred until the plugin launch train. Other deferred feature plugins arrive later in the v0.9.0aN alpha series, one feature at a time.
+**The v0.9.0a1 default install is the supported critical-path surface.**
 
-Use this guide to decide what to keep testing now, what to disable, and what to wait for.
+It includes typed facts, scopes, basic recall, federation, audit,
+SQLite storage, Docker Compose deployment, and CIDs as core
+behavior. It does **not** include production support for deferred
+features such as lazy instruction discovery, time-travel queries,
+RTBF tombstones, advanced Memory Garden ACLs, source attestation,
+multi-tenant isolation, or advanced recall graph features.
+
+</div>
+
+The plugin infrastructure now exists on `main`: stable 22-hook dispatch, package entry-point discovery, dependency ordering, lifecycle health checks, operator CLI inspection, production signing/trust policy, and author/operator documentation. Lazy instruction discovery, time-travel queries, RTBF tombstones, advanced Memory Garden ACLs, and source attestation have been extracted as opt-in experimental plugin source packages under `experimental/`.
 
 ## What changed
 
-| Area | v0.9.0a1 default behavior | Current `main` after plugin infrastructure | Later v0.9.0aN work |
-|---|---|---|---|
-| Default node install | No plugins required or registered. | Same default behavior; plugin support is opt-in. | Default install remains critical-path only. |
-| Plugin package loading | Not in the first alpha artifact. | Entry-point discovery and startup registration are implemented; lazy-instruction and time-travel plugin source packages are extracted for validation. | Feature packages are published and installed explicitly as artifact refreshes land. |
-| Plugin signing and trust | Not in the first alpha artifact. | Production registration requires verified signing/trust metadata; unsigned loading is development-only. | Package publication and feature-specific release hardening mature. |
-| Deferred feature behavior | May exist in source, but is dormant or unsupported. | Still not promoted by plugin infrastructure alone; lazy instruction and time-travel behavior now require plugin registration/configuration. | Specific feature plugins ship behind explicit install/configuration. |
-| Internal/pre-plugin test flows | Useful only as historical or local experiments. | Should be retired unless they test the supported default surface. | Replace with feature-plugin tests when each plugin lands. |
+<div className="stigmem-fields">
+
+<div>
+<dt>Area</dt>
+<dt><span className="stigmem-fields__type">Current main</span></dt>
+<dd>Later v0.9.0aN work</dd>
+</div>
+
+<div>
+<dt>Default node install</dt>
+<dt><span className="stigmem-fields__type">unchanged · opt-in plugins</span></dt>
+<dd>Default install remains critical-path only.</dd>
+</div>
+
+<div>
+<dt>Plugin package loading</dt>
+<dt><span className="stigmem-fields__type">entry-point discovery</span></dt>
+<dd>Lazy-instruction and time-travel plugin source packages extracted for validation.</dd>
+</div>
+
+<div>
+<dt>Plugin signing and trust</dt>
+<dt><span className="stigmem-fields__type">verified metadata required</span></dt>
+<dd>Unsigned loading is development-only. Package publication matures with releases.</dd>
+</div>
+
+<div>
+<dt>Deferred feature behavior</dt>
+<dt><span className="stigmem-fields__type">still gated</span></dt>
+<dd>Not promoted by plugin infrastructure alone; lazy instruction and time-travel now require plugin registration/configuration.</dd>
+</div>
+
+<div>
+<dt>Internal/pre-plugin test flows</dt>
+<dt><span className="stigmem-fields__type">retire</span></dt>
+<dd>Should be retired unless they test the supported default surface.</dd>
+</div>
+
+</div>
 
 ## Migration rules
 
-1. **Do not rely on dormant code paths for production behavior.** If a feature is listed as experimental or dormant, treat it as unavailable in supported deployments.
-2. **Do not assume a plugin exists because hooks exist.** Hook infrastructure is available now; feature plugins are separate packages that land later.
-3. **Keep CIDs as core.** Content-addressed IDs are not moving to a plugin.
-4. **Pin alpha artifacts.** Pre-1.0 builds do not carry a stability guarantee; pin exact versions and re-test on every upgrade.
-5. **Use public docs and specs as the migration source.** The canonical public references are [Features](../../concepts/features.md), [Experimental Features](../../reference/experimental-features.md), the [Plugin Author Guide](./author-guide.md), and the [Operator Plugin Management Guide](../../operators/plugins/management.md).
+<ol className="stigmem-steps">
+<li><strong>Do not rely on dormant code paths for production behavior.</strong> If a feature is listed as experimental or dormant, treat it as unavailable in supported deployments.</li>
+<li><strong>Do not assume a plugin exists because hooks exist.</strong> Hook infrastructure is available now; feature plugins are separate packages that land later.</li>
+<li><strong>Keep CIDs as core.</strong> Content-addressed IDs are not moving to a plugin.</li>
+<li><strong>Pin alpha artifacts.</strong> Pre-1.0 builds do not carry a stability guarantee; pin exact versions and re-test on every upgrade.</li>
+<li><strong>Use public docs and specs as the migration source.</strong></li>
+</ol>
 
 ## Feature destinations
 
-| Feature or flow | Current status | Migration destination |
-|---|---|---|
-| Lazy instruction discovery | Experimental; opt-in plugin source extracted on `main`, with signed/package artifact evidence deferred until the plugin launch train. ADR-008 graduation remains blocked on the capability redesign. | Default installs should keep using ordinary typed facts and explicit recall inputs. Test the plugin only in isolated alpha environments with explicit registration/configuration. |
-| Content-addressed IDs | Core behavior. | Continue using the core CID/fact-ID behavior; do not plan for a CID plugin. |
-| Time-travel `as_of` queries | Experimental; opt-in plugin source extracted on `main`, with signed/package artifact evidence deferred until all planned plugins are built. ADR-008 graduation remains open. | Default installs should expect `as_of` requests to fail closed with `time_travel_plugin_not_loaded`. Test the plugin only in isolated alpha environments with explicit registration. |
-| RTBF tombstones | Experimental; opt-in plugin source extracted on `main`, with signed/package artifact evidence deferred until all planned plugins are built. ADR-008 graduation remains open. | Default installs should not expose tombstone routes or filters. Test the plugin only in isolated alpha environments with explicit registration/configuration; use ordinary retractions for current supported tests. |
-| Memory Garden advanced ACL | Experimental; opt-in plugin source extracted on `main`, with signed/package artifact evidence deferred until all planned plugins are built. Default installs keep advanced ACL behavior inactive. | Use stable scopes and basic garden behavior for default-surface tests. Test the plugin only in isolated alpha environments with explicit registration/configuration. |
-| Source attestation | Experimental; opt-in plugin source extracted on `main`, with signed/package artifact evidence deferred until all planned plugins are built. Default installs keep source-attestation behavior inert. | Use existing API-key and audit attribution for default-surface tests. Test the plugin only in isolated alpha environments with explicit registration plus `STIGMEM_SOURCE_ATTESTATION_*` gates. |
-| Multi-tenant isolation | Experimental implementation surface without a `Spec-X` assignment. | Wait for the multi-tenant plugin. Do not treat tenant isolation as part of the default install. |
-| Subscriptions | Experimental and dormant. | Wait for a future subscription reintroduction path. Use polling or supported federation flows. |
-| Intent envelope | Deferred indefinitely. | No migration target is available. Remove dependencies on this behavior. |
-| Decay semantics | Experimental and dormant. | No current alpha feature-plugin commitment. Keep decay experiments isolated. |
-| Synthesis | Experimental and dormant. | No current alpha feature-plugin commitment. Keep synthesis experiments isolated. |
-| Recall graph, vector embeddings, MMR, memory cards | Experimental and dormant. | Wait for the recall-graph reintroduction path. The supported recall surface remains basic typed-fact retrieval. |
-| Non-OpenClaw adapters | Experimental/dormant adapter surfaces. | Treat as unsupported until each adapter passes the reintroduction gates. |
-| Helm, Fly.io, systemd, Grafana, PaaS deployment recipes | Experimental deployment surfaces. | Use Docker Compose for supported v0.9.0a1 testing; keep other deployment recipes isolated. |
+<div className="stigmem-fields">
+
+<div>
+<dt>Feature</dt>
+<dt><span className="stigmem-fields__type">Status</span></dt>
+<dd>Migration destination</dd>
+</div>
+
+<div>
+<dt>Lazy instruction discovery</dt>
+<dt><span className="stigmem-fields__type">experimental plugin</span></dt>
+<dd>Keep using ordinary typed facts and explicit recall inputs in default installs. Test the plugin only in isolated alpha environments.</dd>
+</div>
+
+<div>
+<dt>Content-addressed IDs</dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>Continue using core CID/fact-ID behavior; no CID plugin is planned.</dd>
+</div>
+
+<div>
+<dt>Time-travel <code>as_of</code></dt>
+<dt><span className="stigmem-fields__type">experimental plugin</span></dt>
+<dd>Default installs return <code>time_travel_plugin_not_loaded</code>. Test only in isolated alpha environments.</dd>
+</div>
+
+<div>
+<dt>RTBF tombstones</dt>
+<dt><span className="stigmem-fields__type">experimental plugin</span></dt>
+<dd>Default installs do not expose tombstone routes. Use ordinary retractions for supported tests.</dd>
+</div>
+
+<div>
+<dt>Memory Garden advanced ACL</dt>
+<dt><span className="stigmem-fields__type">experimental plugin</span></dt>
+<dd>Use stable scopes and basic garden behavior for default-surface tests.</dd>
+</div>
+
+<div>
+<dt>Source attestation</dt>
+<dt><span className="stigmem-fields__type">experimental plugin</span></dt>
+<dd>Use existing API-key and audit attribution for default-surface tests.</dd>
+</div>
+
+<div>
+<dt>Multi-tenant isolation</dt>
+<dt><span className="stigmem-fields__type">no Spec-X yet</span></dt>
+<dd>Wait for the multi-tenant plugin. Do not treat tenant isolation as part of the default install.</dd>
+</div>
+
+<div>
+<dt>Subscriptions / Decay / Synthesis</dt>
+<dt><span className="stigmem-fields__type">dormant</span></dt>
+<dd>Wait for future reintroduction paths. Use polling or supported federation flows.</dd>
+</div>
+
+<div>
+<dt>Intent envelope</dt>
+<dt><span className="stigmem-fields__type">deferred indefinitely</span></dt>
+<dd>Remove dependencies on this behavior.</dd>
+</div>
+
+<div>
+<dt>Recall graph / vectors / cards</dt>
+<dt><span className="stigmem-fields__type">dormant</span></dt>
+<dd>Wait for the recall-graph reintroduction path.</dd>
+</div>
+
+<div>
+<dt>Non-OpenClaw adapters</dt>
+<dt><span className="stigmem-fields__type">dormant</span></dt>
+<dd>Treat as unsupported until each adapter passes the reintroduction gates.</dd>
+</div>
+
+<div>
+<dt>Helm/Fly/systemd/PaaS/Grafana</dt>
+<dt><span className="stigmem-fields__type">experimental</span></dt>
+<dd>Use Docker Compose for supported v0.9.0a1 testing.</dd>
+</div>
+
+</div>
 
 ## What to test now
 
 Use current `main` or the next alpha artifact to test the plugin infrastructure itself:
 
-- Author a minimal plugin using the [Plugin Author Guide](./author-guide.md).
-- Register only hooks from the [Plugin Hook Reference](../../reference/plugin-api/hooks.md).
-- Declare capabilities from the [Plugin Capability Reference](../../reference/plugin-api/capabilities.md).
-- Install and inspect plugins using the [Operator Plugin Management Guide](../../operators/plugins/management.md).
-- Verify default behavior with no plugins registered.
-- Verify production signing/trust policy and development-only unsigned loading.
+<div className="stigmem-grid">
 
-Do not test a deferred feature as though it has graduated just because its future hook points now exist.
+<div><h4>Author a minimal plugin</h4><p>Using the <a href="./author-guide.md">Plugin Author Guide</a>.</p></div>
+<div><h4>Register documented hooks</h4><p>From the <a href="../../reference/plugin-api/hooks.md">Plugin Hook Reference</a>.</p></div>
+<div><h4>Declare capabilities</h4><p>From the <a href="../../reference/plugin-api/capabilities.md">Plugin Capability Reference</a>.</p></div>
+<div><h4>Install and inspect</h4><p>Per the <a href="../../operators/plugins/management.md">Operator Plugin Management Guide</a>.</p></div>
+<div><h4>Default with no plugins</h4><p>Verify default behavior with no plugins registered.</p></div>
+<div><h4>Signing policy</h4><p>Verify production signing/trust policy and development-only unsigned loading.</p></div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Do not test a deferred feature as though it has graduated just because its future hook points now exist.**
+
+</div>
 
 ## Retiring pre-plugin tests
 
-If you have tests written before the plugin infrastructure landed, sort them into three groups:
+<div className="stigmem-fields">
 
-| Test type | Action |
-|---|---|
-| Default-surface tests | Keep them, but remove assumptions about deferred feature behavior. |
-| Plugin-infrastructure tests | Rewrite them around manifest, hook, capability, signing, CLI, health, and audit behavior. |
-| Deferred-feature behavior tests | Move them to the relevant feature's experimental area or mark them blocked until that feature plugin exists. |
+<div>
+<dt>Test type</dt>
+<dt><span className="stigmem-fields__type">Action</span></dt>
+<dd>Notes</dd>
+</div>
 
-For plugin-infrastructure tests, prefer small fixtures that exercise `PluginManifest`, `PluginContext`, the registry firing method for the hook semantic, and expected fail-closed behavior.
+<div>
+<dt>Default-surface tests</dt>
+<dt><span className="stigmem-fields__type">keep</span></dt>
+<dd>Remove assumptions about deferred feature behavior.</dd>
+</div>
+
+<div>
+<dt>Plugin-infrastructure tests</dt>
+<dt><span className="stigmem-fields__type">rewrite</span></dt>
+<dd>Rewrite them around manifest, hook, capability, signing, CLI, health, and audit behavior.</dd>
+</div>
+
+<div>
+<dt>Deferred-feature behavior tests</dt>
+<dt><span className="stigmem-fields__type">move or block</span></dt>
+<dd>Move to the relevant feature's experimental area or mark as blocked until that feature plugin exists.</dd>
+</div>
+
+</div>
 
 ## Operator checklist
 
 Before enabling tester plugins in a shared environment:
 
-- Pin the plugin package version.
-- Keep `STIGMEM_PLUGIN_SIGNING_REQUIRED=true`.
-- Set `STIGMEM_PLUGIN_TRUSTED_PUBLISHERS` to reviewed signing identities.
-- Use `STIGMEM_PLUGIN_TRUST_OVERRIDE_PUBLISHERS` only for explicit, short-lived exceptions.
-- Run `stigmem plugins list --json` and `stigmem plugins describe <name> --json` after startup.
-- Review `plugin.registered`, `plugin.registration_failed`, `plugin.handler_denied`, and `plugin.handler_error` audit events.
+<ol className="stigmem-steps">
+<li>Pin the plugin package version.</li>
+<li>Keep <code>STIGMEM_PLUGIN_SIGNING_REQUIRED=true</code>.</li>
+<li>Set <code>STIGMEM_PLUGIN_TRUSTED_PUBLISHERS</code> to reviewed signing identities.</li>
+<li>Use <code>STIGMEM_PLUGIN_TRUST_OVERRIDE_PUBLISHERS</code> only for explicit, short-lived exceptions.</li>
+<li>Run <code>stigmem plugins list --json</code> and <code>stigmem plugins describe &lt;name&gt; --json</code> after startup.</li>
+<li>Review <code>plugin.registered</code>, <code>plugin.registration_failed</code>, <code>plugin.handler_denied</code>, and <code>plugin.handler_error</code> audit events.</li>
+</ol>
 
 ## References
 
-- [Features](../../concepts/features.md)
-- [Experimental Features](../../reference/experimental-features.md)
-- [Roadmap](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md)
-- [Plugin Author Guide](./author-guide.md)
-- [Plugin Hook Reference](../../reference/plugin-api/hooks.md)
-- [Plugin Capability Reference](../../reference/plugin-api/capabilities.md)
-- [Operator Plugin Management Guide](../../operators/plugins/management.md)
+<div className="stigmem-grid">
+
+<div><h4><a href="../../concepts/features.md">Features</a></h4></div>
+<div><h4><a href="../../reference/experimental-features.md">Experimental Features</a></h4></div>
+<div><h4><a href="https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md">Roadmap</a></h4></div>
+<div><h4><a href="./author-guide.md">Plugin Author Guide</a></h4></div>
+<div><h4><a href="../../reference/plugin-api/hooks.md">Plugin Hook Reference</a></h4></div>
+<div><h4><a href="../../reference/plugin-api/capabilities.md">Plugin Capability Reference</a></h4></div>
+<div><h4><a href="../../operators/plugins/management.md">Operator Plugin Management</a></h4></div>
+
+</div>

@@ -5,23 +5,44 @@ audience: Spec
 description: "Spec-05-Federation-Trust rendered entry point — peer declaration, negotiation, replication, and federation scope rules."
 ---
 
-# Spec-05-Federation-Trust {#section-6}
+# Spec-05-Federation-Trust \{#section-6\}
 
-**Status:** Rendered compatibility entry point for [`Spec-05-Federation-Trust`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/05-federation-trust.md).
+<p className="stigmem-meta"><span>8 min read</span><span>Spec contributor · Node operator</span><span>Peer handshake + replication</span></p>
 
-Peer handshake, pull replication, scope enforcement, conflict semantics, backpressure.
+<div className="stigmem-lead">
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**What this page is**
+
+Rendered compatibility entry point for
+[`Spec-05-Federation-Trust`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/05-federation-trust.md).
+Peer handshake, pull replication, scope enforcement, conflict
+semantics, backpressure.
+
+</div>
+
+**Authoritative source:**
+[`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
-Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
+Each subsection below shows the most recent normative text from the
+spec source.
 :::
 
-**Garden isolation invariant:** Facts with `garden_id` set MUST NOT appear in federation pull or push payloads. Nodes MUST filter them before sending. This invariant is enforced independently of scope — a garden-tagged `public` fact is still garden-isolated from the federation perspective.
+<div className="stigmem-keypoint">
 
-Legacy §6 anchors are retained for existing links while the maintained federation-trust prose lives in `Spec-05-Federation-Trust`.
+**Garden isolation invariant.**
 
----
+Facts with <code>garden_id</code> set MUST NOT appear in federation
+pull or push payloads. Nodes MUST filter them before sending. This
+invariant is enforced independently of scope — a garden-tagged
+<code>public</code> fact is still garden-isolated from the federation
+perspective.
+
+</div>
+
+Legacy §6 anchors are retained for existing links while the
+maintained federation-trust prose lives in
+`Spec-05-Federation-Trust`.
 
 <details>
 <summary>Revisions before v1.0: the pre-reset spec-draft</summary>
@@ -32,16 +53,21 @@ Legacy §6 anchors are retained for existing links while the maintained federati
 
 </details>
 
-### §6.1 Peer Declaration {#section-6-1}
+### §6.1 Peer declaration \{#section-6-1\}
 
 Two nodes federate when operators on both sides exchange a signed
-**PeerDeclaration**. The declaration serves three purposes: it identifies the
-peer (via `node_id` and `node_url`), establishes a cryptographic trust root
-(via `federation_pubkey`), and sets the scope boundary for what data may flow
-between the two nodes (via `allowed_scopes`). The signature over the canonical
-JSON body ensures that a declaration cannot be replayed or tampered with in
-transit — the receiving node verifies it against the sender's published key
-before activating the relationship.
+**PeerDeclaration**. The declaration serves three purposes:
+
+<div className="stigmem-grid">
+
+<div><h4>Identify the peer</h4><p>Via <code>node_id</code> and <code>node_url</code>.</p></div>
+<div><h4>Establish a cryptographic trust root</h4><p>Via <code>federation_pubkey</code>.</p></div>
+<div><h4>Set the scope boundary</h4><p>Via <code>allowed_scopes</code> — what data may flow between the two nodes.</p></div>
+
+</div>
+
+The signature over the canonical JSON body ensures that a declaration
+cannot be replayed or tampered with in transit.
 
 ```
 PeerDeclaration {
@@ -60,33 +86,38 @@ RateLimit {
 }
 ```
 
-The `rate_limit` field is optional because most deployments do not need
-per-peer throttling — it exists for operators who federate with high-volume
-peers and want to cap inbound load without rejecting the relationship entirely.
-The `RateLimit` uses a token-bucket model: `facts_per_second` is the refill
-rate; `burst` is the bucket depth.
+The `rate_limit` field is optional. The `RateLimit` uses a
+token-bucket model: `facts_per_second` is the refill rate; `burst`
+is the bucket depth.
 
-**Canonical JSON** for signing: fields in lexicographic key order, no whitespace, UTF-8.
+**Canonical JSON** for signing: fields in lexicographic key order, no
+whitespace, UTF-8.
 
 **Key lifecycle:**
-- Nodes SHOULD rotate their federation keypair no more often than weekly to avoid
-  verification races during rotation.
-- During rotation, nodes MUST keep the old key active for 24 hours and publish the
-  new key at `/.well-known/stigmem`. Peers that fail token verification SHOULD
-  re-fetch the well-known document once before treating it as an attack.
 
-### §6.2 Capability Negotiation — pre-reset Required {#section-6-2}
+<div className="stigmem-grid">
 
-**pre-reset open question §8.4 resolved.** Capability negotiation is now required for all
-nodes that support federation, based on implementation experience from two pre-reset-era adapters.
+<div><h4>Rotate weekly at most</h4><p>Nodes SHOULD rotate their federation keypair no more often than weekly to avoid verification races during rotation.</p></div>
+<div><h4>24-hour dual-trust window</h4><p>During rotation, nodes MUST keep the old key active for 24 hours and publish the new key at <code>/.well-known/stigmem</code>. Peers that fail token verification SHOULD re-fetch the well-known document once before treating it as an attack.</p></div>
 
-After peer registration, nodes MUST exchange capability advertisements before the first
-replication pull. The advertisement tells the peer what relation namespaces the
-node understands, how it handles conflicts on those relations, and which
-replication mode it supports. Without this exchange, a peer cannot distinguish
-relations it can meaningfully process from opaque forwarded data — leading to
-silent contradiction storms when two nodes disagree on conflict resolution
-semantics for a shared relation.
+</div>
+
+### §6.2 Capability negotiation — pre-reset required \{#section-6-2\}
+
+<div className="stigmem-keypoint">
+
+**pre-reset open question §8.4 resolved.**
+
+Capability negotiation is now required for all nodes that support
+federation, based on implementation experience from two pre-reset-era
+adapters.
+
+</div>
+
+After peer registration, nodes MUST exchange capability advertisements
+before the first replication pull. Without this exchange, a peer
+cannot distinguish relations it can meaningfully process from opaque
+forwarded data — leading to silent contradiction storms.
 
 ```
 CapabilityAd {
@@ -99,29 +130,31 @@ CapabilityAd {
 }
 ```
 
-**Exchange route:** `GET /v1/federation/peers/:peer_id/capabilities` returns the
-remote node's capability advertisement. A node MUST respond to this route if it
-supports federation. A node MAY cache the remote capability advertisement for up to
-1 hour.
+**Exchange route:** `GET /v1/federation/peers/:peer_id/capabilities`
+returns the remote node's capability advertisement. A node MUST
+respond to this route if it supports federation. A node MAY cache
+the remote capability advertisement for up to 1 hour.
 
 **Required behavior:**
-- A node MUST advertise at minimum: `federation_mode` and `relations_understood`.
-- A node that receives a capability request MUST respond within 10 seconds or the
-  requesting node MAY treat it as `{ federation_mode: "pull", relations_understood: [] }`.
-- Unknown fields in a received `CapabilityAd` MUST be ignored (forward compatibility).
 
-**Why now required:** the pre-reset line shipped the Paperclip and OpenClaw adapters, both of
-which use distinct relation namespaces (`paperclip:`, `intent:`). Without capability
-exchange, a federated peer cannot distinguish relations it understands from opaque
-forwarded data — leading to silent contradiction storms on relations the peer cannot
-interpret. Capability advertisement gives both sides a shared understanding of what
-to replicate and how to resolve conflicts on those relations.
+<ol className="stigmem-steps">
+<li>A node MUST advertise at minimum: <code>federation_mode</code> and <code>relations_understood</code>.</li>
+<li>A node that receives a capability request MUST respond within 10 seconds or the requesting node MAY treat it as <code>{`{ federation_mode: "pull", relations_understood: [] }`}</code>.</li>
+<li>Unknown fields in a received <code>CapabilityAd</code> MUST be ignored (forward compatibility).</li>
+</ol>
 
-### §6.3 Replication Protocol {#section-6-3}
+**Why now required:** the pre-reset line shipped the Paperclip and
+OpenClaw adapters, both of which use distinct relation namespaces
+(`paperclip:`, `intent:`). Without capability exchange, a federated
+peer cannot distinguish relations it understands from opaque
+forwarded data.
+
+### §6.3 Replication protocol \{#section-6-3\}
 
 #### Pull cadence
 
-The **subscriber** (the node that wants facts) polls the **publisher**:
+The **subscriber** (the node that wants facts) polls the
+**publisher**:
 
 ```
 loop every pull_interval_s (default: 30s):
@@ -133,23 +166,20 @@ loop every pull_interval_s (default: 30s):
   save_cursor(peer_id, resp.cursor)
 ```
 
-**Pull interval:** Default 30 seconds. Configurable via `STIGMEM_FEDERATION_PULL_INTERVAL_S`.
-The publisher's capability advertisement MAY suggest a different interval; the
-subscriber treats this as advisory.
+**Pull interval:** Default 30 seconds. Configurable via
+`STIGMEM_FEDERATION_PULL_INTERVAL_S`. The publisher's capability
+advertisement MAY suggest a different interval; the subscriber treats
+this as advisory.
 
-**Back-pressure:** If the publisher returns 429, the subscriber MUST back off
-exponentially with jitter. Max backoff: 5 minutes. See §6.7 for N-node cascade
-backpressure patterns.
+**Back-pressure:** If the publisher returns 429, the subscriber MUST
+back off exponentially with jitter. Max backoff: 5 minutes. See §6.7
+for N-node cascade backpressure patterns.
 
 #### Idempotent ingestion
 
-The ingestion handler MUST be idempotent: receiving the same fact twice (whether
-from the same peer or a different one in a multi-hop topology) produces exactly
-one stored record. The existence check uses the fact's UUID, not its content,
-because two distinct facts could contain the same assertion at different times.
-A `stigmem:received_from` meta-fact is written alongside the main fact to
-preserve provenance — this is what the federation audit endpoint (§5.8) queries
-to answer "which peer delivered fact X?"
+The ingestion handler MUST be idempotent: receiving the same fact
+twice produces exactly one stored record. The existence check uses
+the fact's UUID, not its content.
 
 ```python
 def ingest_fact(fact):
@@ -160,213 +190,350 @@ def ingest_fact(fact):
     detect_contradiction(fact)  # see §3.3
 ```
 
-The `stigmem:received_from` meta-fact MUST be written atomically with the fact.
+The `stigmem:received_from` meta-fact MUST be written atomically with
+the fact.
 
 #### HLC synchronization
 
-When ingesting a federated fact, the receiving node MUST advance its own HLC:
+When ingesting a federated fact, the receiving node MUST advance its
+own HLC:
+
 ```
 local_hlc = max(local_hlc.wall_ms, fact.hlc.wall_ms)
 ```
 
-### §6.4 Permission Enforcement {#section-6-4}
+### §6.4 Permission enforcement \{#section-6-4\}
 
 **Scope boundary rules (strict):**
 
-| Fact scope  | Federatable?                                                                |
-|-------------|-----------------------------------------------------------------------------|
-| `local`     | Never. Nodes MUST NOT expose `local` facts on federation endpoints.          |
-| `team`      | Never, unless operator sets `STIGMEM_FEDERATION_ALLOW_TEAM=true` (audit-logged). |
-| `company`   | Only if the active PeerDeclaration's `allowed_scopes` includes `"company"`. |
-| `public`    | Yes, to any active peer.                                                     |
+<div className="stigmem-fields">
+
+<div>
+<dt>Fact scope</dt>
+<dt><span className="stigmem-fields__type">Federatable?</span></dt>
+<dd>Conditions</dd>
+</div>
+
+<div>
+<dt><code>local</code></dt>
+<dt><span className="stigmem-fields__type">Never</span></dt>
+<dd>Nodes MUST NOT expose <code>local</code> facts on federation endpoints.</dd>
+</div>
+
+<div>
+<dt><code>team</code></dt>
+<dt><span className="stigmem-fields__type">Never</span></dt>
+<dd>Unless operator sets <code>STIGMEM_FEDERATION_ALLOW_TEAM=true</code> (audit-logged).</dd>
+</div>
+
+<div>
+<dt><code>company</code></dt>
+<dt><span className="stigmem-fields__type">Conditional</span></dt>
+<dd>Only if the active PeerDeclaration's <code>allowed_scopes</code> includes <code>"company"</code>.</dd>
+</div>
+
+<div>
+<dt><code>public</code></dt>
+<dt><span className="stigmem-fields__type">Yes</span></dt>
+<dd>To any active peer.</dd>
+</div>
+
+</div>
 
 **Inbound enforcement:**
-- Nodes MUST reject any fact whose scope is not permitted by the peer's PeerDeclaration.
-- Nodes MUST reject any fact whose `source` does not match the peer's `node_id` or a
-  sub-entity explicitly delegated by the peer (i.e., a fact from `peer-b` should not claim
-  `source="stigmem://node-c/user/alice"` unless `peer-b`'s declaration covers that entity space).
 
-**Audit log:** All rejected inbound facts MUST be recorded with: peer_id, fact_id,
-rejection reason, timestamp. Accessible at `GET /v1/federation/audit?peer_id=<id>`.
+<ol className="stigmem-steps">
+<li>Nodes MUST reject any fact whose scope is not permitted by the peer's PeerDeclaration.</li>
+<li>Nodes MUST reject any fact whose <code>source</code> does not match the peer's <code>node_id</code> or a sub-entity explicitly delegated by the peer.</li>
+</ol>
 
-### §6.5 Conflict-First-Class Semantics {#section-6-5}
+**Audit log:** All rejected inbound facts MUST be recorded with
+`peer_id`, `fact_id`, rejection reason, timestamp. Accessible at
+`GET /v1/federation/audit?peer_id=<id>`.
 
-When a federated fact conflicts with a locally-held fact (same entity/relation/scope,
-different non-zero-confidence values), the receiving node MUST:
+### §6.5 Conflict-first-class semantics \{#section-6-5\}
 
-1. Store both facts.
-2. Assert the system-generated `stigmem:conflict:between` fact (§3.3).
-3. Return both facts when queried, with `contradicted: true`.
-4. NOT silently prefer either fact without explicit resolution.
+When a federated fact conflicts with a locally-held fact (same
+entity/relation/scope, different non-zero-confidence values), the
+receiving node MUST:
 
-**Cross-node conflicts are expected.** The protocol treats them as information, not errors.
-Nodes SHOULD surface unresolved conflicts in monitoring/alerting.
+<ol className="stigmem-steps">
+<li>Store both facts.</li>
+<li>Assert the system-generated <code>stigmem:conflict:between</code> fact (§3.3).</li>
+<li>Return both facts when queried, with <code>contradicted: true</code>.</li>
+<li>NOT silently prefer either fact without explicit resolution.</li>
+</ol>
 
-**Contradiction entity namespace:** All conflict entities use `stigmem:conflict:<uuid>`.
-These entities MUST NOT be federated (they are local accounting artifacts).
+<div className="stigmem-keypoint">
 
-### §6.6 Security Invariants {#section-6-6}
+**Cross-node conflicts are expected.**
 
-The following invariants MUST hold at all times:
+The protocol treats them as information, not errors. Nodes SHOULD
+surface unresolved conflicts in monitoring/alerting. Contradiction
+entity namespace: all conflict entities use
+<code>stigmem:conflict:&lt;uuid&gt;</code>. These entities MUST NOT
+be federated (they are local accounting artifacts).
 
-1. **Scope non-escalation.** An inbound fact may not raise its own scope. A fact
-   arriving with `scope="public"` on a wire that the PeerDeclaration restricts to
-   `["public"]` is valid. A fact arriving with `scope="company"` on a `["public"]`-only
-   peer MUST be rejected.
+</div>
 
-2. **Provenance non-forgery.** A peer MUST NOT assert facts with `source` values it
-   does not own. The receiving node validates `source` against the sender's declared
-   `node_id` and any explicitly delegated entity namespaces.
+### §6.6 Security invariants \{#section-6-6\}
 
-3. **Replay resistance.** Peer tokens carry a `nonce` and `exp`. The receiving node
-   MUST maintain a nonce cache for the duration of the token's validity window (max 1
-   hour). Tokens with already-seen nonces MUST be rejected with 401.
+The following invariants MUST hold at all times.
 
-4. **Partition safety.** During a network partition, each node MUST continue accepting
-   local reads and writes without degradation. Replication resumes from the last
-   persisted cursor when connectivity is restored.
+<div className="stigmem-fields">
 
-5. **No silent data loss.** A node MUST NOT discard facts during reconciliation after
-   a partition. All divergent writes MUST be ingested; contradictions are surfaced to
-   callers.
+<div>
+<dt>Invariant</dt>
+<dt><span className="stigmem-fields__type">Mechanism</span></dt>
+<dd>Effect</dd>
+</div>
+
+<div>
+<dt>1 · Scope non-escalation</dt>
+<dt><span className="stigmem-fields__type">PeerDeclaration check</span></dt>
+<dd>An inbound fact may not raise its own scope. A fact arriving with <code>scope="company"</code> on a <code>["public"]</code>-only peer MUST be rejected.</dd>
+</div>
+
+<div>
+<dt>2 · Provenance non-forgery</dt>
+<dt><span className="stigmem-fields__type">source validation</span></dt>
+<dd>A peer MUST NOT assert facts with <code>source</code> values it does not own. The receiving node validates <code>source</code> against the sender's declared <code>node_id</code> and any explicitly delegated entity namespaces.</dd>
+</div>
+
+<div>
+<dt>3 · Replay resistance</dt>
+<dt><span className="stigmem-fields__type">nonce cache + <code>exp</code></span></dt>
+<dd>Peer tokens carry a <code>nonce</code> and <code>exp</code>. Receiving node MUST maintain a nonce cache for the duration of the token's validity window (max 1 hour). Tokens with already-seen nonces MUST be rejected with 401.</dd>
+</div>
+
+<div>
+<dt>4 · Partition safety</dt>
+<dt><span className="stigmem-fields__type">cursor-resume</span></dt>
+<dd>During a network partition, each node MUST continue accepting local reads and writes without degradation. Replication resumes from the last persisted cursor when connectivity is restored.</dd>
+</div>
+
+<div>
+<dt>5 · No silent data loss</dt>
+<dt><span className="stigmem-fields__type">conflict surfacing</span></dt>
+<dd>A node MUST NOT discard facts during reconciliation after a partition. All divergent writes MUST be ingested; contradictions are surfaced to callers.</dd>
+</div>
+
+</div>
 
 :::note Draft sections — §6.7 and §6.8
-Multi-node relay topologies (3+ nodes) are supported but §6.7 (backpressure) and §6.8 (scope propagation) are draft specifications not yet covered by the conformance test suite. Test your topology before relying on it in production. Scope propagation behavior in relay chains will be formally validated in v2.1.
+Multi-node relay topologies (3+ nodes) are supported but §6.7
+(backpressure) and §6.8 (scope propagation) are draft specifications
+not yet covered by the conformance test suite. Test your topology
+before relying on it in production. Scope propagation behavior in
+relay chains will be formally validated in v2.1.
 :::
 
-### §6.7 N-node Backpressure Patterns — the pre-reset spec Draft {#section-6-7}
+### §6.7 N-node backpressure patterns — pre-reset draft \{#section-6-7\}
 
-> **Pre-reset status:** These patterns were identified during the pre-reset spec 4-node local topology
-> work. They are draft guidance, pending validation in the D1 correctness test suite.
-> Promotion to normative is a the pre-reset spec target.
+<div className="stigmem-keypoint">
 
-In topologies with N > 2 nodes, backpressure from one publisher can cascade through
-relay nodes (nodes that both ingest from peers and are themselves pulled from).
+**Pre-reset status.**
 
-#### §6.7.1 The relay cascade problem {#section-6-7-1}
+These patterns were identified during the pre-reset spec 4-node local
+topology work. They are draft guidance, pending validation in the D1
+correctness test suite. Promotion to normative is a the pre-reset
+spec target.
 
-Consider a 4-node topology: A ← B ← C ← D (each node pulls from the next).
+</div>
+
+In topologies with N > 2 nodes, backpressure from one publisher can
+cascade through relay nodes.
+
+#### §6.7.1 The relay cascade problem \{#section-6-7-1\}
+
+Consider a 4-node topology: A ← B ← C ← D.
 
 If node A emits a burst of 10,000 public facts within a short window:
-1. B receives the burst and its ingest queue grows.
-2. C is pulling from B at the normal cadence. B may return 429 if its write
-   path is saturated (disk I/O, WAL flush, etc.).
-3. C backs off on B, but D continues pulling from C at the normal rate.
-4. C now has a growing lag behind B AND is serving D at full pull rate.
 
-Without relay-aware backpressure, C can fall further and further behind B while
-continuing to serve D with stale data, without any signal to D that it is receiving
-lagged facts.
+<ol className="stigmem-steps">
+<li>B receives the burst and its ingest queue grows.</li>
+<li>C is pulling from B at the normal cadence. B may return 429 if its write path is saturated (disk I/O, WAL flush, etc.).</li>
+<li>C backs off on B, but D continues pulling from C at the normal rate.</li>
+<li>C now has a growing lag behind B AND is serving D at full pull rate.</li>
+</ol>
 
-#### §6.7.2 Recommended relay behavior (draft) {#section-6-7-2}
+Without relay-aware backpressure, C can fall further and further
+behind B while continuing to serve D with stale data, without any
+signal to D that it is receiving lagged facts.
 
-Nodes that are simultaneously a subscriber and publisher (relay nodes) SHOULD:
+#### §6.7.2 Recommended relay behavior (draft) \{#section-6-7-2\}
 
-1. **Propagate backpressure signals.** If a relay node's inbound replication lag
-   exceeds `STIGMEM_FEDERATION_RELAY_LAG_WARNING_MS` (default: 60,000 ms), it SHOULD
-   include a `X-Stigmem-Replication-Lag: <lag_ms>` response header on pull responses
-   to its own subscribers. Subscribers MAY use this to slow their pull cadence.
+Nodes that are simultaneously a subscriber and publisher (relay
+nodes) SHOULD:
 
-2. **Apply admission throttle.** If the relay node's inbound lag exceeds
-   `STIGMEM_FEDERATION_RELAY_LAG_HARD_MS` (default: 300,000 ms — 5 minutes), the node
-   MAY return HTTP 503 on pull requests from its own subscribers with body:
-   ```json
-   { "error": "relay_lag_exceeded", "lag_ms": <integer>, "retry_after_s": <integer> }
-   ```
-   The `retry_after_s` SHOULD be proportional to the lag: `lag_ms / 1000`.
+<div className="stigmem-fields">
 
-3. **Expose lag in well-known.** Nodes SHOULD include a `replication_lag_ms` field in
-   `/.well-known/stigmem` (value: max lag across all inbound peers; omit if not a relay
-   or if lag is within normal bounds). This allows topology health tools to detect
-   degraded relay nodes without polling pull endpoints.
+<div>
+<dt>Behavior</dt>
+<dt><span className="stigmem-fields__type">Trigger</span></dt>
+<dd>Action</dd>
+</div>
 
-#### §6.7.3 Backpressure conformance (draft) {#section-6-7-3}
+<div>
+<dt>1 · Propagate backpressure signals</dt>
+<dt><span className="stigmem-fields__type">lag &gt; warning threshold</span></dt>
+<dd>Include <code>X-Stigmem-Replication-Lag: &lt;lag_ms&gt;</code> response header on pull responses to subscribers. Default warning: 60,000ms.</dd>
+</div>
 
-These env vars configure relay behavior:
+<div>
+<dt>2 · Apply admission throttle</dt>
+<dt><span className="stigmem-fields__type">lag &gt; hard threshold</span></dt>
+<dd>MAY return HTTP 503 with <code>{`{ "error": "relay_lag_exceeded", "lag_ms": ..., "retry_after_s": ... }`}</code>. Default hard: 5 minutes. <code>retry_after_s</code> SHOULD be proportional to lag.</dd>
+</div>
 
-| Variable | Default | Description |
-|---|---|---|
-| `STIGMEM_FEDERATION_RELAY_LAG_WARNING_MS` | `60000` | Lag threshold for warning header |
-| `STIGMEM_FEDERATION_RELAY_LAG_HARD_MS` | `300000` | Lag threshold for 503 throttle |
-| `STIGMEM_FEDERATION_RELAY_ENABLED` | `true` | Set `false` to disable relay behavior (leaf nodes) |
+<div>
+<dt>3 · Expose lag in well-known</dt>
+<dt><span className="stigmem-fields__type">always when relay</span></dt>
+<dd>Include <code>replication_lag_ms</code> field in <code>/.well-known/stigmem</code> (max lag across all inbound peers).</dd>
+</div>
 
-Conformance tests for relay backpressure will be added to the 4-node topology test
-suite (`node/tests/federation/test_4node_federation.py`) before the pre-reset spec stabilization.
+</div>
 
-### §6.8 Scope Propagation Invariants — the pre-reset spec Draft {#section-6-8}
+#### §6.7.3 Backpressure conformance (draft) \{#section-6-7-3\}
 
-> **Pre-reset status:** These invariants close the transitive scope escalation gap identified
-> during the pre-reset spec 4-node topology work. Draft; to be validated against correctness tests
-> before promotion to normative.
+<div className="stigmem-fields">
 
-In a 2-node topology, scope enforcement is bilateral and straightforward. In an N-node
-topology, a fact can travel through multiple hops. The following invariants ensure that
-scope boundaries set by the originating node are respected end-to-end.
+<div>
+<dt>Variable</dt>
+<dt><span className="stigmem-fields__type">Default</span></dt>
+<dd>Description</dd>
+</div>
 
-#### §6.8.1 Transitive scope non-escalation {#section-6-8-1}
+<div>
+<dt><code>STIGMEM_FEDERATION_RELAY_LAG_WARNING_MS</code></dt>
+<dt><span className="stigmem-fields__type"><code>60000</code></span></dt>
+<dd>Lag threshold for warning header.</dd>
+</div>
 
-**Invariant:** A fact's scope MUST NOT be escalated at any relay hop.
+<div>
+<dt><code>STIGMEM_FEDERATION_RELAY_LAG_HARD_MS</code></dt>
+<dt><span className="stigmem-fields__type"><code>300000</code></span></dt>
+<dd>Lag threshold for 503 throttle.</dd>
+</div>
 
-A relay node (node B, receiving from node A and serving node C) MUST NOT:
-- Return a fact with `scope="company"` to node C if node A's PeerDeclaration with
-  node B restricts to `allowed_scopes=["public"]`.
-- Infer that because node C is permitted `company` scope with node B, node B can
-  re-federate `company` facts it received from node A under a `["public"]`-only declaration.
+<div>
+<dt><code>STIGMEM_FEDERATION_RELAY_ENABLED</code></dt>
+<dt><span className="stigmem-fields__type"><code>true</code></span></dt>
+<dd>Set <code>false</code> to disable relay behavior (leaf nodes).</dd>
+</div>
 
-**Implementation requirement:** Nodes MUST tag every ingested federated fact with its
-**source peer's declaration scope** at ingest time. When serving a pull request, a
-relay node MUST intersect the fact's `origin_allowed_scopes` (the scope permitted when
-the fact first entered the federation) with the current peer's `allowed_scopes`. Only
-facts where `fact.scope ∈ origin_allowed_scopes ∩ current_peer.allowed_scopes` are
-returned.
+</div>
 
-The `received_from` meta-fact (§3.1) records the immediate sender, not the origin.
-Relay nodes MUST also store `origin_node_id` and `origin_allowed_scopes` per-fact when
-ingesting federated facts. These fields are internal to the node and MUST NOT be
-re-replicated.
+Conformance tests for relay backpressure will be added to the 4-node
+topology test suite (`node/tests/federation/test_4node_federation.py`)
+before the pre-reset spec stabilization.
 
-#### §6.8.2 Re-federation restriction for company-scoped facts {#section-6-8-2}
+### §6.8 Scope propagation invariants — pre-reset draft \{#section-6-8\}
 
-**the pre-reset spec resolves §8.5 (pre-reset open question).** The following rule is normative as of the pre-reset spec:
+<div className="stigmem-keypoint">
 
-A node that receives a `company`-scoped fact from peer A (where peer A's declaration
-explicitly includes `"company"` in `allowed_scopes`) MUST NOT re-federate that fact
-to any third node C, regardless of what node C's PeerDeclaration allows.
+**Pre-reset status.**
 
-**Rationale:** `company`-scoped facts represent internal knowledge of the originating
-organization. The originating node's explicit `allowed_scopes=["company"]` declaration
-is an authorization grant to a specific peer, not a grant to that peer's downstream
-federation network.
+These invariants close the transitive scope escalation gap identified
+during the pre-reset spec 4-node topology work. Draft; to be
+validated against correctness tests before promotion to normative.
 
-**Implementation requirement:** `company`-scoped ingested facts MUST be tagged
-`re_federation_blocked=true` at ingest. Federation pull responses MUST exclude facts
-with `re_federation_blocked=true`.
+</div>
+
+In a 2-node topology, scope enforcement is bilateral and
+straightforward. In an N-node topology, a fact can travel through
+multiple hops. The following invariants ensure that scope boundaries
+set by the originating node are respected end-to-end.
+
+#### §6.8.1 Transitive scope non-escalation \{#section-6-8-1\}
+
+<div className="stigmem-keypoint">
+
+**Invariant: a fact's scope MUST NOT be escalated at any relay hop.**
+
+</div>
+
+A relay node (node B, receiving from node A and serving node C) MUST
+NOT:
+
+<div className="stigmem-grid">
+
+<div><h4>Widen scope to peer</h4><p>Return a fact with <code>scope="company"</code> to node C if node A's PeerDeclaration with node B restricts to <code>allowed_scopes=["public"]</code>.</p></div>
+<div><h4>Re-grant via transitivity</h4><p>Infer that because node C is permitted <code>company</code> scope with node B, node B can re-federate <code>company</code> facts it received from node A under a <code>["public"]</code>-only declaration.</p></div>
+
+</div>
+
+**Implementation requirement:** Nodes MUST tag every ingested
+federated fact with its source peer's declaration scope at ingest
+time. When serving a pull request, a relay node MUST intersect the
+fact's `origin_allowed_scopes` with the current peer's
+`allowed_scopes`. Only facts where
+`fact.scope ∈ origin_allowed_scopes ∩ current_peer.allowed_scopes`
+are returned.
+
+The `received_from` meta-fact records the immediate sender, not the
+origin. Relay nodes MUST also store `origin_node_id` and
+`origin_allowed_scopes` per-fact when ingesting federated facts.
+These fields are internal to the node and MUST NOT be re-replicated.
+
+#### §6.8.2 Re-federation restriction for company-scoped facts \{#section-6-8-2\}
+
+<div className="stigmem-keypoint">
+
+**the pre-reset spec resolves §8.5 (pre-reset open question).**
+
+A node that receives a <code>company</code>-scoped fact from peer A
+(where peer A's declaration explicitly includes <code>"company"</code>
+in <code>allowed_scopes</code>) MUST NOT re-federate that fact to any
+third node C, regardless of what node C's PeerDeclaration allows.
+
+</div>
+
+**Rationale:** `company`-scoped facts represent internal knowledge of
+the originating organization. The originating node's explicit
+`allowed_scopes=["company"]` declaration is an authorization grant
+to a specific peer, not a grant to that peer's downstream federation
+network.
+
+**Implementation requirement:** `company`-scoped ingested facts MUST
+be tagged `re_federation_blocked=true` at ingest. Federation pull
+responses MUST exclude facts with `re_federation_blocked=true`.
 
 **Exception:** If the originating node explicitly sets
-`STIGMEM_FEDERATION_ALLOW_COMPANY_REFEDERATION=true` (default `false`), the
-re-federation restriction is lifted for that node's outbound `company` facts. This
-flag is operator-level and MUST be logged to the federation audit log each time it
-is applied.
+`STIGMEM_FEDERATION_ALLOW_COMPANY_REFEDERATION=true` (default
+`false`), the re-federation restriction is lifted for that node's
+outbound `company` facts. This flag is operator-level and MUST be
+logged to the federation audit log each time it is applied.
 
-#### §6.8.3 Scope propagation edge cases {#section-6-8-3}
+#### §6.8.3 Scope propagation edge cases \{#section-6-8-3\}
 
-The following edge cases were identified during the pre-reset spec 4-node topology testing:
+The following edge cases were identified during the pre-reset spec
+4-node topology testing.
 
-1. **Mixed-scope batch push.** A push payload (`POST /v1/federation/facts/push`) may
-   contain facts of multiple scopes. Nodes MUST enforce per-fact scope checking within
-   a batch; a scope violation on one fact MUST NOT cause the entire batch to be rejected.
-   The response's `rejected` count and `errors` array MUST enumerate each rejected fact.
+<div className="stigmem-fields">
 
-2. **Scope of contradiction meta-facts.** When a federated fact creates a contradiction,
-   the `stigmem:conflict:between` meta-fact MUST inherit the scope of the conflicting
-   facts. If two facts in `company` scope conflict, the conflict record is `company`-scoped.
-   If a `public` fact from a peer conflicts with a local `company` fact (same entity, same
-   relation), the conflict record is `company`-scoped (the narrower scope wins).
+<div>
+<dt>Edge case</dt>
+<dt><span className="stigmem-fields__type">Requirement</span></dt>
+<dd>Behavior</dd>
+</div>
 
-3. **`team`-scoped fact from a misbehaving peer.** If a peer sends a `team`-scoped fact
-   and the PeerDeclaration does not include `"team"` in `allowed_scopes`, the fact MUST be
-   rejected with HTTP 403 and logged as `event_type="scope_violation"` in the federation
-   audit log. This applies even if `STIGMEM_FEDERATION_ALLOW_TEAM=true` is set locally —
-   the PeerDeclaration is the authoritative grant, not the local env flag.
+<div>
+<dt>Mixed-scope batch push</dt>
+<dt><span className="stigmem-fields__type">per-fact, not all-or-nothing</span></dt>
+<dd>A push payload may contain facts of multiple scopes. Nodes MUST enforce per-fact scope checking within a batch; a scope violation on one fact MUST NOT cause the entire batch to be rejected. Response's <code>rejected</code> count and <code>errors</code> array MUST enumerate each rejected fact.</dd>
+</div>
 
----
+<div>
+<dt>Scope of contradiction meta-facts</dt>
+<dt><span className="stigmem-fields__type">narrower scope wins</span></dt>
+<dd>The <code>stigmem:conflict:between</code> meta-fact MUST inherit the scope of the conflicting facts. If a <code>public</code> fact from a peer conflicts with a local <code>company</code> fact, the conflict record is <code>company</code>-scoped.</dd>
+</div>
+
+<div>
+<dt><code>team</code>-scoped fact from misbehaving peer</dt>
+<dt><span className="stigmem-fields__type">PeerDeclaration is authoritative</span></dt>
+<dd>If a peer sends a <code>team</code>-scoped fact and the PeerDeclaration does not include <code>"team"</code>, the fact MUST be rejected with HTTP 403 and logged as <code>event_type="scope_violation"</code>. This applies even if <code>STIGMEM_FEDERATION_ALLOW_TEAM=true</code> is set locally — the PeerDeclaration is the authoritative grant.</dd>
+</div>
+
+</div>

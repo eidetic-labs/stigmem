@@ -5,19 +5,77 @@ audience: Spec
 description: "Spec-03-HTTP-API rendered entry point — JSON/HTTP API surface and route contracts."
 ---
 
-# Spec-03-HTTP-API {#section-5}
+# Spec-03-HTTP-API \{#section-5\}
 
-**Status:** Rendered compatibility entry point for [`Spec-03-HTTP-API`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/03-http-api.md).
+<p className="stigmem-meta"><span>14 min read</span><span>Spec contributor · SDK author · Adapter author</span><span>25 HTTP routes</span></p>
 
-JSON/HTTP wire format for facts, peers, gardens, trust manifests, and capability tokens.
+<div className="stigmem-lead">
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**What this page is**
+
+Rendered compatibility entry point for
+[`Spec-03-HTTP-API`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/03-http-api.md).
+JSON/HTTP wire format for facts, peers, gardens, trust manifests,
+and capability tokens — every operation is JSON-over-HTTP so any
+language with an HTTP client can participate. No SDK required.
+
+</div>
+
+**Authoritative source:**
+[`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
-Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
+Legacy §5 anchors are retained for existing links while the
+maintained route contract lives in `Spec-03-HTTP-API`.
 :::
 
-Legacy §5 anchors are retained for existing links while the maintained route contract lives in `Spec-03-HTTP-API`.
+## Endpoint groups
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Group</dt>
+<dt><span className="stigmem-fields__type">Sections</span></dt>
+<dd>Purpose</dd>
+</div>
+
+<div>
+<dt>Fact CRUD</dt>
+<dt><span className="stigmem-fields__type">§5.1–§5.5</span></dt>
+<dd>Assert, query, retract, point lookup, node metadata.</dd>
+</div>
+
+<div>
+<dt>Federation lifecycle</dt>
+<dt><span className="stigmem-fields__type">§5.6–§5.8, §5.11</span></dt>
+<dd>Peer register, list, pull, push.</dd>
+</div>
+
+<div>
+<dt>Conflict management</dt>
+<dt><span className="stigmem-fields__type">§5.9–§5.10</span></dt>
+<dd>List + resolve.</dd>
+</div>
+
+<div>
+<dt>Higher-order operations</dt>
+<dt><span className="stigmem-fields__type">§5.12–§5.13</span></dt>
+<dd>Lint + synthesis.</dd>
+</div>
+
+<div>
+<dt>Gardens</dt>
+<dt><span className="stigmem-fields__type">§5.14–§5.20</span></dt>
+<dd>CRUD, membership, garden-filtered assert/query.</dd>
+</div>
+
+<div>
+<dt>Federation trust</dt>
+<dt><span className="stigmem-fields__type">§5.21–§5.25</span></dt>
+<dd>Manifests, capability tokens, quarantine.</dd>
+</div>
+
+</div>
 
 <details>
 <summary>Revisions before pre-reset draft: the pre-reset spec-draft, pre-reset draft, v1.0</summary>
@@ -40,14 +98,21 @@ conflict management (§5.9–§5.10), and higher-order operations (§5.12–§5.
 
 </details>
 
-### §5.1 Assert a fact {#section-5-1}
+### §5.1 Assert a fact \{#section-5-1\}
 
-Asserting a fact is the primary write operation in Stigmem. The caller supplies
-the full `(entity, relation, value, source, confidence, scope)` tuple and the
-node stores it as an immutable record, stamping it with a server-generated `id`,
-wall-clock `timestamp`, and hybrid logical clock (`hlc`) value. Because facts
-are append-only, this endpoint never overwrites an existing record — every call
+The primary write operation. Caller supplies the full
+`(entity, relation, value, source, confidence, scope)` tuple; the
+node stores it as an immutable record, stamping it with a
+server-generated `id`, wall-clock `timestamp`, and HLC value.
+
+<div className="stigmem-keypoint">
+
+**Facts are append-only.**
+
+This endpoint never overwrites an existing record — every call
 produces a new row, even if the same tuple was asserted before.
+
+</div>
 
 ```
 POST /v1/facts
@@ -57,34 +122,28 @@ POST /v1/facts
 → 201 { "id": "<uuid>", "timestamp": "...", "hlc": "...", ...fact... }
 ```
 
-### §5.2 Query facts {#section-5-2}
+### §5.2 Query facts \{#section-5-2\}
 
-Querying is the primary read path. Callers filter by any combination of the
-fact dimensions — `entity`, `relation`, `source`, `scope` — and the node
-returns the matching facts sorted by recency. The response is cursor-paginated
-so that large result sets can be consumed incrementally without holding server
-resources. By default the query excludes contradicted and expired facts; callers
-can opt in to those via the `include_contradicted` and `include_expired` flags
-when they need a full audit trail.
+The primary read path. Filter by any combination of `entity`,
+`relation`, `source`, `scope`; the node returns matching facts
+sorted by recency. Cursor-paginated for large result sets. By
+default excludes contradicted and expired facts.
 
 ```
 GET /v1/facts?entity=stigmem://company.example/user/alice&relation=memory:role
 → 200 { "facts": [...], "total": 1, "cursor": null }
 ```
 
-Query params: `entity`, `relation`, `source`, `scope`, `min_confidence`,
-`after`, `include_contradicted`, `include_expired`, `cursor`, `limit`.
+**Query params:** `entity`, `relation`, `source`, `scope`,
+`min_confidence`, `after`, `include_contradicted`, `include_expired`,
+`cursor`, `limit`.
 
-### §5.3 Node metadata {#section-5-3}
+### §5.3 Node metadata \{#section-5-3\}
 
-Every Stigmem node exposes a discovery document at the well-known path so that
-clients and peers can learn the node's capabilities before making any
-authenticated call. The document advertises the spec version the node
-implements, whether authentication is required, whether federation is enabled,
-and — when federation is active — the node's public key, supported federation
-version, and the concrete endpoint paths for peer management and replication.
-This is the first endpoint a federation peer contacts during mutual discovery
-(§6.1).
+Every node exposes a discovery document at the well-known path so
+clients and peers can learn the node's capabilities before any
+authenticated call. This is the first endpoint a federation peer
+contacts during mutual discovery (§6.1).
 
 ```
 GET /.well-known/stigmem
@@ -109,10 +168,11 @@ GET /.well-known/stigmem
 Nodes with `federation: "enabled"` MUST populate `federation_pubkey`,
 `federation_version`, and `federation_endpoints`.
 
-### §5.4 Retract a fact {#section-5-4}
+### §5.4 Retract a fact \{#section-5-4\}
 
-To retract a fact, assert a new fact for the same `(entity, relation, scope)` with `confidence=0.0`.
-The original fact is never deleted; the retraction is a new immutable entry.
+To retract a fact, assert a new fact for the same
+`(entity, relation, scope)` with `confidence=0.0`. The original
+fact is never deleted; the retraction is a new immutable entry.
 
 ```
 POST /v1/facts
@@ -122,12 +182,12 @@ POST /v1/facts
 → 201 { ..., "confidence": 0.0 }
 ```
 
-### §5.5 Get a single fact {#section-5-5}
+### §5.5 Get a single fact \{#section-5-5\}
 
-Retrieve a single fact by its server-assigned UUID. This is useful for
-dereferencing a fact ID obtained from another endpoint — for example, when
-inspecting the two sides of a conflict (§5.9), following a `fact_refs` link
-from a handoff payload (§4.6), or auditing a specific assertion.
+Retrieve a single fact by its server-assigned UUID. Useful for
+dereferencing fact IDs from other endpoints — inspecting conflict
+sides (§5.9), following `fact_refs` from a handoff payload (§4.6),
+or auditing a specific assertion.
 
 ```
 GET /v1/facts/:id
@@ -135,16 +195,11 @@ GET /v1/facts/:id
 → 404 if not found
 ```
 
-### §5.6 Register a peer — pre-reset {#section-5-6}
+### §5.6 Register a peer — pre-reset \{#section-5-6\}
 
-Peer registration is the first step of the federation handshake. The calling
-node presents a signed declaration containing its identity (`node_id`),
-reachable URL, Ed25519 public key, and the scopes it is willing to share. The
-receiving node stores the declaration in `pending_verification` status and then
-runs the verification flow described below — fetching the caller's
-`/.well-known/stigmem` document to confirm the public key matches. Federation
-traffic (§5.8, §5.11) cannot begin until both sides have registered each other
-and both declarations reach `active` status.
+First step of the federation handshake. The calling node presents
+a signed declaration containing its identity (`node_id`), reachable
+URL, Ed25519 public key, and shared scopes.
 
 ```
 POST /v1/federation/peers
@@ -165,23 +220,19 @@ Authorization: Bearer <api-key with federate permission>
 ```
 
 **Verification flow:**
-1. Receiving node fetches `{node_url}/.well-known/stigmem` to retrieve the peer's
-   `federation_pubkey`.
-2. Node verifies `declaration_sig` over the canonical JSON payload.
-3. If valid, peer status transitions to `"active"`. If `federation_pubkey` in the
-   declaration does not match the one at `/.well-known/stigmem`, status becomes
-   `"rejected"`.
-4. Mutual federation requires both sides to register each other. A node MAY auto-register
-   a reciprocal peer declaration; it MUST NOT begin replicating until both sides are `"active"`.
 
-### §5.7 List peers — pre-reset {#section-5-7}
+<ol className="stigmem-steps">
+<li>Receiving node fetches <code>{`{node_url}`}/.well-known/stigmem</code> to retrieve the peer's <code>federation_pubkey</code>.</li>
+<li>Node verifies <code>declaration_sig</code> over the canonical JSON payload.</li>
+<li>If valid, peer status transitions to <code>"active"</code>. If <code>federation_pubkey</code> mismatches the one at <code>/.well-known/stigmem</code>, status becomes <code>"rejected"</code>.</li>
+<li>Mutual federation requires both sides to register each other. A node MAY auto-register a reciprocal peer declaration; it MUST NOT begin replicating until both sides are <code>"active"</code>.</li>
+</ol>
 
-Returns the set of federation peers known to this node. Each entry includes the
-peer's status (`active`, `pending_verification`, `rejected`, or `revoked`),
-the scopes that peer is allowed to replicate, and the timestamp when the
-relationship was established. Operators use this endpoint to audit federation
-topology; automated tooling uses it to confirm mutual registration before
-triggering replication.
+### §5.7 List peers — pre-reset \{#section-5-7\}
+
+Returns the set of federation peers known to this node. Operators
+audit federation topology; tooling confirms mutual registration
+before triggering replication.
 
 ```
 GET /v1/federation/peers
@@ -190,15 +241,11 @@ GET /v1/federation/peers
                      "allowed_scopes": [...], "established_at": "..." }] }
 ```
 
-### §5.8 Pull replication — pre-reset {#section-5-8}
+### §5.8 Pull replication — pre-reset \{#section-5-8\}
 
-Pull replication is the default mechanism for synchronising facts between
-federated peers. The requesting node supplies an opaque cursor (received from
-the previous pull, or `null` to start from the beginning) and a limit. The
-responding node returns facts that were created or received after the cursor's
-HLC position, filtered to the scopes the requesting peer is authorised to see.
-Pull is idempotent: re-requesting the same cursor returns the same facts, and
-ingesting a duplicate fact on the receiving side is a silent no-op.
+Default mechanism for synchronising facts between federated peers.
+Opaque cursor + limit; response returns facts created or received
+after the cursor's HLC position, filtered to authorised scopes.
 
 ```
 GET /v1/federation/facts?scope=public&cursor=<cursor>&limit=100
@@ -210,26 +257,20 @@ Authorization: Bearer <peer-token>
   }
 ```
 
-**Cursor semantics:** An opaque string encoding the HLC of the last fact returned.
-The cursor is stable: re-requesting the same cursor returns the same facts (idempotent).
-A cursor of `null` requests from the beginning.
+<div className="stigmem-grid">
 
-**Scope filtering:** The peer token's `scopes` claim restricts which scopes can be
-returned. Nodes MUST NOT return facts outside the intersection of `allowed_scopes`
-in the PeerDeclaration and the token's `scopes` claim.
+<div><h4>Cursor semantics</h4><p>An opaque string encoding the HLC of the last fact returned. Stable: re-requesting the same cursor returns the same facts (idempotent). <code>null</code> requests from the beginning.</p></div>
+<div><h4>Scope filtering</h4><p>The peer token's <code>scopes</code> claim restricts which scopes can be returned. Nodes MUST NOT return facts outside the intersection of <code>allowed_scopes</code> in the PeerDeclaration and the token's <code>scopes</code> claim.</p></div>
+<div><h4>Idempotency</h4><p>Nodes MUST deduplicate by fact <code>id</code>. Re-ingesting a fact that already exists locally is a silent no-op.</p></div>
 
-**Idempotency:** Nodes MUST deduplicate by fact `id`. Re-ingesting a fact that already
-exists locally is a silent no-op; the node MUST NOT create a duplicate or update
-the existing record.
+</div>
 
-### §5.9 List conflicts — pre-reset {#section-5-9}
+### §5.9 List conflicts — pre-reset \{#section-5-9\}
 
-When two facts for the same `(entity, relation, scope)` tuple arrive with
-conflicting values — whether from local assertions or federated replication —
-the node records them as a conflict (§7). This endpoint returns the set of
-detected conflicts, filterable by status. Each conflict entry carries references
-to both original facts so that a human operator or automated resolver can
-inspect the competing claims and choose a winner (§5.10).
+When two facts for the same `(entity, relation, scope)` tuple
+arrive with conflicting values (whether local or federated), the
+node records them as a conflict (§7). Filterable by status; each
+entry carries references to both original facts.
 
 ```
 GET /v1/conflicts?status=unresolved&cursor=<cursor>&limit=50
@@ -247,16 +288,11 @@ GET /v1/conflicts?status=unresolved&cursor=<cursor>&limit=50
   }
 ```
 
-### §5.10 Resolve a conflict — pre-reset {#section-5-10}
+### §5.10 Resolve a conflict — pre-reset \{#section-5-10\}
 
-Resolving a conflict is an explicit human- or agent-driven decision that picks
-a winner, optionally supplies a fresh reconciliation value, and records the
-rationale as auditable facts. The caller identifies which of the two competing
-facts wins (or passes `null` to reject both in favour of a new value). The node
-then asserts the resolution as a new fact, links it to the conflict via a
-`stigmem:resolves` meta-fact (§2), and marks the conflict as resolved. Both
-original competing facts remain immutable in the store — resolution is additive,
-never destructive.
+Explicit human- or agent-driven decision that picks a winner,
+optionally supplies a fresh reconciliation value, and records the
+rationale as auditable facts.
 
 ```
 POST /v1/conflicts/:conflict_id/resolve
@@ -273,27 +309,20 @@ Authorization: Bearer <api-key>
 ```
 
 **Resolution semantics:** The node asserts:
-1. A new fact for `(entity, relation, scope)` with the winning or new value and `confidence=1.0`.
-2. A `stigmem:resolves` meta-fact:
-   ```
-   (entity=<resolution-fact-id>, relation="stigmem:resolves",
-    value={type:"ref", v:"<conflict_id>"}, source=<caller's entity_uri>, ...)
-   ```
-3. Updates the conflict's `stigmem:conflict:status` to `"resolved"`.
+
+<ol className="stigmem-steps">
+<li>A new fact for <code>(entity, relation, scope)</code> with the winning or new value and <code>confidence=1.0</code>.</li>
+<li>A <code>stigmem:resolves</code> meta-fact: <code>(entity=&lt;resolution-fact-id&gt;, relation="stigmem:resolves", value={`{type:"ref", v:"<conflict_id>"}`}, source=&lt;caller's entity_uri&gt;, ...)</code>.</li>
+<li>Updates the conflict's <code>stigmem:conflict:status</code> to <code>"resolved"</code>.</li>
+</ol>
 
 Both original conflicting facts remain immutable in the store.
 
-### §5.11 Push replication (optional) — pre-reset {#section-5-11}
+### §5.11 Push replication (optional) — pre-reset \{#section-5-11\}
 
-Push replication is an opt-in, low-latency complement to pull (§5.8). Where
-pull requires the consuming node to poll on a schedule, push lets the producing
-node forward facts to a peer as soon as they are committed. This is useful for
-time-sensitive federation scenarios — for example, when an agent on node A
-asserts a fact that a workflow on node B needs within seconds. Push is guarded
-by a feature flag (`STIGMEM_FEDERATION_PUSH_ENABLED`, default `false`) because
-it adds outbound network traffic and requires the receiving node to expose an
-ingestion endpoint. Nodes that advertise a non-null
-`federation_endpoints.push` MUST accept:
+Opt-in, low-latency complement to pull. The producing node forwards
+facts to a peer as soon as they are committed. Guarded by
+`STIGMEM_FEDERATION_PUSH_ENABLED` (default `false`).
 
 ```
 POST /v1/federation/facts/push
@@ -303,19 +332,16 @@ Authorization: Bearer <peer-token>
 → 202 { "accepted": <int>, "rejected": <int>, "errors": [...] }
 ```
 
-Push is opt-in. Nodes that do not support push SHOULD return 405. Implementations
-SHOULD prefer pull; push is provided for low-latency delivery behind a feature flag
-(`STIGMEM_FEDERATION_PUSH_ENABLED`, default `false`).
+Push is opt-in. Nodes that do not support push SHOULD return 405.
+Implementations SHOULD prefer pull; push is provided for
+low-latency delivery behind a feature flag.
 
-### §5.12 Lint — pre-reset Normative {#section-5-12}
+### §5.12 Lint — pre-reset normative \{#section-5-12\}
 
-The lint endpoint runs a configurable set of data-quality checks against a
-scope and returns machine-readable findings. It is the diagnostic counterpart
-to the decay sweeper (§15): lint identifies problems (contradictions, stale
-facts, low-confidence assertions); decay acts on them. The `checks` array lets
-the caller select which analyses to run so that expensive checks can be skipped
-in latency-sensitive contexts. See §14 for the full finding schema and check
-catalogue.
+The lint endpoint runs a configurable set of data-quality checks
+against a scope and returns machine-readable findings. Diagnostic
+counterpart to the decay sweeper (§15). See §14 for the full
+finding schema and check catalogue.
 
 ```
 POST /v1/lint
@@ -325,16 +351,13 @@ Authorization: Bearer <api-key>
          "checks_run": ["contradiction","stale"], "fact_count": 142 }
 ```
 
-### §5.13 Synthesize scope — the pre-reset spec Draft {#section-5-13}
+### §5.13 Synthesize scope — pre-reset draft \{#section-5-13\}
 
-Synthesis produces a confidence-weighted summary of everything a scope knows
-about a given entity (or the entire scope when no entity filter is supplied).
-Where a raw query (§5.2) returns every historical assertion, synthesis collapses
-the timeline: for each `(entity, relation)` pair it surfaces the single
-highest-confidence live value, flags active contradictions, and reports the
-total fact count. This makes synthesis the go-to read path when an agent needs
-a consolidated world-view rather than a change log. See §16 for the full
-summary-item schema and contradiction-handling rules.
+Produces a confidence-weighted summary of everything a scope knows
+about a given entity (or the entire scope when no entity filter is
+supplied). Collapses the timeline: for each `(entity, relation)`
+pair, surfaces the single highest-confidence live value, flags
+active contradictions, reports total fact count.
 
 ```
 POST /v1/synthesis
@@ -344,9 +367,7 @@ Authorization: Bearer <api-key>
          "fact_count": 142, "contradiction_count": 3 }
 ```
 
----
-
-### §5.14 Create a garden {#section-5-14}
+### §5.14 Create a garden \{#section-5-14\}
 
 ```
 POST /v1/gardens
@@ -378,7 +399,8 @@ Authorization: Bearer <api-key with write permission>
 
 The creating principal is automatically added as `admin`.
 
-**Slug rules:** Must match `^[a-z0-9][a-z0-9\-]{0,62}$`. Stored and matched case-insensitively.
+**Slug rules:** Must match `^[a-z0-9][a-z0-9\-]{0,62}$`. Stored and
+matched case-insensitively.
 
 <details>
 <summary>Revisions before v1.0: pre-reset draft</summary>
@@ -391,37 +413,20 @@ The creating principal is automatically added as `admin`.
 POST /v1/gardens
 Authorization: Bearer <api-key with write permission>
 {
-  "slug":        "project-atlas",          // URL-safe identifier; unique within the node
-  "name":        "Project Atlas",          // display name
-  "scope":       "company",               // facts in this garden must have this scope
-  "description": "Atlas project memory."  // optional
+  "slug":        "project-atlas",
+  "name":        "Project Atlas",
+  "scope":       "company",
+  "description": "Atlas project memory."
 }
-→ 201 {
-    "id":          "<uuid>",
-    "garden_id":   "stigmem://node.example.com/garden/project-atlas",
-    "slug":        "project-atlas",
-    "name":        "Project Atlas",
-    "scope":       "company",
-    "description": "Atlas project memory.",
-    "created_by":  "stigmem://node.example.com/agent/cto",
-    "created_at":  "2026-05-03T00:00:00Z",
-    "members": [{
-      "entity_uri": "stigmem://node.example.com/agent/cto",
-      "role":       "admin",
-      "added_by":   "stigmem://node.example.com/agent/cto",
-      "added_at":   "2026-05-03T00:00:00Z"
-    }]
-  }
+→ 201 { ...GardenRecord with members... }
 → 409 if slug already exists
 ```
 
-The creating principal is automatically added as `admin`.
-
-**Slug rules:** Must match `^[a-z0-9][a-z0-9\-]{0,62}$`. Stored and matched case-insensitively.
+The creating principal is automatically added as `admin`. **Slug rules:** Must match `^[a-z0-9][a-z0-9\-]{0,62}$`. Stored and matched case-insensitively.
 
 </details>
 
-### §5.15 List gardens {#section-5-15}
+### §5.15 List gardens \{#section-5-15\}
 
 ```
 GET /v1/gardens
@@ -429,7 +434,9 @@ Authorization: Bearer <api-key>
 → 200 { "gardens": [ ...GardenRecord... ] }
 ```
 
-Returns only gardens where the caller holds any role (admin, writer, or reader). Admins of the node (callers with `write` permission) see all gardens.
+Returns only gardens where the caller holds any role (admin,
+writer, or reader). Admins of the node (callers with `write`
+permission) see all gardens.
 
 <details>
 <summary>Revisions before v1.0: pre-reset draft</summary>
@@ -448,7 +455,7 @@ Returns only gardens where the caller holds any role (admin, writer, or reader).
 
 </details>
 
-### §5.16 Get a garden {#section-5-16}
+### §5.16 Get a garden \{#section-5-16\}
 
 ```
 GET /v1/gardens/:garden_id_or_slug
@@ -475,7 +482,7 @@ Authorization: Bearer <api-key>
 
 </details>
 
-### §5.17 Delete a garden {#section-5-17}
+### §5.17 Delete a garden \{#section-5-17\}
 
 ```
 DELETE /v1/gardens/:garden_id_or_slug
@@ -485,7 +492,14 @@ Authorization: Bearer <api-key>
 → 404 if not found
 ```
 
-Deleting a garden does NOT delete its associated facts. The `garden_id` field on orphaned facts becomes a dangling reference. Nodes SHOULD surface these in lint output (§14).
+<div className="stigmem-keypoint">
+
+**Deleting a garden does NOT delete its associated facts.**
+
+The <code>garden_id</code> field on orphaned facts becomes a
+dangling reference. Nodes SHOULD surface these in lint output (§14).
+
+</div>
 
 <details>
 <summary>Revisions before v1.0: pre-reset draft</summary>
@@ -506,7 +520,7 @@ Deleting a garden does NOT delete its associated facts. The `garden_id` field on
 
 </details>
 
-### §5.18 Garden membership {#section-5-18}
+### §5.18 Garden membership \{#section-5-18\}
 
 **Add member:**
 
@@ -557,53 +571,14 @@ Authorization: Bearer <api-key> (must be any member)
 
 ### 5.18 Garden membership — the pre-reset spec
 
-**Add member:**
-
-```
-POST /v1/gardens/:garden_id_or_slug/members
-Authorization: Bearer <api-key> (must be garden admin)
-{
-  "entity_uri": "stigmem://node.example.com/user/alice",
-  "role":       "writer"   // "admin" | "writer" | "reader"
-}
-→ 201 { ...GardenMemberRecord... }
-→ 403 if caller is not garden admin
-→ 404 if garden not found
-→ 409 if entity already a member (use PATCH to change role)
-```
-
-**Update member role:**
-
-```
-PATCH /v1/gardens/:garden_id_or_slug/members/:entity_uri
-Authorization: Bearer <api-key> (must be garden admin)
-{ "role": "reader" }
-→ 200 { ...GardenMemberRecord... }
-→ 403 if caller is not garden admin or is demoting themselves (must retain at least one admin)
-```
-
-**Remove member:**
-
-```
-DELETE /v1/gardens/:garden_id_or_slug/members/:entity_uri
-Authorization: Bearer <api-key> (must be garden admin)
-→ 204
-→ 403 if caller would remove the last admin
-```
-
-**List members:**
-
-```
-GET /v1/gardens/:garden_id_or_slug/members
-Authorization: Bearer <api-key> (must be any member)
-→ 200 { "members": [ ...GardenMemberRecord... ] }
-```
+(Same as above — identical request/response shapes for add/update/remove/list.)
 
 </details>
 
-### §5.19 Assert a fact into a garden {#section-5-19}
+### §5.19 Assert a fact into a garden \{#section-5-19\}
 
-Facts are associated with a garden by including `garden_id` in the assert request:
+Facts are associated with a garden by including `garden_id` in the
+assert request.
 
 ```
 POST /v1/facts
@@ -629,28 +604,11 @@ Authorization: Bearer <api-key with write permission>
 
 ### 5.19 Assert a fact into a garden — the pre-reset spec
 
-Facts are associated with a garden by including `garden_id` in the assert request:
-
-```
-POST /v1/facts
-Authorization: Bearer <api-key with write permission>
-{
-  "entity":    "stigmem://node.example.com/project/atlas",
-  "relation":  "roadmap:status",
-  "value":     { "type": "string", "v": "in-flight" },
-  "source":    "stigmem://node.example.com/agent/cto",
-  "scope":     "company",
-  "garden_id": "stigmem://node.example.com/garden/project-atlas"
-}
-→ 201 { ...FactRecord..., "garden_id": "...", "attested": true }
-→ 403 if caller is not a writer or admin in the garden
-→ 403 if scope does not match the garden's declared scope
-→ 404 if garden not found
-```
+(Same shape as above.)
 
 </details>
 
-### §5.20 Query facts with garden filter {#section-5-20}
+### §5.20 Query facts with garden filter \{#section-5-20\}
 
 ```
 GET /v1/facts?garden_id=stigmem://node.example.com/garden/project-atlas
@@ -658,9 +616,16 @@ GET /v1/facts?garden_id=stigmem://node.example.com/garden/project-atlas
 → 403 if caller is not a member of the garden
 ```
 
-The `garden_id` query parameter is additive with other filters (`entity`, `relation`, `scope`, etc.). Garden ACL is enforced: non-members get 403, not an empty result, to prevent membership enumeration.
+<div className="stigmem-keypoint">
 
----
+**Garden ACL is enforced.**
+
+The <code>garden_id</code> query parameter is additive with other
+filters (<code>entity</code>, <code>relation</code>, <code>scope</code>,
+etc.). Non-members get 403, not an empty result, to prevent
+membership enumeration.
+
+</div>
 
 <details>
 <summary>Revisions before v1.0: pre-reset draft</summary>
@@ -669,27 +634,17 @@ The `garden_id` query parameter is additive with other filters (`entity`, `relat
 
 ### 5.20 Query facts with garden filter — the pre-reset spec
 
-```
-GET /v1/facts?garden_id=stigmem://node.example.com/garden/project-atlas
-→ 200 { "facts": [...], "total": N, "cursor": "..." }
-→ 403 if caller is not a member of the garden
-```
-
-The `garden_id` query parameter is additive with other filters (`entity`, `relation`, `scope`, etc.). Garden ACL is enforced: non-members get 403, not an empty result, to prevent membership enumeration.
-
----
+(Same shape as above; garden ACL is enforced — non-members get 403 not empty result.)
 
 </details>
 
-### §5.21 Publish an org manifest {#section-5-21}
+### §5.21 Publish an org manifest \{#section-5-21\}
 
-Publishing an org manifest is the bootstrap step for the federation trust model
-(§19). The admin uploads a self-signed manifest that declares the node's public
-key and the entity URIs it speaks for. The node verifies the signature against
-the embedded public key, stores the manifest, and (if configured) submits it to
-the transparency log (§19.2) for independent auditability. This endpoint
-replaces manual key exchange — peers can now resolve the manifest dynamically
-via §5.22.
+Bootstrap step for the federation trust model (§19). The admin
+uploads a self-signed manifest that declares the node's public key
+and the entity URIs it speaks for. The node verifies the signature
+against the embedded public key, stores the manifest, and (if
+configured) submits it to the transparency log (§19.2).
 
 ```
 PUT /v1/federation/manifest
@@ -715,13 +670,12 @@ Content-Type: application/json
 → 403 if caller not admin
 ```
 
-### §5.22 Resolve an org manifest {#section-5-22}
+### §5.22 Resolve an org manifest \{#section-5-22\}
 
-Peers call this endpoint during the federation handshake to retrieve the
-manifest for a given entity URI. The response contains the full manifest object
-including the public key, entity list, rotation events, and signature — giving
-the peer everything it needs to verify capability tokens (§19.3) issued by
-this node.
+Peers call this endpoint during the federation handshake to
+retrieve the manifest for a given entity URI. The response contains
+the full manifest object — giving the peer everything it needs to
+verify capability tokens (§19.3) issued by this node.
 
 ```
 GET /v1/federation/manifest/:entity_uri_encoded
@@ -729,13 +683,14 @@ GET /v1/federation/manifest/:entity_uri_encoded
 → 404 if no manifest found for entity_uri
 ```
 
-### §5.23 Issue a capability token {#section-5-23}
+### §5.23 Issue a capability token \{#section-5-23\}
 
-Capability tokens (§19.3) are short-lived, scoped credentials that replace
-static API keys for inter-node operations. This endpoint mints a signed token
-granting the named `subject` a specific `verb` on a specific `object` (scope or
-garden URI). The token is self-contained — the receiving peer verifies it using
-the issuer's manifest public key without calling back to the issuing node.
+Capability tokens (§19.3) are short-lived, scoped credentials that
+replace static API keys for inter-node operations. This endpoint
+mints a signed token granting the named `subject` a specific `verb`
+on a specific `object`. Self-contained — the receiving peer
+verifies it using the issuer's manifest public key without calling
+back.
 
 ```
 POST /v1/federation/capability-tokens
@@ -753,11 +708,11 @@ Authorization: Bearer <admin api-key>
 → 403 if caller not admin
 ```
 
-### §5.24 Revoke a capability token {#section-5-24}
+### §5.24 Revoke a capability token \{#section-5-24\}
 
-Revocation invalidates a previously-issued token before its natural expiry. The
-revocation event is recorded in the local revocation list and submitted to the
-transparency log (§19.2.5) so that peers can independently verify the
+Revocation invalidates a previously-issued token before its natural
+expiry. Recorded in the local revocation list and submitted to the
+transparency log (§19.2.5) so peers can independently verify the
 revocation without trusting the issuing node's runtime state.
 
 ```
@@ -769,16 +724,17 @@ Authorization: Bearer <admin api-key>
 → 404 if token_id not found
 ```
 
-### §5.25 Quarantine garden operations {#section-5-25}
+### §5.25 Quarantine garden operations \{#section-5-25\}
 
-Facts that arrive from untrusted or low-scoring federation sources land in a
-quarantine garden (§19.7) rather than the target scope. These operations let a
-moderator review quarantined facts and either promote them to the intended
-destination or reject them permanently. Both actions are auditable — the
-`promoted_by` / `rejected_by` field records who made the decision.
+Facts that arrive from untrusted or low-scoring federation sources
+land in a quarantine garden (§19.7) rather than the target scope.
+These operations let a moderator review quarantined facts and
+either promote them or reject them permanently. Both actions are
+auditable.
+
+**Promote a fact from quarantine to a target garden:**
 
 ```
-// Promote a fact from quarantine to a target garden
 POST /v1/gardens/:quarantine_garden_id/promote
 Authorization: Bearer <api-key> (must hold quarantine:moderator role)
 
@@ -791,8 +747,11 @@ Authorization: Bearer <api-key> (must hold quarantine:moderator role)
 → 403 if caller lacks quarantine:moderator
 → 404 if fact_id not found in quarantine garden
 → 409 if fact already promoted or rejected
+```
 
-// Reject a quarantined fact
+**Reject a quarantined fact:**
+
+```
 POST /v1/gardens/:quarantine_garden_id/reject
 Authorization: Bearer <api-key> (must hold quarantine:moderator role)
 
@@ -805,5 +764,3 @@ Authorization: Bearer <api-key> (must hold quarantine:moderator role)
 → 404 if fact_id not found in quarantine garden
 → 409 if fact already promoted or rejected
 ```
-
----

@@ -7,42 +7,125 @@ description: Why Stigmem stores knowledge as immutable, typed atomic facts — a
 
 # Why Immutable Typed Facts
 
-**Audience:** Protocol implementers and SDK authors.
+<p className="stigmem-meta"><span>4 min read</span><span>Protocol implementer · SDK author</span><span>Spec-01-Fact-Model</span></p>
+
+<div className="stigmem-lead">
+
+**What this page is**
+
+Why Stigmem stores knowledge as immutable, typed atomic facts —
+`(entity, relation, value, source, timestamp, hlc, confidence, scope)`
+— and why mutable key-value stores fail at federation.
+
+</div>
 
 ## The problem
 
-An AI agent needs to remember things — a user's role, a project's status, a preference. The simplest model is a key-value store: `set("alice.role", "CEO")`. But the moment a second agent, a second node, or a second point in time enters the picture, key-value breaks down.
+An AI agent needs to remember things — a user's role, a project's
+status, a preference. The simplest model is a key-value store:
+`set("alice.role", "CEO")`. But the moment a second agent, a second
+node, or a second point in time enters the picture, key-value breaks
+down.
 
-Which write wins? Who wrote it? When? Can you prove the value wasn't tampered with? Can you retract a fact without losing the audit trail? Key-value stores answer none of these questions without bolting on layers of metadata — at which point you've reinvented a fact model, just poorly.
+<div className="stigmem-keypoint">
+
+**Which write wins? Who wrote it? When? Can you prove the value wasn't tampered with?**
+
+Key-value stores answer none of these questions without bolting on
+layers of metadata — at which point you've reinvented a fact model,
+just poorly.
+
+</div>
 
 ## Naive approaches and why they fail
 
-**Mutable key-value store.** Two agents write different values for the same key. Last-write-wins silently discards one. There is no record of the conflict, no provenance, and no way to know the discarded value ever existed.
+<div className="stigmem-fields">
 
-**Append-only log.** Better — you keep history. But a flat log has no structure. Querying "what does Alice prefer?" requires scanning the entire log. You also have no way to express typed values, confidence levels, or scope boundaries without inventing ad-hoc conventions that every consumer must understand.
+<div>
+<dt>Approach</dt>
+<dt><span className="stigmem-fields__type">Failure mode</span></dt>
+<dd>Why it doesn't work</dd>
+</div>
 
-**Document store with versioning.** Git-style versioning preserves history but treats the document as the unit of change. A single-field update creates a full document revision. Merging divergent revisions across federated nodes requires a merge algorithm that understands the document schema — and every schema change breaks the merger.
+<div>
+<dt>Mutable key-value store</dt>
+<dt><span className="stigmem-fields__type">silent loss</span></dt>
+<dd>Two agents write different values for the same key. Last-write-wins silently discards one. No record of the conflict, no provenance, no way to know the discarded value ever existed.</dd>
+</div>
+
+<div>
+<dt>Append-only log</dt>
+<dt><span className="stigmem-fields__type">no structure</span></dt>
+<dd>You keep history, but a flat log has no structure. Querying "what does Alice prefer?" requires scanning the entire log. No way to express typed values, confidence levels, or scope boundaries without ad-hoc conventions.</dd>
+</div>
+
+<div>
+<dt>Document store with versioning</dt>
+<dt><span className="stigmem-fields__type">document-level granularity</span></dt>
+<dd>Git-style versioning preserves history but treats the document as the unit of change. A single-field update creates a full document revision. Merging divergent revisions requires a schema-aware merge algorithm; schema changes break the merger.</dd>
+</div>
+
+</div>
 
 ## Our model
 
-Stigmem stores knowledge as **atomic facts**. Each fact is a single assertion:
+Stigmem stores knowledge as **atomic facts**. Each fact is a single
+assertion:
 
 ```
 (entity, relation, value, source, timestamp, hlc, confidence, scope)
 ```
 
-A fact is immutable once written. Updates are new facts. Retractions are facts with `confidence = 0.0`. This gives you:
+A fact is immutable once written. Updates are new facts. Retractions
+are facts with `confidence = 0.0`. This gives you:
 
-| Property | How |
-|---|---|
-| **Audit trail** | Every assertion ever made is preserved. Nothing is overwritten or deleted. |
-| **Typed values** | Seven value types: `string`, `text`, `number`, `boolean`, `datetime`, `ref`, `null` (Spec-01-Fact-Model typed values). |
-| **Provenance** | Every fact carries `source` (who asserted it) and `timestamp` (when). |
-| **Confidence** | A float in [0.0, 1.0]. `1.0` = certain, `0.5` = uncertain, `0.0` = retracted. |
-| **Scope** | `local`, `team`, `company`, or `public` — governs visibility and federation. |
-| **Causal ordering** | The HLC field (Spec-12-HLC-Bounded-Skew) gives every fact a causally consistent position in time. |
+<div className="stigmem-fields">
 
-### Worked example: asserting and retracting a fact
+<div>
+<dt>Property</dt>
+<dt><span className="stigmem-fields__type">How</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt><strong>Audit trail</strong></dt>
+<dt><span className="stigmem-fields__type">append-only</span></dt>
+<dd>Every assertion ever made is preserved. Nothing is overwritten or deleted.</dd>
+</div>
+
+<div>
+<dt><strong>Typed values</strong></dt>
+<dt><span className="stigmem-fields__type">seven types</span></dt>
+<dd><code>string</code>, <code>text</code>, <code>number</code>, <code>boolean</code>, <code>datetime</code>, <code>ref</code>, <code>null</code> (Spec-01-Fact-Model typed values).</dd>
+</div>
+
+<div>
+<dt><strong>Provenance</strong></dt>
+<dt><span className="stigmem-fields__type"><code>source</code> + <code>timestamp</code></span></dt>
+<dd>Every fact carries who asserted it and when.</dd>
+</div>
+
+<div>
+<dt><strong>Confidence</strong></dt>
+<dt><span className="stigmem-fields__type">float [0.0, 1.0]</span></dt>
+<dd><code>1.0</code> = certain, <code>0.5</code> = uncertain, <code>0.0</code> = retracted.</dd>
+</div>
+
+<div>
+<dt><strong>Scope</strong></dt>
+<dt><span className="stigmem-fields__type">visibility boundary</span></dt>
+<dd><code>local</code>, <code>team</code>, <code>company</code>, or <code>public</code> — governs visibility and federation.</dd>
+</div>
+
+<div>
+<dt><strong>Causal ordering</strong></dt>
+<dt><span className="stigmem-fields__type">HLC</span></dt>
+<dd>Every fact gets a causally consistent position in time (Spec-12-HLC-Bounded-Skew).</dd>
+</div>
+
+</div>
+
+### Worked example · asserting and retracting a fact
 
 ```bash
 # Assert: Alice is CEO
@@ -71,39 +154,67 @@ curl -X POST $STIGMEM_URL/v1/facts \
 # → 201 { "id": "fact_02J...", "confidence": 0.0, ... }
 ```
 
-Both facts exist in the store. The original assertion is never deleted. Querying `memory:role` for Alice now returns the retraction (confidence 0.0), and any query with `min_confidence > 0` filters it out naturally.
+Both facts exist in the store. The original assertion is never
+deleted. Querying `memory:role` for Alice now returns the retraction
+(confidence 0.0), and any query with `min_confidence > 0` filters it
+out naturally.
 
 ### Entity URI structure
 
-Entities use a formal URI scheme that binds identity to the owning node:
+Entities use a formal URI scheme that binds identity to the owning
+node:
 
 ```
 stigmem://{authority}/{type}/{id}
 ```
 
-For example: `stigmem://company.example/user/alice`, `stigmem://company.example/agent/cto`. This prevents identity collisions across federated nodes — two peers can each have a `user/alice` without ambiguity. Entity URIs are normalized to lowercase on ingest (Spec-01-Fact-Model entity normalization) to prevent silent fragmentation.
+For example: `stigmem://company.example/user/alice`,
+`stigmem://company.example/agent/cto`. This prevents identity
+collisions across federated nodes — two peers can each have a
+`user/alice` without ambiguity. Entity URIs are normalized to
+lowercase on ingest (Spec-01-Fact-Model entity normalization) to
+prevent silent fragmentation.
 
 ## Why this is non-obvious
 
-**Immutability seems wasteful.** Storing every version of every fact sounds expensive. But the alternatives — mutable state with conflict resolution, or mutable state with locking — are *more* expensive in a federated system. Immutability eliminates an entire class of distributed systems problems: you never need distributed locks, two-phase commits, or merge algorithms. Contradiction detection (Spec-15-Fact-Semantics) becomes a simple comparison of existing facts.
+<div className="stigmem-grid">
 
-**Retracting by asserting `confidence = 0.0` seems indirect.** But it preserves the retraction as a first-class event with its own provenance. You can answer "who retracted this, and when?" — which matters for compliance (GDPR Art. 17) and debugging. A `DELETE` operation would destroy that information.
+<div><h4>Immutability seems wasteful</h4><p>Storing every version sounds expensive. But mutable state with conflict resolution or distributed locking is <em>more</em> expensive in a federated system. Immutability eliminates an entire class of distributed systems problems: you never need distributed locks, two-phase commits, or merge algorithms. Contradiction detection becomes a simple comparison.</p></div>
+<div><h4>Retracting via <code>confidence = 0.0</code> seems indirect</h4><p>But it preserves the retraction as a first-class event with its own provenance. You can answer "who retracted this, and when?" — which matters for compliance (GDPR Art. 17) and debugging. A <code>DELETE</code> operation would destroy that information.</p></div>
+<div><h4>Seven value types seem arbitrary</h4><p>They're the minimum set that covers practical agent-memory needs without requiring schema registration. <code>string</code> for labels, <code>text</code> for narrative, <code>number</code>/<code>boolean</code>/<code>datetime</code> for structured data, <code>ref</code> for entity-to-entity links (powers the graph index), <code>null</code> for explicit "unknown."</p></div>
 
-**Seven value types seem arbitrary.** They're the minimum set that covers the practical needs of agent memory systems without requiring schema registration. `string` for labels, `text` for narrative, `number`/`boolean`/`datetime` for structured data, `ref` for entity-to-entity links (which power the graph index in Spec-X11-Recall-Graph graph index), and `null` for explicit "unknown."
+</div>
 
 ## What it costs
 
-- **Storage.** Every update creates a new row. For high-churn relations, the facts table grows proportionally. The decay sweeper (Spec-X9-Decay-Semantics) mitigates this by automatically retracting stale facts based on configurable TTL and half-life policies.
-- **Query complexity.** Finding the "current" value for an entity-relation pair requires ordering by HLC and filtering by confidence — not a simple key lookup. The node handles this internally, but implementers should index on `(entity, relation, scope)`.
-- **No partial updates.** You can't change one field of a fact. You assert a complete new fact. For the atomic assertions Stigmem models, this is acceptable; for document-shaped data, use `ref`-type values to point to external storage.
+<div className="stigmem-grid">
+
+<div><h4>Storage</h4><p>Every update creates a new row. For high-churn relations, the facts table grows proportionally. The decay sweeper (Spec-X9) mitigates this by automatically retracting stale facts based on configurable TTL and half-life policies.</p></div>
+<div><h4>Query complexity</h4><p>Finding the "current" value for an entity-relation pair requires ordering by HLC and filtering by confidence — not a simple key lookup. The node handles this internally, but implementers should index on <code>(entity, relation, scope)</code>.</p></div>
+<div><h4>No partial updates</h4><p>You can't change one field of a fact. You assert a complete new fact. For the atomic assertions Stigmem models, this is acceptable; for document-shaped data, use <code>ref</code>-type values to point to external storage.</p></div>
+
+</div>
 
 ## References
 
-- Spec-01-Fact-Model — Atomic Fact Shape
-- Spec-01-Fact-Model.1 — FactValue types
-- Spec-01-Fact-Model.4 — Hybrid Logical Clock
-- Spec-01-Fact-Model.5 — Entity URI Scheme
-- Spec-01-Fact-Model.6 — Entity Naming Rules and strict normalizer
-- Spec Spec-03-HTTP-API assert-fact route — Assert a fact (wire format)
-- Spec Spec-03-HTTP-API retract-fact route — Retract a fact
-- Protocol overview and ADRs — Design rationale for immutability
+<div className="stigmem-next">
+
+<a href="https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md">
+<strong>Spec-01-Fact-Model</strong>
+<span>Atomic fact shape</span>
+<small>Including FactValue types, HLC, entity URI scheme, normalization.</small>
+</a>
+
+<a href="./asserting-facts">
+<strong>Concepts</strong>
+<span>Asserting facts</span>
+<small>Wire format for <code>POST /v1/facts</code> and retraction.</small>
+</a>
+
+<a href="./conflict-semantics">
+<strong>Concepts</strong>
+<span>Conflict semantics</span>
+<small>How immutability and contradiction detection work together.</small>
+</a>
+
+</div>

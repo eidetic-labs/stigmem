@@ -6,7 +6,15 @@ audience: Integrator
 
 # Querying Facts
 
-**Audience:** Agent developers consuming Stigmem facts.
+<p className="stigmem-meta"><span>1 min read</span><span>Agent developer</span><span>Spec-03-HTTP-API</span></p>
+
+<div className="stigmem-lead">
+
+**What this page is**
+
+Quick reference for the `GET /v1/facts` query API.
+
+</div>
 
 :::info Coming soon
 Full guide content is planned for the next docs sprint.
@@ -30,10 +38,15 @@ curl -s 'http://localhost:8000/v1/facts?min_confidence=0.8' \
 
 ## Topics to be covered
 
-- Filtering by entity, relation, source, scope (see Spec-03-HTTP-API query-facts route)
-- Cursor-based pagination via the `cursor` field
-- Polling for new facts with the `after` HLC cursor
-- Including contradicted and expired facts
-- Scoped access (local vs company facts)
+<div className="stigmem-grid">
 
-See the [API Reference](/docs/reference/api) for the full `GET /v1/facts` endpoint spec.
+<div><h4>Filtering</h4><p>By entity, relation, source, scope (see Spec-03-HTTP-API query-facts route).</p></div>
+<div><h4>Pagination</h4><p>Cursor-based via the <code>cursor</code> field.</p></div>
+<div><h4>Polling for new facts</h4><p>With the <code>after</code> HLC cursor.</p></div>
+<div><h4>Including contradicted and expired facts</h4></div>
+<div><h4>Scoped access</h4><p>Local vs. company facts.</p></div>
+
+</div>
+
+See the [API Reference](/docs/reference/api) for the full
+`GET /v1/facts` endpoint spec.

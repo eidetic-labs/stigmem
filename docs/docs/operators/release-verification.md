@@ -117,10 +117,6 @@ Store the resulting hashes in your own deployment record if you require environm
 It identifies the source repository, release tag, commit, workflow,
 Dockerfile, and builder inputs used for the released image.
 
-Arbitrary later rebuilds may not produce the same byte-for-byte image
-digest if upstream base image digests, package indexes, or toolchains
-have moved. Treat a digest mismatch from a later local rebuild as an
-investigation signal, then compare the signed provenance and SBOM
-before deployment.
+Arbitrary later rebuilds may not produce the same byte-for-byte image digest if upstream base image digests, package indexes, or toolchains have moved. Treat a digest mismatch from a later local rebuild as an investigation signal, then compare the signed provenance and SBOM before deployment.
 
 </div>

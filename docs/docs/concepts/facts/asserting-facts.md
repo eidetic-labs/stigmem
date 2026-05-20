@@ -6,27 +6,84 @@ audience: Integrator
 
 # Asserting Facts
 
-**Audience:** Node operators and agent developers using the Stigmem REST API or MCP tools.
+<p className="stigmem-meta"><span>4 min read</span><span>Node operator · Agent developer</span><span>REST + MCP</span></p>
+
+<div className="stigmem-lead">
+
+**What this page is**
+
+The wire format for `POST /v1/facts`: FactValue types, relation
+naming, heartbeat patterns, multi-tenant key behavior.
+
+</div>
 
 ## FactValue schema
 
-Every fact carries a typed value. The `value` field must be an object with a `type` discriminator and, for all types except `null`, a `v` field holding the payload:
+Every fact carries a typed value. The `value` field must be an object
+with a `type` discriminator and, for all types except `null`, a `v`
+field holding the payload.
 
-| `type` | `v` type | Example |
-|--------|----------|---------|
-| `string` | string | `{"type": "string", "v": "active"}` |
-| `text` | string (long-form) | `{"type": "text", "v": "Full markdown body…"}` |
-| `number` | number | `{"type": "number", "v": 42}` |
-| `boolean` | boolean | `{"type": "boolean", "v": true}` |
-| `datetime` | ISO 8601 string | `{"type": "datetime", "v": "2026-05-03T14:00:00Z"}` |
-| `ref` | entity URI string | `{"type": "ref", "v": "user:alice"}` |
-| `null` | (no `v` key) | `{"type": "null"}` |
+<div className="stigmem-fields">
+
+<div>
+<dt><code>type</code></dt>
+<dt><span className="stigmem-fields__type"><code>v</code> type</span></dt>
+<dd>Example</dd>
+</div>
+
+<div>
+<dt><code>string</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd><code>{`{"type": "string", "v": "active"}`}</code></dd>
+</div>
+
+<div>
+<dt><code>text</code></dt>
+<dt><span className="stigmem-fields__type">string (long-form)</span></dt>
+<dd><code>{`{"type": "text", "v": "Full markdown body…"}`}</code></dd>
+</div>
+
+<div>
+<dt><code>number</code></dt>
+<dt><span className="stigmem-fields__type">number</span></dt>
+<dd><code>{`{"type": "number", "v": 42}`}</code></dd>
+</div>
+
+<div>
+<dt><code>boolean</code></dt>
+<dt><span className="stigmem-fields__type">boolean</span></dt>
+<dd><code>{`{"type": "boolean", "v": true}`}</code></dd>
+</div>
+
+<div>
+<dt><code>datetime</code></dt>
+<dt><span className="stigmem-fields__type">ISO 8601</span></dt>
+<dd><code>{`{"type": "datetime", "v": "2026-05-03T14:00:00Z"}`}</code></dd>
+</div>
+
+<div>
+<dt><code>ref</code></dt>
+<dt><span className="stigmem-fields__type">entity URI</span></dt>
+<dd><code>{`{"type": "ref", "v": "user:alice"}`}</code></dd>
+</div>
+
+<div>
+<dt><code>null</code></dt>
+<dt><span className="stigmem-fields__type">no <code>v</code> key</span></dt>
+<dd><code>{`{"type": "null"}`}</code></dd>
+</div>
+
+</div>
 
 ## Relation naming convention
 
-Relations must carry a namespace prefix separated by `:`, for example `memory:role` or `acme:goal_state`. Bare relation names (e.g. `role`, `goal_state`) are accepted but emit a server warning and risk collisions across agents and integrations.
+Relations must carry a namespace prefix separated by `:`, for example
+`memory:role` or `acme:goal_state`. Bare relation names (e.g.,
+`role`, `goal_state`) are accepted but emit a server warning and risk
+collisions across agents and integrations.
 
-Convention: use a short, lowercase namespace that identifies the system or team asserting the fact:
+Convention: use a short, lowercase namespace that identifies the
+system or team asserting the fact:
 
 ```
 <namespace>:<predicate>
@@ -53,15 +110,41 @@ curl -s -X POST http://localhost:8765/v1/facts \
   }' | jq .
 ```
 
-To **update** a fact, assert a new one for the same `(entity, relation, scope)` triple — Stigmem marks the old fact as superseded (see Spec-15-Fact-Semantics).
+<div className="stigmem-keypoint">
 
-To **retract** a fact, set `"confidence": 0.0`.
+**To update a fact, assert a new one for the same `(entity, relation, scope)` triple** — Stigmem marks the old fact as superseded (see Spec-15-Fact-Semantics). **To retract a fact, set `"confidence": 0.0`.**
+
+</div>
 
 ## Heartbeat fact-assertion pattern
 
-Agents that run on a periodic heartbeat should assert a standard set of facts at the start (and end) of each run. This gives any observer a consistent view of agent liveness and intent.
+Agents that run on a periodic heartbeat should assert a standard set
+of facts at the start (and end) of each run. This gives any observer
+a consistent view of agent liveness and intent.
 
 ### Mandatory assertions (every heartbeat)
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Relation</dt>
+<dt><span className="stigmem-fields__type">Value type</span></dt>
+<dd>Purpose</dd>
+</div>
+
+<div>
+<dt><code>acme:last_heartbeat</code></dt>
+<dt><span className="stigmem-fields__type"><code>datetime</code></span></dt>
+<dd>Timestamp of this run.</dd>
+</div>
+
+<div>
+<dt><code>acme:goal_state</code></dt>
+<dt><span className="stigmem-fields__type"><code>string</code></span></dt>
+<dd>What the agent is currently working on.</dd>
+</div>
+
+</div>
 
 ```bash
 # 1 — last_heartbeat: timestamp of this run
@@ -91,7 +174,35 @@ curl -s -X POST http://localhost:8765/v1/facts \
 
 ### Conditional assertions
 
-Assert these only when the condition applies:
+Assert these only when the condition applies.
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Relation</dt>
+<dt><span className="stigmem-fields__type">When</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt><code>acme:blocked_by</code></dt>
+<dt><span className="stigmem-fields__type">progress is blocked</span></dt>
+<dd>Value type: <code>ref</code> pointing to blocker entity.</dd>
+</div>
+
+<div>
+<dt><code>acme:decision</code></dt>
+<dt><span className="stigmem-fields__type">a decision made this heartbeat</span></dt>
+<dd>Use <code>type: "text"</code> for longer rationale; set <code>valid_until</code> if the decision is bounded.</dd>
+</div>
+
+<div>
+<dt><code>acme:completed</code></dt>
+<dt><span className="stigmem-fields__type">task finished this heartbeat</span></dt>
+<dd>Entity points to the issue/task, value is <code>{`{"type": "boolean", "v": true}`}</code>.</dd>
+</div>
+
+</div>
 
 ```bash
 # blocked_by — when progress is blocked
@@ -106,7 +217,7 @@ curl -s -X POST http://localhost:8765/v1/facts \
     "scope":      "company"
   }'
 
-# decision — a decision made this heartbeat (use type: "text" for longer rationale)
+# decision — a decision made this heartbeat
 curl -s -X POST http://localhost:8765/v1/facts \
   -H 'Content-Type: application/json' \
   -d '{
@@ -133,12 +244,23 @@ curl -s -X POST http://localhost:8765/v1/facts \
 ```
 
 :::tip Using the MCP tool instead of curl
-If you are inside a Paperclip or Claude Code session with the Stigmem MCP server configured, call `assert_fact` directly — no `curl` required. See the [Paperclip connector guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip).
+If you are inside a Paperclip or Claude Code session with the Stigmem
+MCP server configured, call `assert_fact` directly — no `curl`
+required. See the
+[Paperclip connector guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip).
 :::
 
 ## Multi-tenant fact assertion
 
-When a node serves multiple tenants, the `tenant_id` is derived automatically from the API key — no extra field in the request body is needed. All facts written with a key scoped to `"acme"` are invisible to keys scoped to any other tenant.
+<div className="stigmem-keypoint">
+
+**`tenant_id` is derived automatically from the API key.**
+
+No extra field in the request body is needed. All facts written with
+a key scoped to <code>"acme"</code> are invisible to keys scoped to
+any other tenant.
+
+</div>
 
 ### Asserting a fact as a specific tenant
 
@@ -157,7 +279,9 @@ curl -s -X POST http://localhost:8765/v1/facts \
   }' | jq .
 ```
 
-A key scoped to `"beta"` cannot read or overwrite this fact — `GET /v1/facts?entity=user:alice` returns an empty result for any other tenant.
+A key scoped to `"beta"` cannot read or overwrite this fact —
+`GET /v1/facts?entity=user:alice` returns an empty result for any
+other tenant.
 
 ### Querying facts — tenant-isolated
 
@@ -167,13 +291,20 @@ curl -s "http://localhost:8765/v1/facts?entity=user:alice" \
   -H "Authorization: Bearer $ACME_KEY" | jq .
 ```
 
-See [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant) for the full isolation model and key provisioning guide.
+See
+[Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant)
+for the full isolation model and key provisioning guide.
 
 ## Additional topics
 
-- Retracting a fact: set `"confidence": 0.0` with the same `(entity, relation, scope)` triple
-- Reification for N-ary relationships: use `stigmem:rel:<uuid>` as an intermediate entity (see Spec-01-Fact-Model.3)
-- `valid_until`: ISO 8601 expiry; omit for a permanent fact
-- Updating facts: see Spec-15-Fact-Semantics for supersession semantics
+<div className="stigmem-grid">
 
-See the [API Reference](/docs/reference/api) for the full `POST /v1/facts` endpoint spec.
+<div><h4>Retracting a fact</h4><p>Set <code>"confidence": 0.0</code> with the same <code>(entity, relation, scope)</code> triple.</p></div>
+<div><h4>Reification for N-ary relationships</h4><p>Use <code>stigmem:rel:&lt;uuid&gt;</code> as an intermediate entity (see Spec-01-Fact-Model.3).</p></div>
+<div><h4><code>valid_until</code></h4><p>ISO 8601 expiry; omit for a permanent fact.</p></div>
+<div><h4>Updating facts</h4><p>See Spec-15-Fact-Semantics for supersession semantics.</p></div>
+
+</div>
+
+See the [API Reference](/docs/reference/api) for the full
+`POST /v1/facts` endpoint spec.

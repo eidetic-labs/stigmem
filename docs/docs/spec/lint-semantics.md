@@ -5,44 +5,88 @@ audience: Spec
 description: "Spec-20-Lint-Semantics rendered entry point — read-only lint checks and finding semantics."
 ---
 
-# Spec-20-Lint-Semantics {#section-14}
+# Spec-20-Lint-Semantics \{#section-14\}
 
-**Status:** Rendered compatibility entry point for [`Spec-20-Lint-Semantics`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/20-lint-semantics.md).
+<p className="stigmem-meta"><span>5 min read</span><span>Spec contributor · Adapter author</span><span>POST /v1/lint</span></p>
 
-POST /v1/lint — orphan relations, scope-escalation violations, contradiction surfacing.
+<div className="stigmem-lead">
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**What this page is**
+
+Rendered compatibility entry point for
+[`Spec-20-Lint-Semantics`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/20-lint-semantics.md).
+The **lint** operation is a first-class Stigmem protocol operation
+that performs health-check sweeps over a bounded scope or entity.
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Lint is strictly read-only.**
+
+It observes and reports issues without writing facts or modifying
+node state. Lint bridges the decay engine (§15) and the current
+production node — running <code>lint_scope</code> against a live
+node reveals knowledge-base health degradation before it affects
+query results or agent behavior.
+
+</div>
+
+**Authoritative source:**
+[`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
-Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
+Each subsection below shows the most recent normative text from the
+spec source.
 :::
 
-The **lint** operation is a first-class Stigmem protocol operation that performs
-health-check sweeps over a bounded scope or entity. Lint is strictly **read-only**:
-it observes and reports issues without writing facts or modifying node state.
+### §14.1 Lint checks \{#section-14-1\}
 
-Lint bridges the decay engine (§15) and the current production node.
-Running `lint_scope` against a live node reveals knowledge-base health degradation
-before it affects query results or agent behavior.
+Four normative checks, each independently selectable.
 
-### §14.1 Lint Checks {#section-14-1}
+<div className="stigmem-fields">
 
-Four normative checks, each independently selectable:
+<div>
+<dt>Check</dt>
+<dt><span className="stigmem-fields__type">Class</span></dt>
+<dd>What it detects</dd>
+</div>
 
-| Check | What it detects |
-|---|---|
-| `contradiction` | Facts sharing the same `(entity, relation, scope)` tuple where both have `confidence > 0.0` and the conflict is unresolved (status `"unresolved"` in the `conflicts` table). |
-| `stale` | Facts whose `valid_until < now` and whose `confidence > 0.0`; optionally, facts whose `valid_until < now + stale_lookahead_s` (approaching expiry). |
-| `orphan` | Entities where every known fact is either retracted (`confidence = 0.0`) or expired (`valid_until < now`). No live facts remain for the entity. |
-| `broken_ref` | Facts with `value.type = "ref"` whose `value.v` targets an entity or fact ID that has no live (non-retracted, non-expired) facts on this node. |
+<div>
+<dt><code>contradiction</code></dt>
+<dt><span className="stigmem-fields__type">correctness</span></dt>
+<dd>Facts sharing the same <code>(entity, relation, scope)</code> tuple where both have <code>confidence &gt; 0.0</code> and the conflict is unresolved (status <code>"unresolved"</code> in the <code>conflicts</code> table).</dd>
+</div>
 
-**Default behavior:** If `checks` is omitted or empty, all four checks run.
+<div>
+<dt><code>stale</code></dt>
+<dt><span className="stigmem-fields__type">freshness</span></dt>
+<dd>Facts whose <code>valid_until &lt; now</code> and <code>confidence &gt; 0.0</code>; optionally, facts whose <code>valid_until &lt; now + stale_lookahead_s</code> (approaching expiry).</dd>
+</div>
 
-**Scope of search:** Each check operates within the `scope` specified in the lint
-request. Checks never cross scope boundaries — a `broken_ref` finding in `company` scope
-is only reported if the broken ref also falls within `company` scope.
+<div>
+<dt><code>orphan</code></dt>
+<dt><span className="stigmem-fields__type">coverage</span></dt>
+<dd>Entities where every known fact is either retracted (<code>confidence = 0.0</code>) or expired (<code>valid_until &lt; now</code>). No live facts remain for the entity.</dd>
+</div>
 
-### §14.2 LintFinding Shape {#section-14-2}
+<div>
+<dt><code>broken_ref</code></dt>
+<dt><span className="stigmem-fields__type">integrity</span></dt>
+<dd>Facts with <code>value.type = "ref"</code> whose <code>value.v</code> targets an entity or fact ID that has no live (non-retracted, non-expired) facts on this node.</dd>
+</div>
+
+</div>
+
+**Default behavior:** If `checks` is omitted or empty, all four
+checks run.
+
+**Scope of search:** Each check operates within the `scope` specified
+in the lint request. Checks never cross scope boundaries — a
+`broken_ref` finding in `company` scope is only reported if the
+broken ref also falls within `company` scope.
+
+### §14.2 LintFinding shape \{#section-14-2\}
 
 ```
 LintFinding {
@@ -55,24 +99,55 @@ LintFinding {
 }
 ```
 
-### §14.3 Severity Mapping {#section-14-3}
+### §14.3 Severity mapping \{#section-14-3\}
 
-| Check | Condition | Severity |
-|---|---|---|
-| `contradiction` | Unresolved conflict between two live facts | `error` |
-| `stale` | `valid_until < now` and `confidence > 0.0` | `warning` |
-| `stale` | `valid_until < now + stale_lookahead_s` (not yet expired but approaching) | `info` |
-| `orphan` | Entity has no live facts | `info` |
-| `broken_ref` | Ref target entity has no live facts in this node's store | `warning` |
-| `broken_ref` | Broken ref where `relation` is `intent:handoff_to` or `intent:context_ref` | `error` |
+<div className="stigmem-fields">
 
-**Severity rationale:**
-- `contradiction` is always `error` — unresolved contradictions corrupt query results for all callers.
-- `stale` and `orphan` are non-critical health signals; expired or empty entities do not block reads.
-- `broken_ref` on intent-routing relations (`intent:handoff_to`, `intent:context_ref`) is `error`
-  because a broken handoff silently discards agent context during delegation.
+<div>
+<dt>Check · Condition</dt>
+<dt><span className="stigmem-fields__type">Severity</span></dt>
+<dd>Rationale</dd>
+</div>
 
-### §14.4 Wire Format {#section-14-4}
+<div>
+<dt><code>contradiction</code> · unresolved conflict between live facts</dt>
+<dt><span className="stigmem-fields__type">error</span></dt>
+<dd>Unresolved contradictions corrupt query results for all callers.</dd>
+</div>
+
+<div>
+<dt><code>stale</code> · <code>valid_until &lt; now</code></dt>
+<dt><span className="stigmem-fields__type">warning</span></dt>
+<dd>Non-critical health signal.</dd>
+</div>
+
+<div>
+<dt><code>stale</code> · within <code>stale_lookahead_s</code></dt>
+<dt><span className="stigmem-fields__type">info</span></dt>
+<dd>Approaching expiry but not yet expired.</dd>
+</div>
+
+<div>
+<dt><code>orphan</code> · entity has no live facts</dt>
+<dt><span className="stigmem-fields__type">info</span></dt>
+<dd>Expired or empty entities do not block reads.</dd>
+</div>
+
+<div>
+<dt><code>broken_ref</code> · target has no live facts</dt>
+<dt><span className="stigmem-fields__type">warning</span></dt>
+<dd>Standard broken-ref.</dd>
+</div>
+
+<div>
+<dt><code>broken_ref</code> · on <code>intent:handoff_to</code> or <code>intent:context_ref</code></dt>
+<dt><span className="stigmem-fields__type">error</span></dt>
+<dd>A broken handoff silently discards agent context during delegation.</dd>
+</div>
+
+</div>
+
+### §14.4 Wire format \{#section-14-4\}
 
 #### Request
 
@@ -99,52 +174,107 @@ Content-Type: application/json
   "checked_at": string,          // ISO 8601 UTC timestamp of when the sweep ran
   "scope":      FactScope,       // echoed from the request
   "checks_run": string[],        // which checks actually ran (echoed or defaulted)
-  "fact_count": integer          // number of facts scanned (not findings; helps gauge sweep completeness)
+  "fact_count": integer          // number of facts scanned (not findings)
 }
 ```
 
 #### Authorization
 
-The caller's API key must have read access to the requested `scope` (§3.5). Nodes MUST
-return HTTP 403 if the key's `allowed_scopes` does not include the requested `scope`.
+The caller's API key must have read access to the requested `scope`
+(§3.5). Nodes MUST return HTTP 403 if the key's `allowed_scopes`
+does not include the requested `scope`.
 
 #### Error responses
 
-| HTTP | Condition |
-|---|---|
-| 400 | `scope` field missing or invalid; unknown `checks` value |
-| 403 | Caller's key is not authorized for the requested scope |
-| 202 | Scope exceeds 100,000 facts (async path; see §14.5) |
+<div className="stigmem-fields">
 
-### §14.5 Performance Contract {#section-14-5}
+<div>
+<dt>HTTP</dt>
+<dt><span className="stigmem-fields__type">Class</span></dt>
+<dd>Condition</dd>
+</div>
 
-- `POST /v1/lint` MUST respond synchronously within **30 seconds** for scopes with fewer
-  than 100,000 facts.
-- For scopes exceeding 100,000 facts, nodes MAY respond with **HTTP 202**:
-  ```
-  202 Accepted
-  { "job_id": "<uuid>", "status": "pending", "estimated_s": integer }
-  ```
-  The caller polls `GET /v1/lint/jobs/:job_id` until `status` is `"done"` or `"failed"`.
-  The async job API is specified here but deferred to the pre-reset substrate work implementation.
-- The sweep MUST be **read-only**. Nodes MUST NOT assert, retract, or update any fact
-  as a side effect of a lint call. This invariant applies even to internal bookkeeping.
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type">bad request</span></dt>
+<dd><code>scope</code> field missing or invalid; unknown <code>checks</code> value.</dd>
+</div>
 
-### §14.6 Relationship to Other Operations {#section-14-6}
+<div>
+<dt>403</dt>
+<dt><span className="stigmem-fields__type">forbidden</span></dt>
+<dd>Caller's key is not authorized for the requested scope.</dd>
+</div>
 
-Lint is **diagnostic**, not prescriptive:
+<div>
+<dt>202</dt>
+<dt><span className="stigmem-fields__type">async</span></dt>
+<dd>Scope exceeds 100,000 facts (async path; see §14.5).</dd>
+</div>
 
-| Finding type | Lint reports | Remediation action (separate call) |
-|---|---|---|
-| `contradiction` | Which facts conflict | `POST /v1/conflicts/:id/resolve` (§5.10) |
-| `stale` | Which facts have expired | `POST /v1/decay/sweep` with `mode="retract"` (§15) or `POST /v1/facts` with `confidence=0.0` |
-| `orphan` | Which entities have no live facts | No action required; orphans are informational |
-| `broken_ref` | Which ref facts have missing targets | Assert missing target entity, or retract the broken ref |
+</div>
 
-### §14.7 MCP Tool: `lint_scope` {#section-14-7}
+### §14.5 Performance contract \{#section-14-5\}
 
-The `lint_scope` MCP tool exposes `POST /v1/lint` to any MCP-aware agent without SDK
-installation.
+<div className="stigmem-grid">
+
+<div><h4>Sync ≤ 30s for &lt;100k facts</h4><p><code>POST /v1/lint</code> MUST respond synchronously within <strong>30 seconds</strong> for scopes with fewer than 100,000 facts.</p></div>
+<div><h4>Async for larger scopes</h4><p>For scopes exceeding 100,000 facts, nodes MAY respond with HTTP 202 and a <code>job_id</code>. The caller polls <code>GET /v1/lint/jobs/:job_id</code>. Async job API is specified but deferred to the pre-reset substrate work.</p></div>
+<div><h4>Read-only invariant</h4><p>The sweep MUST be read-only. Nodes MUST NOT assert, retract, or update any fact as a side effect of a lint call. This invariant applies even to internal bookkeeping.</p></div>
+
+</div>
+
+```
+202 Accepted
+{ "job_id": "<uuid>", "status": "pending", "estimated_s": integer }
+```
+
+### §14.6 Relationship to other operations \{#section-14-6\}
+
+<div className="stigmem-keypoint">
+
+**Lint is diagnostic, not prescriptive.**
+
+</div>
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Finding type</dt>
+<dt><span className="stigmem-fields__type">Lint reports</span></dt>
+<dd>Remediation action (separate call)</dd>
+</div>
+
+<div>
+<dt><code>contradiction</code></dt>
+<dt><span className="stigmem-fields__type">which facts conflict</span></dt>
+<dd><code>POST /v1/conflicts/:id/resolve</code> (§5.10).</dd>
+</div>
+
+<div>
+<dt><code>stale</code></dt>
+<dt><span className="stigmem-fields__type">which facts have expired</span></dt>
+<dd><code>POST /v1/decay/sweep</code> with <code>mode="retract"</code> (§15) or <code>POST /v1/facts</code> with <code>confidence=0.0</code>.</dd>
+</div>
+
+<div>
+<dt><code>orphan</code></dt>
+<dt><span className="stigmem-fields__type">which entities have no live facts</span></dt>
+<dd>No action required; orphans are informational.</dd>
+</div>
+
+<div>
+<dt><code>broken_ref</code></dt>
+<dt><span className="stigmem-fields__type">which ref facts have missing targets</span></dt>
+<dd>Assert missing target entity, or retract the broken ref.</dd>
+</div>
+
+</div>
+
+### §14.7 MCP tool: `lint_scope` \{#section-14-7\}
+
+The `lint_scope` MCP tool exposes `POST /v1/lint` to any MCP-aware
+agent without SDK installation.
 
 #### Tool definition
 
@@ -207,25 +337,70 @@ installation.
 }
 ```
 
-### §14.8 Conformance Test Vectors {#section-14-8}
+### §14.8 Conformance test vectors \{#section-14-8\}
 
-Normative lint vectors are defined in `sdks/stigmem-py/tests/conformance_vectors.py`
-under `LINT_VECTORS`. Each vector includes a `setup` list of fact assertions to run
-before the lint sweep, so results are deterministic.
+Normative lint vectors are defined in
+`sdks/stigmem-py/tests/conformance_vectors.py` under `LINT_VECTORS`.
+Each vector includes a `setup` list of fact assertions to run before
+the lint sweep, so results are deterministic.
 
-**Required vectors for conformance:**
+**Required vectors for conformance** — all eight MUST pass against a
+reference Stigmem node.
 
-| Vector ID | Check | Scenario | Expected `findings` |
-|---|---|---|---|
-| `lint-contradiction` | `contradiction` | Two facts same (entity, relation, scope), different values, both confidence > 0 | ≥1 finding, check=`contradiction`, severity=`error` |
-| `lint-stale` | `stale` | Fact with `valid_until` in the past | ≥1 finding, check=`stale`, severity=`warning` |
-| `lint-stale-lookahead` | `stale` | Fact with `valid_until` within lookahead window but not yet elapsed | ≥1 finding, check=`stale`, severity=`info` |
-| `lint-orphan` | `orphan` | Entity with only retracted facts (confidence=0.0) | ≥1 finding, check=`orphan`, severity=`info` |
-| `lint-broken-ref` | `broken_ref` | Ref fact pointing to entity with no live facts | ≥1 finding, check=`broken_ref`, severity=`warning` |
-| `lint-broken-ref-intent` | `broken_ref` | Broken ref on `intent:handoff_to` relation | ≥1 finding, check=`broken_ref`, severity=`error` |
-| `lint-clean` | all | Scope with only one healthy live fact | findings = `[]` |
-| `lint-scope-filter` | `contradiction` | Contradiction exists in `company` scope; lint request on `local` scope | findings = `[]` (scope isolation) |
+<div className="stigmem-fields">
 
-All eight vectors MUST pass against a reference Stigmem node for conformance.
+<div>
+<dt>Vector ID</dt>
+<dt><span className="stigmem-fields__type">Check</span></dt>
+<dd>Scenario · expected <code>findings</code></dd>
+</div>
 
----
+<div>
+<dt><code>lint-contradiction</code></dt>
+<dt><span className="stigmem-fields__type"><code>contradiction</code></span></dt>
+<dd>Two facts same (entity, relation, scope), different values, both confidence &gt; 0 → ≥1 finding, check=<code>contradiction</code>, severity=<code>error</code>.</dd>
+</div>
+
+<div>
+<dt><code>lint-stale</code></dt>
+<dt><span className="stigmem-fields__type"><code>stale</code></span></dt>
+<dd>Fact with <code>valid_until</code> in the past → ≥1 finding, check=<code>stale</code>, severity=<code>warning</code>.</dd>
+</div>
+
+<div>
+<dt><code>lint-stale-lookahead</code></dt>
+<dt><span className="stigmem-fields__type"><code>stale</code></span></dt>
+<dd>Fact with <code>valid_until</code> within lookahead window but not yet elapsed → ≥1 finding, severity=<code>info</code>.</dd>
+</div>
+
+<div>
+<dt><code>lint-orphan</code></dt>
+<dt><span className="stigmem-fields__type"><code>orphan</code></span></dt>
+<dd>Entity with only retracted facts → ≥1 finding, severity=<code>info</code>.</dd>
+</div>
+
+<div>
+<dt><code>lint-broken-ref</code></dt>
+<dt><span className="stigmem-fields__type"><code>broken_ref</code></span></dt>
+<dd>Ref fact pointing to entity with no live facts → ≥1 finding, severity=<code>warning</code>.</dd>
+</div>
+
+<div>
+<dt><code>lint-broken-ref-intent</code></dt>
+<dt><span className="stigmem-fields__type"><code>broken_ref</code></span></dt>
+<dd>Broken ref on <code>intent:handoff_to</code> relation → ≥1 finding, severity=<code>error</code>.</dd>
+</div>
+
+<div>
+<dt><code>lint-clean</code></dt>
+<dt><span className="stigmem-fields__type">all</span></dt>
+<dd>Scope with only one healthy live fact → findings = <code>[]</code>.</dd>
+</div>
+
+<div>
+<dt><code>lint-scope-filter</code></dt>
+<dt><span className="stigmem-fields__type"><code>contradiction</code></span></dt>
+<dd>Contradiction in <code>company</code> scope; lint request on <code>local</code> scope → findings = <code>[]</code> (scope isolation).</dd>
+</div>
+
+</div>

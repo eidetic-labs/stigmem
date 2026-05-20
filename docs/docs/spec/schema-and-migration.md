@@ -5,19 +5,30 @@ audience: Spec
 description: "Spec-17-Schema-and-Migration rendered entry point — schema, migrations, indexes, and backend contract."
 ---
 
-# Spec-17-Schema-and-Migration {#section-10}
+# Spec-17-Schema-and-Migration \{#section-10\}
 
-**Status:** Rendered compatibility entry point for [`Spec-17-Schema-and-Migration`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/17-schema-and-migration.md).
+<p className="stigmem-meta"><span>4 min read</span><span>Spec contributor · Implementer</span><span>SQL migrations 001–013</span></p>
 
-SQL schema migrations 001-013 covering facts, federation, gardens, attestation, tombstones.
+<div className="stigmem-lead">
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**What this page is**
+
+Rendered compatibility entry point for
+[`Spec-17-Schema-and-Migration`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/17-schema-and-migration.md).
+SQL schema migrations covering facts, federation, gardens,
+attestation, tombstones.
+
+</div>
+
+**Authoritative source:**
+[`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
-Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
+Each subsection below shows the most recent normative text from the
+spec source. Legacy §10 anchors are retained for existing links
+while the maintained schema contract lives in
+`Spec-17-Schema-and-Migration`.
 :::
-
-Legacy §10 anchors are retained for existing links while the maintained schema contract lives in `Spec-17-Schema-and-Migration`.
 
 ### Migration 004 — gardens and source attestation
 
@@ -54,9 +65,15 @@ CREATE INDEX IF NOT EXISTS idx_facts_garden ON facts(garden_id) WHERE garden_id 
 ALTER TABLE facts ADD COLUMN attested INTEGER;  -- 1=true, 0=false, NULL=not-applicable
 ```
 
-**Backward compatibility:** Pre-the pre-reset spec facts have `garden_id = NULL` (no garden) and `attested = NULL` (attestation not applicable). Both columns are nullable by design.
+<div className="stigmem-keypoint">
 
----
+**Backward compatibility.**
+
+Pre-the pre-reset spec facts have <code>garden_id = NULL</code> (no
+garden) and <code>attested = NULL</code> (attestation not
+applicable). Both columns are nullable by design.
+
+</div>
 
 <details>
 <summary>Revisions before v1.0: the pre-reset spec-draft</summary>
@@ -236,7 +253,5 @@ CREATE INDEX IF NOT EXISTS idx_facts_re_federation ON facts(re_federation_blocke
 **Note:** Migration 004 columns are NULL for all pre-the pre-reset spec facts. Nodes MUST populate
 `origin_node_id` and `origin_allowed_scopes` only for facts received via federation
 after the pre-reset spec is deployed.
-
----
 
 </details>

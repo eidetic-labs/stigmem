@@ -7,24 +7,39 @@ audience: Operator
 
 # Plugin Management
 
-**Audience:** Stigmem node operators responsible for enabling and auditing plugins.
+<p className="stigmem-meta"><span>5 min read</span><span>Node operator</span><span>Plugins · v0.9.0aN</span></p>
 
-Plugins are opt-in Python packages loaded at node startup through the `stigmem.plugins` entry point group. The default install runs without plugins. Production deployments should keep plugin signing required, pin plugin package versions, and review every declared capability before rollout.
+<div className="stigmem-lead">
+
+**What this guide covers**
+
+Operator workflow for installing, trusting, inspecting, auditing,
+and troubleshooting Stigmem plugins. Plugins are opt-in Python
+packages loaded at node startup through the `stigmem.plugins` entry
+point group. The default install runs without plugins.
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Production deployments should keep plugin signing required, pin plugin package versions, and review every declared capability before rollout.**
+
+</div>
 
 For author-facing package structure and examples, see the [Plugin Author Guide](../../guides/plugins/author-guide.md). For security review inputs, see the [Plugin Capability Reference](../../reference/plugin-api/capabilities.md).
 
 ## Production workflow
 
-1. **Review the package.** Confirm the plugin name, version, declared hooks, declared capabilities, dependencies, and signing identity.
-2. **Install the package into the node environment.** Use the same Python environment that runs `stigmem` so entry point discovery can find the plugin.
-3. **Configure signing trust.** Add accepted signing identities to `STIGMEM_PLUGIN_TRUSTED_PUBLISHERS`. Use the override list only for explicit, documented exceptions.
-4. **Restart the node.** Plugin discovery and registration are startup-only. There is no hot reload or runtime unload path in v0.9.0aN.
-5. **Inspect registration and health.** Use `stigmem plugins list` and `stigmem plugins describe`.
-6. **Review audit events.** Confirm registration, trust decision, and any handler denial or error events.
+<ol className="stigmem-steps">
+<li><strong>Review the package.</strong> Confirm the plugin name, version, declared hooks, declared capabilities, dependencies, and signing identity.</li>
+<li><strong>Install the package</strong> into the node environment. Use the same Python environment that runs <code>stigmem</code> so entry point discovery can find the plugin.</li>
+<li><strong>Configure signing trust.</strong> Add accepted signing identities to <code>STIGMEM_PLUGIN_TRUSTED_PUBLISHERS</code>. Use the override list only for explicit, documented exceptions.</li>
+<li><strong>Restart the node.</strong> Plugin discovery and registration are startup-only. There is no hot reload or runtime unload path in v0.9.0aN.</li>
+<li><strong>Inspect registration and health.</strong> Use <code>stigmem plugins list</code> and <code>stigmem plugins describe</code>.</li>
+<li><strong>Review audit events.</strong> Confirm registration, trust decision, and any handler denial or error events.</li>
+</ol>
 
 ## Install a plugin package
-
-Install plugins the same way you install other Python packages in the node runtime.
 
 For a source checkout:
 
@@ -38,7 +53,7 @@ For a pinned package:
 python -m pip install 'example-stigmem-plugin==1.0.0'
 ```
 
-For Docker deployments, build a derived image or otherwise install the plugin package into the container image used by the node. Avoid installing plugins manually inside a running container; that is not repeatable and will be lost on redeploy.
+For Docker deployments, build a derived image or otherwise install the plugin package into the container image used by the node. **Avoid installing plugins manually inside a running container; that is not repeatable and will be lost on redeploy.**
 
 The package must expose an entry point in the `stigmem.plugins` group. Stigmem discovers those entry points, calls the manifest factory, resolves plugin dependencies, verifies signing/trust policy, and registers handlers during startup.
 
@@ -46,11 +61,33 @@ The package must expose an entry point in the `stigmem.plugins` group. Stigmem d
 
 Production defaults are fail closed:
 
-| Setting | Production value | Purpose |
-|---|---|---|
-| `STIGMEM_PLUGIN_SIGNING_REQUIRED` | `true` | Reject unsigned or unverified plugins during startup registration. |
-| `STIGMEM_PLUGIN_TRUSTED_PUBLISHERS` | Comma-separated signing identities | Allow plugins signed by known publishers. |
-| `STIGMEM_PLUGIN_TRUST_OVERRIDE_PUBLISHERS` | Empty by default | Explicit audited exception list for signing identities that are not in the trusted-publisher allowlist. |
+<div className="stigmem-fields">
+
+<div>
+<dt>Setting</dt>
+<dt><span className="stigmem-fields__type">Production value</span></dt>
+<dd>Purpose</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_PLUGIN_SIGNING_REQUIRED</code></dt>
+<dt><span className="stigmem-fields__type"><code>true</code></span></dt>
+<dd>Reject unsigned or unverified plugins during startup registration.</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_PLUGIN_TRUSTED_PUBLISHERS</code></dt>
+<dt><span className="stigmem-fields__type">comma list</span></dt>
+<dd>Allow plugins signed by known publishers.</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_PLUGIN_TRUST_OVERRIDE_PUBLISHERS</code></dt>
+<dt><span className="stigmem-fields__type">empty by default</span></dt>
+<dd>Explicit audited exception list for signing identities not in the allowlist.</dd>
+</div>
+
+</div>
 
 Example:
 
@@ -64,17 +101,20 @@ Use `STIGMEM_PLUGIN_TRUST_OVERRIDE_PUBLISHERS` only when you have a documented o
 
 ### Development-only unsigned loading
 
-Local development can load unsigned plugins by setting:
-
 ```bash
 STIGMEM_PLUGIN_SIGNING_REQUIRED=false
 ```
 
-Do not use this in production. When disabled, unsigned plugin loading is warning-visible in logs and audit-visible with `trust_decision=development_unsigned_override`.
+<div className="stigmem-keypoint">
+
+**Do not use this in production.**
+
+When disabled, unsigned plugin loading is warning-visible in logs
+and audit-visible with `trust_decision=development_unsigned_override`.
+
+</div>
 
 ## Inspect installed plugins
-
-List registered plugins:
 
 ```bash
 stigmem plugins list
@@ -98,70 +138,167 @@ Describe one plugin:
 stigmem plugins describe example-stigmem-plugin
 ```
 
-The describe command reports:
-
-- plugin name and version,
-- signing identity,
-- declared capabilities,
-- registered hooks,
-- dependencies,
-- discovery source,
-- latest health status, message, and error summary when available.
+The describe command reports plugin name and version, signing identity, declared capabilities, registered hooks, dependencies, discovery source, and latest health status, message, and error summary when available.
 
 ## Health checks
 
-`health_check` is a lifecycle callable on `PluginManifest`, not a hook. The operator CLI polls plugin health when listing or describing plugins. Health is informational in v0.9.0aN: unhealthy plugins remain registered and their handlers stay active until a future policy layer changes that behavior.
+`health_check` is a lifecycle callable on `PluginManifest`, not a hook. The operator CLI polls plugin health when listing or describing plugins. **Health is informational in v0.9.0aN: unhealthy plugins remain registered and their handlers stay active until a future policy layer changes that behavior.**
 
-Health statuses are:
+<div className="stigmem-fields">
 
-| Status | Meaning |
-|---|---|
-| `healthy` | The plugin reports normal operation. |
-| `degraded` | The plugin reports partial functionality or a recoverable problem. |
-| `unhealthy` | The plugin reports a serious problem. |
-| `unknown` | No health check is available or health has not been reported. |
+<div>
+<dt>Status</dt>
+<dt><span className="stigmem-fields__type">Meaning</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt><code>healthy</code></dt>
+<dt><span className="stigmem-fields__type">normal</span></dt>
+<dd>Plugin reports normal operation.</dd>
+</div>
+
+<div>
+<dt><code>degraded</code></dt>
+<dt><span className="stigmem-fields__type">partial</span></dt>
+<dd>Plugin reports partial functionality or a recoverable problem.</dd>
+</div>
+
+<div>
+<dt><code>unhealthy</code></dt>
+<dt><span className="stigmem-fields__type">serious</span></dt>
+<dd>Plugin reports a serious problem.</dd>
+</div>
+
+<div>
+<dt><code>unknown</code></dt>
+<dt><span className="stigmem-fields__type">no signal</span></dt>
+<dd>No health check is available or health has not been reported.</dd>
+</div>
+
+</div>
 
 ## Audit events to watch
 
 Plugin registration and handler outcomes are written as audit events. Query audit data through your normal audit pipeline. For the admin audit API, see [Audit & Quotas](../../security/audit-and-quotas.md).
 
-Important event types:
+<div className="stigmem-fields">
 
-| Event type | Meaning |
-|---|---|
-| `plugin.registered` | A plugin registered successfully. Metadata includes plugin name, hooks, capabilities, discovery source, signing identity, and trust decision when available. |
-| `plugin.registration_failed` | Registration failed because of duplicate names, manifest validation, config validation, dependency, signing, or trust policy problems. |
-| `plugin.handler_denied` | A voting hook returned `Deny`. Metadata includes hook, handler name, plugin name, and reason. |
-| `plugin.handler_error` | A handler raised an exception. Metadata includes hook, handler name, plugin name, error type, and error summary. |
+<div>
+<dt>Event type</dt>
+<dt><span className="stigmem-fields__type">Trigger</span></dt>
+<dd>Meaning</dd>
+</div>
 
-For production alerts, watch for:
+<div>
+<dt><code>plugin.registered</code></dt>
+<dt><span className="stigmem-fields__type">success</span></dt>
+<dd>A plugin registered successfully. Metadata includes plugin name, hooks, capabilities, discovery source, signing identity, and trust decision when available.</dd>
+</div>
 
-- any `plugin.registration_failed` event during deploy,
-- any `development_unsigned_override` trust decision,
-- any `operator_override` trust decision without an approved change record,
-- repeated `plugin.handler_error` events,
-- unexpected capability additions after a plugin upgrade.
+<div>
+<dt><code>plugin.registration_failed</code></dt>
+<dt><span className="stigmem-fields__type">failure</span></dt>
+<dd>Registration failed: duplicate names, manifest validation, config validation, dependency, signing, or trust policy problems.</dd>
+</div>
+
+<div>
+<dt><code>plugin.handler_denied</code></dt>
+<dt><span className="stigmem-fields__type">veto</span></dt>
+<dd>A voting hook returned <code>Deny</code>. Metadata includes hook, handler name, plugin name, and reason.</dd>
+</div>
+
+<div>
+<dt><code>plugin.handler_error</code></dt>
+<dt><span className="stigmem-fields__type">exception</span></dt>
+<dd>A handler raised an exception. Metadata includes hook, handler name, plugin name, error type, and error summary.</dd>
+</div>
+
+</div>
+
+**For production alerts, watch for:**
+
+<div className="stigmem-grid">
+
+<div><h4>Any <code>registration_failed</code></h4><p>During deploy.</p></div>
+<div><h4>Any <code>development_unsigned_override</code></h4><p>Trust decision.</p></div>
+<div><h4><code>operator_override</code> w/o change record</h4><p>Without an approved change record.</p></div>
+<div><h4>Repeated <code>handler_error</code></h4></div>
+<div><h4>Unexpected capability additions</h4><p>After a plugin upgrade.</p></div>
+
+</div>
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Response |
-|---|---|---|
-| `No plugins registered` | Package is not installed in the node environment, entry point group is missing, or discovery found no packages. | Confirm the package is installed in the same environment as `stigmem`; verify the package declares `[project.entry-points."stigmem.plugins"]`; restart the node. |
-| Startup fails with `unsigned` plugin error | `STIGMEM_PLUGIN_SIGNING_REQUIRED=true` and the plugin did not arrive with verified signing metadata. | Use a signed package from a trusted publisher. Disable signing only in local development. |
-| Startup fails with `signed by untrusted identity` | The signing identity is not in `STIGMEM_PLUGIN_TRUSTED_PUBLISHERS` or the explicit override list. | Add the identity to the trusted-publisher list after review, or use the override list for a documented exception. |
-| Startup fails with duplicate plugin name | Two discovered packages return the same `PluginManifest.name`. | Remove one package or upgrade to packages with unique names. |
-| Startup fails with missing plugin dependency | A plugin lists `depends_on` entries that are not installed or already registered. | Install the dependency plugin or remove the dependent plugin. |
-| Handler fails with `CapabilityError` | The plugin called a `PluginContext` accessor without declaring the matching capability. | Treat this as a plugin bug. Upgrade, disable, or request a corrected manifest. |
-| Health is `degraded` or `unhealthy` | The plugin health check reported a problem, or raised an exception. | Run `stigmem plugins describe <name> --json`; review `health_message` and `health_error`; check plugin logs and audit events. |
+<div className="stigmem-fields">
+
+<div>
+<dt>Symptom</dt>
+<dt><span className="stigmem-fields__type">Likely cause</span></dt>
+<dd>Response</dd>
+</div>
+
+<div>
+<dt><code>No plugins registered</code></dt>
+<dt><span className="stigmem-fields__type">discovery miss</span></dt>
+<dd>Confirm the package is installed in the same environment as <code>stigmem</code>; verify the package declares <code>[project.entry-points."stigmem.plugins"]</code>; restart the node.</dd>
+</div>
+
+<div>
+<dt>Startup fails: <code>unsigned</code> plugin</dt>
+<dt><span className="stigmem-fields__type">signing required</span></dt>
+<dd>Use a signed package from a trusted publisher. Disable signing only in local development.</dd>
+</div>
+
+<div>
+<dt>Startup fails: <code>signed by untrusted identity</code></dt>
+<dt><span className="stigmem-fields__type">not in allowlist</span></dt>
+<dd>Add the identity to the trusted-publisher list after review, or use the override list for a documented exception.</dd>
+</div>
+
+<div>
+<dt>Startup fails: duplicate plugin name</dt>
+<dt><span className="stigmem-fields__type">collision</span></dt>
+<dd>Remove one package or upgrade to packages with unique names.</dd>
+</div>
+
+<div>
+<dt>Startup fails: missing dependency</dt>
+<dt><span className="stigmem-fields__type">depends_on</span></dt>
+<dd>Install the dependency plugin or remove the dependent plugin.</dd>
+</div>
+
+<div>
+<dt>Handler fails: <code>CapabilityError</code></dt>
+<dt><span className="stigmem-fields__type">capability mismatch</span></dt>
+<dd>Treat as a plugin bug. Upgrade, disable, or request a corrected manifest.</dd>
+</div>
+
+<div>
+<dt>Health <code>degraded</code> / <code>unhealthy</code></dt>
+<dt><span className="stigmem-fields__type">plugin reported</span></dt>
+<dd>Run <code>stigmem plugins describe &lt;name&gt; --json</code>; review <code>health_message</code> and <code>health_error</code>; check plugin logs and audit events.</dd>
+</div>
+
+</div>
 
 ## Upgrade and rollback checklist
 
 Before upgrading a plugin:
 
-- Read the release notes and compare the new manifest to the old one.
-- Review added hooks and capabilities.
-- Confirm the signing identity is expected.
-- Deploy first in a non-production environment with production-like signing settings.
-- Capture `stigmem plugins describe <name> --json` before and after the upgrade.
+<ol className="stigmem-steps">
+<li>Read the release notes and compare the new manifest to the old one.</li>
+<li>Review added hooks and capabilities.</li>
+<li>Confirm the signing identity is expected.</li>
+<li>Deploy first in a non-production environment with production-like signing settings.</li>
+<li>Capture <code>stigmem plugins describe &lt;name&gt; --json</code> before and after the upgrade.</li>
+</ol>
 
-To roll back, reinstall the previous pinned plugin version and restart the node. Because registration is startup-only, a restart is required for the old handlers to replace the new ones.
+<div className="stigmem-keypoint">
+
+**To roll back, reinstall the previous pinned plugin version and restart the node.**
+
+Because registration is startup-only, a restart is required for the
+old handlers to replace the new ones.
+
+</div>

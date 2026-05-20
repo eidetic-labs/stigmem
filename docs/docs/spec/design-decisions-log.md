@@ -5,31 +5,96 @@ audience: Spec
 description: "Protocol design decisions retained as overview prose."
 ---
 
-# Protocol Design Decisions {#section-7}
+# Protocol Design Decisions \{#section-7\}
 
-**Status:** Overview prose retained from the v0.9.0a1 specification lineage; design decisions are not an independent component spec.
+<p className="stigmem-meta"><span>2 min read</span><span>Spec contributor · Reviewer</span><span>Overview prose</span></p>
 
-Why the spec made the calls it did — federation, contradictions, entity-vs-agent scoping.
+<div className="stigmem-lead">
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**What this page is**
+
+Why the spec made the calls it did — federation, contradictions,
+entity-vs-agent scoping. Overview prose retained from the v0.9.0a1
+specification lineage; design decisions are not an independent
+component spec.
+
+</div>
+
+**Authoritative source:**
+[`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
-Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
+Each subsection below shows the most recent normative text from the
+spec source. When earlier spec drafts also contained text for the
+same subsection, those revisions are collapsed under a `Revisions`
+accordion beneath it.
 :::
 
-| Decision | Rationale |
-|---|---|
-| Garden as partition above scope | Scope is coarse (4 values); gardens add named, member-gated segmentation without replacing the scope model. Gardens sit inside a scope, not in place of it. |
-| Garden membership is node-local | Cross-node garden federation introduces complex identity delegation questions (who validates remote membership?). Deferred to the pre-reset attestation-chain work when the federation model matures. |
-| `garden_id` field on fact, not a separate collection | Facts remain the canonical storage primitive. `garden_id` is a tag that the node enforces at ACL time. No schema redesign needed. |
-| Orphaned facts on garden delete | Deleting facts on garden delete would be a destructive non-reversible action. Facts are immutable; orphan detection via lint is the safer path. |
-| Source attestation at node, not client | Attestation by client is trivially forgeable. Binding at the node, using the verified identity from the Bearer token, is the only trustworthy enforcement point. |
-| Three attestation modes (`enforce`/`warn`/`off`) | Single-operator self-hosted deployments must not break when upgrading. `warn` default gives operators time to audit before enforcing. |
-| No delegated attestation in the pre-reset spec | Service-agent-writes-for-human is a real pattern, but the delegation chain (who authorized whom) requires a richer identity model. Track C of the pre-reset substrate work adds per-agent keypairs; delegation attestation follows in Track C. |
-| `attested: null` for federation ingest | The receiving node is not the attestation authority for facts it relays. Re-attesting would silently alter provenance. |
-| Garden slug must be unique per node | Gardens are addressed by `stigmem://authority/garden/{slug}`; collisions on slug would make the URI non-unique. |
+## Active decisions
 
----
+<div className="stigmem-fields">
+
+<div>
+<dt>Decision</dt>
+<dt><span className="stigmem-fields__type">Area</span></dt>
+<dd>Rationale</dd>
+</div>
+
+<div>
+<dt>Garden as partition above scope</dt>
+<dt><span className="stigmem-fields__type">scopes & ACL</span></dt>
+<dd>Scope is coarse (4 values); gardens add named, member-gated segmentation without replacing the scope model. Gardens sit inside a scope, not in place of it.</dd>
+</div>
+
+<div>
+<dt>Garden membership is node-local</dt>
+<dt><span className="stigmem-fields__type">federation</span></dt>
+<dd>Cross-node garden federation introduces complex identity delegation questions (who validates remote membership?). Deferred to the pre-reset attestation-chain work when the federation model matures.</dd>
+</div>
+
+<div>
+<dt><code>garden_id</code> field on fact, not a separate collection</dt>
+<dt><span className="stigmem-fields__type">data model</span></dt>
+<dd>Facts remain the canonical storage primitive. <code>garden_id</code> is a tag that the node enforces at ACL time. No schema redesign needed.</dd>
+</div>
+
+<div>
+<dt>Orphaned facts on garden delete</dt>
+<dt><span className="stigmem-fields__type">lifecycle</span></dt>
+<dd>Deleting facts on garden delete would be a destructive non-reversible action. Facts are immutable; orphan detection via lint is the safer path.</dd>
+</div>
+
+<div>
+<dt>Source attestation at node, not client</dt>
+<dt><span className="stigmem-fields__type">trust</span></dt>
+<dd>Attestation by client is trivially forgeable. Binding at the node, using the verified identity from the Bearer token, is the only trustworthy enforcement point.</dd>
+</div>
+
+<div>
+<dt>Three attestation modes (<code>enforce</code>/<code>warn</code>/<code>off</code>)</dt>
+<dt><span className="stigmem-fields__type">migration</span></dt>
+<dd>Single-operator self-hosted deployments must not break when upgrading. <code>warn</code> default gives operators time to audit before enforcing.</dd>
+</div>
+
+<div>
+<dt>No delegated attestation in the pre-reset spec</dt>
+<dt><span className="stigmem-fields__type">scope cut</span></dt>
+<dd>Service-agent-writes-for-human is a real pattern, but the delegation chain (who authorized whom) requires a richer identity model. Track C of the pre-reset substrate work adds per-agent keypairs; delegation attestation follows.</dd>
+</div>
+
+<div>
+<dt><code>attested: null</code> for federation ingest</dt>
+<dt><span className="stigmem-fields__type">provenance</span></dt>
+<dd>The receiving node is not the attestation authority for facts it relays. Re-attesting would silently alter provenance.</dd>
+</div>
+
+<div>
+<dt>Garden slug must be unique per node</dt>
+<dt><span className="stigmem-fields__type">URI hygiene</span></dt>
+<dd>Gardens are addressed by <code>stigmem://authority/garden/{`{slug}`}</code>; collisions on slug would make the URI non-unique.</dd>
+</div>
+
+</div>
 
 <details>
 <summary>Revisions before v1.0: the pre-reset spec-draft</summary>
@@ -76,7 +141,5 @@ Each subsection below shows the most recent normative text from the spec source.
 | confidence decay over `valid_until` reduction (pre-reset) | Setting `valid_until` is a binary expiry; confidence decay is gradual. For knowledge that degrades over time (e.g. an agent's working context facts), a smooth confidence reduction gives downstream agents a calibrated signal to de-weight the fact before it disappears entirely. Both mechanisms coexist. |
 | Company-scoped re-federation blocked by default (pre-reset) | the pre-reset spec 4-node topology revealed that a relay node with wider permissions than the originating peer could silently propagate company-internal facts to third parties. Blocking re-federation by default closes this scope escalation path while preserving the explicit opt-in escape hatch for operators who need it. |
 | Relay lag signal in response headers (pre-reset) | Subscribers cannot know a relay's inbound lag from the facts themselves (HLC timestamps reflect write time, not ingestion lag). A response header is the lowest-overhead signaling path; it does not require a new route and is backward-compatible (old clients ignore unknown headers). |
-
----
 
 </details>

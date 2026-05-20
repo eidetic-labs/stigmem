@@ -8,9 +8,20 @@ audience: Spec
 
 # Recall Pipeline
 
-*Audience: engineers building recall-capable agents or contributing to the recall subsystem (`Spec-X11-Recall-Graph`).*
+<p className="stigmem-meta"><span>2 min read</span><span>Recall engineer</span><span>Spec-X11</span></p>
 
-The recall pipeline retrieves semantically relevant facts for agent queries. It runs three independent retrieval stages, fuses their results with salience signals, and packs the output within a caller-specified token budget using Maximal Marginal Relevance (MMR).
+<div className="stigmem-lead">
+
+**What this page covers**
+
+The recall pipeline retrieves semantically relevant facts for agent
+queries. It runs three independent retrieval stages, fuses their
+results with salience signals, and packs the output within a
+caller-specified token budget using Maximal Marginal Relevance (MMR).
+
+</div>
+
+**Audience:** engineers building recall-capable agents or contributing to the recall subsystem (`Spec-X11-Recall-Graph`).
 
 ## Pipeline overview
 
@@ -46,18 +57,63 @@ flowchart TB
 
 Applied during the fusion step to adjust raw retrieval scores:
 
-| Signal | Formula | Range |
-|--------|---------|-------|
-| Recency | `exp(-0.01 × age_days)` | (0, 1] |
-| Confidence | `fact.confidence` | [0, 1] |
-| Access frequency | `log(1 + access_count) / log(1 + max_access_count)` | [0, 1] |
-| Contradiction penalty | 1.0 if no unresolved contradiction; 0.7 otherwise | {0.7, 1.0} |
-| Garden tier | Configurable per garden; quarantine default 0.2 | [0, 1] |
-| Source-trust multiplier | `0.5 + 0.5 × t` (maps [0,1] → [0.5,1.0]) | [0.5, 1] |
+<div className="stigmem-fields">
+
+<div>
+<dt>Signal</dt>
+<dt><span className="stigmem-fields__type">Range</span></dt>
+<dd>Formula</dd>
+</div>
+
+<div>
+<dt>Recency</dt>
+<dt><span className="stigmem-fields__type">(0, 1]</span></dt>
+<dd><code>exp(-0.01 × age_days)</code></dd>
+</div>
+
+<div>
+<dt>Confidence</dt>
+<dt><span className="stigmem-fields__type">[0, 1]</span></dt>
+<dd><code>fact.confidence</code></dd>
+</div>
+
+<div>
+<dt>Access frequency</dt>
+<dt><span className="stigmem-fields__type">[0, 1]</span></dt>
+<dd><code>log(1 + access_count) / log(1 + max_access_count)</code></dd>
+</div>
+
+<div>
+<dt>Contradiction penalty</dt>
+<dt><span className="stigmem-fields__type">&#123;0.7, 1.0&#125;</span></dt>
+<dd>1.0 if no unresolved contradiction; 0.7 otherwise.</dd>
+</div>
+
+<div>
+<dt>Garden tier</dt>
+<dt><span className="stigmem-fields__type">[0, 1]</span></dt>
+<dd>Configurable per garden; quarantine default 0.2.</dd>
+</div>
+
+<div>
+<dt>Source-trust multiplier</dt>
+<dt><span className="stigmem-fields__type">[0.5, 1]</span></dt>
+<dd><code>0.5 + 0.5 × t</code> (maps [0,1] → [0.5,1.0]).</dd>
+</div>
+
+</div>
 
 ## Security: ANN scope filter
 
-`vec_facts` holds embeddings for all scopes with no `scope` column. Stage 2 ANN results **must** be joined back against the `facts` table and filtered by the caller's scope and garden ACL before being passed to fusion. Without this filter, facts from unauthorized gardens could leak into the response.
+<div className="stigmem-keypoint">
+
+**Stage 2 ANN results MUST be joined back against `facts` and filtered by the caller's scope and garden ACL before fusion.**
+
+`vec_facts` holds embeddings for all scopes with no `scope` column.
+Without this filter, facts from unauthorized gardens could leak into
+the response.
+
+</div>
 
 ## Example
 

@@ -8,46 +8,124 @@ sidebar_position: 4
 
 # Operators
 
-**Audience:** self-hosting operators, infrastructure engineers, SREs.
+<p className="stigmem-meta"><span>3 min read</span><span>Self-hosting operators · SREs</span><span>Handbook overview</span></p>
 
-This handbook covers everything you need to run a Stigmem node in production, from picking a storage backend to debugging recall latency.
+<div className="stigmem-lead">
+
+**What this handbook covers**
+
+Everything you need to run a Stigmem node in production: picking a
+storage backend, deploying, federating with peers, backing up,
+monitoring, and debugging recall latency.
+
+</div>
+
+**Audience:** self-hosting operators, infrastructure engineers, SREs.
 
 ---
 
 ## In this section
 
-| Page | What you'll find |
-|---|---|
-| [Choose your backend (experimental)](https://github.com/eidetic-labs/stigmem/tree/main/experimental/storage-backends) | Decision tree: SQLite vs libSQL vs Postgres |
-| [Deploy runbooks](./runbooks/deploy-runbooks) | Step-by-step runbooks for Fly, Compose, Helm, systemd, and PaaS |
-| [Federation peer setup](./runbooks/federation-setup) | Key generation, pinning, and source-trust tuning |
-| [Operator validation soak](./validation-soak) | 30-day external validation checklist, weekly digest shape, and finding triage |
-| [Backup & restore](./runbooks/backup-restore) | Signed snapshot workflow and cloud PITR |
-| [Monitoring & debugging](./observability/monitoring) | Health checks, metrics, and recall-latency diagnosis |
-| [Peer compromise response](./runbooks/r-peer-compromise) | Containment and recovery when a federation peer is suspicious or compromised |
-| [Worm detection response](./runbooks/r-worm-detected) | Response path for automated cross-peer or agent-to-agent propagation |
-| [Manifest failure response](./runbooks/r-manifest-failure) | What to do when peer manifest or key-rotation verification fails |
-| [Rekor unavailable response](./runbooks/r-rekor-unavailable) | How to handle delayed fact-chain transparency-log checkpoints |
-| [HLC drift response](./runbooks/r-hlc-drift) | How to handle peers sending timestamps outside allowed skew |
-| [Key expiry response](./runbooks/r-key-expiry) | Recovery from expired API, federation, issuer, or encryption keys |
-| [Immutability & attestation](../security/immutability-and-attestation) | R-23 hardening stack, WORM evidence, and TEE deployment options |
-| [Eval harness](https://github.com/eidetic-labs/stigmem/tree/main/experimental/eval-harness) | Automated evaluation and regression testing |
-| [Cost calculator](https://github.com/eidetic-labs/stigmem/tree/main/experimental/billing) | Estimating storage, egress, embedding, and operator costs |
+<div className="stigmem-fields">
+
+<div>
+<dt>Page</dt>
+<dt><span className="stigmem-fields__type">Topic</span></dt>
+<dd>What you'll find</dd>
+</div>
+
+<div>
+<dt><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/storage-backends">Choose your backend (experimental)</a></dt>
+<dt><span className="stigmem-fields__type">storage</span></dt>
+<dd>Decision tree: SQLite vs libSQL vs Postgres.</dd>
+</div>
+
+<div>
+<dt><a href="./runbooks/deploy-runbooks">Deploy runbooks</a></dt>
+<dt><span className="stigmem-fields__type">deploy</span></dt>
+<dd>Step-by-step runbooks for Fly, Compose, Helm, systemd, and PaaS.</dd>
+</div>
+
+<div>
+<dt><a href="./runbooks/federation-setup">Federation peer setup</a></dt>
+<dt><span className="stigmem-fields__type">federation</span></dt>
+<dd>Key generation, pinning, and source-trust tuning.</dd>
+</div>
+
+<div>
+<dt><a href="./validation-soak">Operator validation soak</a></dt>
+<dt><span className="stigmem-fields__type">validation</span></dt>
+<dd>30-day external validation checklist, weekly digest shape, and finding triage.</dd>
+</div>
+
+<div>
+<dt><a href="./runbooks/backup-restore">Backup &amp; restore</a></dt>
+<dt><span className="stigmem-fields__type">DR</span></dt>
+<dd>Signed snapshot workflow and cloud PITR.</dd>
+</div>
+
+<div>
+<dt><a href="./observability/monitoring">Monitoring &amp; debugging</a></dt>
+<dt><span className="stigmem-fields__type">observability</span></dt>
+<dd>Health checks, metrics, and recall-latency diagnosis.</dd>
+</div>
+
+<div>
+<dt><a href="./runbooks/r-peer-compromise">Peer compromise response</a></dt>
+<dt><span className="stigmem-fields__type">incident</span></dt>
+<dd>Containment and recovery when a federation peer is suspicious or compromised.</dd>
+</div>
+
+<div>
+<dt><a href="./runbooks/r-worm-detected">Worm detection response</a></dt>
+<dt><span className="stigmem-fields__type">incident</span></dt>
+<dd>Response path for automated cross-peer or agent-to-agent propagation.</dd>
+</div>
+
+<div>
+<dt><a href="./runbooks/r-manifest-failure">Manifest failure response</a></dt>
+<dt><span className="stigmem-fields__type">incident</span></dt>
+<dd>What to do when peer manifest or key-rotation verification fails.</dd>
+</div>
+
+<div>
+<dt><a href="./runbooks/r-rekor-unavailable">Rekor unavailable response</a></dt>
+<dt><span className="stigmem-fields__type">incident</span></dt>
+<dd>How to handle delayed fact-chain transparency-log checkpoints.</dd>
+</div>
+
+<div>
+<dt><a href="./runbooks/r-hlc-drift">HLC drift response</a></dt>
+<dt><span className="stigmem-fields__type">incident</span></dt>
+<dd>How to handle peers sending timestamps outside allowed skew.</dd>
+</div>
+
+<div>
+<dt><a href="./runbooks/r-key-expiry">Key expiry response</a></dt>
+<dt><span className="stigmem-fields__type">incident</span></dt>
+<dd>Recovery from expired API, federation, issuer, or encryption keys.</dd>
+</div>
+
+<div>
+<dt><a href="../security/immutability-and-attestation">Immutability &amp; attestation</a></dt>
+<dt><span className="stigmem-fields__type">hardening</span></dt>
+<dd>R-23 hardening stack, WORM evidence, and TEE deployment options.</dd>
+</div>
+
+</div>
 
 ---
 
 ## Operator helper scripts
 
-The public repo keeps reusable operator helpers in
-[`scripts/`](https://github.com/eidetic-labs/stigmem/tree/main/scripts):
+The public repo keeps reusable operator helpers in [`scripts/`](https://github.com/eidetic-labs/stigmem/tree/main/scripts):
 
-- `import_markdown_tree.py` imports a markdown index and linked markdown files
-  into a Stigmem node as facts. It is useful for bootstrapping runbooks,
-  team wikis, or personal knowledge bases into a deployment.
-- `stigmem-snapshot.sh` creates a human-readable markdown export of selected
-  facts and contradiction metrics. It complements, but does not replace, the
-  signed `stigmem snapshot` backup format described in
-  [Backup & restore](./runbooks/backup-restore).
+<div className="stigmem-grid">
+
+<div><h4><code>import_markdown_tree.py</code></h4><p>Imports a markdown index and linked markdown files into a Stigmem node as facts. Useful for bootstrapping runbooks, team wikis, or personal knowledge bases.</p></div>
+<div><h4><code>stigmem-snapshot.sh</code></h4><p>Creates a human-readable markdown export of selected facts and contradiction metrics. Complements (but does not replace) the signed <code>stigmem snapshot</code> backup format.</p></div>
+
+</div>
 
 ---
 
@@ -72,17 +150,27 @@ A production Stigmem node has four operational concerns:
 ```
 
 **Start here** if you haven't deployed yet:
-1. [Choose your backend (experimental)](https://github.com/eidetic-labs/stigmem/tree/main/experimental/storage-backends) — picks your persistence strategy.
-2. [Deploy runbooks](./runbooks/deploy-runbooks) — gets the node running in your environment.
-3. [Federation peer setup](./runbooks/federation-setup) — connects your node to peers.
+
+<ol className="stigmem-steps">
+<li><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/storage-backends">Choose your backend</a> — picks your persistence strategy.</li>
+<li><a href="./runbooks/deploy-runbooks">Deploy runbooks</a> — gets the node running in your environment.</li>
+<li><a href="./runbooks/federation-setup">Federation peer setup</a> — connects your node to peers.</li>
+</ol>
 
 **Day-two operations:**
-- [Backup & restore](./runbooks/backup-restore) — protect against data loss.
-- [Monitoring & debugging](./observability/monitoring) — observe and diagnose your node.
-- [Incident runbooks](./runbooks/r-peer-compromise) — respond to critical federation, manifest, HLC, worm, and key-expiry alerts.
+
+<div className="stigmem-grid">
+
+<div><h4>Backup &amp; restore</h4><p><a href="./runbooks/backup-restore">protect against data loss</a>.</p></div>
+<div><h4>Monitoring &amp; debugging</h4><p><a href="./observability/monitoring">observe and diagnose</a>.</p></div>
+<div><h4>Incident runbooks</h4><p><a href="./runbooks/r-peer-compromise">respond to critical alerts</a>: federation, manifest, HLC, worm, key-expiry.</p></div>
+
+</div>
+
+<div className="stigmem-keypoint">
 
 **Planning a deployment?** The [cost calculator](https://github.com/eidetic-labs/stigmem/tree/main/experimental/billing) helps you estimate storage growth, egress, embedding spend, and operator time before you commit to infrastructure.
 
-**Joining external validation?** Start with the
-[Operator validation soak](./validation-soak) checklist so public findings,
-weekly digests, and Phase B exit evidence are traceable from the first day.
+**Joining external validation?** Start with the [Operator validation soak](./validation-soak) checklist so public findings, weekly digests, and Phase B exit evidence are traceable from the first day.
+
+</div>

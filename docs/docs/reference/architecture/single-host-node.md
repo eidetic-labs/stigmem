@@ -8,9 +8,19 @@ audience: Spec
 
 # Single-Host Node
 
-*Audience: engineers deploying or contributing to the Stigmem reference node.*
+<p className="stigmem-meta"><span>2 min read</span><span>Engineer</span><span>Reference architecture</span></p>
 
-A single Stigmem node is a self-contained FastAPI process backed by SQLite (or libSQL/Postgres). This diagram shows the internal component layout and request flow.
+<div className="stigmem-lead">
+
+**What this page covers**
+
+A single Stigmem node is a self-contained FastAPI process backed by
+SQLite (or libSQL/Postgres). This diagram shows the internal
+component layout and request flow.
+
+</div>
+
+**Audience:** engineers deploying or contributing to the Stigmem reference node.
 
 ```mermaid
 graph TB
@@ -51,14 +61,66 @@ graph TB
 
 ## Key components
 
-| Component | File | Responsibility |
-|-----------|------|---------------|
-| FastAPI Router | `main.py`, `routes/` | HTTP endpoint registration, lifespan management |
-| Auth Middleware | `auth.py` | Resolves `Authorization: Bearer` to an identity with scopes and permissions |
-| Source Attestation | `auth.py` | Validates `source` URI against caller's `entity_uri` (`Spec-X6-Source-Attestation`) |
-| HLC Clock | `hlc.py` | Thread-safe hybrid logical clock; advances on local writes and federated receives |
-| Fact Ingest | `routes/facts.py` | Idempotent fact insertion, CID computation, scope enforcement |
-| Conflict Detector | `routes/facts.py` | Detects `(entity, relation, scope)` value divergence; creates contradiction records |
-| Decay Sweeper | `decay.py` | Background task that expires facts past `valid_until` or low confidence (`Spec-X9-Decay-Semantics`) |
-| Federation Pull | `federation_pull.py` | Periodically fetches new facts from registered peers using HLC cursor (`Spec-05-Federation-Trust`) |
-| Storage | `db.py` | SQLite/libSQL/Postgres with migration support; `vec_facts` and `entity_edges` for recall |
+<div className="stigmem-fields">
+
+<div>
+<dt>Component</dt>
+<dt><span className="stigmem-fields__type">File</span></dt>
+<dd>Responsibility</dd>
+</div>
+
+<div>
+<dt>FastAPI Router</dt>
+<dt><span className="stigmem-fields__type"><code>main.py</code>, <code>routes/</code></span></dt>
+<dd>HTTP endpoint registration, lifespan management.</dd>
+</div>
+
+<div>
+<dt>Auth Middleware</dt>
+<dt><span className="stigmem-fields__type"><code>auth.py</code></span></dt>
+<dd>Resolves <code>Authorization: Bearer</code> to an identity with scopes and permissions.</dd>
+</div>
+
+<div>
+<dt>Source Attestation</dt>
+<dt><span className="stigmem-fields__type"><code>auth.py</code></span></dt>
+<dd>Validates <code>source</code> URI against caller's <code>entity_uri</code> (<code>Spec-X6</code>).</dd>
+</div>
+
+<div>
+<dt>HLC Clock</dt>
+<dt><span className="stigmem-fields__type"><code>hlc.py</code></span></dt>
+<dd>Thread-safe hybrid logical clock; advances on local writes and federated receives.</dd>
+</div>
+
+<div>
+<dt>Fact Ingest</dt>
+<dt><span className="stigmem-fields__type"><code>routes/facts.py</code></span></dt>
+<dd>Idempotent fact insertion, CID computation, scope enforcement.</dd>
+</div>
+
+<div>
+<dt>Conflict Detector</dt>
+<dt><span className="stigmem-fields__type"><code>routes/facts.py</code></span></dt>
+<dd>Detects <code>(entity, relation, scope)</code> value divergence; creates contradiction records.</dd>
+</div>
+
+<div>
+<dt>Decay Sweeper</dt>
+<dt><span className="stigmem-fields__type"><code>decay.py</code></span></dt>
+<dd>Background task that expires facts past <code>valid_until</code> or low confidence.</dd>
+</div>
+
+<div>
+<dt>Federation Pull</dt>
+<dt><span className="stigmem-fields__type"><code>federation_pull.py</code></span></dt>
+<dd>Periodically fetches new facts from registered peers using HLC cursor.</dd>
+</div>
+
+<div>
+<dt>Storage</dt>
+<dt><span className="stigmem-fields__type"><code>db.py</code></span></dt>
+<dd>SQLite/libSQL/Postgres with migration support; <code>vec_facts</code> and <code>entity_edges</code> for recall.</dd>
+</div>
+
+</div>

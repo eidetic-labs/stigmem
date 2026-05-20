@@ -7,6 +7,19 @@ audience: Operator
 
 # Deploy Runbooks
 
+<p className="stigmem-meta"><span>4 min read</span><span>First-time operator</span><span>v0.9.0a1</span></p>
+
+<div className="stigmem-lead">
+
+**What this runbook covers**
+
+The Docker Compose reference deployment — the only Stable deployment
+surface in v0.9.0a1. Other surfaces (Fly, Helm, systemd, PaaS,
+Grafana) have been moved to `experimental/deploy-*/` and are gated by
+the ADR-008 reintroduction process.
+
+</div>
+
 **Audience:** operators deploying Stigmem for the first time or migrating between environments.
 **Spec reference:** none — this is operational, not protocol.
 **Source recipes:** [`deploy/compose/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/compose) in the repo.
@@ -24,8 +37,12 @@ The only **Stable** deployment surface in v0.9.0a1 is the Docker Compose referen
 
 ### Prerequisites
 
-- Docker ≥ 24
-- Docker Compose v2 ≥ 2.20
+<div className="stigmem-grid">
+
+<div><h4>Docker ≥ 24</h4></div>
+<div><h4>Docker Compose v2 ≥ 2.20</h4></div>
+
+</div>
 
 ### Step 1 — Clone and configure
 
@@ -65,7 +82,11 @@ print('STIGMEM_FEDERATION_PUBKEY='  + base64.urlsafe_b64encode(pub_bytes).decode
 "
 ```
 
-Store both values in your secrets manager — the runtime requires both.
+<div className="stigmem-keypoint">
+
+**Store both values in your secrets manager — the runtime requires both.**
+
+</div>
 
 ### Step 2 — Start
 
@@ -88,7 +109,7 @@ curl -s http://localhost:8765/healthz
 
 ### Step 4 — Persist keypairs across container recreation
 
-Add the keypair vars to `deploy/compose/.env` (Step 1) before the first start, or set them in the `environment:` block of your `docker-compose.yml`. Without persisting them, a new container auto-generates a new identity and existing peers will not recognize it.
+Add the keypair vars to `deploy/compose/.env` (Step 1) before the first start, or set them in the `environment:` block of your `docker-compose.yml`. **Without persisting them, a new container auto-generates a new identity and existing peers will not recognize it.**
 
 ### Updating
 
@@ -105,13 +126,45 @@ Migrations run automatically on startup.
 
 The recipes below are **not part of the v0.9.0a1 supported surface.** They live under `experimental/deploy-*/` and may be reintroduced in a later release once they pass the ADR-008 gates (threat-model delta → ADR → conformance vectors → 30-day operator soak → documentation parity).
 
-| Surface | Recipe location | Status |
-|---|---|---|
-| Fly.io | [`experimental/deploy-fly/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-fly) | Deferred (no Spec-X assigned) |
-| Helm / Kubernetes | [`experimental/deploy-helm/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-helm) | Deferred (no Spec-X assigned) |
-| systemd / bare metal | [`experimental/deploy-systemd/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-systemd) | Deferred (no Spec-X assigned) |
-| PaaS (Render, Railway, App Runner, Cloud Run) | [`experimental/deploy-paas/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-paas) | Deferred (no Spec-X assigned) |
-| Grafana dashboards | [`experimental/deploy-grafana/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-grafana) | Deferred (no Spec-X assigned) |
+<div className="stigmem-fields">
+
+<div>
+<dt>Surface</dt>
+<dt><span className="stigmem-fields__type">Recipe location</span></dt>
+<dd>Status</dd>
+</div>
+
+<div>
+<dt>Fly.io</dt>
+<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-fly"><code>experimental/deploy-fly/</code></a></span></dt>
+<dd>Deferred (no Spec-X assigned).</dd>
+</div>
+
+<div>
+<dt>Helm / Kubernetes</dt>
+<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-helm"><code>experimental/deploy-helm/</code></a></span></dt>
+<dd>Deferred (no Spec-X assigned).</dd>
+</div>
+
+<div>
+<dt>systemd / bare metal</dt>
+<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-systemd"><code>experimental/deploy-systemd/</code></a></span></dt>
+<dd>Deferred (no Spec-X assigned).</dd>
+</div>
+
+<div>
+<dt>PaaS</dt>
+<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-paas"><code>experimental/deploy-paas/</code></a></span></dt>
+<dd>Render, Railway, App Runner, Cloud Run. Deferred.</dd>
+</div>
+
+<div>
+<dt>Grafana dashboards</dt>
+<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-grafana"><code>experimental/deploy-grafana/</code></a></span></dt>
+<dd>Deferred (no Spec-X assigned).</dd>
+</div>
+
+</div>
 
 Each `experimental/deploy-*/` directory contains a `STATUS.md` describing what would be required to graduate the surface.
 
@@ -119,6 +172,8 @@ Each `experimental/deploy-*/` directory contains a `STATUS.md` describing what w
 
 ## After deploying: what's next?
 
-1. **Connect to peers** → [Federation peer setup](./federation-setup)
-2. **Schedule backups** → [Backup & restore](./backup-restore)
-3. **Set up monitoring** → [Monitoring & debugging](../observability/monitoring)
+<ol className="stigmem-steps">
+<li><strong>Connect to peers</strong> → <a href="./federation-setup">Federation peer setup</a></li>
+<li><strong>Schedule backups</strong> → <a href="./backup-restore">Backup &amp; restore</a></li>
+<li><strong>Set up monitoring</strong> → <a href="../observability/monitoring">Monitoring &amp; debugging</a></li>
+</ol>

@@ -7,9 +7,20 @@ audience: Integrator
 
 # TypeScript SDK Reference
 
-**Audience:** TypeScript / Node.js developers integrating with a Stigmem node.
+<p className="stigmem-meta"><span>5 min read</span><span>TypeScript / Node integrator</span><span>stigmem-ts</span></p>
 
-`stigmem-ts` is the official TypeScript client for the Stigmem REST API. It covers facts, conflicts, federation, lint, recall, memory cards, and subscriptions. It targets Node 20+ and is bundler-compatible (esbuild, Rollup, Webpack, Vite).
+<div className="stigmem-lead">
+
+**What this page covers**
+
+`stigmem-ts` is the official TypeScript client for the Stigmem REST
+API. It covers facts, conflicts, federation, lint, recall, memory
+cards, and subscriptions. Targets Node 20+ and is bundler-compatible
+(esbuild, Rollup, Webpack, Vite).
+
+</div>
+
+**Audience:** TypeScript / Node.js developers integrating with a Stigmem node.
 
 ## Installation
 
@@ -37,7 +48,6 @@ const fact = await client.assertFact(
   "agent:assistant",
   { scope: "local" },
 );
-console.log(fact.id); // UUID
 
 // Hybrid recall
 const recall = await client.recall("Alice's current role", { token_budget: 500 });
@@ -61,142 +71,224 @@ new StigmemClient(opts: {
 })
 ```
 
-All methods return promises and throw `StigmemHTTPError` subclasses on non-2xx responses.
+<div className="stigmem-keypoint">
+
+**All methods return promises and throw `StigmemHTTPError` subclasses on non-2xx responses.**
+
+</div>
 
 ### Facts
 
-#### `assertFact`
-
 ```ts
-client.assertFact(
-  entity:   string,
-  relation: string,
-  value:    FactValue,
-  source:   string,
-  opts?:    AssertOptions,
-): Promise<Fact>
-```
-
-Assert a new fact. `AssertOptions`:
-
-| Field | Type | Default |
-|-------|------|---------|
-| `confidence` | `number` | `1.0` |
-| `scope` | `FactScope` | `"company"` |
-| `valid_until` | `string` | — |
-
-#### `retract`
-
-```ts
-client.retract(
-  entity:   string,
-  relation: string,
-  scope:    FactScope,
-  source:   string,
-  value?:   FactValue,
-): Promise<Fact>
-```
-
-Assert a retraction (confidence=0.0). Convenience wrapper around `assertFact`.
-
-#### `getFact`
-
-```ts
+client.assertFact(entity, relation, value, source, opts?: AssertOptions): Promise<Fact>
+client.retract(entity, relation, scope, source, value?): Promise<Fact>
 client.getFact(factId: string): Promise<Fact>
-```
-
-Fetch a single fact by UUID. Raises `StigmemNotFoundError` (404) when absent.
-
-#### `query`
-
-```ts
 client.query(opts?: QueryOptions): Promise<FactPage>
 ```
 
-Paginated fact query. `QueryOptions`:
+**`AssertOptions`:**
 
-| Field | Type | Default |
-|-------|------|---------|
-| `entity` | `string` | — |
-| `relation` | `string` | — |
-| `source` | `string` | — |
-| `scope` | `FactScope` | — |
-| `min_confidence` | `number` | — |
-| `include_contradicted` | `boolean` | `false` |
-| `include_expired` | `boolean` | `false` |
-| `cursor` | `string` | — |
-| `after` | `string` | — |
-| `limit` | `number` | `50` |
+<div className="stigmem-fields">
+
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Default</span></dt>
+<dd>Type</dd>
+</div>
+
+<div>
+<dt><code>confidence</code></dt>
+<dt><span className="stigmem-fields__type">1.0</span></dt>
+<dd><code>number</code></dd>
+</div>
+
+<div>
+<dt><code>scope</code></dt>
+<dt><span className="stigmem-fields__type">"company"</span></dt>
+<dd><code>FactScope</code></dd>
+</div>
+
+<div>
+<dt><code>valid_until</code></dt>
+<dt><span className="stigmem-fields__type">—</span></dt>
+<dd><code>string</code></dd>
+</div>
+
+</div>
+
+**`QueryOptions`:**
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Default</span></dt>
+<dd>Type</dd>
+</div>
+
+<div>
+<dt><code>entity</code> / <code>relation</code> / <code>source</code></dt>
+<dt><span className="stigmem-fields__type">—</span></dt>
+<dd><code>string</code></dd>
+</div>
+
+<div>
+<dt><code>scope</code></dt>
+<dt><span className="stigmem-fields__type">—</span></dt>
+<dd><code>FactScope</code></dd>
+</div>
+
+<div>
+<dt><code>min_confidence</code></dt>
+<dt><span className="stigmem-fields__type">—</span></dt>
+<dd><code>number</code></dd>
+</div>
+
+<div>
+<dt><code>include_contradicted</code></dt>
+<dt><span className="stigmem-fields__type">false</span></dt>
+<dd><code>boolean</code></dd>
+</div>
+
+<div>
+<dt><code>include_expired</code></dt>
+<dt><span className="stigmem-fields__type">false</span></dt>
+<dd><code>boolean</code></dd>
+</div>
+
+<div>
+<dt><code>cursor</code> / <code>after</code></dt>
+<dt><span className="stigmem-fields__type">—</span></dt>
+<dd><code>string</code></dd>
+</div>
+
+<div>
+<dt><code>limit</code></dt>
+<dt><span className="stigmem-fields__type">50</span></dt>
+<dd><code>number</code></dd>
+</div>
+
+</div>
 
 Use `page.cursor` from the response for cursor-based pagination.
 
-### Recall (pre-reset graph & recall design — §20.3)
-
-#### `recall`
+### Recall
 
 ```ts
 client.recall(query: string, opts?: RecallOptions): Promise<RecallResponse>
 ```
 
-Hybrid recall — return the most salient facts for `query` within `token_budget`. Combines lexical (FTS5/BM25), dense-vector (ANN), and graph-traversal signals.
+**`RecallOptions`:**
 
-`RecallOptions`:
+<div className="stigmem-fields">
 
-| Field | Type | Default |
-|-------|------|---------|
-| `scope` | `FactScope` | `"local"` |
-| `token_budget` | `number` | `4000` |
-| `depth` | `number` | `2` |
-| `weights` | `RecallWeights` | server defaults |
-| `min_confidence` | `number` | `0.1` |
-| `include_neighbors` | `boolean` | `true` |
-| `limit` | `number` | `100` |
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Default</span></dt>
+<dd>Type</dd>
+</div>
 
-`RecallResponse` fields:
+<div>
+<dt><code>scope</code></dt>
+<dt><span className="stigmem-fields__type">"local"</span></dt>
+<dd><code>FactScope</code></dd>
+</div>
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `recall_id` | `string` | UUID for this recall call |
-| `query_hash` | `string` | SHA-256 of the query string |
-| `facts` | `ScoredFact[]` | Ranked, token-budget-packed facts |
-| `total_scored` | `number` | Candidates scored before packing |
-| `token_budget` | `number` | Requested budget |
-| `tokens_used` | `number` | Tokens actually used |
-| `truncated` | `boolean` | True when budget was exhausted |
+<div>
+<dt><code>token_budget</code></dt>
+<dt><span className="stigmem-fields__type">4000</span></dt>
+<dd><code>number</code></dd>
+</div>
 
-`ScoredFact` fields: `fact`, `score`, `score_breakdown`, `hop_distance`, `token_estimate`, `from_card`.
+<div>
+<dt><code>depth</code></dt>
+<dt><span className="stigmem-fields__type">2</span></dt>
+<dd><code>number</code></dd>
+</div>
+
+<div>
+<dt><code>weights</code></dt>
+<dt><span className="stigmem-fields__type">server defaults</span></dt>
+<dd><code>RecallWeights</code></dd>
+</div>
+
+<div>
+<dt><code>min_confidence</code></dt>
+<dt><span className="stigmem-fields__type">0.1</span></dt>
+<dd><code>number</code></dd>
+</div>
+
+<div>
+<dt><code>include_neighbors</code></dt>
+<dt><span className="stigmem-fields__type">true</span></dt>
+<dd><code>boolean</code></dd>
+</div>
+
+<div>
+<dt><code>limit</code></dt>
+<dt><span className="stigmem-fields__type">100</span></dt>
+<dd><code>number</code></dd>
+</div>
+
+</div>
+
+**`RecallResponse` fields:**
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Type</span></dt>
+<dd>Description</dd>
+</div>
+
+<div>
+<dt><code>recall_id</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>UUID for this recall call.</dd>
+</div>
+
+<div>
+<dt><code>query_hash</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>SHA-256 of the query string.</dd>
+</div>
+
+<div>
+<dt><code>facts</code></dt>
+<dt><span className="stigmem-fields__type">ScoredFact[]</span></dt>
+<dd>Ranked, token-budget-packed facts.</dd>
+</div>
+
+<div>
+<dt><code>total_scored</code></dt>
+<dt><span className="stigmem-fields__type">number</span></dt>
+<dd>Candidates scored before packing.</dd>
+</div>
+
+<div>
+<dt><code>token_budget</code> / <code>tokens_used</code></dt>
+<dt><span className="stigmem-fields__type">number</span></dt>
+<dd>Requested vs actual budget.</dd>
+</div>
+
+<div>
+<dt><code>truncated</code></dt>
+<dt><span className="stigmem-fields__type">boolean</span></dt>
+<dd>True when budget was exhausted.</dd>
+</div>
+
+</div>
 
 `RecallWeights` defaults: `{ lexical: 0.35, semantic: 0.35, graph: 0.15, source_trust: 0.10, recency: 0.05 }`.
 
-### Memory cards (pre-reset graph & recall design — §20.4)
-
-#### `getCard`
+### Memory cards
 
 ```ts
 client.getCard(entityUri: string, opts?: CardOptions): Promise<MemoryCard>
 ```
 
-Fetch the synthesized memory card for `entityUri`. `CardOptions`:
-
-| Field | Type | Default |
-|-------|------|---------|
-| `scope` | `FactScope` | `"local"` |
-| `refresh` | `boolean` | `false` |
-
-Raises `StigmemNotFoundError` when the entity has no live facts.
-
-`MemoryCard` fields:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `entity_uri` | `string` | Entity the card describes |
-| `scope` | `string` | Scope the card was materialised from |
-| `summary` | `string` | Structured text summary of live facts |
-| `fact_hashes` | `string[]` | SHA-256(fact_id) for each contributing fact |
-| `avg_confidence` | `number` | Source-trust-weighted mean confidence |
-| `refreshed_at` | `string?` | ISO 8601 UTC timestamp of last refresh |
-| `is_stale` | `boolean` | New fact asserted since last refresh |
-| `has_contradictions` | `boolean` | Any two live facts share the same relation |
+**`CardOptions`:** `scope` (default `"local"`), `refresh` (default `false`).
 
 ```ts
 import { StigmemNotFoundError } from "stigmem-ts";
@@ -211,43 +303,79 @@ try {
 }
 ```
 
-### Conflicts
+**`MemoryCard` fields:**
 
-#### `listConflicts`
+<div className="stigmem-fields">
+
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Type</span></dt>
+<dd>Description</dd>
+</div>
+
+<div>
+<dt><code>entity_uri</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Entity the card describes.</dd>
+</div>
+
+<div>
+<dt><code>scope</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Scope materialised from.</dd>
+</div>
+
+<div>
+<dt><code>summary</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Structured text summary.</dd>
+</div>
+
+<div>
+<dt><code>fact_hashes</code></dt>
+<dt><span className="stigmem-fields__type">string[]</span></dt>
+<dd>SHA-256(fact_id) for each contributing fact.</dd>
+</div>
+
+<div>
+<dt><code>avg_confidence</code></dt>
+<dt><span className="stigmem-fields__type">number</span></dt>
+<dd>Source-trust-weighted mean confidence.</dd>
+</div>
+
+<div>
+<dt><code>refreshed_at</code></dt>
+<dt><span className="stigmem-fields__type">string?</span></dt>
+<dd>ISO 8601 UTC timestamp.</dd>
+</div>
+
+<div>
+<dt><code>is_stale</code></dt>
+<dt><span className="stigmem-fields__type">boolean</span></dt>
+<dd>New fact asserted since last refresh.</dd>
+</div>
+
+<div>
+<dt><code>has_contradictions</code></dt>
+<dt><span className="stigmem-fields__type">boolean</span></dt>
+<dd>Two live facts share the same relation.</dd>
+</div>
+
+</div>
+
+### Conflicts · Lint · Federation · Node info
 
 ```ts
 client.listConflicts(opts?: ConflictListOptions): Promise<ConflictPage>
-```
-
-#### `resolveConflict`
-
-```ts
 client.resolveConflict(conflictId: string, opts?: ResolveOptions): Promise<ConflictResolution>
-```
 
-`ResolveOptions`: `winning_fact_id?`, `resolution_note?`, `new_value?`.
-
-### Lint (§14)
-
-#### `lint`
-
-```ts
 client.lint(scope: FactScope, opts?: LintOptions): Promise<LintResult>
-```
 
-`LintOptions`: `checks?` (`LintCheck[]`), `entity?`, `relation?`, `stale_lookahead_s?`.
-
-### Federation
-
-#### `federationStatus`
-
-```ts
 client.federationStatus(): Promise<Peer[]>
+client.nodeInfo(): Promise<NodeInfo>   // GET /.well-known/stigmem (no auth)
 ```
 
 ### Subscribe (polling, async generator)
-
-#### `subscribeScope`
 
 ```ts
 client.subscribeScope(
@@ -256,12 +384,7 @@ client.subscribeScope(
 ): AsyncGenerator<Fact[]>
 ```
 
-Yields batches of new facts on each poll interval. `SubscribeOptions`:
-
-| Field | Type | Default |
-|-------|------|---------|
-| `intervalMs` | `number` | `30000` |
-| `signal` | `AbortSignal` | — |
+**`SubscribeOptions`:** `intervalMs` (default `30000`), `signal` (`AbortSignal`).
 
 ```ts
 const ac = new AbortController();
@@ -272,17 +395,13 @@ for await (const batch of client.subscribeScope("local", { intervalMs: 5_000, si
 }
 ```
 
-The generator tracks a cursor internally so each batch contains only facts newer than the previous poll.
+<div className="stigmem-keypoint">
 
-### Node info
+**The generator tracks a cursor internally.**
 
-```ts
-client.nodeInfo(): Promise<NodeInfo>
-```
+Each batch contains only facts newer than the previous poll.
 
-Fetches `/.well-known/stigmem`. No authentication required.
-
----
+</div>
 
 ## Value constructors
 
@@ -294,20 +413,45 @@ tv("long text...")                 // TextValue     { type: "text",     v: "..."
 nv(3.14)                           // NumberValue   { type: "number",   v: 3.14 }
 bv(true)                           // BooleanValue  { type: "boolean",  v: true }
 dtv("2026-05-04T00:00:00Z")        // DatetimeValue { type: "datetime", v: "..." }
-rv("stigmem://company.example/x") // RefValue      { type: "ref",      v: "..." }
+rv("stigmem://company.example/x")  // RefValue      { type: "ref",      v: "..." }
 nullv()                            // NullValue     { type: "null" }
 ```
 
----
-
 ## Errors
 
-| Class | HTTP status | When raised |
-|-------|-------------|-------------|
-| `StigmemHTTPError` | any non-2xx | Base class |
-| `StigmemAuthError` | 401 / 403 | Invalid or missing API key |
-| `StigmemNotFoundError` | 404 | Resource does not exist |
-| `StigmemConflictError` | 409 | Conflicting resource state |
+<div className="stigmem-fields">
+
+<div>
+<dt>Class</dt>
+<dt><span className="stigmem-fields__type">HTTP</span></dt>
+<dd>When raised</dd>
+</div>
+
+<div>
+<dt><code>StigmemHTTPError</code></dt>
+<dt><span className="stigmem-fields__type">any non-2xx</span></dt>
+<dd>Base class.</dd>
+</div>
+
+<div>
+<dt><code>StigmemAuthError</code></dt>
+<dt><span className="stigmem-fields__type">401 / 403</span></dt>
+<dd>Invalid or missing API key.</dd>
+</div>
+
+<div>
+<dt><code>StigmemNotFoundError</code></dt>
+<dt><span className="stigmem-fields__type">404</span></dt>
+<dd>Resource does not exist.</dd>
+</div>
+
+<div>
+<dt><code>StigmemConflictError</code></dt>
+<dt><span className="stigmem-fields__type">409</span></dt>
+<dd>Conflicting resource state.</dd>
+</div>
+
+</div>
 
 ```ts
 import {
@@ -330,11 +474,7 @@ try {
 }
 ```
 
----
-
 ## Custom fetch
-
-Inject any fetch-compatible implementation — useful for tests and environments without a global `fetch`:
 
 ```ts
 import { StigmemClient } from "stigmem-ts";
@@ -346,48 +486,42 @@ const client = new StigmemClient({
 });
 ```
 
----
-
 ## Bundler smoke (esbuild)
-
-The SDK ships a `smoke` script that verifies esbuild can tree-shake and bundle it:
 
 ```bash
 cd sdks/stigmem-ts
 pnpm smoke
 ```
 
----
-
 ## Regenerating types from the OpenAPI spec
-
-Types in `src/generated.ts` are auto-generated from `docs/openapi/stigmem.json`:
 
 ```bash
 make sdk-ts-generate   # just generation
 make sdk-ts            # full pipeline: generate → build → test → pack
 ```
 
-The ergonomic types in `src/types.ts` (tagged-union `FactValue`, value constructors, etc.) are hand-authored on top of the generated layer to match the Stigmem wire format described in spec §2.1.
+The ergonomic types in `src/types.ts` (tagged-union `FactValue`, value constructors) are hand-authored on top of the generated layer to match the Stigmem wire format described in spec §2.1.
 
----
-
-## advanced features (pre-reset design)
+## Advanced features
 
 ### Content-addressed fact IDs (§25)
-
-Every fact returned by the node includes a `cid` field — a SHA-256 content hash that uniquely identifies the fact's canonical body. You can fetch a fact by either UUID or CID:
 
 ```ts
 const factByUuid = await client.getFact("550e8400-e29b-41d4-a716-446655440000");
 const factByCid  = await client.getFact("sha256:a3f2b8c901d4...");
 ```
 
-Asserting the same (entity, relation, value, source, scope) tuple twice returns the existing fact — CID-based deduplication is automatic. See the [Content Addressing guide](../concepts/facts/content-addressing.md).
+<div className="stigmem-keypoint">
+
+**Asserting the same (entity, relation, value, source, scope) tuple twice returns the existing fact.**
+
+CID-based deduplication is automatic.
+
+</div>
 
 ### Time-travel queries (§24)
 
-The `as_of` parameter is available on the fact query and recall endpoints via the REST API. Use the HTTP client directly for time-travel queries:
+The `as_of` parameter is available on the fact query and recall endpoints via the REST API. Use the HTTP client directly:
 
 ```ts
 const res = await fetch(
@@ -397,16 +531,13 @@ const res = await fetch(
 const { facts } = await res.json();
 ```
 
-See the [Time-Travel Queries guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/time-travel).
-
----
-
 ## See also
 
-- [Tutorial: SDK Quickstart](../get-started/sdk-quickstart.md) — assert, recall, and subscribe in Python / TS / Go
-- [Recall guide](../concepts/recall/) — hybrid recall, weight tuning, fast-path
-- [Memory Cards guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph) — card lifecycle and divergence policy
-- [Asserting facts](../concepts/facts/asserting-facts.md) — detailed fact write patterns
-- [Querying facts](../concepts/facts/querying-facts.md) — structured predicate queries
-- [Python SDK Reference](./python) — equivalent Python client
-- [Go SDK Reference](https://github.com/eidetic-labs/stigmem/tree/main/experimental/sdk-go) — Go client
+<div className="stigmem-grid">
+
+<div><h4><a href="../get-started/sdk-quickstart.md">Tutorial: SDK Quickstart</a></h4><p>Assert, recall, and subscribe in Python / TS / Go.</p></div>
+<div><h4><a href="../concepts/recall/">Recall guide</a></h4><p>Hybrid recall, weight tuning, fast-path.</p></div>
+<div><h4><a href="./python">Python SDK Reference</a></h4><p>Equivalent Python client.</p></div>
+<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/sdk-go">Go SDK Reference</a></h4><p>Go client.</p></div>
+
+</div>

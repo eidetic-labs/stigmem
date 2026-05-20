@@ -13,73 +13,104 @@ depends_on:
 
 # Spec-07-Recall-Pipeline
 
-`Spec-07-Recall-Pipeline` defines the supported recall path: query filtering,
-scope and garden authorization, scoring inputs, result packing, and the boundary
+<p className="stigmem-meta"><span>3 min read</span><span>Spec contributor · SDK author</span><span>Draft · v0.9.0aN</span></p>
+
+<div className="stigmem-lead">
+
+**What this spec defines**
+
+The supported recall path: query filtering, scope and garden
+authorization, scoring inputs, result packing, and the boundary
 between basic recall and deferred advanced graph/embedding features.
 
-## Extraction Status
+</div>
 
-This file contains the ADR-010 prose extraction for the basic recall pipeline.
-Advanced graph traversal, subscriptions, memory cards, and provenance walks
-remain experimental or separately assigned.
+## Extraction status
 
-## Recall Inputs
+This file contains the ADR-010 prose extraction for the basic
+recall pipeline. Advanced graph traversal, subscriptions, memory
+cards, and provenance walks remain experimental or separately
+assigned.
 
-Recall begins with caller-supplied filters such as entity, relation, source,
-scope, confidence threshold, and optional garden id. Implementations MUST apply
-normalization and authorization before ranking or returning results.
+## Recall inputs
 
-The recall pipeline MUST NOT rank or pack facts the caller is not authorized to
-read. Scope and garden ACL are filters, not score penalties.
+Recall begins with caller-supplied filters such as entity, relation,
+source, scope, confidence threshold, and optional garden id.
+Implementations MUST apply normalization and authorization before
+ranking or returning results.
 
-## Authorization Order
+<div className="stigmem-keypoint">
+
+**The recall pipeline MUST NOT rank or pack facts the caller is not authorized to read.**
+
+Scope and garden ACL are filters, not score penalties.
+
+</div>
+
+## Authorization order
 
 Implementations MUST enforce:
 
-1. Caller identity and read permission.
-2. Scope visibility.
-3. Garden ACL for garden-tagged facts.
-4. Tombstone, quarantine, or sanitizer suppression when those components are
-   active.
+<ol className="stigmem-steps">
+<li>Caller identity and read permission.</li>
+<li>Scope visibility.</li>
+<li>Garden ACL for garden-tagged facts.</li>
+<li>Tombstone, quarantine, or sanitizer suppression when those components are active.</li>
+</ol>
 
 Only surviving facts may enter scoring.
 
-## Scoring Inputs
+## Scoring inputs
 
 Basic recall MAY combine:
 
-- lexical match,
-- semantic match when embeddings are enabled,
-- graph adjacency when the graph index is enabled,
-- source trust,
-- confidence,
-- recency or decay,
-- contradiction state,
-- garden tier.
+<div className="stigmem-grid">
 
-The result score is local and derived. Peers MUST NOT be allowed to supply an
-authoritative score in federated fact payloads.
+<div><h4>Lexical match</h4></div>
+<div><h4>Semantic match</h4><p>When embeddings are enabled.</p></div>
+<div><h4>Graph adjacency</h4><p>When the graph index is enabled.</p></div>
+<div><h4>Source trust</h4></div>
+<div><h4>Confidence</h4></div>
+<div><h4>Recency or decay</h4></div>
+<div><h4>Contradiction state</h4></div>
+<div><h4>Garden tier</h4></div>
 
-## Low-Trust And Quarantine Interaction
+</div>
 
-Low-trust source handling belongs to federation trust and quarantine specs, but
-recall must honor their outputs. Facts admitted to quarantine gardens SHOULD be
-excluded or down-ranked unless the caller explicitly has quarantine visibility
-and the route semantics allow inspection.
+<div className="stigmem-keypoint">
+
+**The result score is local and derived.**
+
+Peers MUST NOT be allowed to supply an authoritative score in
+federated fact payloads.
+
+</div>
+
+## Low-trust and quarantine interaction
+
+Low-trust source handling belongs to federation trust and
+quarantine specs, but recall must honor their outputs. Facts
+admitted to quarantine gardens SHOULD be excluded or down-ranked
+unless the caller explicitly has quarantine visibility and the
+route semantics allow inspection.
 
 ## Packing
 
-When recall is used to feed an agent context window, implementations SHOULD pack
-results to preserve diversity and avoid spending the entire budget on near
-duplicates. Entity-centric recall MAY disable diversity packing and return the
-top facts for that entity.
+When recall is used to feed an agent context window, implementations
+SHOULD pack results to preserve diversity and avoid spending the
+entire budget on near duplicates. Entity-centric recall MAY disable
+diversity packing and return the top facts for that entity.
 
-Packing MUST preserve authorization decisions. A packed summary MUST NOT reveal
-the existence of unauthorized facts.
+<div className="stigmem-keypoint">
 
-## Response Shape
+**Packing MUST preserve authorization decisions.**
 
-Recall responses SHOULD include enough metadata for audit and debugging:
+A packed summary MUST NOT reveal the existence of unauthorized
+facts.
+
+</div>
+
+## Response shape
 
 ```text
 RecallResponse {
@@ -97,12 +128,16 @@ RecallResult {
 
 Exact route shape is owned by `Spec-03-HTTP-API`.
 
-## Out Of Scope
+## Out of scope
 
 This spec does not define:
 
-- advanced recall graph semantics (`Spec-X11-Recall-Graph`),
-- subscriptions (`Spec-X7-Subscriptions`),
-- lazy instruction recall (`Spec-X1-Lazy-Instruction-Discovery`),
-- synthesis (`Spec-X10-Synthesis`), or
-- adapter-specific context injection (`Adapter ABI`, component ID TBD).
+<div className="stigmem-grid">
+
+<div><h4>Advanced recall graph</h4><p><code>Spec-X11-Recall-Graph</code>.</p></div>
+<div><h4>Subscriptions</h4><p><code>Spec-X7-Subscriptions</code>.</p></div>
+<div><h4>Lazy instruction recall</h4><p><code>Spec-X1-Lazy-Instruction-Discovery</code>.</p></div>
+<div><h4>Synthesis</h4><p><code>Spec-X10-Synthesis</code>.</p></div>
+<div><h4>Adapter context injection</h4><p>Adapter ABI, component ID TBD.</p></div>
+
+</div>

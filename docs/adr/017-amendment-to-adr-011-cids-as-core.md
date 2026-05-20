@@ -1,125 +1,312 @@
 # ADR-017: Amendment to ADR-011 — CIDs as core (not plugin)
 
-**Status:** Accepted
-**Date:** 2026-05-07
-**Authors:** Eidetic Labs
-**Amends:** ADR-011 (C1 plugin architecture for cross-cutting features)
-**Related:** ADR-003 (capability-based prompt-injection handling), ADR-016 (storage immutability enforcement); threat model R-23
+<p className="stigmem-meta"><span>4 min read</span><span>Accepted</span><span>Recorded 2026-05-07</span></p>
 
----
+<div className="stigmem-lead">
+
+**What this ADR decides**
+
+Content-addressed fact IDs (CIDs) move from plugin scope to core
+scope. Default install computes CIDs on every fact write and verifies
+on every fact read. The other six cross-cutting feature plugins
+remain plugins per ADR-011's C1 architecture, which is otherwise
+unchanged.
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Default install must equal secure install.**
+
+ADR-016's analysis showed CIDs are load-bearing for both ADR-003 and
+the broader immutability story. Keeping CIDs as an opt-in plugin
+means "default install" silently differs from "secure default install"
+by a critical layer — exactly the credibility-leak pattern stigmem
+should avoid post-retraction.
+
+</div>
+
+**Status:** Accepted · **Date:** 2026-05-07 · **Amends:** [ADR-011](./011-cross-cutting-extraction) (C1 plugin architecture for cross-cutting features) · **Related:** [ADR-003](./003-prompt-injection), [ADR-016](./016-storage-immutability-enforcement); threat model R-23
 
 ## Context
 
-ADR-011 (Accepted 2026-05-07) established a C1 plugin architecture for stigmem's cross-cutting features. Seven features were scoped as plugins, including content-addressed fact IDs (CIDs, §25). At the time of ADR-011's acceptance, CIDs were classified alongside other deferred features as opt-in plugin functionality — adopters who wanted cryptographic content addressing would install `stigmem-plugin-cids`.
+ADR-011 (Accepted 2026-05-07) established a C1 plugin architecture for
+stigmem's cross-cutting features. Seven features were scoped as
+plugins, including content-addressed fact IDs (CIDs, §25). Adopters
+who wanted cryptographic content addressing would install
+`stigmem-plugin-cids`.
 
-Subsequent threat-modeling work revealed that this classification undervalues CIDs' role in stigmem's security architecture. Specifically:
+Subsequent threat-modeling work revealed that this classification
+undervalues CIDs' role in the security architecture.
 
-1. **ADR-003's prompt-injection trust boundary depends on storage immutability** (per ADR-003 § Trust boundary). The L2 federation rule (no receiver-side promotion of `interpret_as`) assumes the storage `interpret_as` value is trustworthy.
+<div className="stigmem-grid">
 
-2. **ADR-016 (storage immutability enforcement) commits CIDs as a load-bearing layer (L3)** in the defense-in-depth stack against R-23 (admin-level storage tampering). Without CIDs in core, ADR-016's L3 layer is opt-in and defense-in-depth has a hole.
+<div><h4>ADR-003 trust boundary depends on storage immutability</h4><p>The L2 federation rule (no receiver-side promotion of <code>interpret_as</code>) assumes the storage <code>interpret_as</code> value is trustworthy.</p></div>
+<div><h4>ADR-016 commits CIDs as L3 of the defense-in-depth stack</h4><p>Without CIDs in core, L3 is opt-in and defense-in-depth has a hole.</p></div>
+<div><h4>Federation peer integrity verification depends on CIDs</h4><p>Peers verify content integrity by recomputing CIDs from canonical bodies. If CIDs are opt-in, federation between deployments with mismatched plugin install has degraded security.</p></div>
 
-3. **Federation peer integrity verification depends on CIDs.** Peers verify content integrity by recomputing CIDs from canonical bodies. If CIDs are an opt-in plugin, federation between deployments where one party has the plugin and the other doesn't has a degraded security posture — and detecting that asymmetry is itself a problem.
+</div>
 
-The original ADR-011 decision treated CIDs as orthogonal to the security architecture. ADR-016's analysis shows CIDs are load-bearing for both ADR-003 and the broader immutability story. Keeping CIDs as a plugin means:
-
-- Default install lacks the integrity layer that backstops ADR-003 against storage compromise.
-- Federation peer verification is conditional on plugin install, not architectural.
-- Operators must understand that "default install" silently differs from "secure default install" by a critical layer.
-
-This amendment corrects that.
+The original ADR-011 decision treated CIDs as orthogonal to the
+security architecture. ADR-016 showed CIDs are load-bearing.
 
 ## Decision
 
-**Move CIDs from plugin scope to core scope.** Specifically:
+**Move CIDs from plugin scope to core scope.**
 
-1. CIDs are no longer one of the seven cross-cutting feature plugins per ADR-011.
-2. CID generation, storage, and verification are part of stigmem core. Default install computes CIDs on every fact write and verifies CIDs on every fact read.
-3. The other six cross-cutting feature plugins (lazy instruction discovery, time-travel, RTBF tombstones, memory garden advanced ACL, source attestation, multi-tenant) remain plugins per ADR-011's C1 architecture. **ADR-011's plugin model is otherwise unchanged.**
+<ol className="stigmem-steps">
+<li>CIDs are no longer one of the seven cross-cutting feature plugins per ADR-011.</li>
+<li>CID generation, storage, and verification are part of stigmem core. Default install computes CIDs on every fact write and verifies CIDs on every fact read.</li>
+<li>The other six cross-cutting feature plugins (lazy instruction discovery, time-travel, RTBF tombstones, memory garden advanced ACL, source attestation, multi-tenant) remain plugins per ADR-011's C1 architecture. ADR-011's plugin model is otherwise unchanged.</li>
+</ol>
 
 ### What this changes in ADR-011's scope
 
-| Feature | Original ADR-011 scope | Amended scope (this ADR) |
-|---|---|---|
-| Lazy instruction discovery | Plugin (`stigmem-plugin-lazy-instruction-discovery`) | Plugin (unchanged) |
-| **CIDs (§25)** | **Plugin (`stigmem-plugin-cids`)** | **Core (not a plugin)** |
-| Time-travel queries | Plugin | Plugin (unchanged) |
-| RTBF tombstones | Plugin | Plugin (unchanged) |
-| Memory-garden advanced ACL | Plugin | Plugin (unchanged) |
-| Source attestation | Plugin | Plugin (unchanged) |
-| Multi-tenant | Plugin | Plugin (unchanged) |
+<div className="stigmem-fields">
+
+<div>
+<dt>Feature</dt>
+<dt><span className="stigmem-fields__type">Original / Amended</span></dt>
+<dd>Status</dd>
+</div>
+
+<div>
+<dt>Lazy instruction discovery</dt>
+<dt><span className="stigmem-fields__type">plugin / plugin</span></dt>
+<dd>Unchanged.</dd>
+</div>
+
+<div>
+<dt><strong>CIDs (§25)</strong></dt>
+<dt><span className="stigmem-fields__type"><strong>plugin → core</strong></span></dt>
+<dd>This amendment.</dd>
+</div>
+
+<div>
+<dt>Time-travel queries</dt>
+<dt><span className="stigmem-fields__type">plugin / plugin</span></dt>
+<dd>Unchanged.</dd>
+</div>
+
+<div>
+<dt>RTBF tombstones</dt>
+<dt><span className="stigmem-fields__type">plugin / plugin</span></dt>
+<dd>Unchanged.</dd>
+</div>
+
+<div>
+<dt>Memory-garden advanced ACL</dt>
+<dt><span className="stigmem-fields__type">plugin / plugin</span></dt>
+<dd>Unchanged.</dd>
+</div>
+
+<div>
+<dt>Source attestation</dt>
+<dt><span className="stigmem-fields__type">plugin / plugin</span></dt>
+<dd>Unchanged.</dd>
+</div>
+
+<div>
+<dt>Multi-tenant</dt>
+<dt><span className="stigmem-fields__type">plugin / plugin</span></dt>
+<dd>Unchanged.</dd>
+</div>
+
+</div>
 
 ### What this changes in Phase A scope
 
-- **PR 4b** (originally `stigmem-plugin-cids` implementation) becomes "implement CIDs as core feature" — same engineering work, different package boundary.
-- The `stigmem-plugin-cids` package is not created.
-- CID-related hooks (`pre_assert_transform` for CID generation, `federation_inbound_validate` for CID verification) move from plugin-registered to core-resident.
-- The hook surface defined in ADR-011 § Hook surface table remains valid — `pre_assert_transform`, `federation_inbound_validate`, etc. — but core-resident handlers register them, not a plugin manifest.
+<div className="stigmem-grid">
+
+<div><h4>PR 4b rewrite</h4><p>Originally <code>stigmem-plugin-cids</code> implementation. Becomes "implement CIDs as core feature" — same engineering work, different package boundary.</p></div>
+<div><h4>No plugin package</h4><p>The <code>stigmem-plugin-cids</code> package is not created.</p></div>
+<div><h4>Hooks move to core</h4><p>CID-related hooks (<code>pre_assert_transform</code> for generation, <code>federation_inbound_validate</code> for verification) move from plugin-registered to core-resident.</p></div>
+<div><h4>Hook surface intact</h4><p>ADR-011's hook surface remains valid — core-resident handlers register them, not a plugin manifest.</p></div>
+
+</div>
 
 ### What this changes in default install behavior
 
-Before this amendment:
-- Default install: facts have no CID. `cid` field is null on stored rows. No content-addressed federation. Tamper detection requires installing the plugin.
+<div className="stigmem-fields">
 
-After this amendment:
-- Default install: every fact has a CID computed at write time. CID is a not-null required column. Content-addressed federation works out of the box. Tamper detection is on by default.
+<div>
+<dt>State</dt>
+<dt><span className="stigmem-fields__type">Before / After</span></dt>
+<dd>Behavior</dd>
+</div>
 
-Operators cannot disable CIDs. There is no `STIGMEM_CIDS_ENABLED=false`. The CID is part of the fact identity.
+<div>
+<dt>Before amendment</dt>
+<dt><span className="stigmem-fields__type">plugin-gated</span></dt>
+<dd>Facts have no CID. <code>cid</code> field is null on stored rows. No content-addressed federation. Tamper detection requires installing the plugin.</dd>
+</div>
+
+<div>
+<dt>After amendment</dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>Every fact has a CID computed at write time. CID is a not-null required column. Content-addressed federation works out of the box. Tamper detection is on by default.</dd>
+</div>
+
+</div>
+
+Operators cannot disable CIDs. There is no `STIGMEM_CIDS_ENABLED=false`.
+The CID is part of the fact identity.
 
 ## Alternatives considered
 
-**1. Keep CIDs as a plugin but require it for federation deployments.** Considered. The argument: single-tenant non-federated deployments don't strictly need CIDs for ADR-003's trust boundary if there's no peer integrity story to protect. Rejected for two reasons: (a) ADR-016's L3 (CID-based tamper detection on read) is part of the storage immutability stack, which applies regardless of federation; (b) "default install minus plugin" being silently weaker than the documented spec is exactly the credibility-leak pattern stigmem should avoid post-retraction.
+<div className="stigmem-fields">
 
-**2. Define a "secure-by-default" install variant that includes the CIDs plugin and a "lean install" variant that doesn't.** Rejected. Two install variants for the same project doubles the documentation, conformance testing, and adopter confusion. Worse, the lean variant has the worst marketing position imaginable: "this version of stigmem is less secure but smaller."
+<div>
+<dt>Alternative</dt>
+<dt><span className="stigmem-fields__type">Disposition</span></dt>
+<dd>Why</dd>
+</div>
 
-**3. Leave ADR-011 as-is; document the CIDs-required-for-security caveat in operator docs.** Rejected. Documentation cannot fix an architectural decision that puts the security floor below the spec's claims. Operators reading "facts are immutable" should not also need to read "...but only if you installed the plugin."
+<div>
+<dt>Keep CIDs as plugin but require it for federation deployments</dt>
+<dt><span className="stigmem-fields__type">rejected</span></dt>
+<dd>ADR-016's L3 applies regardless of federation. "Default install minus plugin" being silently weaker than the spec is exactly the credibility-leak pattern stigmem should avoid.</dd>
+</div>
 
-**4. Wait until ADR-016 is accepted before amending ADR-011.** Considered for sequencing. Both amendments could land together as a coherent set. Decided to draft them concurrently and accept them together (or as a coherent decision in the same sign-off batch). The substance of this amendment is independent of ADR-016's full implementation; CIDs being core matters whether or not the rest of ADR-016 lands.
+<div>
+<dt>Define "secure-by-default" install variant + "lean install" variant</dt>
+<dt><span className="stigmem-fields__type">rejected</span></dt>
+<dd>Two install variants doubles the documentation, conformance testing, and adopter confusion. The lean variant has the worst marketing position imaginable: "this version of stigmem is less secure but smaller."</dd>
+</div>
+
+<div>
+<dt>Leave ADR-011 as-is; document the caveat in operator docs</dt>
+<dt><span className="stigmem-fields__type">rejected</span></dt>
+<dd>Documentation cannot fix an architectural decision that puts the security floor below the spec's claims. Operators reading "facts are immutable" should not also need to read "...but only if you installed the plugin."</dd>
+</div>
+
+<div>
+<dt>Wait until ADR-016 is accepted before amending ADR-011</dt>
+<dt><span className="stigmem-fields__type">considered</span></dt>
+<dd>Decided to draft them concurrently and accept them together. The substance of this amendment is independent of ADR-016's full implementation; CIDs being core matters whether or not the rest of ADR-016 lands.</dd>
+</div>
+
+</div>
 
 ## Consequences
 
 ### What gets easier
 
-- **ADR-003's claims hold by default.** No "secure-only-if-plugin-installed" caveat.
-- **ADR-016's L3 layer is universal.** Defense-in-depth is genuinely defense-in-depth, not optional.
-- **Federation peer verification is unconditional.** Peers can always verify content integrity; no need to check whether the peer has the plugin.
-- **Operator mental model simplifies.** The default install is the secure install.
+<div className="stigmem-grid">
+
+<div><h4>ADR-003's claims hold by default</h4><p>No "secure-only-if-plugin-installed" caveat.</p></div>
+<div><h4>ADR-016's L3 is universal</h4><p>Defense-in-depth is genuinely defense-in-depth, not optional.</p></div>
+<div><h4>Federation peer verification unconditional</h4><p>Peers can always verify content integrity; no need to check whether the peer has the plugin.</p></div>
+<div><h4>Operator mental model simplifies</h4><p>The default install is the secure install.</p></div>
+
+</div>
 
 ### What gets harder
 
-- **One fewer plugin to demonstrate the C1 pattern.** ADR-011's plugin architecture validates against the remaining six features. CIDs were the second priority (after lazy instruction discovery); now the second priority becomes time-travel. The pattern is still validated, just on a slightly different feature first.
-- **Default install size grows slightly.** CID computation, the cid_aliases table, the migration. Marginal.
-- **CID computation is on every write.** Performance cost: ~10-50μs per write for SHA-256 over the canonical body. Acceptable.
+<div className="stigmem-grid">
+
+<div><h4>One fewer plugin to demonstrate C1</h4><p>The pattern is still validated on the remaining six features. CIDs were second-priority after lazy instruction discovery; now second priority becomes time-travel.</p></div>
+<div><h4>Default install size grows slightly</h4><p>CID computation, the <code>cid_aliases</code> table, the migration. Marginal.</p></div>
+<div><h4>CID computation on every write</h4><p>~10–50μs per write for SHA-256 over the canonical body. Acceptable.</p></div>
+
+</div>
 
 ### New risks
 
-- **R-AMD11-1: ADR-011's architectural commitment is weakened.** A reader of ADR-011 sees seven plugins; a reader of ADR-017 (this amendment) sees six plugins. Cross-references must be tracked. Mitigation: ADR-011 stays untouched (immutability rule); ADR-017 is the canonical statement of the six-plugin scope; future readers follow the chain via the `Amends:` reference.
-- **R-AMD11-2: precedent for amending early-Accepted ADRs.** This is the first amendment to an Accepted ADR. It sets precedent: when a downstream ADR (here ADR-016) reveals a flaw in an upstream decision, amendment is the right move. Mitigation: amendments are infrequent and require the same sign-off as new ADRs; the precedent is appropriate, not concerning.
+<div className="stigmem-fields">
+
+<div>
+<dt>Risk</dt>
+<dt><span className="stigmem-fields__type">Status</span></dt>
+<dd>Mitigation</dd>
+</div>
+
+<div>
+<dt><code>R-AMD11-1</code> · ADR-011's architectural commitment weakened</dt>
+<dt><span className="stigmem-fields__type">tracked</span></dt>
+<dd>A reader of ADR-011 sees seven plugins; a reader of ADR-017 sees six. Cross-references must be tracked. Mitigation: ADR-011 stays untouched (immutability rule); ADR-017 is the canonical statement of six-plugin scope; future readers follow the chain via <code>Amends:</code> reference.</dd>
+</div>
+
+<div>
+<dt><code>R-AMD11-2</code> · precedent for amending early-Accepted ADRs</dt>
+<dt><span className="stigmem-fields__type">tracked</span></dt>
+<dd>This is the first amendment to an Accepted ADR. Sets precedent: when a downstream ADR reveals a flaw in an upstream decision, amendment is the right move. Mitigation: amendments are infrequent and require the same sign-off as new ADRs.</dd>
+</div>
+
+</div>
 
 ## Implementation plan
 
-ADR-017 is a scope change, not a re-engineering effort. The actual CID work was already planned for Phase A PR 4b (per ADR-011). This amendment changes only:
+ADR-017 is a scope change, not a re-engineering effort. The actual CID
+work was already planned for Phase A PR 4b. This amendment changes
+only:
 
-- **Package boundary:** CID code lives in `node/src/stigmem_node/cid.py` (core), not in `experimental/cids/src/`.
-- **Manifest:** no `stigmem-plugin-cids` package is created.
-- **Hook registration:** `pre_assert_transform` and `federation_inbound_validate` for CIDs are core-resident; they register with the hook registry as part of node startup, not via plugin discovery.
-- **Tests:** CID tests live in `node/tests/test_cids.py` (core), not in plugin tests.
-- **Documentation:** CIDs are documented in `docs/Build/Concepts/Content-addressing` and `docs/Secure/Immutability-and-attestation` (per ADR-005 IA), not in `docs/Build/Plugins`.
+<div className="stigmem-fields">
+
+<div>
+<dt>Aspect</dt>
+<dt><span className="stigmem-fields__type">Change</span></dt>
+<dd>Detail</dd>
+</div>
+
+<div>
+<dt>Package boundary</dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>CID code lives in <code>node/src/stigmem_node/cid.py</code> (core), not in <code>experimental/cids/src/</code>.</dd>
+</div>
+
+<div>
+<dt>Manifest</dt>
+<dt><span className="stigmem-fields__type">none</span></dt>
+<dd>No <code>stigmem-plugin-cids</code> package created.</dd>
+</div>
+
+<div>
+<dt>Hook registration</dt>
+<dt><span className="stigmem-fields__type">core-resident</span></dt>
+<dd><code>pre_assert_transform</code> and <code>federation_inbound_validate</code> for CIDs register with the hook registry as part of node startup, not via plugin discovery.</dd>
+</div>
+
+<div>
+<dt>Tests</dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>CID tests live in <code>node/tests/test_cids.py</code>, not in plugin tests.</dd>
+</div>
+
+<div>
+<dt>Documentation</dt>
+<dt><span className="stigmem-fields__type">core docs</span></dt>
+<dd><code>docs/Build/Concepts/Content-addressing</code> and <code>docs/Secure/Immutability-and-attestation</code> per ADR-005 IA, not <code>docs/Build/Plugins</code>.</dd>
+</div>
+
+</div>
 
 ### Cascade through master-checklist
 
-- §4.5b PR 4b — rewrite from "implement `stigmem-plugin-cids`" to "implement CIDs as core feature."
-- §4.5g multi-tenant — unchanged (still a plugin).
-- Issue seed #49 — body updated to reflect CIDs as core.
-- ADR-011's path mapping in §3.1 — unchanged (the file mapping is by ADR number, not feature).
+<div className="stigmem-grid">
+
+<div><h4>§4.5b PR 4b</h4><p>Rewrite from "implement <code>stigmem-plugin-cids</code>" to "implement CIDs as core feature."</p></div>
+<div><h4>§4.5g multi-tenant</h4><p>Unchanged (still a plugin).</p></div>
+<div><h4>Issue seed #49</h4><p>Body updated to reflect CIDs as core.</p></div>
+<div><h4>ADR-011's path mapping in §3.1</h4><p>Unchanged (the file mapping is by ADR number, not feature).</p></div>
+
+</div>
 
 ### Cascade through ADR-011
 
-ADR-011 is Accepted (immutable). It is **not** edited. This amendment is the canonical record of the scope change. Future readers of ADR-011 should be directed to ADR-017 via the ADR README index annotations and via the `Amends:` chain.
+ADR-011 is Accepted (immutable). It is **not** edited. This amendment
+is the canonical record of the scope change. Future readers of
+ADR-011 should be directed to ADR-017 via the ADR README index
+annotations and via the `Amends:` chain.
 
 ## Amendment process
 
-This ADR may itself be amended per ADR-001 §Contributor approval rule (two contributors or the founder alone). Amendments to ADR-017 would, in turn, propagate back to ADR-011's effective scope.
+This ADR may itself be amended per ADR-001 §Contributor approval rule
+(two contributors or the founder alone). Amendments to ADR-017 would,
+in turn, propagate back to ADR-011's effective scope.
 
 ---
 
-*Accepted by: @offbyonce (founder), 2026-05-07. Per ADR-001 §Contributor approval rule (founder solo-approval; second contributor sign-off welcome but not required).*
+*Accepted by: @offbyonce (founder), 2026-05-07. Per ADR-001 §Contributor
+approval rule (founder solo-approval; second contributor sign-off
+welcome but not required).*

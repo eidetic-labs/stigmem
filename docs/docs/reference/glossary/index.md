@@ -6,13 +6,33 @@ description: Definitions of key terms used in the Stigmem protocol and documenta
 
 # Glossary
 
-Canonical definitions for terms used throughout the Stigmem protocol specification and documentation. Each entry cites the relevant modular spec.
+<p className="stigmem-meta"><span>4 min read</span><span>Everyone</span><span>Reference</span></p>
+
+<div className="stigmem-lead">
+
+**What this page covers**
+
+Canonical definitions for terms used throughout the Stigmem protocol
+specification and documentation. Each entry cites the relevant
+modular spec.
+
+</div>
 
 ---
 
 ## Capability Token {#capability-token}
 
-A signed, short-lived credential that grants a specific named permission (verb) to a specific subject from a specific issuer. Capability tokens replace ad-hoc per-peer trust agreements with a verifiable, revocable, auditable delegation primitive. Each token carries an Ed25519 signature, a `verb` (`read`, `write`, `admin`, `federate`, `subscribe`, `tombstone:read`), an `object` (the resource it applies to), and a mandatory expiry (max 90 days).
+<div className="stigmem-keypoint">
+
+**A signed, short-lived credential that grants a specific named permission (verb) to a specific subject from a specific issuer.**
+
+Replaces ad-hoc per-peer trust agreements with a verifiable,
+revocable, auditable delegation primitive. Carries an Ed25519
+signature, a `verb` (`read`, `write`, `admin`, `federate`,
+`subscribe`, `tombstone:read`), an `object`, and a mandatory expiry
+(max 90 days).
+
+</div>
 
 **Spec:** `Spec-06-Capability-Tokens`
 
@@ -31,7 +51,16 @@ A signed, short-lived credential that grants a specific named permission (verb) 
 
 ## CID (Content ID) {#cid}
 
-A content-addressed hash that uniquely identifies a fact by its canonical body. Computed as `sha256:` followed by the hex-encoded SHA-256 digest of the fact's deterministic canonical JSON serialization. CIDs enable deduplication, tamper detection, and idempotent federation ingestion without requiring a central ID authority.
+<div className="stigmem-keypoint">
+
+**A content-addressed hash that uniquely identifies a fact by its canonical body.**
+
+Computed as `sha256:` followed by the hex-encoded SHA-256 digest of
+the fact's deterministic canonical JSON serialization. Enables
+deduplication, tamper detection, and idempotent federation
+ingestion without requiring a central ID authority.
+
+</div>
 
 **Spec:** [`Spec-21-Content-Addressed-IDs`](../../spec/specs/21-content-addressed-ids.md)
 
@@ -45,13 +74,16 @@ sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
 ## Fact {#fact}
 
-The atomic unit of knowledge in Stigmem. A fact is an immutable tuple:
+<div className="stigmem-keypoint">
 
-```
-(entity, relation, value, source, timestamp, hlc, confidence, scope)
-```
+**The atomic unit of knowledge in Stigmem.**
 
-Facts are append-only — there is no `PUT` or `DELETE`. Updating a value means asserting a new fact; the latest fact for a given `(entity, relation, scope)` triple wins by precedence rules. A fact with `confidence = 0.0` is a retraction.
+An immutable tuple `(entity, relation, value, source, timestamp,
+hlc, confidence, scope)`. Facts are append-only — there is no `PUT`
+or `DELETE`. Updating a value means asserting a new fact. A fact
+with `confidence = 0.0` is a retraction.
+
+</div>
 
 **Spec:** `Spec-01-Fact-Model`
 
@@ -70,7 +102,17 @@ Facts are append-only — there is no `PUT` or `DELETE`. Updating a value means 
 
 ## Garden {#garden}
 
-A named, ACL-controlled partition within a scope. Gardens provide fine-grained access control above the four-level scope hierarchy (`local`, `team`, `company`, `public`). Each garden has a `slug`, a fixed `scope`, and a membership list of principals with roles (`admin`, `writer`, `reader`). Garden-tagged facts are never replicated to federation peers — garden membership is node-local.
+<div className="stigmem-keypoint">
+
+**A named, ACL-controlled partition within a scope.**
+
+Provides fine-grained access control above the four-level scope
+hierarchy. Each garden has a `slug`, a fixed `scope`, and a
+membership list of principals with roles (`admin`, `writer`,
+`reader`). Garden-tagged facts are never replicated to federation
+peers — garden membership is node-local.
+
+</div>
 
 **Spec:** `Spec-02-Scopes-and-ACL`
 
@@ -84,7 +126,13 @@ curl -X POST http://localhost:8765/v1/gardens \
 
 ## HLC (Hybrid Logical Clock) {#hlc}
 
-The timestamp scheme used for causal ordering across federated nodes. Format: `{wall_ms_utc}.{counter}` (e.g., `1746230400000.003`). On each local write, the node advances the clock to `max(now_ms, last_hlc_ms)` and increments the counter if the wall component is unchanged. On receiving a federated fact, the clock advances to `max(now_ms, received_hlc_ms)`. HLCs ensure that causally related facts are correctly ordered even when wall clocks drift between nodes.
+The timestamp scheme used for causal ordering across federated nodes. Format: `{wall_ms_utc}.{counter}` (e.g., `1746230400000.003`). On each local write, the node advances the clock to `max(now_ms, last_hlc_ms)` and increments the counter if the wall component is unchanged. On receiving a federated fact, the clock advances to `max(now_ms, received_hlc_ms)`.
+
+<div className="stigmem-keypoint">
+
+**HLCs ensure that causally related facts are correctly ordered even when wall clocks drift between nodes.**
+
+</div>
 
 **Spec:** [`Spec-12-HLC-Bounded-Skew`](../../spec/specs/12-hlc-bounded-skew.md)
 
@@ -108,7 +156,7 @@ A signed statement one Stigmem node sends to another when establishing federatio
 
 ## Relation {#relation}
 
-A namespaced string that identifies what kind of statement a fact makes about its entity. Relations use a `namespace:name` format (e.g., `memory:role`, `garden:member`, `roadmap:status`) to prevent collisions between independent systems asserting facts about the same entity. The spec maintains a namespace registry of reserved prefixes.
+A namespaced string that identifies what kind of statement a fact makes about its entity. Relations use a `namespace:name` format to prevent collisions between independent systems asserting facts about the same entity. The spec maintains a namespace registry of reserved prefixes.
 
 **Spec:** `Spec-01-Fact-Model`, `Spec-16-Namespace-Registry`
 
@@ -124,14 +172,49 @@ stigmem:received_from ← system-generated provenance relation
 
 One of four visibility levels that partition facts for access control and federation eligibility:
 
-| Scope | Visibility | Federates? |
-|-------|-----------|------------|
-| `local` | Node-only, never leaves this instance | No |
-| `team` | Logical team boundary, node-operator-defined | No |
-| `company` | Owning company node | Only when PeerDeclaration explicitly allows |
-| `public` | Any registered peer | Yes, by default |
+<div className="stigmem-fields">
 
-Scope is enforced at write time (API key must permit the scope), read time (queries only return facts the caller's key allows), and federation time (outbound replication respects PeerDeclaration scope limits).
+<div>
+<dt>Scope</dt>
+<dt><span className="stigmem-fields__type">Federates?</span></dt>
+<dd>Visibility</dd>
+</div>
+
+<div>
+<dt><code>local</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>Node-only, never leaves this instance.</dd>
+</div>
+
+<div>
+<dt><code>team</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>Logical team boundary, node-operator-defined.</dd>
+</div>
+
+<div>
+<dt><code>company</code></dt>
+<dt><span className="stigmem-fields__type">opt-in</span></dt>
+<dd>Owning company node. Only when PeerDeclaration explicitly allows.</dd>
+</div>
+
+<div>
+<dt><code>public</code></dt>
+<dt><span className="stigmem-fields__type">default</span></dt>
+<dd>Any registered peer.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Scope is enforced at write time, read time, and federation time.**
+
+API key must permit the scope on write; queries only return facts
+the caller's key allows; outbound replication respects
+PeerDeclaration scope limits.
+
+</div>
 
 **Spec:** `Spec-02-Scopes-and-ACL`
 
@@ -149,7 +232,25 @@ A per-source score used to estimate how much weight to give facts from a particu
 
 ## Source Attestation {#source-attestation}
 
-The mechanism that binds a fact's declared `source` URI to the caller's authenticated `entity_uri` at write time. Without attestation, any authenticated principal could claim to be anyone by writing an arbitrary `source` value. The node enforces attestation in one of three modes: `enforce` (reject mismatches), `warn` (accept but flag with `attested: false`), or `off` (no check). Production multi-tenant deployments should use `enforce`.
+The mechanism that binds a fact's declared `source` URI to the caller's authenticated `entity_uri` at write time.
+
+<div className="stigmem-keypoint">
+
+**Without attestation, any authenticated principal could claim to be anyone by writing an arbitrary `source` value.**
+
+The node enforces attestation in one of three modes:
+
+<div className="stigmem-grid">
+
+<div><h4><code>enforce</code></h4><p>Reject mismatches.</p></div>
+<div><h4><code>warn</code></h4><p>Accept but flag with <code>attested: false</code>.</p></div>
+<div><h4><code>off</code></h4><p>No check.</p></div>
+
+</div>
+
+Production multi-tenant deployments should use `enforce`.
+
+</div>
 
 **Spec:** `Spec-X6-Source-Attestation`, `Spec-02-Scopes-and-ACL`
 
@@ -167,6 +268,17 @@ curl -X POST http://localhost:8765/v1/facts \
 
 ## Tombstone {#tombstone}
 
-A signed right-to-be-forgotten (RTBF) marker for suppressing facts about an entity URI, optionally scoped. Tombstones are distinct from normal retraction (`confidence = 0.0`) and are currently an opt-in experimental plugin source package, not part of the v0.9.0a1 default install or a supported compliance surface. Default installs do not expose tombstone routes or filtering unless `stigmem-plugin-tombstones` is explicitly registered.
+A signed right-to-be-forgotten (RTBF) marker for suppressing facts about an entity URI, optionally scoped.
+
+<div className="stigmem-keypoint">
+
+**Tombstones are distinct from normal retraction (`confidence = 0.0`) and are currently an opt-in experimental plugin source package.**
+
+Not part of the v0.9.0a1 default install or a supported compliance
+surface. Default installs do not expose tombstone routes or
+filtering unless `stigmem-plugin-tombstones` is explicitly
+registered.
+
+</div>
 
 **Spec:** `Spec-X2-RTBF-Tombstones`

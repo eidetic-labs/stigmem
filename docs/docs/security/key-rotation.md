@@ -7,27 +7,79 @@ audience: Operator
 
 # Key Rotation
 
-**Audience:** operators and security engineers managing key lifecycle in production.  
-**Spec reference:** Spec-10-Hardening key rotation, Spec-06-Capability-Tokens max token TTL, encryption key derivation in storage hardening, and Spec-05-Federation-Trust federation keys.
+<p className="stigmem-meta"><span>5 min read</span><span>Operator · Security engineer</span><span>Spec-10-Hardening</span></p>
 
-There are four distinct key types to rotate:
+<div className="stigmem-lead">
 
-| Key type | Purpose | Rotation impact | Max rotation cadence (Spec-10-Hardening max rotation cadence) |
-|---|---|---|---|
-| **Static API key** | Bearer-token access for operators, agents, services, and federation admin flows | Caller secret must be redeployed; old key is revoked after overlap | ≤ 90 days by default |
-| **Encryption passphrase** | At-rest encryption of the database file | Node must stop; no peer impact | — |
-| **Node identity key** (Ed25519) | Federation peer authentication, snapshot signing, manifest self-signature | All pinned peers must re-pin or auto-refresh | ≤ 365 days |
-| **Capability issuer key** (Ed25519) | Signing capability tokens issued to subjects | In-flight tokens valid during dual-trust window | ≤ 90 days |
+**What this page is**
 
-Both Ed25519 key types use a **dual-trust window** (Spec-10-Hardening dual-trust window): the retiring key remains in the accept-set for at least 90 days — long enough to cover all in-flight tokens (max TTL is 90 days per Spec-06-Capability-Tokens token shape).
+Runbooks for the four key types operators rotate in production:
+static API keys, encryption passphrases, node identity keys, and
+capability issuer keys.
 
----
+</div>
+
+**Spec reference:** Spec-10-Hardening key rotation, Spec-06-Capability-Tokens
+max token TTL, encryption key derivation in storage hardening, and
+Spec-05-Federation-Trust federation keys.
+
+## The four key types
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Key type</dt>
+<dt><span className="stigmem-fields__type">Max cadence</span></dt>
+<dd>Purpose · Rotation impact</dd>
+</div>
+
+<div>
+<dt><strong>Static API key</strong></dt>
+<dt><span className="stigmem-fields__type">≤ 90 days by default</span></dt>
+<dd>Bearer-token access for operators, agents, services, and federation admin flows. Caller secret must be redeployed; old key is revoked after overlap.</dd>
+</div>
+
+<div>
+<dt><strong>Encryption passphrase</strong></dt>
+<dt><span className="stigmem-fields__type">—</span></dt>
+<dd>At-rest encryption of the database file. Node must stop; no peer impact.</dd>
+</div>
+
+<div>
+<dt><strong>Node identity key</strong> (Ed25519)</dt>
+<dt><span className="stigmem-fields__type">≤ 365 days</span></dt>
+<dd>Federation peer authentication, snapshot signing, manifest self-signature. All pinned peers must re-pin or auto-refresh.</dd>
+</div>
+
+<div>
+<dt><strong>Capability issuer key</strong> (Ed25519)</dt>
+<dt><span className="stigmem-fields__type">≤ 90 days</span></dt>
+<dd>Signing capability tokens issued to subjects. In-flight tokens valid during dual-trust window.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Dual-trust window: ≥ 90 days for Ed25519 keys.**
+
+Both Ed25519 key types use a dual-trust window (Spec-10-Hardening):
+the retiring key remains in the accept-set for at least 90 days —
+long enough to cover all in-flight tokens (max TTL is 90 days per
+Spec-06-Capability-Tokens token shape).
+
+</div>
 
 ## Rotating static API keys
 
-Static API keys are caller-generated bearer tokens stored only as Argon2id hashes. Newly registered static keys get an enforced expiry from `STIGMEM_API_KEY_MAX_AGE_DAYS` (default `90`). The node rejects `expires_at` values beyond that max-age. Operators can set the value to `0` to disable enforcement for development, but production nodes should keep a finite max-age.
+Static API keys are caller-generated bearer tokens stored only as
+Argon2id hashes. Newly registered static keys get an enforced expiry
+from `STIGMEM_API_KEY_MAX_AGE_DAYS` (default `90`). The node rejects
+`expires_at` values beyond that max-age. Operators can set the value
+to `0` to disable enforcement for development, but production nodes
+should keep a finite max-age.
 
-### Step 1 — Find keys nearing expiry
+### Step 1 · Find keys nearing expiry
 
 ```bash
 curl -s \
@@ -36,9 +88,11 @@ curl -s \
   | jq .
 ```
 
-The response includes key ids, owners, permissions, tenant ids, expiry timestamps, and `days_remaining`. It never includes raw key material.
+The response includes key ids, owners, permissions, tenant ids,
+expiry timestamps, and `days_remaining`. It never includes raw key
+material.
 
-### Step 2 — Register the replacement key
+### Step 2 · Register the replacement key
 
 ```bash
 NEW_KEY="$(openssl rand -hex 32)"
@@ -55,11 +109,13 @@ curl -s -X POST \
   }' | jq .
 ```
 
-Store `NEW_KEY` in your secrets manager immediately. The node returns only metadata and never echoes the raw key.
+Store `NEW_KEY` in your secrets manager immediately. The node returns
+only metadata and never echoes the raw key.
 
-### Step 3 — Deploy and verify
+### Step 3 · Deploy and verify
 
-Update the caller's secret, redeploy, then confirm the caller resolves to the expected identity:
+Update the caller's secret, redeploy, then confirm the caller
+resolves to the expected identity:
 
 ```bash
 curl -s \
@@ -67,9 +123,10 @@ curl -s \
   https://your-node.example.com/v1/me | jq .
 ```
 
-### Step 4 — Revoke the retired key
+### Step 4 · Revoke the retired key
 
-After the caller is healthy on the replacement key, revoke the old key id:
+After the caller is healthy on the replacement key, revoke the old
+key id:
 
 ```bash
 curl -s -X DELETE \
@@ -77,20 +134,25 @@ curl -s -X DELETE \
   https://your-node.example.com/v1/auth/keys/<old-key-id>
 ```
 
-Multiple active keys may share one `entity_uri` during rotation. Use distinct `entity_uri` values for distinct agents or tools; use key descriptions for owner/ticket/deployment context.
-
----
+Multiple active keys may share one `entity_uri` during rotation. Use
+distinct `entity_uri` values for distinct agents or tools; use key
+descriptions for owner/ticket/deployment context.
 
 ## Rotating the encryption passphrase
 
 :::caution Node must be stopped
-At-rest re-encryption requires exclusive database access. Stop the node before rekeying.
+At-rest re-encryption requires exclusive database access. Stop the
+node before rekeying.
 :::
 
 ### Prerequisites
 
-- `stigmem-node[encryption,sqlcipher]` installed
-- Old and new passphrases in separate environment variables
+<div className="stigmem-grid">
+
+<div><h4><code>stigmem-node[encryption,sqlcipher]</code></h4><p>Installed.</p></div>
+<div><h4>Old + new passphrases</h4><p>In separate environment variables.</p></div>
+
+</div>
 
 ### Procedure
 
@@ -129,16 +191,19 @@ curl -s https://your-node.example.com/healthz
 ```
 
 :::caution Passphrase loss = data loss
-If you lose the passphrase, the database file is irrecoverable. Store it only in a secrets manager — never in `docker-compose.yml` or version control.
+If you lose the passphrase, the database file is irrecoverable. Store
+it only in a secrets manager — never in `docker-compose.yml` or
+version control.
 :::
-
----
 
 ## Rotating the federation keypair
 
-Rotating the federation keypair changes your node's cryptographic identity. All peers that have pinned your current public key will stop trusting pull responses signed by the new key — you must coordinate the rotation with each peer operator.
+Rotating the federation keypair changes your node's cryptographic
+identity. All peers that have pinned your current public key will
+stop trusting pull responses signed by the new key — you must
+coordinate the rotation with each peer operator.
 
-### Step 1 — Generate a new keypair
+### Step 1 · Generate a new keypair
 
 ```bash
 python3 -c "
@@ -152,11 +217,13 @@ print('NEW_STIGMEM_FEDERATION_PUBKEY='  + base64.urlsafe_b64encode(pub_bytes).de
 "
 ```
 
-### Step 2 — Announce the rotation to peer operators
+### Step 2 · Announce the rotation to peer operators
 
-Share your new public key with each operator who has your node pinned. They must update the pin **after** you restart with the new key. Coordinate a maintenance window if you have many peers.
+Share your new public key with each operator who has your node
+pinned. They must update the pin **after** you restart with the new
+key. Coordinate a maintenance window if you have many peers.
 
-### Step 3 — Update your secrets and restart
+### Step 3 · Update your secrets and restart
 
 ```bash
 # Docker Compose — edit deploy/compose/.env (set STIGMEM_FEDERATION_PUBKEY and
@@ -164,14 +231,14 @@ Share your new public key with each operator who has your node pinned. They must
 docker compose up -d node
 ```
 
-### Step 4 — Verify new key is live
+### Step 4 · Verify new key is live
 
 ```bash
 curl -s https://your-node.example.com/.well-known/stigmem | jq .public_key
 # → "<new-base64url-pub>"
 ```
 
-### Step 5 — Ask peer operators to re-pin
+### Step 5 · Ask peer operators to re-pin
 
 Each peer operator runs:
 
@@ -185,22 +252,26 @@ curl -X PATCH https://their-node.example.com/v1/federation/peers/<your-peer-id> 
   -d "{\"trusted_public_key\": \"$NEW_KEY\"}"
 ```
 
-Until they update the pin, pull attempts from their node to yours will fail with `signature_mismatch` in their audit log.
+Until they update the pin, pull attempts from their node to yours
+will fail with `signature_mismatch` in their audit log.
 
-### Step 6 — Update snapshot signing
+### Step 6 · Update snapshot signing
 
-Snapshots taken after the rotation are signed with the new key. Snapshots taken before the rotation can only be verified with the old public key — keep the old public key on record for snapshot archival verification.
+Snapshots taken after the rotation are signed with the new key.
+Snapshots taken before the rotation can only be verified with the old
+public key — keep the old public key on record for snapshot archival
+verification.
 
 ```bash
 # Verify an old snapshot with the old public key
 stigmem snapshot verify /backups/old-snap.tar.gz --trusted-key <old-base64url-pubkey>
 ```
 
----
-
 ## CLI-based rotation (Spec-10-Hardening)
 
-The `stigmem identity rotate-key` command handles key generation, dual-trust window setup, and transparency-log entries in a single step:
+The `stigmem identity rotate-key` command handles key generation,
+dual-trust window setup, and transparency-log entries in a single
+step:
 
 ```bash
 # Dry-run first — shows new key_id and dual-trust expiry without committing
@@ -221,56 +292,111 @@ stigmem identity rotate-key --kind issuer
 stigmem identity rotate-key --kind node --dual-trust-days 120
 ```
 
-Each rotation writes a `RotationEvent` to the org manifest (signed by the **retiring** key, anchoring trust to the prior identity) and two transparency-log entries: the updated manifest and a `KeyRotationLogEntry`.
+Each rotation writes a `RotationEvent` to the org manifest (signed by
+the **retiring** key, anchoring trust to the prior identity) and two
+transparency-log entries: the updated manifest and a
+`KeyRotationLogEntry`.
 
-After committing, update your secrets manager and restart the node — the same steps as the manual procedure in [Step 3](#step-3--update-your-secrets-and-restart) above. Peers refresh manifests automatically during their `refresh_peer_manifests()` sweep.
-
----
+After committing, update your secrets manager and restart the node —
+the same steps as the manual procedure in
+[Step 3](#step-3--update-your-secrets-and-restart) above. Peers
+refresh manifests automatically during their
+`refresh_peer_manifests()` sweep.
 
 ## Threat model
 
-| Threat | Mitigation |
-|---|---|
-| Stolen retiring key during window | Revoke all tokens issued under that key via `capability revoke`; rotate again |
-| Forged rotation event | Rotation event signature must verify under the retiring key |
-| Key reuse / regression attack | `verify_rotation_chain` rejects any `new_key_id` already seen in the chain |
-| TL unavailable during rotation | In `trust_mode=strict`, TL failure surfaces as a hard error; use `--dry-run` to pre-check |
-| Dual-trust window too short | CLI enforces minimum 90 days; Spec-10-Hardening.2 prohibits shorter windows |
+<div className="stigmem-fields">
 
----
+<div>
+<dt>Threat</dt>
+<dt><span className="stigmem-fields__type">Class</span></dt>
+<dd>Mitigation</dd>
+</div>
+
+<div>
+<dt>Stolen retiring key during window</dt>
+<dt><span className="stigmem-fields__type">key compromise</span></dt>
+<dd>Revoke all tokens issued under that key via <code>capability revoke</code>; rotate again.</dd>
+</div>
+
+<div>
+<dt>Forged rotation event</dt>
+<dt><span className="stigmem-fields__type">authenticity</span></dt>
+<dd>Rotation event signature must verify under the retiring key.</dd>
+</div>
+
+<div>
+<dt>Key reuse / regression attack</dt>
+<dt><span className="stigmem-fields__type">replay</span></dt>
+<dd><code>verify_rotation_chain</code> rejects any <code>new_key_id</code> already seen in the chain.</dd>
+</div>
+
+<div>
+<dt>TL unavailable during rotation</dt>
+<dt><span className="stigmem-fields__type">witness</span></dt>
+<dd>In <code>trust_mode=strict</code>, TL failure surfaces as a hard error; use <code>--dry-run</code> to pre-check.</dd>
+</div>
+
+<div>
+<dt>Dual-trust window too short</dt>
+<dt><span className="stigmem-fields__type">policy</span></dt>
+<dd>CLI enforces minimum 90 days; Spec-10-Hardening.2 prohibits shorter windows.</dd>
+</div>
+
+</div>
 
 ## Rotation checklist
 
 ### Encryption passphrase rotation
 
-- [ ] Node stopped
-- [ ] `stigmem db rekey` ran successfully
-- [ ] New passphrase stored in secrets manager
-- [ ] Old passphrase removed from secrets manager
-- [ ] Node restarted and healthy
-- [ ] Health check passes
+<ol className="stigmem-steps">
+<li>Node stopped.</li>
+<li><code>stigmem db rekey</code> ran successfully.</li>
+<li>New passphrase stored in secrets manager.</li>
+<li>Old passphrase removed from secrets manager.</li>
+<li>Node restarted and healthy.</li>
+<li>Health check passes.</li>
+</ol>
 
 ### Federation keypair rotation
 
-- [ ] Static API keys checked for expiry via `/v1/auth/keys/expiring-soon`
-- [ ] Replacement static keys generated by callers and stored in secrets manager
-- [ ] Callers redeployed and verified with `/v1/me`
-- [ ] Retired static keys revoked
-- [ ] New keypair generated (manual or `stigmem identity rotate-key`)
-- [ ] New key shared with all peer operators
-- [ ] Node secrets updated
-- [ ] Node restarted
-- [ ] New key visible at `/.well-known/stigmem` or `/.well-known/stigmem-manifest.json`
-- [ ] All peers updated their pins (or confirmed auto-refresh)
-- [ ] Pull replication confirmed healthy on all peers
-- [ ] Old public key archived for snapshot verification
-- [ ] Dual-trust expiry date recorded in key rotation log
-- [ ] Reminder set to delete retiring key after `dual_trust_expires_at`
-
----
+<ol className="stigmem-steps">
+<li>Static API keys checked for expiry via <code>/v1/auth/keys/expiring-soon</code>.</li>
+<li>Replacement static keys generated by callers and stored in secrets manager.</li>
+<li>Callers redeployed and verified with <code>/v1/me</code>.</li>
+<li>Retired static keys revoked.</li>
+<li>New keypair generated (manual or <code>stigmem identity rotate-key</code>).</li>
+<li>New key shared with all peer operators.</li>
+<li>Node secrets updated.</li>
+<li>Node restarted.</li>
+<li>New key visible at <code>/.well-known/stigmem</code> or <code>/.well-known/stigmem-manifest.json</code>.</li>
+<li>All peers updated their pins (or confirmed auto-refresh).</li>
+<li>Pull replication confirmed healthy on all peers.</li>
+<li>Old public key archived for snapshot verification.</li>
+<li>Dual-trust expiry date recorded in key rotation log.</li>
+<li>Reminder set to delete retiring key after <code>dual_trust_expires_at</code>.</li>
+</ol>
 
 ## See also
 
-- [Backup & Restore](../operators/runbooks/backup-restore) — snapshot signing uses the same Ed25519 keys
-- [Per-Agent Keypair Registration](./agent-keypairs) — C1 attestation key lifecycle (separate from node/issuer keys)
-- [Audit & Quotas](../security/audit-and-quotas) — `key_rotation` audit events
+<div className="stigmem-next">
+
+<a href="../operators/runbooks/backup-restore">
+<strong>Operators</strong>
+<span>Backup & restore</span>
+<small>Snapshot signing uses the same Ed25519 keys.</small>
+</a>
+
+<a href="./agent-keypairs">
+<strong>Security</strong>
+<span>Agent keypairs</span>
+<small>C1 attestation key lifecycle (separate from node/issuer keys).</small>
+</a>
+
+<a href="./audit-and-quotas">
+<strong>Security</strong>
+<span>Audit & quotas</span>
+<small><code>key_rotation</code> audit events.</small>
+</a>
+
+</div>

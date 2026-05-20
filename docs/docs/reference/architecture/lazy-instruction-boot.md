@@ -8,9 +8,21 @@ audience: Spec
 
 # Lazy Instruction Boot
 
-*Audience: engineers building agent runtimes or adapters that use Stigmem's lazy instruction discovery (`Spec-X1-Lazy-Instruction-Discovery`).*
+<p className="stigmem-meta"><span>3 min read</span><span>Adapter / runtime engineer</span><span>Spec-X1</span></p>
 
-Instead of preloading every instruction document at startup, agents discover and load instructions on demand. The system has three runtime components — a **boot stub**, an **instruction manifest**, and the **`recall_instruction` tool** — plus an off-path **discovery audit** for retrieval-quality evaluation.
+<div className="stigmem-lead">
+
+**What this page covers**
+
+Instead of preloading every instruction document at startup, agents
+discover and load instructions on demand. Three runtime components —
+a **boot stub**, an **instruction manifest**, and the
+**`recall_instruction` tool** — plus an off-path **discovery audit**
+for retrieval-quality evaluation.
+
+</div>
+
+**Audience:** engineers building agent runtimes or adapters that use Stigmem's lazy instruction discovery (`Spec-X1-Lazy-Instruction-Discovery`).
 
 ## Boot sequence
 
@@ -99,9 +111,36 @@ Call `recall_instruction(intent)` to load relevant sections.
 
 ## Instruction load strategies
 
-| Strategy | When | How |
-|----------|------|-----|
-| Task-type preload | Task matches a unit's `required_by_task_types` | Deterministically loaded at heartbeat start before agent sees the task |
-| Guarantee load | Unit has `guarantee_load: true` | Always appended to every `recall_instruction` response (max 5 per agent) |
-| On-demand recall | Agent decides it needs context | Agent calls `recall_instruction` with natural-language intent |
-| Boot stub embedding | Rule is always applicable | Embedded directly in boot stub body (security constraints, escalation thresholds) |
+<div className="stigmem-fields">
+
+<div>
+<dt>Strategy</dt>
+<dt><span className="stigmem-fields__type">When</span></dt>
+<dd>How</dd>
+</div>
+
+<div>
+<dt>Task-type preload</dt>
+<dt><span className="stigmem-fields__type">structurally predictable</span></dt>
+<dd>Task matches a unit's <code>required_by_task_types</code>. Deterministically loaded at heartbeat start before agent sees the task.</dd>
+</div>
+
+<div>
+<dt>Guarantee load</dt>
+<dt><span className="stigmem-fields__type">always-applicable</span></dt>
+<dd>Unit has <code>guarantee_load: true</code>. Always appended to every <code>recall_instruction</code> response (max 5 per agent).</dd>
+</div>
+
+<div>
+<dt>On-demand recall</dt>
+<dt><span className="stigmem-fields__type">agent-driven</span></dt>
+<dd>Agent calls <code>recall_instruction</code> with natural-language intent.</dd>
+</div>
+
+<div>
+<dt>Boot stub embedding</dt>
+<dt><span className="stigmem-fields__type">universal rule</span></dt>
+<dd>Rule is always applicable; embedded directly in boot stub body (security constraints, escalation thresholds).</dd>
+</div>
+
+</div>

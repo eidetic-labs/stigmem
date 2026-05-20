@@ -7,11 +7,20 @@ audience: Integrator
 
 # Content-Addressed Fact IDs (CIDs)
 
-**Audience:** Integrators building deduplication pipelines, federation operators verifying fact integrity, and anyone citing facts by content hash.
+<p className="stigmem-meta"><span>5 min read</span><span>Integrator · Federation operator</span><span>Spec-21-Content-Addressed-IDs</span></p>
 
-Every fact in Stigmem receives a **content identifier (CID)** — a deterministic SHA-256 hash of its canonical body. Two facts with the same entity, relation, value, source, and scope always produce the same CID, regardless of when or where they were asserted. The full protocol is defined in Spec-21-Content-Addressed-IDs.
+<div className="stigmem-lead">
 
----
+**What this page is**
+
+Practical guide to computing and using CIDs. Every fact in Stigmem
+receives a deterministic SHA-256 hash of its canonical body. Two
+facts with the same entity, relation, value, source, and scope always
+produce the same CID, regardless of when or where they were
+asserted. For the design rationale, see
+[Content Addressing concepts](./content-addressing).
+
+</div>
 
 ## CID format
 
@@ -25,11 +34,10 @@ Example:
 sha256:a3f2b8c901d4e5f6789012345678abcdef0123456789abcdef0123456789abcd
 ```
 
----
+## Canonical body
 
-## Canonical body (Spec-21-Content-Addressed-IDs canonical body)
-
-The CID is computed over a JSON object with exactly **6 fields** in lexicographic key order, serialized with RFC 8785 (JCS) determinism:
+The CID is computed over a JSON object with exactly **6 fields** in
+lexicographic key order, serialized with RFC 8785 (JCS) determinism:
 
 ```json
 {
@@ -42,21 +50,71 @@ The CID is computed over a JSON object with exactly **6 fields** in lexicographi
 }
 ```
 
-**Excluded fields** (Spec-21-Content-Addressed-IDs excluded-field validation):
+### Excluded fields
 
-| Field | Why excluded |
-|-------|-------------|
-| `fact_id`, `cid` | Circular — the CID cannot include itself |
-| `created_at` / `timestamp` | Same assertion at different times shares one CID |
-| `confidence` | Confidence can change; CID should not |
-| `valid_until` | Expiry is operational, not content-defining |
-| `derived_from` | Provenance chain requires independent validation |
-| `attestation_chain` | Security-relevant; validated separately |
-| `source_trust` | Trust score is context-dependent |
-| `signature` | Validated independently of content identity |
-| `reason` | Retraction/tombstone reason is metadata |
+<div className="stigmem-fields">
 
----
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Class</span></dt>
+<dd>Why excluded</dd>
+</div>
+
+<div>
+<dt><code>fact_id</code>, <code>cid</code></dt>
+<dt><span className="stigmem-fields__type">circular</span></dt>
+<dd>The CID cannot include itself.</dd>
+</div>
+
+<div>
+<dt><code>created_at</code> / <code>timestamp</code></dt>
+<dt><span className="stigmem-fields__type">temporal metadata</span></dt>
+<dd>Same assertion at different times shares one CID.</dd>
+</div>
+
+<div>
+<dt><code>confidence</code></dt>
+<dt><span className="stigmem-fields__type">mutable signal</span></dt>
+<dd>Confidence can change; CID should not.</dd>
+</div>
+
+<div>
+<dt><code>valid_until</code></dt>
+<dt><span className="stigmem-fields__type">operational</span></dt>
+<dd>Expiry is operational, not content-defining.</dd>
+</div>
+
+<div>
+<dt><code>derived_from</code></dt>
+<dt><span className="stigmem-fields__type">provenance chain</span></dt>
+<dd>Requires independent validation.</dd>
+</div>
+
+<div>
+<dt><code>attestation_chain</code></dt>
+<dt><span className="stigmem-fields__type">security</span></dt>
+<dd>Security-relevant; validated separately.</dd>
+</div>
+
+<div>
+<dt><code>source_trust</code></dt>
+<dt><span className="stigmem-fields__type">contextual</span></dt>
+<dd>Trust score is context-dependent.</dd>
+</div>
+
+<div>
+<dt><code>signature</code></dt>
+<dt><span className="stigmem-fields__type">authenticity</span></dt>
+<dd>Validated independently of content identity.</dd>
+</div>
+
+<div>
+<dt><code>reason</code></dt>
+<dt><span className="stigmem-fields__type">metadata</span></dt>
+<dd>Retraction/tombstone reason.</dd>
+</div>
+
+</div>
 
 ## Computing a CID
 
@@ -129,11 +187,10 @@ func computeCID(entity, relation, valueType, valueV, source, scope string) strin
 }
 ```
 
----
-
 ## Dual addressing — UUID and CID
 
-Every fact has both a UUID (`id`) and a CID. You can fetch a fact by either:
+Every fact has both a UUID (`id`) and a CID. You can fetch a fact by
+either.
 
 ```bash
 # By UUID
@@ -145,20 +202,25 @@ curl -s http://localhost:8765/v1/facts/sha256:a3f2b8c9... \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-The node resolves CIDs via the `fact_cid_aliases` table, which maps each CID to its UUID.
+The node resolves CIDs via the `fact_cid_aliases` table, which maps
+each CID to its UUID.
 
----
-
-## Write-path deduplication (Spec-21-Content-Addressed-IDs write-path deduplication)
+## Write-path deduplication
 
 When you assert a fact, the node:
 
-1. Computes the CID from the 6 canonical fields.
-2. Checks `fact_cid_aliases` for an existing fact with the same CID.
-3. If found, returns the **existing** fact (idempotent write).
-4. If not found, inserts the new fact, stores its CID, and creates the alias.
+<ol className="stigmem-steps">
+<li>Computes the CID from the 6 canonical fields.</li>
+<li>Checks <code>fact_cid_aliases</code> for an existing fact with the same CID.</li>
+<li>If found, returns the <strong>existing</strong> fact (idempotent write).</li>
+<li>If not found, inserts the new fact, stores its CID, and creates the alias.</li>
+</ol>
 
-This means asserting the same (entity, relation, value, source, scope) tuple twice returns the same fact record — no duplicates.
+<div className="stigmem-keypoint">
+
+**Asserting the same (entity, relation, value, source, scope) tuple twice returns the same fact record — no duplicates.**
+
+</div>
 
 ```bash
 # First assertion — creates the fact
@@ -177,36 +239,37 @@ curl -s -X POST http://localhost:8765/v1/facts \
 # Same id and cid as above
 ```
 
----
-
 ## CID verification
 
-The node can verify that a stored fact's CID matches a freshly computed CID:
+The node can verify that a stored fact's CID matches a freshly
+computed CID:
 
 ```bash
 curl -s http://localhost:8765/v1/facts/sha256:a3f2b8c9.../verify \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-If the CID diverges from the stored canonical body, the node emits a `cid_mismatch` audit event.
+If the CID diverges from the stored canonical body, the node emits a
+`cid_mismatch` audit event.
 
----
-
-## Federation and tamper detection (Spec-21-Content-Addressed-IDs federation envelope behavior)
+## Federation and tamper detection
 
 Federation envelopes carry the CID for each fact. The receiving node:
 
-1. Computes the CID independently from the envelope's canonical fields.
-2. Compares it against the envelope's declared CID.
-3. Rejects the fact if they diverge — this detects tampering in transit.
+<ol className="stigmem-steps">
+<li>Computes the CID independently from the envelope's canonical fields.</li>
+<li>Compares it against the envelope's declared CID.</li>
+<li>Rejects the fact if they diverge — this detects tampering in transit.</li>
+</ol>
 
-Facts with `cid: null` whose `created_at` falls after CID enforcement begins are rejected. Legacy pre-CID facts with `cid: null` are accepted during the backfill window.
+Facts with `cid: null` whose `created_at` falls after CID enforcement
+begins are rejected. Legacy pre-CID facts with `cid: null` are
+accepted during the backfill window.
 
----
+## CID backfill
 
-## CID backfill (Spec-21-Content-Addressed-IDs backfill)
-
-Existing facts created before the pre-reset design window do not have CIDs. The node backfills them in the background:
+Existing facts created before the pre-reset design window do not have
+CIDs. The node backfills them in the background.
 
 ```bash
 # Check backfill progress
@@ -225,25 +288,50 @@ Response:
 }
 ```
 
-The backfill runs concurrently with live writes. The migration window is 12 months (Spec-21-Content-Addressed-IDs backfill). After the window closes, all facts must have CIDs.
-
----
+The backfill runs concurrently with live writes. The migration window
+is 12 months. After the window closes, all facts must have CIDs.
 
 ## External citation
 
-CIDs are stable, content-derived identifiers that work across nodes. Use them to cite facts in external systems:
+CIDs are stable, content-derived identifiers that work across nodes.
+Use them to cite facts in external systems.
 
 ```
 stigmem://node.example.com/facts/sha256:a3f2b8c901d4e5f6...
 ```
 
-Because the CID is derived from content, the same fact on two federated nodes has the same CID — making cross-node references unambiguous.
+<div className="stigmem-keypoint">
 
----
+**Because the CID is derived from content, the same fact on two federated nodes has the same CID** — making cross-node references unambiguous.
+
+</div>
 
 ## See also
 
-- [Time-Travel Queries](https://github.com/eidetic-labs/stigmem/tree/main/experimental/time-travel) — query historical fact state
-- [RTBF Tombstones](https://github.com/eidetic-labs/stigmem/tree/main/experimental/tombstones) — experimental entity-erasure semantics
-- [Source Attestation](https://github.com/eidetic-labs/stigmem/tree/main/experimental/source-attestation) — provenance and trust
-- [API Reference](/docs/reference/api) — full endpoint documentation
+<div className="stigmem-next">
+
+<a href="./content-addressing">
+<strong>Concepts</strong>
+<span>Why content addressing</span>
+<small>Design rationale: failure modes of UUIDs and how SHA-256 fixes them.</small>
+</a>
+
+<a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/time-travel">
+<strong>Experimental</strong>
+<span>Time-travel queries</span>
+<small>Query historical fact state.</small>
+</a>
+
+<a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/source-attestation">
+<strong>Experimental</strong>
+<span>Source attestation</span>
+<small>Provenance and trust.</small>
+</a>
+
+<a href="/docs/reference/api">
+<strong>Reference</strong>
+<span>HTTP API</span>
+<small>Full endpoint documentation.</small>
+</a>
+
+</div>

@@ -7,38 +7,51 @@ audience: Integrator
 
 # Tutorial: Harden a Stigmem Deployment
 
-**Audience:** node operators running Stigmem in production or preparing for production.  
-**Time:** ~45 minutes.  
-**Outcome:** a running Stigmem node with mTLS federation, rotated Ed25519 identity and issuer keys, per-principal quotas tuned to your baseline traffic, the hardened distroless container image, and an operator plan for immutable evidence.
+<p className="stigmem-meta"><span>45 min · tutorial</span><span>Node operator</span><span>Production-bound</span></p>
+
+<div className="stigmem-lead">
+
+**What you will build**
+
+A running Stigmem node with mTLS federation, rotated Ed25519
+identity and issuer keys, per-principal quotas tuned to your
+baseline traffic, the hardened distroless container image, and an
+operator plan for immutable evidence.
+
+</div>
+
+**Audience:** node operators running Stigmem in production or preparing for production.
+**Time:** ~45 minutes.
 
 **Prerequisites:**
-- A Stigmem node running the v0.9.0a2 reference image (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a2`). For hardened production, pin to a digest (`@sha256:<digest>`) instead — see the [tag-selection guide](./deployment/install#image-tags).
-- Docker Compose installed (`docker compose version`).
-- `openssl`, `curl`, `jq` available.
-- Admin API key (`STIGMEM_ADMIN_KEY`).
 
-All commands run against a local Docker Compose node.  Adapt `https://your-node.example.com` substitutions for a remote deployment.
+<div className="stigmem-grid">
 
----
+<div><h4>Stigmem v0.9.0a2</h4><p><code>ghcr.io/eidetic-labs/stigmem-node:0.9.0a2</code>. For hardened production, pin to a digest (<code>@sha256:&lt;digest&gt;</code>).</p></div>
+<div><h4>Docker Compose</h4><p><code>docker compose version</code>.</p></div>
+<div><h4>Tools</h4><p><code>openssl</code>, <code>curl</code>, <code>jq</code> available.</p></div>
+<div><h4>Admin API key</h4><p><code>STIGMEM_ADMIN_KEY</code>.</p></div>
+
+</div>
+
+All commands run against a local Docker Compose node. Adapt `https://your-node.example.com` substitutions for a remote deployment.
 
 ## What you will do
 
-```
-Step 1 — mTLS: generate a federation CA and issue a node cert
-Step 2 — mTLS: configure the node and verify mutual TLS
-Step 3 — Key rotation: rotate the Ed25519 identity key
-Step 4 — Key rotation: rotate the capability issuer key
-Step 5 — Quotas: tune write/read ceilings and verify 429 behaviour
-Step 6 — Audit: mint an audit.read key and confirm events are emitted
-Step 7 — Container: switch to the hardened image and verify seccomp
-Step 8 — Immutability: route evidence to WORM storage and plan TEE deployment
-```
-
----
+<ol className="stigmem-steps">
+<li><strong>mTLS:</strong> generate a federation CA and issue a node cert.</li>
+<li><strong>mTLS:</strong> configure the node and verify mutual TLS.</li>
+<li><strong>Key rotation:</strong> rotate the Ed25519 identity key.</li>
+<li><strong>Key rotation:</strong> rotate the capability issuer key.</li>
+<li><strong>Quotas:</strong> tune write/read ceilings and verify 429 behaviour.</li>
+<li><strong>Audit:</strong> mint an <code>audit.read</code> key and confirm events are emitted.</li>
+<li><strong>Container:</strong> switch to the hardened image and verify seccomp.</li>
+<li><strong>Immutability:</strong> route evidence to WORM storage and plan TEE deployment.</li>
+</ol>
 
 ## Step 1 — Generate a federation CA and node cert
 
-Start with a self-managed CA (suitable for small clusters and test environments).  For larger clusters, replace this step with a cert-manager `ClusterIssuer` — see [mTLS Federation Transport](../security/mtls.md#cert-manager-kubernetes).
+Start with a self-managed CA (suitable for small clusters and test environments). For larger clusters, replace this step with a cert-manager `ClusterIssuer` — see [mTLS Federation Transport](../security/mtls.md#cert-manager-kubernetes).
 
 ```bash
 # Create a working directory for TLS material
@@ -67,11 +80,7 @@ openssl x509 -noout -subject -dates -ext subjectAltName -in node.crt
 
 Expected output includes `URI:stigmem://your-org.example.com/nodes/primary` in the SAN field.
 
----
-
 ## Step 2 — Configure mTLS and verify
-
-Add the three TLS environment variables to your Compose override or node environment, then restart:
 
 ```yaml
 # docker-compose.override.yml
@@ -100,8 +109,6 @@ openssl s_client -connect localhost:8765 \
   2>/dev/null | openssl x509 -noout -fingerprint -subject
 ```
 
-You should see the node cert fingerprint and `CN=stigmem-node`.
-
 **Verify that a plaintext connection is rejected:**
 
 ```bash
@@ -109,15 +116,15 @@ curl http://localhost:8765/healthz 2>&1 | grep -i "empty reply\|SSL\|refused"
 # Expect: connection refused or SSL handshake error — not an HTTP 200
 ```
 
-> If you see an HTTP response here, TLS is not yet active — check that `STIGMEM_TLS_CERT_PATH` and `STIGMEM_TLS_KEY_PATH` are set and the files are readable.
+<div className="stigmem-keypoint">
 
-Federation will not start without those TLS settings unless
-`STIGMEM_FEDERATION_INSECURE=1` is explicitly set. Keep that flag unset or set
-to `"0"` in production.
+**Federation will not start without TLS settings unless `STIGMEM_FEDERATION_INSECURE=1` is explicitly set.**
+
+Keep that flag unset or set to `"0"` in production.
+
+</div>
 
 For full configuration reference and troubleshooting, see [mTLS Federation Transport](../security/mtls.md).
-
----
 
 ## Step 3 — Rotate the Ed25519 identity key
 
@@ -138,6 +145,7 @@ docker compose exec stigmem-node \
 ```
 
 Output:
+
 ```
 Key rotation (node) complete
 old key_id : a1b2c3d4e5f60001
@@ -153,7 +161,6 @@ ACTION REQUIRED — update your secrets manager with the new private key:
 **Update the secret and restart:**
 
 ```bash
-# Docker Compose — update the env file, then restart
 sed -i 's|^STIGMEM_NODE_PRIVATE_KEY=.*|STIGMEM_NODE_PRIVATE_KEY=<new-seed>|' .env
 docker compose up -d
 ```
@@ -165,37 +172,44 @@ curl -s https://your-node.example.com/.well-known/stigmem-manifest.json | jq .ke
 # → "9f8e7d6c5b4a0002"
 ```
 
-Record the `dual-trust` expiry date in your key rotation log.  The retiring key remains in the accept-set until that date.
-
----
+Record the `dual-trust` expiry date in your key rotation log. The retiring key remains in the accept-set until that date.
 
 ## Step 4 — Rotate the capability issuer key
 
-Capability tokens are signed by a separate issuer key (`Spec-10-Hardening`). Rotate it at least every 90 days.
+Capability tokens are signed by a separate issuer key. Rotate it at least every 90 days.
 
 ```bash
 docker compose exec stigmem-node \
   stigmem identity rotate-key --kind issuer
 ```
 
-The dual-trust window for the issuer key must be >= 90 days (the maximum capability token TTL per `Spec-06-Capability-Tokens`). The CLI enforces this minimum.
+<div className="stigmem-keypoint">
+
+**The dual-trust window for the issuer key must be ≥ 90 days.**
+
+This is the maximum capability token TTL per
+`Spec-06-Capability-Tokens`. The CLI enforces this minimum.
+
+</div>
 
 Update the `STIGMEM_ISSUER_PRIVATE_KEY` secret and restart the node the same way as Step 3.
 
 **Post-rotation checklist** (both keys):
 
-- [ ] New key visible at `/.well-known/stigmem-manifest.json`
-- [ ] Node restarted and `/healthz` returns 200
-- [ ] Existing capability tokens verified with `stigmem capability verify`
-- [ ] Retiring key archived in read-only secrets until `dual_trust_expires_at`
+<div className="stigmem-grid">
+
+<div><h4>Manifest reflects new key</h4><p>Visible at <code>/.well-known/stigmem-manifest.json</code>.</p></div>
+<div><h4>Node restarted</h4><p><code>/healthz</code> returns 200.</p></div>
+<div><h4>Capability tokens verify</h4><p>With <code>stigmem capability verify</code>.</p></div>
+<div><h4>Retiring key archived</h4><p>Read-only secrets until <code>dual_trust_expires_at</code>.</p></div>
+
+</div>
 
 For the full security model and threat notes, see [Key Rotation Runbook](../security/key-rotation.md).
 
----
-
 ## Step 5 — Tune quotas and verify 429 behaviour
 
-The default quota ceilings (1 000 writes/hour, 5 000 reads/hour) protect shared nodes from noisy neighbours.  After 24 hours of representative traffic, review `quota_breach` audit events and adjust.
+The default quota ceilings (1 000 writes/hour, 5 000 reads/hour) protect shared nodes from noisy neighbours. After 24 hours of representative traffic, review `quota_breach` audit events and adjust.
 
 **Check current breach rate:**
 
@@ -216,9 +230,15 @@ STIGMEM_RATE_LIMIT_READ_PER_HOUR=50000
 
 Restart the node.
 
-Do not set both quota knobs to `0` in production. That kill switch disables
-quota enforcement globally and Stigmem logs a startup `SECURITY WARNING` when
-it is active; it is intended only for isolated local/dev/test environments.
+<div className="stigmem-keypoint">
+
+**Do not set both quota knobs to `0` in production.**
+
+That kill switch disables quota enforcement globally. Stigmem logs a
+startup `SECURITY WARNING` when it is active; it is intended only
+for isolated local/dev/test environments.
+
+</div>
 
 **Verify 429 enforcement:**
 
@@ -235,7 +255,7 @@ for i in $(seq 1 200); do
 done
 ```
 
-A 429 confirms the token-bucket quota is active.  The response body includes `retry_after` seconds and the dimension name:
+A 429 confirms the token-bucket quota is active:
 
 ```json
 {
@@ -247,8 +267,6 @@ A 429 confirms the token-bucket quota is active.  The response body includes `re
 ```
 
 For the full quota model and Prometheus metrics, see [Audit Log & Per-Principal Quotas](../security/audit-and-quotas.md#per-principal-quotas).
-
----
 
 ## Step 6 — Mint an audit key and confirm events
 
@@ -262,7 +280,7 @@ AUDIT_KEY=$(curl -s -X POST http://localhost:8000/v1/admin/api-keys \
 echo "Audit key: $AUDIT_KEY"
 ```
 
-Trigger a few events (assert a fact, exceed a quota limit), then verify they appear:
+Trigger a few events, then verify they appear:
 
 ```bash
 curl -s "http://localhost:8000/v1/admin/audit?limit=10" \
@@ -283,11 +301,15 @@ curl -s http://localhost:8000/v1/admin/audit \
 
 Store `AUDIT_KEY` in your secrets manager and configure your SIEM to poll `/v1/admin/audit` on a schedule.
 
----
-
 ## Step 7 — Switch to the hardened container image
 
-The v0.9.0a2 reference image runs as UID/GID 65532 (non-root) on a distroless base with a read-only root filesystem and a custom seccomp profile.
+<div className="stigmem-keypoint">
+
+**The v0.9.0a2 reference image runs as UID/GID 65532 (non-root).**
+
+Distroless base, read-only root filesystem, and a custom seccomp profile.
+
+</div>
 
 **Pull and verify the image:**
 
@@ -322,12 +344,6 @@ docker run -d \
   ghcr.io/eidetic-labs/stigmem-node:0.9.0a2
 ```
 
-Or use the deploy Compose recipe, which applies the same flags automatically:
-
-```bash
-docker compose -f deploy/compose/docker-compose.yml up -d
-```
-
 **Verify the process runs as non-root:**
 
 ```bash
@@ -345,27 +361,25 @@ docker exec $(docker ps -qf name=stigmem-node) \
 
 For Kubernetes / Helm security context configuration and SBOM verification, see [Container Hardening](../security/container-hardening.md).
 
----
-
 ## Step 8 — Preserve immutable evidence
 
 The ADR-016 storage-immutability stack gives clients and peers tamper evidence through CIDs, local fact-chain verification, and transparency-log checkpoints. Operators still need to preserve that evidence outside the mutable node.
 
 For production:
 
-- Use `STIGMEM_TL_BACKEND=rekor` for external fact-chain checkpoints where possible.
-- If using `STIGMEM_TL_BACKEND=local`, place `STIGMEM_TL_LOCAL_PATH` on storage the node process cannot rewrite outside append-only operation.
-- Export `fact_audit_log` and `federation_audit` rows to WORM-capable object storage before local retention expiry.
-- Keep signed database snapshots under retention lock, and record Rekor checkpoint metadata with restore evidence.
-- For high-assurance deployments, evaluate a TEE-capable runtime and seal node private keys to the measured runtime.
+<div className="stigmem-grid">
+
+<div><h4>External fact-chain</h4><p>Use <code>STIGMEM_TL_BACKEND=rekor</code> for external checkpoints where possible.</p></div>
+<div><h4>Local TL hardening</h4><p>If using <code>STIGMEM_TL_BACKEND=local</code>, place <code>STIGMEM_TL_LOCAL_PATH</code> on storage the node process cannot rewrite outside append-only operation.</p></div>
+<div><h4>WORM export</h4><p>Export <code>fact_audit_log</code> and <code>federation_audit</code> rows to WORM-capable object storage before local retention expiry.</p></div>
+<div><h4>Snapshot retention</h4><p>Keep signed database snapshots under retention lock, with Rekor checkpoint metadata.</p></div>
+<div><h4>TEE evaluation</h4><p>For high-assurance deployments, evaluate a TEE-capable runtime and seal node private keys to the measured runtime.</p></div>
+
+</div>
 
 See [Immutability & Attestation](../security/immutability-and-attestation.md) for the R-23 mitigation stack, verification commands, WORM storage guidance, and TEE deployment notes.
 
----
-
 ## Final verification
-
-Run the full hardening checklist:
 
 ```bash
 # 1. mTLS active
@@ -398,29 +412,83 @@ curl -s https://your-node.example.com/v1/recall \
   | jq '.chain_proof'
 ```
 
----
-
 ## What you have now
 
-| Control | Spec | Status |
-|---|---|---|
-| mTLS federation with SAN validation | `Spec-10-Hardening` | Active |
-| Ed25519 identity key rotated with dual-trust window | `Spec-10-Hardening` | Active |
-| Capability issuer key rotated | `Spec-10-Hardening` | Active |
-| Audit log with 14 event types | `Spec-09-Audit-Log` | Active |
-| Per-principal token-bucket quotas | `Spec-10-Hardening` | Active |
-| Non-root distroless container, read-only fs, dropped caps | `Spec-10-Hardening` | Active |
-| CID, local hash-chain, and checkpoint verification plan | `ADR-016` | Active |
-| WORM/TEE evidence plan | `ADR-016` | Deployment option |
+<div className="stigmem-fields">
 
-Your deployment is now at the pre-reset hardening hardened posture.  Run the [Community Pen-Test Handbook](../security/pen-test.md) test matrix against it to verify from the attacker's perspective.
+<div>
+<dt>Control</dt>
+<dt><span className="stigmem-fields__type">Spec / ADR</span></dt>
+<dd>Status</dd>
+</div>
 
----
+<div>
+<dt>mTLS federation with SAN validation</dt>
+<dt><span className="stigmem-fields__type">Spec-10</span></dt>
+<dd>Active</dd>
+</div>
+
+<div>
+<dt>Ed25519 identity key rotated with dual-trust</dt>
+<dt><span className="stigmem-fields__type">Spec-10</span></dt>
+<dd>Active</dd>
+</div>
+
+<div>
+<dt>Capability issuer key rotated</dt>
+<dt><span className="stigmem-fields__type">Spec-10</span></dt>
+<dd>Active</dd>
+</div>
+
+<div>
+<dt>Audit log with 14 event types</dt>
+<dt><span className="stigmem-fields__type">Spec-09</span></dt>
+<dd>Active</dd>
+</div>
+
+<div>
+<dt>Per-principal token-bucket quotas</dt>
+<dt><span className="stigmem-fields__type">Spec-10</span></dt>
+<dd>Active</dd>
+</div>
+
+<div>
+<dt>Non-root distroless, read-only fs, dropped caps</dt>
+<dt><span className="stigmem-fields__type">Spec-10</span></dt>
+<dd>Active</dd>
+</div>
+
+<div>
+<dt>CID + hash-chain + checkpoint verification plan</dt>
+<dt><span className="stigmem-fields__type">ADR-016</span></dt>
+<dd>Active</dd>
+</div>
+
+<div>
+<dt>WORM/TEE evidence plan</dt>
+<dt><span className="stigmem-fields__type">ADR-016</span></dt>
+<dd>Deployment option</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Your deployment is now at the pre-reset hardening hardened posture.**
+
+Run the [Community Pen-Test Handbook](../security/pen-test.md) test
+matrix against it to verify from the attacker's perspective.
+
+</div>
 
 ## Next steps
 
-- Schedule key rotation reminders: issuer key every 90 days, identity key every 365 days.
-- Configure SIEM retention — export `fact_audit_log` rows to immutable storage before the 90-day minimum window.
-- Review the [Key Rotation Runbook](../security/key-rotation.md#rotation-checklist) post-rotation checklist.
-- For cert-manager-based auto-rotation on Kubernetes, see [mTLS — cert-manager](../security/mtls.md#cert-manager-kubernetes).
-- Review [Immutability & Attestation](../security/immutability-and-attestation.md) before enabling production federation.
+<div className="stigmem-grid">
+
+<div><h4>Rotation reminders</h4><p>Issuer key every 90 days, identity key every 365 days.</p></div>
+<div><h4>SIEM retention</h4><p>Export <code>fact_audit_log</code> rows to immutable storage before the 90-day minimum window.</p></div>
+<div><h4>Post-rotation checklist</h4><p>Review the <a href="../security/key-rotation.md#rotation-checklist">Key Rotation Runbook</a>.</p></div>
+<div><h4>Auto-rotation</h4><p>For cert-manager on Kubernetes, see <a href="../security/mtls.md#cert-manager-kubernetes">mTLS — cert-manager</a>.</p></div>
+<div><h4>Immutability review</h4><p>Review <a href="../security/immutability-and-attestation.md">Immutability &amp; Attestation</a> before enabling production federation.</p></div>
+
+</div>

@@ -12,16 +12,25 @@ depends_on:
 
 # Spec-09-Audit-Log
 
-`Spec-09-Audit-Log` defines the minimum audit surface for security-relevant
-events in the reference node.
+<p className="stigmem-meta"><span>2 min read</span><span>Spec contributor · Node operator</span><span>Draft · v0.9.0aN</span></p>
 
-## Extraction Status
+<div className="stigmem-lead">
 
-This file contains the ADR-010 prose extraction for audit-log semantics.
-Component specs define which events they emit; this spec defines common event
-requirements, ordering expectations, retention, and export boundaries.
+**What this spec defines**
 
-## Required Properties
+The minimum audit surface for security-relevant events in the
+reference node. Common event requirements, ordering expectations,
+retention, and export boundaries.
+
+</div>
+
+## Extraction status
+
+This file contains the ADR-010 prose extraction for audit-log
+semantics. Component specs define which events they emit; this
+spec defines common event requirements.
+
+## Required properties
 
 Audit records SHOULD include:
 
@@ -38,49 +47,66 @@ AuditEvent {
 }
 ```
 
-Events MUST be append-only. Operators MAY redact sensitive metadata for export,
-but redaction MUST NOT change the original stored event.
+<div className="stigmem-keypoint">
 
-## Required Event Families
+**Events MUST be append-only.**
+
+Operators MAY redact sensitive metadata for export, but redaction
+MUST NOT change the original stored event.
+
+</div>
+
+## Required event families
 
 Nodes SHOULD audit:
 
-- fact writes and retractions,
-- fact reads that return data,
-- auth key creation/revocation and failed authentication,
-- peer registration, verification, rejection, and revocation,
-- federation fact accept/reject decisions,
-- scope violations,
-- capability-token issuance and revocation,
-- quarantine admission, promotion, and rejection,
-- CID mismatch/collision events once CID support is assigned and implemented,
-- administrative export and configuration changes.
+<div className="stigmem-grid">
+
+<div><h4>Fact writes and retractions</h4></div>
+<div><h4>Fact reads returning data</h4></div>
+<div><h4>Auth key lifecycle</h4><p>Creation, revocation, failed authentication.</p></div>
+<div><h4>Peer registration lifecycle</h4><p>Registration, verification, rejection, revocation.</p></div>
+<div><h4>Federation fact decisions</h4><p>Accept/reject.</p></div>
+<div><h4>Scope violations</h4></div>
+<div><h4>Capability-token issuance and revocation</h4></div>
+<div><h4>Quarantine lifecycle</h4><p>Admission, promotion, rejection.</p></div>
+<div><h4>CID mismatch/collision</h4><p>Once CID support is assigned and implemented.</p></div>
+<div><h4>Admin export + config changes</h4></div>
+
+</div>
 
 ## Ordering
 
-Audit events MUST carry wall-clock timestamps. Implementations SHOULD also carry
-HLC or monotonic ordering metadata when available so investigators can order
-events across federation boundaries.
+Audit events MUST carry wall-clock timestamps. Implementations
+SHOULD also carry HLC or monotonic ordering metadata when available
+so investigators can order events across federation boundaries.
 
 ## Retention
 
-Default retention SHOULD be long enough to support security investigation and
-operator review. Deployments MAY configure retention, but reducing retention
-below the documented default SHOULD be an explicit operator choice.
+Default retention SHOULD be long enough to support security
+investigation and operator review. Deployments MAY configure
+retention, but reducing retention below the documented default
+SHOULD be an explicit operator choice.
 
 ## Export
 
-Admin export MUST require administrative authorization. Export responses SHOULD
-be paginated or streamed when event volume can be large. Export shape must not
-reveal data the caller is not authorized to inspect.
+Admin export MUST require administrative authorization. Export
+responses SHOULD be paginated or streamed when event volume can be
+large. Export shape must not reveal data the caller is not
+authorized to inspect.
 
-## Failure Handling
+## Failure handling
 
-Audit emission failure on security-critical writes SHOULD fail closed when that
-is practical. For non-critical observability events, implementations MAY fail
+<div className="stigmem-keypoint">
+
+**Audit emission failure on security-critical writes SHOULD fail closed.**
+
+For non-critical observability events, implementations MAY fail
 open but SHOULD log local diagnostics.
 
-## Out Of Scope
+</div>
 
-This spec does not define SIEM integrations, external log storage, or component
-event catalogues beyond the required families above.
+## Out of scope
+
+This spec does not define SIEM integrations, external log storage,
+or component event catalogues beyond the required families above.

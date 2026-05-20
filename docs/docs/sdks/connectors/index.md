@@ -7,59 +7,140 @@ audience: Integrator
 
 # Connectors
 
-Install recipes and smoke tests for running the Stigmem MCP server inside popular
-editors, agent CLIs, and non-MCP runtimes.
+<p className="stigmem-meta"><span>2 min read</span><span>Integrator</span><span>Adapter index</span></p>
+
+<div className="stigmem-lead">
+
+**What this section covers**
+
+Install recipes and smoke tests for running the Stigmem MCP server
+inside popular editors, agent CLIs, and non-MCP runtimes.
+
+</div>
 
 ## MCP host connectors
 
-These guides configure the existing MCP server (`stigmem/adapters/mcp/`) as a tool
-provider inside each host. Build the server once, then register it in each host's
-config.
+These guides configure the existing MCP server (`stigmem/adapters/mcp/`) as a tool provider inside each host. Build the server once, then register it in each host's config.
 
-| Guide | Host |
-|-------|------|
-| [Zed (experimental)](https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter) | Zed editor — `mcp_servers` block in `settings.json` |
-| [Cursor](https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter) | Cursor editor — `.cursor/mcp.json` |
-| [Codex CLI](https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter) | OpenAI Codex CLI — `~/.codex/config.yaml` |
-| [Continue.dev](https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter) | Continue VS Code/JetBrains extension — `.continue/config.json` |
+<div className="stigmem-fields">
+
+<div>
+<dt>Host</dt>
+<dt><span className="stigmem-fields__type">Config location</span></dt>
+<dd>Guide</dd>
+</div>
+
+<div>
+<dt>Zed (experimental)</dt>
+<dt><span className="stigmem-fields__type"><code>mcp_servers</code> in <code>settings.json</code></span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter">experimental/mcp-adapter</a></dd>
+</div>
+
+<div>
+<dt>Cursor</dt>
+<dt><span className="stigmem-fields__type"><code>.cursor/mcp.json</code></span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter">experimental/mcp-adapter</a></dd>
+</div>
+
+<div>
+<dt>Codex CLI</dt>
+<dt><span className="stigmem-fields__type"><code>~/.codex/config.yaml</code></span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter">experimental/mcp-adapter</a></dd>
+</div>
+
+<div>
+<dt>Continue.dev</dt>
+<dt><span className="stigmem-fields__type"><code>.continue/config.json</code></span></dt>
+<dd>Continue VS Code/JetBrains extension.</dd>
+</div>
+
+</div>
 
 ## Runtime adapters
 
-These adapters translate Stigmem's tools into the native function-calling format of
-non-MCP runtimes.
+These adapters translate Stigmem's tools into the native function-calling format of non-MCP runtimes.
 
-| Guide | Runtime |
-|-------|---------|
-| [Gemini](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-gemini) | Google Gemini — native `FunctionDeclaration` format |
-| [Ollama / LiteLLM (experimental)](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-ollama-litellm) | OpenAI-compatible tool-use format for local models |
+<div className="stigmem-fields">
+
+<div>
+<dt>Runtime</dt>
+<dt><span className="stigmem-fields__type">Format</span></dt>
+<dd>Guide</dd>
+</div>
+
+<div>
+<dt>Gemini</dt>
+<dt><span className="stigmem-fields__type">native <code>FunctionDeclaration</code></span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-gemini">experimental/adapter-gemini</a></dd>
+</div>
+
+<div>
+<dt>Ollama / LiteLLM</dt>
+<dt><span className="stigmem-fields__type">OpenAI-compatible tool-use</span></dt>
+<dd>For local models. <a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-ollama-litellm">experimental/adapter-ollama-litellm</a></dd>
+</div>
+
+</div>
 
 ## Agent platform adapters
 
-These adapters integrate Stigmem with agent orchestration platforms via their
-native skill or hook surfaces (not MCP).
+<div className="stigmem-fields">
 
-| Guide | Platform |
-|-------|----------|
-| [OpenClaw](./openclaw) | OpenClaw — ClawHub skill providing boot handshake, handoff, decision, and escalation surfaces |
-| [Paperclip / Claude Code](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip) | Paperclip and Claude Code — MCP server registered in `.mcp.json` |
+<div>
+<dt>Platform</dt>
+<dt><span className="stigmem-fields__type">Integration</span></dt>
+<dd>Guide</dd>
+</div>
+
+<div>
+<dt>OpenClaw</dt>
+<dt><span className="stigmem-fields__type">ClawHub skill</span></dt>
+<dd>Boot handshake, handoff, decision, and escalation surfaces. <a href="./openclaw">OpenClaw guide</a>.</dd>
+</div>
+
+<div>
+<dt>Paperclip / Claude Code</dt>
+<dt><span className="stigmem-fields__type">MCP server in <code>.mcp.json</code></span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip">experimental/adapter-paperclip</a></dd>
+</div>
+
+</div>
 
 ## Vault / note-taking adapters
 
-These adapters sync Stigmem facts with local markdown vaults, enabling bidirectional
-integration with note-taking tools.
+<div className="stigmem-fields">
 
-| Guide | Tool |
-|-------|------|
-| [Obsidian Vault](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-obsidian) | CLI/daemon sync for Obsidian, Logseq, Dendron, and plain-folder markdown vaults |
+<div>
+<dt>Tool</dt>
+<dt><span className="stigmem-fields__type">Sync mode</span></dt>
+<dd>Guide</dd>
+</div>
+
+<div>
+<dt>Obsidian / Logseq / Dendron</dt>
+<dt><span className="stigmem-fields__type">CLI/daemon</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-obsidian">experimental/adapter-obsidian</a></dd>
+</div>
+
+</div>
 
 ## Memory federation adapters
 
-These adapters bridge Stigmem with other memory systems to share knowledge across
-boundaries.
+<div className="stigmem-fields">
 
-| Guide | System |
-|-------|--------|
-| [Zep](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-zep) | Zep — mirror shared facts into per-user/session episodic memory |
+<div>
+<dt>System</dt>
+<dt><span className="stigmem-fields__type">Bridge</span></dt>
+<dd>Guide</dd>
+</div>
+
+<div>
+<dt>Zep</dt>
+<dt><span className="stigmem-fields__type">episodic memory mirror</span></dt>
+<dd>Mirror shared facts into per-user/session episodic memory. <a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-zep">experimental/adapter-zep</a></dd>
+</div>
+
+</div>
 
 ## Shared prerequisites
 
@@ -79,4 +160,8 @@ cd stigmem/node
 uv run uvicorn stigmem_node.main:app --port 8765
 ```
 
-Set `STIGMEM_API_KEY` if your node has `STIGMEM_AUTH_REQUIRED=true`.
+<div className="stigmem-keypoint">
+
+**Set `STIGMEM_API_KEY` if your node has `STIGMEM_AUTH_REQUIRED=true`.**
+
+</div>

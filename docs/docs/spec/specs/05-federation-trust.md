@@ -14,23 +14,38 @@ depends_on:
 
 # Spec-05-Federation-Trust
 
-`Spec-05-Federation-Trust` defines peer admission, peer verification,
-replication authorization, per-hop scope enforcement, source-trust handling, and
-federation audit boundaries.
+<p className="stigmem-meta"><span>4 min read</span><span>Spec contributor · Node operator</span><span>Draft · v0.9.0aN</span></p>
 
-## Extraction Status
+<div className="stigmem-lead">
 
-This file contains the ADR-010 prose extraction for federation trust. It
-intentionally does **not** define manifest shape (`Spec-04-Manifests`),
-capability-token structure (`Spec-06-Capability-Tokens`), quarantine moderation
-(`Spec-08-Quarantine-Garden`), replay windows (`Spec-11-Replay-Protection`), or
-transport hardening (`Spec-10-Hardening`).
+**What this spec defines**
 
-## Peer Declaration
+Peer admission, peer verification, replication authorization,
+per-hop scope enforcement, source-trust handling, and federation
+audit boundaries.
 
-A peer declaration binds a node id, reachable node URL, public federation key,
-and allowed replication scopes. A node MUST NOT replicate with a peer until that
-peer is registered and verified.
+</div>
+
+## Extraction status
+
+This file contains the ADR-010 prose extraction for federation
+trust. It intentionally does **not** define manifest shape
+(`Spec-04-Manifests`), capability-token structure
+(`Spec-06-Capability-Tokens`), quarantine moderation
+(`Spec-08-Quarantine-Garden`), replay windows
+(`Spec-11-Replay-Protection`), or transport hardening
+(`Spec-10-Hardening`).
+
+## Peer declaration
+
+A peer declaration binds a node id, reachable node URL, public
+federation key, and allowed replication scopes.
+
+<div className="stigmem-keypoint">
+
+**A node MUST NOT replicate with a peer until that peer is registered and verified.**
+
+</div>
 
 ```text
 PeerDeclaration {
@@ -43,93 +58,120 @@ PeerDeclaration {
 }
 ```
 
-The signature covers the canonical declaration body. The public key can be
-confirmed through the peer's manifest and discovery document.
+The signature covers the canonical declaration body. The public key
+can be confirmed through the peer's manifest and discovery document.
 
 ## Verification
 
 Peer verification MUST:
 
-1. Resolve the peer's discovery document.
-2. Resolve or verify the peer manifest per `Spec-04-Manifests`.
-3. Verify the declaration signature against the declared public key.
-4. Confirm the declared node id and public key match the resolved peer evidence.
-5. Transition the peer to `active` only after all required checks pass.
+<ol className="stigmem-steps">
+<li>Resolve the peer's discovery document.</li>
+<li>Resolve or verify the peer manifest per <code>Spec-04-Manifests</code>.</li>
+<li>Verify the declaration signature against the declared public key.</li>
+<li>Confirm the declared node id and public key match the resolved peer evidence.</li>
+<li>Transition the peer to <code>active</code> only after all required checks pass.</li>
+</ol>
 
-Rejected peers MUST NOT receive or send replicated facts. Implementations SHOULD
-retain rejection reason and timestamp for audit.
+Rejected peers MUST NOT receive or send replicated facts.
+Implementations SHOULD retain rejection reason and timestamp for
+audit.
 
-## Replication Authorization
+## Replication authorization
 
-Replication is authorized by the intersection of:
+<div className="stigmem-keypoint">
 
-- the fact's own `scope`,
-- the source peer's allowed scopes,
-- the current peer relationship's allowed scopes, and
-- any peer-token or capability constraints required by the route.
+**Replication is authorized by the intersection of all applicable scopes.**
 
-Nodes MUST NOT return facts outside that intersection. Nodes MUST reject inbound
-facts whose scope exceeds the sender's authorization.
+The fact's own `scope`, the source peer's allowed scopes, the
+current peer relationship's allowed scopes, and any peer-token or
+capability constraints required by the route. Nodes MUST NOT return
+facts outside that intersection. Nodes MUST reject inbound facts
+whose scope exceeds the sender's authorization.
 
-## Pull Replication
+</div>
 
-Pull replication is the default synchronization mechanism. The requesting peer
-provides a cursor and a limit; the responding node returns facts after that
-cursor, filtered by the authorization rules above.
+## Pull vs push replication
 
-Cursors are opaque to clients. Reusing the same cursor MUST be idempotent:
-receivers must not create duplicate facts when the same page is ingested more
-than once.
+<div className="stigmem-fields">
 
-## Push Replication
+<div>
+<dt>Mode</dt>
+<dt><span className="stigmem-fields__type">Status</span></dt>
+<dd>Behavior</dd>
+</div>
 
-Push replication is optional and low-latency. Nodes that advertise push support
-MUST apply the same inbound validation, deduplication, scope checks, and audit
-logging as pull ingestion. Nodes that do not support push SHOULD omit the push
-endpoint from discovery or return `405 Method Not Allowed`.
+<div>
+<dt>Pull</dt>
+<dt><span className="stigmem-fields__type">default</span></dt>
+<dd>The requesting peer provides a cursor and a limit; the responding node returns facts after that cursor, filtered by the authorization rules above. Cursors are opaque to clients. Reusing the same cursor MUST be idempotent: receivers must not create duplicate facts when the same page is ingested more than once.</dd>
+</div>
 
-## Scope Propagation
+<div>
+<dt>Push</dt>
+<dt><span className="stigmem-fields__type">optional</span></dt>
+<dd>Low-latency. Nodes that advertise push support MUST apply the same inbound validation, deduplication, scope checks, and audit logging as pull ingestion. Nodes that do not support push SHOULD omit the push endpoint from discovery or return <code>405 Method Not Allowed</code>.</dd>
+</div>
 
-Scope enforcement is per-hop. A relay node MUST NOT escalate a fact's scope when
-serving another peer. Company-scoped facts received from one peer MUST NOT be
-re-federated to another peer unless a future accepted spec explicitly defines an
-operator opt-in path.
+</div>
 
-Relay nodes SHOULD retain origin metadata sufficient to enforce the original
-peer's allowed-scope boundary when serving later peers.
+## Scope propagation
 
-## Source Trust
+<div className="stigmem-keypoint">
 
-Federation trust may compute a source-trust score from manifest validity,
-attestation evidence, peer history, and configured trust mode. Trust scores are
-local derived values; peers MUST NOT be allowed to provide a source-trust value
-that the receiver accepts as authoritative.
+**Scope enforcement is per-hop.**
 
-Advanced trust scoring remains subject to calibration and should be kept
-separate from basic peer admission and scope authorization.
+A relay node MUST NOT escalate a fact's scope when serving another
+peer. Company-scoped facts received from one peer MUST NOT be
+re-federated to another peer unless a future accepted spec
+explicitly defines an operator opt-in path. Relay nodes SHOULD
+retain origin metadata sufficient to enforce the original peer's
+allowed-scope boundary when serving later peers.
 
-## Federation Audit
+</div>
 
-Nodes SHOULD audit federation events that materially affect trust or data flow:
+## Source trust
 
-- peer registered,
-- peer verified,
-- peer rejected,
-- fact accepted,
-- fact rejected,
-- scope violation,
-- replay violation,
-- manifest or signature verification failure.
+Federation trust may compute a source-trust score from manifest
+validity, attestation evidence, peer history, and configured trust
+mode. Trust scores are local derived values; peers MUST NOT be
+allowed to provide a source-trust value that the receiver accepts as
+authoritative.
+
+Advanced trust scoring remains subject to calibration and should be
+kept separate from basic peer admission and scope authorization.
+
+## Federation audit
+
+Nodes SHOULD audit federation events that materially affect trust or
+data flow:
+
+<div className="stigmem-grid">
+
+<div><h4>Peer registered</h4></div>
+<div><h4>Peer verified</h4></div>
+<div><h4>Peer rejected</h4></div>
+<div><h4>Fact accepted</h4></div>
+<div><h4>Fact rejected</h4></div>
+<div><h4>Scope violation</h4></div>
+<div><h4>Replay violation</h4></div>
+<div><h4>Manifest/signature failure</h4><p>Verification failure.</p></div>
+
+</div>
 
 Audit record shape belongs to `Spec-09-Audit-Log`.
 
-## Out Of Scope
+## Out of scope
 
 This spec does not define:
 
-- manifest schema or transparency-log evidence,
-- capability-token wire format,
-- quarantine promote/reject operations,
-- mTLS certificate requirements,
-- replay nonce windows, or
-- content-addressed fact IDs.
+<div className="stigmem-grid">
+
+<div><h4>Manifest schema</h4><p>Or transparency-log evidence.</p></div>
+<div><h4>Capability-token wire format</h4></div>
+<div><h4>Quarantine operations</h4><p>Promote/reject.</p></div>
+<div><h4>mTLS certificate requirements</h4></div>
+<div><h4>Replay nonce windows</h4></div>
+<div><h4>Content-addressed fact IDs</h4></div>
+
+</div>

@@ -17,135 +17,163 @@ depends_on:
 
 # Spec-18-Conformance-and-Failure-Modes
 
-`Spec-18-Conformance-and-Failure-Modes` defines acceptance scenarios that
-exercise Stigmem's safety behavior under federation partitions, malicious peer
-input, partial replication failure, and replay attempts.
+<p className="stigmem-meta"><span>4 min read</span><span>Spec contributor · Conformance tester</span><span>Draft · v0.9.0aN</span></p>
 
-## Extraction Status
+<div className="stigmem-lead">
 
-This file contains the ADR-010 prose extraction for failure-mode acceptance
-scenarios. It defines scenario intent and expected outcomes. Concrete test
-harness layout and fixture implementation remain implementation details.
+**What this spec defines**
 
-Legacy version labels from archived source material are normalized to the
-current `v0.9.0a1` protocol line here. Historical wording remains available in
-`spec/archive/evolution/` and `spec/EVOLUTION.md`.
+Acceptance scenarios that exercise Stigmem's safety behavior under
+federation partitions, malicious peer input, partial replication
+failure, and replay attempts.
 
-## Conformance Gate
+</div>
 
-A conforming federation-capable node MUST demonstrate the scenarios in this
-spec or equivalent tests. Equivalent tests may use different fixture names,
-ports, or process orchestration, but MUST preserve the setup, fault, and
-expected safety outcomes.
+## Extraction status
 
-Failure-mode tests SHOULD run against the same public HTTP and federation
-surfaces that clients use. White-box shortcuts MAY be used only to simulate
-network partitions, process crashes, clock state, or replay caches.
+This file contains the ADR-010 prose extraction for failure-mode
+acceptance scenarios. It defines scenario intent and expected
+outcomes. Concrete test harness layout and fixture implementation
+remain implementation details.
 
-## Split-Brain
+Legacy version labels from archived source material are normalized
+to the current `v0.9.0a1` protocol line here. Historical wording
+remains available in `spec/archive/evolution/` and
+`spec/EVOLUTION.md`.
 
-### Setup
+## Conformance gate
 
-Two nodes, A and B, are federated with `scope=public`. Both begin with the same
-public facts.
+<div className="stigmem-keypoint">
 
-### Scenario
+**A conforming federation-capable node MUST demonstrate the scenarios in this spec or equivalent tests.**
 
-1. Cut network connectivity between A and B.
-2. Write fact `F_a` to node A for a shared entity/relation/scope.
-3. Write conflicting fact `F_b` to node B for the same entity/relation/scope.
-4. Maintain the partition long enough for both nodes to continue serving local
-   reads and writes.
-5. Restore connectivity.
-6. Allow replication to complete.
+Equivalent tests may use different fixture names, ports, or process
+orchestration, but MUST preserve the setup, fault, and expected
+safety outcomes. Failure-mode tests SHOULD run against the same
+public HTTP and federation surfaces that clients use. White-box
+shortcuts MAY be used only to simulate network partitions, process
+crashes, clock state, or replay caches.
 
-### Expected Outcomes
+</div>
 
-- Both nodes retain both facts.
-- At least the node that ingests the second conflicting fact detects the
-  contradiction.
-- Conflict query APIs expose the unresolved conflict.
-- Fact queries with contradicted facts included return both facts with
-  contradiction metadata.
-- No fact is silently discarded.
+## Split-brain
 
-## Malicious Peer
+**Setup.** Two nodes, A and B, are federated with `scope=public`.
+Both begin with the same public facts.
 
-### Setup
+**Scenario.**
 
-Two nodes, A and B, are federated. A malicious process obtains or forges input
-for the B-to-A direction.
+<ol className="stigmem-steps">
+<li>Cut network connectivity between A and B.</li>
+<li>Write fact <code>F_a</code> to node A for a shared entity/relation/scope.</li>
+<li>Write conflicting fact <code>F_b</code> to node B for the same entity/relation/scope.</li>
+<li>Maintain the partition long enough for both nodes to continue serving local reads and writes.</li>
+<li>Restore connectivity.</li>
+<li>Allow replication to complete.</li>
+</ol>
 
-### Scenario
+**Expected outcomes.**
 
-1. The malicious process attempts to push a fact whose scope exceeds B's peer
-   declaration.
-2. The malicious process attempts to push a fact whose source is outside B's
-   declared namespace or authority.
-3. The malicious process replays a previously observed token within the active
-   replay window.
+<div className="stigmem-grid">
 
-### Expected Outcomes
+<div><h4>Both facts retained</h4><p>Both nodes retain both facts.</p></div>
+<div><h4>Contradiction detected</h4><p>At least the node that ingests the second conflicting fact detects it.</p></div>
+<div><h4>Conflict queryable</h4><p>Conflict query APIs expose the unresolved conflict.</p></div>
+<div><h4>Both returned</h4><p>Fact queries with contradicted facts included return both facts with contradiction metadata.</p></div>
+<div><h4>No silent discard</h4><p>No fact is silently discarded.</p></div>
 
-- Over-scope facts are rejected.
-- Source-forgery facts are rejected.
-- In-window replay attempts are rejected.
-- Rejections produce audit events with enough detail to diagnose the reason.
-- The receiving fact store is not corrupted by rejected input.
+</div>
 
-## Partial Replication Failure
+## Malicious peer
 
-### Setup
+**Setup.** Two nodes, A and B, are federated. A malicious process
+obtains or forges input for the B-to-A direction.
 
-Node A pulls from node B. Node B has a larger public fact set than A has already
-replicated. A has persisted a cursor for the last fully accepted page.
+**Scenario.**
 
-### Scenario
+<ol className="stigmem-steps">
+<li>The malicious process attempts to push a fact whose scope exceeds B's peer declaration.</li>
+<li>The malicious process attempts to push a fact whose source is outside B's declared namespace or authority.</li>
+<li>The malicious process replays a previously observed token within the active replay window.</li>
+</ol>
 
-1. B fails after returning a later page but before A persists the cursor for
-   that page.
-2. A attempts another pull while B is unreachable.
-3. A continues serving local reads and writes.
-4. B restarts.
-5. A's next pull cycle resumes.
+**Expected outcomes.**
 
-### Expected Outcomes
+<div className="stigmem-grid">
 
-- A does not crash while B is unavailable.
-- Local reads and writes on A remain available.
-- A resumes from the last persisted cursor, not from the beginning and not from
-  an uncommitted future cursor.
-- Re-ingesting a partially received page does not create duplicate facts.
-- Final convergence includes all eligible facts.
+<div><h4>Over-scope rejected</h4></div>
+<div><h4>Source-forgery rejected</h4></div>
+<div><h4>In-window replay rejected</h4></div>
+<div><h4>Audit captures reason</h4><p>Rejections produce audit events with enough detail to diagnose.</p></div>
+<div><h4>Store uncorrupted</h4><p>The receiving fact store is not corrupted by rejected input.</p></div>
 
-## Replay Attack
+</div>
 
-### Setup
+## Partial replication failure
 
-Two nodes, A and B, are federated. A valid peer token is observed by an attacker.
+**Setup.** Node A pulls from node B. Node B has a larger public fact
+set than A has already replicated. A has persisted a cursor for the
+last fully accepted page.
 
-### Scenario
+**Scenario.**
 
-1. The token is used legitimately once.
-2. The same token is replayed within the active nonce window.
-3. A new token is generated with the same nonce.
-4. A token is submitted after expiry.
+<ol className="stigmem-steps">
+<li>B fails after returning a later page but before A persists the cursor for that page.</li>
+<li>A attempts another pull while B is unreachable.</li>
+<li>A continues serving local reads and writes.</li>
+<li>B restarts.</li>
+<li>A's next pull cycle resumes.</li>
+</ol>
 
-### Expected Outcomes
+**Expected outcomes.**
 
-- First legitimate use succeeds.
-- Immediate replay fails with a nonce-replay error.
-- A different token carrying the same nonce also fails.
-- Expired tokens fail with an expiry error.
-- Replay and expiry failures are audited.
+<div className="stigmem-grid">
 
-## Out Of Scope
+<div><h4>No crash on unavailability</h4><p>A does not crash while B is unavailable.</p></div>
+<div><h4>Local reads/writes available</h4></div>
+<div><h4>Resume from persisted cursor</h4><p>Not from the beginning and not from an uncommitted future cursor.</p></div>
+<div><h4>No duplicates on re-ingest</h4></div>
+<div><h4>Convergence on resume</h4><p>Final convergence includes all eligible facts.</p></div>
+
+</div>
+
+## Replay attack
+
+**Setup.** Two nodes, A and B, are federated. A valid peer token is
+observed by an attacker.
+
+**Scenario.**
+
+<ol className="stigmem-steps">
+<li>The token is used legitimately once.</li>
+<li>The same token is replayed within the active nonce window.</li>
+<li>A new token is generated with the same nonce.</li>
+<li>A token is submitted after expiry.</li>
+</ol>
+
+**Expected outcomes.**
+
+<div className="stigmem-grid">
+
+<div><h4>First use succeeds</h4></div>
+<div><h4>Immediate replay fails</h4><p>With a nonce-replay error.</p></div>
+<div><h4>Same-nonce reuse fails</h4><p>A different token carrying the same nonce also fails.</p></div>
+<div><h4>Expired token fails</h4><p>With an expiry error.</p></div>
+<div><h4>Failures audited</h4><p>Replay and expiry failures are audited.</p></div>
+
+</div>
+
+## Out of scope
 
 This spec does not define:
 
-- performance or soak-test thresholds,
-- adapter ABI conformance vectors,
-- lint-specific conformance vectors,
-- implementation fixture names,
-- CI job topology, or
-- experimental feature gates.
+<div className="stigmem-grid">
+
+<div><h4>Performance/soak thresholds</h4></div>
+<div><h4>Adapter ABI conformance vectors</h4></div>
+<div><h4>Lint conformance vectors</h4></div>
+<div><h4>Implementation fixture names</h4></div>
+<div><h4>CI job topology</h4></div>
+<div><h4>Experimental feature gates</h4></div>
+
+</div>

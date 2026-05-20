@@ -1,157 +1,425 @@
 # ADR-011: Plugin architecture for cross-cutting features (C1)
 
-**Status:** Accepted
-**Amended by:** ADR-017 (2026-05-07) — CIDs reclassified from plugin to core; six remaining cross-cutting plugins. ADR-011's body is preserved as the historical record; readers should consult ADR-017 for the current scope of plugins-vs-core.
-**Date:** 2026-05-07
-**Authors:** Eidetic Labs
-**Supersedes:** ADR-011 (revised 2026-05-06, direct-to-C2)
-**Related:** ADR-002 (v1 scope), ADR-008 (experimental gates), ADR-009 (repo structure), ADR-010 (modular specs), ADR-012 (version-aware feature exposure), ADR-013 (deprecation policy); `stigmem/analyses/feature-extraction-analysis.md`
+<p className="stigmem-meta"><span>12 min read</span><span>Accepted</span><span>Recorded 2026-05-07</span></p>
 
----
+<div className="stigmem-lead">
+
+**What this ADR decides**
+
+Stigmem adopts a plugin architecture (Option C1) for all cross-cutting
+features. Core has no awareness of specific features; all integration
+happens via a generic hook/registry system with capability-restricted
+contexts, signed entry points, and fail-closed semantics. Default
+install matches the v1.0 scope contract exactly.
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Amended by ADR-017 (2026-05-07).**
+
+CIDs were reclassified from plugin to core. Six cross-cutting features
+remain as plugins. ADR-011's body is preserved as the historical
+record; readers should consult ADR-017 for the current scope of
+plugins-vs-core.
+
+</div>
+
+**Status:** Accepted · **Date:** 2026-05-07 · **Authors:** Eidetic Labs · **Supersedes:** ADR-011 (revised 2026-05-06, direct-to-C2) · **Related:** [ADR-002](./002-v1-scope), [ADR-008](./008-experimental-gates), [ADR-009](./009-repo-structure), [ADR-010](./010-modular-specs), ADR-012, ADR-013; `stigmem/analyses/feature-extraction-analysis.md`
 
 ## Context
 
-ADR-009 establishes `experimental/<feature>/` as the home for deferred features. ADR-002 names which features are deferred. The implicit assumption — that moving a feature to `experimental/` is a `git mv` — holds for ~75% of features but fails for the cross-cutting ones (tombstones, time-travel, CIDs, multi-tenant, lazy instruction discovery, memory-garden advanced ACL, source attestation), which are woven into the core node module with dozens of references in single files.
+ADR-009 establishes `experimental/<feature>/` as the home for deferred
+features. ADR-002 names which features are deferred. The implicit
+assumption — that moving a feature to `experimental/` is a `git mv` —
+holds for ~75% of features but fails for the cross-cutting ones
+(tombstones, time-travel, CIDs, multi-tenant, lazy instruction
+discovery, memory-garden advanced ACL, source attestation), which are
+woven into the core node module with dozens of references in single
+files.
 
-This ADR commits to the strategy for handling cross-cutting features: which architectural pattern the project uses, how features integrate with core, what the plugin development model looks like, and how security and scalability are guaranteed at the architectural level rather than per-plugin.
+The choice was between three approaches, in increasing order of
+architectural cleanliness and upfront cost:
 
-The choice is between three approaches, in increasing order of architectural cleanliness and upfront cost:
+<div className="stigmem-fields">
 
-- **Option C3 (feature flags only):** implementation stays in core, gated by feature flags. Scope contract leak; security surface includes all deferred features regardless of whether enabled.
-- **Option C2 (thin shims):** implementation lives in `experimental/<feature>/`; core has named integration points that no-op when the experimental package isn't installed. Cleaner code surface; integration points are feature-specific.
-- **Option C1 (plugin architecture):** core has no awareness of specific features; all integration happens via a generic hook/registry system. Plugins register themselves and provide implementations. Cleanest architecture; substantial upfront design work.
+<div>
+<dt>Option</dt>
+<dt><span className="stigmem-fields__type">Pattern</span></dt>
+<dd>Trade-off</dd>
+</div>
 
-**Two prior versions of this ADR proposed C3-then-C2 and direct-to-C2. After founder review, both are superseded.** The reasoning: if C1 is the long-term architectural destination, doing C2 first means refactoring twice. The "do it once" principle that argued against C3-then-C2 also argues against C2-then-C1. Stigmem commits to C1 from Phase A.
+<div>
+<dt>C3</dt>
+<dt><span className="stigmem-fields__type">feature flags only</span></dt>
+<dd>Implementation stays in core, gated by feature flags. Scope contract leak; security surface includes all deferred features regardless of whether enabled.</dd>
+</div>
 
-The cost is real — C1 requires designing a plugin infrastructure before any feature extracts — but the benefit is a single architectural commitment that doesn't need revisiting and a security/scalability story that the architecture itself enforces rather than each feature reproducing independently.
+<div>
+<dt>C2</dt>
+<dt><span className="stigmem-fields__type">thin shims</span></dt>
+<dd>Implementation lives in <code>experimental/&lt;feature&gt;/</code>; core has named integration points that no-op when the experimental package isn't installed. Cleaner code surface; integration points are feature-specific.</dd>
+</div>
+
+<div>
+<dt>C1</dt>
+<dt><span className="stigmem-fields__type">plugin architecture</span></dt>
+<dd>Core has no awareness of specific features; all integration happens via a generic hook/registry system. Plugins register themselves and provide implementations. Cleanest architecture; substantial upfront design work.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Two prior versions proposed C3-then-C2 and direct-to-C2. Both superseded.**
+
+If C1 is the long-term architectural destination, doing C2 first means
+refactoring twice. The "do it once" principle that argued against
+C3-then-C2 also argues against C2-then-C1. Stigmem commits to C1 from
+Phase A.
+
+</div>
 
 ## Decision
 
-We adopt **Option C1: a plugin architecture** for all cross-cutting features. The architecture is committed in this ADR with the design specifics below. All seven cross-cutting features are implemented as plugins in `experimental/<feature>/` before v0.9.0-preview ships. Core has no feature-specific code; cross-cutting concerns are expressed exclusively through hook firing.
+We adopt **Option C1: a plugin architecture** for all cross-cutting
+features. The architecture is committed in this ADR with the design
+specifics below. All seven cross-cutting features are implemented as
+plugins in `experimental/<feature>/` before v0.9.0-preview ships. Core
+has no feature-specific code; cross-cutting concerns are expressed
+exclusively through hook firing.
 
 ### Architectural goals
 
-The plugin system optimizes for two properties:
+<div className="stigmem-grid">
 
-1. **Security.** Default install ships only what v1.0 critical-path scope commits to. Plugins are registered via signed entry points, run in capability-restricted contexts, fail closed on errors, and are auditable from registration through every hook firing.
-2. **Scalability.** Hook firing is O(1) per registered plugin per call. The registry is read-mostly after startup. Plugins declare async-safety in their manifest. The system supports thousands of registered plugins without coordination overhead at runtime.
+<div><h4>Security</h4><p>Default install ships only what v1.0 critical-path scope commits to. Plugins are registered via signed entry points, run in capability-restricted contexts, fail closed on errors, and are auditable from registration through every hook firing.</p></div>
+<div><h4>Scalability</h4><p>Hook firing is O(1) per registered plugin per call. The registry is read-mostly after startup. Plugins declare async-safety in their manifest. The system supports thousands of registered plugins without coordination overhead at runtime.</p></div>
 
-These two properties are non-negotiable. Specific design choices below derive from them.
+</div>
+
+These two properties are non-negotiable. Specific design choices below
+derive from them.
 
 ### The hook surface
 
-Stigmem core fires named hooks at well-defined points in the protocol's request lifecycle. Plugins register handlers for hooks they care about. Core has no compile-time or import-time knowledge of any specific feature.
+Stigmem core fires named hooks at well-defined points in the protocol's
+request lifecycle. Plugins register handlers for hooks they care
+about. Core has no compile-time or import-time knowledge of any
+specific feature.
 
 #### Fact assertion lifecycle
 
-| Hook | Band | When | Return semantics |
-|---|---|---|---|
-| `pre_assert_authorize` | AUTHZ | Before fact validation; capability and scope check | Voting (first deny wins) |
-| `pre_assert_validate` | VALIDATE | After authorize; structural validation | Voting (first reject wins, with reason) |
-| `pre_assert_transform` | TRANSFORM | After validate; enrichment (CID generation, derive_from, etc.) | Filter chain (fact in, fact out) |
-| `post_assert_persist` | PERSIST | After successful storage | Fire-and-forget (no return) |
-| `post_assert_propagate` | PERSIST | After persist; federation queue | Fire-and-forget |
-| `post_assert_audit` | AUDIT | Always last after assert | Fire-and-forget |
+<div className="stigmem-fields">
+
+<div>
+<dt>Hook</dt>
+<dt><span className="stigmem-fields__type">Band · Return semantics</span></dt>
+<dd>When</dd>
+</div>
+
+<div>
+<dt><code>pre_assert_authorize</code></dt>
+<dt><span className="stigmem-fields__type">AUTHZ · voting (first deny wins)</span></dt>
+<dd>Before fact validation; capability and scope check.</dd>
+</div>
+
+<div>
+<dt><code>pre_assert_validate</code></dt>
+<dt><span className="stigmem-fields__type">VALIDATE · voting (first reject wins, with reason)</span></dt>
+<dd>After authorize; structural validation.</dd>
+</div>
+
+<div>
+<dt><code>pre_assert_transform</code></dt>
+<dt><span className="stigmem-fields__type">TRANSFORM · filter chain (fact in, fact out)</span></dt>
+<dd>After validate; enrichment (CID generation, derive_from, etc.).</dd>
+</div>
+
+<div>
+<dt><code>post_assert_persist</code></dt>
+<dt><span className="stigmem-fields__type">PERSIST · fire-and-forget</span></dt>
+<dd>After successful storage.</dd>
+</div>
+
+<div>
+<dt><code>post_assert_propagate</code></dt>
+<dt><span className="stigmem-fields__type">PERSIST · fire-and-forget</span></dt>
+<dd>After persist; federation queue.</dd>
+</div>
+
+<div>
+<dt><code>post_assert_audit</code></dt>
+<dt><span className="stigmem-fields__type">AUDIT · fire-and-forget</span></dt>
+<dd>Always last after assert.</dd>
+</div>
+
+</div>
 
 #### Recall lifecycle
 
-| Hook | Band | When | Return semantics |
-|---|---|---|---|
-| `pre_recall_authorize` | AUTHZ | Before query parse; capability + tenant + scope | Voting |
-| `pre_recall_rewrite` | TRANSFORM | After authorize; query transformation (as_of for time-travel, garden filter scope) | Filter chain (query in, query out) |
-| `recall_filter` | FILTER | After search results returned; filter (tombstone removal, source-trust threshold, scope) | Filter chain (results in, results out) |
-| `recall_rank` | RANK | After filter; ranking signal adjustment (source-trust, recency, derived-from boost) | Score-delta accumulation |
-| `post_recall_audit` | AUDIT | Always last | Fire-and-forget |
+<div className="stigmem-fields">
+
+<div>
+<dt>Hook</dt>
+<dt><span className="stigmem-fields__type">Band · Return semantics</span></dt>
+<dd>When</dd>
+</div>
+
+<div>
+<dt><code>pre_recall_authorize</code></dt>
+<dt><span className="stigmem-fields__type">AUTHZ · voting</span></dt>
+<dd>Before query parse; capability + tenant + scope.</dd>
+</div>
+
+<div>
+<dt><code>pre_recall_rewrite</code></dt>
+<dt><span className="stigmem-fields__type">TRANSFORM · filter chain (query in, query out)</span></dt>
+<dd>After authorize; query transformation (as_of for time-travel, garden filter scope).</dd>
+</div>
+
+<div>
+<dt><code>recall_filter</code></dt>
+<dt><span className="stigmem-fields__type">FILTER · filter chain (results in, results out)</span></dt>
+<dd>After search results returned; filter (tombstone removal, source-trust threshold, scope).</dd>
+</div>
+
+<div>
+<dt><code>recall_rank</code></dt>
+<dt><span className="stigmem-fields__type">RANK · score-delta accumulation</span></dt>
+<dd>After filter; ranking signal adjustment (source-trust, recency, derived-from boost).</dd>
+</div>
+
+<div>
+<dt><code>post_recall_audit</code></dt>
+<dt><span className="stigmem-fields__type">AUDIT · fire-and-forget</span></dt>
+<dd>Always last.</dd>
+</div>
+
+</div>
 
 #### Federation lifecycle
 
-| Hook | Band | When | Return semantics |
-|---|---|---|---|
-| `federation_peer_authenticate` | AUTHN | Inbound peer connection | Voting |
-| `federation_inbound_validate` | VALIDATE | Inbound fact (HLC bounds, signature, scope) | Voting |
-| `federation_inbound_filter` | FILTER | After validate; filter what peer is allowed to send | Filter chain |
-| `federation_outbound_filter` | FILTER | Before send; filter what we send to peer (scope/tenant strip) | Filter chain |
-| `federation_outbound_sign` | TRANSFORM | After filter; signature attachment | Filter chain |
+<div className="stigmem-fields">
 
-#### Identity & auth
+<div>
+<dt>Hook</dt>
+<dt><span className="stigmem-fields__type">Band · Return semantics</span></dt>
+<dd>When</dd>
+</div>
 
-| Hook | Band | When | Return semantics |
-|---|---|---|---|
-| `identity_resolve` | AUTHN | Per request; resolve identity from credentials | Filter chain (credentials in, identity out) |
-| `tenant_resolve` | AUTHN | After identity_resolve; resolve tenant context (default: "system") | Filter chain (identity in, TenantContext out) |
-| `capability_check` | AUTHZ | Per protected operation | Voting |
+<div>
+<dt><code>federation_peer_authenticate</code></dt>
+<dt><span className="stigmem-fields__type">AUTHN · voting</span></dt>
+<dd>Inbound peer connection.</dd>
+</div>
 
-#### Lifecycle / maintenance
+<div>
+<dt><code>federation_inbound_validate</code></dt>
+<dt><span className="stigmem-fields__type">VALIDATE · voting</span></dt>
+<dd>Inbound fact (HLC bounds, signature, scope).</dd>
+</div>
 
-| Hook | Band | When | Return semantics |
-|---|---|---|---|
-| `migration_register` | (startup) | Plugin registration; declare schema migrations | Filter chain (collect migrations) |
-| `audit_emit` | AUDIT | Per audit event; plugins listen | Fire-and-forget |
-| `decay_sweep_filter` | FILTER | Before decay sweep; exclude facts | Filter chain |
-| `health_check` | OBSERVE | Periodic; report plugin health | Fire-and-forget (status reported) |
+<div>
+<dt><code>federation_inbound_filter</code></dt>
+<dt><span className="stigmem-fields__type">FILTER · filter chain</span></dt>
+<dd>After validate; filter what peer is allowed to send.</dd>
+</div>
 
-#### Configuration
+<div>
+<dt><code>federation_outbound_filter</code></dt>
+<dt><span className="stigmem-fields__type">FILTER · filter chain</span></dt>
+<dd>Before send; filter what we send to peer (scope/tenant strip).</dd>
+</div>
 
-| Hook | Band | When | Return semantics |
-|---|---|---|---|
-| `config_validate` | (startup) | Plugin registration; validate plugin config | Voting (registration aborts on reject) |
+<div>
+<dt><code>federation_outbound_sign</code></dt>
+<dt><span className="stigmem-fields__type">TRANSFORM · filter chain</span></dt>
+<dd>After filter; signature attachment.</dd>
+</div>
 
-**Total: 22 hooks.** This is the *initial* surface; new hooks may be added via ADR-011 amendment with sign-off (two contributors or the founder alone, per ADR-001 §Contributor approval rule). Removing or changing the signature of an existing hook is a breaking change requiring a major version bump per ADR-013 deprecation policy.
+</div>
+
+#### Identity and auth
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Hook</dt>
+<dt><span className="stigmem-fields__type">Band · Return semantics</span></dt>
+<dd>When</dd>
+</div>
+
+<div>
+<dt><code>identity_resolve</code></dt>
+<dt><span className="stigmem-fields__type">AUTHN · filter chain (credentials in, identity out)</span></dt>
+<dd>Per request; resolve identity from credentials.</dd>
+</div>
+
+<div>
+<dt><code>tenant_resolve</code></dt>
+<dt><span className="stigmem-fields__type">AUTHN · filter chain (identity in, TenantContext out)</span></dt>
+<dd>After identity_resolve; resolve tenant context (default: <code>system</code>).</dd>
+</div>
+
+<div>
+<dt><code>capability_check</code></dt>
+<dt><span className="stigmem-fields__type">AUTHZ · voting</span></dt>
+<dd>Per protected operation.</dd>
+</div>
+
+</div>
+
+#### Lifecycle and maintenance
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Hook</dt>
+<dt><span className="stigmem-fields__type">Band · Return semantics</span></dt>
+<dd>When</dd>
+</div>
+
+<div>
+<dt><code>migration_register</code></dt>
+<dt><span className="stigmem-fields__type">(startup) · filter chain (collect migrations)</span></dt>
+<dd>Plugin registration; declare schema migrations.</dd>
+</div>
+
+<div>
+<dt><code>audit_emit</code></dt>
+<dt><span className="stigmem-fields__type">AUDIT · fire-and-forget</span></dt>
+<dd>Per audit event; plugins listen.</dd>
+</div>
+
+<div>
+<dt><code>decay_sweep_filter</code></dt>
+<dt><span className="stigmem-fields__type">FILTER · filter chain</span></dt>
+<dd>Before decay sweep; exclude facts.</dd>
+</div>
+
+<div>
+<dt><code>health_check</code></dt>
+<dt><span className="stigmem-fields__type">OBSERVE · fire-and-forget (status reported)</span></dt>
+<dd>Periodic; report plugin health.</dd>
+</div>
+
+<div>
+<dt><code>config_validate</code></dt>
+<dt><span className="stigmem-fields__type">(startup) · voting (registration aborts on reject)</span></dt>
+<dd>Plugin registration; validate plugin config.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Total: 22 hooks.**
+
+This is the *initial* surface; new hooks may be added via ADR-011
+amendment with sign-off. Removing or changing the signature of an
+existing hook is a breaking change requiring a major version bump per
+ADR-013 deprecation policy.
+
+</div>
 
 ### Hook composition order — bands
 
-When multiple plugins register the same hook, they fire in order determined by **bands** plus FIFO within band:
+When multiple plugins register the same hook, they fire in order
+determined by **bands** plus FIFO within band.
 
-| Band | Numeric value | Purpose |
-|---|---|---|
-| `AUTHN` | 10 | Identity resolution (must run before authz) |
-| `AUTHZ` | 20 | Authorization checks |
-| `VALIDATE` | 30 | Input/output validation |
-| `TRANSFORM` | 40 | Input transformation (CIDs, query rewriting) |
-| `FILTER` | 50 | Output filtering (tombstones, scope) |
-| `RANK` | 60 | Output ranking adjustments |
-| `PERSIST` | 70 | Write-side effects |
-| `AUDIT` | 80 | Audit emission |
-| `OBSERVE` | 90 | Metrics and logging (must not change behavior) |
+<div className="stigmem-fields">
 
-Each hook in the surface above is bound to one band (see "Band" column). Plugins do not specify priority directly; their handler's band is determined by the hook they register for.
+<div>
+<dt>Band</dt>
+<dt><span className="stigmem-fields__type">Value</span></dt>
+<dd>Purpose</dd>
+</div>
 
-**Within a band**, plugins fire in order of plugin name (stable lexicographic). This is deterministic and operator-controllable: an operator can rename a plugin to control composition order if needed. Plugins MUST be designed to be order-independent within a band; relying on a specific peer plugin's behavior is a manifest declaration of dependency (which the registry validates as a topological constraint).
+<div>
+<dt><code>AUTHN</code></dt>
+<dt><span className="stigmem-fields__type">10</span></dt>
+<dd>Identity resolution (must run before authz).</dd>
+</div>
+
+<div>
+<dt><code>AUTHZ</code></dt>
+<dt><span className="stigmem-fields__type">20</span></dt>
+<dd>Authorization checks.</dd>
+</div>
+
+<div>
+<dt><code>VALIDATE</code></dt>
+<dt><span className="stigmem-fields__type">30</span></dt>
+<dd>Input/output validation.</dd>
+</div>
+
+<div>
+<dt><code>TRANSFORM</code></dt>
+<dt><span className="stigmem-fields__type">40</span></dt>
+<dd>Input transformation (CIDs, query rewriting).</dd>
+</div>
+
+<div>
+<dt><code>FILTER</code></dt>
+<dt><span className="stigmem-fields__type">50</span></dt>
+<dd>Output filtering (tombstones, scope).</dd>
+</div>
+
+<div>
+<dt><code>RANK</code></dt>
+<dt><span className="stigmem-fields__type">60</span></dt>
+<dd>Output ranking adjustments.</dd>
+</div>
+
+<div>
+<dt><code>PERSIST</code></dt>
+<dt><span className="stigmem-fields__type">70</span></dt>
+<dd>Write-side effects.</dd>
+</div>
+
+<div>
+<dt><code>AUDIT</code></dt>
+<dt><span className="stigmem-fields__type">80</span></dt>
+<dd>Audit emission.</dd>
+</div>
+
+<div>
+<dt><code>OBSERVE</code></dt>
+<dt><span className="stigmem-fields__type">90</span></dt>
+<dd>Metrics and logging (must not change behavior).</dd>
+</div>
+
+</div>
+
+Each hook is bound to one band. Plugins don't specify priority
+directly; their handler's band is determined by the hook they register
+for. **Within a band**, plugins fire in order of plugin name (stable
+lexicographic). Plugins MUST be designed to be order-independent within
+a band; relying on a specific peer plugin's behavior is a manifest
+declaration of dependency (which the registry validates as a
+topological constraint).
 
 ### Hook return semantics — typed protocol
 
-Each hook category has typed semantics enforced by the registry:
+Each hook category has typed semantics enforced by the registry.
 
-**Voting hooks** (`pre_assert_authorize`, `pre_assert_validate`, federation auth/validate, `capability_check`):
-- Each handler returns `Allow | Deny(reason: str)` or raises `RejectError(reason)`.
-- Registry stops at first `Deny` or `RejectError`; subsequent handlers don't fire.
-- If all return `Allow`, operation proceeds.
-- Default (no plugin registered): `Allow` for optional checks, `Deny("not implemented")` for required checks.
+<div className="stigmem-grid">
 
-**Filter chain hooks** (`pre_assert_transform`, `pre_recall_rewrite`, `recall_filter`, federation `inbound_filter` / `outbound_filter` / `outbound_sign`, `identity_resolve`, `tenant_resolve`, `decay_sweep_filter`, `migration_register`):
-- Each handler receives the previous handler's output (or the initial input for the first handler).
-- Returns the transformed value.
-- Type signature is hook-specific and enforced.
-- Default (no plugin registered): identity function (input passes through unchanged); for `tenant_resolve`, default returns `SystemTenant`.
+<div><h4>Voting hooks</h4><p>Each handler returns <code>Allow | Deny(reason)</code> or raises <code>RejectError(reason)</code>. Registry stops at first deny; subsequent handlers don't fire. Default: <code>Allow</code> for optional checks, <code>Deny("not implemented")</code> for required checks.</p></div>
+<div><h4>Filter chain hooks</h4><p>Each handler receives the previous handler's output. Returns the transformed value. Type signature is hook-specific and enforced. Default: identity function; <code>tenant_resolve</code> defaults to <code>SystemTenant</code>.</p></div>
+<div><h4>Score-delta hooks</h4><p>Each handler receives the current scored result list. Returns <code>dict[fact_id, float_delta]</code>. Registry sums all deltas and applies once. Default: empty deltas.</p></div>
+<div><h4>Fire-and-forget hooks</h4><p>Each handler executes independently. No return value; exceptions are logged and don't halt the operation. <strong>Exception:</strong> in strict mode, exceptions in <code>post_assert_audit</code> and <code>audit_emit</code> are escalated — audit failures must not be silent.</p></div>
 
-**Score-delta hooks** (`recall_rank`):
-- Each handler receives the current scored result list.
-- Returns a `dict[fact_id, float_delta]` of adjustments.
-- Registry sums all deltas and applies once.
-- Default: empty deltas.
-
-**Fire-and-forget hooks** (`post_assert_persist`, `post_assert_propagate`, `post_assert_audit`, `post_recall_audit`, `audit_emit`, `health_check`):
-- Each handler executes independently.
-- No return value; exceptions are logged and don't halt the operation.
-- (Exception: in strict mode, exceptions in `post_assert_audit` and `audit_emit` are escalated — audit failures must not be silent.)
+</div>
 
 ### Plugin lifecycle
 
 #### Registration
 
-Plugins register at process startup via Python `entry_points` (the same mechanism pytest plugins, setuptools, and the broader Python ecosystem use). The entry point group is `stigmem.plugins`.
-
-**`pyproject.toml` example for a plugin:**
+Plugins register at process startup via Python `entry_points` — the
+same mechanism pytest plugins, setuptools, and the broader Python
+ecosystem use. The entry point group is `stigmem.plugins`.
 
 ```toml
 [project]
@@ -180,398 +448,546 @@ def register(context: PluginContext) -> PluginManifest:
             "federation_inbound_validate": validate_tombstone_signature,
             "migration_register": declare_tombstone_migrations,
         },
-        config_schema=TombstonesConfig,  # Pydantic model
-        depends_on={"federation"},  # other plugin names this depends on
+        config_schema=TombstonesConfig,
+        depends_on={"federation"},
     )
 ```
 
 #### Registration validation
 
-Core validates each plugin at registration. Failure to validate aborts process startup with a clear error message. Validation checks:
+Core validates each plugin at registration. Failure aborts process
+startup with a clear error message.
 
-1. **Manifest schema.** Manifest is well-formed.
-2. **Stigmem version compatibility.** `requires_stigmem` is satisfied by current stigmem version.
-3. **Hook signatures.** Each registered handler matches the expected signature for its hook (return type, argument types).
-4. **Capability declaration.** Plugin's declared `capabilities` are in the allowlist (no escalation by registration).
-5. **Dependency resolution.** Declared `depends_on` plugins are also registered; no cycles.
-6. **Configuration validity.** `config_validate` hook fires; any plugin's `config_schema` validates against actual config (env vars / pyproject section).
-7. **Signature validation (production).** In production mode (default), plugin's distribution must be cryptographically signed by a trusted key. Sigstore signatures verified at registration. In development mode (explicit env var), signing is skipped with loud startup warning.
+<ol className="stigmem-steps">
+<li><strong>Manifest schema.</strong> Manifest is well-formed.</li>
+<li><strong>Stigmem version compatibility.</strong> <code>requires_stigmem</code> is satisfied by current stigmem version.</li>
+<li><strong>Hook signatures.</strong> Each registered handler matches the expected signature for its hook (return type, argument types).</li>
+<li><strong>Capability declaration.</strong> Plugin's declared capabilities are in the allowlist (no escalation by registration).</li>
+<li><strong>Dependency resolution.</strong> Declared <code>depends_on</code> plugins are also registered; no cycles.</li>
+<li><strong>Configuration validity.</strong> <code>config_validate</code> hook fires; any plugin's <code>config_schema</code> validates against actual config.</li>
+<li><strong>Signature validation (production).</strong> Plugin's distribution must be cryptographically signed by a trusted key. Sigstore signatures verified at registration. Development mode skips signing with loud startup warning.</li>
+</ol>
 
-#### Health monitoring
+#### Health and deregistration
 
-Plugins MAY implement `health_check`. Core polls plugin health every 60 seconds (configurable). Unhealthy plugins:
-- Are logged with a warning.
-- Are NOT auto-disabled. Operator action only — automatic disabling can mask real problems.
-- If a plugin fails registration after restart, that's the operator's signal.
+<div className="stigmem-grid">
 
-#### Deregistration
+<div><h4>Health monitoring</h4><p>Plugins MAY implement <code>health_check</code>. Core polls every 60 seconds (configurable). Unhealthy plugins are logged with warning but NOT auto-disabled — operator action only. Automatic disabling can mask real problems.</p></div>
+<div><h4>Deregistration</h4><p>Only at process shutdown. No hot-unloading. If an operator wants to remove a plugin, they uninstall the package and restart the process. Hot-unloading introduces consistency hazards (in-flight requests) that aren't worth the complexity for v1.0.</p></div>
 
-Only at process shutdown. No hot-unloading. If an operator wants to remove a plugin, they uninstall the package and restart the process. Hot-unloading introduces consistency hazards (in-flight requests) that aren't worth the complexity for v1.0.
+</div>
 
 ### Plugin trust and security model
 
-The plugin system follows defense-in-depth principles. The threat model: a malicious or buggy plugin must not be able to compromise data integrity, exfiltrate data beyond its declared capabilities, or escalate the privileges of other plugins.
+The plugin system follows defense-in-depth principles. The threat
+model: a malicious or buggy plugin must not be able to compromise data
+integrity, exfiltrate data beyond its declared capabilities, or
+escalate the privileges of other plugins.
 
 #### Capability-restricted contexts
 
-Plugins receive a `PluginContext` at registration that contains restricted handles to core APIs. Capabilities are declared in the manifest and enforced at API call time:
+Plugins receive a `PluginContext` at registration that contains
+restricted handles to core APIs.
 
 ```python
 class PluginContext:
     def get_facts_reader(self) -> FactsReader:
         """Available if 'facts.read' capability declared."""
-        # raises CapabilityError otherwise
 
     def get_audit_emitter(self) -> AuditEmitter:
         """Available if 'audit.emit' capability declared."""
 
     def get_federation_outbound(self) -> FederationOutbound:
         """Available if 'federation.write' capability declared."""
-
-    # ... typed accessors per capability
 ```
 
-Capability values are an enumerated allowlist. New capabilities require ADR-011 amendment.
-
 The well-known capability set (initial):
-- `facts.read`, `facts.write`
-- `recall.read`, `recall.write` (separate because the recall path has different reader semantics)
-- `audit.emit`, `audit.read`
-- `federation.read`, `federation.write`
-- `identity.read`, `tenant.read`, `tenant.write`
-- `config.read`
-- `network.outbound` (most plugins do not get this; only plugins like cloud embedding adapters)
 
-A plugin's manifest declares capabilities at registration. Any attempt to access a capability not declared raises `CapabilityError` at the API call site.
+<div className="stigmem-grid">
 
-#### Code signing (production default)
+<div><h4><code>facts.*</code></h4><p><code>read</code>, <code>write</code>.</p></div>
+<div><h4><code>recall.*</code></h4><p><code>read</code>, <code>write</code> (separate because recall has different reader semantics).</p></div>
+<div><h4><code>audit.*</code></h4><p><code>emit</code>, <code>read</code>.</p></div>
+<div><h4><code>federation.*</code></h4><p><code>read</code>, <code>write</code>.</p></div>
+<div><h4><code>identity</code>, <code>tenant</code></h4><p><code>identity.read</code>, <code>tenant.read</code>, <code>tenant.write</code>.</p></div>
+<div><h4><code>config.read</code></h4></div>
+<div><h4><code>network.outbound</code></h4><p>Most plugins do not get this; only plugins like cloud embedding adapters.</p></div>
 
-In production mode, plugins must be cryptographically signed via Sigstore (or equivalent transparency-log-backed signing). At registration:
+</div>
 
-1. Plugin's distribution is hashed.
-2. Signature is verified against a transparency log entry.
-3. Signing identity is checked against the operator's trusted-publisher list (defaults to Eidetic Labs and known-good plugin authors).
-4. Failure halts registration.
+Capability values are an enumerated allowlist. New capabilities require
+ADR-011 amendment. Any attempt to access a capability not declared
+raises `CapabilityError` at the API call site.
 
-Operators can disable signing for development with `STIGMEM_PLUGIN_SIGNING_REQUIRED=false`. This emits a loud startup warning that's logged at every request until the env var is removed.
+#### Defense layers
 
-#### Manifest declaration audit trail
+<div className="stigmem-grid">
 
-Plugin registration is itself an audit event. The audit log records:
-- Plugin name, version, dependencies.
-- Declared capabilities.
-- Signing identity (production) or "UNSIGNED" (development).
-- Stigmem version at the time of registration.
+<div><h4>Code signing (production default)</h4><p>Plugins must be cryptographically signed via Sigstore. Distribution is hashed, signature verified against transparency log entry, signing identity checked against operator's trusted-publisher list. Failure halts registration. Disable for dev with <code>STIGMEM_PLUGIN_SIGNING_REQUIRED=false</code> (logs warning at every request until removed).</p></div>
+<div><h4>Audit trail</h4><p>Plugin registration is itself an audit event recording plugin name, version, dependencies, declared capabilities, signing identity, and stigmem version. Operators audit via <code>stigmem plugins describe</code>.</p></div>
+<div><h4>Fail-closed</h4><p>Plugins that fail (registration error, exception in a non-fire-and-forget hook, capability violation) abort the operation they were participating in. Plugins NEVER silently no-op on error. Errors propagate as <code>PluginExecutionError</code>.</p></div>
+<div><h4>No introspection</h4><p>Plugins cannot list other registered plugins, read other plugins' configuration, or modify other plugins' state. Enforced by <code>PluginContext</code> not exposing such APIs. Information leakage between plugins is structurally impossible.</p></div>
+<div><h4>Async-safety declaration</h4><p>Each plugin declares <code>async_safe: bool</code>. Stigmem's runtime is async-first; non-async-safe plugins run in a thread pool with documented overhead. Forces plugin authors to make a conscious choice.</p></div>
 
-Operators can audit "what plugins are running and what can they do" via `stigmem plugins describe`.
-
-#### Failure mode: fail-closed
-
-Plugins that fail (registration error, exception in a non-fire-and-forget hook, capability violation) abort the operation they were participating in. Plugins NEVER silently no-op on error. Errors propagate as `PluginExecutionError` with traceback to the calling operation.
-
-#### No introspection
-
-Plugins cannot:
-- List other registered plugins.
-- Read other plugins' configuration.
-- Modify other plugins' state.
-
-This is enforced by the `PluginContext` not exposing such APIs. Information leakage between plugins is structurally impossible.
-
-#### Async-safety declaration
-
-Each plugin declares `async_safe: bool` in its manifest. Stigmem's runtime is async-first; plugins that aren't async-safe run in a thread pool with documented overhead. This forces plugin authors to make a conscious choice and lets operators see which plugins block the event loop.
+</div>
 
 ### Plugin scalability
 
-The architecture commits to specific scalability properties:
+The architecture commits to specific scalability properties.
 
-#### Hook firing performance
+<div className="stigmem-grid">
 
-The registry is a `dict[hook_name, list[HandlerEntry]]` populated at startup. Per-call overhead:
-- Lookup: O(1).
-- Fire: O(N) where N = number of registered handlers for that hook.
-- For 100 registered plugins each with one handler per hook on average, N is typically 1-3 per hook. Effective overhead: tens of microseconds per hook firing.
+<div><h4>Hook firing performance</h4><p>Registry is <code>dict[hook_name, list[HandlerEntry]]</code> populated at startup. Lookup: O(1). Fire: O(N) where N = registered handlers for that hook. For 100 plugins, N is typically 1–3 per hook. Overhead: tens of microseconds per firing.</p></div>
+<div><h4>Read-mostly registry</h4><p>After startup, the registry is read-only. No locks needed for reads. Plugin registration / deregistration only at process boundaries.</p></div>
+<div><h4>Backpressure</h4><p>The plugin system itself does NOT impose rate limits on hook firing. Rate limiting belongs in the protocol layer. Plugins that want to rate-limit do so via their own internal mechanisms.</p></div>
+<div><h4>Concurrency model</h4><p>Async-safe plugins run inline in the event loop. Non-async-safe plugins run in <code>ThreadPoolExecutor</code> with configurable worker count (default: 4). Mixed should declare <code>async_safe=false</code>.</p></div>
+<div><h4>Memory footprint</h4><p>Each registered plugin: typically 100KB–1MB. Core targets 50+ registered plugins without memory pressure. Plugins encouraged but not required to lazy-import dependencies.</p></div>
 
-Hooks must NOT do expensive setup at fire time. Setup happens at registration. If a plugin needs configured state, it captures a closure at registration.
+</div>
 
-#### Read-mostly registry
-
-After process startup, the registry is read-only. No locks needed for reads. Plugin registration / deregistration only at process boundaries.
-
-#### Backpressure and rate limiting
-
-The plugin system itself does NOT impose rate limits on hook firing. Rate limiting belongs in the protocol layer (per ADR-009 / R-23). Plugins that want to rate-limit their work do so via their own internal mechanisms (e.g., cap on outbound network calls).
-
-#### Concurrency model
-
-- Async-safe plugins run inline in the event loop.
-- Non-async-safe plugins run in a `ThreadPoolExecutor` with a configurable worker count (default: 4).
-- A plugin that mixes both should declare `async_safe=false`; partial async-safety is a documentation hazard.
-
-#### Memory footprint
-
-- Each registered plugin: typically 100KB-1MB depending on what it imports.
-- Stigmem core targets supporting 50+ registered plugins without memory pressure.
-- Plugins are encouraged but not required to lazy-import their dependencies.
+Hooks must NOT do expensive setup at fire time. Setup happens at
+registration. If a plugin needs configured state, it captures a
+closure at registration.
 
 ### Configuration model
 
-Per-plugin configuration via two mechanisms (operators choose):
+Per-plugin configuration via two mechanisms (operators choose).
 
-**Environment variables:**
-- `STIGMEM_PLUGIN_<NAME>_<KEY>=<value>`
-- e.g., `STIGMEM_PLUGIN_TOMBSTONES_RETENTION_DAYS=90`
+<div className="stigmem-fields">
 
-**Declarative pyproject.toml section:**
-```toml
-[tool.stigmem.plugins.tombstones]
-retention_days = 90
-sign_outgoing = true
-```
+<div>
+<dt>Mechanism</dt>
+<dt><span className="stigmem-fields__type">Format</span></dt>
+<dd>Example</dd>
+</div>
 
-Both are read at startup and fed into the plugin's `config_schema` (a Pydantic model). The plugin's `config_validate` hook fires on registration; rejection aborts startup.
+<div>
+<dt>Environment variables</dt>
+<dt><span className="stigmem-fields__type"><code>STIGMEM_PLUGIN_&lt;NAME&gt;_&lt;KEY&gt;</code></span></dt>
+<dd><code>STIGMEM_PLUGIN_TOMBSTONES_RETENTION_DAYS=90</code></dd>
+</div>
 
-Operators discover plugin config via:
-```
-$ stigmem plugins describe tombstones
-Plugin: tombstones
-Version: 1.0.0
-Config:
-  retention_days: int (default: 90, min: 1, max: 3650)
-  sign_outgoing: bool (default: true)
-Capabilities: facts.read, facts.write, audit.emit
-Hooks: post_assert_persist, recall_filter, federation_inbound_validate, migration_register
-```
+<div>
+<dt>Declarative pyproject.toml</dt>
+<dt><span className="stigmem-fields__type"><code>[tool.stigmem.plugins.&lt;name&gt;]</code></span></dt>
+<dd><code>retention_days = 90</code></dd>
+</div>
+
+</div>
+
+Both are read at startup and fed into the plugin's `config_schema` (a
+Pydantic model). The plugin's `config_validate` hook fires on
+registration; rejection aborts startup.
+
+Operators discover plugin config via `stigmem plugins describe
+<name>`, which reports plugin name, version, config schema with
+defaults and bounds, declared capabilities, and registered hooks.
 
 ### Testing infrastructure
 
-#### Test plugin registry
+<div className="stigmem-grid">
 
-Tests use a `TestPluginRegistry` that mounts plugins for the test's duration:
+<div><h4>Test plugin registry</h4><p>Tests use <code>TestPluginRegistry</code> via <code>with stigmem_plugins([TombstonesPlugin, TenantsPlugin]):</code> — registry contains exactly these plugins for the test's duration.</p></div>
+<div><h4>Hook protocol tests</h4><p>Tests fire hooks against a controlled registry without going through full request paths — verifies ordering and composition.</p></div>
+<div><h4>Composition tests</h4><p>Each cross-cutting feature ships its own composition tests verifying deterministic ordering, capability violations are caught, fail-closed behavior, and config validation.</p></div>
+<div><h4>Conformance integration</h4><p>v1.0 conformance vectors fire against a default install (no plugins) to verify the no-plugin baseline. Each plugin ships its own conformance vectors against the registry with that plugin loaded.</p></div>
 
-```python
-def test_recall_with_tombstones():
-    with stigmem_plugins([TombstonesPlugin, TenantsPlugin]):
-        # registry contains exactly these two plugins
-        result = recall(query)
-        assert tombstoned_fact not in result
-```
-
-#### Hook protocol tests
-
-Tests can fire hooks against a controlled registry without going through full request paths:
-
-```python
-def test_recall_filter_composition_order():
-    registry = TestRegistry()
-    registry.register("recall_filter", first_filter, band="FILTER", priority=1)
-    registry.register("recall_filter", second_filter, band="FILTER", priority=2)
-    result = registry.fire("recall_filter", initial_results)
-    # Verify ordering and composition
-```
-
-#### Composition tests
-
-Each cross-cutting feature (now a plugin) ships with its own composition tests verifying:
-- Hook ordering is deterministic.
-- Capability violations are caught.
-- Failure mode is fail-closed.
-- Configuration validation rejects bad input.
-
-#### Conformance integration
-
-The v1.0 conformance vectors fire against a default install (no plugins) to verify the no-plugin baseline. Each plugin ships its own conformance vectors that fire against the registry with that plugin loaded.
+</div>
 
 ### Default behavior — no plugins registered
 
 When no plugin is registered for a hook:
-- **AUTHN/AUTHZ hooks (voting):** default to `Allow` for optional checks, `Deny("not implemented")` for required ones. `tenant_resolve` defaults to `SystemTenant`. `identity_resolve` defaults are based on configured auth mode (system identity for unauthenticated, configured identity for API-key paths).
-- **VALIDATE hooks:** structural validation runs in core (always-on); plugin VALIDATE hooks are layered additions.
-- **TRANSFORM hooks:** identity function — input passes through unchanged.
-- **FILTER hooks:** identity function — full result set returned.
-- **RANK hooks:** zero deltas — base scoring applies.
-- **PERSIST/AUDIT hooks:** core's built-in audit and persistence run; plugin hooks are layered additions.
 
-This is the architectural promise of C1: **default install matches v1.0 critical-path scope exactly.** Single-tenant, no tombstones, no time-travel, no CIDs, no source attestation, no advanced ACL, no lazy instruction discovery — because no plugins for those concerns are registered.
+<div className="stigmem-fields">
+
+<div>
+<dt>Hook kind</dt>
+<dt><span className="stigmem-fields__type">Default</span></dt>
+<dd>Effect</dd>
+</div>
+
+<div>
+<dt>AUTHN / AUTHZ (voting)</dt>
+<dt><span className="stigmem-fields__type"><code>Allow</code> for optional, <code>Deny</code> for required</span></dt>
+<dd><code>tenant_resolve</code> defaults to <code>SystemTenant</code>. <code>identity_resolve</code> defaults are based on configured auth mode.</dd>
+</div>
+
+<div>
+<dt>VALIDATE</dt>
+<dt><span className="stigmem-fields__type">core runs always-on</span></dt>
+<dd>Plugin VALIDATE hooks are layered additions.</dd>
+</div>
+
+<div>
+<dt>TRANSFORM</dt>
+<dt><span className="stigmem-fields__type">identity</span></dt>
+<dd>Input passes through unchanged.</dd>
+</div>
+
+<div>
+<dt>FILTER</dt>
+<dt><span className="stigmem-fields__type">identity</span></dt>
+<dd>Full result set returned.</dd>
+</div>
+
+<div>
+<dt>RANK</dt>
+<dt><span className="stigmem-fields__type">zero deltas</span></dt>
+<dd>Base scoring applies.</dd>
+</div>
+
+<div>
+<dt>PERSIST / AUDIT</dt>
+<dt><span className="stigmem-fields__type">core's built-in runs</span></dt>
+<dd>Plugin hooks are layered additions.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**The architectural promise of C1: default install matches v1.0 critical-path scope exactly.**
+
+Single-tenant, no tombstones, no time-travel, no CIDs, no source
+attestation, no advanced ACL, no lazy instruction discovery — because
+no plugins for those concerns are registered.
+
+</div>
 
 ### Per-feature plugin manifests (Phase A scope)
 
-Seven plugins implemented in Phase A:
+Seven plugins implemented in Phase A.
 
-| Plugin | Replaces concept | Hooks registered | Estimated effort |
-|---|---|---|---|
-| `stigmem-plugin-lazy-instruction-discovery` | §21 | `pre_recall_rewrite`, `recall_filter` (lazy boot), `migration_register` | 5-7 days |
-| `stigmem-plugin-cids` | §25 | `pre_assert_transform` (generate CID), `federation_inbound_validate` (verify CID), `migration_register` | 4-5 days |
-| `stigmem-plugin-time-travel` | §24 | `pre_recall_authorize` (require capability), `pre_recall_rewrite` (as_of rewriting), `migration_register` | 5-7 days |
-| `stigmem-plugin-tombstones` | §23 | `recall_filter`, `federation_inbound_validate`, `post_assert_propagate` (RTBF), `migration_register` | 7-10 days |
-| `stigmem-plugin-memory-garden-acl` | §17 advanced | `pre_assert_authorize`, `pre_recall_authorize`, `recall_filter` | 5-7 days |
-| `stigmem-plugin-source-attestation` | §18 | `pre_assert_validate`, `recall_rank` (source-trust signal), `federation_inbound_validate` | 5-7 days |
-| `stigmem-plugin-multi-tenant` | multi-tenant | `tenant_resolve`, `pre_assert_authorize`, `pre_recall_authorize`, `recall_filter`, `federation_outbound_filter`, `migration_register` | 14-21 days |
+<div className="stigmem-fields">
 
-Multi-tenant remains the largest plugin (most hooks, hardest semantics). Default install: no multi-tenant plugin → `tenant_resolve` returns `SystemTenant` → core is single-tenant.
+<div>
+<dt>Plugin</dt>
+<dt><span className="stigmem-fields__type">Hooks · Effort</span></dt>
+<dd>Replaces concept</dd>
+</div>
+
+<div>
+<dt><code>stigmem-plugin-lazy-instruction-discovery</code></dt>
+<dt><span className="stigmem-fields__type"><code>pre_recall_rewrite</code>, <code>recall_filter</code>, <code>migration_register</code> · 5–7 days</span></dt>
+<dd>§21</dd>
+</div>
+
+<div>
+<dt><code>stigmem-plugin-cids</code></dt>
+<dt><span className="stigmem-fields__type"><code>pre_assert_transform</code>, <code>federation_inbound_validate</code>, <code>migration_register</code> · 4–5 days</span></dt>
+<dd>§25 (NOTE: reclassified to core per ADR-017)</dd>
+</div>
+
+<div>
+<dt><code>stigmem-plugin-time-travel</code></dt>
+<dt><span className="stigmem-fields__type"><code>pre_recall_authorize</code>, <code>pre_recall_rewrite</code>, <code>migration_register</code> · 5–7 days</span></dt>
+<dd>§24</dd>
+</div>
+
+<div>
+<dt><code>stigmem-plugin-tombstones</code></dt>
+<dt><span className="stigmem-fields__type"><code>recall_filter</code>, <code>federation_inbound_validate</code>, <code>post_assert_propagate</code>, <code>migration_register</code> · 7–10 days</span></dt>
+<dd>§23</dd>
+</div>
+
+<div>
+<dt><code>stigmem-plugin-memory-garden-acl</code></dt>
+<dt><span className="stigmem-fields__type"><code>pre_assert_authorize</code>, <code>pre_recall_authorize</code>, <code>recall_filter</code> · 5–7 days</span></dt>
+<dd>§17 advanced</dd>
+</div>
+
+<div>
+<dt><code>stigmem-plugin-source-attestation</code></dt>
+<dt><span className="stigmem-fields__type"><code>pre_assert_validate</code>, <code>recall_rank</code>, <code>federation_inbound_validate</code> · 5–7 days</span></dt>
+<dd>§18</dd>
+</div>
+
+<div>
+<dt><code>stigmem-plugin-multi-tenant</code></dt>
+<dt><span className="stigmem-fields__type"><code>tenant_resolve</code>, <code>pre_assert_authorize</code>, <code>pre_recall_authorize</code>, <code>recall_filter</code>, <code>federation_outbound_filter</code>, <code>migration_register</code> · 14–21 days</span></dt>
+<dd>multi-tenant (largest plugin)</dd>
+</div>
+
+</div>
+
+Default install: no multi-tenant plugin → `tenant_resolve` returns
+`SystemTenant` → core is single-tenant.
 
 ### Versioning and compatibility
 
-- Plugins declare `requires_stigmem` SemVer range. Core checks at registration.
-- Stigmem MAJOR version bumps may require plugin re-release; plugins should test against `>=X.0.0,<X+1.0.0`.
-- Hook signatures are part of the stable API per ADR-013 deprecation policy. Changing a hook signature requires major version bump.
-- New hooks are additive (MINOR bumps).
-- Plugins can be developed and shipped independently of core releases as long as they stay within their declared `requires_stigmem` range.
+<div className="stigmem-grid">
+
+<div><h4>Stigmem-version range</h4><p>Plugins declare <code>requires_stigmem</code> SemVer range. Core checks at registration.</p></div>
+<div><h4>Major bump = re-release</h4><p>Stigmem MAJOR version bumps may require plugin re-release; plugins should test against <code>&gt;=X.0.0,&lt;X+1.0.0</code>.</p></div>
+<div><h4>Hook signatures are stable API</h4><p>Per ADR-013 deprecation policy. Changing a hook signature requires major version bump.</p></div>
+<div><h4>New hooks are additive</h4><p>MINOR bumps. Plugins can be developed and shipped independently of core releases within their declared range.</p></div>
+
+</div>
 
 ## Alternatives considered
 
-**1. Option C2 (thin shims).** Rejected (was the prior decision). Reasons C1 wins:
-- Same "do it once" argument that rejected C3-then-C2 also rejects C2-then-C1.
-- C2's named integration points (e.g., `process_recall_tombstones()`) embed feature-specific concept names in core. C1's generic hooks (e.g., `recall_filter`) don't. C1 is more scope-honest.
-- C2's reintroduction story under ADR-008 still requires architectural changes when a feature graduates. C1's reintroduction is a label change — the plugin stays a plugin, it's just trusted to default-on for new installs.
-- External contributor story: C2 requires core PRs to add new integration points; C1 supports new features as plugin packages without core changes.
+<div className="stigmem-fields">
 
-**2. Option C3 (feature flags only).** Rejected. Same reasons as in the prior version of this ADR: scope contract leak, security surface includes everything regardless of enablement, no path to graduation that doesn't involve refactor.
+<div>
+<dt>Alternative</dt>
+<dt><span className="stigmem-fields__type">Disposition</span></dt>
+<dd>Why</dd>
+</div>
 
-**3. Direct plugin loading (no registry).** Rejected. Without a registry, plugins are discovered by import order. This makes hook composition order implicit and fragile, prevents capability-restricted contexts (no central enforcement point), and makes operator audit ("what's running") expensive.
+<div>
+<dt>Option C2 (thin shims)</dt>
+<dt><span className="stigmem-fields__type">rejected (was the prior decision)</span></dt>
+<dd>Same "do it once" argument that rejected C3-then-C2 also rejects C2-then-C1. C2's named integration points embed feature-specific concept names in core. C2's reintroduction story under ADR-008 still requires architectural changes when a feature graduates; C1's reintroduction is a label change. C1 supports new features as plugin packages without core changes.</dd>
+</div>
 
-**4. Plugin sandboxing via subprocess isolation.** Rejected for v1.0. Subprocess isolation is the strongest security model (a malicious plugin can't compromise core's memory) but adds significant per-call overhead and complicates the hook return semantics (serialization across process boundaries). Reconsider for v2.0 if the plugin ecosystem grows or threat model changes.
+<div>
+<dt>Option C3 (feature flags only)</dt>
+<dt><span className="stigmem-fields__type">rejected</span></dt>
+<dd>Scope contract leak, security surface includes everything regardless of enablement, no path to graduation that doesn't involve refactor.</dd>
+</div>
 
-**5. WebAssembly-based plugin model.** Rejected for v1.0. WASM-based plugins (like Envoy's Wasm filters or Spin's component model) provide language-agnostic plugins with capability-based security. Genuinely interesting for the long term but the tooling, debug story, and ecosystem are still maturing for Python-first projects. Defer to a future ADR.
+<div>
+<dt>Direct plugin loading (no registry)</dt>
+<dt><span className="stigmem-fields__type">rejected</span></dt>
+<dd>Without a registry, plugins are discovered by import order. Hook composition order becomes implicit and fragile, capability-restricted contexts impossible (no central enforcement point), operator audit expensive.</dd>
+</div>
 
-**6. Hook-firing order via topological dependencies only (no bands).** Considered. Bands + FIFO is simpler to reason about and matches real-world usage patterns (Apache, pytest, etc.). Plugins that need explicit ordering relative to a peer can declare dependencies, which the registry uses to validate (no cycles); ordering within a band stays FIFO.
+<div>
+<dt>Plugin sandboxing via subprocess isolation</dt>
+<dt><span className="stigmem-fields__type">rejected for v1.0</span></dt>
+<dd>Strongest security model (a malicious plugin can't compromise core's memory) but adds significant per-call overhead and complicates hook return semantics. Reconsider for v2.0 if plugin ecosystem grows or threat model changes.</dd>
+</div>
 
-**7. No code signing in v1.0; trust on first install.** Rejected. Plugin signing is the difference between a plugin ecosystem that's hardenable and one that isn't. Doing it right at v1.0 is much cheaper than retrofitting later.
+<div>
+<dt>WebAssembly-based plugin model</dt>
+<dt><span className="stigmem-fields__type">rejected for v1.0</span></dt>
+<dd>Genuinely interesting for the long term but the tooling, debug story, and ecosystem are still maturing for Python-first projects. Defer to a future ADR.</dd>
+</div>
+
+<div>
+<dt>Hook ordering via topological dependencies only (no bands)</dt>
+<dt><span className="stigmem-fields__type">considered</span></dt>
+<dd>Bands + FIFO is simpler to reason about and matches real-world usage patterns (Apache, pytest). Plugins that need explicit ordering relative to a peer can declare dependencies; ordering within a band stays FIFO.</dd>
+</div>
+
+<div>
+<dt>No code signing in v1.0; trust on first install</dt>
+<dt><span className="stigmem-fields__type">rejected</span></dt>
+<dd>Plugin signing is the difference between an ecosystem that's hardenable and one that isn't. Doing it right at v1.0 is much cheaper than retrofitting.</dd>
+</div>
+
+</div>
 
 ## Consequences
 
 ### What gets easier
 
-- **Default install matches scope contract exactly.** The architecture itself enforces the v1.0 scope boundary; there's no risk of feature creep into core.
-- **Reintroduction is a label change.** When a feature graduates from experimental per ADR-008, the plugin stays a plugin; only its trust tier changes. No core refactor needed.
-- **Security surface is bounded by capabilities, not feature counts.** Audit answers "what can plugin X do?" via the manifest, not by reading source.
-- **External contributors can write plugins.** Once the hook surface is stable, third-party plugins are first-class. No core PR needed to add a feature.
-- **Failure mode is uniform.** All plugins fail-closed via the same mechanism. Operators have one place to look when something breaks.
-- **Auditability is built in.** Plugin registration is an audit event; capability declarations are explicit; signing identifies trusted publishers.
-- **Versioning is consistent.** Plugins follow SemVer with stigmem-version compatibility ranges, integrating cleanly with ADR-012's `Stigmem-Version` header model and ADR-013's deprecation policy.
+<div className="stigmem-grid">
+
+<div><h4>Default install matches scope contract exactly</h4><p>The architecture itself enforces the v1.0 scope boundary; there's no risk of feature creep into core.</p></div>
+<div><h4>Reintroduction is a label change</h4><p>When a feature graduates from experimental per ADR-008, the plugin stays a plugin; only its trust tier changes. No core refactor needed.</p></div>
+<div><h4>Security surface bounded by capabilities</h4><p>Audit answers "what can plugin X do?" via the manifest, not by reading source.</p></div>
+<div><h4>External contributors write plugins</h4><p>Once the hook surface is stable, third-party plugins are first-class. No core PR needed to add a feature.</p></div>
+<div><h4>Failure mode is uniform</h4><p>All plugins fail-closed via the same mechanism. Operators have one place to look when something breaks.</p></div>
+<div><h4>Auditability built in</h4><p>Plugin registration is an audit event; capability declarations are explicit; signing identifies trusted publishers.</p></div>
+<div><h4>Versioning is consistent</h4><p>Plugins follow SemVer with stigmem-version compatibility ranges, integrating with ADR-012's <code>Stigmem-Version</code> header model and ADR-013's deprecation policy.</p></div>
+
+</div>
 
 ### What gets harder
 
-- **Phase A timeline grows substantially.** Plugin infrastructure is ~2-3 weeks before any feature extracts. Per-feature plugin work is similar to C2 extraction work (~5-7 weeks for the seven features). Total Phase A extension: roughly 9-12 weeks. v0.9.0-preview ships later than under C2 or C3.
-- **Architectural decisions are sticky.** Hook surface changes are breaking. The strawman in this ADR commits us to a specific surface; getting it wrong is expensive.
-- **Plugin authors face higher bar.** Writing a plugin requires understanding the hook surface, capability model, signing requirements. Documentation has to compensate (the plugin author guide is part of Phase A docs work).
-- **Test infrastructure investment.** TestPluginRegistry, hook composition tests, conformance integration — all real engineering work that pays off later but takes time upfront.
-- **Operator complexity increases.** Operators have a new concept (plugins) to understand. CLI tools (`stigmem plugins list`, `stigmem plugins describe`) help; documentation and operator guides have to make this approachable.
+<div className="stigmem-grid">
+
+<div><h4>Phase A timeline grows substantially</h4><p>Plugin infrastructure is ~2–3 weeks before any feature extracts. Per-feature work ~5–7 weeks for seven features. Total Phase A extension: ~9–12 weeks. v0.9.0-preview ships later than under C2 or C3.</p></div>
+<div><h4>Architectural decisions are sticky</h4><p>Hook surface changes are breaking. The strawman in this ADR commits to a specific surface; getting it wrong is expensive.</p></div>
+<div><h4>Plugin authors face higher bar</h4><p>Writing a plugin requires understanding the hook surface, capability model, signing requirements. Documentation has to compensate.</p></div>
+<div><h4>Test infrastructure investment</h4><p>TestPluginRegistry, hook composition tests, conformance integration — all real engineering work that pays off later but takes time upfront.</p></div>
+<div><h4>Operator complexity increases</h4><p>Operators have a new concept (plugins) to understand. CLI tools (<code>stigmem plugins list</code>, <code>describe</code>) help; docs have to make this approachable.</p></div>
+
+</div>
 
 ### New risks
 
-- **R-PLUG-1: hook surface design wrong.** The strawman in this ADR is a best guess. If a hook is missing or has wrong semantics, plugins can't express what they need. Mitigation: hook surface is an ADR-011 amendment; new hooks are additive (MINOR); existing hooks can be deprecated per ADR-013. The first six plugin implementations are the test — if they all map cleanly to the surface, the design is sound; if they require workarounds, the surface needs revision before multi-tenant lands.
-- **R-PLUG-2: registry overhead at runtime.** Hook firing on the request hot path could become a bottleneck. Mitigation: registry is a flat dict-of-lists; no dynamic lookups; benchmark per-hook overhead in CI; budget: under 10μs per hook firing.
-- **R-PLUG-3: plugin signing infrastructure delays.** Sigstore integration adds dependency on a Sigstore-compatible signing pipeline. Mitigation: development mode allows unsigned plugins (with loud warning); production signing can land in v0.9.x if it's not ready by v0.9.0-preview tag. The architecture is designed to accept this gracefully.
-- **R-PLUG-4: capability set drift.** New plugins request new capabilities; the allowlist grows. Mitigation: capability additions require ADR-011 amendment; the discipline of adding each is the gate.
-- **R-PLUG-5: security regression in a plugin compromises operator.** A bug in tombstones plugin (for example) causes data loss in operators who installed it. Mitigation: signing identifies the responsible publisher; audit log shows registration provenance; capability boundaries limit blast radius (a buggy `recall_filter` can't write to the audit log if it didn't declare `audit.emit`).
-- **R-PLUG-6: plugin evolution drives core surface churn.** Plugins demand new hooks; the surface grows. Mitigation: hook additions are additive (no breaking changes); ADR amendment process is the gate; periodic review of hook surface bloat at major version boundaries.
+<div className="stigmem-fields">
+
+<div>
+<dt>Risk</dt>
+<dt><span className="stigmem-fields__type">Status</span></dt>
+<dd>Mitigation</dd>
+</div>
+
+<div>
+<dt><code>R-PLUG-1</code> · hook surface design wrong</dt>
+<dt><span className="stigmem-fields__type">tracked</span></dt>
+<dd>If a hook is missing or has wrong semantics, plugins can't express what they need. Mitigation: hook surface is amendable; new hooks are additive (MINOR); existing hooks can be deprecated per ADR-013. The first six plugin implementations are the test — if all map cleanly, design is sound; if not, surface needs revision before multi-tenant lands.</dd>
+</div>
+
+<div>
+<dt><code>R-PLUG-2</code> · registry overhead at runtime</dt>
+<dt><span className="stigmem-fields__type">mitigated</span></dt>
+<dd>Hook firing on the request hot path could become a bottleneck. Mitigation: flat dict-of-lists; no dynamic lookups; benchmark per-hook overhead in CI; budget under 10μs per firing.</dd>
+</div>
+
+<div>
+<dt><code>R-PLUG-3</code> · plugin signing infrastructure delays</dt>
+<dt><span className="stigmem-fields__type">tracked</span></dt>
+<dd>Sigstore integration adds dependency on a Sigstore-compatible signing pipeline. Mitigation: dev mode allows unsigned (with loud warning); production signing can land in v0.9.x if not ready by v0.9.0-preview tag.</dd>
+</div>
+
+<div>
+<dt><code>R-PLUG-4</code> · capability set drift</dt>
+<dt><span className="stigmem-fields__type">tracked</span></dt>
+<dd>New plugins request new capabilities; the allowlist grows. Mitigation: capability additions require ADR-011 amendment.</dd>
+</div>
+
+<div>
+<dt><code>R-PLUG-5</code> · security regression in a plugin compromises operator</dt>
+<dt><span className="stigmem-fields__type">tracked</span></dt>
+<dd>A bug in tombstones plugin (for example) causes data loss in operators who installed it. Mitigation: signing identifies the responsible publisher; audit log shows registration provenance; capability boundaries limit blast radius.</dd>
+</div>
+
+<div>
+<dt><code>R-PLUG-6</code> · plugin evolution drives core surface churn</dt>
+<dt><span className="stigmem-fields__type">tracked</span></dt>
+<dd>Plugins demand new hooks; the surface grows. Mitigation: hook additions are additive; ADR amendment process is the gate; periodic review of hook surface bloat at major version boundaries.</dd>
+</div>
+
+</div>
 
 ### Net effect on the project
 
-- **v1.0 ships with a tight, auditable core and a coherent plugin architecture.** Adopters know exactly what default install does. Operators choose their security/feature tradeoff explicitly via plugin install.
-- **The `experimental/` directory becomes a directory of plugin packages.** Each is independently versioned, releaseable, and deprecatable. ADR-008 reintroduction gates apply to plugins; graduation is about trust, not architecture.
-- **The architecture is recognizably a "serious infrastructure project" pattern.** It maps to PostgreSQL extensions, pytest plugins, Envoy filters, and similar systems that the federated infrastructure category respects.
+<div className="stigmem-grid">
+
+<div><h4>v1.0 ships with a tight, auditable core</h4><p>And a coherent plugin architecture. Adopters know exactly what default install does. Operators choose their security/feature tradeoff explicitly via plugin install.</p></div>
+<div><h4><code>experimental/</code> becomes a directory of plugin packages</h4><p>Each is independently versioned, releaseable, and deprecatable. ADR-008 reintroduction gates apply to plugins; graduation is about trust, not architecture.</p></div>
+<div><h4>Recognizably a "serious infrastructure project" pattern</h4><p>Maps to PostgreSQL extensions, pytest plugins, Envoy filters, and similar systems that the federated infrastructure category respects.</p></div>
+
+</div>
 
 ## Implementation plan
 
-### Phase A: plugin infrastructure (weeks 1-3 of extraction work)
+### Phase A — plugin infrastructure (weeks 1–3 of extraction work)
 
 Order matters. Infrastructure first, then the seven plugins.
 
-#### Phase A.1: Hook protocol and registry (~1 week)
+<ol className="stigmem-steps">
+<li><strong>A.1 · Hook protocol and registry (~1 week).</strong> Implement <code>HookRegistry</code> with band-based composition. Implement typed <code>HookHandler</code> protocols (voting, filter chain, score-delta, fire-and-forget). Implement <code>PluginContext</code> and capability-restricted accessors. Implement <code>PluginManifest</code> schema and validation. Add hook firing in core at all 22 named locations. Verify: empty registry produces single-tenant, no-cross-cutting-features behavior identical to v1.0 critical-path scope. Benchmark hook firing overhead; budget enforcement in CI (&lt;10μs per hook).</li>
+<li><strong>A.2 · Lifecycle, validation, signing (~1 week).</strong> Plugin discovery via <code>entry_points</code>. Manifest validation at registration; failure aborts startup. Capability allowlist enforcement. Dependency resolution (depends_on); cycle detection. Sigstore-based signing in production mode; dev-mode override with warning. Plugin registration audit events. Health-check polling and reporting. CLI: <code>stigmem plugins list</code>, <code>describe</code>.</li>
+<li><strong>A.3 · Testing infrastructure (~3–5 days).</strong> <code>TestPluginRegistry</code> for test mounting. <code>pytest</code> fixture: <code>stigmem_plugins([...])</code>. Hook protocol unit tests. Composition order tests. Capability violation tests (negative). Failure-mode tests (fail-closed verification).</li>
+<li><strong>A.4 · Documentation (~3–5 days).</strong> Plugin author guide in <code>docs/Build/Plugins/</code>. Hook reference in <code>docs/Reference/Plugin-API/</code>. Capability reference. Operator guide in <code>docs/Operate/Plugins/</code>. Migration guide for any operators using v1.0 features that become plugins.</li>
+</ol>
 
-- [ ] Implement `HookRegistry` with band-based composition order.
-- [ ] Implement `HookHandler` typed protocols (voting, filter chain, score-delta, fire-and-forget).
-- [ ] Implement `PluginContext` and capability-restricted accessors.
-- [ ] Implement `PluginManifest` schema and validation.
-- [ ] Add hook firing in core at all 22 named locations. Until plugins exist, all hooks fire with empty handler lists (defaults).
-- [ ] Verify: empty registry produces single-tenant, no-cross-cutting-features behavior identical to v1.0 critical-path scope.
-- [ ] Benchmark hook firing overhead; budget enforcement in CI (<10μs per hook).
-
-#### Phase A.2: Lifecycle, validation, signing (~1 week)
-
-- [ ] Plugin discovery via `entry_points`.
-- [ ] Manifest validation at registration; failure aborts startup.
-- [ ] Capability allowlist enforcement.
-- [ ] Dependency resolution (depends_on); cycle detection.
-- [ ] Sigstore-based signing in production mode; dev-mode override with warning.
-- [ ] Plugin registration audit events.
-- [ ] Health-check polling and reporting.
-- [ ] CLI: `stigmem plugins list`, `stigmem plugins describe`.
-
-#### Phase A.3: Testing infrastructure (~3-5 days)
-
-- [ ] `TestPluginRegistry` for test mounting.
-- [ ] `pytest` fixture: `stigmem_plugins([...])`.
-- [ ] Hook protocol unit tests.
-- [ ] Composition order tests.
-- [ ] Capability violation tests (negative testing).
-- [ ] Failure-mode tests (fail-closed verification).
-
-#### Phase A.4: Documentation (~3-5 days)
-
-- [ ] Plugin author guide in `docs/Build/Plugins/`.
-- [ ] Hook reference in `docs/Reference/Plugin-API/`.
-- [ ] Capability reference.
-- [ ] Operator guide for plugin management in `docs/Operate/Plugins/`.
-- [ ] Migration guide for any operators currently using v1.0 features that become plugins (mostly applies to internal testers since v1.0 was retracted).
-
-### Phase A: per-feature plugin implementations (weeks 4-12)
+### Phase A — per-feature plugin implementations (weeks 4–12)
 
 Each plugin is its own three-PR cycle:
 
-1. **Pre-implementation analysis PR.** Document the plugin's hook usage, capability requirements, and configuration. Validate the hook surface supports what the plugin needs; if it doesn't, file an ADR-011 amendment first.
-2. **Implementation PR.** Implement the plugin in `experimental/<feature>/`. Includes plugin code, tests, manifest, docs.
-3. **Validation PR.** Conformance vectors with the plugin loaded; integration tests; signed release artifact.
+<ol className="stigmem-steps">
+<li><strong>Pre-implementation analysis PR.</strong> Document the plugin's hook usage, capability requirements, and configuration. Validate the hook surface supports what the plugin needs; if not, file an ADR-011 amendment first.</li>
+<li><strong>Implementation PR.</strong> Implement the plugin in <code>experimental/&lt;feature&gt;/</code>. Includes plugin code, tests, manifest, docs.</li>
+<li><strong>Validation PR.</strong> Conformance vectors with the plugin loaded; integration tests; signed release artifact.</li>
+</ol>
 
 Per-feature ordering:
 
-- **Week 4-5: lazy-instruction-discovery** (priority 1; couples to ADR-003).
-- **Week 5-6: cids** (validates the plugin pattern on a tightly-bounded module).
-- **Week 6-7: time-travel** (mid-difficulty; tests query rewriting hook semantics).
-- **Week 7-9: tombstones** (largest non-multi-tenant; tests recall_filter under load).
-- **Week 9-10: memory-garden-acl** (tests authz hooks).
-- **Week 10-11: source-attestation** (tests rank hook).
-- **Week 11-12: multi-tenant** (most complex; capability model gets its hardest test here).
+<div className="stigmem-fields">
+
+<div>
+<dt>Weeks</dt>
+<dt><span className="stigmem-fields__type">Plugin</span></dt>
+<dd>Why this order</dd>
+</div>
+
+<div>
+<dt>4–5</dt>
+<dt><span className="stigmem-fields__type">lazy-instruction-discovery</span></dt>
+<dd>Priority 1; couples to ADR-003.</dd>
+</div>
+
+<div>
+<dt>5–6</dt>
+<dt><span className="stigmem-fields__type">cids</span></dt>
+<dd>Validates the plugin pattern on a tightly-bounded module. (Per ADR-017: this work later folded back into core.)</dd>
+</div>
+
+<div>
+<dt>6–7</dt>
+<dt><span className="stigmem-fields__type">time-travel</span></dt>
+<dd>Mid-difficulty; tests query rewriting hook semantics.</dd>
+</div>
+
+<div>
+<dt>7–9</dt>
+<dt><span className="stigmem-fields__type">tombstones</span></dt>
+<dd>Largest non-multi-tenant; tests <code>recall_filter</code> under load.</dd>
+</div>
+
+<div>
+<dt>9–10</dt>
+<dt><span className="stigmem-fields__type">memory-garden-acl</span></dt>
+<dd>Tests authz hooks.</dd>
+</div>
+
+<div>
+<dt>10–11</dt>
+<dt><span className="stigmem-fields__type">source-attestation</span></dt>
+<dd>Tests rank hook.</dd>
+</div>
+
+<div>
+<dt>11–12</dt>
+<dt><span className="stigmem-fields__type">multi-tenant</span></dt>
+<dd>Most complex; capability model gets its hardest test here.</dd>
+</div>
+
+</div>
 
 ### Phase A exit (v0.9.0-preview ships)
 
-- [ ] All seven plugins implemented, tested, signed, released.
-- [ ] Default install (no plugins) produces v1.0 critical-path behavior.
-- [ ] Conformance vectors pass against default install AND against the full plugin set.
-- [ ] Plugin author docs published; first plugin contributors can self-serve.
-- [ ] Operator docs explain plugin management and trust posture.
-- [ ] No core code references any specific feature by name (other than as test scaffolding).
+<div className="stigmem-grid">
 
-### Post-Phase-A: stewardship
+<div><h4>All seven plugins shipped</h4><p>Implemented, tested, signed, released.</p></div>
+<div><h4>Default install matches v1.0</h4><p>No plugins → v1.0 critical-path behavior.</p></div>
+<div><h4>Conformance passes both</h4><p>Vectors pass against default install AND against the full plugin set.</p></div>
+<div><h4>Plugin author docs published</h4><p>First plugin contributors can self-serve.</p></div>
+<div><h4>Operator docs explain plugin management</h4><p>And trust posture.</p></div>
+<div><h4>No core code references features by name</h4><p>Other than as test scaffolding.</p></div>
 
-The hook surface is reviewed at every major release for:
-- Hook deprecations (per ADR-013).
-- New hooks (additive; ADR-011 amendment).
-- Capability evolution.
+</div>
 
-Phase B (capability redesign, federation hardening, OpenClaw rewrite, operator soak) operates against the post-extraction codebase. The plugin architecture provides the substrate for Phase B work; capability redesign per ADR-003 likely adds new authn/authz hooks for the redesigned semantics.
+### Post-Phase-A — stewardship
+
+The hook surface is reviewed at every major release for hook
+deprecations (per ADR-013), new hooks (additive; ADR-011 amendment),
+and capability evolution. Phase B (capability redesign, federation
+hardening, OpenClaw rewrite, operator soak) operates against the
+post-extraction codebase. The plugin architecture provides the
+substrate for Phase B work.
 
 ## Amendment process
 
 This ADR commits to:
-1. C1 plugin architecture as the cross-cutting strategy.
-2. The 22-hook surface (with bands).
-3. The capability model with declared allowlist.
-4. The signing/trust model (Sigstore in production, dev override with warning).
-5. The plugin lifecycle (entry-point discovery, registration validation, no hot-unload).
-6. The default-install-matches-scope-contract guarantee.
 
-Changes require ADR-011 amendment with sign-off (two contributors or the founder alone, per ADR-001 §Contributor approval rule). Common amendment cases:
+<ol className="stigmem-steps">
+<li>C1 plugin architecture as the cross-cutting strategy.</li>
+<li>The 22-hook surface (with bands).</li>
+<li>The capability model with declared allowlist.</li>
+<li>The signing/trust model (Sigstore in production, dev override with warning).</li>
+<li>The plugin lifecycle (entry-point discovery, registration validation, no hot-unload).</li>
+<li>The default-install-matches-scope-contract guarantee.</li>
+</ol>
 
-- Adding a new hook (additive; MINOR core version bump).
-- Adding a new capability to the allowlist.
-- Changing a hook signature (breaking; MAJOR core version bump per ADR-013).
-- Adding plugin sandboxing (subprocess isolation, WASM-based, etc.) — would supersede the registration-only trust model.
-- Promoting a plugin's default-on status (would also amend ADR-008 reintroduction gates if applicable).
+Changes require ADR-011 amendment with sign-off (two contributors or
+the founder alone, per ADR-001 §Contributor approval rule). Common
+amendment cases: adding a new hook (additive; MINOR core version
+bump); adding a new capability to the allowlist; changing a hook
+signature (breaking; MAJOR core version bump per ADR-013); adding
+plugin sandboxing (subprocess isolation, WASM-based, etc.) — would
+supersede the registration-only trust model; promoting a plugin's
+default-on status (would also amend ADR-008 reintroduction gates if
+applicable).
 
 ---
 
-*Accepted by: @offbyonce (founder), 2026-05-07. Per ADR-001 §Contributor approval rule (founder solo-approval; second contributor sign-off welcome but not required).*
+*Accepted by: @offbyonce (founder), 2026-05-07. Per ADR-001 §Contributor
+approval rule (founder solo-approval; second contributor sign-off
+welcome but not required).*

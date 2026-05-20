@@ -6,30 +6,41 @@ audience: Operator
 
 # Cursor-Reset-on-DB-Loss Recovery
 
-**Audience:** Node operators managing Stigmem federation in production.  
-**Spec reference:** `Spec-05-Federation-Trust` (federation pull loop, cursor semantics)  
-**Track:** F2 — pre-GA hardening
+<p className="stigmem-meta"><span>5 min read</span><span>Federation operator</span><span>F2 hardening</span></p>
+
+<div className="stigmem-lead">
+
+**What this runbook covers**
+
+When a node loses its `replication_cursors` table — through DB
+corruption, an accidental `DROP TABLE`, or a bare-DB restore from
+backup — the next federation pull resets every peer's cursor to
+`NULL`. The pull loop re-fetches every fact from every peer from
+scratch.
+
+</div>
+
+**Audience:** Node operators managing Stigmem federation in production.
+**Spec reference:** `Spec-05-Federation-Trust` (federation pull loop, cursor semantics).
+**Track:** F2 — pre-GA hardening.
 
 ## Problem
 
-When a node loses its `replication_cursors` table — through DB corruption, an
-accidental `DROP TABLE`, or a bare-DB restore from backup — the next federation
-pull resets every peer's cursor to `NULL`. The pull loop re-fetches every fact
-from every peer from scratch.
+<div className="stigmem-keypoint">
 
-This is **safe** (ingestion is idempotent on fact ID) but **expensive**:
+**Cursor reset is safe (ingestion is idempotent on fact ID) but expensive.**
 
 ```
 re-pull cost ≈ total_facts_per_peer × (pull_interval / page_size)
               = e.g. 500 000 facts × (10s / 100) = ~13 hours per peer
 ```
 
-On a busy multi-peer mesh the compounding effect can delay convergence for
-many hours and produce unusually high I/O and network load.
+On a busy multi-peer mesh the compounding effect can delay
+convergence for many hours and produce unusually high I/O and
+network load. The `cursor-export` / `cursor-import` commands bound
+this cost.
 
-The `cursor-export` / `cursor-import` commands bound this cost.
-
----
+</div>
 
 ## Cursor-Checkpoint Workflow
 
@@ -46,7 +57,7 @@ stigmem federation cursor-export \
 stigmem federation cursor-export | tee /backup/stigmem-cursors-latest.json
 ```
 
-Checkpoint format:
+**Checkpoint format:**
 
 ```json
 {
@@ -74,15 +85,17 @@ Checkpoint format:
     --out /backup/stigmem-cursors-latest.json 2>>/var/log/stigmem/cursor-export.log
 ```
 
-This bounds the re-pull window to at most 15 minutes of incremental facts after any DB loss event.
+<div className="stigmem-keypoint">
 
----
+**This bounds the re-pull window to at most 15 minutes of incremental facts after any DB loss event.**
 
-### Recovery procedure (after DB loss)
+</div>
+
+## Recovery procedure (after DB loss)
 
 Each step is idempotent — you can re-run safely.
 
-#### Step 1 — Stop the node
+### Step 1 — Stop the node
 
 ```bash
 systemctl stop stigmem-node   # or: kill $(cat /run/stigmem.pid)
@@ -90,7 +103,7 @@ systemctl stop stigmem-node   # or: kill $(cat /run/stigmem.pid)
 
 The pull loop must not be running while you restore the DB or import cursors.
 
-#### Step 2 — Restore the DB (or start fresh)
+### Step 2 — Restore the DB (or start fresh)
 
 ```bash
 # If you have a DB backup:
@@ -100,10 +113,9 @@ cp /backup/stigmem-YYYYMMDD.db /var/lib/stigmem/stigmem.db
 stigmem migrate normalize-entities --dry-run
 ```
 
-#### Step 3 — Re-register peers (if peer table is lost)
+### Step 3 — Re-register peers (if peer table is lost)
 
-The FK constraint on `replication_cursors` requires each peer row to exist.
-If the peer table is gone (fresh DB or pre-migration 002), re-register peers first:
+The FK constraint on `replication_cursors` requires each peer row to exist. If the peer table is gone (fresh DB or pre-migration 002), re-register peers first:
 
 ```bash
 stigmem federation register-peer \
@@ -113,10 +125,9 @@ stigmem federation register-peer \
 # repeat for each peer
 ```
 
-Peers absent from the `peers` table are **skipped with a warning** during
-import — re-register them, then re-run `cursor-import`.
+Peers absent from the `peers` table are **skipped with a warning** during import — re-register them, then re-run `cursor-import`.
 
-#### Step 4 — Import the checkpoint
+### Step 4 — Import the checkpoint
 
 ```bash
 stigmem federation cursor-import /backup/stigmem-cursors-latest.json
@@ -128,23 +139,25 @@ Expected output:
 cursor import complete: 3 restored, 0 skipped (peer not found), 0 skipped (already set)
 ```
 
-If the restored DB already has non-null cursors from the backup, import skips
-them by default to avoid regressing a newer cursor. Use `--force` to override:
+<div className="stigmem-keypoint">
 
-```bash
-stigmem federation cursor-import --force /backup/stigmem-cursors-latest.json
-```
+**Default import skips cursors that already have non-null values.**
 
-#### Step 5 — Start the node
+If the restored DB already has non-null cursors from the backup,
+import skips them by default to avoid regressing a newer cursor. Use
+`--force` to override.
+
+</div>
+
+### Step 5 — Start the node
 
 ```bash
 systemctl start stigmem-node
 ```
 
-The pull loop reads restored cursors and resumes from the checkpointed
-positions rather than from `NULL` (the beginning of replication time).
+The pull loop reads restored cursors and resumes from the checkpointed positions rather than from `NULL` (the beginning of replication time).
 
-#### Step 6 — Verify
+### Step 6 — Verify
 
 Watch logs for resume vs. full-re-pull patterns:
 
@@ -156,37 +169,63 @@ INFO  pull from stigmem://node-b: cursor=1725349500000.005, got 12 facts, has_mo
 INFO  pull from stigmem://node-b: cursor=None, got 100 facts, has_more=true
 ```
 
-If you see `cursor=None` for a peer after import, that peer was not found
-in the peers table. Re-register it and re-run `cursor-import --force`.
-
----
+If you see `cursor=None` for a peer after import, that peer was not found in the peers table. Re-register it and re-run `cursor-import --force`.
 
 ## Recovery without a Checkpoint
 
-If no checkpoint is available, the node performs a full re-pull. This is safe.
-To minimize impact:
+If no checkpoint is available, the node performs a full re-pull. This is safe. To minimize impact:
 
-1. Start the node during off-peak hours.
-2. Temporarily reduce `STIGMEM_FEDERATION_PULL_INTERVAL_S` (e.g., to `5`) to
-   complete the re-pull faster, then restore the original value.
-3. Monitor the `facts` table row count; re-pull is complete when it stabilizes.
+<ol className="stigmem-steps">
+<li>Start the node during off-peak hours.</li>
+<li>Temporarily reduce <code>STIGMEM_FEDERATION_PULL_INTERVAL_S</code> (e.g., to <code>5</code>) to complete the re-pull faster, then restore the original value.</li>
+<li>Monitor the <code>facts</code> table row count; re-pull is complete when it stabilizes.</li>
+</ol>
 
-**PACELC contract:** During re-pull the node is available for local writes and reads,
-but facts from peers not yet re-fetched are temporarily absent. This is the system's
-existing PA/EL contract — idempotent ingestion ensures no duplicates.
+<div className="stigmem-keypoint">
 
----
+**PACELC contract: during re-pull the node is available for local writes and reads.**
+
+Facts from peers not yet re-fetched are temporarily absent. This is
+the system's existing PA/EL contract — idempotent ingestion ensures
+no duplicates.
+
+</div>
 
 ## Operational Recommendations
 
-| Practice | Rationale |
-|---|---|
-| Schedule `cursor-export` every 15 min alongside DB backup | Bounds re-pull to ≤15 min of missed incremental facts |
-| Keep `replication_cursors` in DB backup validation checks | Detects silent table loss before an incident |
-| Store checkpoint file outside the node's DB directory | Survives disk corruption that takes the DB file |
-| Run `cursor-export` before any planned DB maintenance | Zero-cost re-pull resume even for planned operations |
+<div className="stigmem-fields">
 
----
+<div>
+<dt>Practice</dt>
+<dt><span className="stigmem-fields__type">Cadence</span></dt>
+<dd>Rationale</dd>
+</div>
+
+<div>
+<dt>Schedule <code>cursor-export</code> every 15 min</dt>
+<dt><span className="stigmem-fields__type">15 min</span></dt>
+<dd>Bounds re-pull to ≤15 min of missed incremental facts.</dd>
+</div>
+
+<div>
+<dt>Validate <code>replication_cursors</code> in DB backups</dt>
+<dt><span className="stigmem-fields__type">per backup</span></dt>
+<dd>Detects silent table loss before an incident.</dd>
+</div>
+
+<div>
+<dt>Store checkpoint file outside DB directory</dt>
+<dt><span className="stigmem-fields__type">always</span></dt>
+<dd>Survives disk corruption that takes the DB file.</dd>
+</div>
+
+<div>
+<dt>Run <code>cursor-export</code> before planned DB maintenance</dt>
+<dt><span className="stigmem-fields__type">pre-change</span></dt>
+<dd>Zero-cost re-pull resume even for planned operations.</dd>
+</div>
+
+</div>
 
 ## CLI Reference
 
@@ -211,24 +250,23 @@ usage: stigmem federation cursor-import FILE [--force] [--db PATH]
   --db PATH    Path to stigmem.db. (default: STIGMEM_DB_PATH or settings default)
 ```
 
-Exits 0 on success. Prints a restored/skipped summary to stderr.
-
-Entries whose `peer_id` is absent from the `peers` table are skipped with a
-warning — re-register the peer first and re-run.
-
----
+Entries whose `peer_id` is absent from the `peers` table are skipped with a warning — re-register the peer first and re-run.
 
 ## Invariants Preserved
 
-- **Idempotent ingest:** re-pulled facts already in the DB are silently discarded (no duplicates).
-- **Lower-bound cursor:** if the checkpoint is older than the actual last-seen HLC, the node
-  re-fetches a small window of already-seen facts (harmless) rather than missing any.
-- **No regression without `--force`:** `cursor-import` only fills `NULL` slots by default,
-  so it cannot cause data loss on a partially-intact DB.
+<div className="stigmem-grid">
 
----
+<div><h4>Idempotent ingest</h4><p>Re-pulled facts already in the DB are silently discarded (no duplicates).</p></div>
+<div><h4>Lower-bound cursor</h4><p>If the checkpoint is older than the actual last-seen HLC, the node re-fetches a small window of already-seen facts (harmless) rather than missing any.</p></div>
+<div><h4>No regression without --force</h4><p><code>cursor-import</code> only fills <code>NULL</code> slots by default, so it cannot cause data loss on a partially-intact DB.</p></div>
+
+</div>
 
 ## See also
 
-- [Federation guide](../../concepts/federation/) — peer registration, pull loop, and scope enforcement
-- [4-node soak results](../../concepts/federation/#soak-results) — cursor-resume behavior verified under failure injection
+<div className="stigmem-grid">
+
+<div><h4><a href="../../concepts/federation/">Federation guide</a></h4><p>Peer registration, pull loop, and scope enforcement.</p></div>
+<div><h4><a href="../../concepts/federation/#soak-results">4-node soak results</a></h4><p>Cursor-resume behavior verified under failure injection.</p></div>
+
+</div>

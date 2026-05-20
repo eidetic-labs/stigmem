@@ -7,16 +7,18 @@ audience: Operator
 
 # R-HLC-DRIFT
 
-Use this runbook when a peer sends Hybrid Logical Clock timestamps outside your
-allowed skew window.
+<p className="stigmem-meta"><span>2 min read</span><span>On-call operator</span><span>Runbook</span></p>
 
-Trigger alerts:
+<div className="stigmem-lead">
 
-- `peer_hlc_drift_high`
-- `peer_hlc_drift_critical`
+**When to use**
 
-Default critical threshold: one peer sends a timestamp more than 300 seconds in
-the future.
+A peer sends Hybrid Logical Clock timestamps outside your allowed
+skew window. Trigger alerts: `peer_hlc_drift_high`,
+`peer_hlc_drift_critical`. Default critical threshold: one peer
+sends a timestamp more than 300 seconds in the future.
+
+</div>
 
 ## Identify
 
@@ -28,42 +30,55 @@ curl -s "https://your-node.example.com/v1/federation/audit?limit=200" \
   | jq '.[] | select(.event_type == "peer_hlc_anomaly")'
 ```
 
-Record peer entity URI, observed HLC, local HLC, drift seconds, and whether the
-fact was rejected or admitted.
+Record peer entity URI, observed HLC, local HLC, drift seconds, and whether the fact was rejected or admitted.
 
 ## Contain
 
-1. If drift is critical or repeated, pause pulls from the peer.
-2. Do not relax skew limits for normal live federation traffic.
-3. If you are running an intentional archival backfill, isolate that backfill
-   from normal peer traffic and restore the skew bound afterward.
+<ol className="stigmem-steps">
+<li>If drift is critical or repeated, pause pulls from the peer.</li>
+<li>Do not relax skew limits for normal live federation traffic.</li>
+<li>If you are running an intentional archival backfill, isolate that backfill from normal peer traffic and restore the skew bound afterward.</li>
+</ol>
 
 ## Investigate
 
 Determine whether this is honest clock skew or malicious/manipulated input:
 
-- Ask the peer operator for current NTP status and system time.
-- Compare drift direction: future skew is higher risk than old backfill data.
-- Check whether facts around the anomaly share unusual relations or scopes.
-- Look for concurrent replay or capability-violation events.
+<div className="stigmem-grid">
+
+<div><h4>NTP status</h4><p>Ask the peer operator for current NTP status and system time.</p></div>
+<div><h4>Drift direction</h4><p>Future skew is higher risk than old backfill data.</p></div>
+<div><h4>Relation patterns</h4><p>Check whether facts around the anomaly share unusual relations or scopes.</p></div>
+<div><h4>Concurrent violations</h4><p>Look for concurrent replay or capability-violation events.</p></div>
+
+</div>
 
 ## Recover
 
-For honest clock skew:
+**For honest clock skew:**
 
-1. Ask the peer operator to fix NTP/system time.
-2. Resume pulls after their clock is stable.
-3. Manually pull a small batch and confirm no new anomalies.
+<ol className="stigmem-steps">
+<li>Ask the peer operator to fix NTP/system time.</li>
+<li>Resume pulls after their clock is stable.</li>
+<li>Manually pull a small batch and confirm no new anomalies.</li>
+</ol>
 
-For suspicious drift:
+**For suspicious drift:**
 
-1. Keep the peer disabled.
-2. Retract any admitted facts whose ordering could affect decisions.
-3. Treat the peer as compromised until the operator proves control of the node.
+<ol className="stigmem-steps">
+<li>Keep the peer disabled.</li>
+<li>Retract any admitted facts whose ordering could affect decisions.</li>
+<li>Treat the peer as compromised until the operator proves control of the node.</li>
+</ol>
 
 ## Communicate
 
-Send the peer operator the drift seconds, timestamps, and affected fact IDs. If
-your deployment uses HLC order for compliance/audit workflows, notify affected
-internal stakeholders before relying on time-ordered reports from the incident
-window.
+<div className="stigmem-keypoint">
+
+**Send the peer operator the drift seconds, timestamps, and affected fact IDs.**
+
+If your deployment uses HLC order for compliance/audit workflows,
+notify affected internal stakeholders before relying on time-ordered
+reports from the incident window.
+
+</div>

@@ -13,21 +13,32 @@ depends_on:
 
 # Spec-14-Batch-Assert
 
-`Spec-14-Batch-Assert` defines the batch assertion operation targeted for the
-`v0.9.0bN` line.
+<p className="stigmem-meta"><span>2 min read</span><span>Spec contributor · SDK author</span><span>Draft · v0.9.0bN</span></p>
 
-## Extraction Status
+<div className="stigmem-lead">
 
-This file contains the ADR-010 prose extraction for ADR-006 batch assert
-semantics. Batch assert is not part of the `v0.9.0a1` stable surface.
+**What this spec defines**
+
+The batch assertion operation targeted for the `v0.9.0bN` line.
+Lets a caller submit multiple fact assertions in one request while
+retaining fact-model validation, hook execution, auditability, and
+predictable failure behavior.
+
+</div>
+
+## Extraction status
+
+This file contains the ADR-010 prose extraction for ADR-006 batch
+assert semantics. Batch assert is not part of the `v0.9.0a1` stable
+surface.
 
 ## Purpose
 
-Batch assert lets a caller submit multiple fact assertions in one request while
-retaining fact-model validation, hook execution, auditability, and predictable
-failure behavior.
+Batch assert lets a caller submit multiple fact assertions in one
+request while retaining fact-model validation, hook execution,
+auditability, and predictable failure behavior.
 
-## Request Shape
+## Request shape
 
 ```text
 BatchAssertRequest {
@@ -37,33 +48,54 @@ BatchAssertRequest {
 }
 ```
 
-Each item in `facts` follows the single-fact assertion contract from
-`Spec-01-Fact-Model` and `Spec-03-HTTP-API`.
+Each item in `facts` follows the single-fact assertion contract
+from `Spec-01-Fact-Model` and `Spec-03-HTTP-API`.
 
-## Atomic Mode
+## Atomicity modes
 
-When `atomic=true`, the node MUST commit all facts or none. Validation failure,
-authorization failure, hook denial, or storage failure for any item MUST abort
-the entire batch.
+<div className="stigmem-fields">
 
-When `atomic=false`, the node MAY persist successful items and report failures
-per item.
+<div>
+<dt>Mode</dt>
+<dt><span className="stigmem-fields__type">Semantics</span></dt>
+<dd>Failure behavior</dd>
+</div>
+
+<div>
+<dt><code>atomic: true</code></dt>
+<dt><span className="stigmem-fields__type">all-or-nothing</span></dt>
+<dd>Node MUST commit all facts or none. Validation failure, authorization failure, hook denial, or storage failure for any item MUST abort the entire batch.</dd>
+</div>
+
+<div>
+<dt><code>atomic: false</code></dt>
+<dt><span className="stigmem-fields__type">per-fact</span></dt>
+<dd>Node MAY persist successful items and report failures per item.</dd>
+</div>
+
+</div>
 
 ## Idempotency
 
-When an `idempotency_key` is supplied, retrying the same request with the same
-key SHOULD return the same logical result and MUST NOT duplicate persisted
-facts. Implementations MUST reject reuse of the same idempotency key for a
+<div className="stigmem-keypoint">
+
+**Retrying with the same idempotency key MUST NOT duplicate persisted facts.**
+
+When an <code>idempotency_key</code> is supplied, retrying the same
+request with the same key SHOULD return the same logical result.
+Implementations MUST reject reuse of the same idempotency key for a
 different request body.
 
-## Hook And Audit Semantics
+</div>
 
-Batch assert MUST preserve the behavior of single-fact assertion hooks. Hooks
-may run per fact, per batch, or both, but the externally visible result MUST
-match the configured atomicity. Audit events SHOULD identify the batch and the
-per-fact outcomes.
+## Hook and audit semantics
 
-## Response Shape
+Batch assert MUST preserve the behavior of single-fact assertion
+hooks. Hooks may run per fact, per batch, or both, but the
+externally visible result MUST match the configured atomicity.
+Audit events SHOULD identify the batch and the per-fact outcomes.
+
+## Response shape
 
 ```text
 BatchAssertResponse {
@@ -80,7 +112,7 @@ BatchAssertItemResult {
 }
 ```
 
-## Out Of Scope
+## Out of scope
 
-This spec does not define bulk import tooling, streaming ingestion, or
-cross-node batch replication.
+This spec does not define bulk import tooling, streaming ingestion,
+or cross-node batch replication.

@@ -6,13 +6,21 @@ audience: Integrator
 
 # Audit Log
 
-**Audience:** Node operators and security engineers who need an end-to-end trace linking asserted facts back to verified principals.
+<p className="stigmem-meta"><span>4 min read</span><span>Node operators · Security engineers</span><span>Track C · C3</span></p>
 
-Track C — C3 exposes a joined audit surface that answers: _who_ (principal) used _which credential_ (attested source) to assert _which fact_ (fact-id), and when.
+<div className="stigmem-lead">
 
-Every call to `POST /v1/facts` writes an entry to `fact_audit_log`. The audit endpoints join that table against `agent_keys` and `facts` so you get the full identity trail in a single query.
+**What this page is**
 
----
+Track C — C3 exposes a joined audit surface that answers: *who*
+(principal) used *which credential* (attested source) to assert
+*which fact* (fact-id), and when.
+
+</div>
+
+Every call to `POST /v1/facts` writes an entry to `fact_audit_log`.
+The audit endpoints join that table against `agent_keys` and `facts`
+so you get the full identity trail in a single query.
 
 ## Identity trail model
 
@@ -22,31 +30,94 @@ principal (entity_uri, oidc_sub)
         └── fact_id → facts(entity, relation, value, scope)
 ```
 
-- **principal** — the authenticated caller's `entity_uri` (e.g. `oidc:alice@example.com`, `agent:my-service`) and `oidc_sub` if the key was issued via the OIDC bridge.
-- **attested key** — the registered Ed25519 key that signed this assertion. `null` for unattested writes.
-- **fact** — the entity/relation/value triple stored in the fact store.
+<div className="stigmem-fields">
 
----
+<div>
+<dt>Layer</dt>
+<dt><span className="stigmem-fields__type">Identity</span></dt>
+<dd>Meaning</dd>
+</div>
+
+<div>
+<dt>principal</dt>
+<dt><span className="stigmem-fields__type"><code>entity_uri</code> + <code>oidc_sub</code></span></dt>
+<dd>The authenticated caller (e.g., <code>oidc:alice@example.com</code>, <code>agent:my-service</code>); <code>oidc_sub</code> populated when the key was issued via OIDC.</dd>
+</div>
+
+<div>
+<dt>attested key</dt>
+<dt><span className="stigmem-fields__type">Ed25519 registered key</span></dt>
+<dd>The key that signed this assertion. <code>null</code> for unattested writes.</dd>
+</div>
+
+<div>
+<dt>fact</dt>
+<dt><span className="stigmem-fields__type">entity/relation/value</span></dt>
+<dd>The triple stored in the fact store.</dd>
+</div>
+
+</div>
 
 ## Endpoints
 
-### GET /v1/audit — paginated audit log
+### `GET /v1/audit` · paginated audit log
 
 Query the enriched audit log with optional filters.
 
-**Query parameters:**
+<div className="stigmem-fields">
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `entity_uri` | string | Filter by asserting principal |
-| `oidc_sub` | string | Filter by OIDC subject claim |
-| `source` | string | Filter by fact `source` field |
-| `fact_id` | string | Filter to entries for a specific fact |
-| `attested` | bool | `true` = attested entries only; `false` = unattested only |
-| `cursor` | string | Opaque pagination cursor from a previous response |
-| `limit` | int | Page size (default 50, max 500) |
+<div>
+<dt>Parameter</dt>
+<dt><span className="stigmem-fields__type">Type</span></dt>
+<dd>Description</dd>
+</div>
 
-Results are ordered `ts DESC, id DESC` (newest first). For oldest-first streaming, use `GET /v1/audit/export`.
+<div>
+<dt><code>entity_uri</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Filter by asserting principal.</dd>
+</div>
+
+<div>
+<dt><code>oidc_sub</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Filter by OIDC subject claim.</dd>
+</div>
+
+<div>
+<dt><code>source</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Filter by fact <code>source</code> field.</dd>
+</div>
+
+<div>
+<dt><code>fact_id</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Filter to entries for a specific fact.</dd>
+</div>
+
+<div>
+<dt><code>attested</code></dt>
+<dt><span className="stigmem-fields__type">bool</span></dt>
+<dd><code>true</code> = attested entries only; <code>false</code> = unattested only.</dd>
+</div>
+
+<div>
+<dt><code>cursor</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Opaque pagination cursor from a previous response.</dd>
+</div>
+
+<div>
+<dt><code>limit</code></dt>
+<dt><span className="stigmem-fields__type">int</span></dt>
+<dd>Page size (default 50, max 500).</dd>
+</div>
+
+</div>
+
+Results are ordered `ts DESC, id DESC` (newest first). For
+oldest-first streaming, use `GET /v1/audit/export`.
 
 **Response (200 OK):**
 
@@ -76,9 +147,10 @@ Results are ordered `ts DESC, id DESC` (newest first). For oldest-first streamin
 }
 ```
 
-`attested_key_entity_uri` and `attested_key_description` are `null` when the entry is unattested.
+`attested_key_entity_uri` and `attested_key_description` are `null`
+when the entry is unattested.
 
-**`curl` example:**
+**Examples:**
 
 ```bash
 # All entries for a specific principal
@@ -94,11 +166,11 @@ curl -s "http://localhost:8000/v1/audit?cursor=<cursor-from-previous>" \
   -H 'Authorization: Bearer stgm_...' | jq .
 ```
 
----
+### `GET /v1/audit/facts/{fact_id}` · trail for a single fact
 
-### GET /v1/audit/facts/\{fact\_id\} — trail for a single fact
-
-Returns all audit entries for a specific fact, oldest first. Useful for tracing the full assert/retract history of one fact including every principal that touched it.
+Returns all audit entries for a specific fact, oldest first. Useful
+for tracing the full assert/retract history of one fact including
+every principal that touched it.
 
 ```bash
 curl -s "http://localhost:8000/v1/audit/facts/<fact-id>" \
@@ -106,13 +178,15 @@ curl -s "http://localhost:8000/v1/audit/facts/<fact-id>" \
 # → array of enriched AuditLogEntry objects, ASC order
 ```
 
-Returns `404` if the fact does not exist. Returns an empty array `[]` if the fact exists but has no audit entries (possible for facts that predate Track C).
+Returns `404` if the fact does not exist. Returns an empty array `[]`
+if the fact exists but has no audit entries (possible for facts that
+predate Track C).
 
----
+### `GET /v1/audit/export` · CSV compliance export
 
-### GET /v1/audit/export — CSV compliance export
-
-Streams a CSV with all join columns for SIEM import or compliance archival. Supports the same filters as `GET /v1/audit`. Default limit is 5000 rows; maximum is 50000.
+Streams a CSV with all join columns for SIEM import or compliance
+archival. Supports the same filters as `GET /v1/audit`. Default limit
+is 5000 rows; maximum is 50000.
 
 ```bash
 curl -s "http://localhost:8000/v1/audit/export" \
@@ -136,34 +210,65 @@ fact_entity, fact_relation, fact_value_type, fact_value_v, fact_scope,
 ts
 ```
 
----
-
 ## Tenant scoping
 
-Audit entries are automatically scoped to the caller's tenant. A key provisioned for tenant `"acme"` can only query audit entries where `tenant_id = 'acme'` — cross-tenant audit data is never returned, even with node-admin permissions.
+<div className="stigmem-keypoint">
 
-This scoping was added in migration `012_multi_tenant.sql`. Rows written before that migration carry `tenant_id = 'default'`. See [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant) for the full isolation model.
+**Audit entries are automatically scoped to the caller's tenant.**
 
----
+A key provisioned for tenant <code>"acme"</code> can only query audit
+entries where <code>tenant_id = 'acme'</code> — cross-tenant audit
+data is never returned, even with node-admin permissions.
+
+</div>
+
+This scoping was added in migration `012_multi_tenant.sql`. Rows
+written before that migration carry `tenant_id = 'default'`. See
+[Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant)
+for the full isolation model.
 
 ## Retention and backfill
 
-Facts asserted before Track C landed do not have audit entries. The `fact_audit_log` table was created by migration `006_fact_audit.sql` — all entries with `ts` prior to that migration date are absent.
+<div className="stigmem-grid">
 
-Retention policy (log rotation / archival) is not yet implemented; all entries accumulate indefinitely. Set up external archival if you need bounded storage.
+<div><h4>Pre-Track-C facts have no entries</h4><p>The <code>fact_audit_log</code> table was created by migration <code>006_fact_audit.sql</code> — entries with <code>ts</code> prior to that migration date are absent.</p></div>
+<div><h4>No automatic retention</h4><p>Log rotation / archival is not yet implemented; all entries accumulate indefinitely. Set up external archival if you need bounded storage.</p></div>
 
----
+</div>
 
 ## Web UI
 
-The Audit Log tab in the browser UI (`/` on the node) shows the same joined view with filters for principal, source, and attestation status. The **Export CSV** button triggers `GET /v1/audit/export` with any active filters applied.
-
----
+The Audit Log tab in the browser UI (`/` on the node) shows the same
+joined view with filters for principal, source, and attestation
+status. The **Export CSV** button triggers `GET /v1/audit/export`
+with any active filters applied.
 
 ## See also
 
-- [Agent Keypairs](./agent-keypairs) — C1: registering keys and signing fact assertions
-- [Human Key Issuance](./human-key-issuance) — C2: how OIDC principals and garden roles flow into `entity_uri`
-- [Authentication](./authentication) — Bearer-key model and permissions
-- [OIDC / SSO Integration](https://github.com/eidetic-labs/stigmem/tree/main/experimental/oidc-sso) — OIDC bridge that populates `oidc_sub`
-- [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant) — tenant_id isolation model and migration 012
+<div className="stigmem-next">
+
+<a href="./agent-keypairs">
+<strong>Security</strong>
+<span>Agent keypairs</span>
+<small>C1: registering keys and signing fact assertions.</small>
+</a>
+
+<a href="./human-key-issuance">
+<strong>Security</strong>
+<span>Human key issuance</span>
+<small>C2: OIDC principals and garden roles → <code>entity_uri</code>.</small>
+</a>
+
+<a href="./authentication">
+<strong>Security</strong>
+<span>Authentication</span>
+<small>Bearer-key model and permissions.</small>
+</a>
+
+<a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant">
+<strong>Experimental</strong>
+<span>Multi-tenant scoping</span>
+<small><code>tenant_id</code> isolation model and migration 012.</small>
+</a>
+
+</div>

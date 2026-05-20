@@ -14,28 +14,44 @@ depends_on:
 
 # Spec-15-Fact-Semantics
 
-`Spec-15-Fact-Semantics` defines the supported behavior of facts after they are
-written: provenance, expiry, contradiction detection, query-time winner
-selection, and conflict entities.
+<p className="stigmem-meta"><span>4 min read</span><span>Spec contributor · SDK author</span><span>Draft · v0.9.0aN</span></p>
 
-## Extraction Status
+<div className="stigmem-lead">
 
-This file contains the ADR-010 prose extraction for fact semantics. Atomic fact
-shape is owned by `Spec-01-Fact-Model`; scope enforcement is owned by
-`Spec-02-Scopes-and-ACL`; HTTP route shape is owned by `Spec-03-HTTP-API`.
+**What this spec defines**
 
-Legacy version labels from archived source material are normalized to the
-current `v0.9.0a1` protocol line here. Historical wording remains available in
-`spec/archive/evolution/` and `spec/EVOLUTION.md`.
+The supported behavior of facts after they are written: provenance,
+expiry, contradiction detection, query-time winner selection, and
+conflict entities.
+
+</div>
+
+## Extraction status
+
+This file contains the ADR-010 prose extraction for fact semantics.
+Atomic fact shape is owned by `Spec-01-Fact-Model`; scope
+enforcement is owned by `Spec-02-Scopes-and-ACL`; HTTP route shape
+is owned by `Spec-03-HTTP-API`.
+
+Legacy version labels from archived source material are normalized
+to the current `v0.9.0a1` protocol line here. Historical wording
+remains available in `spec/archive/evolution/` and
+`spec/EVOLUTION.md`.
 
 ## Provenance
 
-Every fact carries `source` and `timestamp`. A node MUST store both without
-modification. Query responses MUST return the original `source`; relay metadata
+<div className="stigmem-keypoint">
+
+**Every fact carries `source` and `timestamp`. A node MUST store both without modification.**
+
+Query responses MUST return the original `source`; relay metadata
 MUST NOT replace the original source.
 
-Inbound federated facts SHOULD record receiving-node provenance separately from
-the original source. The receiving node MAY assert a local meta-fact:
+</div>
+
+Inbound federated facts SHOULD record receiving-node provenance
+separately from the original source. The receiving node MAY assert a
+local meta-fact:
 
 ```text
 entity=<fact-id>
@@ -44,24 +60,25 @@ value={type:"ref", v:"<originating-node-id>"}
 source="system:stigmem"
 ```
 
-The receiving-node provenance fact is local accounting and MUST NOT be
-re-replicated as if it were part of the origin peer's assertion set.
+The receiving-node provenance fact is local accounting and MUST NOT
+be re-replicated as if it were part of the origin peer's assertion
+set.
 
 ## Expiry
 
-Facts whose `valid_until` timestamp has passed MUST NOT be returned by ordinary
-fact queries. A caller MAY request expired facts with an explicit
-`include_expired=true` option on routes that support it.
+Facts whose `valid_until` timestamp has passed MUST NOT be returned
+by ordinary fact queries. A caller MAY request expired facts with an
+explicit `include_expired=true` option on routes that support it.
 
-Expired facts remain in the store. Expiry is a read-filtering and operational
-health concern, not a destructive deletion rule.
+Expired facts remain in the store. Expiry is a read-filtering and
+operational health concern, not a destructive deletion rule.
 
-## TTL Meta-Facts
+## TTL meta-facts
 
-Operators or agents that need to schedule future expiry for a fact that was
-originally asserted without `valid_until` MAY attach a TTL meta-fact. The
-meta-fact's entity is the target fact id, the relation is `stigmem:ttl`, and
-the value is the intended expiry datetime:
+Operators or agents that need to schedule future expiry for a fact
+that was originally asserted without `valid_until` MAY attach a TTL
+meta-fact. The meta-fact's entity is the target fact id, the relation
+is `stigmem:ttl`, and the value is the intended expiry datetime:
 
 ```text
 entity=<fact-id>
@@ -69,46 +86,59 @@ relation="stigmem:ttl"
 value={type:"datetime", v:<expiry>}
 ```
 
-`valid_until` and `confidence` are orthogonal. A historical certain fact may
-have `confidence=1.0` and a `valid_until` timestamp that marks when it stopped
-being current.
+<div className="stigmem-keypoint">
 
-## Contradiction Detection
+**`valid_until` and `confidence` are orthogonal.**
+
+A historical certain fact may have `confidence=1.0` and a
+`valid_until` timestamp that marks when it stopped being current.
+
+</div>
+
+## Contradiction detection
 
 A contradiction exists when two facts `a` and `b` satisfy all of:
 
-- `a.entity == b.entity`
-- `a.relation == b.relation`
-- `a.scope == b.scope`
-- `a.value != b.value`
-- `a.confidence > 0.0`
-- `b.confidence > 0.0`
+<div className="stigmem-grid">
 
-Both facts MUST be retained. Nodes MUST NOT silently overwrite one fact with
-the other.
+<div><h4>Same entity</h4><p><code>a.entity == b.entity</code></p></div>
+<div><h4>Same relation</h4><p><code>a.relation == b.relation</code></p></div>
+<div><h4>Same scope</h4><p><code>a.scope == b.scope</code></p></div>
+<div><h4>Different value</h4><p><code>a.value != b.value</code></p></div>
+<div><h4>Both confident</h4><p><code>a.confidence &gt; 0.0</code> AND <code>b.confidence &gt; 0.0</code></p></div>
 
-Entity normalization from `Spec-01-Fact-Model` applies before contradiction
-detection. Facts written with different raw entity strings that normalize to
-the same canonical entity participate in the same contradiction set.
+</div>
 
-## Query-Time Resolution
+<div className="stigmem-keypoint">
+
+**Both facts MUST be retained. Nodes MUST NOT silently overwrite one fact with the other.**
+
+Entity normalization from `Spec-01-Fact-Model` applies before
+contradiction detection. Facts written with different raw entity
+strings that normalize to the same canonical entity participate in
+the same contradiction set.
+
+</div>
+
+## Query-time resolution
 
 When a query needs a single preferred fact for a contradicted
 `(entity, relation, scope)` tuple, nodes SHOULD apply this ordering:
 
-1. Higher `confidence` wins.
-2. Equal confidence: higher HLC wins.
-3. Equal confidence and HLC: return both with `contradicted: true` and let the
-   caller decide.
+<ol className="stigmem-steps">
+<li>Higher <code>confidence</code> wins.</li>
+<li>Equal confidence: higher HLC wins.</li>
+<li>Equal confidence and HLC: return both with <code>contradicted: true</code> and let the caller decide.</li>
+</ol>
 
-This ordering does not delete or mutate losing facts. It only controls
-presentation and default winner selection.
+This ordering does not delete or mutate losing facts. It only
+controls presentation and default winner selection.
 
-## Conflict Entities
+## Conflict entities
 
-When a contradiction is detected on write, a node SHOULD create a first-class
-conflict entity in the `stigmem:conflict:` namespace. The conflict entity
-reifies disagreement as queryable data.
+When a contradiction is detected on write, a node SHOULD create a
+first-class conflict entity in the `stigmem:conflict:` namespace. The
+conflict entity reifies disagreement as queryable data.
 
 The conflict relation links the competing fact ids:
 
@@ -132,16 +162,25 @@ confidence=1.0
 scope=<same scope as the conflicting facts>
 ```
 
-Resolution is itself represented as new provenance-bearing data. The node MUST
-NOT mutate original facts to hide the conflict.
+<div className="stigmem-keypoint">
 
-## Out Of Scope
+**Resolution is itself represented as new provenance-bearing data.**
+
+The node MUST NOT mutate original facts to hide the conflict.
+
+</div>
+
+## Out of scope
 
 This spec does not define:
 
-- atomic fact field definitions,
-- scope authorization rules,
-- HTTP route shape for conflict listing or resolution,
-- decay sweep algorithms,
-- async lint or decay jobs, or
-- plugin-based custom conflict resolution policies.
+<div className="stigmem-grid">
+
+<div><h4>Atomic fact field definitions</h4></div>
+<div><h4>Scope authorization rules</h4></div>
+<div><h4>HTTP route shape</h4><p>For conflict listing or resolution.</p></div>
+<div><h4>Decay sweep algorithms</h4></div>
+<div><h4>Async lint or decay jobs</h4></div>
+<div><h4>Plugin-based custom resolution</h4><p>Policies.</p></div>
+
+</div>

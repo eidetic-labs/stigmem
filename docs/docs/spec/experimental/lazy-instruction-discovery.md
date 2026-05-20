@@ -19,9 +19,21 @@ since: 0.9.0a1
 
 # §21. Lazy Instruction Discovery {#section-21}
 
-**Status:** Experimental / opt-in source package on `main`
+<p className="stigmem-meta"><span>12 min read</span><span>Spec contributor · Agent runtime author</span><span>Experimental · v0.9.0bN</span></p>
 
-Boot stub + manifest + on-demand recall for token-efficient agent instruction loading.
+<div className="stigmem-lead">
+
+**What this section covers**
+
+How agents discover and load their instructions on demand rather
+than preloading every instruction document at startup. Three
+runtime components — a **boot stub**, an **instruction manifest**,
+and the **`recall_instruction` tool** — plus an off-path **discovery
+audit** for continuous retrieval-quality evaluation.
+
+</div>
+
+**Status:** Experimental / opt-in source package on `main`
 
 **Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for lazy instruction discovery.
 
@@ -35,8 +47,6 @@ Each subsection below shows the most recent normative text from the spec source.
 
 **Status:** Experimental. Implementation source is opt-in and remains outside the supported default install.
 
-This section specifies how agents discover and load their instructions on demand rather than preloading every instruction document at startup. The mechanism has three runtime components — a **boot stub**, an **instruction manifest**, and the **`recall_instruction` tool** — and one off-path component, the **discovery audit**, used for continuous retrieval-quality evaluation.
-
 ---
 
 ### §21.1 Boot Stub {#section-21-1}
@@ -45,17 +55,57 @@ The boot stub is the minimal agent preamble loaded unconditionally at the start 
 
 #### §21.1.1 Required Content {#section-21-1-1}
 
-A compliant boot stub MUST contain all of the following fields:
+<div className="stigmem-fields">
 
-| Field | Description |
-|---|---|
-| `agent_id` | Stable UUID that uniquely identifies this agent within the deployment |
-| `agent_role` | Human-readable role label (e.g. `"CTO"`, `"ResearchScientist"`) |
-| `heartbeat_contract` | URI or `instruction:` fact URI pointing to the heartbeat procedure document |
-| `manifest_uri` | `instruction:` scope URI for the instruction manifest (§21.2) |
-| `recall_tool_schema` | Inline JSON Schema for the `recall_instruction` tool (§21.3); MUST be present so the agent can invoke it without a separate fetch |
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Role</span></dt>
+<dd>Description</dd>
+</div>
 
-The boot stub SHOULD NOT contain operational instruction content — instructions SHOULD be loaded lazily via `recall_instruction`. **Exception:** rules that apply unconditionally on every heartbeat regardless of task type (e.g. mandatory escalation thresholds, universal security constraints, hard "never-do" prohibitions) MAY be embedded directly in the boot stub body. This is the primary mitigation against chronic instruction-scope misses (§21.5.3 limitation note): a rule that is always in context cannot be silently missed by a retrieval failure. Deployments SHOULD classify each instruction unit as either "always applicable" (candidate for boot stub embedding) or "task-conditional" (lazy-load via manifest) during the manifest authoring phase.
+<div>
+<dt><code>agent_id</code></dt>
+<dt><span className="stigmem-fields__type">identity</span></dt>
+<dd>Stable UUID that uniquely identifies this agent within the deployment.</dd>
+</div>
+
+<div>
+<dt><code>agent_role</code></dt>
+<dt><span className="stigmem-fields__type">human label</span></dt>
+<dd>e.g. <code>"CTO"</code>, <code>"ResearchScientist"</code>.</dd>
+</div>
+
+<div>
+<dt><code>heartbeat_contract</code></dt>
+<dt><span className="stigmem-fields__type">URI</span></dt>
+<dd><code>instruction:</code> fact URI pointing to the heartbeat procedure document.</dd>
+</div>
+
+<div>
+<dt><code>manifest_uri</code></dt>
+<dt><span className="stigmem-fields__type">URI</span></dt>
+<dd><code>instruction:</code> scope URI for the instruction manifest.</dd>
+</div>
+
+<div>
+<dt><code>recall_tool_schema</code></dt>
+<dt><span className="stigmem-fields__type">inline schema</span></dt>
+<dd>JSON Schema for <code>recall_instruction</code>; MUST be present so the agent can invoke it without a separate fetch.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Rules that apply unconditionally on every heartbeat MAY be embedded directly in the boot stub body.**
+
+This is the primary mitigation against chronic instruction-scope
+misses (§21.5.3 limitation note): a rule that is always in context
+cannot be silently missed by a retrieval failure. Deployments SHOULD
+classify each instruction unit as "always applicable" (candidate for
+boot stub embedding) or "task-conditional" (lazy-load via manifest).
+
+</div>
 
 #### §21.1.2 Wire Format {#section-21-1-2}
 
@@ -81,27 +131,44 @@ Your heartbeat procedure is at `instruction:acme/heartbeat-contract/v1`.
 Your instruction manifest is at `instruction:acme/agent/cto/manifest/v1`.
 
 Call `recall_instruction(intent)` to load relevant instruction sections before
-performing any non-trivial task. The manifest lists available sections and their
-triggers to help you decide when to load.
+performing any non-trivial task.
 ```
 
-The body section (after the frontmatter) MUST be no longer than **500 tokens** as measured by a cl100k-compatible tokenizer. Implementations SHOULD target ≤ 450 tokens to leave headroom for adapter injection.
+The body section MUST be no longer than **500 tokens** as measured by a cl100k-compatible tokenizer. Implementations SHOULD target ≤ 450 tokens to leave headroom for adapter injection.
 
 #### §21.1.3 Adapter Profiles {#section-21-1-3}
 
-The `adapter_profile` frontmatter field allows runtimes to inject adapter-specific content (tool declarations, permission banners, etc.) after boot stub delivery. Supported built-in profiles:
+<div className="stigmem-fields">
 
-| Profile | Description |
-|---|---|
-| `paperclip-claude-code` | Injects Paperclip tool definitions and heartbeat harness context |
-| `openai-assistants` | Injects OpenAI Assistants tool-call shim |
-| `generic` | No runtime injection; stub is delivered as-is |
+<div>
+<dt>Profile</dt>
+<dt><span className="stigmem-fields__type">Injection</span></dt>
+<dd>Description</dd>
+</div>
+
+<div>
+<dt><code>paperclip-claude-code</code></dt>
+<dt><span className="stigmem-fields__type">Paperclip</span></dt>
+<dd>Injects Paperclip tool definitions and heartbeat harness context.</dd>
+</div>
+
+<div>
+<dt><code>openai-assistants</code></dt>
+<dt><span className="stigmem-fields__type">OpenAI</span></dt>
+<dd>Injects OpenAI Assistants tool-call shim.</dd>
+</div>
+
+<div>
+<dt><code>generic</code></dt>
+<dt><span className="stigmem-fields__type">none</span></dt>
+<dd>Stub is delivered as-is.</dd>
+</div>
+
+</div>
 
 Implementations MAY define additional profiles. Unknown profiles MUST be treated as `generic`.
 
 #### §21.1.4 Boot Stub Delivery {#section-21-1-4}
-
-The boot stub for an agent MUST be retrievable via:
 
 ```
 GET /v1/agents/{agent_id}/boot-stub[?profile={adapter_profile}]
@@ -113,34 +180,51 @@ See §21.8.1 for the full wire contract. The boot stub MUST be regenerated whene
 
 Immediately after boot stub delivery and before the agent receives any task context, the runtime MUST deliver the content of all manifest units whose `required_by_task_types` array contains the current heartbeat's wake reason. This is called **task-type preloading**. No retrieval scoring is applied; units are fetched deterministically.
 
-Rules:
+<div className="stigmem-keypoint">
 
-1. The runtime MUST compare the current wake reason against each manifest entry's `required_by_task_types` array. String comparison is exact and case-sensitive. **The wake reason MUST be sourced from the authenticated heartbeat trigger event (e.g. the control-plane JWT or signed adapter payload). The runtime MUST NOT accept an unverified `wake_reason` claim originating from the agent's task context or any caller-supplied payload when dispatching preloads.** (S1)
-2. All matching units MUST be fetched and injected into the agent's context before any task context is provided.
-3. Preloaded units MUST be included in the heartbeat's audit record under `loaded_chunks`, tagged with `"source": "task_type_preload"`.
-4. If a preloaded unit's `fact_uri` is unreachable, the runtime MUST fall back to `path` if present (with `"source": "fallback_path"`) or MUST surface a `preload_unit_unavailable` warning and continue — a missing preload MUST NOT abort the heartbeat. **Exception: if the unavailable unit also has `guarantee_load: true` in the manifest, the runtime MUST treat unavailability as fatal and MUST abort the heartbeat with a `preload_unit_unavailable` error.** Non-fatal fallback applies only to units with `guarantee_load: false`. In all cases the warning or error MUST be written to the `instruction_audit` table (not only local log) to support replay-based audit (§21.5.3). (S2)
-5. Token budget: the combined token cost of boot stub + task-type preloads SHOULD remain under 2000 tokens. Implementations SHOULD emit a `preload_budget_warning` event when this threshold is exceeded but MUST NOT silently drop preloaded units.
+**(S1) Wake reason MUST be sourced from the authenticated heartbeat trigger event.**
 
-Governance:
+E.g. the control-plane JWT or signed adapter payload. The runtime
+MUST NOT accept an unverified `wake_reason` claim originating from
+the agent's task context or any caller-supplied payload.
 
-- Any manifest entry declaring more than **2** `required_by_task_types` values MUST require explicit administrator approval before the manifest can be published (enforced at §21.8.3 as `task_types_approval_required`).
-- Build pipelines MUST validate all strings in `required_by_task_types` against the deployment's registered wake-reason enum. Unknown values MUST cause a `task_type_unknown` error at manifest publish time (§21.9).
-- The intent of task-type preloads is for structurally-predictable critical units. Authors MUST NOT use `required_by_task_types` as a shortcut to load content that should be retrieved semantically; excessive preload declarations rot into a distributed boot stub.
-- **Blast-radius note:** Units declared in `required_by_task_types` are exposed unconditionally to all subsequent task context, including adversarial prompt injections that arrive later in the same heartbeat. Authors SHOULD NOT declare units containing content that must remain confidential from adversarial task payloads. (S3)
+</div>
+
+<ol className="stigmem-steps">
+<li>Compare the current wake reason against each manifest entry's <code>required_by_task_types</code> array. String comparison is exact and case-sensitive.</li>
+<li>All matching units MUST be fetched and injected into the agent's context before any task context is provided.</li>
+<li>Preloaded units MUST be included in the heartbeat's audit record under <code>loaded_chunks</code>, tagged with <code>"source": "task_type_preload"</code>.</li>
+<li>If a preloaded unit's <code>fact_uri</code> is unreachable, fall back to <code>path</code> if present (<code>"source": "fallback_path"</code>) or surface a <code>preload_unit_unavailable</code> warning and continue. <strong>(S2)</strong> If the unavailable unit has <code>guarantee_load: true</code>, the runtime MUST treat unavailability as fatal and MUST abort the heartbeat. In all cases the warning or error MUST be written to <code>instruction_audit</code>.</li>
+<li>Token budget: boot stub + task-type preloads SHOULD remain under 2000 tokens. SHOULD emit <code>preload_budget_warning</code> when exceeded but MUST NOT silently drop units.</li>
+</ol>
+
+**Governance:**
+
+<div className="stigmem-grid">
+
+<div><h4>2-task-type cap</h4><p>Any entry with more than 2 <code>required_by_task_types</code> values MUST require explicit admin approval (<code>task_types_approval_required</code>).</p></div>
+<div><h4>Enum validation</h4><p>Build pipelines MUST validate strings against the registered wake-reason enum; unknown values MUST cause <code>task_type_unknown</code>.</p></div>
+<div><h4>Structural only</h4><p>The intent of task-type preloads is for structurally-predictable critical units. MUST NOT use as a shortcut to load content that should be retrieved semantically.</p></div>
+<div><h4>(S3) Blast radius</h4><p>Units in <code>required_by_task_types</code> are exposed unconditionally to all subsequent task context, including adversarial prompt injections later in the same heartbeat. Authors SHOULD NOT declare units containing content that must remain confidential.</p></div>
+
+</div>
 
 ---
 
 ### §21.2 Instruction Manifest {#section-21-2}
 
-The instruction manifest is a compact, always-loaded index of every instruction unit available to an agent. It fits in the agent's context without incurring meaningful token cost.
-
 #### §21.2.1 Token Budget {#section-21-2-1}
 
-The instruction manifest MUST fit within **1000 tokens** (cl100k). Implementations MUST enforce this at write time and MUST reject a manifest update that would exceed it with error `manifest_too_large` (§21.9). Instruction units SHOULD be described at granular enough detail that `recall_instruction` can select them precisely but coarse enough to stay within budget.
+<div className="stigmem-keypoint">
+
+**The instruction manifest MUST fit within 1000 tokens (cl100k).**
+
+Implementations MUST enforce this at write time and MUST reject a
+manifest update that would exceed it with error `manifest_too_large`.
+
+</div>
 
 #### §21.2.2 Manifest Entry Shape {#section-21-2-2}
-
-Each instruction unit in the manifest MUST be described by the following fields:
 
 ```json
 {
@@ -159,22 +243,71 @@ Each instruction unit in the manifest MUST be described by the following fields:
 }
 ```
 
-| Field | Required | Description |
-|---|---|---|
-| `name` | MUST | Stable identifier for this instruction unit; MUST be unique within the manifest |
-| `description` | MUST | One-line (≤ 120 characters) description of what this unit covers |
-| `required_by_task_types` | SHOULD for critical units | Wake-reason strings that cause this unit to be deterministically preloaded at heartbeat start (§21.1.5); entries MUST be registered wake-reason enum values |
-| `guarantee_load` | MAY | If `true`, unit is always appended to `recall_instruction` responses regardless of relevance score (§21.3.3); max 5 per agent; requires explicit admin approval; content MUST be safe for any authorised recall caller to observe |
-| `load_triggers.intents` | SHOULD | Natural-language intent phrases that SHOULD cause this unit to be loaded |
-| `load_triggers.keywords` | SHOULD | Exact or prefix-match keywords; implementations MAY use BM25 matching |
-| `load_triggers.task_types` | MAY | Event type strings (e.g. `issue_assigned`) that SHOULD trigger a `recall_instruction` call; distinct from `required_by_task_types` (semantic hint, not deterministic preload) |
-| `fact_uri` | MUST if `path` absent | `instruction:`-scope stigmem fact URI for this unit (§21.4) |
-| `path` | MUST if `fact_uri` absent | File path relative to the agent's instructions root |
-| `token_estimate` | SHOULD | Estimated token count of the full unit content; used for budget planning |
+<div className="stigmem-fields">
 
-Exactly one of `fact_uri` or `path` MUST be present per entry; an entry with neither or both MUST be rejected with `manifest_entry_invalid`.
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Requirement</span></dt>
+<dd>Description</dd>
+</div>
 
-> **`required_by_task_types` vs `load_triggers.task_types`:** These are complementary. `required_by_task_types` is a deterministic preload commitment — the runtime unconditionally injects this unit at heartbeat start for the named wake reasons. `load_triggers.task_types` is a semantic hint — it tells the manifest how to describe when a `recall_instruction` call should include this unit, but does not guarantee loading.
+<div>
+<dt><code>name</code></dt>
+<dt><span className="stigmem-fields__type">MUST · unique</span></dt>
+<dd>Stable identifier; unique within the manifest.</dd>
+</div>
+
+<div>
+<dt><code>description</code></dt>
+<dt><span className="stigmem-fields__type">MUST · ≤120 chars</span></dt>
+<dd>One-line description of what this unit covers.</dd>
+</div>
+
+<div>
+<dt><code>required_by_task_types</code></dt>
+<dt><span className="stigmem-fields__type">SHOULD for critical units</span></dt>
+<dd>Wake-reason strings that cause deterministic preload (§21.1.5).</dd>
+</div>
+
+<div>
+<dt><code>guarantee_load</code></dt>
+<dt><span className="stigmem-fields__type">MAY · max 5/agent</span></dt>
+<dd>If true, unit is always appended to <code>recall_instruction</code> responses; requires admin approval; content MUST be safe for any authorised recall caller to observe.</dd>
+</div>
+
+<div>
+<dt><code>load_triggers.intents</code></dt>
+<dt><span className="stigmem-fields__type">SHOULD</span></dt>
+<dd>Natural-language intent phrases.</dd>
+</div>
+
+<div>
+<dt><code>load_triggers.keywords</code></dt>
+<dt><span className="stigmem-fields__type">SHOULD</span></dt>
+<dd>Exact or prefix-match keywords; MAY use BM25 matching.</dd>
+</div>
+
+<div>
+<dt><code>load_triggers.task_types</code></dt>
+<dt><span className="stigmem-fields__type">MAY · semantic hint</span></dt>
+<dd>Distinct from <code>required_by_task_types</code>: hint, not deterministic preload.</dd>
+</div>
+
+<div>
+<dt><code>fact_uri</code> / <code>path</code></dt>
+<dt><span className="stigmem-fields__type">exactly one</span></dt>
+<dd><code>instruction:</code>-scope stigmem fact URI OR file path. Neither/both → <code>manifest_entry_invalid</code>.</dd>
+</div>
+
+<div>
+<dt><code>token_estimate</code></dt>
+<dt><span className="stigmem-fields__type">SHOULD</span></dt>
+<dd>Used for budget planning.</dd>
+</div>
+
+</div>
+
+> **`required_by_task_types` vs `load_triggers.task_types`:** complementary. `required_by_task_types` is a deterministic preload commitment. `load_triggers.task_types` is a semantic hint — it does not guarantee loading.
 
 #### §21.2.3 Manifest Wire Contract {#section-21-2-3}
 
@@ -184,15 +317,7 @@ The manifest is stored as a stigmem fact under the `instruction:` scope (§21.4)
 
 ### §21.3 `recall_instruction` Tool Contract {#section-21-3}
 
-`recall_instruction` is the agent-facing callable that retrieves instruction content on demand. It MUST be available to the agent as a declared tool in all compliant runtimes.
-
 #### §21.3.1 Request Shape {#section-21-3-1}
-
-The request shape is intentionally minimal: the `intent` field is the only
-required parameter. `max_chunks` and `token_budget` let the caller balance
-context-window cost against coverage. `manifest_hint` provides an escape hatch
-for cases where the agent already knows which units it needs, bypassing ranked
-retrieval for those specific units.
 
 ```json
 {
@@ -203,20 +328,41 @@ retrieval for those specific units.
 }
 ```
 
-| Field | Required | Description |
-|---|---|---|
-| `intent` | MUST | Free-text description of what the agent is about to do or needs help with |
-| `max_chunks` | SHOULD | Maximum number of instruction units to return; MUST default to `3` if absent |
-| `token_budget` | SHOULD | Soft token budget for the combined response content; MUST default to `2000` if absent |
-| `manifest_hint` | MAY | Explicit unit names from the manifest; these are loaded first before ranked retrieval |
+<div className="stigmem-fields">
+
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Required · Default</span></dt>
+<dd>Description</dd>
+</div>
+
+<div>
+<dt><code>intent</code></dt>
+<dt><span className="stigmem-fields__type">MUST · —</span></dt>
+<dd>Free-text description of what the agent is about to do.</dd>
+</div>
+
+<div>
+<dt><code>max_chunks</code></dt>
+<dt><span className="stigmem-fields__type">SHOULD · 3</span></dt>
+<dd>Maximum number of instruction units to return.</dd>
+</div>
+
+<div>
+<dt><code>token_budget</code></dt>
+<dt><span className="stigmem-fields__type">SHOULD · 2000</span></dt>
+<dd>Soft token budget for the combined response content.</dd>
+</div>
+
+<div>
+<dt><code>manifest_hint</code></dt>
+<dt><span className="stigmem-fields__type">MAY</span></dt>
+<dd>Explicit unit names from the manifest; loaded first before ranked retrieval.</dd>
+</div>
+
+</div>
 
 #### §21.3.2 Response Shape {#section-21-3-2}
-
-The response carries the retrieved instruction chunks ranked by relevance,
-along with metadata that the agent and runtime need for budget management and
-audit. The `audit_token` is a first-class field rather than a header because
-the agent must pass it back when submitting usage feedback (§21.5.2) — embedding
-it in the body ensures it cannot be silently dropped by middleware.
 
 ```json
 {
@@ -239,25 +385,20 @@ it in the body ensures it cannot be silently dropped by middleware.
 }
 ```
 
-| Field | Description |
-|---|---|
-| `chunks` | Ordered list of instruction units; most relevant first |
-| `chunks[].name` | Unit name from the manifest |
-| `chunks[].fact_uri` | Stigmem `instruction:` fact URI |
-| `chunks[].content` | Full rendered markdown content of the instruction unit |
-| `chunks[].tokens` | Actual token count of `.content` |
-| `chunks[].valid_until` | Expiry from the backing stigmem fact; agent SHOULD re-call before expiry if session is long |
-| `chunks[].version` | Version string of the instruction unit; used in audit logs |
-| `chunks[].score` | Relevance score in [0.0, 1.0] used for ordering |
-| `chunks[].source` | Either `"stigmem"` or `"fallback_path"` (§21.6.1 co-existence fallback) |
-| `total_tokens` | Sum of tokens across all returned chunks |
-| `truncated` | `true` if one or more units were dropped to stay within `token_budget` |
-| `missed_hints` | Unit names from `manifest_hint` that were not found or not accessible |
-| `audit_token` | Opaque token for the discovery audit; MUST be passed to the audit submission endpoint (§21.5.2) |
+<div className="stigmem-keypoint">
+
+**`audit_token` is a first-class body field, not a header.**
+
+The agent must pass it back when submitting usage feedback. Embedding
+it in the body ensures it cannot be silently dropped by middleware.
+
+</div>
+
+`chunks[].source` is `"stigmem"` or `"fallback_path"`. `missed_hints` lists `manifest_hint` names that were not found.
 
 #### §21.3.3 Backing Implementation {#section-21-3-3}
 
-`recall_instruction` MUST be implemented as a stigmem `recall` call (§20.3) restricted to the `instruction:` scope (§21.4.1):
+`recall_instruction` MUST be implemented as a stigmem `recall` call restricted to the `instruction:` scope:
 
 ```json
 POST /v1/recall
@@ -271,24 +412,31 @@ POST /v1/recall
 }
 ```
 
-The `require_garden_ids` constraint MUST be applied so that `recall_instruction` cannot return facts from gardens the agent is not authorized to read (§17, §19.3). Implementations MUST apply the garden ACL check at recall time using the caller's capability token.
+The `require_garden_ids` constraint MUST be applied so that `recall_instruction` cannot return facts from gardens the agent is not authorized to read. If `manifest_hint` is provided, the named units MUST be included before ranked retrieval; missing/inaccessible hints are silently omitted and named in `missed_hints`.
 
-If `manifest_hint` is provided, the named units MUST be included in the result (subject to `token_budget`) before the ranked retrieval results. If a hinted unit does not exist or is not accessible, it MUST be silently omitted (not an error) and its name MUST appear in `missed_hints`.
+**Guaranteed units (`guarantee_load: true`):**
 
-**Guaranteed units (`guarantee_load: true`):** After ranked and hinted results are assembled, the implementation MUST append all manifest units with `guarantee_load: true` that were not already included. The following rules govern their inclusion:
-
-1. **Position:** guaranteed units MUST be appended after ranked results by default, so that ranked results (higher expected relevance) receive attention primacy. A unit with `force_position: "prepend"` in its manifest entry MUST be prepended instead. **A unit with `force_position: "prepend"` MUST undergo explicit content review at manifest publish time, recorded in provenance metadata, and MUST require a distinct admin approval record separate from the general `guarantee_load` approval.** The `force_position: "prepend"` override SHOULD be reserved for universal policy units where omission risk outweighs priming risk. (S6)
-2. **Budget precedence:** guaranteed units MUST NOT be silently dropped by `token_budget` exhaustion. If budget is exhausted after ranked results, the implementation MUST still append guaranteed units and MUST set `truncated: true`. Ranked results are truncated first to make room; guaranteed units are truncated last but never to zero.
-3. **Agent cap:** at most **5** manifest units **per agent** may have `guarantee_load: true`. Manifest publish MUST be rejected with `guarantee_cap_exceeded` if this per-agent limit would be exceeded (§21.9). A deployment-wide soft cap MAY be configured; exceeding it SHOULD emit a warning event but MUST NOT block individual agent manifest publishes. (S4)
-4. **Relevance threshold:** implementations SHOULD warn (non-fatal) if a guaranteed unit has an empirical `P(relevant | recall_invoked) < 0.6` based on the discovery audit; this is a signal to remove the `guarantee_load` flag from that unit.
-5. **Governance:** setting `guarantee_load: true` on any manifest entry requires explicit administrator approval. The approval MUST be recorded in the manifest's provenance metadata.
-6. **Confidentiality note:** guaranteed units are appended to every `recall_instruction` response and are therefore accessible to any principal authorised to invoke `recall_instruction` for this agent, including via prompt injection. Content in guaranteed units MUST NOT rely on retrieval difficulty for confidentiality. Guaranteed units MUST only contain content that is acceptable for any authorised recall caller to observe. (S5)
+<ol className="stigmem-steps">
+<li><strong>Position.</strong> Guaranteed units MUST be appended after ranked results by default (attention primacy). A unit with <code>force_position: "prepend"</code> MUST be prepended. <strong>(S6)</strong> <code>force_position: "prepend"</code> MUST undergo explicit content review at publish time, recorded in provenance, and MUST require a distinct admin approval record separate from the general <code>guarantee_load</code> approval.</li>
+<li><strong>Budget precedence.</strong> Guaranteed units MUST NOT be silently dropped by <code>token_budget</code> exhaustion. Ranked results are truncated first; guaranteed units never to zero.</li>
+<li><strong>(S4) Agent cap.</strong> At most 5 manifest units <strong>per agent</strong> may have <code>guarantee_load: true</code>. Publish MUST be rejected with <code>guarantee_cap_exceeded</code> if exceeded.</li>
+<li><strong>Relevance threshold.</strong> SHOULD warn if a guaranteed unit has empirical <code>P(relevant | recall_invoked) &lt; 0.6</code>.</li>
+<li><strong>Governance.</strong> Requires explicit administrator approval recorded in provenance metadata.</li>
+<li><strong>(S5) Confidentiality note.</strong> Guaranteed units are accessible to any principal authorised to invoke <code>recall_instruction</code> for this agent, including via prompt injection. Content in guaranteed units MUST NOT rely on retrieval difficulty for confidentiality.</li>
+</ol>
 
 #### §21.3.4 Determinism and Auditability {#section-21-3-4}
 
-The same `(intent, manifest_hint, max_chunks, token_budget)` tuple MUST produce the same ordered result given the same set of instruction facts at the same `valid_until` boundaries. This determinism property enables replay-based audit (§21.5.3).
+<div className="stigmem-keypoint">
 
-Implementations MUST record every `recall_instruction` invocation in the discovery audit table (§21.5.1) before returning the response. If audit write fails, the response MUST still be returned (audit is best-effort); the failure MUST be logged as `audit_write_failed`.
+**The same `(intent, manifest_hint, max_chunks, token_budget)` tuple MUST produce the same ordered result.**
+
+Given the same set of instruction facts at the same `valid_until`
+boundaries. This determinism property enables replay-based audit.
+
+</div>
+
+Implementations MUST record every `recall_instruction` invocation in the discovery audit table before returning. Audit-write failure is logged as `audit_write_failed` but MUST NOT block the response (audit is best-effort).
 
 ---
 
@@ -298,76 +446,146 @@ The `instruction:` URI scheme is a reserved stigmem scope for agent instruction 
 
 #### §21.4.1 Scope Namespace {#section-21-4-1}
 
-`instruction:` URIs follow the pattern:
-
 ```
 instruction:{deployment}/{agent_id}/{unit_name}/{version}
 ```
 
-Where:
-- `{deployment}` is the deployment identifier (e.g. `acme`); MUST match the `entity_uri` root in the org manifest (§19.1).
-- `{agent_id}` is the stable agent UUID or a well-known shortname (e.g. `cto`).
-- `{unit_name}` is the instruction unit name from the manifest.
-- `{version}` is a version string (e.g. `v1`, `v3`); MUST be monotonically incrementing; MUST NOT be a floating alias (e.g. `latest`).
+<div className="stigmem-fields">
+
+<div>
+<dt>Segment</dt>
+<dt><span className="stigmem-fields__type">Constraint</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt><code>&#123;deployment&#125;</code></dt>
+<dt><span className="stigmem-fields__type">org root</span></dt>
+<dd>MUST match the <code>entity_uri</code> root in the org manifest.</dd>
+</div>
+
+<div>
+<dt><code>&#123;agent_id&#125;</code></dt>
+<dt><span className="stigmem-fields__type">UUID or shortname</span></dt>
+<dd>Stable agent UUID or a well-known shortname (e.g. <code>cto</code>).</dd>
+</div>
+
+<div>
+<dt><code>&#123;unit_name&#125;</code></dt>
+<dt><span className="stigmem-fields__type">manifest entry</span></dt>
+<dd>The instruction unit name from the manifest.</dd>
+</div>
+
+<div>
+<dt><code>&#123;version&#125;</code></dt>
+<dt><span className="stigmem-fields__type">monotonic</span></dt>
+<dd>e.g. <code>v1</code>, <code>v3</code>; MUST be monotonically incrementing; MUST NOT be a floating alias like <code>latest</code>.</dd>
+</div>
+
+</div>
 
 The special URI `instruction:{deployment}/{agent_id}/manifest/{version}` addresses the agent's instruction manifest itself.
 
 #### §21.4.2 Versioning {#section-21-4-2}
 
-Instruction facts are **mutable** in the sense that a new version supersedes the old, but individual versioned facts are **immutable** once written. The following rules apply:
+<div className="stigmem-keypoint">
 
-1. A new version MUST be written as a new fact (new `id`, new `version` string) rather than mutating an existing fact.
-2. The previous version's `valid_until` MUST be set to the new version's `created_at` within the same transaction, or within a 30-second grace window.
-3. `recall_instruction` MUST return only the latest version (highest version string by semantic version ordering, or by `created_at` if versions are non-comparable strings).
-4. Agents MAY cache instruction chunks for the duration of a heartbeat/session. Agents MUST NOT cache across heartbeats unless the `valid_until` extends past the next expected heartbeat time.
+**Instruction facts are mutable as a series; individual versioned facts are immutable once written.**
+
+A new version MUST be written as a new fact rather than mutating an
+existing fact. The previous version's `valid_until` MUST be set to
+the new version's `created_at` within the same transaction or a
+30-second grace window.
+
+</div>
+
+<div className="stigmem-grid">
+
+<div><h4>Latest version wins</h4><p><code>recall_instruction</code> MUST return only the latest version (highest version string by semantic version ordering).</p></div>
+<div><h4>Per-heartbeat cache</h4><p>Agents MAY cache instruction chunks for the duration of a heartbeat/session.</p></div>
+<div><h4>No cross-heartbeat cache</h4><p>Unless <code>valid_until</code> extends past the next expected heartbeat time.</p></div>
+
+</div>
 
 #### §21.4.3 Provenance {#section-21-4-3}
 
-Every instruction fact MUST carry:
+<div className="stigmem-fields">
 
-| Field | Requirement |
-|---|---|
-| `source_trust` | MUST be populated at write time (§19.4); instruction facts authored by verified human administrators SHOULD have `source_trust >= 0.9` |
-| `attestation_chain` | MUST include at least one signature from an org manifest key (§19.2); unsigned instruction facts MUST be quarantined (§19.5) |
-| `derived_from` | SHOULD reference the instruction unit's prior version hash when updating; `null` is valid for the first version |
-| Metadata `authored_by` | MUST be the `entity_uri` of the human or system that created this version |
-| Metadata `authored_at` | MUST be an ISO 8601 timestamp |
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Requirement</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt><code>source_trust</code></dt>
+<dt><span className="stigmem-fields__type">MUST · ≥0.9 if human</span></dt>
+<dd>Instruction facts authored by verified human administrators SHOULD have <code>source_trust ≥ 0.9</code>.</dd>
+</div>
+
+<div>
+<dt><code>attestation_chain</code></dt>
+<dt><span className="stigmem-fields__type">MUST</span></dt>
+<dd>At least one signature from an org manifest key. Unsigned instruction facts MUST be quarantined.</dd>
+</div>
+
+<div>
+<dt><code>derived_from</code></dt>
+<dt><span className="stigmem-fields__type">SHOULD</span></dt>
+<dd>Reference the prior version hash when updating; <code>null</code> valid for first version.</dd>
+</div>
+
+<div>
+<dt><code>authored_by</code></dt>
+<dt><span className="stigmem-fields__type">MUST</span></dt>
+<dd><code>entity_uri</code> of the human or system that created this version.</dd>
+</div>
+
+<div>
+<dt><code>authored_at</code></dt>
+<dt><span className="stigmem-fields__type">MUST</span></dt>
+<dd>ISO 8601 timestamp.</dd>
+</div>
+
+</div>
 
 #### §21.4.4 Garden Membership {#section-21-4-4}
 
-All instruction facts MUST be placed in a dedicated instruction garden, separate from operational fact gardens. The naming convention is:
+All instruction facts MUST be placed in a dedicated instruction garden:
 
 ```
 garden_id: "instruction:{deployment}:{agent_id}"
 ```
 
-Access MUST be restricted to:
-- The agent itself: read-only via capability token with verb `read`
-- Deployment administrators: read + write via admin API key
-- Peer agents: MUST NOT have read access to another agent's instruction garden unless explicitly granted; cross-agent instruction access is a confidentiality boundary (§21.4.5)
+<div className="stigmem-grid">
+
+<div><h4>Agent: read-only</h4><p>The agent itself, via capability token with verb <code>read</code>.</p></div>
+<div><h4>Admins: read + write</h4><p>Via admin API key.</p></div>
+<div><h4>Peer agents: no access</h4><p>MUST NOT have read access to another agent's instruction garden unless explicitly granted.</p></div>
+
+</div>
 
 #### §21.4.5 Cross-Agent Confidentiality {#section-21-4-5}
 
-An agent's instruction facts MAY contain sensitive operational details including security postures, escalation paths, and negotiation limits. The following rules enforce confidentiality:
+<div className="stigmem-keypoint">
 
-1. A capability token granting `read` on `instruction:{deployment}/{agent_A}/*` MUST NOT be derived from a token held by `agent_B` unless `agent_B`'s role is a declared supervisor of `agent_A` in the org manifest.
-2. Federation (§19.3) MUST NOT replicate instruction-scope facts to peer nodes unless the receiving node is in the same deployment trust domain.
-3. The `recall_instruction` API endpoint MUST validate that the calling agent's token scope matches the instruction garden of the agent whose manifest is being queried; cross-agent recall MUST return `403 instruction_scope_denied`.
-4. Audit logs for instruction recall MUST be accessible to administrators but MUST NOT be surfaced to peer agents.
+**Cross-agent instruction access is a confidentiality boundary.**
+
+Capability tokens granting `read` on another agent's instruction
+scope MUST NOT be derivable unless the requesting agent's role is a
+declared supervisor in the org manifest. Federation MUST NOT
+replicate instruction-scope facts to peer nodes unless the receiving
+node is in the same deployment trust domain. Cross-agent recall
+attempts MUST return `403 instruction_scope_denied`. Audit logs MUST
+NOT be surfaced to peer agents.
+
+</div>
 
 ---
 
 ### §21.5 Discovery Audit {#section-21-5}
 
-The discovery audit provides a per-heartbeat signal for tuning manifest descriptions and `load_triggers`. It enables evaluation of retrieval quality by comparing what was loaded against what was actually used.
-
 #### §21.5.1 Audit Record Shape {#section-21-5-1}
-
-Each `recall_instruction` invocation produces an audit record that captures
-what the agent asked for (`intent`), what was returned (`loaded_chunks`), and —
-once the heartbeat completes — what the agent actually used (`used_chunks`) and
-what it needed but did not receive (`missed_chunks`). This four-way comparison
-is the raw input for the evaluation metrics defined in §21.5.3.
 
 ```json
 {
@@ -385,29 +603,9 @@ is the raw input for the evaluation metrics defined in §21.5.3.
 }
 ```
 
-| Field | Description |
-|---|---|
-| `id` | Globally unique audit event ID with `audevent_` prefix |
-| `agent_id` | Agent that performed the recall |
-| `heartbeat_id` | Run/heartbeat ID in which the recall occurred |
-| `session_start` | ISO 8601 timestamp of the heartbeat start |
-| `intent` | The `intent` string passed to `recall_instruction` |
-| `loaded_chunks` | Unit names returned by `recall_instruction` in this invocation |
-| `used_chunks` | Unit names the agent demonstrably applied (runtime-tracked or self-reported) |
-| `missed_chunks` | Unit names the agent referenced but that were not in `loaded_chunks` (self-reported or post-hoc replay) |
-| `audit_token` | Must match the `audit_token` returned in the `recall_instruction` response |
-| `audit_closed` | Timestamp when the audit submission was received; `null` until POST /audit |
-| `created_at` | Write timestamp of the initial record |
-
-`used_chunks` and `missed_chunks` MAY be populated by the runtime (if it tracks tool-call traces) or by the agent via self-report at heartbeat end. Agents SHOULD self-report usage when runtime tracking is unavailable.
+The four-way comparison (`intent` → `loaded_chunks` → `used_chunks` → `missed_chunks`) is the raw input for the evaluation metrics defined in §21.5.3. `used_chunks` and `missed_chunks` MAY be populated by the runtime or by the agent via self-report at heartbeat end.
 
 #### §21.5.2 Audit Submission API {#section-21-5-2}
-
-At the end of a heartbeat, the agent (or runtime) submits usage feedback by
-reporting which chunks were actually applied and which were needed but missing.
-The `audit_token` from the original `recall_instruction` response ties the
-submission to the correct record. This endpoint is idempotent — a duplicate
-submission with the same token is a silent success.
 
 ```
 POST /v1/instruction/audit
@@ -424,173 +622,177 @@ Content-Type: application/json
 → 400 audit_token_expired  if token is older than 24 hours
 ```
 
-The audit endpoint MUST be idempotent: a second submission with the same `audit_token` MUST return `204` without modifying the record.
+<div className="stigmem-keypoint">
+
+**The audit endpoint MUST be idempotent.**
+
+A second submission with the same `audit_token` MUST return `204`
+without modifying the record.
+
+</div>
 
 #### §21.5.3 Replay-Based Evaluation {#section-21-5-3}
 
-The audit table is append-only and replay-able. The evaluation metrics are:
+<div className="stigmem-fields">
 
-**Recall@k**: fraction of `used_chunks` that appear in `loaded_chunks` within rank k.  
-**Hit@k**: fraction of heartbeats where at least one `used_chunk` was in `loaded_chunks`.  
-**Miss rate**: `|missed_chunks| / (|used_chunks| + |missed_chunks|)`.
+<div>
+<dt>Metric</dt>
+<dt><span className="stigmem-fields__type">Formula</span></dt>
+<dd>Meaning</dd>
+</div>
 
-These metrics SHOULD be computed over a rolling 7-day window. Deployments SHOULD alert when `miss_rate > 0.15` over 100+ events, as this indicates manifest descriptions or triggers need improvement.
+<div>
+<dt>Recall@k</dt>
+<dt><span className="stigmem-fields__type">|used ∩ loaded@k| / |used|</span></dt>
+<dd>Fraction of <code>used_chunks</code> that appear in <code>loaded_chunks</code> within rank k.</dd>
+</div>
 
-Replay procedure: given an audit record with `intent` and the stigmem state at `session_start`, re-execute `recall_instruction(intent)` and compare results to `loaded_chunks`. Determinism (§21.3.4) guarantees the replay is reproducible.
+<div>
+<dt>Hit@k</dt>
+<dt><span className="stigmem-fields__type">≥1 in loaded@k</span></dt>
+<dd>Fraction of heartbeats where at least one <code>used_chunk</code> was in <code>loaded_chunks</code>.</dd>
+</div>
 
-The `recall@k` and `hit@k` metrics SHOULD be computed against the post-hoc replay set (ground truth: all instruction units the agent actually needed, reconstructed from the full heartbeat trace) to measure manifest coverage independently of what the agent happened to load.
+<div>
+<dt>Miss rate</dt>
+<dt><span className="stigmem-fields__type">|missed| / (|used| + |missed|)</span></dt>
+<dd>Alert when <code>miss_rate &gt; 0.15</code> over 100+ events.</dd>
+</div>
 
-> **Known limitation — endogeneity of `used_chunks` (non-normative):** Recall@k, Hit@k, and miss rate are all computed relative to `used_chunks`, which is itself derived from agent behavior during the heartbeat being measured. An agent that chronically fails to load a required instruction unit will never reference it, so the unit will never appear in `used_chunks`. The chronic miss is therefore invisible to all three live-audit metrics. This is an accepted limitation for the design: the live audit is a useful signal for units the agent *does* interact with, but it cannot independently surface units the agent has never successfully retrieved.
+</div>
+
+These metrics SHOULD be computed over a rolling 7-day window. Determinism (§21.3.4) guarantees the replay is reproducible.
+
+> **Known limitation — endogeneity of `used_chunks` (non-normative):** All three metrics are computed relative to `used_chunks`, which is itself derived from agent behavior during the heartbeat being measured. An agent that chronically fails to load a required instruction unit will never reference it, so the unit will never appear in `used_chunks`. The chronic miss is therefore invisible to all three live-audit metrics. This is an accepted limitation.
 >
 > #### 21.5.4 Probe-Set Eval (follow-on, non-normative)
 >
-> To complement the endogenous live-audit metrics with an exogenous coverage signal, implementations SHOULD maintain a **probe set**: a curated list of `(intent, required_units)` pairs administered independently of the live agent. After every manifest update and on a periodic schedule (e.g. daily), run `recall_instruction(intent)` against each probe and compute:
+> To complement the endogenous live-audit metrics with an exogenous coverage signal, implementations SHOULD maintain a **probe set**: a curated list of `(intent, required_units)` pairs administered independently of the live agent. After every manifest update and on a periodic schedule (e.g. daily), run `recall_instruction(intent)` against each probe and compute Probe-coverage@k and Probe-hit@k.
 >
-> **Probe-coverage@k**: fraction of `required_units` in each probe that appear in the top-k recall result.  
-> **Probe-hit@k**: fraction of probes where ≥ 1 `required_unit` appears in the top-k result.
+> #### 21.5.5 Probe-Set Coverage Sampling with Soft Score Lift (non-normative)
 >
-> Unlike live-audit Recall@k, these metrics are independent of agent behavior — a chronically un-loaded unit will fail the probe that covers it even if no live heartbeat ever referenced it.
->
-> The probe set SHOULD be curated by deployment administrators. Each probe entry MUST specify:
->
-> ```json
-> {
->   "probe_id":       "probe_heartbeat_start",
->   "intent":         "I am starting a new heartbeat and need to know what to do",
->   "required_units": ["heartbeat-procedure", "checkout-procedure"],
->   "k":              3
-> }
-> ```
->
-> A follow-on spec revision (the pre-reset multi-backend work) will formalize the probe-set storage format, the evaluation runner contract, alert thresholds, and the soft-lift mechanism described below.
->
-> #### 21.5.5 Probe-Set Coverage Sampling with Soft Score Lift (the pre-reset multi-backend work roadmap, non-normative)
->
-> Approaches B and augmented A (§21.1.5, §21.8.3) address structurally-predictable and trigger-quality misses at authoring time. The residual problem — semantic-drift misses and embedding-model staleness causing gradual coverage degradation without any live-audit signal — requires an exogenous coverage signal independent of both the retrieval path and agent behavior.
->
-> **Architecture (non-normative):**
->
-> 1. **Probe-set construction:** At manifest publish time, generate M=15–20 synthetic queries per unit by combining the unit's `description` with each `load_triggers.intents` string, paraphrased via a diverse augmentation pass (lexical + syntactic variation, not just dense neighbours). Store per unit as `{unit_id → [q_1 … q_M]}` in the manifest DB. Re-generated on unit update.
->
-> 2. **Background coverage audit:** A scheduled job (runs daily and on every embedding-model version bump) runs all probes through the live retrieval index. Computes per-unit `hit@10` across the M probes. Units with `hit@10 < 0.4` are flagged as *coverage-critical*.
->
-> 3. **Soft score lift for coverage-critical units:** Flagged units receive a log-additive ranking boost applied within the recall engine: `score += log(1 + λ)` where λ ≈ 0.15. This lifts chronically under-retrieved units without forcing them into context unconditionally — they only appear if they are in the semantic neighbourhood of the actual query. No irrelevant units are injected; the noise properties of Approach C are avoided entirely.
->
-> 4. **Coverage endpoint:** `GET /v1/agents/{agent_id}/instruction-manifest/coverage` (§21.8.6) returns per-unit `hit@10` and `coverage_status` so authors can diagnose units before production misses occur.
->
-> 5. **Probe-set calibration:** The probe set SHOULD be seeded with real heartbeat intent strings (10% sample, PII-stripped) on a weekly cadence to keep the distribution calibrated to actual agent query patterns.
->
-> This approach addresses the root cause of endogeneity by making the miss-rate signal exogenous, and makes embedding-model drift visible as a measurable per-unit delta across versions.
+> 1. **Probe-set construction** at manifest publish time. 2. **Background coverage audit** runs daily and on every embedding-model version bump. 3. **Soft score lift** for coverage-critical units: `score += log(1 + λ)` where λ ≈ 0.15. 4. **Coverage endpoint** (§21.8.6). 5. **Probe-set calibration** with PII-stripped real heartbeat intents on a weekly cadence.
 
 ---
 
 ### §21.6 Migration Semantics {#section-21-6}
 
-This section defines the co-existence and deprecation path for agents transitioning from file-based instructions to `instruction:`-scope stigmem facts.
-
 #### §21.6.1 Co-existence Period {#section-21-6-1}
 
-During migration, an agent MAY have both:
-- A static markdown instruction file (e.g. `AGENTS.md`) at a file path, and
-- A manifest with `fact_uri` entries pointing at stigmem.
-
-The following resolution rules apply:
-
-1. If a manifest entry has both `fact_uri` and `path`, `fact_uri` MUST take precedence.
-2. If `fact_uri` lookup fails (fact not found or scope unreachable), the runtime MUST fall back to `path` if present and MUST append `"source": "fallback_path"` to the returned chunk.
-3. File-path entries are read-only; they MUST NOT be written via `recall_instruction` or the instruction API.
-4. The boot stub MUST indicate migration state via the `migration_mode` frontmatter field:
-   - `"file"` — no manifest; static file only
-   - `"coexistence"` — both static file and manifest entries present
-   - `"stigmem"` — manifest only; no file fallback
+<ol className="stigmem-steps">
+<li>If a manifest entry has both <code>fact_uri</code> and <code>path</code>, <code>fact_uri</code> MUST take precedence.</li>
+<li>If <code>fact_uri</code> lookup fails, the runtime MUST fall back to <code>path</code> if present and MUST append <code>"source": "fallback_path"</code>.</li>
+<li>File-path entries are read-only.</li>
+<li>The boot stub MUST indicate migration state via <code>migration_mode</code>: <code>"file"</code>, <code>"coexistence"</code>, or <code>"stigmem"</code>.</li>
+</ol>
 
 #### §21.6.2 Deprecation Path {#section-21-6-2}
 
-The deprecation sequence for an instruction unit is:
+<div className="stigmem-fields">
 
-| Stage | Action |
-|---|---|
-| 1. Seed | Write instruction content to stigmem as `instruction:` facts; verify recall quality over ≥ 5 heartbeats |
-| 2. Coexist | Add `fact_uri` to the manifest entry alongside existing `path`; set `migration_mode: "coexistence"` |
-| 3. Verify | Monitor audit metrics (§21.5.3) for 7 days; confirm `miss_rate < 0.10` |
-| 4. Promote | Remove `path` from the manifest entry; set `migration_mode: "stigmem"` |
-| 5. Archive | Move the source markdown file to `docs/legacy-instructions/` with a redirect comment pointing to the `fact_uri` |
+<div>
+<dt>Stage</dt>
+<dt><span className="stigmem-fields__type">Mode</span></dt>
+<dd>Action</dd>
+</div>
 
-Deployments MUST NOT skip Stage 3 (Verify) for agents that handle sensitive operational decisions. The risk of an undetected miss in a security-relevant instruction unit is higher than the cost of a 7-day observation window.
+<div>
+<dt>1. Seed</dt>
+<dt><span className="stigmem-fields__type">verify ≥5 heartbeats</span></dt>
+<dd>Write instruction content to stigmem as <code>instruction:</code> facts; verify recall quality.</dd>
+</div>
+
+<div>
+<dt>2. Coexist</dt>
+<dt><span className="stigmem-fields__type">coexistence</span></dt>
+<dd>Add <code>fact_uri</code> alongside existing <code>path</code>.</dd>
+</div>
+
+<div>
+<dt>3. Verify</dt>
+<dt><span className="stigmem-fields__type">7-day window</span></dt>
+<dd>Monitor audit metrics; confirm <code>miss_rate &lt; 0.10</code>.</dd>
+</div>
+
+<div>
+<dt>4. Promote</dt>
+<dt><span className="stigmem-fields__type">stigmem</span></dt>
+<dd>Remove <code>path</code> from the manifest entry.</dd>
+</div>
+
+<div>
+<dt>5. Archive</dt>
+<dt><span className="stigmem-fields__type">legacy folder</span></dt>
+<dd>Move source markdown to <code>docs/legacy-instructions/</code> with a redirect comment.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Deployments MUST NOT skip Stage 3 (Verify) for agents that handle sensitive operational decisions.**
+
+The risk of an undetected miss in a security-relevant instruction
+unit is higher than the cost of a 7-day observation window.
+
+</div>
 
 #### §21.6.3 Bulk Migration Tooling {#section-21-6-3}
 
-Implementations SHOULD provide a `stigmem migrate-instructions` CLI command that:
-
-1. Reads all entries from an existing markdown instruction file.
-2. Splits at H2/H3 section boundaries (or at a configurable split regex).
-3. Writes each section as an `instruction:` fact with attestation from the local admin key.
-4. Emits a manifest `entries` array for copy-paste into the manifest file.
-5. Does NOT automatically update the manifest or boot stub; the operator MUST review and commit the change manually.
-
-This is a SHOULD (not MUST) because manual migration is always acceptable.
+Implementations SHOULD provide a `stigmem migrate-instructions` CLI that reads existing markdown, splits at H2/H3 boundaries, writes each section as an `instruction:` fact, and emits a manifest entries array for review. It MUST NOT automatically update the manifest or boot stub.
 
 ---
 
 ### §21.7 Schema Migrations {#section-21-7}
 
-The following DDL MUST be applied when upgrading to pre-reset instruction-discovery design (§21 compliance).
 Three tables support the lazy instruction layer:
 
-**`instruction_manifests`** stores versioned snapshots of each agent's
-instruction manifest. Previous versions are retained (with a `superseded_at`
-timestamp) so that the audit system can replay recalls against the manifest
-that was active at the time.
+<div className="stigmem-grid">
 
-**`instruction_audit`** is the append-only log backing the discovery audit
-(§21.5). Each row captures one `recall_instruction` invocation and its
-usage-feedback follow-up.
+<div><h4><code>instruction_manifests</code></h4><p>Versioned snapshots of each agent's manifest. Previous versions retained with <code>superseded_at</code>.</p></div>
+<div><h4><code>instruction_audit</code></h4><p>Append-only log backing the discovery audit. One row per <code>recall_instruction</code> invocation.</p></div>
+<div><h4><code>boot_stubs</code></h4><p>Caches the rendered boot stub per <code>(agent_id, adapter_profile)</code>. Invalidated on manifest version change.</p></div>
 
-**`boot_stubs`** caches the rendered boot stub for each `(agent_id,
-adapter_profile)` pair. The cache is invalidated whenever the agent's manifest
-version changes or the stub schema version increments.
+</div>
 
 ```sql
--- Instruction manifest registry
 CREATE TABLE IF NOT EXISTS instruction_manifests (
-    id               TEXT PRIMARY KEY,           -- UUID
+    id               TEXT PRIMARY KEY,
     agent_id         TEXT NOT NULL,
     version          TEXT NOT NULL,
-    fact_uri         TEXT NOT NULL,              -- instruction: scope URI
+    fact_uri         TEXT NOT NULL,
     token_count      INTEGER NOT NULL,
-    body             TEXT NOT NULL,              -- JSON: array of manifest entries
-    created_at       INTEGER NOT NULL,           -- Unix ms
-    superseded_at    INTEGER,                    -- NULL if current version
+    body             TEXT NOT NULL,
+    created_at       INTEGER NOT NULL,
+    superseded_at    INTEGER,
     UNIQUE(agent_id, version)
 );
 CREATE INDEX IF NOT EXISTS idx_manifests_agent ON instruction_manifests (agent_id, superseded_at NULLS FIRST);
 
--- Discovery audit log (append-only)
 CREATE TABLE IF NOT EXISTS instruction_audit (
-    id               TEXT PRIMARY KEY,           -- audevent_ prefixed UUID
+    id               TEXT PRIMARY KEY,
     agent_id         TEXT NOT NULL,
     heartbeat_id     TEXT NOT NULL,
-    session_start    INTEGER NOT NULL,           -- Unix ms
+    session_start    INTEGER NOT NULL,
     intent           TEXT NOT NULL,
-    loaded_chunks    TEXT NOT NULL,              -- JSON array of unit names
-    used_chunks      TEXT NOT NULL DEFAULT '[]', -- JSON array; updated on POST /audit
-    missed_chunks    TEXT NOT NULL DEFAULT '[]', -- JSON array; updated on POST /audit
+    loaded_chunks    TEXT NOT NULL,
+    used_chunks      TEXT NOT NULL DEFAULT '[]',
+    missed_chunks    TEXT NOT NULL DEFAULT '[]',
     audit_token      TEXT NOT NULL UNIQUE,
-    audit_closed     INTEGER,                    -- Unix ms; NULL until POST /audit received
-    created_at       INTEGER NOT NULL            -- Unix ms
+    audit_closed     INTEGER,
+    created_at       INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_audit_agent_session ON instruction_audit (agent_id, session_start DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_token         ON instruction_audit (audit_token);
 
--- Boot stub cache (invalidated on manifest update)
 CREATE TABLE IF NOT EXISTS boot_stubs (
     agent_id          TEXT NOT NULL,
     adapter_profile   TEXT NOT NULL DEFAULT 'generic',
     stub_version      INTEGER NOT NULL DEFAULT 1,
-    body              TEXT NOT NULL,              -- full markdown stub
+    body              TEXT NOT NULL,
     token_count       INTEGER NOT NULL,
-    generated_at      INTEGER NOT NULL,           -- Unix ms
-    manifest_version  TEXT NOT NULL,              -- version string of backing manifest
+    generated_at      INTEGER NOT NULL,
+    manifest_version  TEXT NOT NULL,
     PRIMARY KEY (agent_id, adapter_profile)
 );
 ```
@@ -599,16 +801,7 @@ CREATE TABLE IF NOT EXISTS boot_stubs (
 
 ### §21.8 Wire Format Additions {#section-21-8}
 
-The following routes supplement §5. Implementations MUST provide all MUST-labelled routes to claim §21 compliance.
-
 #### §21.8.1 Get Boot Stub (MUST) {#section-21-8-1}
-
-Returns the agent's rendered boot stub as a markdown document. The response
-includes headers that let the runtime verify freshness: `X-Stub-Version` is
-the stub schema version, `X-Manifest-Version` is the backing manifest version,
-and `X-Token-Count` is the stub's token cost. Only the agent itself or an admin
-may call this endpoint — a peer agent requesting another agent's stub is
-rejected with 403 to enforce instruction confidentiality (§21.4.5).
 
 ```
 GET /v1/agents/{agent_id}/boot-stub[?profile={adapter_profile}]
@@ -624,15 +817,9 @@ Authorization: Bearer <agent api-key or admin api-key>
 → 404 if agent not found or no stub generated yet
 ```
 
-If `profile` is absent, MUST default to `generic`. Unknown profiles MUST be treated as `generic` (no error).
+If `profile` is absent, MUST default to `generic`. Unknown profiles MUST be treated as `generic`.
 
 #### §21.8.2 Get Instruction Manifest (MUST) {#section-21-8-2}
-
-Retrieves the current (non-superseded) instruction manifest for an agent. The
-response is a structured JSON object containing the manifest version, backing
-stigmem fact URI, token count, and the full array of manifest entries (§21.2.2).
-This is the endpoint the boot stub references at `manifest_uri` — but it is
-also useful for operators inspecting an agent's configuration.
 
 ```
 GET /v1/agents/{agent_id}/instruction-manifest
@@ -642,7 +829,7 @@ Authorization: Bearer <agent api-key or admin api-key>
     "manifest_version": "v3",
     "fact_uri": "instruction:acme/agent/cto/manifest/v3",
     "token_count": 840,
-    "entries": [ ...entry objects per §21.2.2... ],
+    "entries": [ ...entry objects... ],
     "last_updated_at": "2026-05-04T00:00:00Z"
   }
 → 403 if caller is not the agent itself or an admin
@@ -651,14 +838,6 @@ Authorization: Bearer <agent api-key or admin api-key>
 
 #### §21.8.3 Publish / Replace Instruction Manifest (MUST) {#section-21-8-3}
 
-Publishes a new version of the agent's instruction manifest, replacing the
-current version. This endpoint is the gate through which all manifest changes
-must pass — it enforces the token budget (1000 tokens), validates entry
-structure, runs the paraphrase coverage gate (Approach A), and atomically
-updates the backing stigmem fact, the `instruction_manifests` table, and the
-boot stub cache. Manifest versions are immutable: once a version string is
-published, it cannot be overwritten (409 on collision).
-
 ```
 PUT /v1/agents/{agent_id}/instruction-manifest
 Authorization: Bearer <admin api-key>
@@ -666,100 +845,81 @@ Content-Type: application/json
 
 {
   "version": "v4",
-  "entries": [ ...entry objects per §21.2.2... ],
+  "entries": [ ...entry objects... ],
   "skip_coverage_gate": false
 }
 
-→ 200 {
-    "fact_uri":       "instruction:acme/agent/cto/manifest/v4",
-    "token_count":    910,
-    "coverage_report": [
-      { "unit": "security-posture", "coverage_pct": 0.95, "passed": true },
-      { "unit": "escalation-path",  "coverage_pct": 0.60, "passed": false }
-    ]
-  }
-→ 400 manifest_too_large              if token_count > 1000
-→ 400 manifest_entry_invalid          if any entry has neither or both of fact_uri/path
-→ 400 manifest_coverage_failure       if any unit fails the paraphrase coverage gate (see below)
-→ 400 task_type_unknown               if any required_by_task_types value is not a registered wake-reason string
-→ 400 guarantee_cap_exceeded          if more than 5 entries have guarantee_load: true
-→ 400 task_types_approval_required    if any entry declares > 2 required_by_task_types values without recorded admin approval
-→ 409 manifest_version_conflict       if version already exists (versions are immutable)
+→ 200 { "fact_uri": "...", "token_count": 910, "coverage_report": [...] }
+→ 400 manifest_too_large
+→ 400 manifest_entry_invalid
+→ 400 manifest_coverage_failure
+→ 400 task_type_unknown
+→ 400 guarantee_cap_exceeded
+→ 400 task_types_approval_required
+→ 409 manifest_version_conflict
 ```
 
-**Augmented manifest coverage gate (Approach A):** This route MUST run a paraphrase-expansion coverage check before accepting a manifest. For each unit in the incoming manifest:
+**Augmented manifest coverage gate (Approach A):**
 
-1. For every string in `load_triggers.intents`, generate N=5 paraphrases using lexically and syntactically diverse augmentation (MUST NOT use the retrieval encoder's own nearest-neighbour space as the sole paraphrase source).
-2. Run `recall_instruction(paraphrase)` for each generated paraphrase and check whether this unit appears in the top-k results (default k=3).
-3. Compute `coverage_pct = (paraphrases where unit in top-k) / (total paraphrases)`.
-4. If `coverage_pct < 0.80` for any unit, the entire publish MUST be rejected with `manifest_coverage_failure`, identifying the failing unit(s).
+<ol className="stigmem-steps">
+<li>For every string in <code>load_triggers.intents</code>, generate N=5 paraphrases using lexically and syntactically diverse augmentation (MUST NOT use the retrieval encoder's own nearest-neighbour space as the sole paraphrase source).</li>
+<li>Run <code>recall_instruction(paraphrase)</code> for each generated paraphrase; check whether this unit appears in top-k results (default k=3).</li>
+<li>Compute <code>coverage_pct = (paraphrases where unit in top-k) / (total paraphrases)</code>.</li>
+<li>If <code>coverage_pct &lt; 0.80</code> for any unit, the entire publish MUST be rejected with <code>manifest_coverage_failure</code>.</li>
+</ol>
 
-`skip_coverage_gate: true` MAY be used by administrators to bypass the coverage check (e.g. for bootstrap or emergency update); the bypass MUST be recorded in the manifest's provenance metadata and MUST emit an audit event that includes the names and `coverage_pct` values of all units that would have failed the gate. **When `skip_coverage_gate: true` is used on a manifest containing any `guarantee_load: true` entry, the bypass provenance record MUST include co-signatures from at least two distinct administrators (two distinct `authored_by` entity URIs). Single-admin bypass is permitted only for manifests with no `guarantee_load: true` entries.** (S7) Implementations SHOULD automatically schedule re-certification within 7 days when `skip_coverage_gate: true` is used. (S10)
+<div className="stigmem-keypoint">
 
-**Paraphrase generator data boundary:** Paraphrase generation input MUST be limited to `load_triggers.intents` strings only. Instruction fact content (the body of instruction units) MUST NOT be sent to any external paraphrase generation service. If an external service is used for paraphrase generation, it MUST be listed in the deployment's trust manifest (§19.1) and covered by an appropriate data processing agreement. Implementations SHOULD prefer local, deterministic paraphrase methods for deployments handling confidential instruction content. (S8)
+**(S7) Two-admin co-sign for skip_coverage_gate on guaranteed-unit manifests.**
 
-**Re-certification requirement:** When the deployment's embedding model version changes, all existing manifests MUST be re-certified through this gate before the new model version is activated for production recall. Implementations MUST expose the current embedding model version in the `GET /v1/agents/{agent_id}/instruction-manifest` response.
+When `skip_coverage_gate: true` is used on a manifest containing any
+`guarantee_load: true` entry, the bypass provenance record MUST
+include co-signatures from at least two distinct administrators
+(two distinct `authored_by` entity URIs). Single-admin bypass is
+permitted only for manifests with no `guarantee_load: true` entries.
+**(S10)** Implementations SHOULD automatically schedule
+re-certification within 7 days when `skip_coverage_gate: true` is used.
 
-This route MUST atomically: (1) run coverage gate, (2) write the manifest fact to stigmem under `instruction:` scope, (3) update `instruction_manifests` table, (4) invalidate the boot stub cache for this agent.
+</div>
+
+<div className="stigmem-keypoint">
+
+**(S8) Paraphrase generator data boundary.**
+
+Paraphrase generation input MUST be limited to `load_triggers.intents`
+strings only. Instruction fact content MUST NOT be sent to any
+external paraphrase generation service. External services MUST be
+listed in the deployment's trust manifest with an appropriate DPA.
+Implementations SHOULD prefer local, deterministic paraphrase
+methods for confidential instruction content.
+
+</div>
+
+**Re-certification:** When the deployment's embedding model version changes, all existing manifests MUST be re-certified through this gate before the new model version is activated for production recall.
+
+This route MUST atomically: (1) run coverage gate, (2) write manifest fact, (3) update `instruction_manifests` table, (4) invalidate boot stub cache.
 
 #### §21.8.4 Recall Instructions (MUST) {#section-21-8-4}
-
-This is the HTTP route that backs the `recall_instruction` tool contract
-(§21.3). The agent's runtime calls this endpoint on behalf of the agent when
-it invokes the tool. Scope validation ensures that an agent can only recall
-its own instructions — cross-agent recall is rejected with 403
-`instruction_scope_denied`.
 
 ```
 POST /v1/agents/{agent_id}/recall-instruction
 Authorization: Bearer <agent api-key>
 Content-Type: application/json
 
-{
-  "intent":        "I need to check out an issue and start work",
-  "max_chunks":    3,
-  "token_budget":  1200,
-  "manifest_hint": ["heartbeat-procedure"]
-}
+{ "intent": "...", "max_chunks": 3, "token_budget": 1200, "manifest_hint": ["heartbeat-procedure"] }
 
 → 200 { ...response shape per §21.3.2... }
-→ 400 intent_required          if intent is absent or empty
-→ 403 instruction_scope_denied if agent token scope does not match agent_id
+→ 400 intent_required
+→ 403 instruction_scope_denied
 → 404 if agent not found
-→ 503 recall_backend_unavailable if stigmem recall backend is unreachable (retryable)
+→ 503 recall_backend_unavailable (retryable)
 ```
 
 #### §21.8.5 Submit Discovery Audit (SHOULD) {#section-21-8-5}
 
-The wire-level route for the audit submission described in §21.5.2. This is a
-SHOULD (not MUST) because the audit is best-effort — an agent that cannot
-submit usage feedback does not break the instruction system, it only degrades
-evaluation quality. The request body and semantics are identical to §21.5.2.
-
-```
-POST /v1/instruction/audit
-Authorization: Bearer <agent api-key>
-Content-Type: application/json
-
-{
-  "audit_token":   "audi_01J...",
-  "used_chunks":   ["heartbeat-procedure"],
-  "missed_chunks": []
-}
-
-→ 204 on success (idempotent)
-→ 400 audit_token_invalid  if token not recognized or already fully closed
-→ 400 audit_token_expired  if token is older than 24 hours
-```
+The wire-level route for §21.5.2. This is a SHOULD (not MUST) because the audit is best-effort.
 
 #### §21.8.6 Get Manifest Coverage Report (SHOULD) {#section-21-8-6}
-
-Returns per-unit retrieval quality metrics for the agent's current manifest.
-This is the primary operator tool for diagnosing instruction units that may be
-under-retrieved before they produce production misses. Agent-key callers
-receive only raw numeric metrics; admin-key callers also receive the
-`coverage_status` categorical label to limit the retrieval-quality oracle
-surface for non-admin callers (§22 S11).
 
 ```
 GET /v1/agents/{agent_id}/instruction-manifest/coverage
@@ -770,50 +930,128 @@ Agent-key response:
     "manifest_version": "v4",
     "embedding_model_version": "nomic-embed-text-v1.5",
     "evaluated_at": "2026-05-04T06:00:00Z",
-    "units": [
-      {
-        "name":             "security-posture",
-        "coverage_pct":     0.95,
-        "hit_at_10":        0.92,
-        "probe_count":      20,
-        "last_evaluated_at": "2026-05-04T06:00:00Z"
-      }
-    ]
+    "units": [ { "name": "...", "coverage_pct": 0.95, "hit_at_10": 0.92, "probe_count": 20, "last_evaluated_at": "..." } ]
   }
 
 Admin-key response: same as above, plus "coverage_status" field per unit.
 
-→ 403 instruction_scope_denied  if agent API key's scope does not match {agent_id}
-→ 403 if peer agent's API key is used to query another agent's coverage
+→ 403 instruction_scope_denied
 → 404 if no manifest or no coverage report generated yet
 ```
 
-**Scope validation (S9):** The `agent_id` path parameter MUST be validated against the caller's API key scope. An agent API key MUST only grant access to the coverage report for the agent whose scope matches the token. A peer agent's API key querying a different agent's coverage report MUST return `403 instruction_scope_denied`. Only an admin API key may access any agent's coverage report.
+<div className="stigmem-keypoint">
 
-**Categorical label restriction (S11):** The `coverage_status` categorical label (`"ok"`, `"coverage_critical"`, `"not_evaluated"`) SHOULD be returned only in admin-key responses. Agent-key responses SHOULD return only raw `coverage_pct` and `hit_at_10` values, omitting the categorical label. This limits the retrieval-quality oracle surface for non-admin callers.
+**(S9) Scope validation + (S11) Categorical label restriction.**
 
-`coverage_status` values (admin-only): `"ok"` (hit@10 ≥ 0.4), `"coverage_critical"` (hit@10 < 0.4, soft-lift eligible in the pre-reset multi-backend work), `"not_evaluated"` (probe run not yet completed). This endpoint is the primary operator signal for diagnosing instruction units before they produce production misses.
+The `agent_id` path parameter MUST be validated against the caller's
+API key scope; peer-agent queries MUST return `403`. The
+`coverage_status` categorical label (`"ok"`, `"coverage_critical"`,
+`"not_evaluated"`) SHOULD be returned only in admin-key responses.
+Agent-key responses SHOULD return only raw `coverage_pct` and
+`hit_at_10` values, omitting the categorical label — this limits the
+retrieval-quality oracle surface for non-admin callers.
+
+</div>
+
+`coverage_status` values (admin-only): `"ok"` (hit@10 ≥ 0.4), `"coverage_critical"` (hit@10 < 0.4, soft-lift eligible), `"not_evaluated"` (probe run not yet completed).
 
 ---
 
 ### §21.9 Error Reference {#section-21-9}
 
-| HTTP | Error code | Condition |
-|---|---|---|
-| 400 | `intent_required` | `intent` field absent or empty in `recall_instruction` request |
-| 400 | `manifest_too_large` | Manifest exceeds 1000-token budget |
-| 400 | `manifest_entry_invalid` | Entry has neither `fact_uri` nor `path`, or has both |
-| 400 | `manifest_coverage_failure` | One or more units failed the paraphrase coverage gate at publish time (§21.8.3); response body identifies failing units and their `coverage_pct` |
-| 400 | `task_type_unknown` | A `required_by_task_types` value is not a registered wake-reason string in this deployment |
-| 400 | `guarantee_cap_exceeded` | More than 5 manifest entries have `guarantee_load: true`; deployment cap exceeded |
-| 400 | `task_types_approval_required` | A manifest entry declares > 2 `required_by_task_types` values and no admin approval is recorded |
-| 400 | `audit_token_invalid` | `audit_token` not recognized or already fully closed |
-| 400 | `audit_token_expired` | `audit_token` is older than 24 hours |
-| 403 | `instruction_scope_denied` | Caller's token scope does not match the requested agent's instruction garden |
-| 404 | `manifest_not_found` | No instruction manifest configured for the agent |
-| 404 | `boot_stub_not_found` | No boot stub generated for the agent yet |
-| 409 | `manifest_version_conflict` | Version string already exists; manifest versions are immutable |
-| 503 | `recall_backend_unavailable` | Stigmem recall backend unreachable; retryable |
+<div className="stigmem-fields">
+
+<div>
+<dt>HTTP</dt>
+<dt><span className="stigmem-fields__type">Error code</span></dt>
+<dd>Condition</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>intent_required</code></span></dt>
+<dd><code>intent</code> field absent or empty.</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>manifest_too_large</code></span></dt>
+<dd>Manifest exceeds 1000-token budget.</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>manifest_entry_invalid</code></span></dt>
+<dd>Entry has neither <code>fact_uri</code> nor <code>path</code>, or has both.</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>manifest_coverage_failure</code></span></dt>
+<dd>One or more units failed the paraphrase coverage gate.</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>task_type_unknown</code></span></dt>
+<dd><code>required_by_task_types</code> value not in registered enum.</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>guarantee_cap_exceeded</code></span></dt>
+<dd>More than 5 entries have <code>guarantee_load: true</code>.</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>task_types_approval_required</code></span></dt>
+<dd>Entry declares &gt; 2 <code>required_by_task_types</code> without admin approval.</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>audit_token_invalid</code></span></dt>
+<dd>Token not recognized or already fully closed.</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>audit_token_expired</code></span></dt>
+<dd>Token older than 24 hours.</dd>
+</div>
+
+<div>
+<dt>403</dt>
+<dt><span className="stigmem-fields__type"><code>instruction_scope_denied</code></span></dt>
+<dd>Caller's token scope does not match the agent's instruction garden.</dd>
+</div>
+
+<div>
+<dt>404</dt>
+<dt><span className="stigmem-fields__type"><code>manifest_not_found</code></span></dt>
+<dd>No instruction manifest configured for the agent.</dd>
+</div>
+
+<div>
+<dt>404</dt>
+<dt><span className="stigmem-fields__type"><code>boot_stub_not_found</code></span></dt>
+<dd>No boot stub generated yet.</dd>
+</div>
+
+<div>
+<dt>409</dt>
+<dt><span className="stigmem-fields__type"><code>manifest_version_conflict</code></span></dt>
+<dd>Version string already exists; manifest versions are immutable.</dd>
+</div>
+
+<div>
+<dt>503</dt>
+<dt><span className="stigmem-fields__type"><code>recall_backend_unavailable</code></span></dt>
+<dd>Stigmem recall backend unreachable; retryable.</dd>
+</div>
+
+</div>
 
 ---
 

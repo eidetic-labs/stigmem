@@ -6,26 +6,25 @@ audience: Integrator
 
 # Stigmem in OpenClaw
 
-Evaluate persistent, federated memory for OpenClaw agents via the
-[`stigmem-node` ClawHub skill](https://clawhub.ai/skills/stigmem-node). The skill
-provides four surfaces: a **boot handshake** that injects prior context into the
-system prompt, and write surfaces for **handoffs**, **decisions**, and
-**escalations**.
+<p className="stigmem-meta"><span>5 min read</span><span>OpenClaw developer · Node operator</span><span>Alpha connector</span></p>
 
-**Audience:** OpenClaw skill developers and node operators deploying Stigmem as a
-shared knowledge store across agents.
+<div className="stigmem-lead">
+
+**What this guide covers**
+
+Evaluate persistent, federated memory for OpenClaw agents via the
+[`stigmem-node` ClawHub skill](https://clawhub.ai/skills/stigmem-node).
+The skill provides four surfaces: a **boot handshake** that injects
+prior context into the system prompt, plus write surfaces for
+**handoffs**, **decisions**, and **escalations**.
+
+</div>
+
+**Audience:** OpenClaw skill developers and node operators deploying Stigmem as a shared knowledge store across agents.
 
 :::caution Alpha connector
 
-The OpenClaw connector is available in the v0.9.0aN alpha line for evaluation, not
-as a recommended production integration. This wording is queued for the
-v0.9.0a2 artifact refresh; it does not revise the already-published a1 ClawHub
-package in place. The adapter now separates retrieved content from
-instruction-channel recall output and exports a required system prompt directive,
-with audit-mapped C1-C4/H1-H5 regression coverage. The broader R-21 hardening
-line still needs supported-adapter session propagation and outbound replication
-exclusion evidence before high-stakes production use. See
-[LIMITATIONS.md §9](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
+The OpenClaw connector is available in the v0.9.0aN alpha line for evaluation, not as a recommended production integration. The adapter now separates retrieved content from instruction-channel recall output and exports a required system prompt directive, with audit-mapped C1-C4/H1-H5 regression coverage. See [LIMITATIONS.md §9](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 :::
 
@@ -37,13 +36,9 @@ exclusion evidence before high-stakes production use. See
 skill install stigmem-node
 ```
 
-OpenClaw reads the skill's env-var manifest and prompts for `STIGMEM_URL` on first
-use. `adapter.py` is bundled in the skill directory — no separate package install
-is needed beyond `stigmem-py` (declared in the install spec).
+OpenClaw reads the skill's env-var manifest and prompts for `STIGMEM_URL` on first use. `adapter.py` is bundled in the skill directory.
 
 ### pip
-
-For direct package installs outside ClawHub:
 
 ```bash
 uv add "stigmem-py>=0.9.0a2,<1.0.0"
@@ -53,17 +48,41 @@ pip install --pre "stigmem-py>=0.9.0a2,<1.0.0"
 
 ## Environment variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `STIGMEM_URL` | Yes | Base URL of your Stigmem node (e.g. `https://stigmem.example.com`). |
-| `STIGMEM_API_KEY` | Yes | Least-privilege API key for the node. `OpenClawStigmemAdapter.from_env()` fails closed when this is missing. |
-| `STIGMEM_SOURCE_ENTITY` | No | Entity URI identifying this agent in the fact graph. Default: `agent:openclaw`. |
-| `STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS` | No | Comma-separated `agent:` entity URI allowlist for handoff and escalation targets. The source entity is always allowed. |
+<div className="stigmem-fields">
+
+<div>
+<dt>Variable</dt>
+<dt><span className="stigmem-fields__type">Required</span></dt>
+<dd>Description</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_URL</code></dt>
+<dt><span className="stigmem-fields__type">yes</span></dt>
+<dd>Base URL of your Stigmem node.</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_API_KEY</code></dt>
+<dt><span className="stigmem-fields__type">yes</span></dt>
+<dd>Least-privilege API key. <code>OpenClawStigmemAdapter.from_env()</code> fails closed when missing.</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_SOURCE_ENTITY</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>Entity URI identifying this agent. Default: <code>agent:openclaw</code>.</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_OPENCLAW_ALLOWED_HANDOFF_TARGETS</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>Comma-separated <code>agent:</code> entity URI allowlist for handoff and escalation targets. The source entity is always allowed.</dd>
+</div>
+
+</div>
 
 ## Usage
-
-`adapter.py` is bundled with the ClawHub skill. Import it directly from the skill
-directory, or use the package import if you installed via pip:
 
 ```python
 from adapter import OpenClawStigmemAdapter, SYSTEM_PROMPT_DIRECTIVE   # ClawHub bundled path
@@ -73,9 +92,6 @@ adapter = OpenClawStigmemAdapter.from_env()
 ```
 
 ### Boot handshake
-
-Call `boot()` at session start to pull prior context and inject it into the system
-prompt. Pass the user entity and any project entities the agent should consider:
 
 ```python
 ctx = adapter.boot(
@@ -87,15 +103,17 @@ system_prompt = base_prompt + (
 )
 ```
 
-`boot()` raises `OpenClawBootError` when the node is unreachable or returns an
-error. Treat that as a failed boot, not as a healthy empty context. A successful
-query with no matching facts still returns an empty `BootContext`.
+<div className="stigmem-keypoint">
+
+**`boot()` raises `OpenClawBootError` when the node is unreachable.**
+
+Treat that as a failed boot, not as a healthy empty context. A
+successful query with no matching facts still returns an empty
+`BootContext`.
+
+</div>
 
 ### Emit a decision
-
-Record a significant architectural decision as a durable `roadmap:decision` fact.
-Decisions are append-only; dedupe externally before calling if your workflow needs
-at-most-once semantics:
 
 ```python
 adapter.emit_decision(
@@ -104,10 +122,9 @@ adapter.emit_decision(
 )
 ```
 
-### Emit an escalation
+Decisions are append-only; dedupe externally before calling if your workflow needs at-most-once semantics.
 
-Write an `intent:escalation` fact with a 24-hour expiry so stale escalations don't
-accumulate:
+### Emit an escalation
 
 ```python
 adapter.emit_escalation(
@@ -117,11 +134,9 @@ adapter.emit_escalation(
 )
 ```
 
-`priority` accepts `"low"`, `"medium"`, `"high"`, or `"critical"`.
+`priority` accepts `"low"`, `"medium"`, `"high"`, or `"critical"`. Escalations carry a 24-hour expiry.
 
 ### Emit a handoff
-
-Record a typed handoff cluster when a session ends or delegates to another agent:
 
 ```python
 adapter.emit_handoff(
@@ -134,37 +149,45 @@ adapter.emit_handoff(
 )
 ```
 
-`fact_refs` are persisted as `ref`-typed fact values so the receiving agent can
-fetch them directly. If you pass a non-empty `fact_refs` list and none validate,
-the adapter raises before writing a provenance-free handoff. Use `idempotency_key`
-for retries; a complete previous write is a no-op, while a partial previous write
-raises an explicit error.
+`fact_refs` are persisted as `ref`-typed fact values. If you pass a non-empty `fact_refs` list and none validate, the adapter raises before writing a provenance-free handoff. Use `idempotency_key` for retries.
 
 ## Security
 
-**Source binding** — `STIGMEM_SOURCE_ENTITY` is bound at construction time and
-cannot be overridden per call, so facts are always attributed to the declared agent
-identity. Use a per-deployment entity URI, not a shared or generic identifier.
+<div className="stigmem-fields">
 
-**Untrusted retrieved context** — `boot()` formats retrieved facts as the content
-channel and wraps them in `UNTRUSTED STIGMEM CONTENT` delimiters. Put
-`SYSTEM_PROMPT_DIRECTIVE` above `ctx.summary` in the system prompt so the model
-treats retrieved memory as data, not instructions. `recall_context()` consumes
-channel-separated recall output and keeps instruction-channel facts out of the
-content summary.
+<div>
+<dt>Property</dt>
+<dt><span className="stigmem-fields__type">Behavior</span></dt>
+<dd>Notes</dd>
+</div>
 
-**API key scope** — Set `STIGMEM_API_KEY` to a least-privilege key scoped only to
-the nodes this agent reads from and writes to. Do not share a key across unrelated
-agent deployments. Rotate keys regularly; revoke via the Stigmem node admin API if
-compromised.
+<div>
+<dt>Source binding</dt>
+<dt><span className="stigmem-fields__type">construction-time</span></dt>
+<dd><code>STIGMEM_SOURCE_ENTITY</code> cannot be overridden per call. Use a per-deployment entity URI.</dd>
+</div>
 
-**Fact persistence** — Facts written via this adapter persist across sessions and
-agents. Retract stale facts explicitly rather than relying on expiry for correction,
-and use separate scope namespaces (or separate nodes) for experimental workloads.
+<div>
+<dt>Untrusted retrieved context</dt>
+<dt><span className="stigmem-fields__type">channel-separated</span></dt>
+<dd><code>boot()</code> wraps retrieved facts in <code>UNTRUSTED STIGMEM CONTENT</code> delimiters. Put <code>SYSTEM_PROMPT_DIRECTIVE</code> above <code>ctx.summary</code> so the model treats retrieved memory as data.</dd>
+</div>
+
+<div>
+<dt>API key scope</dt>
+<dt><span className="stigmem-fields__type">least privilege</span></dt>
+<dd>Scope to the nodes this agent reads/writes. Do not share across unrelated deployments. Rotate regularly.</dd>
+</div>
+
+<div>
+<dt>Fact persistence</dt>
+<dt><span className="stigmem-fields__type">across sessions</span></dt>
+<dd>Facts persist across sessions and agents. Retract stale facts explicitly rather than relying on expiry.</dd>
+</div>
+
+</div>
 
 ## Running your own Stigmem node
-
-Stigmem nodes are self-hosted. The quickest way to spin one up:
 
 ```bash
 docker run --rm -p 8765:8765 \
@@ -172,14 +195,9 @@ docker run --rm -p 8765:8765 \
   ghcr.io/eidetic-labs/stigmem-node:latest
 ```
 
-`:latest` is fine for trying things out; for production swap to a pinned
-version tag or a digest pin — see the [tag-selection guide](../../operators/deployment/install#image-tags).
-For a production setup with auth, a persistent volume, and TLS, see the
-[installation guide](../../get-started/installation).
+`:latest` is fine for trying things out; for production swap to a pinned version tag or a digest pin — see the [tag-selection guide](../../operators/deployment/install#image-tags).
 
 ## Smoke test
-
-With the node running and env vars set:
 
 ```python
 from adapter import OpenClawStigmemAdapter
@@ -191,7 +209,11 @@ print("boot ok:", ctx.summary[:80] if ctx else "(no prior context)")
 
 ## See also
 
-- [`adapters/openclaw` README](https://github.com/eidetic-labs/stigmem/tree/main/adapters/openclaw#readme) — package source, changelog, full security model
-- [Federation guide](../../concepts/federation/) — external node onboarding and multi-node topology
-- [Paperclip / Claude Code](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip) — MCP-based integration for Paperclip agents
-- [Authentication](../../security/authentication) — API key setup and OIDC options
+<div className="stigmem-grid">
+
+<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/adapters/openclaw#readme">adapters/openclaw README</a></h4><p>Package source, changelog, full security model.</p></div>
+<div><h4><a href="../../concepts/federation/">Federation guide</a></h4><p>External node onboarding and multi-node topology.</p></div>
+<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip">Paperclip / Claude Code</a></h4><p>MCP-based integration.</p></div>
+<div><h4><a href="../../security/authentication">Authentication</a></h4><p>API key setup and OIDC options.</p></div>
+
+</div>

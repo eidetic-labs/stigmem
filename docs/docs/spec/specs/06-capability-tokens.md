@@ -14,24 +14,39 @@ depends_on:
 
 # Spec-06-Capability-Tokens
 
-`Spec-06-Capability-Tokens` defines short-lived, signed grants used for
-federated and delegated operations. Capability tokens are scoped credentials:
-they grant a subject a verb on a specific object for a bounded time window.
+<p className="stigmem-meta"><span>3 min read</span><span>Spec contributor · Node operator</span><span>Draft · v0.9.0aN</span></p>
 
-## Extraction Status
+<div className="stigmem-lead">
 
-This file contains the ADR-010 prose extraction for capability-token shape,
-issuance, verification, and revocation. It intentionally does **not** define
-peer admission, manifest schema, replay-window policy, or capability-based
-instruction semantics.
+**What this spec defines**
 
-## Token Purpose
+Short-lived, signed grants used for federated and delegated
+operations. Capability tokens are scoped credentials: they grant a
+subject a verb on a specific object for a bounded time window.
 
-Static API keys are node-local credentials. Capability tokens provide a portable
-credential that a receiving peer can verify from issuer manifest material
-without calling back to the issuer on every operation.
+</div>
 
-## Token Shape
+## Extraction status
+
+This file contains the ADR-010 prose extraction for capability-token
+shape, issuance, verification, and revocation. It intentionally
+does **not** define peer admission, manifest schema, replay-window
+policy, or capability-based instruction semantics.
+
+## Token purpose
+
+<div className="stigmem-keypoint">
+
+**Capability tokens are portable credentials.**
+
+Static API keys are node-local credentials. Capability tokens
+provide a portable credential that a receiving peer can verify from
+issuer manifest material without calling back to the issuer on
+every operation.
+
+</div>
+
+## Token shape
 
 ```text
 CapabilityToken {
@@ -47,42 +62,77 @@ CapabilityToken {
 }
 ```
 
-The `issuer` identifies the authority that signed the token. The `subject` is
-the principal receiving the grant. The `verb` identifies the allowed action, and
-the `object` identifies the target scope, garden, entity, or route family.
+<div className="stigmem-fields">
+
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Type</span></dt>
+<dd>Meaning</dd>
+</div>
+
+<div>
+<dt><code>issuer</code></dt>
+<dt><span className="stigmem-fields__type">URI</span></dt>
+<dd>The authority that signed the token.</dd>
+</div>
+
+<div>
+<dt><code>subject</code></dt>
+<dt><span className="stigmem-fields__type">URI</span></dt>
+<dd>The principal receiving the grant.</dd>
+</div>
+
+<div>
+<dt><code>verb</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>The allowed action.</dd>
+</div>
+
+<div>
+<dt><code>object</code></dt>
+<dt><span className="stigmem-fields__type">URI</span></dt>
+<dd>The target scope, garden, entity, or route family.</dd>
+</div>
+
+</div>
 
 ## Signing
 
-The signature covers a canonical encoding of the token body with `signature`
-omitted. The signing key MUST correspond to an active key in the issuer's
-manifest. Receivers MUST verify the issuer manifest before trusting the token.
+The signature covers a canonical encoding of the token body with
+`signature` omitted. The signing key MUST correspond to an active
+key in the issuer's manifest. Receivers MUST verify the issuer
+manifest before trusting the token.
 
 ## Issuance
 
-Capability-token issuance is exposed through the HTTP route owned by
-`Spec-03-HTTP-API`:
+Capability-token issuance is exposed through the HTTP route owned
+by `Spec-03-HTTP-API`:
 
 ```http
 POST /v1/federation/capability-tokens
 ```
 
-Only authorized administrative callers may issue capability tokens. Issuance
-MUST record token id, issuer, subject, verb, object, expiry, and nonce so that
-revocation and audit can refer to the token later.
+Only authorized administrative callers may issue capability tokens.
+Issuance MUST record token id, issuer, subject, verb, object,
+expiry, and nonce so that revocation and audit can refer to the
+token later.
 
 ## Verification
 
 Receivers MUST verify:
 
-1. The token signature.
-2. The issuer manifest and active key id.
-3. The token has not expired.
-4. The nonce is well-formed.
-5. The token has not been revoked.
-6. The requested operation is within the `(verb, object)` grant.
+<ol className="stigmem-steps">
+<li>The token signature.</li>
+<li>The issuer manifest and active key id.</li>
+<li>The token has not expired.</li>
+<li>The nonce is well-formed.</li>
+<li>The token has not been revoked.</li>
+<li>The requested operation is within the <code>(verb, object)</code> grant.</li>
+</ol>
 
-Verification failure MUST deny the operation. Implementations SHOULD distinguish
-signature, expiry, revocation, and scope/verb failures in audit logs.
+Verification failure MUST deny the operation. Implementations SHOULD
+distinguish signature, expiry, revocation, and scope/verb failures
+in audit logs.
 
 ## Revocation
 
@@ -92,30 +142,46 @@ Revocation is exposed through:
 POST /v1/federation/capability-tokens/{token_id}/revoke
 ```
 
-Revocation invalidates a token before its natural expiry. Nodes SHOULD publish
-revocation evidence through the same transparency-log mechanism used for
-manifests when configured. Receivers MUST treat revoked tokens as invalid even
-if the token signature and expiry are otherwise valid.
+Revocation invalidates a token before its natural expiry. Nodes
+SHOULD publish revocation evidence through the same
+transparency-log mechanism used for manifests when configured.
 
-## Replay Relationship
+<div className="stigmem-keypoint">
 
-The token nonce identifies a token instance. Runtime replay windows and inbound
-request nonce caches are owned by `Spec-11-Replay-Protection`; this spec only
-requires the token to carry a verifiable nonce.
+**Receivers MUST treat revoked tokens as invalid even if signature and expiry are otherwise valid.**
 
-## Grant Boundaries
+</div>
 
-Capability tokens are additive grants, not proof of broad identity authority. A
-token granting `write` on one object MUST NOT be interpreted as a grant to write
-any other object. A token granting access to a garden or scope MUST still pass
-the local ACL and scope enforcement rules that apply to that operation.
+## Replay relationship
 
-## Out Of Scope
+The token nonce identifies a token instance. Runtime replay windows
+and inbound request nonce caches are owned by
+`Spec-11-Replay-Protection`; this spec only requires the token to
+carry a verifiable nonce.
+
+## Grant boundaries
+
+<div className="stigmem-keypoint">
+
+**Capability tokens are additive grants, not proof of broad identity authority.**
+
+A token granting <code>write</code> on one object MUST NOT be
+interpreted as a grant to write any other object. A token granting
+access to a garden or scope MUST still pass the local ACL and scope
+enforcement rules that apply to that operation.
+
+</div>
+
+## Out of scope
 
 This spec does not define:
 
-- API-key creation or local operator credentials.
-- Peer-token handshakes that are separate from capability tokens.
-- Capability-based instruction `interpret_as` enforcement.
-- Replay cache implementation.
-- Token UI or CLI workflows.
+<div className="stigmem-grid">
+
+<div><h4>API-key creation</h4><p>Local operator credentials.</p></div>
+<div><h4>Peer-token handshakes</h4><p>That are separate from capability tokens.</p></div>
+<div><h4>Capability-based instruction</h4><p><code>interpret_as</code> enforcement.</p></div>
+<div><h4>Replay cache implementation</h4></div>
+<div><h4>Token UI or CLI workflows</h4></div>
+
+</div>

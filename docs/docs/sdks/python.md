@@ -7,9 +7,19 @@ audience: Integrator
 
 # Python SDK Reference
 
-**Audience:** Python developers integrating with a Stigmem node.
+<p className="stigmem-meta"><span>5 min read</span><span>Python integrator</span><span>stigmem-py</span></p>
 
-`stigmem-py` is the official Python client for the Stigmem REST API. It covers facts, conflicts, federation, recall, memory cards, and subscriptions.
+<div className="stigmem-lead">
+
+**What this page covers**
+
+`stigmem-py` is the official Python client for the Stigmem REST
+API. It covers facts, conflicts, federation, recall, memory cards,
+and subscriptions.
+
+</div>
+
+**Audience:** Python developers integrating with a Stigmem node.
 
 ## Installation
 
@@ -47,13 +57,17 @@ print(card.summary)
 
 ## `StigmemClient`
 
-Synchronous client. All methods raise `StigmemHTTPError` subclasses on non-2xx responses.
-
 ```python
 StigmemClient(url: str, api_key: str | None = None, timeout: float = 10.0)
 ```
 
-Supports use as a context manager (`with StigmemClient(...) as client: ...`).
+<div className="stigmem-keypoint">
+
+**Synchronous client. All methods raise `StigmemHTTPError` subclasses on non-2xx responses.**
+
+Supports use as a context manager: `with StigmemClient(...) as client: ...`
+
+</div>
 
 ### Facts
 
@@ -87,19 +101,13 @@ client.retract(
 ) -> Fact
 ```
 
-Assert a retraction (confidence=0.0). Convenience wrapper around `assert_fact`.
+Assert a retraction (`confidence=0.0`). Convenience wrapper around `assert_fact`.
 
-#### `get`
+#### `get` · `query`
 
 ```python
 client.get(fact_id: str) -> Fact
-```
 
-Fetch a single fact by ID. Raises `StigmemNotFoundError` (404) when absent.
-
-#### `query`
-
-```python
 client.query(
     *,
     entity: str | None = None,
@@ -115,11 +123,9 @@ client.query(
 ) -> FactPage
 ```
 
-Paginated fact query. Use `cursor` from the response to fetch the next page.
+`get` fetches a single fact by ID. `query` is a paginated structured query.
 
-### Recall (pre-reset graph & recall design — §20.3)
-
-#### `recall`
+### Recall
 
 ```python
 client.recall(
@@ -136,24 +142,72 @@ client.recall(
 ) -> RecallResponse
 ```
 
-Hybrid recall — return the most salient facts for `query` within `token_budget`. Combines lexical (FTS5/BM25), dense-vector (ANN), and graph-traversal signals. See the [Recall guide](../concepts/recall/) for details.
+Hybrid recall — return the most salient facts for `query` within `token_budget`. Combines lexical (FTS5/BM25), dense-vector (ANN), and graph-traversal signals.
 
-Set `verify_full=True` to send `Stigmem-Verify: full` and request server-side integrity proof metadata, including the current fact-chain proof when the node can provide it.
+<div className="stigmem-keypoint">
 
-`RecallResponse` fields:
+**Set `verify_full=True` to send `Stigmem-Verify: full`.**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `recall_id` | `str` | UUID for this recall call |
-| `query_hash` | `str` | SHA-256 of the query string |
-| `facts` | `list[ScoredFact]` | Ranked, token-budget-packed facts |
-| `total_scored` | `int` | Candidates scored before packing |
-| `token_budget` | `int` | Requested budget |
-| `tokens_used` | `int` | Tokens actually used |
-| `truncated` | `bool` | True when budget was exhausted |
-| `chain_proof` | `FactChainProof \| None` | Full-verification fact-chain metadata when requested |
+Requests server-side integrity proof metadata, including the
+current fact-chain proof when the node can provide it.
 
-`ScoredFact` fields include `fact`, `score`, `score_breakdown`, `hop_distance`, `token_estimate`, and `from_card` (see below).
+</div>
+
+**`RecallResponse` fields:**
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Type</span></dt>
+<dd>Description</dd>
+</div>
+
+<div>
+<dt><code>recall_id</code></dt>
+<dt><span className="stigmem-fields__type">str</span></dt>
+<dd>UUID for this recall call.</dd>
+</div>
+
+<div>
+<dt><code>query_hash</code></dt>
+<dt><span className="stigmem-fields__type">str</span></dt>
+<dd>SHA-256 of the query string.</dd>
+</div>
+
+<div>
+<dt><code>facts</code></dt>
+<dt><span className="stigmem-fields__type">list[ScoredFact]</span></dt>
+<dd>Ranked, token-budget-packed facts.</dd>
+</div>
+
+<div>
+<dt><code>total_scored</code></dt>
+<dt><span className="stigmem-fields__type">int</span></dt>
+<dd>Candidates scored before packing.</dd>
+</div>
+
+<div>
+<dt><code>token_budget</code> / <code>tokens_used</code></dt>
+<dt><span className="stigmem-fields__type">int</span></dt>
+<dd>Requested vs actual budget.</dd>
+</div>
+
+<div>
+<dt><code>truncated</code></dt>
+<dt><span className="stigmem-fields__type">bool</span></dt>
+<dd>True when budget was exhausted.</dd>
+</div>
+
+<div>
+<dt><code>chain_proof</code></dt>
+<dt><span className="stigmem-fields__type">FactChainProof | None</span></dt>
+<dd>Full-verification fact-chain metadata when requested.</dd>
+</div>
+
+</div>
+
+`ScoredFact` fields include `fact`, `score`, `score_breakdown`, `hop_distance`, `token_estimate`, and `from_card`.
 
 ### Verification helpers
 
@@ -177,11 +231,17 @@ except StigmemVerificationError as exc:
     raise RuntimeError(f"Stigmem verification failed: {exc}") from exc
 ```
 
-`verify_fact_cid` recomputes the content-addressed fact ID from the canonical fact body and rejects mismatches when a stored `cid` is present. `verify_fact_chain_proof` validates compact proof metadata and deterministic local transparency-log checkpoint payloads; Rekor cryptographic inclusion verification remains a node/operator responsibility because it requires live log trust roots.
+<div className="stigmem-keypoint">
 
-### Memory cards (pre-reset graph & recall design — §20.4)
+**Rekor cryptographic inclusion verification remains a node/operator responsibility.**
 
-#### `get_card`
+It requires live log trust roots that the SDK does not embed.
+`verify_fact_chain_proof` validates compact proof metadata and
+deterministic local transparency-log checkpoint payloads only.
+
+</div>
+
+### Memory cards
 
 ```python
 client.get_card(
@@ -192,9 +252,7 @@ client.get_card(
 ) -> MemoryCard
 ```
 
-Fetch the synthesized memory card for `entity_uri`. The card is auto-refreshed when stale. Pass `refresh=True` to force a server-side recomputation regardless of staleness.
-
-Raises `StigmemNotFoundError` when the entity has no live facts.
+Fetch the synthesized memory card for `entity_uri`. The card is auto-refreshed when stale. Pass `refresh=True` to force a server-side recomputation. Raises `StigmemNotFoundError` when the entity has no live facts.
 
 ```python
 from stigmem import StigmemClient, MemoryCard
@@ -203,10 +261,7 @@ from stigmem.exceptions import StigmemNotFoundError
 client = StigmemClient(url="http://localhost:8000", api_key="sk-...")
 
 try:
-    card: MemoryCard = client.get_card(
-        "stigmem://company.example/user/alice",
-        scope="local",
-    )
+    card: MemoryCard = client.get_card("stigmem://company.example/user/alice", scope="local")
     print(card.summary)
     print(f"confidence={card.avg_confidence:.3f}  stale={card.is_stale}")
     print(f"contradictions={card.has_contradictions}")
@@ -214,30 +269,70 @@ except StigmemNotFoundError:
     print("Entity has no live facts")
 
 # Force refresh
-card = client.get_card(
-    "stigmem://company.example/project/phase9",
-    refresh=True,
-)
+card = client.get_card("stigmem://company.example/project/phase9", refresh=True)
 ```
 
-`MemoryCard` fields:
+**`MemoryCard` fields:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `entity_uri` | `str` | Entity the card describes |
-| `scope` | `str` | Scope the card was materialised from |
-| `summary` | `str` | Structured text summary of live facts |
-| `fact_hashes` | `list[str]` | SHA-256(fact_id) for each contributing fact |
-| `avg_confidence` | `float` | Source-trust-weighted mean confidence |
-| `refreshed_at` | `str \| None` | ISO 8601 UTC timestamp of last refresh |
-| `is_stale` | `bool` | True when a new fact has been asserted since the last refresh |
-| `has_contradictions` | `bool` | True when any two live facts share the same relation |
+<div className="stigmem-fields">
 
-`from_card` on `ScoredFact`: when `True`, the fact is a synthetic card-summary produced by the recall fast-path rather than a raw stored fact.
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Type</span></dt>
+<dd>Description</dd>
+</div>
 
-### Conflicts
+<div>
+<dt><code>entity_uri</code></dt>
+<dt><span className="stigmem-fields__type">str</span></dt>
+<dd>Entity the card describes.</dd>
+</div>
 
-#### `list_conflicts`
+<div>
+<dt><code>scope</code></dt>
+<dt><span className="stigmem-fields__type">str</span></dt>
+<dd>Scope the card was materialised from.</dd>
+</div>
+
+<div>
+<dt><code>summary</code></dt>
+<dt><span className="stigmem-fields__type">str</span></dt>
+<dd>Structured text summary of live facts.</dd>
+</div>
+
+<div>
+<dt><code>fact_hashes</code></dt>
+<dt><span className="stigmem-fields__type">list[str]</span></dt>
+<dd>SHA-256(fact_id) for each contributing fact.</dd>
+</div>
+
+<div>
+<dt><code>avg_confidence</code></dt>
+<dt><span className="stigmem-fields__type">float</span></dt>
+<dd>Source-trust-weighted mean confidence.</dd>
+</div>
+
+<div>
+<dt><code>refreshed_at</code></dt>
+<dt><span className="stigmem-fields__type">str | None</span></dt>
+<dd>ISO 8601 UTC timestamp of last refresh.</dd>
+</div>
+
+<div>
+<dt><code>is_stale</code></dt>
+<dt><span className="stigmem-fields__type">bool</span></dt>
+<dd>True when a new fact has been asserted since the last refresh.</dd>
+</div>
+
+<div>
+<dt><code>has_contradictions</code></dt>
+<dt><span className="stigmem-fields__type">bool</span></dt>
+<dd>True when any two live facts share the same relation.</dd>
+</div>
+
+</div>
+
+### Conflicts · Federation · Node info
 
 ```python
 client.list_conflicts(
@@ -246,11 +341,7 @@ client.list_conflicts(
     cursor: str | None = None,
     limit: int = 50,
 ) -> ConflictPage
-```
 
-#### `resolve_conflict`
-
-```python
 client.resolve_conflict(
     conflict_id: str,
     *,
@@ -258,29 +349,10 @@ client.resolve_conflict(
     resolution_note: str = "",
     new_value: FactValue | None = None,
 ) -> ConflictResolution
-```
 
-### Federation
-
-#### `federation_status`
-
-```python
 client.federation_status() -> list[Peer]
+client.node_info() -> NodeInfo   # GET /.well-known/stigmem
 ```
-
-Returns registered peers.
-
-### Node info
-
-#### `node_info`
-
-```python
-client.node_info() -> NodeInfo
-```
-
-Fetches `/.well-known/stigmem`.
-
----
 
 ## `AsyncStigmemClient`
 
@@ -303,8 +375,6 @@ async with AsyncStigmemClient(url="http://localhost:8000", api_key="sk-...") as 
     result = await client.recall("what is Alice's role?", token_budget=500)
 ```
 
----
-
 ## Value constructors
 
 ```python
@@ -319,16 +389,41 @@ from stigmem.models import (
 )
 ```
 
----
-
 ## Exceptions
 
-| Exception | HTTP status | When raised |
-|-----------|-------------|-------------|
-| `StigmemHTTPError` | any non-2xx | Base class |
-| `StigmemAuthError` | 401 / 403 | Invalid or missing API key |
-| `StigmemNotFoundError` | 404 | Resource does not exist |
-| `StigmemConflictError` | 409 | Conflicting resource state |
+<div className="stigmem-fields">
+
+<div>
+<dt>Exception</dt>
+<dt><span className="stigmem-fields__type">HTTP status</span></dt>
+<dd>When raised</dd>
+</div>
+
+<div>
+<dt><code>StigmemHTTPError</code></dt>
+<dt><span className="stigmem-fields__type">any non-2xx</span></dt>
+<dd>Base class.</dd>
+</div>
+
+<div>
+<dt><code>StigmemAuthError</code></dt>
+<dt><span className="stigmem-fields__type">401 / 403</span></dt>
+<dd>Invalid or missing API key.</dd>
+</div>
+
+<div>
+<dt><code>StigmemNotFoundError</code></dt>
+<dt><span className="stigmem-fields__type">404</span></dt>
+<dd>Resource does not exist.</dd>
+</div>
+
+<div>
+<dt><code>StigmemConflictError</code></dt>
+<dt><span className="stigmem-fields__type">409</span></dt>
+<dd>Conflicting resource state.</dd>
+</div>
+
+</div>
 
 ```python
 from stigmem.exceptions import StigmemNotFoundError, StigmemAuthError
@@ -341,11 +436,13 @@ except StigmemAuthError:
     print("Check your API key")
 ```
 
----
-
 ## See also
 
-- [Recall guide](../concepts/recall/) — hybrid recall, weight tuning, fast-path
-- [Memory Cards guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph) — card lifecycle and divergence policy
-- [Asserting facts](../concepts/facts/asserting-facts) — detailed fact write patterns
-- [Querying facts](../concepts/facts/querying-facts) — structured predicate queries
+<div className="stigmem-grid">
+
+<div><h4><a href="../concepts/recall/">Recall guide</a></h4><p>Hybrid recall, weight tuning, fast-path.</p></div>
+<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph">Memory Cards guide</a></h4><p>Card lifecycle and divergence policy.</p></div>
+<div><h4><a href="../concepts/facts/asserting-facts">Asserting facts</a></h4><p>Detailed fact write patterns.</p></div>
+<div><h4><a href="../concepts/facts/querying-facts">Querying facts</a></h4><p>Structured predicate queries.</p></div>
+
+</div>

@@ -7,20 +7,72 @@ audience: Integrator
 
 # Tutorial: SDK Quickstart
 
-**Audience:** Developers integrating with Stigmem for the first time. Pick your language — each section is self-contained.
+<p className="stigmem-meta"><span>5 min hands-on</span><span>For integrators</span><span>Updated 2026-05-19</span></p>
 
-This tutorial walks through three operations that cover the core Stigmem workflow:
+<div className="stigmem-lead">
 
-1. **Assert a fact** — write structured knowledge to the node.
-2. **Recall** — retrieve relevant facts using hybrid search.
-3. **Subscribe** — watch for new facts in real time.
+**What you'll do**
 
-**Prerequisites:**
+Three operations that cover the core Stigmem workflow — assert a fact,
+recall relevant facts with hybrid search, subscribe to a scope —
+in Python, TypeScript, and Go. Each language section is self-contained.
 
-- A running Stigmem node at `http://localhost:8765` (see [Installation](./installation))
-- An API key (`STIGMEM_API_KEY` environment variable)
+</div>
 
----
+<div className="stigmem-keypoint">
+
+**Three operations · same shape across languages.**
+
+The SDK surfaces share the same assert / recall / subscribe vocabulary
+across all three languages. Each language section below is independent
+— pick yours and follow along.
+
+</div>
+
+## Prerequisites
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Requirement</dt>
+<dt><span className="stigmem-fields__type">Notes</span></dt>
+<dd>Where to set</dd>
+</div>
+
+<div>
+<dt>Running node</dt>
+<dt><span className="stigmem-fields__type">localhost:8765</span></dt>
+<dd>See <a href="./installation">Installation</a>.</dd>
+</div>
+
+<div>
+<dt>API key</dt>
+<dt><span className="stigmem-fields__type">env var</span></dt>
+<dd><code>STIGMEM_API_KEY</code> in the environment running your SDK code.</dd>
+</div>
+
+</div>
+
+## What each operation does
+
+<div className="stigmem-grid">
+
+<div>
+<h4>Assert</h4>
+<p>Write a structured <code>(entity, relation, value)</code> triple with provenance to the node — <code>POST /v1/facts</code>.</p>
+</div>
+
+<div>
+<h4>Recall</h4>
+<p>Hybrid search (BM25 + vector + graph) that packs results into a token budget — <code>POST /v1/recall</code>.</p>
+</div>
+
+<div>
+<h4>Subscribe</h4>
+<p>Watch a scope for new facts and deliver them in batches — <code>GET /v1/facts</code> polling.</p>
+</div>
+
+</div>
 
 ## Python
 
@@ -91,8 +143,6 @@ async def main():
 asyncio.run(main())
 ```
 
----
-
 ## TypeScript
 
 ### Install
@@ -146,8 +196,6 @@ for await (const batch of client.subscribeScope("local", {
   }
 }
 ```
-
----
 
 ## Go
 
@@ -218,28 +266,69 @@ func main() {
 }
 ```
 
----
-
 ## What you just did
 
 In each language, you completed the core Stigmem workflow:
 
-| Step | Endpoint | What it does |
-|------|----------|-------------|
-| Assert | `POST /v1/facts` | Writes a structured (entity, relation, value) triple with provenance |
-| Recall | `POST /v1/recall` | Hybrid search (BM25 + vector + graph) that packs results into a token budget |
-| Subscribe | `GET /v1/facts` (polling) | Watches a scope for new facts and delivers batches |
+<div className="stigmem-fields">
 
-Each fact you asserted received a UUID (`id`) and a content identifier (`cid`) — see the [Content Addressing guide](../concepts/facts/content-addressing) for how CIDs enable deduplication and cross-node citation.
+<div>
+<dt>Step</dt>
+<dt><span className="stigmem-fields__type">Endpoint</span></dt>
+<dd>What it does</dd>
+</div>
 
----
+<div>
+<dt>Assert</dt>
+<dt><span className="stigmem-fields__type"><code>POST /v1/facts</code></span></dt>
+<dd>Writes a structured (entity, relation, value) triple with provenance.</dd>
+</div>
 
-## Next steps
+<div>
+<dt>Recall</dt>
+<dt><span className="stigmem-fields__type"><code>POST /v1/recall</code></span></dt>
+<dd>Hybrid search (BM25 + vector + graph) that packs results into a token budget.</dd>
+</div>
 
-- [Recall guide](../concepts/recall/) — weight tuning, memory card fast-path, depth control
-- [Time-Travel Queries](https://github.com/eidetic-labs/stigmem/tree/main/experimental/time-travel) — query facts as they existed at a past timestamp
-- [RTBF Tombstones](https://github.com/eidetic-labs/stigmem/tree/main/experimental/tombstones) — experimental source package for entity-erasure semantics; not default-install or supported compliance behavior
-- [Observability](../operators/observability/) — Prometheus metrics and OpenTelemetry tracing
-- [TypeScript SDK Reference](../sdks/typescript) — full API reference
-- [Go SDK Reference](https://github.com/eidetic-labs/stigmem/tree/main/experimental/sdk-go) — full API reference
-- [Python SDK Reference](../sdks/python) — full API reference
+<div>
+<dt>Subscribe</dt>
+<dt><span className="stigmem-fields__type"><code>GET /v1/facts</code> (polling)</span></dt>
+<dd>Watches a scope for new facts and delivers batches.</dd>
+</div>
+
+</div>
+
+Each fact you asserted received a UUID (`id`) and a content
+identifier (`cid`) — see the
+[content addressing guide](../concepts/facts/content-addressing) for
+how CIDs enable deduplication and cross-node citation.
+
+## What's next
+
+<div className="stigmem-next">
+
+<a href="../concepts/recall/">
+<strong>Concept</strong>
+<span>Recall</span>
+<small>Weight tuning, memory-card fast path, depth control.</small>
+</a>
+
+<a href="../operators/observability/">
+<strong>Operate</strong>
+<span>Observability</span>
+<small>Prometheus metrics and OpenTelemetry tracing.</small>
+</a>
+
+<a href="../sdks/python">
+<strong>Reference</strong>
+<span>Python SDK</span>
+<small>Full API reference.</small>
+</a>
+
+<a href="../sdks/typescript">
+<strong>Reference</strong>
+<span>TypeScript SDK</span>
+<small>Full API reference.</small>
+</a>
+
+</div>

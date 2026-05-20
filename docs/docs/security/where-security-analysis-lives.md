@@ -8,52 +8,117 @@ sidebar_position: 11
 
 # Where Security Analysis Lives
 
-Stigmem uses one protocol-level threat model plus feature-local security files
-for experimental features.
+<p className="stigmem-meta"><span>2 min read</span><span>Navigation</span><span>Per ADR-018</span></p>
+
+<div className="stigmem-lead">
+
+**What this page is**
+
+Stigmem uses one protocol-level threat model plus feature-local
+security files for experimental features. This page tells you where
+to look.
+
+</div>
 
 ## Canonical risk register
 
 The numbered R-XX risk register lives in
 [`spec/security/threat-model.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md).
-Cross-cutting protocol risks stay there. Examples include transport security,
-quota enforcement, prompt-injection controls, CID integrity, release
-supply-chain integrity, and storage immutability.
+Cross-cutting protocol risks stay there.
+
+<div className="stigmem-grid">
+
+<div><h4>Transport security</h4></div>
+<div><h4>Quota enforcement</h4></div>
+<div><h4>Prompt-injection controls</h4></div>
+<div><h4>CID integrity</h4></div>
+<div><h4>Release supply-chain integrity</h4></div>
+<div><h4>Storage immutability</h4></div>
+
+</div>
 
 ## Feature-local security files
 
-Per ADR-018, an experimental feature that owns or materially contributes to a
-numbered risk keeps its feature analysis beside the feature:
+Per ADR-018, an experimental feature that owns or materially
+contributes to a numbered risk keeps its feature analysis beside the
+feature.
 
-| Feature | Security analysis | Risk relationship |
-|---|---|---|
-| Lazy instruction discovery | [`experimental/lazy-instruction-discovery/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/lazy-instruction-discovery/security.md) | Owns R-15; contributes to R-21 |
-| RTBF tombstones | [`experimental/tombstones/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/tombstones/security.md) | Owns R-16 and R-17 |
-| Time-travel queries | [`experimental/time-travel/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/time-travel/security.md) | Contributes to R-17 and R-18 |
-| Memory garden ACL | [`experimental/memory-garden-acl/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/memory-garden-acl/security.md) | Contributes to R-21 |
-| Source attestation | [`experimental/source-attestation/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/source-attestation/security.md) | Contributes to R-22 |
-| Multi-tenant scoping | [`experimental/multi-tenant/security.md`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/multi-tenant/security.md) | Contributes to R-01, R-02, and R-21 |
+<div className="stigmem-fields">
 
-These files do not replace the risk register. They give operators and
-contributors the local threat-model delta, operator scenarios, conformance
-pointers, and ADR-008 reintroduction gates for the feature.
+<div>
+<dt>Feature</dt>
+<dt><span className="stigmem-fields__type">Risk relationship</span></dt>
+<dd>Security analysis location</dd>
+</div>
+
+<div>
+<dt>Lazy instruction discovery</dt>
+<dt><span className="stigmem-fields__type">owns R-15; contributes to R-21</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/lazy-instruction-discovery/security.md"><code>experimental/lazy-instruction-discovery/security.md</code></a></dd>
+</div>
+
+<div>
+<dt>RTBF tombstones</dt>
+<dt><span className="stigmem-fields__type">owns R-16 and R-17</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/tombstones/security.md"><code>experimental/tombstones/security.md</code></a></dd>
+</div>
+
+<div>
+<dt>Time-travel queries</dt>
+<dt><span className="stigmem-fields__type">contributes to R-17 and R-18</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/time-travel/security.md"><code>experimental/time-travel/security.md</code></a></dd>
+</div>
+
+<div>
+<dt>Memory garden ACL</dt>
+<dt><span className="stigmem-fields__type">contributes to R-21</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/memory-garden-acl/security.md"><code>experimental/memory-garden-acl/security.md</code></a></dd>
+</div>
+
+<div>
+<dt>Source attestation</dt>
+<dt><span className="stigmem-fields__type">contributes to R-22</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/source-attestation/security.md"><code>experimental/source-attestation/security.md</code></a></dd>
+</div>
+
+<div>
+<dt>Multi-tenant scoping</dt>
+<dt><span className="stigmem-fields__type">contributes to R-01, R-02, R-21</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/multi-tenant/security.md"><code>experimental/multi-tenant/security.md</code></a></dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Feature-local files do not replace the risk register.**
+
+They give operators and contributors the local threat-model delta,
+operator scenarios, conformance pointers, and ADR-008 reintroduction
+gates for the feature.
+
+</div>
 
 ## Features without security files
 
 Not every directory under `experimental/` receives a `security.md`
-automatically. Adapter, deployment, SDK, dashboard, and workbench directories
-remain covered by their `STATUS.md`, contributor checks, and the protocol-level
-threat model until they own or materially contribute to a numbered risk. When
-that happens, the same PR must add or update the feature-local `security.md`
-and cross-link the risk register.
+automatically. Adapter, deployment, SDK, dashboard, and workbench
+directories remain covered by their `STATUS.md`, contributor checks,
+and the protocol-level threat model until they own or materially
+contribute to a numbered risk. When that happens, the same PR must
+add or update the feature-local `security.md` and cross-link the risk
+register.
 
 ## Contributor rule
 
 When adding a feature-owned R-XX risk:
 
-1. Add the risk to the unified threat model.
-2. Add or update `experimental/<feature>/security.md`.
-3. Link the risk row in the threat model to the feature-local file.
-4. Run the security documentation validator.
+<ol className="stigmem-steps">
+<li>Add the risk to the unified threat model.</li>
+<li>Add or update <code>experimental/&lt;feature&gt;/security.md</code>.</li>
+<li>Link the risk row in the threat model to the feature-local file.</li>
+<li>Run the security documentation validator.</li>
+</ol>
 
 ```bash
 python scripts/check_security_documentation.py

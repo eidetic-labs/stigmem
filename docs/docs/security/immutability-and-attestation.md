@@ -7,28 +7,83 @@ audience: Security
 
 # Immutability and Attestation
 
-**Audience:** operators, security engineers, and evaluators hardening a Stigmem node against storage-layer tampering.
+<p className="stigmem-meta"><span>4 min read</span><span>Operator · Security engineer · Evaluator</span><span>Per ADR-016</span></p>
 
-Stigmem's R-23 risk is admin-level storage tampering: a privileged attacker with database access rewrites stored facts or security metadata below the HTTP/API layer. The mitigation is layered. Each layer catches a different failure mode, and operators get the strongest posture by enabling external attestations and storing evidence outside the mutable node.
+<div className="stigmem-lead">
 
----
+**What this page is**
 
-## Control Stack
+Operator guide for hardening a Stigmem node against storage-layer
+tampering. R-23 is admin-level storage tampering: a privileged
+attacker with database access rewrites stored facts or security
+metadata below the HTTP/API layer.
 
-| Layer | Control | What it detects or prevents |
-|---|---|---|
-| L1 | Append-only fact journal plus projection tables | Normal write paths preserve insertion evidence and derive mutable read state from projections |
-| L2 | SQLite trigger enforcement | Direct `UPDATE`/`DELETE` attempts on `facts` are rejected and recorded as `fact_mutation_attempted` audit evidence |
-| L3 | Content-addressed fact IDs | Fact-body rewrites produce `cid_mismatch` on direct reads, queries, and recall hydration |
-| L4 | Local fact hash chain | Removed, reordered, or rewritten local inserts break sequence/link verification |
-| L5 | Transparency-log checkpoints | Chain heads are periodically anchored outside the mutable node through the configured transparency-log backend |
-| Client/peer | Verification helpers and inbound checks | Clients and federation peers can reject mismatched CIDs and compact proof metadata |
+</div>
 
-The stack is defense in depth. CIDs catch body tampering; the local chain catches sequence and removal tampering; checkpoints make the chain head externally accountable; client/peer verification prevents a consumer from silently accepting bad proof material.
+<div className="stigmem-keypoint">
 
----
+**The mitigation is layered.**
 
-## Runtime Configuration
+Each layer catches a different failure mode. Operators get the
+strongest posture by enabling external attestations and storing
+evidence outside the mutable node.
+
+</div>
+
+## Control stack
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Layer</dt>
+<dt><span className="stigmem-fields__type">Control</span></dt>
+<dd>What it detects or prevents</dd>
+</div>
+
+<div>
+<dt>L1</dt>
+<dt><span className="stigmem-fields__type">append-only journal + projection tables</span></dt>
+<dd>Normal write paths preserve insertion evidence; mutable read state is derived from projections.</dd>
+</div>
+
+<div>
+<dt>L2</dt>
+<dt><span className="stigmem-fields__type">SQLite trigger enforcement</span></dt>
+<dd>Direct <code>UPDATE</code>/<code>DELETE</code> attempts on <code>facts</code> are rejected and recorded as <code>fact_mutation_attempted</code> audit evidence.</dd>
+</div>
+
+<div>
+<dt>L3</dt>
+<dt><span className="stigmem-fields__type">content-addressed fact IDs</span></dt>
+<dd>Fact-body rewrites produce <code>cid_mismatch</code> on direct reads, queries, and recall hydration.</dd>
+</div>
+
+<div>
+<dt>L4</dt>
+<dt><span className="stigmem-fields__type">local fact hash chain</span></dt>
+<dd>Removed, reordered, or rewritten local inserts break sequence/link verification.</dd>
+</div>
+
+<div>
+<dt>L5</dt>
+<dt><span className="stigmem-fields__type">transparency-log checkpoints</span></dt>
+<dd>Chain heads are periodically anchored outside the mutable node through the configured transparency-log backend.</dd>
+</div>
+
+<div>
+<dt>Client / peer</dt>
+<dt><span className="stigmem-fields__type">verification helpers and inbound checks</span></dt>
+<dd>Clients and federation peers can reject mismatched CIDs and compact proof metadata.</dd>
+</div>
+
+</div>
+
+The stack is defense in depth. CIDs catch body tampering; the local
+chain catches sequence and removal tampering; checkpoints make the
+chain head externally accountable; client/peer verification prevents
+a consumer from silently accepting bad proof material.
+
+## Runtime configuration
 
 Use a transparency-log backend for production attestations:
 
@@ -37,7 +92,9 @@ STIGMEM_TL_BACKEND=rekor
 STIGMEM_TL_REKOR_URL=https://rekor.sigstore.dev
 ```
 
-For disconnected test environments, use the local append-only log backend and put the log on storage that ordinary node processes cannot rewrite:
+For disconnected test environments, use the local append-only log
+backend and put the log on storage that ordinary node processes
+cannot rewrite:
 
 ```bash
 STIGMEM_TL_BACKEND=local
@@ -52,9 +109,10 @@ STIGMEM_FACT_CHAIN_CHECKPOINT_MAX_AGE_S=60
 STIGMEM_FACT_CHAIN_CHECKPOINT_RETRY_S=60
 ```
 
-If Rekor is unavailable, writes proceed and checkpoints remain pending for retry. Follow [Rekor unavailable response](../operators/runbooks/r-rekor-unavailable.md) if pending checkpoints accumulate.
-
----
+If Rekor is unavailable, writes proceed and checkpoints remain pending
+for retry. Follow
+[Rekor unavailable response](../operators/runbooks/r-rekor-unavailable.md)
+if pending checkpoints accumulate.
 
 ## Verification
 
@@ -69,7 +127,8 @@ curl -s http://localhost:8000/v1/recall \
   | jq '.chain_proof'
 ```
 
-Python clients can fail closed on CID or compact chain-proof mismatches:
+Python clients can fail closed on CID or compact chain-proof
+mismatches:
 
 ```python
 from stigmem import StigmemClient, verify_fact_chain_proof, verify_fact_cid
@@ -82,41 +141,59 @@ for scored in result.facts:
 verify_fact_chain_proof(result.chain_proof, require_checkpoint=True)
 ```
 
-Federation pulls request full verification metadata and reject inbound facts when a supplied CID does not match the canonical fact body. Rejections emit `federation_integrity_rejected` evidence.
+Federation pulls request full verification metadata and reject inbound
+facts when a supplied CID does not match the canonical fact body.
+Rejections emit `federation_integrity_rejected` evidence.
 
----
+## WORM storage
 
-## WORM Storage
+For high-assurance deployments, export evidence to write-once-read-many
+storage.
 
-For high-assurance deployments, export evidence to write-once-read-many storage:
+<div className="stigmem-grid">
 
-- Ship `fact_audit_log` and `federation_audit` rows to object storage with retention lock.
-- Store local transparency-log files on immutable storage if `STIGMEM_TL_BACKEND=local`.
-- Preserve database snapshots with signed manifests and retention policies. See [Backup & Restore](../operators/runbooks/backup-restore.md).
-- Keep Rekor checkpoint metadata with your incident timeline so a restored node can be compared against the external chain head.
+<div><h4>Audit rows to retention-locked object storage</h4><p>Ship <code>fact_audit_log</code> and <code>federation_audit</code> rows to object storage with retention lock.</p></div>
+<div><h4>Local TL on immutable storage</h4><p>Store local transparency-log files on immutable storage if <code>STIGMEM_TL_BACKEND=local</code>.</p></div>
+<div><h4>Signed database snapshots</h4><p>Preserve database snapshots with signed manifests and retention policies. See <a href="../operators/runbooks/backup-restore">Backup &amp; Restore</a>.</p></div>
+<div><h4>Rekor checkpoint metadata</h4><p>Keep Rekor checkpoint metadata with your incident timeline so a restored node can be compared against the external chain head.</p></div>
 
-WORM storage does not replace Rekor or CID verification. It protects operational evidence when the node host itself is under administrator control.
+</div>
 
----
+<div className="stigmem-keypoint">
 
-## TEE Deployment Option
+**WORM storage does not replace Rekor or CID verification.**
 
-A trusted execution environment can reduce the blast radius of a compromised host administrator:
+It protects operational evidence when the node host itself is under
+administrator control.
 
-- Run the Stigmem node inside a TEE-capable runtime when available.
-- Pin container images by digest and verify SBOM/provenance before deployment.
-- Seal transparency-log credentials and node private keys to the measured runtime.
-- Emit remote-attestation evidence to the same audit destination used for fact-chain checkpoints.
+</div>
 
-TEE deployment is an additional assurance layer, not a protocol requirement. The default mitigation still depends on CIDs, local chain verification, external checkpoints, and client/peer rejection behavior.
+## TEE deployment option
 
----
+A trusted execution environment can reduce the blast radius of a
+compromised host administrator.
 
-## Operator Checklist
+<div className="stigmem-grid">
 
-- [ ] Enable Rekor-backed transparency-log checkpoints or place the local TL file on immutable storage.
-- [ ] Alert on sustained pending checkpoints.
-- [ ] Export audit rows to immutable storage before local retention expiry.
-- [ ] Exercise `Stigmem-Verify: full` recall and SDK verification in staging.
-- [ ] Include CID mismatch, chain-proof mismatch, and Rekor-unavailable scenarios in incident drills.
-- [ ] Review [Harden a Deployment](../operators/tutorial-hardening.md) and [Container Hardening](./container-hardening.md) before production rollout.
+<div><h4>TEE-capable runtime</h4><p>Run the Stigmem node inside a TEE-capable runtime when available.</p></div>
+<div><h4>Pin and verify images</h4><p>Pin container images by digest and verify SBOM/provenance before deployment.</p></div>
+<div><h4>Seal credentials to measurement</h4><p>Seal transparency-log credentials and node private keys to the measured runtime.</p></div>
+<div><h4>Emit attestation evidence</h4><p>Emit remote-attestation evidence to the same audit destination used for fact-chain checkpoints.</p></div>
+
+</div>
+
+TEE deployment is an additional assurance layer, not a protocol
+requirement. The default mitigation still depends on CIDs, local
+chain verification, external checkpoints, and client/peer rejection
+behavior.
+
+## Operator checklist
+
+<ol className="stigmem-steps">
+<li>Enable Rekor-backed transparency-log checkpoints or place the local TL file on immutable storage.</li>
+<li>Alert on sustained pending checkpoints.</li>
+<li>Export audit rows to immutable storage before local retention expiry.</li>
+<li>Exercise <code>Stigmem-Verify: full</code> recall and SDK verification in staging.</li>
+<li>Include CID mismatch, chain-proof mismatch, and Rekor-unavailable scenarios in incident drills.</li>
+<li>Review <a href="../operators/tutorial-hardening">Harden a Deployment</a> and <a href="./container-hardening">Container Hardening</a> before production rollout.</li>
+</ol>

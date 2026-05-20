@@ -7,15 +7,32 @@ audience: Integrator
 
 # Plugin Author Guide
 
+<p className="stigmem-meta"><span>5 min read</span><span>Plugin author</span><span>v0.9.0aN alpha</span></p>
+
+<div className="stigmem-lead">
+
+**What this guide covers**
+
+Build a minimal Stigmem plugin against the stable 22-hook surface
+introduced for the v0.9.0a1 architecture-in-flight line. A plugin
+package contributes a `PluginManifest`, declares the capabilities
+it needs, registers hook handlers, and is loaded at node startup
+through the `stigmem.plugins` Python entry point group.
+
+</div>
+
 **Audience:** Developers writing opt-in Stigmem plugins for the v0.9.0aN alpha series.
 
-Plugins extend a node through the stable 22-hook surface introduced for the v0.9.0a1 architecture-in-flight line. A plugin package contributes a `PluginManifest`, declares the capabilities it needs, registers hook handlers, and is loaded at node startup through the `stigmem.plugins` Python entry point group.
+<div className="stigmem-keypoint">
 
-The default install still runs without plugins. Production nodes should only load plugins that have passed the signing and trusted-publisher checks described below.
+**The default install still runs without plugins.**
+
+Production nodes should only load plugins that have passed the
+signing and trusted-publisher checks described below.
+
+</div>
 
 ## Minimal package layout
-
-Create a normal Python package that can be installed into the same environment as `stigmem-node`:
 
 ```text
 example-stigmem-plugin/
@@ -45,8 +62,6 @@ example_stigmem_plugin = "example_stigmem_plugin:plugin_manifest"
 The entry point value must resolve to a zero-argument callable that returns a `PluginManifest`.
 
 ## Manifest and hook handlers
-
-This example denies writes from a blocked source and records a no-op audit hook so the plugin exercises both voting and fire-and-forget hook patterns:
 
 ```python
 from __future__ import annotations
@@ -84,32 +99,105 @@ def plugin_manifest() -> PluginManifest:
     )
 ```
 
-Manifest fields:
+**Manifest fields:**
 
-| Field | Required | Purpose |
-|---|---:|---|
-| `name` | Yes | Stable plugin name. Use lowercase letters, numbers, and hyphens. |
-| `version` | Yes | Plugin package version. |
-| `requires_stigmem` | No | Compatibility line. Use `>=0.9.0a1` unless your plugin requires a later alpha. |
-| `capabilities` | No | Capability names the plugin may access through `PluginContext`. |
-| `hooks` | No | Mapping from stable hook name to callable handler. |
-| `health_check` | No | Lifecycle health callable used by operator inspection. |
-| `depends_on` | No | Other plugin names that must register before this plugin. |
+<div className="stigmem-fields">
+
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Required</span></dt>
+<dd>Purpose</dd>
+</div>
+
+<div>
+<dt><code>name</code></dt>
+<dt><span className="stigmem-fields__type">yes</span></dt>
+<dd>Stable plugin name. Use lowercase letters, numbers, and hyphens.</dd>
+</div>
+
+<div>
+<dt><code>version</code></dt>
+<dt><span className="stigmem-fields__type">yes</span></dt>
+<dd>Plugin package version.</dd>
+</div>
+
+<div>
+<dt><code>requires_stigmem</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>Compatibility line. Use <code>&gt;=0.9.0a1</code> unless your plugin requires a later alpha.</dd>
+</div>
+
+<div>
+<dt><code>capabilities</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>Capability names the plugin may access through <code>PluginContext</code>.</dd>
+</div>
+
+<div>
+<dt><code>hooks</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>Mapping from stable hook name to callable handler.</dd>
+</div>
+
+<div>
+<dt><code>health_check</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>Lifecycle health callable used by operator inspection.</dd>
+</div>
+
+<div>
+<dt><code>depends_on</code></dt>
+<dt><span className="stigmem-fields__type">no</span></dt>
+<dd>Other plugin names that must register before this plugin.</dd>
+</div>
+
+</div>
 
 ## Hook patterns
 
 Handlers always receive a `PluginContext` as the first positional argument. Hook-specific payloads are supplied as keyword arguments, except filter-chain hooks receive the current value as the second positional argument.
 
-Use these return shapes:
+<div className="stigmem-fields">
 
-| Hook semantic | Handler pattern | Return value |
-|---|---|---|
-| Voting | authorize or validate a request | `Allow()` or `Deny("reason")` |
-| Filter chain | rewrite a payload | the transformed value, never `None` |
-| Score delta | adjust recall ranking | `dict[str, float]` keyed by result or fact id |
-| Fire and forget | audit or observe side effects | `None` |
+<div>
+<dt>Semantic</dt>
+<dt><span className="stigmem-fields__type">Handler pattern</span></dt>
+<dd>Return value</dd>
+</div>
 
-The stable v0.9.0a1 hook names are listed in the [Plugin Hook Reference](../../reference/plugin-api/hooks.md) and defined in the [hook source reference](https://github.com/eidetic-labs/stigmem/blob/main/node/src/stigmem_node/plugins/hooks.py). Do not register hooks outside that list; `health_check` is a manifest lifecycle callable, not a hook name.
+<div>
+<dt>Voting</dt>
+<dt><span className="stigmem-fields__type">authorize / validate</span></dt>
+<dd><code>Allow()</code> or <code>Deny("reason")</code>.</dd>
+</div>
+
+<div>
+<dt>Filter chain</dt>
+<dt><span className="stigmem-fields__type">rewrite payload</span></dt>
+<dd>The transformed value, never <code>None</code>.</dd>
+</div>
+
+<div>
+<dt>Score delta</dt>
+<dt><span className="stigmem-fields__type">adjust ranking</span></dt>
+<dd><code>dict[str, float]</code> keyed by result or fact id.</dd>
+</div>
+
+<div>
+<dt>Fire and forget</dt>
+<dt><span className="stigmem-fields__type">audit / observe</span></dt>
+<dd><code>None</code>.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Do not register hooks outside the 22-hook surface list.**
+
+`health_check` is a manifest lifecycle callable, not a hook name.
+
+</div>
 
 ## Capability declarations
 
@@ -135,9 +223,16 @@ def plugin_manifest() -> PluginManifest:
     )
 ```
 
-The v0.9.0a1 `CoreApis` handles are deliberately narrow and optional. Operators or tests may expose a callable or facade object behind a capability; plugins should handle `None` or an unexpected shape explicitly. If a handler calls `ctx.get_audit_emitter()` without declaring `audit.emit`, registration can succeed but the handler will fail with a capability error when the hook fires.
+<div className="stigmem-keypoint">
 
-The v0.9.0a1 capability allowlist is documented in the [Plugin Capability Reference](../../reference/plugin-api/capabilities.md) and defined in the [capability source reference](https://github.com/eidetic-labs/stigmem/blob/main/node/src/stigmem_node/plugins/capabilities.py).
+**If a handler calls `ctx.get_audit_emitter()` without declaring `audit.emit`, registration can succeed but the handler will fail with a capability error when the hook fires.**
+
+The v0.9.0a1 `CoreApis` handles are deliberately narrow and
+optional. Operators or tests may expose a callable or facade object
+behind a capability; plugins should handle `None` or an unexpected
+shape explicitly.
+
+</div>
 
 ## Local tests
 
@@ -162,7 +257,7 @@ def test_blocks_configured_source() -> None:
     assert decision.reason == "source is blocked by example-stigmem-plugin"
 ```
 
-For tests that need to replace the process-global registry temporarily, use the [testing helper reference](https://github.com/eidetic-labs/stigmem/blob/main/node/src/stigmem_node/plugins/testing.py):
+For tests that need to replace the process-global registry temporarily:
 
 ```python
 from stigmem_node.plugins.testing import stigmem_plugins
@@ -175,37 +270,43 @@ def test_process_registry_fixture() -> None:
         assert "example-stigmem-plugin" in registry.registered_plugins()
 ```
 
-Run the plugin test suite in an environment that has both your package and `stigmem-node>=0.9.0a1` installed.
-
 ## Startup loading
 
 After installing the plugin package, Stigmem discovers entry points from the `stigmem.plugins` group and registers them during startup. Dependency ordering is deterministic: dependencies listed in `depends_on` register before the dependent plugin, and cycles fail closed.
 
-For local development only, an operator may load unsigned plugins by setting:
+For local development only:
 
 ```bash
 STIGMEM_PLUGIN_SIGNING_REQUIRED=false
 ```
 
-That setting emits a security warning and audit metadata. Do not use it in production.
+<div className="stigmem-keypoint">
+
+**That setting emits a security warning and audit metadata. Do not use it in production.**
+
+</div>
 
 ## Signing and trust expectations
 
-Production plugin registration requires a verified signing identity. The current registration boundary expects discovered plugins to arrive with verified signing metadata and then applies operator trust policy:
+Production plugin registration requires a verified signing identity.
 
-- `STIGMEM_PLUGIN_TRUSTED_PUBLISHERS` lists accepted signing identities.
-- `STIGMEM_PLUGIN_TRUST_OVERRIDE_PUBLISHERS` lists explicit audited exceptions.
-- Unsigned plugins are rejected when `STIGMEM_PLUGIN_SIGNING_REQUIRED=true`.
+<div className="stigmem-grid">
 
-The signing gate is implemented in the [signing source reference](https://github.com/eidetic-labs/stigmem/blob/main/node/src/stigmem_node/plugins/signing.py). Operator-facing trust setup is covered separately in the plugin management guide.
+<div><h4><code>STIGMEM_PLUGIN_TRUSTED_PUBLISHERS</code></h4><p>Lists accepted signing identities.</p></div>
+<div><h4><code>STIGMEM_PLUGIN_TRUST_OVERRIDE_PUBLISHERS</code></h4><p>Lists explicit audited exceptions.</p></div>
+<div><h4>Unsigned plugins rejected</h4><p>When <code>STIGMEM_PLUGIN_SIGNING_REQUIRED=true</code>.</p></div>
+
+</div>
 
 ## Author checklist
 
 Before publishing a plugin:
 
-- Use `requires_stigmem=">=0.9.0a1"` or a later alpha bound that matches your tested API surface.
-- Register only stable hook names from the 22-hook surface.
-- Declare only capabilities your handlers actually use.
-- Add unit tests for allow, deny, and error paths.
-- Verify startup discovery through the `stigmem.plugins` entry point.
-- Coordinate signing identity and trusted-publisher configuration with the node operator.
+<ol className="stigmem-steps">
+<li>Use <code>requires_stigmem="&gt;=0.9.0a1"</code> or a later alpha bound that matches your tested API surface.</li>
+<li>Register only stable hook names from the 22-hook surface.</li>
+<li>Declare only capabilities your handlers actually use.</li>
+<li>Add unit tests for allow, deny, and error paths.</li>
+<li>Verify startup discovery through the <code>stigmem.plugins</code> entry point.</li>
+<li>Coordinate signing identity and trusted-publisher configuration with the node operator.</li>
+</ol>

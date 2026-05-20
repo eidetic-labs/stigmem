@@ -7,10 +7,19 @@ audience: Operator
 
 # Backup & Restore
 
-**Audience:** node operators running Stigmem in production.  
-**Spec reference:** snapshot signing uses the node's Ed25519 federation key (`Spec-05-Federation-Trust`).
+<p className="stigmem-meta"><span>5 min read</span><span>Node operator</span><span>DR runbook</span></p>
 
----
+<div className="stigmem-lead">
+
+**What this runbook covers**
+
+Signed snapshots, scheduled backups, verification, and cloud
+point-in-time recovery for libSQL and Postgres.
+
+</div>
+
+**Audience:** node operators running Stigmem in production.
+**Spec reference:** snapshot signing uses the node's Ed25519 federation key (`Spec-05-Federation-Trust`).
 
 ## Quick reference
 
@@ -38,11 +47,7 @@ stigmem snapshot restore /backups/snap.tar.gz \
 stigmem snapshot restore /backups/snap.tar.gz --force-unverified
 ```
 
----
-
 ## What a snapshot captures
-
-Every snapshot is a signed tarball:
 
 ```
 stigmem-snapshot-<timestamp>-<hash>.tar.gz
@@ -52,9 +57,14 @@ stigmem-snapshot-<timestamp>-<hash>.tar.gz
     └── schema_migration_cursor.json   ← applied migration versions
 ```
 
-The signature uses the node's federation private key (`STIGMEM_FEDERATION_PRIVKEY`). Verification checks the signature and every artifact hash before restore proceeds.
+<div className="stigmem-keypoint">
 
----
+**The signature uses the node's federation private key (`STIGMEM_FEDERATION_PRIVKEY`).**
+
+Verification checks the signature and every artifact hash before
+restore proceeds.
+
+</div>
 
 ## Scheduling backups
 
@@ -75,15 +85,7 @@ aws s3 cp "$SNAP" "s3://your-bucket/stigmem/$(basename $SNAP)"
 
 ### Markdown export helper
 
-The signed `stigmem snapshot` CLI is the canonical backup and restore path. For
-operators who also want a human-readable markdown export for review, source
-control, or incident response packets, the repo includes
-[`scripts/stigmem-snapshot.sh`](https://github.com/eidetic-labs/stigmem/blob/main/scripts/stigmem-snapshot.sh).
-
-The helper queries the HTTP API for a chosen scope and entity list, writes a
-markdown report grouped by entity, and can include contradiction metrics. It
-expects `curl`, `jq`, and either `STIGMEM_API_KEY` or `--api-key` when the node
-requires auth.
+The signed `stigmem snapshot` CLI is the canonical backup and restore path. For operators who also want a human-readable markdown export for review, source control, or incident response packets, the repo includes [`scripts/stigmem-snapshot.sh`](https://github.com/eidetic-labs/stigmem/blob/main/scripts/stigmem-snapshot.sh).
 
 ```bash
 scripts/stigmem-snapshot.sh \
@@ -93,10 +95,13 @@ scripts/stigmem-snapshot.sh \
   --output /var/backups/stigmem/team-export-$(date -u +%Y-%m-%d).md
 ```
 
-Treat this export as a secondary operator artifact, not as a restore format. Use
-the signed snapshot commands above for disaster recovery.
+<div className="stigmem-keypoint">
 
----
+**Treat the markdown export as a secondary operator artifact, not as a restore format.**
+
+Use the signed snapshot commands above for disaster recovery.
+
+</div>
 
 ## Verifying a snapshot
 
@@ -138,55 +143,52 @@ Save `priv` to a file (e.g., `/secure/offline.key`, mode `0400`) and add `pub` t
 
 ### Verification modes
 
-| Mode | Behavior |
-|---|---|
-| Default (no flags) | Verifies using the node's own key or the manifest's self-declared key |
-| `--trusted-keys FILE` | **Strict mode** — only keys in that file are trusted; node key and self-declared key are ignored |
-| `--force-unverified` | Bypasses all checks; always logged at `WARNING`. Use only for disaster recovery when the signing key is lost |
+<div className="stigmem-fields">
 
----
+<div>
+<dt>Mode</dt>
+<dt><span className="stigmem-fields__type">Behavior</span></dt>
+<dd>Use case</dd>
+</div>
+
+<div>
+<dt>Default (no flags)</dt>
+<dt><span className="stigmem-fields__type">self-key OK</span></dt>
+<dd>Verifies using the node's own key or the manifest's self-declared key.</dd>
+</div>
+
+<div>
+<dt><code>--trusted-keys FILE</code></dt>
+<dt><span className="stigmem-fields__type">strict</span></dt>
+<dd>Only keys in that file are trusted; node key and self-declared key are ignored.</dd>
+</div>
+
+<div>
+<dt><code>--force-unverified</code></dt>
+<dt><span className="stigmem-fields__type">DR only</span></dt>
+<dd>Bypasses all checks; always logged at <code>WARNING</code>. Use only for disaster recovery when the signing key is lost.</dd>
+</div>
+
+</div>
 
 ## Restore procedure
 
-1. **Stop the node.**
-2. **Back up the current database** (belt and suspenders):
-
-   ```bash
-   cp $STIGMEM_DB_PATH "${STIGMEM_DB_PATH}.pre-restore-backup"
-   ```
-
-3. **Verify the snapshot** (see above).
-4. **Run restore:**
-
-   ```bash
-   stigmem snapshot restore /backups/stigmem-20260601.tar.gz
-   ```
-
-   The restore step:
-   - Verifies checksums and signature.
-   - Writes the database file to `STIGMEM_DB_PATH`.
-   - Replays any migrations newer than the snapshot cursor.
-
-5. **Restart the node.**
-6. **If the node participates in federation**, verify cursor state was captured in the snapshot:
-
-   ```bash
-   stigmem federation cursor-export --db $STIGMEM_DB_PATH
-   ```
-
-   If cursors were lost, see [Cursor-Reset Recovery](./cursor-reset-recovery) to import a checkpoint and avoid a full re-pull.
+<ol className="stigmem-steps">
+<li><strong>Stop the node.</strong></li>
+<li><strong>Back up the current database</strong> (belt and suspenders): <code>cp $STIGMEM_DB_PATH "$&#123;STIGMEM_DB_PATH&#125;.pre-restore-backup"</code></li>
+<li><strong>Verify the snapshot</strong> (see above).</li>
+<li><strong>Run restore:</strong> <code>stigmem snapshot restore /backups/stigmem-20260601.tar.gz</code>. The restore step verifies checksums and signature, writes the database file to <code>STIGMEM_DB_PATH</code>, and replays any migrations newer than the snapshot cursor.</li>
+<li><strong>Restart the node.</strong></li>
+<li><strong>If the node participates in federation</strong>, verify cursor state: <code>stigmem federation cursor-export --db $STIGMEM_DB_PATH</code>. If cursors were lost, see <a href="./cursor-reset-recovery">Cursor-Reset Recovery</a>.</li>
+</ol>
 
 :::caution
 Restore overwrites `STIGMEM_DB_PATH` without confirmation. The pre-restore backup in step 2 is your safety net.
 :::
 
----
-
 ## Cloud PITR (libSQL and Postgres)
 
 ### libSQL / Turso
-
-Turso provides point-in-time recovery on the cloud primary without node downtime:
 
 ```bash
 # List available snapshots
@@ -196,37 +198,65 @@ turso db snapshot list stigmem-prod
 turso db restore stigmem-prod --timestamp 2026-06-01T03:00:00Z --name stigmem-restored
 ```
 
-After restoring to a new Turso database, update `STIGMEM_LIBSQL_URL` in your secrets to point at the restored database and restart the node. For detailed libSQL point-in-time restore via the Turso replica protocol, see the [libSQL PITR guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/storage-libsql).
+After restoring to a new Turso database, update `STIGMEM_LIBSQL_URL` in your secrets to point at the restored database and restart the node.
 
 ### Postgres
 
 Use your managed provider's PITR feature:
 
-- **RDS:** automated backups + point-in-time restore in the AWS Console or CLI
-- **Cloud SQL:** `gcloud sql instances clone` with a `--point-in-time` flag
-- **Neon:** branch from a historical point via the Neon console
-- **Supabase:** contact support — PITR is a Pro feature
+<div className="stigmem-grid">
+
+<div><h4>RDS</h4><p>Automated backups + point-in-time restore in the AWS Console or CLI.</p></div>
+<div><h4>Cloud SQL</h4><p><code>gcloud sql instances clone</code> with a <code>--point-in-time</code> flag.</p></div>
+<div><h4>Neon</h4><p>Branch from a historical point via the Neon console.</p></div>
+<div><h4>Supabase</h4><p>PITR is a Pro feature; contact support.</p></div>
+
+</div>
 
 No Stigmem-specific restore command is needed for Postgres. The node picks up the restored data on restart.
 
----
-
 ## Retention policy
 
-Decide on a retention window before production traffic arrives. A reasonable starting point:
+<div className="stigmem-fields">
 
-| Backup type | Frequency | Retention |
-|---|---|---|
-| Signed snapshot (SQLite) | Daily | 30 days local, 90 days offsite |
-| Turso PITR | Continuous | 7 days (Turso default) |
-| Postgres automated backup | Daily | 7–35 days (provider dependent) |
+<div>
+<dt>Backup type</dt>
+<dt><span className="stigmem-fields__type">Frequency</span></dt>
+<dd>Retention</dd>
+</div>
 
-Test restore from backup at least once per quarter.
+<div>
+<dt>Signed snapshot (SQLite)</dt>
+<dt><span className="stigmem-fields__type">Daily</span></dt>
+<dd>30 days local, 90 days offsite.</dd>
+</div>
 
----
+<div>
+<dt>Turso PITR</dt>
+<dt><span className="stigmem-fields__type">Continuous</span></dt>
+<dd>7 days (Turso default).</dd>
+</div>
+
+<div>
+<dt>Postgres automated backup</dt>
+<dt><span className="stigmem-fields__type">Daily</span></dt>
+<dd>7–35 days (provider dependent).</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Test restore from backup at least once per quarter.**
+
+</div>
 
 ## Security notes
 
-- Snapshot tarballs may contain sensitive fact data and secret peer keys. Store them with appropriate permissions and encrypt at rest.
-- The Ed25519 signature covers the manifest body (artifact names + SHA-256 hashes + metadata) but not the signer's private key. Compromise of the private key lets an attacker forge future snapshots. Rotate the federation keypair and update your `trusted-backup-keys.json` if you suspect compromise — see [Key Rotation](../../security/key-rotation).
-- `--force-unverified` is always logged at `WARNING` level regardless of the node's configured log level. Audit your logs after any forced restore.
+<div className="stigmem-grid">
+
+<div><h4>Sensitive contents</h4><p>Snapshot tarballs may contain sensitive fact data and secret peer keys. Store with appropriate permissions and encrypt at rest.</p></div>
+<div><h4>Signature scope</h4><p>The Ed25519 signature covers the manifest body but not the signer's private key. Rotate the federation keypair and update <code>trusted-backup-keys.json</code> if you suspect compromise.</p></div>
+<div><h4>Forced restore audit</h4><p><code>--force-unverified</code> is always logged at <code>WARNING</code> level regardless of the node's configured log level. Audit your logs after any forced restore.</p></div>
+
+</div>

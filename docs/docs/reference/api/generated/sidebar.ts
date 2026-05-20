@@ -62,48 +62,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "instruction",
-      items: [
-        {
-          type: "doc",
-          id: "reference/api/generated/get-boot-stub-v-1-agents-agent-id-boot-stub-get",
-          label: "Get Boot Stub",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "reference/api/generated/get-instruction-manifest-v-1-agents-agent-id-instruction-manifest-get",
-          label: "Get Instruction Manifest",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "reference/api/generated/publish-instruction-manifest-v-1-agents-agent-id-instruction-manifest-put",
-          label: "Publish Instruction Manifest",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "reference/api/generated/get-manifest-coverage-v-1-agents-agent-id-instruction-manifest-coverage-get",
-          label: "Get Manifest Coverage",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "reference/api/generated/recall-instruction-v-1-agents-agent-id-recall-instruction-post",
-          label: "Recall Instruction",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "reference/api/generated/submit-discovery-audit-v-1-instruction-audit-post",
-          label: "Submit Discovery Audit",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "aliases",
       items: [
         {
@@ -186,6 +144,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "reference/api/generated/list-expiring-keys-v-1-auth-keys-expiring-soon-get",
+          label: "List Expiring Keys",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
           id: "reference/api/generated/revoke-key-v-1-auth-keys-key-id-delete",
           label: "Revoke Key",
           className: "api-method delete",
@@ -260,6 +224,12 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "reference/api/generated/register-peer-v-1-federation-peers-post",
           label: "Register Peer",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "reference/api/generated/approve-peer-v-1-federation-peers-peer-id-approve-post",
+          label: "Approve Peer",
           className: "api-method post",
         },
       ],

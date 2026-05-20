@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"pubkey_fingerprint":{"minLength":1,"title":"Pubkey Fingerprint","type":"string"}},"required":["pubkey_fingerprint"],"title":"PeerApprovalRequest","type":"object"}}},"required":true}}

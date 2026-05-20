@@ -1,0 +1,1 @@
+{"parameters":[{"description":"Return active keys expiring within this many days.","in":"query","name":"within_days","required":false,"schema":{"default":30,"description":"Return active keys expiring within this many days.","maximum":365,"minimum":1,"title":"Within Days","type":"integer"}}]}

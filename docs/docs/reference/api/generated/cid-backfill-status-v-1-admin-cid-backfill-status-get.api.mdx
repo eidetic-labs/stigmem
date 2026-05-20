@@ -5,7 +5,7 @@ description: "Return CID backfill progress for this node (Spec-21-Content-Addres
 sidebar_label: "Cid Backfill Status"
 hide_title: true
 hide_table_of_contents: true
-api: eJytVMtu2zAQ/BVCpxSQLDu35pa4aWugKILYPQWBQYtrmY1EsuTKqSEY6Ef0C/sl3aUecZq0p54sc1+zwxm2iYJQeO1QW5NcJLeAjTdivngnNrJ42OqqEs7b0kMIYmu9wJ0OwlgF4mzpoMjOZ9ncGgSD2aVSnAYqW7wLbyZJmlgHXnLnhaLehVbroek6oMQmrPeztVS1NuvXgiUgNaGezpoAIblok/PplH+KbiR/SucqXcQp+dfAS7RJKHZQS/4i7IQBdVc9Dihs7SpA4EPUWNFHcjXsOx+CaYIHx6GNtRVIkxzTsQWo9VYWGF7rAEq8j7GxgSa4JXhu4MAobcqX1Tdd4B+laFFWLwtXfPzXsiMz+K3RHugO7p71eGWbP/Glr3B2n46j51oNSy/jnT0BsJuvUCDNJwDPNbZsioJ0sm0qcdvfbYQZoGi8xgPBbJOPq9XNFUhPK1zc3R95piwDbxD1QnNIMQylBtxZllenFidxR3/y/SyPiTmlZcMOeRhADrOWrJROHKcTewnFu++Oxr12iC7C1WZrOfNPA23BgymgM4lmzmqSKt8s7kAsUZc11GI/nbydTOVM8FhxebMQv378FJH0VGxB9cZJRSm9AkOHHgpZVakIzWYcSMeyURpToRUPwUMqem9kcrBj7CrIkxMx9zaErGgw4tkCsUE54gxtvQloDVBD1DVk6OUeaFjdVKgz6icNvhHEhLAOM22Eq5pSm8AuJ/sB3yFxYWTk7NJJoi87n0wp3Piqpy1c5Pnj4+NExvDE+jLva0P+aTG//ry8jjXHJ4ENdD3R+plopa578KFjvCcyessGrKU5QUICFaOxR4k+u7KT1+Q/P3+9YhC+Y+4qqeMDEuloe53eJfsZJZ5IetQqi7TDSyLf0WKc3bYbGeCLr45HPv7WgGe70Odeei03zBm5hQpAqmidNnmAA18Jec6xQfayahjVi3fzeGqmD9crxtUwyHZ8BgcrbAZjjiFpDie9CWbMWNkHMAQ17UEg/6dB9Cj8BufOPKM=
+api: eJytVMtu2zAQ/BVCpwSQLCe35pY6aWugKILYPQWFQYtrmYlEsuTKqSEY6Ef0C/sl3aUecR7tqSfL3NfscIZtoiAUXjvU1iQXyS1g442Yza/EWhYPG11VwnlbeghBbKwXuNVBGKtAnCwcFNn5WTazBsFgdqkUp4HK5lfhdJKkiXXgJXeeK+pdaLUamq4CSmzCane2kqrWZvVWsASkJtTTWRMgJBdtcj6d8k/RjeRP6Vylizglvw+8RJuEYgu15C/CThhQd9XjgMLWrgIEPkSNFX0k74d9Z0MwTXDvOLS2tgJpkkM6tgC12sgCw1sdQIkPMTY20AS3BM8NHBilTfm6+qYL/KMULcrqdeGSj/9admAGvzfaA93B3bMeb2zzEl/6Bmff0nH0TKth6UW8sycAdn0PBdJ8AvBcY4umKEgnm6YSt/3dRpgBisZr3BPMNvm0XN68B+lphYu7bweeKcvAG0S90BxSDEOpAbeW5dWpxUnc0p98d5bHxJzSsmGHPAwgh1kLVkonjuOJvYTi3XdH415bRBfharOxnPnSQBvwYAroTKKZs5qkyjeLWxAL1GUNtdhNJ+8mU3kueKy4vJmL3z9/iUh6KjageuOkopRegaFDD4WsqlSEZj0OpGPZKI2p0IqH4D4VvTcyOdgxdhXkyYmYeRtCVjQY8WyA2KAccYK2Xge0Bqgh6hoy9HIHNKxuKtQZ9ZMGTwUxIazDTBvhqqbUJrDLyX7Ad0hcGBk5u3SS6MvOJ1MKN77qaQsXef74+DiRMTyxvsz72pB/ns+uvyyuY83hSWADXU+0fiFaqesOfOgY74mM3rIBa2mOkJBAxWjsUaLPruzoNfnPz1+vGIQfmLtK6viARDraXqd3ye6MEo8kPWqVRdrhJZFvaTHObtu1DPDVV4cDH39vwLNd6HMnvZZr5ozcQgUgVbROmzzAnq+EPOfYIDtZNYzq1bt5ODbTx+sl42oYZDs+g4MV1oMxx5A0+6PeBDNmLO0DGIKa9iCQ/9MgehT+AOx3PKU=
 sidebar_class_name: "get api-method"
 info_path: docs/reference/api/generated/stigmem-reference-node
 custom_edit_url: null
@@ -32,7 +32,7 @@ import Translate from "@docusaurus/Translate";
   path={"/v1/admin/cid-backfill/status"}
   context={"endpoint"}
 >
-
+  
 </MethodEndpoint>
 
 
@@ -40,17 +40,20 @@ import Translate from "@docusaurus/Translate";
 Return CID backfill progress for this node (Spec-21-Content-Addressed-IDs).
 
 <ParamsDetails>
-
+  
 </ParamsDetails>
 
 <RequestSchema
   {...require("./cid-backfill-status-v-1-admin-cid-backfill-status-get.RequestSchema.json")}
 >
-
+  
 </RequestSchema>
 
 <StatusCodes
   {...require("./cid-backfill-status-v-1-admin-cid-backfill-status-get.StatusCodes.json")}
 >
-
+  
 </StatusCodes>
+
+
+      

@@ -86,6 +86,12 @@ auto-generated from the OpenAPI schema served at
 </div>
 
 <div>
+<dt><strong>Admin / Billing</strong> · <code>/v1/admin/billing/events</code></dt>
+<dt><span className="stigmem-fields__type">Admin API key</span></dt>
+<dd>—</dd>
+</div>
+
+<div>
 <dt><strong>Async Jobs</strong> · <code>/v1/jobs/:id</code></dt>
 <dt><span className="stigmem-fields__type">API key</span></dt>
 <dd>Spec-20, Spec-X9.</dd>

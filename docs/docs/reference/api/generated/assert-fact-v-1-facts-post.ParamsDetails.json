@@ -1,0 +1,1 @@
+{"parameters":[{"in":"header","name":"Stigmem-Session","required":false,"schema":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Stigmem-Session"}}]}

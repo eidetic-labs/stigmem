@@ -1,1 +1,1 @@
-{"parameters":[{"in":"path","name":"fact_id","required":true,"schema":{"title":"Fact Id","type":"string"}}]}
+{"parameters":[{"in":"path","name":"fact_id","required":true,"schema":{"title":"Fact Id","type":"string"}},{"in":"header","name":"Stigmem-Session","required":false,"schema":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Stigmem-Session"}}]}

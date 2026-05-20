@@ -38,7 +38,7 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          sidebarPath: './sidebars.js',
+          sidebarPath: './sidebars.ts',
           docItemComponent: '@theme/ApiItem',
           remarkPlugins: [remarkGlossaryLink, remarkSpecLink],
           // Single-version mode for the current v0.9.0 alpha line (canonical first build per

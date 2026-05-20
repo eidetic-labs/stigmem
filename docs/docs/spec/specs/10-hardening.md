@@ -15,60 +15,82 @@ depends_on:
 
 # Spec-10-Hardening
 
-`Spec-10-Hardening` defines baseline operational hardening requirements:
-transport security, key rotation posture, rate limits and quotas, and container
-runtime baseline.
+<p className="stigmem-meta"><span>2 min read</span><span>Spec contributor · Node operator</span><span>Draft · v0.9.0aN</span></p>
 
-## Extraction Status
+<div className="stigmem-lead">
 
-This file contains the ADR-010 prose extraction for supported hardening
-expectations. Replay windows are owned by `Spec-11-Replay-Protection`; audit
-record shape is owned by `Spec-09-Audit-Log`.
+**What this spec defines**
 
-## Federation Transport
+Baseline operational hardening requirements: transport security,
+key rotation posture, rate limits and quotas, and container runtime
+baseline.
 
-Federation deployments SHOULD use mutually authenticated TLS. When mTLS is
-enabled, nodes MUST validate peer certificates against the configured trust
-policy and MUST reject peers whose certificate identity does not match the
-registered peer relationship.
+</div>
 
-Development deployments MAY use non-mTLS transport only when clearly configured
-as non-production.
+## Extraction status
 
-## Key Rotation
+This file contains the ADR-010 prose extraction for supported
+hardening expectations. Replay windows are owned by
+`Spec-11-Replay-Protection`; audit record shape is owned by
+`Spec-09-Audit-Log`.
 
-Federation and manifest signing keys SHOULD support rotation without downtime.
-Rotation procedures MUST preserve a dual-trust period long enough for peers to
-refresh manifests and reject stale keys. Rotation events SHOULD be auditable and
-published through configured transparency-log evidence when available.
+## Federation transport
 
-## Quotas And Rate Limits
+Federation deployments SHOULD use mutually authenticated TLS. When
+mTLS is enabled, nodes MUST validate peer certificates against the
+configured trust policy and MUST reject peers whose certificate
+identity does not match the registered peer relationship.
 
-Nodes SHOULD enforce per-principal quotas for write-heavy and security-sensitive
-operations, including fact asserts, federation ingestion, token issuance, and
-admin exports.
+Development deployments MAY use non-mTLS transport only when
+clearly configured as non-production.
 
-Rate-limit responses SHOULD be explicit and machine-readable. Implementations
-SHOULD avoid revealing sensitive state in rate-limit errors.
+## Key rotation
 
-## Container Baseline
+Federation and manifest signing keys SHOULD support rotation
+without downtime. Rotation procedures MUST preserve a dual-trust
+period long enough for peers to refresh manifests and reject stale
+keys. Rotation events SHOULD be auditable and published through
+configured transparency-log evidence when available.
+
+## Quotas and rate limits
+
+Nodes SHOULD enforce per-principal quotas for write-heavy and
+security-sensitive operations, including fact asserts, federation
+ingestion, token issuance, and admin exports.
+
+Rate-limit responses SHOULD be explicit and machine-readable.
+Implementations SHOULD avoid revealing sensitive state in
+rate-limit errors.
+
+## Container baseline
 
 Production container images SHOULD:
 
-- run as a non-root user,
-- minimize installed packages,
-- use a read-only root filesystem where practical,
-- declare health checks,
-- publish SBOM/provenance evidence when supported by the release process,
-- avoid embedding runtime secrets in image layers.
+<div className="stigmem-grid">
 
-## Configuration Boundaries
+<div><h4>Run as non-root</h4><p>A non-root user with minimal privileges.</p></div>
+<div><h4>Minimize installed packages</h4><p>Avoid shells and build tooling in the production layer.</p></div>
+<div><h4>Read-only root filesystem</h4><p>Where practical.</p></div>
+<div><h4>Declare health checks</h4></div>
+<div><h4>Publish SBOM / provenance evidence</h4><p>When supported by the release process.</p></div>
+<div><h4>Avoid embedded secrets</h4><p>No runtime secrets in image layers.</p></div>
 
-Operators MAY relax some hardening settings in local development. Production
-deployment templates SHOULD prefer the stricter setting and require explicit
-operator action to weaken it.
+</div>
 
-## Out Of Scope
+## Configuration boundaries
 
-This spec does not define replay nonce windows, CID integrity, vulnerability
-reporting policy, or external infrastructure such as hosted transparency logs.
+<div className="stigmem-keypoint">
+
+**Production deployment templates SHOULD prefer the stricter setting.**
+
+Operators MAY relax some hardening settings in local development.
+Production templates SHOULD prefer the stricter setting and require
+explicit operator action to weaken it.
+
+</div>
+
+## Out of scope
+
+This spec does not define replay nonce windows, CID integrity,
+vulnerability reporting policy, or external infrastructure such as
+hosted transparency logs.

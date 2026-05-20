@@ -14,57 +14,76 @@ depends_on:
 
 # Spec-13-Capability-Based-Instructions
 
-`Spec-13-Capability-Based-Instructions` defines structural separation between
-recalled content and executable instruction, plus the capability gate required
-to promote memory into instruction.
+<p className="stigmem-meta"><span>2 min read</span><span>Spec contributor</span><span>Draft · v0.9.0bN</span></p>
 
-## Extraction Status
+<div className="stigmem-lead">
 
-This file contains the ADR-010 prose extraction for ADR-003 capability-based
-instruction handling. The first implementation slice shipped in #373:
-`FactValue.interpret_as` exists, local instruction writes require
-`instruction:write`, and recall preserves instruction/content channels. The
-remaining federation/admission pieces target the `v0.9.0bN` capability
+**What this spec defines**
+
+Structural separation between recalled content and executable
+instruction, plus the capability gate required to promote memory
+into instruction.
+
+</div>
+
+## Extraction status
+
+This file contains the ADR-010 prose extraction for ADR-003
+capability-based instruction handling. The first implementation
+slice shipped in #373: `FactValue.interpret_as` exists, local
+instruction writes require `instruction:write`, and recall
+preserves instruction/content channels. The remaining
+federation/admission pieces target the `v0.9.0bN` capability
 redesign line and are not part of the `v0.9.0a1` stable surface.
 
 ## Principle
 
-Recalled memory is data. It MUST NOT become executable instruction merely
-because it appears in context. Promotion from content to instruction requires an
+<div className="stigmem-keypoint">
+
+**Recalled memory is data.**
+
+It MUST NOT become executable instruction merely because it appears
+in context. Promotion from content to instruction requires an
 explicit capability grant and a structurally separate channel.
 
-## FactValue Extension
+</div>
 
-The capability redesign introduces an instruction interpretation marker on
-facts or recalled units. A fact marked as instruction-like MUST be treated as
-data unless the caller has the required capability to execute or inject that
-instruction.
+## FactValue extension
 
-## Write-Time Enforcement
+The capability redesign introduces an instruction interpretation
+marker on facts or recalled units. A fact marked as
+instruction-like MUST be treated as data unless the caller has the
+required capability to execute or inject that instruction.
 
-Writing instruction-typed facts MUST require explicit `instruction:write`
-authority. General `write` authority is insufficient. Cross-organization
-instruction-typed facts SHOULD be quarantined or rejected unless a trusted
-deployment relationship explicitly permits them.
+## Write-time enforcement
 
-## Recall-Time Enforcement
+Writing instruction-typed facts MUST require explicit
+`instruction:write` authority. General `write` authority is
+insufficient. Cross-organization instruction-typed facts SHOULD be
+quarantined or rejected unless a trusted deployment relationship
+explicitly permits them.
 
-Recall MUST preserve provenance and interpretation metadata. The recall pipeline
-MUST NOT collapse untrusted content into executable instructions. Agent runtimes
-must receive content and instructions through separate structures.
+## Recall-time enforcement
 
-## Federation Boundary
+Recall MUST preserve provenance and interpretation metadata. The
+recall pipeline MUST NOT collapse untrusted content into executable
+instructions. Agent runtimes must receive content and instructions
+through separate structures.
 
-Receiving nodes MUST NOT promote inbound content to instruction based on a
-sender's assertion alone. Any instruction interpretation that crosses federation
-must be revalidated against local policy and capability grants.
+## Federation boundary
+
+Receiving nodes MUST NOT promote inbound content to instruction
+based on a sender's assertion alone. Any instruction interpretation
+that crosses federation must be revalidated against local policy
+and capability grants.
 
 ## Audit
 
-Nodes SHOULD audit instruction writes, rejected promotions, cross-org
-instruction quarantine, and capability failures.
+Nodes SHOULD audit instruction writes, rejected promotions,
+cross-org instruction quarantine, and capability failures.
 
-## Out Of Scope
+## Out of scope
 
-This spec does not define lazy instruction discovery, boot-stub delivery, or
-instruction manifest retrieval; those belong to `Spec-X1-Lazy-Instruction-Discovery`.
+This spec does not define lazy instruction discovery, boot-stub
+delivery, or instruction manifest retrieval; those belong to
+`Spec-X1-Lazy-Instruction-Discovery`.

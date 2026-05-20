@@ -13,43 +13,62 @@ depends_on:
 
 # Spec-12-HLC-Bounded-Skew
 
-`Spec-12-HLC-Bounded-Skew` defines bounds for remote Hybrid Logical Clock values
-accepted during federation ingest.
+<p className="stigmem-meta"><span>2 min read</span><span>Spec contributor</span><span>Draft · v0.9.0aN</span></p>
 
-## Extraction Status
+<div className="stigmem-lead">
 
-This file contains the ADR-010 prose extraction for R-19 bounded-skew behavior.
-The basic HLC field and local advance rules live in `Spec-01-Fact-Model`;
-federation ingest context lives in `Spec-05-Federation-Trust`.
+**What this spec defines**
+
+Bounds for remote Hybrid Logical Clock values accepted during
+federation ingest. Limits how far a remote HLC may advance local
+ordering relative to the receiver's wall clock and policy.
+
+</div>
+
+## Extraction status
+
+This file contains the ADR-010 prose extraction for R-19
+bounded-skew behavior. The basic HLC field and local advance rules
+live in `Spec-01-Fact-Model`; federation ingest context lives in
+`Spec-05-Federation-Trust`.
 
 ## Purpose
 
-HLC values preserve causal ordering, but accepting arbitrarily far-future remote
-HLCs lets a peer distort ordering and conflict resolution. Bounded skew limits
-how far a remote HLC may advance local ordering relative to the receiver's wall
-clock and policy.
+HLC values preserve causal ordering, but accepting arbitrarily
+far-future remote HLCs lets a peer distort ordering and conflict
+resolution. Bounded skew limits how far a remote HLC may advance
+local ordering.
 
-## Inbound Bound
+## Inbound bound
 
-On federation ingest, a node MUST compare the inbound fact's HLC wall component
-against its current wall clock. If the inbound HLC exceeds the configured bound,
-the node MUST reject or quarantine the fact according to local policy.
+On federation ingest, a node MUST compare the inbound fact's HLC
+wall component against its current wall clock. If the inbound HLC
+exceeds the configured bound, the node MUST reject or quarantine
+the fact according to local policy.
 
-The default production posture SHOULD reject excessive skew. Development
-deployments MAY choose warn/quarantine modes when explicitly configured.
+<div className="stigmem-keypoint">
 
-## Audit And Metrics
+**Default production posture: reject excessive skew.**
 
-Nodes SHOULD emit an audit event for rejected or quarantined skew violations.
-Metrics SHOULD include accepted skew distribution and rejected-skew counts so
-operators can distinguish clock drift from hostile peers.
+Development deployments MAY choose warn/quarantine modes when
+explicitly configured.
 
-## Conflict Resolution Relationship
+</div>
 
-Conflict resolution may use HLC ordering as a tie-breaker. Facts rejected for
-bounded-skew violation MUST NOT participate in normal conflict ordering.
+## Audit and metrics
 
-## Out Of Scope
+Nodes SHOULD emit an audit event for rejected or quarantined skew
+violations. Metrics SHOULD include accepted skew distribution and
+rejected-skew counts so operators can distinguish clock drift from
+hostile peers.
 
-This spec does not define NTP configuration, wall-clock synchronization
-operations, or replay nonce windows.
+## Conflict resolution relationship
+
+Conflict resolution may use HLC ordering as a tie-breaker. Facts
+rejected for bounded-skew violation MUST NOT participate in normal
+conflict ordering.
+
+## Out of scope
+
+This spec does not define NTP configuration, wall-clock
+synchronization operations, or replay nonce windows.

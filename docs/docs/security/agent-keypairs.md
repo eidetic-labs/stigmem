@@ -6,13 +6,32 @@ audience: Integrator
 
 # Per-Agent Keypair Registration
 
-**Audience:** Agent developers who need cryptographically verifiable source provenance on asserted facts.
+<p className="stigmem-meta"><span>4 min read</span><span>Agent developers</span><span>Track C · C1</span></p>
 
-Stigmem's `source` field identifies who asserted a fact (`agent:settings-sync`, `oidc:alice@example.com`, etc.), but prior to Track C the node accepted any `source` value the caller provided. C1 closes this gap: agents register an Ed25519 public key with the node, then sign each fact payload. The node verifies the signature before writing.
+<div className="stigmem-lead">
 
-The existing Bearer-key model is unaffected. Keypair attestation is opt-in per assertion; it can be made mandatory node-wide with `STIGMEM_ATTESTATION_REQUIRED=true`.
+**What this page is**
 
----
+Agents register an Ed25519 public key with the node, then sign each
+fact payload. The node verifies the signature before writing —
+cryptographically verifiable source provenance on asserted facts.
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Keypair attestation is opt-in per assertion.**
+
+The existing Bearer-key model is unaffected. Set
+<code>STIGMEM_ATTESTATION_REQUIRED=true</code> to make it mandatory
+node-wide.
+
+</div>
+
+Stigmem's `source` field identifies who asserted a fact
+(`agent:settings-sync`, `oidc:alice@example.com`, etc.), but prior to
+Track C the node accepted any `source` value the caller provided. C1
+closes this gap.
 
 ## How it works
 
@@ -30,13 +49,12 @@ Agent                              Stigmem node
   │                                     │  principal → attested key → fact
 ```
 
----
-
 ## Endpoints
 
-### POST /v1/auth/agent-keys — register a key
+### `POST /v1/auth/agent-keys` · register a key
 
-Register an Ed25519 public key for the calling entity. Requires `write` permission.
+Register an Ed25519 public key for the calling entity. Requires
+`write` permission.
 
 **Request body:**
 
@@ -62,11 +80,13 @@ Register an Ed25519 public key for the calling entity. Requires `write` permissi
 }
 ```
 
-Save the `id` — it is the `key_id` you include in every attestation token.
+<div className="stigmem-keypoint">
 
----
+**Save the `id` — it is the `key_id` you include in every attestation token.**
 
-### GET /v1/auth/agent-keys — list my keys
+</div>
+
+### `GET /v1/auth/agent-keys` · list my keys
 
 Returns all keys (active and revoked) registered by the calling entity.
 
@@ -75,11 +95,10 @@ curl -H 'Authorization: Bearer stgm_...' \
   http://localhost:8000/v1/auth/agent-keys | jq .
 ```
 
----
+### `DELETE /v1/auth/agent-keys/{key_id}` · revoke a key
 
-### DELETE /v1/auth/agent-keys/\{key\_id\} — revoke a key
-
-Marks the key as `revoked`. Revoked keys are rejected at attestation verification. Callers may only revoke their own keys.
+Marks the key as `revoked`. Revoked keys are rejected at attestation
+verification. Callers may only revoke their own keys.
 
 ```bash
 curl -s -X DELETE \
@@ -88,9 +107,35 @@ curl -s -X DELETE \
 # → 204 No Content
 ```
 
-**Error responses:** `403` if the key belongs to a different entity; `404` if not found; `409` if already revoked.
+**Error responses:**
 
----
+<div className="stigmem-fields">
+
+<div>
+<dt>Status</dt>
+<dt><span className="stigmem-fields__type">When</span></dt>
+<dd>Meaning</dd>
+</div>
+
+<div>
+<dt><code>403</code></dt>
+<dt><span className="stigmem-fields__type">wrong owner</span></dt>
+<dd>The key belongs to a different entity.</dd>
+</div>
+
+<div>
+<dt><code>404</code></dt>
+<dt><span className="stigmem-fields__type">not found</span></dt>
+<dd>Key id does not exist.</dd>
+</div>
+
+<div>
+<dt><code>409</code></dt>
+<dt><span className="stigmem-fields__type">conflict</span></dt>
+<dd>Already revoked.</dd>
+</div>
+
+</div>
 
 ## Attesting a fact assertion
 
@@ -119,11 +164,39 @@ Sign the following UTF-8 string with your private key:
 {entity}\n{relation}\n{value.type}\n{encoded_v}\n{source}
 ```
 
-Where `encoded_v` is:
-- `str` value → the string itself
-- `float` value → `repr(float)` as Python formats it (use the same encoding the node uses when storing)
-- `bool` value → `"true"` or `"false"`
-- `json` value → compact JSON string
+<div className="stigmem-fields">
+
+<div>
+<dt>Value type</dt>
+<dt><span className="stigmem-fields__type">Encoding</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt><code>str</code></dt>
+<dt><span className="stigmem-fields__type">verbatim</span></dt>
+<dd>The string itself.</dd>
+</div>
+
+<div>
+<dt><code>float</code></dt>
+<dt><span className="stigmem-fields__type"><code>repr(float)</code></span></dt>
+<dd>As Python formats it (use the same encoding the node uses when storing).</dd>
+</div>
+
+<div>
+<dt><code>bool</code></dt>
+<dt><span className="stigmem-fields__type"><code>"true"</code> / <code>"false"</code></span></dt>
+<dd></dd>
+</div>
+
+<div>
+<dt><code>json</code></dt>
+<dt><span className="stigmem-fields__type">compact JSON string</span></dt>
+<dd></dd>
+</div>
+
+</div>
 
 **Python example (using the `cryptography` library):**
 
@@ -160,34 +233,71 @@ payload = {
 }
 ```
 
----
-
 ## Making attestation mandatory
 
-Set `STIGMEM_ATTESTATION_REQUIRED=true` in the node environment. With this flag:
+Set `STIGMEM_ATTESTATION_REQUIRED=true` in the node environment. With
+this flag:
 
-- Every `POST /v1/facts` must include a valid `attestation` object.
-- Requests without attestation are rejected with `400 Bad Request`:
-  ```
-  "attestation required; register an agent key at POST /v1/auth/agent-keys"
-  ```
+<div className="stigmem-grid">
 
-Default is `false` for backward compatibility with clients that predate Track C.
+<div><h4>Every assert needs attestation</h4><p>Every <code>POST /v1/facts</code> must include a valid <code>attestation</code> object.</p></div>
+<div><h4>Unattested requests rejected</h4><p>Returns <code>400 Bad Request</code>: <em>"attestation required; register an agent key at POST /v1/auth/agent-keys"</em>.</p></div>
 
----
+</div>
+
+Default is `false` for backward compatibility with clients that
+predate Track C.
 
 ## Migration path
 
-| Phase | How to adopt |
-|-------|-------------|
-| **Optional (default)** | Existing agents work unchanged. Agents that want attested provenance generate a keypair, register it, and add `attestation` to each assertion. |
-| **Enforced** | Set `STIGMEM_ATTESTATION_REQUIRED=true`. All agents must register a key before asserting facts. API-key auth continues; only the `attestation` field becomes required. |
+<div className="stigmem-fields">
 
----
+<div>
+<dt>Phase</dt>
+<dt><span className="stigmem-fields__type">Posture</span></dt>
+<dd>How to adopt</dd>
+</div>
+
+<div>
+<dt>Optional (default)</dt>
+<dt><span className="stigmem-fields__type">backward-compatible</span></dt>
+<dd>Existing agents work unchanged. Agents that want attested provenance generate a keypair, register it, and add <code>attestation</code> to each assertion.</dd>
+</div>
+
+<div>
+<dt>Enforced</dt>
+<dt><span className="stigmem-fields__type"><code>STIGMEM_ATTESTATION_REQUIRED=true</code></span></dt>
+<dd>All agents must register a key before asserting facts. API-key auth continues; only the <code>attestation</code> field becomes required.</dd>
+</div>
+
+</div>
 
 ## See also
 
-- [Authentication](./authentication) — Bearer-key model and OIDC-issued keys
-- [Human Key Issuance](./human-key-issuance) — C2: per-garden key scoping for human principals
-- [Audit Log](./audit-log) — C3: querying the principal → attested-source → fact-id trail
-- [OIDC / SSO Integration](https://github.com/eidetic-labs/stigmem/tree/main/experimental/oidc-sso) — how human principals receive their `entity_uri`
+<div className="stigmem-next">
+
+<a href="./authentication">
+<strong>Security</strong>
+<span>Authentication</span>
+<small>Bearer-key model and OIDC-issued keys.</small>
+</a>
+
+<a href="./human-key-issuance">
+<strong>Security</strong>
+<span>Human key issuance</span>
+<small>C2: per-garden key scoping for human principals.</small>
+</a>
+
+<a href="./audit-log">
+<strong>Security</strong>
+<span>Audit log</span>
+<small>C3: principal → attested-source → fact-id trail.</small>
+</a>
+
+<a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/oidc-sso">
+<strong>Experimental</strong>
+<span>OIDC / SSO integration</span>
+<small>How human principals receive their <code>entity_uri</code>.</small>
+</a>
+
+</div>

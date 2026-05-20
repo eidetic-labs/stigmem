@@ -7,58 +7,233 @@ audience: Integrator
 
 # API Reference
 
-The Stigmem reference node exposes a REST API owned by `Spec-03-HTTP-API`, with endpoint semantics split across the component specs listed below. The interactive API reference below is auto-generated from the OpenAPI schema served at `http://localhost:8000/openapi.json`.
+<p className="stigmem-meta"><span>8 min read</span><span>Integrator · SDK author</span><span>OpenAPI</span></p>
+
+<div className="stigmem-lead">
+
+**What this page covers**
+
+The Stigmem reference node exposes a REST API owned by
+`Spec-03-HTTP-API`, with endpoint semantics split across the
+component specs listed below. The interactive API reference is
+auto-generated from the OpenAPI schema served at
+`http://localhost:8000/openapi.json`.
+
+</div>
 
 ## Endpoint groups
 
-| Group | Base path | Auth | Spec |
-|-------|-----------|------|------|
-| **Facts** | `/v1/facts` | API key | `Spec-01-Fact-Model`, `Spec-03-HTTP-API`, `Spec-15-Fact-Semantics` |
-| **Federation** | `/v1/federation/*` | API key + peer token | `Spec-03-HTTP-API`, `Spec-05-Federation-Trust` |
-| **Conflicts** | `/v1/conflicts` | API key | `Spec-03-HTTP-API`, `Spec-15-Fact-Semantics` |
-| **Gardens** | `/v1/gardens/*` | API key (role-gated) | `Spec-02-Scopes-and-ACL`, `Spec-08-Quarantine-Garden` |
-| **Lint** | `/v1/lint` | API key | `Spec-20-Lint-Semantics` |
-| **Decay** | `/v1/decay/sweep` | API key | `Spec-X9-Decay-Semantics` |
-| **Synthesis** | `/v1/synthesis` | API key | `Spec-X10-Synthesis` |
-| **Auth / Keys** | `/v1/auth/keys/*` | Admin API key | `Spec-06-Capability-Tokens` |
-| **Auth / Audit** | `/v1/auth/audit` | Admin API key | `Spec-X6-Source-Attestation` |
-| **Admin / Billing** | `/v1/admin/billing/events` | Admin API key | — |
-| **Async Jobs** | `/v1/jobs/:id` | API key | `Spec-20-Lint-Semantics`, `Spec-X9-Decay-Semantics` |
-| **Identity** | `/v1/me` | API key | — |
-| **Node Metadata** | `/.well-known/stigmem` | None | `Spec-03-HTTP-API`, `Spec-04-Manifests` |
-| **Health** | `/healthz` | None | — |
-| **Recall** | `/v1/recall` | API key | `Spec-07-Recall-Pipeline`, `Spec-X11-Recall-Graph` |
-| **Cards** | `/v1/cards/*` | API key | `Spec-X11-Recall-Graph` |
-| **Graph** | `/v1/graph/*` | API key | `Spec-X11-Recall-Graph` |
-| **Subscriptions** | `/v1/subscriptions` | API key + capability token | `Spec-X7-Subscriptions` |
-| **Provenance** | `/v1/facts/:id/provenance` | API key | `Spec-X11-Recall-Graph` |
-| **Instructions** | `/v1/agents/:id/instruction-manifest` · `/v1/agents/:id/recall-instruction` | API key | `Spec-X1-Lazy-Instruction-Discovery` |
+<div className="stigmem-fields">
+
+<div>
+<dt>Group · Base path</dt>
+<dt><span className="stigmem-fields__type">Auth</span></dt>
+<dd>Spec</dd>
+</div>
+
+<div>
+<dt><strong>Facts</strong> · <code>/v1/facts</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-01-Fact-Model, Spec-03-HTTP-API, Spec-15-Fact-Semantics.</dd>
+</div>
+
+<div>
+<dt><strong>Federation</strong> · <code>/v1/federation/&#42;</code></dt>
+<dt><span className="stigmem-fields__type">API key + peer token</span></dt>
+<dd>Spec-03-HTTP-API, Spec-05-Federation-Trust.</dd>
+</div>
+
+<div>
+<dt><strong>Conflicts</strong> · <code>/v1/conflicts</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-03-HTTP-API, Spec-15-Fact-Semantics.</dd>
+</div>
+
+<div>
+<dt><strong>Gardens</strong> · <code>/v1/gardens/&#42;</code></dt>
+<dt><span className="stigmem-fields__type">API key (role-gated)</span></dt>
+<dd>Spec-02-Scopes-and-ACL, Spec-08-Quarantine-Garden.</dd>
+</div>
+
+<div>
+<dt><strong>Lint</strong> · <code>/v1/lint</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-20-Lint-Semantics.</dd>
+</div>
+
+<div>
+<dt><strong>Decay</strong> · <code>/v1/decay/sweep</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-X9-Decay-Semantics.</dd>
+</div>
+
+<div>
+<dt><strong>Synthesis</strong> · <code>/v1/synthesis</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-X10-Synthesis.</dd>
+</div>
+
+<div>
+<dt><strong>Auth / Keys</strong> · <code>/v1/auth/keys/&#42;</code></dt>
+<dt><span className="stigmem-fields__type">Admin API key</span></dt>
+<dd>Spec-06-Capability-Tokens.</dd>
+</div>
+
+<div>
+<dt><strong>Auth / Audit</strong> · <code>/v1/auth/audit</code></dt>
+<dt><span className="stigmem-fields__type">Admin API key</span></dt>
+<dd>Spec-X6-Source-Attestation.</dd>
+</div>
+
+<div>
+<dt><strong>Async Jobs</strong> · <code>/v1/jobs/:id</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-20, Spec-X9.</dd>
+</div>
+
+<div>
+<dt><strong>Identity</strong> · <code>/v1/me</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>—</dd>
+</div>
+
+<div>
+<dt><strong>Node Metadata</strong> · <code>/.well-known/stigmem</code></dt>
+<dt><span className="stigmem-fields__type">none</span></dt>
+<dd>Spec-03-HTTP-API, Spec-04-Manifests.</dd>
+</div>
+
+<div>
+<dt><strong>Health</strong> · <code>/healthz</code></dt>
+<dt><span className="stigmem-fields__type">none</span></dt>
+<dd>—</dd>
+</div>
+
+<div>
+<dt><strong>Recall</strong> · <code>/v1/recall</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-07-Recall-Pipeline, Spec-X11-Recall-Graph.</dd>
+</div>
+
+<div>
+<dt><strong>Cards</strong> · <code>/v1/cards/&#42;</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-X11-Recall-Graph.</dd>
+</div>
+
+<div>
+<dt><strong>Graph</strong> · <code>/v1/graph/&#42;</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-X11-Recall-Graph.</dd>
+</div>
+
+<div>
+<dt><strong>Subscriptions</strong> · <code>/v1/subscriptions</code></dt>
+<dt><span className="stigmem-fields__type">API key + capability token</span></dt>
+<dd>Spec-X7-Subscriptions.</dd>
+</div>
+
+<div>
+<dt><strong>Provenance</strong> · <code>/v1/facts/:id/provenance</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-X11-Recall-Graph.</dd>
+</div>
+
+<div>
+<dt><strong>Instructions</strong> · <code>/v1/agents/:id/instruction-manifest</code></dt>
+<dt><span className="stigmem-fields__type">API key</span></dt>
+<dd>Spec-X1-Lazy-Instruction-Discovery.</dd>
+</div>
+
+</div>
 
 ---
 
-## Graph And Recall Design Endpoints (`Spec-07-Recall-Pipeline`, `Spec-X11-Recall-Graph`)
+## Graph and recall endpoints
 
 ### `GET /v1/recall` · `POST /v1/recall`
 
-Returns a token-budget-bounded, salience-ranked slice of the fact store relevant to a natural-language or structured query. Uses a three-stage hybrid pipeline: lexical (FTS5/BM25), dense vector (ANN via sqlite-vec), and graph expansion (BFS on `entity_edges`). Results are packed with Maximal Marginal Relevance (MMR) to avoid duplicates within the budget.
+Returns a token-budget-bounded, salience-ranked slice of the fact store relevant to a natural-language or structured query. Uses a three-stage hybrid pipeline: lexical (FTS5/BM25), dense vector (ANN via sqlite-vec), and graph expansion (BFS on `entity_edges`). Results are packed with Maximal Marginal Relevance (MMR).
 
-POST is preferred when `query` exceeds 1000 characters (avoids URI length limits). Both forms accept identical parameters.
+POST is preferred when `query` exceeds 1000 characters.
 
 **Key parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `query` | string | Yes | — | Natural-language or structured query |
-| `token_budget` | integer | Yes | — | Max response tokens (field labels excluded) |
-| `depth` | integer | No | 1 | Graph expansion depth; max 2 |
-| `weights` | object | No | `{lexical:0.30, vector:0.50, graph:0.20}` | Stage weights; must sum to 1.0 ±0.001 |
-| `entity` | string | No | — | Entity URI; enables entity-centric (card-first) recall |
-| `relation` | string | No | — | Relation filter; skips memory card lookup |
-| `scope` | string | No | global | Garden or global scope |
-| `lambda_mmr` | float | No | 0.7 | MMR diversity tradeoff; 1.0 = greedy by score |
-| `min_confidence` | float | No | 0.1 | Minimum effective confidence for inclusion |
-| `force_refresh` | boolean | No | false | Block on synchronous memory card refresh |
-| `include_contradicted` | boolean | No | false | Include facts with unresolved contradictions |
+<div className="stigmem-fields">
+
+<div>
+<dt>Parameter</dt>
+<dt><span className="stigmem-fields__type">Default</span></dt>
+<dd>Description</dd>
+</div>
+
+<div>
+<dt><code>query</code></dt>
+<dt><span className="stigmem-fields__type">required</span></dt>
+<dd>Natural-language or structured query.</dd>
+</div>
+
+<div>
+<dt><code>token_budget</code></dt>
+<dt><span className="stigmem-fields__type">required</span></dt>
+<dd>Max response tokens.</dd>
+</div>
+
+<div>
+<dt><code>depth</code></dt>
+<dt><span className="stigmem-fields__type">1 (max 2)</span></dt>
+<dd>Graph expansion depth.</dd>
+</div>
+
+<div>
+<dt><code>weights</code></dt>
+<dt><span className="stigmem-fields__type">&#123;lex:0.30, vec:0.50, graph:0.20&#125;</span></dt>
+<dd>Stage weights; must sum to 1.0 ±0.001.</dd>
+</div>
+
+<div>
+<dt><code>entity</code></dt>
+<dt><span className="stigmem-fields__type">optional</span></dt>
+<dd>Entity URI; enables entity-centric (card-first) recall.</dd>
+</div>
+
+<div>
+<dt><code>relation</code></dt>
+<dt><span className="stigmem-fields__type">optional</span></dt>
+<dd>Relation filter; skips memory card lookup.</dd>
+</div>
+
+<div>
+<dt><code>scope</code></dt>
+<dt><span className="stigmem-fields__type">global</span></dt>
+<dd>Garden or global scope.</dd>
+</div>
+
+<div>
+<dt><code>lambda_mmr</code></dt>
+<dt><span className="stigmem-fields__type">0.7</span></dt>
+<dd>MMR diversity tradeoff; 1.0 = greedy.</dd>
+</div>
+
+<div>
+<dt><code>min_confidence</code></dt>
+<dt><span className="stigmem-fields__type">0.1</span></dt>
+<dd>Minimum effective confidence.</dd>
+</div>
+
+<div>
+<dt><code>force_refresh</code></dt>
+<dt><span className="stigmem-fields__type">false</span></dt>
+<dd>Block on synchronous memory card refresh.</dd>
+</div>
+
+<div>
+<dt><code>include_contradicted</code></dt>
+<dt><span className="stigmem-fields__type">false</span></dt>
+<dd>Include unresolved contradictions.</dd>
+</div>
+
+</div>
 
 **Example — open-ended query:**
 
@@ -80,55 +255,50 @@ curl -s "http://localhost:8000/v1/recall?entity=stigmem%3A%2F%2Fcompany.example%
   -H 'Authorization: Bearer <api-key>'
 ```
 
-**Response shape:**
-
-```json
-{
-  "results": [
-    {
-      "id": "...",
-      "entity": "stigmem://company.example/agent/cto",
-      "relation": "memory:role",
-      "value": { "type": "text", "v": "CTO" },
-      "score": 0.92,
-      "source_trust": 0.95,
-      "contradicted": false,
-      "derived_from": [],
-      "provenance_of": null
-    }
-  ],
-  "memory_card": {
-    "entity": "stigmem://company.example/agent/cto",
-    "value": "## CTO\n\n| Relation | Value | ... |\n...",
-    "card_stale": false,
-    "contradicted_count": 0
-  },
-  "token_budget_used": 312,
-  "truncated": false
-}
-```
-
 ---
 
-### `GET /v1/cards/{entity_uri}` {#get-v1cardsentity_uri}
+### `GET /v1/cards/{entity_uri}`
 
-Fetch (and optionally force-refresh) the synthesized memory card for a specific entity (`Spec-X11-Recall-Graph`). Returns `404` when the entity has no live facts.
+Fetch (and optionally force-refresh) the synthesized memory card for a specific entity. Returns `404` when the entity has no live facts.
 
-Memory cards are pre-aggregated summaries stored in the `memory_cards` table. They are marked stale on every `assert_fact` call and refreshed on the next read. When a fresh card is available during `POST /v1/recall`, the recall pipeline uses it as a single synthetic fact instead of re-ranking all raw facts for that entity.
+<div className="stigmem-keypoint">
 
-**Path parameter:**
-- `entity_uri` — URL-encoded entity URI (e.g. `stigmem%3A%2F%2Fcompany.example%2Fuser%2Falice`)
+**Memory cards are pre-aggregated summaries.**
+
+Marked stale on every `assert_fact` call and refreshed on the next
+read. When a fresh card is available during `POST /v1/recall`, the
+recall pipeline uses it as a single synthetic fact instead of
+re-ranking all raw facts for that entity.
+
+</div>
+
+**Path parameter:** `entity_uri` — URL-encoded entity URI.
 
 **Query parameters:**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `scope` | string | `"local"` | Scope the card was materialised from (`local`, `team`, `company`, `public`) |
-| `refresh` | boolean | `false` | Force a server-side refresh even if the card is already fresh |
+<div className="stigmem-fields">
 
-**Auth:** read permission required (`read` scope on the API key).
+<div>
+<dt>Parameter</dt>
+<dt><span className="stigmem-fields__type">Default</span></dt>
+<dd>Description</dd>
+</div>
 
-**Example:**
+<div>
+<dt><code>scope</code></dt>
+<dt><span className="stigmem-fields__type">local</span></dt>
+<dd>Scope the card was materialised from.</dd>
+</div>
+
+<div>
+<dt><code>refresh</code></dt>
+<dt><span className="stigmem-fields__type">false</span></dt>
+<dd>Force a server-side refresh even if the card is already fresh.</dd>
+</div>
+
+</div>
+
+**Auth:** read permission required.
 
 ```bash
 # Fetch card (auto-refreshes if stale)
@@ -140,30 +310,35 @@ curl -s "http://localhost:8000/v1/cards/stigmem%3A%2F%2Fcompany.example%2Fuser%2
   -H 'Authorization: Bearer <api-key>'
 ```
 
-**Response:**
-
-```json
-{
-  "entity_uri": "stigmem://company.example/user/alice",
-  "scope": "local",
-  "summary": "Entity: stigmem://company.example/user/alice\nFacts:\n  memory:role: engineer (conf=1.00)\n  memory:team: platform (conf=0.95)",
-  "fact_hashes": ["a1b2c3d4...", "e5f6a7b8..."],
-  "avg_confidence": 0.975,
-  "refreshed_at": "2026-05-04T11:30:00+00:00",
-  "is_stale": false,
-  "has_contradictions": false
-}
-```
-
 **Error responses:**
 
-| Status | Condition |
-|--------|-----------|
-| 400 | Invalid `scope` value or malformed `entity_uri` |
-| 403 | API key lacks read permission |
-| 404 | No live facts exist for the entity |
+<div className="stigmem-fields">
 
-See the [Memory Cards guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph) for the full lifecycle, schema, and Python SDK usage.
+<div>
+<dt>Status</dt>
+<dt><span className="stigmem-fields__type">Code</span></dt>
+<dd>Condition</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type">validation</span></dt>
+<dd>Invalid <code>scope</code> value or malformed <code>entity_uri</code>.</dd>
+</div>
+
+<div>
+<dt>403</dt>
+<dt><span className="stigmem-fields__type">authorization</span></dt>
+<dd>API key lacks read permission.</dd>
+</div>
+
+<div>
+<dt>404</dt>
+<dt><span className="stigmem-fields__type">lookup</span></dt>
+<dd>No live facts exist for the entity.</dd>
+</div>
+
+</div>
 
 ---
 
@@ -171,29 +346,57 @@ See the [Memory Cards guide](https://github.com/eidetic-labs/stigmem/tree/main/e
 
 Returns the graph neighbors of one or more seed entities by traversing the materialized `entity_edges` adjacency index.
 
-**Parameters:**
+<div className="stigmem-fields">
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `entity` | string | Yes | — | Seed entity URI (repeat for multiple seeds) |
-| `depth` | integer | No | 1 | Traversal depth; max 2 |
-| `relation` | string | No | — | Filter edges by relation label |
-| `min_confidence` | float | No | 0.1 | Minimum edge confidence |
-| `limit` | integer | No | 50 | Max edges returned per page |
-| `cursor` | string | No | — | Opaque pagination cursor (TTL: `STIGMEM_CURSOR_TTL_S`, default 300s) |
+<div>
+<dt>Parameter</dt>
+<dt><span className="stigmem-fields__type">Default</span></dt>
+<dd>Description</dd>
+</div>
 
-**Example:**
+<div>
+<dt><code>entity</code></dt>
+<dt><span className="stigmem-fields__type">required</span></dt>
+<dd>Seed entity URI (repeat for multiple seeds).</dd>
+</div>
 
-```bash
-curl -s "http://localhost:8000/v1/graph/neighbors?entity=stigmem%3A%2F%2Fcompany.example%2Fagent%2Fcto&depth=2" \
-  -H 'Authorization: Bearer <api-key>'
-```
+<div>
+<dt><code>depth</code></dt>
+<dt><span className="stigmem-fields__type">1 (max 2)</span></dt>
+<dd>Traversal depth.</dd>
+</div>
+
+<div>
+<dt><code>relation</code></dt>
+<dt><span className="stigmem-fields__type">optional</span></dt>
+<dd>Filter edges by relation label.</dd>
+</div>
+
+<div>
+<dt><code>min_confidence</code></dt>
+<dt><span className="stigmem-fields__type">0.1</span></dt>
+<dd>Minimum edge confidence.</dd>
+</div>
+
+<div>
+<dt><code>limit</code></dt>
+<dt><span className="stigmem-fields__type">50</span></dt>
+<dd>Max edges returned per page.</dd>
+</div>
+
+<div>
+<dt><code>cursor</code></dt>
+<dt><span className="stigmem-fields__type">opaque</span></dt>
+<dd>Pagination cursor (TTL <code>STIGMEM_CURSOR_TTL_S</code>, default 300s).</dd>
+</div>
+
+</div>
 
 ---
 
 ### `POST /v1/subscriptions`
 
-Register a push subscription to receive events when facts matching a scope or entity change. Requires a capability token (`Spec-06-Capability-Tokens`) covering the `subscribe` verb on the target.
+Register a push subscription to receive events when facts matching a scope or entity change. Requires a capability token covering the `subscribe` verb on the target.
 
 ```bash
 curl -s -X POST http://localhost:8000/v1/subscriptions \
@@ -210,7 +413,17 @@ curl -s -X POST http://localhost:8000/v1/subscriptions \
 
 Events are delivered with `subscription_id`, `event_type` (`fact_asserted` | `fact_retracted` | `conflict_opened` | `conflict_resolved`), `fact_id`, and `hlc`.
 
-**Delivery security:** the node re-evaluates the caller's garden ACL **and** capability token revocation status on every event delivery. Event content is not populated until the ACL check passes — preventing cross-garden fact leakage via standing event streams. If access has been revoked since subscription creation, delivery is silently dropped and the subscription is cancelled with event type `subscription_cancelled_access_revoked`.
+<div className="stigmem-keypoint">
+
+**Delivery security: garden ACL + capability revocation re-checked on every event.**
+
+Event content is not populated until the ACL check passes —
+preventing cross-garden fact leakage via standing event streams. If
+access has been revoked since subscription creation, delivery is
+silently dropped and the subscription is cancelled with event type
+`subscription_cancelled_access_revoked`.
+
+</div>
 
 ---
 
@@ -218,31 +431,33 @@ Events are delivered with `subscription_id`, `event_type` (`fact_asserted` | `fa
 
 Walks the `derived_from` DAG for a given fact and returns the full derivation graph.
 
-**Auth requirement:** the caller must have read access to the root fact's scope and `garden_id`. Unauthorized root facts return HTTP 403. When resolving `derived_from` references, facts in unauthorized scopes or gardens are represented as `{"hash": "...", "exists": false}` — identical to genuinely absent facts. The endpoint does not confirm or deny the existence of facts the caller cannot access.
+<div className="stigmem-keypoint">
+
+**Cross-scope inference protection.**
+
+Caller must have read access to the root fact's scope and
+`garden_id`. Unauthorized root facts return HTTP 403. When resolving
+`derived_from` references, facts in unauthorized scopes or gardens
+are represented as `{"hash": "...", "exists": false}` — identical to
+genuinely absent facts. The endpoint does not confirm or deny the
+existence of facts the caller cannot access.
+
+</div>
 
 ```bash
 curl -s http://localhost:8000/v1/facts/abc123/provenance \
   -H 'Authorization: Bearer <api-key>'
 ```
 
-**Response:** array of `FactRecord` objects in topological order (root antecedents first), each annotated with `depth`, `is_root`, and `exists` fields. Unauthorized cross-scope references appear as `{"hash": "...", "exists": false}` entries.
-
 ---
 
-## Lazy Instruction Discovery Endpoints (`Spec-X1-Lazy-Instruction-Discovery`)
+## Lazy instruction discovery endpoints
 
 ### `PUT /v1/agents/{agent_id}/instruction-manifest`
 
-Publish or replace the instruction manifest for an agent. The manifest is the index Stigmem uses to answer lazy `recall-instruction` requests — it lists each instruction unit with its load triggers, token estimate, and fact URI.
-
-The manifest is written with a versioned identifier (`{version}-{timestamp}`) so old manifests are superseded rather than overwritten in place.
+Publish or replace the instruction manifest for an agent. The manifest is written with a versioned identifier so old manifests are superseded rather than overwritten in place.
 
 **Auth:** `write` scope required.
-
-**Path parameter:**
-- `agent_id` — UUID of the agent that owns the manifest.
-
-**Request body:**
 
 ```json
 {
@@ -264,35 +479,53 @@ The manifest is written with a versioned identifier (`{version}-{timestamp}`) so
 }
 ```
 
-**Response:** `200 OK` on success; the stored manifest body with `created_at` and `superseded_at` timestamps.
-
-Typically published automatically by `stigmem instruction migrate`. See the [Instruction Migration guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/lazy-instruction-discovery) for the full workflow.
-
 ---
 
 ### `POST /v1/agents/{agent_id}/recall-instruction`
 
-Retrieve the most relevant instruction units for a given agent intent. Uses a three-phase retrieval strategy:
+Retrieve the most relevant instruction units for a given agent intent.
 
-1. **Hint resolution** — explicit `manifest_hint` names are loaded first (highest priority).
-2. **Ranked retrieval** — remaining slots are filled by BM25 scoring of `intent` against each unit's `description`, `load_triggers.intents`, and `keywords`.
-3. **Guaranteed units** — units with `guarantee_load: true` are always appended regardless of score; at most 5 per manifest.
+**Three-phase retrieval strategy:**
 
-**Auth:** `read` scope required.
+<ol className="stigmem-steps">
+<li><strong>Hint resolution</strong> — explicit <code>manifest_hint</code> names are loaded first (highest priority).</li>
+<li><strong>Ranked retrieval</strong> — remaining slots filled by BM25 scoring of <code>intent</code> against each unit's <code>description</code>, <code>load_triggers.intents</code>, and <code>keywords</code>.</li>
+<li><strong>Guaranteed units</strong> — units with <code>guarantee_load: true</code> are always appended regardless of score; at most 5 per manifest.</li>
+</ol>
 
-**Path parameter:**
-- `agent_id` — UUID of the agent whose manifest to query.
+<div className="stigmem-fields">
 
-**Request body:**
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Default</span></dt>
+<dd>Description</dd>
+</div>
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `intent` | string | Yes | — | Natural-language description of what the agent is about to do |
-| `max_chunks` | integer | No | 3 | Maximum instruction units to load (1–20) |
-| `token_budget` | integer | No | 2000 | Token limit across all returned chunks (1–100 000) |
-| `manifest_hint` | array of strings | No | `[]` | Explicit unit names to prioritize by name |
+<div>
+<dt><code>intent</code></dt>
+<dt><span className="stigmem-fields__type">required</span></dt>
+<dd>Natural-language description of what the agent is about to do.</dd>
+</div>
 
-**Example:**
+<div>
+<dt><code>max_chunks</code></dt>
+<dt><span className="stigmem-fields__type">3</span></dt>
+<dd>Maximum instruction units to load (1–20).</dd>
+</div>
+
+<div>
+<dt><code>token_budget</code></dt>
+<dt><span className="stigmem-fields__type">2000</span></dt>
+<dd>Token limit across all returned chunks (1–100 000).</dd>
+</div>
+
+<div>
+<dt><code>manifest_hint</code></dt>
+<dt><span className="stigmem-fields__type">[]</span></dt>
+<dd>Explicit unit names to prioritize by name.</dd>
+</div>
+
+</div>
 
 ```bash
 curl -s -X POST \
@@ -306,64 +539,82 @@ curl -s -X POST \
   }'
 ```
 
-**Response:**
-
-```json
-{
-  "chunks": [
-    {
-      "name": "incident-response",
-      "fact_uri": "instruction:default/agent/.../incident-response/v1",
-      "content": "## Incident Response\n\nWhen a production incident...",
-      "tokens": 210,
-      "valid_until": null,
-      "version": "v1",
-      "score": 0.91,
-      "source": "stigmem"
-    }
-  ],
-  "total_tokens": 210,
-  "truncated": false,
-  "missed_hints": [],
-  "audit_token": "aud_abc123"
-}
-```
-
-| Field | Description |
-|-------|-------------|
-| `chunks` | Ranked instruction units within the token budget |
-| `total_tokens` | Sum of token estimates across returned chunks |
-| `truncated` | `true` if guaranteed units exceeded the token budget |
-| `missed_hints` | `manifest_hint` names that were not found in the manifest |
-| `audit_token` | Submit to `POST /v1/instruction/audit` to log which chunks were used |
-
-See the [Instruction Migration guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/lazy-instruction-discovery) for the full dry-run → migrate → recall-instruction workflow.
+Response includes `chunks`, `total_tokens`, `truncated`, `missed_hints`, and an `audit_token` to submit to `POST /v1/instruction/audit`.
 
 ---
 
 ### CLI reference — `stigmem instruction migrate`
 
-The `stigmem instruction migrate` command is the primary tool for publishing instruction files to a node. It is a wrapper around the two endpoints above.
+The `stigmem instruction migrate` command is the primary tool for publishing instruction files to a node.
 
 ```
 stigmem instruction migrate PATH --role ROLE --agent-id UUID [options]
 stigmem instruction migrate PATH --skill SKILL --agent-id UUID [options]
 ```
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `PATH` | — | Markdown file or directory |
-| `--role ROLE` / `--skill SKILL` | — | Scope selector (mutually exclusive) |
-| `--agent-id UUID` | — | Agent UUID owning the manifest |
-| `--deployment NAME` | `default` | Deployment namespace |
-| `--version VER` | `v1` | Fact version string |
-| `--node-url URL` | `http://127.0.0.1:8000` | Node base URL |
-| `--api-key KEY` | `$STIGMEM_API_KEY` | API key for writes |
-| `--db PATH` | — | Local SQLite file for fast idempotency checks |
-| `--dry-run` | — | Print diff, exit without writing |
-| `-y` / `--yes` | — | Skip confirmation prompt |
+<div className="stigmem-fields">
 
-Full documentation, idempotency semantics, and the tombstone lifecycle are in the [Instruction Migration guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/lazy-instruction-discovery).
+<div>
+<dt>Flag</dt>
+<dt><span className="stigmem-fields__type">Default</span></dt>
+<dd>Description</dd>
+</div>
+
+<div>
+<dt><code>PATH</code></dt>
+<dt><span className="stigmem-fields__type">required</span></dt>
+<dd>Markdown file or directory.</dd>
+</div>
+
+<div>
+<dt><code>--role ROLE</code> / <code>--skill SKILL</code></dt>
+<dt><span className="stigmem-fields__type">mutually exclusive</span></dt>
+<dd>Scope selector.</dd>
+</div>
+
+<div>
+<dt><code>--agent-id UUID</code></dt>
+<dt><span className="stigmem-fields__type">required</span></dt>
+<dd>Agent UUID owning the manifest.</dd>
+</div>
+
+<div>
+<dt><code>--deployment NAME</code></dt>
+<dt><span className="stigmem-fields__type">default</span></dt>
+<dd>Deployment namespace.</dd>
+</div>
+
+<div>
+<dt><code>--version VER</code></dt>
+<dt><span className="stigmem-fields__type">v1</span></dt>
+<dd>Fact version string.</dd>
+</div>
+
+<div>
+<dt><code>--node-url URL</code></dt>
+<dt><span className="stigmem-fields__type">localhost:8000</span></dt>
+<dd>Node base URL.</dd>
+</div>
+
+<div>
+<dt><code>--api-key KEY</code></dt>
+<dt><span className="stigmem-fields__type">$STIGMEM_API_KEY</span></dt>
+<dd>API key for writes.</dd>
+</div>
+
+<div>
+<dt><code>--dry-run</code></dt>
+<dt><span className="stigmem-fields__type">off</span></dt>
+<dd>Print diff, exit without writing.</dd>
+</div>
+
+<div>
+<dt><code>-y</code> / <code>--yes</code></dt>
+<dt><span className="stigmem-fields__type">off</span></dt>
+<dd>Skip confirmation prompt.</dd>
+</div>
+
+</div>
 
 ## Authentication
 
@@ -377,35 +628,17 @@ Set `STIGMEM_AUTH_REQUIRED=false` to disable auth in development.
 
 ### OIDC / SSO
 
-Human principals can obtain an API key via OIDC. Configure `STIGMEM_OIDC_*` env vars; the node validates the JWT and maps role claims to `admin|writer|reader`. See [OIDC / SSO Integration](https://github.com/eidetic-labs/stigmem/tree/main/experimental/oidc-sso).
+Human principals can obtain an API key via OIDC. Configure `STIGMEM_OIDC_*` env vars; the node validates the JWT and maps role claims to `admin|writer|reader`.
 
 ### Multi-tenant requests
 
-Default installs resolve all API keys into the single `default` tenant. To use
-non-default tenants, install and enable `stigmem-plugin-multi-tenant`, then
-provision API keys with the target `tenant_id`. Requests are scoped by the
-resolved key identity:
-
-```bash
-curl -H 'Authorization: Bearer <your-key>' \
-     http://localhost:8000/v1/facts
-```
-
-See [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant).
+Default installs resolve all API keys into the single `default` tenant. To use non-default tenants, install and enable `stigmem-plugin-multi-tenant`, then provision API keys with the target `tenant_id`.
 
 ### Federation peer tokens
 
-Federation endpoints (`/v1/federation/facts`, `/v1/federation/facts/push`) additionally require a peer token:
-
-```
-Authorization: Bearer <peer-token>
-```
-
-Peer tokens are Ed25519-signed JWTs exchanged during the federation handshake (`Spec-05-Federation-Trust`).
+Federation endpoints additionally require an Ed25519-signed JWT peer token exchanged during the federation handshake (`Spec-05-Federation-Trust`).
 
 ## Generating interactive docs
-
-The interactive try-it-out panels are generated from the live OpenAPI schema:
 
 ```bash
 # Terminal 1 — start the reference node
@@ -417,8 +650,6 @@ cd stigmem/docs
 npm run gen-api-docs
 npm run start
 ```
-
-After regenerating, the sidebar shows individual endpoint pages with live request panels.
 
 :::info
 The API reference sidebar is populated by `npm run gen-api-docs`. Until that command has run, only this overview page appears.

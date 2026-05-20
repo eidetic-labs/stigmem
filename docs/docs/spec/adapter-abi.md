@@ -5,58 +5,115 @@ audience: Spec
 description: "Spec-19-Adapter-ABI rendered entry point — minimum adapter contract and conformance expectations."
 ---
 
-# Spec-19-Adapter-ABI {#section-12}
+# Spec-19-Adapter-ABI \{#section-12\}
 
-**Status:** Rendered compatibility entry point for [`Spec-19-Adapter-ABI`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/19-adapter-abi.md).
+<p className="stigmem-meta"><span>6 min read</span><span>Spec contributor · Adapter author</span><span>Process + middleware contract</span></p>
 
-Minimum contract for platform adapters: env vars, assert/query, source binding.
+<div className="stigmem-lead">
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**What this page is**
+
+Rendered compatibility entry point for
+[`Spec-19-Adapter-ABI`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/19-adapter-abi.md).
+Minimum contract for platform adapters: env vars, assert/query,
+source binding.
+
+</div>
+
+**Authoritative source:**
+[`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
-Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
+Each subsection below shows the most recent normative text from the
+spec source.
 :::
 
-> **pre-reset status:** Promoted from the pre-reset design work reserved section to normative spec, grounded
-> in the three pre-reset adapters shipped: MCP (`stigmem/adapters/mcp/`), Paperclip
-> (`stigmem/adapters/paperclip/`), and OpenClaw (`stigmem/adapters/openclaw/`).
+<div className="stigmem-keypoint">
 
-### §12.1 Adapter Archetypes {#section-12-1}
+**pre-reset status.**
 
-The ABI recognizes two adapter archetypes with different startup failure contracts:
+Promoted from the pre-reset design work reserved section to normative
+spec, grounded in the three pre-reset adapters shipped: MCP
+(<code>stigmem/adapters/mcp/</code>), Paperclip
+(<code>stigmem/adapters/paperclip/</code>), and OpenClaw
+(<code>stigmem/adapters/openclaw/</code>).
 
-**Process-mode adapters** (example: MCP `server.ts`): A standalone process whose
-sole purpose is to bridge a platform protocol to Stigmem. The process is useless if
-Stigmem is not configured; fast failure is correct behavior.
+</div>
 
-**Middleware adapters** (examples: Paperclip `hook.sh`, OpenClaw `adapter.py`): Code
-that extends an existing agent runtime. Stigmem is optional; the agent MUST continue
-operating if Stigmem is unconfigured or unreachable.
+### §12.1 Adapter archetypes \{#section-12-1\}
 
-### §12.2 Required Environment Variables {#section-12-2}
+The ABI recognizes two adapter archetypes with different startup
+failure contracts.
 
-All adapters MUST honor the following environment variables:
+<div className="stigmem-fields">
 
-| Variable | Required by | Default | Description |
-|---|---|---|---|
-| `STIGMEM_URL` | All | — | Base URL of the Stigmem node, e.g. `http://localhost:8765` |
-| `STIGMEM_API_KEY` | All (optional) | none | API key; required when `auth=required` |
-| `STIGMEM_SOURCE_ENTITY` | Middleware | adapter-specific (e.g. `"agent:openclaw"`, `"agent:unknown"`) | Entity URI used as `source` on all write operations. Adapters SHOULD default to a descriptive identity; `"agent:unknown"` is an acceptable last-resort fallback. |
+<div>
+<dt>Archetype</dt>
+<dt><span className="stigmem-fields__type">Example</span></dt>
+<dd>Failure contract</dd>
+</div>
 
-**Process-mode adapters:** MUST exit with a non-zero status code and a clear error
-message to stderr if `STIGMEM_URL` is absent.
+<div>
+<dt>Process-mode adapter</dt>
+<dt><span className="stigmem-fields__type">MCP <code>server.ts</code></span></dt>
+<dd>A standalone process whose sole purpose is to bridge a platform protocol to Stigmem. The process is useless if Stigmem is not configured; fast failure is correct behavior.</dd>
+</div>
 
-**Middleware adapters:** MUST silently skip all Stigmem operations if `STIGMEM_URL`
-is absent. MUST NOT modify the agent process exit code.
+<div>
+<dt>Middleware adapter</dt>
+<dt><span className="stigmem-fields__type">Paperclip <code>hook.sh</code> · OpenClaw <code>adapter.py</code></span></dt>
+<dd>Code that extends an existing agent runtime. Stigmem is optional; the agent MUST continue operating if Stigmem is unconfigured or unreachable.</dd>
+</div>
 
-### §12.3 Boot Handshake Protocol {#section-12-3}
+</div>
 
-The boot handshake runs once when the adapter initializes. It has two phases:
-a node probe and (for middleware adapters) a context pull.
+### §12.2 Required environment variables \{#section-12-2\}
 
-#### §12.3.1 Node probe {#section-12-3-1}
+All adapters MUST honor the following environment variables.
 
-Adapters SHOULD issue `GET /.well-known/stigmem` to verify node reachability on startup.
+<div className="stigmem-fields">
+
+<div>
+<dt>Variable</dt>
+<dt><span className="stigmem-fields__type">Required by · Default</span></dt>
+<dd>Description</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_URL</code></dt>
+<dt><span className="stigmem-fields__type">All · —</span></dt>
+<dd>Base URL of the Stigmem node, e.g. <code>http://localhost:8765</code>.</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_API_KEY</code></dt>
+<dt><span className="stigmem-fields__type">All (optional) · none</span></dt>
+<dd>API key; required when <code>auth=required</code>.</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_SOURCE_ENTITY</code></dt>
+<dt><span className="stigmem-fields__type">Middleware · adapter-specific</span></dt>
+<dd>Entity URI used as <code>source</code> on all write operations. Adapters SHOULD default to a descriptive identity; <code>"agent:unknown"</code> is an acceptable last-resort fallback.</dd>
+</div>
+
+</div>
+
+**Process-mode adapters:** MUST exit with a non-zero status code and
+a clear error message to stderr if `STIGMEM_URL` is absent.
+
+**Middleware adapters:** MUST silently skip all Stigmem operations if
+`STIGMEM_URL` is absent. MUST NOT modify the agent process exit code.
+
+### §12.3 Boot handshake protocol \{#section-12-3\}
+
+The boot handshake runs once when the adapter initializes. It has
+two phases: a node probe and (for middleware adapters) a context pull.
+
+#### §12.3.1 Node probe \{#section-12-3-1\}
+
+Adapters SHOULD issue `GET /.well-known/stigmem` to verify node
+reachability on startup.
 
 Expected response shape:
 
@@ -70,49 +127,48 @@ Expected response shape:
 }
 ```
 
-Required fields: `version`, `node_id`, `node_url`, `auth`, `federation`.
+Required fields: `version`, `node_id`, `node_url`, `auth`,
+`federation`.
 
 If the probe fails or required fields are absent:
-- **Process-mode adapters:** MUST log an error to stderr. SHOULD NOT crash — allow
-  individual tool invocations to fail with a `StigmemError` rather than killing the process.
-- **Middleware adapters:** MUST log a warning to stderr. MUST return an empty
-  `BootContext`. MUST NOT crash or alter the agent's exit code.
 
-#### §12.3.2 Context pull (middleware adapters only) {#section-12-3-2}
+<div className="stigmem-fields">
 
-After a successful node probe, middleware adapters that inject context into the agent
-system prompt MUST issue the following queries in order. All queries are non-fatal:
-a failed or empty response on any individual query MUST NOT abort the boot sequence.
+<div>
+<dt>Archetype</dt>
+<dt><span className="stigmem-fields__type">On probe failure</span></dt>
+<dd>Recovery</dd>
+</div>
 
-1. **User entity facts**
-   ```
-   GET /v1/facts?entity={user_entity}&scope=company&min_confidence=0.7
-   ```
-   Adapters SHOULD filter the result to relevant relation namespaces (e.g. `preference:`).
-   Injecting all relations for the user entity may produce a large or noisy context;
-   retaining `preference:*` is the reference behavior.
+<div>
+<dt>Process-mode</dt>
+<dt><span className="stigmem-fields__type">log error to stderr</span></dt>
+<dd>SHOULD NOT crash — allow individual tool invocations to fail with a <code>StigmemError</code> rather than killing the process.</dd>
+</div>
 
-2. **Project constraints** (one query per project entity; skip if no project entities configured)
-   ```
-   GET /v1/facts?entity={project_entity}&relation=roadmap:constraint&scope=company&min_confidence=0.7
-   ```
+<div>
+<dt>Middleware</dt>
+<dt><span className="stigmem-fields__type">log warning to stderr</span></dt>
+<dd>MUST return an empty <code>BootContext</code>. MUST NOT crash or alter the agent's exit code.</dd>
+</div>
 
-3. **Pending handoffs targeting this adapter**
-   ```
-   GET /v1/facts?relation=intent:handoff_to&scope=company&min_confidence=0.8
-   ```
-   Filter client-side to facts where `value.v == STIGMEM_SOURCE_ENTITY`.
-   For each matching handoff entity, additionally pull:
-   ```
-   GET /v1/facts?entity={handoff_entity}&relation=intent:context_ref&scope=company
-   ```
+</div>
 
-4. **Recent escalations**
-   ```
-   GET /v1/facts?relation=intent:escalation&scope=company&min_confidence=0.8&limit=10
-   ```
+#### §12.3.2 Context pull (middleware adapters only) \{#section-12-3-2\}
 
-#### §12.3.3 BootContext shape {#section-12-3-3}
+After a successful node probe, middleware adapters that inject
+context into the agent system prompt MUST issue the following
+queries in order. All queries are non-fatal: a failed or empty
+response on any individual query MUST NOT abort the boot sequence.
+
+<ol className="stigmem-steps">
+<li><strong>User entity facts.</strong> <code>GET /v1/facts?entity={`{user_entity}`}&scope=company&min_confidence=0.7</code>. Adapters SHOULD filter the result to relevant relation namespaces (e.g. <code>preference:</code>).</li>
+<li><strong>Project constraints.</strong> One query per project entity; skip if no project entities configured: <code>GET /v1/facts?entity={`{project_entity}`}&relation=roadmap:constraint&scope=company&min_confidence=0.7</code>.</li>
+<li><strong>Pending handoffs targeting this adapter.</strong> <code>GET /v1/facts?relation=intent:handoff_to&scope=company&min_confidence=0.8</code>. Filter client-side to facts where <code>value.v == STIGMEM_SOURCE_ENTITY</code>.</li>
+<li><strong>Recent escalations.</strong> <code>GET /v1/facts?relation=intent:escalation&scope=company&min_confidence=0.8&limit=10</code>.</li>
+</ol>
+
+#### §12.3.3 BootContext shape \{#section-12-3-3\}
 
 ```
 BootContext {
@@ -121,123 +177,249 @@ BootContext {
 }
 ```
 
-`BootContext` is always returned, even on total failure. A failed boot returns
-`BootContext { facts: [], summary: "" }`.
+`BootContext` is always returned, even on total failure. A failed
+boot returns `BootContext { facts: [], summary: "" }`.
 
-### §12.4 Write Surfaces {#section-12-4}
+### §12.4 Write surfaces \{#section-12-4\}
 
-Adapters MUST assert the following facts on the specified lifecycle events.
+Adapters MUST assert the following facts on the specified lifecycle
+events.
 
-**Write invariants (apply to all assertions):**
-- `confidence` MUST be 1.0 unless a per-surface override is listed below.
-- All write calls MUST use fire-and-forget semantics: errors MUST be suppressed; the
-  adapter MUST NOT crash the agent on write failure.
-- Write failures SHOULD be logged to stderr at warning level.
+<div className="stigmem-keypoint">
 
-#### §12.4.1 Paperclip-style lifecycle facts {#section-12-4-1}
+**Write invariants (apply to all assertions).**
 
-For adapters that instrument platform issue/task lifecycle:
+<code>confidence</code> MUST be 1.0 unless a per-surface override is
+listed. All write calls MUST use fire-and-forget semantics: errors
+MUST be suppressed; the adapter MUST NOT crash the agent on write
+failure. Write failures SHOULD be logged to stderr at warning level.
 
-| Event | `entity` | `relation` | Value type | Value | `scope` |
-|---|---|---|---|---|---|
-| Checkout (task claimed) | `issue:{task_id}` | `paperclip:checkout` | `string` | `"in_progress"` | `company` |
-| Completion | `issue:{task_id}` | `paperclip:issue_status` | `string` | `"done"` | `company` |
-| Blocked | `issue:{task_id}` | `paperclip:issue_status` | `string` | `"blocked"` | `company` |
-| Blocked by (optional) | `issue:{task_id}` | `paperclip:blocked_by` | `ref` | `"issue:{blocking_id}"` | `company` |
-| Activity ping | `issue:{task_id}` | `paperclip:last_active` | `datetime` | ISO 8601 UTC now | `local` |
+</div>
 
-**Activity ping scope:** `paperclip:last_active` MUST use `scope="local"`. Activity
-pings are heartbeat signals for intra-node observability; they MUST NOT be federated.
+#### §12.4.1 Paperclip-style lifecycle facts \{#section-12-4-1\}
 
-**Entity URI format note:** The `entity` column above uses informal URI shorthand
-(`issue:{task_id}`). Per §2.5, adapters targeting pre-reset+ SHOULD use formal URIs:
-`stigmem://{node_authority}/issue/{task_id}`, where `{node_authority}` is the
-hostname component of `STIGMEM_URL`. Adapters that do not have access to the
-node authority MAY use the informal form — the node will accept it and emit a
-deprecation warning to stderr. Migration to formal URIs is tracked for pre-reset.
+For adapters that instrument platform issue/task lifecycle.
 
-#### §12.4.2 Handoff facts {#section-12-4-2}
+<div className="stigmem-fields">
 
-Emitted when an agent session ends or delegates to another agent. Mint a synthetic
-entity `handoff:{uuid}` and assert all of the following:
+<div>
+<dt>Event</dt>
+<dt><span className="stigmem-fields__type">Relation · Value · Scope</span></dt>
+<dd>Notes</dd>
+</div>
 
-| `relation` | Value type | Value | `confidence` | `scope` |
-|---|---|---|---|---|
-| `intent:handoff_to` | `ref` | target agent entity URI | 1.0 | `company` |
-| `intent:handoff_summary` | `text` | human-readable summary (≤ 4 KB) | 1.0 | `company` |
-| `intent:context_ref` | `ref` | fact ID URI for each referenced context fact (one assertion per ref) | 1.0 | `company` |
-| `intent:continuation` | `text` | continuation note (optional; omit if absent) | 1.0 | `company` |
+<div>
+<dt>Checkout (task claimed)</dt>
+<dt><span className="stigmem-fields__type"><code>paperclip:checkout</code> · <code>"in_progress"</code> · <code>company</code></span></dt>
+<dd>Entity: <code>issue:{`{task_id}`}</code>.</dd>
+</div>
 
-`intent:handoff_to` and `intent:handoff_summary` are REQUIRED. `intent:context_ref`
-MUST have at least one assertion if `fact_refs` is non-empty. `intent:continuation`
-is OPTIONAL.
+<div>
+<dt>Completion</dt>
+<dt><span className="stigmem-fields__type"><code>paperclip:issue_status</code> · <code>"done"</code> · <code>company</code></span></dt>
+<dd></dd>
+</div>
 
-#### §12.4.3 Decision facts {#section-12-4-3}
+<div>
+<dt>Blocked</dt>
+<dt><span className="stigmem-fields__type"><code>paperclip:issue_status</code> · <code>"blocked"</code> · <code>company</code></span></dt>
+<dd></dd>
+</div>
 
-Emitted when an agent makes a significant architectural or roadmap choice:
+<div>
+<dt>Blocked by (optional)</dt>
+<dt><span className="stigmem-fields__type"><code>paperclip:blocked_by</code> · ref · <code>company</code></span></dt>
+<dd>Value: <code>"issue:{`{blocking_id}`}"</code>.</dd>
+</div>
 
-| `entity` | `relation` | Value type | Value | `confidence` | `scope` |
-|---|---|---|---|---|---|
-| `{decision_entity}` | `roadmap:decision` | `text` | decision summary (≤ 4 KB) | 1.0 | `company` |
+<div>
+<dt>Activity ping</dt>
+<dt><span className="stigmem-fields__type"><code>paperclip:last_active</code> · datetime · <code>local</code></span></dt>
+<dd><strong>Activity pings MUST use <code>scope="local"</code></strong> — heartbeat signals for intra-node observability; MUST NOT be federated.</dd>
+</div>
 
-The `{decision_entity}` SHOULD be a formal URI: `stigmem://{node_authority}/decision/{slug}`.
+</div>
 
-#### §12.4.4 Escalation facts {#section-12-4-4}
+**Entity URI format note:** The `entity` column above uses informal
+URI shorthand (`issue:{task_id}`). Per §2.5, adapters targeting
+pre-reset+ SHOULD use formal URIs:
+`stigmem://{node_authority}/issue/{task_id}`. Migration tracked for
+pre-reset.
 
-Emitted when an agent cannot proceed and must escalate. Mint a synthetic entity
-`escalation:{uuid}` and assert:
+#### §12.4.2 Handoff facts \{#section-12-4-2\}
 
-| `relation` | Value type | Value | `confidence` | `scope` |
-|---|---|---|---|---|
-| `intent:escalation` | `string` | priority: `"low"` \| `"medium"` \| `"high"` \| `"critical"` | 1.0 | `company` |
-| `intent:escalate_to` | `ref` | target agent or user entity URI | 1.0 | `company` |
-| `intent:goal` | `text` | goal statement describing what the agent could not complete (≤ 2 KB) | 1.0 | `company` |
+Emitted when an agent session ends or delegates to another agent.
+Mint a synthetic entity `handoff:{uuid}` and assert all of the
+following.
 
-All three assertions are REQUIRED for a complete escalation record.
+<div className="stigmem-fields">
 
-#### §12.4.5 Minimum confidence and scope requirements summary {#section-12-4-5}
+<div>
+<dt>Relation</dt>
+<dt><span className="stigmem-fields__type">Type · Required?</span></dt>
+<dd>Value</dd>
+</div>
 
-| Fact class | Min confidence | Required scope |
-|---|---|---|
-| Lifecycle status (`paperclip:checkout`, `paperclip:issue_status`, `paperclip:blocked_by`) | 1.0 | `company` |
-| Activity ping (`paperclip:last_active`) | 1.0 | `local` (never federated) |
-| Handoff facts | 1.0 | `company` |
-| Decision facts | 1.0 | `company` |
-| Escalation facts | 1.0 | `company` |
+<div>
+<dt><code>intent:handoff_to</code></dt>
+<dt><span className="stigmem-fields__type">ref · REQUIRED</span></dt>
+<dd>Target agent entity URI.</dd>
+</div>
 
-Adapters MUST NOT write lifecycle or intent facts with confidence below 1.0. Low-confidence
-writes on these relations would pollute conflict resolution and break downstream agents
-that depend on these facts for routing.
+<div>
+<dt><code>intent:handoff_summary</code></dt>
+<dt><span className="stigmem-fields__type">text · REQUIRED</span></dt>
+<dd>Human-readable summary (≤ 4 KB).</dd>
+</div>
 
-### §12.5 Context Injection Format {#section-12-5}
+<div>
+<dt><code>intent:context_ref</code></dt>
+<dt><span className="stigmem-fields__type">ref · ≥1 if <code>fact_refs</code> non-empty</span></dt>
+<dd>Fact ID URI per referenced context fact (one assertion per ref).</dd>
+</div>
 
-Adapters that inject Stigmem facts into an agent's system prompt MUST use the
-following markdown schema:
+<div>
+<dt><code>intent:continuation</code></dt>
+<dt><span className="stigmem-fields__type">text · OPTIONAL</span></dt>
+<dd>Continuation note; omit if absent.</dd>
+</div>
 
-```markdown
+</div>
+
+All `confidence` 1.0, `scope` `company`.
+
+#### §12.4.3 Decision facts \{#section-12-4-3\}
+
+Emitted when an agent makes a significant architectural or roadmap
+choice.
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Entity</dt>
+<dt><span className="stigmem-fields__type">Relation · Type · Value</span></dt>
+<dd>Scope · confidence</dd>
+</div>
+
+<div>
+<dt><code>{`{decision_entity}`}</code></dt>
+<dt><span className="stigmem-fields__type"><code>roadmap:decision</code> · text · summary (≤4 KB)</span></dt>
+<dd><code>company</code> · 1.0</dd>
+</div>
+
+</div>
+
+The `{decision_entity}` SHOULD be a formal URI:
+`stigmem://{node_authority}/decision/{slug}`.
+
+#### §12.4.4 Escalation facts \{#section-12-4-4\}
+
+Emitted when an agent cannot proceed and must escalate. Mint a
+synthetic entity `escalation:{uuid}` and assert all three.
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Relation</dt>
+<dt><span className="stigmem-fields__type">Type</span></dt>
+<dd>Value (all REQUIRED)</dd>
+</div>
+
+<div>
+<dt><code>intent:escalation</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Priority: <code>"low"</code> | <code>"medium"</code> | <code>"high"</code> | <code>"critical"</code>.</dd>
+</div>
+
+<div>
+<dt><code>intent:escalate_to</code></dt>
+<dt><span className="stigmem-fields__type">ref</span></dt>
+<dd>Target agent or user entity URI.</dd>
+</div>
+
+<div>
+<dt><code>intent:goal</code></dt>
+<dt><span className="stigmem-fields__type">text</span></dt>
+<dd>Goal statement describing what the agent could not complete (≤ 2 KB).</dd>
+</div>
+
+</div>
+
+All `confidence` 1.0, `scope` `company`.
+
+#### §12.4.5 Minimum confidence and scope requirements summary \{#section-12-4-5\}
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Fact class</dt>
+<dt><span className="stigmem-fields__type">Min confidence · Required scope</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt>Lifecycle status</dt>
+<dt><span className="stigmem-fields__type">1.0 · <code>company</code></span></dt>
+<dd><code>paperclip:checkout</code>, <code>paperclip:issue_status</code>, <code>paperclip:blocked_by</code>.</dd>
+</div>
+
+<div>
+<dt>Activity ping</dt>
+<dt><span className="stigmem-fields__type">1.0 · <code>local</code> (never federated)</span></dt>
+<dd><code>paperclip:last_active</code>.</dd>
+</div>
+
+<div>
+<dt>Handoff / Decision / Escalation facts</dt>
+<dt><span className="stigmem-fields__type">1.0 · <code>company</code></span></dt>
+<dd></dd>
+</div>
+
+</div>
+
+Adapters MUST NOT write lifecycle or intent facts with confidence
+below 1.0. Low-confidence writes on these relations would pollute
+conflict resolution and break downstream agents that depend on these
+facts for routing.
+
+### §12.5 Context injection format \{#section-12-5\}
+
+Adapters that inject Stigmem facts into an agent's system prompt
+MUST use the following markdown schema.
+
+````markdown
 ## Stigmem context — {user_entity}
 
 ### {namespace}
 - **{relation}** on `{entity}`: {value_str}[ _(confidence: {confidence:.2f})_]
-```
+````
 
-**Field rendering rules:**
-- `{user_entity}`: the primary entity passed to the boot handshake
-- `{namespace}`: the relation prefix before the first `:` (e.g. `preference`, `roadmap`);
-  facts with the same namespace are grouped under a shared `### {namespace}` subheading
-- `{relation}`: the fact's `relation` field, verbatim
-- `{entity}`: the fact's `entity` field, verbatim
-- `{value_str}`: for `null` type → render `(null)`; for all other types → render `value.v` as a string
-- Confidence annotation: rendered only when `confidence < 1.0`, using the format
-  `_(confidence: {value:.2f})_`. Facts with `confidence == 1.0` omit the annotation.
+<div className="stigmem-grid">
 
-**Ordering:** Facts SHOULD be ordered by descending `confidence`, then descending `hlc` within equal confidence.
+<div><h4><code>{`{user_entity}`}</code></h4><p>The primary entity passed to the boot handshake.</p></div>
+<div><h4><code>{`{namespace}`}</code></h4><p>The relation prefix before the first <code>:</code>; facts grouped under shared <code>### {`{namespace}`}</code>.</p></div>
+<div><h4><code>{`{relation}`}</code></h4><p>The fact's <code>relation</code> field, verbatim.</p></div>
+<div><h4><code>{`{entity}`}</code></h4><p>The fact's <code>entity</code> field, verbatim.</p></div>
+<div><h4><code>{`{value_str}`}</code></h4><p>For <code>null</code> type → render <code>(null)</code>; for others → render <code>value.v</code> as string.</p></div>
+<div><h4>Confidence annotation</h4><p>Rendered only when <code>confidence &lt; 1.0</code>, as <code>_(confidence: {`{value:.2f}`})_</code>.</p></div>
 
-**Empty context:** If no facts were retrieved, adapters MUST return an empty string
-and MUST NOT inject the `## Stigmem context` header. Do not inject a header with
-zero fact lines.
+</div>
+
+**Ordering:** Facts SHOULD be ordered by descending `confidence`,
+then descending `hlc` within equal confidence.
+
+<div className="stigmem-keypoint">
+
+**Empty context.**
+
+If no facts were retrieved, adapters MUST return an empty string and
+MUST NOT inject the <code>## Stigmem context</code> header. Do not
+inject a header with zero fact lines.
+
+</div>
 
 **Reference implementation** (`stigmem/adapters/openclaw/adapter.py:_facts_to_summary`):
+
 ```python
 def _facts_to_summary(facts: list[Fact], user_entity: str) -> str:
     if not facts:
@@ -257,24 +439,78 @@ def _facts_to_summary(facts: list[Fact], user_entity: str) -> str:
     return "\n".join(lines).rstrip()
 ```
 
-### §12.6 Error Handling Contract {#section-12-6}
+### §12.6 Error handling contract \{#section-12-6\}
 
-The crash-forbidden invariant: **under no circumstances MAY a Stigmem adapter crash
-the host agent process due to a Stigmem node failure.** The adapter is middleware;
-the agent's core functionality MUST remain unaffected if Stigmem is degraded or absent.
+<div className="stigmem-keypoint">
 
-| Scenario | Process-mode adapter | Middleware adapter |
-|---|---|---|
-| `STIGMEM_URL` absent | Exit non-zero with clear error to stderr | Skip all Stigmem ops silently; exit 0 |
-| Node unreachable at boot | Log error to stderr; continue (let tool calls fail individually) | Log warning to stderr; return `BootContext { facts:[], summary:"" }`; continue |
-| Node unreachable on write | Log warning to stderr; no crash | Log warning to stderr; no crash |
-| Node returns HTTP 4xx on write | Log error to stderr; no retry; no crash | Log error to stderr; no retry; no crash |
-| Node returns HTTP 5xx on write | Log error to stderr; retry once after 2 s; suppress on second failure | Log error to stderr; retry once after 2 s; suppress on second failure |
-| Boot query returns HTTP 4xx | Treat as empty result for that query | Treat as empty result for that query |
-| Boot query returns HTTP 5xx | Treat as empty result; log warning | Treat as empty result; log warning |
-| Node unreachable on tool invocation (MCP) | Return `isError: true` with error text in tool result; do not exit | N/A |
+**The crash-forbidden invariant.**
 
-### §12.7 Conformance Test Vectors {#section-12-7}
+Under no circumstances MAY a Stigmem adapter crash the host agent
+process due to a Stigmem node failure. The adapter is middleware;
+the agent's core functionality MUST remain unaffected if Stigmem is
+degraded or absent.
+
+</div>
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Scenario</dt>
+<dt><span className="stigmem-fields__type">Process-mode</span></dt>
+<dd>Middleware</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_URL</code> absent</dt>
+<dt><span className="stigmem-fields__type">Exit non-zero; clear error to stderr</span></dt>
+<dd>Skip all Stigmem ops silently; exit 0.</dd>
+</div>
+
+<div>
+<dt>Node unreachable at boot</dt>
+<dt><span className="stigmem-fields__type">Log error to stderr; continue (let tool calls fail individually)</span></dt>
+<dd>Log warning to stderr; return empty <code>BootContext</code>; continue.</dd>
+</div>
+
+<div>
+<dt>Node unreachable on write</dt>
+<dt><span className="stigmem-fields__type">Log warning; no crash</span></dt>
+<dd>Log warning; no crash.</dd>
+</div>
+
+<div>
+<dt>Node returns HTTP 4xx on write</dt>
+<dt><span className="stigmem-fields__type">Log error; no retry; no crash</span></dt>
+<dd>Log error; no retry; no crash.</dd>
+</div>
+
+<div>
+<dt>Node returns HTTP 5xx on write</dt>
+<dt><span className="stigmem-fields__type">Log error; retry once after 2s; suppress on second failure</span></dt>
+<dd>Same: log error; retry once after 2s; suppress.</dd>
+</div>
+
+<div>
+<dt>Boot query returns HTTP 4xx</dt>
+<dt><span className="stigmem-fields__type">Treat as empty result</span></dt>
+<dd>Same.</dd>
+</div>
+
+<div>
+<dt>Boot query returns HTTP 5xx</dt>
+<dt><span className="stigmem-fields__type">Treat as empty result; log warning</span></dt>
+<dd>Same.</dd>
+</div>
+
+<div>
+<dt>Node unreachable on MCP tool</dt>
+<dt><span className="stigmem-fields__type">Return <code>isError: true</code> with error text; do not exit</span></dt>
+<dd>N/A.</dd>
+</div>
+
+</div>
+
+### §12.7 Conformance test vectors \{#section-12-7\}
 
 A compliant adapter MUST pass all vectors defined in:
 
@@ -282,20 +518,57 @@ A compliant adapter MUST pass all vectors defined in:
 sdks/stigmem-py/tests/conformance_vectors.py
 ```
 
-The vectors are JSON-serialisable dicts shared across the Python and TypeScript SDKs.
+The vectors are JSON-serialisable dicts shared across the Python and
+TypeScript SDKs.
 
-**Vector sets:**
+<div className="stigmem-fields">
 
-| Set | IDs | What it verifies |
-|---|---|---|
-| `ASSERT_VECTORS` | `assert-string`, `assert-text`, `assert-ref`, `retract` | `POST /v1/facts` with each FactValue type; `confidence=0.0` retraction |
-| `QUERY_VECTORS` | `query-by-entity`, `query-by-entity-relation`, `query-min-confidence`, `query-include-contradicted` | `GET /v1/facts` filtering; required response fields |
-| `NODE_INFO_VECTOR` | `node-info` | `GET /.well-known/stigmem` required fields: `version`, `node_id`, `node_url`, `auth`, `federation` |
-| `LINT_VECTORS` | `lint-contradiction`, `lint-stale`, `lint-stale-lookahead`, `lint-orphan`, `lint-broken-ref`, `lint-broken-ref-intent`, `lint-clean`, `lint-scope-filter` | `POST /v1/lint` — all four checks; severity mapping; scope isolation |
-| `DECAY_VECTORS` | `decay-confidence-reduction`, `decay-retraction`, `decay-scope-filter`, `decay-dry-run`, `decay-exempt` | `POST /v1/decay/sweep` — confidence decay, retraction, scope isolation, dry-run mode, exempt relations |
-| `SYNTHESIS_VECTORS` | `synthesis-basic`, `synthesis-contradicted`, `synthesis-min-confidence`, `synthesis-empty` | `POST /v1/synthesis` — confidence ordering, contradiction annotation, min-confidence filter |
+<div>
+<dt>Set</dt>
+<dt><span className="stigmem-fields__type">IDs</span></dt>
+<dd>What it verifies</dd>
+</div>
+
+<div>
+<dt><code>ASSERT_VECTORS</code></dt>
+<dt><span className="stigmem-fields__type">assert-string · assert-text · assert-ref · retract</span></dt>
+<dd><code>POST /v1/facts</code> with each FactValue type; <code>confidence=0.0</code> retraction.</dd>
+</div>
+
+<div>
+<dt><code>QUERY_VECTORS</code></dt>
+<dt><span className="stigmem-fields__type">query-by-entity · query-by-entity-relation · query-min-confidence · query-include-contradicted</span></dt>
+<dd><code>GET /v1/facts</code> filtering; required response fields.</dd>
+</div>
+
+<div>
+<dt><code>NODE_INFO_VECTOR</code></dt>
+<dt><span className="stigmem-fields__type">node-info</span></dt>
+<dd><code>GET /.well-known/stigmem</code> required fields.</dd>
+</div>
+
+<div>
+<dt><code>LINT_VECTORS</code></dt>
+<dt><span className="stigmem-fields__type">8 vectors</span></dt>
+<dd><code>POST /v1/lint</code> — all four checks; severity mapping; scope isolation.</dd>
+</div>
+
+<div>
+<dt><code>DECAY_VECTORS</code></dt>
+<dt><span className="stigmem-fields__type">5 vectors</span></dt>
+<dd><code>POST /v1/decay/sweep</code> — confidence decay, retraction, scope isolation, dry-run mode, exempt relations.</dd>
+</div>
+
+<div>
+<dt><code>SYNTHESIS_VECTORS</code></dt>
+<dt><span className="stigmem-fields__type">4 vectors</span></dt>
+<dd><code>POST /v1/synthesis</code> — confidence ordering, contradiction annotation, min-confidence filter.</dd>
+</div>
+
+</div>
 
 **Running conformance:**
+
 ```bash
 # Python SDK (also runs adapter integration tests)
 pytest sdks/stigmem-py/tests/ -v
@@ -304,15 +577,16 @@ pytest sdks/stigmem-py/tests/ -v
 cd sdks/stigmem-ts && npm test
 ```
 
-**Adapter-specific gate:** Adapters that write lifecycle or intent facts (§12.4) MUST
-additionally demonstrate correct assertion behavior via an integration test that
-verifies:
-1. The expected relations are present in the fact store after each lifecycle event.
-2. Facts written with the wrong scope or below minimum confidence are rejected before
-   reaching the node (validated client-side) or are caught in the node's response.
+**Adapter-specific gate:** Adapters that write lifecycle or intent
+facts (§12.4) MUST additionally demonstrate correct assertion
+behavior via an integration test that verifies:
 
-A compliant adapter is one that passes all `ASSERT_VECTORS`, `QUERY_VECTORS`,
-`NODE_INFO_VECTOR`, `LINT_VECTORS`, `DECAY_VECTORS`, `SYNTHESIS_VECTORS`, and its
-adapter-specific lifecycle tests with a live Stigmem node.
+<ol className="stigmem-steps">
+<li>The expected relations are present in the fact store after each lifecycle event.</li>
+<li>Facts written with the wrong scope or below minimum confidence are rejected before reaching the node (validated client-side) or are caught in the node's response.</li>
+</ol>
 
----
+A compliant adapter is one that passes all `ASSERT_VECTORS`,
+`QUERY_VECTORS`, `NODE_INFO_VECTOR`, `LINT_VECTORS`, `DECAY_VECTORS`,
+`SYNTHESIS_VECTORS`, and its adapter-specific lifecycle tests with a
+live Stigmem node.

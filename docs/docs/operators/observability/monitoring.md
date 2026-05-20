@@ -7,9 +7,18 @@ audience: Operator
 
 # Monitoring & Debugging
 
-**Audience:** operators and SREs running Stigmem in production.
+<p className="stigmem-meta"><span>5 min read</span><span>SRE · Operator</span><span>Day-two operations</span></p>
 
----
+<div className="stigmem-lead">
+
+**What this page covers**
+
+Health checks, log interpretation, recall-latency diagnosis, and
+operational metrics for Stigmem node operators.
+
+</div>
+
+**Audience:** operators and SREs running Stigmem in production.
 
 ## Health check
 
@@ -29,15 +38,35 @@ curl -s https://your-node.example.com/healthz | jq .
 }
 ```
 
-| Field | What to watch for |
-|---|---|
-| `status` | Must be `"ok"`. Any other value means the node is unhealthy. |
-| `sync_lag_ms` | libSQL only. High values (> 5 000 ms) suggest a network issue between the replica and the Turso primary. |
-| `federation_enabled` | Should be `true` if you've enabled federation. |
+<div className="stigmem-fields">
+
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Watch for</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt><code>status</code></dt>
+<dt><span className="stigmem-fields__type">must be "ok"</span></dt>
+<dd>Any other value means the node is unhealthy.</dd>
+</div>
+
+<div>
+<dt><code>sync_lag_ms</code></dt>
+<dt><span className="stigmem-fields__type">&lt; 5000 ms</span></dt>
+<dd>libSQL only. High values suggest a network issue between the replica and the Turso primary.</dd>
+</div>
+
+<div>
+<dt><code>federation_enabled</code></dt>
+<dt><span className="stigmem-fields__type">true if enabled</span></dt>
+<dd>Should match your configuration.</dd>
+</div>
+
+</div>
 
 **Kubernetes / PaaS:** point your liveness and readiness probes at `/healthz`.
-
----
 
 ## Logs
 
@@ -45,63 +74,102 @@ The node emits structured JSON logs to stdout. Use `LOG_LEVEL` to control verbos
 
 ```bash
 STIGMEM_LOG_LEVEL=debug   # maximum detail; avoid in production at scale
-STIGMEM_LOG_LEVEL=info    # default; startup, request/response summaries, federation events
+STIGMEM_LOG_LEVEL=info    # default
 STIGMEM_LOG_LEVEL=warning # only warnings and errors
 ```
 
-Key log events and what they mean:
+**Key log events:**
 
-| Log message fragment | Meaning |
-|---|---|
-| `federation.pull.ok` | Successful pull from a peer |
-| `federation.pull.signature_mismatch` | Peer's key changed; update the pin |
-| `federation.pull.peer_unreachable` | Network or peer-side issue |
-| `storage.migration.applied` | Schema migration ran on startup |
-| `recall.embedding.provider_error` | Embedding provider unavailable |
-| `recall.latency_ms > 1000` | Recall taking > 1 s — see [Recall latency](#recall-latency) |
-| `snapshot.create.ok` | Backup snapshot created successfully |
-| `snapshot.verify.fail` | Snapshot verification failed — do not restore |
+<div className="stigmem-fields">
 
-### Tailing logs
+<div>
+<dt>Message fragment</dt>
+<dt><span className="stigmem-fields__type">Class</span></dt>
+<dd>Meaning</dd>
+</div>
+
+<div>
+<dt><code>federation.pull.ok</code></dt>
+<dt><span className="stigmem-fields__type">success</span></dt>
+<dd>Successful pull from a peer.</dd>
+</div>
+
+<div>
+<dt><code>federation.pull.signature_mismatch</code></dt>
+<dt><span className="stigmem-fields__type">incident</span></dt>
+<dd>Peer's key changed; update the pin.</dd>
+</div>
+
+<div>
+<dt><code>federation.pull.peer_unreachable</code></dt>
+<dt><span className="stigmem-fields__type">network</span></dt>
+<dd>Network or peer-side issue.</dd>
+</div>
+
+<div>
+<dt><code>storage.migration.applied</code></dt>
+<dt><span className="stigmem-fields__type">startup</span></dt>
+<dd>Schema migration ran on startup.</dd>
+</div>
+
+<div>
+<dt><code>recall.embedding.provider_error</code></dt>
+<dt><span className="stigmem-fields__type">degraded</span></dt>
+<dd>Embedding provider unavailable.</dd>
+</div>
+
+<div>
+<dt><code>recall.latency_ms &gt; 1000</code></dt>
+<dt><span className="stigmem-fields__type">performance</span></dt>
+<dd>Recall taking &gt; 1 s — see Recall latency below.</dd>
+</div>
+
+<div>
+<dt><code>snapshot.create.ok</code></dt>
+<dt><span className="stigmem-fields__type">backup</span></dt>
+<dd>Backup snapshot created successfully.</dd>
+</div>
+
+<div>
+<dt><code>snapshot.verify.fail</code></dt>
+<dt><span className="stigmem-fields__type">critical</span></dt>
+<dd>Snapshot verification failed — do not restore.</dd>
+</div>
+
+</div>
 
 ```bash
 # Docker Compose
 docker compose logs -f node
 ```
 
----
-
 ## Metrics
-
-The node exposes a Prometheus-compatible metrics endpoint at `/metrics`:
 
 ```bash
 curl -s https://your-node.example.com/metrics | grep stigmem_
 ```
 
-Key metrics:
+**Key metrics** (see [Observability](./index.md) for the full reference):
 
-| Metric | Description |
-|---|---|
-| `stigmem_fact_write_total` | Successful fact assertions by principal and tenant |
-| `stigmem_fact_read_total` | Fact queries and recall requests by principal and tenant |
-| `stigmem_request_latency_seconds` | End-to-end HTTP request latency by route, method, and status |
-| `stigmem_recall_ranker_duration_seconds` | Hybrid recall ranker duration by tenant |
-| `stigmem_federation_ingress_total` | Facts received via federation pull by peer and status |
-| `stigmem_federation_egress_total` | Facts served via federation pull endpoint by peer and status |
-| `stigmem_replication_lag_seconds` | Estimated replication lag by peer |
-| `stigmem_peer_hlc_anomaly_total` | Inbound federation HLC skew rejections by peer and direction |
-| `stigmem_audit_event_total` | Audit events written by event type and tenant |
+<div className="stigmem-grid">
 
-### Grafana dashboard
+<div><h4><code>stigmem_fact_write_total</code></h4></div>
+<div><h4><code>stigmem_fact_read_total</code></h4></div>
+<div><h4><code>stigmem_request_latency_seconds</code></h4></div>
+<div><h4><code>stigmem_recall_ranker_duration_seconds</code></h4></div>
+<div><h4><code>stigmem_federation_ingress_total</code></h4></div>
+<div><h4><code>stigmem_federation_egress_total</code></h4></div>
+<div><h4><code>stigmem_replication_lag_seconds</code></h4></div>
+<div><h4><code>stigmem_peer_hlc_anomaly_total</code></h4></div>
+<div><h4><code>stigmem_audit_event_total</code></h4></div>
 
-A sample Grafana dashboard JSON is available at [`experimental/deploy-grafana/stigmem-dashboard.json`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/deploy-grafana/stigmem-dashboard.json) in the repo. Grafana support is deferred per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md); the dashboard remains buildable for self-import but is unsupported until it passes the [ADR-008 reintroduction gates](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md). Import it into your Grafana instance and point the data source at your Prometheus scrape target.
+</div>
 
----
+A sample Grafana dashboard JSON is available at [`experimental/deploy-grafana/stigmem-dashboard.json`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/deploy-grafana/stigmem-dashboard.json). Grafana support is deferred per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md); the dashboard remains buildable for self-import but is unsupported until it passes the ADR-008 reintroduction gates.
 
 ## Recall latency
 
-Recall (semantic search) combines vector lookup with graph traversal. High latency usually has one of three causes:
+Recall (semantic search) combines vector lookup with graph traversal. High latency usually has one of three causes.
 
 ### 1. Embedding provider slow or unavailable
 
@@ -117,9 +185,11 @@ ollama pull nomic-embed-text
 ollama serve &
 ```
 
-If using an API provider (OpenAI, Voyage), check for rate limiting or network issues.
+<div className="stigmem-keypoint">
 
-**Tip:** switch to the offline default (`STIGMEM_EMBED_PROVIDER=ollama`) during an outage to eliminate provider dependency.
+**Switch to the offline default (`STIGMEM_EMBED_PROVIDER=ollama`) during an outage to eliminate provider dependency.**
+
+</div>
 
 ### 2. Vector index not built yet
 
@@ -132,8 +202,6 @@ curl -s https://your-node.example.com/v1/recall/status | jq .
 If `index_coverage` is below `1.0`, the index is still building. Recall continues to work but may miss recently added facts until indexing catches up.
 
 ### 3. Database query slow (high fact volume)
-
-For large nodes (millions of facts), storage query latency may dominate. Diagnose:
 
 ```bash
 # Check storage backend latency from metrics
@@ -156,11 +224,7 @@ WHERE tablename = 'vec_facts';
 CREATE INDEX ON vec_facts USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 ```
 
----
-
 ## Federation debugging
-
-If pull replication stops or stalls:
 
 ```bash
 # Check peer status and last pull time
@@ -174,16 +238,41 @@ curl -X POST https://your-node.example.com/v1/federation/peers/<peer-id>/pull \
   -H "Authorization: Bearer $STIGMEM_ADMIN_KEY"
 ```
 
-Common issues:
+**Common issues:**
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| `pull_lag_ms` growing | Network latency or peer overloaded | Increase `STIGMEM_FEDERATION_PULL_INTERVAL_S` |
-| `error: signature_mismatch` | Peer rotated its key | Update peer pin |
-| `error: peer_unreachable` | DNS or firewall | Check `STIGMEM_NODE_URL` and peer's firewall |
-| No facts arriving despite healthy pull | Scope filter mismatch | Check `STIGMEM_FEDERATION_ALLOW_TEAM` if team-scoped facts are expected |
+<div className="stigmem-fields">
 
----
+<div>
+<dt>Symptom</dt>
+<dt><span className="stigmem-fields__type">Cause</span></dt>
+<dd>Fix</dd>
+</div>
+
+<div>
+<dt><code>pull_lag_ms</code> growing</dt>
+<dt><span className="stigmem-fields__type">network / overload</span></dt>
+<dd>Increase <code>STIGMEM_FEDERATION_PULL_INTERVAL_S</code>.</dd>
+</div>
+
+<div>
+<dt><code>signature_mismatch</code></dt>
+<dt><span className="stigmem-fields__type">key rotated</span></dt>
+<dd>Update peer pin.</dd>
+</div>
+
+<div>
+<dt><code>peer_unreachable</code></dt>
+<dt><span className="stigmem-fields__type">DNS / firewall</span></dt>
+<dd>Check <code>STIGMEM_NODE_URL</code> and peer's firewall.</dd>
+</div>
+
+<div>
+<dt>No facts despite healthy pull</dt>
+<dt><span className="stigmem-fields__type">scope filter</span></dt>
+<dd>Check <code>STIGMEM_FEDERATION_ALLOW_TEAM</code> if team-scoped facts are expected.</dd>
+</div>
+
+</div>
 
 ## Alerts
 

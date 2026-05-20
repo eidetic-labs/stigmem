@@ -6,24 +6,56 @@ audience: Integrator
 
 # Conformance Testing
 
-**Audience:** protocol implementers validating a Stigmem node; contributors adding or changing spec behaviour; operators of forks or alternative backend implementations.
+<p className="stigmem-meta"><span>5 min read</span><span>Protocol implementer · Contributor</span><span>Multi-backend</span></p>
 
----
+<div className="stigmem-lead">
+
+**What this page covers**
+
+Two complementary conformance layers: machine-readable wire vectors
+for the HTTP API, and a behavioral suite that exercises the full
+fact/recall/graph/decay/federation/contradiction contract across
+SQLite, libSQL, and Postgres.
+
+</div>
+
+**Audience:** protocol implementers validating a Stigmem node; contributors adding or changing spec behaviour; operators of forks or alternative backend implementations.
 
 ## Overview
 
-Stigmem ships two complementary conformance layers:
+<div className="stigmem-fields">
 
-| Layer | What it tests | Who uses it |
-|-------|---------------|-------------|
-| **Wire conformance (current vectors)** | HTTP wire format and response shape against machine-readable JSON vectors | Spec contributors; anyone checking API compatibility |
-| **Multi-backend behavioral suite** | Full behavioral contract (facts, recall, graph, decay, federation, contradictions, embeddings, provenance) across SQLite, libSQL, and Postgres | Backend implementers; fork operators; CI |
+<div>
+<dt>Layer</dt>
+<dt><span className="stigmem-fields__type">Audience</span></dt>
+<dd>What it tests</dd>
+</div>
 
----
+<div>
+<dt><strong>Wire conformance</strong></dt>
+<dt><span className="stigmem-fields__type">spec contributors</span></dt>
+<dd>HTTP wire format and response shape against machine-readable JSON vectors.</dd>
+</div>
+
+<div>
+<dt><strong>Multi-backend behavioral suite</strong></dt>
+<dt><span className="stigmem-fields__type">backend implementers · CI</span></dt>
+<dd>Full behavioral contract across SQLite, libSQL, and Postgres.</dd>
+</div>
+
+</div>
 
 ## Wire conformance
 
-The current wire-vector suite is the executable test contract for the v0.9.0a1 wire format while the project is in the alpha reset. The files still live under `data/conformance/v1.0/` for compatibility with the pre-reset harness naming; treat that directory name as historical, not as a claim that v1.0 has shipped.
+<div className="stigmem-keypoint">
+
+**The current wire-vector suite is the executable test contract for the v0.9.0a1 wire format.**
+
+The files still live under `data/conformance/v1.0/` for compatibility
+with the pre-reset harness naming — treat that directory name as
+historical, not as a claim that v1.0 has shipped.
+
+</div>
 
 ### Running the suite
 
@@ -32,7 +64,7 @@ The current wire-vector suite is the executable test contract for the v0.9.0a1 w
 uv run pytest node/tests/conformance/test_conformance_v1.py -v
 ```
 
-The runner starts an in-process test node, executes every vector against it, and fails on any regression. Zero skips are enforced — if your change causes a vector to be skipped, CI will fail.
+The runner starts an in-process test node, executes every vector against it, and fails on any regression. **Zero skips are enforced** — if your change causes a vector to be skipped, CI will fail.
 
 To run a single vector group:
 
@@ -48,13 +80,45 @@ The **Conformance** workflow ([`conformance.yml`](https://github.com/eidetic-lab
 
 ### Vector groups
 
-| File | Spec sections covered |
-|------|-----------------------|
-| `01_fact_assert.json` | `Spec-01-Fact-Model`, `Spec-03-HTTP-API` — fact assert wire format, all FactValue types |
-| `02_fact_query.json` | `Spec-03-HTTP-API`, `Spec-15-Fact-Semantics` — query, single-fact GET, retraction |
-| `03_wellknown.json` | `Spec-03-HTTP-API` — `/.well-known/stigmem` discovery endpoint |
-| `04_gardens.json` | `Spec-02-Scopes-and-ACL` — Memory Garden CRUD, role management |
-| `05_garden_facts.json` | `Spec-02-Scopes-and-ACL`, `Spec-01-Fact-Model` — garden-tagged fact writes and ACL enforcement |
+<div className="stigmem-fields">
+
+<div>
+<dt>File</dt>
+<dt><span className="stigmem-fields__type">Spec coverage</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt><code>01_fact_assert.json</code></dt>
+<dt><span className="stigmem-fields__type">Spec-01, Spec-03</span></dt>
+<dd>Fact assert wire format, all FactValue types.</dd>
+</div>
+
+<div>
+<dt><code>02_fact_query.json</code></dt>
+<dt><span className="stigmem-fields__type">Spec-03, Spec-15</span></dt>
+<dd>Query, single-fact GET, retraction.</dd>
+</div>
+
+<div>
+<dt><code>03_wellknown.json</code></dt>
+<dt><span className="stigmem-fields__type">Spec-03</span></dt>
+<dd><code>/.well-known/stigmem</code> discovery endpoint.</dd>
+</div>
+
+<div>
+<dt><code>04_gardens.json</code></dt>
+<dt><span className="stigmem-fields__type">Spec-02</span></dt>
+<dd>Memory Garden CRUD, role management.</dd>
+</div>
+
+<div>
+<dt><code>05_garden_facts.json</code></dt>
+<dt><span className="stigmem-fields__type">Spec-02, Spec-01</span></dt>
+<dd>Garden-tagged fact writes and ACL enforcement.</dd>
+</div>
+
+</div>
 
 ### Adding a new vector
 
@@ -62,67 +126,84 @@ The **Conformance** workflow ([`conformance.yml`](https://github.com/eidetic-lab
 Every new spec section or wire-format change MUST include at least one new conformance vector. PRs that add or modify spec text without a corresponding vector will not be merged.
 :::
 
-1. Add to an existing group file that covers the relevant spec section. If no group exists, create a new numbered file: `06_my_feature.json`.
-2. Follow the vector structure (see below).
-3. Run `uv run pytest node/tests/conformance/test_conformance_v1.py -v` locally before opening a PR.
+<ol className="stigmem-steps">
+<li>Add to an existing group file that covers the relevant spec section. If no group exists, create a new numbered file (e.g. <code>06_my_feature.json</code>).</li>
+<li>Follow the vector structure (see below).</li>
+<li>Run <code>uv run pytest node/tests/conformance/test_conformance_v1.py -v</code> locally before opening a PR.</li>
+</ol>
 
-#### Vector structure
-
-Every vector group file is a JSON object with this top-level shape:
+**Vector structure:**
 
 ```json
 {
   "spec_section": "§X.Y",
   "title": "Short group title",
   "description": "Optional longer description",
-  "vectors": [...]
+  "vectors": [
+    {
+      "id": "unique-kebab-id",
+      "description": "What this vector tests",
+      "method": "POST",
+      "path": "/v1/facts",
+      "body": { ... },
+      "expected_status": 201,
+      "expected_body_contains": { "entity": "stigmem://testnode/user/alice" },
+      "expected_body_has_keys": ["id", "timestamp"]
+    }
+  ]
 }
 ```
 
-Each vector in the `vectors` array:
+**Assertion fields:**
 
-```json
-{
-  "id": "unique-kebab-id",
-  "description": "What this vector tests",
-  "method": "POST",
-  "path": "/v1/facts",
-  "body": {
-    "entity": "stigmem://testnode/user/alice",
-    "relation": "memory:role",
-    "value": { "type": "string", "v": "engineer" },
-    "source": "stigmem://testnode/agent/test",
-    "confidence": 1.0,
-    "scope": "company"
-  },
-  "expected_status": 201,
-  "expected_body_contains": {
-    "entity": "stigmem://testnode/user/alice"
-  },
-  "expected_body_has_keys": ["id", "timestamp"]
-}
-```
+<div className="stigmem-fields">
 
-#### Assertion fields
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Type</span></dt>
+<dd>Checks</dd>
+</div>
 
-| Field | Type | What it checks |
-|-------|------|----------------|
-| `expected_status` | int | HTTP response status code |
-| `expected_body_contains` | object | Top-level response keys equal these values |
-| `expected_body_has_keys` | string[] | Response object includes these keys (any value) |
-| `expected_nested` | object | Dotted-path assertions into the response |
+<div>
+<dt><code>expected_status</code></dt>
+<dt><span className="stigmem-fields__type">int</span></dt>
+<dd>HTTP response status code.</dd>
+</div>
 
-Do **not** add vectors with `requires_auth: true` — zero skips are enforced and auth-dependent scenarios belong under `node/tests/auth/`.
+<div>
+<dt><code>expected_body_contains</code></dt>
+<dt><span className="stigmem-fields__type">object</span></dt>
+<dd>Top-level response keys equal these values.</dd>
+</div>
 
----
+<div>
+<dt><code>expected_body_has_keys</code></dt>
+<dt><span className="stigmem-fields__type">string[]</span></dt>
+<dd>Response object includes these keys (any value).</dd>
+</div>
 
-## Multi-backend behavioral suite (the pre-reset multi-backend work)
+<div>
+<dt><code>expected_nested</code></dt>
+<dt><span className="stigmem-fields__type">object</span></dt>
+<dd>Dotted-path assertions into the response.</dd>
+</div>
 
-The behavioral suite in `node/src/stigmem_conformance/tests/` exercises the full behavioral contract against all three storage backends: **SQLite**, **libSQL**, and **Postgres**.
+</div>
 
-### How to run
+<div className="stigmem-keypoint">
 
-#### In-process (simplest, no external services)
+**Do not add vectors with `requires_auth: true`.**
+
+Zero skips are enforced and auth-dependent scenarios belong under
+`node/tests/auth/`.
+
+</div>
+
+## Multi-backend behavioral suite
+
+The behavioral suite in `node/src/stigmem_conformance/tests/` exercises the full behavioral contract against **SQLite**, **libSQL**, and **Postgres**.
+
+### In-process (simplest, no external services)
 
 ```bash
 # SQLite (default — no dependencies)
@@ -133,7 +214,7 @@ pip install 'stigmem-node[libsql]'
 python -m stigmem_conformance --backend libsql
 ```
 
-#### Postgres
+### Postgres
 
 ```bash
 # Start a local Postgres instance (Docker)
@@ -147,15 +228,15 @@ STIGMEM_TEST_PG_DSN="postgresql://postgres:test@localhost/postgres" \
 python -m stigmem_conformance --backend postgres
 ```
 
-#### Generate a Markdown report
+### Generate a Markdown report
 
 ```bash
 python -m stigmem_conformance --backend sqlite --report conformance-sqlite.md
 ```
 
-The report includes pass/fail counts, test details, and failure traces. It is suitable for committing alongside a release or embedding in operator documentation.
+The report includes pass/fail counts, test details, and failure traces. Suitable for committing alongside a release or embedding in operator documentation.
 
-#### Via pytest directly
+### Via pytest directly
 
 ```bash
 # All backends (skips unavailable ones automatically)
@@ -167,36 +248,109 @@ uv run pytest node/src/stigmem_conformance/tests/ --conformance-backend=sqlite -
 
 ### Test domains
 
-| Module | Tests | Skip conditions |
-|--------|-------|-----------------|
-| `test_facts.py` | Fact assert, query, retraction, TTL, validation | None |
-| `test_recall.py` | Recall endpoint, token budget, scope isolation, response shape | None |
-| `test_graph.py` | Graph neighbors, depth traversal, scope filter, retraction cleanup | None |
-| `test_decay_synthesis.py` | Synthesize endpoint, decay sweeper, confidence ordering | None |
-| `test_contradiction.py` | Contradiction detection, conflict list, resolution | None |
-| `test_embeddings.py` | Recall without vector index; vector tests | Skipped: libSQL/Postgres (sqlite-vec not applicable) |
-| `test_provenance.py` | Audit trail, source attribution, recall_id/query_hash | None |
-| `test_federation.py` | Well-known endpoint, peer registration, pull API shape | None |
+<div className="stigmem-fields">
+
+<div>
+<dt>Module</dt>
+<dt><span className="stigmem-fields__type">Tests</span></dt>
+<dd>Skip conditions</dd>
+</div>
+
+<div>
+<dt><code>test_facts.py</code></dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>Fact assert, query, retraction, TTL, validation. No skips.</dd>
+</div>
+
+<div>
+<dt><code>test_recall.py</code></dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>Recall endpoint, token budget, scope isolation, response shape.</dd>
+</div>
+
+<div>
+<dt><code>test_graph.py</code></dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>Graph neighbors, depth traversal, scope filter, retraction cleanup.</dd>
+</div>
+
+<div>
+<dt><code>test_decay_synthesis.py</code></dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>Synthesize endpoint, decay sweeper, confidence ordering.</dd>
+</div>
+
+<div>
+<dt><code>test_contradiction.py</code></dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>Contradiction detection, conflict list, resolution.</dd>
+</div>
+
+<div>
+<dt><code>test_embeddings.py</code></dt>
+<dt><span className="stigmem-fields__type">SQLite-only</span></dt>
+<dd>Recall without vector index; vector tests. Skipped on libSQL/Postgres (sqlite-vec not applicable).</dd>
+</div>
+
+<div>
+<dt><code>test_provenance.py</code></dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>Audit trail, source attribution, recall_id/query_hash.</dd>
+</div>
+
+<div>
+<dt><code>test_federation.py</code></dt>
+<dt><span className="stigmem-fields__type">core</span></dt>
+<dd>Well-known endpoint, peer registration, pull API shape.</dd>
+</div>
+
+</div>
 
 ### Interpreting the report
 
-| Status | Meaning |
-|--------|---------|
-| ✅ passed | Backend behaves correctly for this scenario |
-| ❌ failed | Behavioral regression — must be fixed before shipping |
-| ⏭ skipped | Feature not applicable to this backend (justified skip) |
+<div className="stigmem-fields">
 
-A report with **zero failures** and **only justified skips** means the backend is conformant.
+<div>
+<dt>Status</dt>
+<dt><span className="stigmem-fields__type">Symbol</span></dt>
+<dd>Meaning</dd>
+</div>
+
+<div>
+<dt>passed</dt>
+<dt><span className="stigmem-fields__type">✅</span></dt>
+<dd>Backend behaves correctly for this scenario.</dd>
+</div>
+
+<div>
+<dt>failed</dt>
+<dt><span className="stigmem-fields__type">❌</span></dt>
+<dd>Behavioral regression — must be fixed before shipping.</dd>
+</div>
+
+<div>
+<dt>skipped</dt>
+<dt><span className="stigmem-fields__type">⏭</span></dt>
+<dd>Feature not applicable to this backend (justified skip).</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**A report with zero failures and only justified skips means the backend is conformant.**
+
+</div>
 
 ### Extending the suite
 
-To add a new behavioral domain:
-
-1. Create `node/src/stigmem_conformance/tests/test_<domain>.py`.
-2. Use only the HTTP API — no direct DB access.
-3. Use the `conformance_client` fixture (parametrized over all backends).
-4. Add `pytest.skip(reason="...")` for backend-specific features with a clear justification string.
-5. Update the table above in this doc.
+<ol className="stigmem-steps">
+<li>Create <code>node/src/stigmem_conformance/tests/test_&lt;domain&gt;.py</code>.</li>
+<li>Use only the HTTP API — no direct DB access.</li>
+<li>Use the <code>conformance_client</code> fixture (parametrized over all backends).</li>
+<li>Add <code>pytest.skip(reason="...")</code> for backend-specific features with a clear justification string.</li>
+<li>Update the test-domains table above.</li>
+</ol>
 
 ```python
 # Example: new domain test
@@ -212,12 +366,16 @@ class TestMyFeature:
 
 ### CI matrix
 
-The `conformance-multi-backend` job in `conformance.yml` runs all three backends in parallel. A `conformance-gate` job ensures all three are green before a PR can merge.
-
-All three backends are required to be green. The Postgres backend is feature-flagged (via the `postgres` extras and `STIGMEM_TEST_PG_DSN` env var) and runs against a GitHub-hosted Postgres 16 service.
-
----
+The `conformance-multi-backend` job runs all three backends in parallel. A `conformance-gate` job ensures all three are green before a PR can merge. The Postgres backend is feature-flagged (via the `postgres` extras and `STIGMEM_TEST_PG_DSN` env var) and runs against a GitHub-hosted Postgres 16 service.
 
 ## Spec citations
 
-Every vector group file declares the modular spec it covers. Keep these citations up to date with the canonical spec composition in [`spec/PROTOCOL.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/PROTOCOL.md). When the spec and a vector disagree, the spec is authoritative — update the vector and open a bug report for the reference node.
+Every vector group file declares the modular spec it covers. Keep these citations up to date with the canonical spec composition in [`spec/PROTOCOL.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/PROTOCOL.md).
+
+<div className="stigmem-keypoint">
+
+**When the spec and a vector disagree, the spec is authoritative.**
+
+Update the vector and open a bug report for the reference node.
+
+</div>

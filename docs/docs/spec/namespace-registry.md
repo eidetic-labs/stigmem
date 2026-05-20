@@ -5,26 +5,56 @@ audience: Spec
 description: "Spec-16-Namespace-Registry rendered entry point — reserved relation prefixes and registry rules."
 ---
 
-# Spec-16-Namespace-Registry {#section-9}
+# Spec-16-Namespace-Registry \{#section-9\}
 
-**Status:** Rendered compatibility entry point for [`Spec-16-Namespace-Registry`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/16-namespace-registry.md).
+<p className="stigmem-meta"><span>2 min read</span><span>Spec contributor</span><span>Reserved prefixes</span></p>
 
-Reserved relation prefixes (memory, system, stigmem, garden) and community registry process.
+<div className="stigmem-lead">
 
-**Authoritative source:** [`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
+**What this page is**
+
+Rendered compatibility entry point for
+[`Spec-16-Namespace-Registry`](https://github.com/eidetic-labs/stigmem/blob/main/spec/specs/16-namespace-registry.md).
+Reserved relation prefixes (memory, system, stigmem, garden) and
+community registry process.
+
+</div>
+
+**Authoritative source:**
+[`spec/stigmem-spec-v0.9.0a1.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/stigmem-spec-v0.9.0a1.md)
 
 :::note Section body
-Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
+Each subsection below shows the most recent normative text from the
+spec source. When earlier spec drafts also contained text for the
+same subsection, those revisions are collapsed under a `Revisions`
+accordion beneath it.
 :::
 
-### §9.1 Reserved prefixes (the pre-reset spec additions) {#section-9-1}
+### §9.1 Reserved prefixes (the pre-reset spec additions) \{#section-9-1\}
 
 *Existing entries from the pre-reset spec unchanged.*
 
-| Prefix | Governed by | Purpose |
-|---|---|---|
-| `garden:` | Spec maintainers | Garden metadata facts: `garden:member`, `garden:role`, `garden:scope` |
-| `stigmem:attest:` | Spec maintainers | Reserved for future per-entity attestation-policy facts (e.g. required-source assertions on a scope or garden). the pre-reset spec source attestation is a pure API operation; this prefix is reserved to prevent squatting ahead of fact-based attestation policy extensions. |
+<div className="stigmem-fields">
+
+<div>
+<dt>Prefix</dt>
+<dt><span className="stigmem-fields__type">Governed by</span></dt>
+<dd>Purpose</dd>
+</div>
+
+<div>
+<dt><code>garden:</code></dt>
+<dt><span className="stigmem-fields__type">Spec maintainers</span></dt>
+<dd>Garden metadata facts: <code>garden:member</code>, <code>garden:role</code>, <code>garden:scope</code>.</dd>
+</div>
+
+<div>
+<dt><code>stigmem:attest:</code></dt>
+<dt><span className="stigmem-fields__type">Spec maintainers</span></dt>
+<dd>Reserved for future per-entity attestation-policy facts (e.g. required-source assertions on a scope or garden). Source attestation is a pure API operation; this prefix prevents squatting ahead of fact-based attestation policy extensions.</dd>
+</div>
+
+</div>
 
 <details>
 <summary>Revisions before v1.0: the pre-reset spec-draft</summary>
@@ -42,11 +72,9 @@ Each subsection below shows the most recent normative text from the spec source.
 
 </details>
 
-### §9.2 Community-registered prefixes (the pre-reset spec additions) {#section-9-2}
+### §9.2 Community-registered prefixes (the pre-reset spec additions) \{#section-9-2\}
 
 *(No new community prefixes in the pre-reset spec.)*
-
----
 
 <details>
 <summary>Revisions before v1.0: the pre-reset spec-draft</summary>
@@ -65,8 +93,7 @@ Each subsection below shows the most recent normative text from the spec source.
 
 </details>
 
-### §9.3 Experimental prefix {#section-9-3}
+### §9.3 Experimental prefix \{#section-9-3\}
 
-`x-` prefix is reserved for informal/experimental use. No registration required.
-
----
+`x-` prefix is reserved for informal/experimental use. No
+registration required.

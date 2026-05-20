@@ -7,98 +7,276 @@ audience: Integrator
 
 # Recall
 
-**Audience:** Agent developers building on top of a Stigmem node.
-**Spec reference:** Spec-07-Recall-Pipeline and Spec-X11-Recall-Graph.
+<p className="stigmem-meta"><span>5 min read</span><span>Agent developer</span><span>Spec-07-Recall-Pipeline + Spec-X11-Recall-Graph</span></p>
 
----
+<div className="stigmem-lead">
 
-The `recall` endpoint answers the question: *"What do I most need to know right now?"* It scans the fact store with a hybrid three-stage pipeline (lexical + dense + graph), scores candidates by relevance to your query, and packs as many facts as possible within a token budget — returning a coherent, size-bounded context slice rather than an unbounded list.
+**What this page is**
+
+The `recall` endpoint answers: *"What do I most need to know right
+now?"* It scans the fact store with a hybrid three-stage pipeline
+(lexical + dense + graph), scores candidates by relevance, and packs
+as many facts as possible within a token budget — returning a
+coherent, size-bounded context slice rather than an unbounded list.
+
+</div>
 
 ## `recall` vs `query_facts`
 
-| | `POST /v1/recall` | `GET /v1/facts` |
-|---|---|---|
-| **Use when** | Query is open-ended or semantic ("what do I know about project X?") | You know the exact entity, relation, or predicate |
-| **Input** | Natural-language or keyword query string | Structured filters (entity, relation, scope, date range) |
-| **Output** | Scored, token-budget-bounded, MMR-packed slice | Paginated full list matching filters |
-| **Graph expansion** | Yes — optional depth-1 or depth-2 hop | No |
-| **Memory card** | Included when `entity` param is set | Not included |
-| **Score signal** | BM25 + cosine similarity + graph proximity | N/A |
-| **Token control** | `token_budget` parameter | `limit` / pagination |
+<div className="stigmem-fields">
 
-**Use `query_facts` when you need a complete list of facts for a specific predicate** — for example, fetching all `memory:tag` values for a project before running a report. Use `recall` when you need the most relevant slice of memory to include in an agent's context window.
+<div>
+<dt>Aspect</dt>
+<dt><span className="stigmem-fields__type"><code>POST /v1/recall</code></span></dt>
+<dd><code>GET /v1/facts</code></dd>
+</div>
 
----
+<div>
+<dt>Use when</dt>
+<dt><span className="stigmem-fields__type">open-ended or semantic</span></dt>
+<dd>"What do I know about project X?" vs. you know the exact entity, relation, or predicate.</dd>
+</div>
+
+<div>
+<dt>Input</dt>
+<dt><span className="stigmem-fields__type">natural-language query</span></dt>
+<dd>Structured filters (entity, relation, scope, date range).</dd>
+</div>
+
+<div>
+<dt>Output</dt>
+<dt><span className="stigmem-fields__type">scored, MMR-packed slice</span></dt>
+<dd>Paginated full list matching filters.</dd>
+</div>
+
+<div>
+<dt>Graph expansion</dt>
+<dt><span className="stigmem-fields__type">yes — depth 1 or 2</span></dt>
+<dd>No.</dd>
+</div>
+
+<div>
+<dt>Memory card</dt>
+<dt><span className="stigmem-fields__type">included with <code>entity</code> param</span></dt>
+<dd>Not included.</dd>
+</div>
+
+<div>
+<dt>Score signal</dt>
+<dt><span className="stigmem-fields__type">BM25 + cosine + graph proximity</span></dt>
+<dd>N/A.</dd>
+</div>
+
+<div>
+<dt>Token control</dt>
+<dt><span className="stigmem-fields__type"><code>token_budget</code></span></dt>
+<dd><code>limit</code> / pagination.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Use `query_facts` when you need a complete list for a specific predicate.**
+
+For example, fetching all <code>memory:tag</code> values for a project
+before running a report. Use <code>recall</code> when you need the
+most relevant slice of memory to include in an agent's context
+window.
+
+</div>
 
 ## How the pipeline works
 
-### Stage 1 — Lexical (BM25/FTS5)
+### Stage 1 · Lexical (BM25/FTS5)
 
-The query string is matched against a full-text index of `entity + relation + value` fields using SQLite FTS5 / BM25 scoring. This stage is fast and catches exact-keyword or near-exact matches. Weight: `lexical` (default 0.30).
+The query string is matched against a full-text index of
+`entity + relation + value` fields using SQLite FTS5 / BM25 scoring.
+Fast; catches exact-keyword or near-exact matches. Weight: `lexical`
+(default 0.30).
 
-### Stage 2 — Dense vector (ANN)
+### Stage 2 · Dense vector (ANN)
 
-The query string is embedded with the same model used at write time (default: `nomic-embed-text-v1.5`) and compared to the `vec_facts` index via approximate nearest-neighbour search (sqlite-vec). This stage catches semantic matches that lexical search misses. Weight: `vector` (default 0.50). Requires `STIGMEM_EMBED_ENABLED=true`.
+The query string is embedded with the same model used at write time
+(default: `nomic-embed-text-v1.5`) and compared to the `vec_facts`
+index via approximate nearest-neighbour search (sqlite-vec). Catches
+semantic matches that lexical search misses. Weight: `vector`
+(default 0.50). Requires `STIGMEM_EMBED_ENABLED=true`.
 
-### Stage 3 — Graph expansion
+### Stage 3 · Graph expansion
 
-Seed facts from stages 1–2 are expanded by traversing the `entity_edges` adjacency index. Related entities are pulled in even if they didn't score on the query directly. Controlled by `depth` (1 or 2) and `weights.graph` (default 0.20). Set `depth=0` to skip graph expansion entirely.
+Seed facts from stages 1–2 are expanded by traversing the
+`entity_edges` adjacency index. Related entities are pulled in even
+if they didn't score on the query directly. Controlled by `depth` (1
+or 2) and `weights.graph` (default 0.20). Set `depth=0` to skip
+graph expansion entirely.
 
 ### MMR packing
 
-After scoring, candidates are packed into the response using Maximal Marginal Relevance (MMR). MMR alternates between relevance and diversity: each slot picks the next candidate that is both highly relevant and dissimilar to what is already packed. This prevents five near-duplicate facts about the same entity consuming the whole budget.
+After scoring, candidates are packed into the response using Maximal
+Marginal Relevance (MMR). MMR alternates between relevance and
+diversity: each slot picks the next candidate that is both highly
+relevant and dissimilar to what is already packed. **This prevents
+five near-duplicate facts about the same entity from consuming the
+whole budget.**
 
-Tune with `lambda_mmr`:
-- `lambda_mmr=1.0` — pure greedy relevance (highest scores first, no diversity penalty).
-- `lambda_mmr=0.5` — balanced (equal weight on relevance and diversity).
-- `lambda_mmr=0.0` — pure diversity (avoids all similarity to already-packed items, regardless of score).
+<div className="stigmem-fields">
 
-Default is `0.7` — biased toward relevance with moderate diversity.
+<div>
+<dt><code>lambda_mmr</code></dt>
+<dt><span className="stigmem-fields__type">Tradeoff</span></dt>
+<dd>Behavior</dd>
+</div>
 
----
+<div>
+<dt><code>1.0</code></dt>
+<dt><span className="stigmem-fields__type">pure relevance</span></dt>
+<dd>Highest scores first, no diversity penalty.</dd>
+</div>
+
+<div>
+<dt><code>0.5</code></dt>
+<dt><span className="stigmem-fields__type">balanced</span></dt>
+<dd>Equal weight on relevance and diversity.</dd>
+</div>
+
+<div>
+<dt><code>0.0</code></dt>
+<dt><span className="stigmem-fields__type">pure diversity</span></dt>
+<dd>Avoids all similarity to already-packed items, regardless of score.</dd>
+</div>
+
+<div>
+<dt><code>0.7</code> (default)</dt>
+<dt><span className="stigmem-fields__type">relevance-biased</span></dt>
+<dd>Moderate diversity.</dd>
+</div>
+
+</div>
 
 ## Token budget
 
-The `token_budget` parameter limits the total size of the packed response. The node counts estimated tokens across `entity`, `relation`, and `value` fields for each candidate fact. Field labels and metadata (`id`, `score`, `source_trust`, etc.) are excluded from the count.
+The `token_budget` parameter limits the total size of the packed
+response. The node counts estimated tokens across `entity`,
+`relation`, and `value` fields for each candidate fact. Field labels
+and metadata (`id`, `score`, `source_trust`, etc.) are excluded from
+the count.
 
-When the budget is exhausted the response includes `"truncated": true`. The count of tokens actually used is returned as `token_budget_used`. Facts are always added in MMR order — the highest-priority items appear first in the `results` array even when the response is truncated.
+When the budget is exhausted the response includes
+`"truncated": true`. The count of tokens actually used is returned
+as `token_budget_used`. Facts are always added in MMR order — the
+highest-priority items appear first in the `results` array even when
+the response is truncated.
 
-**Setting a budget.** A typical LLM context window for agent tool responses is 4 000–8 000 tokens. Leave headroom for the agent's instructions and the conversation history. A starting value of `2000`–`4000` works for most agent tasks.
+<div className="stigmem-keypoint">
+
+**Setting a budget.**
+
+A typical LLM context window for agent tool responses is 4,000–8,000
+tokens. Leave headroom for the agent's instructions and the
+conversation history. A starting value of <code>2000</code>–
+<code>4000</code> works for most agent tasks.
+
+</div>
 
 :::tip Check truncated
-If your agent is missing relevant facts, check `truncated` first. If it is `true`, either raise `token_budget` or narrow the query to a specific entity.
+If your agent is missing relevant facts, check `truncated` first. If
+it is `true`, either raise `token_budget` or narrow the query to a
+specific entity.
 :::
-
----
 
 ## Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `query` | string | Yes | — | Natural-language or structured query |
-| `token_budget` | integer | Yes | — | Max response tokens (field labels excluded) |
-| `depth` | integer | No | 1 | Graph expansion hops; 0 disables graph stage |
-| `weights` | object | No | `{lexical:0.30, vector:0.50, graph:0.20}` | Stage weights; must sum to 1.0 ±0.001 |
-| `entity` | string | No | — | Entity URI; triggers entity-centric (card-first) recall |
-| `relation` | string | No | — | Relation filter; skips memory card lookup |
-| `scope` | string | No | global | Garden or global scope |
-| `lambda_mmr` | float | No | 0.7 | MMR diversity tradeoff (0–1) |
-| `min_confidence` | float | No | 0.1 | Minimum effective confidence for inclusion |
-| `force_refresh` | boolean | No | false | Block on synchronous memory card refresh |
-| `include_contradicted` | boolean | No | false | Include facts with unresolved contradictions |
-| `legacy_format` | query boolean | No | false | Temporary one-minor-version compatibility switch. When `true`, omits `content` and `instructions` from the response while preserving the legacy `facts` array. |
+<div className="stigmem-fields">
 
----
+<div>
+<dt>Parameter</dt>
+<dt><span className="stigmem-fields__type">Type · Default</span></dt>
+<dd>Description</dd>
+</div>
+
+<div>
+<dt><code>query</code></dt>
+<dt><span className="stigmem-fields__type">string · required</span></dt>
+<dd>Natural-language or structured query.</dd>
+</div>
+
+<div>
+<dt><code>token_budget</code></dt>
+<dt><span className="stigmem-fields__type">integer · required</span></dt>
+<dd>Max response tokens (field labels excluded).</dd>
+</div>
+
+<div>
+<dt><code>depth</code></dt>
+<dt><span className="stigmem-fields__type">integer · 1</span></dt>
+<dd>Graph expansion hops; 0 disables graph stage.</dd>
+</div>
+
+<div>
+<dt><code>weights</code></dt>
+<dt><span className="stigmem-fields__type">object · <code>{`{lexical:0.30, vector:0.50, graph:0.20}`}</code></span></dt>
+<dd>Stage weights; must sum to 1.0 ±0.001.</dd>
+</div>
+
+<div>
+<dt><code>entity</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Entity URI; triggers entity-centric (card-first) recall.</dd>
+</div>
+
+<div>
+<dt><code>relation</code></dt>
+<dt><span className="stigmem-fields__type">string</span></dt>
+<dd>Relation filter; skips memory card lookup.</dd>
+</div>
+
+<div>
+<dt><code>scope</code></dt>
+<dt><span className="stigmem-fields__type">string · global</span></dt>
+<dd>Garden or global scope.</dd>
+</div>
+
+<div>
+<dt><code>lambda_mmr</code></dt>
+<dt><span className="stigmem-fields__type">float · 0.7</span></dt>
+<dd>MMR diversity tradeoff (0–1).</dd>
+</div>
+
+<div>
+<dt><code>min_confidence</code></dt>
+<dt><span className="stigmem-fields__type">float · 0.1</span></dt>
+<dd>Minimum effective confidence for inclusion.</dd>
+</div>
+
+<div>
+<dt><code>force_refresh</code></dt>
+<dt><span className="stigmem-fields__type">bool · false</span></dt>
+<dd>Block on synchronous memory card refresh.</dd>
+</div>
+
+<div>
+<dt><code>include_contradicted</code></dt>
+<dt><span className="stigmem-fields__type">bool · false</span></dt>
+<dd>Include facts with unresolved contradictions.</dd>
+</div>
+
+<div>
+<dt><code>legacy_format</code></dt>
+<dt><span className="stigmem-fields__type">query bool · false</span></dt>
+<dd>Temporary one-minor-version compatibility switch. Omits <code>content</code> and <code>instructions</code> while preserving the legacy <code>facts</code> array.</dd>
+</div>
+
+</div>
 
 ## Response channels
 
-By default, recall returns the legacy `facts` array plus channel-separated
-`content` and `instructions` arrays. New adapters should consume `content` and
-`instructions` separately and treat recalled content as untrusted data. Older
-clients can call `POST /v1/recall?legacy_format=true` during the compatibility
-window to receive the pre-channel response shape.
-
----
+By default, recall returns the legacy `facts` array plus
+channel-separated `content` and `instructions` arrays. New adapters
+should consume `content` and `instructions` separately and treat
+recalled content as untrusted data. Older clients can call
+`POST /v1/recall?legacy_format=true` during the compatibility window
+to receive the pre-channel response shape.
 
 ## Examples
 
@@ -116,7 +294,9 @@ curl -s -X POST http://localhost:8765/v1/recall \
 
 ### Entity-centric query (memory card first)
 
-When `entity` is set, the response includes a `memory_card` block — a pre-synthesized entity summary — before the ranked fact list. Use this when the agent is reasoning about a specific entity.
+When `entity` is set, the response includes a `memory_card` block —
+a pre-synthesized entity summary — before the ranked fact list. Use
+this when the agent is reasoning about a specific entity.
 
 ```bash
 curl -s -X POST http://localhost:8765/v1/recall \
@@ -150,20 +330,49 @@ if result.truncated:
     print(f"Warning: response truncated at {result.token_budget_used} tokens")
 ```
 
----
-
 ## Weight tuning
 
-The three stage weights control how much each signal contributes to a fact's final score. Adjust when the defaults produce poor results for your use case.
+The three stage weights control how much each signal contributes to
+a fact's final score. Adjust when the defaults produce poor results.
 
-| Scenario | Recommended weights |
-|---|---|
-| Exact-keyword queries ("what is task X?") | `{lexical: 0.60, vector: 0.20, graph: 0.20}` |
-| Semantic / conceptual queries ("what do I know about auth?") | `{lexical: 0.10, vector: 0.70, graph: 0.20}` |
-| Graph-heavy: exploring entity relationships | `{lexical: 0.20, vector: 0.30, graph: 0.50}` |
-| Embeddings disabled (`STIGMEM_EMBED_ENABLED=false`) | `{lexical: 0.70, vector: 0.00, graph: 0.30}` |
+<div className="stigmem-fields">
 
-When embeddings are disabled the vector stage is skipped and its weight redistributed proportionally at recall time — but passing explicit weights that sum to 1.0 without a `vector` component is cleaner.
+<div>
+<dt>Scenario</dt>
+<dt><span className="stigmem-fields__type">Recommended weights</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt>Exact-keyword queries</dt>
+<dt><span className="stigmem-fields__type"><code>{`{lexical: 0.60, vector: 0.20, graph: 0.20}`}</code></span></dt>
+<dd>"What is task X?"</dd>
+</div>
+
+<div>
+<dt>Semantic / conceptual queries</dt>
+<dt><span className="stigmem-fields__type"><code>{`{lexical: 0.10, vector: 0.70, graph: 0.20}`}</code></span></dt>
+<dd>"What do I know about auth?"</dd>
+</div>
+
+<div>
+<dt>Graph-heavy: exploring relationships</dt>
+<dt><span className="stigmem-fields__type"><code>{`{lexical: 0.20, vector: 0.30, graph: 0.50}`}</code></span></dt>
+<dd>Entity-centric exploration.</dd>
+</div>
+
+<div>
+<dt>Embeddings disabled</dt>
+<dt><span className="stigmem-fields__type"><code>{`{lexical: 0.70, vector: 0.00, graph: 0.30}`}</code></span></dt>
+<dd><code>STIGMEM_EMBED_ENABLED=false</code>.</dd>
+</div>
+
+</div>
+
+When embeddings are disabled the vector stage is skipped and its
+weight redistributed proportionally at recall time — but passing
+explicit weights that sum to 1.0 without a `vector` component is
+cleaner.
 
 ```bash
 curl -s -X POST http://localhost:8765/v1/recall \
@@ -176,33 +385,63 @@ curl -s -X POST http://localhost:8765/v1/recall \
   }'
 ```
 
----
+## Memory cards and recall fast-path
 
-## Memory cards and recall fast-path (Spec-X11-Recall-Graph)
+Memory cards are per-entity, per-scope pre-aggregated summaries
+stored in the `memory_cards` table. They accelerate recall by
+short-circuiting raw-fact re-ranking for entities that have a fresh,
+reliable card.
 
-Memory cards are per-entity, per-scope pre-aggregated summaries stored in the `memory_cards` table. They accelerate recall by short-circuiting raw-fact re-ranking for entities that have a fresh, reliable card.
+<div className="stigmem-grid">
 
-**Stale-on-write.** Every `POST /v1/facts` call marks the affected entity's card stale immediately after the fact is persisted. This is a non-blocking background operation that never delays the write path.
+<div><h4>Stale-on-write</h4><p>Every <code>POST /v1/facts</code> call marks the affected entity's card stale immediately after the fact is persisted. Non-blocking background operation that never delays the write path.</p></div>
+<div><h4>Refresh-on-read (fast-path)</h4><p>During recall, the node calls <code>get_fresh_card</code> for each candidate entity. When a card passes all three conditions — <code>is_stale = false</code>, <code>has_contradictions = false</code>, and <code>avg_confidence ≥ 0.5</code> — the entity's raw facts are replaced by a single synthetic <code>ScoredFact</code> carrying the card summary. This fact appears with <code>from_card: true</code> and the relation <code>stigmem:card:summary</code>.</p></div>
+<div><h4>Divergence policy</h4><p>When any condition is false (including a transient refresh error), the entity falls through to full raw-fact re-ranking. The fallback is transparent to callers: the only signal is the absence of <code>from_card: true</code> on those facts.</p></div>
 
-**Refresh-on-read (fast-path).** During `POST /v1/recall`, the node calls `get_fresh_card` for each candidate entity. When a card passes all three conditions — `is_stale = false`, `has_contradictions = false`, and `avg_confidence ≥ 0.5` — the entity's raw facts are replaced in the scoring pipeline by a single synthetic `ScoredFact` carrying the card summary as its value. This fact appears in the response with `from_card: true` and the relation `stigmem:card:summary`.
+</div>
 
-**Divergence policy.** When any condition is false (including a transient refresh error), the entity falls through to full raw-fact re-ranking. The fallback is transparent to callers: the only signal is the absence of `from_card: true` on those facts. This policy ensures that entities with unresolved contradictions or outdated confidence scores never have their raw evidence hidden behind a potentially unreliable summary.
-
-**Fetching or forcing a card refresh.** Use `GET /v1/cards/{entity_uri}` to inspect a card directly or force a server-side refresh with `?refresh=true`. See the [Memory Cards guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph) for the full lifecycle, schema, and Python SDK usage.
-
----
+**Fetching or forcing a card refresh.** Use
+`GET /v1/cards/{entity_uri}` to inspect a card directly or force a
+server-side refresh with `?refresh=true`. See the
+[Memory Cards guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph)
+for the full lifecycle.
 
 ## Security and access control
 
-- All recall results are filtered by the caller's garden ACL (Spec-02-Scopes-and-ACL) at query time — callers never see facts from gardens they don't have read access to.
-- The content sanitizer (ADR-003 defense-in-depth sanitizer model) strips known prompt-injection sentinels and bidirectional-override characters from `value` fields before they appear in the response.
-- `source_trust` on each result reflects the identity strength of the writing agent (Spec-05-Federation-Trust). Effective confidence = `confidence × source_trust`. Facts below `min_confidence` are excluded.
+<div className="stigmem-grid">
 
----
+<div><h4>Garden ACL filtering</h4><p>All recall results are filtered by the caller's garden ACL (Spec-02) at query time — callers never see facts from gardens they don't have read access to.</p></div>
+<div><h4>Content sanitizer</h4><p>The recall-time sanitizer (ADR-003) strips known prompt-injection sentinels and bidirectional-override characters from <code>value</code> fields.</p></div>
+<div><h4>Source-trust multiplication</h4><p><code>source_trust</code> on each result reflects the identity strength of the writing agent. Effective confidence = <code>confidence × source_trust</code>. Facts below <code>min_confidence</code> are excluded.</p></div>
+
+</div>
 
 ## Related guides
 
-- [Querying facts](../facts/querying-facts) — structured, predicate-based fact queries
-- [Embeddings](https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph) — model selection, reindexing, and mixed-model safety
-- [Memory Gardens](https://github.com/eidetic-labs/stigmem/tree/main/experimental/memory-garden-acl) — garden ACL and recall scoping
-- [Subscriptions](https://github.com/eidetic-labs/stigmem/tree/main/experimental/subscriptions) — push notifications when watched facts change
+<div className="stigmem-next">
+
+<a href="../facts/querying-facts">
+<strong>Concepts</strong>
+<span>Querying facts</span>
+<small>Structured, predicate-based fact queries.</small>
+</a>
+
+<a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/recall-graph">
+<strong>Experimental</strong>
+<span>Embeddings</span>
+<small>Model selection, reindexing, and mixed-model safety.</small>
+</a>
+
+<a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/memory-garden-acl">
+<strong>Experimental</strong>
+<span>Memory Gardens</span>
+<small>Garden ACL and recall scoping.</small>
+</a>
+
+<a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/subscriptions">
+<strong>Experimental</strong>
+<span>Subscriptions</span>
+<small>Push notifications when watched facts change.</small>
+</a>
+
+</div>

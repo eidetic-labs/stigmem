@@ -12,28 +12,43 @@ depends_on:
 
 # Spec-04-Manifests
 
-`Spec-04-Manifests` defines organization and node manifests: the signed
-statement of entity authority, public signing keys, key identifiers, rotation
-events, validity bounds, and transparency-log evidence used by federation trust.
+<p className="stigmem-meta"><span>3 min read</span><span>Spec contributor · Node operator</span><span>Draft · v0.9.0aN</span></p>
 
-## Extraction Status
+<div className="stigmem-lead">
 
-This file contains the ADR-010 prose extraction for manifest publication and
-verification. It intentionally does **not** define peer admission policy,
-replication authorization, or capability-token grants; those belong in
+**What this spec defines**
+
+Organization and node manifests: the signed statement of entity
+authority, public signing keys, key identifiers, rotation events,
+validity bounds, and transparency-log evidence used by federation
+trust.
+
+</div>
+
+## Extraction status
+
+This file contains the ADR-010 prose extraction for manifest
+publication and verification. It intentionally does **not** define
+peer admission policy, replication authorization, or
+capability-token grants; those belong in
 `Spec-05-Federation-Trust` and `Spec-06-Capability-Tokens`.
 
-## Manifest Purpose
+## Manifest purpose
 
-A manifest lets a peer verify that a node or organization is authoritative for
-the entity URIs it claims and exposes the public key material needed to verify
-signatures issued by that authority.
+<div className="stigmem-keypoint">
 
-Manifests replace ad hoc key exchange. A peer can resolve a manifest during the
-federation handshake and use it to verify the sender's signatures and declared
-entity list.
+**A manifest is a signed statement of entity authority.**
 
-## Manifest Shape
+It lets a peer verify that a node or organization is authoritative
+for the entity URIs it claims and exposes the public key material
+needed to verify signatures issued by that authority. Manifests
+replace ad hoc key exchange — peers resolve a manifest during the
+federation handshake and use it to verify the sender's signatures
+and declared entity list.
+
+</div>
+
+## Manifest shape
 
 ```text
 Manifest {
@@ -57,75 +72,114 @@ RotationEvent {
 }
 ```
 
-The `entity_uri` is the root entity URI for the node or organization. The
-`entities` list names the specific entity URIs this manifest is authoritative
-for. Implementations MUST NOT treat an omitted entity as covered by implication
-unless another accepted spec explicitly defines a delegation rule.
+<div className="stigmem-fields">
 
-## Canonical Encoding
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Role</span></dt>
+<dd>Meaning</dd>
+</div>
 
-The manifest signature is computed over a canonical JSON representation of the
-manifest with the `signature` field omitted. Implementations MUST use a stable
-field order and byte representation so that peers can verify signatures
-independently.
+<div>
+<dt><code>entity_uri</code></dt>
+<dt><span className="stigmem-fields__type">root authority</span></dt>
+<dd>Root entity URI for the node or organization.</dd>
+</div>
 
-The `key_id` SHOULD be a stable fingerprint of the active public key. It is used
-for lookup, revocation, and audit evidence; it is not a substitute for signature
-verification.
+<div>
+<dt><code>entities</code></dt>
+<dt><span className="stigmem-fields__type">explicit list</span></dt>
+<dd>The specific entity URIs this manifest is authoritative for. Implementations MUST NOT treat an omitted entity as covered by implication unless another accepted spec explicitly defines a delegation rule.</dd>
+</div>
 
-## Publication
+<div>
+<dt><code>key_id</code></dt>
+<dt><span className="stigmem-fields__type">fingerprint</span></dt>
+<dd>SHOULD be a stable fingerprint of the active public key. Used for lookup, revocation, and audit evidence; not a substitute for signature verification.</dd>
+</div>
 
-Manifest publication uses the HTTP route owned by `Spec-03-HTTP-API`:
+<div>
+<dt><code>rotation_events</code></dt>
+<dt><span className="stigmem-fields__type">key history</span></dt>
+<dd>Lets peers verify changes in signing keys over time.</dd>
+</div>
 
-```http
-PUT /v1/federation/manifest
-```
+</div>
 
-The node MUST verify the uploaded manifest signature before persisting it.
-Publication by non-admin callers MUST be rejected.
+## Canonical encoding
 
-## Resolution
+The manifest signature is computed over a canonical JSON
+representation of the manifest with the `signature` field omitted.
+Implementations MUST use a stable field order and byte representation
+so that peers can verify signatures independently.
 
-Manifest resolution uses:
+## Publication and resolution
 
-```http
-GET /v1/federation/manifest/{entity_uri_encoded}
-```
+<div className="stigmem-fields">
 
-The response returns the full manifest object when the node has a valid manifest
-covering the requested entity. Missing manifests return `404 Not Found`.
+<div>
+<dt>Operation</dt>
+<dt><span className="stigmem-fields__type">Route</span></dt>
+<dd>Authorization</dd>
+</div>
 
-## Transparency-Log Evidence
+<div>
+<dt>Publish</dt>
+<dt><span className="stigmem-fields__type"><code>PUT /v1/federation/manifest</code></span></dt>
+<dd>The node MUST verify the uploaded manifest signature before persisting it. Publication by non-admin callers MUST be rejected.</dd>
+</div>
 
-When a transparency-log backend is configured, the node SHOULD publish manifest
-events to the log and retain inclusion evidence. Transparency-log evidence lets
-peers audit manifest history independently of the runtime node.
+<div>
+<dt>Resolve</dt>
+<dt><span className="stigmem-fields__type"><code>GET /v1/federation/manifest/&#123;entity_uri_encoded&#125;</code></span></dt>
+<dd>Returns the full manifest object when the node has a valid manifest covering the requested entity. Missing manifests return <code>404 Not Found</code>.</dd>
+</div>
 
-This spec depends on transparency-log evidence for auditability, but does not
-require a specific production log service. The trust decision for which log to
-use belongs to deployment policy and federation-trust configuration.
+</div>
 
-## Key Rotation
+Route shape is owned by `Spec-03-HTTP-API`.
 
-Manifests carry `rotation_events` so peers can verify changes in signing keys
-over time. A rotation event MUST bind the old key id, new key id, new public key,
-rotation time, and signature. Peers MUST verify the rotation chain before
-accepting a new active key for an existing authority.
+## Transparency-log evidence
 
-Key rotation and peer trust windows are interpreted by `Spec-05-Federation-Trust`.
+When a transparency-log backend is configured, the node SHOULD
+publish manifest events to the log and retain inclusion evidence.
+Transparency-log evidence lets peers audit manifest history
+independently of the runtime node.
+
+This spec depends on transparency-log evidence for auditability, but
+does not require a specific production log service. The trust
+decision for which log to use belongs to deployment policy and
+federation-trust configuration.
+
+## Key rotation
+
+<div className="stigmem-keypoint">
+
+**A rotation event MUST bind the old key id, new key id, new public key, rotation time, and signature.**
+
+Peers MUST verify the rotation chain before accepting a new active
+key for an existing authority. Key rotation and peer trust windows
+are interpreted by `Spec-05-Federation-Trust`.
+
+</div>
 
 ## Expiry
 
-Peers MUST reject expired manifests. Nodes SHOULD refresh manifests before
-`expires_at` to avoid federation interruptions. A manifest with an expiry far in
-the future can weaken rotation discipline, so deployments SHOULD choose bounded
-validity windows appropriate to their operator model.
+Peers MUST reject expired manifests. Nodes SHOULD refresh manifests
+before `expires_at` to avoid federation interruptions. A manifest
+with an expiry far in the future can weaken rotation discipline, so
+deployments SHOULD choose bounded validity windows appropriate to
+their operator model.
 
-## Out Of Scope
+## Out of scope
 
 This spec does not define:
 
-- Peer admission decisions after manifest verification.
-- Capability-token shape, signing, or revocation.
-- Replication scope authorization.
-- Production Sigstore/Rekor deployment requirements.
+<div className="stigmem-grid">
+
+<div><h4>Peer admission decisions</h4><p>After manifest verification.</p></div>
+<div><h4>Capability-token shape</h4><p>Signing or revocation.</p></div>
+<div><h4>Replication scope authorization</h4></div>
+<div><h4>Production Sigstore/Rekor</h4><p>Deployment requirements.</p></div>
+
+</div>

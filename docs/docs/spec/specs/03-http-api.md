@@ -13,34 +13,50 @@ depends_on:
 
 # Spec-03-HTTP-API
 
-`Spec-03-HTTP-API` defines the JSON-over-HTTP contract for the supported
-reference-node surface. It owns route shape, status-code families, pagination
-shape, and endpoint grouping. Domain semantics for each route remain owned by
+<p className="stigmem-meta"><span>5 min read</span><span>Spec contributor · SDK author</span><span>Draft · v0.9.0aN</span></p>
+
+<div className="stigmem-lead">
+
+**What this spec defines**
+
+The JSON-over-HTTP contract for the supported reference-node
+surface: route shape, status-code families, pagination shape, and
+endpoint grouping. Domain semantics for each route remain owned by
 their component specs.
 
-## Extraction Status
+</div>
 
-This file contains the ADR-010 prose extraction for the supported HTTP API
-surface. It intentionally keeps detailed semantics in the owning specs:
-fact-model rules in `Spec-01-Fact-Model`, scope and garden ACL in
-`Spec-02-Scopes-and-ACL`, federation trust in `Spec-05-Federation-Trust`,
-capability tokens in `Spec-06-Capability-Tokens`, and quarantine moderation in
+## Extraction status
+
+This file contains the ADR-010 prose extraction for the supported
+HTTP API surface. It intentionally keeps detailed semantics in the
+owning specs: fact-model rules in `Spec-01-Fact-Model`, scope and
+garden ACL in `Spec-02-Scopes-and-ACL`, federation trust in
+`Spec-05-Federation-Trust`, capability tokens in
+`Spec-06-Capability-Tokens`, and quarantine moderation in
 `Spec-08-Quarantine-Garden`.
 
-Legacy version labels from archived sources are normalized to the current
-`v0.9.0a1` protocol line. Historical wording remains available in
-`spec/archive/evolution/` and `spec/EVOLUTION.md`.
+Legacy version labels from archived sources are normalized to the
+current `v0.9.0a1` protocol line.
 
-## API Style
+## API style
 
-All supported operations are JSON-over-HTTP. Clients do not need a Stigmem SDK
-to participate; any HTTP client that can send JSON bodies and bearer tokens can
-use the API.
+<div className="stigmem-keypoint">
 
-Responses MUST use JSON unless the endpoint is explicitly documented as empty
-(`204 No Content`). Error responses SHOULD include a stable machine-readable
-detail string or code. Endpoints that return collections SHOULD use cursor
-pagination when the result set can grow without a small fixed bound.
+**All supported operations are JSON-over-HTTP.**
+
+Clients do not need a Stigmem SDK to participate; any HTTP client
+that can send JSON bodies and bearer tokens can use the API.
+
+</div>
+
+<div className="stigmem-grid">
+
+<div><h4>JSON-only responses</h4><p>Unless the endpoint is explicitly documented as <code>204 No Content</code>.</p></div>
+<div><h4>Stable error codes</h4><p>Error responses SHOULD include a stable machine-readable detail string or code.</p></div>
+<div><h4>Cursor pagination</h4><p>Endpoints that return collections SHOULD use cursor pagination when the result set can grow without a small fixed bound.</p></div>
+
+</div>
 
 ## Authentication
 
@@ -50,9 +66,10 @@ Authenticated routes use:
 Authorization: Bearer <token-or-api-key>
 ```
 
-This spec defines the placement of credentials only. API-key identity,
-capability-token verification, peer-token validation, and admin/federate
-permission semantics are owned by their component specs.
+This spec defines the placement of credentials only. API-key
+identity, capability-token verification, peer-token validation, and
+admin/federate permission semantics are owned by their component
+specs.
 
 ## Discovery
 
@@ -60,68 +77,65 @@ permission semantics are owned by their component specs.
 GET /.well-known/stigmem
 ```
 
-The discovery document advertises the node id, node URL, authentication mode,
-supported namespaces, protocol/spec pointer, and any advertised federation
-endpoints. Federation-enabled nodes MUST include the public federation key and
-federation endpoint paths needed for peer discovery.
+The discovery document advertises the node id, node URL,
+authentication mode, supported namespaces, protocol/spec pointer,
+and any advertised federation endpoints. Federation-enabled nodes
+MUST include the public federation key and federation endpoint
+paths needed for peer discovery.
 
-## Fact Operations
+## Fact operations
 
-### Assert Fact
+<div className="stigmem-fields">
 
-```http
-POST /v1/facts
-```
+<div>
+<dt>Operation</dt>
+<dt><span className="stigmem-fields__type">Route</span></dt>
+<dd>Behavior</dd>
+</div>
 
-Asserts one immutable fact. The request body carries the fact tuple fields owned
-by `Spec-01-Fact-Model`; the node stamps server-owned fields such as `id`,
-`timestamp`, and `hlc`.
+<div>
+<dt>Assert fact</dt>
+<dt><span className="stigmem-fields__type"><code>POST /v1/facts</code></span></dt>
+<dd>Asserts one immutable fact. The request body carries the fact tuple fields owned by <code>Spec-01-Fact-Model</code>; the node stamps server-owned fields such as <code>id</code>, <code>timestamp</code>, and <code>hlc</code>. Success: <code>201 Created</code>.</dd>
+</div>
 
-Success: `201 Created` with the created fact record.
+<div>
+<dt>Query facts</dt>
+<dt><span className="stigmem-fields__type"><code>GET /v1/facts</code></span></dt>
+<dd>Queries by <code>entity</code>, <code>relation</code>, <code>source</code>, <code>scope</code>, <code>min_confidence</code>, expiry/contradiction inclusion flags, cursor, and limit. Query-time normalization and ACL filtering must occur before results are returned. Success: <code>200 OK</code> with <code>facts</code>, <code>total</code>, and <code>cursor</code> fields.</dd>
+</div>
 
-### Query Facts
+<div>
+<dt>Get fact</dt>
+<dt><span className="stigmem-fields__type"><code>GET /v1/facts/&#123;id&#125;</code></span></dt>
+<dd>Returns a single fact by id when the caller can read it. Garden-tagged facts must pass garden ACL. <code>200 OK</code>; missing → <code>404</code>; unauthorized garden access → <code>403</code>.</dd>
+</div>
 
-```http
-GET /v1/facts
-```
+<div>
+<dt>Retract</dt>
+<dt><span className="stigmem-fields__type">via assert</span></dt>
+<dd>Assert a new fact for the same <code>(entity, relation, scope)</code> with <code>confidence=0.0</code>. There is no destructive delete route for facts.</dd>
+</div>
 
-Queries facts by fact dimensions such as `entity`, `relation`, `source`,
-`scope`, `min_confidence`, expiry/contradiction inclusion flags, cursor, and
-limit. Query-time normalization and ACL filtering must occur before results are
-returned.
+</div>
 
-Success: `200 OK` with `facts`, `total`, and `cursor` fields.
-
-### Get Fact
-
-```http
-GET /v1/facts/{id}
-```
-
-Returns a single fact by id when the caller can read it. Garden-tagged facts
-must pass garden ACL before being returned.
-
-Success: `200 OK`; missing facts return `404 Not Found`; unauthorized garden
-access returns `403 Forbidden`.
-
-### Retract Fact
-
-Retraction uses the normal fact assertion route by asserting a new fact for the
-same `(entity, relation, scope)` with `confidence=0.0`. There is no destructive
-delete route for facts.
-
-## Conflict Operations
+## Conflict operations
 
 ```http
 GET /v1/conflicts
 POST /v1/conflicts/{conflict_id}/resolve
 ```
 
-Conflict routes expose contradictions detected between facts and allow an
-authorized caller to record a resolution. Resolutions are additive: original
-facts remain immutable, and the resolution itself is recorded as fact data.
+<div className="stigmem-keypoint">
 
-## Federation Routes
+**Resolutions are additive.**
+
+Original facts remain immutable, and the resolution itself is
+recorded as fact data.
+
+</div>
+
+## Federation routes
 
 ```http
 POST /v1/federation/peers
@@ -134,15 +148,16 @@ POST /v1/federation/capability-tokens
 POST /v1/federation/capability-tokens/{token_id}/revoke
 ```
 
-The HTTP API owns these route shapes. Federation peer declaration semantics,
-manifest verification, replication scope checks, capability-token signing, and
-revocation behavior are owned by `Spec-04`, `Spec-05`, and `Spec-06`.
+The HTTP API owns these route shapes. Federation peer declaration
+semantics, manifest verification, replication scope checks,
+capability-token signing, and revocation behavior are owned by
+`Spec-04`, `Spec-05`, and `Spec-06`.
 
-Push replication is optional. Nodes that do not support push SHOULD return
-`405 Method Not Allowed` for the push route or omit the push route from
-discovery.
+Push replication is optional. Nodes that do not support push SHOULD
+return `405 Method Not Allowed` for the push route or omit the push
+route from discovery.
 
-## Garden Routes
+## Garden routes
 
 ```http
 POST /v1/gardens
@@ -160,34 +175,87 @@ POST /v1/gardens/{quarantine_garden_id}/reject
 Basic garden CRUD and membership routes serve `Spec-02-Scopes-and-ACL`.
 Quarantine promote/reject routes serve `Spec-08-Quarantine-Garden`.
 
-## Lint And Higher-Order Operations
+## Lint and higher-order operations
 
 ```http
 POST /v1/lint
 POST /v1/synthesis
 ```
 
-The lint route is part of the supported HTTP surface; lint behavior, checks,
-filters, findings, and async job semantics are owned by
-`Spec-20-Lint-Semantics`. Synthesis remains deferred/experimental per the
-experimental synthesis spec and SHOULD NOT be treated as stable solely because
-the route appeared in archived source material.
+The lint route is part of the supported HTTP surface; lint behavior,
+checks, filters, findings, and async job semantics are owned by
+`Spec-20-Lint-Semantics`. Synthesis remains deferred/experimental
+per the experimental synthesis spec and SHOULD NOT be treated as
+stable solely because the route appeared in archived source material.
 
-## Route Ownership
+## Route ownership
 
-| Route family | HTTP shape owner | Semantic owner |
-|---|---|---|
-| Discovery | `Spec-03-HTTP-API` | Owning advertised component |
-| Fact assert/query/get | `Spec-03-HTTP-API` | `Spec-01-Fact-Model`, `Spec-02-Scopes-and-ACL` |
-| Conflicts | `Spec-03-HTTP-API` | Fact semantics component assignment TBD |
-| Federation peers/facts | `Spec-03-HTTP-API` | `Spec-05-Federation-Trust` |
-| Manifests | `Spec-03-HTTP-API` | `Spec-04-Manifests` |
-| Capability tokens | `Spec-03-HTTP-API` | `Spec-06-Capability-Tokens` |
-| Gardens | `Spec-03-HTTP-API` | `Spec-02-Scopes-and-ACL` |
-| Quarantine moderation | `Spec-03-HTTP-API` | `Spec-08-Quarantine-Garden` |
-| Lint | `Spec-03-HTTP-API` | `Spec-20-Lint-Semantics` |
+<div className="stigmem-fields">
 
-## Out Of Scope
+<div>
+<dt>Route family</dt>
+<dt><span className="stigmem-fields__type">HTTP shape</span></dt>
+<dd>Semantic owner</dd>
+</div>
 
-This spec does not define the internal database schema, SDK behavior, UI
-behavior, plugin hook contracts, or component-specific validation rules.
+<div>
+<dt>Discovery</dt>
+<dt><span className="stigmem-fields__type">Spec-03</span></dt>
+<dd>Owning advertised component.</dd>
+</div>
+
+<div>
+<dt>Fact assert/query/get</dt>
+<dt><span className="stigmem-fields__type">Spec-03</span></dt>
+<dd><code>Spec-01-Fact-Model</code>, <code>Spec-02-Scopes-and-ACL</code>.</dd>
+</div>
+
+<div>
+<dt>Conflicts</dt>
+<dt><span className="stigmem-fields__type">Spec-03</span></dt>
+<dd>Fact semantics component assignment TBD.</dd>
+</div>
+
+<div>
+<dt>Federation peers/facts</dt>
+<dt><span className="stigmem-fields__type">Spec-03</span></dt>
+<dd><code>Spec-05-Federation-Trust</code>.</dd>
+</div>
+
+<div>
+<dt>Manifests</dt>
+<dt><span className="stigmem-fields__type">Spec-03</span></dt>
+<dd><code>Spec-04-Manifests</code>.</dd>
+</div>
+
+<div>
+<dt>Capability tokens</dt>
+<dt><span className="stigmem-fields__type">Spec-03</span></dt>
+<dd><code>Spec-06-Capability-Tokens</code>.</dd>
+</div>
+
+<div>
+<dt>Gardens</dt>
+<dt><span className="stigmem-fields__type">Spec-03</span></dt>
+<dd><code>Spec-02-Scopes-and-ACL</code>.</dd>
+</div>
+
+<div>
+<dt>Quarantine moderation</dt>
+<dt><span className="stigmem-fields__type">Spec-03</span></dt>
+<dd><code>Spec-08-Quarantine-Garden</code>.</dd>
+</div>
+
+<div>
+<dt>Lint</dt>
+<dt><span className="stigmem-fields__type">Spec-03</span></dt>
+<dd><code>Spec-20-Lint-Semantics</code>.</dd>
+</div>
+
+</div>
+
+## Out of scope
+
+This spec does not define the internal database schema, SDK
+behavior, UI behavior, plugin hook contracts, or component-specific
+validation rules.

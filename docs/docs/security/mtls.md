@@ -7,66 +7,133 @@ audience: Operator
 
 # mTLS Federation Transport
 
-Stigmem nodes use **mutual TLS (mTLS)** for all federation peer-to-peer traffic — replication pulls, push wakes, and capability-token exchanges.  This is a normative requirement of Spec-10-Hardening for any deployment that connects more than one node.
+<p className="stigmem-meta"><span>5 min read</span><span>Operator</span><span>Spec-10-Hardening</span></p>
 
-> **Explicit local/dev/test opt-out.** Federation startup requires mTLS by
-> default. Leave `STIGMEM_TLS_CERT_PATH` / `STIGMEM_TLS_KEY_PATH` unset only for
-> local/dev/test federation and only with `STIGMEM_FEDERATION_INSECURE=1`. The
-> node logs a security warning while that flag is active.
+<div className="stigmem-lead">
 
----
+**What this page is**
+
+Stigmem nodes use **mutual TLS (mTLS)** for all federation
+peer-to-peer traffic — replication pulls, push wakes, and
+capability-token exchanges. This is a normative requirement of
+Spec-10-Hardening for any deployment that connects more than one node.
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**Explicit local/dev/test opt-out.**
+
+Federation startup requires mTLS by default. Leave
+<code>STIGMEM_TLS_CERT_PATH</code> / <code>STIGMEM_TLS_KEY_PATH</code>
+unset only for local/dev/test federation and only with
+<code>STIGMEM_FEDERATION_INSECURE=1</code>. The node logs a security
+warning while that flag is active.
+
+</div>
 
 ## How it works
 
 When `STIGMEM_TLS_CERT_PATH` and `STIGMEM_TLS_KEY_PATH` are set:
 
-1. **Server**: Uvicorn starts with TLS 1.3 and requires a client certificate from every peer (`ssl.CERT_REQUIRED`).  Plaintext TCP connections to the federation port are rejected at the TLS handshake — no HTTP response is sent.
-2. **Client (pull loop)**: The pull-replication background task creates an `httpx.AsyncClient` that presents the node's cert and verifies the peer's cert against `STIGMEM_TLS_CA_BUNDLE`.
-3. **Cert watcher**: A background task polls `STIGMEM_TLS_CERT_PATH` every 5 seconds.  When the mtime changes, it calls `ssl.SSLContext.load_cert_chain()` on the live context — in-flight connections are unaffected; new handshakes pick up the new cert immediately.
-4. **SIGHUP**: Sending `SIGHUP` to the node process triggers an immediate cert reload (same mechanism as the file watcher).
+<ol className="stigmem-steps">
+<li><strong>Server.</strong> Uvicorn starts with TLS 1.3 and requires a client certificate from every peer (<code>ssl.CERT_REQUIRED</code>). Plaintext TCP connections to the federation port are rejected at the TLS handshake — no HTTP response is sent.</li>
+<li><strong>Client (pull loop).</strong> The pull-replication background task creates an <code>httpx.AsyncClient</code> that presents the node's cert and verifies the peer's cert against <code>STIGMEM_TLS_CA_BUNDLE</code>.</li>
+<li><strong>Cert watcher.</strong> A background task polls <code>STIGMEM_TLS_CERT_PATH</code> every 5 seconds. When the mtime changes, it calls <code>ssl.SSLContext.load_cert_chain()</code> on the live context — in-flight connections are unaffected; new handshakes pick up the new cert immediately.</li>
+<li><strong>SIGHUP.</strong> Sending <code>SIGHUP</code> to the node process triggers an immediate cert reload (same mechanism as the file watcher).</li>
+</ol>
 
 ### Cipher policy (Spec-10-Hardening.2.3)
 
-TLS 1.3 is enforced as the minimum protocol version.  The permitted cipher suites are:
+TLS 1.3 is enforced as the minimum protocol version. The permitted
+cipher suites are:
 
-| Suite | IANA name |
-|---|---|
-| TLS_AES_256_GCM_SHA384 | Required |
-| TLS_AES_128_GCM_SHA256 | Required |
-| TLS_CHACHA20_POLY1305_SHA256 | Required |
+<div className="stigmem-fields">
+
+<div>
+<dt>Suite</dt>
+<dt><span className="stigmem-fields__type">IANA name</span></dt>
+<dd>Status</dd>
+</div>
+
+<div>
+<dt><code>TLS_AES_256_GCM_SHA384</code></dt>
+<dt><span className="stigmem-fields__type">Required</span></dt>
+<dd></dd>
+</div>
+
+<div>
+<dt><code>TLS_AES_128_GCM_SHA256</code></dt>
+<dt><span className="stigmem-fields__type">Required</span></dt>
+<dd></dd>
+</div>
+
+<div>
+<dt><code>TLS_CHACHA20_POLY1305_SHA256</code></dt>
+<dt><span className="stigmem-fields__type">Required</span></dt>
+<dd></dd>
+</div>
+
+</div>
 
 TLS 1.2 and earlier are **not** negotiated on federation ports.
 
 ### Insecure local/dev/test mode
 
-If `STIGMEM_FEDERATION_ENABLED=true` or `STIGMEM_FEDERATION_PUSH_ENABLED=true`
-and the TLS cert/key paths are unset, the node refuses to start unless
-`STIGMEM_FEDERATION_INSECURE=1` is also set. Use that flag only for local
-single-machine tests or development fixtures. It does not provide peer
-authentication and is not a production setting.
+If `STIGMEM_FEDERATION_ENABLED=true` or
+`STIGMEM_FEDERATION_PUSH_ENABLED=true` and the TLS cert/key paths are
+unset, the node refuses to start unless
+`STIGMEM_FEDERATION_INSECURE=1` is also set. Use that flag only for
+local single-machine tests or development fixtures. It does not
+provide peer authentication and is not a production setting.
 
-When a local Docker demo uses service DNS names such as `node-a` or `node-b`,
-the node also requires `STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK=1`.
-That second acknowledgement is only for local Docker/dev networks; production
+When a local Docker demo uses service DNS names such as `node-a` or
+`node-b`, the node also requires
+`STIGMEM_LOCAL_DEV_ALLOW_INSECURE_NON_LOOPBACK=1`. That second
+acknowledgement is only for local Docker/dev networks; production
 non-loopback federation must use mTLS.
 
 ### SAN validation (Spec-10-Hardening.2.4)
 
-After each successful handshake, the node verifies that the peer certificate's `subjectAltName` contains a **URI SAN** matching the peer's `entity_uri` as declared in its org manifest (`/.well-known/stigmem-manifest.json`).  Connections where the SAN does not match are rejected with a structured JSON error before any federation data is exchanged.
-
----
+After each successful handshake, the node verifies that the peer
+certificate's `subjectAltName` contains a **URI SAN** matching the
+peer's `entity_uri` as declared in its org manifest
+(`/.well-known/stigmem-manifest.json`). Connections where the SAN
+does not match are rejected with a structured JSON error before any
+federation data is exchanged.
 
 ## Configuration
 
-| Variable | Required | Description |
-|---|---|---|
-| `STIGMEM_TLS_CERT_PATH` | Yes (non-localhost) | Path to the node's PEM X.509 certificate |
-| `STIGMEM_TLS_KEY_PATH` | Yes (non-localhost) | Path to the corresponding PEM private key |
-| `STIGMEM_TLS_CA_BUNDLE` | Recommended | Path to a PEM CA bundle for verifying peer certs |
+<div className="stigmem-fields">
 
-All three paths are resolved at startup.  The node refuses to start if the cert/key files are unreadable.
+<div>
+<dt>Variable</dt>
+<dt><span className="stigmem-fields__type">Required?</span></dt>
+<dd>Description</dd>
+</div>
 
----
+<div>
+<dt><code>STIGMEM_TLS_CERT_PATH</code></dt>
+<dt><span className="stigmem-fields__type">Yes (non-localhost)</span></dt>
+<dd>Path to the node's PEM X.509 certificate.</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_TLS_KEY_PATH</code></dt>
+<dt><span className="stigmem-fields__type">Yes (non-localhost)</span></dt>
+<dd>Path to the corresponding PEM private key.</dd>
+</div>
+
+<div>
+<dt><code>STIGMEM_TLS_CA_BUNDLE</code></dt>
+<dt><span className="stigmem-fields__type">Recommended</span></dt>
+<dd>Path to a PEM CA bundle for verifying peer certs.</dd>
+</div>
+
+</div>
+
+All three paths are resolved at startup. The node refuses to start if
+the cert/key files are unreadable.
 
 ## Provisioning node certificates
 
@@ -96,33 +163,36 @@ export STIGMEM_TLS_KEY_PATH=/etc/stigmem/tls/node.key
 export STIGMEM_TLS_CA_BUNDLE=/etc/stigmem/tls/ca.crt
 ```
 
-Repeat step 2 for each node, using its own `ENTITY_URI`.  All nodes in the federation share the same CA certificate in their `STIGMEM_TLS_CA_BUNDLE`.
+Repeat step 2 for each node, using its own `ENTITY_URI`. All nodes in
+the federation share the same CA certificate in their
+`STIGMEM_TLS_CA_BUNDLE`.
 
 ### Docker Compose mTLS example
 
-The local plaintext quickstart remains available for contributor smoke tests,
-but production-shaped federation should use mTLS. The compose example under
-`deploy/compose/docker-compose.mtls.yml` mounts a generated CA bundle plus one
-node certificate/key pair per service and leaves `STIGMEM_FEDERATION_INSECURE`
-unset.
+The local plaintext quickstart remains available for contributor smoke
+tests, but production-shaped federation should use mTLS. The compose
+example under `deploy/compose/docker-compose.mtls.yml` mounts a
+generated CA bundle plus one node certificate/key pair per service
+and leaves `STIGMEM_FEDERATION_INSECURE` unset.
 
 ```bash
 ./deploy/compose/generate-mtls-demo-certs.sh
 docker compose -f deploy/compose/docker-compose.mtls.yml up -d --build
 ```
 
-For an end-to-end local validation that includes peer registration and fact
-replication, run:
+For an end-to-end local validation that includes peer registration and
+fact replication, run:
 
 ```bash
 bash scripts/mtls-compose-smoke.sh
 ```
 
-The smoke script creates local-only certificate material in a temp directory,
-starts the compose stack without `STIGMEM_FEDERATION_INSECURE`, verifies both
-nodes over HTTPS with client certificates, registers peers, asserts a fact on
-node A, verifies the fact on node B, and removes containers and volumes unless
-`KEEP_UP=1`.
+The smoke script creates local-only certificate material in a temp
+directory, starts the compose stack without
+`STIGMEM_FEDERATION_INSECURE`, verifies both nodes over HTTPS with
+client certificates, registers peers, asserts a fact on node A,
+verifies the fact on node B, and removes containers and volumes
+unless `KEEP_UP=1`.
 
 Verify the nodes with the generated client certificates:
 
@@ -140,9 +210,9 @@ curl --cacert deploy/compose/tls/ca.crt \
   https://stigmem-b:8766/healthz
 ```
 
-The generated certificates are suitable only for local validation. For a real
-deployment, issue node certificates from your federation CA and keep the
-service DNS SAN plus the node `entity_uri` URI SAN.
+The generated certificates are suitable only for local validation.
+For a real deployment, issue node certificates from your federation
+CA and keep the service DNS SAN plus the node `entity_uri` URI SAN.
 
 ### cert-manager (Kubernetes)
 
@@ -182,25 +252,22 @@ volumeMounts:
     readOnly: true
 ```
 
-cert-manager rotates the secret automatically.  Stigmem's cert watcher detects the mtime change and reloads within 5 seconds — no pod restart required.
-
----
+cert-manager rotates the secret automatically. Stigmem's cert watcher
+detects the mtime change and reloads within 5 seconds — no pod
+restart required.
 
 ## Certificate rotation (Spec-10-Hardening.3)
 
 ### Zero-downtime rotation procedure
 
-1. **Generate the new certificate** (same CA, new key pair, same `entity_uri` URI SAN).
-2. **Update the org manifest** — record the new cert's public-key fingerprint as a `tls_cert_fingerprint` field in `/.well-known/stigmem-manifest.json` and re-sign the manifest.
-3. **Submit the updated manifest to the transparency log** and wait for acknowledgement before activating the new cert.
-4. **Replace the cert files** at `STIGMEM_TLS_CERT_PATH` / `STIGMEM_TLS_KEY_PATH`.
-5. **Signal the node** to reload: either wait for the 5-second file watcher or send `SIGHUP`:
-
-   ```bash
-   kill -HUP $(cat /var/run/stigmem.pid)
-   ```
-
-6. **Dual-trust window**: During the rotation, federation peers may see either the old or the new certificate depending on timing.  Both are signed by the same CA, so peer verification succeeds throughout.  See Spec-10-Hardening.3.5 and Spec-10-Hardening dual-trust window for the dual-trust period requirements (minimum 90 days for capability tokens).
+<ol className="stigmem-steps">
+<li><strong>Generate the new certificate</strong> (same CA, new key pair, same <code>entity_uri</code> URI SAN).</li>
+<li><strong>Update the org manifest</strong> — record the new cert's public-key fingerprint as a <code>tls_cert_fingerprint</code> field in <code>/.well-known/stigmem-manifest.json</code> and re-sign the manifest.</li>
+<li><strong>Submit the updated manifest to the transparency log</strong> and wait for acknowledgement before activating the new cert.</li>
+<li><strong>Replace the cert files</strong> at <code>STIGMEM_TLS_CERT_PATH</code> / <code>STIGMEM_TLS_KEY_PATH</code>.</li>
+<li><strong>Signal the node</strong> to reload: either wait for the 5-second file watcher or send <code>SIGHUP</code>: <code>kill -HUP $(cat /var/run/stigmem.pid)</code>.</li>
+<li><strong>Dual-trust window.</strong> During rotation, federation peers may see either the old or the new certificate depending on timing. Both are signed by the same CA, so peer verification succeeds throughout. See Spec-10-Hardening.3.5 (minimum 90 days for capability tokens).</li>
+</ol>
 
 ### Verifying rotation
 
@@ -211,20 +278,60 @@ openssl s_client -connect your-node:8765 \
   -CAfile ca.crt 2>/dev/null | openssl x509 -noout -fingerprint -dates
 ```
 
----
-
 ## Reverse proxy deployments
 
-> **Out of scope for this how-to.** If TLS is terminated at the proxy (nginx, Caddy, HAProxy), configure mTLS there and leave `STIGMEM_TLS_CERT_PATH` unset.  See the [deploy runbooks](../operators/runbooks/deploy-runbooks.md) for proxy-pass recipes.  Note that proxy-terminated mTLS does not provide end-to-end mutual authentication between Stigmem nodes — peer-cert SAN validation must be performed at the proxy or re-verified at the app layer.
+<div className="stigmem-keypoint">
 
----
+**Out of scope for this how-to.**
+
+If TLS is terminated at the proxy (nginx, Caddy, HAProxy), configure
+mTLS there and leave <code>STIGMEM_TLS_CERT_PATH</code> unset. See the
+<a href="../operators/runbooks/deploy-runbooks">deploy runbooks</a>
+for proxy-pass recipes. Note that proxy-terminated mTLS does not
+provide end-to-end mutual authentication between Stigmem nodes —
+peer-cert SAN validation must be performed at the proxy or
+re-verified at the app layer.
+
+</div>
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `ssl.SSLError: CERTIFICATE_VERIFY_FAILED` | Peer cert not signed by a CA in `STIGMEM_TLS_CA_BUNDLE` | Add peer's CA cert to the bundle and reload |
-| `ssl.SSLError: NO_SHARED_CIPHER` | TLS version mismatch (peer uses TLS 1.2) | Upgrade peer to a Stigmem version that supports TLS 1.3 |
-| `ssl.SSLError: CERTIFICATE_REQUIRED` | Peer is not presenting a client cert | Peer node needs `STIGMEM_TLS_CERT_PATH` / `STIGMEM_TLS_KEY_PATH` configured |
-| Federation routes return `421` | mTLS enabled but request arrived over HTTP | Ensure clients connect via HTTPS; check reverse proxy TLS passthrough config |
-| Cert watcher not reloading | File mtime not updating (symlink rotation) | Use `kill -HUP` instead; or ensure rotation replaces the file at the same path |
+<div className="stigmem-fields">
+
+<div>
+<dt>Symptom</dt>
+<dt><span className="stigmem-fields__type">Likely cause</span></dt>
+<dd>Fix</dd>
+</div>
+
+<div>
+<dt><code>ssl.SSLError: CERTIFICATE_VERIFY_FAILED</code></dt>
+<dt><span className="stigmem-fields__type">peer cert not signed by trusted CA</span></dt>
+<dd>Add peer's CA cert to <code>STIGMEM_TLS_CA_BUNDLE</code> and reload.</dd>
+</div>
+
+<div>
+<dt><code>ssl.SSLError: NO_SHARED_CIPHER</code></dt>
+<dt><span className="stigmem-fields__type">TLS version mismatch</span></dt>
+<dd>Peer uses TLS 1.2; upgrade peer to a Stigmem version that supports TLS 1.3.</dd>
+</div>
+
+<div>
+<dt><code>ssl.SSLError: CERTIFICATE_REQUIRED</code></dt>
+<dt><span className="stigmem-fields__type">peer not presenting a client cert</span></dt>
+<dd>Peer node needs <code>STIGMEM_TLS_CERT_PATH</code> / <code>STIGMEM_TLS_KEY_PATH</code> configured.</dd>
+</div>
+
+<div>
+<dt>Federation routes return <code>421</code></dt>
+<dt><span className="stigmem-fields__type">mTLS enabled, request over HTTP</span></dt>
+<dd>Ensure clients connect via HTTPS; check reverse proxy TLS passthrough config.</dd>
+</div>
+
+<div>
+<dt>Cert watcher not reloading</dt>
+<dt><span className="stigmem-fields__type">file mtime not updating</span></dt>
+<dd>Symlink rotation hides the mtime change. Use <code>kill -HUP</code> instead; or ensure rotation replaces the file at the same path.</dd>
+</div>
+
+</div>

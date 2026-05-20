@@ -8,9 +8,20 @@ audience: Spec
 
 # Architecture
 
-*Audience: engineers contributing to the node, implementing an adapter, or reading the spec alongside the code.*
+<p className="stigmem-meta"><span>10 min read</span><span>Node engineer · Spec reader</span><span>Reference</span></p>
 
----
+<div className="stigmem-lead">
+
+**What this page covers**
+
+Engineer-facing architecture reference: the fact model, provenance,
+decay, scope hierarchy, contradiction semantics, HLC, federation
+protocol, auth model, repo map, and the experimental graph/recall
+pipeline.
+
+</div>
+
+**Audience:** engineers contributing to the node, implementing an adapter, or reading the spec alongside the code.
 
 ## System overview
 
@@ -43,36 +54,85 @@ graph TB
     FedLoop --> Ingest --> DB
 ```
 
----
-
 ## The fact model
 
-Every piece of knowledge is an **atomic, immutable fact** (`Spec-01-Fact-Model`):
+<div className="stigmem-keypoint">
+
+**Every piece of knowledge is an atomic, immutable fact (`Spec-01-Fact-Model`).**
+
+Facts are append-only: there is no `PUT` or `DELETE`. Updating a
+value means asserting a new fact; the latest fact for a given
+`(entity, relation, scope)` triple wins by precedence rules.
+
+</div>
 
 ```
 (entity, relation, value, source, timestamp, hlc, confidence, scope)
 ```
 
-| Field | Type | Why it exists |
-|-------|------|---------------|
-| `entity` | URI (`stigmem://…` formal; informal deprecated in pre-reset) | *What* the fact is about. Entity-scoped, not agent-scoped — the same entity URI is shared across all agents and nodes. |
-| `relation` | namespaced string (`memory:role`, `roadmap:status`, ...) | *What kind* of statement this is. Namespaced to prevent collisions (`Spec-16-Namespace-Registry`). |
-| `value` | `FactValue` union | The asserted value. See `Spec-01-Fact-Model` for the full type lattice: `string`, `text`, `number`, `boolean`, `datetime`, `ref`, `null`. |
-| `source` | URI | *Who* asserted the fact. Stored immutably; relayed facts carry the *originating* source, not the relay chain. |
-| `timestamp` | ISO 8601 UTC | Wall-clock write time, set by the node (clients may suggest). |
-| `hlc` | HLC string (`{wall_ms}.{counter}`) | Hybrid logical clock tick — causality-preserving across nodes. Required for federation ordering (`Spec-12-HLC-Bounded-Skew`). |
-| `confidence` | float `[0.0, 1.0]` | Asserting party's certainty. `1.0` = certain, `0.0` = retracted. Used in contradiction resolution. |
-| `scope` | `local \| team \| company \| public` | Visibility and federation boundary. Enforced at read and write time. |
+<div className="stigmem-fields">
 
-Facts are **append-only**: there is no `PUT` or `DELETE`. Updating a value means asserting a new fact; the latest fact for a given `(entity, relation, scope)` triple wins by precedence rules.
+<div>
+<dt>Field</dt>
+<dt><span className="stigmem-fields__type">Type</span></dt>
+<dd>Why it exists</dd>
+</div>
 
----
+<div>
+<dt><code>entity</code></dt>
+<dt><span className="stigmem-fields__type">URI</span></dt>
+<dd>What the fact is about. Entity-scoped, not agent-scoped — the same entity URI is shared across all agents and nodes.</dd>
+</div>
+
+<div>
+<dt><code>relation</code></dt>
+<dt><span className="stigmem-fields__type">namespaced string</span></dt>
+<dd>What kind of statement this is. Namespaced to prevent collisions (<code>Spec-16-Namespace-Registry</code>).</dd>
+</div>
+
+<div>
+<dt><code>value</code></dt>
+<dt><span className="stigmem-fields__type">FactValue union</span></dt>
+<dd>The asserted value: <code>string</code>, <code>text</code>, <code>number</code>, <code>boolean</code>, <code>datetime</code>, <code>ref</code>, <code>null</code>.</dd>
+</div>
+
+<div>
+<dt><code>source</code></dt>
+<dt><span className="stigmem-fields__type">URI</span></dt>
+<dd>Who asserted the fact. Relayed facts carry the originating source, not the relay chain.</dd>
+</div>
+
+<div>
+<dt><code>timestamp</code></dt>
+<dt><span className="stigmem-fields__type">ISO 8601 UTC</span></dt>
+<dd>Wall-clock write time, set by the node (clients may suggest).</dd>
+</div>
+
+<div>
+<dt><code>hlc</code></dt>
+<dt><span className="stigmem-fields__type">HLC string</span></dt>
+<dd>Hybrid logical clock tick — causality-preserving across nodes. Required for federation ordering.</dd>
+</div>
+
+<div>
+<dt><code>confidence</code></dt>
+<dt><span className="stigmem-fields__type">float [0.0, 1.0]</span></dt>
+<dd>Asserting party's certainty. <code>1.0</code> = certain, <code>0.0</code> = retracted.</dd>
+</div>
+
+<div>
+<dt><code>scope</code></dt>
+<dt><span className="stigmem-fields__type">local · team · company · public</span></dt>
+<dd>Visibility and federation boundary. Enforced at read and write time.</dd>
+</div>
+
+</div>
 
 ## Provenance and decay
 
-### Provenance (`Spec-15-Fact-Semantics`)
+### Provenance
 
-Every fact carries `source` and `timestamp`, stored without modification. Queries return the original `source`, never an intermediate relay. Federated facts additionally carry a `stigmem:received_from` meta-fact (generated automatically by the receiving node):
+Every fact carries `source` and `timestamp`, stored without modification. Queries return the original `source`, never an intermediate relay. Federated facts additionally carry a `stigmem:received_from` meta-fact:
 
 ```json
 {
@@ -85,18 +145,28 @@ Every fact carries `source` and `timestamp`, stored without modification. Querie
 
 This meta-fact is stored locally and never re-replicated.
 
-### Decay (`valid_until`, `Spec-15-Fact-Semantics`)
+### Decay
 
-Facts have an optional expiry: `valid_until: ISO 8601 | null`. Expired facts:
-- Are **hidden** from normal queries (as if they don't exist).
-- Are **retained** in the store (queryable with `include_expired=true`).
-- Can also be set via a TTL meta-fact: `(entity=<fact-id>, relation="stigmem:ttl", value=<datetime>)`.
+Facts have an optional expiry: `valid_until: ISO 8601 | null`.
 
-`valid_until` and `confidence` are **orthogonal**: a historical certain fact has `confidence=1.0` and `valid_until` set to when it was superseded by a newer value.
+<div className="stigmem-grid">
 
----
+<div><h4>Hidden by default</h4><p>Expired facts are hidden from normal queries (as if they don't exist).</p></div>
+<div><h4>Retained in store</h4><p>Queryable with <code>include_expired=true</code>.</p></div>
+<div><h4>TTL via meta-fact</h4><p><code>(entity=&lt;fact-id&gt;, relation="stigmem:ttl", value=&lt;datetime&gt;)</code>.</p></div>
 
-## Scope Hierarchy And Enforcement (`Spec-02-Scopes-and-ACL`)
+</div>
+
+<div className="stigmem-keypoint">
+
+**`valid_until` and `confidence` are orthogonal.**
+
+A historical certain fact has `confidence=1.0` and `valid_until` set
+to when it was superseded by a newer value.
+
+</div>
+
+## Scope hierarchy and enforcement (`Spec-02-Scopes-and-ACL`)
 
 ```
 local   ─── node-only, never leaves this instance
@@ -105,55 +175,74 @@ company ─── owning company node; federated only when PeerDeclaration expli
 public  ─── federatable to any registered peer by default
 ```
 
-**Write-time enforcement:** A client presenting an API key with `allowed_scopes: ["local"]` cannot write a `public`-scoped fact.
+<div className="stigmem-fields">
 
-**Read-time enforcement:** Cross-scope queries are additive — a query with no scope filter returns results from all scopes the caller's key allows.
+<div>
+<dt>Boundary</dt>
+<dt><span className="stigmem-fields__type">Enforcement</span></dt>
+<dd>Description</dd>
+</div>
 
-**Federation enforcement:** Nodes MUST reject outbound replication of facts whose scope exceeds what the active PeerDeclaration permits. Nodes MUST reject inbound facts whose scope exceeds what the peer is authorized to write.
+<div>
+<dt>Write</dt>
+<dt><span className="stigmem-fields__type">API-key scope</span></dt>
+<dd>A client with <code>allowed_scopes: ["local"]</code> cannot write a <code>public</code>-scoped fact.</dd>
+</div>
 
----
+<div>
+<dt>Read</dt>
+<dt><span className="stigmem-fields__type">additive query</span></dt>
+<dd>Cross-scope queries return results from all scopes the caller's key allows.</dd>
+</div>
 
-## Contradiction Semantics (`Spec-15-Fact-Semantics`)
+<div>
+<dt>Federation</dt>
+<dt><span className="stigmem-fields__type">PeerDeclaration</span></dt>
+<dd>Nodes MUST reject outbound replication of facts whose scope exceeds what the active PeerDeclaration permits, and reject inbound facts beyond peer authority.</dd>
+</div>
 
-A contradiction exists when two facts share `(entity, relation, scope)` but have different values and both have `confidence > 0.0`. **Both facts are retained.** The node auto-generates:
+</div>
 
-```json
-{
-  "entity":   "stigmem:conflict:<uuid>",
-  "relation": "stigmem:conflict:between",
-  "value":    { "type": "text", "v": "<fact-id-a> <fact-id-b>" },
-  "source":   "system:stigmem",
-  "confidence": 1.0,
-  "scope":    "<same as conflicting facts>"
-}
-```
+## Contradiction semantics (`Spec-15-Fact-Semantics`)
 
-Plus a `stigmem:conflict:status = "unresolved"` companion fact.
+A contradiction exists when two facts share `(entity, relation, scope)` but have different values and both have `confidence > 0.0`.
+
+<div className="stigmem-keypoint">
+
+**Both facts are retained.**
+
+The node auto-generates a `stigmem:conflict:<uuid>` reification with
+`stigmem:conflict:between` and a `stigmem:conflict:status = "unresolved"`
+companion fact.
+
+</div>
 
 **Resolution order at query time:**
-1. Higher `confidence` wins.
-2. Equal confidence -> higher `hlc` wins (causal ordering via `Spec-12-HLC-Bounded-Skew`).
-3. Tie → both returned with `contradicted: true`; caller decides.
+
+<ol className="stigmem-steps">
+<li>Higher <code>confidence</code> wins.</li>
+<li>Equal confidence → higher <code>hlc</code> wins (causal ordering).</li>
+<li>Tie → both returned with <code>contradicted: true</code>; caller decides.</li>
+</ol>
 
 Resolution is explicit and traceable: `POST /v1/conflicts/:id/resolve` writes a new fact with the resolved value, updating conflict status to `"resolved"` with full provenance.
 
----
-
 ## Hybrid Logical Clock (`Spec-12-HLC-Bounded-Skew`)
 
-Every node maintains a single HLC:
-
-```
-HLC = "{wall_ms_utc}.{counter}"    // e.g. "1746230400000.003"
-```
+Every node maintains a single HLC: `HLC = "{wall_ms_utc}.{counter}"` (e.g. `"1746230400000.003"`).
 
 **Advance rules:**
-1. On local write: `hlc = max(now_ms, last_hlc_ms)` as wall; increment counter if wall unchanged.
-2. On receiving a federated fact: `hlc = max(now_ms, received_hlc_ms)`; increment counter.
 
-Causally ordered facts (`a.hlc < b.hlc`) are handled correctly across nodes. Equal HLCs on different nodes indicate concurrent writes; `Spec-15-Fact-Semantics` contradiction policy applies. The HLC prevents the split-brain scenario where two nodes partition, accept divergent writes, and then disagree about ordering on reunion.
+<ol className="stigmem-steps">
+<li>On local write: <code>hlc = max(now_ms, last_hlc_ms)</code> as wall; increment counter if wall unchanged.</li>
+<li>On receiving a federated fact: <code>hlc = max(now_ms, received_hlc_ms)</code>; increment counter.</li>
+</ol>
 
----
+<div className="stigmem-keypoint">
+
+**The HLC prevents the split-brain scenario where two nodes partition, accept divergent writes, and then disagree about ordering on reunion.**
+
+</div>
 
 ## Federation Protocol (`Spec-05-Federation-Trust`)
 
@@ -172,49 +261,88 @@ A **PeerDeclaration** is a signed JSON document declaring federation intent:
 }
 ```
 
-The signature uses the declaring node's `federation_pubkey`, published at `/.well-known/stigmem`. Registration is mutual: both nodes must `POST /v1/federation/peers` with the declaration to activate the peering. Capability negotiation is required by `Spec-05-Federation-Trust`.
+Registration is mutual: both nodes must `POST /v1/federation/peers` with the declaration to activate the peering.
 
 ### Replication
 
-Pull-based: each node's background `federation_pull` task runs periodically, fetching facts from registered peers:
+Pull-based:
 
 ```
 GET /v1/federation/facts?since_hlc=<last-seen>&scope=public&limit=500
 Authorization: Bearer <peer-token>
 ```
 
-Peer tokens are short-lived Ed25519-signed JWTs (max 1-hour expiry, replay-protected by nonce). Fact ingestion is **idempotent**: re-asserting a fact that already exists is a no-op. The HLC cursor ensures replication resumes exactly where it left off across restarts.
+<div className="stigmem-grid">
 
-### Failure Modes (`Spec-18-Conformance-and-Failure-Modes`)
+<div><h4>Short-lived peer tokens</h4><p>Ed25519-signed JWTs, max 1-hour expiry, nonce replay-protected.</p></div>
+<div><h4>Idempotent ingest</h4><p>Re-asserting a fact that already exists is a no-op.</p></div>
+<div><h4>HLC cursor resume</h4><p>Replication resumes exactly where it left off across restarts.</p></div>
+
+</div>
+
+### Failure modes
 
 All four failure scenarios are automated in `node/tests/observability/test_failure_modes.py`:
 
-| Scenario | Behavior |
-|----------|----------|
-| Split-brain | Both nodes accept writes during partition; contradictions surface on reunion; no data loss |
-| Malicious peer | Facts asserted in unauthorized scopes are rejected; audit log records the attempt |
-| Partial failure | Surviving node stays read/write available; replication resumes from cursor on reconnect |
-| Replay attack | Old signed messages are rejected via nonce + timestamp window |
+<div className="stigmem-fields">
 
----
+<div>
+<dt>Scenario</dt>
+<dt><span className="stigmem-fields__type">Outcome</span></dt>
+<dd>Behavior</dd>
+</div>
 
-## Auth Model (`Spec-02-Scopes-and-ACL`, `Spec-06-Capability-Tokens`)
+<div>
+<dt>Split-brain</dt>
+<dt><span className="stigmem-fields__type">no data loss</span></dt>
+<dd>Both nodes accept writes during partition; contradictions surface on reunion.</dd>
+</div>
 
-The v0.9.0a1 reference node implements API-key auth for clients and peer tokens for federation.
+<div>
+<dt>Malicious peer</dt>
+<dt><span className="stigmem-fields__type">rejected + audited</span></dt>
+<dd>Facts in unauthorized scopes are rejected; audit log records the attempt.</dd>
+</div>
 
-**API keys (clients):**
-- Presented as `Authorization: Bearer <raw-key>`.
-- Node stores only the SHA-256 hex digest; the raw key is never retained.
-- Each key maps to an `entity_uri`, a set of permissions (`read`, `write`, `federate`), and `allowed_scopes`.
+<div>
+<dt>Partial failure</dt>
+<dt><span className="stigmem-fields__type">read/write available</span></dt>
+<dd>Surviving node stays available; replication resumes from cursor on reconnect.</dd>
+</div>
 
-**Peer tokens (federation):**
-- Ed25519-signed JWTs, max 1-hour expiry.
-- Signing keypair is separate from API keys; public half published at `/.well-known/stigmem`.
-- Nonce cache prevents replay.
+<div>
+<dt>Replay attack</dt>
+<dt><span className="stigmem-fields__type">nonce + window</span></dt>
+<dd>Old signed messages are rejected via nonce + timestamp window.</dd>
+</div>
 
-Auth mode is advertised at `/.well-known/stigmem` as `"auth": "none" | "required"`. Single-operator deployments MAY set `STIGMEM_AUTH_REQUIRED=false` (the default); all callers are trusted in that mode.
+</div>
 
----
+## Auth model
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Credential</dt>
+<dt><span className="stigmem-fields__type">Use</span></dt>
+<dd>Properties</dd>
+</div>
+
+<div>
+<dt>API keys (clients)</dt>
+<dt><span className="stigmem-fields__type">client → node</span></dt>
+<dd><code>Authorization: Bearer &lt;raw-key&gt;</code>. Node stores only SHA-256 hex digest. Maps to an <code>entity_uri</code>, permissions, and <code>allowed_scopes</code>.</dd>
+</div>
+
+<div>
+<dt>Peer tokens (federation)</dt>
+<dt><span className="stigmem-fields__type">node → node</span></dt>
+<dd>Ed25519-signed JWTs, max 1-hour expiry. Public half published at <code>/.well-known/stigmem</code>. Nonce cache prevents replay.</dd>
+</div>
+
+</div>
+
+Auth mode is advertised at `/.well-known/stigmem` as `"auth": "none" | "required"`. Single-operator deployments MAY set `STIGMEM_AUTH_REQUIRED=false`.
 
 ## Repo map
 
@@ -240,61 +368,42 @@ stigmem/
 │   │       ├── conflicts.py        ← /v1/conflicts
 │   │       └── wellknown.py        ← GET /.well-known/stigmem
 │   ├── migrations/                 ← schema migrations
-│   └── tests/                      ← reference-node unit, integration, conformance, and security tests
+│   └── tests/                      ← reference-node unit, integration, conformance, security tests
 │
 ├── adapters/                       ← platform adapters
-│   ├── mcp/                        ← MCP server (TypeScript): stigmem_assert + stigmem_query tools
-│   └── openclaw/                   ← compatibility shim; active package lives under packages/
-│
 ├── packages/                       ← published Python packages and extracted plugins
 ├── sdks/                           ← SDKs and generated clients
 ├── experimental/                   ← deferred or gated features per ADR-002 / ADR-008
 │
 └── docs/                           ← Docusaurus 3 documentation site
-    └── docs/                       ← content
-        ├── get-started/            ← installation and quickstart guides
-        ├── concepts/               ← conceptual model and feature status
-        ├── guides/                 ← plugin and integration guides
-        ├── operators/              ← deployment, runbooks, observability, hardening
-        ├── reference/              ← API, architecture, CLI, glossary
-        ├── security/               ← security architecture and posture
-        ├── spec/                   ← modular protocol specs and experimental specs
-        └── community/              ← project resources, contributing
 ```
-
----
 
 ## Key implementation notes
 
-**SQLite as the v0.9.0a1 reference storage.** The schema (`Spec-17-Schema-and-Migration`) is migration-friendly by design: column additions do not require table rewrites. A PostgreSQL backend is feasible after the alpha line but is not required for the v0.9.0a1 default install.
+<div className="stigmem-grid">
 
-**HLC requires a threading lock.** The in-process HLC state is shared between the HTTP request path and the background federation pull task. Without `threading.Lock`, concurrent writes race and may produce out-of-order HLC values. Fixed in `hlc.py`; covered by `Spec-12-HLC-Bounded-Skew`.
+<div><h4>SQLite as the v0.9.0a1 reference</h4><p>Schema is migration-friendly by design. PostgreSQL backend is feasible after the alpha line but not required.</p></div>
+<div><h4>HLC requires a threading lock</h4><p>The in-process HLC state is shared between HTTP request path and background federation pull. Without <code>threading.Lock</code>, concurrent writes race.</p></div>
+<div><h4>Idempotency + conflict edge case</h4><p>If fact F arrives twice via replication, the second ingestion is a no-op — it must not create a second conflict record.</p></div>
+<div><h4><code>declaration_sig</code> excluded from preimage</h4><p>The Ed25519 signature covers all PeerDeclaration fields except <code>declaration_sig</code> itself.</p></div>
 
-**Idempotency + conflict edge case.** If fact F arrives from peer A and creates a conflict with local fact G, then F arrives again via replication, the second ingestion is a no-op — it must not create a second conflict record. `federation_ingest.py` handles this; `Spec-05-Federation-Trust` owns the federation idempotency rule.
-
-**`declaration_sig` excluded from its own preimage.** The Ed25519 signature over a PeerDeclaration covers all fields *except* `declaration_sig` itself (which obviously does not exist at signing time). `Spec-04-Manifests` and `Spec-05-Federation-Trust` own the signed declaration shape; `peer_auth.py` implements accordingly.
+</div>
 
 :::info Sequence diagrams coming
-Federation handshake, conflict detection flow, and HLC tick protocol sequence diagrams are planned. Contributions welcome — see `CONTRIBUTING.md` at the repo root for the RFC process.
+Federation handshake, conflict detection flow, and HLC tick protocol sequence diagrams are planned. Contributions welcome — see `CONTRIBUTING.md` at the repo root.
 :::
 
----
-
-## Graph Index And Recall Pipeline (`Spec-X11-Recall-Graph`)
+## Graph index and recall pipeline (`Spec-X11-Recall-Graph`)
 
 :::note pre-reset graph & recall design — draft
-This section describes `Spec-X11-Recall-Graph`, which remains experimental. Security review of subscription auth and cross-garden recall scoping is in progress. The diagram and formulas below reflect the experimental spec and may change before the feature passes ADR-008 gates.
+This section describes `Spec-X11-Recall-Graph`, which remains experimental. Security review of subscription auth and cross-garden recall scoping is in progress.
 :::
 
-*Audience: engineers building recall-capable agents, implementing the reference node, or contributing to `Spec-X11-Recall-Graph`.*
-
-pre-reset graph & recall design adds three interconnected subsystems to the reference node: a **graph adjacency index**, a **vector embedding store**, and a **hybrid recall pipeline**. Together they let agents retrieve semantically relevant facts by query rather than exact predicate, within a caller-specified token budget.
-
----
+pre-reset graph & recall design adds three interconnected subsystems: a **graph adjacency index**, a **vector embedding store**, and a **hybrid recall pipeline**.
 
 ### Graph adjacency index (`entity_edges`)
 
-The facts table is flat: facts are rows with no materialized connections between entities. pre-reset graph & recall design adds a side-index that makes entity-to-entity traversal O(edges) rather than O(facts):
+The facts table is flat. pre-reset adds a side-index that makes entity-to-entity traversal O(edges) rather than O(facts):
 
 ```sql
 CREATE TABLE entity_edges (
@@ -312,27 +421,13 @@ CREATE INDEX idx_edges_subject ON entity_edges (subject, scope, confidence);
 CREATE INDEX idx_edges_object  ON entity_edges (object,  scope, confidence);
 ```
 
-A row is inserted whenever a fact with `value.type = "ref"` is persisted and the ref target passes entity-URI validation. The row is soft-deleted (confidence set to 0.0) when the source fact is retracted — hard deletion is a maintenance-only operation. The decay sweeper keeps `entity_edges.confidence` in sync with its source fact within the same transaction.
-
-`GET /v1/graph/neighbors` exposes bounded traversal over this index (depth ≤ 2 by default; capped at 2 to prevent hub-bias collapse on high-degree entities). Cross-garden traversal is governed by the caller's garden ACL, checked at the application layer.
-
----
+`GET /v1/graph/neighbors` exposes bounded traversal over this index (depth ≤ 2 by default).
 
 ### Vector embedding store (`vec_facts`)
 
-Each live fact (confidence > 0.1 by default) is embedded as the composed string:
+Each live fact (confidence > 0.1 by default) is embedded as the composed string `"{entity_display} {relation} {value_text}"` and stored in a `vec_facts` virtual table.
 
-```
-"{entity_display} {relation} {value_text}"
-```
-
-and stored in a `vec_facts` virtual table (sqlite-vec for SQLite/libSQL; pgvector column for Postgres). Embeddings are L2-normalized at insertion so cosine similarity reduces to a dot product, enabling sqlite-vec's native acceleration.
-
-**Default model:** `nomic-embed-text-v1.5` — 768 dimensions, Apache-2.0 license, runs offline via `ollama pull nomic-embed-text`. The Matryoshka architecture lets operators truncate to 256 dimensions via `STIGMEM_EMBED_DIMENSIONS` without re-training, for resource-constrained deployments.
-
-When a fact's confidence falls below the tombstone threshold, its vector is deleted from `vec_facts` in the same transaction. Contradicted facts retain their vectors; a penalty is applied at ranking time, not by modifying the stored embedding.
-
----
+**Default model:** `nomic-embed-text-v1.5` — 768 dimensions, Apache-2.0, runs offline via `ollama pull nomic-embed-text`. Matryoshka architecture lets operators truncate to 256 dimensions via `STIGMEM_EMBED_DIMENSIONS`.
 
 ### Three-stage hybrid recall pipeline
 
@@ -353,66 +448,112 @@ flowchart TB
     MMR --> R["Scored result set\n≤ token_budget"]
 ```
 
-**Stage weights** default to `{lexical: 0.30, vector: 0.50, graph: 0.20}` and are caller-configurable. Dense retrieval dominates because embeddings capture semantic paraphrase that BM25 misses for natural-language queries; lexical is kept to preserve exact relation-namespace matching.
+**Stage weights** default to `{lexical: 0.30, vector: 0.50, graph: 0.20}` and are caller-configurable.
 
-**Salience signals** applied in the fusion formula:
+**Salience signals:**
 
-| Signal | Formula | Range |
-|--------|---------|-------|
-| Recency | `exp(-0.01 × age_days)` | (0, 1] |
-| Confidence | `fact.confidence` | [0, 1] |
-| Access frequency | `log(1 + access_count) / log(1 + max_access_count)` | [0, 1] |
-| Contradiction penalty | 1.0 if no unresolved contradiction; 0.7 otherwise | {0.7, 1.0} |
-| Garden tier | configurable per garden; quarantine default 0.2 | [0, 1] |
-| Source-trust multiplier | `0.5 + 0.5 × t` (maps [0,1] → [0.5,1.0]); 1.0 when trust off | [0.5, 1] |
+<div className="stigmem-fields">
 
-**⚠ Security-critical — ANN scope filter (R1):** `vec_facts` holds embeddings for **all** scopes and gardens with no `scope` column. Stage 2 ANN results MUST be joined back against the `facts` table and filtered by `scope = :scope` and the caller's garden ACL before being passed to fusion or used as graph expansion seeds. Without this filter, garden-B fact IDs surface in a garden-A caller's response, leaking fact existence and content.
+<div>
+<dt>Signal</dt>
+<dt><span className="stigmem-fields__type">Range</span></dt>
+<dd>Formula</dd>
+</div>
 
-**Token-budget packing (MMR):** greedy-by-score selection is avoided because multiple facts about the same entity with the same relation are frequently near-duplicate. Maximal Marginal Relevance iteratively selects the next highest-scoring candidate whose embedding is most different from what has already been selected. `λ_mmr = 0.7` balances relevance and diversity; `λ_mmr = 1.0` degrades to greedy. Token cost is estimated as 40 (fixed overhead) plus `⌈char_count / 4⌉` for the value text.
+<div>
+<dt>Recency</dt>
+<dt><span className="stigmem-fields__type">(0, 1]</span></dt>
+<dd><code>exp(-0.01 × age_days)</code></dd>
+</div>
 
----
+<div>
+<dt>Confidence</dt>
+<dt><span className="stigmem-fields__type">[0, 1]</span></dt>
+<dd><code>fact.confidence</code></dd>
+</div>
+
+<div>
+<dt>Access frequency</dt>
+<dt><span className="stigmem-fields__type">[0, 1]</span></dt>
+<dd>log-normalized within candidate set.</dd>
+</div>
+
+<div>
+<dt>Contradiction penalty</dt>
+<dt><span className="stigmem-fields__type">&#123;0.7, 1.0&#125;</span></dt>
+<dd>1.0 if no unresolved contradiction; 0.7 otherwise.</dd>
+</div>
+
+<div>
+<dt>Garden tier</dt>
+<dt><span className="stigmem-fields__type">[0, 1]</span></dt>
+<dd>Configurable per garden; quarantine default 0.2.</dd>
+</div>
+
+<div>
+<dt>Source-trust multiplier</dt>
+<dt><span className="stigmem-fields__type">[0.5, 1]</span></dt>
+<dd><code>0.5 + 0.5 × t</code>; 1.0 when trust off.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**⚠ Security-critical — ANN scope filter (R1).**
+
+`vec_facts` holds embeddings for **all** scopes and gardens with no
+`scope` column. Stage 2 ANN results MUST be joined back against the
+`facts` table and filtered by `scope = :scope` and the caller's
+garden ACL before being passed to fusion or used as graph expansion
+seeds. Without this filter, garden-B fact IDs surface in a garden-A
+caller's response, leaking fact existence and content.
+
+</div>
 
 ### Memory cards
 
-A **memory card** is a per-entity synthesized summary stored as a `stigmem:memory:card` fact. It is the primary result for entity-centric recall queries (`entity=` specified), providing a pre-aggregated view that avoids re-ranking all constituent facts on every call.
+A **memory card** is a per-entity synthesized summary stored as a `stigmem:memory:card` fact. It is the primary result for entity-centric recall queries.
 
-Cards are structured Markdown:
+<div className="stigmem-grid">
 
-```markdown
-## {entity_display_name}
+<div><h4>Surface contradictions</h4><p>Cards never silently pick a winner. <code>contradicted_count</code> non-zero signals partial unreliability.</p></div>
+<div><h4>Refresh on assert</h4><p>New fact for the entity invalidates the card; enqueue background refresh.</p></div>
+<div><h4>Refresh on decay</h4><p>Confidence change in a constituent fact invalidates the card.</p></div>
+<div><h4>Age threshold</h4><p><code>STIGMEM_CARD_MAX_AGE_S</code> (default 86400s).</p></div>
 
-**Type:** {entity_type}  **URI:** {entity_uri}  **Last refreshed:** {iso8601}
+</div>
 
-### Current facts ({n} live, {m} contradicted)
+During refresh the stale card remains readable with `card_stale: true`. Pass `force_refresh=true` to block on synchronous regeneration (bounded to 500ms).
 
-| Relation | Value | Confidence | Source | Since |
-|----------|-------|------------|--------|-------|
-| memory:role | CTO | 1.00 | agent/assistant | 2026-04-01 |
+<div className="stigmem-keypoint">
 
-### Contradictions ({m} unresolved)
+**Garden ACL on card recall (R2).**
 
-- **memory:role**: `CEO` (conf 1.00) ⟷ `CTO` (conf 0.80) — *unresolved*
-```
+When a recall query includes a memory card, the node MUST verify the
+caller's garden ACL against the card's `garden_id` before including
+it. Cards in unauthorized gardens MUST be excluded; the response
+falls back to raw facts from authorized gardens only.
 
-Cards surface contradictions explicitly — they do not silently pick a winner. The `contradicted_count` metadata field is non-zero when any contradiction exists, signaling to the consumer that the summary is partially unreliable.
-
-**Refresh triggers:**
-1. New fact asserted for the entity
-2. Decay sweep touches a constituent fact (confidence change)
-3. Card age exceeds `STIGMEM_CARD_MAX_AGE_S` (default 86400s)
-
-During refresh the stale card remains readable with `card_stale: true`. Pass `force_refresh=true` to block on synchronous regeneration (bounded to 500ms; falls back to raw facts if exceeded). Card facts are exempt from the decay sweeper.
-
-**Garden ACL on card recall (R2):** when a recall query includes a memory card in the response, the node MUST verify the caller's garden ACL against the card's `garden_id` before including it. Cards in unauthorized gardens MUST be excluded; the response falls back to raw facts from authorized gardens only. An entity may have multiple cards scoped to different gardens; only accessible cards are returned.
-
----
+</div>
 
 ### Subscriptions
 
 `POST /v1/subscriptions` registers a push subscription on a scope, entity, or garden. The node delivers events when matching facts change — eliminating polling loops for agents that watch shared entities.
 
-Subscription creation requires a capability token (`Spec-06-Capability-Tokens`) covering the `subscribe` verb on the target. The node re-evaluates the caller's garden ACL **and** capability token revocation status on every event delivery. Event content is not populated until the ACL check passes — the event record may be queued internally, but the content must not be populated before authorization. If access has been revoked since subscription creation, delivery is silently dropped and the subscription is cancelled with event type `subscription_cancelled_access_revoked`.
+<div className="stigmem-keypoint">
+
+**Cross-garden leakage prevention.**
+
+The node re-evaluates the caller's garden ACL **and** capability
+token revocation status on every event delivery. Event content is
+not populated until the ACL check passes. If access has been revoked
+since subscription creation, delivery is silently dropped and the
+subscription is cancelled with event type
+`subscription_cancelled_access_revoked`. Implementations MUST NOT
+optimize this check away (e.g., by caching the result from
+subscription creation time).
+
+</div>
 
 Events are buffered for `STIGMEM_SUBSCRIPTION_REPLAY_S` seconds (default 3600s). Subscribers may request replay via `GET /v1/subscriptions/:id/events?after={event_id}` within this window.
-
-**Cross-garden leakage prevention:** the garden ACL check on each delivery is the primary guard against cross-garden fact leakage via standing event streams. Implementations MUST NOT optimize this away (e.g., by caching the result from subscription creation time).

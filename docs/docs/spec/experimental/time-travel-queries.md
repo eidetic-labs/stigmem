@@ -18,9 +18,20 @@ since: 0.9.0a1
 
 # §24. Time-Travel / As-Of Queries {#section-24}
 
-**Status:** Experimental / opt-in source package on `main`
+<p className="stigmem-meta"><span>6 min read</span><span>Spec contributor · Compliance reviewer</span><span>Experimental · v0.9.0bN</span></p>
 
-as_of parameter on /v1/recall and /v1/facts; append-only retraction log.
+<div className="stigmem-lead">
+
+**What this section covers**
+
+The `as_of` parameter on `/v1/recall` and `/v1/facts` plus the
+append-only retraction log. Historical auditing, debugging,
+regulatory compliance reporting, and causal provenance
+reconstruction.
+
+</div>
+
+**Status:** Experimental / opt-in source package on `main`
 
 **Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for time-travel query semantics.
 
@@ -54,10 +65,23 @@ The `as_of` parameter is an ISO 8601 timestamp specifying the point-in-time to q
 
 A fact `f` is **visible at time T** if all of the following conditions hold:
 
-1. `f.created_at <= T` — the fact had been written before or at T.
-2. `f.valid_until is null OR f.valid_until > T` — the fact had not yet expired at T.
-3. `f.confidence > 0 at time T` — the fact had not been retracted by T. Retraction is governed by the `fact_retractions` append-only log (see §23.5.3 Migration 013c). A fact `f` is considered retracted at T if and only if a row exists in `fact_retractions` with `fact_id = f.id` and `retracted_at <= T`. The in-place `confidence = 0.0` on the `facts` row is used for live (non-`as_of`) queries only; `query_facts_as_of` MUST join `fact_retractions` on this condition and MUST NOT use the `facts.confidence` field as a proxy for retraction state at historical timestamps.
-4. No active tombstone (§23.3) covers `f.entity` with a scope matching `f.scope`, unless the tombstone has `legal_hold: true` (§24.3). **Note:** because tombstone suppression is retroactive (§24.3.1), the fact-visibility definition at time T is not a purely historical snapshot — it reflects present tombstone state. Callers MUST NOT assume that a result set for `as_of=T` is immutable; a subsequently issued tombstone will retroactively change it. This means the monotonicity invariant (§24.2.3) holds only before accounting for tombstones, retraction, or expiry.
+<ol className="stigmem-steps">
+<li><code>f.created_at &lt;= T</code> — the fact had been written before or at T.</li>
+<li><code>f.valid_until is null OR f.valid_until &gt; T</code> — the fact had not yet expired at T.</li>
+<li><code>f.confidence &gt; 0 at time T</code> — the fact had not been retracted by T. Retraction is governed by the <code>fact_retractions</code> append-only log (see §23.5.3 Migration 013c). A fact is considered retracted at T if and only if a row exists in <code>fact_retractions</code> with <code>fact_id = f.id</code> and <code>retracted_at &lt;= T</code>. The in-place <code>confidence=0.0</code> on the <code>facts</code> row is used for live queries only; <code>query_facts_as_of</code> MUST join <code>fact_retractions</code> and MUST NOT use the <code>facts.confidence</code> field as a proxy for retraction state at historical timestamps.</li>
+<li>No active tombstone (§23.3) covers <code>f.entity</code> with a scope matching <code>f.scope</code>, unless the tombstone has <code>legal_hold: true</code> (§24.3).</li>
+</ol>
+
+<div className="stigmem-keypoint">
+
+**Tombstone suppression is retroactive.**
+
+The fact-visibility definition at time T is not a purely historical
+snapshot — it reflects present tombstone state. Callers MUST NOT
+assume that a result set for `as_of=T` is immutable; a subsequently
+issued tombstone will retroactively change it.
+
+</div>
 
 #### §24.2.2 Query Interface {#section-24-2-2}
 
@@ -70,13 +94,27 @@ GET  /v1/facts?entity_uri=<string>&as_of=<ISO8601>&...
 ```
 
 The `as_of` timestamp MUST be validated as:
-- A valid ISO 8601 timestamp.
-- Not in the future (at most the server's current clock + 5 seconds tolerance for clock skew).
-- Not older than the retention horizon configured for the deployment. Operators MAY configure a minimum `as_of` floor; queries before the floor MUST return `as_of_before_retention_floor`.
+
+<div className="stigmem-grid">
+
+<div><h4>Valid ISO 8601</h4></div>
+<div><h4>Not in the future</h4><p>At most server clock + 5 s tolerance for skew.</p></div>
+<div><h4>Within retention horizon</h4><p>Operators MAY configure a minimum <code>as_of</code> floor; queries before the floor MUST return <code>as_of_before_retention_floor</code>.</p></div>
+
+</div>
 
 #### §24.2.3 Monotonicity Invariant {#section-24-2-3}
 
-The `as_of` result set MUST be monotonically consistent: for any two queries with `as_of=T1 < T2`, the set of facts visible at T1 MUST be a subset of the facts visible at T2, before accounting for tombstones, retraction, or expiry. This invariant allows callers to reason about the causal evolution of the knowledge graph.
+<div className="stigmem-keypoint">
+
+**The `as_of` result set MUST be monotonically consistent.**
+
+For any two queries with `as_of=T1 < T2`, the set of facts visible
+at T1 MUST be a subset of the facts visible at T2, before accounting
+for tombstones, retraction, or expiry. This invariant allows callers
+to reason about the causal evolution of the knowledge graph.
+
+</div>
 
 ### §24.3 Tombstone Interaction (RTBF and Legal Hold) {#section-24-3}
 
@@ -84,24 +122,35 @@ The `as_of` result set MUST be monotonically consistent: for any two queries wit
 
 When a tombstone is issued with `legal_hold: false` (the default):
 
-1. The tombstoned entity's facts MUST be excluded from ALL `as_of` queries, regardless of whether `as_of` predates the tombstone's `created_at`.
-2. The tombstone has retroactive effect: the knowledge graph history is presented as if the entity never appeared.
-3. This applies to `query_facts`, `recall`, and graph traversal results regardless of the `as_of` timestamp.
+<ol className="stigmem-steps">
+<li>The tombstoned entity's facts MUST be excluded from ALL <code>as_of</code> queries, regardless of whether <code>as_of</code> predates the tombstone's <code>created_at</code>.</li>
+<li>The tombstone has retroactive effect: the knowledge graph history is presented as if the entity never appeared.</li>
+<li>This applies to <code>query_facts</code>, <code>recall</code>, and graph traversal results regardless of the <code>as_of</code> timestamp.</li>
+</ol>
 
 This is the normative RTBF semantic: the data subject's right to erasure extends to historical query results.
 
-The 60-second LRU cache refresh window defined in §23.3.3 rule 4 applies equally to `as_of` queries. During this window, a recently tombstoned entity MAY appear in `as_of` results on nodes whose local cache has not yet refreshed. This window is bounded and does not affect the retroactive semantics of the tombstone once the cache refreshes.
+The 60-second LRU cache refresh window defined in §23.3.3 rule 4 applies equally to `as_of` queries. During this window, a recently tombstoned entity MAY appear in `as_of` results on nodes whose local cache has not yet refreshed.
 
 #### §24.3.2 Legal-Hold Behavior (legal_hold: true) {#section-24-3-2}
 
 When a tombstone is issued with `legal_hold: true`:
 
-1. Live recall queries (`GET /v1/recall`, `recall_instruction`) MUST still exclude the entity's facts — the entity is suppressed from the live knowledge graph identically to `legal_hold: false`.
-2. Time-travel queries (`as_of` parameter) MAY return the entity's facts, but MUST annotate them with `"tombstone_status": "legal_hold"` in the response (§24.3.3).
-3. Callers of `as_of` queries MUST be authenticated with an admin API key to receive `legal_hold`-annotated facts. Agent API keys MUST NOT receive `legal_hold`-annotated facts, even in an `as_of` context.
-4. The `legal_hold` flag is intended for regulatory use cases where a data controller must preserve historical records for audit or legal proceedings while still suppressing the entity from operational recall.
+<ol className="stigmem-steps">
+<li>Live recall queries MUST still exclude the entity's facts — suppressed from live recall identically to <code>legal_hold: false</code>.</li>
+<li>Time-travel queries (<code>as_of</code> parameter) MAY return the entity's facts, but MUST annotate them with <code>"tombstone_status": "legal_hold"</code> in the response (§24.3.3).</li>
+<li>Callers MUST be authenticated with an admin API key to receive <code>legal_hold</code>-annotated facts. Agent API keys MUST NOT receive them, even in an <code>as_of</code> context.</li>
+<li>Intended for regulatory use cases where a data controller must preserve historical records for audit or legal proceedings while still suppressing the entity from operational recall.</li>
+</ol>
 
-Operators MUST NOT set `legal_hold: true` absent a documented legal basis. Issuing a `legal_hold` tombstone MUST emit an `rtbf_legal_hold_issued` audit log event (§22.3).
+<div className="stigmem-keypoint">
+
+**Operators MUST NOT set `legal_hold: true` absent a documented legal basis.**
+
+Issuing a `legal_hold` tombstone MUST emit an
+`rtbf_legal_hold_issued` audit log event (§22.3).
+
+</div>
 
 #### §24.3.3 Legal-Hold Response Annotation {#section-24-3-3}
 
@@ -142,7 +191,7 @@ recall_as_of(
   intent:          string,
   scope:           FactScope | null,
   as_of:           ISO8601,
-  is_admin_caller: bool,           // controls legal_hold visibility (§24.3.2)
+  is_admin_caller: bool,
   max_chunks:      int,
   include_graph:   bool
 ) → { chunks: [RecallChunk], tombstone_notices: [TombstoneNotice] }
@@ -150,9 +199,18 @@ recall_as_of(
 
 Implementations of `query_facts_as_of` MUST apply tombstone filtering per §24.3 before returning results. The `as_of` timestamp MUST be passed through to the storage layer as a query parameter and MUST NOT be applied as a post-filter on an unfiltered full scan.
 
-The `is_admin_caller` parameter governs `legal_hold` fact visibility: when `false`, facts covered by a `legal_hold` tombstone MUST be excluded from results (identically to `legal_hold: false` tombstones); when `true`, they MAY be returned and MUST be annotated via `tombstone_notices`. The storage layer MUST NOT rely solely on the API layer to gate `legal_hold` facts.
+<div className="stigmem-keypoint">
 
-**Cursor stability:** `as_of` query cursors are NOT tombstone-stable snapshots. If a tombstone is applied between paginated requests, rows visible on page 1 may be absent from page 2. Callers MUST NOT infer tombstone suppression from inter-page result-count differences. The spec does not require implementations to snapshot tombstone state per cursor; it does require that page 2 results are tombstone-filtered at the time of the page 2 request.
+**The storage layer MUST NOT rely solely on the API layer to gate `legal_hold` facts.**
+
+When `is_admin_caller` is `false`, facts covered by a `legal_hold`
+tombstone MUST be excluded from results (identically to
+`legal_hold: false` tombstones); when `true`, they MAY be returned
+and MUST be annotated via `tombstone_notices`.
+
+</div>
+
+**Cursor stability:** `as_of` query cursors are NOT tombstone-stable snapshots. If a tombstone is applied between paginated requests, rows visible on page 1 may be absent from page 2. Callers MUST NOT infer tombstone suppression from inter-page result-count differences.
 
 ### §24.5 Wire Format {#section-24-5}
 
@@ -179,14 +237,22 @@ Content-Type: application/json
 → 400 as_of_future                  if timestamp is in the future
 → 400 as_of_before_retention_floor  if timestamp predates retention horizon
 → 200 with empty `tombstone_notices` and facts silently filtered, if the query would surface legal_hold
-        facts and the caller is an **agent** API key (indistinguishable from a non-legal-hold empty result)
+        facts and the caller is an **agent** API key
 → 403 as_of_legal_hold_forbidden    if the query would return legal_hold facts and the caller is an **admin**
         API key but the deployment is configured to deny admin as_of access to that entity
 ```
 
-Agent API key callers MUST NOT receive any response that reveals the existence or absence of a legal-hold tombstone. When an agent-key `as_of` query would surface `legal_hold` facts, the node MUST return `200` with results silently filtered (as if the entity never had matching facts) — identical to non-legal-hold tombstone behavior.
+<div className="stigmem-keypoint">
 
-`tombstone_notices` is populated only when `legal_hold` tombstones apply AND the caller is an admin API key.
+**Agent API key callers MUST NOT receive any response that reveals the existence or absence of a legal-hold tombstone.**
+
+When an agent-key `as_of` query would surface `legal_hold` facts,
+the node MUST return `200` with results silently filtered — identical
+to non-legal-hold tombstone behavior. `tombstone_notices` is populated
+only when `legal_hold` tombstones apply AND the caller is an admin
+API key.
+
+</div>
 
 #### §24.5.2 As-Of Fact Query {#section-24-5-2}
 
@@ -207,11 +273,38 @@ Authorization: Bearer <admin api-key>
 
 ### §24.6 Error Reference {#section-24-6}
 
-| HTTP | Error code | Condition |
-|---|---|---|
-| 400 | `as_of_invalid_timestamp` | `as_of` parameter is not a valid ISO 8601 timestamp |
-| 400 | `as_of_future` | `as_of` timestamp is in the future |
-| 400 | `as_of_before_retention_floor` | `as_of` predates the deployment's minimum retention horizon |
-| 403 | `as_of_legal_hold_forbidden` | `as_of` query would surface legal-hold tombstoned facts and the caller is an admin API key but the deployment denies admin time-travel access to that entity; MUST NOT be returned to agent API key callers (use silent 200 filter instead) |
+<div className="stigmem-fields">
+
+<div>
+<dt>HTTP</dt>
+<dt><span className="stigmem-fields__type">Error code</span></dt>
+<dd>Condition</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>as_of_invalid_timestamp</code></span></dt>
+<dd><code>as_of</code> parameter is not a valid ISO 8601 timestamp.</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>as_of_future</code></span></dt>
+<dd><code>as_of</code> timestamp is in the future.</dd>
+</div>
+
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type"><code>as_of_before_retention_floor</code></span></dt>
+<dd><code>as_of</code> predates the deployment's minimum retention horizon.</dd>
+</div>
+
+<div>
+<dt>403</dt>
+<dt><span className="stigmem-fields__type"><code>as_of_legal_hold_forbidden</code></span></dt>
+<dd>Query would surface legal-hold tombstoned facts and the caller is an admin API key but the deployment denies admin time-travel access to that entity; MUST NOT be returned to agent API key callers (use silent 200 filter instead).</dd>
+</div>
+
+</div>
 
 ---

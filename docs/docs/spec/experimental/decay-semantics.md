@@ -18,9 +18,19 @@ since: 0.9.0a1
 
 # §15. Decay Semantics {#section-15}
 
-**Status:** Experimental / dormant source package
+<p className="stigmem-meta"><span>5 min read</span><span>Spec contributor · Node operator</span><span>Experimental · v0.9.0bN</span></p>
 
-Configurable TTL and confidence-decay policies; POST /v1/decay/sweep.
+<div className="stigmem-lead">
+
+**What this section covers**
+
+Configurable TTL and confidence-decay policies; `POST /v1/decay/sweep`.
+The decay operation is the **remediation complement to lint**: lint
+identifies stale/low-confidence facts; the decay sweeper acts on them.
+
+</div>
+
+**Status:** Experimental / dormant source package
 
 **Source material:** Archived evolutionary spec snapshots. This page is the maintained Spec-X home for decay semantics.
 
@@ -31,19 +41,21 @@ Each subsection below shows the most recent normative text from the spec source.
 > **Pre-reset status:** Draft. The decay sweeper (`POST /v1/decay/sweep`) and `decay_scope`
 > MCP tool are specified here. Implementation is the D4 deliverable. Wire
 > format and DecayPolicy registry are draft; conformance test vectors (`DECAY_VECTORS`)
-> will be finalized with D4 implementation. This section will be promoted to normative
-> pre-reset; conformance tests pass against a live node.
-
-The **decay** operation applies operator-configured TTL and confidence-reduction policies
-to live facts, producing retractions or confidence updates. Decay is the **remediation
-complement to lint**: lint identifies stale/low-confidence facts; the decay sweeper acts
-on them.
+> will be finalized with D4 implementation.
 
 ### §15.1 DecayPolicy {#section-15-1}
 
 A `DecayPolicy` configures how facts of a given relation (or all relations) decay over time. Operators deploy one or more policies to ensure knowledge does not accumulate indefinitely — stale facts degrade confidence or are retracted without requiring agents to remember which facts they once asserted.
 
-The struct exposes two mutually-exclusive decay modes. **Retraction** (`ttl_s`) is an aggressive binary cut-off suited for ephemeral state such as "user is online" — once the TTL expires the fact is no longer credible and a zero-confidence retraction is written. **Confidence reduction** (`half_life_s`) provides a smoother signal for beliefs that age gradually; each sweep halves the original confidence until it hits `min_confidence`. The `relation` and `scope` wildcards (`"*"`) allow broad catch-all policies while the `exempt_relations` escape hatch protects system-generated facts (§3.5) and reification primitives whose removal would corrupt the graph.
+<div className="stigmem-keypoint">
+
+**The struct exposes two mutually-exclusive decay modes.**
+
+**Retraction** (`ttl_s`) is an aggressive binary cut-off suited for
+ephemeral state. **Confidence reduction** (`half_life_s`) provides
+a smoother signal for beliefs that age gradually.
+
+</div>
 
 ```
 DecayPolicy {
@@ -63,30 +75,56 @@ DecayMode =
   | "dry_run"      // same logic as retract/confidence but no writes; returns what would be changed
 ```
 
-**Policy registry:** Nodes maintain a list of `DecayPolicy` objects configured via:
-- Environment variable: `STIGMEM_DECAY_POLICIES` (JSON array of `DecayPolicy` objects).
-- Admin API: `GET/POST/DELETE /v1/decay/policies` (management endpoint; not yet implemented; the pre-reset substrate work).
+<div className="stigmem-fields">
 
-**Default policy:** If no policies are configured, the decay sweeper is a no-op. Nodes do
-not apply any automatic decay by default.
+<div>
+<dt>Configuration</dt>
+<dt><span className="stigmem-fields__type">Source</span></dt>
+<dd>Notes</dd>
+</div>
 
-**Policy evaluation order:** Policies are evaluated most-specific-first: exact `relation`
-match before `"*"`, exact `scope` match before `"*"`. The first matching policy wins.
+<div>
+<dt>Env var</dt>
+<dt><span className="stigmem-fields__type"><code>STIGMEM_DECAY_POLICIES</code></span></dt>
+<dd>JSON array of <code>DecayPolicy</code> objects.</dd>
+</div>
 
-**Exempt relations:** The `stigmem:` namespace (system-generated facts) and `rel:`
-namespace (reification primitives) are always exempt from decay and MUST NOT be
-retracted or confidence-reduced by the sweeper, regardless of policy configuration.
-The `exempt_relations` field on individual policies may add further exemptions.
+<div>
+<dt>Admin API</dt>
+<dt><span className="stigmem-fields__type"><code>/v1/decay/policies</code></span></dt>
+<dd>Management endpoint; not yet implemented.</dd>
+</div>
+
+<div>
+<dt>Default policy</dt>
+<dt><span className="stigmem-fields__type">no-op</span></dt>
+<dd>If no policies are configured, the decay sweeper is a no-op. Nodes do not apply any automatic decay by default.</dd>
+</div>
+
+<div>
+<dt>Evaluation order</dt>
+<dt><span className="stigmem-fields__type">most-specific-first</span></dt>
+<dd>Exact <code>relation</code> match before <code>"&#42;"</code>, exact <code>scope</code> match before <code>"&#42;"</code>. The first matching policy wins.</dd>
+</div>
+
+</div>
+
+<div className="stigmem-keypoint">
+
+**The `stigmem:` and `rel:` namespaces are always exempt from decay.**
+
+System-generated facts and reification primitives MUST NOT be
+retracted or confidence-reduced by the sweeper, regardless of
+policy configuration. The `exempt_relations` field may add further
+exemptions.
+
+</div>
 
 ### §15.2 Decay Sweep Wire Format {#section-15-2}
 
-The sweep endpoint triggers evaluation of all matching decay policies against a single scope. Callers specify the target `scope` and may optionally override the decay mode (e.g. forcing `dry_run` for a preview without side effects) or restrict evaluation to a single named policy. The response returns counters that let operators and monitoring systems track how many facts were affected, supporting both automated alerting and manual audit.
-
-The request/response split between "actual" and "dry-run" counters is intentional: `facts_retracted` and `facts_reduced` are always zero in `dry_run` mode, while `dry_run_would_retract` and `dry_run_would_reduce` are always zero outside it. This avoids ambiguity about whether writes occurred.
+The sweep endpoint triggers evaluation of all matching decay policies against a single scope. The request/response split between "actual" and "dry-run" counters is intentional: `facts_retracted` and `facts_reduced` are always zero in `dry_run` mode, while `dry_run_would_retract` and `dry_run_would_reduce` are always zero outside it. This avoids ambiguity about whether writes occurred.
 
 #### Request
-
-The caller supplies the `scope` to sweep and may optionally force a `mode` override (e.g. `dry_run` to preview the sweep without side effects) or restrict evaluation to a single named `policy_id`. All three fields use the same types defined in §15.1; `scope` is the only required parameter.
 
 ```
 POST /v1/decay/sweep
@@ -95,64 +133,104 @@ Content-Type: application/json
 
 {
   "scope":    FactScope,    // required: which scope to sweep
-  "mode":     DecayMode?,   // optional: override all policies' mode for this run (e.g. force "dry_run")
+  "mode":     DecayMode?,   // optional: override all policies' mode for this run
   "policy_id": string?      // optional: run only this named policy
 }
 ```
 
 #### Response
 
-The response reports aggregate counters split by actual vs. dry-run activity. In normal mode `facts_retracted` and `facts_reduced` are populated while the `dry_run_*` fields are zero; in `dry_run` mode the reverse holds. This makes it unambiguous whether the sweep wrote anything — operators can pipe the JSON into monitoring dashboards without parsing the request to determine the mode.
-
 ```
 200 OK
 {
-  "swept_at":          string,   // ISO 8601 UTC
+  "swept_at":          string,
   "scope":             FactScope,
   "mode":              DecayMode,
   "facts_evaluated":   integer,
-  "facts_retracted":   integer,  // 0 in dry_run mode
-  "facts_reduced":     integer,  // confidence-reduced; 0 in dry_run mode
-  "dry_run_would_retract": integer,  // populated in dry_run mode; 0 otherwise
-  "dry_run_would_reduce":  integer,  // populated in dry_run mode; 0 otherwise
-  "policies_applied":  string[]  // policy IDs that matched at least one fact
+  "facts_retracted":   integer,
+  "facts_reduced":     integer,
+  "dry_run_would_retract": integer,
+  "dry_run_would_reduce":  integer,
+  "policies_applied":  string[]
 }
 ```
 
 #### Error responses
 
-| HTTP | Condition |
-|---|---|
-| 400 | `scope` missing or invalid; `policy_id` not found; invalid `mode` override |
-| 403 | Caller's key lacks write access to the requested scope |
-| 202 | Scope exceeds 100,000 facts (async path; same pattern as §14.5) |
+<div className="stigmem-fields">
 
-#### Authorization
+<div>
+<dt>HTTP</dt>
+<dt><span className="stigmem-fields__type">Code</span></dt>
+<dd>Condition</dd>
+</div>
 
-The caller's API key MUST have write access to the requested scope. The decay sweep
-writes retractions (new facts with `confidence=0.0`) or confidence-update facts;
-these are regular fact assertions subject to all normal write invariants.
+<div>
+<dt>400</dt>
+<dt><span className="stigmem-fields__type">validation</span></dt>
+<dd><code>scope</code> missing or invalid; <code>policy_id</code> not found; invalid <code>mode</code> override.</dd>
+</div>
+
+<div>
+<dt>403</dt>
+<dt><span className="stigmem-fields__type">authorization</span></dt>
+<dd>Caller's key lacks write access to the requested scope.</dd>
+</div>
+
+<div>
+<dt>202</dt>
+<dt><span className="stigmem-fields__type">async</span></dt>
+<dd>Scope exceeds 100,000 facts (async path; same pattern as §14.5).</dd>
+</div>
+
+</div>
+
+The caller's API key MUST have write access to the requested scope. The decay sweep writes retractions (new facts with `confidence=0.0`) or confidence-update facts; these are regular fact assertions subject to all normal write invariants.
 
 ### §15.3 Decay and Immutability {#section-15-3}
 
-The decay sweeper does **not** mutate existing facts. All decay actions are expressed
-as new immutable fact assertions:
+<div className="stigmem-keypoint">
 
-- **Retraction:** A new fact `(entity, relation, scope, confidence=0.0, source="system:stigmem:decay")` is asserted. The original fact is retained.
-- **Confidence reduction:** A new fact with `confidence = original_confidence * exp(-ln(2) / half_life_s * elapsed_s)` is asserted, floored at `min_confidence`. The `source` is `"system:stigmem:decay"`.
+**The decay sweeper does not mutate existing facts.**
 
-Both produce entries in the normal facts table and are visible in `GET /v1/facts` responses.
-`source="system:stigmem:decay"` allows callers to distinguish sweep-induced retractions from
-agent-authored retractions.
+All decay actions are expressed as new immutable fact assertions.
+The original fact is retained.
+
+</div>
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Action</dt>
+<dt><span className="stigmem-fields__type">Output fact</span></dt>
+<dd>Source</dd>
+</div>
+
+<div>
+<dt>Retraction</dt>
+<dt><span className="stigmem-fields__type">confidence=0.0</span></dt>
+<dd>New fact <code>(entity, relation, scope, confidence=0.0, source="system:stigmem:decay")</code>.</dd>
+</div>
+
+<div>
+<dt>Confidence reduction</dt>
+<dt><span className="stigmem-fields__type">exponential</span></dt>
+<dd>New fact with <code>confidence = original_confidence * exp(-ln(2) / half_life_s * elapsed_s)</code>, floored at <code>min_confidence</code>.</dd>
+</div>
+
+</div>
+
+Both produce entries in the normal facts table and are visible in `GET /v1/facts` responses. `source="system:stigmem:decay"` allows callers to distinguish sweep-induced retractions from agent-authored retractions.
 
 ### §15.4 Performance Contract {#section-15-4}
 
-- `POST /v1/decay/sweep` MUST respond synchronously within **60 seconds** for scopes
-  with fewer than 100,000 facts. (Decay is more expensive than lint because it writes.)
-- For scopes exceeding 100,000 facts, nodes MAY respond with HTTP 202 following the
-  same async job pattern as §14.5.
-- **Dry-run is always synchronous.** `mode="dry_run"` performs no writes and MUST
-  respond within 30 seconds regardless of scope size.
+<div className="stigmem-grid">
+
+<div><h4>Sync within 60 s</h4><p>For scopes with fewer than 100,000 facts.</p></div>
+<div><h4>Async over 100k</h4><p>HTTP 202 following the same async job pattern as §14.5.</p></div>
+<div><h4>Dry-run always sync</h4><p>Performs no writes and MUST respond within 30 seconds regardless of scope size.</p></div>
+
+</div>
 
 ### §15.5 MCP Tool: `decay_scope` {#section-15-5}
 
@@ -197,11 +275,15 @@ The decay sweeper is designed for scheduled operation:
   -d '{"scope": "company"}'
 ```
 
-The sweep is **idempotent**: running it twice in a row on the same data produces the
-same result (the second run sees the retractions written by the first run and finds
-no additional facts to retract at the same TTL threshold).
+<div className="stigmem-keypoint">
 
-**Cron configuration pattern:** Operators define decay policies as a JSON array in the `STIGMEM_DECAY_POLICIES` environment variable. Each entry declares a relation glob, scope, mode, and the relevant timing parameter (`half_life_s` for confidence decay, `ttl_s` for hard retraction). The sweep endpoint evaluates every matching policy against facts in the requested scope — multiple policies can coexist so that different relation families decay at different rates.
+**The sweep is idempotent.**
+
+Running it twice in a row on the same data produces the same result.
+
+</div>
+
+Operators define decay policies as a JSON array in the `STIGMEM_DECAY_POLICIES` environment variable. Each entry declares a relation glob, scope, mode, and the relevant timing parameter. Multiple policies can coexist so that different relation families decay at different rates.
 
 ```
 STIGMEM_DECAY_POLICIES=[
@@ -227,13 +309,45 @@ STIGMEM_DECAY_POLICIES=[
 
 `DECAY_VECTORS` are defined in `sdks/stigmem-py/tests/conformance_vectors.py`.
 
-| Vector ID | Mode | Scenario | Expected outcome |
-|---|---|---|---|
-| `decay-confidence-reduction` | `confidence` | Fact with `half_life_s=3600`; assert 7200 s ago | New fact with `confidence ≈ 0.25` |
-| `decay-retraction` | `retract` | Fact older than `ttl_s`; assert was 3601 s ago | New fact with `confidence=0.0`, `source="system:stigmem:decay"` |
-| `decay-scope-filter` | `retract` | Stale fact in `public` scope; sweep `company` scope | No facts retracted (scope isolation) |
-| `decay-dry-run` | `dry_run` | Fact older than `ttl_s` | `dry_run_would_retract=1`; no new facts in store |
-| `decay-exempt` | `retract` | Fact with `relation="stigmem:received_from"` in scope | Fact not retracted (exempt namespace) |
+<div className="stigmem-fields">
+
+<div>
+<dt>Vector ID</dt>
+<dt><span className="stigmem-fields__type">Mode</span></dt>
+<dd>Expected outcome</dd>
+</div>
+
+<div>
+<dt><code>decay-confidence-reduction</code></dt>
+<dt><span className="stigmem-fields__type">confidence</span></dt>
+<dd>Fact with <code>half_life_s=3600</code>; asserted 7200 s ago → new fact with <code>confidence ≈ 0.25</code>.</dd>
+</div>
+
+<div>
+<dt><code>decay-retraction</code></dt>
+<dt><span className="stigmem-fields__type">retract</span></dt>
+<dd>Fact older than <code>ttl_s</code> → new fact with <code>confidence=0.0</code>, <code>source="system:stigmem:decay"</code>.</dd>
+</div>
+
+<div>
+<dt><code>decay-scope-filter</code></dt>
+<dt><span className="stigmem-fields__type">retract</span></dt>
+<dd>Stale fact in <code>public</code> scope; sweep <code>company</code> → no facts retracted (scope isolation).</dd>
+</div>
+
+<div>
+<dt><code>decay-dry-run</code></dt>
+<dt><span className="stigmem-fields__type">dry_run</span></dt>
+<dd>Fact older than <code>ttl_s</code> → <code>dry_run_would_retract=1</code>; no new facts in store.</dd>
+</div>
+
+<div>
+<dt><code>decay-exempt</code></dt>
+<dt><span className="stigmem-fields__type">retract</span></dt>
+<dd>Fact with <code>relation="stigmem:received_from"</code> → not retracted (exempt namespace).</dd>
+</div>
+
+</div>
 
 All five vectors MUST pass for conformance.
 

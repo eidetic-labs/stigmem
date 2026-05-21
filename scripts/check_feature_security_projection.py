@@ -184,9 +184,9 @@ def _validate_advisory_policy(security_text: str) -> list[str]:
     failures: list[str] = []
     required_policy_phrases = [
         "Critical and High vulnerabilities that affect a published artifact are "
-        "disclosed with a GitHub repository security advisory",
+        + "disclosed with a GitHub repository security advisory",
         "Medium and Low vulnerabilities are documented in release notes, "
-        "security posture docs, or operator guidance",
+        + "security posture docs, or operator guidance",
     ]
     for phrase in required_policy_phrases:
         if phrase not in security_text:

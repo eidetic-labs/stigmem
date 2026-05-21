@@ -129,6 +129,8 @@ Progress:
   evidence, and open queue-control gaps under `features/async-jobs/`.
 - `fuzzy-resolver` now owns entity-resolution behavior, alias-management
   evidence, and resolver security gaps under `features/fuzzy-resolver/`.
+- `oidc-sso` now owns OIDC exchange behavior, token-validation evidence, and
+  M5/L5 security disposition references under `features/oidc-sso/`.
 
 ### Phase 3: Projection tooling
 

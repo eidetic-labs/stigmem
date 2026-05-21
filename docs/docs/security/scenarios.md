@@ -275,7 +275,7 @@ events to alert on — you must watch the underlying resource metrics.
 
 v0.9.0a1 ships rate-limit enforcement (R-02 Mitigated), but the
 kill-switch (<code>limits=0</code>) is intended for isolated dev/test
-environments only. v0.9.0bN beta series adds a startup warning when
+environments only. Future hardened-core work adds a startup warning when
 both limits are zero so this misconfiguration is loud.
 
 </div>
@@ -1224,7 +1224,7 @@ surface remain future work.
 
 **Open (R-22, High priority).**
 
-The v1.0.0rcN line ships Sigstore-signed releases, reproducible
+The future stable-readiness line ships Sigstore-signed releases, reproducible
 builds, SBOM publication, and Rekor entries for every release. Until
 those ship, operators rely on out-of-band trust signals.
 

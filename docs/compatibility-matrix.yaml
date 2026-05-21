@@ -96,14 +96,14 @@ features:
     stability: documented
     requires:
       node: ">=0.9.0a1"
-    notes: "Header documented in v0.9.0a1; node-side honor lands in Phase B per ADR-012."
+    notes: "Header documented in v0.9.0a1; node-side honor is future hardened-core work per ADR-012."
 
   - id: argon2id-key-hashing
     name: Argon2id API key hashing
     spec_section: §3.5
     stability: beta
     requires:
-      node: ">=0.9.0a2"  # Phase B
+      node: ">=0.9.0a2"  # alpha hardening
     notes: "New API keys are Argon2id-hashed; v0.9.0a1 SHA-256 rows verify during the v0.9.x migration window and rehash on successful use."
 
   - id: lazy-instruction-discovery

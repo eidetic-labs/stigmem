@@ -38,7 +38,7 @@ find node/src node/tests eval adapters experimental \
 | `node/src/stigmem_node/routes/recall.py` | 1025 | Completed | Split into `routes/recall/` stage modules in #268; public import path preserved as `stigmem_node.routes.recall`. |
 | `node/tests/tombstones/test_tombstones.py` | 1024 | Discouraged size | Defer to tombstones experimental/plugin rework. |
 | `node/src/stigmem_node/routes/federation.py` | 1009 | Completed | Split into `routes/federation/` endpoint-family modules in #266; public import path preserved as `stigmem_node.routes.federation`. |
-| `node/src/stigmem_node/models.py` | 690 | Pydantic concentration | Split into domain modules before Phase C. |
+| `node/src/stigmem_node/models.py` | 690 | Pydantic concentration | Split into domain modules before the future stable-readiness line. |
 
 Generated files and archived specs are excluded from this tracker. Files below
 1000 lines can still be decomposed when they are high-churn, high-complexity,
@@ -65,9 +65,9 @@ inventory, name validation commands, and avoid unrelated behavioral changes.
 ## Deferrals
 
 - `node/tests/instruction/test_phase10_instruction.py` belongs with lazy instruction
-  discovery redesign rather than a standalone Phase B refactor.
+  discovery redesign rather than a standalone hardened-core refactor.
 - `node/tests/tombstones/test_tombstones.py` belongs with tombstone experimental/plugin
-  rework rather than a standalone Phase B refactor.
+  rework rather than a standalone hardened-core refactor.
 - `node/src/stigmem_node/routes/instruction.py` stays deferred with lazy
   instruction discovery unless an implementation PR requires a local cleanup.
 
@@ -88,7 +88,7 @@ future major-version deprecation/removal cycle after v1.0.0 GA.
 ## Tracking Notes
 
 - Parent: [#180](https://github.com/eidetic-labs/stigmem/issues/180)
-- Phase B parent: [#165](https://github.com/eidetic-labs/stigmem/issues/165)
+- Hardened-core parent: [#165](https://github.com/eidetic-labs/stigmem/issues/165)
 - Evidence tracker: [#158](https://github.com/eidetic-labs/stigmem/issues/158)
 - #264 implementation converts `stigmem_node.cli` from a monolithic module to
   a package while preserving the public `stigmem_node.cli` import and

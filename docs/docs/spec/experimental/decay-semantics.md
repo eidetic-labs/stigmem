@@ -2,7 +2,7 @@
 spec_id: Spec-X9-Decay-Semantics
 version: 0.1.0-alpha.0
 status: Experimental
-applies_to: stigmem v0.9.0bN
+applies_to: future experimental plugin line
 last_updated: 2026-05-14
 supersedes: pre-reset §15 decay semantics material
 depends_on:
@@ -18,7 +18,7 @@ since: 0.9.0a1
 
 # §15. Decay Semantics {#section-15}
 
-<p className="stigmem-meta"><span>5 min read</span><span>Spec contributor · Node operator</span><span>Experimental · v0.9.0bN</span></p>
+<p className="stigmem-meta"><span>5 min read</span><span>Spec contributor · Node operator</span><span>Experimental · future plugin line</span></p>
 
 <div className="stigmem-lead">
 

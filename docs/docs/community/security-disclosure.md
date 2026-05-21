@@ -334,10 +334,10 @@ dependency-fix posture from the withdrawn v1.0 release-candidate
 snapshot. Several **threat-model** controls (mTLS-default federation,
 persistent audit log, per-principal rate limits, capability-level
 cross-org instruction validation, bounded HLC skew, the ADR-016
-storage-immutability stack) are scheduled for the v0.9.0bN beta
-series and are **not yet in effect** at v0.9.0a2. Adopters running
-federation across organizational boundaries should wait for the
-v0.9.0bN beta series.
+storage-immutability stack) remain future hardened-core work and are
+**not yet in effect** at v0.9.0a2. Adopters running federation across
+organizational boundaries should wait until those controls ship and
+complete operator validation.
 
 </div>
 

@@ -5,7 +5,7 @@ audience: Operator
 
 # Prompt-Injection Hardening
 
-<p className="stigmem-meta"><span>3 min read</span><span>Node operator</span><span>Phase B · v0.9.0aN</span></p>
+<p className="stigmem-meta"><span>3 min read</span><span>Node operator</span><span>Alpha hardening</span></p>
 
 <div className="stigmem-lead">
 
@@ -14,7 +14,7 @@ audience: Operator
 Stigmem treats recalled facts as data, not instructions. The node
 enforces the protocol-side boundary, but operators still choose the
 adapters and models that consume recalled content. This guide
-captures the current Phase B operating posture while ADR-015
+captures the current alpha hardening posture while ADR-015
 certification work continues.
 
 </div>

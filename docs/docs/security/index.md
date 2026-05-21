@@ -76,8 +76,7 @@ prompt-injection trust boundary by silently changing
 <code>instruction</code> at the storage layer. Mitigation is the
 ADR-016 stack (L1–L5: append-only journal, SQLite triggers, CIDs per
 [ADR-017](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md),
-local hash chain, Sigstore Rekor anchor). Targeted: the v0.9.0bN beta
-series.
+local hash chain, Sigstore Rekor anchor). Targeted: future hardened-core work.
 
 </div>
 
@@ -250,7 +249,7 @@ v0.9.0a2 hardening release patches the following advisory batch.
 
 </div>
 
-The Phase B federation-hardening control review lives with the
+The federation-hardening control review lives with the
 canonical security evidence at
 [`spec/security/federation-control-review.md`](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/federation-control-review.md).
 

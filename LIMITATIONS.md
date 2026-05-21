@@ -18,7 +18,7 @@ If after reading this you're unsure whether your use case is safe, the answer is
 
 ## Current state in one sentence
 
-Stigmem v0.9.0a2 is a working federated-memory reference node with a documented threat model and several controls our own threat model identifies as required for safe deployment that have not yet shipped. Those controls land during the v0.9.0bN beta series (see [ROADMAP.md](ROADMAP.md)). Until they do, the deployment recommendations below are the responsible defaults.
+Stigmem v0.9.0a2 is a working federated-memory reference node with a documented threat model and several controls our own threat model identifies as required for safe deployment that have not yet shipped. Those controls remain future hardened-core work (see [ROADMAP.md](ROADMAP.md)); no beta, release-candidate, or GA milestone is active today. Until the controls ship, the deployment recommendations below are the responsible defaults.
 
 ---
 
@@ -37,7 +37,7 @@ These are unambiguous "do not" recommendations as of v0.9.0a2.
 - Replay capability tokens within a window we have not yet fuzz-tested adequately.
 - Write instruction-shaped facts that flow into your agents' context without a structural quarantine boundary.
 
-**What to do today:** do not federate across organizational boundaries until the v0.9.0bN beta series ships. Single-organization federation between nodes you operate yourself is safer, but still subject to the limitations below.
+**What to do today:** do not federate across organizational boundaries until the future hardened-core controls ship and complete operator validation. Single-organization federation between nodes you operate yourself is safer, but still subject to the limitations below.
 
 ---
 
@@ -47,7 +47,7 @@ These are unambiguous "do not" recommendations as of v0.9.0a2.
 
 **What this means:** if an LLM-driven agent is configured with an admin-scope API key (for example, by mounting it into an MCP adapter), a successful prompt injection on that agent grants the attacker full administrative control of your stigmem node — manifest publishing, key rotation, quarantine override, all of it.
 
-**What to do today:** never issue admin-scope keys to anything an LLM can drive. Admin keys are for human operators and automation under human supervision only. Agent keys should be scoped to the minimum necessary (typically `local` or `team`, write access only to the relations the agent specifically needs). We are working on a structural fix that refuses such configurations at the API layer (the v0.9.0bN beta series).
+**What to do today:** never issue admin-scope keys to anything an LLM can drive. Admin keys are for human operators and automation under human supervision only. Agent keys should be scoped to the minimum necessary (typically `local` or `team`, write access only to the relations the agent specifically needs). We are working on a structural fix that refuses such configurations at the API layer as future hardened-core work.
 
 ---
 
@@ -63,7 +63,7 @@ These are unambiguous "do not" recommendations as of v0.9.0a2.
 - Do not allow agents to act on instructions found in fact values without a separate authorization step that does not depend on the fact's content.
 - If you build adapters that consume `recall()` output, preserve the `content` / `instructions` separation and include the ADR-003 system-prompt directive. Treat uncertified models as an accepted operator risk.
 
-The capability-based redesign is present on `main`; the v0.9.0bN beta series remains the target for release posture, certification evidence, and operator validation.
+The capability-based redesign is present on `main`; release posture, certification evidence, and operator validation remain future hardened-core gates.
 
 ---
 
@@ -112,13 +112,13 @@ The capability-based redesign is present on `main`; the v0.9.0bN beta series rem
 - A misbehaving agent can exhaust your storage or your CPU.
 - You cannot reconstruct who-did-what from logs in a way suitable for incident response.
 
-**What to do today:** treat v0.9.0a1 as a development and evaluation release. Production deployment is not recommended until the v0.9.0bN beta series completes (rate limits + persistent audit log). If you must deploy to production now, run behind a reverse proxy with its own rate limiting, and pipe stigmem's structured output to a SIEM you trust.
+**What to do today:** treat v0.9.0a2 as a development and evaluation release. Production deployment is not recommended until rate limits and persistent audit-log controls complete and are release-validated. If you must deploy to production now, run behind a reverse proxy with its own rate limiting, and pipe stigmem's structured output to a SIEM you trust.
 
 ---
 
 ### 8. Long-lived API keys with weak hashing and no rotation
 
-**Status:** Phase B moves new API keys to Argon2id hashing at rest (`node/src/stigmem_node/auth.py:_hash_key`) using the ADR-007 parameters. Legacy v0.9.0a1 SHA-256 rows remain valid during the v0.9.x migration window and are opportunistically rehashed to Argon2id on first successful use. **Separately:** automated rotation and an "expiring soon" admin surface are not yet available.
+**Status:** New API keys use Argon2id hashing at rest (`node/src/stigmem_node/auth.py:_hash_key`) with the ADR-007 parameters. Legacy v0.9.0a1 SHA-256 rows remain valid during the v0.9.x migration window and are opportunistically rehashed to Argon2id on first successful use. **Separately:** automated rotation and an "expiring soon" admin surface are not yet available.
 
 **What this means:** an attacker who obtains the api_keys table (e.g., via R-23 admin-level storage compromise, or via a separate exfiltration vector) faces Argon2id for new keys. Any legacy SHA-256 rows that have not been used or explicitly rotated still retain the older fast-hash posture until migration completes.
 
@@ -128,15 +128,15 @@ The capability-based redesign is present on `main`; the v0.9.0bN beta series rem
 - **Generate API keys at sufficient length** (the default caller-generated recommendation is 256-bit; don't override to anything shorter). Argon2id is defense-in-depth, not permission to use short or predictable keys.
 - **Rotate keys manually on your own schedule** (recommend ≤90 days). Treat any key issued for testing or demo purposes as compromised once you've shared it with anyone outside the issuance context.
 
-The remaining beta hardening work brings: automated rotation runbooks and an "expiring soon" admin surface.
+Future hardened-core work brings: automated rotation runbooks and an "expiring soon" admin surface.
 
-**Why this changed:** release-readiness review for v0.9.0a1 caught that the implementation still used raw SHA-256 despite earlier prose saying Argon2id. Phase B corrects the implementation while retaining dual-mode verification for already-issued keys.
+**Why this changed:** release-readiness review for v0.9.0a1 caught that the implementation still used raw SHA-256 despite earlier prose saying Argon2id. The current alpha line corrects the implementation while retaining dual-mode verification for already-issued keys.
 
 ---
 
 ### 9. Running the OpenClaw bundled adapter as-is
 
-**Status:** Most immediate OpenClaw safety issues have Phase B fixes landed. The
+**Status:** Most immediate OpenClaw safety issues have hardened-core fixes landed. The
 adapter separates retrieved content from instruction-channel recall output and
 requires callers to place `SYSTEM_PROMPT_DIRECTIVE` above the delimited
 `UNTRUSTED STIGMEM CONTENT` summary. Audit-mapped C1-C4/H1-H5 regression tests
@@ -211,7 +211,7 @@ This is intentional — adopters running `pip install <pkg>` in CI shouldn't acc
 ```bash
 npm install @eidetic-labs/stigmem-ts                 # gets the most recent published version (currently a prerelease)
 npm install @eidetic-labs/stigmem-ts@alpha           # gets the most recent 0.9.0-alpha.* prerelease
-npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.1   # explicit pin
+npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.2   # explicit pin
 ```
 
 **Why scoped:** npm's free-tier organization permissions don't allow team-bound package access controls; scoping under `@eidetic-labs` sidesteps that limitation entirely.
@@ -226,12 +226,12 @@ npm requires every package to have a `latest` dist-tag; there is no way to publi
 
 **What this means concretely:**
 
-| Adopter command | What you get today (v0.9.0a1) | What you'll get over time |
+| Adopter command | What you get today (v0.9.0a2) | What you'll get over time |
 |---|---|---|
-| `npm install @eidetic-labs/stigmem-ts` | `0.9.0-alpha.1` | The most recent published version, advancing through `0.9.0-alpha.N` → `0.9.0-beta.N` → `1.0.0-rc.N` → `1.0.0` |
-| `npm install @eidetic-labs/stigmem-ts@alpha` | `0.9.0-alpha.1` | The most recent alpha; locks at the last `0.9.0-alpha.N` once we move to beta |
-| `npm install @eidetic-labs/stigmem-ts@beta` | (no version yet) | The most recent beta, once `0.9.0-beta.1` ships |
-| `npm install @eidetic-labs/stigmem-ts@rc` | (no version yet) | The most recent v1.0.0 release candidate |
+| `npm install @eidetic-labs/stigmem-ts` | `0.9.0-alpha.2` | The most recent published version, advancing through the active alpha line first. Future beta/RC/GA tags are created only when those release lines are explicitly opened and published. |
+| `npm install @eidetic-labs/stigmem-ts@alpha` | `0.9.0-alpha.2` | The most recent alpha. |
+| `npm install @eidetic-labs/stigmem-ts@beta` | (no version yet) | No active beta line today. |
+| `npm install @eidetic-labs/stigmem-ts@rc` | (no version yet) | No active release-candidate line today. |
 
 **Stability signal lives in the version string,** not the dist-tag. Any version ending in `-alpha.N`, `-beta.N`, or `-rc.N` is pre-stable and carries no compatibility guarantee. Adopters who need stability **must** pin a v1.x version once the v1.0.0 line ships. Until then, the version string is the only honest stability indicator.
 
@@ -269,7 +269,7 @@ Running one stigmem node on your own infrastructure, populated by your own agent
 
 ### Local development and prototyping
 
-Developers building agent applications who want to evaluate whether typed-fact memory is the right shape for their problem. Pin to a specific v0.9.0a* version, expect breaking changes during the v0.9.0bN beta-series hardening window, and treat the data as throwaway.
+Developers building agent applications who want to evaluate whether typed-fact memory is the right shape for their problem. Pin to a specific v0.9.0a* version, expect breaking changes during the alpha hardening window and any future pre-stable release, and treat the data as throwaway.
 
 ### Internal tooling within a single trust boundary
 
@@ -289,7 +289,7 @@ Read this document, read the threat model, run `make demo` locally, and decide w
 
 ### If you have already integrated against v1.0
 
-Your code does not need to change today; the wire format hasn't changed. **Do not deploy in cross-org federation configurations.** Pin to v0.9.0a1 and expect minor breaking changes during the v0.9.0bN beta series. Read [the retraction post](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) for context on the version change.
+Your code does not need to change today; the wire format hasn't changed. **Do not deploy in cross-org federation configurations.** Pin to the current alpha line and expect breaking changes before any stable release. Read [the retraction post](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) for context on the version change.
 
 ### If you want to be our first external operator
 
@@ -307,18 +307,18 @@ The [`ROADMAP.md`](ROADMAP.md) at repo root is the public sequencing for closing
 
 | Limitation | Closes in | Tracked as |
 |---|---|---|
-| Cross-org federation safety (mTLS-default, HLC bounds, capability validation) | the v0.9.0bN beta series (federation hardening) | R-01, R-14, R-16 |
-| Prompt-injection structural defense | the v0.9.0bN beta series (capability redesign) | R-05 (replaces sanitizer with capability model) |
-| Agent feedback-loop attack | the v0.9.0bN beta series (capability redesign) | R-15 (new) |
-| Persistent audit log | the v0.9.0bN beta series (federation hardening) | R-09 |
-| Per-principal rate limits | the v0.9.0bN beta series (federation hardening) | R-02 |
-| API key max-age & rotation | the v0.9.0bN beta series (federation hardening) | R-03 |
-| OpenClaw adapter hardening | the v0.9.0bN beta series (capability redesign) | OpenClaw audit C-series |
-| At-rest encryption defaults | the v1.0.0rcN release-candidate series (v1.0.0 GA) | R-04 |
+| Cross-org federation safety (mTLS-default, HLC bounds, capability validation) | future hardened-core line | R-01, R-14, R-16 |
+| Prompt-injection structural defense | future hardened-core line | R-05 (replaces sanitizer with capability model) |
+| Agent feedback-loop attack | future hardened-core line | R-15 (new) |
+| Persistent audit log | future hardened-core line | R-09 |
+| Per-principal rate limits | future hardened-core line | R-02 |
+| API key max-age & rotation | future hardened-core line | R-03 |
+| OpenClaw adapter hardening | future hardened-core line | OpenClaw audit C-series |
+| At-rest encryption defaults | future stable-readiness line | R-04 |
 | Embedding poisoning detection | the v1.x post-GA expansion (post-v1.0) | new entry |
 | Federation expressivity (selective peer sharing, coalitions, project scopes) | the v1.x post-GA expansion (gardens via ADR-008 gates) | Spec-X5 |
 
-After the v0.9.0bN beta series ships and a 30-day operator soak completes, this document will be updated to reflect what is actually safe in v1.0, what remains opt-in, and what is still on the roadmap.
+After hardened-core controls ship and a 30-day operator soak completes, this document will be updated to reflect what is actually safe, what remains opt-in, and what is still on the roadmap.
 
 ---
 

@@ -12,7 +12,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 ### Security
 
 - Document the v0.9.0a2 GitHub Security Advisory publication policy: Critical and High CVSS 4.0 findings in supported published artifacts receive GHSAs once patched; Medium and Low findings are documented in release notes or security posture docs unless their risk profile changes.
-- Add public security-doc references for the six Critical/High v0.9.0a2 advisory disclosures and the `stigmem-node 0.9.0a2` upgrade command.
+- Add the public v0.9.0a2 audit disposition index to `SECURITY.md`, including six Critical/High GHSAs and Medium/Low findings documented without formal advisories per policy.
+- Add the v0.9.0a2 audit evidence ledger under `docs/internal/` and register R-24/R-25/R-26 as mitigated architectural risks in the threat model and evidence registry.
+
+### Changed
+
+- Align roadmap, security, operator, SDK, and spec documentation around the current release horizon: `v0.9.0a3` is the only active release target; beta, release-candidate, and GA lines remain future gates until explicitly opened.
 
 ---
 

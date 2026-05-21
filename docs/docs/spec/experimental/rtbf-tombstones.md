@@ -2,7 +2,7 @@
 spec_id: Spec-X2-RTBF-Tombstones
 version: 0.1.0-alpha.0
 status: Experimental
-applies_to: stigmem v0.9.0bN
+applies_to: future experimental plugin line
 last_updated: 2026-05-14
 supersedes: pre-reset §23 right-to-be-forgotten tombstone material
 depends_on:
@@ -19,7 +19,7 @@ since: 0.9.0a1
 
 # §23. Right-to-be-Forgotten Tombstones {#section-23}
 
-<p className="stigmem-meta"><span>7 min read</span><span>Spec contributor · Compliance reviewer</span><span>Experimental · v0.9.0bN</span></p>
+<p className="stigmem-meta"><span>7 min read</span><span>Spec contributor · Compliance reviewer</span><span>Experimental · future plugin line</span></p>
 
 <div className="stigmem-lead">
 

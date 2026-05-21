@@ -2,7 +2,7 @@
 spec_id: Spec-X7-Subscriptions
 version: 0.1.0-alpha.0
 status: Experimental
-applies_to: stigmem v0.9.0bN
+applies_to: future experimental plugin line
 last_updated: 2026-05-14
 supersedes: pre-reset §20.5 subscription material
 depends_on:
@@ -19,7 +19,7 @@ since: 0.9.0a1
 
 # Spec-X7-Subscriptions
 
-<p className="stigmem-meta"><span>4 min read</span><span>Spec contributor · Node operator</span><span>Experimental · v0.9.0bN</span></p>
+<p className="stigmem-meta"><span>4 min read</span><span>Spec contributor · Node operator</span><span>Experimental · future plugin line</span></p>
 
 <div className="stigmem-lead">
 

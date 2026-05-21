@@ -2,7 +2,7 @@
 
 ## 2026-05-17 — Contributor and Demo Readiness
 
-Stigmem's Phase B readiness work now has two contributor-facing demo paths:
+Stigmem's hardened-core readiness work now has two contributor-facing demo paths:
 
 - `make demo` runs the two-node Docker quickstart from a clean local checkout,
   registers both peers, asserts a company-scoped fact on node A, verifies
@@ -21,7 +21,7 @@ without first reverse-engineering the project structure.
 
 ## Operator Soak Digest Template
 
-Use this template for the weekly public digest once the Phase B external
+Use this template for the weekly public digest once the future hardened-core external
 operator validation soak begins:
 
 ```md

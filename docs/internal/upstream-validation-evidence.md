@@ -24,5 +24,5 @@ only the issue and PR evidence needed to keep GitHub planning coherent.
 Issue [#158](https://github.com/eidetic-labs/stigmem/issues/158) is complete
 when this evidence table and the corresponding Internal-Comms checklist update
 land. The remediation order is preserved, all child issues link back to the
-upstream evaluation, and no active Phase B plan depends on the outdated broad
+upstream evaluation, and no active hardened-core plan depends on the outdated broad
 claim that current `main` lacks all Phase 12-era controls.

@@ -2,7 +2,7 @@
 spec_id: Spec-X1-Lazy-Instruction-Discovery
 version: 0.1.0-alpha.0
 status: Experimental
-applies_to: stigmem v0.9.0bN
+applies_to: future experimental plugin line
 last_updated: 2026-05-14
 supersedes: pre-reset §21 lazy instruction discovery material
 depends_on:

@@ -11,8 +11,8 @@ Stigmem follows the alpha-beta-rc pre-release convention per [ADR-019](docs/adr/
 | Version | Supported |
 | ------- | --------- |
 | `0.9.0a*` (the v0.9.0aN alpha series — current) | Yes — current pre-release line. **No stability guarantee.** Breaking changes during the hardening window are expected and documented in [CHANGELOG.md](CHANGELOG.md). |
-| `0.9.0b*` (the v0.9.0bN beta series — future) | Will be supported when published. |
-| `1.0.0rc*` / `1.0.0` (v1.0.0rcN / v1.0.0 GA — future) | Will be supported when published. |
+| Future beta line | Will be supported if and when a beta artifact is published; no active beta milestone exists today. |
+| Future release-candidate / GA lines | Will be supported if and when those artifacts are published; no active RC or GA milestone exists today. |
 | `1.0.0rc1` (retracted label, never shipped) | **N/A.** The label was announced publicly in 2026-05-03 but the package was never actually published to PyPI (audit 2026-05-08: `pypi.org/pypi/stigmem` returns 404). Nothing to install; nothing to yank. The label was withdrawn — see the retraction post linked from [README §Why v0.9.0a1 and not v1.0](README.md#why-v090a1-and-not-v10). |
 | `< 0.9.0a1` (development checkpoints — `v0.2` through `v2.0`) | **No.** These were internal development checkpoints, not tagged releases. The canonical version line begins at `v0.9.0a1`. |
 
@@ -60,7 +60,7 @@ Stigmem uses **CVSS 4.0** as the primary severity signal for GitHub Security Adv
 
 > **Posture-reset note.** Stigmem's `v1.0` announcement was withdrawn on 2026-05-08; the canonical version line was reset to `v0.9.0a1` per [ADR-001](docs/adr/001-versioning.md) and [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). The dependency-alert triage in this section was originally compiled for `the pre-reset v1.0-rc snapshot` on 2026-05-03 and is **carried forward to v0.9.0a2** because the underlying dependency upgrades remain in effect — the same or newer fixed package versions that resolved the alerts at the pre-reset v1.0-rc snapshot are installed at v0.9.0a2. The supported-version posture changed (see "Supported Versions" above); the dependency-fix evidence did not.
 >
-> **Open security gaps named explicitly:** several controls our threat model identifies as required for stable production — mTLS-default federation, persistent audit log, per-principal rate limits, capability-level validation for cross-org instructions, bounded HLC skew enforcement, the storage-immutability stack ([ADR-016](docs/adr/016-storage-immutability-enforcement.md)) — are scheduled for the v0.9.0bN beta series and are **not yet in effect at v0.9.0a2**. Adopters running federation across organizational boundaries should wait for the v0.9.0bN beta series per [LIMITATIONS.md](LIMITATIONS.md).
+> **Open security gaps named explicitly:** several controls our threat model identifies as required for stable production — mTLS-default federation, persistent audit log, per-principal rate limits, capability-level validation for cross-org instructions, bounded HLC skew enforcement, the storage-immutability stack ([ADR-016](docs/adr/016-storage-immutability-enforcement.md)) — remain future hardened-core work and are **not yet in effect at v0.9.0a2**. Adopters running federation across organizational boundaries should wait until those controls ship in a later hardened-core line per [LIMITATIONS.md](LIMITATIONS.md). No beta, release-candidate, or GA milestone is active today.
 
 This section documents the current security posture of the stigmem `v0.9.0a2` release, including Dependabot and CodeQL triage carried forward from the 2026-05-03 pre-reset v1.0-rc snapshot plus follow-up dependency patches through 2026-05-18.
 
@@ -75,9 +75,9 @@ This section documents the current security posture of the stigmem `v0.9.0a2` re
 
 **Net result: zero unaddressed security alerts at v0.9.0a2.** Dependabot alerts are a *dependency* concern and CodeQL alerts are a *static-analysis* concern — both are separate from the threat-model risks named in the posture-reset banner above.
 
-### GitHub Security Advisories — v0.9.0a2
+### Internal audit dispositions — v0.9.0a2
 
-The v0.9.0a2 hardening release includes a batch of GitHub Security Advisories for Critical and High CVSS 4.0 findings identified during internal audit. All listed advisories are patched by `stigmem-node 0.9.0a2`; upgrade with:
+The v0.9.0a2 hardening release includes a batch of findings identified during internal audit. Critical and High findings that affect published artifacts are disclosed as GitHub Security Advisories (GHSAs). Medium and Low findings are documented here rather than published as formal GHSAs unless their risk profile changes. All listed findings are patched by `stigmem-node 0.9.0a2`; upgrade with:
 
 ```bash
 pip install --upgrade --pre stigmem-node
@@ -89,16 +89,30 @@ If you install through the meta-package, use:
 pip install --upgrade --pre 'stigmem[node]'
 ```
 
-| GHSA | Severity | CVSS 4.0 | Summary |
+| Finding | Severity | Advisory | Resolution |
 | ---- | -------- | -------- | ------- |
-| [GHSA-jmfc-hfjq-pxcp](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-jmfc-hfjq-pxcp) | Critical | 9.1 | Federation insecure transport settings may allow non-loopback cleartext federation |
-| [GHSA-fp6w-8wpg-74g5](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-fp6w-8wpg-74g5) | Critical | 9.2 | Auth-disabled deployments may grant broad anonymous access outside loopback |
-| [GHSA-9vp8-3hmv-8fgh](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-9vp8-3hmv-8fgh) | Critical | 9.1 | Federation peer registration lacked explicit out-of-band approval |
-| [GHSA-xh5j-xjfq-qvvx](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-xh5j-xjfq-qvvx) | High | 7.1 | Federation peer token timestamp validation may reject valid peer tokens |
-| [GHSA-w7pm-9g55-mxfm](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-w7pm-9g55-mxfm) | High | 7.3 | Unsigned plugin override could be enabled without a second explicit acknowledgment |
-| [GHSA-9pc9-4crj-mhpj](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-9pc9-4crj-mhpj) | High | 7.5 | Postgres schema identifier handling required defensive quoting |
+| C1 — Federation peer token timestamp handling | High (CVSS 4.0 — 7.1) | [GHSA-xh5j-xjfq-qvvx](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-xh5j-xjfq-qvvx) | Canonical millisecond token contract with regression coverage for valid and seconds-shaped tokens. |
+| C2 — Non-loopback insecure federation startup | Critical (CVSS 4.0 — 9.1) | [GHSA-jmfc-hfjq-pxcp](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-jmfc-hfjq-pxcp) | Startup refuses insecure federation mode on non-loopback deployments. |
+| H1 — Non-loopback auth-disabled deployment | Critical (CVSS 4.0 — 9.2) | [GHSA-fp6w-8wpg-74g5](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-fp6w-8wpg-74g5) | Startup refuses anonymous full-permission mode outside local development. |
+| H2 — Federation peer registration approval gate | Critical (CVSS 4.0 — 9.1) | [GHSA-9vp8-3hmv-8fgh](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-9vp8-3hmv-8fgh) | Peer registration requires explicit out-of-band approval before activation. |
+| H3 — Unsigned plugin override acknowledgement | High (CVSS 4.0 — 7.3) | [GHSA-w7pm-9g55-mxfm](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-w7pm-9g55-mxfm) | Unsigned plugin override requires explicit operator acknowledgement. |
+| H5 — Postgres schema identifier handling | High (CVSS 4.0 — 7.5) | [GHSA-9pc9-4crj-mhpj](https://github.com/eidetic-labs/stigmem/security/advisories/GHSA-9pc9-4crj-mhpj) | Backend schema handling uses identifier-safe SQL composition and validation. |
+| M1 — Federation nonce cache lifetime | Medium | None; documented per policy | Nonce cache lifetime is at least as long as the accepted token lifetime. |
+| M2 — Federation token issuer validation | Medium | None; documented per policy | Issuer handling has explicit validation coverage. |
+| M3 — Federation token time-claim validation | Medium | None; documented per policy | Time-claim handling has explicit validation coverage, including Hypothesis fuzz coverage. |
+| M4 — Legacy SHA-256 API key acceptance deadline | Medium | None; documented per policy | Legacy SHA-256 API key acceptance has a configurable deadline and regression coverage. |
+| M5 — OIDC ID-token algorithm allowlist | Medium | None; documented per policy | OIDC ID-token algorithm handling uses a configurable allowlist. |
+| M6 — SQLite database and sidecar permissions | Medium | None; documented per policy | SQLite database and sidecar files use restrictive permissions at creation time. |
+| M7 — CLI write-out path permissions | Medium | None; documented per policy | CLI write-out paths use restrictive permissions. |
+| M8 — Rate-limit kill-switch acknowledgement | Medium | None; documented per policy | Production-risky quota-disablement requires explicit operator acknowledgement and remains covered by deployment guidance. |
+| M9 — Federation message validation | Medium | None; documented per policy | Federation message state transitions have validation coverage and are documented as a Medium security disposition. |
+| L1 — Development CORS startup warning | Low | None; documented per policy | Development CORS posture emits a startup warning when enabled. |
+| L2 — Embedding-provider error redaction | Low | None; documented per policy | Embedding-provider errors no longer log sensitive provider detail. |
+| L3 — Audit posture documentation by trust mode | Low | None; documented per policy | Audit evidence posture is documented by trust mode and backend. |
+| L4 — Federation clock-skew leeway | Low; folded into M2/M3 | None; documented per policy | Clock-skew behavior is covered by federation token validation hardening. |
+| L5 — OIDC discovery URL validation | Low | None; documented per policy | OIDC discovery URL handling validates outbound locations and is documented as a Low security disposition. |
 
-Medium and Low findings from the same internal audit are tracked in the security posture docs and release notes rather than published as formal GHSAs unless their risk profile changes.
+Detailed PR, path, test, and evidence lineage for this audit is recorded in [`docs/internal/security-evidence-registry-2026-05-17.md`](docs/internal/security-evidence-registry-2026-05-17.md). Architectural risk classes derived from C2, H1, and H2 are registered as R-24, R-25, and R-26 in [`spec/security/threat-model.md`](spec/security/threat-model.md).
 
 ---
 
@@ -236,7 +250,7 @@ The stigmem reference node (`stigmem/node/`) is implemented in Python with FastA
 
 ### Security Controls in Effect (v0.9.0a2)
 
-> The controls listed here are **dependency- and code-level controls** that are in effect at v0.9.0a2. **Federation-level and threat-model-level controls** named in the posture-reset banner at the top of this section (mTLS-default, audit log, rate limits, capability validation, bounded HLC skew, storage-immutability stack) are **not yet in effect** and are scheduled for the v0.9.0bN beta series.
+> The controls listed here are **dependency- and code-level controls** that are in effect at v0.9.0a2. **Federation-level and threat-model-level controls** named in the posture-reset banner at the top of this section (mTLS-default, audit log, rate limits, capability validation, bounded HLC skew, storage-immutability stack) are **not yet in effect** and remain future hardened-core work, not an active beta milestone.
 
 - **Authentication:** API keys enforced on all write endpoints; per-scope restrictions supported by `Spec-02-Scopes-and-ACL` and `Spec-06-Capability-Tokens`.
 - **Federation:** Peer handshake uses Ed25519 signing; replay attack resistance via HLC timestamps per `Spec-05-Federation-Trust` and `Spec-11-Replay-Protection`.
@@ -271,4 +285,4 @@ uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml
 pnpm audit --audit-level=moderate
 ```
 
-The docs build toolchain (`docusaurus-plugin-openapi-docs` and its transitive dependencies) generates known alerts in `pnpm audit` output. These are suppressed per the Group B analysis above — they are build-time only and have no user-controlled input pathway.
+The docs build toolchain (`docusaurus-plugin-openapi-docs` and its transitive dependencies) generates known alerts in `pnpm audit` output. These are suppressed per the Group B analysis above — they are build-time only and have no user-controlled input pathway. The root `turbo` development tool advisory [GHSA-hcf7-66rw-9f5r](https://github.com/advisories/GHSA-hcf7-66rw-9f5r) is also suppressed until a patched stable package is available on npm; it is a local/CI orchestration dependency and is not included in published Stigmem artifacts.

@@ -171,6 +171,6 @@ A production Stigmem node has four operational concerns:
 
 **Planning a deployment?** The [cost calculator](https://github.com/eidetic-labs/stigmem/tree/main/experimental/billing) helps you estimate storage growth, egress, embedding spend, and operator time before you commit to infrastructure.
 
-**Joining external validation?** Start with the [Operator validation soak](./validation-soak) checklist so public findings, weekly digests, and Phase B exit evidence are traceable from the first day.
+**Joining external validation?** Start with the [Operator validation soak](./validation-soak) checklist so public findings, weekly digests, and future hardened-core exit evidence are traceable from the first day.
 
 </div>

@@ -2,7 +2,7 @@
 spec_id: Spec-14-Batch-Assert
 version: 0.1.0-alpha.0
 status: Draft
-applies_to: stigmem v0.9.0bN
+applies_to: future hardened-core line
 last_updated: 2026-05-14
 supersedes: ADR-006 batch assert material
 depends_on:
@@ -12,8 +12,8 @@ depends_on:
 
 # Spec-14-Batch-Assert
 
-`Spec-14-Batch-Assert` defines the batch assertion operation targeted for the
-`v0.9.0bN` line.
+`Spec-14-Batch-Assert` defines the batch assertion operation targeted for a
+future hardened-core line.
 
 ## Extraction Status
 

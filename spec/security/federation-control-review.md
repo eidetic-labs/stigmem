@@ -1,13 +1,13 @@
 # Federation Hardening Control Review
 
-**Roadmap slice:** Phase B §5.3.0  
+**Roadmap slice:** future hardened-core federation hardening
 **Issue:** #418  
 **Reviewed on:** 2026-05-16  
 **Status:** Current review record for the v0.9.0a1/v0.9.0a2 hardening line
 
 This review records the implementation evidence, test evidence,
 version-introduced notes, and accept/patch/replace decision for the controls
-called out in the Phase B federation-hardening worksheet. It is intentionally a
+called out in the federation-hardening worksheet. It is intentionally a
 review record, not a rewrite PR. Follow-up implementation issues are created
 for every `patch` decision.
 
@@ -71,7 +71,7 @@ sound when mTLS is configured.
 
 **Decision**
 
-Patch. The configured mTLS path is covered, but the Phase B roadmap asks for
+Patch. The configured mTLS path is covered, but the hardened-core roadmap asks for
 mTLS to be the default federation posture and for insecure federation mode to
 require an explicit `STIGMEM_FEDERATION_INSECURE=1` acknowledgement with a loud
 startup warning. That is a production-posture patch, not a reason to rewrite

@@ -1,5 +1,5 @@
 {
-  "title": "Phase B capability-redesign adversarial protocol vectors",
+  "title": "Hardened-core capability-redesign adversarial protocol vectors",
   "description": "Protocol-level negative vectors for instruction typing, federation quarantine, capability signatures, HLC skew, and peer-token replay.",
   "vectors": [
     {

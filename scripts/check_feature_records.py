@@ -16,6 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FEATURES_DIR = ROOT / "features"
+FEATURE_INVENTORY = ROOT / "docs" / "internal" / "feature-tracker.md"
 SKIP_DIRS = {"feature-template"}
 
 REQUIRED_FILES = {
@@ -57,6 +58,22 @@ ENUMS = {
     },
     "default_surface": {"default", "opt-in", "experimental", "internal", "external"},
 }
+
+INVENTORY_STATUSES = {"migrated", "pending", "deferred", "superseded"}
+INVENTORY_HEADING = "## Feature Record Migration Inventory"
+INVENTORY_HEADERS = [
+    "Feature ID",
+    "Feature",
+    "Type",
+    "Stability",
+    "Default surface",
+    "Canonical spec",
+    "Legacy owner",
+    "Target record",
+    "Migration status",
+    "Horizon",
+    "Notes",
+]
 
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
@@ -125,6 +142,116 @@ def feature_dirs() -> list[Path]:
         for path in FEATURES_DIR.iterdir()
         if path.is_dir() and path.name not in SKIP_DIRS
     )
+
+
+def _cell_text(value: str) -> str:
+    value = value.strip()
+    if value.startswith("`") and value.endswith("`"):
+        return value[1:-1]
+    if value.startswith("[`") and "`]" in value:
+        start = value.find("`") + 1
+        end = value.find("`]", start)
+        return value[start:end]
+    if value.startswith("[") and "](" in value:
+        return value[1 : value.find("](")]
+    return value
+
+
+def _parse_inventory_table() -> tuple[list[dict[str, str]], list[str]]:
+    if not FEATURE_INVENTORY.exists():
+        return [], [f"{FEATURE_INVENTORY}: missing feature migration inventory"]
+
+    lines = FEATURE_INVENTORY.read_text(encoding="utf-8").splitlines()
+    try:
+        start = lines.index(INVENTORY_HEADING)
+    except ValueError:
+        return [], [f"{FEATURE_INVENTORY}: missing '{INVENTORY_HEADING}' section"]
+
+    table_lines: list[str] = []
+    for raw in lines[start + 1 :]:
+        if raw.startswith("|"):
+            table_lines.append(raw)
+        elif table_lines:
+            break
+
+    if len(table_lines) < 3:
+        return [], [f"{FEATURE_INVENTORY}: inventory table is missing or empty"]
+
+    headers = [_cell_text(cell) for cell in table_lines[0].strip("|").split("|")]
+    if headers != INVENTORY_HEADERS:
+        return [], [
+            f"{FEATURE_INVENTORY}: inventory headers must be: {', '.join(INVENTORY_HEADERS)}"
+        ]
+
+    rows: list[dict[str, str]] = []
+    errors: list[str] = []
+    for offset, raw in enumerate(table_lines[2:], start=start + 3):
+        cells = [_cell_text(cell) for cell in raw.strip("|").split("|")]
+        if len(cells) != len(INVENTORY_HEADERS):
+            errors.append(f"{FEATURE_INVENTORY}:{offset}: inventory row has {len(cells)} cells")
+            continue
+        rows.append(dict(zip(INVENTORY_HEADERS, cells, strict=True)))
+
+    return rows, errors
+
+
+def validate_inventory(migrated_feature_ids: set[str]) -> list[str]:
+    rows, errors = _parse_inventory_table()
+    if errors:
+        return errors
+
+    seen: set[str] = set()
+    for row in rows:
+        feature_id = row["Feature ID"]
+        feature_type = row["Type"]
+        stability = row["Stability"]
+        default_surface = row["Default surface"]
+        status = row["Migration status"]
+        canonical_spec = row["Canonical spec"]
+        legacy_owner = row["Legacy owner"]
+        target = row["Target record"]
+
+        if not SLUG_RE.fullmatch(feature_id):
+            errors.append(f"{FEATURE_INVENTORY}: feature id '{feature_id}' must use kebab case")
+        if feature_id in seen:
+            errors.append(f"{FEATURE_INVENTORY}: duplicate inventory feature id '{feature_id}'")
+        seen.add(feature_id)
+
+        if feature_type not in ENUMS["feature_type"]:
+            errors.append(f"{FEATURE_INVENTORY}: {feature_id} has invalid type '{feature_type}'")
+        if stability not in ENUMS["stability"]:
+            errors.append(f"{FEATURE_INVENTORY}: {feature_id} has invalid stability '{stability}'")
+        if default_surface not in ENUMS["default_surface"]:
+            errors.append(
+                f"{FEATURE_INVENTORY}: {feature_id} has invalid default surface "
+                f"'{default_surface}'"
+            )
+        if status not in INVENTORY_STATUSES:
+            errors.append(f"{FEATURE_INVENTORY}: {feature_id} has invalid status '{status}'")
+        if canonical_spec != "none" and not re.fullmatch(r"Spec-(?:X)?[0-9]+-.+", canonical_spec):
+            errors.append(
+                f"{FEATURE_INVENTORY}: {feature_id} canonical spec '{canonical_spec}' "
+                "must be 'none' or a Spec-* id"
+            )
+        if not target.startswith("features/") or not target.endswith("/"):
+            errors.append(f"{FEATURE_INVENTORY}: {feature_id} target must be features/<slug>/")
+
+        target_path = ROOT / target
+        if status == "migrated":
+            if feature_id not in migrated_feature_ids:
+                errors.append(
+                    f"{FEATURE_INVENTORY}: migrated row '{feature_id}' has no validated "
+                    "feature record"
+                )
+            if not target_path.is_dir():
+                errors.append(f"{FEATURE_INVENTORY}: migrated target does not exist: {target}")
+        elif legacy_owner != "none" and not (ROOT / legacy_owner).exists():
+            errors.append(
+                f"{FEATURE_INVENTORY}: legacy owner for non-migrated row '{feature_id}' "
+                f"does not exist: {legacy_owner}"
+            )
+
+    return errors
 
 
 def validate_feature(path: Path) -> tuple[dict[str, object], list[str]]:
@@ -211,13 +338,15 @@ def main() -> int:
                 )
             canonical_specs[canonical_spec] = path
 
+    errors.extend(validate_inventory(set(feature_ids)))
+
     if errors:
         print("feature-records: validation failed", file=sys.stderr)
         for error in errors:
             print(f"- {error}", file=sys.stderr)
         return 1
 
-    print(f"feature-records: validated {len(dirs)} migrated feature record(s)")
+    print(f"feature-records: validated {len(dirs)} migrated feature record(s) and inventory")
     return 0
 
 

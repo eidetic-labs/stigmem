@@ -4,7 +4,15 @@
 
 ## Related issue
 
-<!-- Link the issue: Closes #NNN -->
+<!-- Required for every PR from v0.9.0a3 onward: link the closing issue and assign the milestone in the GitHub sidebar. -->
+
+Closes #
+
+## Milestone
+
+<!-- Required for every PR from v0.9.0a3 onward. Assign in the sidebar; restate here for reviewers. One of: v0.9.0a3, v0.9.0b1, v1.0.0rc1, v1.0.0. -->
+
+Milestone:
 
 ## Validation
 

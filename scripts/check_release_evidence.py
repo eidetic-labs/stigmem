@@ -15,7 +15,7 @@ PUBLISH_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "publish.yml"
 CI_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci.yml"
 RELEASE_DOC = REPO_ROOT / "docs" / "docs" / "operators" / "release-verification.md"
 OPERATING_DOC = REPO_ROOT / "OPERATING.md"
-SIDEBARS = REPO_ROOT / "docs" / "sidebars.js"
+SIDEBARS = REPO_ROOT / "docs" / "sidebars.ts"
 
 PUBLISH_REQUIREMENTS = {
     "keyless signing permission": "id-token: write",
@@ -79,7 +79,7 @@ def main() -> int:
         failures.append("OPERATING.md: missing release verification link")
     if "operators/release-verification" not in sidebars:
         failures.append(
-            "docs/sidebars.js: release verification page is not in the operator sidebar"
+            "docs/sidebars.ts: release verification page is not in the operator sidebar"
         )
     if "python scripts/check_release_evidence.py" not in ci:
         failures.append("ci.yml: security-evidence job does not run check_release_evidence.py")

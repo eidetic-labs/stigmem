@@ -127,6 +127,8 @@ Progress:
   R-01/R-02/R-21 security contributions under `features/multi-tenant/`.
 - `async-jobs` now owns shared lint/decay background job lifecycle, polling,
   evidence, and open queue-control gaps under `features/async-jobs/`.
+- `fuzzy-resolver` now owns entity-resolution behavior, alias-management
+  evidence, and resolver security gaps under `features/fuzzy-resolver/`.
 
 ### Phase 3: Projection tooling
 

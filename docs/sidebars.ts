@@ -170,6 +170,7 @@ const sidebars: SidebarsConfig = {
       collapsed: true,
       items: [
         'operators/deployment/install',
+        'operators/release-readiness',
         'operators/release-verification',
         'operators/validation-soak',
       ],

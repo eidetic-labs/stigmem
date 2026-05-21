@@ -54,6 +54,27 @@ Stigmem uses **CVSS 4.0** as the primary severity signal for GitHub Security Adv
 - Medium and Low vulnerabilities are documented in release notes, security posture docs, or operator guidance unless there is known exploitation, third-party reporter coordination, or a downstream compliance need that makes a formal advisory appropriate.
 - CVE requests are optional. Stigmem reserves CVE requests for broadly deployed stable releases, known exploitation, third-party reporter coordination, or explicit partner/customer compliance needs.
 
+## Feature Security Records
+
+Feature-specific security analysis lives with the feature record. This section
+is an index, not the canonical analysis body; update the linked
+`features/<feature>/security.md` file first, then keep this projection current.
+
+| Feature | Security refs | Canonical feature security record |
+| --- | --- | --- |
+| Content-addressed fact IDs | R-18 | [`features/content-addressed-ids/security.md`](features/content-addressed-ids/security.md) |
+| Decay semantics | R-02, R-16 | [`features/decay/security.md`](features/decay/security.md) |
+| Intent envelope | R-05, R-15 | [`features/intent-envelope/security.md`](features/intent-envelope/security.md) |
+| Lazy instruction discovery | R-15, R-21 | [`features/lazy-instruction-discovery/security.md`](features/lazy-instruction-discovery/security.md) |
+| Memory Garden advanced ACL | R-21 | [`features/memory-garden-acl/security.md`](features/memory-garden-acl/security.md) |
+| Multi-tenant boundaries | R-01, R-02, R-21 | [`features/multi-tenant/security.md`](features/multi-tenant/security.md) |
+| Recall graph | R-13, R-20, R-21 | [`features/recall-graph/security.md`](features/recall-graph/security.md) |
+| Source attestation | R-22 | [`features/source-attestation/security.md`](features/source-attestation/security.md) |
+| Subscriptions | R-14, R-16 | [`features/subscriptions/security.md`](features/subscriptions/security.md) |
+| Synthesis | R-05, R-21 | [`features/synthesis/security.md`](features/synthesis/security.md) |
+| Time-travel queries | R-17, R-18 | [`features/time-travel/security.md`](features/time-travel/security.md) |
+| RTBF tombstones | R-16, R-17 | [`features/tombstones/security.md`](features/tombstones/security.md) |
+
 ---
 
 ## Security Posture — v0.9.0a2 (2026-05-18)

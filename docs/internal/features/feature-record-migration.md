@@ -153,7 +153,11 @@ Progress:
   feature records are represented in the public feature matrix and that
   experimental/default-off migrated records are represented in the public
   experimental feature index.
-- `scripts/check.sh docs` runs the feature projection check after validating
+- `scripts/check_feature_security_projection.py` mechanically checks that
+  `SECURITY.md` keeps the advisory-publication policy, internal audit
+  dispositions, and feature-security index aligned with migrated feature
+  records.
+- `scripts/check.sh docs` runs the feature projection checks after validating
   feature records.
 
 ### Phase 4: Strict validation

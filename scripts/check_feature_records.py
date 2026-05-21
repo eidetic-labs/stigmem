@@ -13,11 +13,12 @@ import re
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 FEATURES_DIR = ROOT / "features"
+EXPERIMENTAL_DIR = ROOT / "experimental"
 FEATURE_INVENTORY = ROOT / "docs" / "internal" / "feature-tracker.md"
 SKIP_DIRS = {"feature-template"}
+EXPERIMENTAL_SKIP_DIRS = {"__pycache__", "node_modules", ".pytest_cache", ".next", ".turbo"}
 
 REQUIRED_FILES = {
     "README.md",
@@ -138,9 +139,7 @@ def feature_dirs() -> list[Path]:
     if not FEATURES_DIR.exists():
         return []
     return sorted(
-        path
-        for path in FEATURES_DIR.iterdir()
-        if path.is_dir() and path.name not in SKIP_DIRS
+        path for path in FEATURES_DIR.iterdir() if path.is_dir() and path.name not in SKIP_DIRS
     )
 
 
@@ -201,6 +200,7 @@ def validate_inventory(migrated_feature_ids: set[str]) -> list[str]:
         return errors
 
     seen: set[str] = set()
+    legacy_experimental_ids: set[str] = set()
     for row in rows:
         feature_id = row["Feature ID"]
         feature_type = row["Type"]
@@ -223,8 +223,7 @@ def validate_inventory(migrated_feature_ids: set[str]) -> list[str]:
             errors.append(f"{FEATURE_INVENTORY}: {feature_id} has invalid stability '{stability}'")
         if default_surface not in ENUMS["default_surface"]:
             errors.append(
-                f"{FEATURE_INVENTORY}: {feature_id} has invalid default surface "
-                f"'{default_surface}'"
+                f"{FEATURE_INVENTORY}: {feature_id} has invalid default surface '{default_surface}'"
             )
         if status not in INVENTORY_STATUSES:
             errors.append(f"{FEATURE_INVENTORY}: {feature_id} has invalid status '{status}'")
@@ -235,6 +234,13 @@ def validate_inventory(migrated_feature_ids: set[str]) -> list[str]:
             )
         if not target.startswith("features/") or not target.endswith("/"):
             errors.append(f"{FEATURE_INVENTORY}: {feature_id} target must be features/<slug>/")
+        expected_target = f"features/{feature_id}/"
+        if target != expected_target:
+            errors.append(f"{FEATURE_INVENTORY}: {feature_id} target must be {expected_target}")
+        if legacy_owner.startswith("experimental/"):
+            legacy_id = legacy_owner.removeprefix("experimental/").strip("/")
+            if legacy_id:
+                legacy_experimental_ids.add(legacy_id)
 
         target_path = ROOT / target
         if status == "migrated":
@@ -251,6 +257,31 @@ def validate_inventory(migrated_feature_ids: set[str]) -> list[str]:
                 f"does not exist: {legacy_owner}"
             )
 
+    untracked_feature_records = sorted(migrated_feature_ids - seen)
+    for feature_id in untracked_feature_records:
+        errors.append(
+            f"{FEATURE_INVENTORY}: feature record '{feature_id}' is missing from inventory"
+        )
+
+    errors.extend(validate_experimental_inventory(legacy_experimental_ids))
+    return errors
+
+
+def validate_experimental_inventory(legacy_experimental_ids: set[str]) -> list[str]:
+    if not EXPERIMENTAL_DIR.exists():
+        return []
+
+    errors: list[str] = []
+    experimental_ids = {
+        path.name
+        for path in EXPERIMENTAL_DIR.iterdir()
+        if path.is_dir()
+        and not path.name.startswith(".")
+        and path.name not in EXPERIMENTAL_SKIP_DIRS
+    }
+    missing = sorted(experimental_ids - legacy_experimental_ids)
+    for feature_id in missing:
+        errors.append(f"{FEATURE_INVENTORY}: experimental/{feature_id}/ has no inventory row")
     return errors
 
 
@@ -293,9 +324,7 @@ def validate_feature(path: Path) -> tuple[dict[str, object], list[str]]:
             value = metadata.get(field)
             if isinstance(value, str) and value not in allowed:
                 allowed_text = ", ".join(sorted(allowed))
-                errors.append(
-                    f"{readme}: {field} '{value}' is not one of: {allowed_text}"
-                )
+                errors.append(f"{readme}: {field} '{value}' is not one of: {allowed_text}")
 
     return metadata, errors
 
@@ -325,11 +354,7 @@ def main() -> int:
             feature_ids[feature_id] = path
 
         canonical_spec = metadata.get("canonical_spec")
-        if (
-            isinstance(canonical_spec, str)
-            and canonical_spec
-            and canonical_spec != "none"
-        ):
+        if isinstance(canonical_spec, str) and canonical_spec and canonical_spec != "none":
             previous = canonical_specs.get(canonical_spec)
             if previous is not None:
                 errors.append(

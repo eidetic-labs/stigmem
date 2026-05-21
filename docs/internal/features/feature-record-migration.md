@@ -128,7 +128,7 @@ Progress:
 
 ### Phase 3: Projection tooling
 
-Status: in progress.
+Status: complete.
 
 Projection candidates:
 
@@ -175,13 +175,19 @@ Progress:
 
 ### Phase 4: Strict validation
 
-Status: planned.
+Status: in progress.
 
 Exit criteria:
 
 - CI validates the complete feature inventory, not only migrated directories.
 - Transition allowlists are empty.
 - New feature PRs must include a feature record before merge.
+
+Progress:
+
+- `scripts/check_feature_records.py` now validates the complete migration
+  inventory against existing feature records and top-level experimental
+  implementation directories, not only rows already marked `migrated`.
 
 ## Release Horizon Alignment
 

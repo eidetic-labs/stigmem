@@ -20,6 +20,12 @@ user/operator-facing entries are promoted into the root `CHANGELOG.md`.
 - Preserved plugin-loaded fact-query and recall `as_of` behavior for alpha
   validation.
 
+## v0.9.0a4 Horizon
+
+- Time-travel query support remains an opt-in alpha-series plugin target for
+  `as_of` read semantics, tombstone-aware historical recall, and operator
+  activation guidance.
+
 ## v0.9.0a1 Lineage
 
 - Monolithic spec material preserved section 24 time-travel/as-of query

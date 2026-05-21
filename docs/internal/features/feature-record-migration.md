@@ -157,6 +157,10 @@ Progress:
   `SECURITY.md` keeps the advisory-publication policy, internal audit
   dispositions, and feature-security index aligned with migrated feature
   records.
+- `scripts/check_feature_changelog_projection.py` mechanically checks that
+  root `CHANGELOG.md` carries feature-changelog links, release-line metadata,
+  and status projections for migrated feature records without duplicating
+  feature-local history.
 - `scripts/check.sh docs` runs the feature projection checks after validating
   feature records.
 

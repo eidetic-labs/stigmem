@@ -14,3 +14,9 @@
   the `default` tenant.
 - Added plugin-enabled route and plugin tests for tenant isolation, garden
   isolation, slug reuse, audit scoping, and hook registration.
+
+## v0.9.0a8 Horizon
+
+- Multi-tenant scoping remains an opt-in alpha-series plugin target for
+  tenant-context enforcement, isolation tests, and operator-facing activation
+  guidance.

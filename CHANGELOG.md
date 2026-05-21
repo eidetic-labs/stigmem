@@ -19,6 +19,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 - Align roadmap, security, operator, SDK, and spec documentation around the current release horizon: `v0.9.0a3` is the only active release target; beta, release-candidate, and GA lines remain future gates until explicitly opened.
 
+### Feature Change Records
+
+Feature-local change history is canonical in feature records. This table is the
+root changelog projection used during release prep.
+
+| Feature | Status | Release lines | Feature changelog |
+| --- | --- | --- | --- |
+| Content-addressed fact IDs | active | `v0.9.0a1`, `v0.9.0a3` | [`features/content-addressed-ids/changelog.md`](features/content-addressed-ids/changelog.md) |
+| Decay semantics | deferred | `v0.9.0a1`, `0.9.xA` | [`features/decay/changelog.md`](features/decay/changelog.md) |
+| Intent envelope | deferred | `v0.9.0a1`, `0.9.xA` | [`features/intent-envelope/changelog.md`](features/intent-envelope/changelog.md) |
+| Lazy instruction discovery | active | `v0.9.0a1`, `0.9.xA` | [`features/lazy-instruction-discovery/changelog.md`](features/lazy-instruction-discovery/changelog.md) |
+| Memory Garden advanced ACL | active | `v0.9.0a1`, `0.9.xA` | [`features/memory-garden-acl/changelog.md`](features/memory-garden-acl/changelog.md) |
+| Multi-tenant scoping | active | `v0.9.0a8`, `0.9.xA` | [`features/multi-tenant/changelog.md`](features/multi-tenant/changelog.md) |
+| Recall graph | deferred | `v0.9.0a1`, `0.9.xA` | [`features/recall-graph/changelog.md`](features/recall-graph/changelog.md) |
+| Source attestation | active | `v0.9.0a1`, `0.9.xA` | [`features/source-attestation/changelog.md`](features/source-attestation/changelog.md) |
+| Subscriptions | deferred | `v0.9.0a1`, `0.9.xA` | [`features/subscriptions/changelog.md`](features/subscriptions/changelog.md) |
+| Synthesis | deferred | `v0.9.0a1`, `0.9.xA` | [`features/synthesis/changelog.md`](features/synthesis/changelog.md) |
+| Time-travel queries | active | `v0.9.0a1`, `v0.9.0a4` | [`features/time-travel/changelog.md`](features/time-travel/changelog.md) |
+| RTBF tombstones | active | `v0.9.0a1`, `0.9.xA` | [`features/tombstones/changelog.md`](features/tombstones/changelog.md) |
+
 ---
 
 ## [0.9.0a2] — 2026-05-18

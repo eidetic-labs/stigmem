@@ -33,6 +33,7 @@ root changelog projection used during release prep.
 | Intent envelope | deferred | `v0.9.0a1`, `0.9.xA` | [`features/intent-envelope/changelog.md`](features/intent-envelope/changelog.md) |
 | Lazy instruction discovery | active | `v0.9.0a1`, `0.9.xA` | [`features/lazy-instruction-discovery/changelog.md`](features/lazy-instruction-discovery/changelog.md) |
 | Memory Garden advanced ACL | active | `v0.9.0a1`, `0.9.xA` | [`features/memory-garden-acl/changelog.md`](features/memory-garden-acl/changelog.md) |
+| MCP adapter | active | `v0.9.0a1`, `0.9.xA` | [`features/mcp-adapter/changelog.md`](features/mcp-adapter/changelog.md) |
 | Multi-tenant scoping | active | `v0.9.0a8`, `0.9.xA` | [`features/multi-tenant/changelog.md`](features/multi-tenant/changelog.md) |
 | OIDC SSO | active | `v0.9.0a1`, `0.9.xA` | [`features/oidc-sso/changelog.md`](features/oidc-sso/changelog.md) |
 | Recall graph | deferred | `v0.9.0a1`, `0.9.xA` | [`features/recall-graph/changelog.md`](features/recall-graph/changelog.md) |

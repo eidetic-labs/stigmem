@@ -204,6 +204,9 @@ Progress:
 - `storage-libsql` now has a canonical adapter-specific feature record under
   `features/storage-libsql/`; legacy experimental docs remain compatibility
   pointers until their operator guidance is promoted or retired.
+- `mcp-adapter` now has a canonical adapter feature record under
+  `features/mcp-adapter/`; package alignment and connector validation remain
+  future alpha release-line gates.
 
 ## Release Horizon Alignment
 

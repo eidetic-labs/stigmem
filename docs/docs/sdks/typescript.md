@@ -538,6 +538,6 @@ const { facts } = await res.json();
 <div><h4><a href="../get-started/sdk-quickstart.md">Tutorial: SDK Quickstart</a></h4><p>Assert, recall, and subscribe in Python / TS / Go.</p></div>
 <div><h4><a href="../concepts/recall/">Recall guide</a></h4><p>Hybrid recall, weight tuning, fast-path.</p></div>
 <div><h4><a href="./python">Python SDK Reference</a></h4><p>Equivalent Python client.</p></div>
-<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/sdk-go">Go SDK Reference</a></h4><p>Go client.</p></div>
+<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/sdk-go">Go SDK Reference</a></h4><p>Experimental Go client.</p></div>
 
 </div>

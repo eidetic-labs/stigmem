@@ -201,6 +201,11 @@ for await (const batch of client.subscribeScope("local", {
 
 ### Install
 
+The Go SDK is experimental and not part of the current alpha artifact set. Pin
+to an explicit commit or pre-release tag until
+[`features/sdk-go`](https://github.com/eidetic-labs/stigmem/tree/main/features/sdk-go)
+records package alignment for the active release line.
+
 ```bash
 go get github.com/eidetic-labs/stigmem-go@latest
 ```

@@ -65,7 +65,7 @@ This page renders the YAML as human-readable tables.
 <div>
 <dt><code>stigmem-go</code> (SDK)</dt>
 <dt><span className="stigmem-fields__type">deferred</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/sdk-go"><code>experimental/sdk-go/</code></a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/sdk-go"><code>features/sdk-go/</code></a>; package alignment remains future alpha work.</dd>
 </div>
 
 <div>
@@ -106,6 +106,7 @@ compatibility remains in [`docs/compatibility-matrix.yaml`](https://github.com/e
 | [Content-addressed fact IDs](https://github.com/eidetic-labs/stigmem/blob/main/features/content-addressed-ids/README.md) | core | stable / default | `v0.9.0a1`, `v0.9.0a3` | `stigmem-node`; `node/src/stigmem_node/cid.py` |
 | [Decay semantics](https://github.com/eidetic-labs/stigmem/blob/main/features/decay/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/decay` |
 | [Fuzzy resolver](https://github.com/eidetic-labs/stigmem/blob/main/features/fuzzy-resolver/README.md) | core | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-node`; `node/src/stigmem_node/recall/entity_resolver.py` |
+| [Go SDK](https://github.com/eidetic-labs/stigmem/blob/main/features/sdk-go/README.md) | sdk | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem-go`; `experimental/sdk-go` |
 | [Intent envelope](https://github.com/eidetic-labs/stigmem/blob/main/features/intent-envelope/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/intent-envelope` |
 | [Lazy instruction discovery](https://github.com/eidetic-labs/stigmem/blob/main/features/lazy-instruction-discovery/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-plugin-lazy-instruction-discovery`; `experimental/lazy-instruction-discovery` |
 | [Memory Garden advanced ACL](https://github.com/eidetic-labs/stigmem/blob/main/features/memory-garden-acl/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-plugin-memory-garden-acl`; `experimental/memory-garden-acl` |

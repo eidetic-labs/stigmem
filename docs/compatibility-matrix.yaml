@@ -393,6 +393,22 @@ features:
       typescript_sdk: "workspace"
     notes: "External MCP tool adapter; package metadata remains independent until future alpha connector and security validation completes."
 
+  - id: sdk-go
+    name: Go SDK
+    feature_record: features/sdk-go/README.md
+    feature_type: sdk
+    default_surface: external
+    implementation_path: experimental/sdk-go
+    package: stigmem-go
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (sdk)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Experimental Go client source exists, but package alignment and live-node validation remain future alpha work."
+
 protocol_compatibility:
   - protocol_version: "0.9.0a2"
     supported_by:

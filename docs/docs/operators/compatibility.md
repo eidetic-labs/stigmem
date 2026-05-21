@@ -102,6 +102,7 @@ compatibility remains in [`docs/compatibility-matrix.yaml`](https://github.com/e
 
 | Feature | Type | Stability / surface | Release lines | Package / implementation |
 | --- | --- | --- | --- | --- |
+| [Async jobs](https://github.com/eidetic-labs/stigmem/blob/main/features/async-jobs/README.md) | core | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-node`; `node/src/stigmem_node/jobs.py` |
 | [Content-addressed fact IDs](https://github.com/eidetic-labs/stigmem/blob/main/features/content-addressed-ids/README.md) | core | stable / default | `v0.9.0a1`, `v0.9.0a3` | `stigmem-node`; `node/src/stigmem_node/cid.py` |
 | [Decay semantics](https://github.com/eidetic-labs/stigmem/blob/main/features/decay/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/decay` |
 | [Intent envelope](https://github.com/eidetic-labs/stigmem/blob/main/features/intent-envelope/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/intent-envelope` |

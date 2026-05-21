@@ -77,7 +77,7 @@ These adapters translate Stigmem's tools into the native function-calling format
 <div>
 <dt>Ollama / LiteLLM</dt>
 <dt><span className="stigmem-fields__type">OpenAI-compatible tool-use</span></dt>
-<dd>For local models. <a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-ollama-litellm">experimental/adapter-ollama-litellm</a></dd>
+<dd>For local models. <a href="https://github.com/eidetic-labs/stigmem/tree/main/features/ollama-litellm-adapter">features/ollama-litellm-adapter</a></dd>
 </div>
 
 </div>

@@ -358,6 +358,12 @@ Read the spec at
 </div>
 
 <div>
+<dt>Ollama/LiteLLM adapter</dt>
+<dt><span className="stigmem-fields__type">Superseded, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/ollama-litellm-adapter"><code>features/ollama-litellm-adapter</code></a>; compatibility identity for the OpenAI-compatible tools adapter.</dd>
+</div>
+
+<div>
 <dt>Gemini adapter</dt>
 <dt><span className="stigmem-fields__type">Deferred, external</span></dt>
 <dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/gemini-adapter"><code>features/gemini-adapter</code></a>; package and live Gemini validation remain future alpha work.</dd>

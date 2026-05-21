@@ -161,6 +161,10 @@ Progress:
   root `CHANGELOG.md` carries feature-changelog links, release-line metadata,
   and status projections for migrated feature records without duplicating
   feature-local history.
+- `scripts/check_feature_compatibility_projection.py` mechanically checks that
+  `docs/compatibility-matrix.yaml` and the public operator compatibility page
+  carry feature-record links, release-line metadata, stability, surface, type,
+  package, and implementation projections for migrated feature records.
 - `scripts/check.sh docs` runs the feature projection checks after validating
   feature records.
 

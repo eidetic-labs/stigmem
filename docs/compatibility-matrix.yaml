@@ -82,13 +82,51 @@ features:
       node: ">=0.9.0a1"
     notes: "Capability tokens, manifests, mTLS. Advanced trust scoring deferred to experimental/."
 
-  - id: cids
-    name: Content-addressed fact IDs (CIDs)
+  - id: content-addressed-ids
+    name: Content-addressed fact IDs
+    feature_record: features/content-addressed-ids/README.md
+    feature_type: core
+    default_surface: default
+    implementation_path: node/src/stigmem_node/cid.py
+    package: stigmem-node
+    release_lines:
+      - "v0.9.0a1"
+      - "v0.9.0a3"
     spec_section: §25
     stability: stable
     requires:
       node: ">=0.9.0a1"
     notes: "Core feature per ADR-017 (amendment to ADR-011). Load-bearing for ADR-003 trust boundary + ADR-016 immutability stack."
+
+  - id: decay
+    name: Decay semantics
+    feature_record: features/decay/README.md
+    feature_type: protocol
+    default_surface: opt-in
+    implementation_path: experimental/decay
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: Spec-X9-Decay-Semantics
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Feature record owns the experimental decay semantics projection; default installs keep decay behavior outside the supported surface."
+
+  - id: intent-envelope
+    name: Intent envelope
+    feature_record: features/intent-envelope/README.md
+    feature_type: protocol
+    default_surface: opt-in
+    implementation_path: experimental/intent-envelope
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: Spec-X10-Intent-Envelope
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred protocol feature; feature record owns current status and release-line projection."
 
   - id: stigmem-version-header
     name: Wire-format pinning header
@@ -108,6 +146,14 @@ features:
 
   - id: lazy-instruction-discovery
     name: Lazy instruction discovery
+    feature_record: features/lazy-instruction-discovery/README.md
+    feature_type: plugin
+    default_surface: opt-in
+    implementation_path: experimental/lazy-instruction-discovery
+    package: stigmem-plugin-lazy-instruction-discovery
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
     spec_section: §21
     stability: experimental
     requires:
@@ -115,33 +161,63 @@ features:
       lazy_instruction_plugin: "source-only on main; no released artifact yet"
     notes: "Extracted to experimental/lazy-instruction-discovery/ as an opt-in plugin source package. Default installs do not expose lazy-instruction routes. Signed/package artifact evidence is deferred to the plugin launch train and tracked in #298; ADR-008 graduation remains blocked on ADR-003."
 
-  - id: rtbf-tombstones
-    name: RTBF tombstones
-    spec_section: §23
-    stability: experimental
-    requires:
-      node: ">=0.9.0a1"
-      tombstone_plugin: "source-only on main; no released artifact yet"
-    notes: "Extracted to experimental/tombstones/ as an opt-in plugin source package. Default installs do not expose tombstone routes or filters. Signed/package artifact evidence is deferred to the plugin launch train; ADR-008 graduation remains blocked on tombstone threat-model, conformance, soak, and operator-runbook gates."
-
-  - id: time-travel
-    name: Time-travel queries
-    spec_section: §24
-    stability: experimental
-    requires:
-      node: "experimental"
-    notes: "Deferred to experimental/time-travel/. Targeted v0.9.0a4."
-
   - id: memory-garden-acl
-    name: Memory garden advanced ACL
+    name: Memory Garden advanced ACL
+    feature_record: features/memory-garden-acl/README.md
+    feature_type: plugin
+    default_surface: opt-in
+    implementation_path: experimental/memory-garden-acl
+    package: stigmem-plugin-memory-garden-acl
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
     spec_section: §17 advanced
     stability: experimental
     requires:
       node: "experimental"
     notes: "Basic memory-garden concept stable in core; advanced ACL source package extracted to experimental/memory-garden-acl/ after v0.9.0a1. Default installs keep advanced ACL inactive; signed/package artifact evidence is deferred until all planned plugins are built."
 
+  - id: multi-tenant
+    name: Multi-tenant scoping
+    feature_record: features/multi-tenant/README.md
+    feature_type: plugin
+    default_surface: opt-in
+    implementation_path: experimental/multi-tenant
+    package: stigmem-plugin-multi-tenant
+    release_lines:
+      - "v0.9.0a8"
+      - "0.9.xA"
+    spec_section: (cross-cutting)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Implementation remains the opt-in experimental/multi-tenant/ source package. Targeted v0.9.0a8."
+
+  - id: recall-graph
+    name: Recall graph
+    feature_record: features/recall-graph/README.md
+    feature_type: protocol
+    default_surface: opt-in
+    implementation_path: experimental/recall-graph
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: Spec-X7-Recall-Graph
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred protocol feature; feature record owns current status and release-line projection."
+
   - id: source-attestation
     name: Source attestation
+    feature_record: features/source-attestation/README.md
+    feature_type: plugin
+    default_surface: opt-in
+    implementation_path: experimental/source-attestation
+    package: stigmem-plugin-source-attestation
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
     spec_section: §18
     stability: experimental
     requires:
@@ -149,13 +225,68 @@ features:
       source_attestation_plugin: "source-only on main; no released artifact yet"
     notes: "Extracted to experimental/source-attestation/ as an opt-in plugin source package. Default installs keep source-attestation behavior inert; explicit plugin registration plus source-attestation gates are required. Signed/package artifact evidence is deferred until all planned plugins are built."
 
-  - id: multi-tenant
-    name: Multi-tenant isolation
-    spec_section: (cross-cutting)
+  - id: subscriptions
+    name: Subscriptions
+    feature_record: features/subscriptions/README.md
+    feature_type: protocol
+    default_surface: opt-in
+    implementation_path: experimental/subscriptions
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: Spec-X8-Subscriptions
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Feature record lives at features/multi-tenant/; implementation remains the opt-in experimental/multi-tenant/ source package. Targeted v0.9.0a8."
+    notes: "Deferred protocol feature; feature record owns current status and release-line projection."
+
+  - id: synthesis
+    name: Synthesis
+    feature_record: features/synthesis/README.md
+    feature_type: protocol
+    default_surface: opt-in
+    implementation_path: experimental/synthesis
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: Spec-X11-Synthesis
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred protocol feature; feature record owns current status and release-line projection."
+
+  - id: time-travel
+    name: Time-travel queries
+    feature_record: features/time-travel/README.md
+    feature_type: plugin
+    default_surface: opt-in
+    implementation_path: experimental/time-travel
+    package: stigmem-plugin-time-travel
+    release_lines:
+      - "v0.9.0a1"
+      - "v0.9.0a4"
+    spec_section: §24
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred to experimental/time-travel/. Targeted v0.9.0a4."
+
+  - id: tombstones
+    name: RTBF tombstones
+    feature_record: features/tombstones/README.md
+    feature_type: plugin
+    default_surface: opt-in
+    implementation_path: experimental/tombstones
+    package: stigmem-plugin-tombstones
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: §23
+    stability: experimental
+    requires:
+      node: ">=0.9.0a1"
+      tombstone_plugin: "source-only on main; no released artifact yet"
+    notes: "Extracted to experimental/tombstones/ as an opt-in plugin source package. Default installs do not expose tombstone routes or filters. Signed/package artifact evidence is deferred to the plugin launch train; ADR-008 graduation remains blocked on tombstone threat-model, conformance, soak, and operator-runbook gates."
 
   - id: oidc-sso
     name: OIDC SSO

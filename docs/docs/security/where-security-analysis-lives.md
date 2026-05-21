@@ -55,13 +55,13 @@ pointers during migration.
 <div>
 <dt>Lazy instruction discovery</dt>
 <dt><span className="stigmem-fields__type">owns R-15; contributes to R-21</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/lazy-instruction-discovery/security.md"><code>experimental/lazy-instruction-discovery/security.md</code></a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/features/lazy-instruction-discovery/security.md"><code>features/lazy-instruction-discovery/security.md</code></a></dd>
 </div>
 
 <div>
 <dt>RTBF tombstones</dt>
 <dt><span className="stigmem-fields__type">owns R-16 and R-17</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/tombstones/security.md"><code>experimental/tombstones/security.md</code></a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/features/tombstones/security.md"><code>features/tombstones/security.md</code></a></dd>
 </div>
 
 <div>
@@ -79,7 +79,7 @@ pointers during migration.
 <div>
 <dt>Source attestation</dt>
 <dt><span className="stigmem-fields__type">contributes to R-22</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/source-attestation/security.md"><code>experimental/source-attestation/security.md</code></a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/features/source-attestation/security.md"><code>features/source-attestation/security.md</code></a></dd>
 </div>
 
 <div>

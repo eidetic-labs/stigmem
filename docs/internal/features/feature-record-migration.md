@@ -117,6 +117,9 @@ Progress:
   canonical spec, horizon, and notes.
 - `scripts/check_feature_records.py` validates that `migrated` inventory rows
   correspond to complete feature records.
+- Security-sensitive records for `tombstones`, `source-attestation`, and
+  `lazy-instruction-discovery` now migrate R-16/R-17, R-22, and R-15/R-21
+  feature analysis into feature records.
 
 ### Phase 3: Projection tooling
 

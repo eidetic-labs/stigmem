@@ -73,7 +73,7 @@ pointers during migration.
 <div>
 <dt>Memory garden ACL</dt>
 <dt><span className="stigmem-fields__type">contributes to R-21</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/memory-garden-acl/security.md"><code>experimental/memory-garden-acl/security.md</code></a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/features/memory-garden-acl/security.md"><code>features/memory-garden-acl/security.md</code></a></dd>
 </div>
 
 <div>

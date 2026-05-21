@@ -327,7 +327,7 @@ ownership is:
 |---|---|---|
 | R-19 | Mitigated | Protocol-level, cross-cutting federation risk. Evidence is recorded in `spec/security/evidence-registry.json`; no per-feature `security.md` owner. |
 | R-20 | Accepted | Protocol-level operator opt-in risk for cloud embedding. Tracked in the unified register and experimental feature index; no v0.9.x mitigation planned. |
-| R-21 | In review | Protocol-level cross-cutting risk. Contributor notes now live in [`features/lazy-instruction-discovery/security.md`](../../features/lazy-instruction-discovery/security.md), [`experimental/memory-garden-acl/security.md`](../../experimental/memory-garden-acl/security.md), and [`experimental/multi-tenant/security.md`](../../experimental/multi-tenant/security.md). |
+| R-21 | In review | Protocol-level cross-cutting risk. Contributor notes now live in [`features/lazy-instruction-discovery/security.md`](../../features/lazy-instruction-discovery/security.md), [`features/memory-garden-acl/security.md`](../../features/memory-garden-acl/security.md), and [`experimental/multi-tenant/security.md`](../../experimental/multi-tenant/security.md). |
 | R-22 | Open | Protocol-level release-engineering risk. Stays in this register until the future signed-release pipeline lands. |
 
 Per-feature owned risks are colocated under the owning feature record or, for

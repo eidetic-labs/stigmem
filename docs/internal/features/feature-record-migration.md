@@ -120,6 +120,9 @@ Progress:
 - Security-sensitive records for `tombstones`, `source-attestation`, and
   `lazy-instruction-discovery` now migrate R-16/R-17, R-22, and R-15/R-21
   feature analysis into feature records.
+- Protocol-bearing `0.9.xA` records for `memory-garden-acl`, `subscriptions`,
+  `intent-envelope`, `decay`, `synthesis`, and `recall-graph` now own their
+  Spec-X detail under `features/<feature>/`.
 
 ### Phase 3: Projection tooling
 

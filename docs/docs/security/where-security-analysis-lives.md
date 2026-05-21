@@ -1,7 +1,7 @@
 ---
 title: Where Security Analysis Lives
 sidebar_label: Where Analysis Lives
-description: How Stigmem splits cross-cutting threat-model risks from feature-local experimental security analysis.
+description: How Stigmem splits cross-cutting threat-model risks from feature-local security analysis.
 audience: Security
 sidebar_position: 11
 ---
@@ -15,7 +15,7 @@ sidebar_position: 11
 **What this page is**
 
 Stigmem uses one protocol-level threat model plus feature-local
-security files for experimental features. This page tells you where
+security files for features. This page tells you where
 to look.
 
 </div>
@@ -39,9 +39,10 @@ Cross-cutting protocol risks stay there.
 
 ## Feature-local security files
 
-Per ADR-018, an experimental feature that owns or materially
-contributes to a numbered risk keeps its feature analysis beside the
-feature.
+Per ADR-018 and ADR-020, a feature that owns or materially contributes
+to a numbered risk keeps its feature analysis in its feature record.
+Legacy experimental security files may remain as compatibility
+pointers during migration.
 
 <div className="stigmem-fields">
 
@@ -66,7 +67,7 @@ feature.
 <div>
 <dt>Time-travel queries</dt>
 <dt><span className="stigmem-fields__type">contributes to R-17 and R-18</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/time-travel/security.md"><code>experimental/time-travel/security.md</code></a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/features/time-travel/security.md"><code>features/time-travel/security.md</code></a></dd>
 </div>
 
 <div>
@@ -115,7 +116,7 @@ When adding a feature-owned R-XX risk:
 
 <ol className="stigmem-steps">
 <li>Add the risk to the unified threat model.</li>
-<li>Add or update <code>experimental/&lt;feature&gt;/security.md</code>.</li>
+<li>Add or update <code>features/&lt;feature&gt;/security.md</code>.</li>
 <li>Link the risk row in the threat model to the feature-local file.</li>
 <li>Run the security documentation validator.</li>
 </ol>

@@ -1,0 +1,26 @@
+# Time-Travel Queries Changelog
+
+Feature-local changes are recorded here by release. During release prep,
+user/operator-facing entries are promoted into the root `CHANGELOG.md`.
+
+## Unreleased
+
+- Added ADR-020 feature record and made this directory the canonical feature
+  home for time-travel spec, status, evidence, security, and feature-local
+  history.
+
+## Post-v0.9.0a1 Main
+
+- Added `experimental/time-travel/` as the `stigmem-plugin-time-travel` source
+  package.
+- Added manifest, config schema, hook placeholders, registration tests,
+  deterministic hook-order coverage, and plugin discovery coverage.
+- Updated default install behavior so `as_of` requests fail closed when the
+  plugin is not loaded.
+- Preserved plugin-loaded fact-query and recall `as_of` behavior for alpha
+  validation.
+
+## v0.9.0a1 Lineage
+
+- Monolithic spec material preserved section 24 time-travel/as-of query
+  semantics before extraction to `Spec-X3-Time-Travel-Queries`.

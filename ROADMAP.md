@@ -7,6 +7,19 @@
 
 ---
 
+## How this roadmap is organized
+
+This file is the strategic roadmap: it preserves the release-line horizon,
+major workstreams, and gates that open later lines. Detailed release contracts
+live in [`docs/internal/releases/`](docs/internal/releases/), using the format
+defined in [`docs/internal/roadmap-standards.md`](docs/internal/roadmap-standards.md).
+
+`ROADMAP.md` should not be the per-issue task board or the release-notes draft.
+GitHub milestones track live execution; `CHANGELOG.md` records what actually
+shipped.
+
+---
+
 ## Version-line model
 
 The work is organized into sequential version lines per [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md), but only the next alpha artifact refresh is an active release target. Future beta, release-candidate, and GA lines stay as policy horizons until alpha exit evidence justifies opening them.

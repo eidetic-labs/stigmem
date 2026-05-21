@@ -14,9 +14,12 @@ of duplicating the same analysis across multiple files.
 | Finding-level evidence | `docs/internal/security-evidence-registry-*.md` | Record PRs, paths, tests, dispositions, and publication state | Become the public advisory index |
 | Enduring architectural risks | `spec/security/threat-model.md` | Register cross-cutting R-XX risks and link to per-feature analysis | Add every audit finding as a risk |
 | Machine-checkable mitigated-risk evidence | `spec/security/evidence-registry.json` | Support validators for mitigated threat-model risks | Carry human narrative or release notes |
-| Release scope and readiness | GitHub issues and milestones | Feed summary pages and tag-time checks | Be manually mirrored in several prose trackers |
+| Strategic roadmap | `ROADMAP.md` | Link to detailed release roadmaps and milestone execution | Become a per-issue task board or release-notes draft |
+| Detailed release scope | `docs/internal/releases/<version>-roadmap.md` | Define release contracts, scope, exclusions, artifacts, evidence gates, and release-note candidates | Replace GitHub issues for live execution |
+| Release readiness | GitHub issues, milestones, and `docs/docs/operators/release-readiness.md` | Feed tag-time checks and public/operator status summaries | Be manually mirrored in several prose trackers |
 | Private or embargoed staging | `Internal-Comms/stigmem/security/drafts/` | Hold unpublished publication drafts | Preserve post-publication snapshots of public docs |
 | Architecture decisions | `docs/adr/` | Be linked from IC and planning docs | Be duplicated under Internal-Comms after publication |
+| Roadmap/release document format | `docs/internal/roadmap-standards.md` | Be linked from release docs and review checklists | Drift into undocumented local conventions |
 
 ## Release Security Rule
 

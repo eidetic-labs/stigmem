@@ -188,6 +188,11 @@ Progress:
 - `scripts/check_feature_records.py` now validates the complete migration
   inventory against existing feature records and top-level experimental
   implementation directories, not only rows already marked `migrated`.
+- Migrated inventory rows now project core metadata from the canonical feature
+  `README.md`; title, type, stability, default surface, and canonical spec must
+  match before docs checks pass.
+- `features/README.md` now documents the strict validation contract for new
+  feature work and migrated rows.
 
 ## Release Horizon Alignment
 

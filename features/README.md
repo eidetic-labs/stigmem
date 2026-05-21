@@ -102,10 +102,24 @@ Run the feature record validator from the repository root:
 python3 scripts/check_feature_records.py
 ```
 
-The validator currently checks migrated feature directories under `features/`
-and skips `features/feature-template/`. This lets legacy feature documentation
-migrate incrementally while enforcing the contract for every feature record that
-has entered the new structure.
+The validator skips `features/feature-template/`, enforces the six-file and
+metadata contract for every migrated feature directory under `features/`, and
+checks the internal migration inventory for complete coverage.
+
+Strict checks include:
+
+- Every migrated feature record must have a matching
+  `docs/internal/feature-tracker.md` row.
+- Every migrated inventory row must point to a complete feature record.
+- Migrated tracker metadata for title, type, stability, default surface, and
+  canonical spec must match the feature `README.md` frontmatter.
+- Every top-level `experimental/<feature>/` implementation directory must have
+  an inventory row, even if the feature record migration is still pending.
+
+New feature work that introduces a feature-level implementation directory must
+add or update the inventory row in the same PR. Once a feature is marked
+`migrated`, the feature record owns the detailed feature truth and projection
+surfaces must summarize or link to it instead of duplicating it.
 
 ## Template
 

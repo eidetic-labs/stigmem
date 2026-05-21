@@ -330,14 +330,15 @@ ownership is:
 | R-21 | In review | Protocol-level cross-cutting risk. Contributor notes now live in [`experimental/lazy-instruction-discovery/security.md`](../../experimental/lazy-instruction-discovery/security.md), [`experimental/memory-garden-acl/security.md`](../../experimental/memory-garden-acl/security.md), and [`experimental/multi-tenant/security.md`](../../experimental/multi-tenant/security.md). |
 | R-22 | Open | Protocol-level release-engineering risk. Stays in this register until the future signed-release pipeline lands. |
 
-Per-feature owned risks are colocated under the owning experimental feature:
+Per-feature owned risks are colocated under the owning feature record or, for
+unmigrated features, under the owning experimental feature:
 R-15 in [`experimental/lazy-instruction-discovery/security.md`](../../experimental/lazy-instruction-discovery/security.md)
 and R-16/R-17 in [`experimental/tombstones/security.md`](../../experimental/tombstones/security.md).
 R-18 and R-21 are intentionally protocol-level per ADR-018 because CIDs are
 core and the worm vector is structurally cross-cutting.
 
 Feature-local security analysis also exists for material contributors without
-owned risks: [`experimental/time-travel/security.md`](../../experimental/time-travel/security.md)
+owned risks: [`features/time-travel/security.md`](../../features/time-travel/security.md)
 records R-17/R-18 contributions, [`experimental/source-attestation/security.md`](../../experimental/source-attestation/security.md)
 records the R-22 release-supply-chain boundary, and
 [`experimental/multi-tenant/security.md`](../../experimental/multi-tenant/security.md)

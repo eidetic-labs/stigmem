@@ -243,15 +243,15 @@ their frontmatter.
 | `Spec-18-Conformance-and-Failure-Modes` | Conformance and failure modes | Legacy section 11 |
 | `Spec-19-Adapter-ABI` | Adapter ABI | Legacy section 12 |
 | `Spec-20-Lint-Semantics` | Lint semantics | Legacy section 14 |
-| `Spec-21-Content-Addressed-IDs` | Content-addressed IDs | Legacy section 25 |
+| `Spec-21-Content-Addressed-IDs` | Content-addressed IDs | `features/content-addressed-ids/spec.md`; legacy section 25 |
 
-**Experimental specs (currently at `experimental/<feature>/spec.md`):**
+**Experimental specs (feature records own migrated entries; unmigrated entries remain at `experimental/<feature>/spec.md`):**
 
 | Spec ID | Topic | Located at | Legacy source material |
 |---|---|---|---|
 | `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | `experimental/lazy-instruction-discovery/spec.md` | Legacy section 21 |
 | `Spec-X2-RTBF-Tombstones` | RTBF tombstones | `experimental/tombstones/spec.md` | Legacy section 23 |
-| `Spec-X3-Time-Travel-Queries` | `as_of` time-travel queries | `experimental/time-travel/spec.md` | Legacy section 24 |
+| `Spec-X3-Time-Travel-Queries` | `as_of` time-travel queries | `features/time-travel/spec.md` | Legacy section 24 |
 | `Spec-X5-Memory-Garden-Advanced-ACL` | Memory garden advanced ACL | `experimental/memory-garden-acl/spec.md` | Legacy section 17 advanced material |
 | `Spec-X6-Source-Attestation` | Source attestation | `experimental/source-attestation/spec.md` | Legacy section 18 |
 | `Spec-X7-Subscriptions` | Subscriptions / push federation | `experimental/subscriptions/spec.md` | (new) |

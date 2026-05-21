@@ -24,8 +24,8 @@ for legacy section numbers.
 | §21 Lazy Instruction Discovery | Deferred | [`experimental/lazy-instruction-discovery/spec.md`](../experimental/lazy-instruction-discovery/spec.md) |
 | §22 Security Hardening | Stable | [`specs/09-audit-log.md`](specs/09-audit-log.md), [`specs/10-hardening.md`](specs/10-hardening.md), [`specs/11-replay-protection.md`](specs/11-replay-protection.md) |
 | §23 RTBF Tombstones | Deferred | [`experimental/tombstones/spec.md`](../experimental/tombstones/spec.md) |
-| §24 Time-Travel Queries | Deferred | [`experimental/time-travel/spec.md`](../experimental/time-travel/spec.md) |
-| §25 Content-Addressed Fact IDs (CIDs) | **Stable in core** per [ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md) | [`specs/21-content-addressed-ids.md`](specs/21-content-addressed-ids.md) |
+| §24 Time-Travel Queries | Deferred / experimental plugin | [`features/time-travel/spec.md`](../features/time-travel/spec.md) |
+| §25 Content-Addressed Fact IDs (CIDs) | **Stable in core** per [ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md) | [`features/content-addressed-ids/spec.md`](../features/content-addressed-ids/spec.md) |
 
 ## Modular spec migration (ADR-010)
 

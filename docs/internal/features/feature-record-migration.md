@@ -62,7 +62,7 @@ Exit criteria:
 
 ### Phase 1: Pilot feature records
 
-Status: planned.
+Status: in progress.
 
 Pilot set:
 
@@ -78,6 +78,13 @@ Exit criteria:
   the same detail.
 - Release roadmap entries reference pilot feature records for implementation
   detail.
+
+Progress:
+
+- `features/content-addressed-ids/` added as the pilot core feature record.
+- `features/time-travel/` added as the pilot plugin-backed feature record.
+- `spec/specs/21-content-addressed-ids.md` and `experimental/time-travel/`
+  spec/status/security files now act as compatibility pointers.
 
 ### Phase 2: Inventory and migrate remaining feature families
 

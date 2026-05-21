@@ -23,7 +23,7 @@ or retire the duplicated row.
 |---|---|---|---|
 | Lazy instruction discovery | `Spec-X1-Lazy-Instruction-Discovery` | `experimental/lazy-instruction-discovery/spec.md` | [`STATUS.md`](../../experimental/lazy-instruction-discovery/STATUS.md) |
 | RTBF tombstones | `Spec-X2-RTBF-Tombstones` | `experimental/tombstones/spec.md` | [`STATUS.md`](../../experimental/tombstones/STATUS.md) |
-| Time-travel queries | `Spec-X3-Time-Travel-Queries` | `experimental/time-travel/spec.md` | [`STATUS.md`](../../experimental/time-travel/STATUS.md) |
+| Time-travel queries | `Spec-X3-Time-Travel-Queries` | [`features/time-travel/spec.md`](../../features/time-travel/spec.md) | [`features/time-travel/status.md`](../../features/time-travel/status.md) |
 | Memory Garden advanced ACL | `Spec-X5-Memory-Garden-Advanced-ACL` | `experimental/memory-garden-acl/spec.md` | [`STATUS.md`](../../experimental/memory-garden-acl/STATUS.md) |
 | Source attestation | `Spec-X6-Source-Attestation` | `experimental/source-attestation/spec.md` | [`STATUS.md`](../../experimental/source-attestation/STATUS.md) |
 | Subscriptions | `Spec-X7-Subscriptions` | `experimental/subscriptions/spec.md` | [`STATUS.md`](../../experimental/subscriptions/STATUS.md) |
@@ -55,6 +55,13 @@ future reintroduction work defines protocol behavior.
   one exists.
 - Do not add a public docs link to this internal tracker; internal docs may link
   outward to public pages.
+
+## Migrated Feature Records
+
+| Feature | Feature record | Legacy compatibility path |
+| --- | --- | --- |
+| Content-addressed fact IDs | [`features/content-addressed-ids/`](../../features/content-addressed-ids/) | `spec/specs/21-content-addressed-ids.md` |
+| Time-travel queries | [`features/time-travel/`](../../features/time-travel/) | `experimental/time-travel/` |
 
 ## 2026-05-16 PR 4c Closeout
 

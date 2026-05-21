@@ -335,8 +335,8 @@ Read the spec at
 
 <div>
 <dt>Go SDK (<code>stigmem-go</code>)</dt>
-<dt><span className="stigmem-fields__type">Deferred</span></dt>
-<dd><code>experimental/sdk-go/</code>.</dd>
+<dt><span className="stigmem-fields__type">Experimental, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/sdk-go"><code>features/sdk-go</code></a>; package alignment remains future alpha work.</dd>
 </div>
 
 <div>

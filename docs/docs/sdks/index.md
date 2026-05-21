@@ -40,7 +40,7 @@ Client libraries and integration connectors for Stigmem.
 </div>
 
 <div>
-<dt><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/sdk-go">Go</a></dt>
+<dt><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/sdk-go">Go</a></dt>
 <dt><span className="stigmem-fields__type">experimental</span></dt>
 <dd><code>github.com/eidetic-labs/stigmem-go</code></dd>
 </div>

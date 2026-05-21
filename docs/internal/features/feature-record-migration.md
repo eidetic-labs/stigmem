@@ -207,6 +207,9 @@ Progress:
 - `mcp-adapter` now has a canonical adapter feature record under
   `features/mcp-adapter/`; package alignment and connector validation remain
   future alpha release-line gates.
+- `sdk-go` now has a canonical SDK feature record under `features/sdk-go/`;
+  API parity, package alignment, and live-node smoke validation remain future
+  alpha release-line gates.
 
 ## Release Horizon Alignment
 

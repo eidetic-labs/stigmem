@@ -66,6 +66,7 @@ is an index, not the canonical analysis body; update the linked
 | Content-addressed fact IDs | R-18 | [`features/content-addressed-ids/security.md`](features/content-addressed-ids/security.md) |
 | Decay semantics | R-02, R-16 | [`features/decay/security.md`](features/decay/security.md) |
 | Fuzzy resolver | None | [`features/fuzzy-resolver/security.md`](features/fuzzy-resolver/security.md) |
+| Go SDK | None | [`features/sdk-go/security.md`](features/sdk-go/security.md) |
 | Intent envelope | R-05, R-15 | [`features/intent-envelope/security.md`](features/intent-envelope/security.md) |
 | Lazy instruction discovery | R-15, R-21 | [`features/lazy-instruction-discovery/security.md`](features/lazy-instruction-discovery/security.md) |
 | Memory Garden advanced ACL | R-21 | [`features/memory-garden-acl/security.md`](features/memory-garden-acl/security.md) |

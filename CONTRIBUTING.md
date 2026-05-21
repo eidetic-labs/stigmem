@@ -44,6 +44,17 @@ Good starter work is labeled
 Prefer one small issue per PR. If a starter issue touches docs, update the
 roadmap or checklist only when the issue explicitly changes project status.
 
+### PR-closes-issue and milestone discipline (from v0.9.0a3 onward)
+
+Every PR opened against `main` from v0.9.0a3 onward must:
+
+1. Close exactly one issue (use `Closes #NNN` in the PR body) — open an issue first if none exists.
+2. Be assigned to the milestone that the closing issue belongs to. Current release-line milestones are `v0.9.0a3`, `v0.9.0b1`, `v1.0.0rc1`, and `v1.0.0` (created 2026-05-20).
+
+The discipline lets anyone answer "what shipped in release X?" by reading the milestone instead of triangulating across CHANGELOG, ROADMAP, and git history. PRs that predate v0.9.0a3 are not retroactively backfilled.
+
+Exceptions: emergency security patches and pure-revert PRs may land without a closing issue, with the rationale stated in the PR body.
+
 ## RFC process
 
 Use this when you want to propose a spec change, add a new field or endpoint, change semantics, or resolve an open question in a modular spec.

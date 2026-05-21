@@ -210,6 +210,9 @@ Progress:
 - `sdk-go` now has a canonical SDK feature record under `features/sdk-go/`;
   API parity, package alignment, and live-node smoke validation remain future
   alpha release-line gates.
+- `obsidian-adapter` now has a canonical adapter feature record under
+  `features/obsidian-adapter/`; package, plugin, threat-model, and live-vault
+  validation remain future alpha release-line gates.
 
 ## Release Horizon Alignment
 

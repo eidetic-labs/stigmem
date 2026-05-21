@@ -352,9 +352,15 @@ Read the spec at
 </div>
 
 <div>
-<dt>Obsidian / Letta / Zep / Cognee / Gemini / OpenAI-tools / Paperclip adapters</dt>
+<dt>Letta / Zep / Cognee / Gemini / OpenAI-tools / Paperclip adapters</dt>
 <dt><span className="stigmem-fields__type">Deferred</span></dt>
 <dd><code>experimental/&lt;adapter&gt;-adapter/</code>.</dd>
+</div>
+
+<div>
+<dt>Obsidian adapter</dt>
+<dt><span className="stigmem-fields__type">Experimental, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/obsidian-adapter"><code>features/obsidian-adapter</code></a>; CLI, plugin, and live-vault validation remain future alpha work.</dd>
 </div>
 
 <div>

@@ -129,6 +129,22 @@ features:
       node: "experimental"
     notes: "Feature record owns the experimental decay semantics projection; default installs keep decay behavior outside the supported surface."
 
+  - id: fuzzy-resolver
+    name: Fuzzy resolver
+    feature_record: features/fuzzy-resolver/README.md
+    feature_type: core
+    default_surface: opt-in
+    implementation_path: node/src/stigmem_node/recall/entity_resolver.py
+    package: stigmem-node
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (entity resolution)
+    stability: experimental
+    requires:
+      node: ">=0.9.0a1"
+    notes: "Authenticated entity resolver and alias-management surface; broader resolver tuning remains future-horizon work."
+
   - id: intent-envelope
     name: Intent envelope
     feature_record: features/intent-envelope/README.md

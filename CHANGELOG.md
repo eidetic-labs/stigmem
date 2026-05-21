@@ -29,6 +29,7 @@ root changelog projection used during release prep.
 | Async jobs | active | `v0.9.0a1`, `0.9.xA` | [`features/async-jobs/changelog.md`](features/async-jobs/changelog.md) |
 | Content-addressed fact IDs | active | `v0.9.0a1`, `v0.9.0a3` | [`features/content-addressed-ids/changelog.md`](features/content-addressed-ids/changelog.md) |
 | Decay semantics | deferred | `v0.9.0a1`, `0.9.xA` | [`features/decay/changelog.md`](features/decay/changelog.md) |
+| Fuzzy resolver | active | `v0.9.0a1`, `0.9.xA` | [`features/fuzzy-resolver/changelog.md`](features/fuzzy-resolver/changelog.md) |
 | Intent envelope | deferred | `v0.9.0a1`, `0.9.xA` | [`features/intent-envelope/changelog.md`](features/intent-envelope/changelog.md) |
 | Lazy instruction discovery | active | `v0.9.0a1`, `0.9.xA` | [`features/lazy-instruction-discovery/changelog.md`](features/lazy-instruction-discovery/changelog.md) |
 | Memory Garden advanced ACL | active | `v0.9.0a1`, `0.9.xA` | [`features/memory-garden-acl/changelog.md`](features/memory-garden-acl/changelog.md) |

@@ -165,6 +165,11 @@ Progress:
   `docs/compatibility-matrix.yaml` and the public operator compatibility page
   carry feature-record links, release-line metadata, stability, surface, type,
   package, and implementation projections for migrated feature records.
+- `scripts/check_feature_protocol_projection.py` mechanically checks that
+  feature `canonical_spec` metadata is represented in generated
+  `spec/PROTOCOL.md`, that feature specs name their canonical Spec-* id, and
+  that features without a protocol assignment explicitly state the absence of a
+  Spec-X assignment.
 - `scripts/check.sh docs` runs the feature projection checks after validating
   feature records.
 

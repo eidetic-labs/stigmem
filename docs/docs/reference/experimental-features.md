@@ -37,13 +37,13 @@ Start with the [feature matrix](../concepts/features.md) for the supported v0.9.
 <div>
 <dt><code>Spec-XN</code> experimental protocol</dt>
 <dt><span className="stigmem-fields__type">protocol</span></dt>
-<dd>Has real protocol/design substance and a colocated <code>experimental/&lt;feature&gt;/spec.md</code> source. Rendered spec pages live under the Specification section.</dd>
+<dd>Has real protocol/design substance. Migrated records own the canonical source under <code>features/&lt;feature&gt;/spec.md</code>; compatibility pointers remain under <code>experimental/&lt;feature&gt;/spec.md</code> where needed. Rendered spec pages live under the Specification section.</dd>
 </div>
 
 <div>
 <dt>Experimental implementation surface</dt>
 <dt><span className="stigmem-fields__type">impl</span></dt>
-<dd>Has code, docs, deployment recipes, adapter code, SDK code, or operational tooling under <code>experimental/&lt;feature&gt;/</code>, but no protocol spec yet.</dd>
+<dd>Has code, docs, deployment recipes, adapter code, SDK code, or operational tooling under <code>experimental/&lt;feature&gt;/</code>, but no protocol spec yet. Migrated product truth lives under <code>features/&lt;feature&gt;/</code>.</dd>
 </div>
 
 <div>
@@ -62,11 +62,13 @@ Start with the [feature matrix](../concepts/features.md) for the supported v0.9.
 
 <div className="stigmem-keypoint">
 
-**Every experimental directory should carry a `STATUS.md`.**
+**Every feature should have one visible status owner.**
 
 A `Spec-XN` assignment is reserved for protocol-bearing features;
-adapters, SDKs, dashboards, deployment recipes, and tooling do not
-get fake specs unless they later define protocol behavior.
+migrated features use `features/<feature>/status.md`, while unmigrated
+adapters, SDKs, dashboards, deployment recipes, and tooling continue to use
+`experimental/<surface>/STATUS.md`. Do not assign fake specs unless a surface
+later defines protocol behavior.
 
 </div>
 

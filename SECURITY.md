@@ -62,6 +62,7 @@ is an index, not the canonical analysis body; update the linked
 
 | Feature | Security refs | Canonical feature security record |
 | --- | --- | --- |
+| Async jobs | None | [`features/async-jobs/security.md`](features/async-jobs/security.md) |
 | Content-addressed fact IDs | R-18 | [`features/content-addressed-ids/security.md`](features/content-addressed-ids/security.md) |
 | Decay semantics | R-02, R-16 | [`features/decay/security.md`](features/decay/security.md) |
 | Intent envelope | R-05, R-15 | [`features/intent-envelope/security.md`](features/intent-envelope/security.md) |

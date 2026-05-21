@@ -125,6 +125,8 @@ Progress:
   Spec-X detail under `features/<feature>/`.
 - `multi-tenant` now owns opt-in tenant-scoping behavior, evidence, and
   R-01/R-02/R-21 security contributions under `features/multi-tenant/`.
+- `async-jobs` now owns shared lint/decay background job lifecycle, polling,
+  evidence, and open queue-control gaps under `features/async-jobs/`.
 
 ### Phase 3: Projection tooling
 

@@ -98,6 +98,22 @@ features:
       node: ">=0.9.0a1"
     notes: "Core feature per ADR-017 (amendment to ADR-011). Load-bearing for ADR-003 trust boundary + ADR-016 immutability stack."
 
+  - id: async-jobs
+    name: Async jobs
+    feature_record: features/async-jobs/README.md
+    feature_type: core
+    default_surface: opt-in
+    implementation_path: node/src/stigmem_node/jobs.py
+    package: stigmem-node
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (operation-specific)
+    stability: experimental
+    requires:
+      node: ">=0.9.0a1"
+    notes: "Shared lint and decay background job lifecycle; broader queue controls remain future-horizon work."
+
   - id: decay
     name: Decay semantics
     feature_record: features/decay/README.md

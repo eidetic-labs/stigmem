@@ -26,6 +26,7 @@ root changelog projection used during release prep.
 
 | Feature | Status | Release lines | Feature changelog |
 | --- | --- | --- | --- |
+| Async jobs | active | `v0.9.0a1`, `0.9.xA` | [`features/async-jobs/changelog.md`](features/async-jobs/changelog.md) |
 | Content-addressed fact IDs | active | `v0.9.0a1`, `v0.9.0a3` | [`features/content-addressed-ids/changelog.md`](features/content-addressed-ids/changelog.md) |
 | Decay semantics | deferred | `v0.9.0a1`, `0.9.xA` | [`features/decay/changelog.md`](features/decay/changelog.md) |
 | Intent envelope | deferred | `v0.9.0a1`, `0.9.xA` | [`features/intent-envelope/changelog.md`](features/intent-envelope/changelog.md) |

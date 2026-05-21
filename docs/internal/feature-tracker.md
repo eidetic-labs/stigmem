@@ -43,7 +43,7 @@ act only as wrappers, compatibility projections, or implementation directories.
 | `synthesis` | Synthesis | `protocol` | `experimental` | `opt-in` | `Spec-X10-Synthesis` | `experimental/synthesis/` | `features/synthesis/` | `migrated` | `0.9.xA` | Protocol-bearing experimental feature. |
 | `recall-graph` | Recall graph | `protocol` | `experimental` | `opt-in` | `Spec-X11-Recall-Graph` | `experimental/recall-graph/` | `features/recall-graph/` | `migrated` | `0.9.xA` | Protocol-bearing experimental feature. |
 | `multi-tenant` | Multi-tenant scoping | `plugin` | `experimental` | `opt-in` | `none` | `experimental/multi-tenant/` | `features/multi-tenant/` | `migrated` | `0.9.xA` | Security-contributing cross-cutting feature; assign spec only if protocol work reopens. |
-| `async-jobs` | Async jobs | `core` | `experimental` | `opt-in` | `none` | `experimental/async-jobs/` | `features/async-jobs/` | `pending` | `future alpha` | No Spec-X assigned. |
+| `async-jobs` | Async jobs | `core` | `experimental` | `opt-in` | `none` | `experimental/async-jobs/` | `features/async-jobs/` | `migrated` | `future alpha` | No Spec-X assigned; feature record owns shared job lifecycle detail. |
 | `fuzzy-resolver` | Fuzzy resolver | `core` | `experimental` | `opt-in` | `none` | `experimental/fuzzy-resolver/` | `features/fuzzy-resolver/` | `pending` | `future alpha` | No Spec-X assigned. |
 | `oidc-sso` | OIDC SSO | `core` | `experimental` | `opt-in` | `none` | `experimental/oidc-sso/` | `features/oidc-sso/` | `pending` | `future alpha` | No Spec-X assigned. |
 | `billing` | Billing | `core` | `experimental` | `opt-in` | `none` | `experimental/billing/` | `features/billing/` | `deferred` | `future gate` | Business feature outside active alpha release scope. |

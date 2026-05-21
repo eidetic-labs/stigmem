@@ -1,74 +1,79 @@
-# Feature Tracker
+# Feature Record Migration Inventory
 
-This tracker is a transition inventory while ADR-020 feature records are being
-migrated. It mirrors the public [feature matrix](../docs/concepts/features.md)
-and [experimental features index](../docs/reference/experimental-features.md)
-without making public docs depend on internal planning files.
+This inventory tracks the ADR-020 migration from legacy feature documentation
+to canonical feature records under `features/<feature-slug>/`.
 
-Once a feature has a complete `features/<feature-slug>/` record, that feature
-record owns feature detail. This tracker should then link to the feature record
-or retire the duplicated row.
+It is an operational migration control document, not a second feature dossier.
+Rows identify where feature truth lives today, where the feature record will
+live, and which release horizon should drive migration order. Once a feature is
+marked `migrated`, the feature record owns feature detail and legacy paths must
+act only as wrappers, compatibility projections, or implementation directories.
 
-## Current Public Surfaces
+## Public Surfaces
 
 | Surface | Purpose |
-|---|---|
-| [`docs/docs/concepts/features.md`](../docs/concepts/features.md) | Public v0.9.0a1 feature matrix and supported/default-surface summary. |
+| --- | --- |
+| [`docs/docs/concepts/features.md`](../docs/concepts/features.md) | Public feature matrix and supported/default-surface summary. |
 | [`docs/docs/reference/experimental-features.md`](../docs/reference/experimental-features.md) | Public index of deferred and experimental surfaces. |
 | [`experimental/README.md`](../../experimental/README.md) | Repo-level implementation index for experimental directories. |
+| [`features/README.md`](../../features/README.md) | Feature record contract and metadata rules. |
 
-## Protocol-Bearing Experimental Features
+## Migration Status Values
 
-| Feature | Spec | Source | Status source |
-|---|---|---|---|
-| Lazy instruction discovery | `Spec-X1-Lazy-Instruction-Discovery` | `experimental/lazy-instruction-discovery/spec.md` | [`STATUS.md`](../../experimental/lazy-instruction-discovery/STATUS.md) |
-| RTBF tombstones | `Spec-X2-RTBF-Tombstones` | `experimental/tombstones/spec.md` | [`STATUS.md`](../../experimental/tombstones/STATUS.md) |
-| Time-travel queries | `Spec-X3-Time-Travel-Queries` | [`features/time-travel/spec.md`](../../features/time-travel/spec.md) | [`features/time-travel/status.md`](../../features/time-travel/status.md) |
-| Memory Garden advanced ACL | `Spec-X5-Memory-Garden-Advanced-ACL` | `experimental/memory-garden-acl/spec.md` | [`STATUS.md`](../../experimental/memory-garden-acl/STATUS.md) |
-| Source attestation | `Spec-X6-Source-Attestation` | `experimental/source-attestation/spec.md` | [`STATUS.md`](../../experimental/source-attestation/STATUS.md) |
-| Subscriptions | `Spec-X7-Subscriptions` | `experimental/subscriptions/spec.md` | [`STATUS.md`](../../experimental/subscriptions/STATUS.md) |
-| Intent envelope | `Spec-X8-Intent-Envelope` | `experimental/intent-envelope/spec.md` | [`STATUS.md`](../../experimental/intent-envelope/STATUS.md) |
-| Decay semantics | `Spec-X9-Decay-Semantics` | `experimental/decay/spec.md` | [`STATUS.md`](../../experimental/decay/STATUS.md) |
-| Synthesis | `Spec-X10-Synthesis` | `experimental/synthesis/spec.md` | [`STATUS.md`](../../experimental/synthesis/STATUS.md) |
-| Recall graph | `Spec-X11-Recall-Graph` | `experimental/recall-graph/spec.md` | [`STATUS.md`](../../experimental/recall-graph/STATUS.md) |
+| Status | Meaning |
+| --- | --- |
+| `migrated` | Complete six-file feature record exists and owns feature detail. |
+| `pending` | Legacy docs remain the owner until a feature record PR migrates the row. |
+| `deferred` | Feature record is not planned for the active alpha horizon. |
+| `superseded` | Legacy feature family is intentionally retired or replaced. |
 
-## Experimental Surfaces Without Spec-X
+## Feature Record Migration Inventory
 
-These surfaces remain tracked by `STATUS.md`. Assign a `Spec-XN-*` only if
-future reintroduction work defines protocol behavior.
-
-| Group | Directories |
-|---|---|
-| Cross-cutting features | `experimental/multi-tenant/`, `experimental/async-jobs/`, `experimental/fuzzy-resolver/`, `experimental/oidc-sso/`, `experimental/billing/` |
-| Storage and embedding | `experimental/storage-backends/`, `experimental/storage-libsql/` |
-| Adapters and SDKs | `experimental/mcp-adapter/`, `experimental/sdk-go/`, `experimental/obsidian-adapter/`, `experimental/cognee-adapter/`, `experimental/letta-adapter/`, `experimental/zep-adapter/`, `experimental/gemini-adapter/`, `experimental/ollama-litellm-adapter/`, `experimental/openai-tools-adapter/`, `experimental/paperclip-adapter/` |
-| Deployment, UI, and evaluation | `experimental/dashboard/`, `experimental/eval-harness/`, `experimental/deploy-helm/`, `experimental/deploy-fly/`, `experimental/deploy-grafana/`, `experimental/deploy-paas/`, `experimental/deploy-systemd/` |
+| Feature ID | Feature | Type | Stability | Default surface | Canonical spec | Legacy owner | Target record | Migration status | Horizon | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `content-addressed-ids` | Content-addressed fact IDs | `core` | `stable` | `default` | `Spec-21-Content-Addressed-IDs` | `spec/specs/21-content-addressed-ids.md` | `features/content-addressed-ids/` | `migrated` | `v0.9.0a3` | Pilot core feature record. Legacy spec path is a compatibility projection. |
+| `time-travel` | Time-travel queries | `plugin` | `experimental` | `opt-in` | `Spec-X3-Time-Travel-Queries` | `experimental/time-travel/` | `features/time-travel/` | `migrated` | `v0.9.0a4` | Pilot plugin-backed feature record. Implementation remains under `experimental/time-travel/`. |
+| `lazy-instruction-discovery` | Lazy instruction discovery | `plugin` | `experimental` | `opt-in` | `Spec-X1-Lazy-Instruction-Discovery` | `experimental/lazy-instruction-discovery/` | `features/lazy-instruction-discovery/` | `pending` | `0.9.xA` | Protocol-bearing experimental plugin candidate. |
+| `tombstones` | RTBF tombstones | `plugin` | `experimental` | `opt-in` | `Spec-X2-RTBF-Tombstones` | `experimental/tombstones/` | `features/tombstones/` | `pending` | `0.9.xA` | Security-sensitive migration should preserve R-16/R-17 ownership. |
+| `memory-garden-acl` | Memory Garden advanced ACL | `plugin` | `experimental` | `opt-in` | `Spec-X5-Memory-Garden-Advanced-ACL` | `experimental/memory-garden-acl/` | `features/memory-garden-acl/` | `pending` | `0.9.xA` | Protocol-bearing experimental plugin candidate. |
+| `source-attestation` | Source attestation | `plugin` | `experimental` | `opt-in` | `Spec-X6-Source-Attestation` | `experimental/source-attestation/` | `features/source-attestation/` | `pending` | `0.9.xA` | Security and release-supply-chain references must be preserved. |
+| `subscriptions` | Subscriptions | `protocol` | `experimental` | `opt-in` | `Spec-X7-Subscriptions` | `experimental/subscriptions/` | `features/subscriptions/` | `pending` | `0.9.xA` | Protocol-bearing experimental feature. |
+| `intent-envelope` | Intent envelope | `protocol` | `experimental` | `opt-in` | `Spec-X8-Intent-Envelope` | `experimental/intent-envelope/` | `features/intent-envelope/` | `pending` | `0.9.xA` | Protocol-bearing experimental feature. |
+| `decay` | Decay semantics | `protocol` | `experimental` | `opt-in` | `Spec-X9-Decay-Semantics` | `experimental/decay/` | `features/decay/` | `pending` | `0.9.xA` | Protocol-bearing experimental feature. |
+| `synthesis` | Synthesis | `protocol` | `experimental` | `opt-in` | `Spec-X10-Synthesis` | `experimental/synthesis/` | `features/synthesis/` | `pending` | `0.9.xA` | Protocol-bearing experimental feature. |
+| `recall-graph` | Recall graph | `protocol` | `experimental` | `opt-in` | `Spec-X11-Recall-Graph` | `experimental/recall-graph/` | `features/recall-graph/` | `pending` | `0.9.xA` | Protocol-bearing experimental feature. |
+| `multi-tenant` | Multi-tenant scoping | `plugin` | `experimental` | `opt-in` | `none` | `experimental/multi-tenant/` | `features/multi-tenant/` | `pending` | `0.9.xA` | Security-contributing cross-cutting feature; assign spec only if protocol work reopens. |
+| `async-jobs` | Async jobs | `core` | `experimental` | `opt-in` | `none` | `experimental/async-jobs/` | `features/async-jobs/` | `pending` | `future alpha` | No Spec-X assigned. |
+| `fuzzy-resolver` | Fuzzy resolver | `core` | `experimental` | `opt-in` | `none` | `experimental/fuzzy-resolver/` | `features/fuzzy-resolver/` | `pending` | `future alpha` | No Spec-X assigned. |
+| `oidc-sso` | OIDC SSO | `core` | `experimental` | `opt-in` | `none` | `experimental/oidc-sso/` | `features/oidc-sso/` | `pending` | `future alpha` | No Spec-X assigned. |
+| `billing` | Billing | `core` | `experimental` | `opt-in` | `none` | `experimental/billing/` | `features/billing/` | `deferred` | `future gate` | Business feature outside active alpha release scope. |
+| `storage-backends` | Storage backends | `adapter` | `experimental` | `opt-in` | `none` | `experimental/storage-backends/` | `features/storage-backends/` | `pending` | `future alpha` | Storage-family parent row. |
+| `storage-libsql` | libSQL storage | `adapter` | `experimental` | `opt-in` | `none` | `experimental/storage-libsql/` | `features/storage-libsql/` | `pending` | `future alpha` | Adapter-specific storage feature. |
+| `mcp-adapter` | MCP adapter | `adapter` | `experimental` | `external` | `none` | `experimental/mcp-adapter/` | `features/mcp-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `sdk-go` | Go SDK | `sdk` | `experimental` | `external` | `none` | `experimental/sdk-go/` | `features/sdk-go/` | `pending` | `future alpha` | SDK surface. |
+| `obsidian-adapter` | Obsidian adapter | `adapter` | `experimental` | `external` | `none` | `experimental/obsidian-adapter/` | `features/obsidian-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `cognee-adapter` | Cognee adapter | `adapter` | `experimental` | `external` | `none` | `experimental/cognee-adapter/` | `features/cognee-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `letta-adapter` | Letta adapter | `adapter` | `experimental` | `external` | `none` | `experimental/letta-adapter/` | `features/letta-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `zep-adapter` | Zep adapter | `adapter` | `experimental` | `external` | `none` | `experimental/zep-adapter/` | `features/zep-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `gemini-adapter` | Gemini adapter | `adapter` | `experimental` | `external` | `none` | `experimental/gemini-adapter/` | `features/gemini-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `ollama-litellm-adapter` | Ollama/LiteLLM adapter | `adapter` | `experimental` | `external` | `none` | `experimental/ollama-litellm-adapter/` | `features/ollama-litellm-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `openai-tools-adapter` | OpenAI tools adapter | `adapter` | `experimental` | `external` | `none` | `experimental/openai-tools-adapter/` | `features/openai-tools-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `paperclip-adapter` | Paperclip adapter | `adapter` | `experimental` | `external` | `none` | `experimental/paperclip-adapter/` | `features/paperclip-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `dashboard` | Dashboard | `tooling` | `experimental` | `internal` | `none` | `experimental/dashboard/` | `features/dashboard/` | `pending` | `future alpha` | UI/tooling surface. |
+| `eval-harness` | Evaluation harness | `tooling` | `experimental` | `internal` | `none` | `experimental/eval-harness/` | `features/eval-harness/` | `pending` | `future alpha` | Evaluation tooling. |
+| `deploy-helm` | Helm deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-helm/` | `features/deploy-helm/` | `pending` | `future alpha` | Deployment surface. |
+| `deploy-fly` | Fly.io deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-fly/` | `features/deploy-fly/` | `pending` | `future alpha` | Deployment surface. |
+| `deploy-grafana` | Grafana deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-grafana/` | `features/deploy-grafana/` | `pending` | `future alpha` | Deployment/observability surface. |
+| `deploy-paas` | PaaS deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-paas/` | `features/deploy-paas/` | `pending` | `future alpha` | Deployment surface. |
+| `deploy-systemd` | systemd deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-systemd/` | `features/deploy-systemd/` | `pending` | `future alpha` | Deployment surface. |
 
 ## Maintenance Rules
 
-- Keep the public feature matrix concise; it names status and points to the full
-  experimental index.
-- Keep the public experimental index complete and operator-readable.
-- Keep per-feature gate details in the feature record once migrated. During the
-  transition, legacy experimental gates may remain in
-  `experimental/<feature>/STATUS.md` and should link to the feature record when
-  one exists.
-- Do not add a public docs link to this internal tracker; internal docs may link
-  outward to public pages.
-
-## Migrated Feature Records
-
-| Feature | Feature record | Legacy compatibility path |
-| --- | --- | --- |
-| Content-addressed fact IDs | [`features/content-addressed-ids/`](../../features/content-addressed-ids/) | `spec/specs/21-content-addressed-ids.md` |
-| Time-travel queries | [`features/time-travel/`](../../features/time-travel/) | `experimental/time-travel/` |
-
-## 2026-05-16 PR 4c Closeout
-
-- Time-travel query source now lives under
-  `experimental/time-travel/` as `stigmem-plugin-time-travel`.
-- Default installs reject `as_of` requests with
-  `time_travel_plugin_not_loaded`; plugin-loaded validation covers fact query,
-  recall, deterministic hook ordering, and plugin-required conformance vectors.
-- Signed/package artifact evidence remains deferred until the planned plugin set
-  is built.
+- Do not add feature behavior, security analysis, or release-note detail to this
+  inventory. Put that material in the feature record once migrated.
+- Keep `Migration status` accurate when a feature record PR lands.
+- `migrated` rows must point to a real `features/<feature-slug>/` directory and
+  pass `scripts/check_feature_records.py`.
+- `pending` rows identify the current legacy owner until migration.
+- `deferred` rows remain visible so future-horizon work is not lost.
+- Public docs may summarize feature status, but this inventory remains internal.

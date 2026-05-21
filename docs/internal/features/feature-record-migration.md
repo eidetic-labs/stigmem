@@ -44,7 +44,7 @@ security documents into hubs or projections.
 
 ### Phase 0: Scaffold and advisory validation
 
-Status: in progress.
+Status: complete.
 
 Deliverables:
 
@@ -62,7 +62,7 @@ Exit criteria:
 
 ### Phase 1: Pilot feature records
 
-Status: in progress.
+Status: complete.
 
 Pilot set:
 
@@ -88,7 +88,7 @@ Progress:
 
 ### Phase 2: Inventory and migrate remaining feature families
 
-Status: planned.
+Status: in progress.
 
 Inventory sources:
 
@@ -108,7 +108,15 @@ Exit criteria:
   disposition of `deferred` or `superseded`.
 - Legacy files are wrappers, indexes, or projections rather than independent
   owners of feature detail.
-- The feature tracker either becomes a projection checklist or is retired.
+- The feature tracker is an inventory with validated migrated rows.
+
+Progress:
+
+- `docs/internal/feature-tracker.md` now tracks feature id, target record,
+  legacy owner, migration status, feature type, stability, default surface,
+  canonical spec, horizon, and notes.
+- `scripts/check_feature_records.py` validates that `migrated` inventory rows
+  correspond to complete feature records.
 
 ### Phase 3: Projection tooling
 
@@ -156,10 +164,11 @@ The migration should follow the release horizon, not overwrite it.
 
 1. Scaffold registry, template, migration plan, and validator.
 2. Add pilot core and plugin-backed feature records.
-3. Convert public feature matrix and experimental index into projections or
+3. Convert the internal feature tracker into a validated migration inventory.
+4. Convert public feature matrix and experimental index into projections or
    hub documents.
-4. Convert security and changelog summaries to pull from feature records.
-5. Migrate remaining feature families and remove transition exceptions.
+5. Convert security and changelog summaries to pull from feature records.
+6. Migrate remaining feature families and remove transition exceptions.
 
 Each PR should describe the canonical owner being introduced or changed. PR and
 commit text should avoid blame language; describe the structural correction and

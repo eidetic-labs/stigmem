@@ -310,6 +310,13 @@ When referencing, use relative links from the ADR's location.
 <span>Per-ecosystem spelling of pre-release labels; surface-manifest delegation; supersedes the original v1 → v0.9.0a1 reset.</span>
 </a>
 
+<a className="stigmem-adr-card" href="./020-feature-owned-product-structure">
+<span className="stigmem-adr-card__status">Proposed</span>
+<span className="stigmem-adr-card__id">ADR-020</span>
+<strong>Feature-owned product structure and projection model</strong>
+<span>Feature records become the canonical source for specs, status, evidence, security, and feature changelogs; high-level docs become projections or hubs.</span>
+</a>
+
 </div>
 
 ---

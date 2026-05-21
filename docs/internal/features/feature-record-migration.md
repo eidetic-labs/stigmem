@@ -222,6 +222,9 @@ Progress:
 - `zep-adapter` now has a canonical adapter feature record under
   `features/zep-adapter/`; ownership, package, dependency, and live Zep
   validation remain future alpha release-line gates.
+- `gemini-adapter` now has a canonical adapter feature record under
+  `features/gemini-adapter/`; ownership, package, dependency, and live Gemini
+  validation remain future alpha release-line gates.
 
 ## Release Horizon Alignment
 

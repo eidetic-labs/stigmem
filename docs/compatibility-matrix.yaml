@@ -473,6 +473,22 @@ features:
       node: "experimental"
     notes: "Deferred design-partner adapter; ownership, package, dependency, and live Zep validation remain future alpha work."
 
+  - id: gemini-adapter
+    name: Gemini adapter
+    feature_record: features/gemini-adapter/README.md
+    feature_type: adapter
+    default_surface: external
+    implementation_path: experimental/gemini-adapter
+    package: stigmem-gemini-adapter
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (adapter)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred model/tooling adapter; ownership, package, dependency, and live Gemini validation remain future alpha work."
+
 protocol_compatibility:
   - protocol_version: "0.9.0a2"
     supported_by:

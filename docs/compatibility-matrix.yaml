@@ -336,13 +336,29 @@ features:
       node: ">=0.9.0a1"
     notes: "Opt-in OIDC exchange bridge. Security posture for M5 and L5 is documented in SECURITY.md; production IdP configuration remains operator-owned."
 
+  - id: storage-backends
+    name: Storage backends
+    feature_record: features/storage-backends/README.md
+    feature_type: adapter
+    default_surface: opt-in
+    implementation_path: node/src/stigmem_node/storage
+    package: stigmem-node
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (storage)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Storage backend parent record owns backend-selection and parity posture; non-default backends remain opt-in experimental."
+
   - id: postgres-backend
     name: PostgreSQL backend
     spec_section: (storage)
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Deferred to experimental/storage-backends/."
+    notes: "Deferred Postgres-specific backend surface; storage family detail now lives in features/storage-backends/."
 
   - id: libsql-backend
     name: libSQL / Turso backend

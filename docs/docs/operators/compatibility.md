@@ -113,6 +113,7 @@ compatibility remains in [`docs/compatibility-matrix.yaml`](https://github.com/e
 | [OIDC SSO](https://github.com/eidetic-labs/stigmem/blob/main/features/oidc-sso/README.md) | core | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-node`; `node/src/stigmem_node/routes/auth.py` |
 | [Recall graph](https://github.com/eidetic-labs/stigmem/blob/main/features/recall-graph/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/recall-graph` |
 | [Source attestation](https://github.com/eidetic-labs/stigmem/blob/main/features/source-attestation/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-plugin-source-attestation`; `experimental/source-attestation` |
+| [Storage backends](https://github.com/eidetic-labs/stigmem/blob/main/features/storage-backends/README.md) | adapter | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-node`; `node/src/stigmem_node/storage` |
 | [Subscriptions](https://github.com/eidetic-labs/stigmem/blob/main/features/subscriptions/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/subscriptions` |
 | [Synthesis](https://github.com/eidetic-labs/stigmem/blob/main/features/synthesis/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/synthesis` |
 | [Time-travel queries](https://github.com/eidetic-labs/stigmem/blob/main/features/time-travel/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `v0.9.0a4` | `stigmem-plugin-time-travel`; `experimental/time-travel` |

@@ -300,7 +300,7 @@ Read the spec at
 <div>
 <dt>SQLite backend</dt>
 <dt><span className="stigmem-fields__type">Stable</span></dt>
-<dd>Default storage.</dd>
+<dd>Default storage; backend-family record: <a href="https://github.com/eidetic-labs/stigmem/tree/main/features/storage-backends"><code>features/storage-backends</code></a>.</dd>
 </div>
 
 <div>

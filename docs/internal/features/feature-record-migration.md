@@ -131,6 +131,8 @@ Progress:
   evidence, and resolver security gaps under `features/fuzzy-resolver/`.
 - `oidc-sso` now owns OIDC exchange behavior, token-validation evidence, and
   M5/L5 security disposition references under `features/oidc-sso/`.
+- `storage-backends` now owns backend-selection behavior, adapter evidence, and
+  R-04/R-08 storage security posture under `features/storage-backends/`.
 
 ### Phase 3: Projection tooling
 

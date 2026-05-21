@@ -200,8 +200,8 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 
 <div>
 <dt>Storage backend family</dt>
-<dt><span className="stigmem-fields__type">dormant</span></dt>
-<dd>Backend abstractions beyond the v0.9.0a1 supported SQLite path.</dd>
+<dt><span className="stigmem-fields__type">Experimental, opt-in</span></dt>
+<dd><code>features/storage-backends/</code>; non-default backends remain outside the stable default surface.</dd>
 </div>
 
 <div>

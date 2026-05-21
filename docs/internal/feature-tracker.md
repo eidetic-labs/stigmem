@@ -47,7 +47,7 @@ act only as wrappers, compatibility projections, or implementation directories.
 | `fuzzy-resolver` | Fuzzy resolver | `core` | `experimental` | `opt-in` | `none` | `experimental/fuzzy-resolver/` | `features/fuzzy-resolver/` | `migrated` | `future alpha` | No Spec-X assigned; feature record owns resolver detail. |
 | `oidc-sso` | OIDC SSO | `core` | `experimental` | `opt-in` | `none` | `experimental/oidc-sso/` | `features/oidc-sso/` | `migrated` | `future alpha` | No Spec-X assigned; feature record owns OIDC exchange detail. |
 | `billing` | Billing | `core` | `experimental` | `opt-in` | `none` | `experimental/billing/` | `features/billing/` | `deferred` | `future gate` | Business feature outside active alpha release scope. |
-| `storage-backends` | Storage backends | `adapter` | `experimental` | `opt-in` | `none` | `experimental/storage-backends/` | `features/storage-backends/` | `pending` | `future alpha` | Storage-family parent row. |
+| `storage-backends` | Storage backends | `adapter` | `experimental` | `opt-in` | `none` | `experimental/storage-backends/` | `features/storage-backends/` | `migrated` | `future alpha` | Storage-family parent row; feature record owns backend-selection detail. |
 | `storage-libsql` | libSQL storage | `adapter` | `experimental` | `opt-in` | `none` | `experimental/storage-libsql/` | `features/storage-libsql/` | `pending` | `future alpha` | Adapter-specific storage feature. |
 | `mcp-adapter` | MCP adapter | `adapter` | `experimental` | `external` | `none` | `experimental/mcp-adapter/` | `features/mcp-adapter/` | `pending` | `future alpha` | Adapter surface. |
 | `sdk-go` | Go SDK | `sdk` | `experimental` | `external` | `none` | `experimental/sdk-go/` | `features/sdk-go/` | `pending` | `future alpha` | SDK surface. |

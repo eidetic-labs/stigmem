@@ -249,11 +249,11 @@ their frontmatter.
 
 | Spec ID | Topic | Located at | Legacy source material |
 |---|---|---|---|
-| `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | `experimental/lazy-instruction-discovery/spec.md` | Legacy section 21 |
-| `Spec-X2-RTBF-Tombstones` | RTBF tombstones | `experimental/tombstones/spec.md` | Legacy section 23 |
+| `Spec-X1-Lazy-Instruction-Discovery` | Lazy instruction discovery | `features/lazy-instruction-discovery/spec.md` | Legacy section 21 |
+| `Spec-X2-RTBF-Tombstones` | RTBF tombstones | `features/tombstones/spec.md` | Legacy section 23 |
 | `Spec-X3-Time-Travel-Queries` | `as_of` time-travel queries | `features/time-travel/spec.md` | Legacy section 24 |
 | `Spec-X5-Memory-Garden-Advanced-ACL` | Memory garden advanced ACL | `experimental/memory-garden-acl/spec.md` | Legacy section 17 advanced material |
-| `Spec-X6-Source-Attestation` | Source attestation | `experimental/source-attestation/spec.md` | Legacy section 18 |
+| `Spec-X6-Source-Attestation` | Source attestation | `features/source-attestation/spec.md` | Legacy section 18 |
 | `Spec-X7-Subscriptions` | Subscriptions / push federation | `experimental/subscriptions/spec.md` | (new) |
 | `Spec-X8-Intent-Envelope` | Intent envelope | `experimental/intent-envelope/spec.md` | Legacy section 4 |
 | `Spec-X9-Decay-Semantics` | Decay semantics | `experimental/decay/spec.md` | Legacy section 15 |

@@ -1,0 +1,159 @@
+# Feature Record Migration Plan
+
+**Status:** active
+**Owner:** maintainers
+**ADR:** [ADR-020](../../adr/020-feature-owned-product-structure.md)
+**Last updated:** 2026-05-21
+
+This plan implements ADR-020 without putting migration sequencing into the ADR.
+The goal is to reduce documentation sprawl by moving feature-specific truth into
+uniform feature records and turning root, public, protocol, release, and
+security documents into hubs or projections.
+
+## Goals
+
+1. Establish the feature record scaffold and validator.
+2. Migrate a small pilot set that proves both core and plugin-backed patterns.
+3. Migrate remaining feature facts from `spec/specs/`, `docs/docs/`,
+   `experimental/`, release roadmaps, security docs, and changelog entries.
+4. Convert high-level documents into concise hubs or generated/curated
+   projections.
+5. Remove transition allowlists once the legacy inventory is migrated.
+
+## Non-Goals
+
+- Do not rewrite accepted ADRs as part of migration.
+- Do not move Python package code unless the package/import stability impact has
+  been reviewed.
+- Do not use this plan as a release task board; GitHub issues and milestones
+  remain the live execution system.
+- Do not publish embargoed security detail from Internal-Comms.
+
+## Source-of-Truth Rules
+
+| Fact type | Canonical owner after migration | Projection or summary surfaces |
+| --- | --- | --- |
+| Feature overview, maturity, owner, and implementation path | `features/<feature>/README.md` | Public feature matrix, release roadmap, compatibility matrix |
+| Feature behavior | `features/<feature>/spec.md` | `spec/PROTOCOL.md`, `spec/specs/*.md`, public concept docs |
+| Feature lifecycle and gates | `features/<feature>/status.md` | `ROADMAP.md`, release roadmap, public experimental index |
+| Feature implementation proof | `features/<feature>/evidence.md` | Release evidence gates, internal evidence registries |
+| Feature-specific security analysis | `features/<feature>/security.md` | `SECURITY.md`, threat model, advisory index |
+| Feature-local history | `features/<feature>/changelog.md` | Root `CHANGELOG.md`, release notes |
+
+## Migration Phases
+
+### Phase 0: Scaffold and advisory validation
+
+Status: in progress.
+
+Deliverables:
+
+- `features/README.md` defines the registry and metadata contract.
+- `features/feature-template/` defines the required six-file shape.
+- `scripts/check_feature_records.py` validates migrated feature records.
+- `scripts/check.sh docs` runs the feature record validator.
+
+Exit criteria:
+
+- The docs check passes with no migrated feature directories.
+- The validator fails on incomplete migrated feature directories.
+- Documentation ownership names feature records as the canonical home for
+  feature facts.
+
+### Phase 1: Pilot feature records
+
+Status: planned.
+
+Pilot set:
+
+| Feature | Type | Why |
+| --- | --- | --- |
+| `content-addressed-ids` | core | Proves the core feature pattern and protocol/spec projection path. |
+| `time-travel` | plugin | Proves plugin-backed and experimental metadata without using an experimental docs category. |
+
+Exit criteria:
+
+- Both pilot records include all six files and pass validation.
+- Existing legacy paths link to the pilot feature records instead of duplicating
+  the same detail.
+- Release roadmap entries reference pilot feature records for implementation
+  detail.
+
+### Phase 2: Inventory and migrate remaining feature families
+
+Status: planned.
+
+Inventory sources:
+
+- `spec/specs/*.md`
+- `experimental/*/spec.md`
+- `experimental/*/STATUS.md`
+- `experimental/*/security.md`
+- `docs/docs/concepts/features.md`
+- `docs/docs/reference/experimental-features.md`
+- `docs/internal/feature-tracker.md`
+- release roadmaps under `docs/internal/releases/`
+- root `CHANGELOG.md` and `SECURITY.md`
+
+Exit criteria:
+
+- Every identified feature has a feature record or an explicit documented
+  disposition of `deferred` or `superseded`.
+- Legacy files are wrappers, indexes, or projections rather than independent
+  owners of feature detail.
+- The feature tracker either becomes a projection checklist or is retired.
+
+### Phase 3: Projection tooling
+
+Status: planned.
+
+Projection candidates:
+
+| Projection | Source |
+| --- | --- |
+| Public feature matrix | Feature `README.md` metadata and `status.md` summaries |
+| Experimental feature index | Feature metadata where `stability: experimental` or `default_surface: experimental` |
+| `SECURITY.md` feature-security section | Feature `security.md` summaries and advisory refs |
+| Root `CHANGELOG.md` release candidates | Feature `changelog.md` entries |
+| Compatibility matrix | Feature metadata, package surfaces, and release lines |
+| Protocol index | Feature `spec.md` metadata and canonical spec identifiers |
+
+Exit criteria:
+
+- At least one projection is generated or mechanically checked.
+- Projection checks run in CI.
+- Manual projections include a freshness check or explicit review checklist.
+
+### Phase 4: Strict validation
+
+Status: planned.
+
+Exit criteria:
+
+- CI validates the complete feature inventory, not only migrated directories.
+- Transition allowlists are empty.
+- New feature PRs must include a feature record before merge.
+
+## Release Horizon Alignment
+
+The migration should follow the release horizon, not overwrite it.
+
+| Horizon | Feature-record work |
+| --- | --- |
+| `v0.9.0a1` and `v0.9.0a2` historical docs | Link shipped feature detail to feature records as features migrate. Do not rewrite history to claim later work shipped. |
+| `v0.9.0a3` active alpha | Prioritize records for features whose scope, risk, or release notes are active in this line. |
+| Future `0.9.xA` alpha phases | Use feature records for detailed implementation plans and release roadmaps for version-specific contracts. |
+| Beta, RC, and GA | Remain future gates until explicitly opened. |
+
+## PR Slicing
+
+1. Scaffold registry, template, migration plan, and validator.
+2. Add pilot core and plugin-backed feature records.
+3. Convert public feature matrix and experimental index into projections or
+   hub documents.
+4. Convert security and changelog summaries to pull from feature records.
+5. Migrate remaining feature families and remove transition exceptions.
+
+Each PR should describe the canonical owner being introduced or changed. PR and
+commit text should avoid blame language; describe the structural correction and
+the source-of-truth effect.

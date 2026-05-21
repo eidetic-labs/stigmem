@@ -161,6 +161,8 @@ run_go() {
 
 run_docs() {
   need_cmd npm
+  cd "$ROOT_DIR"
+  timed_run feature-records python3 scripts/check_feature_records.py
   cd "$ROOT_DIR/docs"
   if [[ "${CHECK_SKIP_DOCS_INSTALL:-0}" != "1" ]]; then
     npm ci --ignore-scripts

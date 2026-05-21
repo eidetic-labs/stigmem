@@ -1,8 +1,13 @@
 # Feature Tracker
 
-This tracker mirrors the public [feature matrix](../docs/concepts/features.md)
+This tracker is a transition inventory while ADR-020 feature records are being
+migrated. It mirrors the public [feature matrix](../docs/concepts/features.md)
 and [experimental features index](../docs/reference/experimental-features.md)
 without making public docs depend on internal planning files.
+
+Once a feature has a complete `features/<feature-slug>/` record, that feature
+record owns feature detail. This tracker should then link to the feature record
+or retire the duplicated row.
 
 ## Current Public Surfaces
 
@@ -44,7 +49,10 @@ future reintroduction work defines protocol behavior.
 - Keep the public feature matrix concise; it names status and points to the full
   experimental index.
 - Keep the public experimental index complete and operator-readable.
-- Keep per-feature gate details in each `experimental/<feature>/STATUS.md`.
+- Keep per-feature gate details in the feature record once migrated. During the
+  transition, legacy experimental gates may remain in
+  `experimental/<feature>/STATUS.md` and should link to the feature record when
+  one exists.
 - Do not add a public docs link to this internal tracker; internal docs may link
   outward to public pages.
 

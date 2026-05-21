@@ -194,10 +194,11 @@ def _parse_inventory_table() -> tuple[list[dict[str, str]], list[str]]:
     return rows, errors
 
 
-def validate_inventory(migrated_feature_ids: set[str]) -> list[str]:
+def validate_inventory(feature_metadata: dict[str, dict[str, object]]) -> list[str]:
     rows, errors = _parse_inventory_table()
     if errors:
         return errors
+    migrated_feature_ids = set(feature_metadata)
 
     seen: set[str] = set()
     legacy_experimental_ids: set[str] = set()
@@ -251,6 +252,21 @@ def validate_inventory(migrated_feature_ids: set[str]) -> list[str]:
                 )
             if not target_path.is_dir():
                 errors.append(f"{FEATURE_INVENTORY}: migrated target does not exist: {target}")
+            else:
+                metadata = feature_metadata.get(feature_id, {})
+                expected_fields = {
+                    "Feature": metadata.get("title"),
+                    "Type": metadata.get("feature_type"),
+                    "Stability": metadata.get("stability"),
+                    "Default surface": metadata.get("default_surface"),
+                    "Canonical spec": metadata.get("canonical_spec"),
+                }
+                for field, expected in expected_fields.items():
+                    if isinstance(expected, str) and row[field] != expected:
+                        errors.append(
+                            f"{FEATURE_INVENTORY}: {feature_id} {field} must match "
+                            f"feature record value '{expected}'"
+                        )
         elif legacy_owner != "none" and not (ROOT / legacy_owner).exists():
             errors.append(
                 f"{FEATURE_INVENTORY}: legacy owner for non-migrated row '{feature_id}' "
@@ -336,7 +352,8 @@ def main() -> int:
         return 0
 
     errors: list[str] = []
-    feature_ids: dict[str, Path] = {}
+    feature_paths: dict[str, Path] = {}
+    feature_metadata: dict[str, dict[str, object]] = {}
     canonical_specs: dict[str, Path] = {}
 
     for path in dirs:
@@ -345,13 +362,14 @@ def main() -> int:
 
         feature_id = metadata.get("feature_id")
         if isinstance(feature_id, str) and feature_id:
-            previous = feature_ids.get(feature_id)
+            previous = feature_paths.get(feature_id)
             if previous is not None:
                 errors.append(
                     f"{path / 'README.md'}: duplicate feature_id '{feature_id}' "
                     f"also used by {previous / 'README.md'}"
                 )
-            feature_ids[feature_id] = path
+            feature_paths[feature_id] = path
+            feature_metadata[feature_id] = metadata
 
         canonical_spec = metadata.get("canonical_spec")
         if isinstance(canonical_spec, str) and canonical_spec and canonical_spec != "none":
@@ -363,7 +381,7 @@ def main() -> int:
                 )
             canonical_specs[canonical_spec] = path
 
-    errors.extend(validate_inventory(set(feature_ids)))
+    errors.extend(validate_inventory(feature_metadata))
 
     if errors:
         print("feature-records: validation failed", file=sys.stderr)

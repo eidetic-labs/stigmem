@@ -53,7 +53,7 @@ act only as wrappers, compatibility projections, or implementation directories.
 | `sdk-go` | Go SDK | `sdk` | `experimental` | `external` | `none` | `experimental/sdk-go/` | `features/sdk-go/` | `migrated` | `future alpha` | SDK surface. |
 | `obsidian-adapter` | Obsidian adapter | `adapter` | `experimental` | `external` | `none` | `experimental/obsidian-adapter/` | `features/obsidian-adapter/` | `migrated` | `future alpha` | Adapter surface. |
 | `cognee-adapter` | Cognee adapter | `adapter` | `experimental` | `external` | `none` | `experimental/cognee-adapter/` | `features/cognee-adapter/` | `migrated` | `future alpha` | Adapter surface. |
-| `letta-adapter` | Letta adapter | `adapter` | `experimental` | `external` | `none` | `experimental/letta-adapter/` | `features/letta-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `letta-adapter` | Letta adapter | `adapter` | `experimental` | `external` | `none` | `experimental/letta-adapter/` | `features/letta-adapter/` | `migrated` | `future alpha` | Adapter surface. |
 | `zep-adapter` | Zep adapter | `adapter` | `experimental` | `external` | `none` | `experimental/zep-adapter/` | `features/zep-adapter/` | `pending` | `future alpha` | Adapter surface. |
 | `gemini-adapter` | Gemini adapter | `adapter` | `experimental` | `external` | `none` | `experimental/gemini-adapter/` | `features/gemini-adapter/` | `pending` | `future alpha` | Adapter surface. |
 | `ollama-litellm-adapter` | Ollama/LiteLLM adapter | `adapter` | `experimental` | `external` | `none` | `experimental/ollama-litellm-adapter/` | `features/ollama-litellm-adapter/` | `pending` | `future alpha` | Adapter surface. |

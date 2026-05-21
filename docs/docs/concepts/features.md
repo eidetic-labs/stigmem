@@ -352,9 +352,15 @@ Read the spec at
 </div>
 
 <div>
-<dt>Letta / Zep / Gemini / OpenAI-tools / Paperclip adapters</dt>
+<dt>Zep / Gemini / OpenAI-tools / Paperclip adapters</dt>
 <dt><span className="stigmem-fields__type">Deferred</span></dt>
 <dd><code>experimental/&lt;adapter&gt;-adapter/</code>.</dd>
+</div>
+
+<div>
+<dt>Letta adapter</dt>
+<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/letta-adapter"><code>features/letta-adapter</code></a>; package and live Letta validation remain future alpha work.</dd>
 </div>
 
 <div>

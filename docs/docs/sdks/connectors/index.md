@@ -119,7 +119,7 @@ These adapters translate Stigmem's tools into the native function-calling format
 <div>
 <dt>Obsidian / Logseq / Dendron</dt>
 <dt><span className="stigmem-fields__type">CLI/daemon</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-obsidian">experimental/adapter-obsidian</a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/obsidian-adapter">features/obsidian-adapter</a></dd>
 </div>
 
 </div>

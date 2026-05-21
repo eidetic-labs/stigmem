@@ -224,7 +224,7 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 
 <div><h4>MCP adapter</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter"><code>features/mcp-adapter</code></a> — experimental external adapter; package metadata remains independent until future alpha validation completes.</p></div>
 <div><h4>Go SDK</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/sdk-go"><code>features/sdk-go</code></a> — experimental external SDK; package alignment and live-node validation remain future alpha work.</p></div>
-<div><h4>Obsidian adapter</h4><p>Dormant — requires adapter-specific threat modeling.</p></div>
+<div><h4>Obsidian adapter</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/obsidian-adapter"><code>features/obsidian-adapter</code></a> — experimental external adapter; package, plugin, and live-vault validation remain future alpha work.</p></div>
 <div><h4>Cognee / Letta / Zep</h4><p>Dormant — preserved design-partner adapters.</p></div>
 <div><h4>Gemini / Ollama-LiteLLM / OpenAI tools</h4><p>Dormant — deferred model/tooling adapters.</p></div>
 <div><h4>Paperclip adapter</h4><p>Dormant — deferred lifecycle/event adapter.</p></div>

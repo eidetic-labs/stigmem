@@ -36,6 +36,7 @@ root changelog projection used during release prep.
 | Memory Garden advanced ACL | active | `v0.9.0a1`, `0.9.xA` | [`features/memory-garden-acl/changelog.md`](features/memory-garden-acl/changelog.md) |
 | MCP adapter | active | `v0.9.0a1`, `0.9.xA` | [`features/mcp-adapter/changelog.md`](features/mcp-adapter/changelog.md) |
 | Multi-tenant scoping | active | `v0.9.0a8`, `0.9.xA` | [`features/multi-tenant/changelog.md`](features/multi-tenant/changelog.md) |
+| Obsidian adapter | active | `v0.9.0a1`, `0.9.xA` | [`features/obsidian-adapter/changelog.md`](features/obsidian-adapter/changelog.md) |
 | OIDC SSO | active | `v0.9.0a1`, `0.9.xA` | [`features/oidc-sso/changelog.md`](features/oidc-sso/changelog.md) |
 | Recall graph | deferred | `v0.9.0a1`, `0.9.xA` | [`features/recall-graph/changelog.md`](features/recall-graph/changelog.md) |
 | Source attestation | active | `v0.9.0a1`, `0.9.xA` | [`features/source-attestation/changelog.md`](features/source-attestation/changelog.md) |

@@ -58,7 +58,7 @@ This page renders the YAML as human-readable tables.
 
 <div>
 <dt><code>@eidetic-labs/stigmem-ts</code> (SDK)</dt>
-<dt><span className="stigmem-fields__type">0.9.0-alpha.1</span></dt>
+<dt><span className="stigmem-fields__type">0.9.0-alpha.2</span></dt>
 <dd>npm</dd>
 </div>
 
@@ -130,14 +130,14 @@ This page renders the YAML as human-readable tables.
 
 <div>
 <dt><code>Stigmem-Version</code> header</dt>
-<dt><span className="stigmem-fields__type">Documented (v0.9.0bN)</span></dt>
-<dd><code>Spec-03-HTTP-API</code>; <code>node≥0.9.0bN</code> (planned).</dd>
+<dt><span className="stigmem-fields__type">Documented; future hardened-core work</span></dt>
+<dd><code>Spec-03-HTTP-API</code>; implementation planned for a future hardened-core line.</dd>
 </div>
 
 <div>
 <dt>Argon2id API key hashing</dt>
-<dt><span className="stigmem-fields__type">Planned (v0.9.0bN)</span></dt>
-<dd>Per <a href="https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/007-argon2id.md">ADR-007</a>; <code>node≥0.9.0bN</code> (planned).</dd>
+<dt><span className="stigmem-fields__type">Current alpha line</span></dt>
+<dd>Per <a href="https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/007-argon2id.md">ADR-007</a>; new API keys use Argon2id in the current alpha implementation.</dd>
 </div>
 
 <div>
@@ -182,9 +182,9 @@ This page renders the YAML as human-readable tables.
 
 <div className="stigmem-keypoint">
 
-**`v0.9.0a1`** — `stigmem-node@0.9.0a1`, `stigmem-py@0.9.0a1`,
-`stigmem-openclaw@0.9.0a1`, `stigmem@0.9.0a1` (PyPI) +
-`@eidetic-labs/stigmem-ts@0.9.0-alpha.1` (npm).
+**`v0.9.0a2`** — `stigmem-node@0.9.0a2`, `stigmem-py@0.9.0a2`,
+`stigmem-openclaw@0.9.0a2`, `stigmem@0.9.0a2` (PyPI) +
+`@eidetic-labs/stigmem-ts@0.9.0-alpha.2` (npm).
 
 Default install matches v1.0 critical-path scope per ADR-002
 (single-tenant; no tombstones, time-travel, memory cards, source

@@ -112,7 +112,7 @@ Store the resulting hashes in your own deployment record if you require environm
 
 <div className="stigmem-keypoint">
 
-**The signed container provenance is the supported reproducibility evidence for Phase C.**
+**The signed container provenance is the supported reproducibility evidence for the future stable-readiness line.**
 
 It identifies the source repository, release tag, commit, workflow,
 Dockerfile, and builder inputs used for the released image.

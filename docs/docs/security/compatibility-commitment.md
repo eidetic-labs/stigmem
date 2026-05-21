@@ -86,7 +86,7 @@ Content-Type: application/json
 ```
 
 The pinning header is documented in Spec-15-Fact-Semantics (Wire
-Format). Server implementation lands in the v0.9.0bN beta series.
+Format). Server implementation is future hardened-core work.
 
 ## Beta opt-in via `Stigmem-Beta` header
 
@@ -114,7 +114,7 @@ feature.
 
 <div><h4>Implementation internals</h4><p>Internal Python module structure, algorithm choices, performance characteristics — not subject to the wire-format or public-API commitments above.</p></div>
 <div><h4>Operational defaults</h4><p>Default rate-limit values, cache TTLs, log retention windows — operators should pin via configuration, not rely on defaults remaining constant.</p></div>
-<div><h4>Pre-1.0 builds</h4><p>v0.9.0aN, v0.9.0bN, v1.0.0rcN have NO stability guarantee per ADR-001. Pin to specific versions; auto-upgrade is not safe.</p></div>
+<div><h4>Pre-1.0 builds</h4><p>Alpha and any future pre-stable builds have NO stability guarantee per ADR-001. Pin to specific versions; auto-upgrade is not safe.</p></div>
 <div><h4>Deferred features</h4><p><code>experimental/&lt;feature&gt;/</code> — subject to breaking changes in any release without notice until the feature graduates per ADR-008.</p></div>
 
 </div>

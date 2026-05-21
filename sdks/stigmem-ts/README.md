@@ -103,14 +103,15 @@ await client.assertFact(
 | `stigmem-node` server | `@eidetic-labs/stigmem-ts` SDK |
 |---|---|
 | `0.9.0a1` (preview alpha) | `0.9.0-alpha.1` |
-| `0.9.0aN` / `0.9.0bN` (alpha + beta lines) | `0.9.0-alpha.N` / `0.9.0-beta.N` |
-| `1.0.0` (GA — future) | `1.0.0` and later |
+| `0.9.0a2` (current published alpha) | `0.9.0-alpha.2` |
+| `0.9.0aN` (alpha line) | `0.9.0-alpha.N` |
+| Future beta / RC / GA lines | Versioned only when those release lines are explicitly opened and published. |
 
 The SDK and server advance together along the version line; pin compatible versions in production-leaning environments.
 
 ## npm `latest` dist-tag — what it points at
 
-Until `v1.0.0` GA, `latest` tracks the **most recent published version** regardless of stability tier. Today that's `0.9.0-alpha.1`; it walks forward through `0.9.0-alpha.N` → `0.9.0-beta.N` → `1.0.0-rc.N` → `1.0.0`. This is a deliberate deviation from the standard "`latest` = stable" npm convention; full rationale in [LIMITATIONS.md §npm `latest` dist-tag](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md).
+Until a stable GA line ships, `latest` tracks the **most recent published version** regardless of stability tier. Today that's `0.9.0-alpha.2`; it walks forward through the active alpha line first. Future beta, RC, and GA dist-tags are created only when those release lines are explicitly opened and published. This is a deliberate deviation from the standard "`latest` = stable" npm convention; full rationale in [LIMITATIONS.md §npm `latest` dist-tag](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md).
 
 Stability lives in the version string itself: any version ending in `-alpha.N`, `-beta.N`, or `-rc.N` is pre-stable and carries no compatibility guarantee.
 

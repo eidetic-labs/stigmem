@@ -2,7 +2,7 @@
 spec_id: Spec-X6-Source-Attestation
 version: 0.1.0-alpha.0
 status: Experimental
-applies_to: stigmem v0.9.0bN
+applies_to: future experimental plugin line
 last_updated: 2026-05-17
 supersedes: pre-reset section 18 source-attestation material
 depends_on:

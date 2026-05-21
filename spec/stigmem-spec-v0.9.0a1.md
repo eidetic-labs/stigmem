@@ -1,6 +1,6 @@
 # Stigmem Protocol Specification — v0.9.0a1
 
-**Status:** Canonical (in flight) — section-by-section review of pre-reset spec content against actual implementation in `node/` per master-checklist §4.3a "Spec review and canonicalization to v0.9.0a1."
+**Status:** Historical alpha.1 canonicalization snapshot. Current modular protocol composition lives in [`PROTOCOL.md`](PROTOCOL.md) and `spec/specs/` per [ADR-010](../docs/adr/010-modular-specs.md).
 **Applies to:** Stigmem v0.9.0a1 and reference node implementation.
 **Last updated:** 2026-05-09.
 
@@ -11,11 +11,11 @@
 > - `Experimental in v0.9.0a1` — implementation exists but the section's contract is not committed; reintroduction per [ADR-008](../docs/adr/008-experimental-gates.md) for any section that moves to `experimental/<feature>/spec.md`.
 > - `Deferred from v0.9.0a1` — section's content moves to `experimental/<feature>/spec.md` per [ADR-002](../docs/adr/002-v1-scope.md) v1 critical-path scope decision.
 >
-> **Modular spec migration ([ADR-010](../docs/adr/010-modular-specs.md)) is v0.9.0bN beta-series work.** This document remains a single canonical file through v0.9.0a series; the decomposition into component specs (`spec/specs/01-fact-model.md` through `Spec-14`) lands in the v0.9.0bN beta series.1.
+> **Modular spec migration ([ADR-010](../docs/adr/010-modular-specs.md)) has landed structurally on `main`.** This file remains as the v0.9.0a1 canonicalization snapshot and legacy section map. Current component specs live in `spec/specs/`; experimental specs live in `experimental/<feature>/spec.md`.
 
 ## How to read this document
 
-Per [ADR-010](../docs/adr/010-modular-specs.md), the canonical spec naming convention is `Spec-NN-Topic-Name` for supported protocol component specs and `Spec-XN-Topic-Name` for experimental specs. Until the v0.9.0bN beta series's full per-spec file decomposition lands (master-checklist §5.1), this monolithic file remains canonical and the section-disposition table below uses **`Spec-XN-Name` as the primary identifier** with `[§N legacy]` as a transitional aid for readers familiar with the pre-reset numbering.
+Per [ADR-010](../docs/adr/010-modular-specs.md), the canonical spec naming convention is `Spec-NN-Topic-Name` for supported protocol component specs and `Spec-XN-Topic-Name` for experimental specs. This monolithic file is retained as the alpha.1 snapshot and section-disposition table; the generated current index is [`PROTOCOL.md`](PROTOCOL.md).
 
 The spec is divided into supported protocol components (kept in this canonical file until extraction) and deferred sections (migrated to per-feature `experimental/<feature>/spec.md`).
 
@@ -47,8 +47,8 @@ The spec is divided into supported protocol components (kept in this canonical f
 | `Spec-X3-Time-Travel` | Time-travel queries | §24 | **Deferred** | `experimental/time-travel/spec.md` |
 | `Spec-21-Content-Addressed-IDs` | Content-addressed fact IDs (CIDs) | §25 | **Stable in core** ([ADR-017](../docs/adr/017-amendment-to-adr-011-cids-as-core.md)). This is a core modular-spec assignment, not ADR-008 graduation. | `spec/specs/21-content-addressed-ids.md` |
 | `Spec-12-HLC-Bounded-Skew` | HLC bounded skew (R-19) | (new in v0.9.0a2) | Implemented on main for v0.9.0a2 | `spec/specs/12-hlc-bounded-skew.md` |
-| `Spec-13-Capability-Based-Instructions` | Capability-based instructions per ADR-003 | (new in v0.9.0bN beta series) | Targeted v0.9.0bN beta series | `spec/specs/13-capability-based-instructions.md` |
-| `Spec-14-Batch-Assert` | Batch assert API per ADR-006 | (new in v0.9.0bN beta series) | Targeted v0.9.0bN beta series | `spec/specs/14-batch-assert.md` |
+| `Spec-13-Capability-Based-Instructions` | Capability-based instructions per ADR-003 | (new after v0.9.0a1) | Future hardened-core work; no active beta milestone | `spec/specs/13-capability-based-instructions.md` |
+| `Spec-14-Batch-Assert` | Batch assert API per ADR-006 | (new after v0.9.0a1) | Future hardened-core work; no active beta milestone | `spec/specs/14-batch-assert.md` |
 | `Spec-X7-Subscriptions` | Subscriptions / push federation | (new) | **Deferred** | `experimental/subscriptions/spec.md` |
 
 ## Section status
@@ -56,7 +56,7 @@ The spec is divided into supported protocol components (kept in this canonical f
 This file is a skeleton — content arrives section by section as the master-checklist §4.3a per-section review completes. Each migrated section gets a review note documenting:
 
 - What `node/` files were cross-checked against the spec text.
-- What discrepancies were found (with issue references for v0.9.0bN beta-series follow-up).
+- What discrepancies were found (with issue references for future hardened-core follow-up).
 - What clarity improvements were made.
 - What the section's status is (Stable / Experimental / Deferred).
 

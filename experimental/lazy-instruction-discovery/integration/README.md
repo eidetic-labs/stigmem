@@ -230,4 +230,4 @@ and must not be described as a released installable plugin artifact.
 - Current route behavior uses admin checks and broad `instruction:` scope
   semantics that predate ADR-003. The plugin should preserve alpha behavior
   only behind explicit opt-in config and document that hardened instruction
-  authorization remains Phase B work.
+  authorization remains future hardened-core work.

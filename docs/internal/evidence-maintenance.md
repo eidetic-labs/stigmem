@@ -38,7 +38,7 @@ Every security-evidence change gets one review decision:
 
 ## Release-Candidate Gate
 
-Before any `v1.0.0rcN` tag:
+Before any release-candidate tag:
 
 1. Run the dependency-currency workflow or local equivalent.
 2. Disposition all security-sensitive stale dependencies.

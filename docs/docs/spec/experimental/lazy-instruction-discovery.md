@@ -2,7 +2,7 @@
 spec_id: Spec-X1-Lazy-Instruction-Discovery
 version: 0.1.0-alpha.0
 status: Experimental
-applies_to: stigmem v0.9.0bN
+applies_to: future experimental plugin line
 last_updated: 2026-05-14
 supersedes: pre-reset §21 lazy instruction discovery material
 depends_on:
@@ -19,7 +19,7 @@ since: 0.9.0a1
 
 # §21. Lazy Instruction Discovery {#section-21}
 
-<p className="stigmem-meta"><span>12 min read</span><span>Spec contributor · Agent runtime author</span><span>Experimental · v0.9.0bN</span></p>
+<p className="stigmem-meta"><span>12 min read</span><span>Spec contributor · Agent runtime author</span><span>Experimental · future plugin line</span></p>
 
 <div className="stigmem-lead">
 

@@ -266,7 +266,7 @@ Three options for each:
 2. **Document why empty.** Add a `tests/README.md` explaining the gap. Acceptable for `apps/dashboard/` if dashboard is moving to experimental anyway.
 3. **Remove the directory.** If genuinely no tests will land here, the empty `tests/` directory is misleading.
 
-For `adapters/mcp/`: this is v1.0 critical-path and currently has zero tests. Add tests as part of the strengthening plan's hardening work — Phase B (capability redesign) alongside the OpenClaw audit-driven changes is reasonable.
+For `adapters/mcp/`: this is v1.0 critical-path and currently has zero tests. Add tests as part of the strengthening plan's hardened-core work alongside the OpenClaw audit-driven changes is reasonable.
 
 For the others: they're all moving to experimental per ADR-009, so the empty `tests/` directories disappear with the relocation.
 
@@ -401,7 +401,7 @@ This is **v0.9.x work**, not Phase A. Sequence after the source-side reorganizat
 
 | When | What |
 |---|---|
-| early Phase B | Add `security` and `experimental` markers; update root conftest auto-marker rules. |
+| early hardened-core pass | Add `security` and `experimental` markers; update root conftest auto-marker rules. |
 | v0.9.x — alongside `cli/` decomposition | Move CLI tests into `node/tests/cli/`. Completed as part of the #465 mirror pass. |
 | v0.9.x — alongside `routes/facts/` decomposition | Move route tests into `node/tests/routes/`. Completed as part of the #465 mirror pass. |
 | v0.9.x — alongside Pydantic models decomposition | Add `node/tests/models/` mirroring `node/src/stigmem_node/models/`. Completed as part of the #465 mirror pass. |
@@ -418,7 +418,7 @@ Total effort across v0.9.x: roughly **2 days of `git mv` + conftest updates**, p
 
 You're already on the right framework with the right configuration; the question wasn't really "should we use pytest" — it was "where do tests live." The answer is the convention you're already using (package-root `tests/` directories), with the discipline that internal organization within `tests/` should mirror source layout. That's the entire test-structure recommendation in one sentence.
 
-The structural-decision sweep is complete after this. From here, the work is execution: ADRs accepted, the strengthening plan begins, the cuts land in PR 1, the security work in Weeks 3–5, the operator soak in Phase B (operator soak).
+The structural-decision sweep is complete after this. From here, the work is execution: ADRs accepted, the strengthening plan begins, the cuts land in PR 1, the security work in Weeks 3–5, and the operator soak happens as a future hardened-core gate.
 
 ---
 

@@ -156,7 +156,7 @@ what's there and what's still in flight.
 </div>
 
 <div>
-<h4>Shipping in v0.9.0bN</h4>
+<h4>Future hardened-core work</h4>
 <ul>
 <li>mTLS-default federation peering</li>
 <li>Full capability-level validation for cross-org instructions</li>

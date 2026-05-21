@@ -255,7 +255,7 @@ Read the spec at
 
 <div>
 <dt>Capability-based instruction handling (<code>interpret_as</code>)</dt>
-<dt><span className="stigmem-fields__type">Implemented on <code>main</code>; beta-series cert/validation pending (ADR-003)</span></dt>
+<dt><span className="stigmem-fields__type">Implemented on <code>main</code>; future cert/validation pending (ADR-003)</span></dt>
 <dd>Spec-15-Fact-Semantics</dd>
 </div>
 
@@ -565,8 +565,8 @@ The phase progression is in
 
 <ol className="stigmem-steps">
 <li><strong>v0.9.0a2 through v0.9.0a8</strong> — incremental plugin extraction per ADR-011. Lazy instruction discovery, time-travel queries, RTBF tombstones, advanced Memory Garden ACLs, and source attestation are extracted on <code>main</code> as opt-in experimental source; remaining extraction work continues through multi-tenant. CIDs remain core.</li>
-<li><strong>v0.9.0bN (the beta series)</strong> — complete the remaining hardening evidence around the landed capability redesign, finish ADR-015 model-certification runner/results, federation hardening, OpenClaw audit closeout, modular spec migration per ADR-010, storage immutability stack per ADR-016, 30-day external operator soak.</li>
-<li><strong>v1.0.0-rcN → v1.0.0 (release-candidate series)</strong> — Sigstore-signed releases, reproducible builds, SBOM, 3+ external operators in production. Wire format frozen.</li>
+<li><strong>Future hardened-core line</strong> — complete the remaining hardening evidence around the landed capability redesign, finish ADR-015 model-certification runner/results, federation hardening, OpenClaw audit closeout, storage immutability stack per ADR-016, 30-day external operator soak.</li>
+<li><strong>Future release-candidate and GA lines</strong> — Sigstore-signed releases, reproducible builds, SBOM, 3+ external operators in production. Wire format frozen.</li>
 </ol>
 
 ## Out of scope — explicit non-targets

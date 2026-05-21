@@ -317,19 +317,19 @@ surfaces:
   # ─── npm auto-mirrors (CDN frontends to the npm registry) ─────────────────
   #
   # All four below pull continuously from registry.npmjs.org. When we publish
-  # @eidetic-labs/stigmem-ts@0.9.0-alpha.1 to npm, all four mirror it automatically — no
+  # @eidetic-labs/stigmem-ts@0.9.0-alpha.2 to npm, all four mirror it automatically — no
   # account, no token, no separate publish.
   #
   # unpkg.com (https://unpkg.com/)
-  #   `https://unpkg.com/@eidetic-labs/stigmem-ts@0.9.0-alpha.1/dist/index.js` — direct file
+  #   `https://unpkg.com/@eidetic-labs/stigmem-ts@0.9.0-alpha.2/dist/index.js` — direct file
   #   serving from npm tarballs. Used by browsers + ad-hoc HTML demos.
   #
   # jsDelivr (https://www.jsdelivr.com/)
-  #   `https://cdn.jsdelivr.net/npm/@eidetic-labs/stigmem-ts@0.9.0-alpha.1` — multi-CDN with
+  #   `https://cdn.jsdelivr.net/npm/@eidetic-labs/stigmem-ts@0.9.0-alpha.2` — multi-CDN with
   #   higher uptime than unpkg. Default for many docs sites.
   #
   # esm.sh (https://esm.sh/)
-  #   `https://esm.sh/@eidetic-labs/stigmem-ts@0.9.0-alpha.1` — serves npm packages as ES
+  #   `https://esm.sh/@eidetic-labs/stigmem-ts@0.9.0-alpha.2` — serves npm packages as ES
   #   modules. Used by Deno + browser-native ESM consumers.
   #
   # Skypack (https://www.skypack.dev/)

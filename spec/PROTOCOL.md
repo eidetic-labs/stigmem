@@ -22,8 +22,8 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | [`Spec-10-Hardening`](specs/10-hardening.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-11-Replay-Protection`](specs/11-replay-protection.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-12-HLC-Bounded-Skew`](specs/12-hlc-bounded-skew.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
-| [`Spec-13-Capability-Based-Instructions`](specs/13-capability-based-instructions.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0bN | 2026-05-16 |
-| [`Spec-14-Batch-Assert`](specs/14-batch-assert.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0bN | 2026-05-14 |
+| [`Spec-13-Capability-Based-Instructions`](specs/13-capability-based-instructions.md) | `0.1.0-alpha.0` | Draft | future hardened-core line | 2026-05-16 |
+| [`Spec-14-Batch-Assert`](specs/14-batch-assert.md) | `0.1.0-alpha.0` | Draft | future hardened-core line | 2026-05-14 |
 | [`Spec-15-Fact-Semantics`](specs/15-fact-semantics.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-16-Namespace-Registry`](specs/16-namespace-registry.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
 | [`Spec-17-Schema-and-Migration`](specs/17-schema-and-migration.md) | `0.1.0-alpha.0` | Draft | stigmem v0.9.0aN | 2026-05-14 |
@@ -36,16 +36,16 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 
 | Spec | Version | Status | Applies to | Location |
 |---|---|---|---|---|
-| [`Spec-X1-Lazy-Instruction-Discovery`](../experimental/lazy-instruction-discovery/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/lazy-instruction-discovery/spec.md` |
-| [`Spec-X2-RTBF-Tombstones`](../experimental/tombstones/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/tombstones/spec.md` |
-| [`Spec-X3-Time-Travel-Queries`](../experimental/time-travel/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/time-travel/spec.md` |
-| [`Spec-X5-Memory-Garden-Advanced-ACL`](../experimental/memory-garden-acl/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/memory-garden-acl/spec.md` |
-| [`Spec-X6-Source-Attestation`](../experimental/source-attestation/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/source-attestation/spec.md` |
-| [`Spec-X7-Subscriptions`](../experimental/subscriptions/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/subscriptions/spec.md` |
-| [`Spec-X8-Intent-Envelope`](../experimental/intent-envelope/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/intent-envelope/spec.md` |
-| [`Spec-X9-Decay-Semantics`](../experimental/decay/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/decay/spec.md` |
-| [`Spec-X10-Synthesis`](../experimental/synthesis/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/synthesis/spec.md` |
-| [`Spec-X11-Recall-Graph`](../experimental/recall-graph/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0bN | `experimental/recall-graph/spec.md` |
+| [`Spec-X1-Lazy-Instruction-Discovery`](../experimental/lazy-instruction-discovery/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/lazy-instruction-discovery/spec.md` |
+| [`Spec-X2-RTBF-Tombstones`](../experimental/tombstones/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/tombstones/spec.md` |
+| [`Spec-X3-Time-Travel-Queries`](../experimental/time-travel/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/time-travel/spec.md` |
+| [`Spec-X5-Memory-Garden-Advanced-ACL`](../experimental/memory-garden-acl/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/memory-garden-acl/spec.md` |
+| [`Spec-X6-Source-Attestation`](../experimental/source-attestation/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/source-attestation/spec.md` |
+| [`Spec-X7-Subscriptions`](../experimental/subscriptions/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/subscriptions/spec.md` |
+| [`Spec-X8-Intent-Envelope`](../experimental/intent-envelope/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/intent-envelope/spec.md` |
+| [`Spec-X9-Decay-Semantics`](../experimental/decay/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/decay/spec.md` |
+| [`Spec-X10-Synthesis`](../experimental/synthesis/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/synthesis/spec.md` |
+| [`Spec-X11-Recall-Graph`](../experimental/recall-graph/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/recall-graph/spec.md` |
 
 ## Dependency Graph
 

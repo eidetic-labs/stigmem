@@ -1,20 +1,20 @@
 ---
 title: Operator Validation Soak
 sidebar_label: Operator Validation Soak
-description: How external operators run the Phase B validation soak and report findings.
+description: How external operators run the future hardened-core validation soak and report findings.
 audience: Operator
 ---
 
 # Operator Validation Soak
 
-<p className="stigmem-meta"><span>3 min read</span><span>External operator · Maintainer</span><span>Phase B gate</span></p>
+<p className="stigmem-meta"><span>3 min read</span><span>External operator · Maintainer</span><span>Future hardened-core gate</span></p>
 
 <div className="stigmem-lead">
 
 **What this page covers**
 
-The Phase B operator validation soak is the public evidence gate
-before Stigmem can declare the `v1.0.0rcN` line. At least one
+The operator validation soak is a future public evidence gate before
+Stigmem can declare a release-candidate line. At least one
 external operator must run the hardened core for 30 days, report
 findings publicly when safe, and confirm that P0 findings are fixed
 or explicitly carried forward.
@@ -129,7 +129,7 @@ Operator feedback should explicitly name which observability signals helped and 
 
 ## Exit evidence
 
-Phase B exit requires:
+Hardened-core exit requires:
 
 <ol className="stigmem-steps">
 <li>One external operator completed 30 days of validation.</li>

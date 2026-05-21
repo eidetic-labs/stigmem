@@ -1,7 +1,17 @@
 {
   "schema_version": 1,
-  "status_vocabulary": ["Open", "In review", "Mitigated", "Residual", "Accepted"],
-  "review_decision_vocabulary": ["accept-as-is", "patch", "replace"],
+  "status_vocabulary": [
+    "Open",
+    "In review",
+    "Mitigated",
+    "Residual",
+    "Accepted"
+  ],
+  "review_decision_vocabulary": [
+    "accept-as-is",
+    "patch",
+    "replace"
+  ],
   "risks": {
     "R-01": {
       "title": "mTLS federation peer authentication",
@@ -13,7 +23,9 @@
         "node/src/stigmem_node/routes/federation/common.py",
         "node/src/stigmem_node/routes/federation/replication.py"
       ],
-      "test_files": ["node/tests/federation/test_mtls.py"],
+      "test_files": [
+        "node/tests/federation/test_mtls.py"
+      ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "spec/security/federation-control-review.md",
@@ -30,7 +42,9 @@
         "node/src/stigmem_node/rate_limit.py",
         "node/migrations/022_quota_buckets.sql"
       ],
-      "test_files": ["node/tests/observability/test_quota.py"],
+      "test_files": [
+        "node/tests/observability/test_quota.py"
+      ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "spec/security/federation-control-review.md",
@@ -60,7 +74,7 @@
         "docs/adr/007-argon2id.md"
       ],
       "review_decision": "accept-as-is",
-      "notes": "Current mitigation includes enforced expiry/max-age plus Phase B Argon2id API-key hashing. Legacy SHA-256 rows verify during the v0.9.x migration window and opportunistically rehash to Argon2id with an api_key_rehashed audit event."
+      "notes": "Current mitigation includes enforced expiry/max-age plus alpha-line Argon2id API-key hashing. Legacy SHA-256 rows verify during the v0.9.x migration window and opportunistically rehash to Argon2id with an api_key_rehashed audit event."
     },
     "R-06": {
       "title": "Federation replay protection fuzz coverage",
@@ -70,8 +84,12 @@
         "node/src/stigmem_node/identity/capability.py",
         "node/src/stigmem_node/peer_token.py"
       ],
-      "test_files": ["node/tests/federation/test_phase12_replay_fuzz.py"],
-      "docs_reference_files": ["spec/security/threat-model.md"],
+      "test_files": [
+        "node/tests/federation/test_phase12_replay_fuzz.py"
+      ],
+      "docs_reference_files": [
+        "spec/security/threat-model.md"
+      ],
       "review_decision": "accept-as-is",
       "notes": "Evidence focuses on fuzz and nonce-cache survival tests named by the threat model."
     },
@@ -104,7 +122,9 @@
         "node/src/stigmem_node/identity/key_rotation.py",
         "node/src/stigmem_node/identity/transparency_log.py"
       ],
-      "test_files": ["node/tests/federation/test_phase12_key_rotation.py"],
+      "test_files": [
+        "node/tests/federation/test_phase12_key_rotation.py"
+      ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "spec/security/federation-control-review.md",
@@ -122,7 +142,9 @@
         "deploy/seccomp/stigmem-node.json",
         ".github/workflows/ci.yml"
       ],
-      "test_files": ["node/tests/secure_defaults/test_secure_defaults.py"],
+      "test_files": [
+        "node/tests/secure_defaults/test_secure_defaults.py"
+      ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "docs/docs/security/container-hardening.md"
@@ -138,7 +160,9 @@
         "node/src/stigmem_node/rate_limit.py",
         "node/migrations/022_quota_buckets.sql"
       ],
-      "test_files": ["node/tests/observability/test_quota.py"],
+      "test_files": [
+        "node/tests/observability/test_quota.py"
+      ],
       "docs_reference_files": [
         "spec/security/threat-model.md",
         "spec/security/federation-control-review.md",
@@ -151,7 +175,9 @@
       "title": "Capability token verb/object validation",
       "status": "Mitigated",
       "version_introduced": "0.9.0a1",
-      "implementation_files": ["node/src/stigmem_node/identity/capability.py"],
+      "implementation_files": [
+        "node/src/stigmem_node/identity/capability.py"
+      ],
       "test_files": [
         "node/tests/federation/test_phase12_key_rotation.py",
         "node/tests/identity/test_capability_tokens.py",
@@ -163,7 +189,7 @@
         "docs/docs/security/agent-keypairs.md"
       ],
       "review_decision": "accept-as-is",
-      "notes": "Evidence records current admission validation; broader capability redesign remains tracked by ADR-003 and Phase B issues."
+      "notes": "Evidence records current admission validation; broader capability redesign remains tracked by ADR-003 and future hardened-core issues."
     },
     "R-19": {
       "title": "Inbound remote-HLC skew bounds",
@@ -175,8 +201,12 @@
         "node/src/stigmem_node/settings.py",
         "node/src/stigmem_node/metrics.py"
       ],
-      "test_files": ["node/tests/observability/test_failure_modes.py"],
-      "docs_reference_files": ["spec/security/threat-model.md"],
+      "test_files": [
+        "node/tests/observability/test_failure_modes.py"
+      ],
+      "docs_reference_files": [
+        "spec/security/threat-model.md"
+      ],
       "review_decision": "accept-as-is",
       "notes": "Federation ingest rejects far-future and far-past remote HLC wall times, writes peer_hlc_anomaly audit evidence, and leaves rejected facts uninserted."
     },
@@ -226,7 +256,68 @@
         "SECURITY.md"
       ],
       "review_decision": "accept-as-is",
-      "notes": "Sigstore-signed releases, reproducible builds, SBOM publication, and Rekor entries remain v1.0.0rcN release-candidate deliverables."
+      "notes": "Sigstore-signed releases, reproducible builds, SBOM publication, and Rekor entries remain future stable-readiness deliverables."
+    },
+    "R-24": {
+      "title": "Non-loopback insecure federation deployment refused",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a2",
+      "implementation_files": [
+        "node/src/stigmem_node/main.py",
+        "node/src/stigmem_node/settings.py"
+      ],
+      "test_files": [
+        "node/tests/secure_defaults/test_secure_defaults.py"
+      ],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "CHANGELOG.md",
+        "SECURITY.md",
+        "docs/internal/security-evidence-registry-2026-05-17.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Startup refuses STIGMEM_FEDERATION_INSECURE=1 when node_url is bound to a non-loopback address unless local_dev_allow_insecure_non_loopback is explicitly set. Closed by GHSA-jmfc-hfjq-pxcp."
+    },
+    "R-25": {
+      "title": "Non-loopback auth-disabled deployment refused",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a2",
+      "implementation_files": [
+        "node/src/stigmem_node/main.py",
+        "node/src/stigmem_node/auth.py",
+        "node/src/stigmem_node/settings.py"
+      ],
+      "test_files": [
+        "node/tests/secure_defaults/test_secure_defaults.py"
+      ],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "CHANGELOG.md",
+        "SECURITY.md",
+        "docs/internal/security-evidence-registry-2026-05-17.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Startup refuses STIGMEM_AUTH_REQUIRED=false when node_url is bound to a non-loopback address unless local_dev_allow_insecure_non_loopback is explicitly set. Closed by GHSA-fp6w-8wpg-74g5."
+    },
+    "R-26": {
+      "title": "Federation peer registration approval gate",
+      "status": "Mitigated",
+      "version_introduced": "0.9.0a2",
+      "implementation_files": [
+        "node/src/stigmem_node/routes/federation/peers.py",
+        "node/src/stigmem_node/federation/peer_auth.py"
+      ],
+      "test_files": [
+        "node/tests/federation/test_peer_registration.py"
+      ],
+      "docs_reference_files": [
+        "spec/security/threat-model.md",
+        "CHANGELOG.md",
+        "SECURITY.md",
+        "docs/internal/security-evidence-registry-2026-05-17.md"
+      ],
+      "review_decision": "accept-as-is",
+      "notes": "Peer registration creates pending_approval entries; peer tokens for pending peers are rejected until an administrator approves the peer using the expected fingerprint. Closed by GHSA-9vp8-3hmv-8fgh."
     }
   }
 }

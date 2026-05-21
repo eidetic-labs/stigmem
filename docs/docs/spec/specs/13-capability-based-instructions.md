@@ -3,7 +3,7 @@ spec_id: Spec-13-Capability-Based-Instructions
 version: 0.1.0-alpha.0
 status: Draft
 audience: Spec
-applies_to: stigmem v0.9.0bN
+applies_to: future hardened-core line
 last_updated: 2026-05-16
 supersedes: ADR-003 capability-based prompt-injection redesign material
 depends_on:
@@ -14,7 +14,7 @@ depends_on:
 
 # Spec-13-Capability-Based-Instructions
 
-<p className="stigmem-meta"><span>2 min read</span><span>Spec contributor</span><span>Draft · v0.9.0bN</span></p>
+<p className="stigmem-meta"><span>2 min read</span><span>Spec contributor</span><span>Draft · future hardened-core line</span></p>
 
 <div className="stigmem-lead">
 
@@ -33,8 +33,8 @@ capability-based instruction handling. The first implementation
 slice shipped in #373: `FactValue.interpret_as` exists, local
 instruction writes require `instruction:write`, and recall
 preserves instruction/content channels. The remaining
-federation/admission pieces target the `v0.9.0bN` capability
-redesign line and are not part of the `v0.9.0a1` stable surface.
+federation/admission pieces target a future hardened-core line and are not
+part of the active alpha release horizon.
 
 ## Principle
 

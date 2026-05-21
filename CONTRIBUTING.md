@@ -49,11 +49,26 @@ roadmap or checklist only when the issue explicitly changes project status.
 Every PR opened against `main` from v0.9.0a3 onward must:
 
 1. Close exactly one issue (use `Closes #NNN` in the PR body) — open an issue first if none exists.
-2. Be assigned to the milestone that the closing issue belongs to. Current release-line milestones are `v0.9.0a3`, `v0.9.0b1`, `v1.0.0rc1`, and `v1.0.0` (created 2026-05-20).
+2. Be assigned to the milestone that the closing issue belongs to. The current release-line milestone is `v0.9.0a3`.
 
 The discipline lets anyone answer "what shipped in release X?" by reading the milestone instead of triangulating across CHANGELOG, ROADMAP, and git history. PRs that predate v0.9.0a3 are not retroactively backfilled.
 
+Future release-line milestones are created only when their feature-launch goals and release horizon are approved.
+
 Exceptions: emergency security patches and pure-revert PRs may land without a closing issue, with the rationale stated in the PR body.
+
+## Documentation ownership
+
+Recurring release, security, and evidence facts have one canonical owner. Before
+adding a second copy of the same table or disposition, check
+[`docs/internal/documentation-ownership.md`](docs/internal/documentation-ownership.md)
+and link to the owner instead. In particular:
+
+- `SECURITY.md` is the public security posture and advisory-disposition index.
+- `CHANGELOG.md` is a release-impact summary, not an audit ledger.
+- dated security evidence registries carry PR, path, test, and disposition proof.
+- `spec/security/threat-model.md` carries enduring architectural risks only.
+- Internal-Comms holds unpublished or embargoed staging material only.
 
 ## RFC process
 
@@ -185,7 +200,7 @@ Use the issue template that matches the work:
   operator information in a public issue; use GitHub private security advisories
   or the path in [SECURITY.md](SECURITY.md).
 - **Operator candidate** — teams interested in running a node during external
-  validation or the Phase B soak.
+  validation or the future hardened-core soak.
 - **Federation expressivity** — discussion of federation semantics that do not
   yet fit an implementation issue.
 
@@ -262,7 +277,7 @@ The Features page intentionally avoids calendar dates. Do not add target-quarter
 
 ## Docs versioning snapshot procedure
 
-Stigmem docs are currently in **single-version mode** (current = `v0.9.0a1`). No versioned snapshots are created during the alpha series. The first versioned snapshot will be cut at **v1.0.0 GA** per [ADR-001](docs/adr/001-versioning.md).
+Stigmem docs are currently in **single-version mode** (current published build = `v0.9.0a2`; active release horizon = `v0.9.0a3`). No versioned snapshots are created during the alpha series. The first versioned snapshot will be cut only when a stable GA line actually ships per [ADR-001](docs/adr/001-versioning.md).
 
 When v1.0.0 GA ships, create a versioned snapshot:
 
@@ -273,7 +288,7 @@ When v1.0.0 GA ships, create a versioned snapshot:
 npm run docusaurus docs:version v1.0.0
 ```
 
-This copies `docs/docs/` → `docs/versioned_docs/version-v1.0.0/` and `docs/sidebars.js` → `docs/versioned_sidebars/version-v1.0.0-sidebars.json`, then prepends the tag to `docs/versions.json`.
+This copies `docs/docs/` → `docs/versioned_docs/version-v1.0.0/` and `docs/sidebars.ts` → `docs/versioned_sidebars/version-v1.0.0-sidebars.json`, then prepends the tag to `docs/versions.json`.
 
 3. Update `docusaurus.config.js` → `docs.versions`:
    - Set `lastVersion` to the new tag (e.g., `'v1.0.0'`) so bare `/docs/*` URLs resolve to the released version.

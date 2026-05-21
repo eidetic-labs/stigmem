@@ -1,0 +1,42 @@
+# Documentation Ownership
+
+This file defines where recurring release, security, and evidence facts live.
+It implements the ADR-005 rule that each topic has one canonical owner and the
+ADR-018 rule that security documentation should use a hub-and-link model instead
+of duplicating the same analysis across multiple files.
+
+## Canonical Homes
+
+| Information type | Canonical home | Other files may | Other files must not |
+| --- | --- | --- | --- |
+| Release user/operator impact | `CHANGELOG.md` | Summarize impact and link to detailed security or release docs | Reprint full audit, evidence, or advisory tables |
+| Current security posture and advisory disposition | `SECURITY.md` | Link to evidence ledgers and threat-model risks | Duplicate path/test/PR evidence |
+| Finding-level evidence | `docs/internal/security-evidence-registry-*.md` | Record PRs, paths, tests, dispositions, and publication state | Become the public advisory index |
+| Enduring architectural risks | `spec/security/threat-model.md` | Register cross-cutting R-XX risks and link to per-feature analysis | Add every audit finding as a risk |
+| Machine-checkable mitigated-risk evidence | `spec/security/evidence-registry.json` | Support validators for mitigated threat-model risks | Carry human narrative or release notes |
+| Release scope and readiness | GitHub issues and milestones | Feed summary pages and tag-time checks | Be manually mirrored in several prose trackers |
+| Private or embargoed staging | `Internal-Comms/stigmem/security/drafts/` | Hold unpublished publication drafts | Preserve post-publication snapshots of public docs |
+| Architecture decisions | `docs/adr/` | Be linked from IC and planning docs | Be duplicated under Internal-Comms after publication |
+
+## Release Security Rule
+
+For a security release:
+
+1. `SECURITY.md` is the public disposition index.
+2. `CHANGELOG.md` records the release-impact summary.
+3. The dated evidence registry records proof and lineage.
+4. The threat model changes only when a finding exposes an enduring
+   architectural risk class.
+5. Internal-Comms drafts are deleted or trimmed to still-embargoed residue in
+   the same coordinated publication batch.
+
+## Review Checklist
+
+Before merging a docs PR that touches release, security, or evidence material:
+
+- Identify the canonical owner for each fact being added.
+- Replace duplicate prose with links to the canonical owner.
+- Keep summaries short in non-owner files.
+- If a public artifact graduated from Internal-Comms, cross-link the public PR
+  and IC cleanup PR.
+- Run the relevant evidence and docs validators named by the changed files.

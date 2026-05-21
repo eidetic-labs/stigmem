@@ -1,7 +1,7 @@
 # Stigmem File Structure & Size — Best Practices and Decomposition Plan
 
 > Survey of file-size and structure issues in the current repo, calibrated to industry best practices.
-> Intended as a early Phase B deliverable in the strengthening plan, sequenced after ADR-009 (repo structure) lands.
+> Intended as an early hardened-core deliverable in the strengthening plan, sequenced after ADR-009 (repo structure) lands.
 
 > 2026-05-17 adoption note: this document preserves the 2026-05-06 baseline
 > analysis that motivated the gate. Several examples in the baseline have since
@@ -375,7 +375,7 @@ This doc commits the project to discipline that's measurable, enforceable in CI,
 
 This work is **not Phase A strengthening-plan work.** It comes after the v0.9.0a1 reset has landed. Suggested sequencing:
 
-### early Phase B
+### early hardened-core pass
 
 - Adopt the best-practices doc (drop into the repo).
 - Add `scripts/check_file_sizes.py` as a CI step.

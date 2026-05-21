@@ -512,7 +512,7 @@ valuable findings and eligible for full credit.
 
 <div>
 <dt>Gap</dt>
-<dt><span className="stigmem-fields__type">v0.9.0bN target</span></dt>
+<dt><span className="stigmem-fields__type">Future hardened-core target</span></dt>
 <dd>Spec reference</dd>
 </div>
 

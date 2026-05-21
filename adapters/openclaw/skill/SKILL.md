@@ -114,7 +114,7 @@ adapter.emit_handoff(
 
 These mitigations do **not** make retrieved memory safe to treat as instructions.
 They define the adapter contract for content-channel recall; broader ADR-003
-hardening continues in the Phase B line.
+hardening continues in the future hardened-core line.
 
 **What you should do:**
 - **Append** the Stigmem context after your hardcoded system prompt — never prepend it — so your instructions take precedence over retrieved memory.

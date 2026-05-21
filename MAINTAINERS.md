@@ -22,7 +22,7 @@ Contributions from anyone outside the listed roles above are recorded in git his
 
 ## Authority and approval
 
-Per [ADR-001 § *Contributor approval rule*](docs/adr/001-versioning.md), sign-off on ADRs, ADR amendments, and PRs through the v0.9.0bN beta series requires **either** two contributors **or** the founder alone. The founder takes responsibility for the validation discipline whenever signing alone — the guardrail against AI-velocity-outrunning-validation (per the v1.0 retraction narrative) lives with the founder when they approve solo.
+Per [ADR-001 § *Contributor approval rule*](docs/adr/001-versioning.md), sign-off on ADRs, ADR amendments, and PRs through the pre-stable hardening window requires **either** two contributors **or** the founder alone. The founder takes responsibility for the validation discipline whenever signing alone — the guardrail against AI-velocity-outrunning-validation (per the v1.0 retraction narrative) lives with the founder when they approve solo.
 
 Audit logs (plugin registration per ADR-011, PR approval records, ADR sign-off commits) show the actual signing identities. This file describes who currently holds the roles; git history is the durable record of who exercised them.
 
@@ -50,7 +50,7 @@ The runbook documents five durable rules that prevent the v1.0 retraction failur
 4. **Tag protection on GitHub** for pattern `v*`.
 5. **No `--force` on `main` or release branches, ever.**
 
-Pre-1.0 (`v0.9.0aN` → `v0.9.0bN` → `v1.0.0rcN`): no release branches; tag-and-publish from `main` HEAD. **At v1.0.0 GA: cut `release/v1.x`** and patch releases ship from there. See [the runbook §Release-branch strategy](docs/internal/release-cadence.md#release-branch-strategy) for the full cutover procedure.
+Pre-1.0: no release branches; tag-and-publish from `main` HEAD. Only the active alpha horizon should have an open release milestone. **At stable GA: cut `release/v1.x`** and patch releases ship from there. See [the runbook §Release-branch strategy](docs/internal/release-cadence.md#release-branch-strategy) for the full cutover procedure.
 
 ---
 

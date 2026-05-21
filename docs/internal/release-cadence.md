@@ -88,7 +88,7 @@ The workflow runs in `dry-run` mode by default (logs what would be deleted) and 
 
 ## Release-branch strategy
 
-### Pre-1.0 (`v0.9.0aN` alpha → `v0.9.0bN` beta → `v1.0.0rcN` release-candidate)
+### Pre-1.0
 
 **No release branches.** Each pre-release is allowed to break the previous per ADR-001 stability commitments. Discipline:
 
@@ -197,7 +197,7 @@ Pushing the tag triggers `.github/workflows/publish.yml`, which fans out into:
 2. **`publish-dashboard`** — same shape for the Next.js dashboard.
 3. **`publish-sdk-ts`** — npm publish of `@eidetic-labs/stigmem-ts` with `--tag <alpha|beta|rc|latest>` (derived from the version via `scripts/translate_version.py` — no manual computation needed), with provenance attestation via OIDC.
 4. **`publish-python`** — matrix publishes `stigmem`, `stigmem-py`, `stigmem-node`, `stigmem-openclaw` to PyPI via Trusted Publishers (OIDC; no API token).
-5. **`create-release`** — runs after publish-node + publish-sdk-ts + publish-python succeed. Extracts the `## [<version>]` section from `CHANGELOG.md`, prepends a "Published artifacts" header with the install commands for each registry, creates the GitHub release with that body. Marks as prerelease for any non-`latest` dist-tag (alpha/beta/rc). Title format: `v0.9.0aN — preview alpha`, `v0.9.0bN — preview beta`, `v1.0.0rcN — release candidate`, or just the tag for final releases.
+5. **`create-release`** — runs after publish-node + publish-sdk-ts + publish-python succeed. Extracts the `## [<version>]` section from `CHANGELOG.md`, prepends a "Published artifacts" header with the install commands for each registry, creates the GitHub release with that body. Marks as prerelease for any non-`latest` dist-tag (alpha/beta/rc). Title format follows the translated release tier, for example `v0.9.0aN — preview alpha`; future beta or release-candidate titles are used only when those release lines are explicitly opened.
 
 The first four publish jobs run in parallel (~5-8 minutes total). The release-creation job runs after to ensure the release page only links at working artifacts. **Stay near the workflow run** until the release page appears — if anything fails, you'll want to triage immediately rather than discover hours later.
 

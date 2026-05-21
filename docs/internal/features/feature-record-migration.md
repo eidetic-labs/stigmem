@@ -201,6 +201,9 @@ Progress:
   match before docs checks pass.
 - `features/README.md` now documents the strict validation contract for new
   feature work and migrated rows.
+- `storage-libsql` now has a canonical adapter-specific feature record under
+  `features/storage-libsql/`; legacy experimental docs remain compatibility
+  pointers until their operator guidance is promoted or retired.
 
 ## Release Horizon Alignment
 

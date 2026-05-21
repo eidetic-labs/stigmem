@@ -75,7 +75,9 @@ the `memory:last_seen` retract policy cleaned these automatically.
 
 ## Cognee
 
-**Adapter:** [`experimental/cognee-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/cognee-adapter) (deferred per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
+**Feature record:** [`features/cognee-adapter`](https://github.com/eidetic-labs/stigmem/tree/main/features/cognee-adapter)
+
+**Implementation:** [`experimental/cognee-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/cognee-adapter) (dormant external adapter)
 
 Cognee builds knowledge graphs from unstructured text. The adapter bridges stigmem's (entity, relation, value) triple model with Cognee's graph representation.
 

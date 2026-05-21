@@ -425,6 +425,22 @@ features:
       node: "experimental"
     notes: "Experimental markdown-vault adapter family; CLI, plugin, threat-model, and live-vault validation remain future alpha work."
 
+  - id: cognee-adapter
+    name: Cognee adapter
+    feature_record: features/cognee-adapter/README.md
+    feature_type: adapter
+    default_surface: external
+    implementation_path: experimental/cognee-adapter
+    package: stigmem-cognee-adapter
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (adapter)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Dormant design-partner adapter; ownership, package, dependency, and live Cognee validation remain future alpha work."
+
 protocol_compatibility:
   - protocol_version: "0.9.0a2"
     supported_by:

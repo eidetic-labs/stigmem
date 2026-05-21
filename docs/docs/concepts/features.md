@@ -352,9 +352,15 @@ Read the spec at
 </div>
 
 <div>
-<dt>Letta / Zep / Cognee / Gemini / OpenAI-tools / Paperclip adapters</dt>
+<dt>Letta / Zep / Gemini / OpenAI-tools / Paperclip adapters</dt>
 <dt><span className="stigmem-fields__type">Deferred</span></dt>
 <dd><code>experimental/&lt;adapter&gt;-adapter/</code>.</dd>
+</div>
+
+<div>
+<dt>Cognee adapter</dt>
+<dt><span className="stigmem-fields__type">Dormant, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/cognee-adapter"><code>features/cognee-adapter</code></a>; package and live Cognee validation remain future alpha work.</dd>
 </div>
 
 <div>

@@ -213,6 +213,9 @@ Progress:
 - `obsidian-adapter` now has a canonical adapter feature record under
   `features/obsidian-adapter/`; package, plugin, threat-model, and live-vault
   validation remain future alpha release-line gates.
+- `cognee-adapter` now has a canonical adapter feature record under
+  `features/cognee-adapter/`; ownership, package, dependency, and live Cognee
+  validation remain future alpha release-line gates.
 
 ## Release Horizon Alignment
 

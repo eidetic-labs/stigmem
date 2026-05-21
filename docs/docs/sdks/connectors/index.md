@@ -71,7 +71,7 @@ These adapters translate Stigmem's tools into the native function-calling format
 <div>
 <dt>Gemini</dt>
 <dt><span className="stigmem-fields__type">native <code>FunctionDeclaration</code></span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-gemini">experimental/adapter-gemini</a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/gemini-adapter">features/gemini-adapter</a></dd>
 </div>
 
 <div>

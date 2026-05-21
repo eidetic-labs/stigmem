@@ -23,7 +23,9 @@ decisions.
 
 ## Zep
 
-**Adapter:** [`experimental/zep-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/zep-adapter) (deferred per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md))
+**Feature record:** [`features/zep-adapter`](https://github.com/eidetic-labs/stigmem/tree/main/features/zep-adapter)
+
+**Implementation:** [`experimental/zep-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/zep-adapter) (deferred external adapter)
 
 Zep stores agent memory as session-scoped "propositions" extracted from dialogue. The adapter bridges these into stigmem facts and back.
 

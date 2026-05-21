@@ -227,7 +227,7 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 <div><h4>Obsidian adapter</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/obsidian-adapter"><code>features/obsidian-adapter</code></a> — experimental external adapter; package, plugin, and live-vault validation remain future alpha work.</p></div>
 <div><h4>Cognee adapter</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/cognee-adapter"><code>features/cognee-adapter</code></a> — dormant external adapter; preserved design-partner surface with package and live Cognee validation deferred.</p></div>
 <div><h4>Letta adapter</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/letta-adapter"><code>features/letta-adapter</code></a> — deferred external adapter; preserved design-partner surface with package and live Letta validation deferred.</p></div>
-<div><h4>Zep adapter</h4><p>Dormant — preserved design-partner adapter.</p></div>
+<div><h4>Zep adapter</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/zep-adapter"><code>features/zep-adapter</code></a> — deferred external adapter; preserved design-partner surface with package and live Zep validation deferred.</p></div>
 <div><h4>Gemini / Ollama-LiteLLM / OpenAI tools</h4><p>Dormant — deferred model/tooling adapters.</p></div>
 <div><h4>Paperclip adapter</h4><p>Dormant — deferred lifecycle/event adapter.</p></div>
 

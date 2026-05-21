@@ -376,6 +376,23 @@ features:
       node: "experimental"
     notes: "Opt-in libSQL/Turso adapter; SQLite remains the default backend and release-line certification remains future alpha work."
 
+  - id: mcp-adapter
+    name: MCP adapter
+    feature_record: features/mcp-adapter/README.md
+    feature_type: adapter
+    default_surface: external
+    implementation_path: adapters/mcp
+    package: stigmem-mcp
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (adapter)
+    stability: experimental
+    requires:
+      node: "experimental"
+      typescript_sdk: "workspace"
+    notes: "External MCP tool adapter; package metadata remains independent until future alpha connector and security validation completes."
+
 protocol_compatibility:
   - protocol_version: "0.9.0a2"
     supported_by:

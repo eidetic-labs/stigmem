@@ -71,7 +71,7 @@ This page renders the YAML as human-readable tables.
 <div>
 <dt><code>stigmem-mcp</code> (adapter)</dt>
 <dt><span className="stigmem-fields__type">deferred at 0.4.0</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/mcp-adapter"><code>experimental/mcp-adapter/</code></a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter"><code>features/mcp-adapter/</code></a>; package alignment remains future alpha work.</dd>
 </div>
 
 </div>
@@ -109,6 +109,7 @@ compatibility remains in [`docs/compatibility-matrix.yaml`](https://github.com/e
 | [Intent envelope](https://github.com/eidetic-labs/stigmem/blob/main/features/intent-envelope/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/intent-envelope` |
 | [Lazy instruction discovery](https://github.com/eidetic-labs/stigmem/blob/main/features/lazy-instruction-discovery/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-plugin-lazy-instruction-discovery`; `experimental/lazy-instruction-discovery` |
 | [Memory Garden advanced ACL](https://github.com/eidetic-labs/stigmem/blob/main/features/memory-garden-acl/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-plugin-memory-garden-acl`; `experimental/memory-garden-acl` |
+| [MCP adapter](https://github.com/eidetic-labs/stigmem/blob/main/features/mcp-adapter/README.md) | adapter | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem-mcp`; `adapters/mcp` |
 | [Multi-tenant scoping](https://github.com/eidetic-labs/stigmem/blob/main/features/multi-tenant/README.md) | plugin | experimental / opt-in | `v0.9.0a8`, `0.9.xA` | `stigmem-plugin-multi-tenant`; `experimental/multi-tenant` |
 | [OIDC SSO](https://github.com/eidetic-labs/stigmem/blob/main/features/oidc-sso/README.md) | core | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-node`; `node/src/stigmem_node/routes/auth.py` |
 | [Recall graph](https://github.com/eidetic-labs/stigmem/blob/main/features/recall-graph/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/recall-graph` |

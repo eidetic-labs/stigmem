@@ -347,8 +347,8 @@ Read the spec at
 
 <div>
 <dt>MCP adapter</dt>
-<dt><span className="stigmem-fields__type">Deferred</span></dt>
-<dd><code>stigmem-mcp</code> at v0.4.0; not aligned to v0.9.0a1.</dd>
+<dt><span className="stigmem-fields__type">Experimental, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter"><code>features/mcp-adapter</code></a>; <code>stigmem-mcp</code> package alignment remains future alpha work.</dd>
 </div>
 
 <div>

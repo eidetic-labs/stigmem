@@ -49,7 +49,7 @@ act only as wrappers, compatibility projections, or implementation directories.
 | `billing` | Billing | `core` | `experimental` | `opt-in` | `none` | `experimental/billing/` | `features/billing/` | `deferred` | `future gate` | Business feature outside active alpha release scope. |
 | `storage-backends` | Storage backends | `adapter` | `experimental` | `opt-in` | `none` | `experimental/storage-backends/` | `features/storage-backends/` | `migrated` | `future alpha` | Storage-family parent row; feature record owns backend-selection detail. |
 | `storage-libsql` | libSQL storage | `adapter` | `experimental` | `opt-in` | `none` | `experimental/storage-libsql/` | `features/storage-libsql/` | `migrated` | `future alpha` | Adapter-specific storage feature. |
-| `mcp-adapter` | MCP adapter | `adapter` | `experimental` | `external` | `none` | `experimental/mcp-adapter/` | `features/mcp-adapter/` | `pending` | `future alpha` | Adapter surface. |
+| `mcp-adapter` | MCP adapter | `adapter` | `experimental` | `external` | `none` | `experimental/mcp-adapter/` | `features/mcp-adapter/` | `migrated` | `future alpha` | Adapter surface. |
 | `sdk-go` | Go SDK | `sdk` | `experimental` | `external` | `none` | `experimental/sdk-go/` | `features/sdk-go/` | `pending` | `future alpha` | SDK surface. |
 | `obsidian-adapter` | Obsidian adapter | `adapter` | `experimental` | `external` | `none` | `experimental/obsidian-adapter/` | `features/obsidian-adapter/` | `pending` | `future alpha` | Adapter surface. |
 | `cognee-adapter` | Cognee adapter | `adapter` | `experimental` | `external` | `none` | `experimental/cognee-adapter/` | `features/cognee-adapter/` | `pending` | `future alpha` | Adapter surface. |

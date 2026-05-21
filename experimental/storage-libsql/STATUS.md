@@ -1,5 +1,10 @@
 # storage-libsql — Status
 
-storage-libsql is Dormant for v0.9.0a1 (last tested against); owner unowned; buildable unknown — pending PR 3 verification sweep; last updated 2026-05-09. Spec ID: (no Spec-X assigned — deferred per [ADR-002](../../docs/adr/002-v1-scope.md); if reintroduced, gets next available Spec-X number per [ADR-010](../../docs/adr/010-modular-specs.md)). Legacy section: not applicable.
+This legacy experimental status file is retained as a compatibility pointer.
+The canonical feature record now lives in
+[`features/storage-libsql/`](../../features/storage-libsql/README.md).
 
-This feature remains outside the default surface per [ADR-002](../../docs/adr/002-v1-scope.md) and [ADR-009](../../docs/adr/009-repo-structure.md); shared promotion gates live in [../STATUS-GATES.md](../STATUS-GATES.md).
+libSQL storage is active in source, experimental, and opt-in. SQLite remains
+the default storage backend. Release-line readiness for libSQL/Turso depends on
+the gates tracked in
+[`features/storage-libsql/status.md`](../../features/storage-libsql/status.md).

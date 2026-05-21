@@ -304,6 +304,12 @@ Read the spec at
 </div>
 
 <div>
+<dt>libSQL/Turso storage</dt>
+<dt><span className="stigmem-fields__type">Experimental, opt-in</span></dt>
+<dd>Adapter-specific feature record: <a href="https://github.com/eidetic-labs/stigmem/tree/main/features/storage-libsql"><code>features/storage-libsql</code></a>.</dd>
+</div>
+
+<div>
 <dt>SQLCipher at-rest encryption</dt>
 <dt><span className="stigmem-fields__type">Stable (opt-in)</span></dt>
 <dd>Required for regulated data.</dd>

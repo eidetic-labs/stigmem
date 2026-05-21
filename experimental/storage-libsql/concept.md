@@ -6,6 +6,12 @@ audience: Integrator
 
 # libSQL / Turso — Point-in-Time Restore (PITR)
 
+This legacy experimental runbook is retained as a compatibility pointer. The
+canonical feature record for libSQL/Turso storage now lives in
+[`features/storage-libsql/`](../../features/storage-libsql/README.md). The
+restore guidance below remains adapter-specific operational background until it
+is promoted into release-certified operator documentation.
+
 **Audience:** Operators running Stigmem with `STIGMEM_STORAGE_BACKEND=libsql` and
 a Turso cloud database.  
 **Applies to:** Stigmem the pre-reset attestation-chain work (libSQL/Turso adapter)

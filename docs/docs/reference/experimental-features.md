@@ -206,8 +206,8 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 
 <div>
 <dt>libSQL/Turso storage</dt>
-<dt><span className="stigmem-fields__type">dormant</span></dt>
-<dd>Adds third-party service trust and backend-specific behavior.</dd>
+<dt><span className="stigmem-fields__type">Experimental, opt-in</span></dt>
+<dd><code>features/storage-libsql/</code>; adds third-party service trust and backend-specific behavior.</dd>
 </div>
 
 <div>

@@ -94,7 +94,28 @@ This page renders the YAML as human-readable tables.
 
 </div>
 
-## Feature compatibility (v0.9.0a1)
+## Feature Record Compatibility
+
+Feature records own feature metadata. This table projects the migrated feature
+records into the operator compatibility view; release-specific package
+compatibility remains in [`docs/compatibility-matrix.yaml`](https://github.com/eidetic-labs/stigmem/blob/main/docs/compatibility-matrix.yaml).
+
+| Feature | Type | Stability / surface | Release lines | Package / implementation |
+| --- | --- | --- | --- | --- |
+| [Content-addressed fact IDs](https://github.com/eidetic-labs/stigmem/blob/main/features/content-addressed-ids/README.md) | core | stable / default | `v0.9.0a1`, `v0.9.0a3` | `stigmem-node`; `node/src/stigmem_node/cid.py` |
+| [Decay semantics](https://github.com/eidetic-labs/stigmem/blob/main/features/decay/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/decay` |
+| [Intent envelope](https://github.com/eidetic-labs/stigmem/blob/main/features/intent-envelope/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/intent-envelope` |
+| [Lazy instruction discovery](https://github.com/eidetic-labs/stigmem/blob/main/features/lazy-instruction-discovery/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-plugin-lazy-instruction-discovery`; `experimental/lazy-instruction-discovery` |
+| [Memory Garden advanced ACL](https://github.com/eidetic-labs/stigmem/blob/main/features/memory-garden-acl/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-plugin-memory-garden-acl`; `experimental/memory-garden-acl` |
+| [Multi-tenant scoping](https://github.com/eidetic-labs/stigmem/blob/main/features/multi-tenant/README.md) | plugin | experimental / opt-in | `v0.9.0a8`, `0.9.xA` | `stigmem-plugin-multi-tenant`; `experimental/multi-tenant` |
+| [Recall graph](https://github.com/eidetic-labs/stigmem/blob/main/features/recall-graph/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/recall-graph` |
+| [Source attestation](https://github.com/eidetic-labs/stigmem/blob/main/features/source-attestation/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-plugin-source-attestation`; `experimental/source-attestation` |
+| [Subscriptions](https://github.com/eidetic-labs/stigmem/blob/main/features/subscriptions/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/subscriptions` |
+| [Synthesis](https://github.com/eidetic-labs/stigmem/blob/main/features/synthesis/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/synthesis` |
+| [Time-travel queries](https://github.com/eidetic-labs/stigmem/blob/main/features/time-travel/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `v0.9.0a4` | `stigmem-plugin-time-travel`; `experimental/time-travel` |
+| [RTBF tombstones](https://github.com/eidetic-labs/stigmem/blob/main/features/tombstones/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-plugin-tombstones`; `experimental/tombstones` |
+
+## Baseline Compatibility Summary
 
 <div className="stigmem-fields">
 
@@ -123,12 +144,6 @@ This page renders the YAML as human-readable tables.
 </div>
 
 <div>
-<dt>CIDs</dt>
-<dt><span className="stigmem-fields__type">Stable in core</span></dt>
-<dd>Per <a href="https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/017-amendment-to-adr-011-cids-as-core.md">ADR-017</a>; <code>Spec-21-Content-Addressed-IDs</code>; <code>node≥0.9.0a1</code>.</dd>
-</div>
-
-<div>
 <dt><code>Stigmem-Version</code> header</dt>
 <dt><span className="stigmem-fields__type">Documented; future hardened-core work</span></dt>
 <dd><code>Spec-03-HTTP-API</code>; implementation planned for a future hardened-core line.</dd>
@@ -138,42 +153,6 @@ This page renders the YAML as human-readable tables.
 <dt>Argon2id API key hashing</dt>
 <dt><span className="stigmem-fields__type">Current alpha line</span></dt>
 <dd>Per <a href="https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/007-argon2id.md">ADR-007</a>; new API keys use Argon2id in the current alpha implementation.</dd>
-</div>
-
-<div>
-<dt>Lazy instruction discovery</dt>
-<dt><span className="stigmem-fields__type">Experimental</span></dt>
-<dd><code>Spec-X1</code>; targeted v0.9.0a2.</dd>
-</div>
-
-<div>
-<dt>RTBF tombstones</dt>
-<dt><span className="stigmem-fields__type">Experimental</span></dt>
-<dd><code>Spec-X2</code>; source-only on <code>main</code>; no released plugin artifact yet.</dd>
-</div>
-
-<div>
-<dt>Time-travel queries</dt>
-<dt><span className="stigmem-fields__type">Experimental</span></dt>
-<dd><code>Spec-X3</code>; targeted v0.9.0a4.</dd>
-</div>
-
-<div>
-<dt>Memory garden advanced ACL</dt>
-<dt><span className="stigmem-fields__type">Experimental</span></dt>
-<dd><code>Spec-X5</code>; source-only.</dd>
-</div>
-
-<div>
-<dt>Source attestation</dt>
-<dt><span className="stigmem-fields__type">Experimental</span></dt>
-<dd><code>Spec-X6</code>; source-only.</dd>
-</div>
-
-<div>
-<dt>Multi-tenant isolation</dt>
-<dt><span className="stigmem-fields__type">Experimental</span></dt>
-<dd>Cross-cutting; source-only.</dd>
 </div>
 
 </div>

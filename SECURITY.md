@@ -69,6 +69,7 @@ is an index, not the canonical analysis body; update the linked
 | Go SDK | None | [`features/sdk-go/security.md`](features/sdk-go/security.md) |
 | Intent envelope | R-05, R-15 | [`features/intent-envelope/security.md`](features/intent-envelope/security.md) |
 | Lazy instruction discovery | R-15, R-21 | [`features/lazy-instruction-discovery/security.md`](features/lazy-instruction-discovery/security.md) |
+| Letta adapter | None | [`features/letta-adapter/security.md`](features/letta-adapter/security.md) |
 | Memory Garden advanced ACL | R-21 | [`features/memory-garden-acl/security.md`](features/memory-garden-acl/security.md) |
 | MCP adapter | R-05, R-15, R-21 | [`features/mcp-adapter/security.md`](features/mcp-adapter/security.md) |
 | Multi-tenant boundaries | R-01, R-02, R-21 | [`features/multi-tenant/security.md`](features/multi-tenant/security.md) |

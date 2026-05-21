@@ -457,6 +457,22 @@ features:
       node: "experimental"
     notes: "Deferred design-partner adapter; ownership, package, dependency, and live Letta validation remain future alpha work."
 
+  - id: zep-adapter
+    name: Zep adapter
+    feature_record: features/zep-adapter/README.md
+    feature_type: adapter
+    default_surface: external
+    implementation_path: experimental/zep-adapter
+    package: stigmem-zep-adapter
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (adapter)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred design-partner adapter; ownership, package, dependency, and live Zep validation remain future alpha work."
+
 protocol_compatibility:
   - protocol_version: "0.9.0a2"
     supported_by:

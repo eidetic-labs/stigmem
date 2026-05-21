@@ -219,6 +219,9 @@ Progress:
 - `letta-adapter` now has a canonical adapter feature record under
   `features/letta-adapter/`; ownership, package, dependency, and live Letta
   validation remain future alpha release-line gates.
+- `zep-adapter` now has a canonical adapter feature record under
+  `features/zep-adapter/`; ownership, package, dependency, and live Zep
+  validation remain future alpha release-line gates.
 
 ## Release Horizon Alignment
 

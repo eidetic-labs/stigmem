@@ -80,6 +80,7 @@ is an index, not the canonical analysis body; update the linked
 | Source attestation | R-22 | [`features/source-attestation/security.md`](features/source-attestation/security.md) |
 | Storage backends | R-04, R-08 | [`features/storage-backends/security.md`](features/storage-backends/security.md) |
 | libSQL storage | R-04, R-08 | [`features/storage-libsql/security.md`](features/storage-libsql/security.md) |
+| Zep adapter | None | [`features/zep-adapter/security.md`](features/zep-adapter/security.md) |
 | Subscriptions | R-14, R-16 | [`features/subscriptions/security.md`](features/subscriptions/security.md) |
 | Synthesis | R-05, R-21 | [`features/synthesis/security.md`](features/synthesis/security.md) |
 | Time-travel queries | R-17, R-18 | [`features/time-travel/security.md`](features/time-travel/security.md) |

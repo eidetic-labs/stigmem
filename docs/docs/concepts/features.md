@@ -352,9 +352,15 @@ Read the spec at
 </div>
 
 <div>
-<dt>Zep / Gemini / OpenAI-tools / Paperclip adapters</dt>
+<dt>Gemini / OpenAI-tools / Paperclip adapters</dt>
 <dt><span className="stigmem-fields__type">Deferred</span></dt>
 <dd><code>experimental/&lt;adapter&gt;-adapter/</code>.</dd>
+</div>
+
+<div>
+<dt>Zep adapter</dt>
+<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/zep-adapter"><code>features/zep-adapter</code></a>; package and live Zep validation remain future alpha work.</dd>
 </div>
 
 <div>

@@ -137,7 +137,7 @@ These adapters translate Stigmem's tools into the native function-calling format
 <div>
 <dt>Zep</dt>
 <dt><span className="stigmem-fields__type">episodic memory mirror</span></dt>
-<dd>Mirror shared facts into per-user/session episodic memory. <a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-zep">experimental/adapter-zep</a></dd>
+<dd>Mirror shared facts into per-user/session episodic memory. <a href="https://github.com/eidetic-labs/stigmem/tree/main/features/zep-adapter">features/zep-adapter</a></dd>
 </div>
 
 </div>

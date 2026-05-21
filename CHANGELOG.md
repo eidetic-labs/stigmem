@@ -37,6 +37,7 @@ root changelog projection used during release prep.
 | OIDC SSO | active | `v0.9.0a1`, `0.9.xA` | [`features/oidc-sso/changelog.md`](features/oidc-sso/changelog.md) |
 | Recall graph | deferred | `v0.9.0a1`, `0.9.xA` | [`features/recall-graph/changelog.md`](features/recall-graph/changelog.md) |
 | Source attestation | active | `v0.9.0a1`, `0.9.xA` | [`features/source-attestation/changelog.md`](features/source-attestation/changelog.md) |
+| Storage backends | active | `v0.9.0a1`, `0.9.xA` | [`features/storage-backends/changelog.md`](features/storage-backends/changelog.md) |
 | Subscriptions | deferred | `v0.9.0a1`, `0.9.xA` | [`features/subscriptions/changelog.md`](features/subscriptions/changelog.md) |
 | Synthesis | deferred | `v0.9.0a1`, `0.9.xA` | [`features/synthesis/changelog.md`](features/synthesis/changelog.md) |
 | Time-travel queries | active | `v0.9.0a1`, `v0.9.0a4` | [`features/time-travel/changelog.md`](features/time-travel/changelog.md) |

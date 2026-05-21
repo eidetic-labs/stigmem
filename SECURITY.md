@@ -70,6 +70,7 @@ is an index, not the canonical analysis body; update the linked
 | Lazy instruction discovery | R-15, R-21 | [`features/lazy-instruction-discovery/security.md`](features/lazy-instruction-discovery/security.md) |
 | Memory Garden advanced ACL | R-21 | [`features/memory-garden-acl/security.md`](features/memory-garden-acl/security.md) |
 | Multi-tenant boundaries | R-01, R-02, R-21 | [`features/multi-tenant/security.md`](features/multi-tenant/security.md) |
+| OIDC SSO | None | [`features/oidc-sso/security.md`](features/oidc-sso/security.md) |
 | Recall graph | R-13, R-20, R-21 | [`features/recall-graph/security.md`](features/recall-graph/security.md) |
 | Source attestation | R-22 | [`features/source-attestation/security.md`](features/source-attestation/security.md) |
 | Subscriptions | R-14, R-16 | [`features/subscriptions/security.md`](features/subscriptions/security.md) |

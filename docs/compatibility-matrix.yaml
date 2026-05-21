@@ -322,11 +322,19 @@ features:
 
   - id: oidc-sso
     name: OIDC SSO
+    feature_record: features/oidc-sso/README.md
+    feature_type: core
+    default_surface: opt-in
+    implementation_path: node/src/stigmem_node/routes/auth.py
+    package: stigmem-node
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
     spec_section: (auth)
     stability: experimental
     requires:
-      node: "experimental"
-    notes: "Deferred to experimental/oidc-sso/."
+      node: ">=0.9.0a1"
+    notes: "Opt-in OIDC exchange bridge. Security posture for M5 and L5 is documented in SECURITY.md; production IdP configuration remains operator-owned."
 
   - id: postgres-backend
     name: PostgreSQL backend

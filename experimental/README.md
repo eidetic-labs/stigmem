@@ -39,7 +39,7 @@ the supported surface. The v0.9.0a1 scope boundary is defined by
 
 | Feature | Status |
 |---|---|
-| Multi-tenant isolation | [STATUS](multi-tenant/STATUS.md) |
+| Multi-tenant isolation | [STATUS](../features/multi-tenant/status.md) |
 | Async jobs | [STATUS](async-jobs/STATUS.md) |
 | Fuzzy resolver | [STATUS](fuzzy-resolver/STATUS.md) |
 | OIDC SSO | [STATUS](oidc-sso/STATUS.md) |

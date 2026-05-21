@@ -155,7 +155,7 @@ features:
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Deferred to experimental/multi-tenant/. Targeted v0.9.0a8."
+    notes: "Feature record lives at features/multi-tenant/; implementation remains the opt-in experimental/multi-tenant/ source package. Targeted v0.9.0a8."
 
   - id: oidc-sso
     name: OIDC SSO

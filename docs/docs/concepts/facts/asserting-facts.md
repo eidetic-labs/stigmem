@@ -292,7 +292,7 @@ curl -s "http://localhost:8765/v1/facts?entity=user:alice" \
 ```
 
 See
-[Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant)
+[Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/features/multi-tenant)
 for the full isolation model and key provisioning guide.
 
 ## Additional topics

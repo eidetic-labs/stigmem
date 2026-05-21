@@ -224,7 +224,7 @@ data is never returned, even with node-admin permissions.
 
 This scoping was added in migration `012_multi_tenant.sql`. Rows
 written before that migration carry `tenant_id = 'default'`. See
-[Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant)
+[Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/features/multi-tenant)
 for the full isolation model.
 
 ## Retention and backfill
@@ -265,7 +265,7 @@ with any active filters applied.
 <small>Bearer-key model and permissions.</small>
 </a>
 
-<a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant">
+<a href="https://github.com/eidetic-labs/stigmem/tree/main/features/multi-tenant">
 <strong>Experimental</strong>
 <span>Multi-tenant scoping</span>
 <small><code>tenant_id</code> isolation model and migration 012.</small>

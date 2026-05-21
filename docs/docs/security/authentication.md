@@ -284,7 +284,7 @@ key = create_api_key(
 )
 ```
 
-See [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant)
+See [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/features/multi-tenant)
 for the full isolation model and migration details.
 
 ## Environment variables

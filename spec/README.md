@@ -15,12 +15,12 @@ for legacy section numbers.
 | Section group | Status | Destination |
 |---|---|---|
 | §1–§14 (core protocol foundation) | Stable in v0.9.0a1 | `spec/specs/` component specs, plus monolithic overview/governance bridge prose |
-| §15 Decay, §16 Synthesis | Deferred per [ADR-002](../docs/adr/002-v1-scope.md) | [`experimental/decay/spec.md`](../experimental/decay/spec.md), [`experimental/synthesis/spec.md`](../experimental/synthesis/spec.md) |
-| §17 Memory Garden | Basic concept stable; advanced ACL deferred per [ADR-011](../docs/adr/011-cross-cutting-extraction.md) | [`specs/02-scopes-and-acl.md`](specs/02-scopes-and-acl.md), [`specs/08-quarantine-garden.md`](specs/08-quarantine-garden.md), [`experimental/memory-garden-acl/spec.md`](../experimental/memory-garden-acl/spec.md) |
+| §15 Decay, §16 Synthesis | Deferred per [ADR-002](../docs/adr/002-v1-scope.md) | [`features/decay/spec.md`](../features/decay/spec.md), [`features/synthesis/spec.md`](../features/synthesis/spec.md) |
+| §17 Memory Garden | Basic concept stable; advanced ACL deferred per [ADR-011](../docs/adr/011-cross-cutting-extraction.md) | [`specs/02-scopes-and-acl.md`](specs/02-scopes-and-acl.md), [`specs/08-quarantine-garden.md`](specs/08-quarantine-garden.md), [`features/memory-garden-acl/spec.md`](../features/memory-garden-acl/spec.md) |
 | §18 Source Attestation | Deferred / experimental plugin | [`features/source-attestation/spec.md`](../features/source-attestation/spec.md) |
 | §19 Federation Trust | Basic stable (mTLS, capability tokens); advanced trust scoring deferred | [`specs/04-manifests.md`](specs/04-manifests.md), [`specs/05-federation-trust.md`](specs/05-federation-trust.md), [`specs/06-capability-tokens.md`](specs/06-capability-tokens.md) |
-| §20 Recall and Graph (advanced) | Deferred | [`experimental/recall-graph/spec.md`](../experimental/recall-graph/spec.md) |
-| Subscriptions / push federation | Deferred | [`experimental/subscriptions/spec.md`](../experimental/subscriptions/spec.md) |
+| §20 Recall and Graph (advanced) | Deferred | [`features/recall-graph/spec.md`](../features/recall-graph/spec.md) |
+| Subscriptions / push federation | Deferred | [`features/subscriptions/spec.md`](../features/subscriptions/spec.md) |
 | §21 Lazy Instruction Discovery | Deferred / experimental plugin | [`features/lazy-instruction-discovery/spec.md`](../features/lazy-instruction-discovery/spec.md) |
 | §22 Security Hardening | Stable | [`specs/09-audit-log.md`](specs/09-audit-log.md), [`specs/10-hardening.md`](specs/10-hardening.md), [`specs/11-replay-protection.md`](specs/11-replay-protection.md) |
 | §23 RTBF Tombstones | Deferred / experimental plugin | [`features/tombstones/spec.md`](../features/tombstones/spec.md) |

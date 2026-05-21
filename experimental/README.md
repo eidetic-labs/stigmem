@@ -27,13 +27,13 @@ the supported surface. The v0.9.0a1 scope boundary is defined by
 | Lazy instruction discovery | [`Spec-X1-Lazy-Instruction-Discovery`](lazy-instruction-discovery/spec.md) | [STATUS](lazy-instruction-discovery/STATUS.md) |
 | RTBF tombstones | [`Spec-X2-RTBF-Tombstones`](tombstones/spec.md) | [STATUS](tombstones/STATUS.md) |
 | Time-travel queries | [`Spec-X3-Time-Travel-Queries`](time-travel/spec.md) | [STATUS](time-travel/STATUS.md) |
-| Memory Garden advanced ACL | [`Spec-X5-Memory-Garden-Advanced-ACL`](memory-garden-acl/spec.md) | [STATUS](memory-garden-acl/STATUS.md) |
+| Memory Garden advanced ACL | [`Spec-X5-Memory-Garden-Advanced-ACL`](../features/memory-garden-acl/spec.md) | [STATUS](../features/memory-garden-acl/status.md) |
 | Source attestation | [`Spec-X6-Source-Attestation`](source-attestation/spec.md) | [STATUS](source-attestation/STATUS.md) |
-| Subscriptions | [`Spec-X7-Subscriptions`](subscriptions/spec.md) | [STATUS](subscriptions/STATUS.md) |
-| Intent envelope | [`Spec-X8-Intent-Envelope`](intent-envelope/spec.md) | [STATUS](intent-envelope/STATUS.md) |
-| Decay semantics | [`Spec-X9-Decay-Semantics`](decay/spec.md) | [STATUS](decay/STATUS.md) |
-| Synthesis | [`Spec-X10-Synthesis`](synthesis/spec.md) | [STATUS](synthesis/STATUS.md) |
-| Recall graph | [`Spec-X11-Recall-Graph`](recall-graph/spec.md) | [STATUS](recall-graph/STATUS.md) |
+| Subscriptions | [`Spec-X7-Subscriptions`](../features/subscriptions/spec.md) | [STATUS](../features/subscriptions/status.md) |
+| Intent envelope | [`Spec-X8-Intent-Envelope`](../features/intent-envelope/spec.md) | [STATUS](../features/intent-envelope/status.md) |
+| Decay semantics | [`Spec-X9-Decay-Semantics`](../features/decay/spec.md) | [STATUS](../features/decay/status.md) |
+| Synthesis | [`Spec-X10-Synthesis`](../features/synthesis/spec.md) | [STATUS](../features/synthesis/status.md) |
+| Recall graph | [`Spec-X11-Recall-Graph`](../features/recall-graph/spec.md) | [STATUS](../features/recall-graph/status.md) |
 
 ## Cross-Cutting Features Without Spec-X
 

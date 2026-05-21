@@ -14,7 +14,7 @@ Each checkpoint below captured what the spec said at that step. Major themes tha
 
 - **§1–§3** (motivation, atomic-fact-shape, fact-semantics): stable since v0.5; minor clarity improvements through v2.0.
 - **§6 federation**: structure stable since v0.6; capability tokens (§19) added in v0.9 drafts; mTLS (§22.1) and audit log (§22.3) added in v1.0-rc.
-- **§17 memory garden**: introduced in v0.9 drafts as concept; advanced ACL deferred per [ADR-002](../docs/adr/002-v1-scope.md) + [ADR-011](../docs/adr/011-cross-cutting-extraction.md) → `experimental/memory-garden-acl/spec.md`.
+- **§17 memory garden**: introduced in v0.9 drafts as concept; advanced ACL deferred per [ADR-002](../docs/adr/002-v1-scope.md) + [ADR-011](../docs/adr/011-cross-cutting-extraction.md) → `features/memory-garden-acl/spec.md`.
 - **§19–§25**: introduced in v2.0 (retracted-label snapshot); deferred to `experimental/<feature>/spec.md` per ADR-002.
 
 For per-section provenance, read the relevant snapshot at `spec/archive/evolution/`.

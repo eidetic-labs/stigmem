@@ -511,7 +511,13 @@ ADR-008 five-gate process.
 </div>
 
 <div>
-<dt>Multi-tenant isolation, OIDC SSO, async jobs, fuzzy resolver, billing hooks</dt>
+<dt>Multi-tenant isolation</dt>
+<dt><span className="stigmem-fields__type">Experimental, no Spec-X assigned</span></dt>
+<dd><code>features/multi-tenant/</code></dd>
+</div>
+
+<div>
+<dt>OIDC SSO, async jobs, fuzzy resolver, billing hooks</dt>
 <dt><span className="stigmem-fields__type">Experimental, no Spec-X assigned</span></dt>
 <dd><code>experimental/&lt;feature&gt;/STATUS.md</code></dd>
 </div>
@@ -545,14 +551,13 @@ observability, test helpers, benchmark coverage, entry-point package
 discovery, startup registration, operator inspection commands, and
 production signing/trust gates. Lazy instruction discovery,
 time-travel queries, RTBF tombstones, advanced Memory Garden ACLs,
-and source attestation have been extracted as opt-in experimental
-plugin source packages; signed/package artifact evidence remains
-deferred until the plugin launch train. The ADR-003 instruction-handling
+source attestation, and multi-tenant isolation have been extracted
+as opt-in experimental plugin source packages; signed/package
+artifact evidence remains deferred until the plugin launch train. The ADR-003 instruction-handling
 core is also present on `main`: `interpret_as`, `instruction:write`,
 instruction quarantine, channel-separated recall output, MCP/OpenClaw
 channel framing, instruction audit events, and same-session
-provenance controls. The remaining deferred feature plugin is
-multi-tenant isolation. Plugin authors can start from the
+provenance controls. Plugin authors can start from the
 [Plugin Author Guide](../guides/plugins/author-guide).
 
 See [LIMITATIONS.md §11 — v0.9.0a1 architecture in flight](https://github.com/eidetic-labs/stigmem/blob/main/LIMITATIONS.md)
@@ -564,7 +569,7 @@ The phase progression is in
 [ROADMAP.md](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md).
 
 <ol className="stigmem-steps">
-<li><strong>v0.9.0a2 through v0.9.0a8</strong> — incremental plugin extraction per ADR-011. Lazy instruction discovery, time-travel queries, RTBF tombstones, advanced Memory Garden ACLs, and source attestation are extracted on <code>main</code> as opt-in experimental source; remaining extraction work continues through multi-tenant. CIDs remain core.</li>
+<li><strong>v0.9.0a2 through v0.9.0a8</strong> — incremental plugin extraction per ADR-011. Lazy instruction discovery, time-travel queries, RTBF tombstones, advanced Memory Garden ACLs, source attestation, and multi-tenant isolation are extracted on <code>main</code> as opt-in experimental source. CIDs remain core.</li>
 <li><strong>Future hardened-core line</strong> — complete the remaining hardening evidence around the landed capability redesign, finish ADR-015 model-certification runner/results, federation hardening, OpenClaw audit closeout, storage immutability stack per ADR-016, 30-day external operator soak.</li>
 <li><strong>Future release-candidate and GA lines</strong> — Sigstore-signed releases, reproducible builds, SBOM, 3+ external operators in production. Wire format frozen.</li>
 </ol>

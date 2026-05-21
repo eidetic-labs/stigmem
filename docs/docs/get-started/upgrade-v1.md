@@ -66,8 +66,8 @@ for compatibility with the extracted multi-tenant plugin.
 </div>
 
 See
-[Multi-Tenancy](https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant)
-for the extracted plugin source package.
+[Multi-Tenancy](https://github.com/eidetic-labs/stigmem/tree/main/features/multi-tenant)
+for the feature record and extracted plugin source package.
 
 ### Billing hooks
 
@@ -250,7 +250,7 @@ critical.
 <small>Querying the per-principal write trail.</small>
 </a>
 
-<a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/multi-tenant">
+<a href="https://github.com/eidetic-labs/stigmem/tree/main/features/multi-tenant">
 <strong>Experimental</strong>
 <span>Multi-tenancy plugin</span>
 <small>Tenant isolation model — opt-in package.</small>

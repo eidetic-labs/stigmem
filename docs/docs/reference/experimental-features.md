@@ -157,7 +157,7 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 <div>
 <dt>Multi-tenant isolation</dt>
 <dt><span className="stigmem-fields__type">source-available</span></dt>
-<dd>Adds an opt-in tenant boundary above scopes through <code>stigmem-plugin-multi-tenant</code>; no Spec-X yet.</dd>
+<dd>Adds an opt-in tenant boundary above scopes through <code>stigmem-plugin-multi-tenant</code>; feature record: <a href="https://github.com/eidetic-labs/stigmem/tree/main/features/multi-tenant"><code>features/multi-tenant</code></a>; no Spec-X yet.</dd>
 </div>
 
 <div>

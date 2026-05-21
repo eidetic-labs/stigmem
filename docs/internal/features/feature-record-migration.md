@@ -123,6 +123,8 @@ Progress:
 - Protocol-bearing `0.9.xA` records for `memory-garden-acl`, `subscriptions`,
   `intent-envelope`, `decay`, `synthesis`, and `recall-graph` now own their
   Spec-X detail under `features/<feature>/`.
+- `multi-tenant` now owns opt-in tenant-scoping behavior, evidence, and
+  R-01/R-02/R-21 security contributions under `features/multi-tenant/`.
 
 ### Phase 3: Projection tooling
 

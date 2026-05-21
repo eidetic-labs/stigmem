@@ -85,7 +85,7 @@ pointers during migration.
 <div>
 <dt>Multi-tenant scoping</dt>
 <dt><span className="stigmem-fields__type">contributes to R-01, R-02, R-21</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/experimental/multi-tenant/security.md"><code>experimental/multi-tenant/security.md</code></a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/blob/main/features/multi-tenant/security.md"><code>features/multi-tenant/security.md</code></a></dd>
 </div>
 
 </div>

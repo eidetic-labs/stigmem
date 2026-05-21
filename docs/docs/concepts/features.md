@@ -24,7 +24,7 @@ expiry.
 
 <div className="stigmem-keypoint">
 
-**This page describes v0.9.0a1.**
+**This page describes v0.9.0a1 and the active alpha extraction line.**
 
 The canonical version line of stigmem begins at <code>v0.9.0a1</code>
 per [ADR-001](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/001-versioning.md)
@@ -33,9 +33,11 @@ Earlier version markers labeled internal development checkpoints, not
 tagged releases. Many features that earlier docs described as
 "Stable" were deferred per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md)
 — the v1 critical-path scope cut. Those features remain in the
-codebase under
-[`experimental/<feature>/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental),
-gated, off by default.
+codebase as opt-in or deferred surfaces. Migrated feature truth now lives in
+[`features/<feature>/`](https://github.com/eidetic-labs/stigmem/tree/main/features);
+implementation packages that still live under
+[`experimental/<feature>/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental)
+remain gated and off by default.
 
 </div>
 
@@ -64,13 +66,13 @@ gated, off by default.
 <div>
 <dt><strong>Experimental</strong></dt>
 <dt><span className="stigmem-fields__type">opt-in plugin</span></dt>
-<dd>Feature artifact lives under <code>experimental/&lt;feature&gt;/</code>; opt-in plugin extraction happens across the v0.9.0a2..a8 series per ADR-011; not in default install.</dd>
+<dd>Feature record lives under <code>features/&lt;feature&gt;/</code> once migrated; implementation may remain under <code>experimental/&lt;feature&gt;/</code>. Not in the default install.</dd>
 </div>
 
 <div>
 <dt><strong>Deferred</strong></dt>
 <dt><span className="stigmem-fields__type">non-critical-path</span></dt>
-<dd>Code exists but is not part of the v1 critical-path; lives in <code>experimental/</code> with <code>STATUS.md</code> per ADR-008.</dd>
+<dd>Feature is outside the v1 critical path; migrated rows point to <code>features/&lt;feature&gt;/status.md</code>, while unmigrated rows still use <code>experimental/&lt;feature&gt;/STATUS.md</code>.</dd>
 </div>
 
 </div>
@@ -425,11 +427,12 @@ Read the spec at
 
 ## Experimental & deferred features
 
-The following features are in the codebase under
-[`experimental/<feature>/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental)
-but **not in v0.9.0a1's default install**. Protocol-bearing deferred
-features have one colocated `Spec-XN-*` spec each; adapters, SDKs,
-deployments, dashboards, and tooling carry `STATUS.md` tracking.
+The following features are **not in v0.9.0a1's default install**. Migrated
+feature records own the product truth under
+[`features/<feature>/`](https://github.com/eidetic-labs/stigmem/tree/main/features).
+Implementation code may still live under `experimental/<feature>/`. Unmigrated
+future-alpha adapters, SDKs, deployments, dashboards, and tooling still carry
+`experimental/<surface>/STATUS.md` tracking.
 
 <div className="stigmem-keypoint">
 

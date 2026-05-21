@@ -128,7 +128,7 @@ Progress:
 
 ### Phase 3: Projection tooling
 
-Status: planned.
+Status: in progress.
 
 Projection candidates:
 
@@ -146,6 +146,15 @@ Exit criteria:
 - At least one projection is generated or mechanically checked.
 - Projection checks run in CI.
 - Manual projections include a freshness check or explicit review checklist.
+
+Progress:
+
+- `scripts/check_feature_projections.py` mechanically checks that migrated
+  feature records are represented in the public feature matrix and that
+  experimental/default-off migrated records are represented in the public
+  experimental feature index.
+- `scripts/check.sh docs` runs the feature projection check after validating
+  feature records.
 
 ### Phase 4: Strict validation
 

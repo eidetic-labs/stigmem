@@ -39,7 +39,7 @@ fly secrets set --app "$APP" \
   STIGMEM_OIDC_ALLOWED_DOMAINS="example.com"
 
 # 6. Deploy
-fly deploy --config deploy/fly/fly.toml --app "$APP"
+fly deploy --config experimental/deploy-fly/fly.toml --app "$APP"
 ```
 
 After deploy, check:
@@ -51,7 +51,7 @@ curl https://"$APP".fly.dev/healthz
 ## Subsequent deploys
 
 ```bash
-fly deploy --config deploy/fly/fly.toml --app "$APP"
+fly deploy --config experimental/deploy-fly/fly.toml --app "$APP"
 ```
 
 ## Turso / libSQL backend (recommended for multi-region)

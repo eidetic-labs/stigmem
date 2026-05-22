@@ -4,9 +4,9 @@
 # `fly launch` auto-detects workspace pyproject.toml and fails.
 #
 # Run from repo root:
-#   fly deploy --config deploy/fly/fly.toml --app <APP_NAME>
+#   fly deploy --config experimental/deploy-fly/fly.toml --app <APP_NAME>
 #
-# See deploy/fly/README.md for first-time setup steps.
+# See experimental/deploy-fly/README.md for first-time setup steps.
 #
 # Security posture (Phase 12):
 #   - Image runs as UID 65532 (non-root) — baked into node/Dockerfile.

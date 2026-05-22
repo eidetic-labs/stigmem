@@ -6,10 +6,10 @@
 # First-time setup (run from repo root):
 #   fly apps create <DASHBOARD_APP_NAME>
 #   fly secrets set --app <DASHBOARD_APP_NAME> SESSION_SECRET=... OIDC_CLIENT_SECRET=... ...
-#   fly deploy --config infra/fly.dashboard.toml --app <DASHBOARD_APP_NAME>
+#   fly deploy --config experimental/deploy-fly/fly.dashboard.toml --app <DASHBOARD_APP_NAME>
 #
 # Subsequent deploys:
-#   fly deploy --config infra/fly.dashboard.toml --app <DASHBOARD_APP_NAME>
+#   fly deploy --config experimental/deploy-fly/fly.dashboard.toml --app <DASHBOARD_APP_NAME>
 #
 # Required secrets (set via `fly secrets set`):
 #   SESSION_SECRET           (min 32 random chars)

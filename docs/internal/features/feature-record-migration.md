@@ -1,14 +1,14 @@
 # Feature Record Migration Plan
 
-**Status:** active
+**Status:** complete; retained as a maintenance control
 **Owner:** maintainers
 **ADR:** [ADR-020](../../adr/020-feature-owned-product-structure.md)
 **Last updated:** 2026-05-21
 
-This plan implements ADR-020 without putting migration sequencing into the ADR.
-The goal is to reduce documentation sprawl by moving feature-specific truth into
-uniform feature records and turning root, public, protocol, release, and
-security documents into hubs or projections.
+This plan implemented ADR-020 without putting migration sequencing into the
+ADR. The migration is complete for the current identified inventory: feature
+truth lives in uniform feature records, while root, public, protocol, release,
+and security documents act as hubs or projections.
 
 ## Goals
 
@@ -88,7 +88,7 @@ Progress:
 
 ### Phase 2: Inventory and migrate remaining feature families
 
-Status: in progress.
+Status: complete.
 
 Inventory sources:
 
@@ -133,6 +133,10 @@ Progress:
   M5/L5 security disposition references under `features/oidc-sso/`.
 - `storage-backends` now owns backend-selection behavior, adapter evidence, and
   R-04/R-08 storage security posture under `features/storage-backends/`.
+- Every identified non-deferred row in `docs/internal/feature-tracker.md` now
+  has a canonical feature record under `features/<feature>/`.
+- `billing` remains explicitly `deferred` as a future-gate business feature,
+  not a pending migration row.
 
 ### Phase 3: Projection tooling
 
@@ -183,7 +187,7 @@ Progress:
 
 ### Phase 4: Strict validation
 
-Status: in progress.
+Status: complete for the current inventory; ongoing for new work.
 
 Exit criteria:
 
@@ -259,6 +263,21 @@ Progress:
   `features/deploy-systemd/`; live distro validation, installer review,
   hardening review, upgrade/rollback, offline install, and ownership remain
   future alpha release-line gates.
+- `scripts/check_docs_drift.py` prevents reintroducing `pending` feature
+  inventory rows, stale deploy-path references, and retracted-release labels in
+  live docs outside approved historical posture files.
+
+## Maintenance Mode
+
+New feature work must choose one of three explicit states before merge:
+
+- Add a complete six-file feature record under `features/<feature>/` and mark
+  the inventory row `migrated`.
+- Mark the inventory row `deferred` with a clear future-gate reason.
+- Mark the inventory row `superseded` and point to the canonical replacement.
+
+Do not add new `pending` rows. A `pending` state was useful during migration,
+but after the initial inventory closure it reintroduces unclear ownership.
 
 ## Release Horizon Alignment
 
@@ -280,6 +299,7 @@ The migration should follow the release horizon, not overwrite it.
    hub documents.
 5. Convert security and changelog summaries to pull from feature records.
 6. Migrate remaining feature families and remove transition exceptions.
+7. Close the migration inventory and enforce maintenance-mode drift checks.
 
 Each PR should describe the canonical owner being introduced or changed. PR and
 commit text should avoid blame language; describe the structural correction and

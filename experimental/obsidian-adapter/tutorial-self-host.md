@@ -64,7 +64,7 @@ fly secrets set --app "$APP" \
   STIGMEM_NODE_URL="https://$APP.fly.dev"
 
 # 5. Deploy (~3 min; Fly's remote builder handles the image)
-fly deploy --config deploy/fly/fly.toml --app "$APP"
+fly deploy --config experimental/deploy-fly/fly.toml --app "$APP"
 ```
 
 The deploy compiles the Docker image on Fly's remote builder, pushes it, and starts the Machine. Typical wall-clock time:

@@ -92,9 +92,9 @@ See [`SECURITY.md`](https://github.com/eidetic-labs/stigmem/blob/main/SECURITY.m
 </div>
 
 <div>
-<dt><code>1.0.0rc1</code></dt>
+<dt><code>retracted pre-reset label</code></dt>
 <dt><span className="stigmem-fields__type">no (retracted)</span></dt>
-<dd>Yanked from PyPI.</dd>
+<dd>Retracted label; no PyPI artifact was published.</dd>
 </div>
 
 <div>

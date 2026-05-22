@@ -413,7 +413,7 @@ features:
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Deferred to experimental/time-travel/. Targeted v0.9.0a4."
+    notes: "Active v0.9.0a4 validation: opt-in plugin source, explicit operator gates, default fail-closed behavior."
 
   - id: tombstones
     name: RTBF tombstones

@@ -521,7 +521,10 @@ CID-based deduplication is automatic.
 
 ### Time-travel queries (§24)
 
-The `as_of` parameter is available on the fact query and recall endpoints via the REST API. Use the HTTP client directly:
+The experimental `as_of` parameter is available on the fact query and recall
+endpoints only when `stigmem-plugin-time-travel` is registered and the
+corresponding operator gate is enabled. Default installs fail closed. Use the
+HTTP client directly:
 
 ```ts
 const res = await fetch(

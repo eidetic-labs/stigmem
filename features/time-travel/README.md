@@ -28,7 +28,9 @@ release_lines:
 Time-travel queries allow fact and recall reads at a caller-supplied historical
 timestamp through the `as_of` parameter. The feature is implemented as the
 opt-in `stigmem-plugin-time-travel` source package. Default installs fail
-closed when `as_of` is supplied without the plugin.
+closed when `as_of` is supplied without the plugin; registered plugin installs
+still require explicit operator gates before fact-query or recall `as_of`
+surfaces run.
 
 This feature remains experimental. The feature record owns the long-term spec,
 status, evidence, security analysis, and change history. The legacy
@@ -53,8 +55,8 @@ and now links to this record for canonical product truth.
 | Plugin package | `experimental/time-travel/` | Source package, manifest, config schema, and hook handlers. |
 | Plugin manifest | `experimental/time-travel/src/stigmem_plugin_time_travel/manifest.py` | Declares package name, capabilities, hooks, and config schema. |
 | Plugin config | `experimental/time-travel/src/stigmem_plugin_time_travel/config.py` | Defaults historical reads off until explicitly enabled. |
-| Core fail-closed behavior | `node/src/stigmem_node/routes/facts/query.py`; `node/src/stigmem_node/routes/recall/orchestration.py` | Rejects `as_of` without the plugin. |
-| Historical read implementation | `node/src/stigmem_node/routes/recall/as_of.py` and fact query helpers | Preserves alpha validation behavior when plugin-loaded. |
+| Core fail-closed behavior | `node/src/stigmem_node/routes/time_travel_gate.py`; `node/src/stigmem_node/routes/facts/query.py`; `node/src/stigmem_node/routes/recall/orchestration.py` | Rejects `as_of` without the plugin or without explicit surface gates. |
+| Historical read implementation | `node/src/stigmem_node/routes/recall/as_of.py` and fact query helpers | Validates a4 timestamp, retention, retraction, expiry, CID, tombstone, legal-hold, and recall-scoring behavior when enabled. |
 
 ## Feature Files
 

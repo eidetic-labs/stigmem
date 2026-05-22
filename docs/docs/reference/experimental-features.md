@@ -99,7 +99,7 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 <div>
 <dt>Time-travel queries · <a href="../spec/experimental/time-travel-queries.md">Spec-X3</a></dt>
 <dt><span className="stigmem-fields__type">extracted · ADR-008 blocked</span></dt>
-<dd>Default installs reject <code>as_of</code> fail-closed; plugin-loaded validation covers fact query, recall, hook ordering, and plugin-required conformance.</dd>
+<dd>Default installs reject <code>as_of</code> fail-closed; registered plugins require explicit operator gates; a4 validation covers fact query, recall, tombstone/legal-hold safety, CID interaction, hook ordering, and plugin-required conformance.</dd>
 </div>
 
 <div>

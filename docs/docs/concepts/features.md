@@ -539,7 +539,7 @@ ADR-008 five-gate process.
 
 <div>
 <dt>Time-travel <code>as_of</code> queries</dt>
-<dt><span className="stigmem-fields__type">opt-in plugin source on main; default fails closed on <code>as_of</code></span></dt>
+<dt><span className="stigmem-fields__type">opt-in plugin source on main; explicit operator gates; default fails closed on <code>as_of</code></span></dt>
 <dd>Spec-X3-Time-Travel-Queries</dd>
 </div>
 

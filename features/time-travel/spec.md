@@ -2,8 +2,8 @@
 spec_id: Spec-X3-Time-Travel-Queries
 version: 0.1.0-alpha.0
 status: Experimental
-applies_to: future experimental plugin line
-last_updated: 2026-05-21
+applies_to: v0.9.0a4 alpha plugin-validation line
+last_updated: 2026-05-22
 supersedes: pre-reset section 24 time-travel/as-of query material
 depends_on:
   - Spec-01-Fact-Model >= 0.1.0-alpha.0
@@ -18,8 +18,9 @@ This feature spec owns time-travel query semantics for ADR-020. The
 compatibility file at `experimental/time-travel/spec.md` links here while the
 implementation package remains under `experimental/time-travel/`.
 
-The feature is experimental and opt-in. Default installs MUST reject `as_of`
-requests unless `stigmem-plugin-time-travel` is registered.
+The feature is experimental and opt-in for `v0.9.0a4`. Default installs MUST
+reject `as_of` requests unless `stigmem-plugin-time-travel` is registered and
+the relevant operator gate is explicitly enabled.
 
 ## Scope
 
@@ -63,7 +64,8 @@ The timestamp MUST be:
 - not older than the configured retention floor.
 
 Default installs that receive `as_of` MUST fail closed with
-`time_travel_plugin_not_loaded`.
+`time_travel_plugin_not_loaded`. Registered plugins whose operator gates remain
+disabled MUST fail closed with `time_travel_plugin_disabled`.
 
 ## Tombstone Interaction
 
@@ -108,6 +110,7 @@ reporting. They follow the same tombstone and legal-hold visibility rules.
 | 400 | `as_of_invalid_timestamp` | `as_of` is not a valid ISO 8601 timestamp. |
 | 400 | `as_of_future` | `as_of` is in the future. |
 | 400 | `as_of_before_retention_floor` | `as_of` predates the deployment retention floor. |
+| 403 | `time_travel_plugin_disabled` | Plugin is registered but the requested `as_of` surface is not enabled by operator configuration. |
 | 403 | `as_of_legal_hold_forbidden` | Admin legal-hold historical access is denied by deployment policy. |
 | 501 | `time_travel_plugin_not_loaded` | Default install received `as_of` without the plugin. |
 

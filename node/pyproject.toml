@@ -9,6 +9,7 @@ authors = [{ name = "Eidetic Labs", email = "oss@eidetic-labs.ai" }]
 
 dependencies = [
     "fastapi>=0.115",
+    "starlette>=1.0.1",
     "uvicorn[standard]>=0.34",
     "pydantic>=2.11",
     "pydantic-settings>=2.0",

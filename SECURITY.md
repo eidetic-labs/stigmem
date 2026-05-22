@@ -110,6 +110,10 @@ The release also closes R-18 for the time-travel boundary: federation ingest
 rejects `valid_until` extension attempts and records
 `federation_valid_until_extension_rejected` audit events with the stored and
 incoming values.
+Maintainer audit finding NF-A1 / PYSEC-2026-161 was triaged before a4
+publication and remediated in-tree by requiring `starlette>=1.0.1` for
+`stigmem-node` and refreshing the locked Starlette artifact from `1.0.0` to
+`1.0.1`. No vulnerable a4 artifact was published before this remediation.
 
 The standing publication policy remains: Critical and High vulnerabilities that
 affect supported published artifacts are handled through GHSA where applicable

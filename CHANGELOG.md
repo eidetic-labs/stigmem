@@ -54,6 +54,9 @@ opt-in, and operator-gated.
 - Removed orphan `retention_floor` configuration from the time-travel plugin;
   retention floor remains a single core setting
   (`STIGMEM_AS_OF_RETENTION_FLOOR`).
+- Remediated maintainer-audit finding NF-A1 / PYSEC-2026-161 before a4
+  publication by adding an explicit `starlette>=1.0.1` node dependency floor
+  and refreshing `uv.lock` from `starlette 1.0.0` to `1.0.1`.
 - Retained the standing advisory publication policy: Critical and High
   vulnerabilities use GHSA where applicable after a patched artifact is
   available; Medium and Low findings remain in `SECURITY.md` unless a

@@ -80,6 +80,12 @@ These adapters translate Stigmem's tools into the native function-calling format
 <dd>For local models. <a href="https://github.com/eidetic-labs/stigmem/tree/main/features/ollama-litellm-adapter">features/ollama-litellm-adapter</a></dd>
 </div>
 
+<div>
+<dt>OpenAI tools</dt>
+<dt><span className="stigmem-fields__type">OpenAI-compatible tool-use</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/openai-tools-adapter">features/openai-tools-adapter</a></dd>
+</div>
+
 </div>
 
 ## Agent platform adapters

@@ -321,9 +321,12 @@ def _tombstone_plugin_manifest() -> PluginManifest:
 
 @pytest.fixture()
 def time_travel_client(
-    tmp_db: str, backend: str, encrypt: str
+    tmp_db: str, backend: str, encrypt: str, monkeypatch: pytest.MonkeyPatch
 ) -> Generator[TestClient, None, None]:
     """TestClient with the experimental time-travel plugin registered."""
+    monkeypatch.setenv("STIGMEM_TIME_TRAVEL_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_TIME_TRAVEL_ALLOW_FACT_QUERY_AS_OF", "true")
+    monkeypatch.setenv("STIGMEM_TIME_TRAVEL_ALLOW_RECALL_AS_OF", "true")
     original = settings_module.settings
     test_settings = _make_enc_settings(
         tmp_db, backend, encrypt, auth_required=False, node_url="http://testnode"

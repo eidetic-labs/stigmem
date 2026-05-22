@@ -195,8 +195,13 @@ def p13_client_with_db(tmp_path) -> Generator[tuple[TestClient, str], None, None
 
 
 @pytest.fixture()
-def p13_time_travel_client(tmp_path) -> Generator[TestClient, None, None]:
+def p13_time_travel_client(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> Generator[TestClient, None, None]:
     """Unauthenticated TestClient with the experimental time-travel plugin loaded."""
+    monkeypatch.setenv("STIGMEM_TIME_TRAVEL_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_TIME_TRAVEL_ALLOW_FACT_QUERY_AS_OF", "true")
+    monkeypatch.setenv("STIGMEM_TIME_TRAVEL_ALLOW_RECALL_AS_OF", "true")
     db_file = str(tmp_path / "p13_time_travel.db")
     apply_migrations(db_path=db_file)
     original = settings_module.settings

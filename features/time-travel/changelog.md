@@ -8,6 +8,8 @@ user/operator-facing entries are promoted into the root `CHANGELOG.md`.
 - Added ADR-020 feature record and made this directory the canonical feature
   home for time-travel spec, status, evidence, security, and feature-local
   history.
+- Tightened the plugin boundary so registered time-travel plugins still require
+  explicit operator enablement for fact-query and recall `as_of` surfaces.
 
 ## Post-v0.9.0a1 Main
 

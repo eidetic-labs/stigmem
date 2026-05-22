@@ -3,7 +3,7 @@
 > Public roadmap for stigmem. Milestone-gated, not time-gated — version lines complete when their exit criteria are met.
 >
 > **Current published build:** v0.9.0a2. **Active release horizon:** v0.9.0a3 only (per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
-> **Last updated:** 2026-05-20.
+> **Last updated:** 2026-05-22.
 
 ---
 
@@ -33,39 +33,19 @@ The work is organized into sequential version lines per [ADR-019](docs/adr/019-a
 
 ---
 
-## `v0.9.0aN` — alpha series
+## Current Strategic Horizon
 
-**Status:** Phase A plugin extraction and exit validation are complete on `main`. Source-side OpenClaw/ClawHub alpha framing corrections have landed for the next artifact refresh. Plugin package publication evidence is intentionally deferred until the plugin launch train; it remains tracked in [#298](https://github.com/eidetic-labs/stigmem/issues/298) and is not a v0.9.0a2 blocker.
+`v0.9.0a3` is the only active release horizon. It carries active
+release-planning cleanup, alpha artifact/evidence decisions, and any public docs
+corrections needed before the next alpha tag. The active release contract lives
+in [`docs/internal/releases/v0.9.0a3-roadmap.md`](docs/internal/releases/v0.9.0a3-roadmap.md).
 
-### Entry criteria
-- [x] Pre-flight contributor decisions complete
-- [x] [ADR-001](docs/adr/001-versioning.md), [ADR-002](docs/adr/002-v1-scope.md), [ADR-008](docs/adr/008-experimental-gates.md), [ADR-011](docs/adr/011-cross-cutting-extraction.md) accepted
+The broader alpha deployment sequence remains intact. The detailed alpha-series
+phase plan, including the `v0.9.0a4` through `v0.9.0a8` planned extraction
+horizons and Phase A exit evidence, lives in
+[`docs/internal/releases/v0.9.0-alpha-series-roadmap.md`](docs/internal/releases/v0.9.0-alpha-series-roadmap.md).
 
-### Work
-- [x] **Version reset and first public artifacts** — v0.9.0a1 published as the first build; earlier version markers reclassified as internal development checkpoints.
-- [x] **Public retraction and posture calibration** — retraction post is live; README, SECURITY, LIMITATIONS, roadmap, and docs site now describe the alpha posture instead of the withdrawn v1.0 claim.
-- [x] **Docs information architecture** — docs site follows ADR-005's Learn / Build / Operate / Secure structure.
-- [x] **Deferred-feature layout** — out-of-scope features live under `experimental/` per ADR-009; CIDs remain core per ADR-017.
-- [x] **Hook registry foundation** — main now includes the stable 22-hook registry surface, typed voting/filter-chain/score-delta/fire-and-forget semantics, deterministic manual/core registration, minimum `PluginManifest` / `PluginContext` / capability APIs, hook-site wiring across assertion/recall/federation/auth/migration/audit paths, registry audit/metrics plumbing, test registry helpers, and the hook-firing benchmark gate. This work landed after the v0.9.0a1 artifacts and is queued for the next alpha artifact refresh.
-- [x] **Plugin infrastructure operationalization** — package discovery, plugin dependency lifecycle, health polling, operator CLI, production signing/trust, plugin author/operator documentation, and plugin migration lifecycle/checksum tracking have landed on `main` after v0.9.0a1 and are queued for the next alpha artifact refresh.
-- [x] **Modular spec migration** — the monolithic spec has been decomposed into component specs and experimental `Spec-X*` specs with the public docs navigator reflecting the split. Follow-on spec evolution remains ongoing, but ADR-010's structural migration is no longer a future-release blocker.
-- [x] **CID core/spec validation** — content-addressed fact IDs remain core per ADR-017. Main includes CID computation, write-path persistence, alias lookup, verify endpoint, backfill status/CLI, migration support, tests, and conformance vectors; no `stigmem-plugin-cids` package exists or is planned.
-- [x] **Per-feature plugin extraction** — lazy instruction discovery, time-travel queries, RTBF tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation have been extracted on `main` as opt-in experimental plugin source packages. Signed/package artifact evidence remains deferred until all planned plugins are built ([#298](https://github.com/eidetic-labs/stigmem/issues/298)). CIDs remain core.
-- [x] **Phase A exit validation** — validated the complete extraction set, default-install behavior, plugin docs/trust posture, and roadmap/checklist closeout after the multi-tenant plugin landed ([#432](https://github.com/eidetic-labs/stigmem/issues/432)). Deferred signed/package artifact evidence remains tracked in [#298](https://github.com/eidetic-labs/stigmem/issues/298).
-- [x] **Federation audit retention/observability** — verified persistent federation audit storage, endpoint tests, implemented federation metrics, and corrected public docs so retention and observability claims match code-backed behavior ([#435](https://github.com/eidetic-labs/stigmem/issues/435)).
-- [ ] **v0.9.0a2 artifact refresh** — publish the next alpha artifacts and capture release evidence for the core packages, SDKs, OpenClaw adapter, docs, and GHCR surfaces. Plugin artifact publication evidence is deferred until the plugin launch train because there is no released plugin artifact to attest yet; [#298](https://github.com/eidetic-labs/stigmem/issues/298) stays open for that later evidence. Source-prep work for packaged READMEs, npm dist-tag convention, ClawHub naming/versioning notes, GHCR tag policy, Python SDK version literals, wheel migration packaging, and lint/coverage/complexity ratchets has landed or moved into the normal release gates.
-- [x] **ClawHub/OpenClaw alpha-framing correction** — next-alpha source copy now frames OpenClaw as alpha/evaluation-only; the historical a1 package is not revised retroactively. Remaining OpenClaw audit hardening stays visible in the alpha/beta hardening lane. Closed by [#169](https://github.com/eidetic-labs/stigmem/issues/169).
-- [x] **OpenClaw audit planning for a2..aN** — OpenClaw hardening remains visible in the alpha/beta lane without claiming the a1 ClawHub package closed C1-C4 or H1/H2/H5. Source/docs now point operators to the experimental/evaluation posture and the remaining certification/operator-validation lane.
-- [x] **Docs/spec cleanup** — normalized rendered Spec-X status/source language, added experimental spec stability/since metadata validation, restored Security Model under the Secure sidebar, calibrated stale upgrade copy, and wired redirects for archived duplicate/snapshot entry points ([#433](https://github.com/eidetic-labs/stigmem/issues/433)).
-- [x] **Dogfood disposition** — genericized dogfood-derived scripts are in `scripts/`, operator-facing docs reference their public paths, the historical tokenomics post is preserved under `archive/`, and the obsolete `dogfood/` tree is absent ([#434](https://github.com/eidetic-labs/stigmem/issues/434)).
-
-### Alpha deployment horizon
-
-The alpha line remains the near-term deployment sequence. `v0.9.0a3` is the
-only active release milestone; later alpha entries below are planned horizons
-that stay closed until their predecessor evidence is complete.
-
-| Release horizon | Deployment goal | Milestone state |
+| Horizon | Strategic purpose | Status |
 |---|---|---|
 | `v0.9.0a3` | CID core/spec validation and the next alpha artifact refresh. | Active |
 | `v0.9.0a4` | Time-travel query extraction into an opt-in experimental plugin; default `as_of` behavior fails closed without plugin registration. | Planned, not open |
@@ -74,127 +54,28 @@ that stay closed until their predecessor evidence is complete.
 | `v0.9.0a7` | Source-attestation extraction into an opt-in experimental plugin. | Planned, not open |
 | `v0.9.0a8` | Multi-tenant isolation extraction into an opt-in experimental plugin, completing the planned alpha extraction train. | Planned, not open |
 
-### Exit criteria
-- Public retraction visible.
-- Repo top-level matches ADR-009 shape (~22 entries; `experimental/` is canonical home for deferred features).
-- Hook registry foundation shipped, and remaining plugin infrastructure operationalized per ADR-011: package discovery/lifecycle, dependency resolution, health polling, operator CLI, production signing/trust, author/operator docs, and plugin migration lifecycle tracking.
-- All six cross-cutting features implemented as plugins under `experimental/<feature>/`; CIDs remain core per ADR-017. Core has no remaining default-on deferred plugin behavior outside the hook registry, plugin infrastructure, CIDs, and intentional storage compatibility/migration surfaces.
-- Default install (no plugins registered) produces v1.0.0-critical-path behavior.
-- Multi-tenant adopters opt into `stigmem-plugin-multi-tenant`.
-- All 19 ADRs committed to `docs/adr/`.
-- Threat model and scenarios calibrated to v0.9.0a1 posture.
-- `make demo` works on a clean machine.
-- Per-hook firing benchmarks within budget (<10μs per hook).
+---
 
-### Phase A exit evidence
+## Future Horizon
 
-- Plugin infrastructure is present on `main` with the stable hook registry, typed plugin manifest/context/capability APIs, discovery/lifecycle/health/signing/CLI surfaces, migration registration, observability, and test helpers.
-- Source packages now exist under `experimental/` for all six ADR-011 cross-cutting features: lazy instruction discovery, time-travel, RTBF tombstones, memory-garden advanced ACL, source attestation, and multi-tenant isolation.
-- Default installs do not register those plugins. Default behavior remains the v1.0.0 critical path: single-tenant `default` partitioning, no tombstone filtering/routes, no time-travel recall authorization, no advanced garden ACL, no source-attestation enforcement, and no lazy instruction discovery.
-- Plugin-loaded tests cover each feature boundary, including multi-tenant isolation and default single-tenant collapse after [#431](https://github.com/eidetic-labs/stigmem/issues/431).
-- Docs/spec cleanup now keeps rendered experimental specs honest: Spec-X pages identify themselves as experimental, include stability/since metadata, and no longer point at stale v1.0/pre-reset files as authoritative sources.
-- Signed/package artifact launch evidence is intentionally not a Phase A blocker and remains tracked in [#298](https://github.com/eidetic-labs/stigmem/issues/298) until all planned plugins are built.
+Future beta, release-candidate, GA, and post-GA expansion work remains
+milestone-gated. The detailed workstreams have been moved out of the public
+roadmap and into internal future-horizon release docs:
+
+| Horizon | Detailed plan | Gate |
+|---|---|---|
+| Future hardened core | [`docs/internal/releases/future-hardened-core-roadmap.md`](docs/internal/releases/future-hardened-core-roadmap.md) | Opens only after alpha exit evidence supports it. |
+| Future release-candidate and GA | [`docs/internal/releases/future-rc-ga-roadmap.md`](docs/internal/releases/future-rc-ga-roadmap.md) | Opens only after hardened-core exit and a later RC observation window. |
+| Post-GA expansion | [`docs/internal/releases/post-ga-expansion-roadmap.md`](docs/internal/releases/post-ga-expansion-roadmap.md) | Starts only after stable `v1.0.0` ships. |
 
 ---
 
-## Future beta line — hardened core, with operator validation
+## Experimental Extraction and Graduation
 
-**Status:** not an active release milestone. Several hardened-core slices have
-landed on `main` during the alpha series, but this section is a future gate,
-not a current beta release plan. The next active release horizon remains
-v0.9.0a3.
-
-### Landed on `main`
-
-- OpenClaw safety hardening now has fail-closed startup behavior, visible
-  partial-write failures, channel-separated recall handling, and bounded
-  handoff-target allowlisting. Audit-mapped C1-C4/H1-H5 regression coverage
-  lives in `adapters/openclaw/tests/test_adapter_security.py`, and the ClawHub
-  skill adapter is now a compatibility re-export of the packaged adapter.
-- The ADR-003 capability redesign has landed for the core protocol surfaces:
-  `FactValue.interpret_as`, `instruction:write` enforcement, instruction-typed
-  federation quarantine, channel-separated `recall()` output, MCP/OpenClaw
-  channel framing, instruction promotion/quarantine audit events, and
-  same-session read/write provenance controls. R-21's remaining structural
-  gap has also landed: supported Python/TypeScript/MCP/OpenClaw surfaces
-  propagate sessions and provenance, and outbound federation pull excludes
-  provenance-derived facts.
-- Protocol-level adversarial vectors are in
-  `data/conformance/adversarial/protocol/` and are part of the blocking
-  conformance gate.
-- The ADR-015 consumer-layer `corpus-v1` prompt-injection corpus now contains
-  80 validated patterns across 10 categories, with validation wired into the
-  eval-fast CI path.
-- The first ADR-015 certification harness slice exists at
-  `scripts/run_adversarial_conformance.py`. It provides a deterministic offline
-  provider, auditable rubric, result JSON schema, tier calculation, and result
-  output path. The runner now includes OpenAI, Anthropic, and local Ollama
-  provider adapters. The public reviewed-results index now exists at
-  `data/conformance/adversarial/results/index.json` with CI validation and
-  scheduled re-run posture; provider-backed live result rows remain pending.
-
-### Work (sub-work ordering matters)
-
-1. **Finish capability-redesign documentation and threat-model closure** per
-   [ADR-003](docs/adr/003-prompt-injection.md) — R-05 is now in review after
-   ADR-003/ADR-015 infrastructure landed, R-15 has the TB-3 adapter-promotion
-   threat row, and R-21 is in review after same-session controls, supported
-   adapter/session propagation, and outbound replication exclusion landed.
-2. **Complete ADR-015 certification framework** per
-   [ADR-015](docs/adr/015-adversarial-conformance-and-model-certification.md) —
-   the 80-pattern corpus, runner/result schema, and OpenAI/Anthropic/Ollama
-   provider adapters exist; result-index validation and re-run posture are in
-   place; remaining work is credentialed/provider-backed live certification and
-   publication of reviewed result rows
-   ([#398](https://github.com/eidetic-labs/stigmem/issues/398)).
-3. **Storage immutability stack** per [ADR-016](docs/adr/016-storage-immutability-enforcement.md) — L1 architectural append-only journal + projection tables has landed with projection schema, local-assert journal writes, embedding-status projection, zero remaining direct `facts` mutations in the tracked inventory, and read paths joined to validity/garden/quarantine/CID projections; L2 SQLite triggers now reject `UPDATE`/`DELETE` attempts on `facts` and preserve `fact_mutation_attempted` audit rows; L3 CIDs (per [ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)) are computed on fact writes, recorded in `fact_cid_aliases`, and verified on direct fact reads, fact queries, and recall hydration with `409 cid_mismatch` on tampering; L4 local hash-chain entries are recorded for local fact inserts and can be verified for sequence/link tampering; L5 checkpoint storage now queues/submits chain-head checkpoints through the transparency-log abstraction and exposes checkpoint metadata in full recall proofs; client/peer verification now includes Python SDK CID/chain-proof helpers, inbound federation CID rejection/persistence, and full-verification pull requests; operator hardening docs now cover the R-23 mitigation stack, WORM evidence storage, and TEE deployment options.
-4. **Per-feature security colocation** per [ADR-018](docs/adr/018-security-documentation-colocation.md).
-5. **Federation hardening** — mTLS-default; HLC bounded skew; persistent audit log (90-day retention); per-principal token-bucket quotas; key max-age + rotation runbook. mTLS compose smoke automation ([#425](https://github.com/eidetic-labs/stigmem/issues/425)), audit retention/observability ([#435](https://github.com/eidetic-labs/stigmem/issues/435)), and API-key lifecycle/rotation controls ([#436](https://github.com/eidetic-labs/stigmem/issues/436)) are complete.
-6. **Argon2id migration** per [ADR-007](docs/adr/007-argon2id.md) — dual-mode verification; opportunistic re-hash; benchmarks.
-7. **Operator-facing documentation** — runbooks, observability signals per [ADR-004](docs/adr/004-federation-observability.md), prompt-injection hardening guide.
-8. **Best-practice and quality gates** — internal best-practice docs, dependency-currency reporting, generated-file markers, file-size CI, stale internal-link linting, pytest `security`/`experimental` markers, root auto-marker assignment, major-version hold register, and branch/publish verification are queued in [#437](https://github.com/eidetic-labs/stigmem/issues/437). Follow-on dependency upgrade execution remains tracked separately from the gate adoption work.
-9. **Contributor and demo readiness** — `make demo` / `make demo-attack`, contributor architecture path, issue templates, engineering log, and good-first issue tagging are being completed in [#438](https://github.com/eidetic-labs/stigmem/issues/438).
-10. **30-day external operator soak** — at least one external operator runs against the hardened core with public bug reporting; operator validation and hardened-core exit evidence are tracked in [#439](https://github.com/eidetic-labs/stigmem/issues/439). The evidence framework lives in the operator validation soak guide; the actual 30-day run remains open until an external operator completes it.
-
-### Exit criteria
-- Threat-model risk register has no Open status entries for v1.0.0-critical-path risks.
-- OpenClaw audit findings all show Closed status.
-- 30-day external operator soak completes; all P0 findings addressed.
-- First release-candidate line is justified by evidence and ready to open as a separate milestone.
-
----
-
-## Future release-candidate and GA lines
-
-**Status:** not active. Entry is blocked on hardened-core exit and a later
-release-candidate observation window. Do not create RC or GA milestones until
-the release-candidate line is explicitly opened.
-
-### Work
-- Sigstore-signed releases, reproducible-source evidence, SBOM publication, and Rekor/operator verification evidence ([#440](https://github.com/eidetic-labs/stigmem/issues/440)). The publish workflow now signs GHCR images keylessly, attaches SBOM and BuildKit provenance evidence, publishes npm/PyPI provenance, and documents operator verification commands.
-- 3+ external organizations running stigmem with pairwise federation and public external-review/bug-bounty posture ([#441](https://github.com/eidetic-labs/stigmem/issues/441)).
-- Wire-format freeze; backwards compatibility committed within v1.x ([#442](https://github.com/eidetic-labs/stigmem/issues/442)).
-
-### Exit criteria
-- v1.0.0 stable shipped.
-- Wire format committed.
-- Compatibility commitment doc per [ADR-013](docs/adr/013-deprecation-policy.md) honored across the v1.x line.
-
----
-
-## `v1.x.y` — post-GA expansion
-
-**Status:** not started. Entry blocked on v1.0.0 GA shipping.
-
-### Work
-- Experimental features graduate into the supported surface via [ADR-008](docs/adr/008-experimental-gates.md) reintroduction gates (each gate produces a concrete artifact: threat-model delta, ADR, conformance vectors, 30-day soak, documentation parity). Cross-cutting features remain opt-in plugins per ADR-011 unless a future ADR explicitly changes that boundary. Post-GA plugin stewardship is tracked in [#443](https://github.com/eidetic-labs/stigmem/issues/443).
-- Multi-tenant remains a plugin (`stigmem-plugin-multi-tenant`); the cross-cutting plugin shape per ADR-011 is the permanent home, not a stop on the path to core. Adopters who need multi-tenancy install the plugin explicitly.
-- Modular spec evolution.
-- Plugin ecosystem matures; third-party plugins become first-class.
-- Cross-phase source/test layout hygiene is complete via [#444](https://github.com/eidetic-labs/stigmem/issues/444): the node test-layout slice landed in [#465](https://github.com/eidetic-labs/stigmem/issues/465), observability/utility leaf-module flattening in [#467](https://github.com/eidetic-labs/stigmem/issues/467), federation/networking leaf-module flattening in [#471](https://github.com/eidetic-labs/stigmem/issues/471), lifecycle/deletion helper flattening in [#473](https://github.com/eidetic-labs/stigmem/issues/473), and recall/graph helper flattening in [#475](https://github.com/eidetic-labs/stigmem/issues/475). Dependency/security evidence maintenance remains an ongoing release responsibility ([#445](https://github.com/eidetic-labs/stigmem/issues/445)). The owner/trigger map lives in `docs/internal/evidence-maintenance.md` and is mechanically checked by `make check-evidence-maintenance`.
-
-### Exit criteria
-- None defined; this is the project's steady state.
+Alpha extraction and ADR-008 graduation are distinct lifecycle events. The
+detailed process, worked example, five-gate graduation checklist, and founder
+review checklist live in
+[`docs/internal/releases/alpha-extraction-and-graduation.md`](docs/internal/releases/alpha-extraction-and-graduation.md).
 
 ---
 
@@ -259,86 +140,6 @@ their frontmatter.
 | `Spec-X9-Decay-Semantics` | Decay semantics | `features/decay/spec.md` | Legacy section 15 |
 | `Spec-X10-Synthesis` | Synthesis | `features/synthesis/spec.md` | Legacy section 16 |
 | `Spec-X11-Recall-Graph` | Advanced recall graph | `features/recall-graph/spec.md` | Legacy section 20 advanced material |
-
----
-
-## Experimental extraction vs. graduation
-
-The alpha series and ADR-008 describe two different moves:
-
-- **Alpha extraction (`v0.9.0aN`)** moves feature-specific code and spec text out of core and into opt-in experimental plugin packages. This preserves the v1.0.0 default-install scope while making the experimental feature easier to test. It does **not** make the feature supported, stable, or default-on.
-- **ADR-008 graduation (`v1.x.y`, post-GA)** promotes an experimental feature into the supported surface after the five reintroduction gates pass. For cross-cutting features, the plugin remains a plugin; graduation changes its support/trust tier, not its architectural home.
-
-### Alpha extraction process
-
-During the alpha series, a feature can be extracted into an opt-in experimental plugin when the extraction preserves default-install behavior and the package is clearly marked as experimental.
-
-Required extraction artifacts:
-
-| Artifact | Purpose |
-|---|---|
-| Plugin package | `stigmem-plugin-<feature>` package with manifest, hook registrations, and tests |
-| Spec placement | `experimental/<feature>/spec.md` remains the authoritative experimental spec text |
-| Status file | `experimental/<feature>/STATUS.md` records extraction status, known gaps, and ADR-008 gate status |
-| Compatibility note | Docs state that the plugin is opt-in, experimental, and not part of the stable/default surface |
-| Changelog entry | Records the extraction and any migration instructions for existing alpha users |
-
-Extraction should include targeted tests for the plugin boundary and default-install no-op behavior. It does not require the ADR-008 30-day soak.
-
-### ADR-008 graduation process
-
-When does a spec move from `Spec-X*` (experimental) toward `Spec-NN` (supported/core spec)?
-
-Per [ADR-008](docs/adr/008-experimental-gates.md): **all five gates pass.** Each gate produces a concrete artifact; only after the founder (or two contributors per ADR-001 §Contributor approval rule) signs off on all five does the feature graduate into the supported surface.
-
-### The five gates
-
-| # | Gate | Artifact |
-|---|---|---|
-| 1 | Threat-model delta | `experimental/<feature>/security.md` per ADR-018, merged into `spec/security/threat-model.md` |
-| 2 | ADR drafted and merged | `docs/adr/NNN-<feature>.md` |
-| 3 | Conformance vectors | `data/conformance/<feature>/` including adversarial cases |
-| 4 | 30-day external operator soak | LOG.md entry in this repo with at least one closed issue tagged `<feature>-soak-finding` |
-| 5 | Documentation parity | Pages across all four tabs (Learn / Build / Operate / Secure) per [ADR-005](docs/adr/005-docs-ia.md) |
-
-Order matters per ADR-008: 1 before 2, 3 before 4, 5 last. Skipping requires explicit two-contributor sign-off recorded in the feature's ADR.
-
-### What changes during alpha extraction (worked example)
-
-Using `Spec-X1-Lazy-Instruction-Discovery` as the worked case:
-
-| Surface | Before extraction (v0.9.0a1) | After extraction on `main`, before plugin artifact launch |
-|---|---|---|
-| Spec content | `experimental/lazy-instruction-discovery/spec.md` (Spec-X1) | Remains experimental under `experimental/lazy-instruction-discovery/spec.md` until a future ADR-008 graduation |
-| Plugin package | Not published | `stigmem-plugin-lazy-instruction-discovery` source package extracted under `experimental/lazy-instruction-discovery/`; signed/package publication evidence is deferred until the plugin launch train and tracked in [#298](https://github.com/eidetic-labs/stigmem/issues/298) |
-| Default install behavior | Routes mounted but feature dormant unless configured (per LIMITATIONS §11) | Plugin is opt-in; default install is unchanged in user-visible behavior. Operators who want the feature install the plugin |
-| `experimental/<feature>/STATUS.md` | `Status: Dormant`, ADR-008 gates Open | `Status: Extracted / opt-in experimental`; ADR-008 gates still Open unless separately completed |
-| `ROADMAP.md` v0.9.0aN work table | This row | Lazy-instruction extraction marked complete within the broader per-feature extraction row; remaining feature extractions stay in flight |
-| `concepts/features.md` | Experimental; embedded/dormant implementation acknowledged | Experimental; opt-in plugin source extracted, artifact publication deferred |
-| `docs/compatibility-matrix.yaml` | `stability: experimental` for the feature | Still `stability: experimental`; source package and artifact-evidence status are explicit |
-| `CHANGELOG.md` | — | Entry under `### Added` for v0.9.0a2 noting the extraction and migration notes for alpha users |
-| `spec/EVOLUTION.md` | — | Entry recording the alpha extraction while preserving `Spec-X1` status |
-| `data/conformance/lazy-instruction-discovery/` | optional/empty | Targeted plugin-boundary tests; full ADR-008 conformance vectors arrive before graduation |
-
-### What does NOT happen during alpha extraction
-
-- The feature does **not** become default-on. Plugin architecture per [ADR-011](docs/adr/011-cross-cutting-extraction.md) means extracted cross-cutting features are shipped as opt-in plugins.
-- The feature does **not** become supported or stable. Stability remains experimental until ADR-008 gates pass.
-- The feature does **not** move from `Spec-X*` to `Spec-NN`. That is a later graduation step.
-- The ADR-008 five-gate process is **not** bypassed; it is simply not the alpha extraction gate.
-- Older releases are **not** retroactively updated. v0.9.0a1 remains a published, immutable release; the extraction lands in v0.9.0a2's release artifacts.
-
-### What the founder reviews at ADR-008 graduation
-
-A graduation PR should include:
-1. The five gate artifacts above
-2. The ROADMAP.md supported-surface update
-3. The CHANGELOG entry under `### Added` for the graduating release
-4. The `experimental/<feature>/STATUS.md` flip from Experimental → Graduated with all five gate dates
-5. The `concepts/features.md` row update
-6. The `compatibility-matrix.yaml` update
-
-CI rejects a graduation PR that's missing any of those artifacts (per ADR-013 deprecation-policy validator pattern + ADR-008 gate-tracking).
 
 ---
 

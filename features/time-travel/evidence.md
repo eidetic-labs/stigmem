@@ -19,7 +19,7 @@
 | --- | --- | --- |
 | Plugin package scaffold | `node/tests/plugins/test_time_travel_plugin_scaffold.py` | Entry point, manifest, default config, environment gates, hook registration, deterministic hook order, and discovery. |
 | Plugin-loaded behavior | `node/tests/plugins/test_time_travel_plugin_validation.py` | Default install rejects `as_of`; registered-but-disabled plugin rejects `as_of`; separate fact-query and recall gates are honored; explicitly enabled plugin-loaded fact query and recall accept historical reads. |
-| Integrated Phase 13 coverage | `node/tests/time_travel/test_phase13_time_travel_cid.py` | Historical fact visibility, retraction, expiry, tombstone, legal-hold, recall, and CID interaction tests. |
+| Integrated Phase 13 coverage | `node/tests/time_travel/test_phase13_time_travel_cid.py` | Historical fact visibility, retraction, expiry, tombstone, legal-hold, recall, retention-floor errors, historical recency scoring, CID tamper rejection, and source-trust-style rank-hook visibility tests. |
 | Fast gate | `bash scripts/check.sh python` | Runs plugin, route, and integration tests in the Python check bundle. |
 
 ## Conformance and Fixtures
@@ -31,5 +31,5 @@ time-travel behavior when `stigmem-plugin-time-travel` is not registered.
 
 - External operator soak evidence is not recorded.
 - Signed/package artifact evidence is deferred.
-- Promotion requires additional legal-hold and source-trust/CID integration
-  evidence.
+- Operator-facing source-trust policy evidence remains deferred to the
+  source-attestation feature record.

@@ -1,7 +1,7 @@
 {
   "name": "stigmem",
   "private": true,
-  "version": "0.9.0-alpha.4",
+  "version": "0.9.0-alpha.5",
   "description": "Stigmem — federated knowledge fabric for AI agents",
   "workspaces": [
     "adapters/mcp",
@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "jscpd": "^4.2.2",
-    "turbo": "^2.0.0",
+    "turbo": "^2.9.14",
     "typescript": "^5.4.0"
   },
   "engines": {
@@ -28,16 +28,12 @@
   },
   "packageManager": "pnpm@9.10.0",
   "pnpm": {
-    "auditConfig": {
-      "ignoreGhsas": [
-        "GHSA-hcf7-66rw-9f5r"
-      ]
-    },
     "overrides": {
       "postcss": ">=8.5.11",
       "ip-address": ">=10.1.1",
       "fast-uri": ">=3.1.2",
-      "hono": ">=4.12.18"
+      "hono": ">=4.12.18",
+      "qs": "6.15.2"
     }
   }
 }

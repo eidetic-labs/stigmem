@@ -21,7 +21,7 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 <div className="stigmem-grid">
 
-<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22.</p></div>
+<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22; <strong>v0.9.0a5 active</strong> 2026-05-22.</p></div>
 <div><h4>Future beta line</h4><p>Hardened core, 30-day external operator soak. No active milestone today.</p></div>
 <div><h4>Future release-candidate line</h4><p>Observation window after hardened-core exit. No active milestone today.</p></div>
 <div><h4>Future GA line</h4><p>Wire format committed, compatibility commitment honored across the v1.x line. No active milestone today.</p></div>
@@ -30,17 +30,16 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 ---
 
-## v0.9.0a4 — Time-travel extraction validation
+## v0.9.0a5 — RTBF tombstone extraction validation
 
 <div className="stigmem-lead">
 
-**Shipped alpha validation release for `as_of` plugin-boundary behavior.**
+**Active alpha validation release for RTBF tombstone plugin-boundary behavior.**
 
-`v0.9.0a4` validated
-`stigmem-plugin-time-travel` as the opt-in boundary for historical `as_of`
-queries, preserving default fail-closed behavior without plugin registration,
-and aligning feature, security, compatibility, changelog, and release evidence
-surfaces for the a4 tag.
+`v0.9.0a5` validates `stigmem-plugin-tombstones` as the opt-in boundary for
+RTBF tombstone routes, filters, issuance, revocation, and federation handling.
+Default installs remain inert unless the plugin is registered and explicit
+operator gates are enabled.
 
 </div>
 
@@ -54,26 +53,26 @@ surfaces for the a4 tag.
 
 <div>
 <dt>Milestone</dt>
-<dt><span className="stigmem-fields__type">closed</span></dt>
-<dd>Tracked at [milestone v0.9.0a4](https://github.com/Eidetic-Labs/stigmem/milestone/5).</dd>
+<dt><span className="stigmem-fields__type">active</span></dt>
+<dd>Tracked at [milestone v0.9.0a5](https://github.com/Eidetic-Labs/stigmem/milestone/6).</dd>
 </div>
 
 <div>
 <dt>CHANGELOG</dt>
-<dt><span className="stigmem-fields__type">published</span></dt>
-<dd>[CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md) includes `[0.9.0a4]` release notes.</dd>
+<dt><span className="stigmem-fields__type">prepared</span></dt>
+<dd>[CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md) includes `[0.9.0a5]` release notes.</dd>
 </div>
 
 <div>
 <dt>Entry</dt>
 <dt><span className="stigmem-fields__type">ready</span></dt>
-<dd>`v0.9.0a3` shipped; time-travel feature record and experimental source package exist for a4 validation.</dd>
+<dd>`v0.9.0a4` shipped; tombstone feature records and experimental source package exist for a5 validation.</dd>
 </div>
 
 <div>
 <dt>Exit</dt>
-<dt><span className="stigmem-fields__type">complete</span></dt>
-<dd>Default installs reject `as_of`, plugin-loaded fact query and recall behavior validate, security projections align, and the a4 milestone closes.</dd>
+<dt><span className="stigmem-fields__type">in progress</span></dt>
+<dd>Default installs expose no tombstone routes or filters, plugin-loaded issuance/filtering/revocation/legal-hold behavior validates, security projections align, and the a5 milestone closes.</dd>
 </div>
 
 </div>

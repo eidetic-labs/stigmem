@@ -99,29 +99,7 @@ is an index, not the canonical analysis body; update the linked
 
 ---
 
-## Security Posture — v0.9.0a4 (2026-05-22)
-
-`v0.9.0a4` is the current alpha release horizon. The release validates the
-time-travel read path as an experimental, opt-in plugin boundary: default
-installs fail closed for `as_of`, operators must explicitly enable the
-fact-query and recall surfaces, tombstoned facts are suppressed retroactively,
-and non-admin callers do not receive legal-hold existence signals.
-The release also closes R-18 for the time-travel boundary: federation ingest
-rejects `valid_until` extension attempts and records
-`federation_valid_until_extension_rejected` audit events with the stored and
-incoming values.
-Maintainer audit finding NF-A1 / PYSEC-2026-161 was triaged before a4
-publication and remediated in-tree by requiring `starlette>=1.0.1` for
-`stigmem-node` and refreshing the locked Starlette artifact from `1.0.0` to
-`1.0.1`. No vulnerable a4 artifact was published before this remediation.
-
-The standing publication policy remains: Critical and High vulnerabilities that
-affect supported published artifacts are handled through GHSA where applicable
-after a patched version is available; Medium and Low findings are documented in
-this file unless a documented risk-profile, reporter-coordination, or
-downstream-compliance carve-out applies.
-
-## Security Posture — v0.9.0a5 release horizon
+## Security Posture — v0.9.0a5 (2026-05-22)
 
 `v0.9.0a5` is the active alpha release horizon. The release validates RTBF
 tombstones as an experimental, opt-in plugin boundary: default installs do not
@@ -148,6 +126,28 @@ The public disposition index for the current audit batch remains the
 `v0.9.0a2` section below. The dated internal evidence registry remains a proof
 ledger with path, PR, and regression-test lineage; it is not a second public
 advisory index.
+
+## Security Posture — v0.9.0a4 (2026-05-22)
+
+`v0.9.0a4` was the previous alpha release. The release validates the
+time-travel read path as an experimental, opt-in plugin boundary: default
+installs fail closed for `as_of`, operators must explicitly enable the
+fact-query and recall surfaces, tombstoned facts are suppressed retroactively,
+and non-admin callers do not receive legal-hold existence signals.
+The release also closes R-18 for the time-travel boundary: federation ingest
+rejects `valid_until` extension attempts and records
+`federation_valid_until_extension_rejected` audit events with the stored and
+incoming values.
+Maintainer audit finding NF-A1 / PYSEC-2026-161 was triaged before a4
+publication and remediated in-tree by requiring `starlette>=1.0.1` for
+`stigmem-node` and refreshing the locked Starlette artifact from `1.0.0` to
+`1.0.1`. No vulnerable a4 artifact was published before this remediation.
+
+The standing publication policy remains: Critical and High vulnerabilities that
+affect supported published artifacts are handled through GHSA where applicable
+after a patched version is available; Medium and Low findings are documented in
+this file unless a documented risk-profile, reporter-coordination, or
+downstream-compliance carve-out applies.
 
 ## Security Posture — v0.9.0a3 (2026-05-22)
 

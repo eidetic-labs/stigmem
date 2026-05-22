@@ -279,6 +279,20 @@ def _assert_fact(client: TestClient, headers: dict, entity: str = "user:alice") 
     return resp.json()
 
 
+def _audit_events(db_file: str, event_type: str) -> list[dict]:
+    conn = sqlite3.connect(db_file)
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = conn.execute(
+            "SELECT event_type, entity_uri, fact_id, source, detail FROM fact_audit_log "
+            "WHERE event_type = ? ORDER BY seq",
+            (event_type,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
 # ---------------------------------------------------------------------------
 # POST /v1/tombstones — create
 # ---------------------------------------------------------------------------
@@ -299,6 +313,14 @@ class TestTombstoneCreate:
         assert data["id"].startswith("tomb_")
         assert data["signed_by"] == "stigmem://tombnode/agent/admin"
 
+        audit = _audit_events(db_file, "tombstone_created")
+        assert len(audit) == 1
+        assert audit[0]["entity_uri"] == "stigmem://tombnode/agent/admin"
+        assert audit[0]["fact_id"] == data["id"]
+        detail = json.loads(audit[0]["detail"])
+        assert detail["target_entity_uri"] == "user:alice"
+        assert detail["scope"] == "*"
+
     def test_reader_cannot_create(self, node):
         client, admin_key, reader_key, ts, db_file, *_extra = node
         resp = client.post(
@@ -307,6 +329,7 @@ class TestTombstoneCreate:
             headers=_ah(reader_key),
         )
         assert resp.status_code == 403
+        assert _audit_events(db_file, "tombstone_created") == []
 
     def test_idempotent_on_same_entity_scope(self, node):
         client, admin_key, reader_key, ts, db_file, *_extra = node
@@ -324,6 +347,7 @@ class TestTombstoneCreate:
         assert resp2.status_code == 201
         # Must return the same record (idempotent)
         assert resp1.json()["id"] == resp2.json()["id"]
+        assert len(_audit_events(db_file, "tombstone_created")) == 1
 
     def test_invalid_scope_rejected(self, node):
         client, admin_key, reader_key, ts, db_file, *_extra = node
@@ -404,6 +428,10 @@ class TestTombstoneRevoke:
         assert revoke_resp.status_code == 200
         data = revoke_resp.json()
         assert data["tombstone_id"] == tomb_id
+        audit = _audit_events(db_file, "tombstone_revoked")
+        assert len(audit) == 1
+        assert audit[0]["entity_uri"] == "stigmem://tombnode/agent/admin"
+        assert audit[0]["fact_id"] == tomb_id
 
         # After revocation, status check should show tombstoned=False
         encoded = urllib.parse.quote("user:eve", safe="")
@@ -633,6 +661,10 @@ class TestFederationTombstoneRoutes:
         )
         assert resp.status_code == 200
         assert resp.json()["written"] is True
+        audit = _audit_events(db_file, "tombstone_federation_ingested")
+        assert len(audit) == 1
+        assert audit[0]["entity_uri"] == "stigmem://peer-node"
+        assert audit[0]["fact_id"] == tomb_id
 
         # Idempotent — second ingest same id (fresh token, same payload)
         resp2 = client.post(
@@ -642,6 +674,7 @@ class TestFederationTombstoneRoutes:
         )
         assert resp2.status_code == 200
         assert resp2.json()["written"] is False
+        assert len(_audit_events(db_file, "tombstone_federation_ingested")) == 1
 
     def test_federation_tombstone_ingest_applies_filter(self, node):
         client, admin_key, reader_key, ts, db_file, mint_peer_token, peer_priv = node
@@ -691,6 +724,11 @@ class TestFederationTombstoneRoutes:
             headers=_ah(mint_peer_token()),
         )
         assert resp.status_code == 400
+        audit = _audit_events(db_file, "tombstone_federation_rejected")
+        assert len(audit) == 1
+        detail = json.loads(audit[0]["detail"])
+        assert detail["artifact"] == "tombstone"
+        assert "signature" in detail["reason"]
 
     def test_federation_tombstone_ingest_rejects_bad_signature(self, node):
         client, admin_key, reader_key, ts, db_file, mint_peer_token, peer_priv = node
@@ -713,6 +751,11 @@ class TestFederationTombstoneRoutes:
             headers=_ah(mint_peer_token()),
         )
         assert resp.status_code == 400
+        audit = _audit_events(db_file, "tombstone_federation_rejected")
+        assert len(audit) == 1
+        detail = json.loads(audit[0]["detail"])
+        assert detail["artifact"] == "tombstone"
+        assert "signature" in detail["reason"]
 
     def test_federation_revocation_ingest_accepts_valid_signature(self, node):
         client, admin_key, reader_key, ts, db_file, mint_peer_token, peer_priv = node
@@ -773,6 +816,10 @@ class TestFederationTombstoneRoutes:
             headers=_ah(mint_peer_token()),
         )
         assert resp.status_code == 400
+        audit = _audit_events(db_file, "tombstone_federation_rejected")
+        assert len(audit) == 1
+        detail = json.loads(audit[0]["detail"])
+        assert detail["artifact"] == "revocation"
 
     # -- F-3 regression tests: auth bypass fix --
 
@@ -1070,7 +1117,7 @@ class TestIngestSignatureEnforcement:
         with _tombstone_plugin_app(app):
             client = TestClient(app, raise_server_exceptions=True)
             client.__enter__()
-            yield client, _mint, peer_pub_b64
+            yield client, _mint, peer_pub_b64, db_file
             client.__exit__(None, None, None)
         settings_module.settings = original
         auth_mod.settings = original
@@ -1081,7 +1128,7 @@ class TestIngestSignatureEnforcement:
 
     def test_rejects_tombstone_missing_key_id(self, strict_node):
         """F-1: tombstone with empty key_id is rejected 400."""
-        client, mint, _ = strict_node
+        client, mint, _, _db_file = strict_node
         payload = {
             "id": f"tomb_{uuid.uuid4()}",
             "entity_uri": "user:test",
@@ -1103,7 +1150,7 @@ class TestIngestSignatureEnforcement:
 
     def test_rejects_tombstone_missing_manifest(self, strict_node):
         """F-1: tombstone from unknown signer (no manifest) is rejected 401."""
-        client, mint, _ = strict_node
+        client, mint, _, db_file = strict_node
         payload = {
             "id": f"tomb_{uuid.uuid4()}",
             "entity_uri": "user:test",
@@ -1122,10 +1169,15 @@ class TestIngestSignatureEnforcement:
         )
         assert resp.status_code == 401
         assert "no manifest for signer" in resp.json()["detail"]
+        audit = _audit_events(db_file, "tombstone_federation_rejected")
+        assert len(audit) == 1
+        detail = json.loads(audit[0]["detail"])
+        assert detail["artifact"] == "tombstone"
+        assert detail["reason"] == "signer_manifest_missing"
 
     def test_rejects_tombstone_bad_key_id(self, strict_node):
         """F-1: tombstone with key_id not in manifest is rejected 401."""
-        client, mint, _ = strict_node
+        client, mint, _, _db_file = strict_node
         payload = {
             "id": f"tomb_{uuid.uuid4()}",
             "entity_uri": "user:test",
@@ -1149,7 +1201,7 @@ class TestIngestSignatureEnforcement:
 
     def test_rejects_revocation_missing_key_id(self, strict_node):
         """F-2: revocation with empty key_id is rejected 400."""
-        client, mint, _ = strict_node
+        client, mint, _, _db_file = strict_node
         payload = {
             "id": f"tombrevoke_{uuid.uuid4()}",
             "tombstone_id": "tomb_fake",

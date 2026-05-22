@@ -159,6 +159,16 @@ def create_tombstone(
             return _row_to_tombstone(row)
 
         tomb_id = tombstone_id or "tomb_" + str(uuid.uuid4())
+        _emit_tombstone_audit(
+            conn=conn,
+            event_type="tombstone_created",
+            actor_uri=signed_by,
+            tombstone_id=tomb_id,
+            entity_uri=entity_uri,
+            scope=scope,
+            source="local",
+            detail={"legal_hold": legal_hold},
+        )
         conn.execute(
             """INSERT INTO tombstones
                (id, entity_uri, scope, reason, signed_by, key_id, signature,
@@ -204,6 +214,16 @@ def revoke_tombstone(
             raise ValueError("tombstone_already_revoked")
 
         rev_id = "tombrevoke_" + str(uuid.uuid4())
+        _emit_tombstone_audit(
+            conn=conn,
+            event_type="tombstone_revoked",
+            actor_uri=signed_by,
+            tombstone_id=tombstone_id,
+            entity_uri=tombstone_id,
+            scope=None,
+            source="local",
+            detail={"revocation_id": rev_id},
+        )
         conn.execute(
             """INSERT INTO tombstone_revocations
                (id, tombstone_id, reason, signed_by, key_id, signature, created_at)
@@ -289,6 +309,16 @@ def apply_inbound_tombstone(record: TombstoneRecord) -> bool:
         existing = conn.execute("SELECT id FROM tombstones WHERE id = ?", (record.id,)).fetchone()
         if existing:
             return False
+        _emit_tombstone_audit(
+            conn=conn,
+            event_type="tombstone_federation_ingested",
+            actor_uri=record.signed_by,
+            tombstone_id=record.id,
+            entity_uri=record.entity_uri,
+            scope=record.scope,
+            source="federation",
+            detail={"legal_hold": record.legal_hold},
+        )
         conn.execute(
             """INSERT INTO tombstones
                (id, entity_uri, scope, reason, signed_by, key_id, signature,
@@ -327,6 +357,16 @@ def apply_inbound_revocation(record: TombstoneRevocationRecord) -> bool:
         ).fetchone()
         if existing:
             return False
+        _emit_tombstone_audit(
+            conn=conn,
+            event_type="tombstone_revocation_federation_ingested",
+            actor_uri=record.signed_by,
+            tombstone_id=record.tombstone_id,
+            entity_uri=record.tombstone_id,
+            scope=None,
+            source="federation",
+            detail={"revocation_id": record.id},
+        )
         conn.execute(
             """INSERT INTO tombstone_revocations
                (id, tombstone_id, reason, signed_by, key_id, signature, created_at)
@@ -343,6 +383,34 @@ def apply_inbound_revocation(record: TombstoneRevocationRecord) -> bool:
         )
     invalidate_tombstone_cache()
     return True
+
+
+def _emit_tombstone_audit(
+    *,
+    conn: Any,
+    event_type: str,
+    actor_uri: str,
+    tombstone_id: str,
+    entity_uri: str,
+    scope: str | None,
+    source: str,
+    detail: dict[str, Any],
+) -> None:
+    from ..observability.audit_event import emit
+
+    emit(
+        event_type,
+        entity_uri=actor_uri,
+        fact_id=tombstone_id,
+        source=source,
+        scope=scope,
+        detail={
+            "target_entity_uri": entity_uri,
+            "scope": scope,
+            **detail,
+        },
+        conn=conn,
+    )
 
 
 # ---------------------------------------------------------------------------

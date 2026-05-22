@@ -111,8 +111,9 @@ Store the resulting hashes in your own deployment record if you require environm
 
 ## Verify GPG release signatures
 
-The GitHub release attaches detached ASCII-armored GPG signatures for release
-artifacts, plus `stigmem-release-signing-key.asc`.
+The GitHub release may attach detached ASCII-armored GPG signatures for release
+artifacts, plus `stigmem-release-signing-key.asc`. These signatures are created
+and uploaded manually by the release maintainer after publication.
 
 Import the release public key, download the artifact and matching `.asc`
 signature, then verify:

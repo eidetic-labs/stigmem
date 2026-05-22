@@ -2,8 +2,8 @@
 spec_id: Spec-X3-Time-Travel-Queries
 version: 0.1.0-alpha.0
 status: Experimental
-applies_to: future experimental plugin line
-last_updated: 2026-05-14
+applies_to: v0.9.0a4 alpha plugin-validation line
+last_updated: 2026-05-22
 supersedes: pre-reset §24 time-travel/as-of query material
 depends_on:
   - Spec-01-Fact-Model >= 0.1.0-alpha.0
@@ -18,7 +18,7 @@ since: 0.9.0a1
 
 # §24. Time-Travel / As-Of Queries {#section-24}
 
-<p className="stigmem-meta"><span>6 min read</span><span>Spec contributor · Compliance reviewer</span><span>Experimental · future plugin line</span></p>
+<p className="stigmem-meta"><span>6 min read</span><span>Spec contributor · Compliance reviewer</span><span>Experimental · v0.9.0a4 plugin validation</span></p>
 
 <div className="stigmem-lead">
 
@@ -39,12 +39,16 @@ reconstruction.
 Time-travel semantics interact with tombstones in ways that are still being finalized. Specifically:
 
 - The default install rejects `as_of` requests unless
-  `stigmem-plugin-time-travel` is registered. This source package is available
-  for alpha validation on `main`, but signed/package artifact evidence is
-  deferred until all planned plugins are built.
-- Queries at a time `T` before a tombstone's `issued_at` may return erased data on some backends. Review your deletion workflow before relying on this for compliance.
+  `stigmem-plugin-time-travel` is registered and the relevant fact-query or
+  recall operator gate is enabled. This source package is available for alpha
+  validation on `main`, but signed/package artifact evidence is deferred until
+  the plugin release train is opened.
+- The a4 read path validates retroactive tombstone suppression and non-admin
+  legal-hold silence. Broader RTBF tombstone launch, federation authority, and
+  operator runbooks remain outside the a4 time-travel release.
 - Isolation guarantees differ between SQLite (`BEGIN IMMEDIATE`) and PostgreSQL (`READ COMMITTED`). Test your workload on the production backend before going live.
-- `legal_hold` fact handling requires the admin key; key management for this path is not yet documented.
+- `legal_hold` historical access requires an admin path; operator key
+  separation and audit runbooks are not yet complete.
 :::
 
 :::note Section body

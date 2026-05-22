@@ -9,6 +9,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ## [Unreleased]
 
+### Changed
+
+- Advanced `v0.9.0a4` time-travel validation: `as_of` remains experimental and
+  opt-in behind `stigmem-plugin-time-travel`, requires explicit operator gates,
+  and now has aligned feature, compatibility, security, and public-doc
+  projections for the a4 release horizon.
+
 ## [0.9.0a3] — in progress
 
 **Status:** active alpha release prep — pre-stable, not for production

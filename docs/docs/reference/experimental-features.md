@@ -240,7 +240,7 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 <div className="stigmem-grid">
 
 <div><h4>Curator dashboard</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/dashboard"><code>features/dashboard</code></a> — deferred internal tooling; live-node and deployment validation remain future alpha work.</p></div>
-<div><h4>Eval harness</h4><p>Dormant — evaluation tooling, not a protocol feature.</p></div>
+<div><h4>Eval harness</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/eval-harness"><code>features/eval-harness</code></a> — deferred concept-only evaluation tooling; runnable harness remains future alpha work.</p></div>
 <div><h4>Helm / Fly / PaaS / systemd</h4><p>Dormant — Docker Compose is the supported v0.9.0a1 deployment path.</p></div>
 <div><h4>Grafana dashboards</h4><p>Dormant — deferred observability recipe.</p></div>
 

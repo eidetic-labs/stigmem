@@ -1,5 +1,10 @@
 # eval-harness — Status
 
-eval-harness is Dormant for v0.9.0a1 (last tested against); owner unowned; buildable unknown — pending PR 3 verification sweep; last updated 2026-05-09. Spec ID: (no Spec-X assigned — deferred per [ADR-002](../../docs/adr/002-v1-scope.md); if reintroduced, gets next available Spec-X number per [ADR-010](../../docs/adr/010-modular-specs.md)). Legacy section: not applicable.
+Canonical status now lives in
+[`features/eval-harness/status.md`](../../features/eval-harness/status.md).
 
-This feature remains outside the default surface per [ADR-002](../../docs/adr/002-v1-scope.md) and [ADR-009](../../docs/adr/009-repo-structure.md); shared promotion gates live in [../STATUS-GATES.md](../STATUS-GATES.md).
+This compatibility pointer keeps the legacy concept directory discoverable
+while ADR-020 feature records own feature lifecycle, evidence, security, and
+changelog facts. The evaluation harness remains deferred experimental internal
+tooling; runnable implementation, corpus fixtures, CI wiring, live-node
+validation, and ownership remain future alpha gates.

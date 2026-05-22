@@ -580,7 +580,13 @@ ADR-008 five-gate process.
 </div>
 
 <div>
-<dt>Adapters, SDKs, deployment recipes, eval harness</dt>
+<dt>Evaluation harness</dt>
+<dt><span className="stigmem-fields__type">Experimental internal tooling, no Spec-X assigned</span></dt>
+<dd><code>features/eval-harness/</code></dd>
+</div>
+
+<div>
+<dt>Adapters, SDKs, deployment recipes</dt>
 <dt><span className="stigmem-fields__type">Experimental, no Spec-X assigned</span></dt>
 <dd><code>experimental/&lt;surface&gt;/STATUS.md</code></dd>
 </div>

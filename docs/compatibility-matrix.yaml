@@ -114,6 +114,22 @@ features:
       node: "experimental"
     notes: "Deferred curator UI/tooling surface; dependency currency, auth/session, live-node, and deployment posture remain future alpha work."
 
+  - id: eval-harness
+    name: Evaluation harness
+    feature_record: features/eval-harness/README.md
+    feature_type: tooling
+    default_surface: internal
+    implementation_path: experimental/eval-harness
+    package: none
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (tooling)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred concept-only evaluation tooling; runnable harness, corpus, CI, and live-node validation remain future alpha work."
+
   - id: async-jobs
     name: Async jobs
     feature_record: features/async-jobs/README.md

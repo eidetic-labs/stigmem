@@ -366,7 +366,7 @@ cache survives restarts; fuzz tests cover replay edge cases
 
 ### Scenario 2.3 — What if a peer sends facts with an inflated source-trust score or extended expiry?
 
-<p className="stigmem-meta"><span>R-18 / T7-T3</span><span>Open (Low)</span></p>
+<p className="stigmem-meta"><span>R-18 / T7-T3</span><span>Closed in v0.9.0a4</span></p>
 
 **What if** a federated peer claims that a fact should have a higher
 trust score or should expire later than it was originally asserted?
@@ -393,9 +393,12 @@ locally from the source manifest and MUST reject any `valid_until`
 that extends beyond the value previously observed for the same CID.
 This is a defensive invariant, not a negotiated value.
 
-**How would you know?** This is difficult to detect without a
-regression test. The audit log does not currently record
-`valid_until` extension rejections. This gap is tracked as R-18.
+**How would you know?** Federation ingest emits
+`federation_valid_until_extension_rejected` when an incoming peer fact tries to
+extend `valid_until` beyond the locally stored value. The event records the
+peer, fact ID, stored value, and incoming value for forensic review. Regression
+coverage lives in
+`node/tests/federation/test_valid_until_extension.py`.
 
 **How do you recover?** If you suspect trust score inflation was
 accepted, audit the quarantine garden for facts that should have
@@ -403,8 +406,9 @@ been held but were released. Retract any incorrectly admitted facts.
 
 <div className="stigmem-keypoint">
 
-**Open (Low priority)** — spec mandates local recomputation;
-implementation compliance needs a regression test.
+**Closed in v0.9.0a4** — federation ingest rejects `valid_until` extension via
+`federation_ingest.py:_is_valid_until_extension`, and source-trust values are
+locally recomputed.
 
 </div>
 
@@ -1284,8 +1288,8 @@ those ship, operators rely on out-of-band trust signals.
 
 <div>
 <dt>2.3 Trust / <code>valid_until</code> inflation · R-18</dt>
-<dt><span className="stigmem-fields__type">Open (Low)</span></dt>
-<dd>Monitor for unusual federation ingest patterns.</dd>
+<dt><span className="stigmem-fields__type">Closed in v0.9.0a4</span></dt>
+<dd>Review <code>federation_valid_until_extension_rejected</code> audit events for rejected peer extension attempts.</dd>
 </div>
 
 <div>

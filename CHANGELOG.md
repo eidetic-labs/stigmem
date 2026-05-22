@@ -39,6 +39,21 @@ opt-in, and operator-gated.
 - Validated the time-travel read path against tombstone and legal-hold
   disclosure risks: historical reads suppress tombstoned facts retroactively
   and non-admin callers do not receive legal-hold existence signals.
+- Closed R-18 federation `valid_until` extension rejection. Federation ingest
+  now compares incoming `valid_until` against the locally stored value on
+  re-ingest and raises `FederationValidUntilExtensionError` when the incoming
+  value would extend visibility beyond the locally observed bound. Rejections
+  emit a `federation_valid_until_extension_rejected` audit event with stored
+  and incoming values for forensic inspection. Combined with local source-trust
+  recomputation, R-18 is now closed.
+- Consolidated `is_admin_caller` derivation across `as_of` recall and
+  fact-query paths to consistently use `Identity.is_admin()`.
+- Tightened plugin handler docstrings in `stigmem-plugin-time-travel` to
+  clarify the gate-only role and prevent duplicate authorization at the wrong
+  layer.
+- Removed orphan `retention_floor` configuration from the time-travel plugin;
+  retention floor remains a single core setting
+  (`STIGMEM_AS_OF_RETENTION_FLOOR`).
 - Retained the standing advisory publication policy: Critical and High
   vulnerabilities use GHSA where applicable after a patched artifact is
   available; Medium and Low findings remain in `SECURITY.md` unless a

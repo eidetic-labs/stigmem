@@ -22,7 +22,7 @@ the current threat model.
 | Risk | Contribution | Mitigation |
 | --- | --- | --- |
 | R-17 legal-hold historical data exposure | `as_of` reads are the mechanism that can expose pre-tombstone history when legal hold is active. | Non-admin callers cannot retrieve legal-hold history; preserved-data reads require admin handling and audit evidence. |
-| R-18 CID field-exclusion tampering | Historical reads depend on metadata such as `valid_until` and source trust that are not CID identity fields. | Historical reads must not trust federated metadata changes that local validation would reject. |
+| R-18 CID field-exclusion tampering | Historical reads depend on metadata such as `valid_until` and source trust that are not CID identity fields. | Federation ingest now rejects `valid_until` extension via `FederationValidUntilExtensionError` and emits a `federation_valid_until_extension_rejected` audit event. Source-trust values used during historical reads are recomputed locally. Both invariants together close R-18. |
 
 ## Operator Scenarios
 
@@ -50,10 +50,11 @@ Required adversarial vectors before promotion:
 
 ## Residual Risk
 
-Gate 1 remains open for operator-facing legal-hold role separation, audit
-runbooks, and federation authority validation. The a4 read-path coverage now
-checks that historical reads do not bypass tombstone, legal-hold, CID, or
-source-trust-style ranking controls.
+R-18 is closed for the a4 time-travel boundary by federation-ingest
+`valid_until` extension rejection and local source-trust recomputation.
+Residual risk remains for operator-facing legal-hold role separation and audit
+runbooks. The a4 read-path coverage checks that historical reads do not bypass
+tombstone, legal-hold, CID, or source-trust-style ranking controls.
 
 ## Advisories and Findings
 

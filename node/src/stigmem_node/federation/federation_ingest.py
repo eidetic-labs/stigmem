@@ -62,6 +62,28 @@ class FederationIntegrityError(ValueError):
         super().__init__(f"inbound fact integrity verification failed: {reason}")
 
 
+class FederationValidUntilExtensionError(ValueError):
+    """Inbound federated fact tried to extend an existing valid_until."""
+
+    def __init__(
+        self,
+        *,
+        fact_id: str,
+        sender_node_id: str,
+        stored_valid_until: str | None,
+        incoming_valid_until: str | None,
+    ) -> None:
+        self.fact_id = fact_id
+        self.sender_node_id = sender_node_id
+        self.stored_valid_until = stored_valid_until
+        self.incoming_valid_until = incoming_valid_until
+        super().__init__(
+            "federation ingest rejected: incoming valid_until "
+            f"({incoming_valid_until}) extends stored ({stored_valid_until}) "
+            f"for fact_id={fact_id}, sender={sender_node_id} (R-18)"
+        )
+
+
 def _encode_v(value: dict[str, Any]) -> str:
     vtype = value["type"]
     v = value.get("v")
@@ -180,6 +202,49 @@ def _audit_peer_integrity_failure(
     )
 
 
+def _audit_valid_until_extension(
+    *,
+    conn: Any,
+    exc: FederationValidUntilExtensionError,
+) -> None:
+    from ..observability.audit_event import emit
+
+    emit(
+        "federation_valid_until_extension_rejected",
+        entity_uri="system:federation",
+        fact_id=exc.fact_id,
+        source=exc.sender_node_id,
+        detail={
+            "sender_node_id": exc.sender_node_id,
+            "stored_valid_until": exc.stored_valid_until,
+            "incoming_valid_until": exc.incoming_valid_until,
+            "reason": (
+                "R-18: federation peer attempted to extend valid_until beyond "
+                "the locally-stored value; rejected per local recomputation "
+                "invariant"
+            ),
+        },
+        conn=conn,
+    )
+
+
+def _is_valid_until_extension(stored: str | None, incoming: str | None) -> bool:
+    """Return True when incoming would extend locally observed visibility."""
+
+    if stored is None:
+        return False
+    if incoming is None:
+        return True
+
+    stored_ts = datetime.fromisoformat(stored.replace("Z", "+00:00"))
+    incoming_ts = datetime.fromisoformat(incoming.replace("Z", "+00:00"))
+    if stored_ts.tzinfo is None:
+        stored_ts = stored_ts.replace(tzinfo=UTC)
+    if incoming_ts.tzinfo is None:
+        incoming_ts = incoming_ts.replace(tzinfo=UTC)
+    return incoming_ts > stored_ts
+
+
 def ingest_fact(
     fact: dict[str, Any],
     sender_node_id: str,
@@ -262,8 +327,23 @@ def ingest_fact(
     re_fed_blocked = 1 if scope == "company" else 0
 
     with db() as conn:
-        existing = conn.execute("SELECT id FROM facts WHERE id = ?", (fact_id,)).fetchone()
+        existing = conn.execute(
+            "SELECT id, valid_until FROM facts WHERE id = ?",
+            (fact_id,),
+        ).fetchone()
         if existing is not None:
+            stored_valid_until = existing["valid_until"]
+            incoming_valid_until = fact.get("valid_until")
+            if _is_valid_until_extension(stored_valid_until, incoming_valid_until):
+                violation = FederationValidUntilExtensionError(
+                    fact_id=fact_id,
+                    sender_node_id=sender_node_id,
+                    stored_valid_until=stored_valid_until,
+                    incoming_valid_until=incoming_valid_until,
+                )
+                _audit_valid_until_extension(conn=conn, exc=violation)
+                conn.commit()
+                raise violation
             return False  # already ingested; silent no-op per spec §5.8
 
         # Advance HLC (spec §6.3)

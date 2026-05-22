@@ -10,8 +10,8 @@
 
 The future hardened-core line opens only after alpha exit evidence supports it.
 Several hardened-core slices have landed on `main` during the alpha series, but
-this document is a future gate, not a current beta release plan. The next active
-release horizon remains `v0.9.0a3`.
+this document is a future gate, not a current beta release plan. No beta
+milestone is open; the current published alpha build is `v0.9.0a4`.
 
 ## Scope Summary
 

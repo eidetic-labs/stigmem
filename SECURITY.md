@@ -99,20 +99,30 @@ is an index, not the canonical analysis body; update the linked
 
 ---
 
-## Security Posture — v0.9.0a3 (release prep)
+## Security Posture — v0.9.0a4 (2026-05-22)
 
-`v0.9.0a3` is the active alpha release horizon. At release-prep time, a3 carries
-artifact-readiness and documentation-alignment work rather than a new advisory
-set. The standing publication policy remains: Critical and High
-vulnerabilities that affect supported published artifacts are handled through
-GHSA where applicable after a patched version is available; Medium and Low
-findings are documented in this file unless a documented risk-profile,
-reporter-coordination, or downstream-compliance carve-out applies.
+`v0.9.0a4` is the current alpha release horizon. The release validates the
+time-travel read path as an experimental, opt-in plugin boundary: default
+installs fail closed for `as_of`, operators must explicitly enable the
+fact-query and recall surfaces, tombstoned facts are suppressed retroactively,
+and non-admin callers do not receive legal-hold existence signals.
+
+The standing publication policy remains: Critical and High vulnerabilities that
+affect supported published artifacts are handled through GHSA where applicable
+after a patched version is available; Medium and Low findings are documented in
+this file unless a documented risk-profile, reporter-coordination, or
+downstream-compliance carve-out applies.
 
 The public disposition index for the current audit batch remains the
 `v0.9.0a2` section below. The dated internal evidence registry remains a proof
 ledger with path, PR, and regression-test lineage; it is not a second public
 advisory index.
+
+## Security Posture — v0.9.0a3 (2026-05-22)
+
+`v0.9.0a3` carried artifact-readiness and documentation-alignment work rather
+than a new advisory set. Its publication used the same advisory policy stated
+above.
 
 ## Security Posture — v0.9.0a2 (2026-05-18)
 

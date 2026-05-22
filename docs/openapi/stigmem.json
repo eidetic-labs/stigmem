@@ -3229,13 +3229,13 @@
     }
   },
   "info": {
-    "description": "Reference node implementing the Stigmem v0.9.0a3 HTTP API \u2014 facts, federation, gardens, recall, subscriptions, audit, identity, content-addressed fact IDs. Cross-cutting features (tombstones, time-travel, multi-tenant) are opt-in plugins.",
+    "description": "Reference node implementing the Stigmem v0.9.0a4 HTTP API \u2014 facts, federation, gardens, recall, subscriptions, audit, identity, content-addressed fact IDs. Cross-cutting features (tombstones, time-travel, multi-tenant) are opt-in plugins.",
     "license": {
       "name": "Apache-2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0"
     },
     "title": "Stigmem Reference Node",
-    "version": "0.9.0a3"
+    "version": "0.9.0a4"
   },
   "openapi": "3.1.0",
   "paths": {

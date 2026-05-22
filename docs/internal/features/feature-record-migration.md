@@ -286,7 +286,7 @@ The migration should follow the release horizon, not overwrite it.
 | Horizon | Feature-record work |
 | --- | --- |
 | `v0.9.0a1` and `v0.9.0a2` historical docs | Link shipped feature detail to feature records as features migrate. Do not rewrite history to claim later work shipped. |
-| `v0.9.0a3` active alpha | Prioritize records for features whose scope, risk, or release notes are active in this line. |
+| `v0.9.0a3` and `v0.9.0a4` shipped alpha releases | Preserve feature detail and release evidence without rewriting history to claim later work shipped earlier. |
 | Future `0.9.xA` alpha phases | Use feature records for detailed implementation plans and release roadmaps for version-specific contracts. |
 | Beta, RC, and GA | Remain future gates until explicitly opened. |
 

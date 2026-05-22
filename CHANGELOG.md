@@ -9,19 +9,45 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ## [Unreleased]
 
+_No unreleased changes._
+
+## [0.9.0a4] — 2026-05-22
+
+**Status:** preview alpha — pre-stable, not for production federation across
+organizational boundaries. Time-travel historical reads remain experimental,
+opt-in, and operator-gated.
+
+**Per-ecosystem version strings (per ADR-019):**
+- PyPI / Python: `stigmem 0.9.0a4`, `stigmem-py 0.9.0a4`, `stigmem-node 0.9.0a4`, and `stigmem-openclaw 0.9.0a4` (PEP 440).
+- npm / Node: `@eidetic-labs/stigmem-ts@0.9.0-alpha.4` (semver).
+- GHCR: `ghcr.io/eidetic-labs/stigmem-node:0.9.0a4` and `:0.9.0-alpha.4`.
+- Git tag, GitHub release, prose: `v0.9.0a4` (shorthand).
+
 ### Changed
 
-- Advanced `v0.9.0a4` time-travel validation: `as_of` remains experimental and
+- Advanced the enforced release-version surfaces to the `v0.9.0a4` alpha line
+  across Python packages, npm packages, API metadata, conformance metadata,
+  plugin compatibility defaults, release documentation, and current-facing
+  adopter guidance.
+- Validated `v0.9.0a4` time-travel behavior: `as_of` remains experimental and
   opt-in behind `stigmem-plugin-time-travel`, requires explicit operator gates,
-  and now has aligned feature, compatibility, security, and public-doc
-  projections for the a4 release horizon.
+  fails closed by default, and now has aligned feature, compatibility,
+  security, and public-doc projections for the a4 release horizon.
 
-## [0.9.0a3] — in progress
+### Security
 
-**Status:** active alpha release prep — pre-stable, not for production
-federation across organizational boundaries. Final release evidence, security
-posture, and publication notes are completed through the `v0.9.0a3` milestone
-before tag.
+- Validated the time-travel read path against tombstone and legal-hold
+  disclosure risks: historical reads suppress tombstoned facts retroactively
+  and non-admin callers do not receive legal-hold existence signals.
+- Retained the standing advisory publication policy: Critical and High
+  vulnerabilities use GHSA where applicable after a patched artifact is
+  available; Medium and Low findings remain in `SECURITY.md` unless a
+  documented carve-out applies.
+
+## [0.9.0a3] — 2026-05-22
+
+**Status:** preview alpha — pre-stable, not for production federation across
+organizational boundaries.
 
 **Per-ecosystem version strings (per ADR-019):**
 - PyPI / Python: `stigmem 0.9.0a3`, `stigmem-py 0.9.0a3`, `stigmem-node 0.9.0a3`, and `stigmem-openclaw 0.9.0a3` (PEP 440).

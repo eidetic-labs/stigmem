@@ -71,7 +71,7 @@ def test_manifest_declares_expected_boundary() -> None:
     assert isinstance(manifest, PluginManifest)
     assert manifest.name == PLUGIN_NAME
     assert manifest.version == "0.1.0"
-    assert manifest.requires_stigmem == ">=0.9.0a3"
+    assert manifest.requires_stigmem == ">=0.9.0a4"
     assert manifest.config_schema is TimeTravelConfig
     assert manifest.capabilities == frozenset(
         {

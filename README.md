@@ -21,9 +21,9 @@ Stigmem does **not** replace company orchestration platforms, agent runtimes, or
 
 ## Why `v0.9.0a1` and not `v1.0`
 
-We previously announced `v1.0` and walked it back. Several controls our own threat model identifies as required for stable production — mTLS-default federation, persistent audit log, per-principal rate limits, capability-level validation for cross-org instructions, bounded HLC skew enforcement — were still in flight when the `v1.0` label shipped. Velocity outran validation.
+The public version line was reset from the earlier `v1.0` announcement to `v0.9.0a1` so the release label matches the validated stability posture. Several controls our threat model identifies as required for stable production — mTLS-default federation, persistent audit log, per-principal rate limits, capability-level validation for cross-org instructions, bounded HLC skew enforcement — remain hardened-core work rather than shipped GA guarantees.
 
-The canonical version line is being reset. **`v0.9.0a1` is the *first build* of stigmem.** Earlier version markers (`v0.2` through `v2.0`) labeled internal development checkpoints, not tagged releases anyone deployed in production. The spec *content* under those markers is real product specification — it is being reviewed section by section against the actual implementation and migrated forward into the v0.9.0 canonical structure. Only the implied chronology is being corrected.
+The canonical version line has been reset. **`v0.9.0a1` is the *first build* of stigmem.** Earlier version markers (`v0.2` through `v2.0`) labeled internal development checkpoints, not tagged releases anyone deployed in production. The spec *content* under those markers is real product specification — it is being reviewed section by section against the actual implementation and migrated forward into the v0.9.0 canonical structure. Only the implied chronology is being corrected.
 
 We chose `v0.9.0a1` (PEP 440 alpha) over `v0.9.0-preview` because alpha-beta-rc has built-in iteration semantics (`a1`, `a2`, `b1`, `rc1`) and ecosystem-native sort ordering in PyPI and npm — see [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md).
 

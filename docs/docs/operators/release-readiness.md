@@ -1,7 +1,7 @@
 ---
 title: Release Readiness
 sidebar_label: Release Readiness
-description: Per-release entry and exit criteria, scope, and current status for the Stigmem alpha, beta, RC, and GA release lines.
+description: Per-release entry and exit criteria, scope, and current status for active Stigmem releases and future gated horizons.
 audience: Operator
 ---
 
@@ -13,7 +13,7 @@ audience: Operator
 
 **What this page covers**
 
-A single pivot for "what shipped in release X, what remains in release Y, and what's the gate between them." Mirrors the milestone structure on [`Eidetic-Labs/stigmem`](https://github.com/Eidetic-Labs/stigmem/milestones) and pulls from [ROADMAP.md](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md). For the deeper version-string conventions, see [ADR-001](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/001-versioning.md) and [ADR-019](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md).
+A single pivot for "what shipped in release X, what remains in release Y, and what's the gate between them." Active release rows mirror live GitHub milestones. Future beta, release-candidate, and GA rows are gated horizons from [ROADMAP.md](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md), not active milestones. For the deeper version-string conventions, see [ADR-001](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/001-versioning.md) and [ADR-019](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md).
 
 </div>
 
@@ -21,10 +21,10 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 <div className="stigmem-grid">
 
-<div><h4>v0.9.0aN</h4><p>Alpha series. Honesty pass + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18.</p></div>
-<div><h4>v0.9.0bN</h4><p>Beta series. Hardened core, 30-day external operator soak.</p></div>
-<div><h4>v1.0.0rcN</h4><p>Release candidates. 14-day observation window per RC.</p></div>
-<div><h4>v1.0.0</h4><p>GA. Wire format committed, compatibility commitment honored across the v1.x line.</p></div>
+<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18.</p></div>
+<div><h4>Future beta line</h4><p>Hardened core, 30-day external operator soak. No active milestone today.</p></div>
+<div><h4>Future release-candidate line</h4><p>Observation window after hardened-core exit. No active milestone today.</p></div>
+<div><h4>Future GA line</h4><p>Wire format committed, compatibility commitment honored across the v1.x line. No active milestone today.</p></div>
 
 </div>
 
@@ -36,7 +36,7 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 **Alpha-line catch-all after v0.9.0a2 artifact refresh.**
 
-`v0.9.0a3` carries any pre-beta polish, plugin-launch evidence ([#298](https://github.com/eidetic-labs/stigmem/issues/298)), security fixes, or operator-feedback iteration that lands before the v0.9.0bN entry. Phase A plugin extraction and exit validation completed on `main`; v0.9.0a2 is tagged and pending artifact refresh.
+`v0.9.0a3` carries the next active alpha-line work: plugin-launch evidence ([#298](https://github.com/eidetic-labs/stigmem/issues/298)), security fixes, documentation and release-evidence cleanup, and operator-feedback iteration that lands before the future beta gate opens. Phase A plugin extraction and exit validation completed on `main`; v0.9.0a2 is tagged.
 
 </div>
 
@@ -51,7 +51,7 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 <div>
 <dt>Milestone</dt>
 <dt><span className="stigmem-fields__type">open</span></dt>
-<dd>Tracked at [milestone v0.9.0a3](https://github.com/Eidetic-Labs/stigmem/milestone/1). No issues yet; created 2026-05-20.</dd>
+<dd>Tracked at [milestone v0.9.0a3](https://github.com/Eidetic-Labs/stigmem/milestone/1), the only active release milestone.</dd>
 </div>
 
 <div>
@@ -69,20 +69,20 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 <div>
 <dt>Exit</dt>
 <dt><span className="stigmem-fields__type">pending</span></dt>
-<dd>Ready to declare Phase B (v0.9.0bN) entry. See ROADMAP `v0.9.0bN` for full beta-entry criteria.</dd>
+<dd>Ready to evaluate whether the future beta gate can open. See ROADMAP "Future beta line" for full beta-entry criteria.</dd>
 </div>
 
 </div>
 
 ---
 
-## v0.9.0b1 — Beta series entry, hardened core
+## Future beta line — Hardened core
 
 <div className="stigmem-lead">
 
-**First beta with operator validation.**
+**Hardened-core validation before any beta milestone opens.**
 
-Scope per [ROADMAP `v0.9.0bN`](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md#v090bn--beta-series-hardened-core-with-operator-validation): capability redesign, federation hardening, modular spec migration completion, OpenClaw safety, adversarial conformance corpus, storage immutability stack, operator-facing docs, and a 30-day external operator soak.
+Scope per [ROADMAP future beta line](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md#future-beta-line--hardened-core-with-operator-validation): capability redesign, federation hardening, modular spec migration completion, OpenClaw safety, adversarial conformance corpus, storage immutability stack, operator-facing docs, and a 30-day external operator soak. No beta milestone is active today.
 
 </div>
 
@@ -96,8 +96,8 @@ Scope per [ROADMAP `v0.9.0bN`](https://github.com/eidetic-labs/stigmem/blob/main
 
 <div>
 <dt>Milestone</dt>
-<dt><span className="stigmem-fields__type">open</span></dt>
-<dd>Tracked at [milestone v0.9.0b1](https://github.com/Eidetic-Labs/stigmem/milestone/2).</dd>
+<dt><span className="stigmem-fields__type">future gate</span></dt>
+<dd>No active beta milestone exists. Entry is blocked on alpha-line exit evidence.</dd>
 </div>
 
 <div>
@@ -121,7 +121,7 @@ Scope per [ROADMAP `v0.9.0bN`](https://github.com/eidetic-labs/stigmem/blob/main
 <div>
 <dt>Adversarial conformance corpus ([ADR-015](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/015-adversarial-conformance-and-model-certification.md))</dt>
 <dt><span className="stigmem-fields__type">not started</span></dt>
-<dd>Model certification track for v1.0.0 readiness.</dd>
+<dd>Model certification track for stable-release readiness.</dd>
 </div>
 
 <div>
@@ -157,7 +157,7 @@ Scope per [ROADMAP `v0.9.0bN`](https://github.com/eidetic-labs/stigmem/blob/main
 <div>
 <dt>Exit</dt>
 <dt><span className="stigmem-fields__type">pending</span></dt>
-<dd>Threat-model risk register clean for v1.0.0-critical-path risks; OpenClaw audit findings all closed; 30-day soak completes with P0 findings addressed; release-candidate line ready to open.</dd>
+<dd>Threat-model risk register clean for stable-critical-path risks; OpenClaw audit findings all closed; 30-day soak completes with P0 findings addressed; release-candidate line ready to open.</dd>
 </div>
 
 </div>
@@ -209,7 +209,7 @@ Scope per [ROADMAP future release-candidate and GA horizons](https://github.com/
 <div>
 <dt>External production operators</dt>
 <dt><span className="stigmem-fields__type">not started</span></dt>
-<dd>Three or more required for GA. Pipeline starts with the v0.9.0bN soak invitation.</dd>
+<dd>Three or more required for GA. Pipeline starts with the future beta soak invitation.</dd>
 </div>
 
 <div>
@@ -228,13 +228,13 @@ Scope per [ROADMAP future release-candidate and GA horizons](https://github.com/
 
 ---
 
-## v1.0.0 — GA
+## Future GA line
 
 <div className="stigmem-lead">
 
 **Wire format committed; compatibility commitment honored across v1.x.**
 
-Scope per [ROADMAP `v1.0.0rcN → v1.0.0` exit criteria](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md#exit-criteria-3): v1.0.0 stable shipped, wire format committed, compatibility commitment doc per [ADR-013](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/013-deprecation-policy.md) honored across the v1.x line.
+Scope per [ROADMAP future release-candidate and GA exit criteria](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md#future-release-candidate-and-ga-lines): stable release shipped, wire format committed, compatibility commitment doc per [ADR-013](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/013-deprecation-policy.md) honored across the v1.x line.
 
 </div>
 
@@ -278,4 +278,4 @@ Three gates ensure release notes match shipped code:
 
 ---
 
-*Updated as releases land. Last updated: 2026-05-20.*
+*Updated as releases land. Last updated: 2026-05-21.*

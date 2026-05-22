@@ -2,13 +2,13 @@
 
 How stigmem publishes a new release. Internal-facing maintainer doc; not part of the public docs site.
 
-This document is a **runbook**, not a policy. The policy (versioning rules, stability commitments, contributor approval rule) lives in [ADR-001](../../docs/adr/001-versioning.md), [ADR-019](../../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md), and `release/version-surfaces.yaml`. This doc describes the operational sequence a maintainer follows to ship — and the discipline that prevents the v1.0 retraction failure mode from recurring.
+This document is a **runbook**, not a policy. The policy (versioning rules, stability commitments, contributor approval rule) lives in [ADR-001](../../docs/adr/001-versioning.md), [ADR-019](../../docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md), and `release/version-surfaces.yaml`. This doc describes the operational sequence a maintainer follows to ship — and the discipline that keeps tags, docs, and published artifacts aligned.
 
 ---
 
 ## Release discipline (the durable rules)
 
-These exist because the v1.0 retraction had a single root cause: **the tag, the docs, and the published artifact got out of sync** because the project kept changing under the v1.0 label without re-tagging or freezing. The rules below are the operational guardrails that prevent that drift.
+These rules keep release labels, docs, and published artifacts aligned. Once a version is public, the corresponding tag and artifact must remain a stable historical record; follow-on corrections move to the next version or to a post-release where the ecosystem permits one.
 
 ### Rule 1 — PyPI/npm versions are immutable
 
@@ -16,7 +16,7 @@ PyPI and npm enforce this at the registry: once `stigmem-py 0.9.0a1` is uploaded
 
 ### Rule 2 — Tags are immutable after publish
 
-The git tag is the bridge between commit history and the registry artifact. Once the registry has the artifact, **the tag must never move.** Force-moving a tag after publish desyncs the artifact from its declared source — exactly what failed with v1.0.
+The git tag is the bridge between commit history and the registry artifact. Once the registry has the artifact, **the tag must never move.** Force-moving a tag after publish desyncs the artifact from its declared source.
 
 The corollary: **don't push a `v*` tag until you are confident the commit at the tag is what you want to ship.** Iterate on `main` first; tag once.
 

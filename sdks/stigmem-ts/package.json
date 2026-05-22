@@ -12,6 +12,7 @@
   },
   "files": [
     "dist",
+    "!dist/smoke.cjs",
     "src",
     "README.md"
   ],

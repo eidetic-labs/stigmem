@@ -49,6 +49,7 @@ from stigmem_node.identity.manifest import OrgManifest, sign_manifest
 from stigmem_node.identity.trust_store import store_peer_manifest
 from stigmem_node.main import _include_plugin_routers, create_app
 from stigmem_node.models.tombstones import TombstoneRecord, TombstoneRevocationRecord
+from stigmem_node.plugins import Allow, Deny, PluginContext, PluginManifest
 from stigmem_node.plugins.discovery import DiscoveredPlugin
 from stigmem_node.plugins.testing import stigmem_plugins
 from stigmem_node.tombstone_signing import _revocation_signing_body, _signing_body
@@ -237,7 +238,10 @@ def node(tmp_path):
     # Reset module-level tombstone cache for clean test isolation
     _reset_tombstone_cache()
 
-    admin_key = create_api_key("stigmem://tombnode/agent/admin", ["read", "write", "federate"])
+    admin_key = create_api_key(
+        "stigmem://tombnode/agent/admin",
+        ["read", "write", "federate", "admin"],
+    )
     reader_key = create_api_key("stigmem://tombnode/agent/reader", ["read"])
     # Peer token factory — each call mints a fresh JWT (unique nonce)
     our_node_id = get_or_create_node_id(db_path=db_file)
@@ -368,6 +372,88 @@ class TestTombstoneCreate:
         )
         assert resp.status_code == 201
         assert resp.json()["legal_hold"] is True
+
+
+class TestTombstoneAdminCapabilityConsistency:
+    def test_write_federate_without_admin_cannot_use_admin_routes(self, node):
+        client, admin_key, reader_key, ts, db_file, *_extra = node
+        write_federate_key = create_api_key(
+            "stigmem://tombnode/agent/write-federate",
+            ["read", "write", "federate"],
+        )
+        create_resp = client.post(
+            "/v1/tombstones",
+            json={"entity_uri": "user:admin-consistency", "scope": "*"},
+            headers=_ah(admin_key),
+        )
+        assert create_resp.status_code == 201, create_resp.text
+        tomb_id = create_resp.json()["id"]
+        encoded = urllib.parse.quote("user:admin-consistency", safe="")
+
+        responses = [
+            client.post(
+                "/v1/tombstones",
+                json={"entity_uri": "user:write-fed-denied", "scope": "*"},
+                headers=_ah(write_federate_key),
+            ),
+            client.get(f"/v1/tombstones/{encoded}", headers=_ah(write_federate_key)),
+            client.post(
+                f"/v1/tombstones/{tomb_id}/revoke",
+                json={"reason": "unauthorized"},
+                headers=_ah(write_federate_key),
+            ),
+        ]
+
+        assert [response.status_code for response in responses] == [403, 403, 403]
+        assert {response.json()["detail"] for response in responses} == {
+            "admin API key required"
+        }
+
+    def test_admin_capability_voter_denial_blocks_all_admin_routes(self, node):
+        client, admin_key, reader_key, ts, db_file, *_extra = node
+        create_resp = client.post(
+            "/v1/tombstones",
+            json={"entity_uri": "user:admin-voter-denial", "scope": "*"},
+            headers=_ah(admin_key),
+        )
+        assert create_resp.status_code == 201, create_resp.text
+        tomb_id = create_resp.json()["id"]
+        encoded = urllib.parse.quote("user:admin-voter-denial", safe="")
+        seen_capabilities: list[str] = []
+
+        def capability_check(_ctx: PluginContext, **kwargs: object) -> Deny | Allow:
+            capability = str(kwargs["capability"])
+            seen_capabilities.append(capability)
+            if capability == "admin":
+                return Deny("admin disabled")
+            return Allow()
+
+        manifest = PluginManifest(
+            name="deny-admin-capability",
+            version="1.0.0",
+            hooks={"capability_check": capability_check},
+        )
+
+        with stigmem_plugins([manifest]):
+            responses = [
+                client.post(
+                    "/v1/tombstones",
+                    json={"entity_uri": "user:admin-voter-denied", "scope": "*"},
+                    headers=_ah(admin_key),
+                ),
+                client.get(f"/v1/tombstones/{encoded}", headers=_ah(admin_key)),
+                client.post(
+                    f"/v1/tombstones/{tomb_id}/revoke",
+                    json={"reason": "voter denied"},
+                    headers=_ah(admin_key),
+                ),
+            ]
+
+        assert [response.status_code for response in responses] == [403, 403, 403]
+        assert {response.json()["detail"] for response in responses} == {
+            "admin API key required"
+        }
+        assert seen_capabilities == ["admin", "admin", "admin"]
 
 
 # ---------------------------------------------------------------------------
@@ -890,7 +976,7 @@ class TestTwoNodeFederationPropagation:
         _register_peer(db_file, peer_node_id, peer_pub_b64)
         admin_key = create_api_key(
             f"stigmem://{name}/agent/admin",
-            ["read", "write", "federate"],
+            ["read", "write", "federate", "admin"],
         )
         our_node_id = get_or_create_node_id(db_path=db_file)
 

@@ -10,6 +10,7 @@ import pytest
 from conftest import _make_enc_settings, _patch_settings, _restore_settings
 from fastapi.testclient import TestClient
 
+import stigmem_node.auth as auth_mod
 import stigmem_node.plugins.registry as plugin_registry
 import stigmem_node.settings as settings_module
 from stigmem_node.main import _include_plugin_routers, create_app
@@ -62,9 +63,14 @@ def lazy_plugin_client(
     )
     app = create_app()
     _include_plugin_routers(app, (discovered,))
+    admin_key = auth_mod.create_api_key(
+        "stigmem://testnode/agent/admin",
+        ["read", "write", "federate", "admin"],
+    )
 
     try:
         with stigmem_plugins([manifest]), TestClient(app) as client:
+            client.headers.update({"Authorization": f"Bearer {admin_key}"})
             yield client
     finally:
         _restore_settings(original, extra)

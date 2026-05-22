@@ -5,7 +5,7 @@ Routes:
   GET  /v1/tombstones/{entity_uri_encoded}     — check tombstone status (admin)
   POST /v1/tombstones/{tombstone_id}/revoke    — revoke a tombstone (admin)
 
-All endpoints require write + federate permissions (admin API key).
+All endpoints require an admin API key.
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ _VALID_SCOPES = {"local", "team", "company", "public", "*"}
 
 
 def _require_admin(identity: Identity) -> None:
-    if not (identity.can_write() and identity.can_federate()):
+    if not identity.is_admin():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="admin API key required",

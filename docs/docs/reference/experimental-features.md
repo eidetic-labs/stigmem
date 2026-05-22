@@ -231,7 +231,7 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 <div><h4>Gemini adapter</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/gemini-adapter"><code>features/gemini-adapter</code></a> — deferred external adapter; package and live Gemini validation remain future alpha work.</p></div>
 <div><h4>Ollama-LiteLLM adapter</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/ollama-litellm-adapter"><code>features/ollama-litellm-adapter</code></a> — superseded compatibility identity; behavior lives with the OpenAI-compatible tools adapter.</p></div>
 <div><h4>OpenAI tools adapter</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/openai-tools-adapter"><code>features/openai-tools-adapter</code></a> — deferred OpenAI-compatible tool-use adapter; live provider validation remains future alpha work.</p></div>
-<div><h4>Paperclip adapter</h4><p>Dormant — deferred lifecycle/event adapter.</p></div>
+<div><h4>Paperclip adapter</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/paperclip-adapter"><code>features/paperclip-adapter</code></a> — deferred lifecycle/event adapter; live Paperclip validation remains future alpha work.</p></div>
 
 </div>
 

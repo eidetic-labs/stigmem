@@ -247,7 +247,7 @@ curl -s -X POST http://localhost:8765/v1/facts \
 If you are inside a Paperclip or Claude Code session with the Stigmem
 MCP server configured, call `assert_fact` directly — no `curl`
 required. See the
-[Paperclip connector guide](https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip).
+[Paperclip connector guide](https://github.com/eidetic-labs/stigmem/tree/main/features/paperclip-adapter).
 :::
 
 ## Multi-tenant fact assertion

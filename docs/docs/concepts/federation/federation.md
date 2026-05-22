@@ -562,7 +562,7 @@ environment.
 <small>Local two-node test in under 5 minutes.</small>
 </a>
 
-<a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip">
+<a href="https://github.com/eidetic-labs/stigmem/tree/main/features/paperclip-adapter">
 <strong>Experimental</strong>
 <span>Paperclip connector</span>
 <small>Deploying stigmem as a Paperclip agent fleet's persistent fact store.</small>

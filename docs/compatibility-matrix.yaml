@@ -521,6 +521,22 @@ features:
       node: "experimental"
     notes: "Deferred OpenAI-compatible tool-use adapter; package, dependency, ownership, and live provider validation remain future alpha work."
 
+  - id: paperclip-adapter
+    name: Paperclip adapter
+    feature_record: features/paperclip-adapter/README.md
+    feature_type: adapter
+    default_surface: external
+    implementation_path: experimental/paperclip-adapter
+    package: none
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (adapter)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred lifecycle/event adapter; installation, ownership, live Paperclip, and security validation remain future alpha work."
+
 protocol_compatibility:
   - protocol_version: "0.9.0a2"
     supported_by:

@@ -25,10 +25,8 @@ PUBLISH_REQUIREMENTS = {
     "SBOM attestation": "cosign attest --yes",
     "SPDX attestation type": "--type spdxjson",
     "BuildKit provenance": "provenance: mode=max",
-    "npm provenance": "npm publish \"$RELEASE_NPM_TARBALL\" --provenance",
+    "npm provenance": "npm publish --provenance",
     "PyPI Trusted Publisher": "use_oidc: true",
-    "GPG release signing": "scripts/gpg_sign_release_assets.sh",
-    "GPG release public key": "stigmem-release-signing-key.asc",
     "release-page verification link": "https://docs.stigmem.dev/operators/release-verification",
 }
 

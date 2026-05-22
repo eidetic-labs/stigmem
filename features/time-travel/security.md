@@ -40,6 +40,8 @@ Required adversarial vectors before promotion:
 
 - default installs reject `as_of` queries when the plugin is not loaded;
 - non-admin callers cannot retrieve legal-hold history through `as_of`;
+- non-admin legal-hold suppression is indistinguishable from ordinary
+  tombstone suppression in response bodies and count headers;
 - time-travel reads exclude tombstoned data unless the caller is authorized for
   the legal-hold path;
 - federation ingest rejects `valid_until` extension before historical reads can
@@ -48,9 +50,10 @@ Required adversarial vectors before promotion:
 
 ## Residual Risk
 
-Gate 1 remains open until legal-hold access controls and R-18 integration tests
-cover the time-travel read path. The feature must not graduate while historical
-reads can bypass tombstone, CID, or source-trust controls.
+Gate 1 remains open for operator-facing legal-hold role separation, audit
+runbooks, and federation authority validation. The a4 read-path coverage now
+checks that historical reads do not bypass tombstone, legal-hold, CID, or
+source-trust-style ranking controls.
 
 ## Advisories and Findings
 

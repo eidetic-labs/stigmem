@@ -12,6 +12,8 @@ user/operator-facing entries are promoted into the root `CHANGELOG.md`.
   explicit operator enablement for fact-query and recall `as_of` surfaces.
 - Added historical query validation for recall retention floors, recency scoring
   relative to `as_of`, CID tamper rejection, and rank-hook visibility limits.
+- Added a4 security-posture coverage for retroactive tombstone suppression and
+  non-admin legal-hold responses that do not reveal legal-hold existence.
 
 ## Post-v0.9.0a1 Main
 

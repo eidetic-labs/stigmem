@@ -12,6 +12,7 @@
 | `node/src/stigmem_node/routes/facts/query.py` | Fact query `as_of` gating and plugin-loaded behavior. |
 | `node/src/stigmem_node/routes/recall/as_of.py` | Historical recall behavior. |
 | `node/src/stigmem_node/routes/recall/orchestration.py` | Recall route branch and fail-closed handling. |
+| `node/src/stigmem_node/federation/federation_ingest.py` | R-18 `valid_until` extension rejection before historical reads can observe extended federated metadata. |
 
 ## Tests and Validators
 
@@ -20,6 +21,8 @@
 | Plugin package scaffold | `node/tests/plugins/test_time_travel_plugin_scaffold.py` | Entry point, manifest, default config, environment gates, hook registration, deterministic hook order, and discovery. |
 | Plugin-loaded behavior | `node/tests/plugins/test_time_travel_plugin_validation.py` | Default install rejects `as_of`; registered-but-disabled plugin rejects `as_of`; separate fact-query and recall gates are honored; explicitly enabled plugin-loaded fact query and recall accept historical reads. |
 | Integrated Phase 13 coverage | `node/tests/time_travel/test_phase13_time_travel_cid.py` | Historical fact visibility, retraction, expiry, retroactive tombstone suppression, legal-hold oracle suppression, recall, retention-floor errors, historical recency scoring, CID tamper rejection, and source-trust-style rank-hook visibility tests. |
+| Admin capability voting consistency | `node/tests/time_travel/test_admin_capability_voting_consistency.py` | Fact-query and recall `as_of` paths both use `Identity.is_admin()` so a `capability_check` voter can consistently deny admin legal-hold visibility. |
+| Federation `valid_until` extension rejection | `node/tests/federation/test_valid_until_extension.py` | First observation, idempotent replay, extension rejection, shrinkage no-op, `None` handling, timezone equivalence, and audit evidence for `federation_valid_until_extension_rejected`. |
 | Fast gate | `bash scripts/check.sh python` | Runs plugin, route, and integration tests in the Python check bundle. |
 
 ## Conformance and Fixtures

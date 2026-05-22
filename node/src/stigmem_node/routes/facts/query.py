@@ -377,7 +377,7 @@ def query_facts(
                 scope=scope,
                 relation=relation,
                 as_of=as_of,
-                is_admin_caller="admin" in identity.permissions,
+                is_admin_caller=identity.is_admin(),
                 tenant_id=identity.tenant_id,
                 limit=limit,
                 cursor=cursor,
@@ -614,7 +614,7 @@ def _apply_tombstone_filter(
     entity_uris_in_result = list({r.entity for r in records})
     with db() as _tc_conn:
         excluded, _notices = _get_tombstone_filter(
-            _tc_conn, entity_uris_in_result, scope or "local", "admin" in identity.permissions
+            _tc_conn, entity_uris_in_result, scope or "local", identity.is_admin()
         )
     if not excluded:
         return records, False

@@ -95,7 +95,6 @@ def test_default_config_keeps_behavior_disabled() -> None:
     assert config.enabled is False
     assert config.allow_fact_query_as_of is False
     assert config.allow_recall_as_of is False
-    assert config.retention_floor is None
 
 
 def test_config_loads_environment_gates() -> None:
@@ -104,14 +103,12 @@ def test_config_loads_environment_gates() -> None:
             "STIGMEM_TIME_TRAVEL_ENABLED": "true",
             "STIGMEM_TIME_TRAVEL_ALLOW_FACT_QUERY_AS_OF": "1",
             "STIGMEM_TIME_TRAVEL_ALLOW_RECALL_AS_OF": "yes",
-            "STIGMEM_TIME_TRAVEL_RETENTION_FLOOR": "2026-05-01T00:00:00Z",
         }
     )
 
     assert config.enabled is True
     assert config.allow_fact_query_as_of is True
     assert config.allow_recall_as_of is True
-    assert config.retention_floor == "2026-05-01T00:00:00+00:00"
 
 
 def test_manifest_registers_with_hook_registry() -> None:

@@ -106,6 +106,10 @@ time-travel read path as an experimental, opt-in plugin boundary: default
 installs fail closed for `as_of`, operators must explicitly enable the
 fact-query and recall surfaces, tombstoned facts are suppressed retroactively,
 and non-admin callers do not receive legal-hold existence signals.
+The release also closes R-18 for the time-travel boundary: federation ingest
+rejects `valid_until` extension attempts and records
+`federation_valid_until_extension_rejected` audit events with the stored and
+incoming values.
 
 The standing publication policy remains: Critical and High vulnerabilities that
 affect supported published artifacts are handled through GHSA where applicable

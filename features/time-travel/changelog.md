@@ -14,6 +14,13 @@ user/operator-facing entries are promoted into the root `CHANGELOG.md`.
   relative to `as_of`, CID tamper rejection, and rank-hook visibility limits.
 - Added a4 security-posture coverage for retroactive tombstone suppression and
   non-admin legal-hold responses that do not reveal legal-hold existence.
+- Closed R-18 for the time-travel boundary by rejecting federated
+  `valid_until` extension attempts on ingest, auditing rejected attempts, and
+  keeping source-trust recomputation local.
+- Consolidated admin determination across fact-query and recall `as_of` paths
+  on `Identity.is_admin()`, removed orphan plugin retention-floor config, and
+  clarified that plugin handlers are gate-presence hooks rather than duplicate
+  authorization points.
 
 ## Post-v0.9.0a1 Main
 

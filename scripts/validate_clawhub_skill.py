@@ -30,6 +30,7 @@ import argparse
 import json
 import re
 import sys
+import tomllib
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -67,6 +68,20 @@ KNOWN_STIGMEM_PACKAGES = {
 }
 """PyPI package names the skill may legitimately install. Catches typos
 like `stigmem_py` (underscore) or `stigmem-py-sdk` (drift)."""
+
+LOCAL_PYPI_PACKAGE_PYPROJECTS = {
+    "stigmem": REPO_ROOT / "pyproject.toml",
+    "stigmem-py": REPO_ROOT / "sdks/stigmem-py/pyproject.toml",
+    "stigmem-node": REPO_ROOT / "node/pyproject.toml",
+    "stigmem-openclaw": REPO_ROOT / "adapters/openclaw/pyproject.toml",
+}
+"""Local PyPI package manifests allowed during prerelease artifact preparation.
+
+`--check-pypi` normally requires the ClawHub install range to resolve to a
+published artifact. During release-prep PRs, the range can legitimately point to
+the not-yet-published local prerelease if the same version is present in the
+package's pyproject.
+"""
 
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
@@ -337,10 +352,29 @@ def check_pypi_install_specs(fm: dict[str, Any], r: Report) -> None:
         published = list(meta.get("releases", {}).keys())
         matching = [v for v in published if _safe_match(spec, v, Version)]
         if not matching:
+            local_version = _local_package_version(bare)
+            if local_version and _safe_match(spec, local_version, Version):
+                r.warn(
+                    f"install[{i}].package: '{pkg_spec}' matches local {bare} "
+                    f"{local_version}, but that version is not published on PyPI yet"
+                )
+                continue
             r.err(
                 f"install[{i}].package: '{pkg_spec}' matches NO published version of {bare} on PyPI "
                 f"(published: {sorted(published)[-5:]})"
             )
+
+
+def _local_package_version(package: str) -> str | None:
+    pyproject = LOCAL_PYPI_PACKAGE_PYPROJECTS.get(package)
+    if pyproject is None or not pyproject.exists():
+        return None
+    try:
+        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+        version = data.get("project", {}).get("version")
+    except Exception:
+        return None
+    return str(version) if version else None
 
 
 def _safe_match(spec: Any, v: str, Version: Any) -> bool:

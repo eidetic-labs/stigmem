@@ -418,7 +418,13 @@ Read the spec at
 </div>
 
 <div>
-<dt>Fly.io / systemd / Grafana / PaaS</dt>
+<dt>Fly.io</dt>
+<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-fly"><code>features/deploy-fly</code></a>; live deployment, persistence, dashboard validation, and secrets review remain future alpha work.</dd>
+</div>
+
+<div>
+<dt>systemd / Grafana / PaaS</dt>
 <dt><span className="stigmem-fields__type">Deferred</span></dt>
 <dd><code>experimental/deploy-&#42;/</code>.</dd>
 </div>

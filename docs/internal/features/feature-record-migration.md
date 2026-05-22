@@ -244,6 +244,10 @@ Progress:
 - `deploy-helm` now has a canonical deployment feature record under
   `features/deploy-helm/`; chart publication, live cluster validation,
   hardening review, and ownership remain future alpha release-line gates.
+- `deploy-fly` now has a canonical deployment feature record under
+  `features/deploy-fly/`; live Fly deployment, persistence, dashboard
+  validation, secrets review, and ownership remain future alpha release-line
+  gates.
 
 ## Release Horizon Alignment
 

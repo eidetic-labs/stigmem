@@ -51,7 +51,12 @@ def _tombstone_plugin_registered(monkeypatch: pytest.MonkeyPatch):
         yield
 
 
-def _insert_tombstone(entity_uri: str, tenant_id: str = _TENANT) -> str:
+def _insert_tombstone(
+    entity_uri: str,
+    tenant_id: str = _TENANT,
+    *,
+    legal_hold: bool = False,
+) -> str:
     """Insert an active (non-revoked) tombstone row; return its id."""
     tomb_id = f"tomb_{uuid.uuid4()}"
     now = datetime.now(UTC).isoformat()
@@ -60,7 +65,7 @@ def _insert_tombstone(entity_uri: str, tenant_id: str = _TENANT) -> str:
             """INSERT INTO tombstones
                (id, entity_uri, scope, reason, signed_by, signature,
                 created_at, legal_hold, tenant_id)
-               VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 tomb_id,
                 entity_uri,
@@ -69,10 +74,23 @@ def _insert_tombstone(entity_uri: str, tenant_id: str = _TENANT) -> str:
                 "test-admin",
                 "sig-placeholder",
                 now,
+                1 if legal_hold else 0,
                 tenant_id,
             ),
         )
     return tomb_id
+
+
+def _revoke_tombstone(tombstone_id: str) -> None:
+    rev_id = f"tombrevoke_{uuid.uuid4()}"
+    now = datetime.now(UTC).isoformat()
+    with db_mod.db() as conn:
+        conn.execute(
+            """INSERT INTO tombstone_revocations
+               (id, tombstone_id, reason, signed_by, signature, created_at)
+               VALUES (?,?,?,?,?,?)""",
+            (rev_id, tombstone_id, "reinstated", "test-admin", "rev-sig", now),
+        )
 
 
 def _insert_fact(client: TestClient, entity: str = _ENTITY, value: str = "Alice") -> dict:
@@ -210,15 +228,7 @@ class TestTombstoneSubscriptionDelivery:
         tc_mod.invalidate()
 
         # Revoke the tombstone so entity is no longer tombstoned
-        rev_id = f"tombrevoke_{uuid.uuid4()}"
-        now = datetime.now(UTC).isoformat()
-        with db_mod.db() as conn:
-            conn.execute(
-                """INSERT INTO tombstone_revocations
-                   (id, tombstone_id, reason, signed_by, signature, created_at)
-                   VALUES (?,?,?,?,?,?)""",
-                (rev_id, tomb_id, "reinstated", "test-admin", "rev-sig", now),
-            )
+        _revoke_tombstone(tomb_id)
 
         tc_mod.invalidate()
 
@@ -290,20 +300,33 @@ class TestTombstoneRecallSuppression:
         )
 
         # Revoke tombstone
-        rev_id = f"tombrevoke_{uuid.uuid4()}"
-        now = datetime.now(UTC).isoformat()
-        with db_mod.db() as conn:
-            conn.execute(
-                """INSERT INTO tombstone_revocations
-                   (id, tombstone_id, reason, signed_by, signature, created_at)
-                   VALUES (?,?,?,?,?,?)""",
-                (rev_id, tomb_id, "reinstated", "test-admin", "rev-sig", now),
-            )
+        _revoke_tombstone(tomb_id)
 
         tc_mod.invalidate()
 
         facts = _recall(client, query="alice revoked")
         assert any(f["fact"]["entity"] == _ENTITY for f in facts)
+
+    def test_tombstone_revocation_restores_only_revoked_entity(
+        self, client: TestClient
+    ) -> None:
+        """Revoking Alice's tombstone must not restore Bob while Bob remains tombstoned."""
+        alice = "stigmem://test/agent/alice-revoked-only"
+        bob = "stigmem://test/agent/bob-still-tombstoned"
+        _insert_fact(client, entity=alice, value="selective restore alpha")
+        _insert_fact(client, entity=bob, value="selective restore beta")
+
+        alice_tomb = _insert_tombstone(alice)
+        _insert_tombstone(bob)
+        tc_mod.invalidate()
+
+        _revoke_tombstone(alice_tomb)
+        tc_mod.invalidate()
+
+        facts = _recall(client, query="selective restore")
+        entities = {sf["fact"]["entity"] for sf in facts}
+        assert alice in entities
+        assert bob not in entities
 
     def test_tombstone_suppresses_total_scored_header(self, client: TestClient) -> None:
         """§23.3.3 r.3: X-Total-Count header must be absent when tombstone filtering was applied."""
@@ -395,3 +418,41 @@ class TestTombstonePaginationOracleLeakage:
         assert "X-Total-Count" in resp.headers
         assert resp.json()["total"] is not None
         assert resp.json()["total"] > 0
+
+    def test_facts_query_revocation_restores_only_revoked_entity(
+        self, client: TestClient
+    ) -> None:
+        """Facts query restores only the revoked tombstone target and keeps filtering others."""
+        alice = "stigmem://test/agent/alice-facts-revoked"
+        bob = "stigmem://test/agent/bob-facts-still-tombstoned"
+        _insert_fact(client, entity=alice, value="facts selective restore alpha")
+        _insert_fact(client, entity=bob, value="facts selective restore beta")
+
+        alice_tomb = _insert_tombstone(alice)
+        _insert_tombstone(bob)
+        tc_mod.invalidate()
+        _revoke_tombstone(alice_tomb)
+        tc_mod.invalidate()
+
+        resp = client.get("/v1/facts?scope=local")
+        assert resp.status_code == 200
+        entities = {fact["entity"] for fact in resp.json()["facts"]}
+        assert alice in entities
+        assert bob not in entities
+        assert "X-Total-Count" not in resp.headers
+        assert resp.json()["total"] is None
+
+    def test_facts_query_legal_hold_non_admin_is_silent(self, client: TestClient) -> None:
+        """Non-admin facts query must not expose legal-hold tombstone metadata."""
+        entity = "stigmem://test/agent/legal-hold-silent"
+        _insert_fact(client, entity=entity, value="legal hold silent")
+        _insert_tombstone(entity, legal_hold=True)
+        tc_mod.invalidate()
+
+        resp = client.get("/v1/facts", params={"scope": "local", "entity": entity})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["facts"] == []
+        assert body["tombstone_notices"] == []
+        assert "X-Total-Count" not in resp.headers
+        assert body["total"] is None

@@ -20,7 +20,7 @@ the default supported surface.
 | --- | --- | --- |
 | `v0.9.0a1` | Spec lineage carried section 24 time-travel semantics. | `spec/stigmem-spec-v0.9.0a1.md` |
 | Post-`v0.9.0a1` main | Source package and fail-closed behavior landed for alpha validation. | `experimental/time-travel/`; plugin tests |
-| `v0.9.0a4` planned | Roadmap target for time-travel extraction into opt-in experimental plugin artifacts. | `ROADMAP.md` |
+| `v0.9.0a4` active | Active release target for time-travel extraction validation, default fail-closed behavior, plugin-loaded `as_of` coverage, and release-surface alignment. | `ROADMAP.md`; `docs/internal/releases/v0.9.0a4-roadmap.md` |
 
 ## Gate Progress
 

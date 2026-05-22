@@ -17,6 +17,11 @@ Use the format defined in
 | [`v0.9.0a1`](./v0.9.0a1-roadmap.md) | Historical | First-build release record and posture reset. |
 | [`v0.9.0a2`](./v0.9.0a2-roadmap.md) | Historical | Artifact-refresh, extraction, and security-publication record. |
 | [`v0.9.0a3`](./v0.9.0a3-roadmap.md) | Active | Current alpha release contract. |
+| [`v0.9.0 alpha series`](./v0.9.0-alpha-series-roadmap.md) | Planned | Detailed alpha deployment sequence, phase plan, and exit evidence. |
+| [`future hardened core`](./future-hardened-core-roadmap.md) | Future gate | Preserved hardened-core plan; not an active beta milestone. |
+| [`future RC / GA`](./future-rc-ga-roadmap.md) | Future gate | Preserved release-candidate and stable-release gates. |
+| [`post-GA expansion`](./post-ga-expansion-roadmap.md) | Future gate | Preserved v1.x expansion and plugin stewardship horizon. |
+| [`alpha extraction and graduation`](./alpha-extraction-and-graduation.md) | Maintainer reference | Alpha extraction process and ADR-008 graduation distinction. |
 
 ## Rules
 

@@ -27,6 +27,7 @@ attaches supply-chain evidence to the GHCR node image.
 <div><h4>SPDX SBOM</h4><p>JSON SBOM as an OCI referrer.</p></div>
 <div><h4>SBOM attestation</h4><p>SPDX JSON SBOM attestation.</p></div>
 <div><h4>BuildKit provenance</h4><p>For the container build.</p></div>
+<div><h4>GPG signatures</h4><p>Detached signatures attached to the GitHub release.</p></div>
 <div><h4>Rekor entries</h4><p>Transparency-log entries created by the keyless signing flow.</p></div>
 
 </div>
@@ -107,6 +108,24 @@ python -m pip hash /tmp/stigmem-release/*
 ```
 
 Store the resulting hashes in your own deployment record if you require environment-local package pinning.
+
+## Verify GPG release signatures
+
+The GitHub release attaches detached ASCII-armored GPG signatures for release
+artifacts, plus `stigmem-release-signing-key.asc`.
+
+Import the release public key, download the artifact and matching `.asc`
+signature, then verify:
+
+```bash
+gpg --import stigmem-release-signing-key.asc
+gpg --verify stigmem-node-sbom.spdx.json.asc stigmem-node-sbom.spdx.json
+gpg --verify stigmem-node-image-digest.txt.asc stigmem-node-image-digest.txt
+gpg --verify <artifact>.asc <artifact>
+```
+
+Treat a failed GPG verification as a release-blocking integrity failure. Do not
+mirror or deploy an artifact whose detached signature does not verify.
 
 ## Reproducibility expectations
 

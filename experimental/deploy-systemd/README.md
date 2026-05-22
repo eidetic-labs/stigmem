@@ -13,7 +13,7 @@ Tested on Debian 12, Ubuntu 22.04 LTS, RHEL 9, Fedora 40.
 
 ```bash
 # From repo root:
-sudo bash deploy/systemd/install.sh
+sudo bash experimental/deploy-systemd/install.sh
 ```
 
 The installer:
@@ -89,11 +89,11 @@ Update `STIGMEM_NODE_URL` in `.env` to the public HTTPS URL after configuring TL
 
 ```bash
 # On a connected machine, download wheels:
-pip3 download --pre "stigmem-node==0.9.0a1" -d wheels/
+pip3 download --pre "stigmem-node==0.9.0a2" -d wheels/
 
 # Copy wheels/ to the target, then:
 STIGMEM_OFFLINE=1 WHEEL_DIR=/path/to/wheels \
-  sudo bash deploy/systemd/install.sh
+  sudo bash experimental/deploy-systemd/install.sh
 ```
 
 ## Uninstall

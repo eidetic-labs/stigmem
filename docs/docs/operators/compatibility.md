@@ -112,6 +112,7 @@ compatibility remains in [`docs/compatibility-matrix.yaml`](https://github.com/e
 | [Grafana deployment](https://github.com/eidetic-labs/stigmem/blob/main/features/deploy-grafana/README.md) | deployment | experimental / external | `v0.9.0a1`, `0.9.xA` | `experimental/deploy-grafana` |
 | [Helm deployment](https://github.com/eidetic-labs/stigmem/blob/main/features/deploy-helm/README.md) | deployment | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem`; `experimental/deploy-helm` |
 | [PaaS deployment](https://github.com/eidetic-labs/stigmem/blob/main/features/deploy-paas/README.md) | deployment | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem`; `experimental/deploy-paas` |
+| [systemd deployment](https://github.com/eidetic-labs/stigmem/blob/main/features/deploy-systemd/README.md) | deployment | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem-node`; `experimental/deploy-systemd` |
 | [Gemini adapter](https://github.com/eidetic-labs/stigmem/blob/main/features/gemini-adapter/README.md) | adapter | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem-gemini-adapter`; `experimental/gemini-adapter` |
 | [Go SDK](https://github.com/eidetic-labs/stigmem/blob/main/features/sdk-go/README.md) | sdk | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem-go`; `experimental/sdk-go` |
 | [Intent envelope](https://github.com/eidetic-labs/stigmem/blob/main/features/intent-envelope/README.md) | protocol | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `experimental/intent-envelope` |

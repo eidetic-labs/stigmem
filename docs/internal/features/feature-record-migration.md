@@ -255,6 +255,10 @@ Progress:
 - `deploy-paas` now has a canonical deployment feature record under
   `features/deploy-paas/`; live platform validation, persistence, secrets,
   scaling/cost review, and ownership remain future alpha release-line gates.
+- `deploy-systemd` now has a canonical deployment feature record under
+  `features/deploy-systemd/`; live distro validation, installer review,
+  hardening review, upgrade/rollback, offline install, and ownership remain
+  future alpha release-line gates.
 
 ## Release Horizon Alignment
 

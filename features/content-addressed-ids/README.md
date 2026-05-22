@@ -47,10 +47,14 @@ CIDs are core behavior per ADR-017. They are not an experimental plugin and no
 | Surface | Path | Notes |
 | --- | --- | --- |
 | CID computation and validation | `node/src/stigmem_node/cid.py` | Computes `sha256:` CIDs from canonical fact bodies and verifies stored rows. |
-| Fact write/read integration | `node/src/stigmem_node/routes/facts/` | Persists CIDs, resolves facts by CID, and rejects read-path CID mismatches. |
+| Fact write integration | `node/src/stigmem_node/routes/_facts_assert.py` | Computes CIDs before local insertion, persists `facts.cid`, and records `fact_cid_aliases`. |
+| Fact read integration | `node/src/stigmem_node/routes/facts/` | Resolves facts by CID and rejects read-path CID mismatches. |
 | CID verification route | `node/src/stigmem_node/routes/facts/cid.py` | Exposes `POST /v1/facts/{fact_id}/verify-cid`. |
 | Backfill status route | `node/src/stigmem_node/routes/cid_admin.py` | Exposes `GET /v1/admin/cid-backfill/status`. |
+| Backfill CLI | `node/src/stigmem_node/cli_admin_handlers.py` | Implements `backfill-cids` for CID-null legacy rows. |
+| CID storage migration | `node/migrations/026_cid_and_tombstone_key_id.sql` | Adds `facts.cid`, alias storage, and lookup indexes. |
 | SDK verification helpers | `sdks/stigmem-py/src/stigmem/verification.py` | Recomputes and verifies fact CIDs for clients. |
+| Conformance vectors | `data/conformance/v2.0/25_cid_addressing.json` | Covers default-install CID wire behavior. |
 
 ## Feature Files
 

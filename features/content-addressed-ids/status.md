@@ -18,7 +18,7 @@ hydration, and prompt-injection trust boundaries.
 | Release | Change | Evidence |
 | --- | --- | --- |
 | `v0.9.0a1` | Monolithic spec lineage preserved content-addressed fact ID scope. | `spec/stigmem-spec-v0.9.0a1.md` |
-| `v0.9.0a3` horizon | CID core/spec validation remains in active alpha scope. | `ROADMAP.md`; `docs/internal/releases/v0.9.0a3-roadmap.md` |
+| `v0.9.0a3` horizon | CID core/spec validation remains in active alpha scope. | `ROADMAP.md`; `docs/internal/releases/v0.9.0a3-roadmap.md`; issue #554 |
 
 ## Known Gaps
 
@@ -32,5 +32,7 @@ hydration, and prompt-injection trust boundaries.
 - Default node computes CIDs for new facts.
 - Read paths reject CID mismatches.
 - CID verification and backfill status surfaces exist.
-- Feature-local projection cleanup remains ongoing while legacy spec/public
-  docs wrappers point to this record.
+- Compatibility projection remains a pointer to this feature-owned spec until
+  protocol projection tooling owns generated compatibility files.
+- A3 validation requires the feature record, compatibility matrix, protocol
+  projection, focused CID tests, and docs projection checks to agree.

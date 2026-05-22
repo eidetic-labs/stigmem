@@ -7,6 +7,9 @@ user/operator-facing entries are promoted into the root `CHANGELOG.md`.
 
 - Added ADR-020 feature record and made this directory the canonical feature
   home for CID spec, status, evidence, security, and feature-local history.
+- Recorded the `v0.9.0a3` CID validation gate for issue #554, including core
+  ownership, compatibility projection, implementation coverage, and release
+  posture evidence.
 
 ## v0.9.0a3 Horizon
 

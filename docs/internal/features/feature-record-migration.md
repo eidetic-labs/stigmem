@@ -228,6 +228,9 @@ Progress:
 - `ollama-litellm-adapter` now has a canonical compatibility feature record
   under `features/ollama-litellm-adapter/`; implementation detail is
   consolidated under the OpenAI-compatible tools adapter.
+- `openai-tools-adapter` now has a canonical adapter feature record under
+  `features/openai-tools-adapter/`; package, dependency, ownership, and live
+  model validation remain future alpha release-line gates.
 
 ## Release Horizon Alignment
 

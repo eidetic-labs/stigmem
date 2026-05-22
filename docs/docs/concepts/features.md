@@ -352,9 +352,15 @@ Read the spec at
 </div>
 
 <div>
-<dt>OpenAI-tools / Paperclip adapters</dt>
+<dt>OpenAI tools adapter</dt>
+<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/openai-tools-adapter"><code>features/openai-tools-adapter</code></a>; package, dependency, and live provider validation remain future alpha work.</dd>
+</div>
+
+<div>
+<dt>Paperclip adapter</dt>
 <dt><span className="stigmem-fields__type">Deferred</span></dt>
-<dd><code>experimental/&lt;adapter&gt;-adapter/</code>.</dd>
+<dd><code>experimental/paperclip-adapter/</code>.</dd>
 </div>
 
 <div>

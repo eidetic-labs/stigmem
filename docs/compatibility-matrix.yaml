@@ -505,6 +505,22 @@ features:
       node: "experimental"
     notes: "Superseded compatibility identity for local Ollama and LiteLLM usage; behavior and tests live with the OpenAI-compatible tools adapter."
 
+  - id: openai-tools-adapter
+    name: OpenAI tools adapter
+    feature_record: features/openai-tools-adapter/README.md
+    feature_type: adapter
+    default_surface: external
+    implementation_path: experimental/openai-tools-adapter
+    package: stigmem-openai-tools-adapter
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (adapter)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred OpenAI-compatible tool-use adapter; package, dependency, ownership, and live provider validation remain future alpha work."
+
 protocol_compatibility:
   - protocol_version: "0.9.0a2"
     supported_by:

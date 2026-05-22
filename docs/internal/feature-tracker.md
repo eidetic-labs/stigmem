@@ -64,7 +64,7 @@ act only as wrappers, compatibility projections, or implementation directories.
 | `deploy-helm` | Helm deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-helm/` | `features/deploy-helm/` | `migrated` | `future alpha` | Kubernetes deployment recipe; live cluster validation remains future alpha work. |
 | `deploy-fly` | Fly.io deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-fly/` | `features/deploy-fly/` | `migrated` | `future alpha` | Fly.io deployment recipe; live deployment, persistence, dashboard validation, and ownership remain future alpha work. |
 | `deploy-grafana` | Grafana deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-grafana/` | `features/deploy-grafana/` | `migrated` | `future alpha` | Observability deployment seed; live stack validation, metric review, alert review, packaging, and ownership remain future alpha work. |
-| `deploy-paas` | PaaS deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-paas/` | `features/deploy-paas/` | `pending` | `future alpha` | Deployment surface. |
+| `deploy-paas` | PaaS deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-paas/` | `features/deploy-paas/` | `migrated` | `future alpha` | Managed-platform deployment recipes; live platform validation, persistence, secrets, scaling/cost review, and ownership remain future alpha work. |
 | `deploy-systemd` | systemd deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-systemd/` | `features/deploy-systemd/` | `pending` | `future alpha` | Deployment surface. |
 
 ## Maintenance Rules

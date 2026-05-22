@@ -178,6 +178,22 @@ features:
       node: "experimental"
     notes: "Deferred observability deployment seed; live stack validation, metric review, alert review, packaging, and ownership remain future alpha work."
 
+  - id: deploy-paas
+    name: PaaS deployment
+    feature_record: features/deploy-paas/README.md
+    feature_type: deployment
+    default_surface: external
+    implementation_path: experimental/deploy-paas
+    package: stigmem
+    release_lines:
+      - "v0.9.0a1"
+      - "0.9.xA"
+    spec_section: (deployment)
+    stability: experimental
+    requires:
+      node: "experimental"
+    notes: "Deferred managed-platform deployment recipes; live platform validation, persistence, secrets, scaling/cost review, and ownership remain future alpha work."
+
   - id: async-jobs
     name: Async jobs
     feature_record: features/async-jobs/README.md

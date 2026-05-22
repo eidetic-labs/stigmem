@@ -244,7 +244,8 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 <div><h4>Helm deployment</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-helm"><code>features/deploy-helm</code></a> — deferred Kubernetes deployment recipe; live cluster validation remains future alpha work.</p></div>
 <div><h4>Fly.io deployment</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-fly"><code>features/deploy-fly</code></a> — deferred Fly.io deployment recipe; live deployment, persistence, dashboard validation, and secrets review remain future alpha work.</p></div>
 <div><h4>Grafana deployment</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-grafana"><code>features/deploy-grafana</code></a> — deferred observability deployment seed; live stack validation, metric review, alert review, and packaging remain future alpha work.</p></div>
-<div><h4>PaaS / systemd</h4><p>Dormant — Docker Compose is the supported v0.9.0a1 deployment path.</p></div>
+<div><h4>PaaS deployment</h4><p><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-paas"><code>features/deploy-paas</code></a> — deferred managed-platform deployment recipes; live platform validation, persistence, secrets, and scaling review remain future alpha work.</p></div>
+<div><h4>systemd</h4><p>Dormant — Docker Compose is the supported v0.9.0a1 deployment path.</p></div>
 
 </div>
 

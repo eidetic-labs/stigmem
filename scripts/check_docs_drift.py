@@ -24,10 +24,16 @@ ALLOWED_RETRACTED_LABEL_FILES = {
     ROOT / "SECURITY.md",
 }
 
+ACTIVE_RELEASE_MILESTONE_LABEL = "v0.9.0a3"
+
 FORBIDDEN_RELEASE_TOKENS = {
     "1.0.0rc1": (
         "Do not use the retracted release label in live docs. If the reference "
         "is historical security posture, add the file to ALLOWED_RETRACTED_LABEL_FILES."
+    ),
+    "v0.9.0b1": "Do not name a concrete beta milestone until the beta line is opened.",
+    "v1.0.0rc1": (
+        "Do not name a concrete release-candidate milestone until the RC line is opened."
     ),
 }
 
@@ -38,6 +44,22 @@ FORBIDDEN_PATH_TOKENS = {
     "deploy/paas": "Use experimental/deploy-paas or features/deploy-paas.",
     "experimental/deploy-grafana/stigmem-dashboard.json": (
         "Use experimental/deploy-grafana/dashboards/grafana/."
+    ),
+}
+
+FORBIDDEN_NARRATIVE_PHRASES = {
+    "Velocity outran validation.": (
+        "Use neutral posture/reset language instead of self-critical narrative."
+    ),
+    "walked it back": (
+        "Use neutral posture/reset language instead of self-critical narrative."
+    ),
+    "Honesty pass": "Use posture-calibration language for alpha release work.",
+    "retraction failure mode": (
+        "State the release invariant directly instead of carrying blame language forward."
+    ),
+    "failed with v1.0": (
+        "State the release invariant directly instead of carrying blame language forward."
     ),
 }
 
@@ -103,6 +125,21 @@ def check_tokens() -> list[str]:
                 continue
             if token in text:
                 errors.append(f"{rel}: stale release token '{token}'. {message}")
+
+        for phrase, message in FORBIDDEN_NARRATIVE_PHRASES.items():
+            if phrase in text:
+                errors.append(f"{rel}: stale narrative phrase '{phrase}'. {message}")
+
+        for line_no, line in enumerate(text.splitlines(), 1):
+            if "github.com" not in line or "/milestone/" not in line:
+                continue
+            if ACTIVE_RELEASE_MILESTONE_LABEL in line:
+                continue
+            errors.append(
+                f"{rel}:{line_no}: concrete milestone links are limited to "
+                f"{ACTIVE_RELEASE_MILESTONE_LABEL}; future release lines must stay "
+                "documented as gated horizons until opened"
+            )
 
     return errors
 

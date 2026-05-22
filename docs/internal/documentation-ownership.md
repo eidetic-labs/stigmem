@@ -23,6 +23,83 @@ of duplicating the same analysis across multiple files.
 | Roadmap/release document format | `docs/internal/roadmap-standards.md` | Be linked from release docs and review checklists | Drift into undocumented local conventions |
 | Feature record migration sequencing | `docs/internal/features/feature-record-migration.md` | Track PR slicing, pilot migrations, and transition validation | Amend ADR-020 or become the canonical feature record itself |
 
+## Document Classes
+
+Every non-code document should fit one of these classes. If a document does not
+fit, either move it to the correct class or add an explicit row here before it
+becomes a second source of truth.
+
+| Class | Owner | Examples | Rule |
+| --- | --- | --- | --- |
+| Public orientation | Root/public docs | `README.md`, `LIMITATIONS.md`, `SECURITY.md`, `CONTRIBUTING.md`, `OPERATING.md` | Summarize current posture and link to deeper owners. |
+| Public history | Root changelog and release notes | `CHANGELOG.md`, `release-notes/archive/` | Record what shipped; do not plan future work. |
+| Strategic planning | Roadmap and internal release roadmaps | `ROADMAP.md`, `docs/internal/releases/` | Preserve horizon and release contracts; do not become issue trackers. |
+| Feature-owned records | `features/<feature>/` | `README.md`, `spec.md`, `status.md`, `evidence.md`, `security.md`, `changelog.md` | Own detailed feature truth and feed projections. |
+| Projection surfaces | Generated or curated summaries | `SECURITY.md`, `CHANGELOG.md`, `spec/PROTOCOL.md`, `docs/docs/reference/experimental-features.md`, compatibility docs | Summarize feature records, specs, or registries; never own conflicting detail. |
+| Operator/user guides | Docs site and operator runbooks | `docs/docs/**`, `OPERATING.md`, `deploy/**` | Explain how to use the current product; link to feature records for detailed status. |
+| Maintainer runbooks | `docs/internal/` | `release-cadence.md`, `development.md`, `evidence-maintenance.md` | Describe repo operations and release mechanics; avoid product-roadmap scope. |
+| Analysis and evidence | `docs/internal/*analysis*`, `docs/internal/*evidence*`, `spec/security/` | Security evidence registries, dependency scans, extraction analyses | Capture proof, one-shot analysis, and enduring risk records; link to public summaries. |
+| Archive/historical snapshots | `archive/`, `docs/archive/`, `spec/archive/` | Retraction post source, old docs snapshots, evolution specs | Preserve history with archive framing; not a current source of truth. |
+| Templates/examples | Feature template and examples | `features/feature-template/`, example configs | Define structure or show usage; not a canonical product claim. |
+
+## Current Ownership Inventory
+
+### Root and Release Files
+
+| Path | Class | Owner / source of truth | Projection or dependency |
+| --- | --- | --- | --- |
+| `README.md` | Public orientation | Root project overview | Summarizes `LIMITATIONS.md`, `ROADMAP.md`, `SECURITY.md`, and feature/spec state. |
+| `LIMITATIONS.md` | Public orientation | Current adopter constraints | Links to roadmap, threat model, and feature/security owners. |
+| `SECURITY.md` | Public security index / projection | Security posture and public advisory disposition | Projects feature security records and links to evidence registries. |
+| `CHANGELOG.md` | Public history / projection | Root release history | Projects feature-local changelogs during release prep. |
+| `ROADMAP.md` | Strategic planning | Public strategic horizon | Links to internal release roadmaps for detailed release contracts. |
+| `CONTRIBUTING.md` | Public orientation | Contributor workflow | Links to ADRs, feature records, and docs standards where needed. |
+| `OPERATING.md` | Operator guide | Operational quick reference | Links to docs-site runbooks and release verification guidance. |
+| `MAINTAINERS.md` | Public orientation | Maintainer roles and contact paths | Does not duplicate release/security policy. |
+| `CODE_OF_CONDUCT.md` | Public governance | Community behavior policy | Stable standalone policy. |
+| `LOG.md` | Public history | Lightweight project progress notes | Must not replace changelog or roadmap. |
+
+### Feature and Spec Files
+
+| Path | Class | Owner / source of truth | Projection or dependency |
+| --- | --- | --- | --- |
+| `features/<feature>/README.md` | Feature-owned record | Feature metadata and overview | Feeds feature matrix and public docs summaries. |
+| `features/<feature>/spec.md` | Feature-owned record | Feature-level normative behavior | Links to modular spec pages or experimental compatibility paths. |
+| `features/<feature>/status.md` | Feature-owned record | Lifecycle state and known gaps | Feeds release readiness and roadmap summaries. |
+| `features/<feature>/evidence.md` | Feature-owned record | Implementation/test/evidence paths | Feeds security and release evidence summaries. |
+| `features/<feature>/security.md` | Feature-owned record | Feature-specific security posture | Feeds `SECURITY.md` projection. |
+| `features/<feature>/changelog.md` | Feature-owned record | Feature-local change history | Feeds `CHANGELOG.md` projection. |
+| `spec/specs/` | Normative specification | Modular protocol component specs | Composed into `spec/PROTOCOL.md` and rendered docs. |
+| `experimental/<feature>/` | Implementation / compatibility wrapper | Feature implementation until package promotion | Must point at `features/<feature>/` once the feature record exists. |
+
+### Internal Maintainer Files
+
+| Path | Class | Owner / source of truth | Projection or dependency |
+| --- | --- | --- | --- |
+| `docs/internal/documentation-ownership.md` | Maintainer runbook | Documentation ownership rules | Checked by `scripts/check_documentation_ownership.py`. |
+| `docs/internal/feature-tracker.md` | Maintainer inventory | Feature migration and implementation-path inventory | Checked by `scripts/check_feature_records.py`. |
+| `docs/internal/features/feature-record-migration.md` | Maintainer transition record | Feature-record migration sequencing and closeout | Maintenance-mode transition history only. |
+| `docs/internal/roadmap-standards.md` | Maintainer standard | Roadmap and release-roadmap format | Controls `ROADMAP.md` and `docs/internal/releases/`. |
+| `docs/internal/releases/` | Strategic planning | Per-release contracts and historical release scope | Links back to `ROADMAP.md` and `CHANGELOG.md`. |
+| `docs/internal/release-cadence.md` | Maintainer runbook | Release publishing sequence | Does not define release scope. |
+| `docs/internal/development.md` | Maintainer runbook | Local development workflow | Does not own product behavior. |
+| `docs/internal/evidence-maintenance.md` | Analysis/evidence | Recurring evidence owner/trigger matrix | Feeds release gates. |
+| `docs/internal/major-version-holds.md` | Analysis/evidence | Dependency major-version hold register | Feeds dependency-currency checks. |
+| `docs/internal/security-evidence-registry*.md` | Analysis/evidence | Human-readable security evidence ledgers | Links from `SECURITY.md`; does not replace it. |
+| `docs/internal/*analysis*.md` | Analysis/evidence | One-shot design or migration analysis | Should be cited by owner docs, not copied into them. |
+| `docs/internal/*best-practices*.md` | Maintainer standards | Internal engineering standards | Feed CI/checklist work; do not become public policy. |
+
+### Generated and Archive Files
+
+| Path | Class | Owner / source of truth | Projection or dependency |
+| --- | --- | --- | --- |
+| `docs/docs/reference/api/generated/` | Projection surface | Generated from OpenAPI | Regenerate from code; do not hand-edit product truth. |
+| `spec/PROTOCOL.md` | Projection surface | Generated/validated composition of modular specs and feature records | Checked by feature protocol projection validators. |
+| `docs/compatibility-matrix.yaml` | Projection surface | Compatibility matrix projection | Checked by feature compatibility validator. |
+| `archive/` | Archive/historical snapshots | Historical public artifacts | Must keep archive framing. |
+| `docs/archive/` | Archive/historical snapshots | Historical docs snapshots and superseded pages | Not current guidance. |
+| `spec/archive/` | Archive/historical snapshots | Evolutionary spec snapshots | Not current normative protocol. |
+
 ## Release Security Rule
 
 For a security release:
@@ -47,3 +124,15 @@ Before merging a docs PR that touches release, security, or evidence material:
 - If a public artifact graduated from Internal-Comms, cross-link the public PR
   and IC cleanup PR.
 - Run the relevant evidence and docs validators named by the changed files.
+
+## Validation
+
+Run the ownership validator from the repository root:
+
+```bash
+python3 scripts/check_documentation_ownership.py
+```
+
+The validator ensures that the high-signal recurring documentation owners remain
+listed here. It is intentionally a boundary ratchet, not an exhaustive index of
+every generated API page, archive snapshot, or feature file.

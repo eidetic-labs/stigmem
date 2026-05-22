@@ -22,9 +22,10 @@ user/operator-facing entries are promoted into the root `CHANGELOG.md`.
 
 ## v0.9.0a4 Horizon
 
-- Time-travel query support remains an opt-in alpha-series plugin target for
-  `as_of` read semantics, tombstone-aware historical recall, and operator
-  activation guidance.
+- Time-travel query support is the active alpha-series plugin-boundary
+  validation target for `as_of` read semantics, default fail-closed behavior,
+  tombstone-aware historical recall, security posture, and operator activation
+  guidance.
 
 ## v0.9.0a1 Lineage
 

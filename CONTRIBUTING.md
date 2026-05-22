@@ -49,7 +49,7 @@ roadmap or checklist only when the issue explicitly changes project status.
 Every PR opened against `main` from v0.9.0a3 onward must:
 
 1. Close exactly one issue (use `Closes #NNN` in the PR body) — open an issue first if none exists.
-2. Be assigned to the milestone that the closing issue belongs to. The current release-line milestone is `v0.9.0a3`.
+2. Be assigned to the milestone that the closing issue belongs to. The current release-line milestone is `v0.9.0a4`.
 
 The discipline lets anyone answer "what shipped in release X?" by reading the milestone instead of triangulating across CHANGELOG, ROADMAP, and git history. PRs that predate v0.9.0a3 are not retroactively backfilled.
 
@@ -277,7 +277,7 @@ The Features page intentionally avoids calendar dates. Do not add target-quarter
 
 ## Docs versioning snapshot procedure
 
-Stigmem docs are currently in **single-version mode** (current published build = `v0.9.0a2`; active release horizon = `v0.9.0a3`). No versioned snapshots are created during the alpha series. The first versioned snapshot will be cut only when a stable GA line actually ships per [ADR-001](docs/adr/001-versioning.md).
+Stigmem docs are currently in **single-version mode** (current published build = `v0.9.0a3`; active release horizon = `v0.9.0a4`). No versioned snapshots are created during the alpha series. The first versioned snapshot will be cut only when a stable GA line actually ships per [ADR-001](docs/adr/001-versioning.md).
 
 When v1.0.0 GA ships, create a versioned snapshot:
 

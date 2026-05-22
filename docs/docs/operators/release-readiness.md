@@ -21,7 +21,7 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 <div className="stigmem-grid">
 
-<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18.</p></div>
+<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22.</p></div>
 <div><h4>Future beta line</h4><p>Hardened core, 30-day external operator soak. No active milestone today.</p></div>
 <div><h4>Future release-candidate line</h4><p>Observation window after hardened-core exit. No active milestone today.</p></div>
 <div><h4>Future GA line</h4><p>Wire format committed, compatibility commitment honored across the v1.x line. No active milestone today.</p></div>
@@ -30,13 +30,17 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 ---
 
-## v0.9.0a3 — Alpha series continuation
+## v0.9.0a4 — Time-travel extraction validation
 
 <div className="stigmem-lead">
 
-**Alpha-line catch-all after v0.9.0a2 artifact refresh.**
+**Active alpha horizon for `as_of` plugin-boundary validation.**
 
-`v0.9.0a3` carries the next active alpha-line work: plugin-launch evidence ([#298](https://github.com/eidetic-labs/stigmem/issues/298)), security fixes, documentation and release-evidence cleanup, and operator-feedback iteration that lands before the future beta gate opens. Phase A plugin extraction and exit validation completed on `main`; v0.9.0a2 is tagged.
+`v0.9.0a4` carries the next active alpha-line work: validating
+`stigmem-plugin-time-travel` as the opt-in boundary for historical `as_of`
+queries, preserving default fail-closed behavior without plugin registration,
+and aligning feature, security, compatibility, changelog, and release evidence
+surfaces before the a4 tag. `v0.9.0a3` shipped on 2026-05-22.
 
 </div>
 
@@ -51,25 +55,25 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 <div>
 <dt>Milestone</dt>
 <dt><span className="stigmem-fields__type">open</span></dt>
-<dd>Tracked at [milestone v0.9.0a3](https://github.com/Eidetic-Labs/stigmem/milestone/1), the only active release milestone.</dd>
+<dd>Tracked at [milestone v0.9.0a4](https://github.com/Eidetic-Labs/stigmem/milestone/5), the only active release milestone.</dd>
 </div>
 
 <div>
 <dt>CHANGELOG</dt>
 <dt><span className="stigmem-fields__type">in flight</span></dt>
-<dd>Active work tracked under `[Unreleased]` in [CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md). Promoted to `[0.9.0a3]` at tag time.</dd>
+<dd>Active work tracked under `[Unreleased]` in [CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md). Promoted to `[0.9.0a4]` at tag time.</dd>
 </div>
 
 <div>
 <dt>Entry</dt>
 <dt><span className="stigmem-fields__type">ready</span></dt>
-<dd>Phase A plugin extraction and exit validation complete on `main`; v0.9.0a2 tagged.</dd>
+<dd>`v0.9.0a3` shipped; time-travel feature record and experimental source package exist for a4 validation.</dd>
 </div>
 
 <div>
 <dt>Exit</dt>
 <dt><span className="stigmem-fields__type">pending</span></dt>
-<dd>Ready to evaluate whether the future beta gate can open. See ROADMAP "Future beta line" for full beta-entry criteria.</dd>
+<dd>Default installs reject `as_of`, plugin-loaded fact query and recall behavior validate, security projections align, and the a4 milestone closes.</dd>
 </div>
 
 </div>

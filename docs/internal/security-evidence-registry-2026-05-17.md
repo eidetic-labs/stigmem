@@ -40,12 +40,12 @@ This page lists each audit finding, the code paths that implement the fix, the r
 ## Cross-references
 
 - Public security posture, upgrade command, and audit disposition index: ["Security Posture — v0.9.0a2"](../../SECURITY.md) in `SECURITY.md`.
-- Release-impact summary: `[Unreleased]` `### Security` block in [`CHANGELOG.md`](../../CHANGELOG.md).
+- Release-impact summary: `[0.9.0a2]` `### Security` block in [`CHANGELOG.md`](../../CHANGELOG.md).
 - Architectural risk classes derived from C2, H1, and H2 are registered as R-24, R-25, and R-26 in [`spec/security/threat-model.md`](../../spec/security/threat-model.md).
 - Best-practices guide for the registry format: [security-evidence-registry.md](./security-evidence-registry.md).
 
 ## Additional Medium / Low dispositions documented in SECURITY.md
 
-Rate-limit kill-switch acknowledgement, federation message validation, and OIDC discovery URL validation are captured in `SECURITY.md` as Medium/Low dispositions rather than future publication work. Per the v0.9.0a2 publication policy, Critical and High findings are disclosed through GHSAs; Medium and Low findings are documented in the public security posture unless their risk profile changes.
+Rate-limit kill-switch acknowledgement, federation message validation, and OIDC discovery URL validation are captured in `SECURITY.md` as final Medium/Low dispositions. Per the v0.9.0a2 publication policy, Critical and High findings are disclosed through GHSAs; Medium and Low findings are documented in the public security posture unless their risk profile changes.
 
 C3 federation transport guard / preflight and H6 federation authority verification independent of trust mode did not receive standalone advisories after triage. Their public disposition is captured by the existing federation hardening entries in `CHANGELOG.md`, `SECURITY.md`, and the threat-model evidence for the affected federation risks.

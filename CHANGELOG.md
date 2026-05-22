@@ -22,21 +22,33 @@ before tag.
 - GHCR: `ghcr.io/eidetic-labs/stigmem-node:0.9.0a3` and `:0.9.0-alpha.3`.
 - Git tag, GitHub release, prose: `v0.9.0a3` (shorthand).
 
+### Added
+
+- Validated content-addressed fact IDs as a core alpha feature across the
+  feature record, modular spec projection, compatibility matrix, and release
+  evidence surfaces.
+- Captured a3 release-readiness evidence for the core Python packages,
+  TypeScript SDK package, OpenClaw adapter package, GHCR tag posture, and docs
+  publication posture.
+
 ### Changed
 
 - Advanced the enforced release-version surfaces to the active `v0.9.0a3`
   alpha line so package, API metadata, conformance, plugin fallback, and
   release-documentation surfaces use consistent per-ecosystem spellings.
+- Align roadmap, security, operator, SDK, and spec documentation around the current release horizon: `v0.9.0a3` is the only active release target; beta, release-candidate, and GA lines remain future gates until explicitly opened.
+- Prepared the OpenClaw adapter and ClawHub skill metadata for the a3 alpha
+  artifact line while preserving the alpha/evaluation-only posture.
 
 ### Security
 
-- Document the v0.9.0a2 GitHub Security Advisory publication policy: Critical and High CVSS 4.0 findings in supported published artifacts receive GHSAs once patched; Medium and Low findings are documented in release notes or security posture docs unless their risk profile changes.
-- Add the public v0.9.0a2 audit disposition index to `SECURITY.md`, including six Critical/High GHSAs and Medium/Low findings documented without formal advisories per policy.
-- Add the v0.9.0a2 audit evidence ledger under `docs/internal/` and register R-24/R-25/R-26 as mitigated architectural risks in the threat model and evidence registry.
-
-### Changed
-
-- Align roadmap, security, operator, SDK, and spec documentation around the current release horizon: `v0.9.0a3` is the only active release target; beta, release-candidate, and GA lines remain future gates until explicitly opened.
+- Reconciled a3 release notes and security posture with the standing
+  publication policy: Critical and High findings use GHSA where applicable;
+  Medium and Low dispositions remain in `SECURITY.md` unless a documented
+  carve-out applies.
+- Kept the dated security evidence registry as a proof ledger and `SECURITY.md`
+  as the public disposition index, avoiding duplicate advisory tables in a3
+  release notes.
 
 ### Feature Change Records
 
@@ -110,6 +122,16 @@ root changelog projection used during release prep.
 ### Security
 
 - Dependency and static-analysis release gates are clean for alpha.2: Dependabot alerts, CodeQL alerts, Python dependency audit, npm audit, and pnpm audit all report no open vulnerabilities at release-prep time.
+- Documented the v0.9.0a2 GitHub Security Advisory publication policy:
+  Critical and High CVSS 4.0 findings in supported published artifacts receive
+  GHSAs once patched; Medium and Low findings are documented in release notes
+  or security posture docs unless their risk profile changes.
+- Added the public v0.9.0a2 audit disposition index to `SECURITY.md`, including
+  six Critical/High GHSAs and Medium/Low findings documented without formal
+  advisories per policy.
+- Added the v0.9.0a2 audit evidence ledger under `docs/internal/` and
+  registered R-24/R-25/R-26 as mitigated architectural risks in the threat
+  model and evidence registry.
 
 ---
 

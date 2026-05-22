@@ -213,7 +213,7 @@ print("boot ok:", ctx.summary[:80] if ctx else "(no prior context)")
 
 <div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/adapters/openclaw#readme">adapters/openclaw README</a></h4><p>Package source, changelog, full security model.</p></div>
 <div><h4><a href="../../concepts/federation/">Federation guide</a></h4><p>External node onboarding and multi-node topology.</p></div>
-<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip">Paperclip / Claude Code</a></h4><p>MCP-based integration.</p></div>
+<div><h4><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/paperclip-adapter">Paperclip / Claude Code</a></h4><p>MCP-based integration.</p></div>
 <div><h4><a href="../../security/authentication">Authentication</a></h4><p>API key setup and OIDC options.</p></div>
 
 </div>

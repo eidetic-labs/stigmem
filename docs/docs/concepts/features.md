@@ -359,8 +359,8 @@ Read the spec at
 
 <div>
 <dt>Paperclip adapter</dt>
-<dt><span className="stigmem-fields__type">Deferred</span></dt>
-<dd><code>experimental/paperclip-adapter/</code>.</dd>
+<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/paperclip-adapter"><code>features/paperclip-adapter</code></a>; live Paperclip validation remains future alpha work.</dd>
 </div>
 
 <div>

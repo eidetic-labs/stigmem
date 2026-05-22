@@ -107,7 +107,7 @@ These adapters translate Stigmem's tools into the native function-calling format
 <div>
 <dt>Paperclip / Claude Code</dt>
 <dt><span className="stigmem-fields__type">MCP server in <code>.mcp.json</code></span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/adapter-paperclip">experimental/adapter-paperclip</a></dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/paperclip-adapter">features/paperclip-adapter</a></dd>
 </div>
 
 </div>

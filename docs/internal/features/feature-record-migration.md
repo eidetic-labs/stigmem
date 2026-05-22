@@ -231,6 +231,9 @@ Progress:
 - `openai-tools-adapter` now has a canonical adapter feature record under
   `features/openai-tools-adapter/`; package, dependency, ownership, and live
   model validation remain future alpha release-line gates.
+- `paperclip-adapter` now has a canonical adapter feature record under
+  `features/paperclip-adapter/`; installation, ownership, live Paperclip, and
+  security validation remain future alpha release-line gates.
 
 ## Release Horizon Alignment
 

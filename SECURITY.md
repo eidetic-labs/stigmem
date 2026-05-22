@@ -79,6 +79,7 @@ is an index, not the canonical analysis body; update the linked
 | OIDC SSO | None | [`features/oidc-sso/security.md`](features/oidc-sso/security.md) |
 | Ollama/LiteLLM adapter | None | [`features/ollama-litellm-adapter/security.md`](features/ollama-litellm-adapter/security.md) |
 | OpenAI tools adapter | None | [`features/openai-tools-adapter/security.md`](features/openai-tools-adapter/security.md) |
+| Paperclip adapter | None | [`features/paperclip-adapter/security.md`](features/paperclip-adapter/security.md) |
 | Recall graph | R-13, R-20, R-21 | [`features/recall-graph/security.md`](features/recall-graph/security.md) |
 | Source attestation | R-22 | [`features/source-attestation/security.md`](features/source-attestation/security.md) |
 | Storage backends | R-04, R-08 | [`features/storage-backends/security.md`](features/storage-backends/security.md) |

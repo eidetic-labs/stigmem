@@ -44,7 +44,9 @@ def _tombstone_plugin_manifest():
 
 
 @pytest.fixture(autouse=True)
-def _tombstone_plugin_registered():
+def _tombstone_plugin_registered(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ALLOW_RECALL_FILTER", "true")
     with stigmem_plugins([_tombstone_plugin_manifest()]):
         yield
 

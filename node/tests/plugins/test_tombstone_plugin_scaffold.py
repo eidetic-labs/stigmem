@@ -11,6 +11,7 @@ from typing import Any, TypeVar
 import pytest
 
 import stigmem_node.plugins.discovery as discovery
+from stigmem_node.lifecycle.tombstone_gate import tombstone_filter_enabled
 from stigmem_node.plugins import (
     ENTRY_POINT_GROUP,
     Allow,
@@ -20,6 +21,7 @@ from stigmem_node.plugins import (
     PluginManifest,
     discover_plugin_manifests,
 )
+from stigmem_node.plugins.testing import stigmem_plugins
 
 _FEATURE_DIR = Path(__file__).resolve().parents[3] / "experimental" / "tombstones"
 _SRC_DIR = _FEATURE_DIR / "src"
@@ -113,6 +115,18 @@ def test_manifest_exposes_legacy_routes_when_enabled(monkeypatch: pytest.MonkeyP
     assert "/v1/federation/tombstones/ingest" in route_paths
 
 
+def test_manifest_keeps_routes_absent_when_route_gates_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ENABLED", "true")
+    monkeypatch.delenv("STIGMEM_TOMBSTONES_ALLOW_ADMIN_ROUTES", raising=False)
+    monkeypatch.delenv("STIGMEM_TOMBSTONES_ALLOW_FEDERATION_ROUTES", raising=False)
+
+    manifest = plugin_manifest()
+
+    assert manifest.routes == ()
+
+
 def test_default_config_keeps_behavior_disabled() -> None:
     config = TombstoneConfig()
 
@@ -123,6 +137,37 @@ def test_default_config_keeps_behavior_disabled() -> None:
     assert config.propagate_to_peers is False
     assert config.require_signed_inbound is True
     assert config.cache_ttl_seconds == 60
+
+
+def test_runtime_filter_gate_requires_plugin_and_operator_enablement(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest = plugin_manifest()
+
+    monkeypatch.delenv("STIGMEM_TOMBSTONES_ENABLED", raising=False)
+    monkeypatch.delenv("STIGMEM_TOMBSTONES_ALLOW_RECALL_FILTER", raising=False)
+    assert tombstone_filter_enabled() is False
+
+    with stigmem_plugins([manifest]):
+        assert tombstone_filter_enabled() is False
+        assert (
+            tombstone_filter_enabled(
+                {
+                    "STIGMEM_TOMBSTONES_ENABLED": "true",
+                    "STIGMEM_TOMBSTONES_ALLOW_RECALL_FILTER": "false",
+                }
+            )
+            is False
+        )
+        assert (
+            tombstone_filter_enabled(
+                {
+                    "STIGMEM_TOMBSTONES_ENABLED": "true",
+                    "STIGMEM_TOMBSTONES_ALLOW_RECALL_FILTER": "true",
+                }
+            )
+            is True
+        )
 
 
 def test_config_loads_environment_gates() -> None:

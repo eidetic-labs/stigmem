@@ -95,6 +95,44 @@ def tombstone_plugin_client(
         _restore_settings(original, extra)
 
 
+@pytest.fixture()
+def tombstone_plugin_no_filter_client(
+    tmp_db: str,
+    backend: str,
+    encrypt: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[TestClient, None, None]:
+    original = settings_module.settings
+    test_settings = _make_enc_settings(
+        tmp_db,
+        backend,
+        encrypt,
+        auth_required=False,
+        node_url="http://testnode",
+    )
+    extra = _patch_settings(test_settings)
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ALLOW_ADMIN_ROUTES", "true")
+    monkeypatch.setenv("STIGMEM_TOMBSTONES_ALLOW_FEDERATION_ROUTES", "true")
+    monkeypatch.delenv("STIGMEM_TOMBSTONES_ALLOW_RECALL_FILTER", raising=False)
+
+    manifest = plugin_manifest()
+    discovered = DiscoveredPlugin(
+        manifest=manifest,
+        entry_point_name="tombstones",
+        entry_point_value="stigmem_plugin_tombstones:plugin_manifest",
+        distribution=PLUGIN_NAME,
+    )
+    app = create_app()
+    _include_plugin_routers(app, (discovered,))
+
+    try:
+        with stigmem_plugins([manifest]), TestClient(app, raise_server_exceptions=True) as client:
+            yield client
+    finally:
+        _restore_settings(original, extra)
+
+
 def test_default_install_keeps_tombstone_routes_absent(client: TestClient) -> None:
     assert client.get("/v1/tombstones/user%3Aalice").status_code == 404
     assert client.get("/v1/federation/tombstones").status_code == 404
@@ -132,3 +170,20 @@ def test_plugin_loaded_restores_routes_and_tombstone_filter(
     assert status_response.json()["tombstoned"] is True
     assert fact_response.status_code == 200, fact_response.text
     assert fact_response.json()["facts"] == []
+
+
+def test_plugin_loaded_without_filter_gate_keeps_facts_visible(
+    tombstone_plugin_no_filter_client: TestClient,
+) -> None:
+    entity = "user:tombstone-no-filter-gate"
+    fact = _insert_fact(tombstone_plugin_no_filter_client, entity)
+    _insert_tombstone(entity)
+
+    encoded_entity = urllib.parse.quote(entity, safe="")
+    status_response = tombstone_plugin_no_filter_client.get(f"/v1/tombstones/{encoded_entity}")
+    fact_response = tombstone_plugin_no_filter_client.get("/v1/facts", params={"entity": entity})
+
+    assert status_response.status_code == 200, status_response.text
+    assert status_response.json()["tombstoned"] is True
+    assert fact_response.status_code == 200, fact_response.text
+    assert [row["id"] for row in fact_response.json()["facts"]] == [fact["id"]]

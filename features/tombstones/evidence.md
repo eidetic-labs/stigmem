@@ -8,13 +8,15 @@
 | `experimental/tombstones/src/stigmem_plugin_tombstones/manifest.py` | Plugin manifest, capabilities, hooks, and migration registration. |
 | `experimental/tombstones/src/stigmem_plugin_tombstones/config.py` | Plugin configuration gates. |
 | `experimental/tombstones/src/stigmem_plugin_tombstones/handlers.py` | Hook handlers for recall filtering, federation validation, propagation, and migrations. |
+| `node/src/stigmem_node/lifecycle/tombstone_gate.py` | Runtime gate that requires plugin registration and explicit operator enablement before tombstone filters apply. |
+| `node/src/stigmem_node/routes/facts/common.py` | Shared fact-route tombstone filter application point. |
 
 ## Tests and Validators
 
 | Check | Path or command | Coverage |
 | --- | --- | --- |
-| Plugin scaffold | `node/tests/plugins/test_tombstone_plugin_scaffold.py` | Entry point, manifest, config, hooks, and migration declaration. |
-| Plugin gating | `node/tests/plugins/test_tombstone_plugin_gating.py` | Default-install gating and plugin-loaded behavior. |
+| Plugin scaffold | `node/tests/plugins/test_tombstone_plugin_scaffold.py` | Entry point, manifest, config, route gates, filter gates, hooks, and migration declaration. |
+| Plugin gating | `node/tests/plugins/test_tombstone_plugin_gating.py` | Default-install gating, route registration, filter enablement, and plugin-loaded behavior. |
 | Tombstone behavior | `node/tests/tombstones/` | Filtering, provenance, admin behavior, and tombstone route behavior. |
 | Fast gate | `bash scripts/check.sh python` | Python lint, type, tests, and security bundle. |
 

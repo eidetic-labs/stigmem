@@ -237,6 +237,10 @@ Progress:
 - `dashboard` now has a canonical tooling feature record under
   `features/dashboard/`; dependency currency, auth/session, live-node, and
   deployment posture remain future alpha release-line gates.
+- `eval-harness` now has a canonical tooling feature record under
+  `features/eval-harness/`; the current surface is concept-only and runnable
+  implementation, corpus, CI, and live-node validation remain future alpha
+  release-line gates.
 
 ## Release Horizon Alignment
 

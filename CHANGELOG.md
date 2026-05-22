@@ -9,6 +9,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ## [Unreleased]
 
+## [0.9.0a3] — in progress
+
+**Status:** active alpha release prep — pre-stable, not for production
+federation across organizational boundaries. Final release evidence, security
+posture, and publication notes are completed through the `v0.9.0a3` milestone
+before tag.
+
+**Per-ecosystem version strings (per ADR-019):**
+- PyPI / Python: `stigmem 0.9.0a3`, `stigmem-py 0.9.0a3`, `stigmem-node 0.9.0a3`, and `stigmem-openclaw 0.9.0a3` (PEP 440).
+- npm / Node: `@eidetic-labs/stigmem-ts@0.9.0-alpha.3` (semver).
+- GHCR: `ghcr.io/eidetic-labs/stigmem-node:0.9.0a3` and `:0.9.0-alpha.3`.
+- Git tag, GitHub release, prose: `v0.9.0a3` (shorthand).
+
+### Changed
+
+- Advanced the enforced release-version surfaces to the active `v0.9.0a3`
+  alpha line so package, API metadata, conformance, plugin fallback, and
+  release-documentation surfaces use consistent per-ecosystem spellings.
+
 ### Security
 
 - Document the v0.9.0a2 GitHub Security Advisory publication policy: Critical and High CVSS 4.0 findings in supported published artifacts receive GHSAs once patched; Medium and Low findings are documented in release notes or security posture docs unless their risk profile changes.

@@ -74,8 +74,8 @@ def test_manifest_declares_expected_boundary() -> None:
 
     assert isinstance(manifest, PluginManifest)
     assert manifest.name == PLUGIN_NAME
-    assert manifest.version == "0.9.0-alpha.2"
-    assert manifest.requires_stigmem == ">=0.9.0a2"
+    assert manifest.version == "0.9.0-alpha.3"
+    assert manifest.requires_stigmem == ">=0.9.0a3"
     assert manifest.config_schema is LazyInstructionDiscoveryConfig
     assert manifest.capabilities == frozenset(
         {
@@ -154,7 +154,7 @@ def test_config_rejects_empty_or_duplicate_adapter_profiles() -> None:
 
 
 def test_manifest_registers_with_hook_registry(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a2")
+    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a3")
     registry = HookRegistry()
     manifest = plugin_manifest()
 

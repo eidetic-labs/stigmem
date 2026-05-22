@@ -9,8 +9,8 @@ from .config import LazyInstructionDiscoveryConfig
 from .routes import router
 
 PLUGIN_NAME = "stigmem-plugin-lazy-instruction-discovery"
-PLUGIN_VERSION = "0.9.0-alpha.2"
-REQUIRES_STIGMEM = ">=0.9.0a2"
+PLUGIN_VERSION = "0.9.0-alpha.3"
+REQUIRES_STIGMEM = ">=0.9.0a3"
 
 
 def plugin_manifest() -> PluginManifest:

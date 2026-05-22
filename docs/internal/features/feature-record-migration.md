@@ -225,6 +225,9 @@ Progress:
 - `gemini-adapter` now has a canonical adapter feature record under
   `features/gemini-adapter/`; ownership, package, dependency, and live Gemini
   validation remain future alpha release-line gates.
+- `ollama-litellm-adapter` now has a canonical compatibility feature record
+  under `features/ollama-litellm-adapter/`; implementation detail is
+  consolidated under the OpenAI-compatible tools adapter.
 
 ## Release Horizon Alignment
 

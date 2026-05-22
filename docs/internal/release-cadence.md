@@ -137,6 +137,11 @@ Before pushing a tag, verify:
 - [ ] **Meta-package dep ranges updated** (if applicable). The root `stigmem` `pyproject.toml` `dependencies` and `[project.optional-dependencies]` lists pin to e.g. `stigmem-py>=0.9.0a2,<1.0.0` — when bumping the canonical line, the lower bound should bump too. If you're cutting a beta from an alpha (`0.9.0a3` → `0.9.0b1`), the upper bound stays at `<1.0.0`; if cutting `1.0.0`, the meta-package's bounds get a major-version bump (separate decision; revisit before then).
 - [ ] **Update security artifacts** per `docs/internal/evidence-maintenance.md`: refresh the docs-landing risk-register summary, threat-model page status header, `CHANGELOG.md` `### Security` subsection when security work or risk-status changes landed, and SBOM/signature verification evidence for published artifacts.
 - [ ] **Evidence maintenance validators pass:** `python3 scripts/check_evidence_maintenance.py`, `python3 scripts/validate_security_evidence.py`, and `python3 scripts/check_security_documentation.py`.
+- [ ] **GPG release signing secrets are configured:** `RELEASE_GPG_PRIVATE_KEY`
+  is an ASCII-armored private key, `RELEASE_GPG_KEY_FINGERPRINT` is the
+  expected key fingerprint, and `RELEASE_GPG_PASSPHRASE` is set if the key is
+  passphrase-protected. The tag-push publish workflow fails closed if the
+  private key is missing or does not match the configured fingerprint.
 
 If any item fails, fix or document before proceeding.
 
@@ -183,8 +188,9 @@ git fetch origin
 git log --oneline main..origin/main  # should be empty
 git pull --ff-only origin main
 
-# Tag with the PEP 440 shorthand (per ADR-019)
-git tag v0.9.0a2          # adjust version
+# Tag with the PEP 440 shorthand (per ADR-019). Use a signed tag for release
+# provenance; the publish workflow also GPG-signs release assets.
+git tag -s v0.9.0a2 -m "v0.9.0a2"  # adjust version
 git push origin v0.9.0a2
 
 # Watch the workflow run
@@ -193,11 +199,10 @@ gh run watch --repo eidetic-labs/stigmem $(gh run list --workflow=publish.yml --
 
 Pushing the tag triggers `.github/workflows/publish.yml`, which fans out into:
 
-1. **`publish-node`** — multi-arch (linux/amd64 + linux/arm64) GHCR image; Sigstore cosign keyless signed; SBOM (SPDX JSON) attached. Image gets BOTH PEP 440 and semver tags (e.g. `:0.9.0a2` and `:0.9.0-alpha.2`) so adopters can pull via either form.
-2. **`publish-dashboard`** — same shape for the Next.js dashboard.
-3. **`publish-sdk-ts`** — npm publish of `@eidetic-labs/stigmem-ts` with `--tag <alpha|beta|rc|latest>` (derived from the version via `scripts/translate_version.py` — no manual computation needed), with provenance attestation via OIDC.
-4. **`publish-python`** — matrix publishes `stigmem`, `stigmem-py`, `stigmem-node`, `stigmem-openclaw` to PyPI via Trusted Publishers (OIDC; no API token).
-5. **`create-release`** — runs after publish-node + publish-sdk-ts + publish-python succeed. Extracts the `## [<version>]` section from `CHANGELOG.md`, prepends a "Published artifacts" header with the install commands for each registry, creates the GitHub release with that body. Marks as prerelease for any non-`latest` dist-tag (alpha/beta/rc). Title format follows the translated release tier, for example `v0.9.0aN — preview alpha`; future beta or release-candidate titles are used only when those release lines are explicitly opened.
+1. **`publish-node`** — multi-arch (linux/amd64 + linux/arm64) GHCR image; Sigstore cosign keyless signed; SBOM (SPDX JSON) attached. Image gets BOTH PEP 440 and semver tags (e.g. `:0.9.0a2` and `:0.9.0-alpha.2`) so adopters can pull via either form. On release tags, the workflow also GPG-signs the SBOM and image-digest evidence for attachment to the GitHub release.
+2. **`publish-sdk-ts`** — npm publish of `@eidetic-labs/stigmem-ts` with `--tag <alpha|beta|rc|latest>` (derived from the version via `scripts/translate_version.py` — no manual computation needed), with provenance attestation via OIDC. The job publishes the same tarball it GPG-signs.
+3. **`publish-python`** — matrix publishes `stigmem`, `stigmem-py`, `stigmem-node`, `stigmem-openclaw` to PyPI via Trusted Publishers (OIDC; no API token). The built wheels and sdists are GPG-signed before publication.
+4. **`create-release`** — runs after publish-node + publish-sdk-ts + publish-python succeed. Extracts the `## [<version>]` section from `CHANGELOG.md`, prepends a "Published artifacts" header with the install commands for each registry, creates the GitHub release with that body, and attaches the GPG-signed release artifacts plus `stigmem-release-signing-key.asc`. Marks as prerelease for any non-`latest` dist-tag (alpha/beta/rc). Title format follows the translated release tier, for example `v0.9.0aN — preview alpha`; future beta or release-candidate titles are used only when those release lines are explicitly opened.
 
 The first four publish jobs run in parallel (~5-8 minutes total). The release-creation job runs after to ensure the release page only links at working artifacts. **Stay near the workflow run** until the release page appears — if anything fails, you'll want to triage immediately rather than discover hours later.
 
@@ -220,6 +225,16 @@ Within ~5 minutes of tag push:
     --certificate-identity-regexp 'github.com/eidetic-labs/stigmem' \
     --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
     ghcr.io/eidetic-labs/stigmem-node:$TAG
+  ```
+- [ ] **GPG release assets** — download `stigmem-release-signing-key.asc` and
+  the `*.asc` detached signatures from the GitHub release, import the public
+  key, and verify the downloaded release assets before archiving or mirroring
+  them:
+  ```bash
+  gpg --import stigmem-release-signing-key.asc
+  gpg --verify stigmem-node-sbom.spdx.json.asc stigmem-node-sbom.spdx.json
+  gpg --verify stigmem-node-image-digest.txt.asc stigmem-node-image-digest.txt
+  gpg --verify <artifact>.asc <artifact>
   ```
 - [ ] **GitHub release** — Created automatically by `publish.yml` `create-release` job. Verify the release page at `https://github.com/eidetic-labs/stigmem/releases/tag/v<tag>` shows: (1) the install-commands header, (2) the full CHANGELOG section for this version, (3) the prerelease badge (for alpha/beta/rc) or no badge (for final). If the page is missing or notes are empty, check the `create-release` job log for an extraction error.
 - [ ] **Close the tracking issue** for this release if one was opened (e.g., the PR-N issue in the master-checklist).

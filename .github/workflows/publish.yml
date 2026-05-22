@@ -157,6 +157,34 @@ jobs:
           path: stigmem-node-sbom.spdx.json
           retention-days: 90
 
+      - name: Capture image digest evidence (tag push only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "${{ env.NODE_IMAGE }}@${{ steps.build.outputs.digest }}" > stigmem-node-image-digest.txt
+
+      - name: GPG-sign node release evidence (tag push only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          RELEASE_GPG_KEY_FINGERPRINT: ${{ secrets.RELEASE_GPG_KEY_FINGERPRINT }}
+        run: |
+          scripts/gpg_sign_release_assets.sh \
+            stigmem-node-sbom.spdx.json \
+            stigmem-node-image-digest.txt
+
+      - name: Upload GPG-signed node release evidence (tag push only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-gpg-node
+          path: |
+            stigmem-node-sbom.spdx.json
+            stigmem-node-sbom.spdx.json.asc
+            stigmem-node-image-digest.txt
+            stigmem-node-image-digest.txt.asc
+          retention-days: 90
+
       # ── Image signing (cosign keyless via OIDC) ────────────────────────────
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
@@ -243,6 +271,29 @@ jobs:
           fi
           echo "OK: $PUBLISHED_VER is valid semver"
 
+      - name: Pack npm release tarball
+        run: |
+          cd sdks/stigmem-ts
+          mkdir -p "$RUNNER_TEMP/stigmem-npm-release"
+          PACKED="$(npm pack --pack-destination "$RUNNER_TEMP/stigmem-npm-release")"
+          echo "RELEASE_NPM_TARBALL=$RUNNER_TEMP/stigmem-npm-release/$PACKED" >> "$GITHUB_ENV"
+          echo "Packed $RUNNER_TEMP/stigmem-npm-release/$PACKED"
+
+      - name: GPG-sign npm release tarball
+        env:
+          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          RELEASE_GPG_KEY_FINGERPRINT: ${{ secrets.RELEASE_GPG_KEY_FINGERPRINT }}
+        run: scripts/gpg_sign_release_assets.sh "$RELEASE_NPM_TARBALL"
+
+      - name: Upload GPG-signed npm release tarball
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-gpg-npm
+          path: |
+            ${{ runner.temp }}/stigmem-npm-release/*
+          retention-days: 90
+
       - name: Publish to npm (with provenance)
         # --tag advances the per-line dist-tag (alpha/beta/rc/latest) computed
         # from the version via scripts/translate_version.py. npm requires
@@ -265,7 +316,7 @@ jobs:
             echo "::notice::${PKG_NAME}@${PKG_VER} already on the registry; skipping npm publish."
             exit 0
           fi
-          npm publish --provenance --access public --tag "${{ steps.ver.outputs.npm_tag }}"
+          npm publish "$RELEASE_NPM_TARBALL" --provenance --access public --tag "${{ steps.ver.outputs.npm_tag }}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -355,6 +406,24 @@ jobs:
           python -m pip install --upgrade twine
           twine check "${{ matrix.package.dir }}/dist/"*
 
+      - name: GPG-sign Python release distributions
+        env:
+          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          RELEASE_GPG_KEY_FINGERPRINT: ${{ secrets.RELEASE_GPG_KEY_FINGERPRINT }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/release-gpg-python-${{ matrix.package.name }}"
+          cp "${{ matrix.package.dir }}"/dist/* "$RUNNER_TEMP/release-gpg-python-${{ matrix.package.name }}/"
+          scripts/gpg_sign_release_assets.sh "$RUNNER_TEMP/release-gpg-python-${{ matrix.package.name }}"/*
+
+      - name: Upload GPG-signed Python release distributions
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-gpg-python-${{ matrix.package.name }}
+          path: |
+            ${{ runner.temp }}/release-gpg-python-${{ matrix.package.name }}/*
+          retention-days: 90
+
       # Auth path: OIDC (Trusted Publishers) for all four packages. The
       # `id-token: write` permission granted at the job level above is what
       # the action exchanges with PyPI for a short-lived OIDC token. No
@@ -436,6 +505,7 @@ jobs:
             echo "- **npm:** \`npm install @eidetic-labs/stigmem-ts@${{ steps.ver.outputs.semver }}\`"
             echo "- **GHCR:** \`docker pull ghcr.io/eidetic-labs/stigmem-node:$VER\` (also \`:${{ steps.ver.outputs.semver }}\`)"
             echo "- **Supply-chain evidence:** GHCR image is keyless-signed with Sigstore/cosign; SBOM and BuildKit provenance are attached as OCI referrers. Verification instructions: https://docs.stigmem.dev/operators/release-verification"
+            echo "- **GPG signatures:** Detached ASCII-armored signatures for release artifacts are attached to this GitHub release."
             echo ""
             echo "---"
             echo ""
@@ -446,6 +516,24 @@ jobs:
           echo ""
           echo "First 10 lines of release page body:"
           head -10 /tmp/release-page.md
+
+      - name: Download GPG-signed release artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: release-gpg-*
+          merge-multiple: true
+          path: release-assets
+
+      - name: Export release GPG public key
+        env:
+          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          RELEASE_GPG_KEY_FINGERPRINT: ${{ secrets.RELEASE_GPG_KEY_FINGERPRINT }}
+        run: |
+          mkdir -p release-assets
+          scripts/gpg_export_release_public_key.sh release-assets/stigmem-release-signing-key.asc
+
+      - name: List GitHub release assets
+        run: find release-assets -maxdepth 2 -type f -print | sort
 
       - name: Determine release type (final vs prerelease)
         id: kind
@@ -476,6 +564,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ steps.kind.outputs.title }}
           body_path: /tmp/release-page.md
+          files: release-assets/*
           prerelease: ${{ steps.kind.outputs.is_prerelease == 'true' }}
           draft: false
           token: ${{ secrets.GITHUB_TOKEN }}

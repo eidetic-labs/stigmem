@@ -2,7 +2,7 @@
 # install.sh — Bare-metal stigmem node installer for Debian/Ubuntu and RHEL/Fedora.
 #
 # Usage (run as root or with sudo):
-#   sudo bash deploy/systemd/install.sh
+#   sudo bash experimental/deploy-systemd/install.sh
 #
 # After install:
 #   1. Edit /opt/stigmem/.env (copied from .env.example)
@@ -21,7 +21,7 @@ SERVICE_FILE=/etc/systemd/system/stigmem-node.service
 STIGMEM_USER=stigmem
 STIGMEM_GROUP=stigmem
 PYTHON_MIN_VERSION="3.11"
-STIGMEM_VERSION="${STIGMEM_VERSION:-1.0.0rc1}"
+STIGMEM_VERSION="${STIGMEM_VERSION:-0.9.0a2}"
 STIGMEM_OFFLINE="${STIGMEM_OFFLINE:-0}"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

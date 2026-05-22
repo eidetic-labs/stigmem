@@ -81,6 +81,7 @@ is an index, not the canonical analysis body; update the linked
 | Grafana deployment | None | [`features/deploy-grafana/security.md`](features/deploy-grafana/security.md) |
 | Helm deployment | None | [`features/deploy-helm/security.md`](features/deploy-helm/security.md) |
 | PaaS deployment | None | [`features/deploy-paas/security.md`](features/deploy-paas/security.md) |
+| systemd deployment | None | [`features/deploy-systemd/security.md`](features/deploy-systemd/security.md) |
 | Evaluation harness | None | [`features/eval-harness/security.md`](features/eval-harness/security.md) |
 | OIDC SSO | None | [`features/oidc-sso/security.md`](features/oidc-sso/security.md) |
 | Ollama/LiteLLM adapter | None | [`features/ollama-litellm-adapter/security.md`](features/ollama-litellm-adapter/security.md) |

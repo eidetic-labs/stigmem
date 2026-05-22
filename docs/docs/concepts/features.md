@@ -437,8 +437,8 @@ Read the spec at
 
 <div>
 <dt>systemd</dt>
-<dt><span className="stigmem-fields__type">Deferred</span></dt>
-<dd><code>experimental/deploy-&#42;/</code>.</dd>
+<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-systemd"><code>features/deploy-systemd</code></a>; live distro validation, installer review, hardening review, and upgrade/rollback remain future alpha work.</dd>
 </div>
 
 </div>

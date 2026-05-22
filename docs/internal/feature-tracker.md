@@ -65,7 +65,7 @@ act only as wrappers, compatibility projections, or implementation directories.
 | `deploy-fly` | Fly.io deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-fly/` | `features/deploy-fly/` | `migrated` | `future alpha` | Fly.io deployment recipe; live deployment, persistence, dashboard validation, and ownership remain future alpha work. |
 | `deploy-grafana` | Grafana deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-grafana/` | `features/deploy-grafana/` | `migrated` | `future alpha` | Observability deployment seed; live stack validation, metric review, alert review, packaging, and ownership remain future alpha work. |
 | `deploy-paas` | PaaS deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-paas/` | `features/deploy-paas/` | `migrated` | `future alpha` | Managed-platform deployment recipes; live platform validation, persistence, secrets, scaling/cost review, and ownership remain future alpha work. |
-| `deploy-systemd` | systemd deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-systemd/` | `features/deploy-systemd/` | `pending` | `future alpha` | Deployment surface. |
+| `deploy-systemd` | systemd deployment | `deployment` | `experimental` | `external` | `none` | `experimental/deploy-systemd/` | `features/deploy-systemd/` | `migrated` | `future alpha` | Bare-metal deployment recipe; live distro validation, installer review, hardening review, upgrade/rollback, offline install, and ownership remain future alpha work. |
 
 ## Maintenance Rules
 

@@ -148,8 +148,8 @@ The recipes below are **not part of the v0.9.0a1 supported surface.** They live 
 
 <div>
 <dt>systemd / bare metal</dt>
-<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-systemd"><code>experimental/deploy-systemd/</code></a></span></dt>
-<dd>Deferred (no Spec-X assigned).</dd>
+<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-systemd"><code>features/deploy-systemd</code></a></span></dt>
+<dd>Deferred bare-metal deployment recipe; implementation remains under <code>experimental/deploy-systemd/</code>.</dd>
 </div>
 
 <div>

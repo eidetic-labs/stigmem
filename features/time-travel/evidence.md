@@ -19,7 +19,7 @@
 | --- | --- | --- |
 | Plugin package scaffold | `node/tests/plugins/test_time_travel_plugin_scaffold.py` | Entry point, manifest, default config, environment gates, hook registration, deterministic hook order, and discovery. |
 | Plugin-loaded behavior | `node/tests/plugins/test_time_travel_plugin_validation.py` | Default install rejects `as_of`; registered-but-disabled plugin rejects `as_of`; separate fact-query and recall gates are honored; explicitly enabled plugin-loaded fact query and recall accept historical reads. |
-| Integrated Phase 13 coverage | `node/tests/time_travel/test_phase13_time_travel_cid.py` | Historical fact visibility, retraction, expiry, tombstone, legal-hold, recall, retention-floor errors, historical recency scoring, CID tamper rejection, and source-trust-style rank-hook visibility tests. |
+| Integrated Phase 13 coverage | `node/tests/time_travel/test_phase13_time_travel_cid.py` | Historical fact visibility, retraction, expiry, retroactive tombstone suppression, legal-hold oracle suppression, recall, retention-floor errors, historical recency scoring, CID tamper rejection, and source-trust-style rank-hook visibility tests. |
 | Fast gate | `bash scripts/check.sh python` | Runs plugin, route, and integration tests in the Python check bundle. |
 
 ## Conformance and Fixtures

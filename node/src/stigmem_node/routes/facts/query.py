@@ -215,7 +215,7 @@ def _query_facts_as_of_impl(
     # F-14 §24.3.2: pre-check — agent-key callers get empty results if a legal-hold
     # tombstone covers the queried entity (short-circuit before executing the query)
     if entity and not is_admin_caller and _legal_hold_blocks_query(conn, entity):
-        return QueryResponse(facts=[], total=0, cursor=None)
+        return QueryResponse(facts=[], total=None, cursor=None)
 
     params = _build_as_of_params(
         entity=entity,

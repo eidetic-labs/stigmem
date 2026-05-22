@@ -775,11 +775,11 @@ def test_as_of_tombstone_retroactive_suppression(tmp_path):
 
             _insert_tombstone(db_file, "stigmem://rtbf/user1")
 
-            # as_of BEFORE tombstone was created should still suppress the fact
-            very_early = (datetime.now(UTC) - timedelta(seconds=10)).isoformat()
+            # as_of after the fact but before the tombstone should still suppress the fact.
+            before_tombstone = (datetime.now(UTC) - timedelta(seconds=1)).isoformat()
             r = c.get(
                 "/v1/facts",
-                params={"as_of": very_early, "entity": "stigmem://rtbf/user1"},
+                params={"as_of": before_tombstone, "entity": "stigmem://rtbf/user1"},
                 headers={"Authorization": f"Bearer {agent_key}"},
             )
             assert r.status_code == 200
@@ -871,6 +871,58 @@ def test_as_of_legal_hold_non_admin_excluded(tmp_path):
     _restore_settings(original, mods)
 
 
+def test_as_of_legal_hold_non_admin_matches_non_legal_hold_suppression(tmp_path):
+    """Agent callers must not distinguish legal hold from ordinary tombstone absence."""
+    db_file = str(tmp_path / "lh_oracle.db")
+    apply_migrations(db_path=db_file)
+    original = settings_module.settings
+    ts_settings = Settings(
+        db_path=db_file,
+        auth_required=True,
+        node_url="http://testnode",
+        node_private_key=_gen_test_private_key(),
+    )
+    mods = _patch_settings(ts_settings)
+    agent_key = auth_mod.create_api_key("agent:user", ["read", "write"])
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            for entity in ("stigmem://rtbf/legal-oracle", "stigmem://rtbf/plain-oracle"):
+                _insert_legacy_fact_row(
+                    db_file,
+                    fact_id=f"oracle-{uuid.uuid4()}",
+                    entity=entity,
+                    relation="rel:val",
+                    value="sensitive",
+                    timestamp=_ts(-30),
+                )
+            as_of_before_tombstones = _ts(-20)
+            _insert_tombstone(db_file, "stigmem://rtbf/legal-oracle", legal_hold=True)
+            _insert_tombstone(db_file, "stigmem://rtbf/plain-oracle", legal_hold=False)
+
+            legal_response = c.get(
+                "/v1/facts",
+                params={"as_of": as_of_before_tombstones, "entity": "stigmem://rtbf/legal-oracle"},
+                headers={"Authorization": f"Bearer {agent_key}"},
+            )
+            plain_response = c.get(
+                "/v1/facts",
+                params={"as_of": as_of_before_tombstones, "entity": "stigmem://rtbf/plain-oracle"},
+                headers={"Authorization": f"Bearer {agent_key}"},
+            )
+
+    _restore_settings(original, mods)
+    assert legal_response.status_code == 200
+    assert plain_response.status_code == 200
+    legal_body = legal_response.json()
+    plain_body = plain_response.json()
+    assert legal_body["facts"] == plain_body["facts"] == []
+    assert legal_body["total"] is plain_body["total"] is None
+    assert legal_body.get("tombstone_notices", []) == plain_body.get("tombstone_notices", []) == []
+    assert "x-total-count" not in legal_response.headers
+    assert "x-total-count" not in plain_response.headers
+
+
 # ---------------------------------------------------------------------------
 # POST /v1/recall with as_of
 # ---------------------------------------------------------------------------
@@ -901,6 +953,47 @@ def test_recall_as_of(p13_time_travel_client: TestClient):
         "/v1/facts", params={"entity": "stigmem://recall/e1"}
     ).json()["facts"]:
         assert f_check["id"] not in ids_before
+
+
+def test_recall_as_of_non_legal_tombstone_retroactive_suppression(tmp_path):
+    """Recall as_of must suppress ordinary tombstones even before tombstone creation."""
+    db_file = str(tmp_path / "recall_plain_tombstone.db")
+    apply_migrations(db_path=db_file)
+    original = settings_module.settings
+    ts_settings = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
+    mods = _patch_settings(ts_settings)
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            fact_id = f"recall-plain-tombstone-{uuid.uuid4()}"
+            _insert_legacy_fact_row(
+                db_file,
+                fact_id=fact_id,
+                entity="stigmem://recall/plain-tombstone",
+                relation="rel:history",
+                value="retroactive suppression marker",
+                timestamp=_ts(-30),
+            )
+            as_of_before_tombstone = _ts(-20)
+            _insert_tombstone(db_file, "stigmem://recall/plain-tombstone", legal_hold=False)
+
+            response = c.post(
+                "/v1/recall",
+                json={
+                    "query": "retroactive suppression marker",
+                    "scope": "local",
+                    "as_of": as_of_before_tombstone,
+                    "max_chunks": 10,
+                },
+            )
+
+    _restore_settings(original, mods)
+    assert response.status_code == 200
+    body = response.json()
+    returned_ids = {item["fact"]["id"] for item in body["facts"]}
+    assert fact_id not in returned_ids
+    assert body["tombstone_notices"] == []
+    assert body["total_scored"] is None
 
 
 def test_recall_as_of_retention_floor_rejected(tmp_path):

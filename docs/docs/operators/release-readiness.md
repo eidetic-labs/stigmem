@@ -21,7 +21,7 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 <div className="stigmem-grid">
 
-<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22.</p></div>
+<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22.</p></div>
 <div><h4>Future beta line</h4><p>Hardened core, 30-day external operator soak. No active milestone today.</p></div>
 <div><h4>Future release-candidate line</h4><p>Observation window after hardened-core exit. No active milestone today.</p></div>
 <div><h4>Future GA line</h4><p>Wire format committed, compatibility commitment honored across the v1.x line. No active milestone today.</p></div>
@@ -34,13 +34,13 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 <div className="stigmem-lead">
 
-**Active alpha horizon for `as_of` plugin-boundary validation.**
+**Shipped alpha validation release for `as_of` plugin-boundary behavior.**
 
-`v0.9.0a4` carries the next active alpha-line work: validating
+`v0.9.0a4` validated
 `stigmem-plugin-time-travel` as the opt-in boundary for historical `as_of`
 queries, preserving default fail-closed behavior without plugin registration,
 and aligning feature, security, compatibility, changelog, and release evidence
-surfaces before the a4 tag. `v0.9.0a3` shipped on 2026-05-22.
+surfaces for the a4 tag.
 
 </div>
 
@@ -54,14 +54,14 @@ surfaces before the a4 tag. `v0.9.0a3` shipped on 2026-05-22.
 
 <div>
 <dt>Milestone</dt>
-<dt><span className="stigmem-fields__type">open</span></dt>
-<dd>Tracked at [milestone v0.9.0a4](https://github.com/Eidetic-Labs/stigmem/milestone/5), the only active release milestone.</dd>
+<dt><span className="stigmem-fields__type">closed</span></dt>
+<dd>Tracked at [milestone v0.9.0a4](https://github.com/Eidetic-Labs/stigmem/milestone/5).</dd>
 </div>
 
 <div>
 <dt>CHANGELOG</dt>
-<dt><span className="stigmem-fields__type">in flight</span></dt>
-<dd>Active work tracked under `[Unreleased]` in [CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md). Promoted to `[0.9.0a4]` at tag time.</dd>
+<dt><span className="stigmem-fields__type">published</span></dt>
+<dd>[CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md) includes `[0.9.0a4]` release notes.</dd>
 </div>
 
 <div>
@@ -72,7 +72,7 @@ surfaces before the a4 tag. `v0.9.0a3` shipped on 2026-05-22.
 
 <div>
 <dt>Exit</dt>
-<dt><span className="stigmem-fields__type">pending</span></dt>
+<dt><span className="stigmem-fields__type">complete</span></dt>
 <dd>Default installs reject `as_of`, plugin-loaded fact query and recall behavior validate, security projections align, and the a4 milestone closes.</dd>
 </div>
 
@@ -276,7 +276,7 @@ Scope per [ROADMAP future release-candidate and GA exit criteria](https://github
 
 Three gates ensure release notes match shipped code:
 
-1. **PR-closes-issue and milestone discipline** ([CONTRIBUTING.md](https://github.com/eidetic-labs/stigmem/blob/main/CONTRIBUTING.md#pr-closes-issue-and-milestone-discipline-from-v090a3-onward)) — every PR from v0.9.0a3 onward must close exactly one issue and assign the matching milestone. Lets anyone answer "what shipped in release X?" by reading the milestone view.
+1. **PR-closes-issue and milestone discipline** ([CONTRIBUTING.md](https://github.com/eidetic-labs/stigmem/blob/main/CONTRIBUTING.md#pr-closes-issue-and-milestone-discipline-from-v090a3-onward)) — every release-scoped PR from v0.9.0a3 onward must close exactly one issue and use the issue's matching milestone. Lets anyone answer "what shipped in release X?" by reading the milestone view.
 2. **`scripts/check_release_readiness.py`** — umbrella gate that asserts the CHANGELOG `[<version>]` section is non-empty and the corresponding milestone has zero open issues. Runs as a `release-readiness` job in `.github/workflows/publish.yml` ahead of every tag-gated publish job.
 3. **Existing per-artifact gates** — [`check_version_consistency.py`](https://github.com/eidetic-labs/stigmem/blob/main/scripts/check_version_consistency.py), [`validate_version_surfaces.py`](https://github.com/eidetic-labs/stigmem/blob/main/scripts/validate_version_surfaces.py), [`check_release_evidence.py`](https://github.com/eidetic-labs/stigmem/blob/main/scripts/check_release_evidence.py), and the coverage/ruff/mypy/security-doc baselines — all run as part of CI.
 

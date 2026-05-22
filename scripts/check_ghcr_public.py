@@ -3,7 +3,7 @@
 
 Surfaced as a CI gate after the 2026-05-10 dogfooding finding (issue #103):
 the GHCR package was private at publish time, so adopters following the
-README's `docker pull ghcr.io/eidetic-labs/stigmem-node:0.9.0a3` got
+README's `docker pull ghcr.io/eidetic-labs/stigmem-node:0.9.0a4` got
 403 Forbidden. The fix is a one-time GitHub package-visibility flip,
 but the regression mode is silent — if a future package is published
 private by default and nobody notices, the same friction recurs.
@@ -36,7 +36,7 @@ import urllib.error
 import urllib.request
 
 DEFAULT_IMAGE = "ghcr.io/eidetic-labs/stigmem-node"
-DEFAULT_TAG = "0.9.0a3"
+DEFAULT_TAG = "0.9.0a4"
 
 
 def probe(image: str, tag: str) -> int:

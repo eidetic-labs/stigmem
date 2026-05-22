@@ -2,7 +2,7 @@
 
 > Public roadmap for stigmem. Milestone-gated, not time-gated — version lines complete when their exit criteria are met.
 >
-> **Current published build:** v0.9.0a3. **Active release horizon:** v0.9.0a4 only (per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
+> **Current published build:** v0.9.0a4. **Active release horizon:** no next alpha milestone is open yet (per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
 > **Last updated:** 2026-05-22.
 
 ---
@@ -22,7 +22,7 @@ shipped.
 
 ## Version-line model
 
-The work is organized into sequential version lines per [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md), but only the next alpha artifact refresh is an active release target. Future beta, release-candidate, and GA lines stay as policy horizons until alpha exit evidence justifies opening them.
+The work is organized into sequential version lines per [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). Only one alpha artifact refresh is opened as an active release target at a time; future beta, release-candidate, and GA lines stay as policy horizons until alpha exit evidence justifies opening them.
 
 | Version line | Goal |
 |---|---|
@@ -35,11 +35,10 @@ The work is organized into sequential version lines per [ADR-019](docs/adr/019-a
 
 ## Current Strategic Horizon
 
-`v0.9.0a4` is the only active release horizon. It carries the time-travel
-query extraction validation release: `as_of` stays opt-in behind
-`stigmem-plugin-time-travel`, default installs fail closed without plugin
-registration, and release evidence must prove the boundary before tagging. The
-active release contract lives in
+`v0.9.0a4` shipped the time-travel query extraction validation release:
+`as_of` stays opt-in behind `stigmem-plugin-time-travel`, default installs fail
+closed without plugin registration, and release evidence proves the boundary.
+The detailed release record lives in
 [`docs/internal/releases/v0.9.0a4-roadmap.md`](docs/internal/releases/v0.9.0a4-roadmap.md).
 
 The broader alpha deployment sequence remains intact. The detailed alpha-series
@@ -50,7 +49,7 @@ horizons and Phase A exit evidence, lives in
 | Horizon | Strategic purpose | Status |
 |---|---|---|
 | `v0.9.0a3` | CID core/spec validation and the next alpha artifact refresh. | Shipped |
-| `v0.9.0a4` | Time-travel query extraction into an opt-in experimental plugin; default `as_of` behavior fails closed without plugin registration. | Active |
+| `v0.9.0a4` | Time-travel query extraction into an opt-in experimental plugin; default `as_of` behavior fails closed without plugin registration. | Shipped |
 | `v0.9.0a5` | RTBF tombstone extraction into an opt-in experimental plugin; default routes and filters require plugin registration. | Planned, not open |
 | `v0.9.0a6` | Memory Garden advanced ACL extraction into an opt-in experimental plugin. | Planned, not open |
 | `v0.9.0a7` | Source-attestation extraction into an opt-in experimental plugin. | Planned, not open |

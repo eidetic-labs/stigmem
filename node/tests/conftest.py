@@ -7,6 +7,7 @@ import contextlib
 import importlib
 import json
 import logging
+import os
 import sqlite3
 import sys
 import time
@@ -315,6 +316,8 @@ def _time_travel_plugin_manifest() -> PluginManifest:
 def _tombstone_plugin_manifest() -> PluginManifest:
     if str(_TOMBSTONE_PLUGIN_SRC) not in sys.path:
         sys.path.insert(0, str(_TOMBSTONE_PLUGIN_SRC))
+    os.environ.setdefault("STIGMEM_TOMBSTONES_ENABLED", "true")
+    os.environ.setdefault("STIGMEM_TOMBSTONES_ALLOW_RECALL_FILTER", "true")
     plugin = importlib.import_module("stigmem_plugin_tombstones")
     return plugin.plugin_manifest()
 

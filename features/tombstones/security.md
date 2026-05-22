@@ -9,11 +9,12 @@ entity URIs and suppress facts that agents or operators depend on. Tombstones
 are deliberately strong because they support erasure workflows; that same
 strength gives a malicious admin credential a high blast radius.
 
-Current controls are admin-only issuance, admin audit events, API-key max-age,
-and tombstone audit trail requirements. Required mitigation is an operator and
-protocol workflow for high-blast-radius tombstones: second-admin approval for
-sensitive entities, explicit revocation runbooks, and tests that prove
-tombstone revocation restores only the intended read surface.
+Current controls are admin-only issuance, signer authority checks, structured
+tombstone audit events, API-key max-age, and regression tests proving
+revocation restores only the intended read surface. Required mitigation before
+graduation is an operator and protocol workflow for high-blast-radius
+tombstones: second-admin approval for sensitive entities and explicit
+revocation runbooks.
 
 ### R-17: Legal-hold historical data exposure
 
@@ -22,9 +23,10 @@ preserves historical facts for lawful preservation. If an admin key is later
 compromised, an attacker may be able to retrieve pre-tombstone history via
 `as_of` time-travel queries.
 
-Required mitigation is a narrower legal-hold access model, such as a distinct
-`legal_hold_reader` capability, plus integration tests proving non-admin keys
-cannot retrieve legal-hold history across a tombstone boundary.
+Current controls silently suppress legal-hold tombstoned facts for non-admin
+callers and expose legal-hold notices only to admin callers on historical read
+paths. Required mitigation before graduation is a narrower legal-hold access
+model, such as a distinct `legal_hold_reader` capability.
 
 ## Threat Model Delta
 
@@ -35,7 +37,7 @@ time-travel reads, and federation propagation.
 
 ## Conformance Pointers
 
-Required adversarial vectors before promotion:
+Current adversarial vectors:
 
 - tombstone issued by a non-admin key returns 403;
 - forged tombstone signatures are rejected;
@@ -46,8 +48,8 @@ Required adversarial vectors before promotion:
 ## Residual Risk
 
 Gate 1 remains open. The feature cannot graduate until tombstone DoS recovery,
-legal-hold access separation, and federation authority checks have complete
-design and evidence.
+legal-hold access separation, operator soak, and revocation runbooks have
+complete design and evidence.
 
 ## Advisories and Findings
 

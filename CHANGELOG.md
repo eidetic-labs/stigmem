@@ -9,7 +9,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ## [Unreleased]
 
-_No unreleased changes._
+### Security
+
+- Validated the `v0.9.0a5` RTBF tombstone alpha scope as an opt-in
+  `stigmem-plugin-tombstones` feature. Default installs remain inert until the
+  plugin is registered and operator gates are enabled; admin issuance,
+  federation signer authority, forged-signature rejection, audit events,
+  selective revocation, legal-hold silence, and no-leak behavior are covered in
+  the feature-owned evidence record.
 
 ## [0.9.0a4] — 2026-05-22
 
@@ -141,7 +148,7 @@ root changelog projection used during release prep.
 | Subscriptions | deferred | `v0.9.0a1`, `0.9.xA` | [`features/subscriptions/changelog.md`](features/subscriptions/changelog.md) |
 | Synthesis | deferred | `v0.9.0a1`, `0.9.xA` | [`features/synthesis/changelog.md`](features/synthesis/changelog.md) |
 | Time-travel queries | active | `v0.9.0a1`, `v0.9.0a4` | [`features/time-travel/changelog.md`](features/time-travel/changelog.md) |
-| RTBF tombstones | active | `v0.9.0a1`, `0.9.xA` | [`features/tombstones/changelog.md`](features/tombstones/changelog.md) |
+| RTBF tombstones | active | `v0.9.0a1`, `v0.9.0a5`, `0.9.xA` | [`features/tombstones/changelog.md`](features/tombstones/changelog.md) |
 
 ---
 

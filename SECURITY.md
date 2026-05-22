@@ -121,6 +121,29 @@ after a patched version is available; Medium and Low findings are documented in
 this file unless a documented risk-profile, reporter-coordination, or
 downstream-compliance carve-out applies.
 
+## Security Posture — v0.9.0a5 release horizon
+
+`v0.9.0a5` is the active alpha release horizon. The release validates RTBF
+tombstones as an experimental, opt-in plugin boundary: default installs do not
+mount tombstone admin or federation routes and do not apply tombstone filters
+unless `stigmem-plugin-tombstones` is registered and the explicit operator
+gates are enabled.
+
+R-16 and R-17 remain open feature-owned risks. The a5 validation work improves
+their evidence posture by covering admin-only issuance, federation signer
+authority, forged-signature rejection, tombstone audit events, selective
+revocation recovery, legal-hold silence for non-admin callers, and count/header
+side-channel suppression. Graduation still requires operator soak, documented
+revocation runbooks, high-blast-radius approval policy, and narrower
+legal-hold access separation.
+
+No new public GHSA is introduced by the a5 tombstone validation work. The
+standing publication policy remains: Critical and High vulnerabilities that
+affect supported published artifacts are handled through GHSA where applicable
+after a patched version is available; Medium and Low findings are documented in
+this file unless a documented risk-profile, reporter-coordination, or
+downstream-compliance carve-out applies.
+
 The public disposition index for the current audit batch remains the
 `v0.9.0a2` section below. The dated internal evidence registry remains a proof
 ledger with path, PR, and regression-test lineage; it is not a second public

@@ -9,6 +9,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ## [Unreleased]
 
+_No unreleased changes._
+
+## [0.9.0a5] — 2026-05-22
+
+**Status:** preview alpha — pre-stable, not for production federation across
+organizational boundaries. RTBF tombstones remain experimental, opt-in, and
+operator-gated.
+
+**Per-ecosystem version strings (per ADR-019):**
+- PyPI / Python: `stigmem 0.9.0a5`, `stigmem-py 0.9.0a5`, `stigmem-node 0.9.0a5`, and `stigmem-openclaw 0.9.0a5` (PEP 440).
+- npm / Node: `@eidetic-labs/stigmem-ts@0.9.0-alpha.5` (semver).
+- GHCR: `ghcr.io/eidetic-labs/stigmem-node:0.9.0a5` and `:0.9.0-alpha.5`.
+- Git tag, GitHub release, prose: `v0.9.0a5` (shorthand).
+
+### Changed
+
+- Advanced the enforced release-version surfaces to the `v0.9.0a5` alpha line
+  across Python packages, npm packages, API metadata, conformance metadata,
+  plugin compatibility defaults, release documentation, and current-facing
+  adopter guidance.
+
 ### Security
 
 - Validated the `v0.9.0a5` RTBF tombstone alpha scope as an opt-in

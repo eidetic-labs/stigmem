@@ -1079,7 +1079,7 @@ class TestMigrationRoundTrip:
 
 @pytest.fixture()
 def admin_client(tmp_db: str, backend: str, monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    """A test client with full admin permissions (read+write+federate)."""
+    """A test client with full admin permissions."""
     original = settings_mod.settings
     s = Settings(db_path=tmp_db, auth_required=False)
     settings_mod.settings = s
@@ -1089,7 +1089,7 @@ def admin_client(tmp_db: str, backend: str, monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a3")
 
     # create_api_key uses module-level db(), which now points to tmp_db via settings
-    raw_key = create_api_key("admin:test", ["read", "write", "federate"])
+    raw_key = create_api_key("admin:test", ["read", "write", "federate", "admin"])
 
     manifest = plugin_manifest()
     app = main_mod.create_app()

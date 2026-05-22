@@ -38,6 +38,13 @@ operator-gated.
   federation signer authority, forged-signature rejection, audit events,
   selective revocation, legal-hold silence, and no-leak behavior are covered in
   the feature-owned evidence record.
+- Consolidated admin determination to use `Identity.is_admin()` across
+  tombstone admin routes, instruction admin routes, and provenance tombstone
+  filtering. This removes the `can_write() and can_federate()` proxy so admin
+  checks consult the dedicated `admin` capability and `capability_check` voting
+  hook consistently.
+- Added `scripts/check_admin_determination_consistency.py` to reject future
+  capability-combination-as-admin-proxy patterns in the Python node source.
 
 ## [0.9.0a4] — 2026-05-22
 

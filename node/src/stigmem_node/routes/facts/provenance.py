@@ -106,7 +106,7 @@ def get_provenance(
     excluded: set[str] = set()
     if accessible_entities:
         with db() as _tc_conn:
-            is_admin = identity.can_write() and identity.can_federate()
+            is_admin = identity.is_admin()
             excluded, _ = _get_tombstone_filter(_tc_conn, accessible_entities, root_scope, is_admin)
 
     # Build response — §23.3.2 r.4 tombstone and §20.6.2 unauthorized share identical shape

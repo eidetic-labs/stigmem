@@ -87,7 +87,7 @@ def _now_ms() -> int:
 
 
 def _is_admin(identity: Identity) -> bool:
-    return identity.can_write() and identity.can_federate()
+    return identity.is_admin()
 
 
 def _check_agent_access(identity: Identity, agent_id: str) -> None:

@@ -43,9 +43,10 @@ they pass the ADR-008 reintroduction gates.
 </div>
 
 <div>
-<dt><code>experimental/deploy-grafana/stigmem-dashboard.json</code></dt>
+<dt><code>features/deploy-grafana</code></dt>
 <dt><span className="stigmem-fields__type">unsupported</span></dt>
-<dd>Dashboard seed for self-import.</dd>
+<dd>Feature record for the experimental Grafana dashboards, Prometheus alerts,
+and Tempo config.</dd>
 </div>
 
 </div>
@@ -57,7 +58,10 @@ they pass the ADR-008 reintroduction gates.
 curl -s http://localhost:8765/metrics | grep '^stigmem_'
 ```
 
-Prometheus, Grafana, and Tempo deployment topology is operator-owned today. Point your scrape target at `/metrics`, and import the experimental Grafana dashboard manually if it fits your deployment.
+Prometheus, Grafana, and Tempo deployment topology is operator-owned today.
+Point your scrape target at `/metrics`, and import the experimental Grafana
+dashboards from `experimental/deploy-grafana/dashboards/grafana/` manually if
+they fit your deployment.
 
 ## Prometheus metrics reference
 

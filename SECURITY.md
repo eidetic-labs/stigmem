@@ -78,6 +78,7 @@ is an index, not the canonical analysis body; update the linked
 | Cognee adapter | None | [`features/cognee-adapter/security.md`](features/cognee-adapter/security.md) |
 | Dashboard | None | [`features/dashboard/security.md`](features/dashboard/security.md) |
 | Fly.io deployment | None | [`features/deploy-fly/security.md`](features/deploy-fly/security.md) |
+| Grafana deployment | None | [`features/deploy-grafana/security.md`](features/deploy-grafana/security.md) |
 | Helm deployment | None | [`features/deploy-helm/security.md`](features/deploy-helm/security.md) |
 | Evaluation harness | None | [`features/eval-harness/security.md`](features/eval-harness/security.md) |
 | OIDC SSO | None | [`features/oidc-sso/security.md`](features/oidc-sso/security.md) |

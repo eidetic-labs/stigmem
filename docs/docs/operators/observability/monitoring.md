@@ -165,7 +165,13 @@ curl -s https://your-node.example.com/metrics | grep stigmem_
 
 </div>
 
-A sample Grafana dashboard JSON is available at [`experimental/deploy-grafana/stigmem-dashboard.json`](https://github.com/eidetic-labs/stigmem/blob/main/experimental/deploy-grafana/stigmem-dashboard.json). Grafana support is deferred per [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md); the dashboard remains buildable for self-import but is unsupported until it passes the ADR-008 reintroduction gates.
+Experimental Grafana dashboard JSON is available under
+[`experimental/deploy-grafana/dashboards/grafana/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-grafana/dashboards/grafana).
+Grafana support is deferred per
+[ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md);
+the dashboards remain available for self-import but are unsupported until they
+pass the ADR-008 reintroduction gates. The canonical feature record is
+[`features/deploy-grafana`](https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-grafana).
 
 ## Recall latency
 

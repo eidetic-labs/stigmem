@@ -31,6 +31,7 @@ root changelog projection used during release prep.
 | Decay semantics | deferred | `v0.9.0a1`, `0.9.xA` | [`features/decay/changelog.md`](features/decay/changelog.md) |
 | Dashboard | deferred | `v0.9.0a1`, `0.9.xA` | [`features/dashboard/changelog.md`](features/dashboard/changelog.md) |
 | Fly.io deployment | deferred | `v0.9.0a1`, `0.9.xA` | [`features/deploy-fly/changelog.md`](features/deploy-fly/changelog.md) |
+| Grafana deployment | deferred | `v0.9.0a1`, `0.9.xA` | [`features/deploy-grafana/changelog.md`](features/deploy-grafana/changelog.md) |
 | Helm deployment | deferred | `v0.9.0a1`, `0.9.xA` | [`features/deploy-helm/changelog.md`](features/deploy-helm/changelog.md) |
 | Evaluation harness | deferred | `v0.9.0a1`, `0.9.xA` | [`features/eval-harness/changelog.md`](features/eval-harness/changelog.md) |
 | Fuzzy resolver | active | `v0.9.0a1`, `0.9.xA` | [`features/fuzzy-resolver/changelog.md`](features/fuzzy-resolver/changelog.md) |

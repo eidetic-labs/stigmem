@@ -76,6 +76,7 @@ is an index, not the canonical analysis body; update the linked
 | Multi-tenant boundaries | R-01, R-02, R-21 | [`features/multi-tenant/security.md`](features/multi-tenant/security.md) |
 | Obsidian adapter | R-07 | [`features/obsidian-adapter/security.md`](features/obsidian-adapter/security.md) |
 | Cognee adapter | None | [`features/cognee-adapter/security.md`](features/cognee-adapter/security.md) |
+| Dashboard | None | [`features/dashboard/security.md`](features/dashboard/security.md) |
 | OIDC SSO | None | [`features/oidc-sso/security.md`](features/oidc-sso/security.md) |
 | Ollama/LiteLLM adapter | None | [`features/ollama-litellm-adapter/security.md`](features/ollama-litellm-adapter/security.md) |
 | OpenAI tools adapter | None | [`features/openai-tools-adapter/security.md`](features/openai-tools-adapter/security.md) |

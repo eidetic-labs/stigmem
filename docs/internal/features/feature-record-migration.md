@@ -234,6 +234,9 @@ Progress:
 - `paperclip-adapter` now has a canonical adapter feature record under
   `features/paperclip-adapter/`; installation, ownership, live Paperclip, and
   security validation remain future alpha release-line gates.
+- `dashboard` now has a canonical tooling feature record under
+  `features/dashboard/`; dependency currency, auth/session, live-node, and
+  deployment posture remain future alpha release-line gates.
 
 ## Release Horizon Alignment
 

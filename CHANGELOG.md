@@ -29,6 +29,7 @@ root changelog projection used during release prep.
 | Async jobs | active | `v0.9.0a1`, `0.9.xA` | [`features/async-jobs/changelog.md`](features/async-jobs/changelog.md) |
 | Content-addressed fact IDs | active | `v0.9.0a1`, `v0.9.0a3` | [`features/content-addressed-ids/changelog.md`](features/content-addressed-ids/changelog.md) |
 | Decay semantics | deferred | `v0.9.0a1`, `0.9.xA` | [`features/decay/changelog.md`](features/decay/changelog.md) |
+| Dashboard | deferred | `v0.9.0a1`, `0.9.xA` | [`features/dashboard/changelog.md`](features/dashboard/changelog.md) |
 | Fuzzy resolver | active | `v0.9.0a1`, `0.9.xA` | [`features/fuzzy-resolver/changelog.md`](features/fuzzy-resolver/changelog.md) |
 | Gemini adapter | deferred | `v0.9.0a1`, `0.9.xA` | [`features/gemini-adapter/changelog.md`](features/gemini-adapter/changelog.md) |
 | Go SDK | active | `v0.9.0a1`, `0.9.xA` | [`features/sdk-go/changelog.md`](features/sdk-go/changelog.md) |

@@ -160,8 +160,8 @@ The recipes below are **not part of the v0.9.0a1 supported surface.** They live 
 
 <div>
 <dt>Grafana dashboards</dt>
-<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-grafana"><code>experimental/deploy-grafana/</code></a></span></dt>
-<dd>Deferred (no Spec-X assigned).</dd>
+<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-grafana"><code>features/deploy-grafana</code></a></span></dt>
+<dd>Deferred observability deployment seed; implementation remains under <code>experimental/deploy-grafana/</code>.</dd>
 </div>
 
 </div>

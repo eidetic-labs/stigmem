@@ -1,5 +1,9 @@
-# deploy-grafana — Status
+# Grafana Deployment Status
 
-deploy-grafana is Dormant for v0.9.0a1 (last tested against); owner unowned; buildable unknown — pending PR 3 verification sweep; last updated 2026-05-09. Spec ID: (no Spec-X assigned — deferred per [ADR-002](../../docs/adr/002-v1-scope.md); if reintroduced, gets next available Spec-X number per [ADR-010](../../docs/adr/010-modular-specs.md)). Legacy section: not applicable.
+Canonical feature status now lives in
+[`features/deploy-grafana/status.md`](../../features/deploy-grafana/status.md).
 
-This feature remains outside the default surface per [ADR-002](../../docs/adr/002-v1-scope.md) and [ADR-009](../../docs/adr/009-repo-structure.md); shared promotion gates live in [../STATUS-GATES.md](../STATUS-GATES.md).
+This directory remains the implementation source for the experimental Grafana,
+Prometheus, and Tempo observability recipe. Keep lifecycle, release-line,
+evidence, and security detail in the feature record; keep dashboard,
+provisioning, alert, scrape, and trace config changes here.

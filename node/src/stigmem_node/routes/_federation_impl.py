@@ -375,21 +375,25 @@ def _verify_signed_artifact_or_400(
     tombstones vs revocations.
     """
     if not key_id:
+        _audit_tombstone_ingest_rejected(record, artifact_label, f"{artifact_label}_missing_key_id")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"{artifact_label} missing key_id",
         )
     manifest = get_peer_manifest(signer_uri)
     if manifest is None:
+        _audit_tombstone_ingest_rejected(record, artifact_label, "signer_manifest_missing")
         raise HTTPException(status_code=401, detail=missing_manifest_detail)
     pubkey_b64 = _resolve_pubkey_for_key_id(manifest, key_id)
     if pubkey_b64 is None:
+        _audit_tombstone_ingest_rejected(record, artifact_label, "key_id_not_in_signer_manifest")
         raise HTTPException(status_code=401, detail="key_id not in signer manifest")
     try:
         verifier(record, pubkey_b64)
     except ValueError as exc:
         if on_failure is not None:
             on_failure(record, str(exc))
+        _audit_tombstone_ingest_rejected(record, artifact_label, str(exc))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"{artifact_label}_verification_failed: {exc}",
@@ -404,6 +408,7 @@ def _ingest_revocation(payload: dict[str, Any], fed_settings: Any) -> dict[str, 
     try:
         rev = TombstoneRevocationRecord(**payload)
     except Exception as exc:
+        _audit_tombstone_payload_rejected(payload, "revocation", str(exc))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     _verify_signed_artifact_or_400(
@@ -427,6 +432,7 @@ def _ingest_tombstone(payload: dict[str, Any], fed_settings: Any) -> dict[str, A
     try:
         record = TombstoneRecord(**payload)
     except Exception as exc:
+        _audit_tombstone_payload_rejected(payload, "tombstone", str(exc))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     _verify_signed_artifact_or_400(
@@ -497,4 +503,52 @@ def _emit_tombstone_verification_failed(record: TombstoneRecord, reason: str) ->
         record.id,
         record.entity_uri,
         reason,
+    )
+
+
+def _audit_tombstone_ingest_rejected(record: Any, artifact_label: str, reason: str) -> None:
+    from ..observability.audit_event import emit_nofail
+
+    artifact_id = str(getattr(record, "id", "") or getattr(record, "tombstone_id", ""))
+    signer_uri = str(getattr(record, "signed_by", "") or "system:federation")
+    target_entity_uri = str(
+        getattr(record, "entity_uri", "") or getattr(record, "tombstone_id", "") or artifact_id
+    )
+    emit_nofail(
+        "tombstone_federation_rejected",
+        entity_uri=signer_uri,
+        fact_id=artifact_id or None,
+        source="federation",
+        detail={
+            "artifact": artifact_label,
+            "artifact_id": artifact_id,
+            "target_entity_uri": target_entity_uri,
+            "key_id": str(getattr(record, "key_id", "") or ""),
+            "reason": reason,
+        },
+    )
+
+
+def _audit_tombstone_payload_rejected(
+    payload: dict[str, Any],
+    artifact_label: str,
+    reason: str,
+) -> None:
+    from ..observability.audit_event import emit_nofail
+
+    artifact_id = str(payload.get("id") or payload.get("tombstone_id") or "")
+    signer_uri = str(payload.get("signed_by") or "system:federation")
+    target_entity_uri = str(payload.get("entity_uri") or payload.get("tombstone_id") or artifact_id)
+    emit_nofail(
+        "tombstone_federation_rejected",
+        entity_uri=signer_uri,
+        fact_id=artifact_id or None,
+        source="federation",
+        detail={
+            "artifact": artifact_label,
+            "artifact_id": artifact_id,
+            "target_entity_uri": target_entity_uri,
+            "key_id": str(payload.get("key_id") or ""),
+            "reason": reason,
+        },
     )

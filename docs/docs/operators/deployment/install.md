@@ -44,7 +44,7 @@ The reference node image is published to GHCR at [`ghcr.io/eidetic-labs/stigmem-
 <div>
 <dt><code>:0.9.0aN</code> / <code>:0.9.0bN</code> / <code>:1.0.0rcN</code> / <code>:1.0.0</code></dt>
 <dt><span className="stigmem-fields__type">immutable</span></dt>
-<dd><strong>Production.</strong> Never reassigned after publish. Reproducible builds, audit-traceable deployments, change-control gates.</dd>
+<dd><strong>Release-pinned evaluation or controlled internal workloads.</strong> Never reassigned after publish. Reproducible builds, audit-traceable deployments, change-control gates. Do not treat alpha tags as production-stable.</dd>
 </div>
 
 <div>
@@ -74,7 +74,7 @@ The reference node image is published to GHCR at [`ghcr.io/eidetic-labs/stigmem-
 <div>
 <dt><code>@sha256:&lt;digest&gt;</code></dt>
 <dt><span className="stigmem-fields__type">tamper-evident</span></dt>
-<dd><strong>Hardened production / supply-chain-conscious deployments.</strong> Fixes the content, not the label.</dd>
+<dd><strong>Supply-chain-conscious deployments.</strong> Fixes the content, not the label. Required for hardened production once the release line is stable.</dd>
 </div>
 
 </div>
@@ -84,8 +84,8 @@ The reference node image is published to GHCR at [`ghcr.io/eidetic-labs/stigmem-
 **Quick rule of thumb**
 
 - Trying things out → `:latest`
-- Running a real workload → `:0.9.0aN` (your current release)
-- Auditable production → `@sha256:<digest>` of the version tag you intend to ship
+- Controlled internal workload → `:0.9.0aN` (your current release)
+- Auditable deployment → `@sha256:<digest>` of the version tag you intend to run
 
 </div>
 

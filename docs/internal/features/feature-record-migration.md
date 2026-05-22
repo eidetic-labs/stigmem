@@ -241,6 +241,9 @@ Progress:
   `features/eval-harness/`; the current surface is concept-only and runnable
   implementation, corpus, CI, and live-node validation remain future alpha
   release-line gates.
+- `deploy-helm` now has a canonical deployment feature record under
+  `features/deploy-helm/`; chart publication, live cluster validation,
+  hardening review, and ownership remain future alpha release-line gates.
 
 ## Release Horizon Alignment
 

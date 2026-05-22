@@ -30,6 +30,7 @@ root changelog projection used during release prep.
 | Content-addressed fact IDs | active | `v0.9.0a1`, `v0.9.0a3` | [`features/content-addressed-ids/changelog.md`](features/content-addressed-ids/changelog.md) |
 | Decay semantics | deferred | `v0.9.0a1`, `0.9.xA` | [`features/decay/changelog.md`](features/decay/changelog.md) |
 | Dashboard | deferred | `v0.9.0a1`, `0.9.xA` | [`features/dashboard/changelog.md`](features/dashboard/changelog.md) |
+| Helm deployment | deferred | `v0.9.0a1`, `0.9.xA` | [`features/deploy-helm/changelog.md`](features/deploy-helm/changelog.md) |
 | Evaluation harness | deferred | `v0.9.0a1`, `0.9.xA` | [`features/eval-harness/changelog.md`](features/eval-harness/changelog.md) |
 | Fuzzy resolver | active | `v0.9.0a1`, `0.9.xA` | [`features/fuzzy-resolver/changelog.md`](features/fuzzy-resolver/changelog.md) |
 | Gemini adapter | deferred | `v0.9.0a1`, `0.9.xA` | [`features/gemini-adapter/changelog.md`](features/gemini-adapter/changelog.md) |

@@ -4,20 +4,22 @@ Integrates Stigmem with OpenClaw agents. Provides the standard boot handshake
 (pull user prefs + project constraints into context) and write surfaces for
 handoffs, decisions, and escalations.
 
-> **Status:** alpha / experimental. The current v0.9.0a1 ClawHub skill is published as
-> [`stigmem-node`](https://clawhub.ai/skills/stigmem-node), but it is an
-> evaluation surface, not a recommended production integration. This source copy
-> is queued for the v0.9.0a2 artifact refresh so future ClawHub docs carry that
-> framing explicitly. The adapter has audit-mapped regression coverage and
-> remains alpha while broader R-21 certification/operator evidence is pending; see
+> **Status:** alpha / experimental. The current v0.9.0a3 OpenClaw adapter
+> source is prepared as an evaluation surface, not a recommended production
+> integration. The ClawHub skill is published as
+> [`stigmem-node`](https://clawhub.ai/skills/stigmem-node) and installs the
+> `stigmem-openclaw` adapter package from the active alpha line. The adapter has
+> audit-mapped regression coverage and remains alpha while broader R-21
+> certification/operator evidence is pending; see
 > [LIMITATIONS.md §9](../../LIMITATIONS.md#9-running-the-openclaw-bundled-adapter-as-is).
 
 ## ClawHub skill
 
 For alpha evaluation, install the
 [`stigmem-node` ClawHub skill](https://clawhub.ai/skills/stigmem-node). The skill
-bundles `adapter.py` so no separate package install is required beyond `stigmem-py`,
-and documents the environment variables in a format OpenClaw reads automatically.
+bundles `adapter.py` as a compatibility shim, installs the
+`stigmem-openclaw` package from the active alpha line, and documents the
+environment variables in a format OpenClaw reads automatically.
 
 ```bash
 # Install via OpenClaw's ClawHub integration
@@ -73,19 +75,16 @@ deployments.
 
 ## Changelog
 
-### Next artifact refresh (v0.9.0a2 line)
+### v0.9.0a3 artifact refresh
 
 - Documentation: remove pre-reset release-history framing from the PyPI long
-  description so the next `stigmem-openclaw` publish presents the adapter as a
-  v0.9.0aN alpha/evaluation surface.
+  description so the `stigmem-openclaw` publish presents the adapter as a
+  v0.9.0a3 alpha/evaluation surface.
 - Documentation: align the package README with the ClawHub skill warning that
   OpenClaw is not a recommended production integration while R-21 certification
   and operator validation remain open.
 - Packaging: keep the dependency contract on the active alpha line with
-  `stigmem-py>=0.9.0a1,<1.0.0`.
-
-Already-published v0.9.0a1 artifacts remain immutable; this source update only
-affects the next artifact refresh.
+  `stigmem-py>=0.9.0a3,<1.0.0`.
 
 ## Design
 
@@ -129,7 +128,7 @@ agents import it as a standard Python library.
 
 - Python ≥ 3.11
 - `stigmem-py` installed from the alpha line:
-  `pip install --pre "stigmem-py>=0.9.0a1,<1.0.0"`
+  `pip install --pre "stigmem-py>=0.9.0a3,<1.0.0"`
 - A running Stigmem node
 
 ### Environment variables

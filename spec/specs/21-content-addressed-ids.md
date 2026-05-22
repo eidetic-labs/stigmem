@@ -16,6 +16,9 @@ depends_on:
 # Spec-21-Content-Addressed-IDs
 
 This file is a compatibility projection for existing protocol-index links.
+`v0.9.0a3` validation keeps this as a pointer because the feature-owned spec is
+the source of truth and protocol projection tooling does not yet generate this
+file automatically.
 
 The canonical ADR-020 feature record now lives at
 [`features/content-addressed-ids/`](../../features/content-addressed-ids/).

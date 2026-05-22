@@ -77,6 +77,7 @@ is an index, not the canonical analysis body; update the linked
 | Obsidian adapter | R-07 | [`features/obsidian-adapter/security.md`](features/obsidian-adapter/security.md) |
 | Cognee adapter | None | [`features/cognee-adapter/security.md`](features/cognee-adapter/security.md) |
 | Dashboard | None | [`features/dashboard/security.md`](features/dashboard/security.md) |
+| Helm deployment | None | [`features/deploy-helm/security.md`](features/deploy-helm/security.md) |
 | Evaluation harness | None | [`features/eval-harness/security.md`](features/eval-harness/security.md) |
 | OIDC SSO | None | [`features/oidc-sso/security.md`](features/oidc-sso/security.md) |
 | Ollama/LiteLLM adapter | None | [`features/ollama-litellm-adapter/security.md`](features/ollama-litellm-adapter/security.md) |

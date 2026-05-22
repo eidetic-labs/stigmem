@@ -412,7 +412,13 @@ Read the spec at
 </div>
 
 <div>
-<dt>Helm / Kubernetes / Fly.io / systemd / Grafana / PaaS</dt>
+<dt>Helm / Kubernetes</dt>
+<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-helm"><code>features/deploy-helm</code></a>; live cluster validation remains future alpha work.</dd>
+</div>
+
+<div>
+<dt>Fly.io / systemd / Grafana / PaaS</dt>
 <dt><span className="stigmem-fields__type">Deferred</span></dt>
 <dd><code>experimental/deploy-&#42;/</code>.</dd>
 </div>

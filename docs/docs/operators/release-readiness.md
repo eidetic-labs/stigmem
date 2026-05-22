@@ -157,20 +157,20 @@ Scope per [ROADMAP `v0.9.0bN`](https://github.com/eidetic-labs/stigmem/blob/main
 <div>
 <dt>Exit</dt>
 <dt><span className="stigmem-fields__type">pending</span></dt>
-<dd>Threat-model risk register clean for v1.0.0-critical-path risks; OpenClaw audit findings all closed; 30-day soak completes with P0 findings addressed; v1.0.0rc1 ready to declare.</dd>
+<dd>Threat-model risk register clean for v1.0.0-critical-path risks; OpenClaw audit findings all closed; 30-day soak completes with P0 findings addressed; release-candidate line ready to open.</dd>
 </div>
 
 </div>
 
 ---
 
-## v1.0.0rc1 — First release candidate
+## Future release-candidate line
 
 <div className="stigmem-lead">
 
 **Supply-chain hardening + external production usage.**
 
-Scope per [ROADMAP `v1.0.0rcN → v1.0.0`](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md#v100rcn--v100--release-candidates-and-ga): sigstore-signed releases, reproducible builds, SBOM publication, three or more external operators in production, wire-format freeze candidate.
+Scope per [ROADMAP future release-candidate and GA horizons](https://github.com/eidetic-labs/stigmem/blob/main/ROADMAP.md): sigstore-signed releases, reproducible builds, SBOM publication, three or more external operators in production, wire-format freeze candidate. No release-candidate milestone is active today.
 
 </div>
 
@@ -184,8 +184,8 @@ Scope per [ROADMAP `v1.0.0rcN → v1.0.0`](https://github.com/eidetic-labs/stigm
 
 <div>
 <dt>Milestone</dt>
-<dt><span className="stigmem-fields__type">open</span></dt>
-<dd>Tracked at [milestone v1.0.0rc1](https://github.com/Eidetic-Labs/stigmem/milestone/3). Entry blocked on v0.9.0b1 exit.</dd>
+<dt><span className="stigmem-fields__type">future gate</span></dt>
+<dd>No active release-candidate milestone exists. Entry is blocked on future beta exit evidence.</dd>
 </div>
 
 <div>
@@ -248,8 +248,8 @@ Scope per [ROADMAP `v1.0.0rcN → v1.0.0` exit criteria](https://github.com/eide
 
 <div>
 <dt>Milestone</dt>
-<dt><span className="stigmem-fields__type">open</span></dt>
-<dd>Tracked at [milestone v1.0.0](https://github.com/Eidetic-Labs/stigmem/milestone/4). Entry blocked on v1.0.0rc1 observation window completing without critical regression.</dd>
+<dt><span className="stigmem-fields__type">future gate</span></dt>
+<dd>No active GA milestone exists. Entry is blocked on the future release-candidate observation window completing without critical regression.</dd>
 </div>
 
 <div>

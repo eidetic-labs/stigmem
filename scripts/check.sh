@@ -168,6 +168,7 @@ run_docs() {
   timed_run feature-changelog-projection python3 scripts/check_feature_changelog_projection.py
   timed_run feature-compatibility-projection python3 scripts/check_feature_compatibility_projection.py
   timed_run feature-protocol-projection python3 scripts/check_feature_protocol_projection.py
+  timed_run docs-drift python3 scripts/check_docs_drift.py
   cd "$ROOT_DIR/docs"
   if [[ "${CHECK_SKIP_DOCS_INSTALL:-0}" != "1" ]]; then
     npm ci --ignore-scripts

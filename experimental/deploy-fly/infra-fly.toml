@@ -9,10 +9,10 @@
 #   fly volumes create stigmem_data --size 1 --region iad --app <APP_NAME>
 #   fly secrets set --app <APP_NAME> \
 #     STIGMEM_OIDC_ISSUER_URL=... STIGMEM_OIDC_AUDIENCE=... STIGMEM_OIDC_ALLOWED_DOMAINS=...
-#   fly deploy --config infra/fly.toml --app <APP_NAME>
+#   fly deploy --config experimental/deploy-fly/infra-fly.toml --app <APP_NAME>
 #
 # Subsequent deploys:
-#   fly deploy --config infra/fly.toml --app <APP_NAME>
+#   fly deploy --config experimental/deploy-fly/infra-fly.toml --app <APP_NAME>
 #
 # Required secrets (set via `fly secrets set`):
 #   STIGMEM_OIDC_ISSUER_URL, STIGMEM_OIDC_AUDIENCE, STIGMEM_OIDC_ALLOWED_DOMAINS

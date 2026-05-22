@@ -99,12 +99,12 @@ Never embed `STIGMEM_FEDERATION_PRIVKEY` directly in a `values.yaml` file commit
 
 | Recipe | Guide |
 |---|---|
-| Fly.io | [`deploy/fly/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/fly) |
+| Fly.io | [`features/deploy-fly`](https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-fly) |
 | Docker Compose | [`deploy/compose/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/compose) |
-| systemd / bare-metal | [`deploy/systemd/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/systemd) |
-| Render / Railway / App Runner / Cloud Run | [`deploy/paas/`](https://github.com/eidetic-labs/stigmem/tree/main/deploy/paas) |
+| systemd / bare-metal | [`features/deploy-systemd`](https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-systemd) |
+| Render / Railway / App Runner / Cloud Run | [`features/deploy-paas`](https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-paas) |
 
 See the top-level [`deploy/README.md`](https://github.com/eidetic-labs/stigmem/blob/main/deploy/README.md)
-decision tree for help picking the right recipe.
+decision tree for supported Docker Compose guidance.
 
 For local and single-host deployments, see [Deployment & Installation](./install).

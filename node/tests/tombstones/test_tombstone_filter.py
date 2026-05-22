@@ -18,6 +18,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.tombstone_cache as tc_mod
 from stigmem_node.plugins.testing import stigmem_plugins
@@ -109,6 +110,8 @@ def _insert_fact(client: TestClient, entity: str = _ENTITY, value: str = "Alice"
 
 
 def _create_subscription(client: TestClient, target: str = "local") -> dict:
+    subscriber = f"stigmem://test/agent/subscriber/{uuid.uuid4()}"
+    raw_key = auth_mod.create_api_key(subscriber, ["read"])
     resp = client.post(
         "/v1/subscriptions",
         json={
@@ -116,6 +119,7 @@ def _create_subscription(client: TestClient, target: str = "local") -> dict:
             "on_change": "webhook",
             "delivery_address": "https://example.com/hook",
         },
+        headers={"Authorization": f"Bearer {raw_key}"},
     )
     assert resp.status_code == 201, resp.text
     return resp.json()

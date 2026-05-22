@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+import uuid
 from collections import Counter
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -28,6 +29,7 @@ from unittest.mock import MagicMock, call, patch
 
 from fastapi.testclient import TestClient
 
+import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_mod
 from stigmem_node.subscription_delivery import deliver_pending, sweep_loop
@@ -74,6 +76,8 @@ class _ThreadSafeHTTPClientFactory:
 
 
 def _make_subscription(client: TestClient) -> str:
+    subscriber = f"stigmem://test/agent/subscriber/{uuid.uuid4()}"
+    raw_key = auth_mod.create_api_key(subscriber, ["read"])
     resp = client.post(
         "/v1/subscriptions",
         json={
@@ -81,6 +85,7 @@ def _make_subscription(client: TestClient) -> str:
             "on_change": "webhook",
             "delivery_address": "https://example.com/hook",
         },
+        headers={"Authorization": f"Bearer {raw_key}"},
     )
     assert resp.status_code == 201, resp.text
     return resp.json()["id"]

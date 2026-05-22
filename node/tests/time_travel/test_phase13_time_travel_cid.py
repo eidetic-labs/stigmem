@@ -47,6 +47,7 @@ import stigmem_node.routes.wellknown as wk_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.cid import compute_cid, is_valid_cid
 from stigmem_node.main import create_app
+from stigmem_node.plugins import PluginContext, PluginManifest
 from stigmem_node.plugins.testing import stigmem_plugins
 
 apply_migrations = db_mod.apply_migrations
@@ -689,6 +690,45 @@ def test_as_of_expired_fact_excluded(p13_time_travel_client: TestClient):
     assert f["id"] not in ids
 
 
+def test_as_of_query_rejects_cid_mismatch_on_historical_read(tmp_path):
+    """as_of fact queries must fail closed when a historical row has been tampered."""
+    db_file = str(tmp_path / "asof_cid_mismatch.db")
+    apply_migrations(db_path=db_file)
+    original = settings_module.settings
+    ts_settings = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
+    mods = _patch_settings(ts_settings)
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            fact_id = f"asof-cid-mismatch-{uuid.uuid4()}"
+            _insert_legacy_fact_row(
+                db_file,
+                fact_id=fact_id,
+                entity="stigmem://tt/cid-mismatch",
+                relation="rel:cid",
+                value="original",
+                timestamp=_ts(-10),
+                cid=compute_cid(
+                    "stigmem://tt/cid-mismatch",
+                    "rel:cid",
+                    "string",
+                    "original",
+                    "agent:test",
+                    "local",
+                ),
+            )
+            _tamper_fact_value_after_admin_bypass(db_file, fact_id, "tampered")
+
+            response = c.get(
+                "/v1/facts",
+                params={"as_of": _ts(-1), "entity": "stigmem://tt/cid-mismatch"},
+            )
+
+    _restore_settings(original, mods)
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "cid_mismatch"
+
+
 def test_as_of_future_rejected(p13_time_travel_client: TestClient):
     future = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
     r = p13_time_travel_client.get("/v1/facts", params={"as_of": future})
@@ -861,6 +901,216 @@ def test_recall_as_of(p13_time_travel_client: TestClient):
         "/v1/facts", params={"entity": "stigmem://recall/e1"}
     ).json()["facts"]:
         assert f_check["id"] not in ids_before
+
+
+def test_recall_as_of_retention_floor_rejected(tmp_path):
+    """Recall uses the same as_of_before_retention_floor contract as fact queries."""
+    db_file = str(tmp_path / "recall_retention_floor.db")
+    apply_migrations(db_path=db_file)
+    original = settings_module.settings
+    floor = (datetime.now(UTC) - timedelta(days=1)).isoformat()
+    too_old = (datetime.now(UTC) - timedelta(days=2)).isoformat()
+    ts_settings = Settings(
+        db_path=db_file,
+        auth_required=False,
+        node_url="http://testnode",
+        as_of_retention_floor=floor,
+    )
+    mods = _patch_settings(ts_settings)
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            response = c.post(
+                "/v1/recall",
+                json={"query": "historical", "scope": "local", "as_of": too_old},
+            )
+
+    _restore_settings(original, mods)
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "as_of_before_retention_floor"
+
+
+def test_recall_as_of_scores_recency_relative_to_requested_timestamp(tmp_path):
+    """Historical recall recency is computed against as_of, not wall-clock now."""
+    db_file = str(tmp_path / "recall_asof_scoring.db")
+    apply_migrations(db_path=db_file)
+    original = settings_module.settings
+    ts_settings = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
+    mods = _patch_settings(ts_settings)
+    as_of_dt = datetime.now(UTC) - timedelta(days=1)
+    older_ts = (as_of_dt - timedelta(days=120)).isoformat()
+    newer_ts = (as_of_dt - timedelta(days=10)).isoformat()
+    with stigmem_plugins([_time_travel_plugin_manifest(), _tombstone_plugin_manifest()]):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            older_id = f"recall-asof-older-{uuid.uuid4()}"
+            newer_id = f"recall-asof-newer-{uuid.uuid4()}"
+            _insert_legacy_fact_row(
+                db_file,
+                fact_id=older_id,
+                entity="stigmem://recall/older",
+                relation="rel:history",
+                value="historical anchor",
+                timestamp=older_ts,
+            )
+            _insert_legacy_fact_row(
+                db_file,
+                fact_id=newer_id,
+                entity="stigmem://recall/newer",
+                relation="rel:history",
+                value="historical anchor",
+                timestamp=newer_ts,
+            )
+
+            response = c.post(
+                "/v1/recall",
+                json={
+                    "query": "historical anchor",
+                    "scope": "local",
+                    "as_of": as_of_dt.isoformat(),
+                    "weights": {"lexical": 1.0, "recency": 1.0},
+                    "max_chunks": 10,
+                },
+            )
+
+    _restore_settings(original, mods)
+    assert response.status_code == 200
+    scored = {item["fact"]["id"]: item for item in response.json()["facts"]}
+    assert {older_id, newer_id}.issubset(scored)
+    assert (
+        scored[newer_id]["score_breakdown"]["recency"]
+        > scored[older_id]["score_breakdown"]["recency"]
+    )
+    assert scored[newer_id]["score"] > scored[older_id]["score"]
+
+
+def test_recall_rank_hooks_only_receive_historically_visible_facts(tmp_path):
+    """Source-trust-style rank deltas cannot resurrect facts after the as_of visibility cut."""
+    db_file = str(tmp_path / "recall_rank_visibility.db")
+    apply_migrations(db_path=db_file)
+    original = settings_module.settings
+    ts_settings = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
+    mods = _patch_settings(ts_settings)
+    as_of = _ts(-20)
+    visible_id = f"visible-rank-{uuid.uuid4()}"
+    future_id = f"future-rank-{uuid.uuid4()}"
+    seen_by_rank_hook: list[str] = []
+
+    def rank(
+        _ctx: PluginContext,
+        scored_results: list[object],
+        **_: object,
+    ) -> dict[str, float]:
+        ids = [result.fact.id for result in scored_results if hasattr(result, "fact")]
+        seen_by_rank_hook.extend(ids)
+        return {fact_id: 100.0 for fact_id in ids}
+
+    trust_rank_manifest = PluginManifest(
+        name="source-trust-as-of-visibility-test",
+        version="1.0.0",
+        hooks={"recall_rank": rank},
+    )
+    with stigmem_plugins(
+        [_time_travel_plugin_manifest(), _tombstone_plugin_manifest(), trust_rank_manifest]
+    ):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            _insert_legacy_fact_row(
+                db_file,
+                fact_id=visible_id,
+                entity="stigmem://recall/visible-rank",
+                relation="rel:history",
+                value="ranked historical fact",
+                timestamp=_ts(-30),
+            )
+            _insert_legacy_fact_row(
+                db_file,
+                fact_id=future_id,
+                entity="stigmem://recall/future-rank",
+                relation="rel:history",
+                value="ranked historical fact",
+                timestamp=_ts(-10),
+            )
+
+            response = c.post(
+                "/v1/recall",
+                json={
+                    "query": "ranked historical",
+                    "scope": "local",
+                    "as_of": as_of,
+                    "max_chunks": 10,
+                },
+            )
+
+    _restore_settings(original, mods)
+    assert response.status_code == 200
+    returned_ids = {item["fact"]["id"] for item in response.json()["facts"]}
+    assert visible_id in returned_ids
+    assert future_id not in returned_ids
+    assert visible_id in seen_by_rank_hook
+    assert future_id not in seen_by_rank_hook
+
+
+def test_recall_as_of_rejects_cid_mismatch_before_ranking(tmp_path):
+    """Tampered historical rows fail CID validation before recall ranking can score them."""
+    db_file = str(tmp_path / "recall_asof_cid_mismatch.db")
+    apply_migrations(db_path=db_file)
+    original = settings_module.settings
+    ts_settings = Settings(db_path=db_file, auth_required=False, node_url="http://testnode")
+    mods = _patch_settings(ts_settings)
+    rank_seen = False
+
+    def rank(
+        _ctx: PluginContext,
+        scored_results: list[object],
+        **_: object,
+    ) -> dict[str, float]:
+        nonlocal rank_seen
+        rank_seen = True
+        return {}
+
+    trust_rank_manifest = PluginManifest(
+        name="source-trust-as-of-cid-test",
+        version="1.0.0",
+        hooks={"recall_rank": rank},
+    )
+    with stigmem_plugins(
+        [_time_travel_plugin_manifest(), _tombstone_plugin_manifest(), trust_rank_manifest]
+    ):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=True) as c:
+            fact_id = f"recall-asof-cid-mismatch-{uuid.uuid4()}"
+            _insert_legacy_fact_row(
+                db_file,
+                fact_id=fact_id,
+                entity="stigmem://recall/cid-mismatch",
+                relation="rel:cid",
+                value="original recall value",
+                timestamp=_ts(-10),
+                cid=compute_cid(
+                    "stigmem://recall/cid-mismatch",
+                    "rel:cid",
+                    "string",
+                    "original recall value",
+                    "agent:test",
+                    "local",
+                ),
+            )
+            _tamper_fact_value_after_admin_bypass(db_file, fact_id, "tampered recall value")
+
+            response = c.post(
+                "/v1/recall",
+                json={
+                    "query": "recall value",
+                    "scope": "local",
+                    "as_of": _ts(-1),
+                },
+            )
+
+    _restore_settings(original, mods)
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "cid_mismatch"
+    assert rank_seen is False
 
 
 # ---------------------------------------------------------------------------

@@ -10,6 +10,8 @@ user/operator-facing entries are promoted into the root `CHANGELOG.md`.
   history.
 - Tightened the plugin boundary so registered time-travel plugins still require
   explicit operator enablement for fact-query and recall `as_of` surfaces.
+- Added historical query validation for recall retention floors, recency scoring
+  relative to `as_of`, CID tamper rejection, and rank-hook visibility limits.
 
 ## Post-v0.9.0a1 Main
 

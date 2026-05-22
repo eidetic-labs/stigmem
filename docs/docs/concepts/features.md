@@ -430,7 +430,13 @@ Read the spec at
 </div>
 
 <div>
-<dt>systemd / PaaS</dt>
+<dt>PaaS</dt>
+<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-paas"><code>features/deploy-paas</code></a>; live platform validation, persistence, secrets, and scaling review remain future alpha work.</dd>
+</div>
+
+<div>
+<dt>systemd</dt>
 <dt><span className="stigmem-fields__type">Deferred</span></dt>
 <dd><code>experimental/deploy-&#42;/</code>.</dd>
 </div>

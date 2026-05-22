@@ -154,8 +154,8 @@ The recipes below are **not part of the v0.9.0a1 supported surface.** They live 
 
 <div>
 <dt>PaaS</dt>
-<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-paas"><code>experimental/deploy-paas/</code></a></span></dt>
-<dd>Render, Railway, App Runner, Cloud Run. Deferred.</dd>
+<dt><span className="stigmem-fields__type"><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/deploy-paas"><code>features/deploy-paas</code></a></span></dt>
+<dd>Render, Railway, App Runner, Cloud Run. Deferred; implementation remains under <code>experimental/deploy-paas/</code>.</dd>
 </div>
 
 <div>

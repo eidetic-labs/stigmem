@@ -2,7 +2,7 @@
 
 > Public roadmap for stigmem. Milestone-gated, not time-gated — version lines complete when their exit criteria are met.
 >
-> **Current published build:** v0.9.0a4. **Active release horizon:** no next alpha milestone is open yet (per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
+> **Current published build:** v0.9.0a4. **Active release horizon:** v0.9.0a5 only (per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
 > **Last updated:** 2026-05-22.
 
 ---
@@ -41,6 +41,12 @@ closed without plugin registration, and release evidence proves the boundary.
 The detailed release record lives in
 [`docs/internal/releases/v0.9.0a4-roadmap.md`](docs/internal/releases/v0.9.0a4-roadmap.md).
 
+`v0.9.0a5` is the active release horizon. It validates the RTBF tombstone
+plugin boundary: default installs must not mount tombstone routes or apply
+tombstone filters unless `stigmem-plugin-tombstones` is registered. The detailed
+release contract lives in
+[`docs/internal/releases/v0.9.0a5-roadmap.md`](docs/internal/releases/v0.9.0a5-roadmap.md).
+
 The broader alpha deployment sequence remains intact. The detailed alpha-series
 phase plan, including the `v0.9.0a4` through `v0.9.0a8` planned extraction
 horizons and Phase A exit evidence, lives in
@@ -50,7 +56,7 @@ horizons and Phase A exit evidence, lives in
 |---|---|---|
 | `v0.9.0a3` | CID core/spec validation and the next alpha artifact refresh. | Shipped |
 | `v0.9.0a4` | Time-travel query extraction into an opt-in experimental plugin; default `as_of` behavior fails closed without plugin registration. | Shipped |
-| `v0.9.0a5` | RTBF tombstone extraction into an opt-in experimental plugin; default routes and filters require plugin registration. | Planned, not open |
+| `v0.9.0a5` | RTBF tombstone extraction into an opt-in experimental plugin; default routes and filters require plugin registration. | Active |
 | `v0.9.0a6` | Memory Garden advanced ACL extraction into an opt-in experimental plugin. | Planned, not open |
 | `v0.9.0a7` | Source-attestation extraction into an opt-in experimental plugin. | Planned, not open |
 | `v0.9.0a8` | Multi-tenant isolation extraction into an opt-in experimental plugin, completing the planned alpha extraction train. | Planned, not open |

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,8 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 SKIP_DIRS = {
     ".git",
     ".mypy_cache",
+    ".next",
     ".pytest_cache",
     ".ruff_cache",
+    ".turbo",
     ".venv",
     "__pycache__",
     "build",
@@ -61,19 +64,30 @@ def _is_under(path: Path, parent: Path) -> bool:
 
 def _iter_files() -> list[Path]:
     files: list[Path] = []
-    for path in ROOT.rglob("*"):
-        if path.is_dir():
+    for directory, dirnames, filenames in os.walk(ROOT):
+        base = Path(directory)
+        rel_dir = base.relative_to(ROOT)
+        if any(part in SKIP_DIRS for part in rel_dir.parts):
+            dirnames[:] = []
             continue
-        rel = path.relative_to(ROOT)
-        if any(part in SKIP_DIRS for part in rel.parts):
+        if any(_is_under(rel_dir, prefix) for prefix in SKIP_PREFIXES):
+            dirnames[:] = []
             continue
-        if any(_is_under(rel, prefix) for prefix in SKIP_PREFIXES):
-            continue
-        if path.name in LOCKFILES:
-            continue
-        if path.suffix not in SOURCE_EXTENSIONS:
-            continue
-        files.append(path)
+
+        dirnames[:] = [
+            dirname
+            for dirname in dirnames
+            if dirname not in SKIP_DIRS
+            and not any(_is_under(rel_dir / dirname, prefix) for prefix in SKIP_PREFIXES)
+        ]
+
+        for filename in filenames:
+            path = base / filename
+            if path.name in LOCKFILES:
+                continue
+            if path.suffix not in SOURCE_EXTENSIONS:
+                continue
+            files.append(path)
     return sorted(files)
 
 

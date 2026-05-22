@@ -99,6 +99,16 @@ is an index, not the canonical analysis body; update the linked
 
 ---
 
+## Security Posture — v0.9.0a3 (release prep)
+
+`v0.9.0a3` is the active alpha release horizon. Final a3 security posture,
+release-note reconciliation, and advisory/publication checks are tracked in
+issue #561 before the tag is cut. The standing publication policy remains:
+Critical and High vulnerabilities that affect supported published artifacts are
+handled through GHSA where applicable after a patched version is available;
+Medium and Low findings are documented in this file unless a documented
+risk-profile, reporter-coordination, or downstream-compliance carve-out applies.
+
 ## Security Posture — v0.9.0a2 (2026-05-18)
 
 > **Posture-reset note.** Stigmem's `v1.0` announcement was withdrawn on 2026-05-08; the canonical version line was reset to `v0.9.0a1` per [ADR-001](docs/adr/001-versioning.md) and [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md). The dependency-alert triage in this section was originally compiled for `the pre-reset v1.0-rc snapshot` on 2026-05-03 and is **carried forward to v0.9.0a2** because the underlying dependency upgrades remain in effect — the same or newer fixed package versions that resolved the alerts at the pre-reset v1.0-rc snapshot are installed at v0.9.0a2. The supported-version posture changed (see "Supported Versions" above); the dependency-fix evidence did not.

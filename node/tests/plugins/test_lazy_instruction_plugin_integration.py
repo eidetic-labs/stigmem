@@ -51,7 +51,7 @@ def lazy_plugin_client(
     monkeypatch.setenv("STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ALLOW_MANIFEST_PUBLISH", "true")
     monkeypatch.setenv("STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ALLOW_INSTRUCTION_RECALL", "true")
     monkeypatch.setenv("STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ALLOW_FILE_PATH_ENTRIES", "true")
-    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a2")
+    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a3")
 
     manifest = plugin_manifest()
     discovered = DiscoveredPlugin(
@@ -193,7 +193,7 @@ def test_plugin_loaded_lazy_instruction_discovery_round_trip(
 def test_lazy_instruction_plugin_hook_order_is_deterministic(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a2")
+    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a3")
     calls: list[str] = []
     manifest = _recording_manifest(calls)
     registry = HookRegistry()

@@ -1,8 +1,8 @@
 # LIMITATIONS
 
-> **Stigmem v0.9.0a2.** Not yet suitable for production federation across organizational boundaries. Read this before deploying.
+> **Stigmem v0.9.0a3.** Not yet suitable for production federation across organizational boundaries. Read this before deploying.
 >
-> Last updated: 2026-05-18 · Applies to: v0.9.0a2
+> Last updated: 2026-05-22 · Applies to: v0.9.0a3
 
 ---
 
@@ -10,7 +10,7 @@
 
 A plain-English statement of what stigmem cannot safely do in its current state, organized by deployment scenario. It is the operator's companion to the formal [threat model](spec/security/threat-model.md) and the disclosure policy in [SECURITY.md](SECURITY.md).
 
-If the threat model tells you *what the threats are*, this document tells you *what to actually do or not do today*. It is updated on every release. The contents below apply to **v0.9.0a2** specifically; future versions will close some of these gaps and may open new ones (each new feature lands with its own limitations entry).
+If the threat model tells you *what the threats are*, this document tells you *what to actually do or not do today*. It is updated on every release. The contents below apply to **v0.9.0a3** specifically; future versions will close some of these gaps and may open new ones (each new feature lands with its own limitations entry).
 
 If after reading this you're unsure whether your use case is safe, the answer is: ask in [Discussions](https://github.com/eidetic-labs/stigmem/discussions) before deploying. We'd rather lose an integration than have you hit one of these gaps in production.
 
@@ -18,13 +18,13 @@ If after reading this you're unsure whether your use case is safe, the answer is
 
 ## Current state in one sentence
 
-Stigmem v0.9.0a2 is a working federated-memory reference node with a documented threat model and several controls our own threat model identifies as required for safe deployment that have not yet shipped. Those controls remain future hardened-core work (see [ROADMAP.md](ROADMAP.md)); no beta, release-candidate, or GA milestone is active today. Until the controls ship, the deployment recommendations below are the responsible defaults.
+Stigmem v0.9.0a3 is a working federated-memory reference node with a documented threat model and several controls our own threat model identifies as required for safe deployment that have not yet shipped. Those controls remain future hardened-core work (see [ROADMAP.md](ROADMAP.md)); no beta, release-candidate, or GA milestone is active today. Until the controls ship, the deployment recommendations below are the responsible defaults.
 
 ---
 
 ## What stigmem is **not** safe for today
 
-These are unambiguous "do not" recommendations as of v0.9.0a2.
+These are unambiguous "do not" recommendations as of v0.9.0a3.
 
 ### 1. Cross-organizational federation in adversarial settings
 
@@ -112,7 +112,7 @@ The capability-based redesign is present on `main`; release posture, certificati
 - A misbehaving agent can exhaust your storage or your CPU.
 - You cannot reconstruct who-did-what from logs in a way suitable for incident response.
 
-**What to do today:** treat v0.9.0a2 as a development and evaluation release. Production deployment is not recommended until rate limits and persistent audit-log controls complete and are release-validated. If you must deploy to production now, run behind a reverse proxy with its own rate limiting, and pipe stigmem's structured output to a SIEM you trust.
+**What to do today:** treat v0.9.0a3 as a development and evaluation release. Production deployment is not recommended until rate limits and persistent audit-log controls complete and are release-validated. If you must deploy to production now, run behind a reverse proxy with its own rate limiting, and pipe stigmem's structured output to a SIEM you trust.
 
 ---
 
@@ -211,7 +211,7 @@ This is intentional — adopters running `pip install <pkg>` in CI shouldn't acc
 ```bash
 npm install @eidetic-labs/stigmem-ts                 # gets the most recent published version (currently a prerelease)
 npm install @eidetic-labs/stigmem-ts@alpha           # gets the most recent 0.9.0-alpha.* prerelease
-npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.2   # explicit pin
+npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.3   # explicit pin
 ```
 
 **Why scoped:** npm's free-tier organization permissions don't allow team-bound package access controls; scoping under `@eidetic-labs` sidesteps that limitation entirely.
@@ -226,10 +226,10 @@ npm requires every package to have a `latest` dist-tag; there is no way to publi
 
 **What this means concretely:**
 
-| Adopter command | What you get today (v0.9.0a2) | What you'll get over time |
+| Adopter command | What you get today (v0.9.0a3) | What you'll get over time |
 |---|---|---|
-| `npm install @eidetic-labs/stigmem-ts` | `0.9.0-alpha.2` | The most recent published version, advancing through the active alpha line first. Future beta/RC/GA tags are created only when those release lines are explicitly opened and published. |
-| `npm install @eidetic-labs/stigmem-ts@alpha` | `0.9.0-alpha.2` | The most recent alpha. |
+| `npm install @eidetic-labs/stigmem-ts` | `0.9.0-alpha.3` | The most recent published version, advancing through the active alpha line first. Future beta/RC/GA tags are created only when those release lines are explicitly opened and published. |
+| `npm install @eidetic-labs/stigmem-ts@alpha` | `0.9.0-alpha.3` | The most recent alpha. |
 | `npm install @eidetic-labs/stigmem-ts@beta` | (no version yet) | No active beta line today. |
 | `npm install @eidetic-labs/stigmem-ts@rc` | (no version yet) | No active release-candidate line today. |
 

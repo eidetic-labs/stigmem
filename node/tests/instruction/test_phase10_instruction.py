@@ -1086,7 +1086,7 @@ def admin_client(tmp_db: str, backend: str, monkeypatch: pytest.MonkeyPatch) -> 
     db_mod.settings = s
     auth_mod.settings = s
     _enable_lazy_instruction_env(monkeypatch)
-    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a2")
+    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a3")
 
     # create_api_key uses module-level db(), which now points to tmp_db via settings
     raw_key = create_api_key("admin:test", ["read", "write", "federate"])
@@ -1118,7 +1118,7 @@ def authed_client(
     db_mod.settings = s
     auth_mod.settings = s
     _enable_lazy_instruction_env(monkeypatch)
-    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a2")
+    monkeypatch.setattr(plugin_registry, "_current_stigmem_version", lambda: "0.9.0a3")
 
     raw_key = create_api_key("agent:test", ["read", "write"])
     manifest = plugin_manifest()

@@ -7,7 +7,7 @@
 [![Stability: preview alpha](https://img.shields.io/badge/stability-preview%20alpha-orange.svg)](#why-v090a1-and-not-v10)
 [![Discord](https://img.shields.io/discord/1502847943118684331?label=discord&logo=discord&logoColor=white&color=5865F2)](https://discord.gg/Z47Re7FjjV)
 
-> **Status: `v0.9.0a2` — preview alpha, pre-stable · Apache-2.0**
+> **Status: `v0.9.0a3` — preview alpha, pre-stable · Apache-2.0**
 > **Repository:** [github.com/eidetic-labs/stigmem](https://github.com/eidetic-labs/stigmem)
 > **Not yet recommended for production federation across organizational boundaries.** See [LIMITATIONS.md](LIMITATIONS.md) and the [retraction post](#why-v090a1-and-not-v10) for context.
 
@@ -84,7 +84,7 @@ The **Memory** half reflects persistence and decay: facts have `valid_until` exp
 
 ## Current status
 
-The features below are **implemented in code** but have **not yet completed adversarial validation** at v0.9.0a2. Read [LIMITATIONS.md](LIMITATIONS.md) for which deployment patterns are currently safe.
+The features below are **implemented in code** but have **not yet completed adversarial validation** at v0.9.0a3. Read [LIMITATIONS.md](LIMITATIONS.md) for which deployment patterns are currently safe.
 
 | Area | Implementation | Spec reference |
 |------|--------|-------------|
@@ -119,7 +119,7 @@ cd stigmem
 docker compose up -d
 ```
 
-`docker compose up` pulls pre-built multi-arch images from GHCR (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a2`, signed via Sigstore cosign with attached SBOMs). The recipe pins to the version tag for reproducibility — see [the tag-selection guide](https://docs.stigmem.dev/operators/deployment/install#image-tags) for when to use `:latest`, `:edge`, or a `@sha256:<digest>` pin instead. If you're a contributor working on changes, use `docker compose up --build -d` to force a local rebuild.
+`docker compose up` pulls pre-built multi-arch images from GHCR (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a3`, signed via Sigstore cosign with attached SBOMs). The recipe pins to the version tag for reproducibility — see [the tag-selection guide](https://docs.stigmem.dev/operators/deployment/install#image-tags) for when to use `:latest`, `:edge`, or a `@sha256:<digest>` pin instead. If you're a contributor working on changes, use `docker compose up --build -d` to force a local rebuild.
 
 Two federated nodes start immediately:
 
@@ -147,7 +147,7 @@ cd stigmem/node
 uv run python -m stigmem_node
 ```
 
-**Pre-release install via `pip`:** because v0.9.0a2 is a PEP 440 pre-release, `pip install stigmem` (default channel) will *not* pick it up. Use `--pre` to opt in to the alpha line, and pick the install scope appropriate to your role:
+**Pre-release install via `pip`:** because v0.9.0a3 is a PEP 440 pre-release, `pip install stigmem` (default channel) will *not* pick it up. Use `--pre` to opt in to the alpha line, and pick the install scope appropriate to your role:
 
 ```bash
 pip install --pre stigmem            # SDK only — most common; for apps calling a stigmem node
@@ -230,7 +230,7 @@ uv run pytest tests/ -v
 stigmem/
 ├── spec/           ← canonical specification (under review for v0.9.0a1 first-build canonicalization)
 ├── node/           ← reference node: FastAPI + SQLite
-├── adapters/       ← adapter code (OpenClaw is experimental in v0.9.0a2; MCP deferred)
+├── adapters/       ← adapter code (OpenClaw is experimental in v0.9.0a3; MCP deferred)
 ├── sdks/           ← Python and TypeScript client SDKs (Go SDK deferred)
 ├── experimental/   ← deferred features per ADR-002 (dashboard, additional adapters, deploy recipes, more)
 └── docs/           ← Docusaurus 3 documentation site
@@ -288,7 +288,7 @@ Maintainers and contributors are listed in [MAINTAINERS.md](MAINTAINERS.md).
 
 ## Security
 
-To report a vulnerability, use GitHub's private advisory process — **do not open a public issue**. See [SECURITY.md](SECURITY.md) for the full disclosure policy and the v0.9.0a2 security posture statement.
+To report a vulnerability, use GitHub's private advisory process — **do not open a public issue**. See [SECURITY.md](SECURITY.md) for the full disclosure policy and the v0.9.0a3 security posture statement.
 
 The full STRIDE threat model with per-release risk-register status lives at [`spec/security/threat-model.md`](spec/security/threat-model.md). See also [Security posture](#security-posture) above.
 

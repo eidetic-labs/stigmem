@@ -1,8 +1,20 @@
 from __future__ import annotations
 
+import importlib
+import sys
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
+
+from stigmem_node.plugins.testing import stigmem_plugins
+
+_FEATURE_SRC = Path(__file__).resolve().parents[3] / "experimental" / "time-travel" / "src"
+if str(_FEATURE_SRC) not in sys.path:
+    sys.path.insert(0, str(_FEATURE_SRC))
+
+_PLUGIN = importlib.import_module("stigmem_plugin_time_travel")
 
 
 def _as_of(offset_seconds: int = 0) -> str:
@@ -38,6 +50,47 @@ def test_default_install_rejects_as_of_until_time_travel_plugin_loads(
     )
     assert recall_response.status_code == 501
     assert recall_response.json()["detail"]["code"] == "time_travel_plugin_not_loaded"
+
+
+def test_registered_plugin_requires_explicit_operator_enablement(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("STIGMEM_TIME_TRAVEL_ENABLED", raising=False)
+    monkeypatch.delenv("STIGMEM_TIME_TRAVEL_ALLOW_FACT_QUERY_AS_OF", raising=False)
+    monkeypatch.delenv("STIGMEM_TIME_TRAVEL_ALLOW_RECALL_AS_OF", raising=False)
+
+    with stigmem_plugins([_PLUGIN.plugin_manifest()]):
+        facts_response = client.get("/v1/facts", params={"as_of": _as_of(-1)})
+        assert facts_response.status_code == 403
+        assert facts_response.json()["detail"]["code"] == "time_travel_plugin_disabled"
+
+        recall_response = client.post(
+            "/v1/recall",
+            json={"query": "snapshot content", "scope": "local", "as_of": _as_of(-1)},
+        )
+        assert recall_response.status_code == 403
+        assert recall_response.json()["detail"]["code"] == "time_travel_plugin_disabled"
+
+
+def test_registered_plugin_honors_separate_surface_gates(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_TIME_TRAVEL_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_TIME_TRAVEL_ALLOW_FACT_QUERY_AS_OF", "true")
+    monkeypatch.delenv("STIGMEM_TIME_TRAVEL_ALLOW_RECALL_AS_OF", raising=False)
+
+    with stigmem_plugins([_PLUGIN.plugin_manifest()]):
+        facts_response = client.get("/v1/facts", params={"as_of": _as_of(-1)})
+        assert facts_response.status_code == 200, facts_response.text
+
+        recall_response = client.post(
+            "/v1/recall",
+            json={"query": "snapshot content", "scope": "local", "as_of": _as_of(-1)},
+        )
+        assert recall_response.status_code == 403
+        assert recall_response.json()["detail"]["code"] == "time_travel_plugin_disabled"
 
 
 def test_plugin_loaded_client_accepts_as_of_fact_query_and_recall(

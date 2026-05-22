@@ -28,6 +28,7 @@ from ...recall.graph import MAX_DEPTH
 from ...recall.recall_pipeline import apply_recall_pipeline
 from ...session_graph import record_read_scopes
 from ...tracing import start_span
+from ..time_travel_gate import require_time_travel_enabled
 from .as_of import _recall_as_of_impl
 from .common import (
     _estimate_tokens,
@@ -43,9 +44,6 @@ from .ranking import _greedy_pack, _score_candidates
 from .vector import _semantic_search
 
 _MAX_CANDIDATES = 500
-_TIME_TRAVEL_PLUGIN_NAME = "stigmem-plugin-time-travel"
-
-
 @router.post("", response_model=RecallResponse)
 def recall(
     req: RecallRequest,
@@ -152,14 +150,7 @@ def _handle_as_of_recall(
     """§24 time-travel path. Validates as_of, runs the as_of impl, returns the response."""
     from ..facts import _validate_as_of
 
-    if _TIME_TRAVEL_PLUGIN_NAME not in get_registry().registered_plugins():
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail={
-                "code": "time_travel_plugin_not_loaded",
-                "message": "time-travel queries require stigmem-plugin-time-travel",
-            },
-        )
+    require_time_travel_enabled(get_registry(), surface="recall")
     _validate_as_of(req.as_of)  # type: ignore[arg-type]  # caller guarantees as_of is not None
     recall_id = str(uuid.uuid4())
     query_hash = hashlib.sha256(req.query.encode()).hexdigest()

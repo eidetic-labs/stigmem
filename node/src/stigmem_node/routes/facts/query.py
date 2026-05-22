@@ -22,6 +22,7 @@ from ...plugins import Deny, Failure, Success, TenantContext, get_registry
 from ...recall.recall_pipeline import apply_recall_pipeline
 from ...session_graph import record_read_scopes
 from ..cid_integrity import enforce_read_path_cid
+from ..time_travel_gate import require_time_travel_enabled
 from .common import _get_tombstone_filter, logger, router
 
 
@@ -145,27 +146,6 @@ _FACT_QUERY_SQL = (
     "      OR COALESCE(fvo.valid_until, f.valid_until) > ?)"
     " ORDER BY f.timestamp DESC, f.id DESC LIMIT ?"
 )
-
-_TIME_TRAVEL_PLUGIN_NAME = "stigmem-plugin-time-travel"
-
-
-def _time_travel_plugin_loaded(registry: Any) -> bool:
-    """Return whether the experimental time-travel plugin is registered."""
-
-    return _TIME_TRAVEL_PLUGIN_NAME in registry.registered_plugins()
-
-
-def _raise_time_travel_plugin_required() -> None:
-    """Fail closed when default core receives an experimental as_of request."""
-
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail={
-            "code": "time_travel_plugin_not_loaded",
-            "message": "time-travel queries require stigmem-plugin-time-travel",
-        },
-    )
-
 
 def _build_as_of_params(
     *,
@@ -388,8 +368,7 @@ def query_facts(
 
     # §24.4: time-travel query — delegate to as_of implementation
     if as_of is not None:
-        if not _time_travel_plugin_loaded(registry):
-            _raise_time_travel_plugin_required()
+        require_time_travel_enabled(registry, surface="fact_query")
         _validate_as_of(as_of)
         with db() as conn:
             result = _query_facts_as_of_impl(

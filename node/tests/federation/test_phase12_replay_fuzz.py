@@ -18,7 +18,6 @@ from __future__ import annotations
 import base64
 import json
 import sqlite3
-import tempfile
 import time
 import uuid
 from collections.abc import Iterator
@@ -415,45 +414,44 @@ def _check_peer_token_arbitrary_payload(
     assert expected_error is None or isinstance(expected_error, HTTPException)
 
 
-def test_fuzz_peer_token_arbitrary_payload_never_crashes() -> None:
+def test_fuzz_peer_token_arbitrary_payload_never_crashes(tmp_path: Path) -> None:
     """Signed peer JWTs with varied claim shapes must fail with HTTPException only."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        db_file = str(Path(tmpdir) / "peer_payload_fuzz.db")
-        apply_migrations(db_path=db_file)
+    db_file = str(tmp_path / "peer_payload_fuzz.db")
+    apply_migrations(db_path=db_file)
 
-        peer_priv = Ed25519PrivateKey.generate()
-        peer_pub_b64 = (
-            base64.urlsafe_b64encode(
-                peer_priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-            )
-            .decode()
-            .rstrip("=")
+    peer_priv = Ed25519PrivateKey.generate()
+    peer_pub_b64 = (
+        base64.urlsafe_b64encode(
+            peer_priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
         )
-        peer_node_id = "stigmem://payload-fuzz-peer"
-        local_node_id = "stigmem://payload-fuzz-local"
-        now_iso = datetime.now(UTC).isoformat()
+        .decode()
+        .rstrip("=")
+    )
+    peer_node_id = "stigmem://payload-fuzz-peer"
+    local_node_id = "stigmem://payload-fuzz-local"
+    now_iso = datetime.now(UTC).isoformat()
 
-        conn = sqlite3.connect(db_file)
-        conn.execute(
-            "INSERT INTO peers "
-            "(id, node_id, node_url, federation_pubkey, status, allowed_scopes, "
-            "created_at, declaration_sig, signed_at) "
-            "VALUES (?, ?, ?, ?, 'active', '[]', ?, 'test-sig', ?)",
-            (
-                str(uuid.uuid4()),
-                peer_node_id,
-                "http://payload-fuzz-peer",
-                peer_pub_b64,
-                now_iso,
-                now_iso,
-            ),
-        )
-        conn.commit()
-        conn.close()
+    conn = sqlite3.connect(db_file)
+    conn.execute(
+        "INSERT INTO peers "
+        "(id, node_id, node_url, federation_pubkey, status, allowed_scopes, "
+        "created_at, declaration_sig, signed_at) "
+        "VALUES (?, ?, ?, ?, 'active', '[]', ?, 'test-sig', ?)",
+        (
+            str(uuid.uuid4()),
+            peer_node_id,
+            "http://payload-fuzz-peer",
+            peer_pub_b64,
+            now_iso,
+            now_iso,
+        ),
+    )
+    conn.commit()
+    conn.close()
 
-        test_settings = Settings(db_path=db_file, auth_required=False, node_url=local_node_id)
-        with _patched_test_settings(test_settings):
-            _check_peer_token_arbitrary_payload(peer_priv, local_node_id)
+    test_settings = Settings(db_path=db_file, auth_required=False, node_url=local_node_id)
+    with _patched_test_settings(test_settings):
+        _check_peer_token_arbitrary_payload(peer_priv, local_node_id)
 
 
 # ---------------------------------------------------------------------------
@@ -461,7 +459,7 @@ def test_fuzz_peer_token_arbitrary_payload_never_crashes() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_fuzz_peer_nonce_replay_rejected() -> None:
+def test_fuzz_peer_nonce_replay_rejected(tmp_path: Path) -> None:
     """A peer JWT whose nonce is already in nonce_cache must be rejected (nonce_already_seen).
 
     For each Hypothesis example, the nonce is pre-inserted into the cache
@@ -469,74 +467,73 @@ def test_fuzz_peer_nonce_replay_rejected() -> None:
     predicate without the cross-example contamination that arises from
     consuming nonces inside the loop.
     """
-    with tempfile.TemporaryDirectory() as tmpdir:
-        db_file = str(Path(tmpdir) / "nonce_fuzz.db")
-        apply_migrations(db_path=db_file)
+    db_file = str(tmp_path / "nonce_fuzz.db")
+    apply_migrations(db_path=db_file)
 
-        peer_priv = Ed25519PrivateKey.generate()
-        peer_pub_b64 = (
-            base64.urlsafe_b64encode(
-                peer_priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-            )
-            .decode()
-            .rstrip("=")
+    peer_priv = Ed25519PrivateKey.generate()
+    peer_pub_b64 = (
+        base64.urlsafe_b64encode(
+            peer_priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
         )
-        peer_node_id = "stigmem://fuzz-peer"
-        local_node_id = "stigmem://fuzz-local"
-        peer_db_id = str(uuid.uuid4())
-        now_iso = datetime.now(UTC).isoformat()
+        .decode()
+        .rstrip("=")
+    )
+    peer_node_id = "stigmem://fuzz-peer"
+    local_node_id = "stigmem://fuzz-local"
+    peer_db_id = str(uuid.uuid4())
+    now_iso = datetime.now(UTC).isoformat()
 
-        # Insert peer row so verify_peer_token can resolve the issuer.
-        conn = sqlite3.connect(db_file)
-        conn.execute(
-            "INSERT INTO peers "
-            "(id, node_id, node_url, federation_pubkey, status, allowed_scopes, "
-            "created_at, declaration_sig, signed_at) "
-            "VALUES (?, ?, ?, ?, 'active', '[]', ?, 'test-sig', ?)",
-            (peer_db_id, peer_node_id, "http://fuzz-peer", peer_pub_b64, now_iso, now_iso),
+    # Insert peer row so verify_peer_token can resolve the issuer.
+    conn = sqlite3.connect(db_file)
+    conn.execute(
+        "INSERT INTO peers "
+        "(id, node_id, node_url, federation_pubkey, status, allowed_scopes, "
+        "created_at, declaration_sig, signed_at) "
+        "VALUES (?, ?, ?, ?, 'active', '[]', ?, 'test-sig', ?)",
+        (peer_db_id, peer_node_id, "http://fuzz-peer", peer_pub_b64, now_iso, now_iso),
+    )
+    conn.commit()
+    conn.close()
+
+    test_settings = Settings(db_path=db_file, auth_required=False, node_url=local_node_id)
+    with _patched_test_settings(test_settings):
+        @given(nonce_val=st.uuids().map(str))
+        @settings(
+            max_examples=50,
+            deadline=5000,
+            suppress_health_check=[HealthCheck.too_slow],
         )
-        conn.commit()
-        conn.close()
+        def inner(nonce_val: str) -> None:
+            now_ts = int(time.time() * 1000)
+            exp_ts = now_ts + 3_600_000
+            expires_iso = datetime.fromtimestamp(exp_ts / 1000, UTC).isoformat()
 
-        test_settings = Settings(db_path=db_file, auth_required=False, node_url=local_node_id)
-        with _patched_test_settings(test_settings):
-            @given(nonce_val=st.uuids().map(str))
-            @settings(
-                max_examples=50,
-                deadline=5000,
-                suppress_health_check=[HealthCheck.too_slow],
+            # Pre-populate the nonce cache (simulates "already seen").
+            inner_conn = sqlite3.connect(db_file)
+            inner_conn.execute(
+                "INSERT OR IGNORE INTO nonce_cache (nonce, peer_id, expires_at) "
+                "VALUES (?, ?, ?)",
+                (nonce_val, peer_db_id, expires_iso),
             )
-            def inner(nonce_val: str) -> None:
-                now_ts = int(time.time() * 1000)
-                exp_ts = now_ts + 3_600_000
-                expires_iso = datetime.fromtimestamp(exp_ts / 1000, UTC).isoformat()
+            inner_conn.commit()
+            inner_conn.close()
 
-                # Pre-populate the nonce cache (simulates "already seen").
-                inner_conn = sqlite3.connect(db_file)
-                inner_conn.execute(
-                    "INSERT OR IGNORE INTO nonce_cache (nonce, peer_id, expires_at) "
-                    "VALUES (?, ?, ?)",
-                    (nonce_val, peer_db_id, expires_iso),
-                )
-                inner_conn.commit()
-                inner_conn.close()
+            # Mint a fresh, validly-signed JWT with this nonce.
+            payload = {
+                "iss": peer_node_id,
+                "sub": local_node_id,
+                "iat": now_ts,
+                "exp": exp_ts,
+                "nonce": nonce_val,
+                "scopes": ["read"],
+            }
+            raw_token = jwt.encode(payload, peer_priv, algorithm="EdDSA")
 
-                # Mint a fresh, validly-signed JWT with this nonce.
-                payload = {
-                    "iss": peer_node_id,
-                    "sub": local_node_id,
-                    "iat": now_ts,
-                    "exp": exp_ts,
-                    "nonce": nonce_val,
-                    "scopes": ["read"],
-                }
-                raw_token = jwt.encode(payload, peer_priv, algorithm="EdDSA")
+            # Verification must fail because the nonce is already in the cache.
+            with pytest.raises(HTTPException) as exc_info:
+                verify_peer_token(raw_token, local_node_id)
 
-                # Verification must fail because the nonce is already in the cache.
-                with pytest.raises(HTTPException) as exc_info:
-                    verify_peer_token(raw_token, local_node_id)
+            assert exc_info.value.status_code == 401
+            assert exc_info.value.detail == "nonce_already_seen"
 
-                assert exc_info.value.status_code == 401
-                assert exc_info.value.detail == "nonce_already_seen"
-
-            inner()
+        inner()

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from pydantic import ValidationError
+from stigmem_node.entity_normalizer import NormalizationError, normalize_entity_uri
 from stigmem_node.plugins import Allow, Deny, PluginContext, PluginHealth, PluginHealthStatus
 
 from .config import load_config_from_env
@@ -29,9 +30,9 @@ def pre_assert_validate(_ctx: PluginContext, **kwargs: Any) -> Allow | Deny:
 
     req = kwargs.get("req")
     identity = kwargs.get("identity")
-    source = getattr(req, "source", None)
-    entity_uri = getattr(identity, "entity_uri", None)
-    if source == entity_uri:
+    source = _normalized_or_none(getattr(req, "source", None))
+    authorized_sources = _authorized_source_entities(identity)
+    if source is not None and source in authorized_sources:
         return Allow()
 
     return Deny(
@@ -108,3 +109,22 @@ def health_check(_ctx: PluginContext) -> PluginHealth:
         status=PluginHealthStatus.HEALTHY,
         message="source attestation plugin scaffold registered",
     )
+
+
+def _authorized_source_entities(identity: Any) -> set[str]:
+    source_entities = {getattr(identity, "entity_uri", None)}
+    source_entities.update(getattr(identity, "allowed_source_entities", ()) or ())
+    return {
+        normalized
+        for raw in source_entities
+        if (normalized := _normalized_or_none(raw)) is not None
+    }
+
+
+def _normalized_or_none(raw: Any) -> str | None:
+    if not isinstance(raw, str):
+        return None
+    try:
+        return normalize_entity_uri(raw)
+    except NormalizationError:
+        return None

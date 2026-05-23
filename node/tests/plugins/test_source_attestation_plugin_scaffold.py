@@ -243,6 +243,45 @@ def test_assert_validation_denies_mismatch_when_explicitly_enabled(
     assert "source_attestation_failed" in decision.reason
 
 
+def test_assert_validation_allows_normalized_direct_source_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENFORCE_ASSERT_VALIDATION", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_WARN_ONLY", "false")
+    registry = HookRegistry()
+    registry.register_plugin(plugin_manifest())
+
+    decision = registry.fire_voting(
+        "pre_assert_validate",
+        req=SimpleNamespace(source=" STIGMEM://EXAMPLE.TEST/AGENT/CALLER "),
+        identity=SimpleNamespace(entity_uri="stigmem://example.test/agent/caller"),
+    )
+
+    assert isinstance(decision, Allow)
+
+
+def test_assert_validation_allows_normalized_delegated_source_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENFORCE_ASSERT_VALIDATION", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_WARN_ONLY", "false")
+    registry = HookRegistry()
+    registry.register_plugin(plugin_manifest())
+
+    decision = registry.fire_voting(
+        "pre_assert_validate",
+        req=SimpleNamespace(source=" STIGMEM://EXAMPLE.TEST/AGENT/DELEGATE "),
+        identity=SimpleNamespace(
+            entity_uri="stigmem://example.test/agent/caller",
+            allowed_source_entities=["stigmem://example.test/agent/delegate"],
+        ),
+    )
+
+    assert isinstance(decision, Allow)
+
+
 def test_recall_rank_returns_source_trust_delta_when_explicitly_enabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

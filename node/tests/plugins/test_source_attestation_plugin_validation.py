@@ -83,6 +83,21 @@ def test_plugin_loaded_allows_assert_source_match(
     assert response.status_code == 201, response.text
 
 
+def test_plugin_loaded_allows_normalized_assert_source_match(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENFORCE_ASSERT_VALIDATION", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_WARN_ONLY", "false")
+    fact = {**FACT, "source": " ANON:TRUSTED "}
+
+    with stigmem_plugins([plugin_manifest()]):
+        response = client.post("/v1/facts", json=fact)
+
+    assert response.status_code == 201, response.text
+
+
 def test_recall_rank_hook_site_is_inert_until_plugin_gate_enabled(monkeypatch) -> None:
     record = _fact_record()
     identity = Identity("stigmem://example.test/agent/caller", ["read"])

@@ -75,7 +75,8 @@ ceilings, and graph traversal do not filter by garden membership unless
 `stigmem-plugin-memory-garden-acl` is installed, registered, and enabled with
 the relevant `STIGMEM_MEMORY_GARDEN_ACL_*` flags. Check `/v1/doctor` for the
 current `memory_garden_acl_filtering` state before relying on advanced garden
-filtering.
+filtering. The endpoint is unauthenticated in v0.9.0a6 and exposes only this
+coarse ops posture, not garden names, memberships, tenants, or policy subjects.
 
 :::
 

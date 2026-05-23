@@ -113,8 +113,15 @@ per-surface enablement flag is enabled.
 
 The `/v1/doctor` endpoint exposes the active
 `memory_garden_acl_filtering` state as `disabled`, `enabled-partial`, or
-`enabled-full`. A startup warning is emitted when garden membership rows exist
-but the advanced ACL plugin is not registered. See
+`enabled-full`. `/v1/doctor` is intentionally unauthenticated in v0.9.0a6 and
+therefore exposes this coarse posture value to anonymous HTTP callers as
+standard ops-endpoint disclosure. It does not expose garden names, membership
+rows, tenant identifiers, or policy subjects. Future hardening can auth-gate
+the whole endpoint or return the posture field only to authenticated callers
+while preserving `{"status": "ok"}` for anonymous health probes.
+
+A startup warning is emitted when garden membership rows exist but the
+advanced ACL plugin is not registered. See
 [`features/memory-garden-acl/security.md`](features/memory-garden-acl/security.md)
 for the full feature-owned disposition.
 

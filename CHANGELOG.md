@@ -48,6 +48,10 @@ opt-in, and operator-gated.
   unless `stigmem-plugin-memory-garden-acl` is installed, registered, and the
   per-surface enablement flags are set. `SECURITY.md`, quickstart, a startup
   warning, and the `/v1/doctor` endpoint now surface the opt-in posture.
+- Recorded the `/v1/doctor` disclosure disposition: the unauthenticated
+  endpoint exposes only coarse `memory_garden_acl_filtering` posture in
+  v0.9.0a6; future hardening can auth-gate the endpoint or suppress the
+  posture field for anonymous callers.
 - Plugin scaffold handlers in `stigmem-plugin-memory-garden-acl` now carry
   docstrings explaining stub behavior, failure modes, and core fallback.
 - Quarantine moderator node-admin bypass is now documented in code and in the

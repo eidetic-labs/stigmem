@@ -301,6 +301,12 @@ def create_app() -> FastAPI:
 
     @app.get("/v1/doctor", tags=["ops"])
     def doctor() -> dict[str, str]:
+        """Return coarse node health and operator posture.
+
+        This endpoint is unauthenticated in v0.9.0a6. The garden ACL posture
+        field is accepted as ops-endpoint disclosure and intentionally avoids
+        garden names, membership rows, tenant identifiers, or policy subjects.
+        """
         from .memory_garden_acl_gate import memory_garden_acl_filtering_state
 
         return {

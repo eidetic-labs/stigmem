@@ -5,6 +5,13 @@
 - Added ADR-020 feature record and made this directory the canonical feature
   home for Memory Garden advanced ACL spec, status, evidence, security, and
   feature-local history.
+- Validated the `v0.9.0a6` Memory Garden advanced ACL alpha horizon: basic
+  garden CRUD, membership, direct `garden_id` guards, and quarantine
+  moderation remain core; advanced cross-surface behavior remains opt-in behind
+  `stigmem-plugin-memory-garden-acl` registration and operator gates.
+- Recorded cross-surface disposition for assertion authorization, fact query
+  filtering, recall ranking, graph traversal, OIDC permission ceilings,
+  subscription delivery/replay, quarantine moderation, and R-21 residual risk.
 
 ## Post-v0.9.0a1 Main
 

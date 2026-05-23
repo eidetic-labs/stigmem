@@ -21,6 +21,7 @@ security_refs:
   - R-21
 release_lines:
   - v0.9.0a1
+  - v0.9.0a6
   - 0.9.xA
 ---
 
@@ -47,6 +48,7 @@ path.
 | Primary implementation | `experimental/memory-garden-acl/` |
 | Primary package | `stigmem-plugin-memory-garden-acl` |
 | Canonical spec | `Spec-X5-Memory-Garden-Advanced-ACL` |
+| Current release validation | `v0.9.0a6` |
 
 ## Feature Files
 

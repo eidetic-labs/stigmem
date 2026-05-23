@@ -35,6 +35,13 @@ sdks/stigmem-ts/coverage/
 .env.local
 .env.*.local
 
+# Release signing keys — public keys are attached to GitHub Releases only;
+# private keys must NEVER be committed (use offline storage).
+stigmem-release-signing-key.asc
+stigmem-release-signing-key*.asc
+*private*signing*key*.asc
+*secret*signing*key*.asc
+
 # IDE
 .vscode/
 .idea/

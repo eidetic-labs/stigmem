@@ -160,6 +160,9 @@ def create_app() -> FastAPI:
         discovered_plugins = register_discovered_plugins(freeze=False)
         _include_plugin_routers(app, discovered_plugins)
         apply_migrations()
+        from .memory_garden_acl_gate import warn_if_memory_garden_acl_filtering_disabled
+
+        warn_if_memory_garden_acl_filtering_disabled(logger)
         get_registry().freeze()
 
         if settings.otel_enabled:
@@ -295,6 +298,15 @@ def create_app() -> FastAPI:
     @app.get("/healthz", tags=["ops"])
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/v1/doctor", tags=["ops"])
+    def doctor() -> dict[str, str]:
+        from .memory_garden_acl_gate import memory_garden_acl_filtering_state
+
+        return {
+            "status": "ok",
+            "memory_garden_acl_filtering": memory_garden_acl_filtering_state(),
+        }
 
     @app.get("/metrics", include_in_schema=False, tags=["ops"])
     def prometheus_metrics() -> Response:

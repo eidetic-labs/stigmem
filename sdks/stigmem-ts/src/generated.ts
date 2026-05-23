@@ -425,6 +425,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/doctor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Doctor */
+        get: operations["doctor_v1_doctor_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/entities/resolve": {
         parameters: {
             query?: never;
@@ -1080,7 +1097,9 @@ export interface paths {
          * Admit Fact
          * @description Promote a quarantined fact to the main fabric (or a specific target garden).
          *
-         *     Requires quarantine:moderator or admin role in the fact's quarantine garden.
+         *     Node admins may admit quarantined facts as last-resort moderation
+         *     authority. Other callers require quarantine:moderator or admin role in the
+         *     fact's quarantine garden.
          */
         post: operations["admit_fact_v1_quarantine__fact_id__admit_post"];
         delete?: never;
@@ -1103,7 +1122,9 @@ export interface paths {
          * @description Permanently reject a quarantined fact.
          *
          *     Sets confidence = 0.0 and quarantine_status = 'rejected'.
-         *     Requires quarantine:moderator or admin role in the fact's quarantine garden.
+         *     Node admins may reject quarantined facts as last-resort moderation
+         *     authority. Other callers require quarantine:moderator or admin role in the
+         *     fact's quarantine garden.
          */
         post: operations["reject_fact_v1_quarantine__fact_id__reject_post"];
         delete?: never;
@@ -3215,6 +3236,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    doctor_v1_doctor_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
                 };
             };
         };

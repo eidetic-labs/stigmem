@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import inspect
 import sys
 import tomllib
 from collections.abc import Callable
@@ -133,6 +134,27 @@ def test_manifest_registers_with_hook_registry() -> None:
     report = reports[PLUGIN_NAME]
     assert report.status == PluginHealthStatus.HEALTHY
     assert "plugin scaffold registered" in report.message
+
+
+def test_public_handlers_document_stub_failure_mode_and_core_fallback() -> None:
+    handlers = importlib.import_module("stigmem_plugin_memory_garden_acl.handlers")
+    public_functions = {
+        name: fn
+        for name, fn in inspect.getmembers(handlers, inspect.isfunction)
+        if fn.__module__ == handlers.__name__ and not name.startswith("_")
+    }
+
+    assert {"pre_assert_authorize", "pre_recall_authorize", "recall_filter"} <= set(
+        public_functions
+    )
+    for name, fn in public_functions.items():
+        doc = inspect.getdoc(fn) or ""
+        assert doc, f"{name} must document its scaffold behavior"
+        if name == "health_check":
+            continue
+        assert "Stub:" in doc
+        assert "fail-open" in doc
+        assert "Core fallback" in doc or "core fallback" in doc
 
 
 def test_memory_garden_acl_plugin_hook_order_is_deterministic() -> None:

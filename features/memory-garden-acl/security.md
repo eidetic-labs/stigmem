@@ -20,6 +20,16 @@ unified threat model and this feature record in the same PR.
 
 ## Operator Scenarios
 
+- Memory Garden ACL is opt-in. Default deployments enforce direct `garden_id`
+  reads and writes through the core guards, but tenant-wide queries, recall
+  ranking, push subscriptions, OIDC permission ceilings, and graph traversal
+  do not filter by garden membership unless `stigmem-plugin-memory-garden-acl`
+  is registered and the relevant `STIGMEM_MEMORY_GARDEN_ACL_*` flags are
+  enabled.
+- Quarantine moderation keeps a separate node-admin override. Node-admin bypass is intentional.
+  Node admins are the system's last-resort moderation authority.
+  Garden-scoped moderators must still hold `quarantine:moderator` or `admin`
+  role in the specific quarantine garden.
 - Do not treat garden ACLs as a complete R-21 mitigation until per-session
   read/write graph isolation is designed and tested.
 - Review any feature design that grants writer keys based on recent recall

@@ -3,6 +3,8 @@
 **Security resources:**
 - [Community Pen-Test Handbook](https://docs.stigmem.dev/security/pen-test) — scope, safe harbor, report template, disclosure timeline, and recognition.
 - [Threat Model](https://github.com/eidetic-labs/stigmem/blob/main/spec/security/threat-model.md) — trust boundaries, STRIDE analysis, risk register.
+- [Memory Garden ACL posture](#memory-garden-acl-posture) — direct garden
+  guards are core; advanced tenant-wide filtering is opt-in.
 
 ## Supported Versions
 
@@ -98,6 +100,23 @@ is an index, not the canonical analysis body; update the linked
 | RTBF tombstones | R-16, R-17 | [`features/tombstones/security.md`](features/tombstones/security.md) |
 
 ---
+
+## Memory Garden ACL Posture
+
+**Memory Garden ACL is opt-in.** Default deployments enforce direct
+`garden_id` reads and writes through the core `require_garden_read` and
+`require_garden_write` guards. Tenant-wide queries, recall ranking, push
+subscriptions, OIDC permission ceilings, and graph traversal do **not** filter
+by garden membership unless `stigmem-plugin-memory-garden-acl` is installed and
+registered, `STIGMEM_MEMORY_GARDEN_ACL_ENABLED=1` is set, and the relevant
+per-surface enablement flag is enabled.
+
+The `/v1/doctor` endpoint exposes the active
+`memory_garden_acl_filtering` state as `disabled`, `enabled-partial`, or
+`enabled-full`. A startup warning is emitted when garden membership rows exist
+but the advanced ACL plugin is not registered. See
+[`features/memory-garden-acl/security.md`](features/memory-garden-acl/security.md)
+for the full feature-owned disposition.
 
 ## Security Posture — v0.9.0a6 (2026-05-22)
 

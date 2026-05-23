@@ -4675,6 +4675,31 @@
         ]
       }
     },
+    "/v1/doctor": {
+      "get": {
+        "operationId": "doctor_v1_doctor_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Doctor V1 Doctor Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Doctor",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
     "/v1/entities/resolve": {
       "get": {
         "description": "Resolve a raw entity URI using 3-layer fuzzy resolution (Spec-01-Fact-Model).\n\nLayer 1: canonical normalisation (case/whitespace collapse).\nLayer 2: alias table lookup (explicit pre-registered mappings).\nLayer 3: token-fuzzy scoring over entities of the same type prefix in the fact graph.\n\nReturns the best resolved URI and scored candidates with match details.",
@@ -6882,7 +6907,7 @@
     },
     "/v1/quarantine/{fact_id}/admit": {
       "post": {
-        "description": "Promote a quarantined fact to the main fabric (or a specific target garden).\n\nRequires quarantine:moderator or admin role in the fact's quarantine garden.",
+        "description": "Promote a quarantined fact to the main fabric (or a specific target garden).\n\nNode admins may admit quarantined facts as last-resort moderation\nauthority. Other callers require quarantine:moderator or admin role in the\nfact's quarantine garden.",
         "operationId": "admit_fact_v1_quarantine__fact_id__admit_post",
         "parameters": [
           {
@@ -6962,7 +6987,7 @@
     },
     "/v1/quarantine/{fact_id}/reject": {
       "post": {
-        "description": "Permanently reject a quarantined fact.\n\nSets confidence = 0.0 and quarantine_status = 'rejected'.\nRequires quarantine:moderator or admin role in the fact's quarantine garden.",
+        "description": "Permanently reject a quarantined fact.\n\nSets confidence = 0.0 and quarantine_status = 'rejected'.\nNode admins may reject quarantined facts as last-resort moderation\nauthority. Other callers require quarantine:moderator or admin role in the\nfact's quarantine garden.",
         "operationId": "reject_fact_v1_quarantine__fact_id__reject_post",
         "parameters": [
           {

@@ -21,7 +21,7 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 <div className="stigmem-grid">
 
-<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22; <strong>v0.9.0a5 shipped</strong> 2026-05-22; <strong>v0.9.0a6 active</strong> 2026-05-22.</p></div>
+<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22; <strong>v0.9.0a5 shipped</strong> 2026-05-22; <strong>v0.9.0a6 shipped</strong> 2026-05-23; <strong>v0.9.0a7 active</strong> 2026-05-23.</p></div>
 <div><h4>Future beta line</h4><p>Hardened core, 30-day external operator soak. No active milestone today.</p></div>
 <div><h4>Future release-candidate line</h4><p>Observation window after hardened-core exit. No active milestone today.</p></div>
 <div><h4>Future GA line</h4><p>Wire format committed, compatibility commitment honored across the v1.x line. No active milestone today.</p></div>
@@ -30,16 +30,16 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 ---
 
-## v0.9.0a6 — Memory Garden advanced ACL validation
+## v0.9.0a7 — Source-attestation validation
 
 <div className="stigmem-lead">
 
-**Active alpha validation release for Memory Garden advanced ACL plugin-boundary behavior.**
+**Active alpha validation release for source-attestation plugin-boundary behavior.**
 
-`v0.9.0a6` validates `stigmem-plugin-memory-garden-acl` as the opt-in boundary
-for advanced Memory Garden ACL behavior. Default installs keep basic garden
-CRUD, membership, direct `garden_id` guards, scope mismatch rejection, and
-quarantine moderation in core while advanced cross-surface behavior remains
+`v0.9.0a7` validates `stigmem-plugin-source-attestation` as the opt-in boundary
+for source-authority checks. Default installs keep existing fact write, recall,
+and federation behavior while source-attestation assertion checks, recall
+source-trust scoring, and inbound federation source validation remain
 operator-gated.
 
 </div>
@@ -55,25 +55,25 @@ operator-gated.
 <div>
 <dt>Milestone</dt>
 <dt><span className="stigmem-fields__type">active</span></dt>
-<dd>Tracked at [milestone v0.9.0a6](https://github.com/Eidetic-Labs/stigmem/milestone/7).</dd>
+<dd>Tracked at [milestone v0.9.0a7](https://github.com/Eidetic-Labs/stigmem/milestone/8).</dd>
 </div>
 
 <div>
 <dt>CHANGELOG</dt>
 <dt><span className="stigmem-fields__type">prepared</span></dt>
-<dd>[CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md) includes `[0.9.0a6]` release notes.</dd>
+<dd>[CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md) includes `[0.9.0a7]` release notes.</dd>
 </div>
 
 <div>
 <dt>Entry</dt>
 <dt><span className="stigmem-fields__type">ready</span></dt>
-<dd>`v0.9.0a5` shipped; Memory Garden advanced ACL feature records and experimental source package exist for a6 validation.</dd>
+<dd>`v0.9.0a6` shipped; Source Attestation feature records and experimental source package exist for a7 validation.</dd>
 </div>
 
 <div>
 <dt>Exit</dt>
 <dt><span className="stigmem-fields__type">in progress</span></dt>
-<dd>Default installs retain core garden protections, plugin-loaded advanced ACL behavior validates, security projections align, package dry-runs pass, and the a6 milestone closes before tag clearance.</dd>
+<dd>Default installs remain source-attestation-inert, plugin-loaded source checks validate, security projections align, package dry-runs pass, and the a7 milestone closes before tag clearance.</dd>
 </div>
 
 </div>

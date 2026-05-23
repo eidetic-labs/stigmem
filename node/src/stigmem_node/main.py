@@ -209,9 +209,9 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="Stigmem Reference Node",
-        version="0.9.0a6",
+        version="0.9.0a7",
         description=(
-            "Reference node implementing the Stigmem v0.9.0a6 HTTP API — facts, federation, "
+            "Reference node implementing the Stigmem v0.9.0a7 HTTP API — facts, federation, "
             "gardens, recall, subscriptions, audit, identity, content-addressed fact IDs. "
             "Cross-cutting features (tombstones, time-travel, multi-tenant) are opt-in plugins."
         ),
@@ -303,7 +303,7 @@ def create_app() -> FastAPI:
     def doctor() -> dict[str, str]:
         """Return coarse node health and operator posture.
 
-        This endpoint is unauthenticated in v0.9.0a6. The garden ACL posture
+        This endpoint is unauthenticated in v0.9.0a7. The garden ACL posture
         field is accepted as ops-endpoint disclosure and intentionally avoids
         garden names, membership rows, tenant identifiers, or policy subjects.
         """

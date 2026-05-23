@@ -88,7 +88,7 @@ def federation_inbound_validate(_ctx: PluginContext, **kwargs: Any) -> Allow | D
         return Allow()
 
     fact = kwargs.get("fact") or {}
-    fact_source = fact.get("source") if isinstance(fact, dict) else None
+    fact_source = _normalized_or_none(fact.get("source")) if isinstance(fact, dict) else None
     peer = kwargs.get("peer") or {}
     cap_token = kwargs.get("cap_token") or {}
     expected_source = None
@@ -96,7 +96,7 @@ def federation_inbound_validate(_ctx: PluginContext, **kwargs: Any) -> Allow | D
         expected_source = peer.get("node_id")
     if expected_source is None and isinstance(cap_token, dict):
         expected_source = cap_token.get("subject")
-    if fact_source == expected_source:
+    if fact_source is not None and fact_source == _normalized_or_none(expected_source):
         return Allow()
 
     return Deny("source_attestation_failed: federated fact source does not match sender")

@@ -20,7 +20,7 @@ behavior runs.
 | --- | --- | --- | --- |
 | Threat-model delta | R-22 contribution and source-binding boundary. | Open | `features/source-attestation/security.md` |
 | ADR | Reintroduction design. | Open | Deferred. |
-| Conformance vectors | Enforce/warn/off, delegation, rotation, federation. | Partial | Plugin scaffold and validation tests, including normalized assertion-source and delegated-source checks. |
+| Conformance vectors | Enforce/warn/off, delegation, rotation, federation. | Partial | Plugin scaffold and validation tests, including normalized assertion-source, delegated-source, recall-rank, and federation-boundary checks. |
 | Operator soak | External validation. | Open | None currently recorded. |
 | Documentation parity | Operator docs and artifact evidence. | Open | Artifact publication deferred. |
 

@@ -432,7 +432,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Doctor */
+        /**
+         * Doctor
+         * @description Return coarse node health and operator posture.
+         *
+         *     This endpoint is unauthenticated in v0.9.0a6. The garden ACL posture
+         *     field is accepted as ops-endpoint disclosure and intentionally avoids
+         *     garden names, membership rows, tenant identifiers, or policy subjects.
+         */
         get: operations["doctor_v1_doctor_get"];
         put?: never;
         post?: never;

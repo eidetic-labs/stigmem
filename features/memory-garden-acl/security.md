@@ -26,6 +26,12 @@ unified threat model and this feature record in the same PR.
   do not filter by garden membership unless `stigmem-plugin-memory-garden-acl`
   is registered and the relevant `STIGMEM_MEMORY_GARDEN_ACL_*` flags are
   enabled.
+- `/v1/doctor` is unauthenticated in v0.9.0a6 and returns the coarse
+  `memory_garden_acl_filtering` posture to any HTTP caller. This is accepted
+  for the alpha as standard ops-endpoint disclosure because it does not expose
+  garden names, membership rows, tenant identifiers, or policy subjects.
+  Future hardening options are to auth-gate `/v1/doctor` entirely or suppress
+  the posture field for anonymous callers.
 - Quarantine moderation keeps a separate node-admin override. Node-admin bypass is intentional.
   Node admins are the system's last-resort moderation authority.
   Garden-scoped moderators must still hold `quarantine:moderator` or `admin`

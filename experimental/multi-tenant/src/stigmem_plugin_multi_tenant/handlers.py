@@ -49,25 +49,25 @@ def tenant_resolve(_ctx: PluginContext, value: TenantContext, **kwargs: Any) -> 
 
 
 def pre_assert_authorize(_ctx: PluginContext, **_: Any) -> Allow:
-    """Allow assertions after core permission checks have passed."""
+    """Return Allow() because tenant write authorization is enforced by core."""
 
     return Allow()
 
 
 def pre_recall_authorize(_ctx: PluginContext, **_: Any) -> Allow:
-    """Allow recall after core permission checks have passed."""
+    """Return Allow() because tenant recall authorization is enforced by core."""
 
     return Allow()
 
 
 def recall_filter(_ctx: PluginContext, value: T, **_: Any) -> T:
-    """Preserve core tenant-scoped recall/query results."""
+    """Return recall/query results unchanged after core tenant filtering."""
 
     return value
 
 
 def federation_outbound_filter(_ctx: PluginContext, value: T, **_: Any) -> T:
-    """Preserve core outbound federation filtering."""
+    """Return outbound federation batches unchanged after core tenant filtering."""
 
     return value
 

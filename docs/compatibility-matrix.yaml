@@ -314,6 +314,7 @@ features:
     package: stigmem-plugin-memory-garden-acl
     release_lines:
       - "v0.9.0a1"
+      - "v0.9.0a6"
       - "0.9.xA"
     spec_section: §17 advanced
     stability: experimental

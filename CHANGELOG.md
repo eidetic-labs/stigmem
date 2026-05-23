@@ -9,7 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ## [Unreleased]
 
-_No unreleased changes._
+### Changed
+
+- Validated the `v0.9.0a6` Memory Garden advanced ACL alpha horizon in the
+  feature-owned records. Basic garden CRUD, membership, direct `garden_id`
+  guards, and quarantine moderation remain core; advanced cross-surface ACL
+  behavior remains opt-in behind `stigmem-plugin-memory-garden-acl`
+  registration and operator gates.
+
+### Security
+
+- Recorded the Memory Garden advanced ACL cross-surface disposition for fact
+  query filtering, recall ranking, graph traversal, OIDC permission ceilings,
+  subscription delivery/replay, and quarantine moderation. The feature supports
+  and coexists with R-21 mitigation work but does not itself close
+  same-session read/write graph isolation.
 
 ## [0.9.0a5] — 2026-05-22
 
@@ -159,7 +173,7 @@ root changelog projection used during release prep.
 | Intent envelope | deferred | `v0.9.0a1`, `0.9.xA` | [`features/intent-envelope/changelog.md`](features/intent-envelope/changelog.md) |
 | Lazy instruction discovery | active | `v0.9.0a1`, `0.9.xA` | [`features/lazy-instruction-discovery/changelog.md`](features/lazy-instruction-discovery/changelog.md) |
 | Letta adapter | deferred | `v0.9.0a1`, `0.9.xA` | [`features/letta-adapter/changelog.md`](features/letta-adapter/changelog.md) |
-| Memory Garden advanced ACL | active | `v0.9.0a1`, `0.9.xA` | [`features/memory-garden-acl/changelog.md`](features/memory-garden-acl/changelog.md) |
+| Memory Garden advanced ACL | active | `v0.9.0a1`, `v0.9.0a6`, `0.9.xA` | [`features/memory-garden-acl/changelog.md`](features/memory-garden-acl/changelog.md) |
 | MCP adapter | active | `v0.9.0a1`, `0.9.xA` | [`features/mcp-adapter/changelog.md`](features/mcp-adapter/changelog.md) |
 | Multi-tenant scoping | active | `v0.9.0a8`, `0.9.xA` | [`features/multi-tenant/changelog.md`](features/multi-tenant/changelog.md) |
 | Obsidian adapter | active | `v0.9.0a1`, `0.9.xA` | [`features/obsidian-adapter/changelog.md`](features/obsidian-adapter/changelog.md) |

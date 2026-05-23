@@ -25,10 +25,17 @@ release_lines:
 
 # Source Attestation
 
-Source attestation binds asserted fact `source` values to authenticated
-principals and delegation lists. The feature is implemented as the opt-in
+Source attestation validates asserted fact `source` values against
+authenticated principals and explicit delegation lists in plugin-loaded
+deployments. The feature is implemented as the opt-in
 `stigmem-plugin-source-attestation` source package. Default installs remain
 inert unless the plugin is registered and the relevant gates are enabled.
+
+The current alpha plugin validates direct source matches, normalized source
+matches, delegated-source identity metadata, recall rank contribution, and
+federation inbound guard behavior. It does not prove release artifact
+provenance, does not publish standalone plugin artifacts, and does not mark
+accepted facts as locally re-attested.
 
 ## Current State
 

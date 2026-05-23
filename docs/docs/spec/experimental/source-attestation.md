@@ -2,8 +2,8 @@
 spec_id: Spec-X6-Source-Attestation
 version: 0.1.0-alpha.0
 status: Experimental
-applies_to: future experimental plugin line
-last_updated: 2026-05-17
+applies_to: experimental plugin line
+last_updated: 2026-05-23
 supersedes: pre-reset section 18 source-attestation material
 depends_on:
   - Spec-01-Fact-Model >= 0.1.0-alpha.0
@@ -11,22 +11,23 @@ depends_on:
 title: Spec-X6-Source-Attestation
 sidebar_label: Source Attestation
 audience: Spec
-description: "API-key to entity_uri binding with enforce/warn/off modes; trust anchor for connectors."
+description: "Opt-in plugin validation of fact source claims, recall rank contribution, and federation source guards."
 stability: experimental
 since: 0.9.0a1
 ---
 
 # Spec-X6-Source-Attestation: Source Attestation {#section-18}
 
-<p className="stigmem-meta"><span>6 min read</span><span>Spec contributor · Node operator</span><span>Experimental · future plugin line</span></p>
+<p className="stigmem-meta"><span>6 min read</span><span>Spec contributor · Node operator</span><span>Experimental · opt-in plugin line</span></p>
 
 <div className="stigmem-lead">
 
 **What this spec defines**
 
-API-key → `entity_uri` binding with enforce/warn/off modes. Closes
-the gap where the caller-declared `source` field could otherwise be
-spoofed by any principal holding write permission.
+Opt-in plugin validation of caller-declared fact `source` values. The current
+alpha plugin validates direct and delegated source claims, recall source-trust
+contribution, and federation source guards without changing the default install
+or proving release artifact provenance.
 
 </div>
 
@@ -41,6 +42,12 @@ ranking behavior runs.
 
 **Artifact state:** signed/package publication remains deferred to the
 all-plugins launch lane.
+
+**Current alpha limits:** the plugin validates source claims but does not set
+`attested: true` on accepted facts, does not persist warn-mode `attested: false`
+outcomes, and does not re-attest inbound federated facts as local assertions.
+Durable API-backed delegation persistence and key-rotation conformance remain
+future hardening work.
 
 :::note Section body
 Each subsection below shows the most recent normative text from the spec source. When earlier spec drafts also contained text for the same subsection, those revisions are collapsed under a `Revisions` accordion beneath it — open one to see what changed. Subsections that only appear in one draft render as plain text with no accordion.
@@ -69,7 +76,8 @@ Source attestation closes this gap by binding `source` to the verified `entity_u
 
 ### Spec-X6-Source-Attestation section 2 Attestation Model {#section-18-2}
 
-When a fact is asserted with auth enabled, the node:
+When a fact is asserted with auth enabled and the plugin assertion gate is
+explicitly enabled, the node:
 
 <ol className="stigmem-steps">
 <li>Resolves the key's registered <code>entity_uri</code> and <code>allowed_source_entities</code> (Spec-X6-Source-Attestation section 7).</li>
@@ -77,7 +85,9 @@ When a fact is asserted with auth enabled, the node:
 <li>Checks <code>attested = normalized(fact.source) ∈ &#123; normalized(identity.entity_uri) &#125; ∪ normalized(identity.allowed_source_entities)</code>.</li>
 </ol>
 
-If `source` is absent from the request and the key has a registered `entity_uri`, the node auto-fills `source` from `key.entity_uri` before the check. The auto-filled value is returned in the response.
+Default installs do not run this check. The current alpha plugin expects the
+asserted fact source to be present in the request and validates it before core
+persistence.
 
 ```
 SourceAttestationMode = "enforce" | "warn" | "off"
@@ -94,13 +104,13 @@ SourceAttestationMode = "enforce" | "warn" | "off"
 <div>
 <dt><code>enforce</code></dt>
 <dt><span className="stigmem-fields__type">strict</span></dt>
-<dd>Any <code>source</code> outside <code>&#123;entity_uri&#125; ∪ allowed_source_entities</code> causes HTTP 403 <code>source_attestation_failed</code>. <code>attested: true</code> on all accepted facts.</dd>
+<dd>When the plugin is registered and <code>STIGMEM_SOURCE_ATTESTATION_ENFORCE_ASSERT_VALIDATION=true</code>, any <code>source</code> outside <code>&#123;entity_uri&#125; ∪ allowed_source_entities</code> causes <code>source_attestation_failed</code>. Accepted facts are not marked <code>attested: true</code> in the current alpha plugin.</dd>
 </div>
 
 <div>
 <dt><code>warn</code></dt>
 <dt><span className="stigmem-fields__type">log only</span></dt>
-<dd>Mismatch logged to stderr; fact accepted with <code>attested: false</code>. <code>attested: true</code> if source matches.</dd>
+<dd>Compatibility posture retained from the pre-reset design. Warn-mode logging and <code>attested: false</code> persistence are not implemented by the current alpha plugin.</dd>
 </div>
 
 <div>
@@ -144,22 +154,32 @@ retractions.
 
 Track C adds per-agent keypair registration. Once an agent's public key is registered on the node, a stronger form of attestation becomes possible: the agent signs the fact payload before submission, and the node verifies the signature against the registered public key. This moves attestation from "bearer-token-level" (who presented this API key?) to "fact-level" (who signed this specific fact payload?).
 
-Source attestation is a first step. `attested: true` means the bearer-token-level check passed. Track C extends this with a separate `signature_verified: true | false | null` field once keypairs are implemented.
+Source attestation is a first step toward fact-level attribution. The current
+alpha plugin validates bearer-token-level source authorization but does not set
+`attested: true` on accepted facts. Track C extends this direction with
+separate signature verification once keypairs are implemented.
 
 ### Spec-X6-Source-Attestation section 6 Querying by Attestation {#section-18-6}
 
-Facts can be filtered by attestation status:
+Facts can be filtered by the compatibility `attested` field:
 
 ```
-GET /v1/facts?attested=true    // only source-attested facts
-GET /v1/facts?attested=false   // only non-attested facts (warn/off mode)
+GET /v1/facts?attested=true    // facts explicitly marked attested
+GET /v1/facts?attested=false   // facts explicitly marked unattested
 ```
 
-The `attested` query parameter is optional. Omitting it returns all facts.
+The current alpha source-attestation plugin leaves accepted facts with
+`attested: null`; the query parameter remains for schema compatibility and
+future posture work. Omitting it returns all facts.
 
 ### Spec-X6-Source-Attestation section 7 Key Registration: Binding `entity_uri` to an API Key {#section-18-7}
 
 Source attestation depends on the node knowing the caller's authorized `entity_uri`. This binding is established at **key creation time** and is immutable — a key's `entity_uri` cannot be changed after creation (to prevent retroactive provenance forgery).
+
+**Current alpha state:** core API keys bind `entity_uri` and permissions today.
+The source-attestation plugin also accepts `allowed_source_entities` when that
+metadata is present on the resolved identity object, but durable API-backed
+delegation-list persistence is not complete in this release horizon.
 
 <div className="stigmem-grid">
 
@@ -171,7 +191,10 @@ Source attestation depends on the node knowing the caller's authorized `entity_u
 
 #### Key creation
 
-A key is created with a single POST that binds the `entity_uri`, scope permissions, and optional delegation list at creation time. The node returns the raw API key exactly once in the response; only its SHA-256 digest is stored server-side.
+A key is created with a single POST that binds the `entity_uri` and
+permissions. The node returns the raw API key exactly once in the response;
+new keys are stored with Argon2id hashes. Legacy SHA-256 hashes are accepted
+only during the configured migration window.
 
 ```
 POST /v1/auth/keys
@@ -184,7 +207,7 @@ Authorization: Bearer <admin-key>
 }
 → 201 {
     "key_id":                  "<uuid>",
-    "raw_key":                 "<secret>",   // shown once; SHA-256 stored
+    "raw_key":                 "<secret>",   // shown once; verifier stored
     "entity_uri":              "stigmem://company.example/agent/cto",
     "allowed_scopes":          ["company","public"],
     "allowed_source_entities": [],
@@ -196,20 +219,23 @@ Authorization: Bearer <admin-key>
 
 **The caller MUST store `raw_key` securely — it is not retrievable after creation.**
 
-The node stores only the SHA-256 hex digest. `entity_uri` is
-immutable after creation; attempting to PATCH it returns HTTP 422
-`immutable_field`.
+The node stores only a verifier, never the raw key. `entity_uri` is immutable
+after creation; changing source identity requires revoking and recreating the
+key.
 
 </div>
 
-**Creating a key without `entity_uri`** is allowed for backward compatibility. Such a key can still write facts; in `enforce` mode it will be rejected (HTTP 400 `key_not_attested`); in `warn` mode writes are accepted with `attested: false`.
+**Creating a key without `entity_uri`** is allowed for backward compatibility.
+Such a key can still write facts when source-attestation enforcement is not
+enabled. When plugin enforcement is enabled, source validation requires a
+resolved identity source or explicit delegated source metadata.
 
 #### Updated `Identity` shape
 
 ```
 Identity {
   entity_uri:              URI            // registered at key creation; enforced against fact.source
-  credential:              string         // API key (SHA-256 stored server-side)
+  credential:              string         // raw API key is never stored
   node_url:                string
   allowed_scopes:          FactScope[]
   allowed_source_entities: URI[]          // additional source URIs this key may claim
@@ -218,7 +244,10 @@ Identity {
 
 ### Spec-X6-Source-Attestation section 8 Source Auto-fill {#section-18-8}
 
-If the `source` field is absent from a `POST /v1/facts` request body and the presenting key has a registered `entity_uri`, the node MUST auto-fill `source` from `key.entity_uri`. The auto-filled value MUST appear in the response body.
+Source auto-fill is retained as pre-reset design context but is not claimed as
+implemented by the current alpha plugin. In v0.9.0a7 validation, default
+installs remain inert and plugin-loaded enforcement validates the `source`
+presented to the assertion hook.
 
 ```
 POST /v1/facts
@@ -227,38 +256,13 @@ POST /v1/facts
   "confidence": 1.0, "scope": "company" }
   // source omitted
 
-→ 201 { ..., "source": "stigmem://company.example/agent/cto", "attested": true }
+→ current alpha behavior depends on the core assertion request contract;
+  source-attestation does not auto-mark the result as locally attested.
 ```
 
-If `source` is absent and the key has **no registered `entity_uri`**:
-
-<div className="stigmem-fields">
-
-<div>
-<dt>Mode</dt>
-<dt><span className="stigmem-fields__type">Outcome</span></dt>
-<dd>Notes</dd>
-</div>
-
-<div>
-<dt><code>enforce</code></dt>
-<dt><span className="stigmem-fields__type">HTTP 400</span></dt>
-<dd><code>source_required</code> — source is required when key has no entity_uri in enforce mode.</dd>
-</div>
-
-<div>
-<dt><code>warn</code></dt>
-<dt><span className="stigmem-fields__type">accept + warn</span></dt>
-<dd>Include <code>X-Stigmem-Warn: source_unattested</code> in response; <code>attested: false</code>.</dd>
-</div>
-
-<div>
-<dt><code>off</code></dt>
-<dt><span className="stigmem-fields__type">accept</span></dt>
-<dd><code>attested: null</code>.</dd>
-</div>
-
-</div>
+Warn-mode response headers, `source_required`, and `key_not_attested` storage
+outcomes remain future hardening work unless implemented by a later plugin
+revision.
 
 ### Spec-X6-Source-Attestation section 9 Delegation via `allowed_source_entities` {#section-18-9}
 
@@ -289,7 +293,10 @@ delegation must be an explicit operator grant.
 
 ### Spec-X6-Source-Attestation section 10 Full Key Management API {#section-18-10}
 
-All key management routes require a key with `admin=true`. Revocation is a soft delete — the key record is retained with a `revoked_at` timestamp for audit purposes.
+Full source-attestation key-management and attestation-audit routes remain
+pre-reset design context. Current alpha validation uses the existing API-key
+auth surface plus plugin hook validation; standalone attestation audit routes
+are not claimed as shipped source-attestation behavior.
 
 ```
 POST   /v1/auth/keys                             // create key
@@ -298,34 +305,23 @@ GET    /v1/auth/keys/:key_id                     // get key metadata
 PATCH  /v1/auth/keys/:key_id                     // update description, allowed_scopes, allowed_source_entities
 DELETE /v1/auth/keys/:key_id                     // revoke key (sets revoked_at; record retained for audit)
 
-GET    /v1/auth/attestation-audit                // attestation event log (admin only)
+GET    /v1/auth/attestation-audit                // future attestation event log
 ```
 
-`PATCH` request body may include `description`, `allowed_scopes`, `allowed_source_entities`. `entity_uri` and `admin` are immutable after creation.
+Future revisions may allow `description`, `allowed_scopes`, and
+`allowed_source_entities` updates while keeping `entity_uri` immutable.
+Current alpha evidence does not claim durable API-backed delegation persistence
+or warn-mode attestation audit events.
 
-The attestation audit endpoint returns a paginated log of every attestation decision the node has made. This log is essential for operators transitioning from `warn` to `enforce` mode: querying for `attested=false` events surfaces all callers that would break under strict enforcement.
-
-```
-GET /v1/auth/attestation-audit?key_id=<id>&attested=false&limit=50
-→ 200 {
-    "events": [{
-      "id":              "<uuid>",
-      "key_id":          "...",
-      "entity_uri":      "...",
-      "claimed_source":  "...",
-      "attested":        true | false,
-      "rejection_reason": null | "source_attestation_failed" | "source_required" | "key_not_attested",
-      "ts":              "2026-05-03T00:00:00Z"
-    }],
-    "cursor": "...", "has_more": false
-  }
-```
-
-Filter params: `key_id`, `attested` (true/false), `after` (pagination cursor), `limit` (max 500).
+The attestation-audit query shape below is future design context, not a
+v0.9.0a7 shipped route.
 
 ### Spec-X6-Source-Attestation section 11 Schema Migration (Migration 005) {#section-18-11}
 
-Migration 005 adds two tables to support source attestation. Both tables are additive and do not alter the existing `facts` schema.
+The pre-reset design used a dedicated source-attestation migration. Current
+alpha validation does not add a source-attestation-specific schema migration;
+the core `facts.attested` compatibility column remains available, and the
+plugin records its current behavior through tests and feature evidence.
 
 ```sql
 -- API key management
@@ -362,9 +358,9 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(a
 **Migration note for existing deployments:**
 
 <ol className="stigmem-steps">
-<li>Register existing keys via <code>POST /v1/auth/keys</code> using an <code>existing_credential</code> migration field (accepted for 30 days post-deploy).</li>
-<li>Leave default-install source-attestation behavior off until <code>stigmem-plugin-source-attestation</code> is registered.</li>
-<li>Register <code>entity_uri</code> for all keys, then enable plugin enforcement after verifying the audit log shows no unexpected source mismatches.</li>
+<li>Leave default-install source-attestation behavior inert unless <code>stigmem-plugin-source-attestation</code> is registered.</li>
+<li>Verify every caller has the expected <code>entity_uri</code> before enabling assertion enforcement.</li>
+<li>Treat durable delegation lists, warn-mode audit evidence, and key-rotation conformance as future hardening work until they are implemented and tested.</li>
 </ol>
 
 ### Spec-X6-Source-Attestation section 12 Error Reference {#section-18-12}
@@ -380,25 +376,25 @@ CREATE INDEX IF NOT EXISTS idx_attestation_audit_attested ON attestation_audit(a
 <div>
 <dt>400</dt>
 <dt><span className="stigmem-fields__type"><code>source_required</code></span></dt>
-<dd><code>source</code> omitted; key has no <code>entity_uri</code>; <code>enforce</code> mode.</dd>
+<dd>Future hardening: source omitted while strict attestation requires a source.</dd>
 </div>
 
 <div>
 <dt>400</dt>
 <dt><span className="stigmem-fields__type"><code>key_not_attested</code></span></dt>
-<dd>Key has no <code>entity_uri</code>; node requires attestation.</dd>
+<dd>Future hardening: key lacks source-binding metadata required by policy.</dd>
 </div>
 
 <div>
 <dt>403</dt>
 <dt><span className="stigmem-fields__type"><code>source_attestation_failed</code></span></dt>
-<dd><code>source</code> not in <code>&#123;entity_uri&#125; ∪ allowed_source_entities</code>.</dd>
+<dd><code>source</code> not in <code>&#123;entity_uri&#125; ∪ allowed_source_entities</code> when the plugin enforcement gate is enabled.</dd>
 </div>
 
 <div>
 <dt>422</dt>
 <dt><span className="stigmem-fields__type"><code>immutable_field</code></span></dt>
-<dd>Attempt to PATCH <code>entity_uri</code> or <code>admin</code>.</dd>
+<dd>Future hardening: attempt to change immutable source-binding metadata.</dd>
 </div>
 
 </div>

@@ -36,7 +36,7 @@ Required adversarial vectors before promotion:
 
 - a caller cannot assert a `source` URI that is not bound to its authenticated
   principal;
-- warn mode records unattested facts without silently marking them trusted;
+- warn-mode persistence is explicitly dispositioned before graduation;
 - enforce mode rejects mismatched source claims;
 - key rotation invalidates old source-binding material according to policy;
 - source-attested facts survive federation without allowing peers to forge

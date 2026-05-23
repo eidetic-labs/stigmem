@@ -19,13 +19,17 @@
 | Check | Path or command | Coverage |
 | --- | --- | --- |
 | Plugin scaffold | `node/tests/plugins/test_multi_tenant_plugin_scaffold.py` | Entry point, manifest, capabilities, hooks, config gate, discovery, and health check. |
-| Tenant isolation routes | `node/tests/routes/test_multi_tenant.py` | Default collapse, plugin-enabled tenant visibility, garden isolation, slug reuse, cross-tenant write denial, and audit scoping. |
+| Tenant isolation routes | `node/tests/routes/test_multi_tenant.py` | Default collapse for identity, fact get/query, garden namespace, audit partition, and env-gate behavior; plugin-enabled tenant visibility, garden isolation, slug reuse, cross-tenant write denial, and audit scoping. |
 | Garden route coverage | `node/tests/routes/test_gardens.py` | Tenant-aware garden lookup and membership behavior. |
 | Observability coverage | `node/tests/observability/test_billing_hooks.py`; `node/tests/observability/test_tracing.py` | Tenant IDs on billing/audit/tracing surfaces. |
 | Fast gate | `bash scripts/check.sh python` | Python lint, type, tests, and security bundle. |
 
 ## Coverage Gaps
 
+- Default single-tenant collapse is covered for identity, fact read/query,
+  garden lookup/listing, audit listing, and plugin-gate absence. Background
+  worker and federation-specific default-collapse checks remain part of the
+  cross-surface a8 validation goal.
 - No external operator soak evidence is recorded.
 - Federation tenant-boundary adversarial vectors are incomplete.
 - Per-tenant quota and resource-isolation evidence is incomplete.

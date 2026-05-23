@@ -21,7 +21,7 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 <div className="stigmem-grid">
 
-<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22; <strong>v0.9.0a5 active</strong> 2026-05-22.</p></div>
+<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22; <strong>v0.9.0a5 shipped</strong> 2026-05-22; <strong>v0.9.0a6 active</strong> 2026-05-22.</p></div>
 <div><h4>Future beta line</h4><p>Hardened core, 30-day external operator soak. No active milestone today.</p></div>
 <div><h4>Future release-candidate line</h4><p>Observation window after hardened-core exit. No active milestone today.</p></div>
 <div><h4>Future GA line</h4><p>Wire format committed, compatibility commitment honored across the v1.x line. No active milestone today.</p></div>
@@ -30,16 +30,17 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 ---
 
-## v0.9.0a5 — RTBF tombstone extraction validation
+## v0.9.0a6 — Memory Garden advanced ACL validation
 
 <div className="stigmem-lead">
 
-**Active alpha validation release for RTBF tombstone plugin-boundary behavior.**
+**Active alpha validation release for Memory Garden advanced ACL plugin-boundary behavior.**
 
-`v0.9.0a5` validates `stigmem-plugin-tombstones` as the opt-in boundary for
-RTBF tombstone routes, filters, issuance, revocation, and federation handling.
-Default installs remain inert unless the plugin is registered and explicit
-operator gates are enabled.
+`v0.9.0a6` validates `stigmem-plugin-memory-garden-acl` as the opt-in boundary
+for advanced Memory Garden ACL behavior. Default installs keep basic garden
+CRUD, membership, direct `garden_id` guards, scope mismatch rejection, and
+quarantine moderation in core while advanced cross-surface behavior remains
+operator-gated.
 
 </div>
 
@@ -54,25 +55,25 @@ operator gates are enabled.
 <div>
 <dt>Milestone</dt>
 <dt><span className="stigmem-fields__type">active</span></dt>
-<dd>Tracked at [milestone v0.9.0a5](https://github.com/Eidetic-Labs/stigmem/milestone/6).</dd>
+<dd>Tracked at [milestone v0.9.0a6](https://github.com/Eidetic-Labs/stigmem/milestone/7).</dd>
 </div>
 
 <div>
 <dt>CHANGELOG</dt>
 <dt><span className="stigmem-fields__type">prepared</span></dt>
-<dd>[CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md) includes `[0.9.0a5]` release notes.</dd>
+<dd>[CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md) includes `[0.9.0a6]` release notes.</dd>
 </div>
 
 <div>
 <dt>Entry</dt>
 <dt><span className="stigmem-fields__type">ready</span></dt>
-<dd>`v0.9.0a4` shipped; tombstone feature records and experimental source package exist for a5 validation.</dd>
+<dd>`v0.9.0a5` shipped; Memory Garden advanced ACL feature records and experimental source package exist for a6 validation.</dd>
 </div>
 
 <div>
 <dt>Exit</dt>
 <dt><span className="stigmem-fields__type">in progress</span></dt>
-<dd>Default installs expose no tombstone routes or filters, plugin-loaded issuance/filtering/revocation/legal-hold behavior validates, security projections align, and the a5 milestone closes.</dd>
+<dd>Default installs retain core garden protections, plugin-loaded advanced ACL behavior validates, security projections align, package dry-runs pass, and the a6 milestone closes before tag clearance.</dd>
 </div>
 
 </div>

@@ -49,7 +49,7 @@ from .hooks import HOOK_SPECS, HookOrdering, HookSemantic
 from .manifest import PluginManifest
 
 logger = logging.getLogger("stigmem.plugins.registry")
-_FALLBACK_STIGMEM_VERSION = "0.9.0a5"
+_FALLBACK_STIGMEM_VERSION = "0.9.0a6"
 
 T = TypeVar("T")
 

@@ -1,8 +1,8 @@
 # LIMITATIONS
 
-> **Stigmem v0.9.0a5.** Not yet suitable for production federation across organizational boundaries. Read this before deploying.
+> **Stigmem v0.9.0a6.** Not yet suitable for production federation across organizational boundaries. Read this before deploying.
 >
-> Last updated: 2026-05-22 · Applies to: v0.9.0a5
+> Last updated: 2026-05-22 · Applies to: v0.9.0a6
 
 ---
 
@@ -10,7 +10,7 @@
 
 A plain-English statement of what stigmem cannot safely do in its current state, organized by deployment scenario. It is the operator's companion to the formal [threat model](spec/security/threat-model.md) and the disclosure policy in [SECURITY.md](SECURITY.md).
 
-If the threat model tells you *what the threats are*, this document tells you *what to actually do or not do today*. It is updated on every release. The contents below apply to **v0.9.0a5** specifically; future versions will close some of these gaps and may open new ones (each new feature lands with its own limitations entry).
+If the threat model tells you *what the threats are*, this document tells you *what to actually do or not do today*. It is updated on every release. The contents below apply to **v0.9.0a6** specifically; future versions will close some of these gaps and may open new ones (each new feature lands with its own limitations entry).
 
 If after reading this you're unsure whether your use case is safe, the answer is: ask in [Discussions](https://github.com/eidetic-labs/stigmem/discussions) before deploying. We'd rather lose an integration than have you hit one of these gaps in production.
 
@@ -18,13 +18,13 @@ If after reading this you're unsure whether your use case is safe, the answer is
 
 ## Current state in one sentence
 
-Stigmem v0.9.0a5 is a working federated-memory reference node with a documented threat model and several controls our own threat model identifies as required for safe deployment that have not yet shipped. Those controls remain future hardened-core work (see [ROADMAP.md](ROADMAP.md)); no beta, release-candidate, or GA milestone is active today. Until the controls ship, the deployment recommendations below are the responsible defaults.
+Stigmem v0.9.0a6 is a working federated-memory reference node with a documented threat model and several controls our own threat model identifies as required for safe deployment that have not yet shipped. Those controls remain future hardened-core work (see [ROADMAP.md](ROADMAP.md)); no beta, release-candidate, or GA milestone is active today. Until the controls ship, the deployment recommendations below are the responsible defaults.
 
 ---
 
 ## What stigmem is **not** safe for today
 
-These are unambiguous "do not" recommendations as of v0.9.0a5.
+These are unambiguous "do not" recommendations as of v0.9.0a6.
 
 ### 1. Cross-organizational federation in adversarial settings
 
@@ -112,7 +112,7 @@ The capability-based redesign is present on `main`; release posture, certificati
 - A misbehaving agent can exhaust your storage or your CPU.
 - You cannot reconstruct who-did-what from logs in a way suitable for incident response.
 
-**What to do today:** treat v0.9.0a5 as a development and evaluation release. Production deployment is not recommended until rate limits and persistent audit-log controls complete and are release-validated. If you must deploy to production now, run behind a reverse proxy with its own rate limiting, and pipe stigmem's structured output to a SIEM you trust.
+**What to do today:** treat v0.9.0a6 as a development and evaluation release. Production deployment is not recommended until rate limits and persistent audit-log controls complete and are release-validated. If you must deploy to production now, run behind a reverse proxy with its own rate limiting, and pipe stigmem's structured output to a SIEM you trust.
 
 ---
 
@@ -211,7 +211,7 @@ This is intentional — adopters running `pip install <pkg>` in CI shouldn't acc
 ```bash
 npm install @eidetic-labs/stigmem-ts                 # gets the most recent published version (currently a prerelease)
 npm install @eidetic-labs/stigmem-ts@alpha           # gets the most recent 0.9.0-alpha.* prerelease
-npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.5   # explicit pin
+npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.6   # explicit pin
 ```
 
 **Why scoped:** npm's free-tier organization permissions don't allow team-bound package access controls; scoping under `@eidetic-labs` sidesteps that limitation entirely.
@@ -226,10 +226,10 @@ npm requires every package to have a `latest` dist-tag; there is no way to publi
 
 **What this means concretely:**
 
-| Adopter command | What you get today (v0.9.0a5) | What you'll get over time |
+| Adopter command | What you get today (v0.9.0a6) | What you'll get over time |
 |---|---|---|
-| `npm install @eidetic-labs/stigmem-ts` | `0.9.0-alpha.5` | The most recent published version, advancing through the active alpha line first. Future beta/RC/GA tags are created only when those release lines are explicitly opened and published. |
-| `npm install @eidetic-labs/stigmem-ts@alpha` | `0.9.0-alpha.5` | The most recent alpha. |
+| `npm install @eidetic-labs/stigmem-ts` | `0.9.0-alpha.6` | The most recent published version, advancing through the active alpha line first. Future beta/RC/GA tags are created only when those release lines are explicitly opened and published. |
+| `npm install @eidetic-labs/stigmem-ts@alpha` | `0.9.0-alpha.6` | The most recent alpha. |
 | `npm install @eidetic-labs/stigmem-ts@beta` | (no version yet) | No active beta line today. |
 | `npm install @eidetic-labs/stigmem-ts@rc` | (no version yet) | No active release-candidate line today. |
 
@@ -341,7 +341,7 @@ This is by design as the alpha-line iteration semantics ([ADR-019](docs/adr/019-
 | Lazy instruction discovery | `experimental/lazy-instruction-discovery/` source package; default routes require plugin registration/configuration | `Spec-X1-Lazy-Instruction-Discovery` | extracted opt-in plugin source; artifact evidence deferred | v0.9.0a2 |
 | Content-addressed fact IDs | `node/src/stigmem_node/cid.py` | `Spec-21-Content-Addressed-IDs`; **stays in core** ([ADR-017](docs/adr/017-amendment-to-adr-011-cids-as-core.md)) | n/a | v0.9.0a3 |
 | Time-travel queries | `experimental/time-travel/` source package; default `as_of` requests fail closed without plugin registration | `Spec-X3-Time-Travel-Queries` | extracted opt-in plugin source; artifact evidence deferred | v0.9.0a4 |
-| RTBF tombstones | `experimental/tombstones/` source package; default routes and filters require plugin registration/configuration | `Spec-X2-RTBF-Tombstones` | extracted opt-in plugin source; artifact evidence deferred | v0.9.0a5 |
+| RTBF tombstones | `experimental/tombstones/` source package; default routes and filters require plugin registration/configuration | `Spec-X2-RTBF-Tombstones` | extracted opt-in plugin source; artifact evidence deferred | v0.9.0a6 |
 | Memory-garden advanced ACL | `node/src/stigmem_node/garden_acl.py` | `Spec-X5-Memory-Garden-Advanced-ACL` | `experimental/memory-garden-acl/` plugin | v0.9.0a6 |
 | Source attestation | `node/src/stigmem_node/source_trust.py` | `Spec-X6-Source-Attestation` | `experimental/source-attestation/` plugin | v0.9.0a7 |
 | Multi-tenant isolation | `tenant_id` in 23 core files | Deferred plugin work; no supported protocol spec yet | `experimental/multi-tenant/` plugin | v0.9.0a8 |

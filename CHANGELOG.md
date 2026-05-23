@@ -11,6 +11,44 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 _No unreleased changes._
 
+## [0.9.0a7] — 2026-05-23
+
+**Status:** preview alpha — pre-stable, not for production federation across
+organizational boundaries. Source attestation remains experimental, opt-in, and
+operator-gated.
+
+**Per-ecosystem version strings (per ADR-019):**
+- PyPI / Python: `stigmem 0.9.0a7`, `stigmem-py 0.9.0a7`, `stigmem-node 0.9.0a7`, and `stigmem-openclaw 0.9.0a7` (PEP 440).
+- npm / Node: `@eidetic-labs/stigmem-ts@0.9.0-alpha.7` (semver).
+- GHCR: `ghcr.io/eidetic-labs/stigmem-node:0.9.0a7` and `:0.9.0-alpha.7`.
+- Git tag, GitHub release, prose: `v0.9.0a7` (shorthand).
+
+### Changed
+
+- Advanced the enforced release-version surfaces to the `v0.9.0a7` alpha line
+  across Python packages, npm packages, API metadata, conformance metadata,
+  plugin compatibility defaults, release documentation, and current-facing
+  adopter guidance.
+- Validated the `v0.9.0a7` source-attestation alpha horizon in the
+  feature-owned records. Default installs remain source-attestation-inert;
+  assertion source checks, source-trust recall signals, and inbound federation
+  source validation require `stigmem-plugin-source-attestation` registration
+  and explicit operator gates.
+
+### Security
+
+- Recorded the source-attestation disposition for direct source matches,
+  normalized source matches, identity-provided delegated source entities,
+  recall source-trust contribution, and federation inbound source guards.
+- Clarified that source attestation validates fact authorship claims in
+  plugin-loaded deployments and does not prove release artifact provenance.
+  Signed tags, detached artifact signatures, SBOMs, image digests, provenance,
+  and Rekor/Sigstore evidence remain release-process responsibilities.
+- Documented residual source-attestation gaps: accepted facts are not marked
+  as locally re-attested, federated facts are not silently re-attested, durable
+  API-backed delegation persistence remains future hardening, and standalone
+  plugin artifact evidence is deferred to the plugin launch train.
+
 ## [0.9.0a6] — 2026-05-22
 
 **Status:** preview alpha — pre-stable, not for production federation across

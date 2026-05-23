@@ -113,7 +113,7 @@ per-surface enablement flag is enabled.
 
 The `/v1/doctor` endpoint exposes the active
 `memory_garden_acl_filtering` state as `disabled`, `enabled-partial`, or
-`enabled-full`. `/v1/doctor` is intentionally unauthenticated in v0.9.0a6 and
+`enabled-full`. `/v1/doctor` is intentionally unauthenticated in v0.9.0a7 and
 therefore exposes this coarse posture value to anonymous HTTP callers as
 standard ops-endpoint disclosure. It does not expose garden names, membership
 rows, tenant identifiers, or policy subjects. Future hardening can auth-gate
@@ -125,13 +125,42 @@ advanced ACL plugin is not registered. See
 [`features/memory-garden-acl/security.md`](features/memory-garden-acl/security.md)
 for the full feature-owned disposition.
 
+## Security Posture — v0.9.0a7 (2026-05-23)
+
+`v0.9.0a7` is the active alpha release horizon. The release validates Source
+Attestation as an experimental, opt-in plugin boundary: default installs keep
+existing fact write, recall, and federation behavior, while assertion source
+checks, recall source-trust contribution, and inbound federation source guards
+remain inactive unless `stigmem-plugin-source-attestation` is registered and
+operator gates are enabled.
+
+The feature-owned security record documents the a7 disposition for direct
+source matches, normalized source matches, identity-provided delegated source
+entities, recall source-trust contribution, federation inbound source guards,
+and R-22 residual risk. Source Attestation helps operators reason about fact
+authorship claims in plugin-loaded deployments, but it does not prove release
+artifact provenance. Release supply-chain evidence remains owned by the
+release process: signed tags, detached artifact signatures, SBOMs, image
+digests, provenance, and Rekor/Sigstore verification where applicable.
+
+Accepted facts are not marked as locally re-attested, federated facts are not
+silently re-attested, durable API-backed delegation persistence remains future
+hardening, and standalone plugin artifact evidence is deferred to the plugin
+launch train.
+
+The standing publication policy remains: Critical and High vulnerabilities that
+affect supported published artifacts are handled through GHSA where applicable
+after a patched version is available; Medium and Low findings are documented in
+this file unless a documented risk-profile, reporter-coordination, or
+downstream-compliance carve-out applies.
+
 ## Security Posture — v0.9.0a6 (2026-05-22)
 
-`v0.9.0a6` is the active alpha release horizon. The release validates Memory
-Garden advanced ACL as an experimental, opt-in plugin boundary: default
-installs keep basic garden CRUD, membership, direct `garden_id` read/write
-guards, scope mismatch rejection, and quarantine moderation in core, while
-advanced cross-surface behavior remains inactive unless the
+`v0.9.0a6` was the previous alpha release. The release validates Memory Garden
+advanced ACL as an experimental, opt-in plugin boundary: default installs keep
+basic garden CRUD, membership, direct `garden_id` read/write guards, scope
+mismatch rejection, and quarantine moderation in core, while advanced
+cross-surface behavior remains inactive unless the
 `stigmem-plugin-memory-garden-acl` package is registered and operator gates are
 enabled.
 
@@ -142,12 +171,6 @@ moderation, and R-21 residual risk. Memory Garden advanced ACL supports and
 coexists with R-21 mitigation work, but it does not itself close same-session
 read/write graph isolation; that closure still requires session, graph, and
 audit evidence outside this feature boundary.
-
-The standing publication policy remains: Critical and High vulnerabilities that
-affect supported published artifacts are handled through GHSA where applicable
-after a patched version is available; Medium and Low findings are documented in
-this file unless a documented risk-profile, reporter-coordination, or
-downstream-compliance carve-out applies.
 
 ## Security Posture — v0.9.0a5 (2026-05-22)
 

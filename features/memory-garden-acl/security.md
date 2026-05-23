@@ -37,8 +37,12 @@ Required adversarial vectors before promotion:
 
 ## Residual Risk
 
-Gate 1 remains open. The security delta must explicitly say whether the feature
-implements, supports, or merely coexists with the R-21 mitigation design.
+Gate 1 remains partial. The a6 disposition is that Memory Garden advanced ACL
+supports and coexists with R-21 mitigation work by providing an opt-in
+membership boundary for assertion, recall, graph, OIDC, and subscription
+surfaces. It does not, by itself, implement or close R-21 same-session
+read/write graph isolation. R-21 closure still requires session, graph, and
+audit evidence outside this feature boundary.
 
 ## Advisories and Findings
 

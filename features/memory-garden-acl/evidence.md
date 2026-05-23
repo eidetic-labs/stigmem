@@ -48,6 +48,23 @@ being enabled.
 | Recall filtering activates only with plugin and recall-filter gate | Plugin-loaded advanced behavior | `node/tests/routes/test_gardens.py::TestGardenFactACL::test_plugin_global_query_hides_garden_facts` |
 | Default global queries do not apply advanced garden filtering | Default install no-op | `node/tests/routes/test_gardens.py::TestGardenFactACL::test_default_global_query_does_not_apply_advanced_garden_filter` |
 
+## v0.9.0a6 Cross-Surface Disposition
+
+Advanced Memory Garden ACL behavior is not a single route. It appears across
+assertion, query, recall, graph, OIDC exchange, subscription delivery/replay,
+and quarantine surfaces. The a6 disposition is:
+
+| Surface | Disposition | Evidence |
+| --- | --- | --- |
+| Assertion authorization | Hook is registered as `pre_assert_authorize`; current plugin handler is allow/no-op until a stricter policy is configured. Basic direct `garden_id` write checks remain core. | `node/tests/plugins/test_memory_garden_acl_plugin_scaffold.py`; `node/tests/routes/test_gardens.py::TestGardenFactACL` |
+| Fact query / global visibility | Direct `garden_id` query guard remains core; global garden filtering is gated by plugin registration plus `STIGMEM_MEMORY_GARDEN_ACL_APPLY_RECALL_FILTER=true`. | `node/tests/routes/test_gardens.py::TestGardenFactACL::test_default_global_query_does_not_apply_advanced_garden_filter`; `node/tests/routes/test_gardens.py::TestGardenFactACL::test_plugin_global_query_hides_garden_facts` |
+| Recall ranking | Garden-tagged candidates are filtered only when the plugin recall-filter gate is active. | `node/src/stigmem_node/routes/recall/ranking.py`; plugin gate tests |
+| Graph traversal | Graph edge filtering uses the same recall-filter gate; no separate graph-specific hook is introduced in a6. | `node/tests/routes/test_graph.py::TestGraphGardenACL::test_garden_edge_hidden_from_non_member` |
+| OIDC permission ceiling | Membership-derived OIDC permission ceilings are gated by plugin registration plus `STIGMEM_MEMORY_GARDEN_ACL_ENABLE_OIDC_PERMISSION_CEILING=true`; default installs do not cap permissions by garden membership. | `node/tests/auth/test_oidc.py::test_exchange_default_install_does_not_apply_garden_permission_ceiling`; `node/tests/auth/test_oidc.py::test_exchange_no_membership_caps_at_read` |
+| Subscription delivery and replay | Delivery/replay suppression uses the recall-filter gate. Default delivery remains unchanged; plugin-loaded delivery suppresses non-member payloads and replay redacts blocked events. | `node/tests/routes/test_subscriptions.py::test_default_delivery_does_not_apply_advanced_garden_acl`; `node/tests/routes/test_subscriptions.py::test_plugin_delivery_skipped_when_not_garden_member`; `node/tests/routes/test_subscriptions.py::test_replay_window_suppresses_garden_acl_blocked_events` |
+| Quarantine moderation | Retained in core under Spec-08; not rehomed into the Memory Garden advanced ACL plugin. | `node/tests/routes/test_quarantine.py::TestQuarantineGardenActions` |
+| R-21 same-session read/write graph isolation | Supported/coexisting boundary only. Memory Garden advanced ACL does not, by itself, implement or close R-21. | `features/memory-garden-acl/security.md` |
+
 ## Tests and Validators
 
 | Check | Path or command | Coverage |
@@ -60,6 +77,7 @@ being enabled.
 | Fast gate | `bash scripts/check.sh python` | Python lint, type, tests, and security bundle. |
 | a6 focused core boundary gate | `uv run pytest node/tests/routes/test_gardens.py node/tests/routes/test_quarantine.py node/tests/conformance/test_conformance_v1.py` | 114 passed on 2026-05-23. |
 | a6 focused plugin boundary gate | `uv run pytest node/tests/plugins/test_memory_garden_acl_plugin_scaffold.py node/tests/plugins/test_memory_garden_acl_plugin_validation.py node/tests/routes/test_gardens.py::TestGardenFactACL::test_default_global_query_does_not_apply_advanced_garden_filter node/tests/routes/test_gardens.py::TestGardenFactACL::test_plugin_global_query_hides_garden_facts` | 13 passed on 2026-05-23. |
+| a6 focused cross-surface gate | `uv run pytest node/tests/routes/test_graph.py::TestGraphGardenACL::test_garden_edge_hidden_from_non_member node/tests/auth/test_oidc.py::test_exchange_default_install_does_not_apply_garden_permission_ceiling node/tests/auth/test_oidc.py::test_exchange_no_membership_caps_at_read node/tests/routes/test_subscriptions.py::test_default_delivery_does_not_apply_advanced_garden_acl node/tests/routes/test_subscriptions.py::test_plugin_delivery_skipped_when_not_garden_member node/tests/routes/test_subscriptions.py::test_replay_window_suppresses_garden_acl_blocked_events node/tests/routes/test_quarantine.py::TestQuarantineGardenActions node/tests/routes/test_gardens.py::TestGardenFactACL::test_default_global_query_does_not_apply_advanced_garden_filter node/tests/routes/test_gardens.py::TestGardenFactACL::test_plugin_global_query_hides_garden_facts` | 14 passed on 2026-05-23. |
 
 ## Coverage Gaps
 

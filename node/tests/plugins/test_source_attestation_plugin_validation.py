@@ -156,6 +156,38 @@ def test_default_install_ignores_recall_rank_environment_gates(monkeypatch) -> N
     assert default_scores[0].score == 0.0
 
 
+def test_plugin_loaded_ignores_recall_rank_when_source_weight_disabled(monkeypatch) -> None:
+    record = _fact_record()
+    identity = Identity("stigmem://example.test/agent/caller", ["read"])
+    weights = RecallWeights(
+        lexical=1.0,
+        semantic=0.0,
+        graph=0.0,
+        source_trust=0.0,
+        recency=0.0,
+    )
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_APPLY_RECALL_RANK", "true")
+
+    def fail_if_called(*_args, **_kwargs) -> float:
+        raise AssertionError("source trust must not run when source_trust weight is zero")
+
+    monkeypatch.setattr("stigmem_node.source_trust.compute_source_trust", fail_if_called)
+
+    with stigmem_plugins([plugin_manifest()]):
+        plugin_scores = _score_candidates(
+            {record.id: record},
+            {record.id: 0.0},
+            {},
+            {},
+            weights,
+            identity,
+            depth=1,
+        )
+
+    assert plugin_scores[0].score == 0.0
+
+
 def test_default_install_ignores_federation_environment_gates(monkeypatch) -> None:
     monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
     monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENFORCE_FEDERATION_INBOUND", "true")
@@ -185,6 +217,40 @@ def test_default_install_ignores_federation_environment_gates(monkeypatch) -> No
 
     assert ok is True
     assert error is None
+
+
+def test_plugin_loaded_preserves_federated_fact_attestation_boundary(monkeypatch) -> None:
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENFORCE_FEDERATION_INBOUND", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_WARN_ONLY", "false")
+    fact = {
+        "id": "fed-fact-1",
+        "source": "stigmem://peer.example/node/a",
+        "scope": "public",
+    }
+    peer = {
+        "id": "peer-a",
+        "node_id": "stigmem://peer.example/node/a",
+        "allowed_scopes": '["public"]',
+    }
+    _FederationIngestStub.ingested_facts = []
+
+    monkeypatch.setattr(
+        "stigmem_node.routes.federation.replication._public_module",
+        _FederationIngestStub,
+    )
+    with stigmem_plugins([plugin_manifest()]):
+        ok, error = _push_fact_with_peer_token(
+            fact,
+            "public",
+            peer,
+            {"scopes": ["public"]},
+        )
+
+    assert ok is True
+    assert error is None
+    assert _FederationIngestStub.ingested_facts == [fact]
+    assert "attested" not in _FederationIngestStub.ingested_facts[0]
 
 
 def test_plugin_loaded_preserves_baseline_federation_inbound_match(monkeypatch) -> None:
@@ -232,7 +298,10 @@ def _fact_record() -> FactRecord:
 
 
 class _FederationIngestStub:
-    def ingest_fact(self, *_args, **_kwargs) -> None:
+    ingested_facts: list[dict[str, object]] = []
+
+    def ingest_fact(self, fact: dict[str, object], *_args, **_kwargs) -> None:
+        self.ingested_facts.append(fact)
         return None
 
     def write_audit_log(self, *_args, **_kwargs) -> None:

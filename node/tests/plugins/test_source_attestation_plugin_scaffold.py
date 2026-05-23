@@ -314,6 +314,66 @@ def test_recall_rank_returns_source_trust_delta_when_explicitly_enabled(
     assert deltas["fact-1"] > 0.0
 
 
+def test_recall_rank_returns_no_delta_when_source_weight_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import stigmem_node.source_trust as source_trust_mod
+
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_APPLY_RECALL_RANK", "true")
+
+    def fail_if_called(*_args: object, **_kwargs: object) -> float:
+        raise AssertionError("source trust must not run when source_trust weight is zero")
+
+    monkeypatch.setattr(source_trust_mod, "compute_source_trust", fail_if_called)
+    registry = HookRegistry()
+    registry.register_plugin(plugin_manifest())
+    scored = [
+        SimpleNamespace(
+            fact=SimpleNamespace(
+                id="fact-1",
+                source="stigmem://example.test/agent/source",
+                scope="public",
+                confidence=1.0,
+            )
+        )
+    ]
+    weights = SimpleNamespace(
+        lexical=1.0,
+        semantic=0.0,
+        graph=0.0,
+        source_trust=0.0,
+        recency=0.0,
+    )
+
+    deltas = registry.fire_score_delta(
+        "recall_rank",
+        scored,
+        identity=SimpleNamespace(entity_uri="agent:caller"),
+        weights=weights,
+    )
+
+    assert deltas == {}
+
+
+def test_federation_validation_allows_normalized_peer_match_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENABLED", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_ENFORCE_FEDERATION_INBOUND", "true")
+    monkeypatch.setenv("STIGMEM_SOURCE_ATTESTATION_WARN_ONLY", "false")
+    registry = HookRegistry()
+    registry.register_plugin(plugin_manifest())
+
+    decision = registry.fire_voting(
+        "federation_inbound_validate",
+        fact={"source": " STIGMEM://EXAMPLE.TEST/PEER/SENDER "},
+        peer={"node_id": "stigmem://example.test/peer/sender"},
+    )
+
+    assert isinstance(decision, Allow)
+
+
 def test_federation_validation_denies_mismatch_when_explicitly_enabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

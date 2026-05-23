@@ -25,6 +25,11 @@ registered key material and configured attestation policy.
 The feature narrows spoofing and repudiation risk for fact authorship, but it
 does not prove release artifact provenance.
 
+Federation inbound validation is a guard on peer/source consistency. It does
+not transform an inbound federated fact into a locally attested assertion, and
+it does not replace the core federation source-ownership checks that already
+run before plugin hook dispatch on peer and capability-token push paths.
+
 ## Conformance Pointers
 
 Required adversarial vectors before promotion:
@@ -35,7 +40,7 @@ Required adversarial vectors before promotion:
 - enforce mode rejects mismatched source claims;
 - key rotation invalidates old source-binding material according to policy;
 - source-attested facts survive federation without allowing peers to forge
-  local source identity.
+  local source identity or be silently re-attested as local facts.
 
 ## Advisories and Findings
 

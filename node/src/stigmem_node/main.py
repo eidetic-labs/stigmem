@@ -206,9 +206,9 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="Stigmem Reference Node",
-        version="0.9.0a5",
+        version="0.9.0a6",
         description=(
-            "Reference node implementing the Stigmem v0.9.0a5 HTTP API — facts, federation, "
+            "Reference node implementing the Stigmem v0.9.0a6 HTTP API — facts, federation, "
             "gardens, recall, subscriptions, audit, identity, content-addressed fact IDs. "
             "Cross-cutting features (tombstones, time-travel, multi-tenant) are opt-in plugins."
         ),

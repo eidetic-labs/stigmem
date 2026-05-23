@@ -99,9 +99,33 @@ is an index, not the canonical analysis body; update the linked
 
 ---
 
+## Security Posture — v0.9.0a6 (2026-05-22)
+
+`v0.9.0a6` is the active alpha release horizon. The release validates Memory
+Garden advanced ACL as an experimental, opt-in plugin boundary: default
+installs keep basic garden CRUD, membership, direct `garden_id` read/write
+guards, scope mismatch rejection, and quarantine moderation in core, while
+advanced cross-surface behavior remains inactive unless the
+`stigmem-plugin-memory-garden-acl` package is registered and operator gates are
+enabled.
+
+The feature-owned security record documents the a6 cross-surface disposition
+for assertion authorization, fact query filtering, recall ranking, graph
+traversal, OIDC permission ceilings, subscription delivery/replay, quarantine
+moderation, and R-21 residual risk. Memory Garden advanced ACL supports and
+coexists with R-21 mitigation work, but it does not itself close same-session
+read/write graph isolation; that closure still requires session, graph, and
+audit evidence outside this feature boundary.
+
+The standing publication policy remains: Critical and High vulnerabilities that
+affect supported published artifacts are handled through GHSA where applicable
+after a patched version is available; Medium and Low findings are documented in
+this file unless a documented risk-profile, reporter-coordination, or
+downstream-compliance carve-out applies.
+
 ## Security Posture — v0.9.0a5 (2026-05-22)
 
-`v0.9.0a5` is the active alpha release horizon. The release validates RTBF
+`v0.9.0a5` was the previous alpha release. The release validates RTBF
 tombstones as an experimental, opt-in plugin boundary: default installs do not
 mount tombstone admin or federation routes and do not apply tombstone filters
 unless `stigmem-plugin-tombstones` is registered and the explicit operator

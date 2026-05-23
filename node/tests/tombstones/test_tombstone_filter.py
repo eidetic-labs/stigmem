@@ -13,6 +13,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
+from time import monotonic, sleep
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -125,6 +126,30 @@ def _create_subscription(client: TestClient, target: str = "local") -> dict:
     return resp.json()
 
 
+def _drain_subscription_delivery(*, timeout_s: float = 2.0) -> None:
+    """Run the best-effort delivery sweep until this test's events are drained.
+
+    ``deliver_pending`` intentionally returns without work when another sweep
+    holds the process-wide claim lock. The full suite can briefly overlap with
+    background delivery tasks, so these tests wait for a settled DB state
+    instead of relying on a single best-effort call.
+    """
+    deadline = monotonic() + timeout_s
+    while True:
+        deliver_pending()
+        with db_mod.db() as conn:
+            row = conn.execute(
+                """SELECT COUNT(*) AS n
+                   FROM subscription_events
+                   WHERE delivery_status IN ('pending', 'delivering')"""
+            ).fetchone()
+        if row["n"] == 0:
+            return
+        if monotonic() >= deadline:
+            raise AssertionError(f"subscription delivery did not drain; remaining={row['n']}")
+        sleep(0.01)
+
+
 def _recall(client: TestClient, query: str = "alice") -> list[dict]:
     resp = client.post(
         "/v1/recall",
@@ -158,7 +183,7 @@ class TestTombstoneSubscriptionDelivery:
             mock_inst.post.return_value = mock_resp
             mock_cls.return_value = mock_inst
 
-            deliver_pending()
+            _drain_subscription_delivery()
 
             mock_inst.post.assert_not_called()
 
@@ -188,7 +213,7 @@ class TestTombstoneSubscriptionDelivery:
             mock_inst.post.return_value = mock_resp
             mock_cls.return_value = mock_inst
 
-            deliver_pending()
+            _drain_subscription_delivery()
 
             mock_inst.post.assert_called_once()
 
@@ -214,7 +239,7 @@ class TestTombstoneSubscriptionDelivery:
             mock_inst.post.return_value = mock_resp
             mock_cls.return_value = mock_inst
 
-            deliver_pending()
+            _drain_subscription_delivery()
 
             # Exactly one call — Bob's event; Alice's is suppressed
             assert mock_inst.post.call_count == 1
@@ -246,7 +271,7 @@ class TestTombstoneSubscriptionDelivery:
             mock_inst.post.return_value = mock_resp
             mock_cls.return_value = mock_inst
 
-            deliver_pending()
+            _drain_subscription_delivery()
 
             # Revocation → entity no longer tombstoned → webhook called
             mock_inst.post.assert_called_once()

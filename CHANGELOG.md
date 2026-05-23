@@ -42,6 +42,18 @@ opt-in, and operator-gated.
   subscription delivery/replay, and quarantine moderation. The feature supports
   and coexists with R-21 mitigation work but does not itself close
   same-session read/write graph isolation.
+- Documented Memory Garden ACL posture explicitly: default deployments enforce
+  direct `garden_id` read guards but do not filter tenant-wide queries, recall
+  ranking, push subscriptions, OIDC permission ceilings, or graph traversal
+  unless `stigmem-plugin-memory-garden-acl` is installed, registered, and the
+  per-surface enablement flags are set. `SECURITY.md`, quickstart, a startup
+  warning, and the `/v1/doctor` endpoint now surface the opt-in posture.
+- Plugin scaffold handlers in `stigmem-plugin-memory-garden-acl` now carry
+  docstrings explaining stub behavior, failure modes, and core fallback.
+- Quarantine moderator node-admin bypass is now documented in code and in the
+  Memory Garden advanced ACL feature security record.
+- Release signing key hygiene now excludes `stigmem-release-signing-key*.asc`
+  and private/secret signing-key `.asc` files from the repository.
 
 ## [0.9.0a5] — 2026-05-22
 

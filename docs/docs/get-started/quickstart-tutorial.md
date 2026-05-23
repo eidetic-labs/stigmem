@@ -67,6 +67,18 @@ what `make demo` does and how to drive it manually.
 
 No Python installation required — the nodes run in containers.
 
+:::caution Memory Garden ACL is opt-in in v0.9.0a6
+
+Default deployments enforce direct `garden_id` reads and writes, but
+tenant-wide fact queries, recall ranking, push subscriptions, OIDC permission
+ceilings, and graph traversal do not filter by garden membership unless
+`stigmem-plugin-memory-garden-acl` is installed, registered, and enabled with
+the relevant `STIGMEM_MEMORY_GARDEN_ACL_*` flags. Check `/v1/doctor` for the
+current `memory_garden_acl_filtering` state before relying on advanced garden
+filtering.
+
+:::
+
 ## Step 1 — Clone and start the stack
 
 ```bash

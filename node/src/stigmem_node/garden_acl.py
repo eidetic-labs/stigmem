@@ -110,7 +110,12 @@ def is_node_admin(identity: Identity) -> bool:
 def require_quarantine_moderator_or_admin(garden: dict[str, Any], identity: Identity) -> None:
     """Raise 403 if identity cannot promote/reject quarantined facts (spec §19.5.3).
 
-    Allowed roles: 'admin' or 'quarantine:moderator'.
+    This helper checks garden-scoped moderation roles only: 'admin' or
+    'quarantine:moderator' in the quarantine garden membership table.
+    Route-level callers intentionally allow node admins through before this
+    helper runs. Node-admin bypass is intentional because node admins are the
+    system's last-resort moderation authority; garden-scoped moderators must
+    still be members of the specific quarantine garden.
     """
     role = get_member_role(garden["id"], identity.entity_uri)
     if role not in ("admin", "quarantine:moderator"):

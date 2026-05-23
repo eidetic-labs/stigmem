@@ -161,7 +161,9 @@ def admit_fact(
 ) -> dict[str, Any]:
     """Promote a quarantined fact to the main fabric (or a specific target garden).
 
-    Requires quarantine:moderator or admin role in the fact's quarantine garden.
+    Node admins may admit quarantined facts as last-resort moderation
+    authority. Other callers require quarantine:moderator or admin role in the
+    fact's quarantine garden.
     """
     _require_write(identity)
 
@@ -236,7 +238,9 @@ def reject_fact(
     """Permanently reject a quarantined fact.
 
     Sets confidence = 0.0 and quarantine_status = 'rejected'.
-    Requires quarantine:moderator or admin role in the fact's quarantine garden.
+    Node admins may reject quarantined facts as last-resort moderation
+    authority. Other callers require quarantine:moderator or admin role in the
+    fact's quarantine garden.
     """
     _require_write(identity)
 
@@ -286,7 +290,10 @@ def _get_quarantined_fact(
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Return (fact_row, garden_row) for a pending quarantined fact.
 
-    Raises 404 or 409 as appropriate.  Checks moderator access.
+    Raises 404 or 409 as appropriate. Node-admin bypass is intentional because
+    node admins are the system's last-resort moderation authority. Garden-scoped
+    moderators must hold quarantine:moderator or admin role in the fact's
+    quarantine garden.
     """
     with db() as conn:
         row = conn.execute(

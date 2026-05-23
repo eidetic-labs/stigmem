@@ -22,7 +22,13 @@ def config_validate(_ctx: PluginContext, **_: Any) -> Allow | Deny:
 
 
 def pre_assert_validate(_ctx: PluginContext, **kwargs: Any) -> Allow | Deny:
-    """Gate source/identity binding behind explicit plugin configuration."""
+    """Gate source/identity binding behind explicit plugin configuration.
+
+    Returns Allow() when the plugin is disabled or assertion enforcement is not
+    enabled. When both gates are enabled, the handler rejects declared source
+    values that do not match the authenticated principal or its delegated
+    source-entity list.
+    """
 
     config = load_config_from_env()
     if not (config.enabled and config.enforce_assert_validation):
@@ -41,7 +47,12 @@ def pre_assert_validate(_ctx: PluginContext, **kwargs: Any) -> Allow | Deny:
 
 
 def recall_rank(_ctx: PluginContext, scored_results: list[Any], **kwargs: Any) -> dict[str, float]:
-    """Contribute source-trust score deltas only when explicitly enabled."""
+    """Contribute source-trust score deltas only when explicitly enabled.
+
+    Returns an empty delta map when the plugin is disabled, recall ranking is
+    not enabled, or the active recall weights set source_trust to zero. Only
+    enabled deployments add source-trust contribution to caller-owned scoring.
+    """
 
     config = load_config_from_env()
     if not (config.enabled and config.apply_recall_rank):
@@ -81,7 +92,13 @@ def recall_rank(_ctx: PluginContext, scored_results: list[Any], **kwargs: Any) -
 
 
 def federation_inbound_validate(_ctx: PluginContext, **kwargs: Any) -> Allow | Deny:
-    """Gate inbound source-attestation policy behind explicit plugin configuration."""
+    """Gate inbound source-attestation policy behind explicit plugin configuration.
+
+    Returns Allow() when the plugin is disabled or federation-inbound
+    enforcement is not enabled. When both gates are enabled, the handler
+    rejects federated facts whose normalized source does not match the peer
+    node identifier or capability-token subject.
+    """
 
     config = load_config_from_env()
     if not (config.enabled and config.enforce_federation_inbound):

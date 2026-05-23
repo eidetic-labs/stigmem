@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+import time
 import uuid
 from collections import Counter
 from datetime import UTC, datetime, timedelta
@@ -32,7 +33,7 @@ from fastapi.testclient import TestClient
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_mod
-from stigmem_node.subscription_delivery import deliver_pending, sweep_loop
+import stigmem_node.subscription_delivery as delivery_mod
 
 
 class _ThreadSafePost:
@@ -116,6 +117,54 @@ def _patched_http_mock() -> tuple[_ThreadSafeHTTPClientFactory, _ThreadSafeHTTPC
     return mock_cls, mock_inst
 
 
+def _force_retryable_subscription_remainder() -> dict[str, int]:
+    """Make unfinished delivery rows immediately claimable and return status counts."""
+    with db_mod.db() as conn:
+        conn.execute(
+            "UPDATE subscription_events SET next_retry_at = NULL"
+            " WHERE delivery_status = 'pending'"
+        )
+        conn.execute(
+            "UPDATE subscription_events SET claimed_at = ?"
+            " WHERE delivery_status = 'delivering'",
+            ((datetime.now(UTC) - timedelta(seconds=3600)).isoformat(),),
+        )
+        rows = conn.execute(
+            "SELECT delivery_status, COUNT(*) AS n FROM subscription_events"
+            " GROUP BY delivery_status"
+        ).fetchall()
+    return {row["delivery_status"]: row["n"] for row in rows}
+
+
+def _wait_for_delivery_lock_idle(timeout_s: float = 5.0) -> None:
+    """Wait until no concurrent delivery sweep owns the process-wide test lock."""
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        if delivery_mod._DELIVER_PENDING_LOCK.acquire(blocking=False):  # noqa: SLF001
+            delivery_mod._DELIVER_PENDING_LOCK.release()  # noqa: SLF001
+            return
+        time.sleep(0.01)
+    raise AssertionError("subscription delivery lock did not become idle")
+
+
+def _drain_subscription_delivery(expected_delivered: int, timeout_s: float = 5.0) -> dict[str, int]:
+    """Drive the production delivery path until all rows settle or fail clearly."""
+    deadline = time.monotonic() + timeout_s
+    status_counts: dict[str, int] = {}
+    while time.monotonic() < deadline:
+        status_counts = _force_retryable_subscription_remainder()
+        if (
+            status_counts.get("delivered", 0) == expected_delivered
+            and status_counts.get("delivering", 0) == 0
+            and status_counts.get("pending", 0) == 0
+        ):
+            return status_counts
+        _wait_for_delivery_lock_idle(timeout_s=max(0.1, deadline - time.monotonic()))
+        delivery_mod.deliver_pending()
+        time.sleep(0.01)
+    return _force_retryable_subscription_remainder()
+
+
 def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
     """Many threads racing on ``deliver_pending`` must not duplicate-deliver.
 
@@ -147,7 +196,7 @@ def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
     def worker() -> None:
         try:
             barrier.wait()  # release all threads simultaneously
-            deliver_pending()
+            delivery_mod.deliver_pending()
         except Exception as exc:
             with worker_errors_lock:
                 worker_errors.append(exc)
@@ -180,24 +229,7 @@ def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
         # recovery path before each drain pass. This keeps the test
         # deterministic under CI load while preserving the duplicate delivery
         # assertion: every POST is still recorded and checked below.
-        for _ in range(5):
-            with db_mod.db() as conn:
-                conn.execute(
-                    "UPDATE subscription_events SET next_retry_at = NULL"
-                    " WHERE delivery_status = 'pending'"
-                )
-                conn.execute(
-                    "UPDATE subscription_events SET claimed_at = ?"
-                    " WHERE delivery_status = 'delivering'",
-                    ((datetime.now(UTC) - timedelta(seconds=3600)).isoformat(),),
-                )
-                remaining = conn.execute(
-                    "SELECT COUNT(*) AS n FROM subscription_events"
-                    " WHERE delivery_status IN ('pending', 'delivering')"
-                ).fetchone()["n"]
-            if remaining == 0:
-                break
-            deliver_pending()
+        status_counts = _drain_subscription_delivery(expected_delivered=20)
 
     # Primary regression check: no event POSTed more than once during the race.
     racing_counts = Counter(racing_event_ids)
@@ -213,12 +245,6 @@ def test_concurrent_deliver_pending_no_duplicate(client: TestClient) -> None:
 
     # Every event must terminally settle.  Some may have been silently
     # delivered (ACL/sanitizer drop) — they still end in 'delivered' status.
-    with db_mod.db() as conn:
-        rows = conn.execute(
-            "SELECT delivery_status, COUNT(*) AS n FROM subscription_events"
-            " GROUP BY delivery_status"
-        ).fetchall()
-    status_counts = {r["delivery_status"]: r["n"] for r in rows}
     assert status_counts.get("delivered", 0) == 20, status_counts
     assert status_counts.get("delivering", 0) == 0, status_counts
     assert status_counts.get("pending", 0) == 0, status_counts
@@ -236,11 +262,11 @@ def test_sweep_loop_and_deliver_pending_no_duplicate(client: TestClient) -> None
         original_interval = settings_mod.settings.subscription_delivery_sweep_s
         settings_mod.settings.subscription_delivery_sweep_s = 0
         try:
-            task = asyncio.create_task(sweep_loop())
+            task = asyncio.create_task(delivery_mod.sweep_loop())
             # Race the loop against an explicit call.
             await asyncio.gather(
-                asyncio.to_thread(deliver_pending),
-                asyncio.to_thread(deliver_pending),
+                asyncio.to_thread(delivery_mod.deliver_pending),
+                asyncio.to_thread(delivery_mod.deliver_pending),
                 asyncio.sleep(0.05),
             )
             task.cancel()
@@ -282,7 +308,7 @@ def test_stale_claim_recovered(client: TestClient) -> None:
         original = settings_mod.settings.subscription_claim_timeout_s
         settings_mod.settings.subscription_claim_timeout_s = 60
         try:
-            deliver_pending()
+            delivery_mod.deliver_pending()
         finally:
             settings_mod.settings.subscription_claim_timeout_s = original
 
@@ -312,7 +338,7 @@ def test_claim_clears_after_failure_and_retry_is_pending(client: TestClient) -> 
     mock_cls = MagicMock(return_value=mock_inst)
 
     with patch("stigmem_node.subscription_delivery.httpx.Client", mock_cls):
-        deliver_pending()
+        delivery_mod.deliver_pending()
 
     with db_mod.db() as conn:
         row = conn.execute(

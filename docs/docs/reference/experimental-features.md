@@ -111,7 +111,7 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 <div>
 <dt>Source attestation · <a href="../spec/experimental/source-attestation.md">Spec-X6</a></dt>
 <dt><span className="stigmem-fields__type">extracted · ADR-008 blocked</span></dt>
-<dd>Default installs keep source-attestation behavior inert; plugin-loaded validation covers assertion mismatch, recall trust-rank contribution, federation inbound validation.</dd>
+<dd>Default installs keep source-attestation behavior inert; plugin-loaded validation covers assertion source checks, recall trust-rank contribution, and federation inbound guards without proving release provenance or locally re-attesting federated facts.</dd>
 </div>
 
 <div>

@@ -180,9 +180,11 @@ breaks provenance guarantees.
 
 </div>
 
-**Solution (pre-reset):** Source attestation binds the declared
-`source` to the caller's `entity_uri` registered on their API key at
-write time (§18.7). The `entity_uri` is immutable after key creation.
+**Current alpha solution:** Source attestation is owned by
+`stigmem-plugin-source-attestation`. When the plugin is registered and
+the assertion-validation gate is enabled, it validates the declared
+`source` against the caller's `entity_uri` plus any explicitly exposed
+delegation list.
 
 ```
 SourceAttestationMode = "enforce" | "warn" | "off"
@@ -199,13 +201,13 @@ SourceAttestationMode = "enforce" | "warn" | "off"
 <div>
 <dt><code>enforce</code></dt>
 <dt><span className="stigmem-fields__type">strict</span></dt>
-<dd>Node rejects any <code>POST /v1/facts</code> where <code>source ∉ {`{identity.entity_uri}`} ∪ identity.allowed_source_entities</code>. Returns HTTP 403 <code>source_attestation_failed</code>.</dd>
+<dd>Plugin-loaded deployments reject any <code>POST /v1/facts</code> where <code>source ∉ {`{identity.entity_uri}`} ∪ identity.allowed_source_entities</code>. Returns <code>source_attestation_failed</code>.</dd>
 </div>
 
 <div>
 <dt><code>warn</code></dt>
 <dt><span className="stigmem-fields__type">observed</span></dt>
-<dd>Node accepts the fact; logs a warning; sets <code>attested: false</code> on the stored record.</dd>
+<dd>Compatibility posture retained from the pre-reset design. Warn-mode persistence is not implemented by the current alpha plugin.</dd>
 </div>
 
 <div>
@@ -228,18 +230,19 @@ compatibility field. Nodes expose the configured compatibility value
 at `/.well-known/stigmem` as
 `"source_attestation": "enforce" | "warn" | "off"`.
 
-**Auth-disabled mode:** When `STIGMEM_AUTH_REQUIRED=false`, the
-caller identity is anonymous. Attestation cannot be performed;
-`attested` is `null` for all writes in this mode.
+**Auth-disabled mode:** When `STIGMEM_AUTH_REQUIRED=false`, the caller identity
+is anonymous. Source-attestation checks only run if the plugin is registered
+and the relevant gate is enabled; otherwise `attested` remains `null`.
 
-**Service agents writing on behalf of others:** Use
-`allowed_source_entities` (§18.9) to delegate specific source claims
-to an adapter key. This is the explicit delegation path — the
-pre-reset spec model does not support implicit delegation.
+**Service agents writing on behalf of others:** `allowed_source_entities`
+delegates specific source claims when that metadata is available on the
+resolved identity. Durable API-backed delegation-list persistence remains
+future hardening work.
 
-**Federated facts:** Source attestation is NOT re-applied to facts
-received via federation. The original `source` is preserved per
-§3.1. Federated facts MUST have `attested: null` on ingest.
+**Federated facts:** Source attestation is not re-applied to facts received via
+federation. The plugin can guard inbound peer/source consistency, but the
+original `source` is preserved per §3.1 and federated facts are not silently
+re-attested as local assertions.
 
 <details>
 <summary>Revisions before v1.0: the pre-reset spec-draft, pre-reset draft</summary>

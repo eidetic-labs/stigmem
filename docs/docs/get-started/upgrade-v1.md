@@ -81,9 +81,11 @@ a custom backend. See
 
 Source attestation remains experimental in the v0.9.0aN line
 (`Spec-X6-Source-Attestation`). Default installs keep
-source-attestation behavior off; runtime enforcement is moving behind
+source-attestation behavior off; runtime enforcement lives behind
 `stigmem-plugin-source-attestation` registration and explicit plugin
-configuration. See
+configuration. The current alpha plugin validates source claims and related
+recall/federation guards, but it does not prove release artifact provenance or
+mark accepted facts as locally re-attested. See
 [Source Attestation](https://github.com/eidetic-labs/stigmem/tree/main/experimental/source-attestation).
 
 ### Conformance test suite

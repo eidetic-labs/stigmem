@@ -232,18 +232,23 @@ A per-source score used to estimate how much weight to give facts from a particu
 
 ## Source Attestation {#source-attestation}
 
-The mechanism that binds a fact's declared `source` URI to the caller's authenticated `entity_uri` at write time.
+An opt-in plugin mechanism that validates a fact's declared `source` URI
+against the caller's authenticated `entity_uri` and explicit delegated source
+entities.
 
 <div className="stigmem-keypoint">
 
 **Without attestation, any authenticated principal could claim to be anyone by writing an arbitrary `source` value.**
 
-The node enforces attestation in one of three modes:
+The current alpha plugin keeps default installs inert. Plugin-loaded
+deployments can enforce source checks and contribute recall/federation guard
+behavior, but warn-mode persistence and `attested: true` marking are not
+implemented yet.
 
 <div className="stigmem-grid">
 
-<div><h4><code>enforce</code></h4><p>Reject mismatches.</p></div>
-<div><h4><code>warn</code></h4><p>Accept but flag with <code>attested: false</code>.</p></div>
+<div><h4><code>enforce</code></h4><p>Reject mismatches when the plugin gate is enabled.</p></div>
+<div><h4><code>warn</code></h4><p>Compatibility posture; persistence is not implemented in the alpha plugin.</p></div>
 <div><h4><code>off</code></h4><p>No check.</p></div>
 
 </div>

@@ -368,7 +368,7 @@ features:
     requires:
       node: ">=0.9.0a1"
       source_attestation_plugin: "source-only on main; no released artifact yet"
-    notes: "Extracted to experimental/source-attestation/ as an opt-in plugin source package. Default installs keep source-attestation behavior inert; explicit plugin registration plus source-attestation gates are required. Signed/package artifact evidence is deferred until all planned plugins are built."
+    notes: "Extracted to experimental/source-attestation/ as an opt-in plugin source package. Default installs keep source-attestation behavior inert; explicit plugin registration plus source-attestation gates are required. The alpha plugin validates source claims and recall/federation guards but does not prove release provenance or locally re-attest accepted facts."
 
   - id: subscriptions
     name: Subscriptions

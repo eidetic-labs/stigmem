@@ -29,6 +29,25 @@ removing the protections required for default garden use.
 | Scope mismatch and missing garden failures | Core | `node/tests/routes/test_gardens.py::TestGardenFactACL`; `node/tests/conformance/test_conformance_v1.py::TestGardenFactACLConformance` |
 | Quarantine-garden promote/reject and `quarantine:moderator` role checks | Core under Spec-08, not Memory Garden advanced ACL plugin behavior | `node/tests/routes/test_quarantine.py` |
 
+## v0.9.0a6 Plugin Boundary Validation
+
+The advanced ACL package remains opt-in. Registration alone is not sufficient
+to activate advanced behavior; the operator must also set
+`STIGMEM_MEMORY_GARDEN_ACL_ENABLED=true` and the specific gate for the behavior
+being enabled.
+
+| Plugin behavior | Disposition | Evidence |
+| --- | --- | --- |
+| Package metadata and `stigmem.plugins` entry point | Opt-in plugin package | `node/tests/plugins/test_memory_garden_acl_plugin_scaffold.py::test_pyproject_declares_stigmem_plugin_entry_point` |
+| Manifest name, version, capabilities, hooks, config schema, and no route mounts | Advanced ACL plugin boundary | `node/tests/plugins/test_memory_garden_acl_plugin_scaffold.py::test_manifest_declares_expected_boundary` |
+| Default config disables all advanced ACL gates | Fail-closed default | `node/tests/plugins/test_memory_garden_acl_plugin_scaffold.py::test_default_config_keeps_behavior_disabled` |
+| Environment config loads explicit operator gates | Operator opt-in | `node/tests/plugins/test_memory_garden_acl_plugin_scaffold.py::test_config_loads_environment_gates` |
+| Hook registration, health, and no-op handler behavior | Registered plugin remains allow/no-op until policy is configured | `node/tests/plugins/test_memory_garden_acl_plugin_scaffold.py::test_manifest_registers_with_hook_registry` |
+| Handler ordering for assertion authorization, recall authorization, and recall filtering | Deterministic plugin/core ordering | `node/tests/plugins/test_memory_garden_acl_plugin_scaffold.py::test_memory_garden_acl_plugin_hook_order_is_deterministic`; `node/tests/plugins/test_memory_garden_acl_plugin_validation.py::test_memory_garden_acl_hook_ordering_is_deterministic` |
+| Advanced OIDC and recall gates require plugin registration and global enablement | No default-install activation | `node/tests/plugins/test_memory_garden_acl_plugin_validation.py::test_advanced_acl_gates_require_plugin_registration`; `node/tests/plugins/test_memory_garden_acl_plugin_validation.py::test_advanced_acl_gates_require_global_enable` |
+| Recall filtering activates only with plugin and recall-filter gate | Plugin-loaded advanced behavior | `node/tests/routes/test_gardens.py::TestGardenFactACL::test_plugin_global_query_hides_garden_facts` |
+| Default global queries do not apply advanced garden filtering | Default install no-op | `node/tests/routes/test_gardens.py::TestGardenFactACL::test_default_global_query_does_not_apply_advanced_garden_filter` |
+
 ## Tests and Validators
 
 | Check | Path or command | Coverage |
@@ -40,6 +59,7 @@ removing the protections required for default garden use.
 | Protocol conformance | `node/tests/conformance/test_conformance_v1.py` | Garden setup and member/non-member access conformance. |
 | Fast gate | `bash scripts/check.sh python` | Python lint, type, tests, and security bundle. |
 | a6 focused core boundary gate | `uv run pytest node/tests/routes/test_gardens.py node/tests/routes/test_quarantine.py node/tests/conformance/test_conformance_v1.py` | 114 passed on 2026-05-23. |
+| a6 focused plugin boundary gate | `uv run pytest node/tests/plugins/test_memory_garden_acl_plugin_scaffold.py node/tests/plugins/test_memory_garden_acl_plugin_validation.py node/tests/routes/test_gardens.py::TestGardenFactACL::test_default_global_query_does_not_apply_advanced_garden_filter node/tests/routes/test_gardens.py::TestGardenFactACL::test_plugin_global_query_hides_garden_facts` | 13 passed on 2026-05-23. |
 
 ## Coverage Gaps
 

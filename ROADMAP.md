@@ -2,7 +2,7 @@
 
 > Public roadmap for stigmem. Milestone-gated, not time-gated — version lines complete when their exit criteria are met.
 >
-> **Current published build:** v0.9.0a5. **Active release horizon:** v0.9.0a6 only (per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
+> **Current published build:** v0.9.0a6. **Active release horizon:** v0.9.0a7 only (per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
 > **Last updated:** 2026-05-23.
 
 ---
@@ -35,18 +35,18 @@ The work is organized into sequential version lines per [ADR-019](docs/adr/019-a
 
 ## Current Strategic Horizon
 
-`v0.9.0a5` shipped the RTBF tombstone extraction validation release: tombstone
-routes and filters stay opt-in behind `stigmem-plugin-tombstones`, default
-installs do not expose tombstone behavior without plugin registration, and
-release evidence proves the boundary. The detailed release record lives in
-[`docs/internal/releases/v0.9.0a5-roadmap.md`](docs/internal/releases/v0.9.0a5-roadmap.md).
-
-`v0.9.0a6` is the active release horizon. It validates the Memory Garden
-advanced ACL plugin boundary: basic garden CRUD, membership, and direct
-`garden_id` fact guards remain core, while advanced cross-surface ACL behavior
-stays opt-in behind `stigmem-plugin-memory-garden-acl`. The detailed release
-contract lives in
+`v0.9.0a6` shipped the Memory Garden advanced ACL validation release: basic
+garden CRUD, membership, and direct `garden_id` fact guards remain core, while
+advanced cross-surface ACL behavior stays opt-in behind
+`stigmem-plugin-memory-garden-acl`. The detailed release record lives in
 [`docs/internal/releases/v0.9.0a6-roadmap.md`](docs/internal/releases/v0.9.0a6-roadmap.md).
+
+`v0.9.0a7` is the active release horizon. It validates the source-attestation
+plugin boundary: default installs do not enforce source-identity binding,
+while plugin-loaded deployments can opt into assertion validation, recall
+ranking signals, and federation inbound validation through
+`stigmem-plugin-source-attestation`. The detailed release contract lives in
+[`docs/internal/releases/v0.9.0a7-roadmap.md`](docs/internal/releases/v0.9.0a7-roadmap.md).
 
 The broader alpha deployment sequence remains intact. The detailed alpha-series
 phase plan, including the `v0.9.0a4` through `v0.9.0a8` planned extraction
@@ -58,8 +58,8 @@ horizons and Phase A exit evidence, lives in
 | `v0.9.0a3` | CID core/spec validation and the next alpha artifact refresh. | Shipped |
 | `v0.9.0a4` | Time-travel query extraction into an opt-in experimental plugin; default `as_of` behavior fails closed without plugin registration. | Shipped |
 | `v0.9.0a5` | RTBF tombstone extraction into an opt-in experimental plugin; default routes and filters require plugin registration. | Shipped |
-| `v0.9.0a6` | Memory Garden advanced ACL extraction into an opt-in experimental plugin; basic garden CRUD and direct guards remain core. | Active |
-| `v0.9.0a7` | Source-attestation extraction into an opt-in experimental plugin. | Planned, not open |
+| `v0.9.0a6` | Memory Garden advanced ACL extraction into an opt-in experimental plugin; basic garden CRUD and direct guards remain core. | Shipped |
+| `v0.9.0a7` | Source-attestation extraction into an opt-in experimental plugin; default source binding remains inert without plugin registration. | Active |
 | `v0.9.0a8` | Multi-tenant isolation extraction into an opt-in experimental plugin, completing the planned alpha extraction train. | Planned, not open |
 
 ---

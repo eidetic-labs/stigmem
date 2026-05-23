@@ -57,6 +57,34 @@ def default_two_tenants(tmp_path: object) -> Generator[tuple[TestClient, str, st
 
 
 @pytest.fixture()
+def default_two_tenants_with_gate(
+    tmp_path: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[tuple[TestClient, str, str], None, None]:
+    """Single DB with the env gate enabled but no multi-tenant plugin."""
+    db_file = str(tmp_path) + "/mt-default-gate.db"  # type: ignore[operator]
+    apply_migrations(db_path=db_file)
+
+    original = settings_module.settings
+    test_settings = Settings(db_path=db_file, auth_required=True, node_url="http://testnode")
+    settings_module.settings = test_settings
+    auth_mod.settings = test_settings
+    db_mod.settings = test_settings
+
+    key_a = create_api_key("agent:alice", ["read", "write"], tenant_id="tenant-a")
+    key_b = create_api_key("agent:bob", ["read", "write"], tenant_id="tenant-b")
+
+    monkeypatch.setenv("STIGMEM_MULTI_TENANT_ENABLED", "true")
+    app = create_app()
+    with TestClient(app, raise_server_exceptions=True) as c:
+        yield c, key_a, key_b
+
+    settings_module.settings = original
+    auth_mod.settings = original
+    db_mod.settings = original
+
+
+@pytest.fixture()
 def two_tenants(
     tmp_path: object,
     monkeypatch: pytest.MonkeyPatch,
@@ -117,6 +145,46 @@ def test_default_install_collapses_non_default_tenant_keys(
         client.get(f"/v1/facts/{fact_id}", headers={"Authorization": f"Bearer {key_b}"}).status_code
         == 200
     )
+
+
+def test_default_install_ignores_multi_tenant_environment_gate(
+    default_two_tenants_with_gate: tuple,
+) -> None:
+    """The env gate cannot enable non-default tenant resolution by itself."""
+    client, key_a, key_b = default_two_tenants_with_gate
+
+    me_a = client.get("/v1/me", headers={"Authorization": f"Bearer {key_a}"})
+    me_b = client.get("/v1/me", headers={"Authorization": f"Bearer {key_b}"})
+
+    assert me_a.status_code == 200
+    assert me_b.status_code == 200
+    assert me_a.json()["tenant_id"] == "default"
+    assert me_b.json()["tenant_id"] == "default"
+
+
+def test_default_install_query_uses_single_default_partition(
+    default_two_tenants: tuple,
+) -> None:
+    """Without the plugin, a non-default key does not create a private partition."""
+    client, key_a, key_b = default_two_tenants
+
+    resp = client.post(
+        "/v1/facts",
+        json={
+            "entity": "stigmem://test/default-partition",
+            "relation": "test:visible",
+            "value": {"type": "string", "v": "shared-default"},
+            "source": "agent:alice",
+        },
+        headers={"Authorization": f"Bearer {key_a}"},
+    )
+    assert resp.status_code == 201
+
+    query = client.get("/v1/facts", headers={"Authorization": f"Bearer {key_b}"})
+
+    assert query.status_code == 200
+    values = {fact["value"]["v"] for fact in query.json()["facts"]}
+    assert values == {"shared-default"}
 
 
 def test_tenant_a_fact_invisible_to_tenant_b(two_tenants: tuple) -> None:
@@ -210,6 +278,31 @@ def test_tenants_see_only_their_own_facts(two_tenants: tuple) -> None:
 # ---------------------------------------------------------------------------
 
 
+def test_default_install_uses_one_garden_namespace(
+    default_two_tenants: tuple,
+) -> None:
+    """Without the plugin, non-default keys share the default garden namespace."""
+    client, key_a, key_b = default_two_tenants
+
+    resp = client.post(
+        "/v1/gardens",
+        json={"slug": "shared-default-garden", "name": "Shared Default", "scope": "company"},
+        headers={"Authorization": f"Bearer {key_a}"},
+    )
+    assert resp.status_code == 201
+
+    list_resp = client.get("/v1/gardens", headers={"Authorization": f"Bearer {key_b}"})
+    get_resp = client.get(
+        "/v1/gardens/shared-default-garden",
+        headers={"Authorization": f"Bearer {key_b}"},
+    )
+
+    assert list_resp.status_code == 200
+    assert [garden["slug"] for garden in list_resp.json()] == ["shared-default-garden"]
+    assert get_resp.status_code == 200
+    assert get_resp.json()["name"] == "Shared Default"
+
+
 def test_garden_invisible_cross_tenant(two_tenants: tuple) -> None:
     """Tenant B cannot see Tenant A's garden by slug or in listing."""
     client, key_a, key_b = two_tenants
@@ -287,6 +380,27 @@ def test_tenant_a_cannot_write_to_tenant_b_garden(two_tenants: tuple) -> None:
 # ---------------------------------------------------------------------------
 # Audit isolation
 # ---------------------------------------------------------------------------
+
+
+def test_default_install_uses_one_audit_partition(default_two_tenants: tuple) -> None:
+    """Without the plugin, audit entries are visible within the default tenant."""
+    client, key_a, key_b = default_two_tenants
+
+    client.post(
+        "/v1/facts",
+        json={
+            "entity": "stigmem://test/default-audit",
+            "relation": "test:audit",
+            "value": {"type": "string", "v": "shared"},
+            "source": "agent:alice",
+        },
+        headers={"Authorization": f"Bearer {key_a}"},
+    )
+
+    resp_b = client.get("/v1/audit", headers={"Authorization": f"Bearer {key_b}"})
+
+    assert resp_b.status_code == 200
+    assert len(resp_b.json()["entries"]) == 1
 
 
 def test_audit_scoped_by_tenant(two_tenants: tuple) -> None:

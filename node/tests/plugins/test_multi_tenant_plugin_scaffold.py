@@ -13,6 +13,7 @@ import stigmem_node.plugins.discovery as discovery
 from stigmem_node.auth import Identity
 from stigmem_node.plugins import (
     ENTRY_POINT_GROUP,
+    Allow,
     HookRegistry,
     PluginHealthStatus,
     PluginManifest,
@@ -133,6 +134,59 @@ def test_tenant_resolve_uses_identity_tenant_when_enabled(
 
     assert tenant.tenant_id == "tenant-a"
     assert tenant.metadata["resolved_by"] == PLUGIN_NAME
+
+
+def test_tenant_resolve_falls_back_to_source_tenant_metadata_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_MULTI_TENANT_ENABLED", "true")
+    manifest = plugin_manifest()
+    registry = HookRegistry()
+    registry.register_plugin(manifest)
+
+    tenant = registry.fire_filter_chain(
+        "tenant_resolve",
+        TenantContext(tenant_id="default", metadata={"source_tenant_id": "tenant-from-key"}),
+        identity=object(),
+    )
+
+    assert tenant.tenant_id == "tenant-from-key"
+    assert tenant.metadata["resolved_by"] == PLUGIN_NAME
+
+
+def test_authorization_hooks_return_allow_decisions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_MULTI_TENANT_ENABLED", "true")
+    manifest = plugin_manifest()
+    registry = HookRegistry()
+    registry.register_plugin(manifest)
+
+    assert isinstance(registry.fire_voting("pre_assert_authorize"), Allow)
+    assert isinstance(registry.fire_voting("pre_recall_authorize"), Allow)
+
+
+def test_pass_through_filter_hooks_preserve_payload_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_MULTI_TENANT_ENABLED", "true")
+    manifest = plugin_manifest()
+    registry = HookRegistry()
+    registry.register_plugin(manifest)
+
+    recall_payload = [{"fact_id": "f1"}]
+    federation_payload = {"facts": [{"id": "f1"}]}
+    migrations_payload = ("core-migration",)
+
+    assert registry.fire_filter_chain("recall_filter", recall_payload) is recall_payload
+    assert (
+        registry.fire_filter_chain("federation_outbound_filter", federation_payload)
+        is federation_payload
+    )
+    assert (
+        registry.fire_filter_chain("migration_register", migrations_payload)
+        is migrations_payload
+    )
 
 
 def test_health_check_reports_healthy() -> None:

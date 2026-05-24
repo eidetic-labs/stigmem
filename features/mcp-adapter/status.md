@@ -8,12 +8,14 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` |
 | Default surface | `external` |
-| Publication state | `hold` - package metadata and live protocol smoke are aligned; host UI smoke, security certification, dry-run evidence, and maintainer publication clearance remain incomplete. |
+| Publication state | `hold` - package metadata, live protocol smoke, and repo-local adapter security regressions are aligned; host UI smoke, dry-run evidence, and maintainer publication clearance remain incomplete. |
 
 The MCP adapter source exists under `adapters/mcp` and includes TypeScript unit
 tests. The package metadata is aligned to the current alpha release line, and
-the repo-local stdio smoke now validates against a live node. Publication still
-requires host UI smoke, security, dry-run, and maintainer clearance validation.
+the repo-local stdio smoke now validates against a live node. Focused adapter
+security regressions cover recall framing, malformed write rejection, and
+credential/session boundaries. Publication still requires host UI smoke,
+dry-run, and maintainer clearance validation.
 
 ## Release History
 
@@ -30,15 +32,16 @@ requires host UI smoke, security, dry-run, and maintainer clearance validation.
 | Unit coverage | Cover tool registration, argument coercion, session propagation, and recall channel output. | Complete for current adapter logic | `adapters/mcp/src/server.test.ts` |
 | Connector docs | Provide host-specific setup guidance. | Partial; repo-local smoke validated, host UI launches still open | `experimental/mcp-adapter/`; `adapters/mcp/tests/smoke.sh` |
 | Package alignment | Align package metadata and release artifact policy with the active release line. | Complete for metadata; publication still held | `adapters/mcp/package.json`; `release/version-surfaces.yaml`; `docs/compatibility-matrix.yaml` |
-| Security certification | Validate recall rendering, instruction separation, and write-surface abuse cases. | Open | `features/mcp-adapter/security.md`; `docs/docs/security/model-certification.md` |
+| Security certification | Validate recall rendering, instruction separation, and write-surface abuse cases. | Complete for repo-local adapter framing; live model certification remains separate | `features/mcp-adapter/security.md`; `adapters/mcp/src/server.test.ts`; `docs/docs/security/model-certification.md` |
 | Documentation parity | Replace legacy experimental docs with feature-owned record plus projections. | In progress | This feature record. |
 
 ## Known Gaps
 
 - Host connector guides need UI-level verification in Codex CLI, Continue.dev,
   Cursor, and Zed before promotion.
-- Live adapter/model certification is still required for prompt-injection and
-  instruction-channel risks.
+- Live model certification remains required for provider/model behavior under
+  ADR-015; adapter framing regression coverage is complete for the current
+  tool surface.
 - Smoke testing depends on a running Stigmem node and host-specific MCP config.
 - Registry publication remains blocked until dry-run evidence and maintainer
   clearance are recorded.

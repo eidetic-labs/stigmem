@@ -19,7 +19,7 @@
     "start": "node dist/server.js",
     "dev": "tsx src/server.ts",
     "type-check": "tsc --noEmit",
-    "test": "vitest run --exclude dist/**"
+    "test": "vitest run src/server.test.ts"
   },
   "license": "Apache-2.0",
   "author": "Eidetic Labs <oss@eidetic-labs.ai>",

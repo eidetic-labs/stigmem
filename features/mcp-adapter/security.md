@@ -25,8 +25,9 @@ security posture.
 - Tool calls that write facts depend on the node's auth, quota, audit, and
   scope enforcement. The adapter does not add an independent authorization
   layer.
-- Package-version alignment is not complete, so consumers should pin the
-  adapter version and treat the package as experimental.
+- Package metadata is aligned for publication readiness, but registry
+  publication remains held until live connector smoke, adapter security
+  certification, dry-run evidence, and maintainer clearance are complete.
 
 ## Advisories and Findings
 

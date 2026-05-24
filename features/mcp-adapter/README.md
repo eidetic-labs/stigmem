@@ -30,9 +30,10 @@ for agent hosts such as Claude Code, Codex CLI, Cursor, Zed, and Continue.dev.
 It is a stateless TypeScript adapter that translates MCP tool calls into HTTP
 requests against the configured node.
 
-The adapter source is active and tested, but the `stigmem-mcp` package version
-remains independent from the alpha artifact set. Release-line alignment and
-promotion depend on adapter security, packaging, and host-connector validation.
+The adapter source is active and tested. The `stigmem-mcp` package metadata is
+aligned to the current alpha release line for publication readiness, but
+registry publication remains held pending live host-connector smoke, adapter
+security certification, dry-run evidence, and explicit maintainer clearance.
 
 ## Current State
 

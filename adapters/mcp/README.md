@@ -30,6 +30,11 @@ pnpm install
 pnpm build
 ```
 
+The package metadata is aligned to `0.9.0-alpha.8` for publication readiness,
+but registry publication is still held. Use the workspace build until the
+feature record records live connector smoke, security certification, dry-run
+evidence, and explicit maintainer clearance.
+
 ### Configure in Claude Code
 
 Add to `.claude/mcp_servers.json` (or the global MCP config):

@@ -8,11 +8,12 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` |
 | Default surface | `external` |
-| Publication state | `hold` - implementation and tests exist, but release-line package alignment, host smoke, and security certification remain incomplete. |
+| Publication state | `hold` - package metadata aligned; host smoke, security certification, dry-run evidence, and maintainer publication clearance remain incomplete. |
 
 The MCP adapter source exists under `adapters/mcp` and includes TypeScript unit
-tests. The package version remains independent from the alpha artifact set, so
-release-line promotion requires packaging, connector, and security validation.
+tests. The package metadata is aligned to the current alpha release line, but
+publication still requires connector, security, dry-run, and maintainer
+clearance validation.
 
 ## Release History
 
@@ -28,15 +29,15 @@ release-line promotion requires packaging, connector, and security validation.
 | Tool surface | Expose node operations through MCP tools. | Partial | `adapters/mcp/src/server.ts`; `adapters/mcp/README.md` |
 | Unit coverage | Cover tool registration, argument coercion, session propagation, and recall channel output. | Partial | `adapters/mcp/src/server.test.ts` |
 | Connector docs | Provide host-specific setup guidance. | Partial | `experimental/mcp-adapter/` |
-| Package alignment | Align package metadata and release artifact policy with the active release line. | Open | `adapters/mcp/package.json`; `docs/compatibility-matrix.yaml` |
+| Package alignment | Align package metadata and release artifact policy with the active release line. | Complete for metadata; publication still held | `adapters/mcp/package.json`; `release/version-surfaces.yaml`; `docs/compatibility-matrix.yaml` |
 | Security certification | Validate recall rendering, instruction separation, and write-surface abuse cases. | Open | `features/mcp-adapter/security.md`; `docs/docs/security/model-certification.md` |
 | Documentation parity | Replace legacy experimental docs with feature-owned record plus projections. | In progress | This feature record. |
 
 ## Known Gaps
 
-- `stigmem-mcp` package metadata remains independent from the current alpha
-  artifact set.
 - Host connector guides need release-line verification before promotion.
 - Live adapter/model certification is still required for prompt-injection and
   instruction-channel risks.
 - Smoke testing depends on a running Stigmem node and host-specific MCP config.
+- Registry publication remains blocked until dry-run evidence and maintainer
+  clearance are recorded.

@@ -70,8 +70,8 @@ This page renders the YAML as human-readable tables.
 
 <div>
 <dt><code>stigmem-mcp</code> (adapter)</dt>
-<dt><span className="stigmem-fields__type">deferred at 0.4.0</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter"><code>features/mcp-adapter/</code></a>; package alignment remains future alpha work.</dd>
+<dt><span className="stigmem-fields__type">held at 0.9.0-alpha.8</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter"><code>features/mcp-adapter/</code></a>; package metadata is aligned, but publication remains held pending live connector smoke and security certification.</dd>
 </div>
 
 </div>

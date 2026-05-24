@@ -8,6 +8,7 @@
 | `adapters/mcp/package.json` | Package metadata, runtime dependencies, and test/build scripts. |
 | `adapters/mcp/README.md` | Adapter setup, tool list, environment variables, and protocol notes. |
 | `adapters/mcp/tests/smoke.sh` | Node-backed smoke-test entry point. |
+| `release/version-surfaces.yaml` | Version-consistency registration for `adapters/mcp/package.json`. |
 
 ## Tests
 
@@ -16,6 +17,9 @@
 | `adapters/mcp/src/server.test.ts` | Tool registration, JSON argument coercion, session propagation, recall channel separation, lint calls, and error reporting. |
 | `pnpm --filter "./adapters/mcp" test` | Package-local Vitest entry point. |
 | `pnpm --filter "./adapters/mcp" type-check` | TypeScript type-check entry point. |
+| `pnpm --filter "./adapters/mcp" build` | TypeScript build for the package runtime entry point. |
+| `npm pack --dry-run --json` from `adapters/mcp/` | Package file allowlist and registry metadata dry-run; current package contains `README.md`, `dist/server.js`, `dist/server.js.map`, `dist/server.d.ts`, and `package.json`. |
+| `python3 scripts/check_version_consistency.py` | Confirms `stigmem-mcp` package metadata is aligned with the active release line. |
 
 ## Connector Docs
 
@@ -39,7 +43,6 @@
 
 ## Evidence Gaps
 
-- Release-line package alignment and artifact publication evidence are not
-  complete.
+- Package metadata is aligned; artifact publication evidence is not complete.
 - Host-specific connector guides need fresh smoke evidence.
 - Live model/adapter certification evidence is still required before promotion.

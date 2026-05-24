@@ -1,7 +1,7 @@
 {
   "name": "stigmem-mcp",
   "version": "0.9.0-alpha.8",
-  "description": "MCP server for Stigmem — exposes assert_fact, query_facts, recall, resolve_contradiction, subscribe_scope",
+  "description": "MCP server for Stigmem — exposes assert_fact, query_facts, recall, resolve_contradiction, subscribe_scope, and lint_scope",
   "type": "module",
   "bin": {
     "stigmem-mcp": "./dist/server.js"

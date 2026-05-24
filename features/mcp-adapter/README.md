@@ -31,9 +31,10 @@ It is a stateless TypeScript adapter that translates MCP tool calls into HTTP
 requests against the configured node.
 
 The adapter source is active and tested. The `stigmem-mcp` package metadata is
-aligned to the current alpha release line for publication readiness, but
-registry publication remains held pending live host-connector smoke, adapter
-security certification, dry-run evidence, and explicit maintainer clearance.
+aligned to the current alpha release line for publication readiness, and
+repo-local MCP protocol smoke passes against a live node. Registry publication
+remains held pending host UI smoke, adapter security certification, dry-run
+evidence, and explicit maintainer clearance.
 
 ## Current State
 

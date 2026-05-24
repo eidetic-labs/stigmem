@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Expanded the MCP live-node smoke to validate `recall`, `lint_scope`, canonical
+  smoke URIs, session-aware calls, six-tool discovery, and the package-aligned
+  server version reported during MCP initialization.
 - Aligned `stigmem-mcp` package metadata to the current alpha release line for
   publication readiness while keeping registry publication held pending live
   connector smoke, security certification, dry-run evidence, and maintainer

@@ -8,12 +8,12 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` |
 | Default surface | `external` |
-| Publication state | `hold` - package metadata aligned; host smoke, security certification, dry-run evidence, and maintainer publication clearance remain incomplete. |
+| Publication state | `hold` - package metadata and live protocol smoke are aligned; host UI smoke, security certification, dry-run evidence, and maintainer publication clearance remain incomplete. |
 
 The MCP adapter source exists under `adapters/mcp` and includes TypeScript unit
-tests. The package metadata is aligned to the current alpha release line, but
-publication still requires connector, security, dry-run, and maintainer
-clearance validation.
+tests. The package metadata is aligned to the current alpha release line, and
+the repo-local stdio smoke now validates against a live node. Publication still
+requires host UI smoke, security, dry-run, and maintainer clearance validation.
 
 ## Release History
 
@@ -26,16 +26,17 @@ clearance validation.
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| Tool surface | Expose node operations through MCP tools. | Partial | `adapters/mcp/src/server.ts`; `adapters/mcp/README.md` |
-| Unit coverage | Cover tool registration, argument coercion, session propagation, and recall channel output. | Partial | `adapters/mcp/src/server.test.ts` |
-| Connector docs | Provide host-specific setup guidance. | Partial | `experimental/mcp-adapter/` |
+| Tool surface | Expose node operations through MCP tools. | Complete for current six-tool surface | `adapters/mcp/src/server.ts`; `adapters/mcp/README.md`; `adapters/mcp/tests/smoke.sh` |
+| Unit coverage | Cover tool registration, argument coercion, session propagation, and recall channel output. | Complete for current adapter logic | `adapters/mcp/src/server.test.ts` |
+| Connector docs | Provide host-specific setup guidance. | Partial; repo-local smoke validated, host UI launches still open | `experimental/mcp-adapter/`; `adapters/mcp/tests/smoke.sh` |
 | Package alignment | Align package metadata and release artifact policy with the active release line. | Complete for metadata; publication still held | `adapters/mcp/package.json`; `release/version-surfaces.yaml`; `docs/compatibility-matrix.yaml` |
 | Security certification | Validate recall rendering, instruction separation, and write-surface abuse cases. | Open | `features/mcp-adapter/security.md`; `docs/docs/security/model-certification.md` |
 | Documentation parity | Replace legacy experimental docs with feature-owned record plus projections. | In progress | This feature record. |
 
 ## Known Gaps
 
-- Host connector guides need release-line verification before promotion.
+- Host connector guides need UI-level verification in Codex CLI, Continue.dev,
+  Cursor, and Zed before promotion.
 - Live adapter/model certification is still required for prompt-injection and
   instruction-channel risks.
 - Smoke testing depends on a running Stigmem node and host-specific MCP config.

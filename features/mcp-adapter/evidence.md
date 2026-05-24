@@ -20,6 +20,8 @@
 | `pnpm --filter "./adapters/mcp" build` | TypeScript build for the package runtime entry point. |
 | `npm pack --dry-run --json` from `adapters/mcp/` | Package file allowlist and registry metadata dry-run; current package contains `README.md`, `dist/server.js`, `dist/server.js.map`, `dist/server.d.ts`, and `package.json`. |
 | `python3 scripts/check_version_consistency.py` | Confirms `stigmem-mcp` package metadata is aligned with the active release line. |
+| `STIGMEM_AUTH_REQUIRED=false STIGMEM_DB_PATH=/private/tmp/stigmem-mcp-smoke-final.db STIGMEM_PORT=8765 uv run python -c 'from stigmem_node.main import run; run()'` | Starts a local unauthenticated loopback node for live MCP smoke validation. |
+| `STIGMEM_URL=http://localhost:8765 bash adapters/mcp/tests/smoke.sh` | Live MCP protocol smoke passed against a local node: initialize, six-tool discovery, `assert_fact`, `query_facts`, `recall`, `lint_scope`, and session-aware calls. |
 
 ## Connector Docs
 
@@ -43,6 +45,6 @@
 
 ## Evidence Gaps
 
-- Package metadata is aligned; artifact publication evidence is not complete.
-- Host-specific connector guides need fresh smoke evidence.
+- Package metadata and live protocol smoke are aligned; artifact publication evidence is not complete.
+- Host-specific connector guides have been reviewed against the local stdio smoke path, but Codex CLI, Continue.dev, Cursor, and Zed UI-level launches are not validated in this repo-local run.
 - Live model/adapter certification evidence is still required before promotion.

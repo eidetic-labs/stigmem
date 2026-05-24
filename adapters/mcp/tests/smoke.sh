@@ -2,7 +2,7 @@
 # stigmem/adapters/mcp/tests/smoke.sh
 #
 # MCP server smoke test — exercises the full JSON-RPC protocol end-to-end:
-#   initialize → tools/list → tools/call assert_fact → tools/call query_facts
+#   initialize → tools/list → assert_fact → query_facts → recall → lint_scope
 #
 # Usage:
 #   cd stigmem          (or any directory — script resolves paths relative to itself)
@@ -11,6 +11,7 @@
 # Environment overrides:
 #   STIGMEM_URL        Base URL of a live node (default: http://localhost:8765)
 #   STIGMEM_API_KEY    API key (optional; omit for unauthenticated nodes)
+#   STIGMEM_SESSION_ID Session id propagated by the adapter (default: generated smoke id)
 #   KEEP_SERVER        Set to 1 to leave the server process running after the test
 
 set -euo pipefail
@@ -20,6 +21,7 @@ MCP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SERVER_JS="$MCP_DIR/dist/server.js"
 
 STIGMEM_URL="${STIGMEM_URL:-http://localhost:8765}"
+STIGMEM_SESSION_ID="${STIGMEM_SESSION_ID:-mcp:smoke-$(date +%s)-$$}"
 KEEP_SERVER="${KEEP_SERVER:-0}"
 SERVER_PID=""
 REQ_FIFO=""
@@ -58,7 +60,7 @@ RESP_FIFO=$(mktemp -t stigmem-mcp-resp.XXXXXX)
 rm "$REQ_FIFO" "$RESP_FIFO"
 mkfifo "$REQ_FIFO" "$RESP_FIFO"
 
-ENV_VARS=("STIGMEM_URL=$STIGMEM_URL")
+ENV_VARS=("STIGMEM_URL=$STIGMEM_URL" "STIGMEM_SESSION_ID=$STIGMEM_SESSION_ID")
 if [[ -n "${STIGMEM_API_KEY:-}" ]]; then
   ENV_VARS+=("STIGMEM_API_KEY=$STIGMEM_API_KEY")
 fi
@@ -88,6 +90,16 @@ read_response() {
     fail "Timed out waiting for MCP response"
   fi
   echo "$line"
+}
+
+extract_text_payload() {
+  python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+content = d.get('result', {}).get('content', [])
+assert content, f'empty content: {d}'
+print(content[0]['text'])
+"
 }
 
 # ---- step 2: initialize --------------------------------------------------------
@@ -133,7 +145,9 @@ ok "$TOOLS_SUMMARY"
 
 log "Step 4 — tools/call assert_fact (write a smoke-test fact)"
 
-RUN_ID="$(date +%s)"
+RUN_ID="$(date +%s)-$$"
+SMOKE_ENTITY="stigmem://smoke-test/fact/zed-e2e-$RUN_ID"
+SMOKE_SOURCE="stigmem://smoke-test/agent/smoke-test"
 ASSERT_CALL=$(python3 -c "
 import json
 msg = {
@@ -143,12 +157,13 @@ msg = {
   'params': {
     'name': 'assert_fact',
     'arguments': {
-      'entity': 'smoke-test:zed-e2e-$RUN_ID',
+      'entity': '$SMOKE_ENTITY',
       'relation': 'smoke:status',
       'value': {'type': 'string', 'v': 'zed-smoke-ok'},
-      'source': 'agent:smoke-test',
+      'source': '$SMOKE_SOURCE',
       'confidence': 1.0,
-      'scope': 'local'
+      'scope': 'local',
+      'session_id': '$STIGMEM_SESSION_ID'
     }
   }
 }
@@ -184,10 +199,11 @@ print(json.dumps({
   'params': {
     'name': 'query_facts',
     'arguments': {
-      'entity': 'smoke-test:zed-e2e-$RUN_ID',
+      'entity': '$SMOKE_ENTITY',
       'relation': 'smoke:status',
       'scope': 'local',
-      'limit': 1
+      'limit': 1,
+      'session_id': '$STIGMEM_SESSION_ID'
     }
   }
 }))
@@ -212,6 +228,83 @@ print(f'retrieved {len(facts)} fact(s); value.v={v}')
 
 ok "$QUERY_SUMMARY"
 
+# ---- step 6: recall -----------------------------------------------------------
+
+log "Step 6 — tools/call recall (retrieve the asserted fact through recall)"
+
+RECALL_CALL=$(python3 -c "
+import json
+print(json.dumps({
+  'jsonrpc': '2.0',
+  'id': 5,
+  'method': 'tools/call',
+  'params': {
+    'name': 'recall',
+    'arguments': {
+      'query': 'zed-smoke-ok smoke:status',
+      'scope': 'local',
+      'token_budget': 1000,
+      'depth': 1,
+      'include_neighbors': False,
+      'limit': 5,
+      'session_id': '$STIGMEM_SESSION_ID'
+    }
+  }
+}))
+")
+send_msg "$RECALL_CALL"
+RECALL_RESP=$(read_response)
+
+RECALL_SUMMARY=$(echo "$RECALL_RESP" | extract_text_payload | python3 -c "
+import sys, json
+payload = json.load(sys.stdin)
+assert 'system_prompt_directive' in payload, f'missing directive: {payload}'
+assert isinstance(payload.get('content'), list), f'missing content channel: {payload}'
+assert isinstance(payload.get('instructions'), list), f'missing instructions channel: {payload}'
+content_text = json.dumps(payload.get('content', []))
+assert 'zed-smoke-ok' in content_text, f'smoke fact not recalled: {payload}'
+print(f'recall returned {len(payload.get(\"content\", []))} content fact(s) and {len(payload.get(\"instructions\", []))} instruction fact(s)')
+" 2>&1) || fail "recall check failed: $RECALL_SUMMARY. Response: $RECALL_RESP"
+
+ok "$RECALL_SUMMARY"
+
+# ---- step 7: lint_scope -------------------------------------------------------
+
+log "Step 7 — tools/call lint_scope (read-only live lint sweep)"
+
+LINT_CALL=$(python3 -c "
+import json
+print(json.dumps({
+  'jsonrpc': '2.0',
+  'id': 6,
+  'method': 'tools/call',
+  'params': {
+    'name': 'lint_scope',
+    'arguments': {
+      'scope': 'local',
+      'checks': ['stale', 'broken_ref'],
+      'entity': '$SMOKE_ENTITY'
+    }
+  }
+}))
+")
+send_msg "$LINT_CALL"
+LINT_RESP=$(read_response)
+
+LINT_SUMMARY=$(echo "$LINT_RESP" | extract_text_payload | python3 -c "
+import sys, json
+payload = json.load(sys.stdin)
+assert payload.get('scope') == 'local', f'unexpected scope: {payload}'
+assert 'findings' in payload, f'missing findings: {payload}'
+assert 'checked_at' in payload, f'missing checked_at: {payload}'
+checks = set(payload.get('checks_run', []))
+expected = {'stale', 'broken_ref'}
+assert expected.issubset(checks), f'checks not run: {payload}'
+print(f'lint checked {payload.get(\"fact_count\")} fact(s); findings={len(payload.get(\"findings\", []))}')
+" 2>&1) || fail "lint_scope check failed: $LINT_SUMMARY. Response: $LINT_RESP"
+
+ok "$LINT_SUMMARY"
+
 # ---- summary -------------------------------------------------------------------
 
 echo ""
@@ -221,8 +314,12 @@ echo "========================================"
 echo ""
 echo "Verified:"
 echo "  • MCP initialize handshake"
-echo "  • tools/list returns all 5 Stigmem tools"
+echo "  • tools/list returns all 6 Stigmem tools"
 echo "  • tools/call assert_fact writes a fact to the node"
 echo "  • tools/call query_facts retrieves the asserted fact"
+echo "  • tools/call recall returns channel-separated recalled content"
+echo "  • tools/call lint_scope completes a read-only node sweep"
+echo "  • STIGMEM_SESSION_ID is supplied to session-aware tool calls"
 echo ""
 echo "Node URL: $STIGMEM_URL"
+echo "Session ID: $STIGMEM_SESSION_ID"

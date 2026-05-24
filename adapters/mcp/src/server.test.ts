@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { StigmemAuthError } from "@eidetic-labs/stigmem-ts";
 
-import { SYSTEM_PROMPT_DIRECTIVE, TOOLS, handleToolCall } from "./server.js";
+import { MCP_SERVER_VERSION, SYSTEM_PROMPT_DIRECTIVE, TOOLS, handleToolCall } from "./server.js";
 
 describe("TOOLS", () => {
   it("exposes the expected MCP tool names", () => {
@@ -14,6 +14,10 @@ describe("TOOLS", () => {
       "subscribe_scope",
       "lint_scope",
     ]);
+  });
+
+  it("reports the package-aligned MCP server version", () => {
+    expect(MCP_SERVER_VERSION).toBe("0.9.0-alpha.8");
   });
 
   it("describes assert_fact with typed FactValue variants", () => {

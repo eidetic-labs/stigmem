@@ -50,14 +50,14 @@ pnpm --filter "./adapters/mcp" test                 # vitest, fast
 
 ```bash
 # From the repo root, in the workspace venv:
-uv run python -m stigmem_node
+uv run python -c 'from stigmem_node.main import run; run()'
 # Listens on 0.0.0.0:8765 by default; auth required by default
 ```
 
 Override settings via env or `.env`:
 
 ```bash
-STIGMEM_AUTH_REQUIRED=false STIGMEM_DB_PATH=/tmp/stigmem-dev.db uv run python -m stigmem_node
+STIGMEM_AUTH_REQUIRED=false STIGMEM_DB_PATH=/tmp/stigmem-dev.db uv run python -c 'from stigmem_node.main import run; run()'
 ```
 
 Common envs: `STIGMEM_PORT`, `STIGMEM_HOST`, `STIGMEM_FEDERATION_ENABLED`, `STIGMEM_FEDERATION_PULL_INTERVAL_S`, `STIGMEM_LOG_LEVEL`.
@@ -214,7 +214,7 @@ Verified 2026-05-13 as part of the upstream-validation F-01 / F-02 follow-up:
 - **Implementation PRs:** Phase A version reset and canonical Apache-2.0 license replacement landed before this snapshot; #160 expands the checker to cover prose/runtime surfaces that were previously manifest-only.
 - **Current release posture:** canonical version anchor is `pyproject.toml` `project.version = "0.9.0a2"`; semver packages use the equivalent `0.9.0-alpha.2`.
 - **Checked version surfaces:** root/node/SDK/OpenClaw Python package metadata, root and TypeScript package metadata, FastAPI app metadata, generated OpenAPI metadata, README banner, CHANGELOG top entry, LIMITATIONS applicability, SECURITY posture header, Docusaurus versions metadata, conformance package version, and plugin registry/manifest fallback strings.
-- **MCP package metadata:** `adapters/mcp/package.json` is aligned to the active alpha semver release line for publication readiness, but registry publication remains blocked until live connector smoke, adapter security certification, dry-run evidence, and maintainer clearance complete; experimental adapter/dashboard package versions remain independent `0.1.0` surfaces until they pass ADR-008 reintroduction gates.
+- **MCP package metadata:** `adapters/mcp/package.json` is aligned to the active alpha semver release line for publication readiness, and repo-local MCP protocol smoke passes against a live node; registry publication remains blocked until host UI smoke, adapter security certification, dry-run evidence, and maintainer clearance complete; experimental adapter/dashboard package versions remain independent `0.1.0` surfaces until they pass ADR-008 reintroduction gates.
 - **License evidence:** GitHub repository metadata reports `apache-2.0` / "Apache License 2.0"; root `LICENSE` is the canonical Apache-2.0 text; published package metadata uses `Apache-2.0` for in-scope packages.
 - **CI/test evidence:** `.github/workflows/version-consistency.yml` runs `scripts/validate_version_surfaces.py` and `scripts/check_version_consistency.py --verbose`; `node/tests/lifecycle/test_version_consistency_script.py` covers the regex and literal metadata extractors used for prose/runtime surfaces.
 - **Version introduced:** v0.9.0a1 baseline, with #160 coverage added during the v0.9.0aN upstream-validation correction line.
@@ -275,7 +275,7 @@ node -e "import('@eidetic-labs/stigmem-ts').then(m => console.log('exports:', Ob
 
 ### Port 8765 / 8766 already in use
 
-Another stigmem-node instance — typically a Paperclip-managed instance or a stale `uv run python -m stigmem_node` from a previous session. Either:
+Another stigmem-node instance — typically a Paperclip-managed instance or a stale `uv run python -c 'from stigmem_node.main import run; run()'` from a previous session. Either:
 
 - Kill it: `lsof -nP -i :8765` to find PID, then `kill <pid>`.
 - Or use the smoke test's auto-port-detection: it picks the next free pair.

@@ -1,0 +1,119 @@
+name: Bootstrap publish stigmem plugins (one-time)
+
+# One-time bootstrap publication of the 6 security-sensitive plugin packages
+# via PyPI API token. Required because PyPI's Pending Trusted Publishers
+# mechanism did not work in the maintainer's environment.
+#
+# After this runs successfully + all 6 projects get Trusted Publisher
+# configured at https://pypi.org/manage/project/<name>/settings/publishing/,
+# DELETE THIS WORKFLOW FILE + REVOKE THE PYPI_BOOTSTRAP_TOKEN secret. All
+# subsequent versions ship via publish.yml's OIDC path.
+#
+# Documented as a one-time contract exception per
+# docs/internal/plugin-publication-contract.md §"Supply-Chain Attestation".
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build + check + hash-verify only; no PyPI upload"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin:
+          - memory-garden-acl
+          - source-attestation
+          - multi-tenant
+          - tombstones
+          - time-travel
+          - lazy-instruction-discovery
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v0.9.0a8
+
+      - uses: astral-sh/setup-uv@v3
+
+      - name: Build wheel + sdist
+        working-directory: experimental/${{ matrix.plugin }}
+        run: |
+          rm -rf dist
+          uv build --out-dir dist
+          ls -la dist/
+
+      - name: twine check
+        working-directory: experimental/${{ matrix.plugin }}
+        run: uv run --with twine twine check dist/*
+
+      - name: Verify SHA-256 matches dry-run record
+        working-directory: experimental/${{ matrix.plugin }}
+        run: |
+          set -e
+          dry_run_record="../../docs/internal/plugin-publication-dry-run.md"
+          for f in dist/*.whl dist/*.tar.gz; do
+            sha=$(sha256sum "$f" | awk '{print $1}')
+            echo "Hash for $f -> $sha"
+            if ! grep -F "$sha" "$dry_run_record" >/dev/null; then
+              echo "::error::SHA-256 mismatch for $f: $sha not in $dry_run_record"
+              echo "::error::Build is non-reproducible vs the dry-run record from PR #656; aborting."
+              exit 1
+            fi
+            echo "  ✓ verified against dry-run record"
+          done
+
+      - name: Upload to PyPI via API token
+        if: ${{ !inputs.dry_run }}
+        working-directory: experimental/${{ matrix.plugin }}
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_BOOTSTRAP_TOKEN }}
+        run: |
+          uv run --with twine twine upload \
+            --non-interactive \
+            --disable-progress-bar \
+            dist/*.whl dist/*.tar.gz
+
+      - name: Confirm upload succeeded
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -e
+          pkg_name="stigmem-plugin-${{ matrix.plugin }}"
+          # PyPI CDN may take ~30s to propagate; retry up to 6 times
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/${pkg_name}/0.9.0a8/json")
+            if [ "$code" = "200" ]; then
+              echo "✓ ${pkg_name}@0.9.0a8 visible on PyPI"
+              exit 0
+            fi
+            echo "  attempt $i: PyPI returned ${code}; retrying in 10s..."
+            sleep 10
+          done
+          echo "::error::${pkg_name}@0.9.0a8 not visible on PyPI after 60s"
+          exit 1
+
+  summary:
+    needs: bootstrap
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Summarize
+        run: |
+          echo "## Bootstrap publish summary"
+          echo "Run mode: dry_run=${{ inputs.dry_run }}"
+          echo "All 6 plugin matrix jobs reached completion (some may have failed; see individual jobs)."
+          if [ "${{ inputs.dry_run }}" = "false" ]; then
+            echo ""
+            echo "Next steps:"
+            echo "1. Verify all 6 plugins on PyPI: https://pypi.org/user/eidetic-labs/"
+            echo "2. Configure Trusted Publisher per project (see plan §D.2)"
+            echo "3. Run cleanup (see plan §F)"
+          fi

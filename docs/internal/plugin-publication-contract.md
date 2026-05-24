@@ -121,6 +121,29 @@ requirements:
 - Reproducible build commands and SHA-256 hashes for wheel and source
   distribution artifacts recorded in feature evidence or changelog entries.
 
+### One-time bootstrap exception
+
+The OIDC trusted-publisher requirement above applies to all steady-state
+publications. For **the first publication of a net-new PyPI package** when
+PyPI's pending publisher mechanism is unavailable, an account-scoped API
+token may be used as a one-time bootstrap, subject to:
+
+- Token is named for the bootstrap event (e.g., `<package>-bootstrap-<date>`)
+  and recorded in the release-rollback log
+- Token is revoked within 24 hours of the successful bootstrap publication
+- Each bootstrapped package has a Trusted Publisher configured in its PyPI
+  project settings before its next release
+- The bootstrap workflow file is deleted from the repository after use
+- The bootstrap event is documented in the affected feature records
+  (`features/<feature>/evidence.md`) with the date, the package name, and
+  the SHA-256 hashes that were published
+
+The bootstrap exception does NOT permit:
+- Re-using the bootstrap token for steady-state publication
+- Bootstrapping additional packages after the first one without re-running
+  the full publication contract verification
+- Skipping clean-checkout build + dry-run hash verification before upload
+
 Every npm-distributed adapter reaching `publish-ready` must satisfy these
 supply-chain requirements:
 

@@ -4,7 +4,7 @@
   "description": "MCP server for Stigmem — exposes assert_fact, query_facts, recall, resolve_contradiction, subscribe_scope, and lint_scope",
   "type": "module",
   "bin": {
-    "stigmem-mcp": "./dist/server.js"
+    "stigmem-mcp": "dist/server.js"
   },
   "main": "./dist/server.js",
   "types": "./dist/server.d.ts",
@@ -15,7 +15,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/server.js",
     "start": "node dist/server.js",
     "dev": "tsx src/server.ts",
     "type-check": "tsc --noEmit",

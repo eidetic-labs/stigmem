@@ -8,6 +8,8 @@
 - Added adapter security regressions for adversarial recall framing, malformed
   write rejection before SDK dispatch, and credential-like tool argument
   filtering.
+- Recorded npm dry-run evidence, prerelease `alpha` tag requirement, executable
+  bin packaging, and no-publication disposition for `stigmem-mcp`.
 - Aligned `stigmem-mcp` package metadata to the current alpha release line for
   publication readiness while keeping registry publication held pending live
   connector smoke, security certification, dry-run evidence, and maintainer

@@ -27,9 +27,9 @@ security posture.
 - Tool calls that write facts depend on the node's auth, quota, audit, and
   scope enforcement. The adapter does not add an independent authorization
   layer.
-- Package metadata and repo-local protocol/security smoke are aligned for
-  publication readiness, but registry publication remains held until host UI
-  smoke, dry-run evidence, and maintainer clearance are complete.
+- Package metadata, repo-local protocol/security smoke, and npm dry-run
+  evidence are aligned for publication readiness, but registry publication
+  remains held until host UI smoke and maintainer clearance are complete.
 
 ## Advisories and Findings
 

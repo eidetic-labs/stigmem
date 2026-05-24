@@ -49,7 +49,7 @@ Start a Codex session and confirm Stigmem tools are available:
 
 ```bash
 codex --tools
-# → Should list: assert_fact, query_facts, resolve_contradiction, subscribe_scope, lint_scope
+# → Should list: assert_fact, query_facts, recall, resolve_contradiction, subscribe_scope, lint_scope
 ```
 
 ## Smoke test
@@ -57,6 +57,10 @@ codex --tools
 ```bash
 bash stigmem/adapters/mcp/tests/smoke.sh
 ```
+
+The smoke starts the MCP server over stdio and validates initialize, six-tool
+discovery, `assert_fact`, `query_facts`, `recall`, `lint_scope`, and
+session-aware calls against the configured node.
 
 ## Per-project config
 

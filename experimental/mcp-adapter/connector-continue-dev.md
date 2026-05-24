@@ -65,6 +65,10 @@ Omit `STIGMEM_API_KEY` if auth is disabled on your node.
 bash stigmem/adapters/mcp/tests/smoke.sh
 ```
 
+The smoke starts the MCP server over stdio and validates initialize, six-tool
+discovery, `assert_fact`, `query_facts`, `recall`, `lint_scope`, and
+session-aware calls against the configured node.
+
 ## Using Stigmem in Continue chat
 
 Once connected, you can invoke Stigmem tools directly in the chat:

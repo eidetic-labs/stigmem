@@ -61,8 +61,8 @@ bash stigmem/adapters/mcp/tests/smoke.sh
 ```
 
 The script starts the MCP server, sends `initialize` + `tools/list`, confirms
-all five Stigmem tools are present, then sends a `query_facts` call and checks
-for a valid response.
+all six Stigmem tools are present, then validates `assert_fact`, `query_facts`,
+`recall`, `lint_scope`, and session-aware calls against the configured node.
 
 ## Troubleshooting
 

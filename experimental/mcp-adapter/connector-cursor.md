@@ -58,6 +58,10 @@ Omit `STIGMEM_API_KEY` if your node runs without auth.
 bash stigmem/adapters/mcp/tests/smoke.sh
 ```
 
+The smoke starts the MCP server over stdio and validates initialize, six-tool
+discovery, `assert_fact`, `query_facts`, `recall`, `lint_scope`, and
+session-aware calls against the configured node.
+
 ## npx alternative
 
 If you prefer not to build locally, you can run the server via npx once the package

@@ -47,11 +47,12 @@ Add `STIGMEM_API_KEY` to the `env` block:
 |---|---|---|---|
 | `STIGMEM_URL` | yes | — | Base URL of the Stigmem node |
 | `STIGMEM_API_KEY` | no | — | API key (only when node runs with `STIGMEM_AUTH_REQUIRED=true`) |
+| `STIGMEM_SESSION_ID` | no | generated per process | Stable session id propagated on session-aware read and write calls |
 | `STIGMEM_POLL_LIMIT` | no | `50` | Max facts per `subscribe_scope` call (1–500) |
 
 ## Smoke test
 
-Verifies the full assert → query round-trip through the MCP protocol before opening Zed:
+Verifies the full assert → query → recall → lint path through the MCP protocol before opening Zed:
 
 ```bash
 bash stigmem/adapters/mcp/tests/smoke.sh
@@ -63,6 +64,8 @@ The script (source: `tests/smoke.sh`) does:
 3. `tools/list` — confirms all 6 tools are present
 4. `tools/call assert_fact` — writes a test fact to the node
 5. `tools/call query_facts` — reads it back and asserts the value
+6. `tools/call recall` — confirms recalled content stays channel-separated
+7. `tools/call lint_scope` — runs a read-only live lint sweep
 
 Exits 0 on success. Requires a running Stigmem node at `STIGMEM_URL`.
 

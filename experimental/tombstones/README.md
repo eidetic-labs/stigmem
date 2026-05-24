@@ -22,7 +22,7 @@ the current status, evidence, and security notes.
 ## Installation
 
 ```bash
-pip install --pre stigmem-node==0.9.0a8 stigmem-plugin-tombstones==0.9.0a8
+pip install --pre stigmem-node==0.9.0a8 stigmem-plugin-tombstones==0.1.0
 ```
 
 ## Enable

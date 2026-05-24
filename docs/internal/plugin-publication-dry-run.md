@@ -42,20 +42,26 @@ uv build experimental/multi-tenant --out-dir /private/tmp/stigmem-plugin-goal5/m
 
 ## Dry-Run Hashes
 
+> **Note (2026-05-24):** Hashes re-captured after correcting plugin versions
+> from `0.9.0a8` (lock-stepped with stigmem-core, per PR #665's implicit
+> alignment) to `0.1.0` (per-plugin independent versioning per ADR-011 and the
+> amended publication contract). The original `0.9.0a8` artifacts were never
+> published; this correction is pre-publication.
+
 | Artifact | SHA-256 |
 | --- | --- |
-| `stigmem_plugin_lazy_instruction_discovery-0.9.0a8-py3-none-any.whl` | `4f67b71e3ca31ff324dd2e17560cfe255c69662caaf72c23d17771363c20214e` |
-| `stigmem_plugin_memory_garden_acl-0.9.0a8-py3-none-any.whl` | `c704efb5877f3379f95466e963b839fbafca007936f66b4d96c3eafac86ad7d7` |
-| `stigmem_plugin_multi_tenant-0.9.0a8-py3-none-any.whl` | `b57ee2f8f94aa5d32f79af92144314299df6bb1b1f10776a1ad3c56376803bd5` |
-| `stigmem_plugin_source_attestation-0.9.0a8-py3-none-any.whl` | `28f4c74e8e5c7f0e30d4492e5ba38e8a2d57090b27d478bfdbc8ed6f032a29ac` |
-| `stigmem_plugin_time_travel-0.9.0a8-py3-none-any.whl` | `542662fd12620225a1c95854d717dfa98751f520ea1108709c214c27d289b262` |
-| `stigmem_plugin_tombstones-0.9.0a8-py3-none-any.whl` | `4aa6795dd8c51d2c4362f2e79d4d15c6a0a167998fcd1f1975ca05debb6af365` |
-| `stigmem_plugin_lazy_instruction_discovery-0.9.0a8.tar.gz` | `f252837d1a62025c7332494c4b0f1e5d63c0138d58c2b1779773d76c03fa76bf` |
-| `stigmem_plugin_memory_garden_acl-0.9.0a8.tar.gz` | `69c2a3f6618a4f824a7741abd91fbb670d0794fc1847b8f63387921b4afe5b18` |
-| `stigmem_plugin_multi_tenant-0.9.0a8.tar.gz` | `5156312429ffd35de5d0d634d34ed5477c137664787d133e9e69013746ed707d` |
-| `stigmem_plugin_source_attestation-0.9.0a8.tar.gz` | `61a41aa34c6e8345134523068f1db11221206be89373b4ef798328d21ecdf211` |
-| `stigmem_plugin_time_travel-0.9.0a8.tar.gz` | `7cc12aa887ff7b9f7b8c018132865b3c32d03a64aca9c677aa0e76509ce5412a` |
-| `stigmem_plugin_tombstones-0.9.0a8.tar.gz` | `529a344e72d38ee6e42366516d20fd31780aacce8ba7abd853e77f01d220efd6` |
+| `stigmem_plugin_lazy_instruction_discovery-0.1.0-py3-none-any.whl` | `24fc82f230989340ccdbdf8b7fd826e4005b2779050274906accdd3a039b1fa7` |
+| `stigmem_plugin_memory_garden_acl-0.1.0-py3-none-any.whl` | `ab58efa4ddd227e40ae943d65ce87c17825be75be65bef2f116d4abc06f403f9` |
+| `stigmem_plugin_multi_tenant-0.1.0-py3-none-any.whl` | `08833f67fbfc6b3eeb54c8db6ad1d7650eee37e92a54c5fb7d3cb56f8b9139cf` |
+| `stigmem_plugin_source_attestation-0.1.0-py3-none-any.whl` | `5b315b8e323d806eaad20f738d03007c5b002e3db63f415e30a6119ce81ff2bc` |
+| `stigmem_plugin_time_travel-0.1.0-py3-none-any.whl` | `0b218a883a9dad3afbddbceac1705438ed991e0bac5865153321f44513e446c7` |
+| `stigmem_plugin_tombstones-0.1.0-py3-none-any.whl` | `f27cfdb5dd1830ec7f37507d4c4b7048b11662bafbd6d4bc5c01b30943a26452` |
+| `stigmem_plugin_lazy_instruction_discovery-0.1.0.tar.gz` | `fc793ad5b5674de69d7fc231ee45aa94ad468b569ea9230e7e82e65017519d5e` |
+| `stigmem_plugin_memory_garden_acl-0.1.0.tar.gz` | `7b07b47000c78bc2150134ad66e7118815a001821bbfcdf7b6f9c7309d4971d8` |
+| `stigmem_plugin_multi_tenant-0.1.0.tar.gz` | `883ce1e6f1ca8f0c08338fa66b64e1e2ea950057a5a646e2910310b564f0c408` |
+| `stigmem_plugin_source_attestation-0.1.0.tar.gz` | `ef9835eca34f7b211ab190fdd00fb71f0f42409733e5dc2a2e0bf8ceb087b675` |
+| `stigmem_plugin_time_travel-0.1.0.tar.gz` | `597147022fb0730a989c9d885450c7c4c4242068c85a6a26086c1c2c7e932c04` |
+| `stigmem_plugin_tombstones-0.1.0.tar.gz` | `114bdcb462dfccd31695b41fd9a425f231756681cc1ef308fb299871d6780431` |
 
 ## Registry and Release Disposition
 

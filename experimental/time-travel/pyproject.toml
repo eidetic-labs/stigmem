@@ -1,6 +1,6 @@
 [project]
 name = "stigmem-plugin-time-travel"
-version = "0.9.0a8"
+version = "0.1.0"
 description = "Experimental time-travel query plugin for Stigmem."
 readme = "README.md"
 requires-python = ">=3.11"

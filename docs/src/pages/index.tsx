@@ -49,7 +49,7 @@ const features: FeatureItem[] = [
   {
     title: 'Plugs into your stack',
     description:
-      'Native connectors for Claude Code, Cursor, Zed, Gemini, Codex CLI, and LiteLLM. Your agents share a verifiable memory in minutes — no custom glue code required.',
+      'Codex CLI MCP support, repo-local protocol smoke, and experimental connector guides for additional hosts. Your agents share a verifiable memory without custom glue code.',
   },
   {
     title: 'Interactive API reference',

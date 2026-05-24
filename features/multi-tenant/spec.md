@@ -24,8 +24,12 @@ Single-tenant deployments do not need the plugin.
 
 When the plugin is registered and `STIGMEM_MULTI_TENANT_ENABLED=true`, the
 `tenant_resolve` hook preserves the API key's tenant ID. The resolved tenant
-then flows through reads, writes, gardens, recall, audit, federation, and
-plugin hooks.
+then flows through tenant-scoped HTTP, storage, recall, audit, observability,
+subscription, and plugin-hook paths that accept request tenant context.
+
+Existing node-level federation replication remains constrained to the
+`default` tenant in v0.9.0a8. Non-default tenant federation needs a dedicated
+design, conformance vectors, and risk disposition before it can be promoted.
 
 ```text
 Bearer token -> Identity(entity_uri, permissions, tenant_id)
@@ -46,7 +50,7 @@ Bearer token -> Identity(entity_uri, permissions, tenant_id)
 | Garden ACL | Membership checks resolve garden identity within the caller tenant. |
 | Audit log | Audit rows carry `tenant_id`; audit queries are tenant-scoped. |
 | API keys | Each key belongs to exactly one tenant. |
-| Federation | Federation paths must preserve tenant context and must not cross tenant boundaries. |
+| Federation | Existing node-level pull exports only `default` tenant facts; tenant-aware non-default federation is deferred. |
 | Plugin hooks | Hook payloads receive tenant context through the plugin framework. |
 
 ## Non-Isolated Node Surfaces
@@ -91,5 +95,6 @@ separate tenant registry; tenant identity is implicit in key assignment.
   surface.
 - This feature does not publish a signed plugin artifact.
 - This feature does not define per-tenant billing policy.
+- This feature does not provide tenant-aware non-default federation.
 - This feature does not provide process-level resource isolation between
   tenants.

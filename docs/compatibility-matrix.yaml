@@ -336,7 +336,7 @@ features:
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Implementation remains the opt-in experimental/multi-tenant/ source package. Targeted v0.9.0a8."
+    notes: "Implementation remains the opt-in experimental/multi-tenant/ source package. v0.9.0a8 validates default single-tenant collapse, plugin-enabled tenant scoping, and default-tenant-only node federation; shared-node readiness remains blocked on tenant-aware federation, per-tenant quota/resource controls, soak evidence, and signed plugin artifacts."
 
   - id: recall-graph
     name: Recall graph

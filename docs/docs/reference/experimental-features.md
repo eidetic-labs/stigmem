@@ -159,7 +159,7 @@ These features have a `Spec-XN-*` experimental spec. They are not part of the su
 <div>
 <dt>Multi-tenant isolation</dt>
 <dt><span className="stigmem-fields__type">source-available</span></dt>
-<dd>Adds an opt-in tenant boundary above scopes through <code>stigmem-plugin-multi-tenant</code>; feature record: <a href="https://github.com/eidetic-labs/stigmem/tree/main/features/multi-tenant"><code>features/multi-tenant</code></a>; no Spec-X yet.</dd>
+<dd>Adds an opt-in tenant boundary above scopes through <code>stigmem-plugin-multi-tenant</code>. Default installs collapse to <code>default</code>; v0.9.0a8 does not claim shared-node readiness or tenant-aware non-default federation. Feature record: <a href="https://github.com/eidetic-labs/stigmem/tree/main/features/multi-tenant"><code>features/multi-tenant</code></a>; no Spec-X yet.</dd>
 </div>
 
 <div>

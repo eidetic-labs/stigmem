@@ -13,9 +13,9 @@ def _args(**kwargs: object) -> argparse.Namespace:
 
 
 def test_mcp_config_lists_editors(capsys: pytest.CaptureFixture[str]) -> None:
-    from stigmem_node.cli.mcp import _cmd_mcp_config
+    import stigmem_node.cli.mcp as mcp
 
-    rc = _cmd_mcp_config(_args(list=True, editor=None))
+    rc = mcp._cmd_mcp_config(_args(list=True, editor=None))
 
     out = capsys.readouterr().out
     assert rc == 0
@@ -24,9 +24,9 @@ def test_mcp_config_lists_editors(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_mcp_config_emits_codex_metadata(capsys: pytest.CaptureFixture[str]) -> None:
-    from stigmem_node.cli.mcp import _cmd_mcp_config
+    import stigmem_node.cli.mcp as mcp
 
-    rc = _cmd_mcp_config(
+    rc = mcp._cmd_mcp_config(
         _args(
             list=False,
             editor="codex-cli",
@@ -44,9 +44,9 @@ def test_mcp_config_emits_codex_metadata(capsys: pytest.CaptureFixture[str]) -> 
 
 
 def test_mcp_config_rejects_unknown_editor(capsys: pytest.CaptureFixture[str]) -> None:
-    from stigmem_node.cli.mcp import _cmd_mcp_config
+    import stigmem_node.cli.mcp as mcp
 
-    rc = _cmd_mcp_config(
+    rc = mcp._cmd_mcp_config(
         _args(
             list=False,
             editor="unknown",
@@ -64,14 +64,14 @@ def test_mcp_detect_json_uses_home(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from stigmem_node.cli.mcp import _cmd_mcp_detect
+    import stigmem_node.cli.mcp as mcp
 
     monkeypatch.setenv("HOME", str(tmp_path))
     codex = tmp_path / ".codex"
     codex.mkdir()
     (codex / "config.toml").write_text('[mcp_servers.stigmem]\ncommand = "stigmem-mcp"\n')
 
-    rc = _cmd_mcp_detect(_args(json=True))
+    rc = mcp._cmd_mcp_detect(_args(json=True))
     payload = json.loads(capsys.readouterr().out)
 
     assert rc == 0
@@ -84,10 +84,10 @@ def test_mcp_install_dry_run_does_not_write(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from stigmem_node.cli.mcp import _cmd_mcp_install
+    import stigmem_node.cli.mcp as mcp
 
     monkeypatch.setenv("HOME", str(tmp_path))
-    rc = _cmd_mcp_install(
+    rc = mcp._cmd_mcp_install(
         _args(
             editor="codex-cli",
             write=False,
@@ -108,10 +108,10 @@ def test_mcp_install_write_creates_config(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    from stigmem_node.cli.mcp import _cmd_mcp_install
+    import stigmem_node.cli.mcp as mcp
 
     monkeypatch.setenv("HOME", str(tmp_path))
-    rc = _cmd_mcp_install(
+    rc = mcp._cmd_mcp_install(
         _args(
             editor="codex-cli",
             write=True,
@@ -133,14 +133,14 @@ def test_mcp_install_refuses_existing_without_force(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    from stigmem_node.cli.mcp import _cmd_mcp_install
+    import stigmem_node.cli.mcp as mcp
 
     monkeypatch.setenv("HOME", str(tmp_path))
     codex = tmp_path / ".codex"
     codex.mkdir()
     (codex / "config.toml").write_text('[mcp_servers.stigmem]\ncommand = "stigmem-mcp"\n')
 
-    rc = _cmd_mcp_install(
+    rc = mcp._cmd_mcp_install(
         _args(
             editor="codex-cli",
             write=True,

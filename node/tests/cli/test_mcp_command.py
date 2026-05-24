@@ -23,7 +23,7 @@ def test_mcp_config_lists_editors(capsys: pytest.CaptureFixture[str]) -> None:
     assert "claude-code" in out
 
 
-def test_mcp_config_emits_codex_snippet(capsys: pytest.CaptureFixture[str]) -> None:
+def test_mcp_config_emits_codex_metadata(capsys: pytest.CaptureFixture[str]) -> None:
     from stigmem_node.cli.mcp import _cmd_mcp_config
 
     rc = _cmd_mcp_config(
@@ -37,9 +37,9 @@ def test_mcp_config_emits_codex_snippet(capsys: pytest.CaptureFixture[str]) -> N
 
     out = capsys.readouterr().out
     assert rc == 0
-    assert "[mcp_servers.stigmem]" in out
-    assert "stigmem-mcp" in out
-    assert "STIGMEM_URL" in out
+    assert "codex-cli" in out
+    assert "~/.codex/config.toml" in out
+    assert "integrations/mcp/codex-cli" in out
     assert "sk-test" not in out
 
 

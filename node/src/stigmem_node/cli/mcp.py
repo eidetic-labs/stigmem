@@ -173,10 +173,6 @@ def _render_snippet(config: EditorConfig, stigmem_url: str, stigmem_api_key: str
     )
 
 
-def _render_display_snippet(config: EditorConfig, stigmem_url: str) -> str:
-    return _render_snippet(config, stigmem_url, "<redacted; set STIGMEM_API_KEY manually>")
-
-
 def _json_stigmem_entry(stigmem_url: str, stigmem_api_key: str) -> dict[str, object]:
     return {
         "command": "stigmem-mcp",
@@ -367,9 +363,13 @@ def _cmd_mcp_config(args: argparse.Namespace) -> int:
     if config is None:
         print(f"error: unknown MCP editor: {args.editor}")
         return 1
-    print(f"# Paste into: {config.config_path}")
-    print(_render_display_snippet(config, args.stigmem_url), end="")
-    print("# API keys are not echoed. Set STIGMEM_API_KEY in the target config manually.")
+    print(f"Editor: {config.editor}")
+    print(f"Config path: {config.config_path}")
+    print(f"Config format: {config.config_format}")
+    print(f"Guide: {config.docs_link}")
+    print("Run `stigmem mcp install --dry-run` to preview the target path.")
+    print("Run `stigmem mcp install --write` to update the config with local backups.")
+    print("API keys are not echoed; set STIGMEM_API_KEY through the target editor config.")
     return 0
 
 
@@ -395,9 +395,9 @@ def _cmd_mcp_install(args: argparse.Namespace) -> int:
     print(f"Config path: {path}")
     print(f"Backup path: {backup_path}")
     print(f"Action: {action}")
-    print("--- planned stigmem MCP snippet (redacted) ---")
-    print(_render_display_snippet(config, args.stigmem_url), end="")
-    print("--- end planned snippet ---")
+    print(f"Guide: {config.docs_link}")
+    print("Planned change: add or replace the stigmem MCP server entry.")
+    print("API keys are not echoed; the written config uses the provided STIGMEM_API_KEY value.")
     if not args.write:
         print("Dry-run only. Re-run with --write to apply.")
         return 0

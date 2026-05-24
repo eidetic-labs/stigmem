@@ -21,7 +21,8 @@ Use the format defined in
 | [`v0.9.0a5`](./v0.9.0a5-roadmap.md) | Historical | RTBF tombstone plugin-boundary validation and alpha artifact refresh. |
 | [`v0.9.0a6`](./v0.9.0a6-roadmap.md) | Historical | Memory Garden advanced ACL plugin-boundary validation and alpha artifact refresh. |
 | [`v0.9.0a7`](./v0.9.0a7-roadmap.md) | Historical | Source-attestation plugin-boundary validation and alpha artifact refresh. |
-| [`v0.9.0a8`](./v0.9.0a8-roadmap.md) | Active | Multi-tenant isolation plugin-boundary validation and alpha artifact refresh. |
+| [`v0.9.0a8`](./v0.9.0a8-roadmap.md) | Historical | Multi-tenant isolation plugin-boundary validation and alpha artifact refresh. |
+| [`plugin publication readiness`](./plugin-publication-readiness.md) | Active | Standalone experimental plugin artifact publication readiness. |
 | [`v0.9.0 alpha series`](./v0.9.0-alpha-series-roadmap.md) | Planned | Detailed alpha deployment sequence, phase plan, and exit evidence. |
 | [`future hardened core`](./future-hardened-core-roadmap.md) | Future gate | Preserved hardened-core plan; not an active beta milestone. |
 | [`future RC / GA`](./future-rc-ga-roadmap.md) | Future gate | Preserved release-candidate and stable-release gates. |

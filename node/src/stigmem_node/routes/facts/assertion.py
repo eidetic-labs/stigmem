@@ -27,7 +27,10 @@ def assert_fact(
     entity/source URIs on ingest.
     """
     request_id = str(uuid.uuid4())
-    tenant = TenantContext(tenant_id=identity.tenant_id)
+    tenant = TenantContext(
+        tenant_id=identity.tenant_id,
+        metadata={"tenant_context_source": "hook"},
+    )
     registry = get_registry()
     with start_span(
         "stigmem.assert_fact",

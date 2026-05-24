@@ -8,6 +8,10 @@
 - Aligned a8 feature records and public projections around the same posture:
   multi-tenant scoping is opt-in experimental plugin behavior, default installs
   collapse to the `default` tenant, and shared-node readiness is not claimed.
+- Added tenant-ID normalization/validation, explicit TenantContext source
+  metadata, and structural CI coverage for tenant context construction.
+- Documented the capability reservation and core-enforced/plugin-acknowledged
+  hook pattern for the a8 plugin boundary.
 
 ## Post-v0.9.0a1 Main
 

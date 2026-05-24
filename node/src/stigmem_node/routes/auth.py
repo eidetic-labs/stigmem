@@ -49,6 +49,7 @@ from ..models.auth import (
 )
 from ..net_util import assert_safe_url
 from ..settings import settings
+from ..tenant import TenantIdError
 
 logger = logging.getLogger("stigmem.auth")
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
@@ -298,6 +299,11 @@ def register_static_key(
             expires_at=body.expires_at,
             tenant_id=target_tenant,
         )
+    except TenantIdError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
     except ValueError as exc:
         if "max age" in str(exc):
             raise HTTPException(
@@ -309,13 +315,21 @@ def register_static_key(
             detail="raw_key already exists; generate a new key value",
         ) from exc
 
+    # Read back canonical values so audit and response use normalized tenant ID.
+    with db() as conn:
+        row = conn.execute(
+            "SELECT created_at, expires_at, tenant_id FROM api_keys WHERE id = ?",
+            (registered_id,),
+        ).fetchone()
+    normalized_tenant = row["tenant_id"] or "default"
+
     # Audit: spec §22.3.1 maps lifecycle ops on admin surfaces to
     # ``admin_action``.  Detail captures the new key's identity and the
     # caller's identity for accountability.
     audit_emit(
         "admin_action",
         entity_uri=identity.entity_uri,
-        tenant_id=target_tenant,
+        tenant_id=normalized_tenant,
         detail={
             "action": "api_key_register",
             "new_key_id": registered_id,
@@ -324,13 +338,6 @@ def register_static_key(
             "has_expiry": body.expires_at is not None,
         },
     )
-
-    # Read back created_at so the response carries the canonical timestamp.
-    with db() as conn:
-        row = conn.execute(
-            "SELECT created_at, expires_at FROM api_keys WHERE id = ?",
-            (registered_id,),
-        ).fetchone()
 
     # Deliberately no ``logger.info`` here.  The ``audit_emit`` above is
     # the authoritative record (event_type=admin_action), and a structured
@@ -357,7 +364,7 @@ def register_static_key(
         description=body.description,
         created_at=row["created_at"],
         expires_at=row["expires_at"],
-        tenant_id=target_tenant,
+        tenant_id=normalized_tenant,
     )
 
 

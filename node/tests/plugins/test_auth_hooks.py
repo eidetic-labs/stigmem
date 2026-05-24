@@ -51,6 +51,23 @@ def test_tenant_resolve_can_replace_identity_tenant(client: TestClient) -> None:
     assert response.json()["tenant_id"] == "plugin-tenant"
 
 
+def test_invalid_tenant_resolve_value_collapses_to_default(client: TestClient) -> None:
+    def tenant_resolve(_ctx: PluginContext, _value: TenantContext, **_: object) -> TenantContext:
+        return TenantContext(tenant_id="contains spaces")
+
+    manifest = PluginManifest(
+        name="tenant-plugin",
+        version="1.0.0",
+        hooks={"tenant_resolve": tenant_resolve},
+    )
+
+    with stigmem_plugins([manifest]):
+        response = client.get("/v1/me")
+
+    assert response.status_code == 200
+    assert response.json()["tenant_id"] == "default"
+
+
 def test_capability_check_can_deny_existing_permission(client: TestClient) -> None:
     calls: list[str] = []
 

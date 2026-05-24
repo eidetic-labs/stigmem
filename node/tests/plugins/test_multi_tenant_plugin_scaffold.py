@@ -110,7 +110,13 @@ def test_tenant_resolve_preserves_default_when_disabled(
     identity = Identity("agent:alice", ["read"], tenant_id="tenant-a")
     tenant = registry.fire_filter_chain(
         "tenant_resolve",
-        TenantContext(tenant_id="default", metadata={"source_tenant_id": "tenant-a"}),
+        TenantContext(
+            tenant_id="default",
+            metadata={
+                "source_tenant_id": "tenant-a",
+                "tenant_context_source": "hook",
+            },
+        ),
         identity=identity,
     )
 
@@ -128,12 +134,19 @@ def test_tenant_resolve_uses_identity_tenant_when_enabled(
     identity = Identity("agent:alice", ["read"], tenant_id="tenant-a")
     tenant = registry.fire_filter_chain(
         "tenant_resolve",
-        TenantContext(tenant_id="default", metadata={"source_tenant_id": "tenant-a"}),
+        TenantContext(
+            tenant_id="default",
+            metadata={
+                "source_tenant_id": "tenant-a",
+                "tenant_context_source": "hook",
+            },
+        ),
         identity=identity,
     )
 
     assert tenant.tenant_id == "tenant-a"
     assert tenant.metadata["resolved_by"] == PLUGIN_NAME
+    assert tenant.metadata["tenant_context_source"] == "resolved"
 
 
 def test_tenant_resolve_falls_back_to_source_tenant_metadata_when_enabled(
@@ -146,12 +159,62 @@ def test_tenant_resolve_falls_back_to_source_tenant_metadata_when_enabled(
 
     tenant = registry.fire_filter_chain(
         "tenant_resolve",
-        TenantContext(tenant_id="default", metadata={"source_tenant_id": "tenant-from-key"}),
+        TenantContext(
+            tenant_id="default",
+            metadata={
+                "source_tenant_id": "tenant-from-key",
+                "tenant_context_source": "hook",
+            },
+        ),
         identity=object(),
     )
 
     assert tenant.tenant_id == "tenant-from-key"
     assert tenant.metadata["resolved_by"] == PLUGIN_NAME
+    assert tenant.metadata["tenant_context_source"] == "resolved"
+
+
+def test_tenant_resolve_normalizes_identity_tenant_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_MULTI_TENANT_ENABLED", "true")
+    registry = HookRegistry()
+    registry.register_plugin(plugin_manifest())
+
+    identity = Identity("agent:alice", ["read"], tenant_id=" Customer-A ")
+    tenant = registry.fire_filter_chain(
+        "tenant_resolve",
+        TenantContext(
+            tenant_id="default",
+            metadata={
+                "source_tenant_id": "default",
+                "tenant_context_source": "hook",
+            },
+        ),
+        identity=identity,
+    )
+
+    assert tenant.tenant_id == "customer-a"
+    assert tenant.metadata["tenant_context_source"] == "resolved"
+
+
+def test_tenant_resolve_preserves_context_for_invalid_tenant_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("STIGMEM_MULTI_TENANT_ENABLED", "true")
+    registry = HookRegistry()
+    registry.register_plugin(plugin_manifest())
+    inbound = TenantContext(
+        tenant_id="default",
+        metadata={
+            "source_tenant_id": "contains spaces",
+            "tenant_context_source": "hook",
+        },
+    )
+
+    tenant = registry.fire_filter_chain("tenant_resolve", inbound, identity=object())
+
+    assert tenant is inbound
 
 
 def test_authorization_hooks_return_allow_decisions(

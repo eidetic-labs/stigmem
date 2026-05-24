@@ -46,6 +46,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from .db import db
 from .plugins import Deny, TenantContext, get_registry
 from .settings import settings as settings
+from .tenant import DEFAULT_TENANT_ID, TenantIdError, validate_tenant_id
 
 _ARGON2_HASHER = PasswordHasher(
     time_cost=2,
@@ -277,7 +278,10 @@ class Identity:
             "capability_check",
             identity=self,
             capability=capability,
-            tenant=TenantContext(tenant_id=self.tenant_id),
+            tenant=TenantContext(
+                tenant_id=self.tenant_id,
+                metadata={"tenant_context_source": "hook"},
+            ),
         )
         return not isinstance(decision, Deny)
 
@@ -327,17 +331,24 @@ def _apply_identity_hooks(identity: Identity, raw_credentials: str | None) -> Id
     tenant = registry.fire_filter_chain(
         "tenant_resolve",
         TenantContext(
-            tenant_id="default",
-            metadata={"source_tenant_id": resolved.tenant_id},
+            tenant_id=DEFAULT_TENANT_ID,
+            metadata={
+                "source_tenant_id": resolved.tenant_id,
+                "tenant_context_source": "hook",
+            },
         ),
         identity=resolved,
     )
-    if tenant.tenant_id != resolved.tenant_id:
+    try:
+        resolved_tenant_id = validate_tenant_id(tenant.tenant_id)
+    except TenantIdError:
+        resolved_tenant_id = DEFAULT_TENANT_ID
+    if resolved_tenant_id != resolved.tenant_id:
         return Identity(
             entity_uri=resolved.entity_uri,
             permissions=sorted(resolved.permissions),
             oidc_sub=resolved.oidc_sub,
-            tenant_id=tenant.tenant_id,
+            tenant_id=resolved_tenant_id,
         )
     return resolved
 
@@ -374,6 +385,7 @@ def register_api_key(
         permissions = ["read", "write"]
     if find_api_key_id_by_raw_key(raw_key) is not None:
         raise ValueError("raw API key already exists")
+    normalized_tenant_id = validate_tenant_id(tenant_id)
     key_id = str(uuid.uuid4())
     created_at = datetime.now(UTC).replace(microsecond=0)
     normalized_expires_at = _normalize_api_key_expiry(
@@ -395,7 +407,7 @@ def register_api_key(
                 created_at.isoformat(),
                 normalized_expires_at,
                 oidc_sub,
-                tenant_id,
+                normalized_tenant_id,
             ),
         )
     return key_id

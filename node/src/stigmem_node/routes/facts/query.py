@@ -308,7 +308,10 @@ def query_facts(
         )  # noqa: E501
 
     request_id = str(uuid.uuid4())
-    tenant = TenantContext(tenant_id=identity.tenant_id)
+    tenant = TenantContext(
+        tenant_id=identity.tenant_id,
+        metadata={"tenant_context_source": "hook"},
+    )
     registry = get_registry()
     query_payload: dict[str, Any] = {
         "entity": entity,

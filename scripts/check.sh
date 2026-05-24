@@ -115,6 +115,7 @@ run_python() {
   timed_run python-bandit uv run bandit -r node/src/ sdks/stigmem-py/src/ -c pyproject.toml -q
   timed_run python-constant-time uv run python scripts/check_constant_time.py node/src/ sdks/stigmem-py/src/
   timed_run python-admin-determination uv run python scripts/check_admin_determination_consistency.py
+  timed_run python-tenant-resolution uv run python scripts/check_tenant_resolution_consistency.py
   timed_run python-facts-immutability-inventory uv run python scripts/check_facts_immutability_inventory.py
   write_timing_report
 }

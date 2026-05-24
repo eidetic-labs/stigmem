@@ -11,6 +11,40 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 _No unreleased changes._
 
+## [0.9.0a8] — 2026-05-23
+
+**Status:** preview alpha — pre-stable, not for production federation across
+organizational boundaries. Multi-tenant scoping remains experimental, opt-in,
+and operator-gated.
+
+**Per-ecosystem version strings (per ADR-019):**
+- PyPI / Python: `stigmem 0.9.0a8`, `stigmem-py 0.9.0a8`, `stigmem-node 0.9.0a8`, and `stigmem-openclaw 0.9.0a8` (PEP 440).
+- npm / Node: `@eidetic-labs/stigmem-ts@0.9.0-alpha.8` (semver).
+- GHCR: `ghcr.io/eidetic-labs/stigmem-node:0.9.0a8` and `:0.9.0-alpha.8`.
+- Git tag, GitHub release, prose: `v0.9.0a8` (shorthand).
+
+### Changed
+
+- Advanced the enforced release-version surfaces to the `v0.9.0a8` alpha line
+  across Python packages, npm packages, API metadata, conformance metadata,
+  plugin compatibility defaults, release documentation, and current-facing
+  adopter guidance.
+- Validated the `v0.9.0a8` multi-tenant alpha horizon in the feature-owned
+  records. Default installs collapse callers to the `default` tenant;
+  non-default tenant isolation requires `stigmem-plugin-multi-tenant`
+  registration and explicit operator enablement.
+
+### Security
+
+- Recorded the multi-tenant scoping disposition for default identity collapse,
+  plugin-enabled tenant resolution, fact/garden/recall/audit/observability and
+  subscription scoping, and node-level federation pull default-tenant-only
+  behavior.
+- Clarified that multi-tenant scoping is experimental and does not yet claim
+  stable shared-node readiness, tenant-aware non-default federation,
+  per-tenant quota/resource isolation, external operator soak evidence, or a
+  signed standalone plugin artifact.
+
 ## [0.9.0a7] — 2026-05-23
 
 **Status:** preview alpha — pre-stable, not for production federation across

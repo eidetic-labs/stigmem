@@ -20,7 +20,7 @@ helper surfaces are either `hold` or `defer` per
 | Surface group | Decision | Reason |
 | --- | --- | --- |
 | Security-sensitive plugins | Build dry-run complete; do not publish | Package builds pass, but maintainer publication clearance has not been granted. |
-| MCP adapter | Do not publish | Classified `hold`; live host smoke, package alignment, and security certification remain open. |
+| MCP adapter | Do not publish | Classified `hold`; package alignment, live protocol smoke, adapter security certification, and npm dry-run evidence are complete, but host UI smoke and maintainer clearance remain open. |
 | Obsidian adapter | Do not publish | Classified `hold`; live-vault smoke, packaging/channel ownership, and key-storage review remain open. |
 | Partner/model adapters | Do not publish | Classified `defer`; ownership, live integration, and dependency validation remain open. |
 | Dashboard, evaluation, deployment helpers | Do not publish | Classified `defer`; these are not standalone plugin publication targets for this milestone. |
@@ -64,3 +64,8 @@ or signature/provenance publication occurred in this goal. A future publication
 PR must record maintainer clearance, rerun clean-checkout build/install
 verification, choose the target registry/channel, and document rollback or yank
 instructions before any artifact is published.
+
+The MCP adapter now has a separate npm dry-run record:
+[`mcp-publication-dry-run.md`](mcp-publication-dry-run.md). It remains a
+no-publication `hold` because host UI smoke and explicit maintainer publication
+clearance are not complete.

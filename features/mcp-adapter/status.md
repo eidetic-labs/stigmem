@@ -8,14 +8,15 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` |
 | Default surface | `external` |
-| Publication state | `hold` - package metadata, live protocol smoke, and repo-local adapter security regressions are aligned; host UI smoke, dry-run evidence, and maintainer publication clearance remain incomplete. |
+| Publication state | `hold` - package metadata, live protocol smoke, repo-local adapter security regressions, and npm dry-run evidence are aligned; host UI smoke and maintainer publication clearance remain incomplete. |
 
 The MCP adapter source exists under `adapters/mcp` and includes TypeScript unit
 tests. The package metadata is aligned to the current alpha release line, and
 the repo-local stdio smoke now validates against a live node. Focused adapter
 security regressions cover recall framing, malformed write rejection, and
-credential/session boundaries. Publication still requires host UI smoke,
-dry-run, and maintainer clearance validation.
+credential/session boundaries. npm dry-runs pass with `--tag alpha` and
+provenance enabled. Publication still requires host UI smoke and maintainer
+clearance validation.
 
 ## Release History
 

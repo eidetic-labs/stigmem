@@ -24,7 +24,7 @@ classified as `publish-now` in this track.
 
 | Order | Surface | Feature record | Implementation | Disposition | Missing validation before publication |
 | --- | --- | --- | --- | --- | --- |
-| 1 | MCP adapter | `features/mcp-adapter/` | `adapters/mcp/`; `experimental/mcp-adapter/` connector guides | `hold` | Validate host connector guides; run live node plus host-specific MCP smoke; complete model/tool security certification; record dry-run evidence and maintainer clearance before publication. |
+| 1 | MCP adapter | `features/mcp-adapter/` | `adapters/mcp/`; `experimental/mcp-adapter/` connector guides | `hold` | Package metadata, live protocol smoke, adapter security regressions, and dry-run evidence are complete; host UI smoke and maintainer clearance remain required before npm publication. |
 | 2 | Obsidian adapter | `features/obsidian-adapter/` | `experimental/obsidian-adapter/cli/`; `experimental/obsidian-adapter/plugin/` | `hold` | Validate CLI package and Obsidian plugin packaging; run live-vault sync smoke; review key-storage guidance; decide registry/channel ownership. |
 | 3 | Cognee adapter | `features/cognee-adapter/` | `experimental/cognee-adapter/` | `defer` | Assign owner; validate against a known Cognee runtime, vector store, and dependency set; refresh package metadata before reconsidering publication. |
 | 4 | Letta adapter | `features/letta-adapter/` | `experimental/letta-adapter/` | `defer` | Assign owner; validate against a real Letta server and agent memory; refresh dependency/package compatibility. |

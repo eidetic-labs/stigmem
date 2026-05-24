@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-- No unreleased feature-local changes beyond the ADR-020 record migration.
+- Aligned `stigmem-mcp` package metadata to the current alpha release line for
+  publication readiness while keeping registry publication held pending live
+  connector smoke, security certification, dry-run evidence, and maintainer
+  clearance.
 
 ## 2026-05-21
 

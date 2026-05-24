@@ -1,12 +1,19 @@
 {
   "name": "stigmem-mcp",
-  "version": "0.4.0",
+  "version": "0.9.0-alpha.8",
   "description": "MCP server for Stigmem — exposes assert_fact, query_facts, recall, resolve_contradiction, subscribe_scope",
   "type": "module",
   "bin": {
     "stigmem-mcp": "./dist/server.js"
   },
   "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "files": [
+    "dist/server.js",
+    "dist/server.js.map",
+    "dist/server.d.ts",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
@@ -15,9 +22,30 @@
     "test": "vitest run --exclude dist/**"
   },
   "license": "Apache-2.0",
+  "author": "Eidetic Labs <oss@eidetic-labs.ai>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eidetic-labs/stigmem.git",
+    "directory": "adapters/mcp"
+  },
+  "homepage": "https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter#readme",
+  "bugs": {
+    "url": "https://github.com/eidetic-labs/stigmem/issues"
+  },
+  "keywords": [
+    "stigmem",
+    "mcp",
+    "model-context-protocol",
+    "agents",
+    "memory"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@eidetic-labs/stigmem-ts": "workspace:*",
+    "@eidetic-labs/stigmem-ts": "0.9.0-alpha.8",
     "zod": "^3.23.0"
   },
   "devDependencies": {

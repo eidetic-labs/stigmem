@@ -61,6 +61,7 @@ def pull_facts(
     params: list[Any] = list(query_scopes)
     conditions: list[str] = [
         f"scope IN ({scope_placeholders})",
+        "tenant_id = ?",
         "hlc IS NOT NULL",  # only facts with an HLC are replication-eligible
         "received_from IS NULL",  # do not re-federate inbound facts (§3.1)
         "entity NOT LIKE 'stigmem:conflict:%'",  # conflict entities are local (§6.5)
@@ -68,6 +69,7 @@ def pull_facts(
         "re_federation_blocked = 0",  # exclude company-scope relay-blocked facts (§6.8.2)
         "(derived_from IS NULL OR derived_from = '' OR derived_from = '[]')",
     ]
+    params.append("default")
     if cursor:
         conditions.append("hlc > ?")
         params.append(cursor)

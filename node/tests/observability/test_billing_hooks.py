@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import importlib
+import sys
 from collections.abc import Generator
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,12 +15,22 @@ import stigmem_node.billing as billing_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_module
 from stigmem_node.main import create_app
-from stigmem_node.plugins import PluginContext, PluginManifest, TenantContext
+from stigmem_node.plugins import PluginManifest
 from stigmem_node.plugins.testing import stigmem_plugins
 
 create_api_key = auth_mod.create_api_key
 apply_migrations = db_mod.apply_migrations
 Settings = settings_module.Settings
+_MULTI_TENANT_PLUGIN_SRC = (
+    Path(__file__).resolve().parents[3] / "experimental" / "multi-tenant" / "src"
+)
+
+
+def _multi_tenant_manifest() -> PluginManifest:
+    if str(_MULTI_TENANT_PLUGIN_SRC) not in sys.path:
+        sys.path.insert(0, str(_MULTI_TENANT_PLUGIN_SRC))
+    plugin = importlib.import_module("stigmem_plugin_multi_tenant")
+    return plugin.plugin_manifest()
 
 # ---------------------------------------------------------------------------
 # Fixture: client with CaptureBus injected
@@ -76,8 +89,11 @@ def test_fact_written_event_emitted(hooked_client: tuple) -> None:
     assert isinstance(evt.ts, str) and len(evt.ts) > 0
 
 
-def test_fact_written_captures_tenant_id(tmp_path: object) -> None:
-    """fact_written carries the plugin-resolved tenant_id from the API key."""
+def test_fact_written_captures_multi_tenant_plugin_tenant_id(
+    tmp_path: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """fact_written carries the tenant_id resolved by the multi-tenant plugin."""
     db_file = str(tmp_path) + "/billing_tenant.db"  # type: ignore[operator]
     apply_migrations(db_path=db_file)
 
@@ -92,24 +108,9 @@ def test_fact_written_captures_tenant_id(tmp_path: object) -> None:
     billing_mod.set_hook_bus(bus)
 
     key = create_api_key("agent:tester", ["read", "write"], tenant_id="acme-corp")
+    monkeypatch.setenv("STIGMEM_MULTI_TENANT_ENABLED", "true")
 
-    def tenant_resolve(
-        _ctx: PluginContext,
-        value: TenantContext,
-        **_: object,
-    ) -> TenantContext:
-        source_tenant_id = value.metadata.get("source_tenant_id")
-        if isinstance(source_tenant_id, str):
-            return TenantContext(tenant_id=source_tenant_id)
-        return value
-
-    manifest = PluginManifest(
-        name="billing-tenant-test",
-        version="1.0.0",
-        hooks={"tenant_resolve": tenant_resolve},
-    )
-
-    with stigmem_plugins([manifest]):
+    with stigmem_plugins([_multi_tenant_manifest()]):
         app = create_app()
         with TestClient(app, raise_server_exceptions=True) as c:
             resp = c.post(

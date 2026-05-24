@@ -285,7 +285,8 @@ key = create_api_key(
 ```
 
 See [Multi-Tenant Scoping](https://github.com/eidetic-labs/stigmem/tree/main/features/multi-tenant)
-for the full isolation model and migration details.
+for the full isolation model and migration details. In v0.9.0a8 this is
+experimental plugin behavior; it is not a default shared-node support claim.
 
 ## Environment variables
 

@@ -214,11 +214,13 @@ ts
 
 <div className="stigmem-keypoint">
 
-**Audit entries are automatically scoped to the caller's tenant.**
+**Audit entries are scoped to the caller's tenant when tenant context is active.**
 
-A key provisioned for tenant <code>"acme"</code> can only query audit
-entries where <code>tenant_id = 'acme'</code> — cross-tenant audit
-data is never returned, even with node-admin permissions.
+Default installs collapse audit tenant context to <code>"default"</code>. With
+the opt-in multi-tenant plugin registered and enabled, a key provisioned for
+tenant <code>"acme"</code> can only query audit entries where
+<code>tenant_id = 'acme'</code>; cross-tenant audit data is not returned through
+tenant-scoped audit queries.
 
 </div>
 

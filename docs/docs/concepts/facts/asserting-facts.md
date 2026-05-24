@@ -254,11 +254,13 @@ required. See the
 
 <div className="stigmem-keypoint">
 
-**`tenant_id` is derived automatically from the API key.**
+**`tenant_id` is derived automatically from the API key when the opt-in plugin is enabled.**
 
-No extra field in the request body is needed. All facts written with
-a key scoped to <code>"acme"</code> are invisible to keys scoped to
-any other tenant.
+No extra field in the request body is needed. Default installs collapse all
+callers to <code>"default"</code>. With
+<code>stigmem-plugin-multi-tenant</code> registered and enabled, facts written
+with a key scoped to <code>"acme"</code> are invisible to keys scoped to any
+other tenant.
 
 </div>
 
@@ -279,9 +281,9 @@ curl -s -X POST http://localhost:8765/v1/facts \
   }' | jq .
 ```
 
-A key scoped to `"beta"` cannot read or overwrite this fact —
-`GET /v1/facts?entity=user:alice` returns an empty result for any
-other tenant.
+A key scoped to `"beta"` cannot read or overwrite this fact when the
+multi-tenant plugin is enabled. `GET /v1/facts?entity=user:alice` returns an
+empty result for any other tenant.
 
 ### Querying facts — tenant-isolated
 

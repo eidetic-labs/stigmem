@@ -8,6 +8,7 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` |
 | Default surface | `external` |
+| Publication state | `hold` - CLI/plugin source exists, but live-vault smoke, package/channel ownership, and key-storage review remain incomplete. |
 
 The adapter source exists for both CLI/daemon and plugin surfaces, but it
 remains experimental and outside the current alpha artifact set. Promotion

@@ -16,6 +16,7 @@ complete.
 | Owner | `unowned` |
 | Package | `none` |
 | Implementation | `experimental/deploy-grafana` |
+| Publication state | `defer` - observability seed material, not a standalone plugin artifact; live stack validation remains open. |
 
 ## Release History
 

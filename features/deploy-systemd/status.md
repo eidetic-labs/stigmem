@@ -15,6 +15,7 @@ validation, offline-install validation, and ownership are not complete.
 | Owner | `unowned` |
 | Package | `stigmem-node` |
 | Implementation | `experimental/deploy-systemd` |
+| Publication state | `defer` - deployment helper, not a standalone plugin artifact; live distro validation remains open. |
 
 ## Release History
 

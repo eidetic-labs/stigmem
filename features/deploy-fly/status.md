@@ -14,6 +14,7 @@ restore evidence, production secrets review, and ownership are not complete.
 | Owner | `unowned` |
 | Package | `stigmem` |
 | Implementation | `experimental/deploy-fly` |
+| Publication state | `defer` - deployment recipe, not a standalone plugin artifact; live deployment validation remains open. |
 
 ## Release History
 

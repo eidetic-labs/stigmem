@@ -8,6 +8,7 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` |
 | Default surface | `external` |
+| Publication state | `defer` - unowned model adapter; live Gemini API/model and dependency validation are not complete. |
 
 The adapter source exists on `main` as experimental model/tooling adapter
 surface area. It remains deferred and outside the current alpha artifact set.

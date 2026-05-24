@@ -8,6 +8,7 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` |
 | Default surface | `external` |
+| Publication state | `defer` - unowned design-partner adapter; live Cognee and dependency validation are not complete. |
 
 The adapter source exists on `main` as experimental design-partner surface
 area. It remains dormant and outside the current alpha artifact set. Promotion

@@ -14,6 +14,7 @@ validation, and ownership are not complete.
 | Owner | `unowned` |
 | Package | `stigmem` |
 | Implementation | `experimental/deploy-helm` |
+| Publication state | `defer` - deployment chart, not a standalone plugin artifact; live cluster validation remains open. |
 
 ## Release History
 

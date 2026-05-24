@@ -81,6 +81,7 @@ becomes a second source of truth.
 | `docs/internal/features/feature-record-migration.md` | Maintainer transition record | Feature-record migration sequencing and closeout | Maintenance-mode transition history only. |
 | `docs/internal/roadmap-standards.md` | Maintainer standard | Roadmap and release-roadmap format | Controls `ROADMAP.md` and `docs/internal/releases/`. |
 | `docs/internal/plugin-publication-contract.md` | Maintainer standard | Standalone experimental plugin publication gates | Controls plugin artifact readiness; does not grant ADR-008 graduation. |
+| `docs/internal/plugin-publication-disposition.md` | Maintainer tracker | Adapter/tooling publication order and disposition for the active plugin readiness milestone | Feeds Goal 4 and Goal 5 planning; does not publish artifacts or override feature records. |
 | `docs/internal/releases/` | Strategic planning | Per-release contracts and historical release scope | Links back to `ROADMAP.md` and `CHANGELOG.md`. |
 | `docs/internal/release-cadence.md` | Maintainer runbook | Release publishing sequence | Does not define release scope. |
 | `docs/internal/development.md` | Maintainer runbook | Local development workflow | Does not own product behavior. |

@@ -14,6 +14,7 @@ and deployment posture are not complete.
 | Owner | `unowned` |
 | Package | `dashboard` |
 | Implementation | `experimental/dashboard` |
+| Publication state | `defer` - internal/deployment surface, not a standalone plugin publication target in this milestone. |
 
 ## Release History
 

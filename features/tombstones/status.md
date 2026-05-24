@@ -8,6 +8,7 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` spec lineage |
 | Default surface | `opt-in` |
+| Publication state | `hold` - package metadata aligned; registry publication blocked on dry-run evidence and maintainer clearance. |
 
 Tombstone source exists on `main` as an experimental plugin package. Default
 installs do not expose tombstone behavior unless `stigmem-plugin-tombstones` is

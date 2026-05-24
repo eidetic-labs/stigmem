@@ -8,6 +8,7 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` spec lineage |
 | Default surface | `opt-in` |
+| Publication state | `hold` - package metadata aligned; registry publication blocked on dry-run evidence and maintainer clearance. |
 
 Time-travel query source exists on `main` as an experimental plugin package for
 `v0.9.0a4` validation. The default install rejects `as_of` requests unless the

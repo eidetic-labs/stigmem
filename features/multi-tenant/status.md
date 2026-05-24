@@ -8,6 +8,7 @@
 | Stability | `experimental` |
 | First release | `v0.9.0a8` validation target |
 | Default surface | `opt-in` |
+| Publication state | `hold` - package metadata aligned; registry publication blocked on dry-run evidence and maintainer clearance. |
 
 Multi-tenant scoping exists on `main` as an opt-in experimental plugin source
 package. Default installs collapse callers into the `default` tenant. Plugin
@@ -18,7 +19,7 @@ tenant resolution.
 
 | Release | Change | Evidence |
 | --- | --- | --- |
-| `v0.9.0a8` in progress | Multi-tenant isolation extraction validates the opt-in experimental plugin boundary without promoting shared-node readiness. | `docs/internal/releases/v0.9.0a8-roadmap.md`; `features/multi-tenant/evidence.md` |
+| `v0.9.0a8` shipped | Multi-tenant isolation extraction validated the opt-in experimental plugin boundary without promoting shared-node readiness. | `docs/internal/releases/v0.9.0a8-roadmap.md`; `features/multi-tenant/evidence.md` |
 | Post-extraction main | Plugin source package, default-collapse behavior, plugin-enabled tenant isolation, federation default-tenant-only boundary, and cross-surface route/plugin tests landed. | `experimental/multi-tenant/`; `node/tests/routes/test_multi_tenant.py`; `node/tests/plugins/test_multi_tenant_plugin_scaffold.py`; `node/tests/federation/test_pull.py` |
 | `0.9.xA` planned | Continue alpha validation and decide whether a future Spec-X assignment is needed. | `ROADMAP.md` |
 

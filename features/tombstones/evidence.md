@@ -19,6 +19,7 @@
 | --- | --- | --- |
 | Plugin scaffold | `node/tests/plugins/test_tombstone_plugin_scaffold.py` | Entry point, manifest, config, route gates, filter gates, hooks, and migration declaration. |
 | Plugin gating | `node/tests/plugins/test_tombstone_plugin_gating.py` | Default-install gating, route registration, filter enablement, and plugin-loaded behavior. |
+| Publication contract | `node/tests/plugins/test_security_plugin_publication_contract.py` | Package metadata, entry point, build metadata, README presence, and feature status publication-state checks. |
 | Tombstone behavior | `node/tests/tombstones/` | Filtering, provenance, admin behavior, tombstone route behavior, selective revocation recovery, legal-hold silence, side-channel checks, signer authority, forged signature rejection, and audit events. |
 | Fast gate | `bash scripts/check.sh python` | Python lint, type, tests, and security bundle. |
 

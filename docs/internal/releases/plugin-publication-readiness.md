@@ -91,16 +91,22 @@ readiness review as standalone experimental artifacts.
 - `stigmem-plugin-multi-tenant`
 
 **Included changes:**
-- Verify package metadata and entry points.
-- Verify disabled-gate no-op/pass-through behavior.
-- Verify enabled-mode behavior against feature records.
-- Align feature records with any remaining publication gaps.
+- Align package metadata, entry points, README files, build metadata, and source
+  distribution manifests with the publication contract.
+- Preserve disabled-gate no-op/pass-through behavior and enabled-mode behavior
+  through existing focused plugin tests.
+- Align feature records with the remaining publication hold: package metadata
+  is ready, but registry publication still requires dry-run evidence and
+  maintainer clearance.
 
 **Excluded / deferred:**
 - Publishing artifacts before maintainer clearance.
 - ADR-008 graduation.
 
 **Evidence required:**
+- `node/tests/plugins/test_security_plugin_publication_contract.py` validates
+  package metadata, entry points, README presence, build metadata, source
+  distribution manifests, and feature-record publication state.
 - Focused plugin tests pass.
 - Feature security/evidence records identify residual risks and publication
   state consistently.
@@ -181,7 +187,7 @@ carve-out applies.
 | --- | --- | --- |
 | Alpha closeout | a8 docs marked historical and release-readiness updated. | Active |
 | Publication contract | Standard checklist and package evidence requirements exist. | Complete for baseline contract |
-| Security-sensitive plugin readiness | Each plugin has package metadata, disabled behavior, enabled behavior, and security evidence reviewed. | Pending |
+| Security-sensitive plugin readiness | Each plugin has package metadata, disabled behavior, enabled behavior, and security evidence reviewed. | Complete for source-package readiness; publication remains blocked on Goal 5 dry-run evidence and maintainer clearance. |
 | Adapter/tooling disposition | Each adapter/tooling surface is classified before publication. | Pending |
 | Publish clearance | Maintainer approval, dry-runs, provenance/signature evidence, and post-publish verification. | Pending |
 

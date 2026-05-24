@@ -1,6 +1,6 @@
 [project]
 name = "stigmem-plugin-lazy-instruction-discovery"
-version = "0.9.0a2"
+version = "0.9.0a8"
 description = "Experimental lazy instruction discovery plugin for Stigmem."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -20,7 +20,7 @@ classifiers = [
 ]
 dependencies = [
     "pydantic>=2",
-    "stigmem-node>=0.9.0a2,<1.0.0",
+    "stigmem-node>=0.9.0a8,<1.0.0",
 ]
 
 [project.entry-points."stigmem.plugins"]
@@ -28,7 +28,7 @@ lazy-instruction-discovery = "stigmem_plugin_lazy_instruction_discovery:plugin_m
 
 [project.urls]
 Homepage = "https://github.com/eidetic-labs/stigmem"
-Documentation = "https://github.com/eidetic-labs/stigmem/tree/main/experimental/lazy-instruction-discovery"
+Documentation = "https://github.com/eidetic-labs/stigmem/tree/main/features/lazy-instruction-discovery"
 Repository = "https://github.com/eidetic-labs/stigmem"
 Issues = "https://github.com/eidetic-labs/stigmem/issues"
 

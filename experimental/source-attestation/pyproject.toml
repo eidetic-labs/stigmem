@@ -1,14 +1,56 @@
 [project]
 name = "stigmem-plugin-source-attestation"
-version = "0.1.0"
+version = "0.9.0a8"
 description = "Experimental source-attestation plugin for Stigmem."
+readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [
+  { name = "Eidetic Labs", email = "oss@eidetic-labs.ai" },
+]
+keywords = ["stigmem", "plugins", "source-attestation", "provenance", "federation"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "pydantic>=2",
+    "stigmem-node>=0.9.0a8,<1.0.0",
 ]
 
 [project.entry-points."stigmem.plugins"]
 source-attestation = "stigmem_plugin_source_attestation:plugin_manifest"
+
+[project.urls]
+Homepage = "https://github.com/eidetic-labs/stigmem"
+Documentation = "https://github.com/eidetic-labs/stigmem/tree/main/features/source-attestation"
+Repository = "https://github.com/eidetic-labs/stigmem"
+Issues = "https://github.com/eidetic-labs/stigmem/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stigmem_plugin_source_attestation"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "README.md",
+  "STATUS.md",
+  "security.md",
+  "spec.md",
+  "concept.md",
+  "src/stigmem_plugin_source_attestation/**/*.py",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

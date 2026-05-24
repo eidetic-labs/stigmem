@@ -23,6 +23,7 @@
 | --- | --- | --- |
 | Plugin scaffold | `node/tests/plugins/test_multi_tenant_plugin_scaffold.py` | Entry point, manifest, capabilities, hooks, config gate, identity and metadata tenant resolution, authorization allow decisions, pass-through filters, discovery, and health check. |
 | Plugin validation companion | `node/tests/plugins/test_multi_tenant_plugin_validation.py` | Capability surface, disabled-gate invariance, malformed gate parsing, and tenant-ID normalization. |
+| Publication contract | `node/tests/plugins/test_security_plugin_publication_contract.py` | Package metadata, entry point, build metadata, README presence, and feature status publication-state checks. |
 | Tenant validation helper | `node/tests/test_tenant_validation.py` | Tenant-ID normalization and rejection rules. |
 | Tenant context metadata | `node/tests/test_tenant_context_metadata.py`; `node/tests/lifecycle/test_tenant_resolution_consistency_script.py`; `scripts/check_tenant_resolution_consistency.py` | Every core `TenantContext` construction declares `tenant_context_source`; federation pins are explicitly marked `pinned`. |
 | Tenant isolation routes | `node/tests/routes/test_multi_tenant.py` | Default collapse for identity, fact get/query, garden namespace, audit partition, and env-gate behavior; plugin-enabled tenant visibility, recall isolation, recall tracing label propagation, subscription fan-out isolation, garden isolation, slug reuse, cross-tenant write denial, and audit scoping. |

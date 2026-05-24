@@ -8,6 +8,7 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` spec lineage |
 | Default surface | `opt-in` |
+| Publication state | `hold` - package metadata aligned; registry publication blocked on dry-run evidence and maintainer clearance. |
 
 Basic garden CRUD, membership, and direct `garden_id` fact read/write guards
 remain core. Advanced cross-cutting ACL behavior is extracted into an opt-in

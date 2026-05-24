@@ -132,6 +132,25 @@ For machine-readable output:
 stigmem plugins list --json
 ```
 
+Search the published plugin catalog:
+
+```bash
+stigmem plugins search tenant
+```
+
+Print install and enable commands for a known plugin:
+
+```bash
+stigmem plugins enable multi-tenant
+```
+
+Diagnose installed/enabled mismatches:
+
+```bash
+stigmem plugins doctor
+stigmem doctor
+```
+
 Describe one plugin:
 
 ```bash

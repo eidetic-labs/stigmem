@@ -23,7 +23,15 @@ from .capability import (
 )
 from .federation import _cmd_federation_register_peer
 from .maintenance import _cmd_decay_sweep, _cmd_migrate_normalize_entities
-from .plugins import _cmd_plugins_describe, _cmd_plugins_list
+from .plugins import (
+    _cmd_doctor,
+    _cmd_plugins_describe,
+    _cmd_plugins_disable,
+    _cmd_plugins_doctor,
+    _cmd_plugins_enable,
+    _cmd_plugins_list,
+    _cmd_plugins_search,
+)
 from .snapshot import _cmd_snapshot_create, _cmd_snapshot_restore
 
 
@@ -160,6 +168,28 @@ def _build_parser() -> argparse.ArgumentParser:
     pd_p.add_argument("name", metavar="NAME", help="plugin name")
     pd_p.add_argument("--json", action="store_true", help="output as JSON")
     pd_p.set_defaults(func=_cmd_plugins_describe)
+
+    ps_p = plugins_sub.add_parser("search", help="search the built-in plugin catalog")
+    ps_p.add_argument("query", metavar="QUERY", help="catalog search term")
+    ps_p.add_argument("--json", action="store_true", help="output as JSON")
+    ps_p.set_defaults(func=_cmd_plugins_search)
+
+    pe_p = plugins_sub.add_parser("enable", help="print install and enable commands")
+    pe_p.add_argument("name", metavar="NAME", help="plugin slug or package name")
+    pe_p.set_defaults(func=_cmd_plugins_enable)
+
+    pdis_p = plugins_sub.add_parser("disable", help="print disable command")
+    pdis_p.add_argument("name", metavar="NAME", help="plugin slug or package name")
+    pdis_p.set_defaults(func=_cmd_plugins_disable)
+
+    pdoc_p = plugins_sub.add_parser("doctor", help="diagnose plugin install and enable state")
+    pdoc_p.add_argument("--json", action="store_true", help="output as JSON")
+    pdoc_p.set_defaults(func=_cmd_plugins_doctor)
+
+    # ------------------------------------------------------------------ doctor
+    doctor_p = sub.add_parser("doctor", help="print node and plugin diagnostics")
+    doctor_p.add_argument("--json", action="store_true", help="output as JSON")
+    doctor_p.set_defaults(func=_cmd_doctor)
 
     # ------------------------------------------------------------------ federation
     fed_p = sub.add_parser(

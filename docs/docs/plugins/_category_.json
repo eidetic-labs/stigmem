@@ -1,0 +1,8 @@
+{
+  "label": "Plugin Catalog",
+  "position": 55,
+  "link": {
+    "type": "doc",
+    "id": "plugins/index"
+  }
+}

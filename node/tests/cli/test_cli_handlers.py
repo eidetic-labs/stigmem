@@ -345,6 +345,76 @@ class TestPluginsCli:
         assert rc == 1
         assert "plugin not found: missing-plugin" in capsys.readouterr().err
 
+    def test_search_plugins_catalog(self, capsys: pytest.CaptureFixture) -> None:
+        from stigmem_node.cli import _cmd_plugins_search
+
+        rc = _cmd_plugins_search(_args(query="tenant", json=False))
+        out = capsys.readouterr().out
+
+        assert rc == 0
+        assert "stigmem-plugin-multi-tenant" in out
+        assert "STIGMEM_MULTI_TENANT_ENABLED" in out
+
+    def test_enable_disable_print_operator_commands(
+        self, capsys: pytest.CaptureFixture
+    ) -> None:
+        from stigmem_node.cli import _cmd_plugins_disable, _cmd_plugins_enable
+
+        assert _cmd_plugins_enable(_args(name="source-attestation")) == 0
+        enable_out = capsys.readouterr().out
+        assert "stigmem-plugin-source-attestation" in enable_out
+        assert "export STIGMEM_SOURCE_ATTESTATION_ENABLED=1" in enable_out
+
+        assert _cmd_plugins_disable(_args(name="stigmem-plugin-source-attestation")) == 0
+        disable_out = capsys.readouterr().out
+        assert "unset STIGMEM_SOURCE_ATTESTATION_ENABLED" in disable_out
+
+    def test_plugin_doctor_reports_enabled_missing_plugin(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        import stigmem_node.cli.plugins as plugins_cli
+        from stigmem_node.cli import _cmd_plugins_doctor
+
+        class EmptyRegistry:
+            def plugin_infos(self) -> list[Any]:
+                return []
+
+        monkeypatch.setenv("STIGMEM_TOMBSTONES_ENABLED", "1")
+        monkeypatch.setattr(plugins_cli, "_load_plugin_registry", lambda: EmptyRegistry())
+
+        rc = _cmd_plugins_doctor(_args(json=False))
+        out = capsys.readouterr().out
+
+        assert rc == 0
+        assert "stigmem-plugin-tombstones status=enabled-not-installed" in out
+        assert "Install stigmem-plugin-tombstones" in out
+
+    def test_top_level_doctor_json_includes_plugins(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        import stigmem_node.cli.plugins as plugins_cli
+        from stigmem_node.cli import _cmd_doctor
+
+        class EmptyRegistry:
+            def plugin_infos(self) -> list[Any]:
+                return []
+
+        monkeypatch.setattr(plugins_cli, "_load_plugin_registry", lambda: EmptyRegistry())
+
+        rc = _cmd_doctor(_args(json=True))
+        payload = json.loads(capsys.readouterr().out)
+
+        assert rc == 0
+        assert payload["status"] == "ok"
+        assert {row["package"] for row in payload["plugins"]} >= {
+            "stigmem-plugin-multi-tenant",
+            "stigmem-plugin-tombstones",
+        }
+
 
 class TestCapabilityVerify:
     def test_valid_token_human_output(

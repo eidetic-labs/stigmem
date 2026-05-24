@@ -1,6 +1,6 @@
 {
   "name": "stigmem-mcp",
-  "version": "0.9.0-alpha.8",
+  "version": "0.9.0-alpha.9",
   "description": "MCP server for Stigmem — exposes assert_fact, query_facts, recall, resolve_contradiction, subscribe_scope, and lint_scope",
   "type": "module",
   "bin": {
@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@eidetic-labs/stigmem-ts": "0.9.0-alpha.8",
+    "@eidetic-labs/stigmem-ts": "workspace:*",
     "zod": "^3.23.0"
   },
   "devDependencies": {

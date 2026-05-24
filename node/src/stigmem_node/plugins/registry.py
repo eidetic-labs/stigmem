@@ -49,7 +49,7 @@ from .hooks import HOOK_SPECS, HookOrdering, HookSemantic
 from .manifest import PluginManifest
 
 logger = logging.getLogger("stigmem.plugins.registry")
-_FALLBACK_STIGMEM_VERSION = "0.9.0a8"
+_FALLBACK_STIGMEM_VERSION = "0.9.0a9"
 
 T = TypeVar("T")
 
@@ -803,6 +803,12 @@ def register_core_handler(
 
 
 def _current_stigmem_version() -> str:
+    try:
+        from stigmem_node import __version__
+
+        return __version__
+    except ImportError:
+        pass
     try:
         return version("stigmem-node")
     except PackageNotFoundError:

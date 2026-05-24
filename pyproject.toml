@@ -1,6 +1,6 @@
 [project]
 name = "stigmem"
-version = "0.9.0a8"
+version = "0.9.0a9"
 description = "Stigmem — federated knowledge fabric for AI agents (meta-package)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,18 +23,52 @@ classifiers = [
 # Operators self-hosting a node use `pip install stigmem[node]` or
 # `pip install stigmem-node` directly. See the install table below for extras.
 dependencies = [
-  "stigmem-py>=0.9.0a8,<1.0.0",
+  "stigmem-py>=0.9.0a9,<1.0.0",
 ]
 
 [project.optional-dependencies]
 # pip install stigmem[node] → SDK + reference node service
-node = ["stigmem-node>=0.9.0a8,<1.0.0"]
+node = ["stigmem-node>=0.9.0a9,<1.0.0"]
 # pip install stigmem[openclaw] → SDK + OpenClaw adapter
-openclaw = ["stigmem-openclaw>=0.9.0a8,<1.0.0"]
+openclaw = ["stigmem-openclaw>=0.9.0a9,<1.0.0"]
+# pip install stigmem[<feature>] → SDK + one published experimental plugin
+lazy-instruction-discovery = [
+  "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
+]
+memory-garden-acl = [
+  "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
+]
+multi-tenant = [
+  "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
+]
+source-attestation = [
+  "stigmem-plugin-source-attestation>=0.1.0,<2.0.0",
+]
+time-travel = [
+  "stigmem-plugin-time-travel>=0.1.0,<2.0.0",
+]
+tombstones = [
+  "stigmem-plugin-tombstones>=0.1.0,<2.0.0",
+]
+# pip install stigmem[plugins-all] → SDK + all currently published experimental plugins
+plugins-all = [
+  "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
+  "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
+  "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
+  "stigmem-plugin-source-attestation>=0.1.0,<2.0.0",
+  "stigmem-plugin-time-travel>=0.1.0,<2.0.0",
+  "stigmem-plugin-tombstones>=0.1.0,<2.0.0",
+]
 # pip install stigmem[all] → everything published from this monorepo
 all = [
-  "stigmem-node>=0.9.0a8,<1.0.0",
-  "stigmem-openclaw>=0.9.0a8,<1.0.0",
+  "stigmem-node>=0.9.0a9,<1.0.0",
+  "stigmem-openclaw>=0.9.0a9,<1.0.0",
+  "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
+  "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
+  "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
+  "stigmem-plugin-source-attestation>=0.1.0,<2.0.0",
+  "stigmem-plugin-time-travel>=0.1.0,<2.0.0",
+  "stigmem-plugin-tombstones>=0.1.0,<2.0.0",
 ]
 
 [project.urls]

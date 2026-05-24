@@ -2,7 +2,7 @@
 name: stigmem-node
 title: Stigmem
 description: Persistent federated memory for OpenClaw agents — boot handshake, handoff, decision, and escalation surfaces backed by a Stigmem node.
-version: 1.0.8
+version: 1.0.9
 metadata:
   openclaw:
     emoji: "🧠"
@@ -36,8 +36,9 @@ metadata:
 Gives your OpenClaw agent persistent, federated memory via [Stigmem](https://stigmem.dev) — an open-source knowledge fabric that stores facts as immutable, signed assertions and replicates them across nodes.
 
 > **Alpha status.** This source copy is prepared for the v0.9.0a9 ClawHub
-> artifact refresh. The OpenClaw skill is available for v0.9.0aN evaluation only,
-> not as a recommended production integration. The adapter separates retrieved
+> artifact refresh, which adds plugin-awareness pointers. The OpenClaw skill
+> remains available for v0.9.0aN evaluation only, not as a recommended
+> production integration. The adapter separates retrieved
 > content from
 > instruction-channel recall output and exports a required system prompt
 > directive, but the broader ADR-003 hardening line still needs MCP parity,
@@ -100,6 +101,31 @@ adapter.emit_handoff(
     idempotency_key="session-2026-05-02-abc",
 )
 ```
+
+## Compatible Stigmem plugins
+
+Your Stigmem node can be extended with opt-in plugins that change what this
+OpenClaw skill sees when it calls boot, handoff, decision, and escalation.
+The plugins are installed and enabled on the Stigmem node, not on the OpenClaw
+agent side, but their effects are visible to this skill's recall and fact-write
+surfaces.
+
+| Plugin | Effect on this skill |
+|---|---|
+| [`stigmem-plugin-multi-tenant`](https://pypi.org/project/stigmem-plugin-multi-tenant/) | Boot context, handoff, decision, and escalation become tenant-scoped on the node side |
+| [`stigmem-plugin-source-attestation`](https://pypi.org/project/stigmem-plugin-source-attestation/) | Recalled facts include source trust scores; low-trust sources can be filtered or quarantined by the node |
+| [`stigmem-plugin-memory-garden-acl`](https://pypi.org/project/stigmem-plugin-memory-garden-acl/) | Memory-garden membership controls which gardens the boot handshake reads from |
+| [`stigmem-plugin-tombstones`](https://pypi.org/project/stigmem-plugin-tombstones/) | Tombstoned facts are filtered from recall results and boot context |
+| [`stigmem-plugin-time-travel`](https://pypi.org/project/stigmem-plugin-time-travel/) | Historical handoff and decision queries become available against the node |
+| [`stigmem-plugin-lazy-instruction-discovery`](https://pypi.org/project/stigmem-plugin-lazy-instruction-discovery/) | Boot context becomes lazier: instructions are resolved on demand from the node |
+
+These plugins do not require changes to this OpenClaw skill or your agent code.
+Whether any are active depends on how your Stigmem node is configured. Ask your
+Stigmem node operator whether plugins are enabled, or inspect `stigmem doctor`
+output on the node side.
+
+See [docs.stigmem.dev/en/latest/docs/plugins](https://docs.stigmem.dev/en/latest/docs/plugins)
+for the full plugin catalog, per-plugin enablement, and security carve-outs.
 
 ## Security
 
@@ -190,6 +216,15 @@ Stigmem nodes can federate with each other to share public-scoped facts across o
 ## Changelog
 
 > **Note on versioning.** This ClawHub skill is independently versioned along its own semver line. The skill's `version:` (currently 1.0.x) tracks the skill's ClawHub release history; the dependency on stigmem is expressed via the `install.package` pin (currently `stigmem-openclaw>=0.9.0a9,<1.0.0`). The bare-stigmem version line was reset to v0.9.0a1 in May 2026 — see [the retraction post](https://dev.to/offbyonce/walking-back-our-v10-announcement-resetting-to-v090a1-as-the-first-build-al0) — but ClawHub registry rules require monotonically increasing skill versions, so the skill stays on its 1.0.x line. The two version surfaces are intentionally decoupled.
+
+### v1.0.9
+
+- Documentation: adds a "Compatible Stigmem plugins" section for OpenClaw
+  operators, pointing to the six published Stigmem plugin packages and
+  clarifying that plugin installation and enablement happen on the Stigmem node
+  side, not inside the OpenClaw skill environment.
+- Documentation: refreshes the alpha-status note for the v0.9.0a9 ClawHub
+  artifact refresh.
 
 ### v1.0.8
 

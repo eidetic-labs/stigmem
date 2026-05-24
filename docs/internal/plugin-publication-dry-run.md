@@ -67,5 +67,5 @@ instructions before any artifact is published.
 
 The MCP adapter now has a separate npm dry-run record:
 [`mcp-publication-dry-run.md`](mcp-publication-dry-run.md). It remains a
-no-publication `hold` because host UI smoke and explicit maintainer publication
-clearance are not complete.
+no-publication `hold` because explicit maintainer publication clearance is not
+complete.

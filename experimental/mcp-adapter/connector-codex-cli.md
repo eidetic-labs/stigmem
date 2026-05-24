@@ -27,17 +27,16 @@ pnpm build
 
 ## Step 2 — Add to Codex config
 
-Edit `~/.codex/config.yaml` (create it if it doesn't exist):
+Edit `~/.codex/config.toml` (create it if it doesn't exist):
 
-```yaml
-mcpServers:
-  stigmem:
-    command: node
-    args:
-      - /absolute/path/to/stigmem/adapters/mcp/dist/server.js
-    env:
-      STIGMEM_URL: "http://localhost:8765"
-      STIGMEM_API_KEY: "sk-your-key-here"
+```toml
+[mcp_servers.stigmem]
+command = "node"
+args = ["/absolute/path/to/stigmem/adapters/mcp/dist/server.js"]
+
+[mcp_servers.stigmem.env]
+STIGMEM_URL = "http://localhost:8765"
+STIGMEM_API_KEY = "sk-your-key-here"
 ```
 
 Replace `/absolute/path/to/stigmem` with the real path.
@@ -48,9 +47,13 @@ Omit `STIGMEM_API_KEY` if auth is disabled on your node.
 Start a Codex session and confirm Stigmem tools are available:
 
 ```bash
-codex --tools
-# → Should list: assert_fact, query_facts, recall, resolve_contradiction, subscribe_scope, lint_scope
+codex mcp list
+codex mcp get stigmem
 ```
+
+The configured Stigmem server should appear as an enabled stdio MCP server.
+Inside a Codex session, the host should expose `assert_fact`, `query_facts`,
+`recall`, `resolve_contradiction`, `subscribe_scope`, and `lint_scope`.
 
 ## Smoke test
 
@@ -64,16 +67,15 @@ session-aware calls against the configured node.
 
 ## Per-project config
 
-You can also place the config in the project root as `.codex/config.yaml`:
+You can also place the config in the project root as `.codex/config.toml`:
 
-```yaml
-mcpServers:
-  stigmem:
-    command: node
-    args:
-      - ./stigmem/adapters/mcp/dist/server.js
-    env:
-      STIGMEM_URL: "http://localhost:8765"
+```toml
+[mcp_servers.stigmem]
+command = "node"
+args = ["./stigmem/adapters/mcp/dist/server.js"]
+
+[mcp_servers.stigmem.env]
+STIGMEM_URL = "http://localhost:8765"
 ```
 
 Relative paths in `args` are resolved from the project root when Codex is run
@@ -83,7 +85,7 @@ from that directory.
 
 | Symptom | Fix |
 |---------|-----|
-| Tools not listed | Verify config path: `~/.codex/config.yaml` or `.codex/config.yaml` |
+| Tools not listed | Verify config path: `~/.codex/config.toml` or `.codex/config.toml`, then run `codex mcp list` |
 | `spawn node ENOENT` | Use the absolute path to node: `which node` |
 | Auth errors | Check `STIGMEM_API_KEY` matches the key created on the node |
 

@@ -2,9 +2,10 @@
 
 Exposes [Stigmem](../../README.md) as an [MCP](https://modelcontextprotocol.io) server.
 Any stdio-capable MCP host can launch this adapter, but the `0.9.0-alpha.8`
-publication gate only validates Codex CLI plus the repo-local MCP protocol
-smoke. Continue.dev, Cursor, Zed, Claude Code, and custom-host connector use is
-experimental until a host-specific smoke record exists.
+publication gate only validates Codex CLI, Claude Code, and the repo-local MCP
+protocol smoke. Gemini CLI has passed MCP tool execution with a host
+final-response caveat. Continue.dev, Cursor, Zed, and custom-host connector use
+is experimental until a host-specific smoke record exists.
 
 ## Tools exposed
 
@@ -34,9 +35,10 @@ pnpm build
 
 The package metadata is aligned to `0.9.0-alpha.8` for publication readiness,
 but registry publication is still held. Use the workspace build until the
-feature record records Codex CLI host UI smoke and explicit maintainer
-clearance. Continue.dev, Cursor, and Zed guides remain unvalidated for this
-alpha package state.
+feature record records explicit maintainer clearance. Continue.dev, Cursor, and
+Zed guides remain unvalidated for this alpha package state. Gemini CLI users
+should review the host caveat in the MCP smoke record before relying on clean
+final-response rendering.
 
 ### Configure in Claude Code
 

@@ -22,10 +22,12 @@ inside popular editors, agent CLIs, and non-MCP runtimes.
 
 These guides configure the existing MCP server (`stigmem/adapters/mcp/`) as a
 tool provider inside each host. Build the server once, then register it in each
-host's config. For `0.9.0-alpha.8`, Codex CLI is the only host UI targeted for
-publication clearance; Continue.dev, Cursor, and Zed remain experimental
+host's config. For `0.9.0-alpha.8`, Codex CLI and Claude Code are the validated
+host UI targets for publication clearance. Gemini CLI has host smoke evidence
+with a final-response caveat. Continue.dev, Cursor, and Zed remain experimental
 connector guides until host-specific smoke evidence is recorded. The canonical
-feature record is [`features/mcp-adapter`](https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter).
+feature record is
+[`features/mcp-adapter`](https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter).
 
 <div className="stigmem-fields">
 
@@ -48,8 +50,20 @@ feature record is [`features/mcp-adapter`](https://github.com/eidetic-labs/stigm
 </div>
 
 <div>
-<dt>Codex CLI (targeted smoke)</dt>
-<dt><span className="stigmem-fields__type"><code>~/.codex/config.yaml</code></span></dt>
+<dt>Codex CLI (validated smoke)</dt>
+<dt><span className="stigmem-fields__type"><code>~/.codex/config.toml</code></span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter">features/mcp-adapter</a></dd>
+</div>
+
+<div>
+<dt>Claude Code (validated smoke)</dt>
+<dt><span className="stigmem-fields__type"><code>.mcp.json</code> or <code>--mcp-config</code></span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter">features/mcp-adapter</a></dd>
+</div>
+
+<div>
+<dt>Gemini CLI (smoke caveat)</dt>
+<dt><span className="stigmem-fields__type"><code>gemini mcp add</code> project config</span></dt>
 <dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter">features/mcp-adapter</a></dd>
 </div>
 

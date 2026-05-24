@@ -20,9 +20,11 @@ security posture.
 ## Residual Risk
 
 - MCP hosts can still render tool output unsafely. Repo-local tests certify the
-  adapter framing. Codex CLI is the required `0.9.0-alpha.8` host UI smoke
-  target; Continue.dev, Cursor, and Zed remain unvalidated experimental
-  connector guides until future host-specific smoke evidence exists.
+  adapter framing. Codex CLI and Claude Code are validated `0.9.0-alpha.8`
+  host UI smoke targets. Gemini CLI completed MCP tool execution with a host
+  final-response caveat. Continue.dev, Cursor, and Zed remain unvalidated
+  experimental connector guides until future host-specific smoke evidence
+  exists.
 - API keys configured in MCP host files must be protected through local secret
   handling or host-specific secure storage.
 - Tool calls that write facts depend on the node's auth, quota, audit, and
@@ -30,8 +32,7 @@ security posture.
   layer.
 - Package metadata, repo-local protocol/security smoke, and npm dry-run
   evidence are aligned for publication readiness, but registry publication
-  remains held until Codex CLI host UI smoke and maintainer clearance are
-  complete.
+  remains held until maintainer clearance is complete.
 
 ## Carve-outs
 

@@ -8,6 +8,7 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` spec lineage |
 | Default surface | `opt-in` |
+| Publication state | `hold` - package metadata aligned; registry publication blocked on dry-run evidence and maintainer clearance. |
 
 Lazy instruction discovery source exists on `main` as an experimental plugin
 package. Default installs do not expose the lazy-instruction routes unless the
@@ -21,7 +22,7 @@ plugin is registered and configured.
 | ADR | Redesign around ADR-003 capability model. | Blocked | ADR-003 implementation shape. |
 | Conformance vectors | Instruction-write, quarantine, recall, namespace isolation. | Partial | Instruction and plugin tests. |
 | Operator soak | Non-critical agent workload soak. | Open | None currently recorded. |
-| Documentation parity | Boot stub, manifest, operator approval, security docs. | Open | Artifact publication deferred. |
+| Documentation parity | Boot stub, manifest, operator approval, security docs. | Partial | Package README, source metadata, and feature-owned record are aligned; artifact publication evidence deferred. |
 
 ## Known Gaps
 

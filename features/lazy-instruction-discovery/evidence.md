@@ -16,6 +16,7 @@
 | --- | --- | --- |
 | Plugin scaffold | `node/tests/plugins/test_lazy_instruction_plugin_scaffold.py` | Entry point, manifest, config, routes, and registration. |
 | Plugin integration | `node/tests/plugins/test_lazy_instruction_plugin_integration.py` | Plugin-loaded route behavior. |
+| Publication contract | `node/tests/plugins/test_security_plugin_publication_contract.py` | Package metadata, entry point, build metadata, README presence, and feature status publication-state checks. |
 | Instruction channel tests | `node/tests/instruction/test_phase10_instruction.py` | Instruction-typed fact handling and recall channel behavior. |
 | Migration lifecycle tests | `node/tests/lifecycle/test_instruction_migrate_b2.py` | Instruction migration behavior. |
 | Fast gate | `bash scripts/check.sh python` | Python lint, type, tests, and security bundle. |

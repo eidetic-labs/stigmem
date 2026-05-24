@@ -15,6 +15,7 @@
 | --- | --- | --- |
 | Plugin scaffold | `node/tests/plugins/test_source_attestation_plugin_scaffold.py` | Entry point, manifest, config, hooks, and discovery. |
 | Plugin validation | `node/tests/plugins/test_source_attestation_plugin_validation.py` | Default inert behavior, environment-gate-only no-op behavior, plugin-loaded source-attestation checks, recall source-weight gating, and federated fact attestation-boundary checks. |
+| Publication contract | `node/tests/plugins/test_security_plugin_publication_contract.py` | Package metadata, entry point, build metadata, README presence, and feature status publication-state checks. |
 | Assertion enforcement | `node/tests/plugins/test_source_attestation_plugin_scaffold.py` | Normalized direct-source and delegated-source decisions when assertion enforcement is enabled. |
 | Recall/federation hooks | `node/tests/plugins/test_source_attestation_plugin_scaffold.py` | Recall rank no-op behavior with zero source-trust weight and normalized federation sender matching. |
 | Fast gate | `bash scripts/check.sh python` | Python lint, type, tests, and security bundle. |

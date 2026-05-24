@@ -71,6 +71,7 @@ and quarantine surfaces. The a6 disposition is:
 | --- | --- | --- |
 | Plugin scaffold | `node/tests/plugins/test_memory_garden_acl_plugin_scaffold.py` | Entry point, manifest, config schema, hook declarations, and discovery. |
 | Plugin validation | `node/tests/plugins/test_memory_garden_acl_plugin_validation.py` | Registration gates, independent OIDC/recall enablement, and hook ordering. |
+| Publication contract | `node/tests/plugins/test_security_plugin_publication_contract.py` | Package metadata, entry point, build metadata, README presence, and feature status publication-state checks. |
 | Garden routes | `node/tests/routes/test_gardens.py` | Core garden CRUD, membership, and direct garden fact access behavior. |
 | Quarantine routes | `node/tests/routes/test_quarantine.py` | Spec-08 quarantine-garden promote/reject and moderator role behavior retained in core. |
 | Protocol conformance | `node/tests/conformance/test_conformance_v1.py` | Garden setup and member/non-member access conformance. |

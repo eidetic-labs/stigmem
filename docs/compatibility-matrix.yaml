@@ -6,37 +6,37 @@
 #
 # Initial population at v0.9.0a1 baseline. Update on every release.
 
-generated_for_protocol_version: 0.9.0a7
+generated_for_protocol_version: 0.9.0a8
 
 packages:
   node:
     name: stigmem-node
     versions:
-      - "0.9.0a7"
+      - "0.9.0a8"
       - "0.9.0a1"
     repository: github.com/eidetic-labs/stigmem
   python_sdk:
     name: stigmem-py
     versions:
-      - "0.9.0a7"
+      - "0.9.0a8"
       - "0.9.0a1"
     repository: github.com/eidetic-labs/stigmem
   typescript_sdk:
     name: "@eidetic-labs/stigmem-ts"
     versions:
-      - "0.9.0-alpha.7"
+      - "0.9.0-alpha.8"
       - "0.9.0-alpha.1"
     repository: github.com/eidetic-labs/stigmem
   meta_package:
     name: stigmem
     versions:
-      - "0.9.0a7"
+      - "0.9.0a8"
       - "0.9.0a1"
     repository: github.com/eidetic-labs/stigmem
   openclaw_adapter:
     name: stigmem-openclaw
     versions:
-      - "0.9.0a7"
+      - "0.9.0a8"
       - "0.9.0a1"
     repository: github.com/eidetic-labs/stigmem
   go_sdk:
@@ -53,8 +53,8 @@ connectors:
   - id: openclaw
     name: OpenClaw
     requires:
-      openclaw_adapter: ">=0.9.0a7,<1.0.0"
-      python_sdk: ">=0.9.0a7,<1.0.0"
+      openclaw_adapter: ">=0.9.0a8,<1.0.0"
+      python_sdk: ">=0.9.0a8,<1.0.0"
     notes: "Hardened v0.9 adapter; experimental flag until external operator soak per ADR-002."
 
 features:
@@ -652,12 +652,12 @@ features:
     notes: "Deferred lifecycle/event adapter; installation, ownership, live Paperclip, and security validation remain future alpha work."
 
 protocol_compatibility:
-  - protocol_version: "0.9.0a7"
+  - protocol_version: "0.9.0a8"
     supported_by:
-      node: ">=0.9.0a7"
-      python_sdk: ">=0.9.0a7"
-      typescript_sdk: ">=0.9.0-alpha.7"
-      openclaw_adapter: ">=0.9.0a7"
+      node: ">=0.9.0a8"
+      python_sdk: ">=0.9.0a8"
+      typescript_sdk: ">=0.9.0-alpha.8"
+      openclaw_adapter: ">=0.9.0a8"
     deprecation_window: "Pre-1.0 alpha; no stability guarantee. Pin to specific versions per ADR-001."
 
   - protocol_version: "0.9.0a1"

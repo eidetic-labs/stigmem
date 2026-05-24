@@ -67,7 +67,7 @@ what `make demo` does and how to drive it manually.
 
 No Python installation required — the nodes run in containers.
 
-:::caution Memory Garden ACL is opt-in in v0.9.0a7
+:::caution Memory Garden ACL is opt-in in v0.9.0a8
 
 Default deployments enforce direct `garden_id` reads and writes, but
 tenant-wide fact queries, recall ranking, push subscriptions, OIDC permission
@@ -75,7 +75,7 @@ ceilings, and graph traversal do not filter by garden membership unless
 `stigmem-plugin-memory-garden-acl` is installed, registered, and enabled with
 the relevant `STIGMEM_MEMORY_GARDEN_ACL_*` flags. Check `/v1/doctor` for the
 current `memory_garden_acl_filtering` state before relying on advanced garden
-filtering. The endpoint is unauthenticated in v0.9.0a7 and exposes only this
+filtering. The endpoint is unauthenticated in v0.9.0a8 and exposes only this
 coarse ops posture, not garden names, memberships, tenants, or policy subjects.
 
 :::
@@ -372,14 +372,14 @@ The transcript records the gate command, exit code, elapsed time, and
 expected scenario outcomes. It does not contain secrets or private
 keys.
 
-:::caution Helm / Kubernetes is deferred in v0.9.0a7
+:::caution Helm / Kubernetes is deferred in v0.9.0a8
 The Helm chart has been moved to
 [`experimental/deploy-helm/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/deploy-helm)
 per
 [ADR-002](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/002-v1-scope.md).
 It remains buildable but is unsupported until the
 [ADR-008 reintroduction gates](https://github.com/eidetic-labs/stigmem/blob/main/docs/adr/008-experimental-gates.md)
-pass. The supported v0.9.0a7 deployment surface is Docker Compose
+pass. The supported v0.9.0a8 deployment surface is Docker Compose
 (above).
 :::
 

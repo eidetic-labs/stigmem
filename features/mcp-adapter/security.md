@@ -31,6 +31,26 @@ security posture.
   evidence are aligned for publication readiness, but registry publication
   remains held until host UI smoke and maintainer clearance are complete.
 
+## Carve-outs
+
+The `0.9.0-alpha.8` MCP adapter does not implement:
+
+- Rate limiting: there is no per-second or per-minute call cap. A misbehaving
+  MCP client, or a host bug spamming tool calls, can exhaust upstream node
+  capacity.
+- Response size caps: large recall or query results are returned in full; the
+  adapter does not enforce truncation beyond tool arguments and upstream node
+  behavior.
+- Concurrent connection limits: stdio is a single-host subprocess transport, so
+  there is no adapter-level multi-connection listener to cap.
+- Filesystem path hardening in tool arguments: current tool schemas do not
+  accept filesystem paths. The adapter relies on Zod schemas and upstream node
+  validation for the present six-tool surface.
+
+These carve-outs are acceptable for the stdio subprocess model and alpha
+distribution. They become required design gates if an HTTP or SSE transport is
+added.
+
 ## Advisories and Findings
 
 None currently recorded for the MCP adapter. The adapter contributes to R-05,

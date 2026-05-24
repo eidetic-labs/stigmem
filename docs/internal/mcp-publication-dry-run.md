@@ -2,7 +2,7 @@
 
 **Status:** complete for no-publication closeout
 **Applies to:** `stigmem-mcp` `0.9.0-alpha.8`
-**Last updated:** 2026-05-23
+**Last updated:** 2026-05-24
 
 This record captures the MCP adapter publication dry-run after package metadata,
 live protocol smoke, and repo-local adapter security certification landed. No
@@ -45,10 +45,10 @@ npm publish --dry-run --provenance --tag alpha
 | Field | Value |
 | --- | --- |
 | Filename | `stigmem-mcp-0.9.0-alpha.8.tgz` |
-| Package size | `10958` bytes |
-| Unpacked size | `42372` bytes |
-| SHA-1 shasum | `85b664ebb6bc226a79755d2e5fafdb5b8328577a` |
-| Integrity | `sha512-wcWUD+K48pTj4wEFxJdCRZWqLrGlLGCjD90CWjwVvGsNpi8incragFA4yKv/petmD5aGBVil2Mwuz59Dfb8X2Q==` |
+| Package size | `11963` bytes |
+| Unpacked size | `45593` bytes |
+| SHA-1 shasum | `13a0f9177ca99c58a814bdc4a6057adc93312a02` |
+| Integrity | `sha512-TX5tSkI9FAslUHSem29wiV6dg3z4OrHc+crGBwK0DPs9lnslElQTqVhyuUXL6+LUft5B5xUdPn0roX5e8/IY+Q==` |
 
 ## Pack Contents
 
@@ -84,3 +84,14 @@ future maintainer-approved npm publication is executed and must be withdrawn:
 - Explicit maintainer clearance for npm publication.
 - Post-publish install verification from a clean project, only after
   publication is approved.
+
+### Publication-Scope Limitations
+
+The MCP adapter ships stdio transport only in `0.9.0-alpha.8`. HTTP and SSE
+transports defined by MCP are out of scope for this package state. Operators
+using hosts that only support HTTP MCP servers cannot use this adapter until a
+future HTTP transport lands.
+
+HTTP transport remains a follow-up gate. Rate limits and connection caps become
+required when the adapter accepts network clients instead of a single
+editor-launched stdio host process.

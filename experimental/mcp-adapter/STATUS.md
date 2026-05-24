@@ -1,8 +1,8 @@
 # mcp-adapter — Status
 
-This legacy experimental status file is retained as a compatibility pointer.
-The canonical feature record now lives in
-[`features/mcp-adapter/`](../../features/mcp-adapter/README.md).
+This file is a compatibility pointer for existing `experimental/mcp-adapter/`
+links. The canonical status record now lives at
+[`features/mcp-adapter/status.md`](../../features/mcp-adapter/status.md).
 
 The MCP adapter source is active and experimental. Its package version remains
 independent from the alpha artifact set until release-line package, connector,

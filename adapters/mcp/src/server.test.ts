@@ -1,8 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 import { StigmemAuthError } from "@eidetic-labs/stigmem-ts";
 
-import { MCP_SERVER_VERSION, SYSTEM_PROMPT_DIRECTIVE, TOOLS, handleToolCall } from "./server.js";
+import {
+  MCP_SERVER_VERSION,
+  SYSTEM_PROMPT_DIRECTIVE,
+  TOOLS,
+  handleToolCall,
+  zodToJsonSchema,
+} from "./server.js";
 
 describe("TOOLS", () => {
   it("exposes the expected MCP tool names", () => {
@@ -30,6 +37,12 @@ describe("TOOLS", () => {
     expect(schema.required).toContain("entity");
     expect(schema.required).toContain("value");
     expect(schema.properties.value.oneOf).toHaveLength(7);
+  });
+
+  it("fails closed on unsupported Zod constructors instead of mis-advertising strings", () => {
+    expect(() =>
+      zodToJsonSchema(z.object({ recursive: z.lazy(() => z.string()) })),
+    ).toThrow("zodToJsonSchema: unhandled Zod constructor ZodLazy");
   });
 });
 
@@ -71,6 +84,31 @@ describe("handleToolCall", () => {
       }),
     );
     expect(JSON.parse(result.content[0].text)).toEqual({ id: "fact-001" });
+  });
+
+  it("generates a new default session id for each session-aware tool call", async () => {
+    const originalSession = process.env["STIGMEM_SESSION_ID"];
+    delete process.env["STIGMEM_SESSION_ID"];
+    try {
+      client.query
+        .mockResolvedValueOnce({ facts: [], total: 0, cursor: null })
+        .mockResolvedValueOnce({ facts: [], total: 0, cursor: null });
+
+      await handleToolCall(client, "query_facts", { entity: "user:alice" });
+      await handleToolCall(client, "query_facts", { entity: "user:bob" });
+
+      const firstSession = client.query.mock.calls[0][0].session_id;
+      const secondSession = client.query.mock.calls[1][0].session_id;
+      expect(firstSession).toMatch(/^mcp:/);
+      expect(secondSession).toMatch(/^mcp:/);
+      expect(firstSession).not.toBe(secondSession);
+    } finally {
+      if (originalSession === undefined) {
+        delete process.env["STIGMEM_SESSION_ID"];
+      } else {
+        process.env["STIGMEM_SESSION_ID"] = originalSession;
+      }
+    }
   });
 
   it("passes explicit session and provenance options for assert_fact", async () => {
@@ -307,6 +345,48 @@ describe("handleToolCall", () => {
 
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain("Error: HTTP 401: forbidden");
+  });
+
+  it("does not include STIGMEM_API_KEY value in tool-call error responses", async () => {
+    const fakeKey = "stk_test_NEVER_LEAK_THIS_xxxxxxxxxxxx";
+    const originalEnv = process.env["STIGMEM_API_KEY"];
+    process.env["STIGMEM_API_KEY"] = fakeKey;
+    try {
+      client.assertFact.mockRejectedValueOnce(
+        new Error(`HTTP 401 from upstream; request had key ${fakeKey}`),
+      );
+
+      const result = await handleToolCall(client, "assert_fact", {
+        entity: "test",
+        relation: "test",
+        value: { type: "string", v: "test" },
+        source: "agent:test",
+      });
+
+      const serialized = JSON.stringify(result);
+      expect(result.isError).toBe(true);
+      expect(serialized).not.toContain(fakeKey);
+      expect(serialized).toContain("[redacted STIGMEM_API_KEY]");
+    } finally {
+      if (originalEnv === undefined) {
+        delete process.env["STIGMEM_API_KEY"];
+      } else {
+        process.env["STIGMEM_API_KEY"] = originalEnv;
+      }
+    }
+  });
+
+  it("rejects oversized tool arguments before calling the SDK", async () => {
+    const result = await handleToolCall(client, "assert_fact", {
+      entity: "x".repeat(1_100_000),
+      relation: "test",
+      value: { type: "string", v: "test" },
+      source: "agent:test",
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("MCP tool arguments exceed");
+    expect(client.assertFact).not.toHaveBeenCalled();
   });
 
   it("returns an explicit error for unknown tools", async () => {

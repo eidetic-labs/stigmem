@@ -14,6 +14,7 @@ complete.
 | Owner | `unowned` |
 | Package | `none` |
 | Implementation | `experimental/paperclip-adapter` |
+| Publication state | `defer` - no package artifact is defined; automated tests, live Paperclip validation, and security review remain open. |
 
 ## Release History
 

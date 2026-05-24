@@ -15,6 +15,7 @@ surface.
 | Owner | `unowned` |
 | Package | `none` |
 | Implementation | `experimental/eval-harness` |
+| Publication state | `defer` - concept-only in the current repository state; no runnable harness/corpus package exists. |
 
 ## Release History
 

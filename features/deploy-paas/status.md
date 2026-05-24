@@ -14,6 +14,7 @@ scaling/cost review, and ownership are not complete.
 | Owner | `unowned` |
 | Package | `stigmem` |
 | Implementation | `experimental/deploy-paas` |
+| Publication state | `defer` - deployment recipes, not standalone plugin artifacts; live platform validation remains open. |
 
 ## Release History
 

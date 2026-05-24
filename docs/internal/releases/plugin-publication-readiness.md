@@ -123,7 +123,8 @@ security-sensitive core plugin readiness so the launch train does not sprawl.
   Paperclip, dashboard, evaluation harness, and deployment helpers.
 
 **Included changes:**
-- Classify each surface as publish-now, hold, or defer.
+- Classify each surface as publish-now, hold, or defer in
+  [`docs/internal/plugin-publication-disposition.md`](../plugin-publication-disposition.md).
 - Define per-surface missing live validation.
 - Avoid publishing adapter artifacts that cannot be meaningfully validated.
 
@@ -188,7 +189,7 @@ carve-out applies.
 | Alpha closeout | a8 docs marked historical and release-readiness updated. | Active |
 | Publication contract | Standard checklist and package evidence requirements exist. | Complete for baseline contract |
 | Security-sensitive plugin readiness | Each plugin has package metadata, disabled behavior, enabled behavior, and security evidence reviewed. | Complete for source-package readiness; publication remains blocked on Goal 5 dry-run evidence and maintainer clearance. |
-| Adapter/tooling disposition | Each adapter/tooling surface is classified before publication. | Pending |
+| Adapter/tooling disposition | Each adapter/tooling surface is classified before publication. | Complete for publication-order classification; hold/defer surfaces still require follow-up validation before any Goal 5 publication action. |
 | Publish clearance | Maintainer approval, dry-runs, provenance/signature evidence, and post-publish verification. | Pending |
 
 ## Release Notes Candidates

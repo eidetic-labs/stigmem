@@ -13,6 +13,7 @@ and mocked tests exist, but release-line validation is not complete.
 | Owner | `unowned` |
 | Package | `stigmem-openai-tools-adapter` |
 | Implementation | `experimental/openai-tools-adapter` |
+| Publication state | `defer` - live provider validation, package validation, dependency validation, and ownership remain unresolved. |
 
 ## Release History
 

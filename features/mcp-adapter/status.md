@@ -8,6 +8,7 @@
 | Stability | `experimental` |
 | First release | `0.9.0a1` |
 | Default surface | `external` |
+| Publication state | `hold` - implementation and tests exist, but release-line package alignment, host smoke, and security certification remain incomplete. |
 
 The MCP adapter source exists under `adapters/mcp` and includes TypeScript unit
 tests. The package version remains independent from the alpha artifact set, so

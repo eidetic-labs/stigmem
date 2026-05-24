@@ -21,7 +21,8 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 <div className="stigmem-grid">
 
-<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22; <strong>v0.9.0a5 shipped</strong> 2026-05-22; <strong>v0.9.0a6 shipped</strong> 2026-05-23; <strong>v0.9.0a7 shipped</strong> 2026-05-23; <strong>v0.9.0a8 active</strong> 2026-05-23.</p></div>
+<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22; <strong>v0.9.0a5 shipped</strong> 2026-05-22; <strong>v0.9.0a6 shipped</strong> 2026-05-23; <strong>v0.9.0a7 shipped</strong> 2026-05-23; <strong>v0.9.0a8 shipped</strong> 2026-05-23.</p></div>
+<div><h4>Plugin publication readiness</h4><p>Active post-a8 horizon for standalone experimental plugin artifact evidence. Does not open beta, RC, GA, or a new alpha release.</p></div>
 <div><h4>Future beta line</h4><p>Hardened core, 30-day external operator soak. No active milestone today.</p></div>
 <div><h4>Future release-candidate line</h4><p>Observation window after hardened-core exit. No active milestone today.</p></div>
 <div><h4>Future GA line</h4><p>Wire format committed, compatibility commitment honored across the v1.x line. No active milestone today.</p></div>
@@ -34,7 +35,7 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 <div className="stigmem-lead">
 
-**Active alpha validation release for multi-tenant plugin-boundary behavior.**
+**Historical alpha validation release for multi-tenant plugin-boundary behavior.**
 
 `v0.9.0a8` validates `stigmem-plugin-multi-tenant` as the opt-in boundary for
 tenant scoping. Default installs collapse callers into the single `default`
@@ -53,8 +54,8 @@ is registered and explicitly enabled.
 
 <div>
 <dt>Milestone</dt>
-<dt><span className="stigmem-fields__type">active</span></dt>
-<dd>Tracked at [milestone v0.9.0a8](https://github.com/Eidetic-Labs/stigmem/milestone/9).</dd>
+<dt><span className="stigmem-fields__type">shipped</span></dt>
+<dd>Tracked at [milestone v0.9.0a8](https://github.com/Eidetic-Labs/stigmem/milestone/9) and shipped as [GitHub release v0.9.0a8](https://github.com/eidetic-labs/stigmem/releases/tag/v0.9.0a8).</dd>
 </div>
 
 <div>
@@ -71,8 +72,8 @@ is registered and explicitly enabled.
 
 <div>
 <dt>Exit</dt>
-<dt><span className="stigmem-fields__type">in progress</span></dt>
-<dd>Default installs collapse to `default`, plugin-loaded tenant scoping validates, security projections align, package dry-runs pass, and the a8 milestone closes before tag clearance.</dd>
+<dt><span className="stigmem-fields__type">complete</span></dt>
+<dd>Default installs collapse to `default`, plugin-loaded tenant scoping validates, security projections align, package dry-runs pass, and the release published as `v0.9.0a8`.</dd>
 </div>
 
 </div>

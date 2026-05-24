@@ -127,7 +127,7 @@ for the full feature-owned disposition.
 
 ## Security Posture — v0.9.0a8 (2026-05-23)
 
-`v0.9.0a8` is the active alpha release horizon. The release validates
+`v0.9.0a8` is a shipped alpha release. The release validates
 multi-tenant scoping as an experimental, opt-in plugin boundary: default
 installs collapse every caller into the `default` tenant, while non-default
 tenant resolution remains inactive unless `stigmem-plugin-multi-tenant` is

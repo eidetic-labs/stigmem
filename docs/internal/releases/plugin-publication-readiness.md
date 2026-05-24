@@ -145,19 +145,23 @@ security-sensitive core plugin readiness so the launch train does not sprawl.
 meet the publication contract and receive maintainer clearance.
 
 **Included changes:**
-- Build/package dry-runs.
-- Registry provenance and signature verification.
-- GitHub release evidence or plugin-specific release notes as appropriate.
-- Post-publish verification and rollback/yank instructions.
+- Build/package dry-runs for security-sensitive plugin source packages.
+- No-publication disposition because no plugin has explicit maintainer
+  clearance for registry publication.
+- Registry provenance, signature verification, release evidence, post-publish
+  verification, and rollback/yank instructions remain future publication
+  requirements for any later approved artifact.
 
 **Excluded / deferred:**
 - Publishing plugins that fail the contract.
 - Publishing by implication from source-package existence.
 
 **Evidence required:**
-- Dry-run logs are captured or linked.
-- Published package metadata matches the feature record.
-- Public docs state that published plugins remain experimental.
+- Dry-run commands and hashes are captured in
+  [`docs/internal/plugin-publication-dry-run.md`](../plugin-publication-dry-run.md).
+- No published package metadata exists for this goal.
+- Public docs continue to state that plugin and adapter surfaces are
+  experimental, opt-in, held, or deferred.
 
 ## Artifact Surfaces
 
@@ -190,13 +194,13 @@ carve-out applies.
 | Publication contract | Standard checklist and package evidence requirements exist. | Complete for baseline contract |
 | Security-sensitive plugin readiness | Each plugin has package metadata, disabled behavior, enabled behavior, and security evidence reviewed. | Complete for source-package readiness; publication remains blocked on Goal 5 dry-run evidence and maintainer clearance. |
 | Adapter/tooling disposition | Each adapter/tooling surface is classified before publication. | Complete for publication-order classification; hold/defer surfaces still require follow-up validation before any Goal 5 publication action. |
-| Publish clearance | Maintainer approval, dry-runs, provenance/signature evidence, and post-publish verification. | Pending |
+| Publish clearance | Maintainer approval, dry-runs, provenance/signature evidence, and post-publish verification. | Dry-run complete; no publication approved or executed. |
 
 ## Release Notes Candidates
 
-Not applicable until an approved plugin artifact publication occurs. When a
-plugin artifact ships, release notes must state that the plugin is
-experimental, opt-in, and not ADR-008 graduated.
+No release notes are published for this closeout because no plugin artifact was
+published. When a future plugin artifact ships, release notes must state that
+the plugin is experimental, opt-in, and not ADR-008 graduated.
 
 ## Deferred / Follow-Up Work
 
@@ -208,5 +212,6 @@ experimental, opt-in, and not ADR-008 graduated.
 
 ## Historical Disposition
 
-Not yet historical. Complete after the approved plugin artifacts either publish
-with evidence or are explicitly deferred with a documented disposition.
+The readiness track is complete for the no-publication closeout: source-package
+dry-runs were recorded, adapter/tooling dispositions were recorded, and all
+registry publication remains blocked pending explicit maintainer clearance.

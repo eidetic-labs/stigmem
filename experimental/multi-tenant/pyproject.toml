@@ -19,7 +19,7 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "pydantic>=2",
+    "pydantic>=2,<3",
     "stigmem-node>=0.9.0a8,<1.0.0",
 ]
 
@@ -47,10 +47,7 @@ include = [
   "README.md",
   "STATUS.md",
   "security.md",
+  "spec.md",
   "concept.md",
   "src/stigmem_plugin_multi_tenant/**/*.py",
 ]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-asyncio_mode = "auto"

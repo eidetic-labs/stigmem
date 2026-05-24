@@ -104,6 +104,35 @@ Before a plugin artifact is published, the maintainer must confirm:
 - post-publish verification checks the registry artifact, install command,
   entry point discovery, and feature-record links
 
+## Supply-Chain Attestation
+
+Every Python plugin reaching `publish-ready` must satisfy these supply-chain
+requirements:
+
+- PyPI Trusted Publisher via GitHub Actions OIDC; do not publish with a
+  long-lived PyPI API token.
+- Sigstore signing for every wheel and source distribution publication, with
+  the verification command recorded in the feature evidence record.
+- CycloneDX or SPDX JSON SBOM generated for the release artifact and attached
+  to the corresponding GitHub release or publication evidence.
+- Dependency bounds that include appropriate upper limits for the release line;
+  dependencies must not use open-ended `>=N` ranges without a documented
+  compatibility reason.
+- Reproducible build commands and SHA-256 hashes for wheel and source
+  distribution artifacts recorded in feature evidence or changelog entries.
+
+Every npm-distributed adapter reaching `publish-ready` must satisfy these
+supply-chain requirements:
+
+- `publishConfig.provenance: true` in `package.json`.
+- Publication through GitHub Actions OIDC-backed npm provenance, not a
+  long-lived npm token.
+- Dependency ranges appropriate for the trust tier: exact pins for prerelease
+  Eidetic Labs dependencies and reviewed major-version bounds for stable
+  third-party dependencies.
+- Dry-run output that records package contents, integrity, tag, access level,
+  and rollback or deprecation instructions before publication.
+
 ## Publication Approval
 
 Publication requires maintainer approval after the relevant goal issue closes.

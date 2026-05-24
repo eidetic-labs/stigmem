@@ -15,7 +15,9 @@ class PluginManifest(BaseModel):
     """Minimum manifest accepted by PR 4-INF.1 manual registration."""
 
     name: str = Field(pattern=r"^[a-z][a-z0-9-]{2,63}$")
-    version: str = Field(pattern=r"^\d+\.\d+\.\d+(?:[-+][a-zA-Z0-9.-]+)?$")
+    version: str = Field(
+        pattern=r"^\d+\.\d+\.\d+(?:(?:a|b|rc)\d+|[-+][a-zA-Z0-9.-]+)?$"
+    )
     requires_stigmem: str = ">=0.9.0a8"
     capabilities: frozenset[str] = frozenset()
     async_safe: bool = True

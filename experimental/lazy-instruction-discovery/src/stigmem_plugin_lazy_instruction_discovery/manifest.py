@@ -9,7 +9,7 @@ from .config import LazyInstructionDiscoveryConfig
 from .routes import router
 
 PLUGIN_NAME = "stigmem-plugin-lazy-instruction-discovery"
-PLUGIN_VERSION = "0.9.0-alpha.3"
+PLUGIN_VERSION = "0.9.0a8"
 REQUIRES_STIGMEM = ">=0.9.0a3"
 
 

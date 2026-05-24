@@ -98,7 +98,7 @@ def test_security_sensitive_plugin_package_metadata_is_publication_ready(
     assert project["requires-python"] == ">=3.11"
     assert project["license"]["text"] == "Apache-2.0"
     assert {"name": "Eidetic Labs", "email": "oss@eidetic-labs.ai"} in project["authors"]
-    assert "pydantic>=2" in project["dependencies"]
+    assert "pydantic>=2,<3" in project["dependencies"]
     assert "stigmem-node>=0.9.0a8,<1.0.0" in project["dependencies"]
     assert project["entry-points"]["stigmem.plugins"][plugin.entry_point] == (
         f"{plugin.module_name}:plugin_manifest"

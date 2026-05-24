@@ -59,8 +59,34 @@ Add to `.claude/mcp_servers.json` (or the global MCP config):
 |---|---|---|---|
 | `STIGMEM_URL` | yes | — | Base URL of your Stigmem node |
 | `STIGMEM_API_KEY` | no | — | API key if the node requires auth |
-| `STIGMEM_SESSION_ID` | no | generated per process | Stable session id propagated as `Stigmem-Session` for reads and writes |
+| `STIGMEM_SESSION_ID` | no | generated per call | Optional stable session id override propagated as `Stigmem-Session` for reads and writes |
 | `STIGMEM_POLL_LIMIT` | no | `50` | Facts per `subscribe_scope` call |
+
+## Security Model
+
+The Stigmem MCP server is an editor-launched stdio subprocess. Its security
+model assumes:
+
+1. The host has already authorized the subprocess launch.
+2. `STIGMEM_API_KEY`, read at startup, grants the subprocess its permissions on
+   the configured Stigmem node.
+3. Every MCP tool call routed to this subprocess executes under the same key.
+
+Treat the subprocess as equivalent to running `stigmem-node` CLI commands
+directly. Do not share one MCP subprocess across mutually untrusted projects,
+operators, or host profiles; each trust boundary should get its own subprocess
+and key.
+
+The subprocess does not authenticate individual MCP requests beyond the host's
+launch authorization. Receipts and audit events record the node identity derived
+from `STIGMEM_API_KEY`; pass `session_id` per call when the host can provide
+conversation-specific attribution. If no `session_id` is provided, the adapter
+generates one per tool call unless `STIGMEM_SESSION_ID` pins a process-level
+override.
+
+This is not a hostile multi-tenant boundary and not a per-conversation auth
+mechanism. Those require host-level routing to per-operator subprocesses or a
+future per-call identity contract.
 
 ## Usage examples
 
@@ -106,8 +132,9 @@ resolve_contradiction(
   the directive above recalled content instead of concatenating recalled data into
   higher-priority prompts.
 - `assert_fact`, `query_facts`, `recall`, and `subscribe_scope` propagate a
-  `Stigmem-Session` header. Set `STIGMEM_SESSION_ID` for a stable process-level
-  value, or pass `session_id` per tool call to override it.
+  `Stigmem-Session` header. Pass `session_id` per tool call for
+  conversation-specific attribution, or set `STIGMEM_SESSION_ID` for a stable
+  process-level override.
 - `assert_fact` accepts `write_mode="summarize_with_provenance"` plus
   `derived_from=[{"fact_id":"..."}]` for legitimate agent summaries derived
   from recalled facts.

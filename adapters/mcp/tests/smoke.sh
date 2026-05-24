@@ -65,7 +65,7 @@ if [[ -n "${STIGMEM_API_KEY:-}" ]]; then
   ENV_VARS+=("STIGMEM_API_KEY=$STIGMEM_API_KEY")
 fi
 
-env "${ENV_VARS[@]}" node "$SERVER_JS" <"$REQ_FIFO" >"$RESP_FIFO" 2>/dev/null &
+env "${ENV_VARS[@]}" node "$SERVER_JS" <"$REQ_FIFO" >"$RESP_FIFO" &
 SERVER_PID=$!
 
 # Open write end so the server doesn't get EOF immediately
@@ -90,6 +90,11 @@ read_response() {
     fail "Timed out waiting for MCP response"
   fi
   echo "$line"
+}
+
+rpc() {
+  send_msg "$1"
+  read_response
 }
 
 extract_text_payload() {
@@ -140,6 +145,82 @@ print(f'found {len(tools)} tools: {sorted(tools)}')
 " 2>&1) || fail "tools/list check failed: $TOOLS_SUMMARY"
 
 ok "$TOOLS_SUMMARY"
+
+# ---- step 3b: negative JSON-RPC/tool cases -------------------------------------
+
+log "Step 3b — negative JSON-RPC and tool-call cases"
+
+send_msg '{"jsonrpc":"2.0","id":29,"method":"tools/call","params":{}}'
+MALFORMED_RESP=$(read_response)
+echo "$MALFORMED_RESP" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d.get('id') == 29, f'expected id=29: {d}'
+assert 'error' in d, f'malformed JSON-RPC did not return error: {d}'
+message = d['error'].get('message', '')
+assert 'Invalid' in message or 'request' in message.lower(), f'unexpected malformed error: {d}'
+" || fail "Malformed JSON-RPC was not rejected: $MALFORMED_RESP"
+ok "malformed JSON-RPC rejected"
+
+UNKNOWN_RESP=$(rpc '{"jsonrpc":"2.0","id":30,"method":"tools/call","params":{"name":"nonexistent_tool","arguments":{}}}')
+echo "$UNKNOWN_RESP" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d.get('id') == 30, f'expected id=30: {d}'
+result = d.get('result', {})
+assert result.get('isError') is True, f'unknown tool did not return tool error: {d}'
+text = result.get('content', [{}])[0].get('text', '')
+assert 'Unknown tool' in text, f'unexpected unknown-tool response: {d}'
+" || fail "Unknown tool name did not return error: $UNKNOWN_RESP"
+ok "unknown tool rejected"
+
+OVERSIZED_CALL=$(python3 -c "
+import json
+print(json.dumps({
+  'jsonrpc': '2.0',
+  'id': 31,
+  'method': 'tools/call',
+  'params': {
+    'name': 'assert_fact',
+    'arguments': {
+      'entity': 'x' * 1100000,
+      'relation': 'test',
+      'value': {'type': 'string', 'v': 'test'},
+      'source': 'stigmem://smoke-test/agent/smoke-test'
+    }
+  }
+}))
+")
+OVERSIZED_RESP=$(rpc "$OVERSIZED_CALL")
+echo "$OVERSIZED_RESP" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d.get('id') == 31, f'expected id=31: {d}'
+text = d.get('result', {}).get('content', [{}])[0].get('text', '')
+assert d.get('result', {}).get('isError') is True, f'oversized payload did not return tool error: {d}'
+assert 'exceed' in text.lower(), f'unexpected oversized response: {d}'
+" || fail "Oversized payload did not return error: $OVERSIZED_RESP"
+ok "oversized payload rejected"
+
+MISSING_FIELD_RESP=$(rpc '{"jsonrpc":"2.0","id":32,"method":"tools/call","params":{"name":"assert_fact","arguments":{"entity":"test"}}}')
+echo "$MISSING_FIELD_RESP" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d.get('id') == 32, f'expected id=32: {d}'
+result = d.get('result', {})
+assert result.get('isError') is True, f'missing field did not return tool error: {d}'
+text = result.get('content', [{}])[0].get('text', '')
+assert 'Error:' in text, f'unexpected missing-field response: {d}'
+" || fail "Missing-required-field did not return error: $MISSING_FIELD_RESP"
+ok "missing required field rejected"
+
+if [[ -n "${STIGMEM_API_KEY:-}" ]]; then
+  REDACTION_RESP=$(rpc '{"jsonrpc":"2.0","id":33,"method":"tools/call","params":{"name":"nonexistent_tool","arguments":{}}}')
+  if grep -q "$STIGMEM_API_KEY" <<<"$REDACTION_RESP"; then
+    fail "Response contained STIGMEM_API_KEY value"
+  fi
+  ok "tool error response does not contain STIGMEM_API_KEY value"
+fi
 
 # ---- step 4: assert_fact -------------------------------------------------------
 

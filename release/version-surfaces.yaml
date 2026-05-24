@@ -51,6 +51,15 @@ surfaces:
     spelling: pep440
     sort_authority: pep440
 
+  - id: stigmem-node-package-version
+    kind: internal-protocol
+    category: python-package
+    file: node/src/stigmem_node/__init__.py
+    pattern: '^__version__ = "(?P<version>[^"]+)"'
+    spelling: pep440
+    sort_authority: pep440
+    notes: In-package version surface used by operators and local diagnostics.
+
   - id: pypi-stigmem-py
     kind: external-registry
     category: python-package

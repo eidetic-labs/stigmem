@@ -2,8 +2,8 @@
 feature: multi-tenant
 spec_id: Spec-X0-Multi-Tenant-Scoping
 status: Experimental
-applies_to: stigmem v0.9.0a1
-last_updated: 2026-05-21
+applies_to: stigmem v0.9.0a8
+last_updated: 2026-05-24
 owned_risks: []
 contributed_risks:
   - R-01

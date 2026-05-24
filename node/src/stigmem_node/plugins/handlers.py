@@ -45,13 +45,25 @@ Outcome: TypeAlias = Success | Failure
 
 @dataclass(frozen=True, slots=True)
 class TenantContext:
-    """Resolved tenant context passed through hook payloads."""
+    """Resolved tenant context passed through hook payloads.
+
+    Standard metadata keys:
+    - ``tenant_context_source``: one of ``hook``, ``pinned``, ``resolved``, or
+      ``system``. ``hook`` marks request-context construction, ``pinned`` marks
+      federation default-tenant dispatch, ``resolved`` marks plugin promotion,
+      and ``system`` marks internal system contexts.
+    - ``source_tenant_id``: optional pre-resolution identity tenant.
+    - ``resolved_by``: optional plugin name that promoted the tenant.
+    """
 
     tenant_id: str
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
-SYSTEM_TENANT = TenantContext(tenant_id="system")
+SYSTEM_TENANT = TenantContext(
+    tenant_id="system",
+    metadata={"tenant_context_source": "system"},
+)
 
 
 @dataclass(frozen=True, slots=True)

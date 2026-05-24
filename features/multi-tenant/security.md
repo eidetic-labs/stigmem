@@ -37,6 +37,17 @@ entries or remain explicitly mapped to protocol-level risks.
 - Treat current federation routes as node-level/default-tenant only. They must
   not export non-default tenant facts until tenant-aware federation receives a
   dedicated design, tests, and risk disposition.
+- Restrict `/metrics` scrape access on multi-tenant nodes. Prometheus metrics
+  include unredacted `tenant=<tenant_id>` labels on audit, fact write, fact
+  query, contradiction, and recall counters so operators can maintain
+  per-tenant SLOs and incident triage. Any party with scrape access can infer
+  tenant inventory and traffic shape. Keep `/metrics` internal, use mTLS or
+  token auth when crossing trust boundaries, and prefer opaque tenant IDs when
+  tenant inventory is sensitive.
+- Enforce tenant naming through API-key registration. Tenant IDs are normalized
+  and validated with `validate_tenant_id`: NFKC fold, strip, lowercase, then
+  `^[a-z0-9][a-z0-9-]{0,62}$`. Non-conforming tenant IDs fail with
+  `tenant_id_empty` or `tenant_id_invalid`.
 
 ## Conformance Pointers
 

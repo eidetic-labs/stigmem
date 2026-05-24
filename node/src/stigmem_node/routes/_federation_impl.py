@@ -78,7 +78,10 @@ async def register_peer_impl(
         "federation_peer_authenticate",
         req=req,
         identity=identity,
-        tenant=TenantContext(tenant_id=identity.tenant_id),
+        tenant=TenantContext(
+            tenant_id=identity.tenant_id,
+            metadata={"tenant_context_source": "hook"},
+        ),
     )
     if isinstance(decision, Deny):
         raise HTTPException(status_code=403, detail=decision.reason)

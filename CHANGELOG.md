@@ -40,6 +40,9 @@ and operator-gated.
   plugin-enabled tenant resolution, fact/garden/recall/audit/observability and
   subscription scoping, and node-level federation pull default-tenant-only
   behavior.
+- Added tenant-ID normalization and validation, explicit TenantContext source
+  metadata, and a structural CI guard that rejects unclassified tenant context
+  construction.
 - Clarified that multi-tenant scoping is experimental and does not yet claim
   stable shared-node readiness, tenant-aware non-default federation,
   per-tenant quota/resource isolation, external operator soak evidence, or a

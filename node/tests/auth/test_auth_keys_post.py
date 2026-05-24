@@ -106,6 +106,46 @@ class TestRegisterStaticKey:
             "raw_key must not appear anywhere in the response body"
         )
 
+    def test_admin_register_normalizes_tenant_id(
+        self, authed_client: tuple[TestClient, str]
+    ) -> None:
+        client, _ = authed_client
+        admin_key = _mint_admin_key()
+
+        resp = client.post(
+            "/v1/auth/keys",
+            headers={"Authorization": f"Bearer {admin_key}"},
+            json={
+                "raw_key": _new_raw_key(),
+                "entity_uri": "agent:tenant-service",
+                "permissions": ["read"],
+                "tenant_id": " Customer-A ",
+            },
+        )
+
+        assert resp.status_code == 201, resp.text
+        assert resp.json()["tenant_id"] == "customer-a"
+
+    def test_admin_register_rejects_invalid_tenant_id(
+        self, authed_client: tuple[TestClient, str]
+    ) -> None:
+        client, _ = authed_client
+        admin_key = _mint_admin_key()
+
+        resp = client.post(
+            "/v1/auth/keys",
+            headers={"Authorization": f"Bearer {admin_key}"},
+            json={
+                "raw_key": _new_raw_key(),
+                "entity_uri": "agent:tenant-service",
+                "permissions": ["read"],
+                "tenant_id": "contains spaces",
+            },
+        )
+
+        assert resp.status_code == 400, resp.text
+        assert "tenant_id_invalid" in resp.json()["detail"]
+
     def test_admin_can_register_with_explicit_expiry(
         self, authed_client: tuple[TestClient, str]
     ) -> None:

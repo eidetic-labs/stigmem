@@ -95,7 +95,10 @@ def pull_facts(
         row_to_record(r, contradicted=seen[(r["entity"], r["relation"], r["scope"])] > 1)
         for r in rows
     ]
-    tenant = TenantContext(tenant_id="default")
+    tenant = TenantContext(
+        tenant_id="default",
+        metadata={"tenant_context_source": "pinned"},
+    )
     registry = get_registry()
     records = registry.fire_filter_chain(
         "federation_outbound_filter",
@@ -314,7 +317,10 @@ def _push_fact_with_cap_token(
     if fact_source != sender_node_id:
         return False, {"fact_id": fact.get("id"), "error": "source_not_owned"}
 
-    tenant = TenantContext(tenant_id="default")
+    tenant = TenantContext(
+        tenant_id="default",
+        metadata={"tenant_context_source": "pinned"},
+    )
     registry = get_registry()
     decision = registry.fire_voting(
         "federation_inbound_validate",
@@ -383,7 +389,10 @@ def _push_fact_with_peer_token(
         )
         return False, {"fact_id": fact.get("id"), "error": "source_not_owned"}
 
-    tenant = TenantContext(tenant_id="default")
+    tenant = TenantContext(
+        tenant_id="default",
+        metadata={"tenant_context_source": "pinned"},
+    )
     registry = get_registry()
     decision = registry.fire_voting(
         "federation_inbound_validate",

@@ -204,8 +204,16 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Plugins',
+      link: { type: 'doc', id: 'plugins/index' },
       collapsed: true,
       items: [
+        'plugins/index',
+        'plugins/lazy-instruction-discovery',
+        'plugins/time-travel',
+        'plugins/tombstones',
+        'plugins/memory-garden-acl',
+        'plugins/source-attestation',
+        'plugins/multi-tenant',
         'operators/plugins/management',
       ],
     },

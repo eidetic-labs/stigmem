@@ -24,7 +24,15 @@ from .capability import (
 from .federation import _cmd_federation_register_peer
 from .maintenance import _cmd_decay_sweep, _cmd_migrate_normalize_entities
 from .parser import _build_parser
-from .plugins import _cmd_plugins_describe, _cmd_plugins_list
+from .plugins import (
+    _cmd_doctor,
+    _cmd_plugins_describe,
+    _cmd_plugins_disable,
+    _cmd_plugins_doctor,
+    _cmd_plugins_enable,
+    _cmd_plugins_list,
+    _cmd_plugins_search,
+)
 from .snapshot import _cmd_snapshot_create, _cmd_snapshot_restore
 
 # Re-export for backward compatibility (tests / docs gen import these names).
@@ -37,6 +45,7 @@ __all__ = [
     "_cmd_capability_revoke",
     "_cmd_capability_verify",
     "_cmd_decay_sweep",
+    "_cmd_doctor",
     "_cmd_federation_cursor_export",
     "_cmd_federation_cursor_import",
     "_cmd_federation_register_peer",
@@ -45,7 +54,11 @@ __all__ = [
     "_cmd_instruction_migrate",
     "_cmd_migrate_normalize_entities",
     "_cmd_plugins_describe",
+    "_cmd_plugins_disable",
+    "_cmd_plugins_doctor",
+    "_cmd_plugins_enable",
     "_cmd_plugins_list",
+    "_cmd_plugins_search",
     "_cmd_snapshot_create",
     "_cmd_snapshot_restore",
     "main",

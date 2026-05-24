@@ -7,7 +7,7 @@
 [![Stability: preview alpha](https://img.shields.io/badge/stability-preview%20alpha-orange.svg)](#why-v090a1-and-not-v10)
 [![Discord](https://img.shields.io/discord/1502847943118684331?label=discord&logo=discord&logoColor=white&color=5865F2)](https://discord.gg/Z47Re7FjjV)
 
-> **Status: `v0.9.0a8` — preview alpha, pre-stable · Apache-2.0**
+> **Status: `v0.9.0a9` — preview alpha, pre-stable · Apache-2.0**
 > **Repository:** [github.com/eidetic-labs/stigmem](https://github.com/eidetic-labs/stigmem)
 > **Not yet recommended for production federation across organizational boundaries.** See [LIMITATIONS.md](LIMITATIONS.md) and the [retraction post](#why-v090a1-and-not-v10) for context.
 
@@ -84,7 +84,7 @@ The **Memory** half reflects persistence and decay: facts have `valid_until` exp
 
 ## Current status
 
-The features below are **implemented in code** but have **not yet completed adversarial validation** at v0.9.0a8. Read [LIMITATIONS.md](LIMITATIONS.md) for which deployment patterns are currently safe.
+The features below are **implemented in code** but have **not yet completed adversarial validation** at v0.9.0a9. Read [LIMITATIONS.md](LIMITATIONS.md) for which deployment patterns are currently safe.
 
 | Area | Implementation | Spec reference |
 |------|--------|-------------|
@@ -119,7 +119,7 @@ cd stigmem
 docker compose up -d
 ```
 
-`docker compose up` pulls pre-built multi-arch images from GHCR (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a8`, signed via Sigstore cosign with attached SBOMs). The recipe pins to the version tag for reproducibility — see [the tag-selection guide](https://docs.stigmem.dev/operators/deployment/install#image-tags) for when to use `:latest`, `:edge`, or a `@sha256:<digest>` pin instead. If you're a contributor working on changes, use `docker compose up --build -d` to force a local rebuild.
+`docker compose up` pulls pre-built multi-arch images from GHCR (`ghcr.io/eidetic-labs/stigmem-node:0.9.0a9`, signed via Sigstore cosign with attached SBOMs). The recipe pins to the version tag for reproducibility — see [the tag-selection guide](https://docs.stigmem.dev/operators/deployment/install#image-tags) for when to use `:latest`, `:edge`, or a `@sha256:<digest>` pin instead. If you're a contributor working on changes, use `docker compose up --build -d` to force a local rebuild.
 
 Two federated nodes start immediately:
 
@@ -147,7 +147,7 @@ cd stigmem/node
 uv run python -m stigmem_node
 ```
 
-**Pre-release install via `pip`:** because v0.9.0a8 is a PEP 440 pre-release, `pip install stigmem` (default channel) will *not* pick it up. Use `--pre` to opt in to the alpha line, and pick the install scope appropriate to your role:
+**Pre-release install via `pip`:** because v0.9.0a9 is a PEP 440 pre-release, `pip install stigmem` (default channel) will *not* pick it up. Use `--pre` to opt in to the alpha line, and pick the install scope appropriate to your role:
 
 ```bash
 pip install --pre stigmem            # SDK only — most common; for apps calling a stigmem node
@@ -157,6 +157,27 @@ pip install --pre stigmem[all]       # everything published from this repo
 ```
 
 `stigmem` is a meta-package; the actual code ships under `stigmem-py` (SDK), `stigmem-node` (server), and `stigmem-openclaw` (adapter). You can install any of those directly if you'd rather skip the meta-package: `pip install --pre stigmem-py`, etc.
+
+## Plugins
+
+Six experimental plugins are published independently at `0.1.0`. Installing a
+plugin package makes it discoverable through the `stigmem.plugins` entry point;
+turning behavior on still requires the plugin-specific `STIGMEM_*_ENABLED`
+gate and a node restart.
+
+| Plugin | Install extra | Package | Enable gate |
+| --- | --- | --- | --- |
+| Lazy instruction discovery | `stigmem[lazy-instruction-discovery]` | `stigmem-plugin-lazy-instruction-discovery` | `STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ENABLED` |
+| Time travel | `stigmem[time-travel]` | `stigmem-plugin-time-travel` | `STIGMEM_TIME_TRAVEL_ENABLED` |
+| Tombstones | `stigmem[tombstones]` | `stigmem-plugin-tombstones` | `STIGMEM_TOMBSTONES_ENABLED` |
+| Memory Garden ACL | `stigmem[memory-garden-acl]` | `stigmem-plugin-memory-garden-acl` | `STIGMEM_MEMORY_GARDEN_ACL_ENABLED` |
+| Source attestation | `stigmem[source-attestation]` | `stigmem-plugin-source-attestation` | `STIGMEM_SOURCE_ATTESTATION_ENABLED` |
+| Multi-tenant scoping | `stigmem[multi-tenant]` | `stigmem-plugin-multi-tenant` | `STIGMEM_MULTI_TENANT_ENABLED` |
+
+Use `pip install --pre 'stigmem[plugins-all]'` to install every published
+plugin package. Then inspect local state with `stigmem plugins list` and
+`stigmem plugins doctor`. The full catalog is in
+[docs/docs/plugins](docs/docs/plugins/index.md).
 
 **Migrating from bare-metal to Docker?** See the [upgrade path guide](docs/docs/get-started/upgrade-v1.md).
 
@@ -230,7 +251,7 @@ uv run pytest tests/ -v
 stigmem/
 ├── spec/           ← canonical specification (under review for v0.9.0a1 first-build canonicalization)
 ├── node/           ← reference node: FastAPI + SQLite
-├── adapters/       ← adapter code (OpenClaw is experimental in v0.9.0a8; MCP deferred)
+├── adapters/       ← adapter code (OpenClaw is experimental in v0.9.0a9; MCP deferred)
 ├── sdks/           ← Python and TypeScript client SDKs (Go SDK deferred)
 ├── experimental/   ← deferred features per ADR-002 (dashboard, additional adapters, deploy recipes, more)
 └── docs/           ← Docusaurus 3 documentation site
@@ -288,7 +309,7 @@ Maintainers and contributors are listed in [MAINTAINERS.md](MAINTAINERS.md).
 
 ## Security
 
-To report a vulnerability, use GitHub's private advisory process — **do not open a public issue**. See [SECURITY.md](SECURITY.md) for the full disclosure policy and the v0.9.0a8 security posture statement.
+To report a vulnerability, use GitHub's private advisory process — **do not open a public issue**. See [SECURITY.md](SECURITY.md) for the full disclosure policy and the v0.9.0a9 security posture statement.
 
 The full STRIDE threat model with per-release risk-register status lives at [`spec/security/threat-model.md`](spec/security/threat-model.md). See also [Security posture](#security-posture) above.
 

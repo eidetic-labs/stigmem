@@ -1927,7 +1927,7 @@ wheels = [
 
 [[package]]
 name = "stigmem"
-version = "0.9.0a8"
+version = "0.9.0a9"
 source = { editable = "." }
 dependencies = [
     { name = "stigmem-py" },
@@ -1937,12 +1937,44 @@ dependencies = [
 all = [
     { name = "stigmem-node" },
     { name = "stigmem-openclaw" },
+    { name = "stigmem-plugin-lazy-instruction-discovery" },
+    { name = "stigmem-plugin-memory-garden-acl" },
+    { name = "stigmem-plugin-multi-tenant" },
+    { name = "stigmem-plugin-source-attestation" },
+    { name = "stigmem-plugin-time-travel" },
+    { name = "stigmem-plugin-tombstones" },
+]
+lazy-instruction-discovery = [
+    { name = "stigmem-plugin-lazy-instruction-discovery" },
+]
+memory-garden-acl = [
+    { name = "stigmem-plugin-memory-garden-acl" },
+]
+multi-tenant = [
+    { name = "stigmem-plugin-multi-tenant" },
 ]
 node = [
     { name = "stigmem-node" },
 ]
 openclaw = [
     { name = "stigmem-openclaw" },
+]
+plugins-all = [
+    { name = "stigmem-plugin-lazy-instruction-discovery" },
+    { name = "stigmem-plugin-memory-garden-acl" },
+    { name = "stigmem-plugin-multi-tenant" },
+    { name = "stigmem-plugin-source-attestation" },
+    { name = "stigmem-plugin-time-travel" },
+    { name = "stigmem-plugin-tombstones" },
+]
+source-attestation = [
+    { name = "stigmem-plugin-source-attestation" },
+]
+time-travel = [
+    { name = "stigmem-plugin-time-travel" },
+]
+tombstones = [
+    { name = "stigmem-plugin-tombstones" },
 ]
 
 [package.dev-dependencies]
@@ -1966,9 +1998,27 @@ requires-dist = [
     { name = "stigmem-node", marker = "extra == 'node'", editable = "node" },
     { name = "stigmem-openclaw", marker = "extra == 'all'", editable = "adapters/openclaw" },
     { name = "stigmem-openclaw", marker = "extra == 'openclaw'", editable = "adapters/openclaw" },
+    { name = "stigmem-plugin-lazy-instruction-discovery", marker = "extra == 'all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-lazy-instruction-discovery", marker = "extra == 'lazy-instruction-discovery'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-lazy-instruction-discovery", marker = "extra == 'plugins-all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-memory-garden-acl", marker = "extra == 'all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-memory-garden-acl", marker = "extra == 'memory-garden-acl'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-memory-garden-acl", marker = "extra == 'plugins-all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-multi-tenant", marker = "extra == 'all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-multi-tenant", marker = "extra == 'multi-tenant'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-multi-tenant", marker = "extra == 'plugins-all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-source-attestation", marker = "extra == 'all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-source-attestation", marker = "extra == 'plugins-all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-source-attestation", marker = "extra == 'source-attestation'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-time-travel", marker = "extra == 'all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-time-travel", marker = "extra == 'plugins-all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-time-travel", marker = "extra == 'time-travel'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-tombstones", marker = "extra == 'all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-tombstones", marker = "extra == 'plugins-all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-tombstones", marker = "extra == 'tombstones'", specifier = ">=0.1.0,<2.0.0" },
     { name = "stigmem-py", editable = "sdks/stigmem-py" },
 ]
-provides-extras = ["node", "openclaw", "all"]
+provides-extras = ["node", "openclaw", "lazy-instruction-discovery", "memory-garden-acl", "multi-tenant", "source-attestation", "time-travel", "tombstones", "plugins-all", "all"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1987,7 +2037,7 @@ dev = [
 
 [[package]]
 name = "stigmem-node"
-version = "0.9.0a8"
+version = "0.9.0a9"
 source = { editable = "node" }
 dependencies = [
     { name = "argon2-cffi" },
@@ -2086,7 +2136,7 @@ dev = [
 
 [[package]]
 name = "stigmem-openclaw"
-version = "0.9.0a8"
+version = "0.9.0a9"
 source = { editable = "adapters/openclaw" }
 dependencies = [
     { name = "stigmem-py" },
@@ -2110,13 +2160,91 @@ requires-dist = [
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
     { name = "respx", marker = "extra == 'dev'", specifier = ">=0.21" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
-    { name = "stigmem-py", specifier = ">=0.9.0a8,<1.0.0" },
+    { name = "stigmem-py", specifier = ">=0.9.0a9,<1.0.0" },
 ]
 provides-extras = ["dev"]
 
 [[package]]
+name = "stigmem-plugin-lazy-instruction-discovery"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "stigmem-node" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d6/d9/658f973db658d50cfa740bf74ae7c204f156bbbb8459b7d15969b6843c21/stigmem_plugin_lazy_instruction_discovery-0.1.0.tar.gz", hash = "sha256:fc793ad5b5674de69d7fc231ee45aa94ad468b569ea9230e7e82e65017519d5e", size = 27248, upload-time = "2026-05-24T20:21:18.391Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ae/5a/996fbdb8cfb2888e1e889d96a8ba4433ec5b0ac7a61023fd636f478c0922/stigmem_plugin_lazy_instruction_discovery-0.1.0-py3-none-any.whl", hash = "sha256:24fc82f230989340ccdbdf8b7fd826e4005b2779050274906accdd3a039b1fa7", size = 7995, upload-time = "2026-05-24T20:21:15.863Z" },
+]
+
+[[package]]
+name = "stigmem-plugin-memory-garden-acl"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "stigmem-node" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d5/8b/5166838ff1303543edb22ae5257b28eaa75e6f62bc8a6f5255f36464212b/stigmem_plugin_memory_garden_acl-0.1.0.tar.gz", hash = "sha256:7b07b47000c78bc2150134ad66e7118815a001821bbfcdf7b6f9c7309d4971d8", size = 5219, upload-time = "2026-05-24T20:21:17.268Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/68/38/aa0725d1fbf2157fd5ed2f03da511875d8f0215ae2c81c5083a5241b2552/stigmem_plugin_memory_garden_acl-0.1.0-py3-none-any.whl", hash = "sha256:ab58efa4ddd227e40ae943d65ce87c17825be75be65bef2f116d4abc06f403f9", size = 5738, upload-time = "2026-05-24T20:21:15.6Z" },
+]
+
+[[package]]
+name = "stigmem-plugin-multi-tenant"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "stigmem-node" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a4/07/ad9904358b8b0af2e6614b5161779fac1f0d10322799a3379c83ee1a601b/stigmem_plugin_multi_tenant-0.1.0.tar.gz", hash = "sha256:883ce1e6f1ca8f0c08338fa66b64e1e2ea950057a5a646e2910310b564f0c408", size = 6859, upload-time = "2026-05-24T20:21:21.613Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9b/c8/db5128f5cd35ad61f6ab5b926bb0a15cac1459678da06a9970b0fce33fda/stigmem_plugin_multi_tenant-0.1.0-py3-none-any.whl", hash = "sha256:08833f67fbfc6b3eeb54c8db6ad1d7650eee37e92a54c5fb7d3cb56f8b9139cf", size = 5781, upload-time = "2026-05-24T20:21:17.007Z" },
+]
+
+[[package]]
+name = "stigmem-plugin-source-attestation"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "stigmem-node" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/48/ba/f62d47333580ef3b674526217640febdfafc9919d310e0dea71aab23c527/stigmem_plugin_source_attestation-0.1.0.tar.gz", hash = "sha256:ef9835eca34f7b211ab190fdd00fb71f0f42409733e5dc2a2e0bf8ceb087b675", size = 6330, upload-time = "2026-05-24T20:21:19.389Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/48/b1/42ec0b77898f016fd0cc056bde860e876d8d51290a32396e9c79fa23542b/stigmem_plugin_source_attestation-0.1.0-py3-none-any.whl", hash = "sha256:5b315b8e323d806eaad20f738d03007c5b002e3db63f415e30a6119ce81ff2bc", size = 6545, upload-time = "2026-05-24T20:21:16.577Z" },
+]
+
+[[package]]
+name = "stigmem-plugin-time-travel"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "stigmem-node" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6c/3e/429d2d92b9045c6c074b40ee54090b422236d528df4b1b329983964e2c59/stigmem_plugin_time_travel-0.1.0.tar.gz", hash = "sha256:597147022fb0730a989c9d885450c7c4c4242068c85a6a26086c1c2c7e932c04", size = 7693, upload-time = "2026-05-24T20:21:16.237Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8a/40/95b41b691b2be0286c78d8cea5c17065c34155ba59e6a27ead9cf8232a18/stigmem_plugin_time_travel-0.1.0-py3-none-any.whl", hash = "sha256:0b218a883a9dad3afbddbceac1705438ed991e0bac5865153321f44513e446c7", size = 5522, upload-time = "2026-05-24T20:21:15.175Z" },
+]
+
+[[package]]
+name = "stigmem-plugin-tombstones"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "stigmem-node" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/90/32/b8e3aa3b3bccf8981f5f51eeaa94d6305bb8ede39b3e480d2110b05e7363/stigmem_plugin_tombstones-0.1.0.tar.gz", hash = "sha256:114bdcb462dfccd31695b41fd9a425f231756681cc1ef308fb299871d6780431", size = 8399, upload-time = "2026-05-24T20:21:20.87Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bb/c0/301d5e566c9ea9390164514bcd6134d340e37bd691d4a96efe16f47901ad/stigmem_plugin_tombstones-0.1.0-py3-none-any.whl", hash = "sha256:f27cfdb5dd1830ec7f37507d4c4b7048b11662bafbd6d4bc5c01b30943a26452", size = 6341, upload-time = "2026-05-24T20:21:17.001Z" },
+]
+
+[[package]]
 name = "stigmem-py"
-version = "0.9.0a8"
+version = "0.9.0a9"
 source = { editable = "sdks/stigmem-py" }
 dependencies = [
     { name = "httpx" },

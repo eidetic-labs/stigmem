@@ -93,7 +93,7 @@ def test_security_sensitive_plugin_package_metadata_is_publication_ready(
     sdist_include = data["tool"]["hatch"]["build"]["targets"]["sdist"]["include"]
 
     assert project["name"] == plugin.package_name
-    assert project["version"] == "0.9.0a8"
+    assert project["version"] == "0.1.0"
     assert project["readme"] == "README.md"
     assert project["requires-python"] == ">=3.11"
     assert project["license"]["text"] == "Apache-2.0"

@@ -5,7 +5,7 @@ This check answers a single question before a publish workflow tags an immutable
 release: is the surrounding bookkeeping consistent with the code we are about to
 ship?
 
-It does two things existing gates (`check_version_consistency.py`,
+It does three things existing gates (`check_version_consistency.py`,
 `validate_version_surfaces.py`, `check_release_evidence.py`) do not:
 
 1. **CHANGELOG presence and non-emptiness.** When run without `--tag`, asserts
@@ -15,7 +15,11 @@ It does two things existing gates (`check_version_consistency.py`,
    `--tag vX.Y.Z`, asserts that a `## [X.Y.Z]` section exists and has body
    content (so a tag push cannot create a CHANGELOG-less release).
 
-2. **Milestone is closed.** When run with `--tag vX.Y.Z`, asserts that a
+2. **Plugin catalog consistency.** Asserts that README plugin entries,
+   meta-package extras, and docs catalog pages agree on the published plugin
+   package set.
+
+3. **Milestone is closed.** When run with `--tag vX.Y.Z`, asserts that a
    GitHub milestone with title matching the tag's version exists and has zero
    open issues. Requires `gh` CLI on PATH and authenticated for the target repo
    (defaults to `Eidetic-Labs/stigmem`; override with `--repo`). The milestone
@@ -41,11 +45,12 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CHANGELOG = REPO_ROOT / "CHANGELOG.md"
+PLUGIN_CATALOG_CHECK = REPO_ROOT / "scripts" / "check_plugin_readme_pypi_consistency.py"
 
 DEFAULT_REPO = "Eidetic-Labs/stigmem"
 
@@ -138,12 +143,26 @@ def _check_changelog_for_version(changelog: str, version: str) -> list[str]:
     return []
 
 
+def _check_plugin_catalog_consistency() -> list[str]:
+    result = subprocess.run(  # noqa: S603
+        [sys.executable, str(PLUGIN_CATALOG_CHECK)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return []
+    detail = result.stderr.strip() or result.stdout.strip()
+    return [f"plugin catalog consistency failed: {detail}"]
+
+
 def _run_gh_api(repo: str, path: str) -> tuple[bool, str]:
     if not shutil.which("gh"):
         return False, "gh CLI not on PATH"
     try:
-        result = subprocess.run(
-            ["gh", "api", f"repos/{repo}/{path}"],
+        result = subprocess.run(  # noqa: S603
+            ["gh", "api", f"repos/{repo}/{path}"],  # noqa: S607
             capture_output=True,
             text=True,
             check=False,
@@ -235,6 +254,7 @@ def main(argv: list[str] | None = None) -> int:
             failures.extend(_check_milestone(args.repo, version))
     else:
         failures.extend(_check_changelog_unreleased(changelog))
+    failures.extend(_check_plugin_catalog_consistency())
 
     if failures:
         _print_failures(failures)

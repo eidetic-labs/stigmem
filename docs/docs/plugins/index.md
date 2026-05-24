@@ -1,0 +1,52 @@
+---
+title: Plugin Catalog
+sidebar_label: Catalog
+description: Published experimental Stigmem plugins and their operator gates.
+audience: Operator
+---
+
+# Plugin Catalog
+
+Stigmem plugins are optional Python packages discovered through the
+`stigmem.plugins` entry point group. Installing a plugin package makes it
+discoverable; enabling behavior still requires the plugin's explicit
+`STIGMEM_*_ENABLED` gate and a node restart.
+
+The six plugins below are independently versioned at `0.1.0` and support the
+current alpha node line with `stigmem-node>=0.9.0a8,<1.0.0`. They remain
+experimental and opt-in.
+
+| Plugin | Package | Enable gate | Summary |
+| --- | --- | --- | --- |
+| [Lazy instruction discovery](./lazy-instruction-discovery.md) | `stigmem-plugin-lazy-instruction-discovery` | `STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ENABLED` | Instruction manifest discovery and migration helpers. |
+| [Time travel](./time-travel.md) | `stigmem-plugin-time-travel` | `STIGMEM_TIME_TRAVEL_ENABLED` | Historical fact and recall query behavior. |
+| [Tombstones](./tombstones.md) | `stigmem-plugin-tombstones` | `STIGMEM_TOMBSTONES_ENABLED` | Right-to-be-forgotten tombstone enforcement. |
+| [Memory Garden ACL](./memory-garden-acl.md) | `stigmem-plugin-memory-garden-acl` | `STIGMEM_MEMORY_GARDEN_ACL_ENABLED` | Memory Garden membership ACL filtering. |
+| [Source attestation](./source-attestation.md) | `stigmem-plugin-source-attestation` | `STIGMEM_SOURCE_ATTESTATION_ENABLED` | Source identity checks and source-trust recall signals. |
+| [Multi-tenant scoping](./multi-tenant.md) | `stigmem-plugin-multi-tenant` | `STIGMEM_MULTI_TENANT_ENABLED` | Tenant scoping and default-tenant collapse. |
+
+## Install
+
+Install one plugin:
+
+```bash
+python -m pip install 'stigmem-plugin-tombstones>=0.1.0,<2.0.0'
+export STIGMEM_TOMBSTONES_ENABLED=1
+```
+
+Install through the meta-package extras:
+
+```bash
+python -m pip install --pre 'stigmem[tombstones]'
+python -m pip install --pre 'stigmem[plugins-all]'
+```
+
+After installing or changing an enable gate, restart the node and run:
+
+```bash
+stigmem plugins list
+stigmem plugins doctor
+```
+
+For package trust, signing, and operational review, see
+[Plugin Management](../operators/plugins/management.md).

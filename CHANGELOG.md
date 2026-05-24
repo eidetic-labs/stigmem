@@ -11,9 +11,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ### Changed
 
+- Preparing the `v0.9.0a9` plugin discovery release line.
+
+## [0.9.0a9] — Unreleased
+
+### Changed
+
+- Advanced live release-version surfaces toward `v0.9.0a9` for the plugin
+  discovery release line.
 - Opened the post-`v0.9.0a8` plugin publication readiness track, marked the
   alpha extraction train as complete through `v0.9.0a8`, and added the
   standalone experimental plugin publication contract.
+- Added operator-facing plugin discovery surfaces: README plugin catalog,
+  meta-package plugin extras, docs-site catalog pages, and `stigmem plugins`
+  search/enable/disable/doctor CLI commands.
+- Added a structural guard that keeps README, PyPI extra definitions, and docs
+  plugin catalog entries aligned for the six published experimental plugins.
 
 ### Security
 

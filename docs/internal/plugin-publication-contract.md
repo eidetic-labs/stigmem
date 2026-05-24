@@ -36,6 +36,21 @@ Plugin `version` strings are independent of `stigmem-core` versions. The
 compatibility boundary lives in `requires_stigmem`; the plugin version reflects
 only the plugin's own development cadence.
 
+## Plugin Versioning
+
+Standalone plugins do not lock-step with the core `stigmem-node` release
+number. A plugin release records two separate facts:
+
+- `version`: the plugin artifact's own PEP 440 lifecycle.
+- `requires_stigmem`: the supported core node compatibility range.
+
+The first published security-sensitive plugin artifacts shipped at `0.1.0`
+after bootstrap verification. Future plugin releases advance from that
+per-plugin line (`0.1.1`, `0.2.0`, etc.) according to plugin change scope. They
+must not be bumped to the core alpha number solely because `stigmem-node`
+advances. Core compatibility changes belong in `requires_stigmem`, package
+dependency bounds, feature records, and release notes.
+
 ## Required Feature Record State
 
 The feature record under `features/<feature-slug>/` remains the source of

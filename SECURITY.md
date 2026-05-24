@@ -113,7 +113,7 @@ per-surface enablement flag is enabled.
 
 The `/v1/doctor` endpoint exposes the active
 `memory_garden_acl_filtering` state as `disabled`, `enabled-partial`, or
-`enabled-full`. `/v1/doctor` is intentionally unauthenticated in v0.9.0a8 and
+`enabled-full`. `/v1/doctor` is intentionally unauthenticated in v0.9.0a9 and
 therefore exposes this coarse posture value to anonymous HTTP callers as
 standard ops-endpoint disclosure. It does not expose garden names, membership
 rows, tenant identifiers, or policy subjects. Future hardening can auth-gate
@@ -124,6 +124,27 @@ A startup warning is emitted when garden membership rows exist but the
 advanced ACL plugin is not registered. See
 [`features/memory-garden-acl/security.md`](features/memory-garden-acl/security.md)
 for the full feature-owned disposition.
+
+## Security Posture — v0.9.0a9 (2026-05-24)
+
+`v0.9.0a9` is the plugin-discovery alpha release. It does not graduate any
+experimental plugin, turn any plugin on by default, or add an HTTP plugin
+enumeration endpoint. The release adds operator-facing discovery surfaces:
+README catalog entries, meta-package extras, docs catalog pages, and CLI
+diagnostics for installed/enabled plugin state.
+
+The six published security-sensitive plugin artifacts remain independently
+versioned at `0.1.0` and remain opt-in. Installing a package makes the plugin
+discoverable through the `stigmem.plugins` entry point group; behavior still
+requires the matching `STIGMEM_*_ENABLED` gate and a node restart. This keeps
+default deployments aligned with ADR-011 while making the available plugin
+surface easier for operators to inspect.
+
+The standing publication policy remains: Critical and High vulnerabilities that
+affect supported published artifacts are handled through GHSA where applicable
+after a patched version is available; Medium and Low findings are documented in
+this file unless a documented risk-profile, reporter-coordination, or
+downstream-compliance carve-out applies.
 
 ## Security Posture — v0.9.0a8 (2026-05-23)
 

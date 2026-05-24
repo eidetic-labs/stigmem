@@ -23,6 +23,7 @@
 | `npm publish --dry-run --provenance --tag alpha` from `adapters/mcp/` | npm publication dry-run only; no registry upload occurred. Confirms prerelease publication requires the `alpha` tag. |
 | `python3 scripts/check_version_consistency.py` | Confirms `stigmem-mcp` package metadata is aligned with the active release line. |
 | `docs/internal/mcp-publication-dry-run.md` | Captures dry-run hashes, pack contents, registry/channel plan, rollback/yank plan, and no-publication disposition. |
+| `docs/internal/mcp-host-ui-smoke-2026-05-24.md` | Manual host UI smoke execution record. Codex CLI is the required `0.9.0-alpha.8` host UI gate; Continue.dev, Cursor, and Zed are explicitly unvalidated experimental connector guides. |
 | `STIGMEM_AUTH_REQUIRED=false STIGMEM_DB_PATH=/private/tmp/stigmem-mcp-smoke-final.db STIGMEM_PORT=8765 uv run python -c 'from stigmem_node.main import run; run()'` | Starts a local unauthenticated loopback node for live MCP smoke validation. |
 | `STIGMEM_URL=http://localhost:8765 bash adapters/mcp/tests/smoke.sh` | Live MCP protocol smoke passed against a local node: initialize, six-tool discovery, `assert_fact`, `query_facts`, `recall`, `lint_scope`, and session-aware calls. |
 
@@ -49,5 +50,5 @@
 ## Evidence Gaps
 
 - Package metadata, live protocol smoke, adapter security regressions, and npm dry-run evidence are aligned; artifact publication is still not approved or executed.
-- Host-specific connector guides have been reviewed against the local stdio smoke path, but Codex CLI, Continue.dev, Cursor, and Zed UI-level launches are not validated in this repo-local run.
+- Host-specific connector guides have been reviewed against the local stdio smoke path, and the host UI smoke execution record exists. Codex CLI UI-level launch evidence is still required for Codex-scoped alpha publication clearance. Continue.dev, Cursor, and Zed UI-level launches remain unvalidated and must not be described as supported until a future smoke record captures real pass/fail evidence.
 - Live model certification remains separate from adapter framing certification; no provider/model is certified until reviewed ADR-015 result JSON is committed.

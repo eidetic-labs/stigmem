@@ -20,7 +20,12 @@ inside popular editors, agent CLIs, and non-MCP runtimes.
 
 ## MCP host connectors
 
-These guides configure the existing MCP server (`stigmem/adapters/mcp/`) as a tool provider inside each host. Build the server once, then register it in each host's config. The canonical feature record is [`features/mcp-adapter`](https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter).
+These guides configure the existing MCP server (`stigmem/adapters/mcp/`) as a
+tool provider inside each host. Build the server once, then register it in each
+host's config. For `0.9.0-alpha.8`, Codex CLI is the only host UI targeted for
+publication clearance; Continue.dev, Cursor, and Zed remain experimental
+connector guides until host-specific smoke evidence is recorded. The canonical
+feature record is [`features/mcp-adapter`](https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter).
 
 <div className="stigmem-fields">
 
@@ -31,25 +36,25 @@ These guides configure the existing MCP server (`stigmem/adapters/mcp/`) as a to
 </div>
 
 <div>
-<dt>Zed (experimental)</dt>
+<dt>Zed (experimental, unvalidated)</dt>
 <dt><span className="stigmem-fields__type"><code>mcp_servers</code> in <code>settings.json</code></span></dt>
 <dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter">features/mcp-adapter</a></dd>
 </div>
 
 <div>
-<dt>Cursor</dt>
+<dt>Cursor (experimental, unvalidated)</dt>
 <dt><span className="stigmem-fields__type"><code>.cursor/mcp.json</code></span></dt>
 <dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter">features/mcp-adapter</a></dd>
 </div>
 
 <div>
-<dt>Codex CLI</dt>
+<dt>Codex CLI (targeted smoke)</dt>
 <dt><span className="stigmem-fields__type"><code>~/.codex/config.yaml</code></span></dt>
 <dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter">features/mcp-adapter</a></dd>
 </div>
 
 <div>
-<dt>Continue.dev</dt>
+<dt>Continue.dev (experimental, unvalidated)</dt>
 <dt><span className="stigmem-fields__type"><code>.continue/config.json</code></span></dt>
 <dd>Continue VS Code/JetBrains extension.</dd>
 </div>

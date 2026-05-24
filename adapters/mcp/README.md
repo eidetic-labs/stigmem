@@ -1,8 +1,10 @@
 # Stigmem MCP Server
 
 Exposes [Stigmem](../../README.md) as an [MCP](https://modelcontextprotocol.io) server.
-Any MCP-aware agent — Claude Code, Codex, or a custom host — can use Stigmem as a tool
-without installing any SDK.
+Any stdio-capable MCP host can launch this adapter, but the `0.9.0-alpha.8`
+publication gate only validates Codex CLI plus the repo-local MCP protocol
+smoke. Continue.dev, Cursor, Zed, Claude Code, and custom-host connector use is
+experimental until a host-specific smoke record exists.
 
 ## Tools exposed
 
@@ -32,8 +34,9 @@ pnpm build
 
 The package metadata is aligned to `0.9.0-alpha.8` for publication readiness,
 but registry publication is still held. Use the workspace build until the
-feature record records host UI smoke, security certification, dry-run evidence,
-and explicit maintainer clearance.
+feature record records Codex CLI host UI smoke and explicit maintainer
+clearance. Continue.dev, Cursor, and Zed guides remain unvalidated for this
+alpha package state.
 
 ### Configure in Claude Code
 

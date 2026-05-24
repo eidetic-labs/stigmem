@@ -11,8 +11,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ### Changed
 
-- Opened the post-`v0.9.0a8` plugin publication readiness track and marked
-  the alpha extraction train as complete through `v0.9.0a8`.
+- Opened the post-`v0.9.0a8` plugin publication readiness track, marked the
+  alpha extraction train as complete through `v0.9.0a8`, and added the
+  standalone experimental plugin publication contract.
 
 ## [0.9.0a8] — 2026-05-23
 

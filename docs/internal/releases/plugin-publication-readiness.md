@@ -58,7 +58,8 @@ that plugin publication is the next active horizon.
 criteria every standalone experimental plugin must satisfy before publication.
 
 **Included changes:**
-- Standard plugin package checklist.
+- Standard plugin package checklist in
+  [`docs/internal/plugin-publication-contract.md`](../plugin-publication-contract.md).
 - Required manifest fields and compatibility metadata.
 - Required README/install/build/test content.
 - Required feature-record security/evidence/changelog updates.
@@ -70,6 +71,8 @@ criteria every standalone experimental plugin must satisfy before publication.
 
 **Evidence required:**
 - Checklist is referenced from the plugin publication readiness roadmap.
+- The contract defines package metadata, feature-record, behavior, security,
+  release-evidence, and approval gates.
 - Feature-record validators still pass.
 
 ### Goal 3 - Validate Security-Sensitive Core Plugins
@@ -177,7 +180,7 @@ carve-out applies.
 | Gate | Required evidence | Status |
 | --- | --- | --- |
 | Alpha closeout | a8 docs marked historical and release-readiness updated. | Active |
-| Publication contract | Standard checklist and package evidence requirements exist. | Pending |
+| Publication contract | Standard checklist and package evidence requirements exist. | Complete for baseline contract |
 | Security-sensitive plugin readiness | Each plugin has package metadata, disabled behavior, enabled behavior, and security evidence reviewed. | Pending |
 | Adapter/tooling disposition | Each adapter/tooling surface is classified before publication. | Pending |
 | Publish clearance | Maintainer approval, dry-runs, provenance/signature evidence, and post-publish verification. | Pending |

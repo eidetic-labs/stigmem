@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import UTC, datetime
 
 from conftest import FedNode, make_peer_token
 
 from stigmem_node.db import db as _db_ctx
 from stigmem_node.federation_ingest import ingest_fact
+from stigmem_node.hlc import node_hlc
 
 from .helpers import generate_ed25519_b64, insert_active_peer, make_federated_fact
 
@@ -82,6 +84,61 @@ class TestPullEndpoint:
         returned = r.json()["facts"]
         hlcs = [f["hlc"] for f in returned if f.get("hlc")]
         assert hlcs == sorted(hlcs)
+
+    def test_non_default_tenant_facts_not_returned_from_node_level_pull(
+        self,
+        fed_node: FedNode,
+    ) -> None:
+        """Node-level federation pull only exports default-tenant facts."""
+        default_resp = fed_node.client.post(
+            "/v1/facts",
+            json={
+                "entity": f"fed:default:{uuid.uuid4()}",
+                "relation": "test:value",
+                "value": {"type": "string", "v": "default-visible"},
+                "source": "agent:test",
+                "scope": "public",
+            },
+        )
+        assert default_resp.status_code == 201
+        default_id = default_resp.json()["id"]
+        non_default_id = str(uuid.uuid4())
+
+        with _db_ctx() as conn:
+            conn.execute(
+                """INSERT INTO facts
+                   (id, entity, relation, value_type, value_v, source, timestamp,
+                    confidence, scope, hlc, tenant_id)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    non_default_id,
+                    f"fed:tenant-a:{uuid.uuid4()}",
+                    "test:value",
+                    "string",
+                    "tenant-hidden",
+                    "agent:test",
+                    datetime.now(UTC).isoformat(),
+                    1.0,
+                    "public",
+                    node_hlc.tick(),
+                    "tenant-a",
+                ),
+            )
+
+        node_b_pub, node_b_priv = generate_ed25519_b64()
+        node_b_id = f"stigmem://test-b-tenant-filter-{uuid.uuid4()}"
+        insert_active_peer(fed_node.db_path, node_b_id, "http://testnode-b-tenant", node_b_pub)
+
+        token = make_peer_token(node_b_priv, node_b_id, fed_node.node_id, ["public"])
+        r = fed_node.client.get(
+            "/v1/federation/facts",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+        assert r.status_code == 200
+        returned_ids = {fact["id"] for fact in r.json()["facts"]}
+        assert default_id in returned_ids
+        assert non_default_id not in returned_ids
 
 
 # ---------------------------------------------------------------------------

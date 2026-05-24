@@ -34,8 +34,9 @@ entries or remain explicitly mapped to protocol-level risks.
 - Treat missing tenant context in logs, audits, background jobs, or plugin hook
   payloads as a security bug.
 - Require per-tenant quota evidence before independent tenants share a node.
-- Verify that federation peers cannot inject facts into another tenant's
-  namespace.
+- Treat current federation routes as node-level/default-tenant only. They must
+  not export non-default tenant facts until tenant-aware federation receives a
+  dedicated design, tests, and risk disposition.
 
 ## Conformance Pointers
 
@@ -44,7 +45,8 @@ Required adversarial vectors before promotion:
 - every public read and write path enforces tenant isolation;
 - audit events include tenant context where tenant context exists;
 - quotas can be enforced per tenant as well as per agent/source;
-- federation ingest cannot cross tenant boundaries;
+- federation ingest and egress cannot cross tenant boundaries, or the route is
+  explicitly constrained to the default tenant;
 - plugin hooks receive tenant context and cannot silently drop it.
 
 ## Residual Risk
@@ -52,6 +54,11 @@ Required adversarial vectors before promotion:
 Gate 1 remains open. Reintroduction requires tenant-aware conformance vectors,
 an explicit Spec-X decision, and an explicit risk ownership decision for
 tenant-isolation failures.
+
+The v0.9.0a8 disposition for existing federation endpoints is
+default-tenant-only. This prevents non-default tenant fact export through
+node-level peer replication, but it is not a claim that shared-node,
+tenant-aware federation is ready.
 
 ## Advisories and Findings
 

@@ -6,6 +6,7 @@ import importlib
 import sys
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,6 +14,7 @@ from fastapi.testclient import TestClient
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
 import stigmem_node.settings as settings_module
+import stigmem_node.tracing as tracing_mod
 from stigmem_node.main import create_app
 from stigmem_node.plugins.testing import stigmem_plugins
 
@@ -271,6 +273,148 @@ def test_tenants_see_only_their_own_facts(two_tenants: tuple) -> None:
 
     assert values_a == {"alice"}
     assert values_b == {"bob"}
+
+
+def test_recall_scoped_by_tenant(two_tenants: tuple) -> None:
+    """POST /v1/recall returns only the caller tenant's facts."""
+    client, key_a, key_b = two_tenants
+
+    client.post(
+        "/v1/facts",
+        json={
+            "entity": "stigmem://test/recall/a",
+            "relation": "memory:note",
+            "value": {"type": "string", "v": "a8 tenant alice recall marker"},
+            "source": "agent:alice",
+        },
+        headers={"Authorization": f"Bearer {key_a}"},
+    )
+    client.post(
+        "/v1/facts",
+        json={
+            "entity": "stigmem://test/recall/b",
+            "relation": "memory:note",
+            "value": {"type": "string", "v": "a8 tenant bob recall marker"},
+            "source": "agent:bob",
+        },
+        headers={"Authorization": f"Bearer {key_b}"},
+    )
+
+    resp_a = client.post(
+        "/v1/recall",
+        json={"query": "a8 tenant recall marker", "scope": "local"},
+        headers={"Authorization": f"Bearer {key_a}"},
+    )
+    resp_b = client.post(
+        "/v1/recall",
+        json={"query": "a8 tenant recall marker", "scope": "local"},
+        headers={"Authorization": f"Bearer {key_b}"},
+    )
+
+    assert resp_a.status_code == 200
+    assert resp_b.status_code == 200
+    values_a = {fact["fact"]["value"]["v"] for fact in resp_a.json()["facts"]}
+    values_b = {fact["fact"]["value"]["v"] for fact in resp_b.json()["facts"]}
+    assert any("a8 tenant alice recall marker" in value for value in values_a)
+    assert all("a8 tenant bob recall marker" not in value for value in values_a)
+    assert any("a8 tenant bob recall marker" in value for value in values_b)
+    assert all("a8 tenant alice recall marker" not in value for value in values_b)
+
+
+class _FakeSpan:
+    def __init__(self) -> None:
+        self.attributes: dict[str, Any] = {}
+
+    def set_attribute(self, key: str, value: Any) -> None:
+        self.attributes[key] = value
+
+
+class _FakeTracer:
+    def __init__(self) -> None:
+        self.last_span = _FakeSpan()
+
+    def start_as_current_span(self, _name: str) -> Any:
+        from collections.abc import Iterator
+        from contextlib import contextmanager
+
+        @contextmanager
+        def _cm() -> Iterator[_FakeSpan]:
+            yield self.last_span
+
+        return _cm()
+
+
+def test_recall_trace_span_uses_resolved_tenant(two_tenants: tuple) -> None:
+    """Recall tracing labels use the plugin-resolved tenant context."""
+    client, key_a, _key_b = two_tenants
+    saved_enabled = tracing_mod._OTEL_ENABLED
+    saved_tracer = tracing_mod._tracer
+    tracer = _FakeTracer()
+    tracing_mod._OTEL_ENABLED = True
+    tracing_mod._tracer = tracer
+    try:
+        resp = client.post(
+            "/v1/recall",
+            json={"query": "trace tenant", "scope": "local"},
+            headers={"Authorization": f"Bearer {key_a}"},
+        )
+    finally:
+        tracing_mod._OTEL_ENABLED = saved_enabled
+        tracing_mod._tracer = saved_tracer
+
+    assert resp.status_code == 200
+    assert tracer.last_span.attributes["stigmem.tenant"] == "tenant-a"
+
+
+def test_subscription_fan_out_scoped_by_tenant(two_tenants: tuple) -> None:
+    """Background subscription fan-out does not enqueue cross-tenant events."""
+    client, key_a, key_b = two_tenants
+
+    sub_resp = client.post(
+        "/v1/subscriptions",
+        json={
+            "target": "local",
+            "on_change": "webhook",
+            "delivery_address": "https://tenant-a.example/hook",
+        },
+        headers={"Authorization": f"Bearer {key_a}"},
+    )
+    assert sub_resp.status_code == 201
+    sub_id = sub_resp.json()["id"]
+
+    client.post(
+        "/v1/facts",
+        json={
+            "entity": "stigmem://test/subscription/b",
+            "relation": "test:event",
+            "value": {"type": "string", "v": "tenant-b event"},
+            "source": "agent:bob",
+        },
+        headers={"Authorization": f"Bearer {key_b}"},
+    )
+    with db_mod.db() as conn:
+        cross_tenant_events = conn.execute(
+            "SELECT * FROM subscription_events WHERE subscription_id=?",
+            (sub_id,),
+        ).fetchall()
+    assert cross_tenant_events == []
+
+    client.post(
+        "/v1/facts",
+        json={
+            "entity": "stigmem://test/subscription/a",
+            "relation": "test:event",
+            "value": {"type": "string", "v": "tenant-a event"},
+            "source": "agent:alice",
+        },
+        headers={"Authorization": f"Bearer {key_a}"},
+    )
+    with db_mod.db() as conn:
+        own_events = conn.execute(
+            "SELECT * FROM subscription_events WHERE subscription_id=?",
+            (sub_id,),
+        ).fetchall()
+    assert len(own_events) == 1
 
 
 # ---------------------------------------------------------------------------

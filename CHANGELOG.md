@@ -15,6 +15,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
   alpha extraction train as complete through `v0.9.0a8`, and added the
   standalone experimental plugin publication contract.
 
+### Security
+
+- Remediated `qs` CVE-2026-8723 / GHSA-q8mj-m7cp-5q26 in the documentation
+  build toolchain by forcing `qs>=6.15.2` in `docs/package.json` and refreshing
+  `docs/package-lock.json`. The root pnpm workspace was already pinned to the
+  patched `qs@6.15.2` release.
+
 ## [0.9.0a8] — 2026-05-23
 
 **Status:** preview alpha — pre-stable, not for production federation across

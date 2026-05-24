@@ -4,7 +4,7 @@
 
 This file records the ADR-010 modular specification composition for the Stigmem protocol. It is generated from YAML frontmatter in component [`spec/specs/`](specs/) files and colocated experimental specs under `experimental/<feature>/spec.md`.
 
-**Metadata last updated:** 2026-05-21
+**Metadata last updated:** 2026-05-24
 
 ## Protocol Component Specs
 
@@ -39,6 +39,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | [`Spec-X1-Lazy-Instruction-Discovery`](../experimental/lazy-instruction-discovery/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/lazy-instruction-discovery/spec.md` |
 | [`Spec-X2-RTBF-Tombstones`](../experimental/tombstones/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/tombstones/spec.md` |
 | [`Spec-X3-Time-Travel-Queries`](../experimental/time-travel/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/time-travel/spec.md` |
+| [`Spec-X4-Multi-Tenant-Scoping`](../experimental/multi-tenant/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/multi-tenant/spec.md` |
 | [`Spec-X5-Memory-Garden-Advanced-ACL`](../experimental/memory-garden-acl/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/memory-garden-acl/spec.md` |
 | [`Spec-X6-Source-Attestation`](../experimental/source-attestation/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/source-attestation/spec.md` |
 | [`Spec-X7-Subscriptions`](../experimental/subscriptions/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/subscriptions/spec.md` |
@@ -75,6 +76,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | `Spec-X1-Lazy-Instruction-Discovery` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | pre-reset section 21 lazy instruction discovery material |
 | `Spec-X2-RTBF-Tombstones` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-05-Federation-Trust >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset section 23 right-to-be-forgotten tombstone material |
 | `Spec-X3-Time-Travel-Queries` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-X2-RTBF-Tombstones >= 0.1.0-alpha.0` | pre-reset section 24 time-travel/as-of query material |
+| `Spec-X4-Multi-Tenant-Scoping` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | features/multi-tenant/spec.md package projection |
 | `Spec-X5-Memory-Garden-Advanced-ACL` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0` | pre-reset section 17 advanced Memory Garden ACL material |
 | `Spec-X6-Source-Attestation` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset section 18 source-attestation material |
 | `Spec-X7-Subscriptions` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0` | pre-reset section 20.5 subscription material |

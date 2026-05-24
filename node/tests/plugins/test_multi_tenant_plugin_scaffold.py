@@ -65,11 +65,12 @@ def test_pyproject_declares_stigmem_plugin_entry_point() -> None:
 
 
 def test_manifest_declares_expected_boundary() -> None:
+    data = tomllib.loads((_FEATURE_DIR / "pyproject.toml").read_text(encoding="utf-8"))
     manifest = plugin_manifest()
 
     assert isinstance(manifest, PluginManifest)
     assert manifest.name == PLUGIN_NAME
-    assert manifest.version == "0.1.0"
+    assert manifest.version == data["project"]["version"]
     assert manifest.requires_stigmem == ">=0.9.0a3"
     assert manifest.config_schema is MultiTenantConfig
     assert manifest.capabilities == frozenset(

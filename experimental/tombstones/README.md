@@ -25,6 +25,53 @@ the current status, evidence, and security notes.
 pip install --pre stigmem-node==0.9.0a8 stigmem-plugin-tombstones==0.9.0a8
 ```
 
+## Enable
+
+Set the plugin gate environment variable to opt in:
+
+```bash
+export STIGMEM_TOMBSTONES_ENABLED=1
+```
+
+The default install is inert; tombstone hook behavior only activates when the
+package is installed, discovered through the `stigmem.plugins` entry point, and
+the operator enables the gate. Admin routes, federation routes, recall
+filtering, and peer propagation remain separately gated.
+
+## Disable
+
+Unset the plugin gate environment variable, or set it to any value other than
+`1`, `true`, `yes`, or `on`:
+
+```bash
+unset STIGMEM_TOMBSTONES_ENABLED
+```
+
+The plugin returns to inert state at the next process start. No data migration
+is required; core scope, tenant, audit, and federation enforcement continues to
+hold.
+
+## Test
+
+From a Stigmem repository checkout with development dependencies installed:
+
+```bash
+uv run pytest node/tests/plugins/test_tombstone_plugin_scaffold.py \
+  node/tests/plugins/test_tombstone_plugin_gating.py
+```
+
+The package itself ships no separate test tree; upstream plugin validation
+lives in `node/tests/plugins/`.
+
+## Uninstall
+
+```bash
+pip uninstall stigmem-plugin-tombstones
+```
+
+Removing the package is sufficient. The gate environment variable becomes moot
+once the entry point is no longer discoverable.
+
 ## Project Links
 
 - Repository: <https://github.com/eidetic-labs/stigmem>

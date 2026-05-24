@@ -9,6 +9,14 @@ This tracker classifies non-security-sensitive adapter and tooling surfaces for
 the plugin publication readiness milestone. It does not publish artifacts,
 create package promises, or graduate any feature under ADR-008.
 
+> **Note:** This disposition table classifies adapter, tooling, dashboard,
+> evaluation, and deployment surfaces. The six security-sensitive plugins
+> (`source-attestation`, `multi-tenant`, `memory-garden-acl`, `tombstones`,
+> `time-travel`, and `lazy-instruction-discovery`) are the primary publication
+> queue and are tracked separately in
+> [`plugin-publication-dry-run.md`](plugin-publication-dry-run.md). Both tracks
+> must complete before any first publication clearance.
+
 ## Disposition Rules
 
 | Disposition | Meaning | Registry action |

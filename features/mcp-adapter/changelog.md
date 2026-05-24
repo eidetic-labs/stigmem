@@ -3,8 +3,9 @@
 ## Unreleased
 
 - Added the `2026-05-24` host UI smoke execution record and narrowed the
-  `0.9.0-alpha.8` publication clearance gate to Codex CLI, with Continue.dev,
-  Cursor, and Zed retained as unvalidated experimental connector guides.
+  `0.9.0-alpha.8` publication clearance gate to Codex CLI and Claude Code,
+  recorded Gemini CLI as GO-WITH-CAVEAT, and retained Continue.dev, Cursor, and
+  Zed as unvalidated experimental connector guides.
 - Expanded the MCP live-node smoke to validate `recall`, `lint_scope`, canonical
   smoke URIs, session-aware calls, six-tool discovery, and the package-aligned
   server version reported during MCP initialization.
@@ -14,8 +15,8 @@
 - Recorded npm dry-run evidence, prerelease `alpha` tag requirement, executable
   bin packaging, and no-publication disposition for `stigmem-mcp`.
 - Aligned `stigmem-mcp` package metadata to the current alpha release line for
-  publication readiness while keeping registry publication held pending Codex
-  CLI connector smoke, maintainer clearance, and post-publish verification.
+  publication readiness while keeping registry publication held pending
+  maintainer clearance and post-publish verification.
 
 ## 2026-05-21
 

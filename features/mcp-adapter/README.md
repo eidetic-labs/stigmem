@@ -27,15 +27,16 @@ release_lines:
 
 The MCP adapter exposes a running Stigmem node as Model Context Protocol tools
 for stdio-capable agent hosts. `0.9.0-alpha.8` scopes validated host UI support
-to Codex CLI plus repo-local MCP protocol smoke. Continue.dev, Cursor, Zed,
-Claude Code, and custom-host use remain experimental until host-specific smoke
-evidence exists. The adapter is a stateless TypeScript process that translates
-MCP tool calls into HTTP requests against the configured node.
+to Codex CLI, Claude Code, Gemini CLI with its final-response caveat, and
+repo-local MCP protocol smoke. Continue.dev, Cursor, Zed, and custom-host use
+remain experimental until host-specific smoke evidence exists. The adapter is a
+stateless TypeScript process that translates MCP tool calls into HTTP requests
+against the configured node.
 
 The adapter source is active and tested. The `stigmem-mcp` package metadata is
 aligned to the current alpha release line for publication readiness, and
 repo-local MCP protocol smoke passes against a live node. Registry publication
-remains held pending Codex CLI host UI smoke and explicit maintainer clearance.
+remains held pending explicit maintainer clearance.
 
 ## Current State
 

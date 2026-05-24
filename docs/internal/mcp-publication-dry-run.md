@@ -12,7 +12,7 @@ registry upload, release asset upload, tag, or provenance publication occurred.
 
 | Surface | Decision | Reason |
 | --- | --- | --- |
-| `stigmem-mcp` | `hold` - do not publish | Package dry-runs pass, but the required Codex CLI UI smoke has not been completed, and maintainer clearance for an npm registry action has not been granted. Continue.dev, Cursor, and Zed connector guides are experimental and unvalidated for `0.9.0-alpha.8`. |
+| `stigmem-mcp` | `hold` - do not publish | Package dry-runs pass, Codex CLI / Claude Code host UI smoke has passed, and Gemini CLI host UI smoke completed with a final-response caveat, but maintainer clearance for an npm registry action has not been granted. Continue.dev, Cursor, and Zed connector guides are experimental and unvalidated for `0.9.0-alpha.8`. |
 
 ## Registry and Channel
 
@@ -80,7 +80,8 @@ future maintainer-approved npm publication is executed and must be withdrawn:
 
 ## Remaining Gates
 
-- Required Codex CLI host UI smoke. Execution record:
+- Required Codex CLI / Claude Code host UI smoke and Gemini CLI caveated host
+  smoke. Execution record:
   [`mcp-host-ui-smoke-2026-05-24.md`](mcp-host-ui-smoke-2026-05-24.md).
 - Explicit maintainer clearance for npm publication.
 - Post-publish install verification from a clean project, only after
@@ -90,7 +91,8 @@ Continue.dev, Cursor, and Zed connector guides remain experimental and
 unvalidated in this release line because those host UIs are not available in the
 maintainer environment for the `0.9.0-alpha.8` clearance gate. They are not
 publication blockers only if package and release material scope validated host
-support to Codex CLI plus the repo-local MCP protocol smoke.
+support to Codex CLI, Claude Code, Gemini CLI with its final-response caveat,
+and the repo-local MCP protocol smoke.
 
 ### Publication-Scope Limitations
 

@@ -35,6 +35,7 @@ from .routes.graph import router as graph_router
 from .routes.identity import router as identity_router
 from .routes.intents import router as intents_router
 from .routes.lint import router as lint_router
+from .routes.mcp import router as mcp_router
 from .routes.quarantine import router as quarantine_router
 from .routes.recall import router as recall_router
 from .routes.resolver import router as resolver_router
@@ -293,6 +294,7 @@ def create_app() -> FastAPI:
     app.include_router(cards_router)
     app.include_router(recall_router)
     app.include_router(subscriptions_router)
+    app.include_router(mcp_router)
     app.include_router(wellknown_router)
 
     @app.get("/healthz", tags=["ops"])

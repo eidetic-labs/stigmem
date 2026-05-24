@@ -137,6 +137,20 @@ const sidebars: SidebarsConfig = {
       link: { type: 'doc', id: 'sdks/connectors/index' },
       items: [
         'sdks/connectors/openclaw',
+        {
+          type: 'category',
+          label: 'MCP integrations',
+          link: { type: 'doc', id: 'integrations/mcp/index' },
+          collapsed: true,
+          items: [
+            'integrations/mcp/codex-cli',
+            'integrations/mcp/claude-code',
+            'integrations/mcp/gemini-cli',
+            'integrations/mcp/continue-dev',
+            'integrations/mcp/cursor',
+            'integrations/mcp/zed',
+          ],
+        },
       ],
     },
     {

@@ -23,6 +23,14 @@ from .capability import (
 )
 from .federation import _cmd_federation_register_peer
 from .maintenance import _cmd_decay_sweep, _cmd_migrate_normalize_entities
+from .mcp import (
+    _cmd_mcp_config,
+    _cmd_mcp_detect,
+    _cmd_mcp_doctor,
+    _cmd_mcp_install,
+    _cmd_mcp_smoke,
+    _cmd_mcp_status,
+)
 from .parser import _build_parser
 from .plugins import (
     _cmd_doctor,
@@ -53,6 +61,12 @@ __all__ = [
     "_cmd_instruction_manifest_generate",
     "_cmd_instruction_migrate",
     "_cmd_migrate_normalize_entities",
+    "_cmd_mcp_config",
+    "_cmd_mcp_detect",
+    "_cmd_mcp_doctor",
+    "_cmd_mcp_install",
+    "_cmd_mcp_smoke",
+    "_cmd_mcp_status",
     "_cmd_plugins_describe",
     "_cmd_plugins_disable",
     "_cmd_plugins_doctor",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 
 from ..cli_admin_handlers import (
     _cmd_audit_discovery,
@@ -23,6 +24,14 @@ from .capability import (
 )
 from .federation import _cmd_federation_register_peer
 from .maintenance import _cmd_decay_sweep, _cmd_migrate_normalize_entities
+from .mcp import (
+    _cmd_mcp_config,
+    _cmd_mcp_detect,
+    _cmd_mcp_doctor,
+    _cmd_mcp_install,
+    _cmd_mcp_smoke,
+    _cmd_mcp_status,
+)
 from .plugins import (
     _cmd_doctor,
     _cmd_plugins_describe,
@@ -185,6 +194,71 @@ def _build_parser() -> argparse.ArgumentParser:
     pdoc_p = plugins_sub.add_parser("doctor", help="diagnose plugin install and enable state")
     pdoc_p.add_argument("--json", action="store_true", help="output as JSON")
     pdoc_p.set_defaults(func=_cmd_plugins_doctor)
+
+    # ------------------------------------------------------------------ mcp
+    mcp_p = sub.add_parser(
+        "mcp",
+        help="manage stigmem-mcp editor integrations",
+    )
+    mcp_sub = mcp_p.add_subparsers(dest="mcp_command", metavar="SUBCOMMAND")
+    mcp_sub.required = True
+
+    mcp_doc_p = mcp_sub.add_parser("doctor", help="diagnose stigmem-mcp setup")
+    mcp_doc_p.add_argument("--json", action="store_true", help="output as JSON")
+    mcp_doc_p.set_defaults(func=_cmd_mcp_doctor)
+
+    mcp_detect_p = mcp_sub.add_parser("detect", help="detect known editor configs")
+    mcp_detect_p.add_argument("--json", action="store_true", help="output as JSON")
+    mcp_detect_p.set_defaults(func=_cmd_mcp_detect)
+
+    mcp_status_p = mcp_sub.add_parser("status", help="show editor config status")
+    mcp_status_p.add_argument("--json", action="store_true", help="output as JSON")
+    mcp_status_p.set_defaults(func=_cmd_mcp_status)
+
+    mcp_config_p = mcp_sub.add_parser("config", help="print editor config snippets")
+    mcp_config_p.add_argument("editor", nargs="?", metavar="EDITOR", help="editor slug")
+    mcp_config_p.add_argument("--list", action="store_true", help="list supported editors")
+    mcp_config_p.add_argument(
+        "--stigmem-url",
+        default=os.getenv("STIGMEM_URL", "http://localhost:8765"),
+        metavar="URL",
+        help="Stigmem node URL for the emitted snippet",
+    )
+    mcp_config_p.add_argument(
+        "--stigmem-api-key",
+        default=os.getenv("STIGMEM_API_KEY", "<your-api-key>"),
+        metavar="KEY",
+        help="Stigmem API key for the emitted snippet",
+    )
+    mcp_config_p.set_defaults(func=_cmd_mcp_config)
+
+    mcp_install_p = mcp_sub.add_parser("install", help="write an editor MCP config")
+    mcp_install_p.add_argument("editor", metavar="EDITOR", help="editor slug")
+    mcp_install_p.add_argument("--write", action="store_true", help="apply the planned change")
+    mcp_install_p.add_argument(
+        "--force",
+        action="store_true",
+        help="replace existing stigmem-mcp entry",
+    )
+    mcp_install_p.add_argument("--yes", action="store_true", help="skip interactive confirmation")
+    mcp_install_p.add_argument("--backup-dir", default=None, metavar="DIR", help="backup directory")
+    mcp_install_p.add_argument(
+        "--stigmem-url",
+        default=os.getenv("STIGMEM_URL", "http://localhost:8765"),
+        metavar="URL",
+        help="Stigmem node URL to write",
+    )
+    mcp_install_p.add_argument(
+        "--stigmem-api-key",
+        default=os.getenv("STIGMEM_API_KEY", "<your-api-key>"),
+        metavar="KEY",
+        help="Stigmem API key to write",
+    )
+    mcp_install_p.set_defaults(func=_cmd_mcp_install)
+
+    mcp_smoke_p = mcp_sub.add_parser("smoke", help="verify an editor MCP setup")
+    mcp_smoke_p.add_argument("editor", metavar="EDITOR", help="editor slug")
+    mcp_smoke_p.set_defaults(func=_cmd_mcp_smoke)
 
     # ------------------------------------------------------------------ doctor
     doctor_p = sub.add_parser("doctor", help="print node and plugin diagnostics")

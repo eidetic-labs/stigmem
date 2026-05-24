@@ -6780,6 +6780,30 @@
         ]
       }
     },
+    "/v1/mcp/connectors": {
+      "get": {
+        "description": "List supported MCP editor connectors and validation tiers.",
+        "operationId": "list_mcp_connectors_v1_mcp_connectors_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Mcp Connectors V1 Mcp Connectors Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Mcp Connectors",
+        "tags": [
+          "mcp"
+        ]
+      }
+    },
     "/v1/me": {
       "get": {
         "operationId": "whoami_v1_me_get",

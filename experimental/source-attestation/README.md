@@ -23,7 +23,7 @@ notes.
 ## Installation
 
 ```bash
-pip install --pre stigmem-node==0.9.0a8 stigmem-plugin-source-attestation==0.9.0a8
+pip install --pre stigmem-node==0.9.0a8 stigmem-plugin-source-attestation==0.1.0
 ```
 
 ## Enable

@@ -23,13 +23,18 @@ Every publish-ready plugin must have:
 
 - a package name matching `stigmem-plugin-<feature-slug>` unless a compatibility
   reason is documented in the feature record
-- a package version aligned with the release train being published
+- `requires_stigmem` aligned to the supported release train
+- a package version following the plugin's independent lifecycle under PEP 440
 - a `stigmem.plugins` entry point that resolves to the plugin manifest
 - a manifest with stable plugin id, hook registrations, capabilities,
   compatibility bounds, config schema, and health behavior
 - README install, enable, disable, test, and uninstall instructions
 - explicit experimental/stability language in package metadata and README
 - license, authorship, and source repository metadata
+
+Plugin `version` strings are independent of `stigmem-core` versions. The
+compatibility boundary lives in `requires_stigmem`; the plugin version reflects
+only the plugin's own development cadence.
 
 ## Required Feature Record State
 

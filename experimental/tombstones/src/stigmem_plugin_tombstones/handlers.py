@@ -9,7 +9,7 @@ from stigmem_node.plugins import Allow, Migration, PluginContext, PluginHealth, 
 
 T = TypeVar("T")
 PLUGIN_NAME = "stigmem-plugin-tombstones"
-PLUGIN_VERSION = "0.9.0a8"
+PLUGIN_VERSION = "0.1.0"
 
 
 def recall_filter(_ctx: PluginContext, value: T, **_: Any) -> T:

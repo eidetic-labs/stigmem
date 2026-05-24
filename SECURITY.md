@@ -150,6 +150,32 @@ after a patched version is available; Medium and Low findings are documented in
 this file unless a documented risk-profile, reporter-coordination, or
 downstream-compliance carve-out applies.
 
+## Post-a8 Dependency Advisory — qs CVE-2026-8723 (2026-05-24)
+
+`qs` CVE-2026-8723 / GHSA-q8mj-m7cp-5q26 is a Moderate denial-of-service issue
+in `qs.stringify` when callers combine `arrayFormat: "comma"` with
+`encodeValuesOnly: true` on arrays containing `null` or `undefined` entries.
+
+Stigmem's root pnpm workspace was already pinned to the patched `qs@6.15.2`
+release. The remaining exposure was the Docusaurus documentation build
+toolchain lockfile, where transitive dependencies resolved `qs@6.15.1` and
+`qs@6.14.2`. This is a build-time documentation dependency, not the Python
+reference node, TypeScript SDK, MCP adapter runtime, or published static docs
+browser bundle.
+
+Remediation: `docs/package.json` now overrides `qs` to `>=6.15.2`, and
+`docs/package-lock.json` resolves all docs-site `qs` copies to `6.15.2`.
+`npm ls qs` from `docs/` confirms Docusaurus, Express/body-parser, and
+`docusaurus-theme-openapi-docs` all resolve to `qs@6.15.2`.
+
+Publication disposition: documented here per the Medium/Low publication policy.
+No Stigmem GHSA is opened because the affected package advisory is already
+public upstream, the vulnerable dependency is patched before the next Stigmem
+release, and no supported Stigmem runtime endpoint used the vulnerable
+`qs.stringify` option combination.
+
+Evidence: [`docs/internal/security-evidence-registry-2026-05-24.md`](docs/internal/security-evidence-registry-2026-05-24.md).
+
 ## Security Posture — v0.9.0a7 (2026-05-23)
 
 `v0.9.0a7` validated Source Attestation as an experimental, opt-in plugin

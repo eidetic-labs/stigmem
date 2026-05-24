@@ -6,7 +6,7 @@ from __future__ import annotations
 import sys
 import tomllib
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,7 +39,7 @@ def check_readme() -> list[str]:
 
 
 def check_pyproject_extras() -> list[str]:
-    project = cast("dict[str, Any]", _root_pyproject()["project"])
+    project = cast("dict[str, object]", _root_pyproject()["project"])
     optional = cast("dict[str, list[str]]", project.get("optional-dependencies", {}))
     errors: list[str] = []
     plugins_all = _dependency_names(optional.get("plugins-all", []))

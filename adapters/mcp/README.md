@@ -18,6 +18,17 @@ is experimental until a host-specific smoke record exists.
 | `subscribe_scope` | Poll for recent facts in a scope (single-shot, cursor-based) |
 | `lint_scope` | Health-check sweep — detect contradictions, stale facts, orphans, broken refs (read-only; `Spec-20-Lint-Semantics`) |
 
+## Validation tiers
+
+| Editor | Tier | Guide |
+|---|---|---|
+| Codex CLI | Validated | [Codex CLI](../../docs/docs/integrations/mcp/codex-cli.md) |
+| Claude Code | Validated | [Claude Code](../../docs/docs/integrations/mcp/claude-code.md) |
+| Gemini CLI | Caveated | [Gemini CLI](../../docs/docs/integrations/mcp/gemini-cli.md) |
+| Continue.dev | Experimental | [Continue.dev](../../docs/docs/integrations/mcp/continue-dev.md) |
+| Cursor | Experimental | [Cursor](../../docs/docs/integrations/mcp/cursor.md) |
+| Zed | Experimental | [Zed](../../docs/docs/integrations/mcp/zed.md) |
+
 ## Setup
 
 ### Requirements

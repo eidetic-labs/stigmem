@@ -1,0 +1,8 @@
+{
+  "label": "MCP integrations",
+  "position": 30,
+  "link": {
+    "type": "doc",
+    "id": "integrations/mcp/index"
+  }
+}

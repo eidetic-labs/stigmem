@@ -179,6 +179,39 @@ plugin package. Then inspect local state with `stigmem plugins list` and
 `stigmem plugins doctor`. The full catalog is in
 [docs/docs/plugins](docs/docs/plugins/index.md).
 
+## MCP / Editor integrations
+
+Stigmem ships an [MCP](https://modelcontextprotocol.io) server that lets
+LLM-aware editors read from and write to a Stigmem node directly from chat.
+
+```bash
+npm install -g stigmem-mcp
+# or:
+npx -y stigmem-mcp@0.9.0-alpha.9
+```
+
+```bash
+stigmem mcp doctor
+stigmem mcp detect
+stigmem mcp config codex-cli
+stigmem mcp install codex-cli --write
+stigmem mcp smoke codex-cli
+```
+
+| Editor | Validation tier | Connector guide |
+| --- | --- | --- |
+| Codex CLI | Validated | [docs/integrations/mcp/codex-cli](https://docs.stigmem.dev/en/latest/docs/integrations/mcp/codex-cli) |
+| Claude Code | Validated | [docs/integrations/mcp/claude-code](https://docs.stigmem.dev/en/latest/docs/integrations/mcp/claude-code) |
+| Gemini CLI | Caveated | [docs/integrations/mcp/gemini-cli](https://docs.stigmem.dev/en/latest/docs/integrations/mcp/gemini-cli) |
+| Continue.dev | Experimental | [docs/integrations/mcp/continue-dev](https://docs.stigmem.dev/en/latest/docs/integrations/mcp/continue-dev) |
+| Cursor | Experimental | [docs/integrations/mcp/cursor](https://docs.stigmem.dev/en/latest/docs/integrations/mcp/cursor) |
+| Zed | Experimental | [docs/integrations/mcp/zed](https://docs.stigmem.dev/en/latest/docs/integrations/mcp/zed) |
+
+Validation tiers: **Validated** means host UI smoke evidence is on file;
+**Caveated** means tool execution passed with a documented host-side caveat;
+**Experimental** means connector guide exists but host UI smoke evidence is
+pending.
+
 **Migrating from bare-metal to Docker?** See the [upgrade path guide](docs/docs/get-started/upgrade-v1.md).
 
 ## Quickstart — two nodes federating
@@ -251,7 +284,7 @@ uv run pytest tests/ -v
 stigmem/
 ├── spec/           ← canonical specification (under review for v0.9.0a1 first-build canonicalization)
 ├── node/           ← reference node: FastAPI + SQLite
-├── adapters/       ← adapter code (OpenClaw is experimental in v0.9.0a9; MCP deferred)
+├── adapters/       ← adapter code (OpenClaw and MCP are alpha-line integrations)
 ├── sdks/           ← Python and TypeScript client SDKs (Go SDK deferred)
 ├── experimental/   ← deferred features per ADR-002 (dashboard, additional adapters, deploy recipes, more)
 └── docs/           ← Docusaurus 3 documentation site

@@ -25,8 +25,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 - Added operator-facing plugin discovery surfaces: README plugin catalog,
   meta-package plugin extras, docs-site catalog pages, and `stigmem plugins`
   search/enable/disable/doctor CLI commands.
+- Added MCP enablement surfaces: README editor integration table, docs-site
+  MCP connector catalog, `stigmem mcp` doctor/detect/config/install/status/smoke
+  CLI commands, and `GET /v1/mcp/connectors` catalog discovery.
 - Added a structural guard that keeps README, PyPI extra definitions, and docs
   plugin catalog entries aligned for the six published experimental plugins.
+- Added a structural guard that keeps README, adapter README, docs-site MCP
+  connector pages, and the `stigmem mcp` editor catalog aligned.
 
 ### Security
 

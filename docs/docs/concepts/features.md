@@ -348,7 +348,7 @@ Read the spec at
 <div>
 <dt>MCP adapter</dt>
 <dt><span className="stigmem-fields__type">Experimental, external</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter"><code>features/mcp-adapter</code></a>; <code>stigmem-mcp</code> package metadata is aligned, but publication remains held pending live connector smoke and security certification.</dd>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter"><code>features/mcp-adapter</code></a>; <code>@eidetic-labs/stigmem-mcp</code> is independently versioned and installs the <code>stigmem-mcp</code> binary.</dd>
 </div>
 
 <div>

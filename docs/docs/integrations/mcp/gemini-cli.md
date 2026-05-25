@@ -16,7 +16,7 @@ tool calls, so support remains caveated until a clean host release is verified.
 ## Install
 
 ```bash
-npm install -g stigmem-mcp
+npm install -g @eidetic-labs/stigmem-mcp
 ```
 
 ## Configure

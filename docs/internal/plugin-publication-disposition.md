@@ -3,7 +3,7 @@
 **Status:** active maintainer tracker
 **Applies to:** adapter, tooling, dashboard, evaluation, and deployment helper
 surfaces considered during the plugin publication readiness track
-**Last updated:** 2026-05-24
+**Last updated:** 2026-05-25
 
 This tracker classifies non-security-sensitive adapter and tooling surfaces for
 the plugin publication readiness milestone. It does not publish artifacts,
@@ -25,14 +25,16 @@ create package promises, or graduate any feature under ADR-008.
 | `hold` | Real implementation/package surface exists, but release-line validation is incomplete. | Do not publish until the named gaps close. |
 | `defer` | Not a standalone plugin publication target for the active track. | Do not publish in this milestone. |
 
-No adapter, tooling, dashboard, evaluation, or deployment helper surface is
-classified as `publish-now` in this track.
+The MCP adapter is classified as `publish-now` after maintainer clearance for
+the scoped npm package and independent `0.1.0` version line. Other adapter,
+tooling, dashboard, evaluation, and deployment helper surfaces remain outside
+the publication queue.
 
 ## Adapter and Tooling Order
 
 | Order | Surface | Feature record | Implementation | Disposition | Missing validation before publication |
 | --- | --- | --- | --- | --- | --- |
-| 1 | MCP adapter | `features/mcp-adapter/` | `adapters/mcp/`; `experimental/mcp-adapter/` connector guides | `hold` | Package metadata, live protocol smoke, adapter security regressions, dry-run evidence, Codex CLI / Claude Code host UI smoke, and Gemini CLI smoke with caveat are complete; Continue.dev, Cursor, and Zed remain experimental/unvalidated connector guides. Maintainer clearance remains required before npm publication. |
+| 1 | MCP adapter | `features/mcp-adapter/` | `adapters/mcp/`; `experimental/mcp-adapter/` connector guides | `publish-now` | Scoped npm package `@eidetic-labs/stigmem-mcp@0.1.0`; package metadata, live protocol smoke, adapter security regressions, dry-run evidence, Codex CLI / Claude Code host UI smoke, Gemini CLI smoke with caveat, and maintainer clearance are complete. Continue.dev, Cursor, and Zed remain experimental/unvalidated connector guides, not publication blockers for `0.1.0`. |
 | 2 | Obsidian adapter | `features/obsidian-adapter/` | `experimental/obsidian-adapter/cli/`; `experimental/obsidian-adapter/plugin/` | `hold` | Validate CLI package and Obsidian plugin packaging; run live-vault sync smoke; review key-storage guidance; decide registry/channel ownership. |
 | 3 | Cognee adapter | `features/cognee-adapter/` | `experimental/cognee-adapter/` | `defer` | Assign owner; validate against a known Cognee runtime, vector store, and dependency set; refresh package metadata before reconsidering publication. |
 | 4 | Letta adapter | `features/letta-adapter/` | `experimental/letta-adapter/` | `defer` | Assign owner; validate against a real Letta server and agent memory; refresh dependency/package compatibility. |

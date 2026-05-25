@@ -6,17 +6,18 @@ audience: Integrator
 
 # MCP integrations
 
-Stigmem ships `stigmem-mcp`, a stdio MCP server that lets MCP-aware editors
-read from and write to a Stigmem node. The adapter exposes six tools:
+Stigmem ships `@eidetic-labs/stigmem-mcp`, a stdio MCP server that installs the
+`stigmem-mcp` binary and lets MCP-aware editors read from and write to a
+Stigmem node. The adapter exposes six tools:
 `assert_fact`, `query_facts`, `recall`, `resolve_contradiction`,
 `subscribe_scope`, and `lint_scope`.
 
 ## Install
 
 ```bash
-npm install -g stigmem-mcp
+npm install -g @eidetic-labs/stigmem-mcp
 # or run without a global install:
-npx -y stigmem-mcp@0.9.0-alpha.9
+npx -y @eidetic-labs/stigmem-mcp@0.1.0
 ```
 
 ## Quick start
@@ -67,7 +68,7 @@ across mutually untrusted workspaces.
 
 | Symptom | Check |
 |---|---|
-| `stigmem-mcp` not found | Run `npm install -g stigmem-mcp` or use the `npx` snippet in your editor config |
+| `stigmem-mcp` not found | Run `npm install -g @eidetic-labs/stigmem-mcp` or use the `npx` snippet in your editor config |
 | Auth errors | Confirm `STIGMEM_API_KEY` matches a valid node key |
 | Connection refused | Confirm the node is reachable at `STIGMEM_URL` |
 | Tools missing in the editor | Run `stigmem mcp status` and restart the editor after config changes |

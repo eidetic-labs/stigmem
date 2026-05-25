@@ -20,7 +20,7 @@ security posture.
 ## Residual Risk
 
 - MCP hosts can still render tool output unsafely. Repo-local tests certify the
-  adapter framing. Codex CLI and Claude Code are validated `0.9.0-alpha.8`
+  adapter framing. Codex CLI and Claude Code are validated `0.1.0`
   host UI smoke targets. Gemini CLI completed MCP tool execution with a host
   final-response caveat. Continue.dev, Cursor, and Zed remain unvalidated
   experimental connector guides until future host-specific smoke evidence
@@ -30,13 +30,12 @@ security posture.
 - Tool calls that write facts depend on the node's auth, quota, audit, and
   scope enforcement. The adapter does not add an independent authorization
   layer.
-- Package metadata, repo-local protocol/security smoke, and npm dry-run
-  evidence are aligned for publication readiness, but registry publication
-  remains held until maintainer clearance is complete.
+- Package metadata, repo-local protocol/security smoke, npm dry-run evidence,
+  and maintainer clearance are aligned for scoped npm publication readiness.
 
 ## Carve-outs
 
-The `0.9.0-alpha.8` MCP adapter does not implement:
+The `0.1.0` MCP adapter does not implement:
 
 - Rate limiting: there is no per-second or per-minute call cap. A misbehaving
   MCP client, or a host bug spamming tool calls, can exhaust upstream node

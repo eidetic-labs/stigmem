@@ -9,7 +9,7 @@ channel handling.
 
 This feature covers:
 
-- the `stigmem-mcp` TypeScript package under `adapters/mcp`;
+- the `@eidetic-labs/stigmem-mcp` TypeScript package under `adapters/mcp`;
 - stdio MCP server startup;
 - tool registration for fact write, query, recall, contradiction resolution,
   scope polling, and scope linting;
@@ -49,8 +49,8 @@ instructions.
 - Defining or versioning MCP itself.
 - Making the adapter part of the stable default node surface.
 - Owning node API behavior or feature semantics behind each tool.
-- Claiming package-version alignment with the current alpha artifact set before
-  release-line validation is complete.
+- Treating the npm adapter package version as the Stigmem project version; the
+  adapter package has an independent semver line.
 
 ## Canonical Spec Assignment
 

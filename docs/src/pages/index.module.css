@@ -1,47 +1,1165 @@
-.heroBanner {
-  padding: 5rem 0 4rem;
-  text-align: center;
+/* ──────────────────────────────────────────────────────────────────────────
+ * STIGMEM · docs landing page · pages/index.module.css
+ *
+ * Aesthetic: dark canvas + indigo/violet glow, monospace-heavy for facts +
+ * federation handshakes. Visual metaphor is a network operations centre
+ * crossed with a signed ledger.
+ *
+ * Local tokens reuse the brand identity already established in
+ * src/css/custom.css (--stigmem-logo-bg, --stigmem-logo-glow, the
+ * indigo/violet primary scale).
+ *
+ * All animations respect prefers-reduced-motion via the global
+ * @media (prefers-reduced-motion) block at the bottom.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/* ───────── Local tokens ───────── */
+.home {
+  --stig-ink: #070912;
+  --stig-ink-2: #0e1124;
+  --stig-surface: #15182a;
+  --stig-surface-2: #1c1f36;
+  --stig-rule: rgba(167, 139, 250, 0.16);
+  --stig-rule-soft: rgba(167, 139, 250, 0.08);
+  --stig-text: #e2e4f2;
+  --stig-text-dim: #a8acc4;
+  --stig-text-mute: #6b6f88;
+  --stig-violet-100: #e0dbff;
+  --stig-violet-300: #c4b5fd;
+  --stig-violet-400: #a78bfa;
+  --stig-violet-500: #818cf8;
+  --stig-violet-700: #4f46e5;
+  --stig-cyan: #67e8f9;
+  --stig-amber: #fbbf24;
+  --stig-red: #f87171;
+  --stig-green: #34d399;
+  --stig-mono: var(--ifm-font-family-monospace, 'JetBrains Mono', ui-monospace, monospace);
+  --stig-sans: var(--ifm-font-family-base, 'Poppins', system-ui, sans-serif);
+  --stig-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  background: var(--stig-ink);
+  color: var(--stig-text);
+  font-family: var(--stig-sans);
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+/* Reset the default Docusaurus hero treatment so we own the surface */
+.home :global(.hero) {
+  background: transparent;
+}
+
+/* ───────── Common: eyebrow ───────── */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  font-family: var(--stig-mono);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--stig-violet-300);
+  margin: 0 0 1.4rem;
+  padding: 0;
+}
+
+.eyebrowNum {
+  color: var(--stig-text-mute);
+  font-weight: 400;
+}
+
+.eyebrowDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--stig-violet-400);
+  box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.7);
+  animation: stigPulse 2.4s var(--stig-ease) infinite;
+}
+
+@keyframes stigPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.55); }
+  50% { box-shadow: 0 0 0 8px rgba(167, 139, 250, 0); }
+}
+
+/* ───────── Common: section head ───────── */
+.sectionHead {
+  max-width: 760px;
+  margin: 0 auto 2.4rem;
+  text-align: left;
+}
+
+.sectionHead h2 {
+  font-family: var(--stig-sans);
+  font-weight: 500;
+  font-size: clamp(1.7rem, 2.4vw, 2.15rem);
+  line-height: 1.16;
+  letter-spacing: -0.018em;
+  color: var(--stig-text);
+  margin: 0 0 0.7rem;
+}
+
+.sectionLede {
+  color: var(--stig-text-dim);
+  font-size: 1.02rem;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.sectionHeadSplit {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2.8rem;
+  align-items: end;
+  max-width: 1100px;
+}
+
+.sectionHeadSplit h2 {
+  margin: 0;
+}
+
+@media (max-width: 880px) {
+  .sectionHeadSplit {
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+    align-items: start;
+  }
+}
+
+/* ───────── Common: buttons ───────── */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  padding: 0.62em 1.15em;
+  font-family: var(--stig-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: background 180ms var(--stig-ease), color 180ms var(--stig-ease),
+    border-color 180ms var(--stig-ease), transform 180ms var(--stig-ease);
+  cursor: pointer;
+}
+
+.button:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.buttonPrimary {
+  background: linear-gradient(180deg, var(--stig-violet-400), var(--stig-violet-500));
+  color: var(--stig-ink);
+  border-color: var(--stig-violet-300);
+  box-shadow: 0 8px 22px -10px rgba(129, 140, 248, 0.55);
+}
+
+.buttonPrimary:hover {
+  background: linear-gradient(180deg, var(--stig-violet-300), var(--stig-violet-400));
+  color: var(--stig-ink);
+  border-color: var(--stig-violet-100);
+}
+
+.buttonGhost {
+  background: transparent;
+  color: var(--stig-text);
+  border-color: var(--stig-rule);
+}
+
+.buttonGhost:hover {
+  background: rgba(167, 139, 250, 0.08);
+  color: var(--stig-violet-100);
+  border-color: var(--stig-violet-400);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * HERO
+ * ────────────────────────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 4rem;
+  padding: 7.5rem 3rem 6rem;
+  align-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--stig-rule);
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    padding: 5.5rem 1.5rem 4rem;
+  }
+}
+
+.heroBg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.heroGlow {
+  position: absolute;
+  inset: -20% -10% -10% -10%;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(78, 70, 229, 0.32) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 60%, rgba(167, 139, 250, 0.20) 0%, transparent 50%);
+  filter: blur(20px);
+}
+
+.heroGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(167, 139, 250, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(167, 139, 250, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 50% 50%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 30%, transparent 75%);
+}
+
+.heroCopy {
+  max-width: 620px;
+}
+
+.heroTitle {
+  font-family: var(--stig-sans);
+  font-weight: 500;
+  font-size: clamp(2.4rem, 4.4vw, 3.6rem);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  margin: 0 0 1.6rem;
+  color: var(--stig-text);
+}
+
+.heroLine {
+  display: block;
+}
+
+.heroLineAccent {
+  background: linear-gradient(90deg, var(--stig-violet-300), var(--stig-violet-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.heroLede {
+  color: var(--stig-text-dim);
+  font-size: 1.08rem;
+  line-height: 1.66;
+  margin: 0 0 2rem;
+  max-width: 56ch;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-bottom: 2.4rem;
+}
+
+.heroSnippet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65em;
+  padding: 0.55em 0.95em;
+  font-family: var(--stig-mono);
+  font-size: 0.82rem;
+  color: var(--stig-violet-100);
+  background: var(--stig-surface);
+  border: 1px solid var(--stig-rule);
+  border-radius: 8px;
+}
+
+.heroSnippetPrompt {
+  color: var(--stig-violet-400);
+  font-weight: 600;
+}
+
+.heroStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.6rem;
+  margin: 0;
+  padding: 1.4rem 0 0;
+  border-top: 1px solid var(--stig-rule-soft);
+}
+
+.heroStats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.heroStats dt {
+  font-family: var(--stig-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--stig-text-mute);
+  margin: 0;
+}
+
+.heroStats dd {
+  font-family: var(--stig-mono);
+  font-size: 0.82rem;
+  color: var(--stig-violet-100);
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+
+@media (max-width: 540px) {
+  .heroStats {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+}
+
+/* ───────── Hero stage: the fact-record card ───────── */
+.heroStage {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+@media (max-width: 1024px) {
+  .heroStage {
+    justify-content: center;
+  }
+}
+
+.factCard {
+  width: min(440px, 100%);
+  background: linear-gradient(180deg, var(--stig-surface), var(--stig-ink-2));
+  border: 1px solid var(--stig-rule);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 24px 48px -24px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(78, 70, 229, 0.18);
   position: relative;
   overflow: hidden;
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2.5rem 1.5rem;
-  }
+.factCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--stig-violet-400), transparent);
+  opacity: 0.7;
 }
 
-/* Logo: 1280x640 native (2:1). Sized to fill the visual space above the
-   wordmark — caps at the container width on small viewports. */
-.heroLogo {
-  display: block;
-  width: 100%;
-  max-width: 560px;
-  height: auto;
-  margin: 0 auto 0.5rem;
+.factCardChrome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--stig-rule);
 }
 
-@media screen and (max-width: 996px) {
-  .heroLogo {
-    max-width: 380px;
-  }
+.factCardLabel {
+  font-family: var(--stig-mono);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--stig-violet-300);
 }
 
-@media screen and (max-width: 480px) {
-  .heroLogo {
-    max-width: 280px;
-  }
+.factCardId {
+  font-family: var(--stig-mono);
+  font-size: 0.78rem;
+  color: var(--stig-text-mute);
 }
 
-.buttons {
+.factCardFields {
+  list-style: none;
+  margin: 0;
+  padding: 0.85rem 1.1rem;
+}
+
+.factCardFields li {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 1rem;
+  padding: 0.32rem 0;
+  font-family: var(--stig-mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  border-bottom: 1px dashed var(--stig-rule-soft);
+}
+
+.factCardFields li:last-child {
+  border-bottom: none;
+}
+
+.factFieldKey {
+  color: var(--stig-text-mute);
+}
+
+.factFieldVal {
+  color: var(--stig-violet-100);
+  word-break: break-all;
+}
+
+.factCardSig {
+  padding: 0.7rem 1.1rem;
+  border-top: 1px solid var(--stig-rule);
+  font-family: var(--stig-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  color: var(--stig-text-mute);
+  background: rgba(78, 70, 229, 0.05);
+}
+
+.factCardSigVal {
+  color: var(--stig-violet-300);
+  letter-spacing: 0.15em;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * PRIMITIVES (3-card band)
+ * ────────────────────────────────────────────────────────────────────────── */
+.primitives {
+  padding: 6rem 3rem;
+  border-bottom: 1px solid var(--stig-rule);
+}
+
+@media (max-width: 1024px) {
+  .primitives { padding: 4.5rem 1.5rem; }
+}
+
+.primitiveGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 880px) {
+  .primitiveGrid { grid-template-columns: 1fr; }
+}
+
+.primitive {
+  background: var(--stig-surface);
+  border: 1px solid var(--stig-rule);
+  border-radius: 12px;
+  padding: 1.6rem 1.5rem;
+  transition: border-color 200ms var(--stig-ease), transform 200ms var(--stig-ease);
+  position: relative;
+}
+
+.primitive::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, transparent 30%, rgba(167, 139, 250, 0.18) 80%);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+
+.primitiveLabel {
+  font-family: var(--stig-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--stig-violet-300);
+  margin: 0 0 0.55rem;
+  letter-spacing: 0.04em;
+}
+
+.primitiveType {
+  font-family: var(--stig-mono);
+  font-size: 0.74rem;
+  color: var(--stig-text-mute);
+  margin: 0 0 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--stig-rule-soft);
+  word-break: break-all;
+}
+
+.primitiveBlurb {
+  color: var(--stig-text-dim);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * DEMO: animated terminal + side panel
+ * ────────────────────────────────────────────────────────────────────────── */
+.demo {
+  padding: 6rem 3rem;
+  border-bottom: 1px solid var(--stig-rule);
+}
+
+@media (max-width: 1024px) {
+  .demo { padding: 4.5rem 1.5rem; }
+}
+
+.demoBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .demoBody { grid-template-columns: 1fr; gap: 2rem; }
+}
+
+/* Terminal */
+.recorder {
+  background: linear-gradient(180deg, var(--stig-surface), var(--stig-ink));
+  border: 1px solid var(--stig-rule);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 24px 60px -32px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(78, 70, 229, 0.2);
+  min-height: 380px;
+}
+
+.recorderChrome {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 1rem;
-  margin-top: 1.5rem;
-  flex-wrap: wrap;
+  padding: 0.7rem 1rem;
+  background: rgba(7, 9, 18, 0.6);
+  border-bottom: 1px solid var(--stig-rule);
 }
 
-.featureRow {
-  padding: 2rem 0 3rem;
+.recorderDots {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.recorderDot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.recorderDotR { background: #ff5f56; }
+.recorderDotY { background: #ffbd2e; }
+.recorderDotG { background: #27c93f; }
+
+.recorderPath {
+  flex: 1;
+  font-family: var(--stig-mono);
+  font-size: 0.75rem;
+  color: var(--stig-text-mute);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.recorderHlc {
+  font-family: var(--stig-mono);
+  font-size: 0.7rem;
+  color: var(--stig-violet-300);
+  letter-spacing: 0.08em;
+}
+
+.recorderBody {
+  padding: 1.25rem 1.5rem;
+  font-family: var(--stig-mono);
+  font-size: 0.82rem;
+  line-height: 1.66;
+  color: var(--stig-text);
+  min-height: 300px;
+}
+
+.recorderLine {
+  margin: 0;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.recorderPrompt {
+  color: var(--stig-violet-400);
+  font-weight: 600;
+  user-select: none;
+}
+
+.recorderPromptCont {
+  color: var(--stig-text-mute);
+  user-select: none;
+}
+
+.recorderText {
+  color: var(--stig-text);
+}
+
+.recorderHashLine .recorderText {
+  color: var(--stig-text-mute);
+  font-style: italic;
+}
+
+.recorderCaret {
+  display: inline-block;
+  color: var(--stig-violet-400);
+  animation: stigBlink 1.05s steps(1) infinite;
+  margin-left: 1px;
+  font-weight: 600;
+}
+
+@keyframes stigBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.recorderComment {
+  margin: 0.1rem 0 0.55rem;
+  padding-left: 1.2em;
+  font-family: var(--stig-mono);
+  font-size: 0.78rem;
+  color: var(--stig-text-mute);
+  font-style: normal;
+}
+
+.recorderKindAssert .recorderText,
+.recorderKindAssert .recorderPrompt { color: var(--stig-violet-100); }
+.recorderKindReplicate .recorderText { color: var(--stig-violet-300); }
+.recorderKindRecall .recorderText { color: var(--stig-cyan); }
+
+.recorderComment.recorderKindAssert { color: var(--stig-green); }
+.recorderComment.recorderKindReplicate { color: var(--stig-violet-300); }
+.recorderComment.recorderKindRecall { color: var(--stig-cyan); }
+
+/* Demo side panel */
+.demoSide h3 {
+  font-family: var(--stig-sans);
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin: 0 0 1.3rem;
+  color: var(--stig-text);
+  letter-spacing: -0.005em;
+}
+
+.demoSteps {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.demoSteps li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  padding: 1.15rem 0;
+  border-top: 1px solid var(--stig-rule-soft);
+}
+
+.demoSteps li:first-child { border-top: none; padding-top: 0; }
+
+.demoStepNum {
+  font-family: var(--stig-mono);
+  font-size: 0.78rem;
+  color: var(--stig-violet-400);
+  letter-spacing: 0.06em;
+  align-self: start;
+}
+
+.demoSteps strong {
+  display: block;
+  font-family: var(--stig-sans);
+  font-weight: 500;
+  font-size: 0.98rem;
+  color: var(--stig-text);
+  margin: 0 0 0.35rem;
+}
+
+.demoSteps p {
+  color: var(--stig-text-dim);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * FEDERATION SECTION
+ * ────────────────────────────────────────────────────────────────────────── */
+.federationSection {
+  padding: 6rem 3rem;
+  border-bottom: 1px solid var(--stig-rule);
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(78, 70, 229, 0.10) 0%, transparent 60%),
+    var(--stig-ink);
+}
+
+@media (max-width: 1024px) {
+  .federationSection { padding: 4.5rem 1.5rem; }
+}
+
+.federation {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.federationSvg {
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+  display: block;
+}
+
+.federationCaption {
+  max-width: 60ch;
+  text-align: center;
+  font-size: 0.92rem;
+  color: var(--stig-text-dim);
+  line-height: 1.65;
+}
+
+.federationGrid {
+  opacity: 0.7;
+}
+
+/* Animated handshake — dash sweep along the line */
+.federationHandshake {
+  stroke-dashoffset: 0;
+  animation: stigDashSweep 2.4s linear infinite;
+}
+
+@keyframes stigDashSweep {
+  to { stroke-dashoffset: -28; }
+}
+
+.federationReplA {
+  stroke-dashoffset: 0;
+  animation: stigDashSweep 3.2s linear infinite;
+}
+
+.federationReplB {
+  stroke-dashoffset: 0;
+  animation: stigDashSweep 4.0s linear infinite reverse;
+}
+
+.federationNode circle {
+  filter: drop-shadow(0 0 12px rgba(167, 139, 250, 0.25));
+}
+
+.federationNodeName {
+  font-family: var(--stig-mono);
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--stig-violet-100);
+  letter-spacing: 0.06em;
+}
+
+.federationNodeScope {
+  font-family: var(--stig-mono);
+  font-size: 9px;
+  fill: var(--stig-text-mute);
+  letter-spacing: 0.06em;
+}
+
+.federationLabel {
+  font-family: var(--stig-mono);
+  font-size: 10px;
+  fill: var(--stig-violet-300);
+  letter-spacing: 0.08em;
+}
+
+.federationHlc {
+  font-family: var(--stig-mono);
+  font-size: 10px;
+  fill: var(--stig-text-mute);
+  letter-spacing: 0.1em;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * PLUGINS
+ * ────────────────────────────────────────────────────────────────────────── */
+.plugins {
+  padding: 6rem 3rem;
+  border-bottom: 1px solid var(--stig-rule);
+}
+
+@media (max-width: 1024px) {
+  .plugins { padding: 4.5rem 1.5rem; }
+}
+
+.pluginGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 1024px) {
+  .pluginGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .pluginGrid { grid-template-columns: 1fr; }
+}
+
+.pluginCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.5rem 1.4rem;
+  background: var(--stig-surface);
+  border: 1px solid var(--stig-rule);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 200ms var(--stig-ease), border-color 200ms var(--stig-ease),
+    background 200ms var(--stig-ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.pluginCard:hover {
+  text-decoration: none;
+  color: inherit;
+  transform: translateY(-2px);
+  border-color: var(--stig-violet-400);
+  background: linear-gradient(180deg, var(--stig-surface-2), var(--stig-surface));
+}
+
+.pluginCard::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--stig-violet-400), transparent);
+  opacity: 0;
+  transition: opacity 200ms var(--stig-ease);
+}
+
+.pluginCard:hover::after {
+  opacity: 0.8;
+}
+
+.pluginPip {
+  font-family: var(--stig-mono);
+  font-size: 0.74rem;
+  color: var(--stig-violet-300);
+  margin: 0 0 0.85rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px dashed var(--stig-rule-soft);
+  letter-spacing: -0.005em;
+  word-break: break-all;
+}
+
+.pluginTitle {
+  font-family: var(--stig-sans);
+  font-weight: 500;
+  font-size: 1.05rem;
+  color: var(--stig-text);
+  margin: 0 0 0.65rem;
+  letter-spacing: -0.005em;
+}
+
+.pluginBlurb {
+  color: var(--stig-text-dim);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0 0 1.2rem;
+  flex: 1;
+}
+
+.pluginCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--stig-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--stig-violet-400);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: auto;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * EDITOR INTEGRATIONS — table-style list
+ * ────────────────────────────────────────────────────────────────────────── */
+.editors {
+  padding: 6rem 3rem;
+  border-bottom: 1px solid var(--stig-rule);
+}
+
+@media (max-width: 1024px) {
+  .editors { padding: 4.5rem 1.5rem; }
+}
+
+.editorList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--stig-rule);
+  max-width: 880px;
+}
+
+.editorRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 1.4rem;
+  align-items: center;
+  padding: 1rem 0.4rem;
+  border-bottom: 1px solid var(--stig-rule);
+  text-decoration: none;
+  color: inherit;
+  transition: background 180ms var(--stig-ease), padding 180ms var(--stig-ease);
+}
+
+.editorRow:hover {
+  text-decoration: none;
+  color: inherit;
+  background: rgba(167, 139, 250, 0.05);
+  padding-left: 1.2rem;
+}
+
+.editorName {
+  font-family: var(--stig-sans);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--stig-text);
+  letter-spacing: -0.005em;
+}
+
+.editorTier {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25em 0.7em;
+  font-family: var(--stig-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+.tierValidated {
+  color: var(--stig-green);
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.06);
+}
+
+.tierCaveated {
+  color: var(--stig-amber);
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.tierExperimental {
+  color: var(--stig-text-mute);
+  border-color: var(--stig-rule);
+  background: var(--stig-surface);
+}
+
+.editorArrow {
+  color: var(--stig-text-mute);
+  transition: color 180ms var(--stig-ease), transform 180ms var(--stig-ease);
+}
+
+.editorRow:hover .editorArrow {
+  color: var(--stig-violet-400);
+  transform: translateX(2px);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * HONEST STATUS
+ * ────────────────────────────────────────────────────────────────────────── */
+.status {
+  padding: 6rem 3rem;
+  border-bottom: 1px solid var(--stig-rule);
+}
+
+@media (max-width: 1024px) {
+  .status { padding: 4.5rem 1.5rem; }
+}
+
+.statusBox {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 2.2rem 2.2rem;
+  background: var(--stig-surface);
+  border: 1px solid var(--stig-rule);
+  border-left: 3px solid var(--stig-amber);
+  border-radius: 12px;
+  position: relative;
+}
+
+.statusBox h2 {
+  margin: 0 0 1rem;
+  color: var(--stig-text);
+  font-size: clamp(1.35rem, 2vw, 1.7rem);
+  letter-spacing: -0.015em;
+}
+
+.statusBox h2 code,
+.statusLede code {
+  font-family: var(--stig-mono);
+  font-size: 0.88em;
+  background: var(--stig-ink);
+  color: var(--stig-amber);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.statusLede {
+  color: var(--stig-text-dim);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin: 0 0 1.5rem;
+}
+
+.statusActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * FOOTER BAND
+ * ────────────────────────────────────────────────────────────────────────── */
+.band {
+  padding: 6rem 3rem 7rem;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 3rem;
+  align-items: end;
+  background:
+    radial-gradient(ellipse at 80% 100%, rgba(167, 139, 250, 0.10) 0%, transparent 50%),
+    var(--stig-ink);
+}
+
+@media (max-width: 880px) {
+  .band {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 4.5rem 1.5rem 5rem;
+    align-items: start;
+  }
+}
+
+.band h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  letter-spacing: -0.018em;
+  color: var(--stig-text);
+}
+
+.bandLede {
+  color: var(--stig-text-dim);
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 56ch;
+}
+
+.bandActions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.7rem;
+}
+
+.bandActions .button {
+  justify-content: space-between;
+  padding: 0.85em 1.2em;
+  font-family: var(--stig-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * REDUCED MOTION
+ * ────────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .eyebrowDot,
+  .recorderCaret,
+  .federationHandshake,
+  .federationReplA,
+  .federationReplB,
+  .pluginCard,
+  .pluginCard::after,
+  .editorRow,
+  .editorArrow {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .pluginCard:hover,
+  .button:hover,
+  .editorRow:hover {
+    transform: none;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * LIGHT-THEME OVERRIDES
+ *
+ * The base aesthetic is dark by design (matches stigmem's logo brand), but
+ * Docusaurus operators may toggle light mode. Provide subtle adjustments so
+ * the landing is still readable rather than blinding.
+ * ────────────────────────────────────────────────────────────────────────── */
+:global([data-theme='light']) .home {
+  --stig-ink: #fbf9ff;
+  --stig-ink-2: #f4f1fb;
+  --stig-surface: #ffffff;
+  --stig-surface-2: #f7f5ff;
+  --stig-text: #1a1633;
+  --stig-text-dim: #4c4868;
+  --stig-text-mute: #807ba1;
+  --stig-rule: rgba(78, 70, 229, 0.16);
+  --stig-rule-soft: rgba(78, 70, 229, 0.08);
+  --stig-violet-100: #2d1b69;
+  --stig-violet-300: #5b21b6;
+  --stig-violet-400: #7c3aed;
+  --stig-violet-500: #6d28d9;
+}
+
+:global([data-theme='light']) .factCard,
+:global([data-theme='light']) .recorder,
+:global([data-theme='light']) .primitive,
+:global([data-theme='light']) .pluginCard,
+:global([data-theme='light']) .statusBox {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 12px 28px -16px rgba(78, 70, 229, 0.22);
+}
+
+:global([data-theme='light']) .recorderChrome {
+  background: rgba(247, 245, 255, 0.8);
+}
+
+:global([data-theme='light']) .federationSection {
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(124, 58, 237, 0.06) 0%, transparent 60%),
+    var(--stig-ink);
+}
+
+:global([data-theme='light']) .band {
+  background:
+    radial-gradient(ellipse at 80% 100%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+    var(--stig-ink);
 }

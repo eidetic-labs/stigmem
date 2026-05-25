@@ -15,7 +15,6 @@ from typing import Literal
 ConfigFormat = Literal["toml", "json", "jsonc"]
 ValidationTier = Literal["validated", "caveated", "experimental"]
 DEFAULT_API_KEY_PLACEHOLDER = "<your-api-key>"
-DISPLAY_API_KEY_PLACEHOLDER = "<STIGMEM_API_KEY>"
 
 
 @dataclass(frozen=True)
@@ -237,13 +236,53 @@ def _merge_config(
     return f"{existing.rstrip()}\n\n# Added by stigmem mcp install at {_iso_timestamp()}\n{snippet}"
 
 
-def _api_key_source(api_key: str) -> tuple[str, bool]:
+def _api_key_from_environment(api_key: str) -> bool:
     env_value = os.environ.get("STIGMEM_API_KEY", "")
-    if env_value and api_key == env_value:
-        return "environment variable", True
-    if api_key == DEFAULT_API_KEY_PLACEHOLDER:
-        return "<your-api-key> placeholder (you must edit the file before use)", False
-    return "value passed via --stigmem-api-key flag", False
+    return bool(env_value and api_key == env_value)
+
+
+def _render_dry_run_preview(config: EditorConfig, stigmem_url: str) -> str:
+    if config.config_format == "toml":
+        return f"""[mcp_servers.stigmem]
+command = "stigmem-mcp"
+
+[mcp_servers.stigmem.env]
+STIGMEM_URL = "{stigmem_url}"
+# credential field omitted from dry-run output
+"""
+    if config.editor == "continue-dev":
+        return json.dumps(
+            {
+                "mcpServers": [
+                    {
+                        "name": "stigmem",
+                        "command": "stigmem-mcp",
+                        "env": {
+                            "STIGMEM_URL": stigmem_url,
+                            "_credential_omitted": True,
+                        },
+                    }
+                ]
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    key = "mcp_servers" if config.editor == "zed" else "mcpServers"
+    return json.dumps(
+        {
+            key: {
+                "stigmem": {
+                    "command": "stigmem-mcp",
+                    "env": {
+                        "STIGMEM_URL": stigmem_url,
+                        "_credential_omitted": True,
+                    },
+                }
+            }
+        },
+        indent=2,
+        sort_keys=True,
+    )
 
 
 def _iso_timestamp() -> str:
@@ -378,7 +417,7 @@ def _cmd_mcp_config(args: argparse.Namespace) -> int:
     print(f"Config path: {config.config_path}")
     print(f"Config format: {config.config_format}")
     print(f"Guide: {config.docs_link}")
-    print(f"Preview full editor-config body: stigmem mcp install {config.editor} --dry-run")
+    print(f"Preview the planned Stigmem MCP entry: stigmem mcp install {config.editor} --dry-run")
     print(f"Apply with backup: stigmem mcp install {config.editor} --write")
     print(
         "This command intentionally does not print a config snippet; see the guide "
@@ -411,21 +450,24 @@ def _cmd_mcp_install(args: argparse.Namespace) -> int:
     print(f"Action: {action}")
     print(f"Guide: {config.docs_link}")
     print("Planned change: add or replace the stigmem MCP server entry.")
-    source, from_env = _api_key_source(args.stigmem_api_key)
-    print(f"STIGMEM_API_KEY source: {source}")
-    print(f"The key value is not echoed and will be written to: {path}")
-    if from_env:
-        print("Press Ctrl-C if you did not intend to embed your env-var key in this file.")
+    print(f"Credential value is not echoed and will be written to: {path}")
+    if _api_key_from_environment(args.stigmem_api_key):
+        print("Credential source: environment variable.")
+        print("Press Ctrl-C if you did not intend to embed that value in this file.")
+    elif args.stigmem_api_key == DEFAULT_API_KEY_PLACEHOLDER:
+        print("Credential source: placeholder. Edit the file before use.")
+    else:
+        print("Credential source: command-line flag.")
     if not args.write:
-        preview = _render_snippet(config, args.stigmem_url, DISPLAY_API_KEY_PLACEHOLDER)
+        preview = _render_dry_run_preview(config, args.stigmem_url)
         print()
-        print("--- planned stigmem MCP server entry (dry-run; API key value redacted) ---")
+        print("--- planned stigmem MCP server entry (dry-run; auth key omitted) ---")
         print(preview, end="" if preview.endswith("\n") else "\n")
         print("--- end planned stigmem MCP server entry ---")
         print()
         print(
             "Dry-run only. Re-run with --write to merge this entry into the editor config "
-            "with the unredacted key."
+            "with the configured credential value."
         )
         return 0
     if os.isatty(0) and not args.yes:

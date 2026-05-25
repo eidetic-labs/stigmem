@@ -16,9 +16,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 ### Fixed
 
 - Hardened `stigmem mcp install` operator output: dry runs now show the planned
-  config body with the API key value redacted, `--write` identifies whether the
-  key came from `$STIGMEM_API_KEY`, a flag, or the placeholder, and POSIX backup
-  files are written owner-only.
+  Stigmem server entry while omitting the credential field, `--write`
+  identifies whether the credential came from the environment, a flag, or the
+  placeholder, and POSIX backup files are written owner-only.
 - Clarified that `stigmem mcp config <editor>` intentionally prints metadata
   and guide links rather than a copy-paste config snippet.
 - Extended the MCP catalog consistency guard to validate the

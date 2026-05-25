@@ -130,7 +130,7 @@ def test_mcp_install_warns_when_api_key_sourced_from_env(
 
     out = capsys.readouterr().out
     assert rc == 0
-    assert "$STIGMEM_API_KEY environment variable" in out
+    assert "STIGMEM_API_KEY source: environment variable" in out
     assert "Press Ctrl-C" in out
     assert api_key not in out
 
@@ -186,10 +186,10 @@ def test_mcp_install_dry_run_prints_merged_config_body_with_key_redacted(
 
     out = capsys.readouterr().out
     assert rc == 0
-    assert "--- planned config body" in out
+    assert "--- planned stigmem MCP server entry" in out
     assert "<STIGMEM_API_KEY>" in out
     assert api_key not in out
-    assert "--- end planned config body ---" in out
+    assert "--- end planned stigmem MCP server entry ---" in out
 
 
 def test_mcp_install_write_creates_config(

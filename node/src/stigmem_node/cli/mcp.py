@@ -237,16 +237,10 @@ def _merge_config(
     return f"{existing.rstrip()}\n\n# Added by stigmem mcp install at {_iso_timestamp()}\n{snippet}"
 
 
-def _mask_secret(value: str) -> str:
-    if len(value) < 12:
-        return "<too-short-to-mask>"
-    return f"{value[:4]}...{value[-4:]} ({len(value)} chars)"
-
-
 def _api_key_source(api_key: str) -> tuple[str, bool]:
     env_value = os.environ.get("STIGMEM_API_KEY", "")
     if env_value and api_key == env_value:
-        return f"$STIGMEM_API_KEY environment variable ({_mask_secret(env_value)})", True
+        return "environment variable", True
     if api_key == DEFAULT_API_KEY_PLACEHOLDER:
         return "<your-api-key> placeholder (you must edit the file before use)", False
     return "value passed via --stigmem-api-key flag", False
@@ -423,18 +417,16 @@ def _cmd_mcp_install(args: argparse.Namespace) -> int:
     if from_env:
         print("Press Ctrl-C if you did not intend to embed your env-var key in this file.")
     if not args.write:
-        display_merged = _merge_config(
-            config,
-            existing,
-            args.stigmem_url,
-            DISPLAY_API_KEY_PLACEHOLDER,
+        preview = _render_snippet(config, args.stigmem_url, DISPLAY_API_KEY_PLACEHOLDER)
+        print()
+        print("--- planned stigmem MCP server entry (dry-run; API key value redacted) ---")
+        print(preview, end="" if preview.endswith("\n") else "\n")
+        print("--- end planned stigmem MCP server entry ---")
+        print()
+        print(
+            "Dry-run only. Re-run with --write to merge this entry into the editor config "
+            "with the unredacted key."
         )
-        print()
-        print("--- planned config body (dry-run; API key value redacted) ---")
-        print(display_merged, end="" if display_merged.endswith("\n") else "\n")
-        print("--- end planned config body ---")
-        print()
-        print("Dry-run only. Re-run with --write to apply this content with the unredacted key.")
         return 0
     if os.isatty(0) and not args.yes:
         answer = input("Apply this change? [y/N] ").strip().lower()

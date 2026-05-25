@@ -1,0 +1,172 @@
+name: Coverage
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coverage-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install workspace dependencies
+        run: |
+          uv sync --all-packages
+          pnpm install --frozen-lockfile
+
+      - name: Python coverage
+        env:
+          HYPOTHESIS_SEED: "0"
+        run: |
+          mkdir -p coverage/python
+          uv run pytest node/tests/ sdks/stigmem-py/tests/ \
+            --cov=node/src --cov=sdks/stigmem-py/src \
+            --cov-branch \
+            --cov-report=xml:coverage/python/coverage.xml \
+            --cov-report=html:coverage/python/htmlcov \
+            --cov-report=term
+
+      - name: Coverage baseline ratchet
+        run: uv run python scripts/check_coverage_baseline.py
+
+      - name: Generate coverage badge
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+
+          import html
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          root = ET.parse("coverage/python/coverage.xml").getroot()
+          percent = round(float(root.attrib["line-rate"]) * 100)
+          color = (
+              "brightgreen" if percent >= 90
+              else "green" if percent >= 80
+              else "yellow" if percent >= 70
+              else "orange" if percent >= 60
+              else "red"
+          )
+          svg_color = {
+              "brightgreen": "#4c1",
+              "green": "#97ca00",
+              "yellow": "#dfb317",
+              "orange": "#fe7d37",
+              "red": "#e05d44",
+          }[color]
+          label = "coverage"
+          value = f"{percent}%"
+          badge = {"schemaVersion": 1, "label": label, "message": value, "color": color}
+          svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="112" height="20" role="img" aria-label="{label}: {value}">
+            <title>{html.escape(label)}: {html.escape(value)}</title>
+            <linearGradient id="s" x2="0" y2="100%">
+              <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+              <stop offset="1" stop-opacity=".1"/>
+            </linearGradient>
+            <clipPath id="r"><rect width="112" height="20" rx="3" fill="#fff"/></clipPath>
+            <g clip-path="url(#r)">
+              <rect width="64" height="20" fill="#555"/>
+              <rect x="64" width="48" height="20" fill="{svg_color}"/>
+              <rect width="112" height="20" fill="url(#s)"/>
+            </g>
+            <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110">
+              <text aria-hidden="true" x="325" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="540">coverage</text>
+              <text x="325" y="140" transform="scale(.1)" fill="#fff" textLength="540">coverage</text>
+              <text aria-hidden="true" x="875" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="300">{html.escape(value)}</text>
+              <text x="875" y="140" transform="scale(.1)" fill="#fff" textLength="300">{html.escape(value)}</text>
+            </g>
+          </svg>
+          """
+          out = Path("coverage/python/htmlcov")
+          out.mkdir(parents=True, exist_ok=True)
+          (out / "coverage-badge.json").write_text(
+              json.dumps(badge, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          (out / "coverage-badge.svg").write_text(svg, encoding="utf-8")
+          PY
+
+      - name: Build TypeScript packages
+        run: pnpm build
+
+      - name: TypeScript coverage
+        run: |
+          pnpm --filter stigmem-ts exec vitest run --coverage --coverage.reporter=text --coverage.reporter=lcov
+          pnpm --filter stigmem-mcp exec vitest run --exclude 'dist/**' --coverage --coverage.reporter=text --coverage.reporter=lcov
+          pnpm --filter dashboard exec vitest run --coverage --coverage.reporter=text --coverage.reporter=lcov
+
+      - name: Summarize per-package coverage
+        run: |
+          uv run python scripts/summarize_coverage.py | tee coverage/summary.md
+          cat coverage/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: stigmem-coverage
+          path: |
+            coverage/python/htmlcov/
+            coverage/python/coverage.xml
+            coverage/summary.md
+            sdks/stigmem-ts/coverage/**
+            adapters/mcp/coverage/**
+            experimental/dashboard/coverage/**
+
+      - name: Publish coverage branch
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          staging="$(mktemp -d)"
+          cp -R coverage/python/htmlcov/. "$staging"/
+          git -C "$staging" init
+          git -C "$staging" config user.name "github-actions[bot]"
+          git -C "$staging" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$staging" add .
+          git -C "$staging" commit -m "Publish coverage for $GITHUB_REF_NAME"
+          git -C "$staging" branch -M gh-pages-coverage
+          git -C "$staging" remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git -C "$staging" push --force origin gh-pages-coverage
+
+      - name: Attach coverage.xml to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for attempt in {1..12}; do
+            if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+              gh release upload "$GITHUB_REF_NAME" coverage/python/coverage.xml --clobber
+              exit 0
+            fi
+            echo "Release $GITHUB_REF_NAME not visible yet; retrying ($attempt/12)."
+            sleep 10
+          done
+          echo "Release $GITHUB_REF_NAME was not available for coverage.xml upload." >&2
+          exit 1

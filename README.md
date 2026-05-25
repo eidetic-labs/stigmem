@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/eidetic-labs/stigmem/actions/workflows/ci.yml/badge.svg)](https://github.com/eidetic-labs/stigmem/actions/workflows/ci.yml)
 [![Conformance](https://github.com/eidetic-labs/stigmem/actions/workflows/conformance.yml/badge.svg)](https://github.com/eidetic-labs/stigmem/actions/workflows/conformance.yml)
+[![Coverage](https://stigmem.dev/coverage-badge.svg)](https://stigmem.dev/coverage/)
 [![PyPI version](https://img.shields.io/pypi/v/stigmem?include_prereleases&label=pypi)](https://pypi.org/project/stigmem/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Stability: preview alpha](https://img.shields.io/badge/stability-preview%20alpha-orange.svg)](#why-v090a1-and-not-v10)

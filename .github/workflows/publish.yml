@@ -4,8 +4,9 @@ on:
   # Push to main: GHCR images get sha + `:edge` tags (tip-of-trunk preview).
   # `:latest` does NOT advance on main — it advances only on tag push, so
   # adopters pulling `:latest` always get the most recently released version.
-  # This matches our npm `latest` dist-tag convention (LIMITATIONS.md):
-  # `latest` walks forward through prereleases until v1.0.0 GA.
+  # npm's line-specific dist-tag (`alpha`/`beta`/`rc`/`latest`) advances from
+  # the publish job. While the project is pre-stable, maintainers advance the
+  # npm `latest` dist-tag manually after the OIDC publish succeeds.
   # PyPI / npm / release-creation jobs are gated by
   # `if: startsWith(github.ref, 'refs/tags/v')` and skip on plain main pushes.
   push:
@@ -245,14 +246,11 @@ jobs:
 
       - name: Publish to npm (with provenance)
         # --tag advances the per-line dist-tag (alpha/beta/rc/latest) computed
-        # from the version via scripts/translate_version.py. npm requires
-        # `latest` to exist on every package, so on first publish it is
-        # auto-set to the just-published version regardless of --tag. Our
-        # convention (per LIMITATIONS.md §npm install behavior): `latest`
-        # tracks the most recent published version — stable when v1.0.0
-        # ships, prerelease until then. The post-publish step below moves
-        # `latest` forward explicitly on every prerelease so adopters running
-        # bare `npm install` get the most recent build, not the very first.
+        # from the version via scripts/translate_version.py. This job uses npm
+        # Trusted Publisher/OIDC, not an npm automation token. npm's OIDC
+        # credential is scoped to `npm publish --provenance`; maintainers move
+        # `latest` manually after prerelease publication when project policy
+        # requires bare `npm install` to resolve to the newest alpha.
         run: |
           cd sdks/stigmem-ts
           PKG_NAME=$(node -p "require('./package.json').name")
@@ -266,25 +264,6 @@ jobs:
             exit 0
           fi
           npm publish --provenance --access public --tag "${{ steps.ver.outputs.npm_tag }}"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Advance latest dist-tag to this version
-        # Project convention: `latest` tracks the most recent published version
-        # regardless of stability tier. Stability is communicated by the
-        # version string itself (`-alpha.N`, `-beta.N`, `-rc.N` suffixes are
-        # unmistakable) — not by the `latest` tag. This makes bare
-        # `npm install` always return the most recent build.
-        #
-        # Idempotent: `npm dist-tag add` with an already-set value is a no-op.
-        run: |
-          cd sdks/stigmem-ts
-          PKG_NAME=$(node -p "require('./package.json').name")
-          PKG_VER=$(node -p "require('./package.json').version")
-          npm dist-tag add "${PKG_NAME}@${PKG_VER}" latest
-          echo "::notice::Set latest → ${PKG_NAME}@${PKG_VER}"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-python:
     name: Build & publish Python packages to PyPI

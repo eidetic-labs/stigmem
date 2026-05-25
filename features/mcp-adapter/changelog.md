@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added the dedicated `.github/workflows/mcp-publish.yml` npm Trusted
+  Publisher workflow for future `@eidetic-labs/stigmem-mcp` releases and
+  recorded `0.1.0` as the manual bootstrap publication.
 - Switched the npm publication target to the scoped package
   `@eidetic-labs/stigmem-mcp@0.1.0`, established independent adapter semver,
   and recorded scoped first-publication dry-run evidence.

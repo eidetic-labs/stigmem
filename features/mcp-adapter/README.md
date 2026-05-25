@@ -35,8 +35,9 @@ against the configured node.
 
 The adapter source is active and tested. The `@eidetic-labs/stigmem-mcp`
 package is independently versioned from the Stigmem project release line and
-repo-local MCP protocol smoke passes against a live node. Registry publication
-has maintainer clearance for the scoped npm package.
+repo-local MCP protocol smoke passes against a live node. The `0.1.0` package
+is public on npm as the manual bootstrap publication; future publications use
+npm Trusted Publisher/OIDC via `.github/workflows/mcp-publish.yml`.
 
 ## Current State
 

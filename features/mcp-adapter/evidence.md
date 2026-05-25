@@ -20,7 +20,9 @@
 | `pnpm --filter "./adapters/mcp" build` | TypeScript build for the package runtime entry point. |
 | `npm pack --dry-run --json` from `adapters/mcp/` | Package file allowlist and registry metadata dry-run; current package contains `README.md`, executable `dist/server.js`, `dist/server.js.map`, `dist/server.d.ts`, and `package.json`. |
 | `npm publish --dry-run --provenance --access public --tag alpha` from `adapters/mcp/` | npm publication dry-run only; no registry upload occurred. Confirms first publication command shape for the scoped package. |
-| `docs/internal/mcp-publication-dry-run.md` | Captures dry-run hashes, pack contents, registry/channel plan, rollback/yank plan, and scoped first-publication disposition. |
+| `npm install @eidetic-labs/stigmem-mcp@0.1.0 --registry=https://registry.npmjs.org/` from a clean temporary project | Post-publication consumer install verification for the public scoped npm package. |
+| `docs/internal/mcp-publication-dry-run.md` | Captures dry-run hashes, published artifact identity, pack contents, registry/channel plan, rollback/yank plan, Trusted Publisher configuration, and scoped first-publication disposition. |
+| `.github/workflows/mcp-publish.yml` | Dedicated npm Trusted Publisher workflow for future MCP package releases. |
 | `docs/internal/mcp-host-ui-smoke-2026-05-24.md` | Manual host UI smoke execution record. Codex CLI and Claude Code are validated host UI gates; Gemini CLI completed with a final-response caveat; Continue.dev, Cursor, and Zed are explicitly unvalidated experimental connector guides. |
 | `STIGMEM_AUTH_REQUIRED=false STIGMEM_DB_PATH=/private/tmp/stigmem-mcp-smoke-final.db STIGMEM_PORT=8765 uv run python -c 'from stigmem_node.main import run; run()'` | Starts a local unauthenticated loopback node for live MCP smoke validation. |
 | `STIGMEM_URL=http://localhost:8765 bash adapters/mcp/tests/smoke.sh` | Live MCP protocol smoke passed against a local node: initialize, six-tool discovery, `assert_fact`, `query_facts`, `recall`, `lint_scope`, and session-aware calls. |
@@ -48,6 +50,9 @@
 
 ## Evidence Gaps
 
-- Package metadata, live protocol smoke, adapter security regressions, npm dry-run evidence, Codex CLI / Claude Code host UI smoke, Gemini CLI smoke with caveat, and maintainer clearance are aligned; artifact publication has not yet executed.
+- Package metadata, live protocol smoke, adapter security regressions, npm dry-run evidence, Codex CLI / Claude Code host UI smoke, Gemini CLI smoke with caveat, maintainer clearance, public registry publication, and post-publish install verification are aligned for `0.1.0`.
+- The `0.1.0` package was a manual token-authenticated bootstrap publication
+  without provenance. Provenance begins with the first `mcp-publish.yml`
+  Trusted Publisher release.
 - Host-specific connector guides have been reviewed against the local stdio smoke path, and the host UI smoke execution record exists. Continue.dev, Cursor, and Zed UI-level launches remain unvalidated and must not be described as supported until a future smoke record captures real pass/fail evidence.
 - Live model certification remains separate from adapter framing certification; no provider/model is certified until reviewed ADR-015 result JSON is committed.

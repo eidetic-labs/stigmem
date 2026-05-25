@@ -22,11 +22,12 @@ inside popular editors, agent CLIs, and non-MCP runtimes.
 
 These guides configure the existing MCP server (`stigmem/adapters/mcp/`) as a
 tool provider inside each host. Build the server once, then register it in each
-host's config. For `0.9.0-alpha.8`, Codex CLI and Claude Code are the validated
-host UI targets for publication clearance. Gemini CLI has host smoke evidence
-with a final-response caveat. Continue.dev, Cursor, and Zed remain experimental
-connector guides until host-specific smoke evidence is recorded. The canonical
-feature record is
+host's config. For the independently versioned
+`@eidetic-labs/stigmem-mcp@0.1.0` package, Codex CLI and Claude Code are the
+validated host UI targets for publication clearance. Gemini CLI has host smoke
+evidence with a final-response caveat. Continue.dev, Cursor, and Zed remain
+experimental connector guides until host-specific smoke evidence is recorded.
+The canonical feature record is
 [`features/mcp-adapter`](https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter).
 
 <div className="stigmem-fields">

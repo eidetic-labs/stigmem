@@ -11,7 +11,7 @@ audience: Operator
 | --- | --- |
 | Package | `stigmem-plugin-lazy-instruction-discovery` |
 | Current plugin version | `0.1.0` |
-| Stigmem compatibility | `stigmem-node>=0.9.0a8,<1.0.0` |
+| Stigmem compatibility | `stigmem-node>=0.9.0a9,<1.0.0` |
 | Enable gate | `STIGMEM_LAZY_INSTRUCTION_DISCOVERY_ENABLED` |
 | Feature record | [`features/lazy-instruction-discovery`](https://github.com/eidetic-labs/stigmem/tree/main/features/lazy-instruction-discovery) |
 

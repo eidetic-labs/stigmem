@@ -13,7 +13,7 @@ discoverable; enabling behavior still requires the plugin's explicit
 `STIGMEM_*_ENABLED` gate and a node restart.
 
 The six plugins below are independently versioned at `0.1.0` and support the
-current alpha node line with `stigmem-node>=0.9.0a8,<1.0.0`. They remain
+current alpha node line with `stigmem-node>=0.9.0a9,<1.0.0`. They remain
 experimental and opt-in.
 
 | Plugin | Package | Enable gate | Summary |

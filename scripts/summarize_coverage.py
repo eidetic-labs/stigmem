@@ -5,9 +5,10 @@ from __future__ import annotations
 
 import re
 import sys
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
+
+from defusedxml import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / "coverage" / "summary.md"
@@ -21,7 +22,14 @@ class Totals:
     branches_hit: int = 0
     branches_found: int = 0
 
-    def add(self, *, lines_hit: int, lines_found: int, branches_hit: int = 0, branches_found: int = 0) -> None:
+    def add(
+        self,
+        *,
+        lines_hit: int,
+        lines_found: int,
+        branches_hit: int = 0,
+        branches_found: int = 0,
+    ) -> None:
         self.lines_hit += lines_hit
         self.lines_found += lines_found
         self.branches_hit += branches_hit
@@ -49,21 +57,34 @@ def parse_python() -> dict[str, Totals]:
     root = ET.parse(PYTHON_XML).getroot()
     for class_el in root.findall(".//class"):
         filename = class_el.attrib.get("filename", "")
-        for prefix in packages:
-            if not filename.startswith(prefix):
-                continue
-            totals = packages[prefix]
-            for line_el in class_el.findall("./lines/line"):
-                totals.lines_found += 1
-                if int(line_el.attrib.get("hits", "0")) > 0:
-                    totals.lines_hit += 1
-                if line_el.attrib.get("branch") == "true":
-                    match = re.search(r"\((\d+)/(\d+)\)", line_el.attrib.get("condition-coverage", ""))
-                    if match:
-                        totals.branches_hit += int(match.group(1))
-                        totals.branches_found += int(match.group(2))
-            break
+        totals = _python_totals_for_filename(packages, filename)
+        if totals is None:
+            continue
+        for line_el in class_el.findall("./lines/line"):
+            totals.lines_found += 1
+            if int(line_el.attrib.get("hits", "0")) > 0:
+                totals.lines_hit += 1
+            if line_el.attrib.get("branch") == "true":
+                match = re.search(
+                    r"\((\d+)/(\d+)\)",
+                    line_el.attrib.get("condition-coverage", ""),
+                )
+                if match:
+                    totals.branches_hit += int(match.group(1))
+                    totals.branches_found += int(match.group(2))
     return packages
+
+
+def _python_totals_for_filename(packages: dict[str, Totals], filename: str) -> Totals | None:
+    if filename.startswith(("stigmem_node/", "stigmem_conformance/")):
+        return packages["node/src"]
+    if filename.startswith("stigmem/"):
+        return packages["sdks/stigmem-py/src"]
+    if filename.startswith("node/src/"):
+        return packages["node/src"]
+    if filename.startswith("sdks/stigmem-py/src/"):
+        return packages["sdks/stigmem-py/src"]
+    return None
 
 
 def parse_lcov(path: Path) -> Totals:
@@ -92,9 +113,15 @@ def main() -> int:
     rows.extend(python.items())
     rows.extend(
         [
-            ("sdks/stigmem-ts", parse_lcov(ROOT / "sdks" / "stigmem-ts" / "coverage" / "lcov.info")),
+            (
+                "sdks/stigmem-ts",
+                parse_lcov(ROOT / "sdks" / "stigmem-ts" / "coverage" / "lcov.info"),
+            ),
             ("adapters/mcp", parse_lcov(ROOT / "adapters" / "mcp" / "coverage" / "lcov.info")),
-            ("apps/dashboard", parse_lcov(ROOT / "apps" / "dashboard" / "coverage" / "lcov.info")),
+            (
+                "experimental/dashboard",
+                parse_lcov(ROOT / "experimental" / "dashboard" / "coverage" / "lcov.info"),
+            ),
         ]
     )
 

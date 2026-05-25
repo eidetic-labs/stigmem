@@ -168,6 +168,13 @@ source = ["node/src", "sdks/stigmem-py/src"]
 branch = true
 omit = ["*/tests/*", "*/migrations/*"]
 
+[tool.coverage.report]
+show_missing = true
+
+[tool.coverage.html]
+directory = "coverage/python/htmlcov"
+title = "Stigmem Python coverage"
+
 [tool.bandit]
 exclude_dirs = ["tests", ".venv"]
 skips = ["B101"]

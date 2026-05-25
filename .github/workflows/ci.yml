@@ -77,9 +77,12 @@ jobs:
               - 'experimental/sdk-go/**'
             coverage:
               - '.github/workflows/ci.yml'
+              - '.github/workflows/coverage.yml'
               - 'pyproject.toml'
               - 'package.json'
               - 'pnpm-lock.yaml'
+              - 'scripts/check_coverage_baseline.py'
+              - 'scripts/summarize_coverage.py'
               - 'node/**'
               - 'sdks/stigmem-py/**'
               - 'sdks/stigmem-ts/**'

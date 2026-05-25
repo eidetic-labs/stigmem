@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - site/**
+  workflow_run:
+    workflows: ["Coverage"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -18,12 +21,30 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Restore published coverage report
+        run: |
+          if git ls-remote --exit-code origin refs/heads/gh-pages-coverage >/dev/null 2>&1; then
+            coverage_tmp="$(mktemp -d)"
+            git clone --depth=1 --branch gh-pages-coverage "https://github.com/${GITHUB_REPOSITORY}.git" "$coverage_tmp"
+            mkdir -p site/coverage
+            tar -C "$coverage_tmp" --exclude .git -cf - . | tar -C site/coverage -xf -
+            if [ -f site/coverage/coverage-badge.svg ]; then
+              cp site/coverage/coverage-badge.svg site/coverage-badge.svg
+            fi
+            rm -rf "$coverage_tmp"
+          else
+            echo "No gh-pages-coverage branch found; deploying site without coverage report."
+          fi
 
       - uses: actions/configure-pages@v6
 

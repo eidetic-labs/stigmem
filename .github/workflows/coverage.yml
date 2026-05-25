@@ -150,12 +150,12 @@ jobs:
           fi
           staging="$(mktemp -d)"
           cp -R coverage/python/htmlcov/. "$staging"/
-          git -C "$staging" init
+          find "$staging" -mindepth 1 -maxdepth 1 -print -quit | grep -q .
+          git -C "$staging" init --initial-branch=gh-pages-coverage
           git -C "$staging" config user.name "github-actions[bot]"
           git -C "$staging" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C "$staging" add .
+          git -C "$staging" add -f -A .
           git -C "$staging" commit -m "Publish coverage for ${publish_ref}"
-          git -C "$staging" branch -M gh-pages-coverage
           git -C "$staging" remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git -C "$staging" push --force origin gh-pages-coverage
 

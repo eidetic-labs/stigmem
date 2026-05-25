@@ -24,7 +24,15 @@ ALLOWED_RETRACTED_LABEL_FILES = {
     ROOT / "SECURITY.md",
 }
 
-ACTIVE_RELEASE_MILESTONE_LABEL = "v0.9.0a8"
+ALLOWED_RELEASE_MILESTONE_LABELS = {
+    "v0.9.0a3",
+    "v0.9.0a4",
+    "v0.9.0a5",
+    "v0.9.0a6",
+    "v0.9.0a7",
+    "v0.9.0a8",
+    "v0.9.0a9",
+}
 
 FORBIDDEN_RELEASE_TOKENS = {
     "1.0.0rc1": (
@@ -133,11 +141,11 @@ def check_tokens() -> list[str]:
         for line_no, line in enumerate(text.splitlines(), 1):
             if "github.com" not in line or "/milestone/" not in line:
                 continue
-            if ACTIVE_RELEASE_MILESTONE_LABEL in line:
+            if any(label in line for label in ALLOWED_RELEASE_MILESTONE_LABELS):
                 continue
             errors.append(
                 f"{rel}:{line_no}: concrete milestone links are limited to "
-                f"{ACTIVE_RELEASE_MILESTONE_LABEL}; future release lines must stay "
+                f"{sorted(ALLOWED_RELEASE_MILESTONE_LABELS)}; future release lines must stay "
                 "documented as gated horizons until opened"
             )
 

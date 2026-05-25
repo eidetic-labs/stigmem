@@ -211,7 +211,7 @@ This is intentional — adopters running `pip install <pkg>` in CI shouldn't acc
 ```bash
 npm install @eidetic-labs/stigmem-ts                 # gets the most recent published version (currently a prerelease)
 npm install @eidetic-labs/stigmem-ts@alpha           # gets the most recent 0.9.0-alpha.* prerelease
-npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.8   # explicit pin
+npm install @eidetic-labs/stigmem-ts@0.9.0-alpha.9   # explicit pin
 ```
 
 **Why scoped:** npm's free-tier organization permissions don't allow team-bound package access controls; scoping under `@eidetic-labs` sidesteps that limitation entirely.

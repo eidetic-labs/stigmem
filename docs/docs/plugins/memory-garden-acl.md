@@ -11,7 +11,7 @@ audience: Operator
 | --- | --- |
 | Package | `stigmem-plugin-memory-garden-acl` |
 | Current plugin version | `0.1.0` |
-| Stigmem compatibility | `stigmem-node>=0.9.0a8,<1.0.0` |
+| Stigmem compatibility | `stigmem-node>=0.9.0a9,<1.0.0` |
 | Enable gate | `STIGMEM_MEMORY_GARDEN_ACL_ENABLED` |
 | Feature record | [`features/memory-garden-acl`](https://github.com/eidetic-labs/stigmem/tree/main/features/memory-garden-acl) |
 

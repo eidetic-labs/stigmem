@@ -305,7 +305,7 @@ Store `AUDIT_KEY` in your secrets manager and configure your SIEM to poll `/v1/a
 
 <div className="stigmem-keypoint">
 
-**The v0.9.0a8 reference image runs as UID/GID 65532 (non-root).**
+**The v0.9.0a9 reference image runs as UID/GID 65532 (non-root).**
 
 Distroless base, read-only root filesystem, and a custom seccomp profile.
 
@@ -314,13 +314,13 @@ Distroless base, read-only root filesystem, and a custom seccomp profile.
 **Pull and verify the image:**
 
 ```bash
-docker pull ghcr.io/eidetic-labs/stigmem-node:0.9.0a8
+docker pull ghcr.io/eidetic-labs/stigmem-node:0.9.0a9
 
 # Verify the Sigstore keyless signature
 cosign verify \
   --certificate-identity-regexp "https://github.com/eidetic-labs/stigmem/.github/workflows/publish.yml" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  ghcr.io/eidetic-labs/stigmem-node:0.9.0a8
+  ghcr.io/eidetic-labs/stigmem-node:0.9.0a9
 ```
 
 **Run with the full security posture:**
@@ -341,7 +341,7 @@ docker run -d \
   -e STIGMEM_TLS_CA_BUNDLE=/tls/ca.crt \
   -v /etc/stigmem/tls:/tls:ro \
   -p 8765:8765 \
-  ghcr.io/eidetic-labs/stigmem-node:0.9.0a8
+  ghcr.io/eidetic-labs/stigmem-node:0.9.0a9
 ```
 
 **Verify the process runs as non-root:**

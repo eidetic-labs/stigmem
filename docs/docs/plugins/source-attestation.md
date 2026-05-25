@@ -11,7 +11,7 @@ audience: Operator
 | --- | --- |
 | Package | `stigmem-plugin-source-attestation` |
 | Current plugin version | `0.1.0` |
-| Stigmem compatibility | `stigmem-node>=0.9.0a8,<1.0.0` |
+| Stigmem compatibility | `stigmem-node>=0.9.0a9,<1.0.0` |
 | Enable gate | `STIGMEM_SOURCE_ATTESTATION_ENABLED` |
 | Feature record | [`features/source-attestation`](https://github.com/eidetic-labs/stigmem/tree/main/features/source-attestation) |
 

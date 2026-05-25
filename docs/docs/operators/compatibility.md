@@ -7,7 +7,7 @@ description: Cross-package compatibility matrix per ADR-014.
 
 # Compatibility
 
-<p className="stigmem-meta"><span>4 min read</span><span>Node operator</span><span>v0.9.0a1</span></p>
+<p className="stigmem-meta"><span>4 min read</span><span>Node operator</span><span>v0.9.0a9</span></p>
 
 <div className="stigmem-lead">
 
@@ -20,7 +20,7 @@ This page renders the YAML as human-readable tables.
 
 </div>
 
-> **Initial population at v0.9.0a1 baseline.** The full Docusaurus plugin that auto-renders the YAML at build time is acknowledged as a follow-up; this page is the hand-maintained equivalent for v0.9.0a1 → first publish. Updates ship with every release.
+> **Initial population at v0.9.0a1 baseline.** The full Docusaurus plugin that auto-renders the YAML at build time is acknowledged as a follow-up; this page is the hand-maintained equivalent for the active alpha line. Updates ship with every release.
 
 ## Package versions
 
@@ -34,31 +34,31 @@ This page renders the YAML as human-readable tables.
 
 <div>
 <dt><code>stigmem-node</code></dt>
-<dt><span className="stigmem-fields__type">0.9.0a1</span></dt>
+<dt><span className="stigmem-fields__type">0.9.0a9</span></dt>
 <dd>PyPI</dd>
 </div>
 
 <div>
 <dt><code>stigmem-py</code></dt>
-<dt><span className="stigmem-fields__type">0.9.0a1</span></dt>
+<dt><span className="stigmem-fields__type">0.9.0a9</span></dt>
 <dd>PyPI</dd>
 </div>
 
 <div>
 <dt><code>stigmem</code> (meta-package)</dt>
-<dt><span className="stigmem-fields__type">0.9.0a1</span></dt>
+<dt><span className="stigmem-fields__type">0.9.0a9</span></dt>
 <dd>PyPI</dd>
 </div>
 
 <div>
 <dt><code>stigmem-openclaw</code> (adapter)</dt>
-<dt><span className="stigmem-fields__type">0.9.0a1</span></dt>
+<dt><span className="stigmem-fields__type">0.9.0a9</span></dt>
 <dd>PyPI</dd>
 </div>
 
 <div>
 <dt><code>@eidetic-labs/stigmem-ts</code> (SDK)</dt>
-<dt><span className="stigmem-fields__type">0.9.0-alpha.2</span></dt>
+<dt><span className="stigmem-fields__type">0.9.0-alpha.9</span></dt>
 <dd>npm</dd>
 </div>
 
@@ -88,8 +88,8 @@ This page renders the YAML as human-readable tables.
 
 <div>
 <dt>OpenClaw</dt>
-<dt><span className="stigmem-fields__type">openclaw≥0.9.0a1, py≥0.9.0a1,&lt;1.0.0</span></dt>
-<dd>OpenClaw runtime ≥1.2. Experimental alpha connector only; public copy/framing corrections queued for v0.9.0a2.</dd>
+<dt><span className="stigmem-fields__type">openclaw≥0.9.0a9, py≥0.9.0a9,&lt;1.0.0</span></dt>
+<dd>OpenClaw runtime ≥1.2. Experimental alpha connector only.</dd>
 </div>
 
 </div>

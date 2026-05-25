@@ -1,13 +1,17 @@
 # MCP Adapter Publication Dry-Run
 
-**Status:** complete for scoped npm first-publication clearance
+**Status:** complete; `0.1.0` bootstrap publication verified
 **Applies to:** `@eidetic-labs/stigmem-mcp` `0.1.0`
 **Last updated:** 2026-05-25
 
 This record captures the MCP adapter publication dry-run after package metadata,
 live protocol smoke, repo-local adapter security certification, and maintainer
-clearance landed. No registry upload, release asset upload, tag, or provenance
-publication occurred during the dry run.
+clearance landed. The dry run did not publish artifacts. The subsequent
+`0.1.0` npm publication was performed manually with token authentication and
+`--provenance=false` because local npm CLI publication cannot generate
+Trusted Publisher provenance. Future MCP package publications use the dedicated
+`.github/workflows/mcp-publish.yml` GitHub Actions workflow and npm Trusted
+Publisher/OIDC.
 
 ## Publication Decision
 
@@ -23,7 +27,7 @@ publication occurred during the dry run.
 | Package | `@eidetic-labs/stigmem-mcp` |
 | Version | `0.1.0` |
 | Publish tag required | `alpha` |
-| Provenance | `publishConfig.provenance=true`; dry-run command included `--provenance` |
+| Provenance | `0.1.0` bootstrap has no provenance; future releases use Trusted Publisher via `.github/workflows/mcp-publish.yml` |
 | Access | `public` |
 | Runtime SDK dependency | `@eidetic-labs/stigmem-ts@^0.9.0-alpha.8` |
 
@@ -53,6 +57,49 @@ npm publish --dry-run --provenance --access public --tag alpha
 | SHA-1 shasum | `7aa71c1970ad92df794a370366e0c19689a53002` |
 | Integrity | `sha512-DEGnbMLTbXmClbeGJcok3F7ylJ7wS0n686R3ZLA2cP6Zx6bcX9axTkA8NwaGkmStn0EjuGuNkugSz0Ksyt1Buw==` |
 
+## Published Artifact
+
+| Field | Value |
+| --- | --- |
+| Package | `@eidetic-labs/stigmem-mcp` |
+| Version | `0.1.0` |
+| Dist-tags | `alpha`, `latest` |
+| Git head | `b86813e18129f9d3eb1653fe51190b0476308a09` |
+| SHA-1 shasum | `7aa71c1970ad92df794a370366e0c19689a53002` |
+| Integrity | `sha512-DEGnbMLTbXmClbeGJcok3F7ylJ7wS0n686R3ZLA2cP6Zx6bcX9axTkA8NwaGkmStn0EjuGuNkugSz0Ksyt1Buw==` |
+| Publication path | Manual npm token bootstrap with `--provenance=false` |
+
+Post-publication consumer install verification passed from a clean temporary
+project with:
+
+```bash
+npm install @eidetic-labs/stigmem-mcp@0.1.0 --registry=https://registry.npmjs.org/
+node -p "require('./node_modules/@eidetic-labs/stigmem-mcp/package.json').name + '@' + require('./node_modules/@eidetic-labs/stigmem-mcp/package.json').version"
+```
+
+## Trusted Publisher Configuration
+
+Future MCP package releases use npm Trusted Publishing rather than npm access
+tokens. The npm package should be configured with:
+
+| Field | Value |
+| --- | --- |
+| Package | `@eidetic-labs/stigmem-mcp` |
+| Publisher | GitHub Actions |
+| Repository owner | `eidetic-labs` |
+| Repository | `stigmem` |
+| Workflow filename | `mcp-publish.yml` |
+| Environment | `npm-production` |
+| Allowed action | `npm publish` |
+
+The matching GitHub workflow is `.github/workflows/mcp-publish.yml`. It grants
+`id-token: write`, does not set `NODE_AUTH_TOKEN`, builds/tests/type-checks the
+adapter, stamps the independently versioned MCP package, and runs:
+
+```bash
+npm publish --access public --tag "$TAG"
+```
+
 ## Pack Contents
 
 | Path | Mode | Purpose |
@@ -72,19 +119,19 @@ Both requirements are now captured in package metadata/scripts and this record.
 
 ## Rollback and Yank Plan
 
-No rollback action is needed for this dry run because nothing was published. If
-the maintainer-approved npm publication is executed and must be withdrawn:
+If the published MCP package must be withdrawn:
 
 1. Stop automation or release notes that point users to the package.
 2. If within npm's unpublish window and policy permits, run `npm unpublish @eidetic-labs/stigmem-mcp@0.1.0`.
 3. If unpublish is unavailable or undesirable, run `npm deprecate @eidetic-labs/stigmem-mcp@0.1.0 "<reason>"`.
 4. Publish a corrective package only after a new PR records maintainer
-   clearance, dry-run evidence, and post-publish verification.
+   clearance, dry-run evidence, and post-publish verification. Do not reuse an
+   already-published npm version; npm versions are immutable.
 
 ## Remaining Gates
 
-- First registry publication with an npm token or Trusted Publisher.
-- Post-publish install verification from a clean project.
+- First Trusted Publisher release, expected at `0.1.1` or later.
+- Verify npm provenance on the first Trusted Publisher release.
 
 Continue.dev, Cursor, and Zed connector guides remain experimental and
 unvalidated in this release line because those host UIs are not available in the

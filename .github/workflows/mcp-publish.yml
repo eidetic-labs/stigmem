@@ -1,0 +1,90 @@
+name: Publish MCP package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "MCP package version, e.g. 0.1.1"
+        required: true
+        type: string
+      tag:
+        description: "npm dist-tag"
+        required: true
+        default: alpha
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: mcp-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish @eidetic-labs/stigmem-mcp
+    runs-on: ubuntu-latest
+    environment: npm-production
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build MCP package
+        run: pnpm --filter "./adapters/mcp" build
+
+      - name: Test MCP package
+        run: pnpm --filter "./adapters/mcp" test
+
+      - name: Type-check MCP package
+        run: pnpm --filter "./adapters/mcp" type-check
+
+      - name: Stamp MCP package version
+        run: |
+          cd adapters/mcp
+          npm pkg set version="${{ inputs.version }}"
+
+      - name: Validate package metadata
+        run: |
+          cd adapters/mcp
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VER=$(node -p "require('./package.json').version")
+          if [ "$PKG_NAME" != "@eidetic-labs/stigmem-mcp" ]; then
+            echo "::error::unexpected package name: $PKG_NAME"
+            exit 1
+          fi
+          if [ "$PKG_VER" != "${{ inputs.version }}" ]; then
+            echo "::error::package version $PKG_VER does not match workflow input ${{ inputs.version }}"
+            exit 1
+          fi
+          echo "::notice::Publishing ${PKG_NAME}@${PKG_VER}"
+
+      - name: Skip if version already published
+        id: gate
+        run: |
+          cd adapters/mcp
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VER=$(node -p "require('./package.json').version")
+          if npm view "${PKG_NAME}@${PKG_VER}" version 2>/dev/null | grep -qx "$PKG_VER"; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::${PKG_NAME}@${PKG_VER} already on the registry; skipping publish."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish MCP package with npm provenance
+        if: steps.gate.outputs.skip == 'false'
+        run: |
+          cd adapters/mcp
+          npm publish --access public --tag "${{ inputs.tag }}"

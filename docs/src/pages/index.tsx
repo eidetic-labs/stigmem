@@ -210,90 +210,89 @@ function FederationDiagram() {
   return (
     <figure className={styles.federation} aria-label="Federation handshake between two Stigmem nodes">
       <svg
-        viewBox="0 0 540 280"
+        viewBox="0 0 540 270"
         xmlns="http://www.w3.org/2000/svg"
         className={styles.federationSvg}
         aria-hidden="true"
       >
         <defs>
-          <radialGradient id="stig-node-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(167, 139, 250, 0.55)" />
-            <stop offset="100%" stopColor="rgba(7, 9, 18, 0)" />
-          </radialGradient>
           <linearGradient id="stig-handshake" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#818cf8" stopOpacity="0.2" />
             <stop offset="50%" stopColor="#a78bfa" stopOpacity="0.9" />
             <stop offset="100%" stopColor="#818cf8" stopOpacity="0.2" />
           </linearGradient>
           <marker id="stig-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#a78bfa" />
+            <path d="M 0 0 L 10 5 L 0 10 z" className={styles.federationArrowHead} />
           </marker>
         </defs>
 
-        <g className={styles.federationGrid} stroke="rgba(167, 139, 250, 0.06)" strokeWidth="1" fill="none">
-          <line x1="0" y1="70" x2="540" y2="70" />
-          <line x1="0" y1="140" x2="540" y2="140" />
-          <line x1="0" y1="210" x2="540" y2="210" />
+        <g className={styles.federationGrid} strokeWidth="1" fill="none">
+          <line x1="0" y1="60" x2="540" y2="60" />
+          <line x1="0" y1="125" x2="540" y2="125" />
+          <line x1="0" y1="190" x2="540" y2="190" />
         </g>
 
-        <circle cx="130" cy="140" r="78" fill="url(#stig-node-glow)" />
-        <circle cx="410" cy="140" r="78" fill="url(#stig-node-glow)" />
-
+        {/* Handshake line — center between the two nodes */}
         <line
           x1="160"
-          y1="140"
+          y1="125"
           x2="380"
-          y2="140"
+          y2="125"
           stroke="url(#stig-handshake)"
           strokeWidth="2"
           strokeDasharray="6 8"
           className={styles.federationHandshake}
         />
 
+        {/* Replication arcs */}
         <path
-          d="M 160 124 Q 270 96 380 124"
+          d="M 160 109 Q 270 81 380 109"
           fill="none"
-          stroke="#a78bfa"
           strokeWidth="1.4"
-          strokeOpacity="0.7"
           strokeDasharray="3 4"
           markerEnd="url(#stig-arrow)"
           className={styles.federationReplA}
         />
 
         <path
-          d="M 380 156 Q 270 184 160 156"
+          d="M 380 141 Q 270 169 160 141"
           fill="none"
-          stroke="#818cf8"
           strokeWidth="1.4"
-          strokeOpacity="0.5"
           strokeDasharray="3 4"
           markerEnd="url(#stig-arrow)"
           className={styles.federationReplB}
         />
 
+        {/* Node A: circle, name inside, scope + HLC stacked below */}
         <g className={styles.federationNode}>
-          <circle cx="130" cy="140" r="44" fill="#15182a" stroke="#a78bfa" strokeWidth="1.6" />
-          <text x="130" y="135" textAnchor="middle" className={styles.federationNodeName}>node-a</text>
-          <text x="130" y="156" textAnchor="middle" className={styles.federationNodeScope}>scope: company</text>
+          <circle cx="130" cy="125" r="44" className={styles.federationNodeCircle} strokeWidth="1.6" />
+          <text x="130" y="130" textAnchor="middle" className={styles.federationNodeName}>node-a</text>
+          <text x="130" y="200" textAnchor="middle" className={styles.federationNodeScope}>scope: company</text>
+          <text x="130" y="222" textAnchor="middle" className={styles.federationHlc}>HLC 7BFA0:42</text>
         </g>
 
+        {/* Node B: same structure, scope string is longer so it gets full width below the circle */}
         <g className={styles.federationNode}>
-          <circle cx="410" cy="140" r="44" fill="#15182a" stroke="#818cf8" strokeWidth="1.6" />
-          <text x="410" y="135" textAnchor="middle" className={styles.federationNodeName}>node-b</text>
-          <text x="410" y="156" textAnchor="middle" className={styles.federationNodeScope}>scope: company, public</text>
+          <circle cx="410" cy="125" r="44" className={styles.federationNodeCircle} strokeWidth="1.6" />
+          <text x="410" y="130" textAnchor="middle" className={styles.federationNodeName}>node-b</text>
+          <text x="410" y="200" textAnchor="middle" className={styles.federationNodeScope}>scope: company, public</text>
+          <text x="410" y="222" textAnchor="middle" className={styles.federationHlc}>HLC 7BFA0:43</text>
         </g>
 
+        {/* PeerDeclaration chip — widened to fit full label */}
         <g>
-          <rect x="220" y="44" width="100" height="22" rx="11" fill="#15182a" stroke="rgba(167, 139, 250, 0.4)" strokeWidth="1" />
-          <text x="270" y="60" textAnchor="middle" className={styles.federationLabel}>
+          <rect
+            x="165"
+            y="20"
+            width="210"
+            height="26"
+            rx="13"
+            className={styles.federationChip}
+            strokeWidth="1"
+          />
+          <text x="270" y="37" textAnchor="middle" dominantBaseline="middle" className={styles.federationLabel}>
             PeerDeclaration · ed25519
           </text>
-        </g>
-
-        <g>
-          <text x="130" y="232" textAnchor="middle" className={styles.federationHlc}>HLC 7BFA0:42</text>
-          <text x="410" y="232" textAnchor="middle" className={styles.federationHlc}>HLC 7BFA0:43</text>
         </g>
       </svg>
       <figcaption className={styles.federationCaption}>

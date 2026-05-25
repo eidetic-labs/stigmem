@@ -19,8 +19,8 @@
   --stig-ink-2: #0e1124;
   --stig-surface: #15182a;
   --stig-surface-2: #1c1f36;
-  --stig-rule: rgba(167, 139, 250, 0.16);
-  --stig-rule-soft: rgba(167, 139, 250, 0.22);
+  --stig-rule: rgba(167, 139, 250, 0.26);
+  --stig-rule-soft: rgba(167, 139, 250, 0.38);
   --stig-text: #e2e4f2;
   --stig-text-dim: #a8acc4;
   --stig-text-mute: #9a9eb8;
@@ -232,7 +232,7 @@
   font-family: var(--stig-sans);
   font-weight: 500;
   font-size: clamp(2.4rem, 4.4vw, 3.6rem);
-  line-height: 1.06;
+  line-height: 1.14;
   letter-spacing: -0.025em;
   margin: 0 0 1.6rem;
   color: var(--stig-text);
@@ -247,6 +247,14 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  /* The gradient's paint region for background-clip: text is the
+   * padding-box of THIS element, not its parent. Extra bottom padding
+   * + extra line-height ensure Poppins's "g/y/p" descenders fully
+   * paint instead of being clipped at the baseline of the line-box.
+   * Negative margin-bottom keeps the visual rhythm unchanged. */
+  padding-bottom: 0.22em;
+  margin-bottom: -0.22em;
+  line-height: 1.2;
 }
 
 .heroLede {
@@ -337,7 +345,7 @@
 }
 
 .factCard {
-  width: min(440px, 100%);
+  width: min(540px, 100%);
   background: linear-gradient(180deg, var(--stig-surface), var(--stig-ink-2));
   border: 1px solid var(--stig-rule);
   border-radius: 14px;
@@ -362,13 +370,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.9rem 1.1rem;
+  padding: 1.05rem 1.35rem;
   border-bottom: 1px solid var(--stig-rule);
 }
 
 .factCardLabel {
   font-family: var(--stig-mono);
-  font-size: 0.74rem;
+  font-size: 0.82rem;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -377,23 +385,23 @@
 
 .factCardId {
   font-family: var(--stig-mono);
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   color: var(--stig-text-mute);
 }
 
 .factCardFields {
   list-style: none;
   margin: 0;
-  padding: 0.85rem 1.1rem;
+  padding: 1.05rem 1.35rem;
 }
 
 .factCardFields li {
   display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 1rem;
-  padding: 0.32rem 0;
+  grid-template-columns: 130px 1fr;
+  gap: 1.15rem;
+  padding: 0.42rem 0;
   font-family: var(--stig-mono);
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   line-height: 1.6;
   border-bottom: 1px dashed var(--stig-rule-soft);
 }
@@ -412,10 +420,10 @@
 }
 
 .factCardSig {
-  padding: 0.7rem 1.1rem;
+  padding: 0.9rem 1.35rem;
   border-top: 1px solid var(--stig-rule);
   font-family: var(--stig-mono);
-  font-size: 0.74rem;
+  font-size: 0.82rem;
   letter-spacing: 0.06em;
   color: var(--stig-text-mute);
   background: rgba(78, 70, 229, 0.05);
@@ -732,7 +740,8 @@
 }
 
 .federationGrid {
-  opacity: 0.7;
+  stroke: var(--stig-rule-soft);
+  opacity: 0.55;
 }
 
 /* Animated handshake — dash sweep along the line */
@@ -746,46 +755,78 @@
 }
 
 .federationReplA {
+  stroke: var(--stig-violet-400);
+  stroke-opacity: 0.85;
   stroke-dashoffset: 0;
   animation: stigDashSweep 3.2s linear infinite;
 }
 
 .federationReplB {
+  stroke: var(--stig-violet-500);
+  stroke-opacity: 0.7;
   stroke-dashoffset: 0;
   animation: stigDashSweep 4.0s linear infinite reverse;
 }
 
-.federationNode circle {
-  filter: drop-shadow(0 0 12px rgba(167, 139, 250, 0.25));
+.federationArrowHead {
+  fill: var(--stig-violet-400);
+}
+
+/* Node circle: theme-aware fill + violet stroke. The fill is the section
+ * background tinted slightly so the circle reads as a distinct surface
+ * in both light + dark themes (rather than a hardcoded dark blob). */
+.federationNodeCircle {
+  fill: var(--stig-fed-node-fill);
+  stroke: var(--stig-violet-400);
+  filter: drop-shadow(0 0 14px var(--stig-fed-node-glow));
 }
 
 .federationNodeName {
   font-family: var(--stig-mono);
   font-size: 14px;
   font-weight: 600;
-  fill: var(--stig-violet-100);
+  fill: var(--stig-fed-node-name);
   letter-spacing: 0.06em;
 }
 
+/* Scope + HLC now sit BELOW the circle on the section background, not
+ * inside the circle. Bumped from 9-10px → 11-12px since they have room. */
 .federationNodeScope {
   font-family: var(--stig-mono);
-  font-size: 9px;
-  fill: var(--stig-text-mute);
-  letter-spacing: 0.06em;
-}
-
-.federationLabel {
-  font-family: var(--stig-mono);
-  font-size: 10px;
-  fill: var(--stig-violet-300);
-  letter-spacing: 0.08em;
+  font-size: 12px;
+  fill: var(--stig-text-dim);
+  letter-spacing: 0.04em;
 }
 
 .federationHlc {
   font-family: var(--stig-mono);
-  font-size: 10px;
+  font-size: 11px;
   fill: var(--stig-text-mute);
   letter-spacing: 0.1em;
+}
+
+/* PeerDeclaration chip — widened rect with theme-aware fill. */
+.federationChip {
+  fill: var(--stig-fed-chip-fill);
+  stroke: var(--stig-violet-400);
+  stroke-opacity: 0.55;
+}
+
+.federationLabel {
+  font-family: var(--stig-mono);
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--stig-violet-300);
+  letter-spacing: 0.08em;
+}
+
+/* Dark-mode (default) — node + chip fills are the elevated surface so
+ * they sit slightly above the section background. */
+.home {
+  --stig-fed-node-fill: var(--stig-surface);
+  --stig-fed-node-glow: rgba(167, 139, 250, 0.28);
+  --stig-fed-node-name: var(--stig-violet-100);
+  --stig-fed-chip-fill: var(--stig-surface);
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -1130,12 +1171,26 @@
   --stig-text: #1a1633;
   --stig-text-dim: #4c4868;
   --stig-text-mute: #5d5878;
-  --stig-rule: rgba(78, 70, 229, 0.16);
-  --stig-rule-soft: rgba(78, 70, 229, 0.18);
+  --stig-rule: rgba(78, 70, 229, 0.22);
+  --stig-rule-soft: rgba(78, 70, 229, 0.32);
   --stig-violet-100: #2d1b69;
   --stig-violet-300: #5b21b6;
   --stig-violet-400: #7c3aed;
   --stig-violet-500: #6d28d9;
+
+  /* Terminal accents: the dark-mode bright green + cyan (#34d399 / #67e8f9)
+   * sit at ~1.5:1 on white. Override to deep emerald + deep teal that
+   * clear WCAG AA on the recorder's near-white background. */
+  --stig-green: #047857;
+  --stig-cyan:  #0e7490;
+
+  /* Federation SVG: in light mode the nodes + chip read as crisp white
+   * discs over the lavender section background. Name fill darkens to
+   * deep violet so it stays legible on the white circle interior. */
+  --stig-fed-node-fill: #ffffff;
+  --stig-fed-node-glow: rgba(124, 58, 237, 0.18);
+  --stig-fed-node-name: #4c1d95;
+  --stig-fed-chip-fill: #ffffff;
 }
 
 :global([data-theme='light']) .factCard,

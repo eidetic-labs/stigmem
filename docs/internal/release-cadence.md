@@ -199,7 +199,7 @@ gh run watch --repo eidetic-labs/stigmem $(gh run list --workflow=publish.yml --
 Pushing the tag triggers `.github/workflows/publish.yml`, which fans out into:
 
 1. **`publish-node`** — multi-arch (linux/amd64 + linux/arm64) GHCR image; Sigstore cosign keyless signed; SBOM (SPDX JSON) attached. Image gets BOTH PEP 440 and semver tags (e.g. `:0.9.0a2` and `:0.9.0-alpha.2`) so adopters can pull via either form.
-2. **`publish-sdk-ts`** — npm publish of `@eidetic-labs/stigmem-ts` with `--tag <alpha|beta|rc|latest>` (derived from the version via `scripts/translate_version.py` — no manual computation needed), with provenance attestation via OIDC.
+2. **`publish-sdk-ts`** — npm publish of `@eidetic-labs/stigmem-ts` with `--tag <alpha|beta|rc|latest>` (derived from the version via `scripts/translate_version.py` — no manual computation needed), with provenance attestation via npm Trusted Publisher/OIDC. The workflow does not use `NPM_TOKEN`.
 3. **`publish-python`** — matrix publishes `stigmem`, `stigmem-py`, `stigmem-node`, `stigmem-openclaw` to PyPI via Trusted Publishers (OIDC; no API token).
 4. **`create-release`** — runs after publish-node + publish-sdk-ts + publish-python succeed. Extracts the `## [<version>]` section from `CHANGELOG.md`, prepends a "Published artifacts" header with the install commands for each registry, and creates the GitHub release with that body. Marks as prerelease for any non-`latest` dist-tag (alpha/beta/rc). Title format follows the translated release tier, for example `v0.9.0aN — preview alpha`; future beta or release-candidate titles are used only when those release lines are explicitly opened.
 
@@ -214,7 +214,11 @@ The first four publish jobs run in parallel (~5-8 minutes total). The release-cr
 Within ~5 minutes of tag push:
 
 - [ ] **PyPI** — `pip install --pre stigmem` resolves to the new version. `pip show stigmem` returns the expected `Version:`. Repeat for `stigmem-py`, `stigmem-node`, `stigmem-openclaw`.
-- [ ] **npm** — `npm view @eidetic-labs/stigmem-ts version` returns the new semver. `npm view @eidetic-labs/stigmem-ts` shows the right `dist-tags`: the line-specific tag (`alpha` / `beta` / `rc`) advances to the new prerelease, AND `latest` advances to it too (per the project convention in [`LIMITATIONS.md` §npm `latest` dist-tag](../../LIMITATIONS.md). The publish workflow's "Advance latest dist-tag" step handles this automatically; the verification just confirms it ran).
+- [ ] **npm** — `npm view @eidetic-labs/stigmem-ts version` returns the new semver. `npm view @eidetic-labs/stigmem-ts` shows the right `dist-tags`: the line-specific tag (`alpha` / `beta` / `rc`) advances to the new prerelease. While the project is pre-stable, maintainers also advance `latest` manually after the Trusted Publisher release succeeds:
+  ```bash
+  npm dist-tag add @eidetic-labs/stigmem-ts@<semver> latest
+  npm view @eidetic-labs/stigmem-ts dist-tags --json
+  ```
 - [ ] **GHCR** — `docker pull ghcr.io/eidetic-labs/stigmem-node:<tag>` succeeds. (No `stigmem-dashboard` image: dashboard is deferred per ADR-002; `publish-dashboard` was removed from `publish.yml` in PR #64.)
 - [ ] **GHCR visibility** — for first publish of a new package only: visit `https://github.com/orgs/eidetic-labs/packages` → find the package → Package settings → Danger Zone → Change visibility → **Public**. Subsequent pushes inherit the visibility setting; this is one-time per package.
 - [ ] **Cosign** — replace `<tag>` with the actual version (e.g. `0.9.0a2`):

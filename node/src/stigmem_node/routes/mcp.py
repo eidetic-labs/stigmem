@@ -6,6 +6,8 @@ from fastapi import APIRouter
 
 from ..cli.mcp import editor_catalog
 
+__all__ = ["editor_catalog", "list_mcp_connectors", "router"]
+
 router = APIRouter(prefix="/v1/mcp", tags=["mcp"])
 
 

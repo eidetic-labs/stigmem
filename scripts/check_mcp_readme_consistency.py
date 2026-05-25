@@ -30,11 +30,19 @@ def _cli_editors() -> set[str]:
     return set(EDITOR_CONFIGS)
 
 
+def _http_route_editors() -> set[str]:
+    sys.path.insert(0, str(ROOT / "node" / "src"))
+    from stigmem_node.routes.mcp import editor_catalog
+
+    return {entry["editor"] for entry in editor_catalog()}
+
+
 def main() -> int:
     readme = _readme_editors()
     adapter_readme = _adapter_readme_editors()
     docs = _docs_editors()
     cli = _cli_editors()
+    http = _http_route_editors()
     expected = cli
     failures: list[str] = []
     for name, observed in {
@@ -42,6 +50,7 @@ def main() -> int:
         "adapters/mcp/README.md": adapter_readme,
         "docs/docs/integrations/mcp": docs,
         "EDITOR_CONFIGS": cli,
+        "/v1/mcp/connectors": http,
     }.items():
         if observed != expected:
             failures.append(f"{name}: expected {sorted(expected)}, observed {sorted(observed)}")
@@ -50,7 +59,7 @@ def main() -> int:
         for failure in failures:
             print(f"  {failure}")
         return 1
-    print(f"mcp-readme-consistency: {len(expected)} editors aligned")
+    print(f"mcp-readme-consistency: 5 surfaces aligned; {len(expected)} editors")
     return 0
 
 

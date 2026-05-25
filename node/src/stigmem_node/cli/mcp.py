@@ -14,6 +14,8 @@ from typing import Literal
 
 ConfigFormat = Literal["toml", "json", "jsonc"]
 ValidationTier = Literal["validated", "caveated", "experimental"]
+DEFAULT_API_KEY_PLACEHOLDER = "<your-api-key>"
+DISPLAY_API_KEY_PLACEHOLDER = "<STIGMEM_API_KEY>"
 
 
 @dataclass(frozen=True)
@@ -235,6 +237,21 @@ def _merge_config(
     return f"{existing.rstrip()}\n\n# Added by stigmem mcp install at {_iso_timestamp()}\n{snippet}"
 
 
+def _mask_secret(value: str) -> str:
+    if len(value) < 12:
+        return "<too-short-to-mask>"
+    return f"{value[:4]}...{value[-4:]} ({len(value)} chars)"
+
+
+def _api_key_source(api_key: str) -> tuple[str, bool]:
+    env_value = os.environ.get("STIGMEM_API_KEY", "")
+    if env_value and api_key == env_value:
+        return f"$STIGMEM_API_KEY environment variable ({_mask_secret(env_value)})", True
+    if api_key == DEFAULT_API_KEY_PLACEHOLDER:
+        return "<your-api-key> placeholder (you must edit the file before use)", False
+    return "value passed via --stigmem-api-key flag", False
+
+
 def _iso_timestamp() -> str:
     return dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H-%M-%SZ")
 
@@ -367,9 +384,12 @@ def _cmd_mcp_config(args: argparse.Namespace) -> int:
     print(f"Config path: {config.config_path}")
     print(f"Config format: {config.config_format}")
     print(f"Guide: {config.docs_link}")
-    print("Run `stigmem mcp install --dry-run` to preview the target path.")
-    print("Run `stigmem mcp install --write` to update the config with local backups.")
-    print("API keys are not echoed; set STIGMEM_API_KEY through the target editor config.")
+    print(f"Preview full editor-config body: stigmem mcp install {config.editor} --dry-run")
+    print(f"Apply with backup: stigmem mcp install {config.editor} --write")
+    print(
+        "This command intentionally does not print a config snippet; see the guide "
+        "for manual configuration."
+    )
     return 0
 
 
@@ -397,9 +417,24 @@ def _cmd_mcp_install(args: argparse.Namespace) -> int:
     print(f"Action: {action}")
     print(f"Guide: {config.docs_link}")
     print("Planned change: add or replace the stigmem MCP server entry.")
-    print("API keys are not echoed; the written config uses the provided STIGMEM_API_KEY value.")
+    source, from_env = _api_key_source(args.stigmem_api_key)
+    print(f"STIGMEM_API_KEY source: {source}")
+    print(f"The key value is not echoed and will be written to: {path}")
+    if from_env:
+        print("Press Ctrl-C if you did not intend to embed your env-var key in this file.")
     if not args.write:
-        print("Dry-run only. Re-run with --write to apply.")
+        display_merged = _merge_config(
+            config,
+            existing,
+            args.stigmem_url,
+            DISPLAY_API_KEY_PLACEHOLDER,
+        )
+        print()
+        print("--- planned config body (dry-run; API key value redacted) ---")
+        print(display_merged, end="" if display_merged.endswith("\n") else "\n")
+        print("--- end planned config body ---")
+        print()
+        print("Dry-run only. Re-run with --write to apply this content with the unredacted key.")
         return 0
     if os.isatty(0) and not args.yes:
         answer = input("Apply this change? [y/N] ").strip().lower()
@@ -410,7 +445,9 @@ def _cmd_mcp_install(args: argparse.Namespace) -> int:
     if existing:
         backup_dir.mkdir(parents=True, exist_ok=True)
         backup_path.write_text(existing)
-        print(f"Backed up existing config to {backup_path}")
+        if os.name == "posix":
+            backup_path.chmod(0o600)
+        print(f"Backed up existing config to {backup_path} (owner-only mode)")
     path.write_text(merged)
     print(f"Wrote {path}")
     print(f"Verify with: stigmem mcp smoke {config.editor}")

@@ -13,6 +13,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 - Preparing the `v0.9.0a9` plugin discovery release line.
 
+### Fixed
+
+- Hardened `stigmem mcp install` operator output: dry runs now show the planned
+  config body with the API key value redacted, `--write` identifies whether the
+  key came from `$STIGMEM_API_KEY`, a flag, or the placeholder, and POSIX backup
+  files are written owner-only.
+- Clarified that `stigmem mcp config <editor>` intentionally prints metadata
+  and guide links rather than a copy-paste config snippet.
+- Extended the MCP catalog consistency guard to validate the
+  `/v1/mcp/connectors` payload alongside README, adapter README, docs, and CLI
+  editor surfaces.
+
 ## [0.9.0a9] — Unreleased
 
 ### Changed

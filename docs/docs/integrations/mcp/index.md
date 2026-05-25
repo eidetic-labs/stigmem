@@ -25,12 +25,16 @@ npx -y stigmem-mcp@0.9.0-alpha.9
 stigmem mcp doctor
 stigmem mcp detect
 stigmem mcp config codex-cli
+stigmem mcp install codex-cli
 stigmem mcp install codex-cli --write
 stigmem mcp smoke codex-cli
 ```
 
 `stigmem mcp install` defaults to a dry run. Passing `--write` creates a
 timestamped backup before changing an existing editor config.
+`stigmem mcp config` prints metadata and the connector guide link only; use
+the install dry run to preview the planned Stigmem server entry with the
+credential field omitted from console output.
 
 ## Supported editors
 

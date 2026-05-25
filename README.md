@@ -191,12 +191,18 @@ npx -y stigmem-mcp@0.9.0-alpha.9
 ```
 
 ```bash
-stigmem mcp doctor
-stigmem mcp detect
-stigmem mcp config codex-cli
+stigmem mcp doctor                  # verify install + STIGMEM_URL/STIGMEM_API_KEY
+stigmem mcp detect                  # auto-detect installed editors
+stigmem mcp config codex-cli        # print metadata + docs link only
+stigmem mcp install codex-cli       # dry-run: preview Stigmem entry; credential omitted
 stigmem mcp install codex-cli --write
 stigmem mcp smoke codex-cli
 ```
+
+`stigmem mcp config` intentionally does not print a copy-paste config
+snippet. Use `stigmem mcp install <editor>` for the dry-run preview; the
+preview shows the Stigmem server entry but omits the authentication key field
+so console output never contains a reusable secret.
 
 | Editor | Validation tier | Connector guide |
 | --- | --- | --- |

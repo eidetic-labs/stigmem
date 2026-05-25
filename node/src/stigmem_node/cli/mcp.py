@@ -14,6 +14,7 @@ from typing import Literal
 
 ConfigFormat = Literal["toml", "json", "jsonc"]
 ValidationTier = Literal["validated", "caveated", "experimental"]
+DEFAULT_API_KEY_PLACEHOLDER = "<your-api-key>"
 
 
 @dataclass(frozen=True)
@@ -235,6 +236,55 @@ def _merge_config(
     return f"{existing.rstrip()}\n\n# Added by stigmem mcp install at {_iso_timestamp()}\n{snippet}"
 
 
+def _api_key_from_environment(api_key: str) -> bool:
+    env_value = os.environ.get("STIGMEM_API_KEY", "")
+    return bool(env_value and api_key == env_value)
+
+
+def _render_dry_run_preview(config: EditorConfig, stigmem_url: str) -> str:
+    if config.config_format == "toml":
+        return f"""[mcp_servers.stigmem]
+command = "stigmem-mcp"
+
+[mcp_servers.stigmem.env]
+STIGMEM_URL = "{stigmem_url}"
+# credential field omitted from dry-run output
+"""
+    if config.editor == "continue-dev":
+        return json.dumps(
+            {
+                "mcpServers": [
+                    {
+                        "name": "stigmem",
+                        "command": "stigmem-mcp",
+                        "env": {
+                            "STIGMEM_URL": stigmem_url,
+                            "_credential_omitted": True,
+                        },
+                    }
+                ]
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    key = "mcp_servers" if config.editor == "zed" else "mcpServers"
+    return json.dumps(
+        {
+            key: {
+                "stigmem": {
+                    "command": "stigmem-mcp",
+                    "env": {
+                        "STIGMEM_URL": stigmem_url,
+                        "_credential_omitted": True,
+                    },
+                }
+            }
+        },
+        indent=2,
+        sort_keys=True,
+    )
+
+
 def _iso_timestamp() -> str:
     return dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H-%M-%SZ")
 
@@ -367,9 +417,12 @@ def _cmd_mcp_config(args: argparse.Namespace) -> int:
     print(f"Config path: {config.config_path}")
     print(f"Config format: {config.config_format}")
     print(f"Guide: {config.docs_link}")
-    print("Run `stigmem mcp install --dry-run` to preview the target path.")
-    print("Run `stigmem mcp install --write` to update the config with local backups.")
-    print("API keys are not echoed; set STIGMEM_API_KEY through the target editor config.")
+    print(f"Preview the planned Stigmem MCP entry: stigmem mcp install {config.editor} --dry-run")
+    print(f"Apply with backup: stigmem mcp install {config.editor} --write")
+    print(
+        "This command intentionally does not print a config snippet; see the guide "
+        "for manual configuration."
+    )
     return 0
 
 
@@ -397,9 +450,25 @@ def _cmd_mcp_install(args: argparse.Namespace) -> int:
     print(f"Action: {action}")
     print(f"Guide: {config.docs_link}")
     print("Planned change: add or replace the stigmem MCP server entry.")
-    print("API keys are not echoed; the written config uses the provided STIGMEM_API_KEY value.")
+    print(f"Credential value is not echoed and will be written to: {path}")
+    if _api_key_from_environment(args.stigmem_api_key):
+        print("Credential source: environment variable.")
+        print("Press Ctrl-C if you did not intend to embed that value in this file.")
+    elif args.stigmem_api_key == DEFAULT_API_KEY_PLACEHOLDER:
+        print("Credential source: placeholder. Edit the file before use.")
+    else:
+        print("Credential source: command-line flag.")
     if not args.write:
-        print("Dry-run only. Re-run with --write to apply.")
+        preview = _render_dry_run_preview(config, args.stigmem_url)
+        print()
+        print("--- planned stigmem MCP server entry (dry-run; auth key omitted) ---")
+        print(preview, end="" if preview.endswith("\n") else "\n")
+        print("--- end planned stigmem MCP server entry ---")
+        print()
+        print(
+            "Dry-run only. Re-run with --write to merge this entry into the editor config "
+            "with the configured credential value."
+        )
         return 0
     if os.isatty(0) and not args.yes:
         answer = input("Apply this change? [y/N] ").strip().lower()
@@ -410,7 +479,9 @@ def _cmd_mcp_install(args: argparse.Namespace) -> int:
     if existing:
         backup_dir.mkdir(parents=True, exist_ok=True)
         backup_path.write_text(existing)
-        print(f"Backed up existing config to {backup_path}")
+        if os.name == "posix":
+            backup_path.chmod(0o600)
+        print(f"Backed up existing config to {backup_path} (owner-only mode)")
     path.write_text(merged)
     print(f"Wrote {path}")
     print(f"Verify with: stigmem mcp smoke {config.editor}")

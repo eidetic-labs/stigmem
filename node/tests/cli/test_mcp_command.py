@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -104,6 +105,94 @@ def test_mcp_install_dry_run_does_not_write(
     assert not (tmp_path / ".codex" / "config.toml").exists()
 
 
+def test_mcp_install_warns_when_api_key_sourced_from_env(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import stigmem_node.cli.mcp as mcp
+
+    api_key = "sk-test-1234567890abcdef"
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("STIGMEM_API_KEY", api_key)
+
+    rc = mcp._cmd_mcp_install(
+        _args(
+            editor="codex-cli",
+            write=False,
+            force=False,
+            yes=True,
+            backup_dir=None,
+            stigmem_url="http://localhost:8765",
+            stigmem_api_key=api_key,
+        )
+    )
+
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "Credential source: environment variable." in out
+    assert "Press Ctrl-C" in out
+    assert api_key not in out
+
+
+def test_mcp_install_warns_when_api_key_is_placeholder(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import stigmem_node.cli.mcp as mcp
+
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("STIGMEM_API_KEY", raising=False)
+
+    rc = mcp._cmd_mcp_install(
+        _args(
+            editor="codex-cli",
+            write=False,
+            force=False,
+            yes=True,
+            backup_dir=None,
+            stigmem_url="http://localhost:8765",
+            stigmem_api_key="<your-api-key>",
+        )
+    )
+
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "Credential source: placeholder. Edit the file before use." in out
+
+
+def test_mcp_install_dry_run_prints_server_entry_with_auth_key_omitted(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import stigmem_node.cli.mcp as mcp
+
+    api_key = "test-key-12345"
+    monkeypatch.setenv("HOME", str(tmp_path))
+
+    rc = mcp._cmd_mcp_install(
+        _args(
+            editor="codex-cli",
+            write=False,
+            force=False,
+            yes=True,
+            backup_dir=None,
+            stigmem_url="http://localhost:8765",
+            stigmem_api_key=api_key,
+        )
+    )
+
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "--- planned stigmem MCP server entry (dry-run; auth key omitted) ---" in out
+    assert "credential field omitted from dry-run output" in out
+    assert api_key not in out
+    assert "STIGMEM_API_KEY =" not in out
+    assert "--- end planned stigmem MCP server entry ---" in out
+
+
 def test_mcp_install_write_creates_config(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -127,6 +216,40 @@ def test_mcp_install_write_creates_config(
     assert rc == 0
     assert config.exists()
     assert "stigmem-mcp" in config.read_text()
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX permissions only")
+def test_mcp_install_backup_file_is_owner_only(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import stigmem_node.cli.mcp as mcp
+
+    monkeypatch.setenv("HOME", str(tmp_path))
+    codex = tmp_path / ".codex"
+    codex.mkdir()
+    (codex / "config.toml").write_text("# existing operator content\n")
+    backup_dir = tmp_path / "backups"
+
+    rc = mcp._cmd_mcp_install(
+        _args(
+            editor="codex-cli",
+            write=True,
+            force=False,
+            yes=True,
+            backup_dir=str(backup_dir),
+            stigmem_url="http://localhost:8765",
+            stigmem_api_key="sk",
+        )
+    )
+
+    out = capsys.readouterr().out
+    backups = list(backup_dir.glob("config.toml.stigmem-bak-*"))
+    assert rc == 0
+    assert "owner-only mode" in out
+    assert len(backups) == 1
+    assert backups[0].stat().st_mode & 0o777 == 0o600
 
 
 def test_mcp_install_refuses_existing_without_force(

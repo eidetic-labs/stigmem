@@ -236,6 +236,12 @@ def _build_parser() -> argparse.ArgumentParser:
     mcp_install_p.add_argument("editor", metavar="EDITOR", help="editor slug")
     mcp_install_p.add_argument("--write", action="store_true", help="apply the planned change")
     mcp_install_p.add_argument(
+        "--dry-run",
+        dest="write",
+        action="store_false",
+        help="preview the planned change without writing (default)",
+    )
+    mcp_install_p.add_argument(
         "--force",
         action="store_true",
         help="replace existing stigmem-mcp entry",

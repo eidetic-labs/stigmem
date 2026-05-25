@@ -38,10 +38,12 @@ jobs:
           filters: |
             python:
               - '.github/workflows/ci.yml'
+              - 'README.md'
               - 'pyproject.toml'
               - 'uv.lock'
               - 'conftest.py'
               - 'scripts/check.sh'
+              - 'scripts/check_readme_shape.py'
               - 'scripts/check_ruff_baseline.py'
               - 'scripts/check_mypy_baseline.py'
               - 'scripts/check_constant_time.py'

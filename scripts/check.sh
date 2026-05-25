@@ -120,6 +120,7 @@ run_python() {
   timed_run python-plugin-manifest-version uv run python scripts/check_plugin_manifest_version_consistency.py
   timed_run python-plugin-readme-pypi-consistency uv run python scripts/check_plugin_readme_pypi_consistency.py
   timed_run python-mcp-readme-consistency uv run python scripts/check_mcp_readme_consistency.py
+  timed_run python-readme-shape uv run python scripts/check_readme_shape.py
   timed_run python-facts-immutability-inventory uv run python scripts/check_facts_immutability_inventory.py
   write_timing_report
 }

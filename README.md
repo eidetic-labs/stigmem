@@ -4,7 +4,7 @@
 [![Conformance](https://github.com/eidetic-labs/stigmem/actions/workflows/conformance.yml/badge.svg)](https://github.com/eidetic-labs/stigmem/actions/workflows/conformance.yml)
 [![Coverage](https://stigmem.dev/coverage-badge.svg)](https://stigmem.dev/coverage/)
 [![PyPI version](https://img.shields.io/pypi/v/stigmem?include_prereleases&label=pypi)](https://pypi.org/project/stigmem/)
-[![npm version](https://img.shields.io/npm/v/stigmem-mcp/alpha?label=npm%3Astigmem-mcp)](https://www.npmjs.com/package/stigmem-mcp)
+[![npm version](https://img.shields.io/npm/v/@eidetic-labs/stigmem-mcp/alpha?label=npm%3A%40eidetic-labs%2Fstigmem-mcp)](https://www.npmjs.com/package/@eidetic-labs/stigmem-mcp)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Stability: preview alpha](https://img.shields.io/badge/stability-preview%20alpha-orange.svg)](#why-pre-stable)
 [![Discord](https://img.shields.io/discord/1502847943118684331?label=discord&logo=discord&logoColor=white&color=5865F2)](https://discord.gg/Z47Re7FjjV)
@@ -132,9 +132,9 @@ released under [ADR-011](docs/adr/011-plugin-independent-versioning.md).
 The MCP server is a separate npm package:
 
 ```bash
-npm install -g stigmem-mcp
+npm install -g @eidetic-labs/stigmem-mcp
 # or, ephemeral:
-npx -y stigmem-mcp@0.9.0-alpha.9
+npx -y @eidetic-labs/stigmem-mcp@0.1.0
 ```
 
 ## Plugins

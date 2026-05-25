@@ -24,7 +24,7 @@ describe("TOOLS", () => {
   });
 
   it("reports the package-aligned MCP server version", () => {
-    expect(MCP_SERVER_VERSION).toBe("0.9.0-alpha.9");
+    expect(MCP_SERVER_VERSION).toBe("0.1.0");
   });
 
   it("describes assert_fact with typed FactValue variants", () => {

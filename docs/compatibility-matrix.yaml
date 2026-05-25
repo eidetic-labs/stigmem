@@ -43,9 +43,9 @@ packages:
     name: stigmem-go
     versions: []  # not shipped in the alpha.2 artifact set; deferred to experimental/sdk-go/
   mcp_adapter:
-    name: stigmem-mcp
+    name: "@eidetic-labs/stigmem-mcp"
     versions:
-      - "0.9.0-alpha.8"  # package metadata aligned; publication remains held pending connector/security validation
+      - "0.1.0"  # independently versioned npm package
   lazy_instruction_plugin:
     name: stigmem-plugin-lazy-instruction-discovery
     versions: []  # source extracted on main; signed/package artifact evidence deferred to the plugin launch train (#298)
@@ -497,7 +497,7 @@ features:
     feature_type: adapter
     default_surface: external
     implementation_path: adapters/mcp
-    package: stigmem-mcp
+    package: "@eidetic-labs/stigmem-mcp"
     release_lines:
       - "v0.9.0a1"
       - "0.9.xA"
@@ -505,8 +505,8 @@ features:
     stability: experimental
     requires:
       node: "experimental"
-      typescript_sdk: "workspace"
-    notes: "External MCP tool adapter; package metadata is aligned to the current alpha release line, but publication remains held until live connector and security validation complete."
+      typescript_sdk: ">=0.9.0-alpha.8"
+    notes: "External MCP tool adapter; npm package is independently versioned from the Stigmem project release line."
 
   - id: sdk-go
     name: Go SDK

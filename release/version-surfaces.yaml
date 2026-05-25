@@ -103,19 +103,6 @@ surfaces:
       `npm install @eidetic-labs/stigmem-ts`. Generates a per-package CI
       token scoped to `@eidetic-labs/stigmem-ts` for NPM_TOKEN.
 
-  - id: npm-stigmem-mcp
-    kind: external-registry
-    category: node-package
-    file: adapters/mcp/package.json
-    field: version
-    spelling: semver
-    sort_authority: semver
-    notes: >-
-      MCP adapter package metadata is aligned with the active alpha release
-      line for publication readiness. Registry publication remains blocked
-      until live connector smoke, adapter security certification, dry-run
-      evidence, and explicit maintainer clearance are complete.
-
   # ClawHub skill version is INDEPENDENTLY VERSIONED (same pattern as adapter
   # pyproject.toml files at independent 0.x). The skill's `version:` field
   # tracks the skill's own ClawHub release line, not the stigmem protocol

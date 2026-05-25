@@ -69,9 +69,9 @@ This page renders the YAML as human-readable tables.
 </div>
 
 <div>
-<dt><code>stigmem-mcp</code> (adapter)</dt>
-<dt><span className="stigmem-fields__type">held at 0.9.0-alpha.8</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter"><code>features/mcp-adapter/</code></a>; package metadata is aligned, but publication remains held pending live connector smoke and security certification.</dd>
+<dt><code>@eidetic-labs/stigmem-mcp</code> (adapter)</dt>
+<dt><span className="stigmem-fields__type">0.1.0</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/mcp-adapter"><code>features/mcp-adapter/</code></a>; independently versioned npm package that installs the <code>stigmem-mcp</code> binary.</dd>
 </div>
 
 </div>
@@ -119,7 +119,7 @@ compatibility remains in [`docs/compatibility-matrix.yaml`](https://github.com/e
 | [Lazy instruction discovery](https://github.com/eidetic-labs/stigmem/blob/main/features/lazy-instruction-discovery/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `0.9.xA` | `stigmem-plugin-lazy-instruction-discovery`; `experimental/lazy-instruction-discovery` |
 | [Letta adapter](https://github.com/eidetic-labs/stigmem/blob/main/features/letta-adapter/README.md) | adapter | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem-letta-adapter`; `experimental/letta-adapter` |
 | [Memory Garden advanced ACL](https://github.com/eidetic-labs/stigmem/blob/main/features/memory-garden-acl/README.md) | plugin | experimental / opt-in | `v0.9.0a1`, `v0.9.0a6`, `0.9.xA` | `stigmem-plugin-memory-garden-acl`; `experimental/memory-garden-acl` |
-| [MCP adapter](https://github.com/eidetic-labs/stigmem/blob/main/features/mcp-adapter/README.md) | adapter | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem-mcp`; `adapters/mcp` |
+| [MCP adapter](https://github.com/eidetic-labs/stigmem/blob/main/features/mcp-adapter/README.md) | adapter | experimental / external | `v0.9.0a1`, `0.9.xA` | `"@eidetic-labs/stigmem-mcp"`; `adapters/mcp` |
 | [Multi-tenant scoping](https://github.com/eidetic-labs/stigmem/blob/main/features/multi-tenant/README.md) | plugin | experimental / opt-in | `v0.9.0a8`, `0.9.xA` | `stigmem-plugin-multi-tenant`; `experimental/multi-tenant` |
 | [Obsidian adapter](https://github.com/eidetic-labs/stigmem/blob/main/features/obsidian-adapter/README.md) | adapter | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem-obsidian`; `experimental/obsidian-adapter` |
 | [Ollama/LiteLLM adapter](https://github.com/eidetic-labs/stigmem/blob/main/features/ollama-litellm-adapter/README.md) | adapter | experimental / external | `v0.9.0a1`, `0.9.xA` | `stigmem-openai-tools-adapter`; `experimental/openai-tools-adapter` |

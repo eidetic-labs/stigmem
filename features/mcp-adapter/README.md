@@ -9,7 +9,7 @@ feature_type: adapter
 default_surface: external
 canonical_spec: none
 implementation_path: adapters/mcp
-package: stigmem-mcp
+package: "@eidetic-labs/stigmem-mcp"
 adr_refs:
   - ADR-002
   - ADR-009
@@ -26,17 +26,17 @@ release_lines:
 # MCP Adapter
 
 The MCP adapter exposes a running Stigmem node as Model Context Protocol tools
-for stdio-capable agent hosts. `0.9.0-alpha.8` scopes validated host UI support
+for stdio-capable agent hosts. `0.1.0` scopes validated host UI support
 to Codex CLI, Claude Code, Gemini CLI with its final-response caveat, and
 repo-local MCP protocol smoke. Continue.dev, Cursor, Zed, and custom-host use
 remain experimental until host-specific smoke evidence exists. The adapter is a
 stateless TypeScript process that translates MCP tool calls into HTTP requests
 against the configured node.
 
-The adapter source is active and tested. The `stigmem-mcp` package metadata is
-aligned to the current alpha release line for publication readiness, and
+The adapter source is active and tested. The `@eidetic-labs/stigmem-mcp`
+package is independently versioned from the Stigmem project release line and
 repo-local MCP protocol smoke passes against a live node. Registry publication
-remains held pending explicit maintainer clearance.
+has maintainer clearance for the scoped npm package.
 
 ## Current State
 
@@ -46,7 +46,7 @@ remains held pending explicit maintainer clearance.
 | Stability | `experimental` |
 | Default surface | `external` |
 | Primary implementation | `adapters/mcp` |
-| Primary package | `stigmem-mcp` |
+| Primary package | `@eidetic-labs/stigmem-mcp` |
 | Canonical spec | `none` |
 
 ## Feature Files

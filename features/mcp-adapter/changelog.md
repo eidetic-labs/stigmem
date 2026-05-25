@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Switched the npm publication target to the scoped package
+  `@eidetic-labs/stigmem-mcp@0.1.0`, established independent adapter semver,
+  and recorded scoped first-publication dry-run evidence.
 - Added the `2026-05-24` host UI smoke execution record and narrowed the
   `0.9.0-alpha.8` publication clearance gate to Codex CLI and Claude Code,
   recorded Gemini CLI as GO-WITH-CAVEAT, and retained Continue.dev, Cursor, and
@@ -12,11 +15,8 @@
 - Added adapter security regressions for adversarial recall framing, malformed
   write rejection before SDK dispatch, and credential-like tool argument
   filtering.
-- Recorded npm dry-run evidence, prerelease `alpha` tag requirement, executable
-  bin packaging, and no-publication disposition for `stigmem-mcp`.
-- Aligned `stigmem-mcp` package metadata to the current alpha release line for
-  publication readiness while keeping registry publication held pending
-  maintainer clearance and post-publish verification.
+- Recorded npm dry-run evidence, `alpha` dist-tag usage, executable bin
+  packaging, and publication disposition for the MCP adapter package.
 
 ## 2026-05-21
 

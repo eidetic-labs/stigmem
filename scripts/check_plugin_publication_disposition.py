@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TRACKER = ROOT / "docs" / "internal" / "plugin-publication-disposition.md"
 
 EXPECTED_DISPOSITIONS = {
-    "mcp-adapter": "hold",
+    "mcp-adapter": "publish-now",
     "obsidian-adapter": "hold",
     "cognee-adapter": "defer",
     "letta-adapter": "defer",

@@ -14,7 +14,7 @@ still pending, so this connector remains experimental.
 ## Install
 
 ```bash
-npm install -g stigmem-mcp
+npm install -g @eidetic-labs/stigmem-mcp
 ```
 
 ## Configure

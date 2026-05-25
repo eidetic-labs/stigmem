@@ -1,7 +1,7 @@
 # Stigmem MCP Server
 
 Exposes [Stigmem](../../README.md) as an [MCP](https://modelcontextprotocol.io) server.
-Any stdio-capable MCP host can launch this adapter, but the `0.9.0-alpha.9`
+Any stdio-capable MCP host can launch this adapter, but the `0.1.0`
 publication gate only validates Codex CLI, Claude Code, and the repo-local MCP
 protocol smoke. Gemini CLI has passed MCP tool execution with a host
 final-response caveat. Continue.dev, Cursor, Zed, and custom-host connector use
@@ -39,17 +39,23 @@ is experimental until a host-specific smoke record exists.
 ### Install
 
 ```bash
+npm install -g @eidetic-labs/stigmem-mcp
+# or, ephemeral:
+npx -y @eidetic-labs/stigmem-mcp@0.1.0
+```
+
+For local development:
+
+```bash
 cd stigmem/adapters/mcp
 pnpm install
 pnpm build
 ```
 
-The package metadata is aligned to `0.9.0-alpha.9` for publication readiness,
-but registry publication is still held. Use the workspace build until the
-feature record records explicit maintainer clearance. Continue.dev, Cursor, and
-Zed guides remain unvalidated for this alpha package state. Gemini CLI users
-should review the host caveat in the MCP smoke record before relying on clean
-final-response rendering.
+The npm package is versioned independently from the Stigmem project release
+line. Continue.dev, Cursor, and Zed guides remain unvalidated for this package
+state. Gemini CLI users should review the host caveat in the MCP smoke record
+before relying on clean final-response rendering.
 
 ### Configure in Claude Code
 
@@ -161,7 +167,7 @@ resolve_contradiction(
 Claude Code / MCP host
       │  MCP (stdio)
       ▼
-stigmem-mcp  (this package)
+@eidetic-labs/stigmem-mcp  (this package; installs the `stigmem-mcp` binary)
       │  HTTP
       ▼
 Stigmem node  (stigmem/node)

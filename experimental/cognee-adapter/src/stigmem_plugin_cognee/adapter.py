@@ -177,7 +177,7 @@ class StigmemCogneeAdapter:
         self._default_dataset = default_dataset
 
     @classmethod
-    def from_env(cls) -> "StigmemCogneeAdapter":
+    def from_env(cls) -> StigmemCogneeAdapter:
         """Build adapter from environment variables.
 
         Cognee configuration variables read here::

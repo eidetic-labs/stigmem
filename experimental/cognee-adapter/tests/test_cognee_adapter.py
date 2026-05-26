@@ -16,7 +16,6 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from stigmem_plugin_cognee.adapter import (
     StigmemCogneeAdapter,
     _fact_to_text,

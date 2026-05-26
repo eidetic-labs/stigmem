@@ -67,11 +67,18 @@ The adapter is intentionally thin:
 python -m pip install 'stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0'
 ```
 
+Install Cognee only in deployments that run the live bridge:
+
+```bash
+python -m pip install 'stigmem-plugin-cognee-adapter[cognee]>=0.1.0,<2.0.0'
+```
+
 ### Requirements
 
 - Python ≥ 3.11
 - `stigmem-py`: `pip install stigmem-py` (or from workspace)
-- `cognee`: `pip install cognee`
+- `cognee`: optional runtime extra for live Cognee calls; unit tests and plugin
+  discovery do not require it.
 - An LLM backend accessible by Cognee (default: OpenAI — set `OPENAI_API_KEY`
   or use `COGNEE_LLM_PROVIDER` + `COGNEE_LLM_API_KEY` for other providers)
 
@@ -173,6 +180,7 @@ application by installing the package and importing
 
 ```bash
 python -m pip install 'stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0'
+python -m pip install 'stigmem-plugin-cognee-adapter[cognee]>=0.1.0,<2.0.0'  # live Cognee bridge
 stigmem plugins list
 ```
 

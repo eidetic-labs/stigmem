@@ -3,7 +3,7 @@ feature: cognee-adapter
 spec_id: Spec-X0-Cognee-Adapter
 status: Experimental
 applies_to: stigmem v0.9.0a10
-last_updated: 2026-05-25
+last_updated: 2026-05-26
 owned_risks: []
 contributed_risks:
   - R-01
@@ -25,6 +25,10 @@ Cognee results as authorization-grade Stigmem facts.
 
 - Cognee is imported lazily, so installing the plugin does not contact Cognee or
   configure providers by itself.
+- Cognee is an optional runtime extra, not a hard dependency of the published
+  adapter package. This keeps default Stigmem plugin installs out of Cognee's
+  current transitive `diskcache==5.6.3` exposure (`CVE-2025-69872`) until the
+  upstream dependency has an audited fix path.
 - Runtime behavior is host-application driven; there is no default node hook
   that automatically exports facts.
 - Configuration is explicit through `COGNEE_*` environment variables.
@@ -44,6 +48,8 @@ Cognee results as authorization-grade Stigmem facts.
 - Add optional caller-provided redaction/filter callbacks before Cognee export.
 - Add integration tests against a pinned Cognee runtime when the project selects
   a supported Cognee version.
+- Re-evaluate the Cognee optional extra when `diskcache` or Cognee publishes a
+  non-vulnerable dependency path for `CVE-2025-69872`.
 
 ## v0.1.0 Disclaimer
 

@@ -4197,17 +4197,22 @@ name = "stigmem-plugin-cognee-adapter"
 version = "0.1.0"
 source = { editable = "experimental/cognee-adapter" }
 dependencies = [
-    { name = "cognee" },
     { name = "pydantic" },
     { name = "stigmem-node" },
 ]
 
+[package.optional-dependencies]
+cognee = [
+    { name = "cognee" },
+]
+
 [package.metadata]
 requires-dist = [
-    { name = "cognee", specifier = ">=0.1.0,<1.0.0" },
+    { name = "cognee", marker = "extra == 'cognee'", specifier = ">=0.1.0,<1.0.0" },
     { name = "pydantic", specifier = ">=2,<3" },
     { name = "stigmem-node", editable = "node" },
 ]
+provides-extras = ["cognee"]
 
 [[package]]
 name = "stigmem-plugin-lazy-instruction-discovery"

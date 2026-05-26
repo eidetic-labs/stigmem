@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from stigmem_node.plugins import PluginManifest
 
-PLUGIN_NAME = "cognee-adapter"
+PLUGIN_NAME = "stigmem-plugin-cognee-adapter"
 PLUGIN_VERSION = "0.1.0"
 REQUIRES_STIGMEM = ">=0.9.0a10"
 

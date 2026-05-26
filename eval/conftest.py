@@ -45,6 +45,7 @@ def eval_node():
     except ImportError as exc:
         pytest.skip(f"stigmem_node not importable: {exc}")
     db_mod = importlib.import_module("stigmem_node.db")
+    plugin_lifecycle = importlib.import_module("stigmem_node.plugins.lifecycle")
     settings_module = importlib.import_module("stigmem_node.settings")
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
@@ -72,28 +73,33 @@ def eval_node():
     for mod in extra:
         mod.settings = test_settings
 
+    original_discovery = plugin_lifecycle.discover_plugin_manifests
+    plugin_lifecycle.discover_plugin_manifests = lambda: ()  # type: ignore[assignment]
     db_mod.apply_migrations(db_path=tmp)
     app = create_app()
 
-    with TestClient(app, raise_server_exceptions=False) as tc:
-        # Wrap TestClient in an httpx.Client-compatible shim
-        class _TestClientAdapter(httpx.Client):
-            """Thin wrapper so harness code works with either TestClient or real httpx."""
+    try:
+        with TestClient(app, raise_server_exceptions=False) as tc:
+            # Wrap TestClient in an httpx.Client-compatible shim
+            class _TestClientAdapter(httpx.Client):
+                """Thin wrapper so harness code works with either TestClient or real httpx."""
 
-            def __init__(self, tc_inner: TestClient) -> None:
-                self._tc = tc_inner
+                def __init__(self, tc_inner: TestClient) -> None:
+                    self._tc = tc_inner
 
-            def post(self, url: str, **kwargs):  # type: ignore[override]
-                return self._tc.post(url, **kwargs)
+                def post(self, url: str, **kwargs):  # type: ignore[override]
+                    return self._tc.post(url, **kwargs)
 
-            def get(self, url: str, **kwargs):  # type: ignore[override]
-                return self._tc.get(url, **kwargs)
+                def get(self, url: str, **kwargs):  # type: ignore[override]
+                    return self._tc.get(url, **kwargs)
 
-            @property
-            def base_url(self):
-                return "http://127.0.0.1:8765"
+                @property
+                def base_url(self):
+                    return "http://127.0.0.1:8765"
 
-        yield _TestClientAdapter(tc)
+            yield _TestClientAdapter(tc)
+    finally:
+        plugin_lifecycle.discover_plugin_manifests = original_discovery  # type: ignore[assignment]
 
     # Restore settings
     settings_module.settings = original  # type: ignore[assignment]
@@ -132,6 +138,7 @@ def auth_eval_node():
     except ImportError as exc:
         pytest.skip(f"stigmem_node not importable: {exc}")
     db_mod = importlib.import_module("stigmem_node.db")
+    plugin_lifecycle = importlib.import_module("stigmem_node.plugins.lifecycle")
     settings_module = importlib.import_module("stigmem_node.settings")
 
     saved_map: dict[str, object] = {}
@@ -150,26 +157,31 @@ def auth_eval_node():
     for name in saved_map:
         sys.modules[name].settings = auth_settings
 
+    original_discovery = plugin_lifecycle.discover_plugin_manifests
+    plugin_lifecycle.discover_plugin_manifests = lambda: ()  # type: ignore[assignment]
     db_mod.apply_migrations(db_path=tmp)
     app = create_app()
 
-    with TestClient(app, raise_server_exceptions=False) as tc:
+    try:
+        with TestClient(app, raise_server_exceptions=False) as tc:
 
-        class _AuthAdapter(httpx.Client):
-            def __init__(self, tc_inner: TestClient) -> None:
-                self._tc = tc_inner
+            class _AuthAdapter(httpx.Client):
+                def __init__(self, tc_inner: TestClient) -> None:
+                    self._tc = tc_inner
 
-            def post(self, url: str, **kwargs):  # type: ignore[override]
-                return self._tc.post(url, **kwargs)
+                def post(self, url: str, **kwargs):  # type: ignore[override]
+                    return self._tc.post(url, **kwargs)
 
-            def get(self, url: str, **kwargs):  # type: ignore[override]
-                return self._tc.get(url, **kwargs)
+                def get(self, url: str, **kwargs):  # type: ignore[override]
+                    return self._tc.get(url, **kwargs)
 
-            @property
-            def base_url(self):
-                return "http://eval-authnode"
+                @property
+                def base_url(self):
+                    return "http://eval-authnode"
 
-        yield _AuthAdapter(tc)
+            yield _AuthAdapter(tc)
+    finally:
+        plugin_lifecycle.discover_plugin_manifests = original_discovery  # type: ignore[assignment]
 
     for name, saved_val in saved_map.items():
         if name in sys.modules:

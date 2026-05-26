@@ -1,3 +1,16 @@
+---
+feature: cognee-adapter
+spec_id: Spec-X0-Cognee-Adapter
+status: Experimental
+applies_to: stigmem v0.9.0a10
+last_updated: 2026-05-25
+owned_risks: []
+contributed_risks:
+  - R-01
+  - R-02
+  - R-21
+---
+
 # Cognee Adapter Security Review
 
 ## Threat Model at v0.1.0
@@ -17,6 +30,12 @@ Cognee results as authorization-grade Stigmem facts.
 - Configuration is explicit through `COGNEE_*` environment variables.
 - Opaque Cognee results are labeled with `relation="cognee:result"` rather than
   silently pretending to be exact Stigmem facts.
+- The adapter contributes to R-01 and R-02 because it handles externally sourced
+  semantic memory data that must remain provenance-scoped and authorization
+  aware.
+- The adapter contributes to R-21 because live Cognee deployments may call
+  external provider backends; operators must treat those network boundaries as
+  explicit deployment choices.
 
 ## Open Risks for Post-v0.1.0
 

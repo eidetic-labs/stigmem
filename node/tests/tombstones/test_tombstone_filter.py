@@ -21,9 +21,9 @@ from fastapi.testclient import TestClient
 
 import stigmem_node.auth as auth_mod
 import stigmem_node.db as db_mod
+import stigmem_node.subscription_delivery as delivery_mod
 import stigmem_node.tombstone_cache as tc_mod
 from stigmem_node.plugins.testing import stigmem_plugins
-from stigmem_node.subscription_delivery import deliver_pending
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -136,7 +136,12 @@ def _drain_subscription_delivery(*, timeout_s: float = 2.0) -> None:
     """
     deadline = monotonic() + timeout_s
     while True:
-        deliver_pending()
+        while not delivery_mod._DELIVER_PENDING_LOCK.acquire(blocking=False):  # noqa: SLF001
+            if monotonic() >= deadline:
+                raise AssertionError("subscription delivery lock did not become idle")
+            sleep(0.01)
+        delivery_mod._DELIVER_PENDING_LOCK.release()  # noqa: SLF001
+        delivery_mod.deliver_pending()
         with db_mod.db() as conn:
             row = conn.execute(
                 """SELECT COUNT(*) AS n

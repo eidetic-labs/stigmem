@@ -154,6 +154,7 @@ plugin-specific `STIGMEM_*_ENABLED` environment variable and a node restart.
 | Multi-tenant scoping | Boot, handoff, decision, and escalation become tenant-scoped | `stigmem-plugin-multi-tenant` / `stigmem[multi-tenant]` | `STIGMEM_MULTI_TENANT_ENABLED` |
 | Cognee adapter | Bridges selected facts into Cognee memory graphs | `stigmem-plugin-cognee-adapter` / `stigmem[cognee-adapter]` | Host-application opt-in |
 | Gemini adapter | Exposes Stigmem tools as Gemini FunctionDeclarations | `stigmem-plugin-gemini-adapter` / `stigmem[gemini-adapter]` | Host-application opt-in |
+| Letta adapter | Bridges selected facts into Letta archival memory | `stigmem-plugin-letta-adapter` / `stigmem[letta-adapter]` | Host-application opt-in |
 
 Inspect local state with `stigmem plugins list`, `stigmem plugins describe
 <plugin>`, and `stigmem plugins doctor`. Full catalog and per-plugin security

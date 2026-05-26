@@ -221,8 +221,9 @@ Progress:
   `features/cognee-adapter/`; ownership, package, dependency, and live Cognee
   validation remain future alpha release-line gates.
 - `letta-adapter` now has a canonical adapter feature record under
-  `features/letta-adapter/`; ownership, package, dependency, and live Letta
-  validation remain future alpha release-line gates.
+  `features/letta-adapter/`; package metadata and mocked validation are
+  complete for v0.9.0a10, while live Letta validation remains
+  design-partner/operator-owned for v0.1.0.
 - `zep-adapter` now has a canonical adapter feature record under
   `features/zep-adapter/`; ownership, package, dependency, and live Zep
   validation remain future alpha release-line gates.

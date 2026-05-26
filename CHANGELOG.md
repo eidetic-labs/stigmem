@@ -19,6 +19,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
   adapter, experimental opt-in. Discoverable via `stigmem plugins list` and
   installable via `pip install stigmem-plugin-gemini-adapter`. See
   [feature record](features/gemini-adapter/).
+- `stigmem-plugin-letta-adapter` v0.1.0 — Letta archival-memory bridge
+  adapter, experimental opt-in. Discoverable via `stigmem plugins list` and
+  installable via `pip install stigmem-plugin-letta-adapter`. See
+  [feature record](features/letta-adapter/).
 
 ### Changed
 
@@ -333,7 +337,7 @@ root changelog projection used during release prep.
 | Go SDK | active | `v0.9.0a1`, `0.9.xA` | [`features/sdk-go/changelog.md`](features/sdk-go/changelog.md) |
 | Intent envelope | deferred | `v0.9.0a1`, `0.9.xA` | [`features/intent-envelope/changelog.md`](features/intent-envelope/changelog.md) |
 | Lazy instruction discovery | active | `v0.9.0a1`, `0.9.xA` | [`features/lazy-instruction-discovery/changelog.md`](features/lazy-instruction-discovery/changelog.md) |
-| Letta adapter | deferred | `v0.9.0a1`, `0.9.xA` | [`features/letta-adapter/changelog.md`](features/letta-adapter/changelog.md) |
+| Letta adapter | active | `v0.9.0a1`, `v0.9.0a10` | [`features/letta-adapter/changelog.md`](features/letta-adapter/changelog.md) |
 | Memory Garden advanced ACL | active | `v0.9.0a1`, `v0.9.0a6`, `0.9.xA` | [`features/memory-garden-acl/changelog.md`](features/memory-garden-acl/changelog.md) |
 | MCP adapter | active | `v0.9.0a1`, `0.9.xA` | [`features/mcp-adapter/changelog.md`](features/mcp-adapter/changelog.md) |
 | Multi-tenant scoping | active | `v0.9.0a8`, `0.9.xA` | [`features/multi-tenant/changelog.md`](features/multi-tenant/changelog.md) |

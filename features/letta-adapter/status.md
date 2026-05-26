@@ -4,37 +4,37 @@
 
 | Field | Value |
 | --- | --- |
-| Status | `deferred` |
+| Status | `active` |
 | Stability | `experimental` |
-| First release | `0.9.0a1` |
-| Default surface | `external` |
-| Publication state | `defer` - unowned design-partner adapter; live Letta and dependency validation are not complete. |
+| First release | `0.9.0a10` |
+| Default surface | `opt-in` |
+| Publication state | `published` |
+| Package | `stigmem-plugin-letta-adapter` |
 
-The adapter source exists on `main` as experimental design-partner surface
-area. It remains deferred and outside the current alpha artifact set.
-Promotion requires an assigned owner, package validation, dependency
-validation against a known Letta version, and live integration evidence.
+The adapter source exists on `main` as experimental design-partner surface area
+and is packaged as an opt-in plugin for the v0.9.0a10 adapter publication
+batch. Live Letta integration evidence remains design-partner/operator-owned
+for v0.1.0.
 
 ## Release History
 
 | Release | Change | Evidence |
 | --- | --- | --- |
 | `v0.9.0a1` | Letta adapter source and documentation existed as experimental adapter surface area. | `experimental/letta-adapter/STATUS.md`; `experimental/letta-adapter/` |
-| `0.9.xA` planned | Decide whether to reactivate, replace, or retire the adapter after ownership and integration validation. | `docs/internal/feature-tracker.md`; `docs/compatibility-matrix.yaml` |
+| `v0.9.0a10` | Packaged as `stigmem-plugin-letta-adapter` v0.1.0 with src-layout package metadata, plugin manifest, tests, and publication projections. | `experimental/letta-adapter/pyproject.toml`; `experimental/letta-adapter/evidence.md` |
 
 ## Gate Progress
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
 | Source preservation | Keep the adapter source available for future design-partner review. | Complete | `experimental/letta-adapter/` |
-| Unit tests | Mock Letta to validate serialization, parsing, environment configuration, push, batch push, pull, filtering, and missing-dependency behavior. | Partial | `experimental/letta-adapter/tests/test_letta_adapter.py` |
-| Package validation | Confirm package metadata, install path, and dependency compatibility. | Open | `experimental/letta-adapter/pyproject.toml` |
-| Live integration | Validate against a real Letta server and agent archival memory. | Open | None currently recorded. |
-| Documentation parity | Replace legacy experimental docs with feature-owned record plus projections. | In progress | This feature record. |
+| Unit tests | Mock Letta to validate serialization, parsing, environment configuration, push, batch push, pull, filtering, and missing-dependency behavior. | Complete | `experimental/letta-adapter/tests/test_letta_adapter.py` |
+| Package validation | Confirm package metadata, install path, entry point, and dependency compatibility. | Complete | `experimental/letta-adapter/pyproject.toml`; `experimental/letta-adapter/src/stigmem_plugin_letta/manifest.py` |
+| Live integration | Validate against a real Letta server and agent archival memory. | Partial | `experimental/letta-adapter/evidence.md` |
+| Documentation parity | Feature-owned record plus catalog projections are current. | Complete | This feature record; `experimental/letta-adapter/spec.md` |
 
 ## Known Gaps
 
-- The adapter is not shipped in the current alpha artifact set.
-- The feature has no assigned owner.
-- Live Letta integration evidence is not complete.
-- Dependency, package, and version compatibility evidence are not complete.
+- Live Letta integration evidence remains operator-owned for v0.1.0.
+- The optional bridge depends on external Letta server availability.
+- Host applications own agent selection, prompt policy, and write policy.

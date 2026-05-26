@@ -432,7 +432,7 @@ export default function Home() {
           <div className={styles.heroCopy}>
             <p className={styles.eyebrow}>
               <PulseDot />
-              v0.9.0a9 · preview alpha · Apache-2.0
+              v0.9.0a10 · preview alpha · Apache-2.0
             </p>
             <h1 id="stig-hero-title" className={styles.heroTitle}>
               <span className={styles.heroLine}>Shared, scope-aware</span>
@@ -698,7 +698,7 @@ export default function Home() {
               Pre-stable. Read <code>LIMITATIONS.md</code> before integrating.
             </h2>
             <p className={styles.statusLede}>
-              Stigmem is at <code>v0.9.0a9</code> — a preview alpha. Single-org, single-node
+              Stigmem is at <code>v0.9.0a10</code> — a preview alpha. Single-org, single-node
               deployments are the currently-supported pattern. Cross-org federation needs
               hardened-core work documented in the roadmap. The version label matches the
               validated stability posture; there is no v1.0 yet, and the implied chronology

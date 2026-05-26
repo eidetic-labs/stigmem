@@ -32,6 +32,9 @@ node = ["stigmem-node>=0.9.0a9,<1.0.0"]
 # pip install stigmem[openclaw] → SDK + OpenClaw adapter
 openclaw = ["stigmem-openclaw>=0.9.0a9,<1.0.0"]
 # pip install stigmem[<feature>] → SDK + one published experimental plugin
+cognee-adapter = [
+  "stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0",
+]
 lazy-instruction-discovery = [
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
 ]
@@ -52,6 +55,7 @@ tombstones = [
 ]
 # pip install stigmem[plugins-all] → SDK + all currently published experimental plugins
 plugins-all = [
+  "stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
   "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
   "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
@@ -63,6 +67,7 @@ plugins-all = [
 all = [
   "stigmem-node>=0.9.0a9,<1.0.0",
   "stigmem-openclaw>=0.9.0a9,<1.0.0",
+  "stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
   "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
   "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
@@ -92,22 +97,23 @@ packages = []
 
 [tool.uv.workspace]
 # Per ADR-002 v1 critical-path scope + ADR-009 §2(b): only critical-path
-# packages in the default workspace. experimental/ is excluded so default
-# `uv sync` doesn't pull deferred-feature dependencies. Operators who want
-# an experimental feature install its package explicitly via
-# `pip install stigmem-plugin-<feature>` (when ADR-011 plugin packaging
-# lands) or by adding the experimental/<feature>/ path to their workspace.
+# packages in the default workspace. Only explicitly listed experimental
+# packages are included here, so default `uv sync` does not pull deferred
+# experimental dependencies. Operators who want another experimental feature
+# install its package explicitly via `pip install stigmem-plugin-<feature>` or
+# by adding the experimental/<feature>/ path to their workspace.
 members = [
   "node",
   "sdks/stigmem-py",
   "adapters/openclaw",
+  "experimental/cognee-adapter",
 ]
-exclude = ["experimental/**"]
 
 [tool.uv.sources]
 stigmem-node = { workspace = true }
 stigmem-py = { workspace = true }
 stigmem-openclaw = { workspace = true }
+stigmem-plugin-cognee-adapter = { workspace = true }
 
 [dependency-groups]
 dev = [

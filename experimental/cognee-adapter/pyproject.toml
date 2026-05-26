@@ -1,7 +1,64 @@
 [project]
-name = "stigmem-cognee-adapter"
+name = "stigmem-plugin-cognee-adapter"
 version = "0.1.0"
+description = "Experimental Cognee memory-graph bridge adapter for Stigmem."
+readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [
+  { name = "Eidetic Labs", email = "oss@eidetic-labs.ai" },
+]
+keywords = ["stigmem", "plugins", "cognee", "memory-graph", "adapter"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "pydantic>=2,<3",
+  "stigmem-node>=0.9.0a10,<1.0.0",
+]
+
+[project.optional-dependencies]
+cognee = [
+  "cognee>=0.1.0,<1.0.0",
+]
+
+[project.entry-points."stigmem.plugins"]
+cognee-adapter = "stigmem_plugin_cognee:plugin_manifest"
+
+[project.urls]
+Homepage = "https://github.com/eidetic-labs/stigmem"
+Documentation = "https://github.com/eidetic-labs/stigmem/tree/main/experimental/cognee-adapter"
+Repository = "https://github.com/eidetic-labs/stigmem"
+Issues = "https://github.com/eidetic-labs/stigmem/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stigmem_plugin_cognee"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "README.md",
+  "STATUS.md",
+  "security.md",
+  "spec.md",
+  "evidence.md",
+  "changelog.md",
+  "src/stigmem_plugin_cognee/**/*.py",
+  "tests/",
+  "demo.py",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

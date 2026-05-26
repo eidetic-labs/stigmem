@@ -8,7 +8,7 @@ TRACKER = ROOT / "docs" / "internal" / "plugin-publication-disposition.md"
 EXPECTED_DISPOSITIONS = {
     "mcp-adapter": "published",
     "obsidian-adapter": "hold",
-    "cognee-adapter": "defer",
+    "cognee-adapter": "published",
     "letta-adapter": "defer",
     "zep-adapter": "defer",
     "gemini-adapter": "defer",

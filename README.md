@@ -139,7 +139,7 @@ npx -y @eidetic-labs/stigmem-mcp@0.1.0
 
 ## Plugins
 
-Six experimental plugins are published as independent PyPI packages
+Seven experimental plugins are published as independent PyPI packages
 (`stigmem-plugin-<name>@0.1.0`). Installing makes a plugin discoverable through
 the `stigmem.plugins` entry-point group; turning behavior on still requires the
 plugin-specific `STIGMEM_*_ENABLED` environment variable and a node restart.
@@ -152,6 +152,7 @@ plugin-specific `STIGMEM_*_ENABLED` environment variable and a node restart.
 | Memory Garden ACL | Membership controls which gardens boot reads | `stigmem-plugin-memory-garden-acl` / `stigmem[memory-garden-acl]` | `STIGMEM_MEMORY_GARDEN_ACL_ENABLED` |
 | Source attestation | Recalled facts carry source trust scores | `stigmem-plugin-source-attestation` / `stigmem[source-attestation]` | `STIGMEM_SOURCE_ATTESTATION_ENABLED` |
 | Multi-tenant scoping | Boot, handoff, decision, and escalation become tenant-scoped | `stigmem-plugin-multi-tenant` / `stigmem[multi-tenant]` | `STIGMEM_MULTI_TENANT_ENABLED` |
+| Cognee adapter | Bridges selected facts into Cognee memory graphs | `stigmem-plugin-cognee-adapter` / `stigmem[cognee-adapter]` | Host-application opt-in |
 
 Inspect local state with `stigmem plugins list`, `stigmem plugins describe
 <plugin>`, and `stigmem plugins doctor`. Full catalog and per-plugin security

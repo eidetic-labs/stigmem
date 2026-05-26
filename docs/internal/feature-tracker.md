@@ -52,7 +52,7 @@ act only as wrappers, compatibility projections, or implementation directories.
 | `mcp-adapter` | MCP adapter | `adapter` | `experimental` | `external` | `none` | `experimental/mcp-adapter/` | `features/mcp-adapter/` | `migrated` | `future alpha` | Adapter surface. |
 | `sdk-go` | Go SDK | `sdk` | `experimental` | `external` | `none` | `experimental/sdk-go/` | `features/sdk-go/` | `migrated` | `future alpha` | SDK surface. |
 | `obsidian-adapter` | Obsidian adapter | `adapter` | `experimental` | `external` | `none` | `experimental/obsidian-adapter/` | `features/obsidian-adapter/` | `migrated` | `future alpha` | Adapter surface. |
-| `cognee-adapter` | Cognee adapter | `adapter` | `experimental` | `external` | `none` | `experimental/cognee-adapter/` | `features/cognee-adapter/` | `migrated` | `future alpha` | Adapter surface. |
+| `cognee-adapter` | Cognee adapter | `adapter` | `experimental` | `opt-in` | `none` | `experimental/cognee-adapter/` | `features/cognee-adapter/` | `migrated` | `v0.9.0a10` | Adapter surface packaged as an opt-in plugin. |
 | `letta-adapter` | Letta adapter | `adapter` | `experimental` | `external` | `none` | `experimental/letta-adapter/` | `features/letta-adapter/` | `migrated` | `future alpha` | Adapter surface. |
 | `zep-adapter` | Zep adapter | `adapter` | `experimental` | `external` | `none` | `experimental/zep-adapter/` | `features/zep-adapter/` | `migrated` | `future alpha` | Adapter surface. |
 | `gemini-adapter` | Gemini adapter | `adapter` | `experimental` | `external` | `none` | `experimental/gemini-adapter/` | `features/gemini-adapter/` | `migrated` | `future alpha` | Adapter surface. |

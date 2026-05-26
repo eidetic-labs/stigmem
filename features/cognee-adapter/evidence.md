@@ -4,16 +4,17 @@
 
 | Path | Purpose |
 | --- | --- |
-| `experimental/cognee-adapter/adapter.py` | Serialization, Cognee configuration, assertion, batch assertion, query, and result normalization. |
+| `experimental/cognee-adapter/src/stigmem_plugin_cognee/adapter.py` | Serialization, Cognee configuration, assertion, batch assertion, query, and result normalization. |
 | `experimental/cognee-adapter/demo.py` | Demonstration flow that asserts Stigmem facts, pushes them into Cognee, and queries the graph. |
-| `experimental/cognee-adapter/pyproject.toml` | Source package metadata for `stigmem-cognee-adapter`. |
+| `experimental/cognee-adapter/pyproject.toml` | Source package metadata for `stigmem-plugin-cognee-adapter`. |
+| `experimental/cognee-adapter/src/stigmem_plugin_cognee/manifest.py` | Stigmem plugin discovery manifest for `cognee-adapter`. |
 
 ## Tests
 
 | Evidence | Coverage |
 | --- | --- |
 | `experimental/cognee-adapter/tests/test_cognee_adapter.py` | Mocked Cognee tests for serialization, parsing, normalization, environment configuration, assertion, batch assertion, query, and missing-dependency errors. |
-| `experimental/cognee-adapter/tests/conftest.py` | Test path setup for importing the adapter module from the experimental source directory. |
+| `experimental/cognee-adapter/tests/conftest.py` | Test path setup for importing the src-layout adapter package. |
 
 ## Docs
 
@@ -36,6 +37,5 @@
 ## Evidence Gaps
 
 - Live Cognee runtime evidence is not complete.
-- Package installation and dependency compatibility evidence remain deferred.
-- The legacy docs refer to old adapter path examples in places and should be
-  treated as historical implementation notes until the adapter is reactivated.
+- Live Cognee runtime evidence is not complete.
+- Provider-specific extraction quality remains out of scope for v0.1.0.

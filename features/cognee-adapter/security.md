@@ -23,7 +23,7 @@ downstream retention part of the adapter security posture.
 - Local vector database files may retain sensitive fact text after deletion
   from Stigmem.
 - The adapter does not enforce redaction, retention, or dataset isolation.
-- Live security validation is incomplete because the feature is dormant.
+- Live security validation remains design-partner/operator-owned for v0.1.0.
 
 ## Advisories and Findings
 

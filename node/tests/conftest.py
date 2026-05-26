@@ -59,6 +59,14 @@ def _allow_unsigned_plugin_test_overrides(monkeypatch: pytest.MonkeyPatch) -> No
     )
 
 
+@pytest.fixture(autouse=True)
+def _isolate_entry_point_plugins(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plugin_lifecycle = importlib.import_module("stigmem_node.plugins.lifecycle")
+    monkeypatch.setattr(plugin_lifecycle, "discover_plugin_manifests", lambda: ())
+
+
 # ---------------------------------------------------------------------------
 # Backend selection CLI option (Phase 8 — multi-backend conformance)
 # ---------------------------------------------------------------------------

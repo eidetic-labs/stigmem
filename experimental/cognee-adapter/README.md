@@ -1,9 +1,13 @@
-# Stigmem — Cognee Adapter
+# stigmem-plugin-cognee-adapter
 
-Bridges [stigmem](https://github.com/acme/stigmem) with
+Bridges [Stigmem](https://github.com/eidetic-labs/stigmem) with
 [topoteretes/Cognee](https://github.com/topoteretes/cognee) — a knowledge-graph
 / memory layer that ingests documents and conversations, extracts entities and
 relationships via LLM, and exposes them as a queryable graph.
+
+This package is experimental and opt-in. Installing it makes the
+`cognee-adapter` plugin discoverable through the `stigmem.plugins` entry-point
+group; host applications still choose when to call the adapter.
 
 ## Federation model
 
@@ -51,18 +55,30 @@ The adapter is intentionally thin:
 
 | File | Purpose |
 |---|---|
-| `adapter.py` | Bridge adapter — serialisation, Cognee calls, normalisation |
+| `src/stigmem_plugin_cognee/adapter.py` | Bridge adapter — serialisation, Cognee calls, normalisation |
+| `src/stigmem_plugin_cognee/manifest.py` | Stigmem plugin discovery manifest |
 | `demo.py` | Runnable end-to-end demo (assert facts → push to Cognee → query) |
 | `tests/conftest.py` | pytest path setup |
-| `tests/test_adapter.py` | Unit tests (cognee mocked; no live deps required) |
+| `tests/test_cognee_adapter.py` | Unit tests (cognee mocked; no live deps required) |
 
-## Setup
+## Installation
+
+```bash
+python -m pip install 'stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0'
+```
+
+Install Cognee only in deployments that run the live bridge:
+
+```bash
+python -m pip install 'stigmem-plugin-cognee-adapter[cognee]>=0.1.0,<2.0.0'
+```
 
 ### Requirements
 
 - Python ≥ 3.11
 - `stigmem-py`: `pip install stigmem-py` (or from workspace)
-- `cognee`: `pip install cognee`
+- `cognee`: optional runtime extra for live Cognee calls; unit tests and plugin
+  discovery do not require it.
 - An LLM backend accessible by Cognee (default: OpenAI — set `OPENAI_API_KEY`
   or use `COGNEE_LLM_PROVIDER` + `COGNEE_LLM_API_KEY` for other providers)
 
@@ -92,7 +108,7 @@ COGNEE_VECTOR_DB_PATH=.cognee_db
 ### Push a single fact into Cognee
 
 ```python
-from adapter import StigmemCogneeAdapter
+from stigmem_plugin_cognee.adapter import StigmemCogneeAdapter
 
 bridge = StigmemCogneeAdapter.from_env()
 
@@ -144,7 +160,7 @@ asyncio.run(main())
 ### End-to-end demo
 
 ```bash
-cd stigmem/adapters/cognee
+cd stigmem/experimental/cognee-adapter
 STIGMEM_URL=http://localhost:8765 \
   COGNEE_LLM_PROVIDER=openai \
   COGNEE_LLM_MODEL=gpt-4o-mini \
@@ -156,15 +172,42 @@ The demo asserts six related facts about the Loom project into stigmem, pushes
 them into Cognee's graph, then queries the graph with natural-language questions
 to verify the relationships are discoverable.
 
-## Running tests
+## Enable
+
+The adapter has no node-global behavior gate at v0.1.0. Enable it in the host
+application by installing the package and importing
+`stigmem_plugin_cognee.adapter.StigmemCogneeAdapter`.
 
 ```bash
-cd stigmem
-uv run pytest adapters/cognee/tests/ -v
+python -m pip install 'stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0'
+python -m pip install 'stigmem-plugin-cognee-adapter[cognee]>=0.1.0,<2.0.0'  # live Cognee bridge
+stigmem plugins list
+```
+
+## Disable
+
+Remove the adapter from the host application path and restart the process that
+loads plugins. If it was installed only for this integration, uninstall it:
+
+```bash
+python -m pip uninstall stigmem-plugin-cognee-adapter
+```
+
+## Test
+
+```bash
+cd experimental/cognee-adapter
+python -m pytest tests/ -v
 ```
 
 No live stigmem node, Cognee instance, or LLM API key required — the `cognee`
 module is fully mocked in the test suite.
+
+## Uninstall
+
+```bash
+python -m pip uninstall stigmem-plugin-cognee-adapter
+```
 
 ## Search types
 

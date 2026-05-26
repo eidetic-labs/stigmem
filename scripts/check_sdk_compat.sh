@@ -36,6 +36,7 @@ env \
   STIGMEM_HOST=127.0.0.1 \
   STIGMEM_PORT="${PORT}" \
   STIGMEM_DB_PATH="${DB_PATH}" \
+  STIGMEM_PLUGIN_AUTO_DISCOVERY_ENABLED=false \
   uv run python -m stigmem_node.main >"${LOG_PATH}" 2>&1 &
 NODE_PID=$!
 

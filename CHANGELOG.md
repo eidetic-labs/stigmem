@@ -9,6 +9,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ## [Unreleased]
 
+### Added
+
+- `stigmem-plugin-cognee-adapter` v0.1.0 — Cognee memory-graph bridge
+  adapter, experimental opt-in. Discoverable via `stigmem plugins list` and
+  installable via `pip install stigmem-plugin-cognee-adapter`. See
+  [feature record](features/cognee-adapter/).
+
 ### Changed
 
 - Preparing the `v0.9.0a9` plugin discovery release line.
@@ -327,7 +334,7 @@ root changelog projection used during release prep.
 | MCP adapter | active | `v0.9.0a1`, `0.9.xA` | [`features/mcp-adapter/changelog.md`](features/mcp-adapter/changelog.md) |
 | Multi-tenant scoping | active | `v0.9.0a8`, `0.9.xA` | [`features/multi-tenant/changelog.md`](features/multi-tenant/changelog.md) |
 | Obsidian adapter | active | `v0.9.0a1`, `0.9.xA` | [`features/obsidian-adapter/changelog.md`](features/obsidian-adapter/changelog.md) |
-| Cognee adapter | deferred | `v0.9.0a1`, `0.9.xA` | [`features/cognee-adapter/changelog.md`](features/cognee-adapter/changelog.md) |
+| Cognee adapter | active | `v0.9.0a1`, `v0.9.0a10` | [`features/cognee-adapter/changelog.md`](features/cognee-adapter/changelog.md) |
 | OIDC SSO | active | `v0.9.0a1`, `0.9.xA` | [`features/oidc-sso/changelog.md`](features/oidc-sso/changelog.md) |
 | Ollama/LiteLLM adapter | superseded | `v0.9.0a1`, `0.9.xA` | [`features/ollama-litellm-adapter/changelog.md`](features/ollama-litellm-adapter/changelog.md) |
 | OpenAI tools adapter | deferred | `v0.9.0a1`, `0.9.xA` | [`features/openai-tools-adapter/changelog.md`](features/openai-tools-adapter/changelog.md) |

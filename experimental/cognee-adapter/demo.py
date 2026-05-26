@@ -39,11 +39,11 @@ from pathlib import Path
 
 _HERE = Path(__file__).parent
 _REPO_ROOT = _HERE.parent.parent.parent
-sys.path.insert(0, str(_HERE))
+sys.path.insert(0, str(_HERE / "src"))
 sys.path.insert(0, str(_REPO_ROOT / "sdks" / "stigmem-py" / "src"))
 
-from adapter import StigmemCogneeAdapter  # noqa: E402
 from stigmem import StigmemClient  # noqa: E402
+from stigmem_plugin_cognee.adapter import StigmemCogneeAdapter  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Demo facts — a small knowledge graph about the Loom project
@@ -158,9 +158,10 @@ async def run_demo() -> None:
         results = await bridge.query_from_cognee_async(scope=scope, query=query)
         if results:
             for rec in results:
-                print(
-                    f"    entity={rec['entity']!r}  relation={rec['relation']!r}  value={rec['value']}"
-                )
+                entity = rec["entity"]
+                relation = rec["relation"]
+                value = rec["value"]
+                print(f"    entity={entity!r}  relation={relation!r}  value={value}")
         else:
             print("    (no results)")
 

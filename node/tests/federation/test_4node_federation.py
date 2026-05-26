@@ -153,6 +153,7 @@ def _start_node(
         "STIGMEM_FEDERATION_PULL_INTERVAL_S": str(PULL_INTERVAL_S),
         "STIGMEM_FEDERATION_PUBKEY": pub_b64,
         "STIGMEM_FEDERATION_PRIVKEY": priv_b64,
+        "STIGMEM_PLUGIN_AUTO_DISCOVERY_ENABLED": "false",
         "STIGMEM_LOG_LEVEL": "error",
     }
     return subprocess.Popen(

@@ -137,6 +137,15 @@ it discoverable through the `stigmem.plugins` entry point group; adapter
 behavior still requires explicit operator configuration and does not change the
 default node security posture.
 
+Dependabot #52 / `CVE-2025-69872` flagged Cognee's transitive
+`diskcache==5.6.3` dependency for unsafe pickle deserialization when an
+attacker can write to the cache directory. The Cognee adapter removed its
+`cognee` optional dependency extra before v0.9.0a10 tagging, so default plugin
+installs, `stigmem[cognee-adapter]`, `stigmem[plugins-all]`, and
+`stigmem[all]` no longer resolve Cognee or DiskCache. Live Cognee deployments
+remain operator-owned until Cognee or DiskCache publishes an audited
+non-vulnerable dependency path.
+
 The standing publication policy remains: Critical and High vulnerabilities that
 affect supported published artifacts are handled through GHSA where applicable
 after a patched version is available; Medium and Low findings are documented in

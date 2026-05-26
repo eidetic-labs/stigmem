@@ -20,6 +20,12 @@ graphs and normalizes Cognee search results back into Stigmem-shaped records.
 Installing the package makes the adapter discoverable; the host application
 chooses when to call the bridge.
 
+The package does not publish a `cognee` extra in v0.1.0 because Cognee's
+current dependency path resolves `diskcache==5.6.3`, which is affected by
+CVE-2025-69872 unsafe pickle deserialization. Live Cognee deployments must
+install Cognee separately after accepting and mitigating the upstream
+cache-directory risk.
+
 ```bash
 python -m pip install 'stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0'
 stigmem plugins doctor

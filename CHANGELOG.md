@@ -15,6 +15,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
   adapter, experimental opt-in. Discoverable via `stigmem plugins list` and
   installable via `pip install stigmem-plugin-cognee-adapter`. See
   [feature record](features/cognee-adapter/).
+- `stigmem-plugin-gemini-adapter` v0.1.0 — Gemini FunctionDeclaration bridge
+  adapter, experimental opt-in. Discoverable via `stigmem plugins list` and
+  installable via `pip install stigmem-plugin-gemini-adapter`. See
+  [feature record](features/gemini-adapter/).
 
 ### Changed
 
@@ -325,7 +329,7 @@ root changelog projection used during release prep.
 | systemd deployment | deferred | `v0.9.0a1`, `0.9.xA` | [`features/deploy-systemd/changelog.md`](features/deploy-systemd/changelog.md) |
 | Evaluation harness | deferred | `v0.9.0a1`, `0.9.xA` | [`features/eval-harness/changelog.md`](features/eval-harness/changelog.md) |
 | Fuzzy resolver | active | `v0.9.0a1`, `0.9.xA` | [`features/fuzzy-resolver/changelog.md`](features/fuzzy-resolver/changelog.md) |
-| Gemini adapter | deferred | `v0.9.0a1`, `0.9.xA` | [`features/gemini-adapter/changelog.md`](features/gemini-adapter/changelog.md) |
+| Gemini adapter | active | `v0.9.0a1`, `v0.9.0a10` | [`features/gemini-adapter/changelog.md`](features/gemini-adapter/changelog.md) |
 | Go SDK | active | `v0.9.0a1`, `0.9.xA` | [`features/sdk-go/changelog.md`](features/sdk-go/changelog.md) |
 | Intent envelope | deferred | `v0.9.0a1`, `0.9.xA` | [`features/intent-envelope/changelog.md`](features/intent-envelope/changelog.md) |
 | Lazy instruction discovery | active | `v0.9.0a1`, `0.9.xA` | [`features/lazy-instruction-discovery/changelog.md`](features/lazy-instruction-discovery/changelog.md) |

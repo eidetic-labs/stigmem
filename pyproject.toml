@@ -35,6 +35,9 @@ openclaw = ["stigmem-openclaw>=0.9.0a9,<1.0.0"]
 cognee-adapter = [
   "stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0",
 ]
+gemini-adapter = [
+  "stigmem-plugin-gemini-adapter>=0.1.0,<2.0.0",
+]
 lazy-instruction-discovery = [
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
 ]
@@ -56,6 +59,7 @@ tombstones = [
 # pip install stigmem[plugins-all] → SDK + all currently published experimental plugins
 plugins-all = [
   "stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0",
+  "stigmem-plugin-gemini-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
   "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
   "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
@@ -68,6 +72,7 @@ all = [
   "stigmem-node>=0.9.0a9,<1.0.0",
   "stigmem-openclaw>=0.9.0a9,<1.0.0",
   "stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0",
+  "stigmem-plugin-gemini-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
   "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
   "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
@@ -107,6 +112,7 @@ members = [
   "sdks/stigmem-py",
   "adapters/openclaw",
   "experimental/cognee-adapter",
+  "experimental/gemini-adapter",
 ]
 
 [tool.uv.sources]
@@ -114,6 +120,7 @@ stigmem-node = { workspace = true }
 stigmem-py = { workspace = true }
 stigmem-openclaw = { workspace = true }
 stigmem-plugin-cognee-adapter = { workspace = true }
+stigmem-plugin-gemini-adapter = { workspace = true }
 
 [dependency-groups]
 dev = [

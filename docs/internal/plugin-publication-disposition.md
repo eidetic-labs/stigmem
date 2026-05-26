@@ -28,11 +28,12 @@ create package promises, or graduate any feature under ADR-008.
 
 The MCP adapter is classified as `published` after maintainer clearance,
 scoped npm publication, and post-publish install verification for the
-independent `0.1.0` version line. Cognee is classified as `published` for the
-v0.9.0a10 adapter batch after package metadata, feature records, and mocked
-adapter validation were brought into the publication contract. Other adapter,
-tooling, dashboard, evaluation, and deployment helper surfaces remain outside
-the publication queue until their own publication PRs land.
+independent `0.1.0` version line. Cognee and Gemini are classified as
+`published` for the v0.9.0a10 adapter batch after package metadata, feature
+records, and mocked adapter validation were brought into the publication
+contract. Other adapter, tooling, dashboard, evaluation, and deployment helper
+surfaces remain outside the publication queue until their own publication PRs
+land.
 
 ## Adapter and Tooling Order
 
@@ -43,7 +44,7 @@ the publication queue until their own publication PRs land.
 | 3 | Cognee adapter | `features/cognee-adapter/` | `experimental/cognee-adapter/` | `published` | `stigmem-plugin-cognee-adapter@0.1.0` package metadata, src-layout package, plugin manifest, README/install/uninstall guidance, security record, feature evidence, and mocked adapter tests are complete for the v0.9.0a10 adapter batch. Live Cognee runtime validation remains design-partner/operator-owned for v0.1.0. |
 | 4 | Letta adapter | `features/letta-adapter/` | `experimental/letta-adapter/` | `defer` | Assign owner; validate against a real Letta server and agent memory; refresh dependency/package compatibility. |
 | 5 | Zep adapter | `features/zep-adapter/` | `experimental/zep-adapter/` | `defer` | Assign owner; validate against Zep Cloud or self-hosted Zep; refresh dependency/package compatibility. |
-| 6 | Gemini adapter | `features/gemini-adapter/` | `experimental/gemini-adapter/` | `defer` | Assign owner; validate against a real Gemini API/model; refresh SDK/API compatibility and package metadata. |
+| 6 | Gemini adapter | `features/gemini-adapter/` | `experimental/gemini-adapter/` | `published` | `stigmem-plugin-gemini-adapter@0.1.0` package metadata, src-layout package, plugin manifest, README/install/uninstall guidance, security record, feature evidence, and mocked adapter tests are complete for the v0.9.0a10 adapter batch. Live Gemini API/model validation remains design-partner/operator-owned for v0.1.0. |
 | 7 | OpenAI-compatible tools adapter | `features/openai-tools-adapter/` | `experimental/openai-tools-adapter/` | `defer` | Assign owner; validate live LiteLLM, OpenAI SDK, and local Ollama paths; pin optional provider dependency compatibility. |
 | 8 | Paperclip adapter | `features/paperclip-adapter/` | `experimental/paperclip-adapter/` | `defer` | Define an install artifact; add automated tests; run live Paperclip validation; review delegated-agent write policy and credential scope. |
 

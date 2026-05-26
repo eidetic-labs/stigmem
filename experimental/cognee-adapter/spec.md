@@ -1,3 +1,22 @@
+---
+spec_id: Spec-X7-Cognee-Adapter
+version: 0.1.0-alpha.0
+status: Experimental
+applies_to: stigmem v0.9.0a10 plugin package
+last_updated: 2026-05-25
+supersedes: features/cognee-adapter/spec.md package projection
+depends_on:
+  - Spec-01-Fact-Model >= 0.1.0-alpha.0
+  - Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0
+  - Spec-07-Recall-Pipeline >= 0.1.0-alpha.0
+title: Cognee Adapter
+sidebar_label: Cognee Adapter
+audience: Spec
+description: "Package projection for Cognee adapter semantics."
+stability: experimental
+since: 0.9.0a10
+---
+
 # Cognee Adapter Spec
 
 ## Purpose

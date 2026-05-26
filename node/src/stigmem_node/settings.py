@@ -196,6 +196,9 @@ class Settings(BaseSettings):
     plugin_signing_required: bool = True
     # Required literal acknowledgement before unsigned-plugin loading is allowed.
     plugin_unsigned_ack: str = ""
+    # Disable installed entry-point plugin discovery for test and smoke
+    # environments that intentionally exercise the default no-plugin node.
+    plugin_auto_discovery_enabled: bool = True
     # Comma-separated Sigstore signing identities accepted for production plugin
     # registration when plugin_signing_required=true.
     plugin_trusted_publishers: str = ""

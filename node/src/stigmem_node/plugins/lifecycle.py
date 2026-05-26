@@ -35,6 +35,12 @@ def register_discovered_plugins(
     require_signatures = (
         settings.plugin_signing_required if signing_required is None else signing_required
     )
+    if not settings.plugin_auto_discovery_enabled:
+        logger.info("installed plugin auto-discovery disabled")
+        if freeze:
+            target.freeze()
+        return ()
+
     discovered = discover_plugin_manifests()
     ordered = resolve_plugin_dependencies(
         discovered,

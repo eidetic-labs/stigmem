@@ -17,8 +17,9 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 import uuid
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -28,10 +29,10 @@ from fastapi.testclient import TestClient
 
 import stigmem_node.auth as auth_mod
 import stigmem_node.settings as settings_module
+import stigmem_node.subscription_delivery as delivery_mod
 from stigmem_node.main import create_app
 from stigmem_node.plugins import PluginManifest
 from stigmem_node.plugins.testing import stigmem_plugins
-from stigmem_node.subscription_delivery import deliver_pending
 
 Settings = settings_module.Settings
 create_api_key = auth_mod.create_api_key
@@ -88,6 +89,63 @@ def _create_subscription(
     resp = client.post("/v1/subscriptions", json=body)
     assert resp.status_code == 201, resp.text
     return resp.json()
+
+
+def _wait_for_delivery_lock_idle(timeout_s: float = 5.0) -> None:
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        if delivery_mod._DELIVER_PENDING_LOCK.acquire(blocking=False):  # noqa: SLF001
+            delivery_mod._DELIVER_PENDING_LOCK.release()  # noqa: SLF001
+            return
+        time.sleep(0.01)
+    raise AssertionError("subscription delivery lock did not become idle")
+
+
+def _wait_for_subscription_event(
+    event_id: str,
+    predicate: Callable[[dict], bool],
+    timeout_s: float = 5.0,
+) -> dict:
+    """Drive production delivery until a specific event matches a predicate."""
+    import stigmem_node.db as db_mod
+
+    deadline = time.monotonic() + timeout_s
+    last_event: dict | None = None
+    while time.monotonic() < deadline:
+        with db_mod.db() as conn:
+            event = conn.execute(
+                "SELECT * FROM subscription_events WHERE id=?", (event_id,)
+            ).fetchone()
+        if event is None:
+            raise AssertionError(f"subscription event {event_id} was not found")
+        last_event = dict(event)
+        if predicate(last_event):
+            return last_event
+        _wait_for_delivery_lock_idle(timeout_s=max(0.1, deadline - time.monotonic()))
+        delivery_mod.deliver_pending()
+        time.sleep(0.01)
+    raise AssertionError(f"subscription event {event_id} did not match predicate: {last_event}")
+
+
+def _subscription_event_id(subscription_id: str) -> str:
+    import stigmem_node.db as db_mod
+
+    with db_mod.db() as conn:
+        event = conn.execute(
+            "SELECT id FROM subscription_events WHERE subscription_id=?", (subscription_id,)
+        ).fetchone()
+    if event is None:
+        raise AssertionError(f"subscription {subscription_id} has no event")
+    return event["id"]
+
+
+def _drain_subscription_event(event_id: str, timeout_s: float = 5.0) -> str:
+    event = _wait_for_subscription_event(
+        event_id,
+        lambda row: row["delivery_status"] in {"delivered", "failed"},
+        timeout_s=timeout_s,
+    )
+    return event["delivery_status"]
 
 
 # ---------------------------------------------------------------------------
@@ -362,7 +420,7 @@ def test_deliver_pending_webhook_success(client: TestClient) -> None:
         mock_client_instance.post.return_value = mock_resp
         mock_client_cls.return_value = mock_client_instance
 
-        deliver_pending()
+        delivery_mod.deliver_pending()
 
     import stigmem_node.db as db_mod
 
@@ -388,6 +446,7 @@ def test_deliver_pending_webhook_success(client: TestClient) -> None:
 def test_deliver_pending_webhook_retry_on_5xx(client: TestClient) -> None:
     sub = _create_subscription(client)
     _assert_fact(client)
+    event_id = _subscription_event_id(sub["id"])
 
     mock_resp = MagicMock()
     mock_resp.status_code = 503
@@ -399,14 +458,10 @@ def test_deliver_pending_webhook_retry_on_5xx(client: TestClient) -> None:
         mock_client_instance.post.return_value = mock_resp
         mock_client_cls.return_value = mock_client_instance
 
-        deliver_pending()
-
-    import stigmem_node.db as db_mod
-
-    with db_mod.db() as conn:
-        event = conn.execute(
-            "SELECT * FROM subscription_events WHERE subscription_id=?", (sub["id"],)
-        ).fetchone()
+        event = _wait_for_subscription_event(
+            event_id,
+            lambda row: row["delivery_attempts"] == 1,
+        )
     assert event["delivery_status"] == "pending"
     assert event["delivery_attempts"] == 1
     assert event["next_retry_at"] is not None
@@ -426,7 +481,7 @@ def test_deliver_pending_webhook_410_cancels_subscription(client: TestClient) ->
         mock_client_instance.post.return_value = mock_resp
         mock_client_cls.return_value = mock_client_instance
 
-        deliver_pending()
+        delivery_mod.deliver_pending()
 
     resp = client.get(f"/v1/subscriptions/{sub['id']}")
     assert resp.status_code == 404
@@ -469,7 +524,7 @@ def test_circuit_breaker_opens_after_threshold(client: TestClient) -> None:
                         "UPDATE subscription_events SET next_retry_at=NULL WHERE subscription_id=?",
                         (sub["id"],),
                     )
-                deliver_pending()
+                delivery_mod.deliver_pending()
 
         import stigmem_node.db as db_mod
 
@@ -493,7 +548,7 @@ def test_deliver_pending_wake(client: TestClient, capsys: pytest.CaptureFixture)
         client, on_change="wake", delivery_address="stigmem://test/agent/alice"
     )
     _assert_fact(client)
-    deliver_pending()
+    delivery_mod.deliver_pending()
 
     captured = capsys.readouterr()
     wake_lines = [line for line in captured.err.splitlines() if "stigmem_wake" in line]
@@ -530,7 +585,7 @@ def test_replay_window_returns_events(client: TestClient) -> None:
         mock_client_instance.__exit__ = MagicMock(return_value=False)
         mock_client_instance.post.return_value = mock_resp
         mock_client_cls.return_value = mock_client_instance
-        deliver_pending()
+        delivery_mod.deliver_pending()
 
     resp = client.get(f"/v1/subscriptions/{sub['id']}/events")
     assert resp.status_code == 200
@@ -628,7 +683,7 @@ def test_default_delivery_does_not_apply_advanced_garden_acl(client: TestClient)
         mock_client_instance.post.return_value = mock_resp
         mock_client_cls.return_value = mock_client_instance
 
-        deliver_pending()
+        delivery_mod.deliver_pending()
 
         mock_client_instance.post.assert_called_once()
 
@@ -688,16 +743,12 @@ def test_plugin_delivery_skipped_when_not_garden_member(
         mock_client_instance.post.return_value = mock_resp
         mock_client_cls.return_value = mock_client_instance
 
-        deliver_pending()
+        status = _drain_subscription_event(event_id)
 
         # Webhook must NOT have been called (ACL blocked delivery)
         mock_client_instance.post.assert_not_called()
 
-    with db_mod.db() as conn:
-        event = conn.execute(
-            "SELECT delivery_status FROM subscription_events WHERE id=?", (event_id,)
-        ).fetchone()
-    assert event["delivery_status"] == "delivered"  # silently marked delivered
+    assert status == "delivered"  # silently marked delivered
 
 
 # ---------------------------------------------------------------------------
@@ -757,7 +808,7 @@ def test_delivery_sanitizer_redacted(client: TestClient) -> None:
         mock_client_instance.post.side_effect = capture_post
         mock_client_cls.return_value = mock_client_instance
 
-        deliver_pending()
+        delivery_mod.deliver_pending()
 
     # Delivery succeeded; in warn mode the fact is passed through with sanitizer_warnings
     assert mock_client_instance.post.called

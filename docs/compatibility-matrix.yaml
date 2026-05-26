@@ -597,17 +597,17 @@ features:
     name: Gemini adapter
     feature_record: features/gemini-adapter/README.md
     feature_type: adapter
-    default_surface: external
+    default_surface: opt-in
     implementation_path: experimental/gemini-adapter
-    package: stigmem-gemini-adapter
+    package: stigmem-plugin-gemini-adapter
     release_lines:
       - "v0.9.0a1"
-      - "0.9.xA"
-    spec_section: (adapter)
+      - "v0.9.0a10"
+    spec_section: Spec-X7-Gemini-Adapter
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Deferred model/tooling adapter; ownership, package, dependency, and live Gemini validation remain future alpha work."
+    notes: "Experimental opt-in Gemini adapter packaged for the v0.9.0a10 adapter batch; live Gemini API/model validation remains operator-owned for v0.1.0."
 
   - id: ollama-litellm-adapter
     name: Ollama/LiteLLM adapter

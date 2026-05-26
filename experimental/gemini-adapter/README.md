@@ -1,7 +1,11 @@
-# Stigmem — Gemini Adapter
+# stigmem-plugin-gemini-adapter
 
 Integrates Stigmem with the [Google Gemini API](https://ai.google.dev) using
 Gemini's native **FunctionDeclaration** format.
+
+This package is experimental and opt-in. Installing it makes the
+`gemini-adapter` plugin discoverable through the `stigmem.plugins` entry-point
+group; host applications still choose when to call the adapter.
 
 ## Design
 
@@ -18,24 +22,37 @@ The adapter has three surfaces:
 3. **`run(system_prompt, user_message)`** — a thin agentic loop that handles
    the full tool-use turn sequence. Requires `google-generativeai` installed.
 
-The adapter depends only on `stigmem-py`. The `google-generativeai` SDK is an
-optional dependency needed only for `run()`.
+The adapter depends on Stigmem's Python client surface. The
+`google-generativeai` SDK is an optional dependency needed only for `run()`.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `adapter.py` | Adapter — function declarations + dispatch + agentic loop |
+| `src/stigmem_plugin_gemini/adapter.py` | Adapter — function declarations + dispatch + agentic loop |
+| `src/stigmem_plugin_gemini/manifest.py` | Stigmem plugin discovery manifest |
 | `tests/conftest.py` | pytest path setup |
 | `tests/test_adapter.py` | Unit tests (respx-mocked) |
 
-## Setup
+## Installation
+
+```bash
+python -m pip install 'stigmem-plugin-gemini-adapter>=0.1.0,<2.0.0'
+```
+
+Install the Gemini SDK only in deployments that use the convenience
+`run()` loop:
+
+```bash
+python -m pip install 'stigmem-plugin-gemini-adapter[gemini]>=0.1.0,<2.0.0'
+```
 
 ### Requirements
 
 - Python ≥ 3.11
 - `stigmem-py`: `pip install stigmem-py` (or from workspace)
-- Optional — for `run()`: `pip install google-generativeai`
+- `google-generativeai`: optional runtime extra for `run()`; function
+  declarations, dispatch, unit tests, and plugin discovery do not require it.
 
 ### Environment variables
 
@@ -52,7 +69,7 @@ GOOGLE_API_KEY=your-gemini-key       # required for run()
 ### Raw declarations (no Gemini SDK needed)
 
 ```python
-from adapter import STIGMEM_FUNCTION_DECLARATIONS
+from stigmem_plugin_gemini import STIGMEM_FUNCTION_DECLARATIONS
 
 # Pass to any Gemini-compatible API as plain JSON
 print(STIGMEM_FUNCTION_DECLARATIONS[0]["name"])  # → "assert_fact"
@@ -62,7 +79,7 @@ print(STIGMEM_FUNCTION_DECLARATIONS[0]["name"])  # → "assert_fact"
 
 ```python
 import google.generativeai as genai
-from adapter import StigmemGeminiAdapter
+from stigmem_plugin_gemini import StigmemGeminiAdapter
 
 genai.configure(api_key="your-gemini-key")
 adapter = StigmemGeminiAdapter.from_env()
@@ -94,7 +111,7 @@ for part in response.candidates[0].content.parts:
 
 ```python
 import google.generativeai as genai
-from adapter import StigmemGeminiAdapter
+from stigmem_plugin_gemini import StigmemGeminiAdapter
 
 genai.configure(api_key="your-gemini-key")
 adapter = StigmemGeminiAdapter.from_env()
@@ -106,14 +123,41 @@ answer = adapter.run(
 print(answer)
 ```
 
-## Running tests
+## Enable
+
+The adapter has no node-global behavior gate at v0.1.0. Enable it in the host
+application by installing the package and importing
+`stigmem_plugin_gemini.StigmemGeminiAdapter`.
+
+```bash
+python -m pip install 'stigmem-plugin-gemini-adapter>=0.1.0,<2.0.0'
+python -m pip install 'stigmem-plugin-gemini-adapter[gemini]>=0.1.0,<2.0.0'  # live Gemini loop
+stigmem plugins list
+```
+
+## Disable
+
+Remove the adapter from the host application path and restart the process that
+loads plugins. If it was installed only for this integration, uninstall it:
+
+```bash
+python -m pip uninstall stigmem-plugin-gemini-adapter
+```
+
+## Test
 
 ```bash
 cd stigmem
-uv run pytest adapters/gemini/tests/ -v
+uv run pytest experimental/gemini-adapter/tests/ -v
 ```
 
 No live node or Gemini API key required — all HTTP calls are mocked with respx.
+
+## Uninstall
+
+```bash
+python -m pip uninstall stigmem-plugin-gemini-adapter
+```
 
 ## Protocol notes
 

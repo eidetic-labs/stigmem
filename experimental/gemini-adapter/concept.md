@@ -6,7 +6,7 @@ audience: Integrator
 
 # Stigmem in Gemini (E5)
 
-**Package:** `stigmem/adapters/gemini/adapter.py`
+**Package:** `stigmem-plugin-gemini-adapter`
 
 Integrates Stigmem with the [Google Gemini API](https://ai.google.dev) using
 Gemini's native `FunctionDeclaration` format. No MCP server required — the
@@ -43,7 +43,7 @@ adapter calls the Stigmem node directly over HTTP.
 ### Raw declarations — no Gemini SDK needed
 
 ```python
-from adapter import STIGMEM_FUNCTION_DECLARATIONS
+from stigmem_plugin_gemini import STIGMEM_FUNCTION_DECLARATIONS
 
 # Pass as plain JSON to any Gemini-compatible REST endpoint
 print(STIGMEM_FUNCTION_DECLARATIONS[0]["name"])  # → "assert_fact"
@@ -53,7 +53,7 @@ print(STIGMEM_FUNCTION_DECLARATIONS[0]["name"])  # → "assert_fact"
 
 ```python
 import google.generativeai as genai
-from adapter import StigmemGeminiAdapter
+from stigmem_plugin_gemini import StigmemGeminiAdapter
 
 genai.configure(api_key="your-gemini-key")
 adapter = StigmemGeminiAdapter.from_env()
@@ -88,7 +88,7 @@ for part in response.candidates[0].content.parts:
 
 ```python
 import google.generativeai as genai
-from adapter import StigmemGeminiAdapter
+from stigmem_plugin_gemini import StigmemGeminiAdapter
 
 genai.configure(api_key="your-gemini-key")
 adapter = StigmemGeminiAdapter.from_env()
@@ -108,7 +108,7 @@ No live node or Gemini key required — all HTTP is mocked with `respx`.
 
 ```bash
 cd stigmem
-uv run pytest adapters/gemini/tests/ -v
+uv run pytest experimental/gemini-adapter/tests/ -v
 ```
 
 ## Protocol notes

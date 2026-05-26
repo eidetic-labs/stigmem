@@ -4,23 +4,24 @@
 
 | Path | Purpose |
 | --- | --- |
-| `experimental/gemini-adapter/adapter.py` | Gemini function declarations, Stigmem dispatch, environment configuration, and optional Gemini run loop. |
-| `experimental/gemini-adapter/pyproject.toml` | Source package metadata for `stigmem-gemini-adapter`. |
+| `experimental/gemini-adapter/src/stigmem_plugin_gemini/adapter.py` | Gemini function declarations, Stigmem dispatch, environment configuration, and optional Gemini run loop. |
+| `experimental/gemini-adapter/src/stigmem_plugin_gemini/manifest.py` | Stigmem plugin discovery manifest. |
+| `experimental/gemini-adapter/pyproject.toml` | Package metadata for `stigmem-plugin-gemini-adapter`. |
 
 ## Tests
 
 | Evidence | Coverage |
 | --- | --- |
 | `experimental/gemini-adapter/tests/test_gemini_adapter.py` | Tests for function declarations, environment configuration, dispatch behavior, HTTP mocking, and error handling. |
-| `experimental/gemini-adapter/tests/conftest.py` | Test path setup for importing the adapter module from the experimental source directory. |
+| `experimental/gemini-adapter/tests/conftest.py` | Test path setup for importing the src-layout adapter package. |
 
 ## Docs
 
 | Path | Coverage |
 | --- | --- |
-| `experimental/gemini-adapter/README.md` | Legacy adapter overview, setup, usage, and protocol notes. |
-| `experimental/gemini-adapter/concept.md` | Legacy concept guidance for Gemini function-calling integration. |
-| `experimental/gemini-adapter/STATUS.md` | Legacy status statement now superseded by this feature record. |
+| `experimental/gemini-adapter/README.md` | Adapter overview, install, usage, enable/disable, and protocol notes. |
+| `experimental/gemini-adapter/spec.md` | Package projection for adapter semantics. |
+| `experimental/gemini-adapter/evidence.md` | Package-level validation evidence. |
 
 ## Projection Checks
 
@@ -35,6 +36,6 @@
 ## Evidence Gaps
 
 - Live Gemini API evidence is not complete.
-- Package installation and dependency compatibility evidence remain deferred.
-- The legacy docs refer to old adapter path examples in places and should be
-  treated as historical implementation notes until the adapter is reactivated.
+- Live Gemini API evidence is not complete.
+- Live model acceptance across Gemini model families remains outside the v0.1.0
+  automated release gate.

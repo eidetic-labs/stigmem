@@ -371,8 +371,8 @@ Read the spec at
 
 <div>
 <dt>Gemini adapter</dt>
-<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/gemini-adapter"><code>features/gemini-adapter</code></a>; package and live Gemini validation remain future alpha work.</dd>
+<dt><span className="stigmem-fields__type">Experimental, opt-in</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/gemini-adapter"><code>features/gemini-adapter</code></a>; packaged as <code>stigmem-plugin-gemini-adapter</code> for v0.9.0a10; live Gemini validation remains operator-owned for v0.1.0.</dd>
 </div>
 
 <div>

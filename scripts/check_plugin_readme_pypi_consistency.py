@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 PLUGINS: tuple[tuple[str, str], ...] = (
     ("cognee-adapter", "stigmem-plugin-cognee-adapter"),
+    ("gemini-adapter", "stigmem-plugin-gemini-adapter"),
     ("lazy-instruction-discovery", "stigmem-plugin-lazy-instruction-discovery"),
     ("memory-garden-acl", "stigmem-plugin-memory-garden-acl"),
     ("multi-tenant", "stigmem-plugin-multi-tenant"),

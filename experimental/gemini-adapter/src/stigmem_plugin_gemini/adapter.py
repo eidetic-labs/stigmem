@@ -8,7 +8,7 @@ build a ``genai.Tool`` object.
 
 Typical usage::
 
-    from adapter import StigmemGeminiAdapter
+    from stigmem_plugin_gemini import StigmemGeminiAdapter
 
     adapter = StigmemGeminiAdapter.from_env()
 
@@ -33,7 +33,6 @@ import os
 from typing import Any
 
 from pydantic import TypeAdapter
-
 from stigmem import StigmemClient
 from stigmem.exceptions import StigmemError
 from stigmem.models import FactValue
@@ -100,7 +99,9 @@ STIGMEM_FUNCTION_DECLARATIONS: list[dict[str, Any]] = [
                 },
                 "scope": {
                     "type": "STRING",
-                    "description": "Visibility scope: local, team, company, public. Default company.",
+                    "description": (
+                        "Visibility scope: local, team, company, public. Default company."
+                    ),
                 },
                 "valid_until": {
                     "type": "STRING",
@@ -250,7 +251,9 @@ STIGMEM_FUNCTION_DECLARATIONS: list[dict[str, Any]] = [
                 },
                 "stale_lookahead_s": {
                     "type": "INTEGER",
-                    "description": "Seconds ahead to consider a fact 'soon-to-expire'. Default 86400.",
+                    "description": (
+                        "Seconds ahead to consider a fact 'soon-to-expire'. Default 86400."
+                    ),
                 },
             },
             "required": ["scope"],
@@ -293,7 +296,7 @@ class StigmemGeminiAdapter:
         self._model = model
 
     @classmethod
-    def from_env(cls) -> "StigmemGeminiAdapter":
+    def from_env(cls) -> StigmemGeminiAdapter:
         return cls(
             url=os.environ["STIGMEM_URL"],
             api_key=os.environ.get("STIGMEM_API_KEY"),

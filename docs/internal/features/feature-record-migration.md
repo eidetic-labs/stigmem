@@ -227,8 +227,9 @@ Progress:
   `features/zep-adapter/`; ownership, package, dependency, and live Zep
   validation remain future alpha release-line gates.
 - `gemini-adapter` now has a canonical adapter feature record under
-  `features/gemini-adapter/`; ownership, package, dependency, and live Gemini
-  validation remain future alpha release-line gates.
+  `features/gemini-adapter/`; package metadata and mocked validation are
+  complete for v0.9.0a10, while live Gemini validation remains
+  design-partner/operator-owned for v0.1.0.
 - `ollama-litellm-adapter` now has a canonical compatibility feature record
   under `features/ollama-litellm-adapter/`; implementation detail is
   consolidated under the OpenAI-compatible tools adapter.

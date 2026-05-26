@@ -315,6 +315,9 @@ jobs:
           - name: stigmem-plugin-cognee-adapter
             dir: experimental/cognee-adapter
             use_oidc: true
+          - name: stigmem-plugin-gemini-adapter
+            dir: experimental/gemini-adapter
+            use_oidc: true
 
     steps:
       - uses: actions/checkout@v6

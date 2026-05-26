@@ -3,7 +3,7 @@
 Run with::
 
     cd stigmem
-    uv run pytest adapters/gemini/tests/ -v
+    uv run pytest experimental/gemini-adapter/tests/ -v
 """
 
 from __future__ import annotations
@@ -13,9 +13,7 @@ import json
 import httpx
 import pytest
 import respx
-
-# conftest.py adds the adapter directory to sys.path
-from adapter import STIGMEM_FUNCTION_DECLARATIONS, StigmemGeminiAdapter
+from stigmem_plugin_gemini import STIGMEM_FUNCTION_DECLARATIONS, StigmemGeminiAdapter
 
 BASE = "http://test-stigmem"
 SOURCE = "agent:gemini"

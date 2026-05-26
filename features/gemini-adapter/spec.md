@@ -3,12 +3,12 @@
 ## Scope
 
 The Gemini adapter maps Stigmem tool operations into Gemini-native function
-declarations and dispatch behavior. It does not define Gemini API behavior,
-Stigmem node API semantics, or a stable adapter packaging contract.
+declarations and dispatch behavior. It does not define Gemini API behavior or
+Stigmem node API semantics.
 
 This feature covers:
 
-- the `stigmem-gemini-adapter` source package under
+- the `stigmem-plugin-gemini-adapter` source package under
   `experimental/gemini-adapter`;
 - `STIGMEM_FUNCTION_DECLARATIONS` in Gemini `FunctionDeclaration`-shaped JSON;
 - `gemini_tools()` for returning those declarations;
@@ -46,14 +46,14 @@ shape separate from OpenAI-style lower-case JSON Schema declarations.
 
 ## Non-Goals
 
-- Shipping the adapter in the current alpha artifact set.
-- Defining stable Gemini SDK package compatibility.
+- Defining stable Gemini SDK package compatibility beyond the v0.1.0 optional
+  runtime extra.
 - Running an MCP server.
 - Making Gemini required for Stigmem node availability.
 - Defining new Stigmem protocol semantics.
 
 ## Canonical Spec Assignment
 
-There is no Spec-X assignment for the Gemini adapter. It is an external adapter
-around existing Stigmem tool and client behavior, not a standalone Stigmem
-protocol module.
+`Spec-X7-Gemini-Adapter` is the package projection for this external adapter.
+It remains an adapter around existing Stigmem tool and client behavior, not a
+standalone Stigmem protocol module.

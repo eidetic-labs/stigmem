@@ -321,6 +321,9 @@ jobs:
           - name: stigmem-plugin-letta-adapter
             dir: experimental/letta-adapter
             use_oidc: true
+          - name: stigmem-plugin-openai-tools-adapter
+            dir: experimental/openai-tools-adapter
+            use_oidc: true
           - name: stigmem-plugin-zep-adapter
             dir: experimental/zep-adapter
             use_oidc: true

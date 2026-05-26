@@ -615,7 +615,7 @@ features:
     feature_type: adapter
     default_surface: external
     implementation_path: experimental/openai-tools-adapter
-    package: stigmem-openai-tools-adapter
+    package: stigmem-plugin-openai-tools-adapter
     release_lines:
       - "v0.9.0a1"
       - "0.9.xA"
@@ -623,23 +623,23 @@ features:
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Superseded compatibility identity for local Ollama and LiteLLM usage; behavior and tests live with the OpenAI-compatible tools adapter."
+    notes: "Superseded compatibility identity for local Ollama and LiteLLM usage; behavior and tests live with the OpenAI-compatible tools adapter package."
 
   - id: openai-tools-adapter
     name: OpenAI tools adapter
     feature_record: features/openai-tools-adapter/README.md
     feature_type: adapter
-    default_surface: external
+    default_surface: opt-in
     implementation_path: experimental/openai-tools-adapter
-    package: stigmem-openai-tools-adapter
+    package: stigmem-plugin-openai-tools-adapter
     release_lines:
       - "v0.9.0a1"
-      - "0.9.xA"
-    spec_section: (adapter)
+      - "v0.9.0a10"
+    spec_section: Spec-X7-OpenAI-Tools-Adapter
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Deferred OpenAI-compatible tool-use adapter; package, dependency, ownership, and live provider validation remain future alpha work."
+    notes: "Experimental opt-in OpenAI-compatible tool-use adapter packaged for the v0.9.0a10 adapter batch; live LiteLLM, OpenAI SDK, and Ollama validation remains operator-owned for v0.1.0."
 
   - id: paperclip-adapter
     name: Paperclip adapter

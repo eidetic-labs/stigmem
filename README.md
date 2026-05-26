@@ -127,8 +127,8 @@ Individual plugin extras: `stigmem[lazy-instruction-discovery]`,
 `stigmem[memory-garden-acl]`, `stigmem[multi-tenant]`,
 `stigmem[source-attestation]`, `stigmem[time-travel]`,
 `stigmem[tombstones]`, `stigmem[cognee-adapter]`,
-`stigmem[gemini-adapter]`, `stigmem[letta-adapter]`, and
-`stigmem[zep-adapter]`.
+`stigmem[gemini-adapter]`, `stigmem[letta-adapter]`,
+`stigmem[openai-tools-adapter]`, and `stigmem[zep-adapter]`.
 Each is an independently versioned PyPI package (`stigmem-plugin-<name>`)
 released under [ADR-011](docs/adr/011-plugin-independent-versioning.md).
 
@@ -142,10 +142,11 @@ npx -y @eidetic-labs/stigmem-mcp@0.1.0
 
 ## Plugins
 
-Ten experimental plugins are published as independent PyPI packages
+Eleven experimental plugins are published as independent PyPI packages
 (`stigmem-plugin-<name>@0.1.0`). Installing makes a plugin discoverable through
-the `stigmem.plugins` entry-point group; turning behavior on still requires the
-plugin-specific `STIGMEM_*_ENABLED` environment variable and a node restart.
+the `stigmem.plugins` entry-point group. Node behavior plugins still require
+their plugin-specific `STIGMEM_*_ENABLED` environment variable and a node
+restart; adapter packages require host-application opt-in.
 
 | Plugin | What it adds | Package / extra | Enable gate |
 | --- | --- | --- | --- |
@@ -158,6 +159,7 @@ plugin-specific `STIGMEM_*_ENABLED` environment variable and a node restart.
 | Cognee adapter | Bridges selected facts into Cognee memory graphs | `stigmem-plugin-cognee-adapter` / `stigmem[cognee-adapter]` | Host-application opt-in |
 | Gemini adapter | Exposes Stigmem tools as Gemini FunctionDeclarations | `stigmem-plugin-gemini-adapter` / `stigmem[gemini-adapter]` | Host-application opt-in |
 | Letta adapter | Bridges selected facts into Letta archival memory | `stigmem-plugin-letta-adapter` / `stigmem[letta-adapter]` | Host-application opt-in |
+| OpenAI tools adapter | Exposes Stigmem tools as OpenAI-compatible function calls | `stigmem-plugin-openai-tools-adapter` / `stigmem[openai-tools-adapter]` | Host-application opt-in |
 | Zep adapter | Bridges selected facts into Zep session memory | `stigmem-plugin-zep-adapter` / `stigmem[zep-adapter]` | Host-application opt-in |
 
 Inspect local state with `stigmem plugins list`, `stigmem plugins describe

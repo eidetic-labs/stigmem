@@ -236,8 +236,9 @@ Progress:
   under `features/ollama-litellm-adapter/`; implementation detail is
   consolidated under the OpenAI-compatible tools adapter.
 - `openai-tools-adapter` now has a canonical adapter feature record under
-  `features/openai-tools-adapter/`; package, dependency, ownership, and live
-  model validation remain future alpha release-line gates.
+  `features/openai-tools-adapter/`; package metadata and mocked validation are
+  complete for v0.9.0a10, while live LiteLLM, OpenAI SDK, and Ollama validation
+  remain operator-owned for v0.1.0.
 - `paperclip-adapter` now has a canonical adapter feature record under
   `features/paperclip-adapter/`; installation, ownership, live Paperclip, and
   security validation remain future alpha release-line gates.

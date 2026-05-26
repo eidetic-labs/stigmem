@@ -53,12 +53,12 @@ Gemini adapter's native `FunctionDeclaration` format.
 
 - MCP transport or protocol negotiation.
 - Provider-specific model certification.
-- Shipping this adapter in the default alpha artifact set before validation
-  gates complete.
+- Shipping provider SDKs in the default alpha artifact set.
 - Maintaining a second Ollama/LiteLLM implementation separate from this
   OpenAI-compatible adapter.
 
 ## Spec Assignment
 
-There is no Spec-X assignment for the OpenAI tools adapter. It is an
-experimental external adapter surface, not a protocol-bearing feature.
+The canonical feature spec assignment is `Spec-X7-OpenAI-Tools-Adapter`. The
+adapter is an external integration spec around existing Stigmem fact/query
+behavior, not a new core protocol module.

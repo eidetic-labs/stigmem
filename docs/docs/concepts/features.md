@@ -353,8 +353,8 @@ Read the spec at
 
 <div>
 <dt>OpenAI tools adapter</dt>
-<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/openai-tools-adapter"><code>features/openai-tools-adapter</code></a>; package, dependency, and live provider validation remain future alpha work.</dd>
+<dt><span className="stigmem-fields__type">Experimental, opt-in</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/openai-tools-adapter"><code>features/openai-tools-adapter</code></a>; packaged as <code>stigmem-plugin-openai-tools-adapter</code> for v0.9.0a10; live LiteLLM, OpenAI SDK, and Ollama validation remains operator-owned for v0.1.0.</dd>
 </div>
 
 <div>

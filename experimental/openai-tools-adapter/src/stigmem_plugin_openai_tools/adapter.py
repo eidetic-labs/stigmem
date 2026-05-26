@@ -7,7 +7,7 @@ Stigmem tools without going through MCP.
 
 Typical usage::
 
-    from adapter import StigmemOpenAIToolsAdapter
+    from stigmem_plugin_openai_tools import StigmemOpenAIToolsAdapter
 
     adapter = StigmemOpenAIToolsAdapter.from_env()
 
@@ -29,7 +29,6 @@ import os
 from typing import Any
 
 from pydantic import TypeAdapter
-
 from stigmem import StigmemClient
 from stigmem.exceptions import StigmemError
 from stigmem.models import FactValue
@@ -207,7 +206,9 @@ STIGMEM_TOOLS: list[dict[str, Any]] = [
                     },
                     "cursor": {
                         "type": "string",
-                        "description": "Opaque cursor from the previous call. Omit to start from now.",
+                        "description": (
+                            "Opaque cursor from the previous call. Omit to start from now."
+                        ),
                     },
                     "limit": {
                         "type": "integer",
@@ -252,7 +253,9 @@ STIGMEM_TOOLS: list[dict[str, Any]] = [
                     },
                     "stale_lookahead_s": {
                         "type": "integer",
-                        "description": "Seconds ahead to consider a fact soon-to-expire. Default 86400.",
+                        "description": (
+                            "Seconds ahead to consider a fact soon-to-expire. Default 86400."
+                        ),
                     },
                 },
                 "required": ["scope"],
@@ -298,7 +301,7 @@ class StigmemOpenAIToolsAdapter:
         self._source = source_entity
 
     @classmethod
-    def from_env(cls) -> "StigmemOpenAIToolsAdapter":
+    def from_env(cls) -> StigmemOpenAIToolsAdapter:
         return cls(
             url=os.environ["STIGMEM_URL"],
             api_key=os.environ.get("STIGMEM_API_KEY"),

@@ -3,7 +3,7 @@
 Run with::
 
     cd stigmem
-    uv run pytest adapters/openai-tools/tests/ -v
+    uv run pytest experimental/openai-tools-adapter/tests/ -v
 """
 
 from __future__ import annotations
@@ -13,9 +13,7 @@ import json
 import httpx
 import pytest
 import respx
-
-# conftest.py adds the adapter directory to sys.path
-from adapter import STIGMEM_TOOLS, StigmemOpenAIToolsAdapter
+from stigmem_plugin_openai_tools.adapter import STIGMEM_TOOLS, StigmemOpenAIToolsAdapter
 
 BASE = "http://test-stigmem"
 SOURCE = "agent:openai-tools"

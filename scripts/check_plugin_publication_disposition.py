@@ -12,7 +12,7 @@ EXPECTED_DISPOSITIONS = {
     "gemini-adapter": "published",
     "letta-adapter": "published",
     "zep-adapter": "published",
-    "openai-tools-adapter": "defer",
+    "openai-tools-adapter": "published",
     "paperclip-adapter": "defer",
     "dashboard": "defer",
     "eval-harness": "defer",

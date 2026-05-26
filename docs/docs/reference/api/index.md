@@ -640,7 +640,7 @@ Human principals can obtain an API key via OIDC. Configure `STIGMEM_OIDC_*` env 
 
 Default installs resolve all API keys into the single `default` tenant. To use non-default tenants, install and enable `stigmem-plugin-multi-tenant`, then provision API keys with the target `tenant_id`.
 
-Multi-tenant scoping is experimental in v0.9.0a9. It does not yet provide shared-node readiness, per-tenant quota/resource controls, or tenant-aware non-default federation.
+Multi-tenant scoping is experimental in v0.9.0a10. It does not yet provide shared-node readiness, per-tenant quota/resource controls, or tenant-aware non-default federation.
 
 ### Federation peer tokens
 

@@ -21,8 +21,8 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 <div className="stigmem-grid">
 
-<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22; <strong>v0.9.0a5 shipped</strong> 2026-05-22; <strong>v0.9.0a6 shipped</strong> 2026-05-23; <strong>v0.9.0a7 shipped</strong> 2026-05-23; <strong>v0.9.0a8 shipped</strong> 2026-05-23; <strong>v0.9.0a9 release candidate</strong> 2026-05-24.</p></div>
-<div><h4>v0.9.0a9</h4><p>Active plugin discovery and publication-readiness release candidate. Does not open beta, RC, GA, or a supported-plugin stability claim.</p></div>
+<div><h4>v0.9.0aN</h4><p>Alpha series. Posture calibration + plugin extraction. <strong>v0.9.0a1 shipped</strong> 2026-05-08; <strong>v0.9.0a2 tagged</strong> 2026-05-18; <strong>v0.9.0a3 shipped</strong> 2026-05-22; <strong>v0.9.0a4 shipped</strong> 2026-05-22; <strong>v0.9.0a5 shipped</strong> 2026-05-22; <strong>v0.9.0a6 shipped</strong> 2026-05-23; <strong>v0.9.0a7 shipped</strong> 2026-05-23; <strong>v0.9.0a8 shipped</strong> 2026-05-23; <strong>v0.9.0a9 shipped</strong> 2026-05-25; <strong>v0.9.0a10 release candidate</strong> 2026-05-26.</p></div>
+<div><h4>v0.9.0a10</h4><p>Active adapter-batch publication release candidate. Does not open beta, RC, GA, or a supported-plugin stability claim.</p></div>
 <div><h4>Future beta line</h4><p>Hardened core, 30-day external operator soak. No active milestone today.</p></div>
 <div><h4>Future release-candidate line</h4><p>Observation window after hardened-core exit. No active milestone today.</p></div>
 <div><h4>Future GA line</h4><p>Wire format committed, compatibility commitment honored across the v1.x line. No active milestone today.</p></div>
@@ -31,16 +31,17 @@ A single pivot for "what shipped in release X, what remains in release Y, and wh
 
 ---
 
-## v0.9.0a9 — Plugin discovery and publication readiness
+## v0.9.0a10 — Adapter batch publication readiness
 
 <div className="stigmem-lead">
 
-**Active release candidate for plugin discovery, package evidence, and current release-line documentation.**
+**Active release candidate for adapter package publication, package evidence, and current release-line documentation.**
 
-`v0.9.0a9` validates the public plugin catalog, scoped MCP npm publication
-evidence, Trusted Publisher release path, current compatibility projections,
-and release-line documentation before tag. Experimental plugins remain opt-in
-and unsupported unless a future ADR-008 graduation gate says otherwise.
+`v0.9.0a10` validates the Cognee, Gemini, Letta, OpenAI-compatible tools, and
+Zep adapter packages as independently versioned `0.1.0` experimental plugins.
+The release keeps adapter behavior opt-in, records package evidence, updates
+current compatibility projections, and preserves the Trusted Publisher release
+path before tag.
 
 </div>
 
@@ -55,7 +56,56 @@ and unsupported unless a future ADR-008 graduation gate says otherwise.
 <div>
 <dt>Milestone</dt>
 <dt><span className="stigmem-fields__type">release candidate</span></dt>
-<dd>Tracked at milestone v0.9.0a9; release-readiness requires zero open issues before tag.</dd>
+<dd>Tracked at milestone v0.9.0a10; release-readiness requires zero open issues before tag.</dd>
+</div>
+
+<div>
+<dt>CHANGELOG</dt>
+<dt><span className="stigmem-fields__type">prepared</span></dt>
+<dd>[CHANGELOG.md](https://github.com/eidetic-labs/stigmem/blob/main/CHANGELOG.md) includes `[0.9.0a10]` release notes.</dd>
+</div>
+
+<div>
+<dt>Entry</dt>
+<dt><span className="stigmem-fields__type">ready</span></dt>
+<dd>`v0.9.0a9` shipped; adapter package records, manifests, and publication surfaces are complete.</dd>
+</div>
+
+<div>
+<dt>Exit</dt>
+<dt><span className="stigmem-fields__type">ready for tag</span></dt>
+<dd>Version surfaces, release evidence, docs projections, plugin catalog, and release-readiness gates pass for `v0.9.0a10`.</dd>
+</div>
+
+</div>
+
+---
+
+## v0.9.0a9 — Plugin discovery and publication readiness
+
+<div className="stigmem-lead">
+
+**Historical alpha release for plugin discovery, package evidence, and current release-line documentation.**
+
+`v0.9.0a9` validated the public plugin catalog, scoped MCP npm publication
+evidence, Trusted Publisher release path, current compatibility projections,
+and release-line documentation. Experimental plugins remained opt-in and
+unsupported unless a future ADR-008 graduation gate says otherwise.
+
+</div>
+
+<div className="stigmem-fields">
+
+<div>
+<dt>Area</dt>
+<dt><span className="stigmem-fields__type">Status</span></dt>
+<dd>Notes</dd>
+</div>
+
+<div>
+<dt>Milestone</dt>
+<dt><span className="stigmem-fields__type">shipped</span></dt>
+<dd>Tracked at milestone v0.9.0a9 and shipped as GitHub release v0.9.0a9.</dd>
 </div>
 
 <div>
@@ -67,13 +117,13 @@ and unsupported unless a future ADR-008 graduation gate says otherwise.
 <div>
 <dt>Entry</dt>
 <dt><span className="stigmem-fields__type">ready</span></dt>
-<dd>`v0.9.0a8` shipped; plugin publication readiness and MCP package evidence are recorded.</dd>
+<dd>`v0.9.0a8` shipped; plugin publication readiness and MCP package evidence were recorded.</dd>
 </div>
 
 <div>
 <dt>Exit</dt>
-<dt><span className="stigmem-fields__type">ready for tag</span></dt>
-<dd>Version surfaces, release evidence, docs projections, plugin catalog, and release-readiness gates pass for `v0.9.0a9`.</dd>
+<dt><span className="stigmem-fields__type">shipped</span></dt>
+<dd>Version surfaces, release evidence, docs projections, plugin catalog, and release-readiness gates passed for `v0.9.0a9`.</dd>
 </div>
 
 </div>

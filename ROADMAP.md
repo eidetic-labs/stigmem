@@ -2,8 +2,8 @@
 
 > Public roadmap for stigmem. Milestone-gated, not time-gated — version lines complete when their exit criteria are met.
 >
-> **Current release candidate:** v0.9.0a9. **Active horizon:** plugin discovery and publication readiness only; no beta, RC, or GA milestone is open (per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
-> **Last updated:** 2026-05-24.
+> **Current release candidate:** v0.9.0a10. **Active horizon:** adapter batch publication readiness only; no beta, RC, or GA milestone is open (per [ADR-001](docs/adr/001-versioning.md) + [ADR-019](docs/adr/019-amendment-to-adr-001-prerelease-version-strings.md)).
+> **Last updated:** 2026-05-26.
 
 ---
 
@@ -42,11 +42,12 @@ tenant-scoped request context through `stigmem-plugin-multi-tenant`. The
 detailed historical release contract lives in
 [`docs/internal/releases/v0.9.0a8-roadmap.md`](docs/internal/releases/v0.9.0a8-roadmap.md).
 
-`v0.9.0a9` is the current plugin discovery and publication-readiness release
-candidate. It validates the public plugin catalog, scoped MCP package
-publication evidence, Trusted Publisher release path, and current release-line
-documentation before tag. This is not a beta/RC/GA opening and does not make
-any plugin supported or stable. The detailed readiness contract lives in
+`v0.9.0a10` is the current adapter batch publication-readiness release
+candidate. It validates the Cognee, Gemini, Letta, OpenAI-compatible tools, and
+Zep adapter packages as opt-in experimental plugins, plus the public plugin
+catalog, Trusted Publisher release path, and current release-line documentation
+before tag. This is not a beta/RC/GA opening and does not make any plugin
+supported or stable. The detailed readiness contract lives in
 [`docs/internal/releases/plugin-publication-readiness.md`](docs/internal/releases/plugin-publication-readiness.md).
 
 The broader alpha deployment sequence remains intact. The detailed alpha-series
@@ -62,7 +63,7 @@ horizons and Phase A exit evidence, lives in
 | `v0.9.0a6` | Memory Garden advanced ACL extraction into an opt-in experimental plugin; basic garden CRUD and direct guards remain core. | Shipped |
 | `v0.9.0a7` | Source-attestation extraction into an opt-in experimental plugin; default source checks remain inert without plugin registration. | Shipped |
 | `v0.9.0a8` | Multi-tenant isolation extraction into an opt-in experimental plugin, completing the planned alpha extraction train. | Shipped |
-| `v0.9.0a9` | Plugin discovery and publication readiness, including package metadata, conformance, release evidence, MCP package publication, and Trusted Publisher path. | Release candidate |
+| `v0.9.0a10` | Adapter batch publication readiness, including package metadata, feature records, conformance, release evidence, and Trusted Publisher path. | Release candidate |
 | Plugin publication readiness | Standalone experimental plugin artifact readiness, including package metadata, conformance, and release evidence. | Active workstream |
 
 ---

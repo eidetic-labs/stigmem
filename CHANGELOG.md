@@ -9,6 +9,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ## [Unreleased]
 
+### Changed
+
+- Opened the post-`v0.9.0a10` release-prep lane after the adapter publication
+  batch.
+
+## [0.9.0a10] — 2026-05-26
+
 ### Added
 
 - `stigmem-plugin-cognee-adapter` v0.1.0 — Cognee memory-graph bridge
@@ -34,7 +41,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
 
 ### Changed
 
-- Preparing the `v0.9.0a9` plugin discovery release line.
+- Prepared the `v0.9.0a10` adapter batch publication release line.
 
 ### Fixed
 
@@ -48,7 +55,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
   `/v1/mcp/connectors` payload alongside README, adapter README, docs, and CLI
   editor surfaces.
 
-## [0.9.0a9] — Unreleased
+## [0.9.0a9] — 2026-05-25
 
 ### Changed
 

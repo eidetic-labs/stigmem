@@ -9,7 +9,7 @@ feature_type: adapter
 default_surface: external
 canonical_spec: none
 implementation_path: experimental/openai-tools-adapter
-package: stigmem-openai-tools-adapter
+package: stigmem-plugin-openai-tools-adapter
 adr_refs:
   - ADR-002
   - ADR-009
@@ -31,8 +31,8 @@ OpenAI Python SDK.
 
 This feature record exists to keep the historical Ollama/LiteLLM surface
 discoverable without creating a second source of truth. Behavior, code, and
-tests live under `experimental/openai-tools-adapter` until the OpenAI tools
-feature record is migrated.
+tests live under `experimental/openai-tools-adapter`; the OpenAI tools feature
+record now owns the package publication facts.
 
 ## Current State
 
@@ -42,7 +42,7 @@ feature record is migrated.
 | Stability | `experimental` |
 | Default surface | `external` |
 | Primary implementation | `experimental/openai-tools-adapter` |
-| Primary package | `stigmem-openai-tools-adapter` |
+| Primary package | `stigmem-plugin-openai-tools-adapter` |
 | Canonical spec | `none` |
 
 ## Feature Files

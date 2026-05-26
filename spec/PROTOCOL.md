@@ -45,6 +45,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | [`Spec-X7-Cognee-Adapter`](../experimental/cognee-adapter/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0a10 plugin package | `experimental/cognee-adapter/spec.md` |
 | [`Spec-X7-Gemini-Adapter`](../experimental/gemini-adapter/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0a10 plugin package | `experimental/gemini-adapter/spec.md` |
 | [`Spec-X7-Letta-Adapter`](../experimental/letta-adapter/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0a10 plugin package | `experimental/letta-adapter/spec.md` |
+| [`Spec-X7-OpenAI-Tools-Adapter`](../experimental/openai-tools-adapter/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0a10 plugin package | `experimental/openai-tools-adapter/spec.md` |
 | [`Spec-X7-Subscriptions`](../experimental/subscriptions/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/subscriptions/spec.md` |
 | [`Spec-X7-Zep-Adapter`](../experimental/zep-adapter/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0a10 plugin package | `experimental/zep-adapter/spec.md` |
 | [`Spec-X8-Intent-Envelope`](../experimental/intent-envelope/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/intent-envelope/spec.md` |
@@ -86,6 +87,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | `Spec-X7-Cognee-Adapter` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | features/cognee-adapter/spec.md package projection |
 | `Spec-X7-Gemini-Adapter` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | features/gemini-adapter/spec.md package projection |
 | `Spec-X7-Letta-Adapter` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | features/letta-adapter/spec.md package projection |
+| `Spec-X7-OpenAI-Tools-Adapter` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | features/openai-tools-adapter/spec.md package projection |
 | `Spec-X7-Subscriptions` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0` | pre-reset section 20.5 subscription material |
 | `Spec-X7-Zep-Adapter` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | features/zep-adapter/spec.md package projection |
 | `Spec-X8-Intent-Envelope` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 4 intent envelope material |

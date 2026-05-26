@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Published `stigmem-plugin-openai-tools-adapter` as an experimental opt-in
+  adapter package for the v0.9.0a10 adapter batch.
+- Added src-layout package metadata and `stigmem.plugins` discovery manifest.
+- Recorded package-level spec, evidence, security, and status docs for the
+  adapter publication contract.
 - Added ADR-020 feature record for the OpenAI-compatible tools adapter.
 - Consolidated OpenAI, LiteLLM, and OpenAI-compatible local endpoint behavior
   under this feature record.

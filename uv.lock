@@ -22,6 +22,7 @@ members = [
     "stigmem-plugin-cognee-adapter",
     "stigmem-plugin-gemini-adapter",
     "stigmem-plugin-letta-adapter",
+    "stigmem-plugin-openai-tools-adapter",
     "stigmem-plugin-zep-adapter",
     "stigmem-py",
 ]
@@ -6681,6 +6682,7 @@ all = [
     { name = "stigmem-plugin-letta-adapter" },
     { name = "stigmem-plugin-memory-garden-acl" },
     { name = "stigmem-plugin-multi-tenant" },
+    { name = "stigmem-plugin-openai-tools-adapter" },
     { name = "stigmem-plugin-source-attestation" },
     { name = "stigmem-plugin-time-travel" },
     { name = "stigmem-plugin-tombstones" },
@@ -6707,6 +6709,9 @@ multi-tenant = [
 node = [
     { name = "stigmem-node" },
 ]
+openai-tools-adapter = [
+    { name = "stigmem-plugin-openai-tools-adapter" },
+]
 openclaw = [
     { name = "stigmem-openclaw" },
 ]
@@ -6717,6 +6722,7 @@ plugins-all = [
     { name = "stigmem-plugin-letta-adapter" },
     { name = "stigmem-plugin-memory-garden-acl" },
     { name = "stigmem-plugin-multi-tenant" },
+    { name = "stigmem-plugin-openai-tools-adapter" },
     { name = "stigmem-plugin-source-attestation" },
     { name = "stigmem-plugin-time-travel" },
     { name = "stigmem-plugin-tombstones" },
@@ -6774,6 +6780,9 @@ requires-dist = [
     { name = "stigmem-plugin-multi-tenant", marker = "extra == 'all'", specifier = ">=0.1.0,<2.0.0" },
     { name = "stigmem-plugin-multi-tenant", marker = "extra == 'multi-tenant'", specifier = ">=0.1.0,<2.0.0" },
     { name = "stigmem-plugin-multi-tenant", marker = "extra == 'plugins-all'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-openai-tools-adapter", marker = "extra == 'all'", editable = "experimental/openai-tools-adapter" },
+    { name = "stigmem-plugin-openai-tools-adapter", marker = "extra == 'openai-tools-adapter'", editable = "experimental/openai-tools-adapter" },
+    { name = "stigmem-plugin-openai-tools-adapter", marker = "extra == 'plugins-all'", editable = "experimental/openai-tools-adapter" },
     { name = "stigmem-plugin-source-attestation", marker = "extra == 'all'", specifier = ">=0.1.0,<2.0.0" },
     { name = "stigmem-plugin-source-attestation", marker = "extra == 'plugins-all'", specifier = ">=0.1.0,<2.0.0" },
     { name = "stigmem-plugin-source-attestation", marker = "extra == 'source-attestation'", specifier = ">=0.1.0,<2.0.0" },
@@ -6788,7 +6797,7 @@ requires-dist = [
     { name = "stigmem-plugin-zep-adapter", marker = "extra == 'zep-adapter'", editable = "experimental/zep-adapter" },
     { name = "stigmem-py", editable = "sdks/stigmem-py" },
 ]
-provides-extras = ["node", "openclaw", "cognee-adapter", "gemini-adapter", "letta-adapter", "zep-adapter", "lazy-instruction-discovery", "memory-garden-acl", "multi-tenant", "source-attestation", "time-travel", "tombstones", "plugins-all", "all"]
+provides-extras = ["node", "openclaw", "cognee-adapter", "gemini-adapter", "letta-adapter", "openai-tools-adapter", "zep-adapter", "lazy-instruction-discovery", "memory-garden-acl", "multi-tenant", "source-attestation", "time-travel", "tombstones", "plugins-all", "all"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -7038,6 +7047,40 @@ sdist = { url = "https://files.pythonhosted.org/packages/a4/07/ad9904358b8b0af2e
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9b/c8/db5128f5cd35ad61f6ab5b926bb0a15cac1459678da06a9970b0fce33fda/stigmem_plugin_multi_tenant-0.1.0-py3-none-any.whl", hash = "sha256:08833f67fbfc6b3eeb54c8db6ad1d7650eee37e92a54c5fb7d3cb56f8b9139cf", size = 5781, upload-time = "2026-05-24T20:21:17.007Z" },
 ]
+
+[[package]]
+name = "stigmem-plugin-openai-tools-adapter"
+version = "0.1.0"
+source = { editable = "experimental/openai-tools-adapter" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "stigmem-node" },
+    { name = "stigmem-py" },
+]
+
+[package.optional-dependencies]
+litellm = [
+    { name = "litellm" },
+]
+openai = [
+    { name = "openai" },
+]
+providers = [
+    { name = "litellm" },
+    { name = "openai" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "litellm", marker = "extra == 'litellm'", specifier = ">=1.60,<2.0" },
+    { name = "litellm", marker = "extra == 'providers'", specifier = ">=1.60,<2.0" },
+    { name = "openai", marker = "extra == 'openai'", specifier = ">=1.0,<3.0" },
+    { name = "openai", marker = "extra == 'providers'", specifier = ">=1.0,<3.0" },
+    { name = "pydantic", specifier = ">=2,<3" },
+    { name = "stigmem-node", editable = "node" },
+    { name = "stigmem-py", editable = "sdks/stigmem-py" },
+]
+provides-extras = ["litellm", "openai", "providers"]
 
 [[package]]
 name = "stigmem-plugin-source-attestation"

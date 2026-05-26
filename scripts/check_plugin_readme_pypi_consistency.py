@@ -14,6 +14,7 @@ PLUGINS: tuple[tuple[str, str], ...] = (
     ("cognee-adapter", "stigmem-plugin-cognee-adapter"),
     ("gemini-adapter", "stigmem-plugin-gemini-adapter"),
     ("letta-adapter", "stigmem-plugin-letta-adapter"),
+    ("openai-tools-adapter", "stigmem-plugin-openai-tools-adapter"),
     ("zep-adapter", "stigmem-plugin-zep-adapter"),
     ("lazy-instruction-discovery", "stigmem-plugin-lazy-instruction-discovery"),
     ("memory-garden-acl", "stigmem-plugin-memory-garden-acl"),

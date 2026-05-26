@@ -23,6 +23,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
   adapter, experimental opt-in. Discoverable via `stigmem plugins list` and
   installable via `pip install stigmem-plugin-letta-adapter`. See
   [feature record](features/letta-adapter/).
+- `stigmem-plugin-openai-tools-adapter` v0.1.0 — OpenAI-compatible tool-use
+  adapter, experimental opt-in. Discoverable via `stigmem plugins list` and
+  installable via `pip install stigmem-plugin-openai-tools-adapter`. See
+  [feature record](features/openai-tools-adapter/).
 - `stigmem-plugin-zep-adapter` v0.1.0 — Zep session-memory bridge adapter,
   experimental opt-in. Discoverable via `stigmem plugins list` and installable
   via `pip install stigmem-plugin-zep-adapter`. See
@@ -349,7 +353,7 @@ root changelog projection used during release prep.
 | Cognee adapter | active | `v0.9.0a1`, `v0.9.0a10` | [`features/cognee-adapter/changelog.md`](features/cognee-adapter/changelog.md) |
 | OIDC SSO | active | `v0.9.0a1`, `0.9.xA` | [`features/oidc-sso/changelog.md`](features/oidc-sso/changelog.md) |
 | Ollama/LiteLLM adapter | superseded | `v0.9.0a1`, `0.9.xA` | [`features/ollama-litellm-adapter/changelog.md`](features/ollama-litellm-adapter/changelog.md) |
-| OpenAI tools adapter | deferred | `v0.9.0a1`, `0.9.xA` | [`features/openai-tools-adapter/changelog.md`](features/openai-tools-adapter/changelog.md) |
+| OpenAI tools adapter | active | `v0.9.0a1`, `v0.9.0a10` | [`features/openai-tools-adapter/changelog.md`](features/openai-tools-adapter/changelog.md) |
 | Paperclip adapter | deferred | `v0.9.0a1`, `0.9.xA` | [`features/paperclip-adapter/changelog.md`](features/paperclip-adapter/changelog.md) |
 | Recall graph | deferred | `v0.9.0a1`, `0.9.xA` | [`features/recall-graph/changelog.md`](features/recall-graph/changelog.md) |
 | Source attestation | active | `v0.9.0a1`, `0.9.xA` | [`features/source-attestation/changelog.md`](features/source-attestation/changelog.md) |

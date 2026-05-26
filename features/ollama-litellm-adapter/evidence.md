@@ -4,8 +4,8 @@
 
 | Path | Purpose |
 | --- | --- |
-| `experimental/openai-tools-adapter/adapter.py` | OpenAI-compatible tool declarations, dispatch, LiteLLM loop, and OpenAI SDK loop used by Ollama/LiteLLM. |
-| `experimental/openai-tools-adapter/pyproject.toml` | Source package metadata for `stigmem-openai-tools-adapter`. |
+| `experimental/openai-tools-adapter/src/stigmem_plugin_openai_tools/adapter.py` | OpenAI-compatible tool declarations, dispatch, LiteLLM loop, and OpenAI SDK loop used by Ollama/LiteLLM. |
+| `experimental/openai-tools-adapter/pyproject.toml` | Package metadata for `stigmem-plugin-openai-tools-adapter`. |
 | `experimental/ollama-litellm-adapter/concept.md` | Legacy Ollama/LiteLLM connector concept and usage guidance. |
 
 ## Tests
@@ -13,7 +13,7 @@
 | Evidence | Coverage |
 | --- | --- |
 | `experimental/openai-tools-adapter/tests/test_openai_tools_adapter.py` | Tests for OpenAI-format tool declarations, dispatch, mocked HTTP behavior, and error handling. |
-| `experimental/openai-tools-adapter/tests/conftest.py` | Test path setup for importing the OpenAI-compatible adapter module. |
+| `experimental/openai-tools-adapter/tests/conftest.py` | Test path setup for importing the OpenAI-compatible src-layout package. |
 
 ## Docs
 
@@ -36,5 +36,5 @@
 ## Evidence Gaps
 
 - Live Ollama and LiteLLM model evidence is not complete.
-- The OpenAI-compatible tools adapter feature record still needs its own
-  migration before it becomes the sole canonical behavior record.
+- The OpenAI-compatible tools adapter feature record owns package publication
+  facts; this record remains a historical compatibility identity.

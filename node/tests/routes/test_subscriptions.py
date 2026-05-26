@@ -19,7 +19,7 @@ import json
 import sys
 import time
 import uuid
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -101,26 +101,51 @@ def _wait_for_delivery_lock_idle(timeout_s: float = 5.0) -> None:
     raise AssertionError("subscription delivery lock did not become idle")
 
 
-def _drain_subscription_event(event_id: str, timeout_s: float = 5.0) -> str:
-    """Drive production delivery until a specific event settles."""
+def _wait_for_subscription_event(
+    event_id: str,
+    predicate: Callable[[dict], bool],
+    timeout_s: float = 5.0,
+) -> dict:
+    """Drive production delivery until a specific event matches a predicate."""
     import stigmem_node.db as db_mod
 
     deadline = time.monotonic() + timeout_s
-    last_status = "missing"
+    last_event: dict | None = None
     while time.monotonic() < deadline:
         with db_mod.db() as conn:
             event = conn.execute(
-                "SELECT delivery_status FROM subscription_events WHERE id=?", (event_id,)
+                "SELECT * FROM subscription_events WHERE id=?", (event_id,)
             ).fetchone()
         if event is None:
             raise AssertionError(f"subscription event {event_id} was not found")
-        last_status = event["delivery_status"]
-        if last_status in {"delivered", "failed"}:
-            return last_status
+        last_event = dict(event)
+        if predicate(last_event):
+            return last_event
         _wait_for_delivery_lock_idle(timeout_s=max(0.1, deadline - time.monotonic()))
         delivery_mod.deliver_pending()
         time.sleep(0.01)
-    return last_status
+    raise AssertionError(f"subscription event {event_id} did not match predicate: {last_event}")
+
+
+def _subscription_event_id(subscription_id: str) -> str:
+    import stigmem_node.db as db_mod
+
+    with db_mod.db() as conn:
+        event = conn.execute(
+            "SELECT id FROM subscription_events WHERE subscription_id=?", (subscription_id,)
+        ).fetchone()
+    if event is None:
+        raise AssertionError(f"subscription {subscription_id} has no event")
+    return event["id"]
+
+
+def _drain_subscription_event(event_id: str, timeout_s: float = 5.0) -> str:
+    event = _wait_for_subscription_event(
+        event_id,
+        lambda row: row["delivery_status"] in {"delivered", "failed"},
+        timeout_s=timeout_s,
+    )
+    return event["delivery_status"]
 
 
 # ---------------------------------------------------------------------------
@@ -421,6 +446,7 @@ def test_deliver_pending_webhook_success(client: TestClient) -> None:
 def test_deliver_pending_webhook_retry_on_5xx(client: TestClient) -> None:
     sub = _create_subscription(client)
     _assert_fact(client)
+    event_id = _subscription_event_id(sub["id"])
 
     mock_resp = MagicMock()
     mock_resp.status_code = 503
@@ -432,14 +458,10 @@ def test_deliver_pending_webhook_retry_on_5xx(client: TestClient) -> None:
         mock_client_instance.post.return_value = mock_resp
         mock_client_cls.return_value = mock_client_instance
 
-        delivery_mod.deliver_pending()
-
-    import stigmem_node.db as db_mod
-
-    with db_mod.db() as conn:
-        event = conn.execute(
-            "SELECT * FROM subscription_events WHERE subscription_id=?", (sub["id"],)
-        ).fetchone()
+        event = _wait_for_subscription_event(
+            event_id,
+            lambda row: row["delivery_attempts"] == 1,
+        )
     assert event["delivery_status"] == "pending"
     assert event["delivery_attempts"] == 1
     assert event["next_retry_at"] is not None

@@ -15,7 +15,7 @@ in reads and returned with a ``letta:archival_memory`` relation.
 
 Typical usage::
 
-    from adapter import StigmemLettaAdapter
+    from stigmem_plugin_letta import StigmemLettaAdapter
 
     adapter = StigmemLettaAdapter.from_env()
 
@@ -67,10 +67,7 @@ def _fact_to_text(fact: dict[str, Any]) -> str:
     vtype: str = value.get("type", "null")
     v = value.get("v")
 
-    if vtype == "null" or v is None:
-        vstr = "null"
-    else:
-        vstr = str(v)
+    vstr = "null" if vtype == "null" or v is None else str(v)
 
     lines = [
         _STIGMEM_PREFIX,
@@ -168,7 +165,7 @@ class StigmemLettaAdapter:
         self._letta_token = letta_token
 
     @classmethod
-    def from_env(cls) -> "StigmemLettaAdapter":
+    def from_env(cls) -> StigmemLettaAdapter:
         """Construct from environment variables.
 
         ``LETTA_URL``   — Letta server base URL (default: ``http://localhost:8283``)

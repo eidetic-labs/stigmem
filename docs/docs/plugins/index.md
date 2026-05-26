@@ -12,7 +12,7 @@ Stigmem plugins are optional Python packages discovered through the
 discoverable; enabling behavior still requires the plugin's explicit
 `STIGMEM_*_ENABLED` gate and a node restart.
 
-The eight plugins below are independently versioned at `0.1.0` and support the
+The nine plugins below are independently versioned at `0.1.0` and support the
 current alpha node line. The adapter-batch packages require
 `stigmem-node>=0.9.0a10,<1.0.0`; earlier security plugins support the alpha
 line they were published on. They remain experimental and opt-in.
@@ -27,6 +27,7 @@ line they were published on. They remain experimental and opt-in.
 | [Multi-tenant scoping](./multi-tenant.md) | `stigmem-plugin-multi-tenant` | `STIGMEM_MULTI_TENANT_ENABLED` | Tenant scoping and default-tenant collapse. |
 | [Cognee adapter](./cognee-adapter.md) | `stigmem-plugin-cognee-adapter` | Host-application opt-in | Bridges selected facts into Cognee memory graphs. |
 | [Gemini adapter](./gemini-adapter.md) | `stigmem-plugin-gemini-adapter` | Host-application opt-in | Exposes Stigmem tools as Gemini FunctionDeclarations. |
+| [Letta adapter](./letta-adapter.md) | `stigmem-plugin-letta-adapter` | Host-application opt-in | Bridges selected facts into Letta archival memory. |
 
 ## Install
 

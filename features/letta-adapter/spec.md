@@ -8,7 +8,7 @@ packaging contract.
 
 This feature covers:
 
-- the `stigmem-letta-adapter` source package under
+- the `stigmem-plugin-letta-adapter` source package under
   `experimental/letta-adapter`;
 - serialization of Stigmem fact dictionaries into `[stigmem]`-tagged archival
   memory passages;
@@ -46,14 +46,14 @@ writes. Pull behavior depends on that prefix:
 
 ## Non-Goals
 
-- Shipping the adapter in the current alpha artifact set.
-- Defining stable Letta package compatibility.
+- Defining stable Letta package compatibility beyond the v0.1.0 optional
+  runtime extra.
 - Modifying Letta core memory blocks or deleting Letta passages.
 - Making Letta required for Stigmem node availability.
 - Defining new Stigmem protocol semantics.
 
 ## Canonical Spec Assignment
 
-There is no Spec-X assignment for the Letta adapter. It is an external adapter
-around existing Stigmem fact and query behavior, not a standalone Stigmem
-protocol module.
+`Spec-X7-Letta-Adapter` is the package projection for this external adapter.
+It remains an adapter around existing Stigmem fact and query behavior, not a
+standalone Stigmem protocol module.

@@ -4,22 +4,24 @@
 
 | Path | Purpose |
 | --- | --- |
-| `experimental/letta-adapter/adapter.py` | Letta client configuration, fact serialization, archival-memory push, batch push, pull, and parsing. |
-| `experimental/letta-adapter/pyproject.toml` | Source package metadata for `stigmem-letta-adapter`. |
+| `experimental/letta-adapter/src/stigmem_plugin_letta/adapter.py` | Letta client configuration, fact serialization, archival-memory push, batch push, pull, and parsing. |
+| `experimental/letta-adapter/src/stigmem_plugin_letta/manifest.py` | Stigmem plugin discovery manifest. |
+| `experimental/letta-adapter/pyproject.toml` | Package metadata for `stigmem-plugin-letta-adapter`. |
 
 ## Tests
 
 | Evidence | Coverage |
 | --- | --- |
 | `experimental/letta-adapter/tests/test_letta_adapter.py` | Mocked Letta tests for serialization, parsing, environment configuration, push, batch push, pull, filtering, and missing-dependency errors. |
-| `experimental/letta-adapter/tests/conftest.py` | Test path setup for importing the adapter module from the experimental source directory. |
+| `experimental/letta-adapter/tests/conftest.py` | Test path setup for importing the src-layout adapter package. |
 
 ## Docs
 
 | Path | Coverage |
 | --- | --- |
-| `experimental/letta-adapter/README.md` | Legacy adapter overview, setup, environment variables, usage, and invariants. |
-| `experimental/letta-adapter/STATUS.md` | Legacy status statement now superseded by this feature record. |
+| `experimental/letta-adapter/README.md` | Adapter overview, install, usage, enable/disable, and invariants. |
+| `experimental/letta-adapter/spec.md` | Package projection for adapter semantics. |
+| `experimental/letta-adapter/evidence.md` | Package-level validation evidence. |
 | `docs/docs/operators/design-partner-notes.md` | Design-partner notes for Letta, including wake/sleep round-trip and synthesis feedback. |
 
 ## Projection Checks
@@ -35,6 +37,5 @@
 ## Evidence Gaps
 
 - Live Letta server evidence is not complete.
-- Package installation and dependency compatibility evidence remain deferred.
-- The legacy docs refer to old adapter path examples in places and should be
-  treated as historical implementation notes until the adapter is reactivated.
+- Live agent-memory behavior across Letta versions remains outside the v0.1.0
+  automated release gate.

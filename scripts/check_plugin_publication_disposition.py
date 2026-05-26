@@ -10,7 +10,7 @@ EXPECTED_DISPOSITIONS = {
     "obsidian-adapter": "hold",
     "cognee-adapter": "published",
     "gemini-adapter": "published",
-    "letta-adapter": "defer",
+    "letta-adapter": "published",
     "zep-adapter": "defer",
     "openai-tools-adapter": "defer",
     "paperclip-adapter": "defer",

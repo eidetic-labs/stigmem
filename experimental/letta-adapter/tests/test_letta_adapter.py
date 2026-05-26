@@ -3,7 +3,7 @@
 Run with::
 
     cd stigmem
-    uv run pytest adapters/letta/tests/ -v
+    uv run pytest experimental/letta-adapter/tests/ -v
 """
 
 from __future__ import annotations
@@ -13,9 +13,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-
-# conftest.py adds the adapter directory to sys.path
-from adapter import (
+from stigmem_plugin_letta.adapter import (
     _STIGMEM_PREFIX,
     StigmemLettaAdapter,
     _fact_to_text,

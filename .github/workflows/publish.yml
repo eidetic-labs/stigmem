@@ -318,6 +318,9 @@ jobs:
           - name: stigmem-plugin-gemini-adapter
             dir: experimental/gemini-adapter
             use_oidc: true
+          - name: stigmem-plugin-letta-adapter
+            dir: experimental/letta-adapter
+            use_oidc: true
 
     steps:
       - uses: actions/checkout@v6

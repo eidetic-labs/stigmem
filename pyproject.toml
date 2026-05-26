@@ -38,6 +38,9 @@ cognee-adapter = [
 gemini-adapter = [
   "stigmem-plugin-gemini-adapter>=0.1.0,<2.0.0",
 ]
+letta-adapter = [
+  "stigmem-plugin-letta-adapter>=0.1.0,<2.0.0",
+]
 lazy-instruction-discovery = [
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
 ]
@@ -60,6 +63,7 @@ tombstones = [
 plugins-all = [
   "stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-gemini-adapter>=0.1.0,<2.0.0",
+  "stigmem-plugin-letta-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
   "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
   "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
@@ -73,6 +77,7 @@ all = [
   "stigmem-openclaw>=0.9.0a9,<1.0.0",
   "stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-gemini-adapter>=0.1.0,<2.0.0",
+  "stigmem-plugin-letta-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
   "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
   "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
@@ -113,6 +118,7 @@ members = [
   "adapters/openclaw",
   "experimental/cognee-adapter",
   "experimental/gemini-adapter",
+  "experimental/letta-adapter",
 ]
 
 [tool.uv.sources]
@@ -121,6 +127,7 @@ stigmem-py = { workspace = true }
 stigmem-openclaw = { workspace = true }
 stigmem-plugin-cognee-adapter = { workspace = true }
 stigmem-plugin-gemini-adapter = { workspace = true }
+stigmem-plugin-letta-adapter = { workspace = true }
 
 [dependency-groups]
 dev = [

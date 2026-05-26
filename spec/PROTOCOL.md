@@ -44,6 +44,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | [`Spec-X6-Source-Attestation`](../experimental/source-attestation/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/source-attestation/spec.md` |
 | [`Spec-X7-Cognee-Adapter`](../experimental/cognee-adapter/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0a10 plugin package | `experimental/cognee-adapter/spec.md` |
 | [`Spec-X7-Gemini-Adapter`](../experimental/gemini-adapter/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0a10 plugin package | `experimental/gemini-adapter/spec.md` |
+| [`Spec-X7-Letta-Adapter`](../experimental/letta-adapter/spec.md) | `0.1.0-alpha.0` | Experimental | stigmem v0.9.0a10 plugin package | `experimental/letta-adapter/spec.md` |
 | [`Spec-X7-Subscriptions`](../experimental/subscriptions/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/subscriptions/spec.md` |
 | [`Spec-X8-Intent-Envelope`](../experimental/intent-envelope/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/intent-envelope/spec.md` |
 | [`Spec-X9-Decay-Semantics`](../experimental/decay/spec.md) | `0.1.0-alpha.0` | Experimental | future experimental plugin line | `experimental/decay/spec.md` |
@@ -83,6 +84,7 @@ This file records the ADR-010 modular specification composition for the Stigmem 
 | `Spec-X6-Source-Attestation` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-09-Audit-Log >= 0.1.0-alpha.0` | pre-reset section 18 source-attestation material |
 | `Spec-X7-Cognee-Adapter` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-02-Scopes-and-ACL >= 0.1.0-alpha.0`<br>`Spec-07-Recall-Pipeline >= 0.1.0-alpha.0` | features/cognee-adapter/spec.md package projection |
 | `Spec-X7-Gemini-Adapter` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | features/gemini-adapter/spec.md package projection |
+| `Spec-X7-Letta-Adapter` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | features/letta-adapter/spec.md package projection |
 | `Spec-X7-Subscriptions` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0`<br>`Spec-06-Capability-Tokens >= 0.1.0-alpha.0` | pre-reset section 20.5 subscription material |
 | `Spec-X8-Intent-Envelope` | `Spec-01-Fact-Model >= 0.1.0-alpha.0` | spec/stigmem-spec-v0.9.0a1.md section 4 intent envelope material |
 | `Spec-X9-Decay-Semantics` | `Spec-01-Fact-Model >= 0.1.0-alpha.0`<br>`Spec-03-HTTP-API >= 0.1.0-alpha.0` | pre-reset section 15 decay semantics material |

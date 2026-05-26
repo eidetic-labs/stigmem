@@ -225,8 +225,9 @@ Progress:
   complete for v0.9.0a10, while live Letta validation remains
   design-partner/operator-owned for v0.1.0.
 - `zep-adapter` now has a canonical adapter feature record under
-  `features/zep-adapter/`; ownership, package, dependency, and live Zep
-  validation remain future alpha release-line gates.
+  `features/zep-adapter/`; package metadata and mocked validation are complete
+  for v0.9.0a10, while live Zep validation remains
+  design-partner/operator-owned for v0.1.0.
 - `gemini-adapter` now has a canonical adapter feature record under
   `features/gemini-adapter/`; package metadata and mocked validation are
   complete for v0.9.0a10, while live Gemini validation remains

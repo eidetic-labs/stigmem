@@ -581,17 +581,17 @@ features:
     name: Zep adapter
     feature_record: features/zep-adapter/README.md
     feature_type: adapter
-    default_surface: external
+    default_surface: opt-in
     implementation_path: experimental/zep-adapter
-    package: stigmem-zep-adapter
+    package: stigmem-plugin-zep-adapter
     release_lines:
       - "v0.9.0a1"
-      - "0.9.xA"
-    spec_section: (adapter)
+      - "v0.9.0a10"
+    spec_section: Spec-X7-Zep-Adapter
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Deferred design-partner adapter; ownership, package, dependency, and live Zep validation remain future alpha work."
+    notes: "Experimental opt-in Zep adapter packaged for the v0.9.0a10 adapter batch; live Zep Cloud/self-hosted validation remains operator-owned for v0.1.0."
 
   - id: gemini-adapter
     name: Gemini adapter

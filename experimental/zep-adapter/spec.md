@@ -1,12 +1,29 @@
+---
+spec_id: Spec-X7-Zep-Adapter
+version: 0.1.0-alpha.0
+status: Experimental
+applies_to: stigmem v0.9.0a10 plugin package
+last_updated: 2026-05-26
+supersedes: features/zep-adapter/spec.md package projection
+depends_on:
+  - Spec-01-Fact-Model >= 0.1.0-alpha.0
+title: Zep Adapter
+sidebar_label: Zep Adapter
+audience: Spec
+description: "Package projection for Zep adapter semantics."
+stability: experimental
+since: 0.9.0a10
+---
+
 # Zep Adapter Spec
 
 ## Scope
 
-The Zep adapter connects Stigmem facts to Zep session memory. It does not
-define Zep behavior, Stigmem node API semantics, or a default-on runtime
-dependency for Stigmem installs.
+The Zep adapter connects Stigmem fact dictionaries to Zep session memory. It
+does not define Zep behavior, Stigmem node API semantics, or a required runtime
+dependency for default Stigmem installs.
 
-This feature covers:
+This package covers:
 
 - the `stigmem-plugin-zep-adapter` package under `experimental/zep-adapter`;
 - plugin discovery through the `stigmem.plugins` entry-point group;

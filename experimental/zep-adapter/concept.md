@@ -27,10 +27,10 @@ hydrate each other:
 
 ## Install
 
-Copy the adapter into your project:
+Install the adapter package:
 
 ```bash
-cp stigmem/adapters/zep/adapter.py ./stigmem_zep.py
+python -m pip install 'stigmem-plugin-zep-adapter[zep]>=0.1.0,<2.0.0'
 ```
 
 ## Environment variables
@@ -51,7 +51,7 @@ STIGMEM_SOURCE_ENTITY=agent:stigmem-zep
 ### Mirror a stigmem fact into Zep
 
 ```python
-from stigmem_zep import StigmemZepAdapter
+from stigmem_plugin_zep import StigmemZepAdapter
 
 adapter = StigmemZepAdapter.from_env()
 
@@ -75,7 +75,7 @@ cd stigmem
 STIGMEM_URL=http://localhost:8765 \
 ZEP_BASE_URL=http://localhost:8000 \
 SESSION_ID=demo-001 \
-uv run python adapters/zep/demo.py
+uv run python experimental/zep-adapter/demo.py
 ```
 
 The demo asserts a fact via the stigmem REST API, mirrors it to Zep, and
@@ -85,7 +85,7 @@ reads back the session's episodic facts.
 
 ```bash
 cd stigmem
-uv run pytest adapters/zep/tests/ -v
+uv run pytest experimental/zep-adapter/tests/ -v
 ```
 
 No live Zep instance required — Zep client calls are mocked with

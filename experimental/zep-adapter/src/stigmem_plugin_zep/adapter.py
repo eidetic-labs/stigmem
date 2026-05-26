@@ -20,7 +20,7 @@ This adapter bridges them at the seam:
 
 Typical usage::
 
-    from adapter import StigmemZepAdapter
+    from stigmem_plugin_zep import StigmemZepAdapter
 
     adapter = StigmemZepAdapter.from_env()
 
@@ -145,7 +145,7 @@ class StigmemZepAdapter:
         self._source = source_entity
 
     @classmethod
-    def from_env(cls) -> "StigmemZepAdapter":
+    def from_env(cls) -> StigmemZepAdapter:
         """Construct from environment variables.
 
         Optional env vars:

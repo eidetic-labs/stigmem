@@ -25,7 +25,7 @@ decisions.
 
 **Feature record:** [`features/zep-adapter`](https://github.com/eidetic-labs/stigmem/tree/main/features/zep-adapter)
 
-**Implementation:** [`experimental/zep-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/zep-adapter) (deferred external adapter)
+**Implementation:** [`experimental/zep-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/zep-adapter) (experimental opt-in adapter package)
 
 Zep stores agent memory as session-scoped "propositions" extracted from dialogue. The adapter bridges these into stigmem facts and back.
 
@@ -52,7 +52,7 @@ Zep stores agent memory as session-scoped "propositions" extracted from dialogue
 
 **Feature record:** [`features/letta-adapter`](https://github.com/eidetic-labs/stigmem/tree/main/features/letta-adapter)
 
-**Implementation:** [`experimental/letta-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/letta-adapter) (deferred external adapter)
+**Implementation:** [`experimental/letta-adapter/`](https://github.com/eidetic-labs/stigmem/tree/main/experimental/letta-adapter) (experimental opt-in adapter package)
 
 Letta is an agent framework with first-class persistent memory blocks. The adapter federates stigmem facts into Letta's in-context memory and back.
 

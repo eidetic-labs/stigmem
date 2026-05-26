@@ -41,6 +41,9 @@ gemini-adapter = [
 letta-adapter = [
   "stigmem-plugin-letta-adapter>=0.1.0,<2.0.0",
 ]
+zep-adapter = [
+  "stigmem-plugin-zep-adapter>=0.1.0,<2.0.0",
+]
 lazy-instruction-discovery = [
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
 ]
@@ -64,6 +67,7 @@ plugins-all = [
   "stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-gemini-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-letta-adapter>=0.1.0,<2.0.0",
+  "stigmem-plugin-zep-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
   "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
   "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
@@ -78,6 +82,7 @@ all = [
   "stigmem-plugin-cognee-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-gemini-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-letta-adapter>=0.1.0,<2.0.0",
+  "stigmem-plugin-zep-adapter>=0.1.0,<2.0.0",
   "stigmem-plugin-lazy-instruction-discovery>=0.1.0,<2.0.0",
   "stigmem-plugin-memory-garden-acl>=0.1.0,<2.0.0",
   "stigmem-plugin-multi-tenant>=0.1.0,<2.0.0",
@@ -119,6 +124,7 @@ members = [
   "experimental/cognee-adapter",
   "experimental/gemini-adapter",
   "experimental/letta-adapter",
+  "experimental/zep-adapter",
 ]
 
 [tool.uv.sources]
@@ -128,6 +134,7 @@ stigmem-openclaw = { workspace = true }
 stigmem-plugin-cognee-adapter = { workspace = true }
 stigmem-plugin-gemini-adapter = { workspace = true }
 stigmem-plugin-letta-adapter = { workspace = true }
+stigmem-plugin-zep-adapter = { workspace = true }
 
 [dependency-groups]
 dev = [

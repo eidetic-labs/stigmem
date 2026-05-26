@@ -12,7 +12,7 @@ Stigmem plugins are optional Python packages discovered through the
 discoverable; enabling behavior still requires the plugin's explicit
 `STIGMEM_*_ENABLED` gate and a node restart.
 
-The six plugins below are independently versioned at `0.1.0` and support the
+The seven plugins below are independently versioned at `0.1.0` and support the
 current alpha node line with `stigmem-node>=0.9.0a9,<1.0.0`. They remain
 experimental and opt-in.
 
@@ -24,6 +24,7 @@ experimental and opt-in.
 | [Memory Garden ACL](./memory-garden-acl.md) | `stigmem-plugin-memory-garden-acl` | `STIGMEM_MEMORY_GARDEN_ACL_ENABLED` | Memory Garden membership ACL filtering. |
 | [Source attestation](./source-attestation.md) | `stigmem-plugin-source-attestation` | `STIGMEM_SOURCE_ATTESTATION_ENABLED` | Source identity checks and source-trust recall signals. |
 | [Multi-tenant scoping](./multi-tenant.md) | `stigmem-plugin-multi-tenant` | `STIGMEM_MULTI_TENANT_ENABLED` | Tenant scoping and default-tenant collapse. |
+| [Cognee adapter](./cognee-adapter.md) | `stigmem-plugin-cognee-adapter` | Host-application opt-in | Bridges selected facts into Cognee memory graphs. |
 
 ## Install
 

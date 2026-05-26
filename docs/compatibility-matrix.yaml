@@ -549,17 +549,17 @@ features:
     name: Cognee adapter
     feature_record: features/cognee-adapter/README.md
     feature_type: adapter
-    default_surface: external
+    default_surface: opt-in
     implementation_path: experimental/cognee-adapter
-    package: stigmem-cognee-adapter
+    package: stigmem-plugin-cognee-adapter
     release_lines:
       - "v0.9.0a1"
-      - "0.9.xA"
+      - "v0.9.0a10"
     spec_section: (adapter)
     stability: experimental
     requires:
       node: "experimental"
-    notes: "Dormant design-partner adapter; ownership, package, dependency, and live Cognee validation remain future alpha work."
+    notes: "Experimental opt-in Cognee adapter packaged for the v0.9.0a10 adapter batch; live Cognee runtime validation remains operator-owned for v0.1.0."
 
   - id: letta-adapter
     name: Letta adapter

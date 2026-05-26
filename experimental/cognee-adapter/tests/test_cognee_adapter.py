@@ -3,7 +3,7 @@
 Run with::
 
     cd stigmem
-    uv run pytest adapters/cognee/tests/ -v
+    python -m pytest experimental/cognee-adapter/tests -v
 
 No live stigmem node or Cognee/LLM API key required.
 """
@@ -17,8 +17,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-# conftest.py adds the adapter directory to sys.path
-from adapter import (
+from stigmem_plugin_cognee.adapter import (
     StigmemCogneeAdapter,
     _fact_to_text,
     _normalize_cognee_results,

@@ -4,7 +4,7 @@ Bridge between stigmem's atomic fact store and Cognee's knowledge-graph layer.
 
 Two surfaces::
 
-    from adapter import StigmemCogneeAdapter
+    from stigmem_plugin_cognee.adapter import StigmemCogneeAdapter
 
     bridge = StigmemCogneeAdapter.from_env()
 

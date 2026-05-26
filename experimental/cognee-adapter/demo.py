@@ -39,10 +39,10 @@ from pathlib import Path
 
 _HERE = Path(__file__).parent
 _REPO_ROOT = _HERE.parent.parent.parent
-sys.path.insert(0, str(_HERE))
+sys.path.insert(0, str(_HERE / "src"))
 sys.path.insert(0, str(_REPO_ROOT / "sdks" / "stigmem-py" / "src"))
 
-from adapter import StigmemCogneeAdapter  # noqa: E402
+from stigmem_plugin_cognee.adapter import StigmemCogneeAdapter  # noqa: E402
 from stigmem import StigmemClient  # noqa: E402
 
 # ---------------------------------------------------------------------------

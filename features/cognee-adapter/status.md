@@ -4,37 +4,39 @@
 
 | Field | Value |
 | --- | --- |
-| Status | `dormant` |
+| Status | `active` |
 | Stability | `experimental` |
-| First release | `0.9.0a1` |
-| Default surface | `external` |
-| Publication state | `defer` - unowned design-partner adapter; live Cognee and dependency validation are not complete. |
+| First release | `0.9.0a10` |
+| Default surface | `opt-in` |
+| Publication state | `published` |
+| Package | `stigmem-plugin-cognee-adapter` |
 
 The adapter source exists on `main` as experimental design-partner surface
-area. It remains dormant and outside the current alpha artifact set. Promotion
-requires an assigned owner, package validation, dependency validation against a
-known Cognee version, and live integration evidence.
+area. As of v0.9.0a10, it is packaged as an opt-in plugin with src-layout
+metadata, a Stigmem discovery manifest, and mock-based validation evidence.
 
 ## Release History
 
 | Release | Change | Evidence |
 | --- | --- | --- |
 | `v0.9.0a1` | Cognee adapter source and documentation existed as experimental adapter surface area. | `experimental/cognee-adapter/STATUS.md`; `experimental/cognee-adapter/` |
-| `0.9.xA` planned | Decide whether to reactivate, replace, or retire the adapter after ownership and integration validation. | `docs/internal/feature-tracker.md`; `docs/compatibility-matrix.yaml` |
+| `v0.9.0a10` | Package as `stigmem-plugin-cognee-adapter` v0.1.0 for adapter batch publication. | `experimental/cognee-adapter/pyproject.toml`; `experimental/cognee-adapter/evidence.md` |
 
 ## Gate Progress
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
 | Source preservation | Keep the adapter source available for future design-partner review. | Complete | `experimental/cognee-adapter/` |
-| Unit tests | Mock Cognee to validate serialization, parsing, config, assertion, batch assertion, and query behavior. | Partial | `experimental/cognee-adapter/tests/test_cognee_adapter.py` |
-| Package validation | Confirm package metadata, install path, and dependency compatibility. | Open | `experimental/cognee-adapter/pyproject.toml` |
-| Live integration | Validate against a real Cognee runtime, vector store, and LLM backend. | Open | None currently recorded. |
-| Documentation parity | Replace legacy experimental docs with feature-owned record plus projections. | In progress | This feature record. |
+| Unit tests | Mock Cognee to validate serialization, parsing, config, assertion, batch assertion, and query behavior. | Complete | `experimental/cognee-adapter/tests/test_cognee_adapter.py` |
+| Package validation | Confirm package metadata, install path, entry point, and dependency compatibility. | Complete | `experimental/cognee-adapter/pyproject.toml`; `experimental/cognee-adapter/src/stigmem_plugin_cognee/manifest.py` |
+| Live integration | Validate against a real Cognee runtime, vector store, and LLM backend. | Partial | `experimental/cognee-adapter/evidence.md` |
+| Documentation parity | Replace legacy experimental docs with feature-owned record plus projections. | Complete | This feature record; `experimental/cognee-adapter/spec.md` |
 
 ## Known Gaps
 
-- The adapter is not shipped in the current alpha artifact set.
-- The feature has no assigned owner.
-- Live Cognee integration evidence is not complete.
-- Dependency, package, and version compatibility evidence are not complete.
+- Live Cognee integration evidence remains design-partner/operator-owned for
+  v0.1.0.
+- The adapter does not retry Cognee outages internally; callers own retry and
+  circuit-breaker policy.
+- Dataset isolation, LLM provider selection, and retention policy remain
+  operator responsibilities.

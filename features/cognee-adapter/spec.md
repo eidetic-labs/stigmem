@@ -8,7 +8,7 @@ adapter packaging contract.
 
 This feature covers:
 
-- the `stigmem-cognee-adapter` source package under
+- the `stigmem-plugin-cognee-adapter` source package under
   `experimental/cognee-adapter`;
 - serialization of Stigmem fact dictionaries into structured text for Cognee
   ingestion;
@@ -48,7 +48,6 @@ raw text in a text value.
 
 ## Non-Goals
 
-- Shipping the adapter in the current alpha artifact set.
 - Defining a stable Cognee package or plugin compatibility promise.
 - Making Cognee required for Stigmem node availability.
 - Retrying or circuit-breaking Cognee outages inside the adapter.

@@ -23,6 +23,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-rel
   adapter, experimental opt-in. Discoverable via `stigmem plugins list` and
   installable via `pip install stigmem-plugin-letta-adapter`. See
   [feature record](features/letta-adapter/).
+- `stigmem-plugin-zep-adapter` v0.1.0 — Zep session-memory bridge adapter,
+  experimental opt-in. Discoverable via `stigmem plugins list` and installable
+  via `pip install stigmem-plugin-zep-adapter`. See
+  [feature record](features/zep-adapter/).
 
 ### Changed
 
@@ -351,7 +355,7 @@ root changelog projection used during release prep.
 | Source attestation | active | `v0.9.0a1`, `0.9.xA` | [`features/source-attestation/changelog.md`](features/source-attestation/changelog.md) |
 | Storage backends | active | `v0.9.0a1`, `0.9.xA` | [`features/storage-backends/changelog.md`](features/storage-backends/changelog.md) |
 | libSQL storage | active | `v0.9.0a1`, `0.9.xA` | [`features/storage-libsql/changelog.md`](features/storage-libsql/changelog.md) |
-| Zep adapter | deferred | `v0.9.0a1`, `0.9.xA` | [`features/zep-adapter/changelog.md`](features/zep-adapter/changelog.md) |
+| Zep adapter | active | `v0.9.0a1`, `v0.9.0a10` | [`features/zep-adapter/changelog.md`](features/zep-adapter/changelog.md) |
 | Subscriptions | deferred | `v0.9.0a1`, `0.9.xA` | [`features/subscriptions/changelog.md`](features/subscriptions/changelog.md) |
 | Synthesis | deferred | `v0.9.0a1`, `0.9.xA` | [`features/synthesis/changelog.md`](features/synthesis/changelog.md) |
 | Time-travel queries | active | `v0.9.0a1`, `v0.9.0a4` | [`features/time-travel/changelog.md`](features/time-travel/changelog.md) |

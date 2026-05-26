@@ -377,8 +377,8 @@ Read the spec at
 
 <div>
 <dt>Zep adapter</dt>
-<dt><span className="stigmem-fields__type">Deferred, external</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/zep-adapter"><code>features/zep-adapter</code></a>; package and live Zep validation remain future alpha work.</dd>
+<dt><span className="stigmem-fields__type">Experimental, opt-in</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/zep-adapter"><code>features/zep-adapter</code></a>; packaged as <code>stigmem-plugin-zep-adapter</code> for v0.9.0a10; live Zep validation remains operator-owned for v0.1.0.</dd>
 </div>
 
 <div>
@@ -389,8 +389,8 @@ Read the spec at
 
 <div>
 <dt>Cognee adapter</dt>
-<dt><span className="stigmem-fields__type">Dormant, external</span></dt>
-<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/cognee-adapter"><code>features/cognee-adapter</code></a>; package and live Cognee validation remain future alpha work.</dd>
+<dt><span className="stigmem-fields__type">Experimental, opt-in</span></dt>
+<dd><a href="https://github.com/eidetic-labs/stigmem/tree/main/features/cognee-adapter"><code>features/cognee-adapter</code></a>; packaged as <code>stigmem-plugin-cognee-adapter</code> for v0.9.0a10; live Cognee validation remains operator-owned for v0.1.0.</dd>
 </div>
 
 <div>

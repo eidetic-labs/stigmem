@@ -18,14 +18,14 @@ Usage:
     STIGMEM_URL=http://localhost:8765 \\
     ZEP_BASE_URL=http://localhost:8000 \\
     SESSION_ID=demo-001 \\
-    uv run python adapters/zep/demo.py
+    uv run python experimental/zep-adapter/demo.py
 """
 
 import os
 import uuid
 
 import httpx
-from adapter import StigmemZepAdapter
+from stigmem_plugin_zep import StigmemZepAdapter
 
 
 def main() -> None:

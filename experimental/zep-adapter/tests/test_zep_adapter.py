@@ -2,7 +2,7 @@
 
 Run with:
     cd stigmem
-    uv run pytest adapters/zep/tests/ -v
+    uv run pytest experimental/zep-adapter/tests/ -v
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-from adapter import (
+from stigmem_plugin_zep.adapter import (
     StigmemZepAdapter,
     fact_to_message_content,
     zep_fact_to_stigmem_record,

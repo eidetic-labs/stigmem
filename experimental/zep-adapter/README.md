@@ -1,7 +1,11 @@
-# Stigmem — Zep Adapter
+# stigmem-plugin-zep-adapter
 
-Federation bridge between [Stigmem](../../README.md) and [Zep](https://www.getzep.com)
-memory infrastructure.
+Federation bridge between [Stigmem](https://github.com/eidetic-labs/stigmem)
+and [Zep](https://www.getzep.com) session memory infrastructure.
+
+This package is experimental and opt-in. Installing it makes the `zep-adapter`
+plugin discoverable through the `stigmem.plugins` entry-point group; host
+applications still choose when to call the adapter.
 
 ## Federation model
 
@@ -9,62 +13,85 @@ Stigmem and Zep address different memory scopes:
 
 |  | Stigmem | Zep |
 |---|---|---|
-| **Scope** | Shared, multi-agent coordination | Per-user / per-session episodic |
-| **Granularity** | Typed, namespaced facts (`entity + relation + value`) | Conversational messages → extracted propositions |
-| **Consistency** | Conflict detection + HLC ordering | Recency-weighted extraction |
-| **Audience** | Agent network | Single LLM application |
+| Scope | Shared, multi-agent coordination | Per-user/per-session episodic |
+| Granularity | Typed facts (`entity + relation + value`) | Conversational messages extracted into propositions |
+| Consistency | Conflict detection and HLC ordering | Recency-weighted extraction |
+| Audience | Agent network | Single LLM application |
 
-The seam this adapter implements:
+The adapter mirrors Stigmem facts into Zep as structured `[STIGMEM]` system
+messages and maps Zep extracted facts back into Stigmem-shaped records for
+query hydration or re-assertion.
 
-- **assert direction** (`assert_to_zep`): when stigmem asserts a fact in a shared scope,
-  mirror it as a Zep memory message for the relevant session/user.  Zep's extractor surfaces
-  it alongside the session's episodic context.
-- **query direction** (`query_from_zep`): when an agent queries a scope, optionally hydrate
-  from Zep episodic memory — useful for per-user personalisation on top of the shared fact base.
+## Design
+
+- `assert_to_zep()` writes a single Stigmem fact to a target Zep session.
+- `query_from_zep()` reads Zep extracted facts and stamps the caller-supplied
+  Stigmem scope onto returned records.
+- Zep has no Stigmem scope model; callers own session authorization and
+  downstream filtering.
+- `zep-cloud` is a lazy optional import; discovery and tests do not require it.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `adapter.py` | Adapter — encoding helpers + `StigmemZepAdapter` class |
-| `demo.py` | Runnable demo: assert a fact via stigmem, mirror to Zep, verify |
+| `src/stigmem_plugin_zep/adapter.py` | Bridge adapter - encoding helpers, Zep session write, query, and record conversion |
+| `src/stigmem_plugin_zep/manifest.py` | Stigmem plugin discovery manifest |
+| `demo.py` | Optional live demo: assert a fact, mirror to Zep, verify extraction |
 | `tests/conftest.py` | pytest path setup |
-| `tests/test_adapter.py` | Unit tests (mock Zep client; no live Zep required) |
+| `tests/test_zep_adapter.py` | Unit tests (Zep client mocked; no live deps required) |
 
-## Setup
+## Installation
+
+```bash
+python -m pip install 'stigmem-plugin-zep-adapter>=0.1.0,<2.0.0'
+```
+
+Install Zep only in deployments that run the live bridge:
+
+```bash
+python -m pip install 'stigmem-plugin-zep-adapter[zep]>=0.1.0,<2.0.0'
+```
+
+Install demo dependencies only when running `demo.py`:
+
+```bash
+python -m pip install 'stigmem-plugin-zep-adapter[demo,zep]>=0.1.0,<2.0.0'
+```
 
 ### Requirements
 
-- Python ≥ 3.11
-- `zep-cloud`: `pip install zep-cloud`
-- For the demo: a running stigmem node + a Zep instance or Zep Cloud API key
+- Python >= 3.11
+- `stigmem-py`: `pip install stigmem-py` (or from workspace)
+- `zep-cloud`: optional runtime extra for live Zep calls; unit tests and plugin
+  discovery do not require it.
+- Zep Cloud API key or a self-hosted Zep base URL for live use.
 
 ### Environment variables
 
 ```bash
-# Zep (use one)
 ZEP_API_KEY=your-zep-cloud-key        # Zep Cloud
 ZEP_BASE_URL=http://localhost:8000    # self-hosted Zep
+STIGMEM_SOURCE_ENTITY=agent:stigmem-zep
+```
 
-# stigmem (for demo.py and query_from_stigmem integration)
+`demo.py` also reads:
+
+```bash
 STIGMEM_URL=http://localhost:8765
-STIGMEM_API_KEY=sk-your-key           # optional
-
-# shared
-STIGMEM_SOURCE_ENTITY=agent:stigmem-zep  # source URI on produced records
-SESSION_ID=my-session-001                # for demo; auto-generated if unset
+STIGMEM_API_KEY=sk-your-key
+SESSION_ID=my-session-001
 ```
 
 ## Usage
 
-### Mirror a stigmem fact into Zep
+### Mirror a Stigmem fact into Zep
 
 ```python
-from adapter import StigmemZepAdapter
+from stigmem_plugin_zep import StigmemZepAdapter
 
 adapter = StigmemZepAdapter.from_env()
 
-# fact_dict is any stigmem FactRecord (plain dict)
 fact_dict = {
     "id": "fact-123",
     "entity": "user:alice",
@@ -74,60 +101,72 @@ fact_dict = {
     "scope": "company",
     "confidence": 1.0,
 }
+
 result = adapter.assert_to_zep(fact_dict, session_id="session-abc")
 print(result["content"])
-# → "[STIGMEM] user:alice | memory:role: principal-engineer (scope=company, confidence=1.00)"
 ```
 
 ### Hydrate from Zep episodic memory
 
 ```python
 records = adapter.query_from_zep("company", session_id="session-abc")
-for r in records:
-    print(r["value"]["v"])
-    # → each Zep-extracted episodic fact as a stigmem FactRecord dict
+for record in records:
+    print(record["value"]["v"])
 ```
 
 ### Run the demo
 
 ```bash
-cd stigmem
 STIGMEM_URL=http://localhost:8765 \
 ZEP_BASE_URL=http://localhost:8000 \
 SESSION_ID=demo-001 \
-uv run python adapters/zep/demo.py
+python experimental/zep-adapter/demo.py
 ```
 
-## Running tests
+## Enable
+
+The adapter has no node-global behavior gate at v0.1.0. Enable it in the host
+application by installing the package and importing
+`stigmem_plugin_zep.StigmemZepAdapter`.
 
 ```bash
-cd stigmem
-uv run pytest adapters/zep/tests/ -v
+python -m pip install 'stigmem-plugin-zep-adapter>=0.1.0,<2.0.0'
+python -m pip install 'stigmem-plugin-zep-adapter[zep]>=0.1.0,<2.0.0'  # live Zep bridge
+stigmem plugins list
 ```
 
-No live Zep instance or stigmem node required — the Zep client is injected as a
+## Disable
+
+Remove the adapter from the host application path and restart the process that
+loads plugins. If it was installed only for this integration, uninstall it:
+
+```bash
+python -m pip uninstall stigmem-plugin-zep-adapter
+```
+
+## Test
+
+```bash
+cd experimental/zep-adapter
+python -m pytest tests/ -v
+```
+
+No live Zep instance or Stigmem node required; the Zep client is injected as a
 `unittest.mock.MagicMock` via the `_zep_client` constructor parameter.
 
-## Protocol notes
+## Uninstall
 
-- **Message role**: facts are written as `"system"` role messages.  Zep attributes system
-  messages as ground truth, not user-authored ephemera, so the fact survives summarisation
-  cycles longer than user-role messages would.
-- **Extraction lag**: Zep's fact extractor runs asynchronously.  A freshly written message
-  may not appear in `memory.get(session_id).facts` immediately; allow a few seconds and
-  re-run `query_from_zep`.
-- **Idempotency**: `assert_to_zep` does not deduplicate — asserting the same fact twice
-  results in two messages.  If deduplication matters, track mirrored fact IDs at the call
-  site.
-- **Zep SDK**: targets `zep-cloud` (works for both Zep Cloud and self-hosted Zep ≥ 0.27).
-  For the older `zep-python` SDK, instantiate `ZepClient` yourself and pass it via
-  `_zep_client=` to use the dependency-injection path.
-- **Scope semantics**: the `scope` parameter in `query_from_zep` is stamped onto returned
-  records but not filtered on the Zep side — Zep has no concept of stigmem scopes.  All
-  facts in a session are returned; the caller filters by scope if needed.
+```bash
+python -m pip uninstall stigmem-plugin-zep-adapter
+```
 
-## See also
+## Invariants
 
-- [Letta adapter](../letta/README.md) — per-agent archival memory bridge
-- [stigmem node README](../../node/README.md) — running a local node
-- [Authentication](../../docs/docs/guides/authentication.md) — API key setup
+- The adapter appends to Zep session memory; it does not delete or deduplicate
+  Zep messages.
+- Zep extraction is asynchronous, so recently mirrored facts may not appear in
+  `query_from_zep()` immediately.
+- Zep is a secondary enrichment layer. Zep failures do not affect Stigmem node
+  availability.
+- Callers own retry, circuit-breaker, session authorization, redaction, and
+  prompt/write policy.

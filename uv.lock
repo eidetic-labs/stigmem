@@ -22,6 +22,7 @@ members = [
     "stigmem-plugin-cognee-adapter",
     "stigmem-plugin-gemini-adapter",
     "stigmem-plugin-letta-adapter",
+    "stigmem-plugin-zep-adapter",
     "stigmem-py",
 ]
 
@@ -4909,7 +4910,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -6683,6 +6684,7 @@ all = [
     { name = "stigmem-plugin-source-attestation" },
     { name = "stigmem-plugin-time-travel" },
     { name = "stigmem-plugin-tombstones" },
+    { name = "stigmem-plugin-zep-adapter" },
 ]
 cognee-adapter = [
     { name = "stigmem-plugin-cognee-adapter" },
@@ -6718,6 +6720,7 @@ plugins-all = [
     { name = "stigmem-plugin-source-attestation" },
     { name = "stigmem-plugin-time-travel" },
     { name = "stigmem-plugin-tombstones" },
+    { name = "stigmem-plugin-zep-adapter" },
 ]
 source-attestation = [
     { name = "stigmem-plugin-source-attestation" },
@@ -6727,6 +6730,9 @@ time-travel = [
 ]
 tombstones = [
     { name = "stigmem-plugin-tombstones" },
+]
+zep-adapter = [
+    { name = "stigmem-plugin-zep-adapter" },
 ]
 
 [package.dev-dependencies]
@@ -6777,9 +6783,12 @@ requires-dist = [
     { name = "stigmem-plugin-tombstones", marker = "extra == 'all'", specifier = ">=0.1.0,<2.0.0" },
     { name = "stigmem-plugin-tombstones", marker = "extra == 'plugins-all'", specifier = ">=0.1.0,<2.0.0" },
     { name = "stigmem-plugin-tombstones", marker = "extra == 'tombstones'", specifier = ">=0.1.0,<2.0.0" },
+    { name = "stigmem-plugin-zep-adapter", marker = "extra == 'all'", editable = "experimental/zep-adapter" },
+    { name = "stigmem-plugin-zep-adapter", marker = "extra == 'plugins-all'", editable = "experimental/zep-adapter" },
+    { name = "stigmem-plugin-zep-adapter", marker = "extra == 'zep-adapter'", editable = "experimental/zep-adapter" },
     { name = "stigmem-py", editable = "sdks/stigmem-py" },
 ]
-provides-extras = ["node", "openclaw", "cognee-adapter", "gemini-adapter", "letta-adapter", "lazy-instruction-discovery", "memory-garden-acl", "multi-tenant", "source-attestation", "time-travel", "tombstones", "plugins-all", "all"]
+provides-extras = ["node", "openclaw", "cognee-adapter", "gemini-adapter", "letta-adapter", "zep-adapter", "lazy-instruction-discovery", "memory-garden-acl", "multi-tenant", "source-attestation", "time-travel", "tombstones", "plugins-all", "all"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -7068,6 +7077,32 @@ sdist = { url = "https://files.pythonhosted.org/packages/90/32/b8e3aa3b3bccf8981
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bb/c0/301d5e566c9ea9390164514bcd6134d340e37bd691d4a96efe16f47901ad/stigmem_plugin_tombstones-0.1.0-py3-none-any.whl", hash = "sha256:f27cfdb5dd1830ec7f37507d4c4b7048b11662bafbd6d4bc5c01b30943a26452", size = 6341, upload-time = "2026-05-24T20:21:17.001Z" },
 ]
+
+[[package]]
+name = "stigmem-plugin-zep-adapter"
+version = "0.1.0"
+source = { editable = "experimental/zep-adapter" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "stigmem-node" },
+]
+
+[package.optional-dependencies]
+demo = [
+    { name = "httpx" },
+]
+zep = [
+    { name = "zep-cloud" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", marker = "extra == 'demo'", specifier = ">=0.28,<1.0" },
+    { name = "pydantic", specifier = ">=2,<3" },
+    { name = "stigmem-node", editable = "node" },
+    { name = "zep-cloud", marker = "extra == 'zep'", specifier = ">=2,<4" },
+]
+provides-extras = ["zep", "demo"]
 
 [[package]]
 name = "stigmem-py"
@@ -7889,6 +7924,22 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/8f/be/f9f7594e23b5b93affff0318e4593c1920331bcaefda326cabcad94296a1/yarl-1.24.2-cp314-cp314t-win_amd64.whl", hash = "sha256:a7624b1ca46ca5d7b864ef0d2f8efe3091454085ee1855b4e992314529972215", size = 102980, upload-time = "2026-05-19T21:30:59.735Z" },
     { url = "https://files.pythonhosted.org/packages/65/a4/ba80dccd3593ff1f01051a818694d07b58cb8232677ee9a22a5a1f93a9fc/yarl-1.24.2-cp314-cp314t-win_arm64.whl", hash = "sha256:e434a45ce2e7a947f951fc5a8944c8cc080b7e59f9c50ae80fd39107cf88126d", size = 91219, upload-time = "2026-05-19T21:31:01.934Z" },
     { url = "https://files.pythonhosted.org/packages/fd/4d/4b880086bd0d3e034d25647be1d830afc3e3f610e98c4ab3490af6b1b6d5/yarl-1.24.2-py3-none-any.whl", hash = "sha256:2783d9226db8797636cd6896e4de81feed252d1db72265686c9558d97a4d94b9", size = 53576, upload-time = "2026-05-19T21:31:03.909Z" },
+]
+
+[[package]]
+name = "zep-cloud"
+version = "3.22.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pydantic-core" },
+    { name = "python-dateutil" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bc/28/cf38fd0603b1880e0f678da1bf427f6a6e71f505a44814b1c8152289468d/zep_cloud-3.22.0.tar.gz", hash = "sha256:3f979701b660e5fa84597c5713b163212d5af3d511b24d65688cb8ffd6a431f0", size = 85415, upload-time = "2026-05-04T20:14:59.402Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ce/69/d8ac76d3472a2f9492e403322a623a8b304bcc3a5dcbd469fb9e5e24d59a/zep_cloud-3.22.0-py3-none-any.whl", hash = "sha256:440fa6f8e9bf425865a8147c3cb797492e914693f0939139b45ade6d848479f1", size = 152168, upload-time = "2026-05-04T20:14:57.655Z" },
 ]
 
 [[package]]
